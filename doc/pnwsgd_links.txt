@@ -1,0 +1,3 @@
+PNNL-24744, http://www.pnwsmartgrid.org/docs/TransactiveSignalSchema.pdf
+PNNL-25140, http://www.pnwsmartgrid.org/docs/NonTransactiveSchema.pdf
+
