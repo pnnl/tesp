@@ -1,0 +1,6 @@
+*.m4
+*.ffs_db
+*.log
+*.status
+*.o
+*.ldb
