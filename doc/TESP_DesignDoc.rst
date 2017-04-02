@@ -7,7 +7,7 @@ Summary of the Transactive Energy Simulation Platform
 
 Pacific Northwest National Laboratory has been working on a multi-year
 transactive systems program (TSP) funded by the United States Department
-of Energy (DOW). The 2016-2017 work included a separate task on
+of Energy (DOE). The 2016-2017 work included a separate task on
 simulation of transactive systems approaches. Previous transactive
 simulation work has been closely linked to demonstration projects, and
 often not easily repeatable by others. Building on GridLAB-D and other
@@ -38,12 +38,12 @@ suggested by NIST’s TE Challenge [`2 <#_ENREF_2>`__]. This led to
 adoption of the following objectives:
 
 1. Integration of separate Transactive Energy Agents (TEAgents) that
-       encapsulate behaviors of market mechanisms and participants.
+   encapsulate behaviors of market mechanisms and participants.
 
 2. Separation of the valuation function from simulation.
 
 3. Implementation of an efficient and completely open-source platform
-       for Windows, Mac OS X and Linux.
+   for Windows, Mac OS X and Linux.
 
 4. Definition of a growth model for multi-year TE simulations.
 
@@ -81,7 +81,7 @@ which was chosen because:
 1. Python is now commonly used in colleges to teach new programmers
 
 2. Python has many available add-on packages for numerics, graphics and
-       data handling
+   data handling
 
 3. Python bindings to FNCS already existed
 
@@ -120,11 +120,11 @@ two different time steps, which may vary with time and between
 simulators under supervision by FNCS. These are:
 
 1. The operational time step for power system load and resource
-       variations, weather variations, and power system control actions,
-       e.g. 1 to 60 seconds, although 15 seconds is recommended.
+   variations, weather variations, and power system control actions,
+   e.g. 1 to 60 seconds, although 15 seconds is recommended.
 
 2. The market-clearing time step for transactive systems, e.g. 5, 15 or
-       60 minutes.
+   60 minutes.
 
 Events like peak load days, power system faults, transmission line
 outages, and bulk generator outages would occur within the operational
@@ -147,14 +147,14 @@ Figure 2. Interaction of growth model with operational model
 Early versions of the growth model will only include:
 
 1. Fixed growth factors for existing solar, storage and controllable
-       loads; input as a schedule of %/year vs. time.
+   loads; input as a schedule of %/year vs. time.
 
 2. Pre-identified feasible sites for new capacitor banks, chosen from a
-       list of fixed sizes.
+   list of fixed sizes.
 
 3. Residential rooftop solar adoption models for existing houses
-       [`9 <#_ENREF_9>`__, `10 <#_ENREF_10>`__], or a simpler one based
-       on total energy use and floor area of the house.
+   [`9 <#_ENREF_9>`__, `10 <#_ENREF_10>`__], or a simpler one based
+   on total energy use and floor area of the house.
 
 4. Changing size of an existing substation or service transformer.
 
@@ -294,7 +294,7 @@ amplification factor is used to scale up the load from one simulated
 GridLAB-D feeder to represent many similar feeders connected to the same
 MATPOWER bus. Each generator has a bus number (more than one generator
 can be at a bus), power rating, cost function
-:math:`f(P) = c_0 + c_1 P + c_2 P^2`, startup cost, shutdown cost, and
+f(P) = c :sub:`0` + c :sub:`1` P + c :sub:`2` P :sup:`2`, startup cost, shutdown cost, and
 other descriptive information. Each FNCSBus has nominal P and Q that
 MATPOWER can vary outside of GridLAB-D, plus the name of a GridLAB-D
 substation that provides additional load at the bus. (All GridLAB-D
@@ -466,7 +466,7 @@ supplemental revenue calculations until more agents are developed.
 
 Figure 13. TEAgent dictionary and metrics
 
-The EnergyPlus dictionary and metrics structure in **Figure 14** follows
+The EnergyPlus dictionary and metrics structure in Figure 14 follows
 the same pattern as MATPOWER, GridLAB-D and TEAgent metrics. There are
 42 metric values in the array, most of them pertaining to heating and
 cooling system temperatures and states. Each EnergyPlus model is
@@ -486,7 +486,7 @@ aggregated for all zones [`14 <#_ENREF_14>`__].
 
 |image13|
 
-\ **Figure 14.** EnergyPlus dictionary and metrics
+\ Figure 14. EnergyPlus dictionary and metrics
 
 GridLAB-D Enhancements
 ----------------------
@@ -496,23 +496,23 @@ support of TESP. This past year, the GridLAB-D enhancements done for
 TESP have included:
 
 1. Extraction of the double-auction market and double-ramp controller
-       into separate modules, with communication links to the internal
-       GridLAB-D houses. This pattern can be reused to open up other
-       GridLAB-D controller designs to a broader community of
-       developers.
+   into separate modules, with communication links to the internal
+   GridLAB-D houses. This pattern can be reused to open up other
+   GridLAB-D controller designs to a broader community of
+   developers.
 
 2. Porting the FNCS-enabled version of GridLAB-D to Microsoft Windows.
-       This had not been working with the MinGW compiler that was
-       recently adopted for GridLAB-D on Windows, and it will be
-       important for other projects.
+   This had not been working with the MinGW compiler that was
+   recently adopted for GridLAB-D on Windows, and it will be
+   important for other projects.
 
 3. Implementing the JSON metrics collector and writer classes in the
-       tape module. This should provide efficiency and space benefits to
-       other users who need to post-process GridLAB-D outputs.
+   tape module. This should provide efficiency and space benefits to
+   other users who need to post-process GridLAB-D outputs.
 
 4. Implementing a JSON-based message format for agents running under
-       FNCS. Again, this should provide efficiency benefits for other
-       projects that need more complicated FNCS message structures.
+   FNCS. Again, this should provide efficiency benefits for other
+   projects that need more complicated FNCS message structures.
 
 Using and Customizing the TESP
 ------------------------------
@@ -529,16 +529,16 @@ customization, depending whether the user chooses to install or build
 TESP:
 
 -  Install TESP: this may require administrator privileges on the target
-       computer and supplemental downloads. It will be possible to
-       develop new TEAgents and valuation scripts by modifying or
-       developing Python code. Development in Java should also be
-       possible.
+   computer and supplemental downloads. It will be possible to
+   develop new TEAgents and valuation scripts by modifying or
+   developing Python code. Development in Java should also be
+   possible.
 
 -  Build TESP: in addition to the skill set for installing TESP, users
-       should be familiar with configuring environments and using C/C++
-       compilers on the target computer. This approach will enable the
-       user to develop new TEAgents in C/C++, and to replace or upgrade
-       co-simulators (i.e. GridLAB-D, MATPOWER, EnergyPlus) within TESP.
+   should be familiar with configuring environments and using C/C++
+   compilers on the target computer. This approach will enable the
+   user to develop new TEAgents in C/C++, and to replace or upgrade
+   co-simulators (i.e. GridLAB-D, MATPOWER, EnergyPlus) within TESP.
 
 TESP has been designed to build and run with free compilers, including
 MinGW but not Microsoft Visual C++ (MSVC) on Windows. The Python code
@@ -594,30 +594,23 @@ dictate them. The overall pattern of a FNCS-compliant program will be:
 5. While *time\_granted* < *stop\_time*:
 
    a. Request the next *time\_request* from FNCS; your program then
-          blocks.
+      blocks.
 
-   b. FNCS returns *time\_granted*, **which may be less than your
-          *time\_request.*** For example, controllers might submit bids
-          up to a second before the market interval closes, and you
-          should keep track of these.
+   b. FNCS returns *time\_granted*, which may be less than your
+      *time\_request.* For example, controllers might submit bids
+      up to a second before the market interval closes, and you
+      should keep track of these.
 
-   c. Collect and process the messages you subscribed to. There may not
-          be any if your time request has simply come up. On the other
-          hand, you might receive bids or other information to store
-          before taking action on them.
+   c. Collect and process the messages you subscribed to. There may not be any if your time request has simply come up. On the other hand, you might receive bids or other information to store before  taking action on them.
 
-   d. Perform any supplemental processing, including publication of
-          values through FNCS. For example, suppose 300 seconds have
-          elapsed since the last market clearing. Your agent should
-          settle all the bids, publish the clearing price (and other
-          values), and set up for the next market interval.
+   d. Perform any supplemental processing, including publication of values through FNCS. For example, suppose 300 seconds have elapsed since the last market clearing. Your agent should settle all the bids, publish the clearing price (and other values), and set up for the next market interval.
 
    e. Determine the next *time\_request*, usually by adding *delta\_t*
-          to the last one. However, if *time\_granted* has been coming
-          irregularly in 5b, you might need to adjust *delta\_t* so that
-          you do land on the next market clearing interval. If your
-          agent is modeling some type of dynamic process, you may also
-          adapt *delta\_t* to the observed rates of change.
+      to the last one. However, if *time\_granted* has been coming
+      irregularly in 5b, you might need to adjust *delta\_t* so that
+      you do land on the next market clearing interval. If your
+      agent is modeling some type of dynamic process, you may also
+      adapt *delta\_t* to the observed rates of change.
 
    f. Loop back to 5a, unless *time\_granted* ≥ *stop\_time*.
 
@@ -640,7 +633,7 @@ customization, code re-use, etc.
 Example Models
 ==============
 
-**Figure 15** shows a reduced-order demonstration model that
+Figure 15 shows a reduced-order demonstration model that
 incorporates all three federated co-simulators; GridLAB-D simulating 30
 houses, EnergyPlus simulating one large building, and PYPOWER or
 MATPOWER simulating the bulk system. This model can simulate two days of
@@ -651,7 +644,7 @@ Even so, this model is the recommended starting point for TESP.
 
 |image14|
 
-\ **Figure 15**. Demonstration model with 30 houses and a school
+\ Figure 15. Demonstration model with 30 houses and a school
 
 The three-phase unresponsive load comes from a GridLAB-D player file on
 each phase, connected to the feeder primary. The EnergyPlus load
@@ -899,19 +892,19 @@ operate autonomously in load-following mode.
 
 Table 1. Growth Model for SGIP-1 Simulations
 
-+------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| **Case**   | **Houses**   | **HVAC Controllers**   | **Waterheaters**   | **PV Systems**   | **Storage Systems**   |
-+============+==============+========================+====================+==================+=======================+
-| No TE      | 1594         | 1                      | 1151               | 0                | 0                     |
-+------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| Year 0     | 1594         | 755                    | 1151               | 0                | 0                     |
-+------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| Year 1     | 1594         | 755                    | 1151               | 159              | 82                    |
-+------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| Year 2     | 1594         | 755                    | 1151               | 311              | 170                   |
-+------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| Year 3     | 1594         | 755                    | 1151               | 464              | 253                   |
-+------------+--------------+------------------------+--------------------+------------------+-----------------------+
++---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+| **Case**      | **Houses**   | **HVAC Controllers**   | **Waterheaters**   | **PV Systems**   | **Storage Systems**   |
++===============+==============+========================+====================+==================+=======================+
+| No TE         | 1594         | 1                      | 1151               | 0                | 0                     |
++---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+| Year 0        | 1594         | 755                    | 1151               | 0                | 0                     |
++---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+| Year 1        | 1594         | 755                    | 1151               | 159              | 82                    |
++---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+| Year 2        | 1594         | 755                    | 1151               | 311              | 170                   |
++---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+| Year 3        | 1594         | 755                    | 1151               | 464              | 253                   |
++---------------+--------------+------------------------+--------------------+------------------+-----------------------+
 
 Insights and Lessons Learned
 ----------------------------
