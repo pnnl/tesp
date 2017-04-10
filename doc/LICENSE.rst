@@ -1,4 +1,7 @@
+============
 TESP License
+============
+
 Version 1.0, April 2017
 https://github.com/pnnl/tesp
 
@@ -12,15 +15,12 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
    may use, copy, modify, merge, publish, distribute, sublicense,
    and/or sell copies of the Software, and may permit others to do so,
    subject to the following conditions:
-   - Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimers.
-   - Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in
-     the documentation and/or other materials provided with the
-     distribution.
-   - Other than as used herein, neither the name Battelle Memorial
-     Institute or Battelle may be used in any form whatsoever without
-     the express written consent of Battelle.
+
+   * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimers.
+
+   * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+   * Other than as used herein, neither the name Battelle Memorial Institute or Battelle may be used in any form whatsoever without the express written consent of Battelle.
 
 2. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -33,6 +33,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
    OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 
 3. The Software was produced by Battelle under Contract No.
    DE-AC05-76RL01830 with the Department of Energy.  The U.S. Government
@@ -50,9 +51,4 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
 END TERMS AND CONDITIONS
 
-For interested users:  This software system was developed at PNNL with 
-DOE funding [from the Office of Electricity], and PNNL also developed 
-utility applications that are patent-protected and available for 
-licensing for commercial use. More information can be found at PNNL’s 
-Available Technologies site: http://availabletechnologies.pnnl.gov/ or by 
-contacting peter.christensen@pnnl.gov
+For interested users:  This software system was developed at PNNL with DOE funding [from the Office of Electricity], and PNNL also developed utility applications that are patent-protected and available for licensing for commercial use. More information can be found at PNNL’s Available Technologies site: http://availabletechnologies.pnnl.gov/ or by contacting peter.christensen@pnnl.gov

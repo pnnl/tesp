@@ -1,0 +1,393 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title>Transactive Energy Simulation Platform (TESP) Design Documentation</title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1>Transactive Energy Simulation Platform (TESP) Design Documentation</h1>
+<h3 id="contents" class="HeadingFrontNoTOC">Contents</h3>
+<p><a href="#summary-of-the-transactive-energy-simulation-platform">Summary of the Transactive Energy Simulation Platform</a></p>
+<p>&emsp;<a href="#goals">Goals</a></p>
+<p>&emsp;<a href="#design-choices-for-version-1">Design Choices for Version 1</a></p>
+<p>&emsp;<a href="#operational-and-growth-models">Operational and Growth Models</a></p>
+<p>&emsp;<a href="#messages-between-simulators-and-agents">Messages between Simulators and Agents</a></p>
+<p>&emsp;<a href="#output-metrics-to-support-evaluation">Output Metrics to Support Evaluation</a></p>
+<p>&emsp;<a href="#gridlab-d-enhancements">GridLAB-D Enhancements</a></p>
+<p>&emsp;<a href="#using-and-customizing-the-tesp">Using and Customizing the TESP</a></p>
+<p><a href="#example-models">Example Models</a></p>
+<p>&emsp;<a href="#sgip-use-cases">SGIP Use Cases</a></p>
+<p>&emsp;<a href="#sgip-1-model-overview">SGIP 1 Model Overview</a></p>
+<p>&emsp;<a href="#the-circuit-model">The Circuit Model</a></p>
+<p>&emsp;<a href="#the-growth-model">The Growth Model</a></p>
+<p>&emsp;<a href="#insights-and-lessons-learned">Insights and Lessons Learned</a></p>
+<p><a href="#planning-for-the-next-tesp-version">Planning for the Next TESP Version</a></p>
+<p>&emsp;<a href="#new-teagents">New TEAgents</a></p>
+<p>&emsp;<a href="#usability-enhancements">Usability Enhancements</a></p>
+<p>&emsp;<a href="#growth-model">Growth Model</a></p>
+<p>&emsp;<a href="#agent-learning-behaviors">Agent Learning Behaviors</a></p>
+<p>&emsp;<a href="#stochastic-modeling">Stochastic Modeling</a></p>
+<p>&emsp;<a href="#testing-and-validation">Testing and Validation</a></p>
+<p><a href="#references">References</a></p>
+<h3 id="figures" class="HeadingFrontNoTOC"><br />
+Figures</h3>
+<p><a href="#_Toc478633276">Figure 1. TESP Rev 1 components federated through FNCS. New work in green./a></p>
+<p><a href="#_Toc478633277">Figure 2. Interaction of growth model with operational model</a></p>
+<p><a href="#_Toc478633278">Figure 3. Message Schemas</a></p>
+<p><a href="#_Toc478633279">Figure 4. Message Flows</a></p>
+<p><a href="#_Toc478633280">Figure 5. Partitioning the valuation metrics between simulation and post-processing</a></p>
+<p><a href="#_Toc478633281">Figure 6. New metrics collection classes for GridLAB-D</a></p>
+<p><a href="#_Toc478633282">Figure 7. MATPOWER dictionary with generator and FNCS bus metrics</a></p>
+<p><a href="#_Toc478633283">Figure 8. GridLAB-D dictionary</a></p>
+<p><a href="#_Toc478633284">Figure 9. GridLAB-D substation metrics</a></p>
+<p><a href="#_Toc478633285">Figure 10. GridLAB-D billing meter metrics</a></p>
+<p><a href="#_Toc478633286">Figure 11. GridLAB-D house metrics</a></p>
+<p><a href="#_Toc478633287">Figure 12. GridLAB-D inverter metrics</a></p>
+<p><a href="#_Toc478633288">Figure 13. TEAgent dictionary and metrics</a></p>
+<p><a href="#_Toc478633289">Figure 14. EnergyPlus dictionary and metrics</a></p>
+<p><a href="#_Toc478633290">Figure 15. Demonstration model with 30 houses and a school</a></p>
+<p><a href="#_Toc478633291">Figure 16. SGIP-1 system configuration with partial PV and storage adoption</a></p>
+<p><a href="#_Toc478633292">Figure 17. Bulk System Model with Maximum Generator Real Power Output Capacities</a></p>
+<p><a href="#_Toc478633293">Figure 18. Distribution Feeder Model (http://emac.berkeley.edu/gridlabd/taxonomy_graphs/)</a></p>
+<p><a href="#_Toc478633294">Figure 19. Elementary School Model</a></p>
+<h3 id="tables" class="HeadingFrontNoTOC">Tables</h3>
+<p><a href="#_Toc478633295">Table 1. Growth Model for SGIP-1 Simulations</a></p>
+<h1 id="summary-of-the-transactive-energy-simulation-platform">Summary of the Transactive Energy Simulation Platform</h1>
+<p>Pacific Northwest National Laboratory has been working on a multi-year transactive systems program (TSP) funded by the United States Department of Energy (DOW). The 2016-2017 work included a separate task on simulation of transactive systems approaches. Previous transactive simulation work has been closely linked to demonstration projects, and often not easily repeatable by others. Building on GridLAB-D and other software modules, we have produced a Transactive Energy Simulation Platform (TESP) that addresses a wider variety of use cases and drivers that were described earlier. Equally important, TESP has been designed for easier customization and use by other researchers, so it can support a greater variety of design, test and experimentation work in transactive systems.</p>
+<p>The source code, design documents and examples for TESP are being moved from an internal PNNL repository onto a public site at https://github.com/pnnl/tesp/, with minimally restrictive open-source license terms. The main goal of this section is to summarize and explain the design choices in TESP, in particular the message schemas and metrics, so that other researchers may evaluate the costs and benefits of using TESP. The public repository will have more detailed and up-to-date information.</p>
+<h2 id="goals">Goals</h2>
+<p>Preliminary functional requirements were based on the valuation approach developed last year [<a href="#_ENREF_1">1</a>], supplemented by additional study of use cases and drivers to be published in a companion report. We also considered the possibility of new transactive pilot projects, as suggested by NIST’s TE Challenge [<a href="#_ENREF_2">2</a>]. This led to adoption of the following objectives:</p>
+<ol style="list-style-type: decimal">
+<li><blockquote>
+<p>Integration of separate Transactive Energy Agents (TEAgents) that encapsulate behaviors of market mechanisms and participants.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Separation of the valuation function from simulation.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Implementation of an efficient and completely open-source platform for Windows, Mac OS X and Linux.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Definition of a growth model for multi-year TE simulations.</p>
+</blockquote></li>
+</ol>
+<p>Objectives 1-3 specifically support use by others, while objective 4 ultimately extends the simulation time horizon up to 20 years.</p>
+<h2 id="design-choices-for-version-1">Design Choices for Version 1</h2>
+<p>Figure 1 shows the simulation modules federated in Rev 1 of TESP. GridLAB-D covers the electric power distribution system [<a href="#_ENREF_3">3</a>], MATPOWER covers the bulk electric power system [<a href="#_ENREF_4">4</a>], and EnergyPlus covers large commercial buildings [<a href="#_ENREF_5">5</a>]. These three simulators have been previously federated at PNNL, but only pairwise (i.e. GridLAB-D with MATPOWER, and GridLAB-D with EnergyPlus). The use of all three together in a transactive simulation is new this year. The integrating Framework for Network Co-simulation (FNCS) manages the time step synchronization and message exchange among all of the federated simulation modules [<a href="#_ENREF_6">6</a>]. In this way, TESP builds mostly on proven components, which helps mitigate risk in software development. Some of these components may be upgraded or replaced in future versions, as described later. However, the overall platform design in Figure 1 still applies.</p>
+<p><img src="./media/Federates.png"/></p>
+<p><span id="_Ref351627757" class="anchor"><span id="_Toc477900585" class="anchor"><span id="_Toc478633276" class="anchor"></span></span></span>Figure 1. TESP Rev 1 components federated through FNCS. New work in green.</p>
+<p>New work in Figure 1 has been highlighted in <strong>green</strong>. This primarily represents custom code implemented in the Python programming language, which was chosen because:</p>
+<ol style="list-style-type: decimal">
+<li><blockquote>
+<p>Python is now commonly used in colleges to teach new programmers</p>
+</blockquote></li>
+<li><blockquote>
+<p>Python has many available add-on packages for numerics, graphics and data handling</p>
+</blockquote></li>
+<li><blockquote>
+<p>Python bindings to FNCS already existed</p>
+</blockquote></li>
+</ol>
+<p>Custom code for TESP can also be implemented in other languages like C++ and Java, and in fact, the “wrappers” or “agents” for MATPOWER and EnergyPlus have been implemented as separate C++ programs. Our experience has been that developers with experience in C++ or Java can easily work in Python, while the converse is not always true. These factors led to the choice of Python as a default language for customizing TESP.</p>
+<p>Initially, the TEAgents include a double-auction market mechanism, one per substation, and a dual-ramp thermostat controller, one per house [<a href="#_ENREF_7">7</a>]. These were previously hard-coded in GridLAB-D, and those implementations remain in GridLAB-D, but the separate Python versions allow others to study and modify just the transactive code without having to rebuild all of GridLAB-D. Much of the future work envisioned for TESP would focus on significantly expanding the numbers and capabilities of TEAgents. Regarding the other new work highlighted in Figure 1, section 1.3 (next) describes the Growth Model and section 1.5 describes the Valuation scripts.</p>
+<h2 id="operational-and-growth-models">Operational and Growth Models</h2>
+<p>TESP adopts a time-stepping simulation that separates the operational model, of a system with fixed infrastructure running for hours or days, from the growth model, of a system with infrastructure that evolves over months or years. Figure 2 shows these two models in a Unified Modeling Language (UML) activity diagram [<a href="#_ENREF_8">8</a>]. After configuration, the simulation begins with a system in the initial year-zero state, i.e. with no growth included. The operational model then begins to run with federated co-simulators in the form of GridLAB-D, TEAgents, MATPOWER and EnergyPlus. The operational model has two different time steps, which may vary with time and between simulators under supervision by FNCS. These are:</p>
+<ol style="list-style-type: decimal">
+<li><blockquote>
+<p>The operational time step for power system load and resource variations, weather variations, and power system control actions, e.g. 1 to 60 seconds, although 15 seconds is recommended.</p>
+</blockquote></li>
+<li><blockquote>
+<p>The market-clearing time step for transactive systems, e.g. 5, 15 or 60 minutes.</p>
+</blockquote></li>
+</ol>
+<p>Events like peak load days, power system faults, transmission line outages, and bulk generator outages would occur within the operational model. These involve no permanent changes to the system infrastructure, and the power system is expected to respond autonomously to such events. Events like new loads, new distributed energy resources (DER), and capital investments would occur within the growth model because they represent permanent changes to system infrastructure. Most of the time, this will require stopping and re-starting the operational model and its federated simulators. Future TESP versions will make these transitions more efficiently. Growth model time steps would usually be monthly, quarterly or yearly, but could also be as short as weekly. After the last growth time step, the simulation ends for valuation by post-processing.</p>
+<p><img src="./media/GrowthOpModel.png"/></p>
+<p><span id="_Ref351635728" class="anchor"><span id="_Toc477900586" class="anchor"><span id="_Toc478633277" class="anchor"></span></span></span>Figure 2. Interaction of growth model with operational model</p>
+<p>Early versions of the growth model will only include:</p>
+<ol style="list-style-type: decimal">
+<li><blockquote>
+<p>Fixed growth factors for existing solar, storage and controllable loads; input as a schedule of %/year vs. time.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Pre-identified feasible sites for new capacitor banks, chosen from a list of fixed sizes.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Residential rooftop solar adoption models for existing houses [<a href="#_ENREF_9">9</a>, <a href="#_ENREF_10">10</a>], or a simpler one based on total energy use and floor area of the house.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Changing size of an existing substation or service transformer.</p>
+</blockquote></li>
+</ol>
+<p>Later versions are planned to have heuristics that utility system planners and other agents would use in making investment decisions. These heuristics will execute between growth model time steps, using only information available at that point in the simulation.</p>
+<h2 id="messages-between-simulators-and-agents">Messages between Simulators and Agents</h2>
+<p>In Rev 1, TESP simulators exchange a minimal set of messages shown in Figure 3 and Figure 4.</p>
+<p><embed src="./media/MessageClasses.png"/></p>
+<p><span id="_Ref351639497" class="anchor"><span id="_Toc477900587" class="anchor"><span id="_Toc478633278" class="anchor"></span></span></span>Figure 3. Message Schemas</p>
+<p>These messages route through FNCS in a format like “topic/keyword=value”. In Figure 3, the “id” would refer to a specific feeder, house, market, or building, and it would be the message topic. Once published via FNCS, any other FNCS simulator can access the value by subscription. For example, MATPOWER publishes two values, the locational marginal price (LMP) at a substation bus and the positive sequence three-phase voltage at the bus. GridLAB-D subscribes to the voltage, using it to update the power flow solution. The double-auction for that substation subscribes to the LMP, using it to represent a seller in the next market clearing interval. In turn, GridLAB-D publishes a distribution load value at the substation following each significantly different power flow solution; MATPOWER subscribes to that value for its next optimal power flow solution.</p>
+<p><embed src="./media/MessageFlows.png"/></p>
+<p><span id="_Ref351639501" class="anchor"><span id="_Toc477900588" class="anchor"><span id="_Toc478633279" class="anchor"></span></span></span>Figure 4. Message Flows</p>
+<p>EnergyPlus publishes three phase power values after each of its solutions (currently on five-minute intervals). These are all numerically equal, at one third of the total building power that includes lights, office equipment, refrigeration and HVAC loads. GridLAB-D subscribes in order to update its power flow model at the point of interconnection for the building, which is typically at a 480-V or 208-V three-phase transformer. EnergyPlus also subscribes to the double-auction market’s published clearing price, using that value for a real-time price (RTP) response of its HVAC load.</p>
+<p>Message flows involving the thermostat controller, at the center of Figure 4, are a little more involved. From the associated house within GridLAB-D, it subscribes to the air temperature, HVAC power state, and the HVAC power if turned on. The controller uses this information to help formulate a bid for electric power at the next market clearing, primarily the price and quantity. Note that each market clearing interval will have its own market id, and that re-bidding may be allowed until that particular market id closes. When bidding closes for a market interval, the double-auction market will settle all bids and publish several values, primarily the clearing price. The house thermostat controllers use that clearing price subscription, compared to their bid price, to adjust the HVAC thermostat setpoint. As noted above, the EnergyPlus building also uses the clearing price to determine how much to adjust its thermostat setting. Figure 3 shows several other keyword values published by the double-auction market and thermostat controllers; these are mainly used to define “ramps” for the controller bidding strategies. See the GridLAB-D documentation, or TESP design documentation, for more details.</p>
+<p>These message schemas are limited to the minimum necessary to operate Version 1, and it’s expected that the schema will expand as new TEAgents are added. Beyond that, note that any of the simulators may subscribe to any values that it “knows about”, i.e., there are no security and access control emulations. This may be a layer outside the scope of TESP. However, there is also no provision for enforcement of bid compliance, i.e. perfect compliance is built into the code. That’s clearly not a realistic assumption, and is within the scope for future versions as described in Section 3.</p>
+<h2 id="output-metrics-to-support-evaluation">Output Metrics to Support Evaluation</h2>
+<p>TESP will produce various outputs that support comparative evaluation of different scenarios. Many of these outputs are non-monetary, so a user will have to apply different weighting and aggregation methods to complete the evaluations. This is done in the Evaluation Script, which is written in Python. These TESP outputs all come from the Operational Model, or from the Growth Model applied to the Operational Model. For efficiency, each simulator writes intermediate metrics to Javascript Object Notation (JSON) files during the simulation, as shown in Figure 5. For example, if GridLAB-D simulates a three-phase commercial load at 10-second time steps, the voltage metrics output would only include the minimum, maximum, mean and median voltage over all three phases, and over a metrics aggregation interval of 5 to 60 minutes. This saves considerable disk space and processing time over the handling of multiple CSV files. Python, and other languages, have library functions optimized to quickly load JSON files.</p>
+<p><img src="./media/IntermediateMetrics.png"/></p>
+<p><span id="_Ref351643125" class="anchor"><span id="_Toc477900589" class="anchor"><span id="_Toc478633280" class="anchor"></span></span></span>Figure 5. Partitioning the valuation metrics between simulation and post-processing</p>
+<p>To support these intermediate metrics, two new classes were added to the “tape” module of GridLAB-D, as shown in Figure 6. The volume and variety of metrics generated from GridLAB-D is currently the highest among simulators within TESP, so it was especially important here to provide outputs that take less time and space than CSV files. Most of the outputs come from billing meters, either single-phase triplex meters that serve houses, or three-phase meters that serve commercial loads. The power, voltage and billing revenue outputs are linked to these meters, of which there may be several thousand on a feeder. Houses, which always connect to triplex meters, provide the air temperature and setpoint deviation outputs for evaluating occupant comfort. Inverters, which always connect to meters, provide real and reactive power flow outputs for connected solar panels, battery storage, and future DER like vehicle chargers. Note that inverters may be separately metered from a house or commercial building, or combined on the same meter as in net metering. Feeder-level metrics, primarily the real and reactive losses, are also collected by a fourth class that iterates over all transformers and lines in the model; this substation-level class has just one instance not shown in Figure 6. An hourly metrics output interval is shown, but this is adjustable.</p>
+<p><img src="./media/GLDMetricsClasses.png"/></p>
+<p><span id="_Ref351643528" class="anchor"><span id="_Toc477900590" class="anchor"><span id="_Toc478633281" class="anchor"></span></span></span>Figure 6. New metrics collection classes for GridLAB-D</p>
+<p>The initial GridLAB-D metrics are detailed in five UML diagrams, so we begin the UML metric descriptions with MATPOWER, which is much simpler. During each simulation, MATPOWER will produce two JSON files, one for all of the generators and another for all of the FNCS interface buses to GridLAB-D. A third JSON file, called the dictionary, is produced before the simulation starts from the MATPOWER case input file. The dictionary serves as an aid to post-processing. Figure 7 shows the schema for all three MATPOWER metrics files.</p>
+<p>The MATPOWER dictionary (top of Figure 7) includes the system MVA base (typically 100) and GridLAB-D feeder amplification factor. The amplification factor is used to scale up the load from one simulated GridLAB-D feeder to represent many similar feeders connected to the same MATPOWER bus. Each generator has a bus number (more than one generator can be at a bus), power rating, cost function <em>f(P)=c<sub>0</sub>+c<sub>1</sub>P+c<sub>2</sub>P<sup>2</sup></em>, startup cost, shutdown cost, and other descriptive information. Each FNCSBus has nominal P and Q that MATPOWER can vary outside of GridLAB-D, plus the name of a GridLAB-D substation that provides additional load at the bus. (All GridLAB-D loads are currently scaled by the same <em>ampFactor</em> in MATPOWER, but the released version of TESP will have separate <em>ampFactor</em> for each FNCSBus). In total, the MATPOWER dictionary contains four JSON objects; the <em>ampFactor</em>, the <em>baseMVA</em>, a dictionary (map) of Generators keyed on the generator id, and a dictionary (map) of FNCSBuses keyed on the bus id. In MATPOWER, all id values are integers, but the other simulators use string ids.</p>
+<p><embed src="./media/MATPOWERMetrics.png"/></p>
+<p><span id="_Ref351645040" class="anchor"><span id="_Toc477900591" class="anchor"><span id="_Toc478633282" class="anchor"></span></span></span>Figure 7. MATPOWER dictionary with generator and FNCS bus metrics</p>
+<p>The GenMetrics file (center of Figure 7) includes the simulation starting date, time and time zone as <em>StartTime</em>, which should be the same in all metrics output files from that simulation. It also contains a dictionary (map) of three MetadataRecords, which define the array index and units for each of the three generator metric output values. These are the real power <em>LMP</em>, along with the actual real and reactive power outputs, <em>Pgen</em> and <em>Qgen</em>. At each time for metrics output, a GenTime dictionary (map) object will be written with key equal to the time in seconds from the simulation <em>StartTime</em>, and the value being a dictionary (map) of GenRecords.</p>
+<p>The GenRecord keys are generator numbers, which will match the dictionary. The GenRecord values are arrays of three indexed output values, with indices and units matching the Metadata. This structure minimizes nesting in the JSON file, and facilitates quick loading in a Python post-processor program. Valuation may require the use of both metrics and the dictionary. For example, suppose we need the profit earned by a generator at a time 300 seconds after the simulation starting time. The revenue comes from the metrics as <em>LMP_P * Pgen</em>. In order to find the cost, one would start with cost function coefficients obtained from the dictionary for that generator, and substitute <em>Pgen</em> into that cost function. In addition, the post processing script should add startup and shutdown costs based on <em>Pgen</em> transitions between zero and non-zero values; MATPOWER itself does not handle startup and shutdown costs. Furthermore, aggregating across generators and times would have to be done in post-processing, using built-in functions from Python’s NumPy package. The repository includes an example of how to do this.</p>
+<p>Turning to more complicated GridLAB-D metrics, Figure 8 provides the dictionary. At the top level, it includes the substation transformer size and the MATPOWER substation name for FNCS connection. There are four dictionaries (maps) of component types, namely houses, inverters, billing meters and feeders. While real substations often have more than one feeder, in this model only one feeder dictionary will exist, comprising all GridLAB-D components in that model. The reason is that feeders are actually distinguished by their different circuit breakers or reclosers at the feeder head, and GridLAB-D does not currently associate components to switches that way. In other words, there is one feeder and one substation per GridLAB-D file in this version of TESP. When this restriction is lifted in a future version, attributes like <em>feeder_id</em>, <em>house_count</em> and <em>inverter_count</em> will become helpful. At present, all <em>feeder_id</em> attributes will have the same value, while <em>house_count</em> and <em>inverter_count</em> will simply be the length of their corresponding JSON dictionary objects. Figure 8 shows that a BillingMeter must have at least one House or Inverter with no upper limit, otherwise it would not appear in the dictionary. The <em>wh_gallons</em> attribute can be used to flag a thermostat-controlled electric waterheater, but these are not yet treated as responsive loads in Version 1. Other attributes like the inverter’s <em>rated_W</em> and the house’s <em>sqft</em> could be useful in weighting some of the metric outputs.</p>
+<p>Figure 9 shows the structure of substation metrics output from GridLAB-D, consisting of real power and energy, reactive power and energy, and losses from all distribution components in that model. As with MATPOWER metrics files, the substation metrics JSON file contains the <em>StartTime</em> of the simulation, Metadata with array index and units for each metric value, and a dictionary (map) of time records, keyed on the simulation time in seconds from <em>StartTime</em>. Each time record contains a dictionary (map) of SubstationRecords, each of which contains an array of 18 values. This structure, with minimal nesting of JSON objects, was designed to facilitate fast loading and navigation of arrays in Python. The TESP code repository includes examples of working with metrics output in Python.</p>
+<p>Figure 10 shows the structure of billing meter metrics, which is very similar to that of substation metrics, except that each array contains 30 values. The billing meter metrics aggregate real and reactive power for any houses and inverters connected to the meter, with several voltage magnitude and unbalance metrics. The interval bill is also included, based on metered consumption and the tariff that was input to GridLAB-D. In some cases, revenues may be recalculated in post-processing to explore different tariff designs. It’s also possible to re-calculate the billing determinants from metrics that have been defined.</p>
+<p><embed src="./media/GLDDictionary.png"/></p>
+<p><span id="_Ref351647075" class="anchor"><span id="_Toc477900592" class="anchor"><span id="_Toc478633283" class="anchor"></span></span></span>Figure 8. GridLAB-D dictionary</p>
+<p>The Range A and Range B metrics in Figure 10 refer to ANSI C84.1 [<a href="#_ENREF_11">11</a>]. For service voltages less than 600 V, Range A is +/- 5% of nominal voltage for normal operation. Range B is -8.33% to +5.83% of nominal voltage for limited-extent operation. Voltage unbalance is defined as the maximum deviation from average voltage, divided by average voltage, among all phases present. For three-phase meters, the unbalance is based on line-to-line voltages, because that is how motor voltage unbalance is evaluated. For triplex meters, unbalance is based on line-to-neutral voltages, because there is only one line-to-line voltage. In Figure 10, <em>voltage_</em> refers to the line-to-neutral voltage, while <em>voltage12_</em> refers to the line-to-line voltage. The <em>below_10_percent</em> voltage duration and count metrics indicate when the billing meter has no voltage. That information would be used to calculate reliability indices in post-processing, with flexible weighting and aggregation options by customer, owner, circuit, etc. These include the System Average Interruption Frequency Index (SAIFI) and System Average Interruption Duration Index (SAIDI) [<a href="#_ENREF_12">12</a>, <a href="#_ENREF_13">13</a>]. This voltage-based approach to reliability indices works whether the outage resulted from a distribution, transmission, or bulk generation event. The voltage-based metrics also support Momentary Average Interruption Frequency Index (MAIFI) for shorter duration outages.</p>
+<p><embed src="./media/SubstationMetrics.png"/></p>
+<p><span id="_Ref351705272" class="anchor"><span id="_Toc477900593" class="anchor"><span id="_Toc478633284" class="anchor"></span></span></span>Figure 9. GridLAB-D substation metrics</p>
+<p><embed src="./media/BillingMeterMetrics.png"/></p>
+<p><span id="_Ref351705778" class="anchor"><span id="_Toc477900594" class="anchor"><span id="_Toc478633285" class="anchor"></span></span></span>Figure 10. GridLAB-D billing meter metrics</p>
+<p>The house metric JSON file structure is shown in Figure 11, following the same structure as the other GridLAB-D metrics files, with 18 values in each array. These relate to the breakdown of total house load into HVAC and waterheater components, which are both thermostat controlled. The house air temperature, and its deviation from the thermostat setpoint, are also included. Note that the house bill would be included in billing meter metrics, not the house metrics. Inverter metrics in Figure 12 include 8 real and reactive power values in the array, so the connected resource outputs can be disaggregated from the billing meter outputs, which always net the connected houses and inverters. In Version 1, the inverters will be net metered, or have their own meter, but they don’t have transactive agents yet.</p>
+<p><embed src="./media/HouseMetrics.png"/></p>
+<p><span id="_Ref351708667" class="anchor"><span id="_Toc477900595" class="anchor"><span id="_Toc478633286" class="anchor"></span></span></span>Figure 11. GridLAB-D house metrics</p>
+<p><embed src="./media/InverterMetrics.png"/></p>
+<p><span id="_Ref351708959" class="anchor"><span id="_Toc477900596" class="anchor"><span id="_Toc478633287" class="anchor"></span></span></span>Figure 12. GridLAB-D inverter metrics</p>
+<p>Figure 13 shows the transactive agent dictionary and metrics file structures. Currently, these include one double-auction market per substation and one double-ramp controller per HVAC. Each dictionary (map) is keyed to the controller or market id. The Controller dictionary (top left) has a <em>houseName</em> for linkage to a specific house within the GridLAB-D model. In Version 1, there can be only one Market instance per GridLAB-D model, but this will expand in future versions. See the GridLAB-D market module documentation for information about the other dictionary attributes.</p>
+<p>There will be two JSON metrics output files for TEAgents during a simulation, one for markets and one for controllers, which are structured as shown at the bottom of Figure 13. The use of <em>StartTime</em> and Metadata is the same as for MATPOWER and GridLAB-D metrics. For controllers, the bid price and quantity (kw, not kwh) is recorded for each market clearing interval’s id. For auctions, the actual clearing price and type are recorded for each market clearing interval’s id. That clearing price applies throughout the feeder, so it can be used for supplemental revenue calculations until more agents are developed.</p>
+<p><embed src="./media/AgentMetrics.png"/></p>
+<p><span id="_Ref351709684" class="anchor"><span id="_Toc477900597" class="anchor"><span id="_Toc478633288" class="anchor"></span></span></span>Figure 13. TEAgent dictionary and metrics</p>
+<p>The EnergyPlus dictionary and metrics structure in <strong>Figure 14</strong> follows the same pattern as MATPOWER, GridLAB-D and TEAgent metrics. There are 42 metric values in the array, most of them pertaining to heating and cooling system temperatures and states. Each EnergyPlus model is custom-built for a specific commercial building, with detailed models of the HVAC equipment and zones, along with a customized Energy Management System (EMS) program to manage the HVAC. Many of the metrics are specified to track the EMS program performance during simulation. In addition, the occupants metric can be used for weighting the comfort measures; EnergyPlus estimates the number of occupants per zone based on hour of day and type of day, then TESP aggregates for the whole building. The <em>electric_demand_power</em> metric is the total three-phase power published to GridLAB-D, including HVAC and variable loads from lights, refrigeration, office equipment, etc. The <em>kwhr_price</em> will correspond to the market clearing price from Figure 13. Finally, the <em>ashrae_uncomfortable_hours</em> is based on a simple standardized model, aggregated for all zones [<a href="#_ENREF_14">14</a>].</p>
+<p><embed src="./media/EplusMetrics.png"/></p>
+<p><span id="_Ref351710443" class="anchor"><span id="_Toc477900598" class="anchor"><span id="_Toc478633289" class="anchor"></span></span></span><strong>Figure 14.</strong> EnergyPlus dictionary and metrics</p>
+<h2 id="gridlab-d-enhancements">GridLAB-D Enhancements</h2>
+<p>The TSP simulation task includes maintenance and updates to GridLAB-D in support of TESP. This past year, the GridLAB-D enhancements done for TESP have included:</p>
+<ol style="list-style-type: decimal">
+<li><blockquote>
+<p>Extraction of the double-auction market and double-ramp controller into separate modules, with communication links to the internal GridLAB-D houses. This pattern can be reused to open up other GridLAB-D controller designs to a broader community of developers.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Porting the FNCS-enabled version of GridLAB-D to Microsoft Windows. This had not been working with the MinGW compiler that was recently adopted for GridLAB-D on Windows, and it will be important for other projects.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Implementing the JSON metrics collector and writer classes in the tape module. This should provide efficiency and space benefits to other users who need to post-process GridLAB-D outputs.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Implementing a JSON-based message format for agents running under FNCS. Again, this should provide efficiency benefits for other projects that need more complicated FNCS message structures.</p>
+</blockquote></li>
+</ol>
+<h2 id="using-and-customizing-the-tesp">Using and Customizing the TESP</h2>
+<p>TESP runs on Linux (Ubuntu tested), Mac OS X, and Microsoft Windows. Installers, source code, examples and documentation will be available at https://github.com/pnnl/tesp/, and the TESP will also be running under Linux at PNNL’s Electricity Infrastructure Operations Center (EIOC) in Richland, WA. However, we expect that most users would wish to run TESP on their own computers, which offers the possibility of customization and also helps to preserve proprietary information that might be developed or incorporated with TESP. There are two basic levels of customization, depending whether the user chooses to install or build TESP:</p>
+<ul>
+<li><blockquote>
+<p>Install TESP: this may require administrator privileges on the target computer and supplemental downloads. It will be possible to develop new TEAgents and valuation scripts by modifying or developing Python code. Development in Java should also be possible.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Build TESP: in addition to the skill set for installing TESP, users should be familiar with configuring environments and using C/C++ compilers on the target computer. This approach will enable the user to develop new TEAgents in C/C++, and to replace or upgrade co-simulators (i.e. GridLAB-D, MATPOWER, EnergyPlus) within TESP.</p>
+</blockquote></li>
+</ul>
+<p>TESP has been designed to build and run with free compilers, including MinGW but not Microsoft Visual C++ (MSVC) on Windows. The Python code has been developed and tested with Python 3, including the NumPy, SciPy, Matplotlib and Pandas packages. There are several suitable and free Python distributions that will install these packages. MATPOWER has been compiled into a shared object library with wrapper application, which requires the MATLAB runtime to execute. This is a free download, but it’s very large and the version must exactly match the MATLAB version that TESP used in building the library and wrapper. This is true even if you have a full version of MATLAB installed, so better solutions are under investigation. At this time, we expect to support MATPOWER only for Linux, with the alternative PYPOWER [<a href="#_ENREF_17">17</a>] supported on Windows, Linux and Mac OS X. The code repository should always have the most up-to-date information.</p>
+<p>In order to provide new or customized valuation scripts in Python, the user should first study the provided examples. These illustrate how to load the JSON dictionaries and metrics described in Section 1.5, aggregate and post-process the values, make plots, etc. Coupled with some experience or learning in Python, this constitutes the easiest route to customizing TESP.</p>
+<p>The next level of complexity would involve customizing or developing new TEAgents in Python. The existing auction and controller agents provide examples on how to configure the message subscriptions, publish values, and link with FNCS at runtime. Section 1.4 describes the existing messages, but these constitute a minimal set for Version 1. It’s possible to define your own messages between your own TEAgents, with significant freedom. It’s also possible to publish and subscribe, or “peek and poke”, any named object / attribute in the GridLAB-D model, even those not called out in Section 1.4. For example, if writing a waterheater controller, you should be able to read its outlet temperature and write its tank setpoint via FNCS messages, without modifying GridLAB-D code. You probably also want to define metrics for your TEAgent, as in Section 1.5. Your TEAgent will run under supervision of a FNCS broker program. This means you can request time steps, but not dictate them. The overall pattern of a FNCS-compliant program will be:</p>
+<ol style="list-style-type: decimal">
+<li><p>Initialize FNCS and subscribe to messages, i.e. notify the broker.</p></li>
+<li><p>Determine the desired simulation <em>stop_time</em>, and any time step size (<em>delta_t</em>) preferences. For example, a transactive market mechanism on 5-minute clearing intervals would like <em>delta_t</em> of 300 seconds.</p></li>
+<li><p>Set <em>time_granted</em> to zero; this will be under control of the FNCS broker.</p></li>
+<li><p>Initialize <em>time_request</em>; this is usually <em>0 + delta_t</em>, but it could be <em>stop_time</em> if you just wish to collect messages as they come in.</p></li>
+<li><p>While <em>time_granted</em> &lt; <em>stop_time</em>:</p>
+<ol style="list-style-type: lower-alpha">
+<li><blockquote>
+<p>Request the next <em>time_request</em> from FNCS; your program then blocks.</p>
+</blockquote></li>
+<li><blockquote>
+<p>FNCS returns <em>time_granted</em>, <strong>which may be less than your <em>time_request.</em></strong> For example, controllers might submit bids up to a second before the market interval closes, and you should keep track of these.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Collect and process the messages you subscribed to. There may not be any if your time request has simply come up. On the other hand, you might receive bids or other information to store before taking action on them.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Perform any supplemental processing, including publication of values through FNCS. For example, suppose 300 seconds have elapsed since the last market clearing. Your agent should settle all the bids, publish the clearing price (and other values), and set up for the next market interval.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Determine the next <em>time_request</em>, usually by adding <em>delta_t</em> to the last one. However, if <em>time_granted</em> has been coming irregularly in 5b, you might need to adjust <em>delta_t</em> so that you do land on the next market clearing interval. If your agent is modeling some type of dynamic process, you may also adapt <em>delta_t</em> to the observed rates of change.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Loop back to 5a, unless <em>time_granted</em> ≥ <em>stop_time</em>.</p>
+</blockquote></li>
+</ol></li>
+<li><p>Write your JSON metrics file; Python has built-in support for this.</p></li>
+<li><p>Finalize FNCS for an orderly shutdown, i.e. notify the broker that you’re done.</p></li>
+</ol>
+<p>The main points are to realize that an overall “while loop” must be used instead of a “for loop”, and that the <em>time_granted</em> values don’t necessarily match the <em>time_requested</em> values.</p>
+<p>Developers working with C/C++ will need much more familiarity with compiling and linking to other libraries and applications, and much more knowledge of any co-simulators they wish to replace. This development process generally takes longer, which represents added cost. The benefits could be faster execution times, more flexibility in customization, code re-use, etc.</p>
+<h1 id="example-models">Example Models</h1>
+<p><strong>Figure 15</strong> shows a reduced-order demonstration model that incorporates all three federated co-simulators; GridLAB-D simulating 30 houses, EnergyPlus simulating one large building, and PYPOWER or MATPOWER simulating the bulk system. This model can simulate two days of real time in several minutes of computer time, which is an advantage for demonstrations and early testing of new code. There aren’t enough market participants or diverse loads to produce realistic results at scale. Even so, this model is the recommended starting point for TESP.</p>
+<p><embed src="./media/TE30system.png"/></p>
+<p><span id="_Ref478591864" class="anchor"><span id="_Toc478633290" class="anchor"></span></span><strong>Figure 15</strong>. Demonstration model with 30 houses and a school</p>
+<p>The three-phase unresponsive load comes from a GridLAB-D player file on each phase, connected to the feeder primary. The EnergyPlus load connects through a three-phase padmount transformer, while the houses connect through single-phase transformers, ten per phase. Except for transformers, all of the line impedances in this model are negligible. One of the house loads has been shown in more detail. It includes a responsive electric cooling load, lights, and several non-responsive appliances. In addition, each house has a solar panel connected through an inverter to the same meter, which might or might not implement net metering. Storage, vehicle chargers and other appliances (e.g. electric water heater) could be added. For now, each house is assumed to have gas heat and gas water heater.</p>
+<h2 id="sgip-use-cases">SGIP Use Cases</h2>
+<p>TESP will initially respond to four of the Smart Grid Interoperability Panel (SGIP) use cases [<a href="#_ENREF_15">15</a>] and an additional use case to illustrate the growth model.</p>
+<p><em>SGIP-1 and SGIP-6</em>. “The grid is severely strained in capacity and requires additional load shedding/shifting or storage resources” [<a href="#_ENREF_15">15</a>]. The details confirm that this use case addresses only generation capacity constraints of the type that might be needed after existing demand-response resources become exhausted.</p>
+<p>This use case clearly takes place on a day that available resources are inadequate in a warm location like California or Arizona. In the base-case scenario, the system anticipates the event that morning or even earlier. Contracted demand-response resources—predominantly distributed generator sets―are scheduled to actuate during the day at the predicted time of the peak load. While helpful, the demand response proves inadequate. Therefore, each distribution utility must also conduct emergency curtailment, meaning that entire distribution circuits must be intentionally de-energized to reduce system demand. Each utility is allocated a fraction of the total shortfall to correct.</p>
+<p>In the test scenario, nearly everything remains the same, except a double-auction transactive market is coordinating battery energy storage and residential space conditioning and electric water heaters. These controllable assets are presumed to not be contracted by and to not participate in conventional demand-response. As the last available resources become dispatched, the costly final resources elevate the transactive price signal, thus causing transactive assets to respond. The demand-response resources are dispatched as for the base case, presuming they were scheduled that morning without consideration of the transactive system’s response. As the peak demand nears, the need for emergency curtailment might be reduced or fully avoided by the actions of the transactive system.</p>
+<p>The principal valuation metrics for this use case address the costs and inconvenience of the emergency curtailment. Interesting impacts include changes in the numbers of customers curtailed, the durations of the emergency curtailment, and unserved load.</p>
+<p><em>SGIP-2</em>. “DER are engaged based on economics and location to balance wind resources” [<a href="#_ENREF_15">15</a>]. The scenario narrative states that ramping, not balancing or fast regulation, should be the target grid service for this use case.</p>
+<p>This use case requires that bulk wind resources are a substantial fraction (40%) of the region’s bulk resource mix. Wind resources are highly correlated across the region. If the wind resource disappears rapidly, then other resources must be rapidly dispatched to replace the wind energy. This challenge is exacerbated if it occurs while other demand is increasing. If, however, wind resource materializes rapidly, other resources must ramp down, and this challenge is amplified if it occurs while other demand is decreasing. The ideal test day includes both the rapid ramping up and down of wind resource.</p>
+<p>In the base case, supply is scheduled every hour or half-hour. The system must always allow a margin—ramping reserves―both up and down should these ramping services be needed. The system counteracts rapid changes in wind, both up and down, by controlling hydropower generation and spinning reserves [<a href="#_ENREF_15">15</a>]. The cost of doing this is often modest, given that hydropower generation might not even be the marginal resource. But the costs might understate the fact that more expensive resources might be used to provide this margin, and provision of ramping might impact hydropower generation maintenance costs. The cost of reserving resources is incurred regardless whether the system is ramping up or down. These reserves, as well as the costs of providing them, are addressed centrally by the system. The provision of ramping services is not isolated in that the quality of response might excite balancing and regulation services to become engaged.</p>
+<p>In the test case, a transactive system is in operation, but the system otherwise operates the same.</p>
+<p>We do not expect the double-auction transactive system to be particularly helpful for this use case. The dispatch algorithm generates the equivalent of a locational marginal price, which is responsive to the locational cost of marginal resource, efficiency, and transport constraints. While there will be some benefit caused by the transactive period being shorter than the scheduling interval, the transactive system here will respond to the marginal cost, which does not reflect ramping service costs. So, as wind ramps up and down, there will be a corresponding helpful reduction and increase in the transactive price signal. However, the transactive signal is not designed to align with the scheduling intervals and the corresponding needs for ramping services that result within each scheduling interval.</p>
+<p>Primary impacts will address ramping reserves and their costs under the alternative scenarios.</p>
+<p><em>SGIP-3</em>. “High-penetration of rooftop solar PV causes swings in voltage on distribution grid” [<a href="#_ENREF_15">15</a>]. Solar generation capacity is stated to be up to 120% of load. Reversals of power flow can occur. Solar power intermittency creates corresponding voltage power quality issues. We choose to focus on the voltage management challenge, given that flow reversal is not itself a problem if it makes sense for system economics.</p>
+<p>In the base case, this condition might today be disallowed at the planning stage because of the challenges that reversed power flow might induce in protection schemes. Presuming such high penetration and reversed flows are allowed, the distribution feeder must use its existing resources—capacitors, reactors, regulating transformers—to keep voltage in its acceptable range. Solar power inverters mostly correct to unity power factor today. Voltage tends to increase, if uncorrected, at times that solar power is injected into the distribution system. It is likely that this feeder will encounter voltage violations and flicker because of the high penetration and intermittency of the PV generation.</p>
+<p>In the test case, the double-auction transactive system is operating on the high-solar-penetration feeder. Voltage management is not directly targeted by transactive mechanisms today, but the behaviors of the mechanisms can affect voltage management.</p>
+<p>The primary impacts will be changes in the occurrences of voltage range violations, power quality events, and operations of voltage controls (e.g., tap changes) on the feeder.</p>
+<p><em>SGIP-6</em>. “A sudden transmission system constraint results in emergency load reductions” [<a href="#_ENREF_15">15</a>]. A distribution system network operator with a system having 150 MW peak winter load is given 15-minutes advance notice by his transmission supplier to curtail 40 MW. The curtailment is to last 2 hours. The distribution system network operator has no generation resources of his own to use. Business as usual mitigation is to conduct rolling blackouts. Alternatives exist if some or all of the emergency curtailment can be satisfied by DER [<a href="#_ENREF_15">15</a>]. Alternatively, the event might be naturally exercised by emulating contingency and maintenance outages. These events would then be stochastic in their occurrences.</p>
+<p>SGIP-6 is very similar to SGIP-1, but it is caused by a system constraint rather than inadequate supply resources. It can be emulated by reducing the capacity of transmission or distribution that supply the test feeders. Refer to our discussion of SGIP-1 for the remedial actions, including conventional demand response, emergency curtailment, and double-auction transactive system that will be used in the base case and test scenarios. The valuation metrics and impacts are expected to be the same.</p>
+<h2 id="sgip-1-model-overview">SGIP 1 Model Overview</h2>
+<p>Figure 16 shows the types of assets and stakeholders considered for the use cases in this version. The active market participants include a double-auction market at the substation level, the bulk transmission and generation system, a large commercial building with responsive HVAC thermostat, and single-family residences that have a responsive HVAC thermostat. Transactive message flows and key attributes are indicated in <strong>orange</strong>.</p>
+<p>In addition, the model includes PV and storage resources at some of the houses, and waterheaters at many houses. These resources can be transactive, but are not in this version because the corresponding separate TEAgents have not been implemented yet. Likewise, the planned new TEAgent that implements load shedding from the substation has not yet been implemented.</p>
+<p><span id="_Toc450805018" class="anchor"></span><embed src="./media/SGIP1system.png"/></p>
+<p><span id="_Ref477895206" class="anchor"><span id="_Toc477900599" class="anchor"><span id="_Toc478633291" class="anchor"></span></span></span>Figure 16. SGIP-1 system configuration with partial PV and storage adoption</p>
+<h2 id="the-circuit-model">The Circuit Model</h2>
+<p>Figure 17 shows the bulk system model in MATPOWER. It is a small system with three generating units and three load buses that comes with MATPOWER, to which we added a high-cost peaking unit to assure convergence of the optimal power flow in all cases. In SGIP-1 simulations, generating unit 2 was taken offline on the second day to simulate a contingency. The GridLAB-D model was connected to Bus 7, and scaled up to represent multiple feeders. In this way, prices, loads and resources on transmission and distribution systems can impact each other.</p>
+<p><embed src="./media/MATPOWERsystem.png"/></p>
+<p><span id="_Ref477897835" class="anchor"><span id="_Toc477900600" class="anchor"><span id="_Toc478633292" class="anchor"></span></span></span>Figure 17. Bulk System Model with Maximum Generator Real Power Output Capacities</p>
+<p>Figure 18 shows the topology of a 12.47-kV feeder based on the western region of PNNL’s taxonomy of typical distribution feeders [<a href="#_ENREF_16">16</a>]. We use a MATLAB feeder generator script that produces these models from a typical feeder, including random placement of houses and load appliances of different sizes appropriate to the region. The model generator can also produce small commercial buildings, but these were not used here in favor of a detailed large building modeled in EnergyPlus. The resulting feeder model included 1594 houses, 755 of which had air conditioning, and approximately 4.8 MW peak load at the substation. We used a typical weather file for Arizona, and ran the simulation for two days, beginning midnight on July 1, 2013, which was a weekday. A normal day was simulated in order for the auction market history to stabilize, and on the second day, a bulk generation outage was simulated. See the code repository for more details.</p>
+<p>Figure 19 shows the building envelope for an elementary school model that was connected to the GridLAB-D feeder model at a 480-volt, three-phase transformer secondary. The total electric load varied from 48 kW to about 115 kW, depending on the hour of day. The EnergyPlus agent program collected metrics from the building model, and adjusted the thermostat setpoints based on real-time price, which is a form of passive response.</p>
+<p><img src="./media/FeederR1_1.png"/></p>
+<p><span id="_Ref477898096" class="anchor"><span id="_Toc477900601" class="anchor"><span id="_Toc478633293" class="anchor"></span></span></span>Figure 18. Distribution Feeder Model (http://emac.berkeley.edu/gridlabd/taxonomy_graphs/)</p>
+<p><img src="./media/School.png"/></p>
+<p><span id="_Ref477898560" class="anchor"><span id="_Toc477900602" class="anchor"><span id="_Toc478633294" class="anchor"></span></span></span>Figure 19. Elementary School Model</p>
+<h2 id="the-growth-model">The Growth Model</h2>
+<p>This version of the growth model has been implemented for yearly increases in PV adoption, storage adoption, new (greenfield) houses, and load growth in existing houses. For SGIP-1, only the PV and storage growth has actually been used. A planned near-term extension will cover automatic transformer upgrades, making use of load growth more robust and practical.</p>
+<p>Table 1 summarizes the growth model used in this report for SGIP-1. In row 1, with no (significant) transactive mechanism, one HVAC controller and one auction market agent were still used to transmit MATPOWER’s LMP down to the EnergyPlus model, which still responded to real-time prices. In this version, only the HVAC controllers were transactive. PV systems would operate autonomously at full output, and storage systems would operate autonomously in load-following mode.</p>
+<p><span id="_Ref450803647" class="anchor"><span id="_Toc450805052" class="anchor"><span id="_Toc477900603" class="anchor"><span id="_Toc478633295" class="anchor"></span></span></span></span>Table 1. Growth Model for SGIP-1 Simulations</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>Case</strong></th>
+<th><strong>Houses</strong></th>
+<th><strong>HVAC Controllers</strong></th>
+<th><strong>Waterheaters</strong></th>
+<th><strong>PV Systems</strong></th>
+<th><strong>Storage Systems</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No TE</td>
+<td>1594</td>
+<td>1</td>
+<td>1151</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>Year 0</td>
+<td>1594</td>
+<td>755</td>
+<td>1151</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>Year 1</td>
+<td>1594</td>
+<td>755</td>
+<td>1151</td>
+<td>159</td>
+<td>82</td>
+</tr>
+<tr class="even">
+<td>Year 2</td>
+<td>1594</td>
+<td>755</td>
+<td>1151</td>
+<td>311</td>
+<td>170</td>
+</tr>
+<tr class="odd">
+<td>Year 3</td>
+<td>1594</td>
+<td>755</td>
+<td>1151</td>
+<td>464</td>
+<td>253</td>
+</tr>
+</tbody>
+</table>
+<h2 id="insights-and-lessons-learned">Insights and Lessons Learned</h2>
+<p>A public demonstration and rollout of TESP is planned for a workshop on April 27, in Northern Virginia. That workshop will mark the end of TESP’s first six-month release cycle. The main accomplishment, under our simulation task, is that all of the essential TESP components are working over the FNCS framework and on multiple operating systems. This has established the foundation for adding many more features and use case simulations over the next couple of release cycles, as described in Section 3. Many of these developments will be incremental, while others are more forward-looking.</p>
+<p>Two significant lessons have been learned in this release cycle, meaning those two things need to be done differently going forward. The first lesson relates to MATPOWER. It has been difficult to deploy compiled versions of MATPOWER on all three operating systems, and it will be inconvenient for users to manage different versions of the required MATLAB runtime. This is true even for users who might already have a full version of MATLAB. Furthermore, we would need to modify MATPOWER source code in order to detect non-convergence and summarize transmission system losses. This leads us to seriously consider alternatives, such as PyPower [<a href="#_ENREF_17">17</a>] or AMES [<a href="#_ENREF_18">18</a>]; although both have their own limitations, they are much easier to modify and deploy.</p>
+<p>The second lesson relates to EnergyPlus modeling, which is a completely different domain than power system modeling. We were able to get help from other PNNL staff to make small corrections in the EnergyPlus model depicted in Figure 19, but it’s clear we will need more building model experts on the team going forward. This will be especially true as we integrate VOLTTRON-based agents into TESP.</p>
+<h1 id="planning-for-the-next-tesp-version">Planning for the Next TESP Version</h1>
+<p>At this stage, TESP comprises a basic framework to conduct design and evaluation of transactive mechanisms, and it is open for use by others on Windows, Linux and Mac OS X. The next version of TESP should rapidly expand its capabilities, by building on the established framework.</p>
+<h2 id="new-teagents">New TEAgents</h2>
+<p>These are arguably the most important, as they add key features that are directly in TESP’s scope, and likely not available elsewhere integrated into a single platform. The more examples we provide, the easier it should be for others to write their own (better) TEAgents.</p>
+<ol style="list-style-type: decimal">
+<li><p>VOLTTRON is a standard for building automation and management systems, and it has been used to implement build-level transactive mechanisms for electricity, air and chilled water in co-simulation with EnergyPlus [<a href="#_ENREF_5">5</a>]. A TEAgent based on VOLTTRON could manage the building-level transactive system, and also participate in the feeder-level or substation-level electricity markets on behalf of the building loads and resources. The work involves porting the Python-based VOLTTRON program to interface with EnergyPlus via FNCS instead of EnergyPlus’s built-in Building Control Virtual Test Bed (BCVTB). Then, the VOLTTRON program will need to construct bid curves for the grid market.</p></li>
+<li><p>PowerMatcher is a transactive mechanism implemented by the Netherlands Organisation for Applied Scientific Research (TNO) [<a href="#_ENREF_19">19</a>]. The existing code is in Java, with a custom API and message schema. TNO would have to undertake the work of interfacing PowerMatcher to the TESP, with technical support from PNNL.</p></li>
+<li><p>TeMix is another transactive mechanism that has been implemented by a California-based company [<a href="#_ENREF_20">20</a>], and selected for some pilot projects. TeMix would have to undertake the work of interfacing its product to the TESP, with technical support from PNNL.</p></li>
+<li><p>Passive Controller (Load Shedding) – GridLAB-D includes a built-in passive controller, and switches that can isolate sections of a circuit. This function would be extracted into a separate TEAgent that implements load shedding in response to a message from MATPOWER. If the bulk system capacity margin falls below minimum, or worse, if the optimal power flow fails to converge, the bulk system operator would have to invoke load shedding. In TESP, the MATPOWER simulator would initiate load shedding a few seconds prior to the market clearing time, which initiates a new GridLAB-D power flow and reduced substation load published to MATPOWER. Load shedding is a traditional approach that will reduce the system reliability indices, whereas transactive mechanisms could maintain resource margins without impacting the reliability indices.</p></li>
+<li><p>Passive Controller (Demand Response) – the GridLAB-D passive controller already simulates various forms of price-responsive or directly-controlled loads. These would be extracted into a separate TEAgent for control of waterheaters and other loads, complementing the transactive dual ramp controller for HVAC.</p></li>
+<li><p>Generator Controller – GridLAB-D has a built-in generator controller that is tailored for conventional (i.e. dispatchable) generators with operating, maintenance and capital recovery costs included. This has not been completely developed, but it would be useful in TESP as a separate TEAgent so that cogeneration may be included. For example, several teams are developing 1-kW generators for co-generation with residential gas furnaces (the ARPA-E GENSETS program).</p></li>
+<li><p>Storage Controller – GridLAB-D’s built-in battery only implements a load-following mode with state-of-charge and charge/discharge thresholds. We expect to develop a more capable battery controller during 2017 as part of a Washington State Clean Energy Fund (CEF) project in collaboration with Avista Utilities and Washington State University. This new agent would be implemented and tested in TESP.</p></li>
+</ol>
+<p>The enhancements 1, 2 and 3 are probably the most important. A VOLTTRON agent is strategic because it enables intrabuilding-to-grid transactions. It also fills a weakness in GridLAB-D’s own commercial building models, which are adequate for small-box establishments and strip malls, but not for larger buildings like the school in Section 2.3. The PowerMatcher and TeMix agents are strategic because they would show usability of TESP by others, and facilitate cross-vendor experiments.</p>
+<h2 id="usability-enhancements">Usability Enhancements</h2>
+<p>These are also important for usability and widespread adoption of TESP.</p>
+<ol style="list-style-type: decimal">
+<li><p>Capacitor Switching and Tap Changer Metrics – GridLAB-D includes built-in counters for capacitor switching and tap changer operations, which reflect wear-and-tear on utility infrastructure. These should be added to the metrics described in Section 4.5, and this would likely complete the intermediate metrics output from GridLAB-D.</p></li>
+<li><p>TE Challenge Message Schemas – NIST has defined several classes and message schemas for the TE Challenge project [<a href="#_ENREF_2">2</a>]. Many of these tie directly to GridLAB-D, so they are already supported via FNCS. We will continue to review all of them to ensure that TESP remains compatible with TE Challenge to the extent possible.</p></li>
+<li><p>Solution Monitor – at present, TESP is configured and launched via script-building utilities and console commands, which are adequate for developers. The two-day simulations described in this report finish within an hour or two, but that will increase as the time horizons and system sizes increase. We plan to provide a graphical user interface (GUI) with spreadsheet interfaces for configuring TESP, live strip charts to indicate solution progress, and more convenient methods to stop a simulation.</p></li>
+<li><p>Valuation GUI – the post-processing scripts for valuation also run from the command line, which is adequate for developers. We plan to provide a GUI that presents results in formatted tables and lists, plots variables that are selected from lists, etc. Both the solution monitor and post-processing GUIs will be implemented in Python using the Tkinter package that comes with it. This makes the GUIs portable across operating systems, and allows for user customization, just as with the Python-based TEAgents.</p></li>
+<li><p>IEEE 1516 [<a href="#_ENREF_21">21-23</a>] is a comprehensive family of standards for co-simulation, sometimes referred to as High-Level Architecture (HLA). As part of Grid Modernization Lab Consortium (GMLC) project 1.4.15, “Development of Integrated Transmission, Distribution and Communication (TDC) Models”, FNCS and other National Lab co-simulation frameworks are evolving toward greater compliance with IEEE 1516. We plan to adopt a reduced-profile, lightweight version of FNCS or some other framework in TESP, so that it will be fully compliant with IEEE 1516. This fosters interoperability among simulators and agents developed by others. However, compared to some other HLA frameworks that we have evaluated, FNCS is much more efficient, handling thousands of federated processes. For TESP, we’ll need to maintain that level of performance in the new standards-compliant framework.</p></li>
+<li><p>Intermediate Time Aggregations – for a single feeder as described in Section 2.3, a two-day simulation produces about 1 GB in JSON metrics before compression. (CSV files would be even larger). To mitigate the growth of these files, we plan to implement aggregation in time for yearly and multi-year simulations, in which metrics are aggregated by hour of the day, season, weekday vs. weekend or holiday, and by year of the simulation. No accuracy would be lost in cumulative metrics, and it would still be possible to identify metrics for individual stakeholders.</p></li>
+</ol>
+<p>The enhancements listed in sections 3.1 and 3.2 are of known complexity, and could be implemented within the next year, subject to resource availability (including external parties TNO and TeMix). We expect to do some prioritization at a TESP pre-release workshop on April 27, and implement the selected enhancements over a series of two six-month release cycles.</p>
+<p>Some important longer-term enhancements are described in the next four subsections. Work on them will begin, but most likely not be completed over the next year. We are also considering a faster building simulator than EnergyPlus, and federating ns-3 to simulate communication networks. For now, both of those appear to be less important than the enhancements listed in sections 3.1 and 3.2.</p>
+<h2 id="growth-model">Growth Model</h2>
+<p>The growth model described in sections 1.3 and 2.4 follows a pre-defined script, with some random variability. This is adequate for short horizons, up to a few years. Over longer terms, we’ll need an intelligent growth model that mimics the analytics and heuristics used by various stakeholders to make investment decisions. For example, the TESP user may wish to evaluate impacts from a policy initiative that will have a ten-year lifetime. That policy initiative may influence investments that have a twenty-year lifetime. It’s not possible to realistically script that kind of growth model ahead of time. Instead, we need growth model agents that will make investment decisions appropriate to the system as it evolves.</p>
+<h2 id="agent-learning-behaviors">Agent Learning Behaviors</h2>
+<p>Participants in any market will naturally try to optimize their outcomes, or “game the system” depending on the observer’s perspective. In designing brand-new market mechanisms for transactive energy, it’s critically important to account for this human behavior, otherwise undesired and unanticipated outcomes will occur. It’s up to the policymakers to design market rules so that, with enforcement of the rules, undesired outcomes don’t occur. Currently, our agents take algorithmic and sometimes probabilistic approaches to transactions, but they aren’t smart enough to “game the system” as a human would. We have teamed with Iowa State University to investigate these agent learning behaviors beginning this year.</p>
+<h2 id="stochastic-modeling">Stochastic Modeling</h2>
+<p>TESP currently uses random input variables, but the simulations are deterministic and in full detail (e.g. every house, every HVAC thermostat, every waterheater, etc.) It would be more efficient, and perhaps more realistic, to have stochastic simulations on reduced-order models as an option. This opens the door to more use of sensitivity analysis and automatic optimization routines than is currently practical. We have teamed with University of Pittsburgh to investigate the subject beginning this year, building on previous work in circuit model order reduction and probabilistic modeling.</p>
+<h2 id="testing-and-validation">Testing and Validation</h2>
+<p>Testing and validation will be a continuous process throughout the life of TESP. Some opportunities will arise through past and future pilot projects in transactive energy. Other test cases will have to be created. We expect to team with Dartmouth College in formalizing this process, and also to work with Case Western University in modeling their transactive campus project with NASA.<span id="_Toc477937462" class="anchor"><span id="_Toc477937479" class="anchor"><span id="_Toc477937480" class="anchor"><span id="_Toc477937482" class="anchor"><span id="_Toc477937484" class="anchor"><span id="_Toc477937485" class="anchor"><span id="_Toc477937486" class="anchor"><span id="_Toc477937487" class="anchor"><span id="_Toc477937488" class="anchor"><span id="_Toc474758340" class="anchor"><span id="_Toc477937489" class="anchor"><span id="_Toc477937490" class="anchor"></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<h1 id="references">References</h1>
+<p><span id="_ENREF_1" class="anchor"></span>[1] D. J. Hammerstrom, C. D. Corbin, N. Fernandez, J. S. Homer, A. Makhmalbaf, R. G. Pratt<em>, et al.</em> (2016). <em>Valuation of Transactive Systems Final Report, PNNL-25323</em>. Available: http://bgintegration.pnnl.gov/pdf/ValuationTransactiveFinalReportPNNL25323.pdf</p>
+<p><span id="_ENREF_2" class="anchor"></span>[2] NIST. (2017). <em>NIST Transactive Energy Challenge</em>. Available: https://pages.nist.gov/TEChallenge/</p>
+<p><span id="_ENREF_3" class="anchor"></span>[3] D. P. Chassin, J. C. Fuller, and N. Djilali, &quot;GridLAB-D: An agent-based simulation framework for smart grids,&quot; <em>Journal of Applied Mathematics,</em> vol. 2014, pp. 1-12, 2014.</p>
+<p><span id="_ENREF_4" class="anchor"></span>[4] R. D. Zimmerman, C. E. Murillo-Sanchez, and R. J. Thomas, &quot;MATPOWER: Steady-State Operations, Planning, and Analysis Tools for Power Systems Research and Education,&quot; <em>IEEE Transactions on Power Systems,</em> vol. 26, pp. 12-19, 2011.</p>
+<p><span id="_ENREF_5" class="anchor"></span>[5] H. Hao, C. D. Corbin, K. Kalsi, and R. G. Pratt, &quot;Transactive Control of Commercial Buildings for Demand Response,&quot; <em>IEEE Transactions on Power Systems,</em> vol. PP, pp. 1-1, 2016.</p>
+<p><span id="_ENREF_6" class="anchor"></span>[6] S. Ciraci, J. Daily, J. Fuller, A. Fisher, L. Marinovici, and K. Agarwal, &quot;FNCS: a framework for power system and communication networks co-simulation,&quot; presented at the Proceedings of the Symposium on Theory of Modeling &amp; Simulation - DEVS Integrative, Tampa, Florida, 2014.</p>
+<p><span id="_ENREF_7" class="anchor"></span>[7] J. C. Fuller, K. P. Schneider, and D. Chassin, &quot;Analysis of Residential Demand Response and double-auction markets,&quot; in <em>2011 IEEE Power and Energy Society General Meeting</em>, 2011, pp. 1-7.</p>
+<p><span id="_ENREF_8" class="anchor"></span>[8] J. Arlow and I. Neustadt, <em>UML 2.0 and the Unified Process: Practical Object-Oriented Analysis and Design (2nd Edition)</em>: Addison-Wesley Professional, 2005.</p>
+<p><span id="_ENREF_9" class="anchor"></span>[9] H. Zhang, Y. Vorobeychik, J. Letchford, and K. Lakkaraju, &quot;Data-Driven Agent-Based Modeling, with Application to Rooftop Solar Adoption,&quot; presented at the Proceedings of the 2015 International Conference on Autonomous Agents and Multiagent Systems, Istanbul, Turkey, 2015.</p>
+<p><span id="_ENREF_10" class="anchor"></span>[10] V. Sultan, B. Alsamani, N. Alharbi, Y. Alsuhaibany, and M. Alzahrani, &quot;A predictive model to forecast customer adoption of rooftop solar,&quot; in <em>2016 4th International Symposium on Computational and Business Intelligence (ISCBI)</em>, 2016, pp. 33-44.</p>
+<p><span id="_ENREF_11" class="anchor"></span>[11] ANSI, &quot;ANSI C84.1-2016; American National Standard for Electric Power Systems and Equipment—Voltage Ratings (60 Hz),&quot; ed, 2016.</p>
+<p><span id="_ENREF_12" class="anchor"></span>[12] IEEE, &quot;IEEE Guide for Electric Power Distribution Reliability Indices,&quot; <em>IEEE Std 1366-2012 (Revision of IEEE Std 1366-2003),</em> pp. 1-43, 2012.</p>
+<p><span id="_ENREF_13" class="anchor"></span>[13] IEEE, &quot;IEEE Guide for Collecting, Categorizing, and Utilizing Information Related to Electric Power DistributionInterruption Events,&quot; <em>IEEE Std 1782-2014,</em> pp. 1-98, 2014.</p>
+<p><span id="_ENREF_14" class="anchor"></span>[14] ASHRAE, &quot;ANSI/ASHRAE standard 55-2010 : thermal environmental conditions for human occupancy,&quot; 2010.</p>
+<p><span id="_ENREF_15" class="anchor"></span>[15] D. G. Holmberg, D. Hardin, R. Melton, R. Cunningham, and S. Widergren, &quot;Transactive Energy Application Landscape Scenarios,&quot; Smart Grid Interoperability Panel2016.</p>
+<p><span id="_ENREF_16" class="anchor"></span>[16] K. P. Schneider, Y. Chen, D. Engle, and D. Chassin, &quot;A Taxonomy of North American radial distribution feeders,&quot; in <em>2009 IEEE Power &amp; Energy Society General Meeting</em>, 2009, pp. 1-6.</p>
+<p><span id="_ENREF_17" class="anchor"></span>[17] R. Lincoln. (2017). <em>PYPOWER</em>. Available: https://pypi.python.org/pypi/PYPOWER</p>
+<p><span id="_ENREF_18" class="anchor"></span>[18] H. Li and L. Tesfatsion, &quot;The AMES wholesale power market test bed: A computational laboratory for research, teaching, and training,&quot; in <em>2009 IEEE Power &amp; Energy Society General Meeting</em>, 2009, pp. 1-8.</p>
+<p><span id="_ENREF_19" class="anchor"></span>[19] J. K. Kok, C. J. Warmer, and I. G. Kamphuis, &quot;PowerMatcher: multiagent control in the electricity infrastructure,&quot; presented at the Proceedings of the fourth international joint conference on Autonomous agents and multiagent systems, The Netherlands, 2005.</p>
+<p><span id="_ENREF_20" class="anchor"></span>[20] TeMix Inc. (2017). <em>TeMix</em>. Available: www.temix.net</p>
+<p><span id="_ENREF_21" class="anchor"></span>[21] IEEE, &quot;IEEE Standard for Modeling and Simulation (M&amp;S) High Level Architecture (HLA)-- Federate Interface Specification,&quot; <em>IEEE Std 1516.1-2010 (Revision of IEEE Std 1516.1-2000),</em> pp. 1-378, 2010.</p>
+<p><span id="_ENREF_22" class="anchor"></span>[22] IEEE, &quot;IEEE Standard for Modeling and Simulation (M&amp;S) High Level Architecture (HLA)-- Framework and Rules,&quot; <em>IEEE Std 1516-2010 (Revision of IEEE Std 1516-2000),</em> pp. 1-38, 2010.</p>
+<p><span id="_ENREF_23" class="anchor"></span>[23] IEEE, &quot;IEEE Standard for Modeling and Simulation (M&amp;S) High Level Architecture (HLA)-- Object Model Template (OMT) Specification,&quot; <em>IEEE Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),</em> pp. 1-110, 2010.</p>
+</body>
+<footer>
+  <p><b>Copyright &copy; 2017 Battelle Memorial Institute</b></p>
+  <p>Contact: <a href="mailto:Thomas.McDermott@pnnl.gov">Thomas.McDermott@pnnl.gov</a>.</p>
+</footer>
+</html>
