@@ -47,60 +47,78 @@ vars = [['MATPOWER','GLD Bus',7,''],
 				];
 
 fig, ax = plt.subplots(4,1, sharex = 'col')
+plt.ion()
 
 def launch_all():
 	print('launching all simulators')
 	subprocess.Popen ('(export FNCS_BROKER="tcp://*:5571" && exec fncs_broker 36 &> broker.log &)', shell=True)
 	subprocess.Popen ('(export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w ../energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw -d output -r ../energyplus/SchoolDualController.idf &> eplus.log &)', shell=True)
 	subprocess.Popen ('(export FNCS_CONFIG_FILE=eplus_json.yaml && exec eplus_json 2d 5m School_DualController eplus_TE_Challenge_metrics.json &> eplus_json.log &)', shell=True)
-#	subprocess.Popen ('(export FNCS_CONFIG_FILE=tracer.yaml && exec fncs_tracer 2d tracer.out &> tracer.log &)', shell=True)
 	subprocess.Popen ('(exec ./launch_TE_Challenge_agents.sh &)', shell=True)
 	subprocess.Popen ('(export FNCS_CONFIG_FILE=pypower30.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec python fncsPYPOWER.py TE_Challenge "2013-07-01 00:00:00" 172800 300 &> pypower.log &)', shell=True)
+
+#	subprocess.Popen ('(export FNCS_BROKER="tcp://*:5571" && exec fncs_broker 3 &> broker.log &)', shell=True)
+#	subprocess.Popen ('(export FNCS_LOG_STDOUT=yes && exec fncs_player 2d player.txt &> ppplayer.log &)', shell=True)
+#	subprocess.Popen ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec python fncsPYPOWER.py &> pypower.log &)', shell=True)
+
 	print('launched all simulators')
 
 	nb.select(2)
 	root.update()
 
 	os.environ['FNCS_CONFIG_FILE'] = 'tesp.yaml'
+#	os.environ['FNCS_CONFIG_FILE'] = 'pptracer.yaml'
 	os.environ['FNCS_FATAL'] = 'NO'
 	print('config file = ', os.environ['FNCS_CONFIG_FILE'])
 
 	fncs.initialize()
 	time_granted = 0
 	time_stop = 2 * 24 * 60
-	hrs=np.linspace(0.0, 48.0, 577)
-	x0 = np.zeros(577)
-	x1 = np.zeros(577)
-	x2 = np.zeros(577)
-	x3 = np.zeros(577)
+#	yaml_delta = 60
+	yaml_delta = 5
+	nsteps = int (time_stop / yaml_delta)
+	hrs=np.linspace(0.0, 48.0, nsteps+1)
+	idxlast = -1
+	x0 = np.empty(nsteps+1)
+	x1 = np.zeros(nsteps+1)
+	x2 = np.zeros(nsteps+1)
+	x3 = np.zeros(nsteps+1)
 	while time_granted < time_stop:
 		time_granted = fncs.time_request(time_stop)
 		events = fncs.get_events()
+		idx = int (time_granted / yaml_delta)
+		if idx <= idxlast:
+			continue
+		idxlast = idx
 		for key in events:
 			tok = key.decode()
-			idx = int (time_granted / 60)
 			if tok == 'power_A':
 				val = 3.0 * float (fncs.get_value(key).decode().strip('+ degFkW')) / 1000.0
-#				print(hrs,tok,val)
 				x1[idx] = val
-				ax[1].plot(hrs,x1)
+				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
 			elif tok == 'house_air_temperature':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
-#				print(hrs,tok,val)
 				x3[idx] = val
-				ax[3].plot(hrs,x3)
+				ax[3].plot(hrs[1:idx],x3[1:idx],color='magenta')
 			elif tok == 'vpos7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW')) / 133000.0
-#				print(hrs,tok,val)
 				x0[idx] = val
-				ax[0].plot(hrs,x0)
+				ax[0].plot(hrs[1:idx],x0[1:idx],color='green')
 			elif tok == 'clear_price':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
-#				print(hrs,tok,val)
 				x2[idx] = val
-				ax[2].plot(hrs,x2)
+				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
+			elif tok == 'LMP7':
+				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
+				x2[idx] = val
+				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
+			elif tok == 'SUBSTATION7':
+				val = float (fncs.get_value(key).decode().strip('+ degFkW')) # already in kW
+				x1[idx] = val
+				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
 #			print (time_granted, key.decode(), fncs.get_value(key).decode())
 		root.update()
+		fig.canvas.draw()
 	fncs.finalize()
 
 def kill_all():
@@ -177,4 +195,9 @@ nb.add(f1, text='Configuration', underline=0, padding=2)
 nb.add(f2, text='Launch', underline=0, padding=2)
 nb.add(f3, text='Plots', underline=0, padding=2)
 
-root.mainloop()
+while True:
+	try:
+		root.mainloop()
+		break
+	except UnicodeDecodeError:
+		pass
