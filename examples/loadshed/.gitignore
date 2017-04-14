@@ -1,3 +1,5 @@
 *.json
 *.out
 *.csv
+*.txt
+*.log

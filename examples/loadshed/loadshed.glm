@@ -17,12 +17,20 @@ module reliability {
 	report_event_log true;
 }
 
+module connection; // FNCS
 module tape;
 
 // this has to be the first object defined, so it's the last one committed
 object metrics_collector_writer {
 	interval 60;
 	filename loadshed_metrics.json;
+}
+
+object fncs_msg {
+     name gridlabdSimulator1;
+     parent n650;
+     configure loadshed_fncs.cfg;
+     option "transport:hostname localhost, port 5571";
 }
 
 // Loadshedding Switch
@@ -394,14 +402,14 @@ object node { //632 {
      nominal_voltage 2401.7771;
 }
 
-object meter { //650 {
+
+object substation { // must be a substation for MATPOWER/PYPOWER
       name n650;
       phases "ABCN";
       bustype SWING;
-      voltage_A 2401.7771;
-      voltage_B -1200.8886-2080.000j;
-      voltage_C -1200.8886+2080.000j;
       nominal_voltage 2401.7771;
+  base_power 12MVA;
+  power_convergence_value 100VA;
 } 
  
 object node { //680 {
