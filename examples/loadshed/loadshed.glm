@@ -35,10 +35,14 @@ object fncs_msg {
 
 // Loadshedding Switch
 object eventgen {
-	name test_loadshed;
+	name event_loadshed;
 	parent testmetrics;
+	max_outage_length 18000;
+	max_simultaneous_faults 1;
 	fault_type "SW-ABC";
-	manual_outages "sw_loadshed,2000-01-01 2:00:00,2000-01-01 4:00:00";
+	controlled_switch "sw_loadshed";
+	switch_state 1;
+	manual_outages "sw_loadshed,2030-01-01 2:00:00,2030-01-01 4:00:00";  // need this, should lie beyond Tmax
 }
 object switch {
 	phases "ABCN";
@@ -53,6 +57,7 @@ object fault_check {
 	name test_fault;
 	check_mode ONCHANGE;
 	output_filename testout.txt;
+	eventgen_object event_loadshed;
 }
 object power_metrics {
 	name pwrmetrics;
@@ -66,10 +71,13 @@ object metrics {
 	metric_interval 1 h; 							       
 	report_interval 1 h;								     
 }
+// end of reliability module prerequisites, beginning of shed load voltage measurements
+
 object meter {
 	name m675;
 	parent l675;
 	bill_mode UNIFORM;
+  nominal_voltage 2401.7771;
 	object metrics_collector {
 		interval 60;
 	};
@@ -78,16 +86,13 @@ object meter {
 	name m692;
 	parent l692;
 	bill_mode UNIFORM;
+  nominal_voltage 2401.7771;
 	object metrics_collector {
 		interval 60;
 	};
 }
-object recorder {
-	parent m675;
-	property voltage_A,voltage_B,voltage_C;
-	interval 60;
-	file voltages675.csv;
-}
+
+// end of shed load voltage measurements
 
 // Phase Conductor for 601: 556,500 26/7 ACSR
 object overhead_line_conductor {
@@ -338,7 +343,7 @@ object overhead_line { //671684 {
      configuration lc604;
 }
 
- object overhead_line { //684611 {
+object overhead_line { //684611 {
       phases "CN";
       name line_684-611;
       from n684;
@@ -403,13 +408,17 @@ object node { //632 {
 }
 
 
-object substation { // must be a substation for MATPOWER/PYPOWER
-      name n650;
-      phases "ABCN";
-      bustype SWING;
-      nominal_voltage 2401.7771;
+object substation { // must be a substation for MATPOWER/PYPOWER and TESP metrics
+  name n650;
+  phases "ABCN";
+  bustype SWING;
+  nominal_voltage 2401.7771;
+	positive_sequence_voltage 2400.0;
   base_power 12MVA;
   power_convergence_value 100VA;
+	object metrics_collector {
+		interval 60;
+	};
 } 
  
 object node { //680 {
