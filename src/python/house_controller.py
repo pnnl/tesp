@@ -1,4 +1,3 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
 '''
 main file of the controller object, mainly used for assigning data read from input
 '''
@@ -38,7 +37,7 @@ timeSim= 0
 # for timeSim in np.arange(0, tf*3600, deltaT):
 while (time_granted < tf*3600):
     # =================Simulation for each time step ============================================ 
-#    print("Granted", time_granted, "of", timeSim + deltaT)
+    print('****', time_granted)
     
     # Initialization when time = 0
     if time_granted == 0:

@@ -1,4 +1,3 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
 # file: process_agents.py
 import json;
 import sys;
@@ -104,7 +103,7 @@ ax[0].set_ylabel(CLEAR_UNITS)
 ax[0].set_title ("Prices at " + a_keys[0] + ":" + c_keys[0])
 ax[0].legend(loc='best')
 
-ax[1].plot(hrs, data_c[0,:,BID_Q_IDX], color="red", label="Quantity")
+ax[1].plot(hrs, data_c[0,:,BID_Q_IDX], color="red", marker="o", label="Quantity")
 ax[1].set_ylabel(BID_Q_UNITS)
 ax[1].set_title ("Bid Quantity at " + c_keys[0])
 ax[1].set_xlabel("Hours")

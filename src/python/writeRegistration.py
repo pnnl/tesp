@@ -1,4 +1,3 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
 import numpy as np
 
 def writeRegistration (filename):
@@ -48,10 +47,10 @@ def writeRegistration (filename):
     stat_type = ["SY_MEAN", "SY_STDEV"]
     value = [0, 0]
     capacity_reference_object = 'substation_transformer'
-    max_capacity_reference_bid_quantity = 12000
+    max_capacity_reference_bid_quantity = 1000
     
     # house data:
-    air_temperature = 0.0
+    air_temperature = 78.0 # 0.0
     
     # Assign empty dictionary
     controllers = {}
@@ -77,6 +76,7 @@ def writeRegistration (filename):
             # Check for ANY object within the house, and don't use its name:
             if inHouses == True and lst[0] == "object" and lst[1] != "house":
                 endedHouse = True
+#                print('  ended on', line)
             # Check FNCS_msg object name
             if inFNCSmsg == True:
                 if lst[0] == "name":
@@ -91,18 +91,21 @@ def writeRegistration (filename):
                 if lst[0] == "cooling_system_type":
                     if (lst[1].strip(";") == "ELECTRIC"):
                         isELECTRIC = True
+#                        print('ELECTRIC parsed',houseName,air_temperature)
         elif len(lst) == 1:
-            if inHouses == True and isELECTRIC == True:
-                controller_name = houseName + "_thermostat_controller"
-                controllers[controller_name] = {}
-                controllers[controller_name]['controller_information'] = {'control_mode': control_mode, 'marketName': marketName, 'houseName': houseName, 'bid_id': controller_name, 'period': periodController, \
-                               'ramp_low': ramp_low, 'ramp_high': ramp_high, 'range_low': range_low, 'range_high': range_high, 'base_setpoint': base_setpoint, \
-                               'bid_delay': bid_delay, 'use_predictive_bidding': use_predictive_bidding, 'use_override': use_override}
-                controllers[controller_name]['market_information'] = {'market_id': 0, 'market_unit': unit, 'initial_price': initial_price, 'average_price': initial_price, 'std_dev': std_dev, 'clear_price': initial_price, 'price_cap': price_cap, 'period': periodMarket}
-#                 controllers[controller_name]['house_information'] = {'target': 'air_temperature', 'deadband': 0, 'setpoint0': -1, 'currTemp': -1, 'controlled_load_all': 0, 'powerstate': 'ON'}
+            if inHouses == True: 
                 inHouses = False
                 endedHouse = False
-                isELECTRIC = False
+                if isELECTRIC == True:
+#                    print('  ELECTRIC writing',houseName,air_temperature,'on',line)
+                    controller_name = houseName + "_thermostat_controller"
+                    controllers[controller_name] = {}
+                    controllers[controller_name]['controller_information'] = {'control_mode': control_mode, 'marketName': marketName, 'houseName': houseName, 'bid_id': controller_name, 'period': periodController, \
+                               'ramp_low': ramp_low, 'ramp_high': ramp_high, 'range_low': range_low, 'range_high': range_high, 'base_setpoint': base_setpoint, \
+                               'bid_delay': bid_delay, 'use_predictive_bidding': use_predictive_bidding, 'use_override': use_override}
+                    controllers[controller_name]['market_information'] = {'market_id': 0, 'market_unit': unit, 'initial_price': initial_price, 'average_price': initial_price, 'std_dev': std_dev, 'clear_price': initial_price, 'price_cap': price_cap, 'period': periodMarket}
+#                   controllers[controller_name]['house_information'] = {'target': 'air_temperature', 'deadband': 0, 'setpoint0': -1, 'currTemp': -1, 'controlled_load_all': 0, 'powerstate': 'ON'}
+                    isELECTRIC = False
                        
     # Write market dictionary
     auctions[marketName] = {}
@@ -197,9 +200,10 @@ def writeRegistration (filename):
             controller[key] = singleControllerReg[key]
     subscriptions['controller'] = controller   
     auctionReg['subscriptions'] = subscriptions
-    # Values received from MATPOWER
+    # Values received from MATPOWER and GridLAB-D
     values = {}
     values['LMP'] = {'topic': "matpower/LMP_B7", 'default': 0.1, 'type': 'double', 'list': 'false'}
+    values['refload'] = {'topic': "gridlabdSimulator1/distribution_load", 'default': '0', 'type': 'complex', 'list': 'false'}
     auctionReg['values'] = values
 
     auctionDict['registration'] = auctionReg 

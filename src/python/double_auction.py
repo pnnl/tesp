@@ -1,4 +1,3 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
 '''
 main file of the auction object, mainly used for assigning data read from input
 '''
@@ -54,7 +53,7 @@ timeSim = 0
 # Start simulation for each time step:
 while (time_granted < tf*3600):
     # ============================ Value assigned to the auction object from csv files ============================
-#    print("granted", time_granted, "of", timeSim + deltaT)
+    print('****', time_granted)
     # Obtain the step number for the capacity_reference_bid_price, for read in from csv file only, not for FNCS read in
     # Bidder prices are given with 5 minute interval: 
     bidderStepNum = int(math.floor(time_granted / 300))

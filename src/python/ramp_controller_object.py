@@ -1,4 +1,3 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
 """
 This file simulates a controller object
 """
@@ -130,7 +129,8 @@ class ramp_controller_object:
         if "power_state" in fncs_sub_value_String:
             self.house['powerstate'] = fncs_sub_value_String['power_state'] # fncs.get_value('power_state') #fncs_sub_value_String['values']['power_state']
         if "hvac_load" in fncs_sub_value_String:
-            self.house['controlled_load_all'] = self.get_num(fncs_sub_value_String['hvac_load'] ) #fncs_sub_value_String['values']['hvac_load']      
+            self.house['controlled_load_all'] = self.get_num(fncs_sub_value_String['hvac_load'] ) #fncs_sub_value_String['values']['hvac_load']
+        print('subscribed',self.house['currTemp'],self.house['powerstate'],self.house['controlled_load_all'],self.market['average_price'],self.market['std_dev'],self.market['clear_price'],self.market['price_cap'],self.market['initial_price'])      
 
 #         if self.controller['control_mode'] == "CN_DOUBLE_RAMP": # double_ramp controller receive extra data from house      
 #         self.house['thermostat_state'] = house_value['House'][self.controller['houseName']]['thermostat_state']['propertyValue']
@@ -750,6 +750,7 @@ class ramp_controller_object:
         self.fncs_publish['controller'][self.controller['name']]['rebid']['propertyValue'] = self.controller_bid['rebid'] 
         self.fncs_publish['controller'][self.controller['name']]['bid_name'] = self.controller['name']
        
+        print ('Bidding PQSrebid',self.controller_bid['bid_price'],self.controller_bid['bid_quantity'],self.controller_bid['state'],self.controller_bid['rebid'])
         # Set controller_bid rebid value to true after publishing
         self.controller_bid['rebid'] = 1
               

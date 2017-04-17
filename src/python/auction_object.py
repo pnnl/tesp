@@ -1,4 +1,3 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
 """
 This file simulates an auction object
 """
@@ -6,7 +5,7 @@ This file simulates an auction object
 import numpy as np
 import math
 import warnings
-from math import sqrt
+import math
 import sys
 from copy import deepcopy
 
@@ -15,6 +14,41 @@ from get_curve import curve
 import fncs
 import json
 from pprint import pprint
+
+def parse_kw(arg):
+    tok = arg.strip('+-; MWVAKdrij')
+    vals = re.split(r'[\+-]+', tok)
+    if len(vals) < 2: # only a real part provided
+        vals.append('0')
+    vals = [float(v) for v in vals]
+
+    if '-' in tok:
+        vals[1] *= -1.0
+    if arg.startswith('-'):
+        vals[0] *= -1.0
+
+    if 'd' in arg:
+        vals[1] *= (math.pi / 180.0)
+        p = vals[0] * math.cos(vals[1])
+        q = vals[0] * math.sin(vals[1])
+    elif 'r' in arg:
+        p = vals[0] * math.cos(vals[1])
+        q = vals[0] * math.sin(vals[1])
+    else:
+        p = vals[0]
+        q = vals[1]
+
+    if 'KVA' in arg:
+        p *= 1.0
+        q *= 1.0
+    elif 'MVA' in arg:
+        p *= 1000.0
+        q *= 1000.0
+    else:  # VA
+        p /= 1000.0
+        q /= 1000.0
+
+    return p
 
 # Class definition
 class auction_object:
@@ -123,14 +157,16 @@ class auction_object:
     # ====================Obtain values from the broker ================================
     def subscribeVal(self, fncs_sub_value_String):
 #        print (fncs_sub_value_String)
-        # look for a new LMP
+        # look for a new LMP and refload
+        if 'refload' in fncs_sub_value_String:
+            self.market['capacity_reference_object']['capacity_reference_property'] = parse_kw(fncs_sub_value_String['refload'])
         if "LMP" in fncs_sub_value_String:
             if self.market['capacity_reference_object']['name'] != 'none':
                 self.market['capacity_reference_object']['capacity_reference_bid_price'] = self.get_num(fncs_sub_value_String['LMP'])
    
         # bidder infromation read from fncs_sub_value
         # Assign values to buyers
-        print('collecting bids at LMP', self.market['capacity_reference_object']['capacity_reference_bid_price'])
+#        print('collecting bids at LMP', self.market['capacity_reference_object']['capacity_reference_bid_price'])
         if "controller" in fncs_sub_value_String:
             controllerKeys = list (fncs_sub_value_String['controller'].keys())
             for i in range(len(controllerKeys)):
@@ -376,7 +412,7 @@ class auction_object:
                         stdev /= (sample_need - skipped)
                     else:
                         stdev = 0.0
-                    self.stats['value'][k] = sqrt(stdev)
+                    self.stats['value'][k] = math.sqrt(stdev)
                     
             # Give the updated mean snd std values to the market_output        
             if self.market['statistic_mode'] == 1:
@@ -417,6 +453,8 @@ class auction_object:
             unresponsive = {'from': self.market['capacity_reference_object']['name'], 'price': self.market['pricecap'],
                             'state': 'ON', 'quantity': refload - self.buyer['state'].count('ON') - total_unknown/2}
                 
+            print('  Unbidding Refload,#buyers,#on,#off=',refload,len(self.buyer['state']),self.buyer['state'].count('ON'),self.buyer['state'].count('OFF'))
+                            
             if unresponsive['quantity'] < -0.001:
                 warnings.warn('capacity_reference_property has negative unresponsive load--this is probably due to improper bidding')
             elif unresponsive['quantity'] > 0.001:
@@ -431,7 +469,7 @@ class auction_object:
         if self.market['capacity_reference_object']['name'] != 'none' and self.market['special_mode'] == 'MD_NONE':
             max_capacity_reference_bid_quantity = self.market['capacity_reference_object']['max_capacity_reference_bid_quantity']
             capacity_reference_bid_price = self.market['capacity_reference_object']['capacity_reference_bid_price']
-#            print("capacity reference bids", capacity_reference_bid_price, "up to", max_capacity_reference_bid_quantity)
+            print("  Capacity reference bids", capacity_reference_bid_price, "up to", max_capacity_reference_bid_quantity)
             # Submit bid
             if max_capacity_reference_bid_quantity < 0: 
                 # Negative quantity is buyer
@@ -605,7 +643,7 @@ class auction_object:
             # Iterate each buyer to obtain the final buyer curve
             for i in range (len(buyer['name'])):
                 curve_buyer.get_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], 'descending')
-            # Iterate each buyer to obtain the final seller curve    
+            # Iterate each seller to obtain the final seller curve    
             for i in range (len(seller['name'])):
                 curve_seller.get_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], 'ascending')
             
@@ -651,6 +689,8 @@ class auction_object:
                 else:
                     responsive_buy += curve_buyer.quantity[i]
             total_buy = unresponsive_buy + responsive_buy; # Did not see it used anywhere
+
+            print('  curve summaries (sell, buy)',curve_seller.count, responsive_sell, unresponsive_sell, curve_buyer.count, responsive_buy, unresponsive_buy)
             
             # Calculate clearing quantity and price here
             # Define the section number of the buyer and the seller curves respectively as i and j
@@ -829,7 +869,7 @@ class auction_object:
                 missingBidder = "seller"
             elif curve_buyer.count == 0:
                 missingBidder = "buyer"
-#            print ('Market %s fails to clear due to missing %s' % (self.market['name'], missingBidder))
+            print ('  Market %s fails to clear due to missing %s' % (self.market['name'], missingBidder))
             
             # Update market output information
             self.market_output['clear_price'] = self.nextClear['price']
@@ -852,7 +892,8 @@ class auction_object:
                     marginal_total += curve_buyer.quantity[i]
                 else:
                     break
-            marginal_frac = float(marginal_quantity) / marginal_total
+            if marginal_total > 0.0:
+                marginal_frac = float(marginal_quantity) / marginal_total
        
         elif clearing_type == 'CT_SELLER':
             marginal_subtotal = 0
@@ -868,12 +909,16 @@ class auction_object:
                     marginal_total += curve_seller.quantity[i]
                 else:
                     break
-            marginal_frac = float(marginal_quantity) / marginal_total 
+            if marginal_total > 0.0:
+                marginal_frac = float(marginal_quantity) / marginal_total 
         
         else:
             marginal_quantity = 0.0
             marginal_frac = 0.0
         
+
+        print(clearing_type, self.nextClear['price'], marginal_quantity, marginal_total, marginal_frac)
+
         # Update new_price and price_index, for the calculation of sdv and mean from update_statistics later
         if self.market['history_count'] > 0:
             # If the market clearing times equal to the desried statistic interval, update it from 0
