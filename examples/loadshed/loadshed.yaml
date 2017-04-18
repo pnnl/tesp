@@ -1,6 +1,6 @@
 name: loadshed
 time_delta: 15s
-broker: tcp://localhost:5571
+broker: tcp://localhost:5570
 values:
     sw_status:
         topic: player/sw_status
