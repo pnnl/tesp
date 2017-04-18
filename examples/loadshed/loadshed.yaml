@@ -1,5 +1,5 @@
 name: loadshed
-time_delta: 15s
+time_delta: 1s
 broker: tcp://localhost:5570
 values:
     sw_status:
