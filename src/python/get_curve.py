@@ -1,12 +1,26 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
 class curve:
     def __init__(self):
         self.bidname, self.price, self.quantity = ([] for i in range(3))
-        self.count = 0       
+        self.count = 0
+        self.total = 0.0
+        self.total_on = 0.0
+        self.total_off = 0.0  
         
-    def get_curve(self, price, quantity, name, flag):
+    def set_curve_order(self, flag):
+        # If the reverse of the array is required, so that the values are in ascending order
+        if flag == 'ascending':
+            self.price.reverse()
+            self.quantity.reverse()
+            self.bidname.reverse()
+        
+    def add_to_curve(self, price, quantity, name, state):
         if quantity == 0:
             return
+        self.total += quantity
+        if state == 'ON':
+            self.total_on += quantity
+        if state == 'OFF':
+            self.total_off += quantity
         value_insert_flag = 0
         if self.count == 0:
             # Since it is the first time assigning values to the curve, define an empty array for the price and mean
@@ -40,11 +54,6 @@ class curve:
                 self.bidname.append(name)
                 self.count += 1
             
-            # If the reverse of the array is requried, so that the values are in ascending order
-            if flag == 'ascending':
-                self.price.reverse()
-                self.quantity.reverse()
-                self.bidname.reverse()
         
                             
                             

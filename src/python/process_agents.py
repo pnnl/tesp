@@ -77,10 +77,10 @@ for key, val in meta_c.items():
         BID_Q_IDX = val['index']
         BID_Q_UNITS = val['units']
 
-# create a NumPy array of all controller metrics
-data_c = np.empty(shape=(len(c_keys), len(times), len(lst_c[str(times[0])][c_keys[0]])), dtype=np.float)
+# create a NumPy array of all controller metrics - many are "missing" zero-bids
+data_c = np.empty(shape=(len(c_keys), len(times), len(meta_c.items())), dtype=np.float)
 print ("\nConstructed", data_c.shape, "NumPy array for Controllers")
-zary = np.zeros(len(lst_c[str(times[0])][c_keys[0]]))
+zary = np.zeros(len(meta_c.items()))
 j = 0
 for key in c_keys:
     i = 0
@@ -89,7 +89,6 @@ for key in c_keys:
             ary = lst_c[str(t)][c_keys[j]]
         else:
             ary = zary
-            print('missing data at', t, 'for', c_keys[j])
         data_c[j, i,:] = ary
         i = i + 1
     j = j + 1

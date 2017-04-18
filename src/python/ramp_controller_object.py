@@ -130,7 +130,7 @@ class ramp_controller_object:
             self.house['powerstate'] = fncs_sub_value_String['power_state'] # fncs.get_value('power_state') #fncs_sub_value_String['values']['power_state']
         if "hvac_load" in fncs_sub_value_String:
             self.house['controlled_load_all'] = self.get_num(fncs_sub_value_String['hvac_load'] ) #fncs_sub_value_String['values']['hvac_load']
-        print('subscribed',self.house['currTemp'],self.house['powerstate'],self.house['controlled_load_all'],self.market['average_price'],self.market['std_dev'],self.market['clear_price'],self.market['price_cap'],self.market['initial_price'])      
+        print ('  subscribed', self.house['currTemp'], self.house['powerstate'], self.house['controlled_load_all'])
 
 #         if self.controller['control_mode'] == "CN_DOUBLE_RAMP": # double_ramp controller receive extra data from house      
 #         self.house['thermostat_state'] = house_value['House'][self.controller['houseName']]['thermostat_state']['propertyValue']
@@ -468,6 +468,8 @@ class ramp_controller_object:
                 if timeSim != 0:
                     self.house['setpoint0'] = set_temp - self.house['lastsetpoint0'] 
                     fncs.publish('cooling_setpoint', set_temp)
+                    print('  ', timeSim,'Setting (clear price, avgP, stdP, range_high, ramp_high, rang_low, ramp_low',
+                          set_temp, clear_price, avgP, stdP, range_high, ramp_high, range_low, ramp_low)
                     self.house['lastsetpoint0'] = set_temp
             else:
                 # Change of house setpoint only changes when market changes
@@ -740,23 +742,25 @@ class ramp_controller_object:
         # Display some outputs for test only when sync part is processed
 #        print ('At %d min, with market_id %d, bidding price is %f, bidding quantity is %f, house set point change is %f, rebid is %d' % (timeSim/60, self.controller_bid['market_id'], self.controller_bid['bid_price'], self.controller_bid['bid_quantity'], self.house['setpoint0'], self.controller_bid['rebid']))
         
-        # Update to be published values
-        self.fncs_publish['controller'][self.controller['name']]['market_id']['propertyValue'] = self.controller_bid['market_id']
-        self.fncs_publish['controller'][self.controller['name']]['bid_id']['propertyValue'] = self.controller['name'] # bid_id is unique for each controller unchanged
-        self.fncs_publish['controller'][self.controller['name']]['price']['propertyValue'] = self.controller_bid['bid_price']
-        self.fncs_publish['controller'][self.controller['name']]['quantity']['propertyValue'] = self.controller_bid['bid_quantity']
-        self.fncs_publish['controller'][self.controller['name']]['bid_accepted']['propertyValue'] = 1 if no_bid == 0 else 0
-        self.fncs_publish['controller'][self.controller['name']]['state']['propertyValue'] = self.controller_bid['state']
-        self.fncs_publish['controller'][self.controller['name']]['rebid']['propertyValue'] = self.controller_bid['rebid'] 
-        self.fncs_publish['controller'][self.controller['name']]['bid_name'] = self.controller['name']
-       
-        print ('Bidding PQSrebid',self.controller_bid['bid_price'],self.controller_bid['bid_quantity'],self.controller_bid['state'],self.controller_bid['rebid'])
-        # Set controller_bid rebid value to true after publishing
-        self.controller_bid['rebid'] = 1
-              
-        fncs_publishString = json.dumps(self.fncs_publish)
-        
-        fncs.agentPublish(fncs_publishString)
+        # Issue a bid, if appropriate
+        if self.controller_bid['bid_quantity'] > 0.0 and self.controller_bid['bid_price'] > 0.0:
+            self.fncs_publish['controller'][self.controller['name']]['market_id']['propertyValue'] = self.controller_bid['market_id']
+            self.fncs_publish['controller'][self.controller['name']]['bid_id']['propertyValue'] = self.controller['name'] # bid_id is unique for each controller unchanged
+            self.fncs_publish['controller'][self.controller['name']]['price']['propertyValue'] = self.controller_bid['bid_price']
+            self.fncs_publish['controller'][self.controller['name']]['quantity']['propertyValue'] = self.controller_bid['bid_quantity']
+            self.fncs_publish['controller'][self.controller['name']]['bid_accepted']['propertyValue'] = 1 if no_bid == 0 else 0
+            self.fncs_publish['controller'][self.controller['name']]['state']['propertyValue'] = self.controller_bid['state']
+            self.fncs_publish['controller'][self.controller['name']]['rebid']['propertyValue'] = self.controller_bid['rebid'] 
+            self.fncs_publish['controller'][self.controller['name']]['bid_name'] = self.controller['name']
+           
+            print('  (temp,state,load,avg,std,clear,cap,init)',self.house['currTemp'],self.house['powerstate'],self.house['controlled_load_all'],self.market['average_price'],self.market['std_dev'],self.market['clear_price'],self.market['price_cap'],self.market['initial_price'])      
+            print (timeSim, 'Bidding PQSrebid',self.controller_bid['bid_price'],self.controller_bid['bid_quantity'],self.controller_bid['state'],self.controller_bid['rebid'])
+            # Set controller_bid rebid value to true after publishing
+            self.controller_bid['rebid'] = 1
+                  
+            fncs_publishString = json.dumps(self.fncs_publish)
+            
+            fncs.agentPublish(fncs_publishString)
         
         # Return sync time t2
         return sys.maxsize

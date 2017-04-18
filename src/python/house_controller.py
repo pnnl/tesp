@@ -37,8 +37,6 @@ timeSim= 0
 # for timeSim in np.arange(0, tf*3600, deltaT):
 while (time_granted < tf*3600):
     # =================Simulation for each time step ============================================ 
-    print('****', time_granted)
-    
     # Initialization when time = 0
     if time_granted == 0:
         controller_obj.initController()

@@ -53,7 +53,6 @@ timeSim = 0
 # Start simulation for each time step:
 while (time_granted < tf*3600):
     # ============================ Value assigned to the auction object from csv files ============================
-    print('****', time_granted)
     # Obtain the step number for the capacity_reference_bid_price, for read in from csv file only, not for FNCS read in
     # Bidder prices are given with 5 minute interval: 
     bidderStepNum = int(math.floor(time_granted / 300))
@@ -73,8 +72,7 @@ while (time_granted < tf*3600):
     
     # Process presync, sync and postsync part for each time step
     # Presync process
-#    aucObj.presync(time_granted, capacity_reference_bid_price[bidderStepNum][0])
-    aucObj.presync(time_granted, 0.0) # subscribeVal should update the busLMP within aucObj
+    aucObj.presync(time_granted) 
 
     # write metrics only at market clearings
     if len (aucObj.offers['name']) > 0:

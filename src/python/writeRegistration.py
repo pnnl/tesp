@@ -19,11 +19,17 @@ def writeRegistration (filename):
     # controller data:
     periodController = 300
     control_mode = "CN_RAMP"
-    ramp_low = np.random.uniform (1.5, 2.5) # 2
-    ramp_high = 2
-    range_low = np.random.uniform (-4, -2) # -3
-    range_high = 2
-    base_setpoint = np.random.uniform (76.0, 80.0) # 78 # 87.5
+    min_ramp_high = 1.5
+    max_ramp_high = 2.5
+    min_range_high = 1.5
+    max_range_high = 2.5
+    # used with np.random.uniform below
+    min_ramp_low = 1.5
+    max_ramp_low = 2.5
+    min_range_low = -3.0
+    max_range_low = -2.0
+    min_base_setpoint = 76.0
+    max_base_setpoint = 80.0
     bid_delay = 60
     use_predictive_bidding = 0
     use_override = "OFF"
@@ -33,7 +39,7 @@ def writeRegistration (filename):
     unit = "kW"
     periodMarket = 300
     initial_price = 0.02078
-    std_dev = 0.00361
+    std_dev = 0.01 # 0.00361
     price_cap = 3.78
     special_mode = "MD_NONE" #"MD_BUYERS"
     use_future_mean_price = 0
@@ -45,9 +51,9 @@ def writeRegistration (filename):
     stat_mode =  ["ST_CURR", "ST_CURR"]
     interval = [86400, 86400]
     stat_type = ["SY_MEAN", "SY_STDEV"]
-    value = [0, 0]
+    value = [0.02078, 0.01] # 0.00361]
     capacity_reference_object = 'substation_transformer'
-    max_capacity_reference_bid_quantity = 1000
+    max_capacity_reference_bid_quantity = 5000
     
     # house data:
     air_temperature = 78.0 # 0.0
@@ -100,6 +106,11 @@ def writeRegistration (filename):
 #                    print('  ELECTRIC writing',houseName,air_temperature,'on',line)
                     controller_name = houseName + "_thermostat_controller"
                     controllers[controller_name] = {}
+                    ramp_low = np.random.uniform (min_ramp_low, max_ramp_low)
+                    range_low = np.random.uniform (min_range_low, max_range_low)
+                    ramp_high = np.random.uniform (min_ramp_high, max_ramp_high)
+                    range_high = np.random.uniform (min_range_high, max_range_high)
+                    base_setpoint = np.random.uniform (min_base_setpoint, max_base_setpoint)
                     controllers[controller_name]['controller_information'] = {'control_mode': control_mode, 'marketName': marketName, 'houseName': houseName, 'bid_id': controller_name, 'period': periodController, \
                                'ramp_low': ramp_low, 'ramp_high': ramp_high, 'range_low': range_low, 'range_high': range_high, 'base_setpoint': base_setpoint, \
                                'bid_delay': bid_delay, 'use_predictive_bidding': use_predictive_bidding, 'use_override': use_override}
