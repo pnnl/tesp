@@ -1,0 +1,47 @@
+name: tracer
+time_delta: 5m
+broker: tcp://localhost:5570
+values:
+    power_A:
+        topic: eplus_json/power_A
+        default: 0
+    power_B:
+        topic: eplus_json/power_B
+        default: 0
+    power_C:
+        topic: eplus_json/power_C
+        default: 0
+    cooling_setpoint_delta:
+        topic: eplus_json/cooling_setpoint_delta
+        default: 0
+    total_controlled_cooling_load:
+        topic: eplus/EMS COOLING CONTROLLED LOAD
+        default: 0
+    desired_cooling_temperature:
+        topic: eplus/EMS COOLING DESIRED TEMPERATURE
+        default: 0
+    current_cooling_temperature:
+        topic: eplus/EMS COOLING CURRENT TEMPERATURE
+        default: 0
+    cooling_power_state:
+        topic: eplus/EMS COOLING POWER STATE
+        default: 0
+    heating_setpoint_delta:
+        topic: eplus_json/heating_setpoint_delta
+        default: 0
+    total_controlled_heating_load:
+        topic: eplus/EMS HEATING CONTROLLED LOAD
+        default: 0
+    desired_heating_temperature:
+        topic: eplus/EMS HEATING DESIRED TEMPERATURE
+        default: 0
+    current_heating_temperature:
+        topic: eplus/EMS HEATING CURRENT TEMPERATURE
+        default: 0
+    heating_power_state:
+        topic: eplus/EMS HEATING POWER STATE
+        default: 0
+    electric_demand_power:
+        topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
+        default: 0
+
