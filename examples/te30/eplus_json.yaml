@@ -1,6 +1,6 @@
 name: eplus_json
 time_delta: 5m
-broker: tcp://localhost:5571
+broker: tcp://localhost:5570
 values:
     kwhr_price:
         topic: auction_Market_1/clear_price

@@ -1,6 +1,6 @@
 name: pypower
 time_delta: 300s
-broker: tcp://localhost:5571
+broker: tcp://localhost:5570
 values:
     SUBSTATION7:
         topic: gridlabdSimulator1/distribution_load

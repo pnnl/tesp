@@ -1,6 +1,6 @@
 name: pypower
 time_delta: 3600s
-broker: tcp://localhost:5571
+broker: tcp://localhost:5570
 values:
     SUBSTATION7:
         topic: player/distribution_load

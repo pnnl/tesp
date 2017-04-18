@@ -1,6 +1,6 @@
 name: tracer
 time_delta: 5m
-broker: tcp://localhost:5571
+broker: tcp://localhost:5570
 values:
     LMP7:
         topic: pypower/LMP_B7

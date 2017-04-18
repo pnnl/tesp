@@ -24,10 +24,10 @@ module residential {
 module tape;
 module generators;
 
-#include "water_and_setpoint_schedule_v3.glm"
-#include "appliance_schedules.glm"
+#include "../schedules/water_and_setpoint_schedule_v3.glm"
+#include "../schedules/appliance_schedules.glm"
 //#include "solar.glm"
-#include "fixed_rate_schedule_v2.glm"
+#include "../schedules/fixed_rate_schedule_v2.glm"
 #include "outputs_te.glm"
 
 object metrics_collector_writer {
@@ -37,7 +37,7 @@ object metrics_collector_writer {
 
 object climate {
      name "RegionalWeather";
-     tmyfile "../energyplus/AZ-Tucson_International_Ap.tmy3";
+     tmyfile "../weather/AZ-Tucson_International_Ap.tmy3";
      interpolate QUADRATIC;
 };
 
@@ -127,6 +127,7 @@ object substation {
 	name network_node;
 	phases ABCN;
 	nominal_voltage 133000;
+	positive_sequence_voltage 133000;
 	bustype SWING;
   base_power 12MVA;
   power_convergence_value 100VA;
