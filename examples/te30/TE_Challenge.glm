@@ -140,7 +140,7 @@ object fncs_msg {
      parent network_node;
      configure TE_Challenge_FNCS_config.txt;
 //     configure TE_Eplusonly.txt;
-     option "transport:hostname localhost, port 5571";
+     option "transport:hostname localhost, port 5570";
 }
 
 object meter {

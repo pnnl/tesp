@@ -202,7 +202,7 @@ with warnings.catch_warnings():
 			gen_metrics[str(ts)] = {}
 			for i in range (gen.shape[0]):
 				row = gen[i].tolist()
-				busidx = row[0] - 1
+				busidx = int(row[0] - 1)
 				gen_metrics[str(ts)][str(i+1)] = [row[1],row[2],float(bus[busidx,13])*0.001]
 			tnext += dt
 		ts = fncs.time_request(tnext)

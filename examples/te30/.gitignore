@@ -1,0 +1,3 @@
+*.py
+input/
+__pycache__/
