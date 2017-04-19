@@ -1,6 +1,7 @@
 set FNCS_FATAL=NO
 set FNCS_LOG_STDOUT=yes
 set FNCS_LOG_LEVEL=DEBUG4
+set FNCS_TIME_DELTA=
 
 set FNCS_CONFIG_FILE=
 start /b cmd /c fncs_broker 36 ^>broker.log 2^>^&1
@@ -22,10 +23,12 @@ set FNCS_CONFIG_FILE=
 
 start /b cmd /c gridlabd TE_Challenge.glm ^>gridlabd.log 2^>^&1 
 
+set FNCS_TIME_DELTA=60s
 start /b cmd /c python double_auction.py input/auction_registration.json TE_Challenge ^>auction.log 2^>^&1
 
 set FNCS_LOG_STDOUT=yes
 set FNCS_LOG_LEVEL=DEBUG1
+set FNCS_TIME_DELTA=60s
 
 start /b cmd /c python house_controller.py input/controller_registration_F1_house_B0_thermostat_controller.json ^>control1.log 2^>^&1 
 start /b cmd /c python house_controller.py input/controller_registration_F1_house_C1_thermostat_controller.json ^>control2.log 2^>^&1 
