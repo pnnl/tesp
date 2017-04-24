@@ -8,4 +8,5 @@ __pycache__/
 *.audit
 *.xml
 broker_trace.txt
+*FNCS_Config.txt
 
