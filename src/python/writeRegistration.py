@@ -19,13 +19,13 @@ def writeRegistration (filename):
     # controller data:
     periodController = 300
     control_mode = "CN_RAMP"
-    min_ramp_high = 1.5
-    max_ramp_high = 2.5
+    min_ramp_high = 50.0 # 1.5
+    max_ramp_high = 100.0 # 2.5
     min_range_high = 1.5
     max_range_high = 2.5
     # used with np.random.uniform below
-    min_ramp_low = 1.5
-    max_ramp_low = 2.5
+    min_ramp_low = 50.0 # 1.5
+    max_ramp_low = 100.0 # 2.5
     min_range_low = -3.0
     max_range_low = -2.0
     min_base_setpoint = 76.0

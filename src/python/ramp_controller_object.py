@@ -441,11 +441,14 @@ class ramp_controller_object:
                         shift_direction = 1
                     else:
                         shift_direction = 0
-                        
+                
+                # trying to moderate impact of stdP in the denominator
+                if stdP < 0.02:
+                    stdP = 0.02
                 # Calculate updated set_temp
                 if abs(stdP) < 0.0001:
                     set_temp = setpoint0
-                elif clear_price < avgP and range_low != 0:
+                elif clear_price < avgP and range_low != 0 and self.controller_bid['bid_quantity'] > 0.0: # only reduce setting if we actually bid
                     set_temp = setpoint0 + (clear_price - avgP) * abs(range_low) / (ramp_low * stdP) + deadband_shift*shift_direction
                 elif clear_price > avgP and range_high != 0:
                     set_temp = setpoint0 + (clear_price - avgP) * abs(range_high) / (ramp_high * stdP) + deadband_shift*shift_direction
