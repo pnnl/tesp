@@ -4,3 +4,5 @@
 *.status
 *.o
 *.ldb
+broker_trace.txt
+
