@@ -81,7 +81,7 @@ cd ~/src/gridlab-d
 autoreconf -isf
 cd third_party
 bash install_xercesc  # many warnings about changing permissions ... not important?
-./configure --with-fncs
+./configure --with-fncs=/usr/local
 make
 sudo make install
 
