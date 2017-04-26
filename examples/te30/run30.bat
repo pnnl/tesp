@@ -1,12 +1,13 @@
 set FNCS_FATAL=yes
 set FNCS_LOG_STDOUT=yes
-set FNCS_LOG_LEVEL=DEBUG1
+set FNCS_LOG_LEVEL=DEBUG4
 set FNCS_TRACE=yes
 set FNCS_TIME_DELTA=
 
 set FNCS_CONFIG_FILE=
 start /b cmd /c fncs_broker 36 ^>broker.log 2^>^&1
 
+set FNCS_LOG_LEVEL=
 set FNCS_CONFIG_FILE=eplus.yaml
 start /b cmd /c energyplus -w ../energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw -d output -r ../energyplus/SchoolDualController.idf ^>eplus.log 2^>^&1
 
@@ -21,9 +22,11 @@ start /b cmd /c python fncsPYPOWER.py TE_Challenge "2013-07-01 00:00:00" 172800 
 
 
 set FNCS_CONFIG_FILE=
-
+set FNCS_LOG_LEVEL=DEBUG4
+set FNCS_LOG_STDOUT=yes
 start /b cmd /c gridlabd TE_Challenge.glm ^>gridlabd.log 2^>^&1 
 
+set FNCS_LOG_LEVEL=
 set FNCS_TIME_DELTA=60s
 start /b cmd /c python double_auction.py input/auction_registration.json TE_Challenge ^>auction.log 2^>^&1
 

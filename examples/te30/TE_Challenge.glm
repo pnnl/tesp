@@ -3,7 +3,7 @@
 #set randomseed=10
 #set relax_naming_rules=1
 #set savefile=test.xml
-#set minimum_timestep=60
+#set minimum_timestep=15
 
 clock {
 	timezone PST+8PDT;

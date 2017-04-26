@@ -35,7 +35,7 @@ TestCase1 - from a command prompt in c:\tesp\examples\loadshed
 ==============================================================
 1.	python glm_dict.py loadshed
 2.	run
-2a.      (GridLAB-D may crash after completion; kill5570 and do step 3)
+2a.      (GridLAB-D may crash after completion; check list5570; kill5570 if needed; do step 3)
 3.	python plot_loadshed.py loadshed
 
 TestCase2 - from a command prompt in c:\tesp\examples\energyplus

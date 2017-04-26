@@ -18,11 +18,13 @@ while time_granted < time_stop:
 	for key in events:
 		topic = key.decode()
 		value = fncs.get_value(key).decode()
-#		print (time_granted, topic, value, flush=True)
+		print (time_granted, topic, value, flush=True)
 		if topic == 'sw_status':
 			fncs.publish('sw_status', value)
 	time_next = time_granted + 1
 
+print('finalizing FNCS', flush=True)
 fncs.finalize()
+print('done', flush=True)
 
 
