@@ -40,6 +40,22 @@ Installing TESP (includes GridLAB-D 4.0)
 5.  Add "c:\gridlab-d\install64\bin" to the system environment variable "Path"
 6.  Create "GLPATH"  system environment variable, and set
       GLPATH = C:\gridlab-d\install64\share\gridlabd;C:\gridlab-d\install64\lib\gridlabd
+7.  From a Command Prompt, enter "gridlabd --version" and "energyplus --version" to verify
+
+Patching PYPOWER if Necessary
+=============================
+
+Run "pf" or "opf" from a command prompt, and you'll see either warnings or 
+errors from PYPOWER due to deprecated behaviors, primarily the use of 
+floats for array indices.  To fix this: 
+
+1. manually copy three Python files from c:\tesp\src\pypower
+
+2. the target location depends on where Python and site packages were installed.  Some examples: 
+
+   (Windows)  c:\Python36\Lib\site-packages\pypower
+
+   (Mac OS X) $HOME/miniconda3/lib/python3.5/site-packages/PYPOWER-5.0.1-py3.5.egg/pypower
 
 TESP Uses TCP/IP port 5570 for communication
 ============================================
@@ -50,7 +66,7 @@ TestCase1 - from a command prompt in c:\tesp\examples\loadshed
 ==============================================================
 1.	python glm_dict.py loadshed
 2.	run
-2a.      (GridLAB-D may crash after completion; check list5570; kill5570 if needed; do step 3)
+2a.      (GridLAB-D may crash after completion; check with list5570; then use kill5570 if needed; do step 3)
 3.	python plot_loadshed.py loadshed
 
 TestCase2 - from a command prompt in c:\tesp\examples\energyplus
@@ -68,6 +84,7 @@ TestCase4 - from a command prompt in c:\tesp\examples\te30
 1.	python prep_agents.py te_challenge
 2.	python glm_dict.py te_challenge
 3.	run30
+3a.     the simulation takes about 10 minutes, use "type TE*.csv" to show progress up to 172800 seconds
 4.	python process_eplus.py te_challenge
 5.	python process_pypower.py te_challenge
 6.	python process_agents.py te_challenge
