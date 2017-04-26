@@ -1,0 +1,13 @@
+.deps/
+Makefile
+Makefile.in
+autom4te.cache/
+compile
+config.h
+config.h.in
+configure
+depcomp
+eplus_json
+install-sh
+missing
+stamp-h1
