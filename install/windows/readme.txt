@@ -15,6 +15,21 @@ Then from a command prompt, invoke the following:
 http://www.lfd.uci.edu/~gohlke/pythonlibs/ and run 
 "pip install numpy-1.12.1+mkl-cp36-cp36m-win_amd64.whl")
 
+Patching PYPOWER if Necessary
+=============================
+
+Run "pf" or "opf" from a command prompt, and you'll see either warnings or 
+errors from PYPOWER due to deprecated behaviors, primarily the use of 
+floats for array indices.  To fix this: 
+
+1. manually copy three Python files from c:\tesp\src\pypower
+
+2. the target location depends on where Python and site packages were installed.  Some examples: 
+
+   (Windows)  c:\Python36\Lib\site-packages\pypower
+
+   (Mac OS X) $HOME/miniconda3/lib/python3.5/site-packages/PYPOWER-5.0.1-py3.5.egg/pypower
+
 Installing TESP (includes GridLAB-D 4.0)
 ========================================
 1a.  checkout https://github.com/pnnl/tesp to c:\tesp  OR
