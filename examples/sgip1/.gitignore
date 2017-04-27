@@ -1,0 +1,9 @@
+*.json
+*FNCS_Config.txt
+__pycache__/
+input/
+output/
+*.csv
+*.out
+launch*.sh
+
