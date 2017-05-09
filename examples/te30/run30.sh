@@ -8,4 +8,3 @@
 (exec ./launch_TE_Challenge_agents.sh &)
 #(exec ./launch_Eplusonly_agents.sh &)
 (export FNCS_CONFIG_FILE=pypower30.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec python fncsPYPOWER.py TE_Challenge "2013-07-01 00:00:00" 172800 300 &> pypower.log &)
-

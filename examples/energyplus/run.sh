@@ -3,4 +3,3 @@
 (export FNCS_LOG_STDOUT=yes && exec fncs_player 2d prices.txt &> player.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus_json.yaml && exec eplus_json 2d 5m School_DualController eplus_eplus_metrics.json &> eplus_json.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=tracer.yaml && exec fncs_tracer 2d tracer.out &> tracer.log &)
-

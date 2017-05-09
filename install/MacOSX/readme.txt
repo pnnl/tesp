@@ -17,18 +17,23 @@ Installing TESP (includes GridLAB-D 4.0)
 1b.  Unzip archive from USB to ~/tesp
 2.  Unzip the archive ~/tesp/install/MacOSX/Archive_usr_local_bin.zip to /usr/local/bin
 3.  Unzip the archive ~/tesp/install/MacOSX/Archive_usr_local_lib.zip to /usr/local/lib
-4.  From a Terminal, enter "gridlabd --version" and "energyplus --version" to verify
+4.  Unzip the archive ~/tesp/install/MacOSX/Archive_usr_local_share.zip to /usr/local/share
+5a.  Manually create the directory /usr/local/opt/jsoncpp
+5b.  Unzip the archive ~/tesp/install/MacOSX/Archive_usr_local_opt_jsoncpp.zip to /usr/local/opt/jsoncpp
+6.  From a Terminal, enter "gridlabd --version" and "energyplus --version" to verify
 
 Patching PYPOWER if Necessary
 =============================
 
-Run "pf" or "opf" from a Terminal, and you'll see either warnings or 
-errors from PYPOWER due to deprecated behaviors, primarily the use of 
+Run "pf" or "opf" from a Terminal, and you'll see either warnings (up to Python 3.5) or 
+errors (in Python 3.6) from PYPOWER due to deprecated behaviors, primarily the use of 
 floats for array indices.  To fix this: 
 
-1. manually copy three Python files from ~/tesp/src/pypower
+1. You will manually copy the three patched Python files from ~/tesp/src/pypower
 
-2. the target location depends on where Python and site packages were installed.  Some examples: 
+2. The target location depends on where Python and site packages have been installed. Please search
+your installation for directories containing the three files to patch: ext2int.py, opf_hessfcn.py 
+and pipsopf_solver.py. Some examples: 
 
    (Windows)  c:\Python36\Lib\site-packages\pypower
 
