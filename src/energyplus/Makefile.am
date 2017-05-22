@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 AM_CXXFLAGS =
-AM_CPPFLAGS =
+AM_CPPFLAGS = -std=c++0x
 AM_LDFLAGS =
 # LDADD = -ljsoncpp
 LDADD =
