@@ -13,6 +13,7 @@ matplotlib.use("TkAgg");
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg;
 from matplotlib.figure import Figure;
 import matplotlib.pyplot as plt;
+from matplotlib.animation import FuncAnimation;
 
 root = tk.Tk()
 root.title('Transactive Energy Simulation Platform')
@@ -48,7 +49,37 @@ vars = [['MATPOWER','GLD Bus',7,''],
 				];
 
 fig, ax = plt.subplots(4,1, sharex = 'col')
-plt.ion()
+hrs, x0, x1, x2, x3 = [], [], [], [], []
+lines = [ax[0].plot([],[],color='green',animated=True), ax[1].plot([],[],color='red',animated=True),
+         ax[2].plot([],[],color='blue',animated=True), ax[3].plot([],[],color='magenta',animated=True)]
+# plt.ion()
+
+def init_plot():
+        ax[0].set_xlim(0,48)
+        ax[1].set_xlim(0,48)
+        ax[2].set_xlim(0,48)
+        ax[3].set_xlim(0,48)
+        ax[0].set_ylim(0,1)
+        ax[1].set_ylim(0,1)
+        ax[2].set_ylim(0,1)
+        ax[3].set_ylim(0,1)
+        ax[0].set_ylabel('[pu]')
+        ax[0].set_title ('PYPOWER Bus Voltage')
+        ax[1].set_ylabel('[kW]')
+        ax[1].set_title ('Primary School Load')
+        ax[2].set_ylabel('[$]')
+        ax[2].set_title ('Clearing Price')
+        ax[3].set_ylabel('[degF]')
+        ax[3].set_title ('House Temperature')
+        ax[3].set_xlabel('Hours')
+        return lines;
+
+def animate_plot(frame):
+        lines[0].set_data(hrs,x0)
+        lines[1].set_data(hrs,x1)
+        lines[2].set_data(hrs,x2)
+        lines[3].set_data(hrs,x3)
+        return lines;
 
 def launch_all():
 	print('launching all simulators')
@@ -81,6 +112,9 @@ def launch_all():
 	x1 = np.zeros(nsteps+1)
 	x2 = np.zeros(nsteps+1)
 	x3 = np.zeros(nsteps+1)
+	ani = FuncAnimation (fig, animate_plot, init_func=init_plot, interval=2000, blit=True);
+#	plt.show();
+        
 	while time_granted < time_stop:
 		time_granted = fncs.time_request(time_stop)
 		events = fncs.get_events()
@@ -93,30 +127,30 @@ def launch_all():
 			if tok == 'power_A':
 				val = 3.0 * float (fncs.get_value(key).decode().strip('+ degFkW')) / 1000.0
 				x1[idx] = val
-				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
+#				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
 			elif tok == 'house_air_temperature':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
 				x3[idx] = val
-				ax[3].plot(hrs[1:idx],x3[1:idx],color='magenta')
+#				ax[3].plot(hrs[1:idx],x3[1:idx],color='magenta')
 			elif tok == 'vpos7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW')) / 133000.0
 				x0[idx] = val
-				ax[0].plot(hrs[1:idx],x0[1:idx],color='green')
+#				ax[0].plot(hrs[1:idx],x0[1:idx],color='green')
 			elif tok == 'clear_price':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
 				x2[idx] = val
-				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
+#				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
 			elif tok == 'LMP7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
 				x2[idx] = val
-				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
+#				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
 			elif tok == 'SUBSTATION7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW')) # already in kW
 				x1[idx] = val
-				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
+#				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
 #			print (time_granted, key.decode(), fncs.get_value(key).decode())
 		root.update()
-		fig.canvas.draw()
+#		fig.canvas.draw()
 	fncs.finalize()
 
 def kill_all():
@@ -171,20 +205,21 @@ f3 = ttk.Frame(nb, name='plots')
 #fig, ax = plt.subplots(4,1, sharex = 'col')
 
 #ax[0].plot(np.array([1,2,3,4,5,6,7,8]),np.array([5,6,1,2,6,1,3,4]), color='red')
-ax[0].set_ylabel('[pu]')
-ax[0].set_title ('PYPOWER Bus Voltage')
 
-ax[1].set_ylabel('[kW]')
-ax[1].set_title ('Primary School Load')
+#ax[0].set_ylabel('[pu]')
+#ax[0].set_title ('PYPOWER Bus Voltage')
 
-ax[2].set_ylabel('[$]')
-ax[2].set_title ('Clearing Price')
+#ax[1].set_ylabel('[kW]')
+#ax[1].set_title ('Primary School Load')
 
-ax[3].set_ylabel('[degF]')
-ax[3].set_title ('House Temperature')
+#ax[2].set_ylabel('[$]')
+#ax[2].set_title ('Clearing Price')
 
-ax[3].set_xlabel('Hours')
-plt.xlim(0.0,48.0)
+#ax[3].set_ylabel('[degF]')
+#ax[3].set_title ('House Temperature')
+
+#ax[3].set_xlabel('Hours')
+#plt.xlim(0.0,48.0)
 
 canvas = FigureCanvasTkAgg(fig, f3)
 canvas.show()
