@@ -14,3 +14,5 @@ and pipsopf_solver.py. Some examples:
    (Windows)  c:\Python36\Lib\site-packages\pypower
 
    (Mac OS X) $HOME/miniconda3/lib/python3.5/site-packages/PYPOWER-5.0.1-py3.5.egg/pypower
+
+   (Linux)    ~/miniconda3/lib/python3.6/site-packages/pypower

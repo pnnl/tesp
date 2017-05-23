@@ -139,7 +139,7 @@ object substation {
 object fncs_msg {
      name gridlabdSimulator1;
      parent network_node;
-     configure TE_Challenge_FNCS_config.txt;
+     configure TE_Challenge_FNCS_Config.txt;
 //     configure TE_Eplusonly.txt;
      option "transport:hostname localhost, port 5570";
 }

@@ -100,11 +100,11 @@ while (time_granted < tf*3600):
     # No postsync process in this object
     
     if (time_granted < (timeSim + deltaT)) :
-        print ('requesting the same', timeSim + deltaT, flush=True)
+#        print ('requesting the same', timeSim + deltaT, flush=True)
         time_granted = fncs.time_request(timeSim + deltaT)
     else:
         timeSim = timeSim + deltaT
-        print ('requesting new', timeSim + deltaT, flush=True)
+#        print ('requesting new', timeSim + deltaT, flush=True)
         time_granted = fncs.time_request(timeSim + deltaT)
 
 
