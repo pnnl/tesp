@@ -1,21 +1,22 @@
-INSTALL_PATH := /home/laurentiu/tespMATPOWER_install
-MCR_PATH := /usr/local/matlab_2013a
-FNCS_PATH := /home/laurentiu/ccsiFNCS_install
-#JSONCPP_INCLUDE := /usr/local/include/jsoncpp/json
+INSTALL_PATH := /usr/local
+MCR_PATH := /usr/local/MATLAB/MCR/v81
+FNCS_PATH := /usr/local
+JSONCPP_INCLUDE := /usr/include/jsoncpp
 # JSONCPP_LIB := /usr/local/lib
-CXX = g++-4.4
+CXX = g++
 
 CXXFLAGS =
 CXXFLAGS += -g
 CXXFLAGS += -ansi
 CXXFLAGS += -pthread
 CXXFLAGS += -O0
+CXXFLAGS += -std=c++11
 
 CPPFLAGS =
 CPPFLAGS += -I$(MCR_PATH)/extern/include/cpp
 CPPFLAGS += -I$(MCR_PATH)/extern/include
 CPPFLAGS += -I$(FNCS_PATH)/include
-#CPPFLAGS += -I$(JSONCPP_INCLUDE)
+CPPFLAGS += -I$(JSONCPP_INCLUDE)
 CPPFLAGS += -D_GNU_SOURCE
 CPPFLAGS += -DUNIX
 CPPFLAGS += -DX11
@@ -63,7 +64,7 @@ matpowerLoadMetrics.o: matpowerLoadMetrics.cpp
 
 matpowerGeneratorMetrics.o: matpowerGeneratorMetrics.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS) $(CPPFLAGS)
-	
+
 start_MATPOWER: start_MATPOWER.o matpowerintegrator.o read_load_profile.o read_model_dim.o read_model_data.o matpowerLoadMetrics.o matpowerGeneratorMetrics.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LIBS)
 
