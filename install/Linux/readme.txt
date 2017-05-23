@@ -1,0 +1,1 @@
+There is presently no binary distribution of TESP for Linux.  Please see Ubuntu_build.md in this directory for instructions to build TESP on Ubuntu (tested version 16.04).
