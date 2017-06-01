@@ -4,14 +4,8 @@ format long g;
 %% Most of the things you might want to change via a scripting mechanism are located in this section
 
 % Directory for input files (CSVs)
-%dir = 'C:\Users\d3x289\Documents\LAAR\8500 Node System\IEEE8500-CSV\DSSdata\IEEETest\4800Bus\CSV_Version\';
-%dir = 'C:\Users\d3x289\Documents\GridLABD\ticket\937\models\8500 Node System\IEEE8500-CSV\DSSdata\IEEETest\4800Bus\CSV_Version\';
-%dir = 'C:\Users\hans464\Desktop\GLD\GLD_ticket_937\models\8500 Node System\IEEE8500-CSV\DSSdata\IEEETest\4800Bus\CSV_Version\';
-dir = '~/src/gridlab-d/models/8500 Node System/IEEE8500-CSV/DSSdata/IEEETest/4800Bus/CSV_Version/';
+dir = '~/src/ptesp/examples/ieee8500/backbone/';
 % Directory for output of GLM files
-%dir2 = 'C:\Users\d3x289\Documents\LAAR\';
-%dir2 = 'C:\Users\d3x289\Documents\GridLABD\ticket\937\VS2005\x64\Release\';
-%dir2 = 'C:\Users\hans464\Desktop\LAAR\FY16\8500_node_system\';
 dir2 = '~/src/ptesp/examples/ieee8500/';
 
 % Power flow solver method
@@ -333,22 +327,6 @@ if (strcmp(houses,'y') ~= 0)
     fprintf(fid,'     interpolate QUADRATIC;\n');
     fprintf(fid,'}\n\n');
 end
-
-% for i=1:2:23
-%     fprintf(fid,'object voltdump {\n');
-%     fprintf(fid,'     filename "8500_schedule_volt_%d.csv";\n',i);
-%     
-%     if (i >= 24)  %not quite right
-%         j = i;
-%         while (j >= 24)
-%             j = j - 24;
-%         end
-%     else
-%         j = i;
-%     end  
-%     fprintf(fid,'     runtime %s %d:00:00'';\n',start_date,j);
-%     fprintf(fid,'}\n\n');
-% end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Create Regulator objects -- Easiest by hand
@@ -1018,62 +996,6 @@ if ( strcmp(houses,'y')~=0 )
                     fprintf(fid,'         water_demand small_%d*%.1f;\n',wh_sched,water_var);
                 end
 
-% %                 if (with_DR == 1)
-% %                     fprintf(fid,'         object passive_controller {\n');
-% %                     fprintf(fid,'              period 4;\n');
-% %                     fprintf(fid,'	           control_mode PROBABILITY_OFF;\n');
-% %                     fprintf(fid,'	           distribution_type NORMAL;\n');
-% %                     fprintf(fid,'	           observation_object Market_1;\n');
-% %                     fprintf(fid,'	           observation_property past_market.clearing_price;\n');
-% %                     fprintf(fid,'	           stdev_observation_property %s;\n','my_std');
-% %                     fprintf(fid,'	           expectation_object Market_1;\n');
-% %                     fprintf(fid,'	           expectation_property %s;\n','my_avg');
-% %                     fprintf(fid,'	           comfort_level %.2f;\n',9999);
-% %                     fprintf(fid,'	           state_property override;\n');
-% %                     fprintf(fid,'         };\n'); 
-% %                 elseif (with_DR == 2)
-% %                     fprintf(fid,'         object passive_controller {\n');
-% %                     fprintf(fid,'              name "%s_%.0f_waterheater_controller";\n',char(RawTripLoads{3}(i)),jj);
-% %                     fprintf(fid,'              period 1;\n');
-% %                     fprintf(fid,'              control_mode PRIMARY_FREQUENCY_CONTROL;\n');
-% %                     fprintf(fid,'              PFC_mode %s;\n',whc_PFC_mode);
-% %                     fprintf(fid,'              voltage_lockout %.1f;\n',whc_voltage_lockout);
-% %                     fprintf(fid,'              state_observed is_waterheater_on;\n');
-% %                     fprintf(fid,'              power_observed actual_load;\n');
-% %                     fprintf(fid,'              state_property override;\n');
-% %                     fprintf(fid,'              trigger_time_under_frequency %d;\n',whc_trigger_time_under_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              trigger_time_over_frequency %d;\n',whc_trigger_time_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              release_time_under_frequency %d;\n',whc_release_time_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              release_time_over_frequency %d;\n',whc_release_time_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              release_point_under_frequency %.6f;\n',whc_release_point_under_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              release_point_over_frequency %.6f;\n',whc_release_point_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              trigger_point_under_frequency %.6f;\n',whc_trigger_point_under_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              trigger_point_over_frequency %.6f;\n',whc_trigger_point_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              frequency frequency_player.value;\n');
-% %                     fprintf(fid,'         };\n');                         
-% %                 elseif (with_DR == 3)
-% %                     fprintf(fid,'         object passive_controller {\n');
-% %                     fprintf(fid,'              name "%s_%.0f_waterheater_controller";\n',char(RawTripLoads{3}(i)),jj);
-% %                     fprintf(fid,'              period 1;\n');
-% %                     fprintf(fid,'              observation_object supervisor;\n');
-% %                     fprintf(fid,'              control_mode PRIMARY_FREQUENCY_CONTROL;\n');
-% %                     fprintf(fid,'              PFC_mode %s;\n',whc_PFC_mode);
-% %                     fprintf(fid,'              voltage_lockout %.1f;\n',whc_voltage_lockout);
-% %                     fprintf(fid,'              state_observed is_waterheater_on;\n');
-% %                     fprintf(fid,'              power_observed actual_load;\n');
-% %                     fprintf(fid,'              bid_delay %d;\n',whc_bid_delay);
-% %                     fprintf(fid,'              state_property override;\n');
-% %                     fprintf(fid,'              trigger_time_under_frequency %d;\n',whc_trigger_time_under_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              trigger_time_over_frequency %d;\n',whc_trigger_time_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              release_time_under_frequency %d;\n',whc_release_time_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              release_time_over_frequency %d;\n',whc_release_time_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              release_point_under_frequency %.6f;\n',whc_release_point_under_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              release_point_over_frequency %.6f;\n',whc_release_point_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              trigger_point_under_frequency %.6f;\n',whc_trigger_point_under_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              trigger_point_over_frequency %.6f;\n',whc_trigger_point_over_frequency_vec(total_houses+jj));
-% %                     fprintf(fid,'              frequency frequency_player.value;\n');
-% %                     fprintf(fid,'         };\n');                        
-% %                 end    
                 fprintf(fid,'  };\n');
             end
             fprintf(fid,'};\n\n');         
@@ -2182,135 +2104,7 @@ fprintf(fid,'	interval 4;\n');
 fprintf(fid,'	file main_regulator_DR%d.csv;\n',with_DR);
 fprintf(fid,'	property power_in_A.real,power_in_A.imag,power_in_B.real,power_in_B.imag,power_in_C.real,power_in_C.imag;\n');
 fprintf(fid,'};\n');
-
-fprintf(fid,'object multi_recorder {\n');
-fprintf(fid,'	parent FEEDER_REG;\n');
-fprintf(fid,'	interval 4;\n');
-fprintf(fid,'	file regulator_taps_DR%d.csv;\n',with_DR);
-fprintf(fid,'	property tap_A,tap_B,tap_C,VREG2:tap_A,VREG2:tap_B,VREG2:tap_C,VREG3:tap_A,VREG3:tap_B,VREG3:tap_C,VREG4:tap_A,VREG4:tap_B,VREG4:tap_C;\n');
-fprintf(fid,'};\n');
-
-fprintf(fid,'object multi_recorder {\n');
-fprintf(fid,'	parent CapBank0;\n');
-fprintf(fid,'	interval 60;\n');
-fprintf(fid,'	file capacitor_state_DR%d.csv;\n',with_DR);
-fprintf(fid,'	property CapBank0:switchA,CapBank0:switchB,CapBank0:switchC,CapBank1:switchA,CapBank1:switchB,CapBank1:switchC,CapBank2:switchA,CapBank2:switchB,CapBank2:switchC;\n');
-fprintf(fid,'};\n');
-
-fprintf(fid,'object group_recorder {\n');
-fprintf(fid,'     group class=triplex_meter;\n');
-fprintf(fid,'     file meter_voltage_12_DR%d.csv;\n',with_DR);
-fprintf(fid,'     interval %d;\n',minimum_timestep);
-fprintf(fid,'     property voltage_12;\n');
-fprintf(fid,'     in %s;\n',group_start);
-fprintf(fid,'     out %s;\n',group_stop);
-fprintf(fid,'};\n\n');
     
-    
-if with_DR == 0
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=waterheater;\n');
-    fprintf(fid,'     file wh_actual_load_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property actual_load;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=waterheater;\n');
-    fprintf(fid,'     file wh_rated_load_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property heating_element_capacity;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=waterheater;\n');
-    fprintf(fid,'     file wh_state_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property is_waterheater_on;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-elseif with_DR == 2 || with_DR == 3
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=waterheater;\n');
-    fprintf(fid,'     file wh_actual_load_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property actual_load;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=waterheater;\n');
-    fprintf(fid,'     file wh_rated_load_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property heating_element_capacity;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=waterheater;\n');
-    fprintf(fid,'     file wh_state_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property is_waterheater_on;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=passive_controller;\n');
-    fprintf(fid,'     file whc_trig_freq_under_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property trigger_point_under_frequency;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=passive_controller;\n');
-    fprintf(fid,'     file whc_trig_freq_over_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property trigger_point_over_frequency;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=passive_controller;\n');
-    fprintf(fid,'     file whc_voltage_lockout_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property voltage_lockout_state;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=passive_controller;\n');
-    fprintf(fid,'     file whc_pfc_state_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property PFC_state;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-    fprintf(fid,'object group_recorder {\n');
-    fprintf(fid,'     group class=passive_controller;\n');
-    fprintf(fid,'     file whc_frequency_DR%d.csv;\n',with_DR);
-    fprintf(fid,'     interval %d;\n',minimum_timestep);
-    fprintf(fid,'     property frequency;\n');
-    fprintf(fid,'     in %s;\n',group_start);
-    fprintf(fid,'     out %s;\n',group_stop);
-    fprintf(fid,'};\n\n');
-    
-
-end
-
-
 
 if ( strcmp(houses,'y')~=0 )
     fprintf(fid,'// Floor area: smallest: %.1f, largest: %.1f\n',floor_area_small,floor_area_large);
