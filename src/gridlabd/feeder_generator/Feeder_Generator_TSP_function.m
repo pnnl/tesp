@@ -4066,7 +4066,6 @@ for tax_ind=1:no_of_tax
                             fprintf(write_file,'        charge_lockout_time 1;\n');
                             fprintf(write_file,'        discharge_lockout_time 1;\n');
                             fprintf(write_file,'        rated_power %.0f;\n',5000);%Tesla Powerwall 2 
-                            fprintf(write_file,'        inverter_efficiency %.0f;\n',0.975);
                             fprintf(write_file,'        max_charge_rate %.0f;\n',5000);
                             fprintf(write_file,'        max_discharge_rate %.0f;\n',5000);
                             fprintf(write_file,'        sense_object tpm%d_%s\n',jjj,parent); %meter for house + solar + battery
@@ -4074,7 +4073,7 @@ for tax_ind=1:no_of_tax
                             fprintf(write_file,'        charge_off_threshold %.0f;\n',0);
                             fprintf(write_file,'        discharge_off_threshold %.0f;\n',2000);
                             fprintf(write_file,'        discharge_on_threshold %.0f;\n',3000);
-                            fprintf(write_file,'        inverter_efficiency %.2f;\n',0.975);
+                            fprintf(write_file,'        inverter_efficiency %.3f;\n',0.975);
 
                             fprintf(write_file,'        object battery {\n');
                             fprintf(write_file,'            name battery_%s\n',parent1);

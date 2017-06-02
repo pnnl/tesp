@@ -9,83 +9,43 @@ dir = '~/src/ptesp/examples/ieee8500/backbone/';
 dir2 = '~/src/ptesp/examples/ieee8500/';
 
 % Power flow solver method
-solver_method = 'FBS';
+solver_method = 'NR'; % 'FBS';
 
 % Start and stop times
 start_date='''2000-09-01';
 stop_date  = '''2000-09-01';
-start_time='12:00:00''';
-stop_time = '16:00:00''';
+start_time='8:00:00''';
+stop_time = '9:00:00''';
 timezone='PST+8PDT';
 
-% start and stop times of group recorders/collectors
-group_start='''2000-09-01 14:00:00''';
-group_stop='''2000-09-01 16:00:00''';
-
 % Minimum timestep
-minimum_timestep = 4;
+minimum_timestep = 15; % 4;
 
 % Do you want to use houses?
 houses = 'y';   % 'y' indicates you want to use houses, 'n' indicates static loads
-use_load = 'n'; % 'y' indicates you want zip loads, 'n' indicates no "appliances" within the home
-climate_file = 'WA-Yakima.tmy2';
+use_load = 'y'; % 'y' indicates you want zip loads, 'n' indicates no appliances within the home
+alt_climate_file = '../weather/WA-Yakima_Air_Terminal.tmy3';
+climate_file = '../weather/AZ-Tucson_International_Ap.tmy3';
 
 load_scalar = 1.0;   % leave as 1 for house models; if houses='n', then this scales the base load of the original 8500 node system
 house_scalar = 8;%8.7;%6;  % changes square ft (an increase in house_scalar will decrease sqft and decrease load)
 zip_scalar = 0.3;%0.3;%3;   % scales the zip load (an increase in zip_scalar will increase load)
 
-gas_perc = 0.5; % percent of homes that use gas heat (rest use resistive)
-elec_cool_perc = 0.7; % percent of homes that use electric AC (rest use NONE)
+solar_fraction = 0.3;    % portion of houses with solar
+battery_fraction = 0.5;  % portion of solar houses adding storage
 
-perc_gas_wh = 0; % percent of homes with gas waterheaters (rest use electrical)
+gas_perc = 0.5; % ratio of homes that use gas heat (rest use resistive)
+elec_cool_perc = 0.9; % ratio of homes that use electric AC (rest use NONE)
 
-with_DR = 0; % do we want to include DR;
-             %   case 0 = NONE
-             %   case 1 = all OFF as driven by price.player
-             %   case 2 = autonomous response of PFC devices
-             %   case 3 = supervisory control of PFC devices
+perc_gas_wh = 0.5; % ratio of homes with gas waterheaters (rest use electrical)
 
-% PFC flags
-supervisor_period = 900; % period of the supervisor
-supervisor_frequency_deadband = 0.015; % deadband of the frequency around nominal frequency
-supervisor_droop = 0.2; % droop response in percentage of PFC controlled devices
-supervisor_bid_sort_mode = 'NONE'; % Bid sort mode
-                                   %    NONE = no sorting is done
-                                   %    POWER_INCREASING = sort accordinng to power with the smallest first
-                                   %    POWER_DECREASING = sort accordinng to power with the largest first
-                                   %    VOLTAGE_DEVIAION_FROM_NOMINAL = sort according to voltage deviation from nominal, smallets first                                               
-supervisor_PFC_mode = 'OVER_UNDER_FREQUENCY'; % Primary frequency control mode for supervisor
-                                              %     UNDER_FREQUENCY = only react to under frequency events
-                                              %     OVER_FREQUENCY = only react to over frequency events
-                                              %     OVER_UNDER_FREQUENCY = react to both over and under frequency events
-whc_PFC_mode = 'OVER_UNDER_FREQUENCY';  % Primary frequency control mode for individual devices, will be overwritten by supervisor if active
-                                        %     UNDER_FREQUENCY = only react to under frequency events
-                                        %     OVER_FREQUENCY = only react to over frequency events
-                                        %     OVER_UNDER_FREQUENCY = react to both over and under frequency events
-whc_voltage_lockout = 0; % Percentage of voltage deviation before device is in lockout mode where it does not participate in PFC
-whc_bid_delay = 30; % bid delay, the amount of time each device bids in advance before clearing the supervisor
-whc_trigger_time_under_frequency = [1 1]; % [min max] trigger time in seconds
-whc_trigger_time_over_frequency = [1 1]; % [min max] trigger time in seconds
-whc_release_time_under_frequency = [120 180]; % [min max] of time in released state
-whc_release_time_over_frequency = [120 180]; % [min max] of time in released state
-whc_release_point_under_frequency = [59.999 59.999]; % [min max] of release frequency
-whc_release_point_over_frequency = [60.001 60.001]; % [min max] of release frequency
-whc_trigger_point_under_frequency = [59.5 60]; % [min max] of trigger frequency, rember it get's reset to 59.985 if above it!
-whc_trigger_point_over_frequency = [60.5 60]; % [max min] of trigger frequency, rember it get's reset to 60.015 if below it!
-whc_frequency_file = 'freqTest.player'; % file containing frequency inforamation         
-
-% total_num_wh = 1973;
-% wh_average_power = 0.0045;
-% wh_average_on = 0.125;
-% 
-% whc_trigger_point_under_frequency(1) = 60 - (total_num_wh * wh_average_power * wh_average_on * supervisor_droop);
-% whc_trigger_point_over_frequency(1) = 60 + (total_num_wh * wh_average_power * (1-wh_average_on) * supervisor_droop);
-
-
-with_violations = 0;
+% if > 0 adds metrics_collector objects to meters with bill_mode,
+% inverters, houses, waterheaters and the swing node
+% also puts a metrics_collector_writer as the first object
+metrics_interval = 300;
 
 % Voltage regulator and capacitor settings
-%  All voltages in on 120 volt "per unit" basis
+%  All voltages in on 120 volt per unit basis
 %  VAr setpoints for capacitors are in kVAr
 %  Time is in seconds
 
@@ -133,9 +93,9 @@ end
 % Plugs
 avg_plug = 0.075;          % normal distribution clipped at 0.05 and .5 kW
 std_dev_plug = 0.02;      
-plug_pwr_frac = 0.1;
-plug_curr_frac = 0.1;
-plug_imp_frac = 0.8;
+plug_pwr_frac = 0.0; % 0.1;
+plug_curr_frac = 1.0; % 0.1;
+plug_imp_frac = 0.0; % 0.8;
 plug_pwr_pf = 0.95;
 plug_curr_pf = 0.95;
 plug_imp_pf = 0.95;
@@ -254,30 +214,7 @@ EndTripLoads = length(RawTripLoads{1});
 EndTripNodes = length(RawTripLines{1});
 
 %% Print to glm file
-if strcmp(solver_method,'FBS')
-    if (with_DR == 1)
-        open_name = [dir2 'IEEE_8500node_whouses_FBS_DR1.glm'];
-    elseif (with_DR == 2)
-        open_name = [dir2 'IEEE_8500node_whouses_FBS_DR2.glm'];
-    elseif (with_DR == 3)
-        open_name = [dir2 'IEEE_8500node_whouses_FBS_DR3.glm'];        
-    else
-        open_name = [dir2 'IEEE_8500node_whouses_FBS.glm'];
-    end
-elseif strcmp(solver_method,'NR')
-    if (with_DR == 1)
-        open_name = [dir2 'IEEE_8500node_whouses_NR_DR1.glm'];
-    elseif (with_DR == 2)
-        open_name = [dir2 'IEEE_8500node_whouses_NR_DR2.glm'];
-    elseif (with_DR == 3)
-        open_name = [dir2 'IEEE_8500node_whouses_NR_DR3.glm'];
-    else
-        open_name = [dir2 'IEEE_8500node_whouses_NR.glm'];
-    end
-else
-    fprintf('screw-up in naming of open file');
-end
-
+open_name = [dir2 'IEEE_8500.glm'];
 fid = fopen(open_name,'wt');
 
 %% Header stuff and schedules
@@ -306,8 +243,11 @@ if (strcmp(houses,'y') ~= 0)
 end
 
 fprintf(fid,'module market;\n');
+if (solar_fraction > 0) || (battery_fraction > 0)
+    fprintf(fid,'module generators;\n');
+end
 fprintf(fid,'module tape;\n\n');
-%fprintf(fid,'#include "recorders.glm";\n');
+
 fprintf(fid,'#include "schedules.glm";\n\n');
 
 if (strcmp(houses,'y') ~= 0)
@@ -316,14 +256,21 @@ end
 fprintf(fid,'#set profiler=1;\n');
 fprintf(fid,'#set relax_naming_rules=1;\n');
 fprintf(fid,'#set suppress_repeat_messages=0;\n');
-fprintf(fid,'#set savefile="8500_balanced_%s.xml";\n',solver_method);
+%fprintf(fid,'#set savefile="8500_balanced_%s.xml";\n',solver_method);
 fprintf(fid,'#set randomseed=10\n');
-fprintf(fid,'//#define stylesheet=C:/Documents and Settings/d3x289/My Documents/GridLAB-D/trunk/VS2005/gridlabd-2_0;\n\n');
+if (metrics_interval > 0)
+    fprintf(fid,'#define METRICS_INTERVAL=%.0f\n',metrics_interval);
+    fprintf(fid,'object metrics_collector_writer {\n');
+    fprintf(fid,'     interval ${METRICS_INTERVAL};\n');
+    fprintf(fid,'     filename IEEE_8500_metrics.json;\n');
+    fprintf(fid,'};\n\n');
+end
 
 if (strcmp(houses,'y') ~= 0)
     fprintf(fid,'object climate {\n');
-    fprintf(fid,'     name "climate";\n');
+    fprintf(fid,'     name climate;\n');
     fprintf(fid,'     tmyfile "%s";\n',climate_file);
+    fprintf(fid,'//     tmyfile "%s";\n',alt_climate_file);
     fprintf(fid,'     interpolate QUADRATIC;\n');
     fprintf(fid,'}\n\n');
 end
@@ -452,34 +399,34 @@ fprintf(fid,'}\n\n');
 
 
 fprintf(fid,'object regulator {\n');
-fprintf(fid,'     name "FEEDER_REG";\n');
+fprintf(fid,'     name FEEDER_REG;\n');
 fprintf(fid,'     phases ABCN;\n');
-fprintf(fid,'     from "regxfmr_HVMV_Sub_LSB";\n');
-fprintf(fid,'     to "_HVMV_Sub_LSB";\n');
+fprintf(fid,'     from regxfmr_HVMV_Sub_LSB;\n');
+fprintf(fid,'     to _HVMV_Sub_LSB;\n');
 fprintf(fid,'     configuration reg_config_1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object regulator {\n');
 fprintf(fid,'     name VREG2;\n');
 fprintf(fid,'     phases ABCN;\n');
-fprintf(fid,'     from "regxfmr_190-8593";\n');
-fprintf(fid,'     to "190-8593";\n');
+fprintf(fid,'     from regxfmr_190-8593;\n');
+fprintf(fid,'     to gld_190-8593;\n');
 fprintf(fid,'     configuration reg_config_2;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object regulator {\n');
 fprintf(fid,'     name VREG3;\n');
 fprintf(fid,'     phases ABCN;\n');
-fprintf(fid,'     from "regxfmr_190-8581";\n');
-fprintf(fid,'     to "190-8581";\n');
+fprintf(fid,'     from regxfmr_190-8581;\n');
+fprintf(fid,'     to gld_190-8581;\n');
 fprintf(fid,'     configuration reg_config_3;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object regulator {\n');
 fprintf(fid,'     name VREG4;\n');
 fprintf(fid,'     phases ABCN;\n');
-fprintf(fid,'     from "regxfmr_190-7361";\n');
-fprintf(fid,'     to "190-7361";\n');
+fprintf(fid,'     from regxfmr_190-7361;\n');
+fprintf(fid,'     to gld_190-7361;\n');
 fprintf(fid,'     configuration reg_config_4;\n');
 fprintf(fid,'}\n\n');
 
@@ -595,9 +542,9 @@ fprintf(fid,'}\n\n');
 
 fprintf(fid,'object transformer {\n');
 fprintf(fid,'     phases ABCN;\n');
-fprintf(fid,'     name "%s";\n',char(RawTrans{1}(1)));
-fprintf(fid,'     from "%s";\n',char(RawTrans{3}(1)));
-fprintf(fid,'     to "%s";\n',char(RawTrans{4}(1)));
+fprintf(fid,'     name %s;\n',char(RawTrans{1}(1)));
+fprintf(fid,'     from %s;\n',gld_strict_name(char(RawTrans{3}(1))));
+fprintf(fid,'     to %s;\n',gld_strict_name(char(RawTrans{4}(1))));
 fprintf(fid,'     configuration trans_config_1;\n');
 fprintf(fid,'}\n\n');
 
@@ -622,11 +569,11 @@ XL = 0.5*(XHL+XLT-XHT);
 XT = 0.5*(XLT+XHT-XHL);
 
 for i=1:EndLoadTrans
-   t_conf = sprintf('%.0f%.0f%s',RawLoadTrans{6}(i),RawLoadTrans{10}(i),char(RawLoadTrans{4}(i))); 
+   t_conf = sprintf('xf%.0f%.0f%s',RawLoadTrans{6}(i),RawLoadTrans{10}(i),char(RawLoadTrans{4}(i))); 
    t_confs(i,1:length(t_conf)) = t_conf;
    if i==1
       fprintf(fid,'object transformer_configuration {\n');
-      fprintf(fid,'     name "%s";\n',t_conf);
+      fprintf(fid,'     name %s;\n',t_conf);
       fprintf(fid,'     connect_type SINGLE_PHASE_CENTER_TAPPED;\n');
       fprintf(fid,'     install_type POLETOP;\n');
       fprintf(fid,'     primary_voltage %5.1fV;\n',1000*RawLoadTrans{5}(i));
@@ -636,9 +583,8 @@ for i=1:EndLoadTrans
       fprintf(fid,'     impedance %f+%fj;\n',RHL,XH);
       fprintf(fid,'     impedance1 %f+%fj;\n',RHT,XL);
       fprintf(fid,'     impedance2 %f+%fj;\n',RLT,XT);
-      Z = 7200^2 / (1000 * RawLoadTrans{6}(i) * 0.005);
-      R = 7200^2 / (1000 * RawLoadTrans{6}(i) * 0.002);
-      fprintf(fid,'     shunt_impedance %.0f+%.0fj;\n',R,Z);
+      fprintf(fid,'     shunt_resistance 500.0;\n'); % these are per-unit parallel impedances
+      fprintf(fid,'     shunt_reactance 200.0;\n');
       fprintf(fid,'}\n\n');
    else
       stop = 0;
@@ -651,7 +597,7 @@ for i=1:EndLoadTrans
 
       if stop ~= 1 
         fprintf(fid,'object transformer_configuration {\n');
-        fprintf(fid,'     name "%s";\n',t_conf);
+        fprintf(fid,'     name %s;\n',t_conf);
         fprintf(fid,'     connect_type SINGLE_PHASE_CENTER_TAPPED;\n');
         fprintf(fid,'     install_type POLETOP;\n');
         fprintf(fid,'     primary_voltage %5.1f;\n',1000*RawLoadTrans{5}(i));
@@ -661,9 +607,8 @@ for i=1:EndLoadTrans
         fprintf(fid,'     impedance 0.006+0.0136j;\n');
         fprintf(fid,'     impedance1 0.012+0.0204j;\n');
         fprintf(fid,'     impedance2 0.012+0.0204j;\n');
-        Z = 7200^2 / (1000 * RawLoadTrans{6}(i) * 0.005);
-        R = 7200^2 / (1000 * RawLoadTrans{6}(i) * 0.002);
-        fprintf(fid,'     shunt_impedance %.0f+%.0fj;\n',R,Z);
+        fprintf(fid,'     shunt_resistance 500.0;\n'); % these are per-unit parallel impedances
+        fprintf(fid,'     shunt_reactance 200.0;\n');
         fprintf(fid,'}\n\n');          
       end
    end
@@ -675,10 +620,10 @@ fprintf(fid,'// Center-tap transformers\n\n');
 
 for i=1:EndLoadTrans
     fprintf(fid,'object transformer {\n');
-    fprintf(fid,'     configuration "%.0f%.0f%s";\n',RawLoadTrans{6}(i),RawLoadTrans{10}(i),char(RawLoadTrans{4}(i)));
-    fprintf(fid,'     name "%s";\n',char(RawLoadTrans{1}(i))); 
-    fprintf(fid,'     from "%s";\n',char(RawLoadTrans{3}(i)));   
-    fprintf(fid,'     to "%s";\n',char(RawLoadTrans{7}(i)));
+    fprintf(fid,'     configuration xf%.0f%.0f%s;\n',RawLoadTrans{6}(i),RawLoadTrans{10}(i),char(RawLoadTrans{4}(i)));
+    fprintf(fid,'     name %s;\n',char(RawLoadTrans{1}(i))); 
+    fprintf(fid,'     from %s;\n',gld_strict_name(char(RawLoadTrans{3}(i))));   
+    fprintf(fid,'     to %s;\n',gld_strict_name(char(RawLoadTrans{7}(i))));
     fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
     fprintf(fid,'     phases %sS;\n',char(RawLoadTrans{4}(i)));
     fprintf(fid,'}\n\n');    
@@ -705,6 +650,10 @@ if ( strcmp(houses,'y')~=0 )
     total_wh_num = 0;
     total_ac_num = 0;
     total_ac_kw = 0;
+    total_solar_num = 0;
+    total_solar_kw = 0;
+    total_battery_num = 0;
+    total_battery_kw = 0;
     
     % Make sure it's only psuedo-randomized, but repeatable
     s2 = RandStream.create('mrg32k3a','NumStreams',3,'StreamIndices',2);
@@ -721,19 +670,6 @@ if ( strcmp(houses,'y')~=0 )
         total_houses_num = total_houses_num + ceil(sqrt(reload^2 + imload^2) / house_scalar / 1000);   
     end
     
-    whc_trigger_time_under_frequency_vec = floor(whc_trigger_time_under_frequency(1) + (whc_trigger_time_under_frequency(2)-whc_trigger_time_under_frequency(1))*rand(total_houses_num,1));
-    whc_trigger_time_over_frequency_vec = floor(whc_trigger_time_over_frequency(1) + (whc_trigger_time_over_frequency(2)-whc_trigger_time_over_frequency(1))*rand(total_houses_num,1));
-    whc_release_time_under_frequency_vec = floor(whc_release_time_under_frequency(1) + (whc_release_time_under_frequency(2)-whc_release_time_under_frequency(1))*rand(total_houses_num,1));
-    whc_release_time_over_frequency_vec = floor(whc_release_time_over_frequency(1) + (whc_release_time_over_frequency(2)-whc_release_time_over_frequency(1))*rand(total_houses_num,1));
-    whc_release_point_under_frequency_vec = whc_release_point_under_frequency(1) + (whc_release_point_under_frequency(2)-whc_release_point_under_frequency(1))*rand(total_houses_num,1);
-    whc_release_point_over_frequency_vec = whc_release_point_over_frequency(1) + (whc_release_point_over_frequency(2)-whc_release_point_over_frequency(1))*rand(total_houses_num,1);
-    whc_trigger_point_under_frequency_vec = whc_trigger_point_under_frequency(1) + (whc_trigger_point_under_frequency(2)-whc_trigger_point_under_frequency(1))*rand(total_houses_num,1);
-    whc_trigger_point_over_frequency_vec = whc_trigger_point_over_frequency(1) + (whc_trigger_point_over_frequency(2)-whc_trigger_point_over_frequency(1))*rand(total_houses_num,1);    
-   
-    % This will make sure we have the approximated curve
-    whc_trigger_point_under_frequency_vec(whc_trigger_point_under_frequency_vec>(60-supervisor_frequency_deadband))=59.985;
-    whc_trigger_point_over_frequency_vec(whc_trigger_point_over_frequency_vec<(60+supervisor_frequency_deadband))=60.015;
-    
     for i=1:EndTripLoads
         reload = load_scalar*RawTripLoads{9}(i)*1000;
         imload = load_scalar*RawTripLoads{9}(i)*1000*tan(acos(RawTripLoads{10}(i)));
@@ -742,14 +678,14 @@ if ( strcmp(houses,'y')~=0 )
        
         
         fprintf(fid,'object triplex_node {\n');
-        fprintf(fid,'     name "%s";\n',char(RawTripLoads{3}(i)));
+        fprintf(fid,'     name %s;\n',char(RawTripLoads{3}(i)));
         fprintf(fid,'     nominal_voltage 120;\n');
         Tph = char(RawTripLoads{3}(i));
         PhLoad = Tph(10);
-        fprintf(fid,'     phases %sS;\n\n',PhLoad);
+        fprintf(fid,'     phases %sS;\n',PhLoad);
         fprintf(fid,'}\n\n');
         
-        fprintf(fid,'     // Converted from load: %.1f+%.1fj\n',reload,imload);
+        fprintf(fid,'// Converted from load: %.1f+%.1fj\n',reload,imload);
         for jj=1:no_of_houses
             floor_area = 2000+500*randn(1);
             if (floor_area > 3500)
@@ -771,20 +707,29 @@ if ( strcmp(houses,'y')~=0 )
             scalar_A = 324.9/8907 * floor_area^0.442;  % used for scaling light and plug loads
             skew = 4800*randn(1);
             
+            % putting house, battery and storage on the same meter for now
+            mtr_root = sprintf ('%s_%.0f', char(RawTripLoads{3}(i)),jj);
+            
             fprintf(fid,'object triplex_meter {\n');
-            fprintf(fid,'     name "%s_%.0f";\n',char(RawTripLoads{3}(i)),jj);
-            fprintf(fid,'     parent "%s";\n',char(RawTripLoads{3}(i)));
+            fprintf(fid,'     name %s;\n',mtr_root);
+            fprintf(fid,'     parent %s;\n',char(RawTripLoads{3}(i)));
             fprintf(fid,'     nominal_voltage 120;\n');
             Tph = char(RawTripLoads{3}(i));
             PhLoad = Tph(10);
-            fprintf(fid,'     phases %sS;\n\n',PhLoad);
+            fprintf(fid,'     phases %sS;\n',PhLoad);
+            fprintf(fid,'     bill_mode NONE;\n');
+            if (metrics_interval > 0)
+                fprintf(fid,'     object metrics_collector {\n');
+                fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+                fprintf(fid,'     };\n');
+            end
             fprintf(fid,'}\n\n');
         
             fprintf(fid,'object house {\n');
-            fprintf(fid,'  parent "%s_%.0f";\n',char(RawTripLoads{3}(i)),jj);
-            fprintf(fid,'  schedule_skew %.0f;\n',skew);
-            fprintf(fid,'  name "%s_%.0f_house";\n',char(RawTripLoads{3}(i)),jj);
-            fprintf(fid,'  floor_area %.1f;\n',floor_area);
+            fprintf(fid,'     parent %s;\n',mtr_root);
+            fprintf(fid,'     schedule_skew %.0f;\n',skew);
+            fprintf(fid,'     name %s_house;\n',mtr_root);
+            fprintf(fid,'     floor_area %.1f;\n',floor_area);
             
             ti = floor(5*rand(1)) + 3; % can use to shift thermal integrity
             
@@ -792,19 +737,28 @@ if ( strcmp(houses,'y')~=0 )
                 ti = 6;
             end
             
-            
-            fprintf(fid,'  thermal_integrity_level %d;\n',ti);
-            fprintf(fid,'  hvac_power_factor %.3f;\n',0.85 + .1 * rand(1));
-            
-            if ( i == 1 )           
-                fprintf(fid,'     object recorder {\n');
-                fprintf(fid,'          file example_house.csv;\n');
-                fprintf(fid,'          interval 900;\n');
-                fprintf(fid,'          limit %d;\n',24*4);
-                fprintf(fid,'          property outdoor_temperature,air_temperature,mass_temperature;\n');
-                fprintf(fid,'     };\n');
+            fprintf(fid,'     thermal_integrity_level %d;\n',ti);
+            % for TESP dictionary, print the system types before setpoints
+            if (rand(1) < gas_perc)
+                heat_type = 'GAS';
+            else
+                heat_type = 'RESISTANCE';
             end
 
+            if (rand(1) < elec_cool_perc)
+                cool_type = 'ELECTRIC';
+                total_ac_num = total_ac_num + 1;
+                [ac_btu, ac_kw] = estimate_ac_size (floor_area, ti);
+                total_ac_kw = total_ac_kw + ac_kw;
+                fprintf (fid, '     // AC size estimate %d BTU/hr or %7.2f kW\n', ac_btu, ac_kw);
+            else
+                cool_type = 'NONE';
+            end
+
+            fprintf(fid,'     auxiliary_system_type NONE;\n');
+            fprintf(fid,'     heating_system_type %s;\n',heat_type);
+            fprintf(fid,'     cooling_system_type %s;\n',cool_type);
+            fprintf(fid,'     hvac_power_factor %.3f;\n',0.85 + .1 * rand(1));
             % Set cool temp and schedule
             cool_schedule = ceil(9*rand(1));
 
@@ -815,7 +769,7 @@ if ( strcmp(houses,'y')~=0 )
                 cool_temp = 0;
             end
             cooloffset = 80-10*rand(1); %cooling temp between 70-80
-            fprintf(fid,'  cooling_setpoint cooling%d*%1.2f+%2.2f;\n',cool_schedule,cool_temp,cooloffset);
+            fprintf(fid,'     cooling_setpoint cooling%d*%1.2f+%2.2f;\n',cool_schedule,cool_temp,cooloffset);
 
             % Set heat temp and schedule
             heat_schedule = ceil(9*rand(1));
@@ -830,123 +784,7 @@ if ( strcmp(houses,'y')~=0 )
             elseif (heat_temp < 0);
                 heat_temp = 0;
             end
-            fprintf(fid,'  heating_setpoint heating%d*%1.2f+%2.2f;\n',heat_schedule,heat_temp,heatoffset);
-
-            if (rand(1) < gas_perc)
-                heat_type = 'GAS';
-            else
-                heat_type = 'RESISTANCE';
-            end
-
-            if (rand(1) < elec_cool_perc)
-                cool_type = 'ELECTRIC';
-                total_ac_num = total_ac_num + 1;
-                [ac_btu, ac_kw] = estimate_ac_size (floor_area, ti);
-                total_ac_kw = total_ac_kw + ac_kw;
-                fprintf (fid, '  // AC size estimate %d BTU/hr or %7.2f kW\n', ac_btu, ac_kw);
-            else
-                cool_type = 'NONE';
-            end
-
-            fprintf(fid,'  auxiliary_system_type NONE;\n');
-            fprintf(fid,'  heating_system_type %s;\n',heat_type);
-            fprintf(fid,'  cooling_system_type %s;\n\n',cool_type);
-
-            if (strcmp(use_load,'y')~=0)
-                % Lights
-                fprintf(fid,'  // Lights (%s)\n',light_type);
-                fprintf(fid,'  object ZIPload {\n');
-                fprintf(fid,'         schedule_skew %.0f;\n',skew);
-                fprintf(fid,'         name "%s_%.0f_lights";\n',char(RawTripLoads{3}(i)),jj);
-
-                light_schedule = ceil(3*rand(1));
-                light_load = avg_lights + std_dev_lights*randn(1);
-
-                if (strcmp(light_type,'INCANDESCENT')~=0)
-                    while(light_load < 0.5 || light_load > 2)
-                        light_load = avg_lights + std_dev_lights*randn(1);
-                    end
-                else
-                    while(light_load < 0.1 || light_load > 0.4)
-                        light_load = avg_lights + std_dev_lights*randn(1);
-                    end
-                end
-
-                fprintf(fid,'         base_power lights%d*%f;\n',light_schedule,zip_scalar*light_load*scalar_A);
-                fprintf(fid,'         power_fraction %f;\n',lights_pwr_frac);
-                fprintf(fid,'         impedance_fraction %f;\n',lights_imp_frac);
-                fprintf(fid,'         current_fraction %f;\n',lights_curr_frac);
-                fprintf(fid,'         power_pf %f;\n',lights_pwr_pf);
-                fprintf(fid,'         current_pf %f;\n',lights_curr_pf);
-                fprintf(fid,'         impedance_pf %f;\n',lights_imp_pf);
-                fprintf(fid,'  };\n\n');
-
-                % TV
-                test_lcd = rand(1);
-                if (test_lcd < lcd_to_crt)
-                    tv_type = 'LCD';
-                else
-                    tv_type = 'CRT';
-                end
-                fprintf(fid,'  // Television (%s)\n',tv_type);
-                fprintf(fid,'  object ZIPload {\n');
-                fprintf(fid,'        schedule_skew %.0f;\n',skew);
-                fprintf(fid,'        name "%s_%.0f_tv";\n',char(RawTripLoads{3}(i)),jj);
-
-                if (strcmp(tv_type,'CRT')~=0)
-                    tv_schedule = ceil(3*rand(1));
-                    tv_load = avg_crt_tv + std_dev_crt_tv*randn(1);
-                    while(tv_load < 0.025 || tv_load > 0.125)
-                        tv_load = avg_crt_tv + std_dev_crt_tv*randn(1);
-                    end
-
-                    fprintf(fid,'         base_power television%d*%f;\n',tv_schedule,zip_scalar*tv_load);
-                    fprintf(fid,'         power_fraction %f;\n',crt_tv_pwr_frac);
-                    fprintf(fid,'         impedance_fraction %f;\n',crt_tv_imp_frac);
-                    fprintf(fid,'         current_fraction %f;\n',crt_tv_curr_frac);
-                    fprintf(fid,'         power_pf %f;\n',crt_tv_pwr_pf);
-                    fprintf(fid,'         current_pf %f;\n',crt_tv_curr_pf);
-                    fprintf(fid,'         impedance_pf %f;\n',crt_tv_imp_pf);
-                else
-                    tv_schedule = ceil(3*rand(1));
-                    tv_load = avg_lcd_tv + std_dev_lcd_tv*randn(1);
-                    while(tv_load < 0.025 || tv_load > 0.4)
-                        tv_load = avg_lcd_tv + std_dev_lcd_tv*randn(1);
-                    end
-
-                    fprintf(fid,'         base_power television%d*%f;\n',tv_schedule,zip_scalar*tv_load);
-                    fprintf(fid,'         power_fraction %f;\n',lcd_tv_pwr_frac);
-                    fprintf(fid,'         impedance_fraction %f;\n',lcd_tv_imp_frac);
-                    fprintf(fid,'         current_fraction %f;\n',lcd_tv_curr_frac);
-                    fprintf(fid,'         power_pf %f;\n',lcd_tv_pwr_pf);
-                    fprintf(fid,'         current_pf %f;\n',lcd_tv_curr_pf);
-                    fprintf(fid,'         impedance_pf %f;\n',lcd_tv_imp_pf);
-                end
-
-                fprintf(fid,'  };\n\n');
-
-
-                % Plugs
-                fprintf(fid,'  // Plug load (convenience loads)\n');
-                fprintf(fid,'  object ZIPload {\n');
-                fprintf(fid,'         schedule_skew %.0f;\n',skew);
-                fprintf(fid,'         name "%s_%.0f_plugs";\n',char(RawTripLoads{3}(i)),jj);
-
-                plug_schedule = ceil(3*rand(1));
-                plug_load = avg_plug + std_dev_plug*randn(1);
-                while(plug_load < 0.05 || plug_load > 0.5)
-                    plug_load = avg_plug + std_dev_plug*randn(1);
-                end
-
-                fprintf(fid,'         base_power plug1*%f;\n',plug_schedule,zip_scalar*plug_load*scalar_A);
-                fprintf(fid,'         power_fraction %f;\n',plug_pwr_frac);
-                fprintf(fid,'         impedance_fraction %f;\n',plug_imp_frac);
-                fprintf(fid,'         current_fraction %f;\n',plug_curr_frac);
-                fprintf(fid,'         power_pf %f;\n',plug_pwr_pf);
-                fprintf(fid,'         current_pf %f;\n',plug_curr_pf);
-                fprintf(fid,'         impedance_pf %f;\n',plug_imp_pf);
-                fprintf(fid,'  };\n\n');
-            end
+            fprintf(fid,'     heating_setpoint heating%d*%1.2f+%2.2f;\n',heat_schedule,heat_temp,heatoffset);
 
             % Water heater settings
             if (rand(1) < perc_gas_wh)
@@ -954,14 +792,13 @@ if ( strcmp(houses,'y')~=0 )
             else
                 wh_type = 'elec';
             end
-
             
             skew2 = 7200*randn(1);
             
             if (strcmp(wh_type,'elec') ~= 0)
-                fprintf(fid,' object waterheater {\n');
+                fprintf(fid,'     object waterheater {\n');
                 fprintf(fid,'         schedule_skew %.0f;\n',skew2);
-                fprintf(fid,'         name "%s_%.0f_waterheater";\n',char(RawTripLoads{3}(i)),jj);
+                fprintf(fid,'         name %s_waterheater;\n',mtr_root);
                 fprintf(fid,'         tank_height 3.78 ft;\n');
                 
                 test = rand(1);
@@ -996,9 +833,129 @@ if ( strcmp(houses,'y')~=0 )
                     fprintf(fid,'         water_demand small_%d*%.1f;\n',wh_sched,water_var);
                 end
 
-                fprintf(fid,'  };\n');
+                if (metrics_interval > 0)
+                    fprintf(fid,'         object metrics_collector {\n');
+                    fprintf(fid,'             interval ${METRICS_INTERVAL};\n');
+                    fprintf(fid,'         };\n');
+                end
+                fprintf(fid,'     };\n');
             end
-            fprintf(fid,'};\n\n');         
+            
+            if (strcmp(use_load,'y')~=0)
+                % Plugs
+                fprintf(fid,'     object ZIPload {\n');
+                fprintf(fid,'         schedule_skew %.0f;\n',skew);
+                fprintf(fid,'         name %s_zip;\n',mtr_root);
+
+                plug_schedule = ceil(3*rand(1));
+                plug_load = avg_plug + std_dev_plug*randn(1);
+                while(plug_load < 0.05 || plug_load > 0.5)
+                    plug_load = avg_plug + std_dev_plug*randn(1);
+                end
+
+                fprintf(fid,'         base_power plug1*%f;\n',plug_schedule,zip_scalar*plug_load*scalar_A);
+                fprintf(fid,'         power_fraction %f;\n',plug_pwr_frac);
+                fprintf(fid,'         impedance_fraction %f;\n',plug_imp_frac);
+                fprintf(fid,'         current_fraction %f;\n',plug_curr_frac);
+                fprintf(fid,'         power_pf %f;\n',plug_pwr_pf);
+                fprintf(fid,'         current_pf %f;\n',plug_curr_pf);
+                fprintf(fid,'         impedance_pf %f;\n',plug_imp_pf);
+                fprintf(fid,'     };\n');
+            end
+
+            if (metrics_interval > 0)
+                fprintf(fid,'     object metrics_collector {\n');
+                fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+                fprintf(fid,'     };\n');
+            end
+            fprintf(fid,'};\n\n');
+            
+            if rand(1) < solar_fraction
+                %Estimating size of solar array based on house sq ft
+                if ((0.1*floor_area > 162) && (0.1*floor_area < 270))
+                    panel_area = 0.1*floor_area;
+                elseif  0.1*floor_area < 162
+                    panel_area = 162;
+                else
+                    panel_area = 270;
+                end
+                                        
+                array_efficiency = 0.2;
+                sq_feet_to_sq_m = 1/10.74;
+                rated_insolation = 1000; %w/sq. m
+                inverter_undersizing = 0.9;
+                array_power  = panel_area * sq_feet_to_sq_m * rated_insolation * array_efficiency;
+                inverter_power = array_power * inverter_undersizing;
+                
+                fprintf(fid,'object inverter {\n');
+                fprintf(fid,'    name %s_solar_inv;\n',mtr_root);
+                fprintf(fid,'    parent %s;\n',mtr_root);
+                fprintf(fid,'    phases %sS;\n',PhLoad);
+                fprintf(fid,'    generator_status ONLINE;\n');
+                fprintf(fid,'    generator_mode CONSTANT_PF;\n');
+                fprintf(fid,'    inverter_type FOUR_QUADRANT;\n');
+                fprintf(fid,'    inverter_efficiency %.0f;\n',0.975);
+                fprintf(fid,'    rated_power %.0f;\n',inverter_power);
+                fprintf(fid,'    power_factor 1.0;\n');
+                fprintf(fid,'    object solar {\n');                    
+                fprintf(fid,'        name %s_solar;\n',mtr_root);
+                fprintf(fid,'        generator_mode SUPPLY_DRIVEN;\n');
+                fprintf(fid,'        generator_status ONLINE;\n');
+                fprintf(fid,'        panel_type SINGLE_CRYSTAL_SILICON;\n');
+                fprintf(fid,'        efficiency 0.2;\n');
+                fprintf(fid,'        area %.0f;\n',floor_area);
+                fprintf(fid,'     };\n');
+                if (metrics_interval > 0)
+                    fprintf(fid,'     object metrics_collector {\n');
+                    fprintf(fid,'        interval ${METRICS_INTERVAL};\n');
+                    fprintf(fid,'     };\n');
+                end
+                fprintf(fid,'};\n');
+                total_solar_num = total_solar_num + 1;
+                total_solar_kw = total_solar_kw + 0.001 * inverter_power;
+                % 5-kW Tesla Powerwall 2
+                if rand(1) < battery_fraction
+                    fprintf(fid,'object inverter {\n');
+                    fprintf(fid,'    name %s_battery_inv;\n',mtr_root);
+                    fprintf(fid,'    parent %s;\n',mtr_root);
+                    fprintf(fid,'    phases %sS;\n',PhLoad);
+                    fprintf(fid,'    generator_status ONLINE;\n');
+                    fprintf(fid,'    generator_mode CONSTANT_PQ;\n');
+                    fprintf(fid,'    inverter_type FOUR_QUADRANT;\n');
+                    fprintf(fid,'    four_quadrant_control_mode LOAD_FOLLOWING;\n');
+                    fprintf(fid,'    charge_lockout_time 1;\n');
+                    fprintf(fid,'    discharge_lockout_time 1;\n');
+                    fprintf(fid,'    rated_power %.0f;\n',5000);%Tesla Powerwall 2 
+                    fprintf(fid,'    max_charge_rate %.0f;\n',5000);
+                    fprintf(fid,'    max_discharge_rate %.0f;\n',5000);
+                    fprintf(fid,'    sense_object %s;\n',mtr_root); %meter for house + solar + battery
+                    fprintf(fid,'    charge_on_threshold %.0f;\n',-100);
+                    fprintf(fid,'    charge_off_threshold %.0f;\n',0);
+                    fprintf(fid,'    discharge_off_threshold %.0f;\n',2000);
+                    fprintf(fid,'    discharge_on_threshold %.0f;\n',3000);
+                    fprintf(fid,'    inverter_efficiency %.3f;\n',0.975);
+                    fprintf(fid,'    object battery {\n');
+                    fprintf(fid,'        name %s_battery;\n',mtr_root);
+                    fprintf(fid,'        generator_status ONLINE;\n');
+                    fprintf(fid,'        use_internal_battery_model true;\n');
+                    fprintf(fid,'        generator_mode CONSTANT_PQ;\n');
+                    fprintf(fid,'        battery_type LI_ION;\n');
+                    fprintf(fid,'        nominal_voltage %.0f;\n',480);%Tesla Powerwall 2 
+                    fprintf(fid,'        battery_capacity %.0f;\n',13500);%Tesla Powerwall 2 
+                    fprintf(fid,'        round_trip_efficiency %.2f;\n',0.86);
+                    fprintf(fid,'        state_of_charge %.2f;\n',0.5);
+                    fprintf(fid,'        generator_mode SUPPLY_DRIVEN;\n');
+                    fprintf(fid,'    };\n');
+                    if (metrics_interval > 0)
+                        fprintf(fid,'    object metrics_collector {\n');
+                        fprintf(fid,'        interval ${METRICS_INTERVAL};\n');
+                        fprintf(fid,'    };\n');
+                    end
+                    fprintf(fid,'};\n');
+                    total_battery_num = total_battery_num + 1;
+                    total_battery_kw = total_battery_kw + 5;
+                end
+            end
         end     
         total_houses = total_houses + no_of_houses;
     end
@@ -1007,10 +964,12 @@ if ( strcmp(houses,'y')~=0 )
     disp(['Total load = ' num2str(0.001*total_reload) ' +j' num2str(0.001*total_imload) ' kW']);
     disp(['Electric water heaters = ' num2str(total_wh_num) ' ' num2str(total_wh_kw) ' kw']);
     disp(['Air conditioners = ' num2str(total_ac_num) ' ' num2str(total_ac_kw) ' kw']);
+    disp(['Solar = ' num2str(total_solar_num) ' ' num2str(total_solar_kw) ' kw']);
+    disp(['Storage = ' num2str(total_battery_num) ' ' num2str(total_battery_kw) ' kw']);
 else
     for i=1:EndTripLoads
         fprintf(fid,'object triplex_node {\n');
-        fprintf(fid,'     name "%s";\n',char(RawTripLoads{3}(i)));
+        fprintf(fid,'     name %s;\n',char(RawTripLoads{3}(i)));
         fprintf(fid,'     nominal_voltage 120;\n');
         Tph = char(RawTripLoads{3}(i));
         PhLoad = Tph(10);
@@ -1036,7 +995,7 @@ fprintf(fid,'// Triplex Node Objects without loads\n\n');
 disp('Printing triplex nodes...');
 for i=1:EndTripNodes
     fprintf(fid,'object triplex_node {\n');
-    fprintf(fid,'     name "%s";\n',char(RawTripLines{2}(i)));
+    fprintf(fid,'     name %s;\n',char(RawTripLines{2}(i)));
     fprintf(fid,'     nominal_voltage 120;\n');
     TphN = char(RawTripLines{4}(i));
     PhNode = TphN(10);
@@ -1139,20 +1098,20 @@ for i=1:length(Node_Name{1})
     if (~isempty(findstr(char(Node_Name{1}(i)),'Q'))||(~isempty(findstr(char(Node_Name{1}(i)),'L2823592')))) 
         fprintf(fid,'object node {\n');
         fprintf(fid,'     phases ABCN;\n');
-        fprintf(fid,'     name "%s";\n',char(Node_Name{1}(i)));
+        fprintf(fid,'     name %s;\n',gld_strict_name(char(Node_Name{1}(i))));
         fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
         fprintf(fid,'}\n\n');
     elseif (~isempty(findstr(char(Node_Name{1}(i)),'193-48013'))||(~isempty(findstr(char(Node_Name{1}(i)),'E182745')))||(~isempty(findstr(char(Node_Name{1}(i)),'193-51796')))) 
         % Some weird switch nodes that only need one phase attached
         fprintf(fid,'object node {\n');
         fprintf(fid,'     phases AN;\n');
-        fprintf(fid,'     name "%s";\n',char(Node_Name{1}(i)));
+        fprintf(fid,'     name %s;\n',gld_strict_name(char(Node_Name{1}(i))));
         fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
         fprintf(fid,'}\n\n');
     else
         fprintf(fid,'object node {\n');
         fprintf(fid,'     phases %sN;\n',phase);
-        fprintf(fid,'     name "%s";\n',char(Node_Name{1}(i)));
+        fprintf(fid,'     name %s;\n',gld_strict_name(char(Node_Name{1}(i))));
         fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
         fprintf(fid,'}\n\n');
     end
@@ -1161,18 +1120,59 @@ end
 % One node object in regulators and HV needs to be manually generated
 fprintf(fid,'object node {\n');
 fprintf(fid,'     phases ABCN;\n');
-fprintf(fid,'     name "regxfmr_HVMV_Sub_LSB";\n');
+fprintf(fid,'     name regxfmr_HVMV_Sub_LSB;\n');
 fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
 fprintf(fid,'}\n\n');
 
-fprintf(fid,'object node {\n');
-fprintf(fid,'     phases ABCN;\n');
-fprintf(fid,'     name "HVMV_Sub_HSB";\n');
+fprintf(fid,'object substation {\n');
+fprintf(fid,'     name network_node;\n');
 fprintf(fid,'     bustype SWING;\n');
-fprintf(fid,'     voltage_A 69512-0.7d;\n');    % Correct for missing 
-fprintf(fid,'     voltage_B 69557-120.7d;\n');  % reactor
-fprintf(fid,'     voltage_C 69595+119.3d;\n');
-fprintf(fid,'     nominal_voltage 69512;\n');
+fprintf(fid,'     nominal_voltage 66395.3;\n');
+fprintf(fid,'     base_power 12MVA;\n');
+fprintf(fid,'     power_convergence_value 100VA;\n');
+fprintf(fid,'     phases ABCN;\n');
+fprintf(fid,'     positive_sequence_voltage 69715.1;\n');
+if (metrics_interval > 0)
+    fprintf(fid,'     object metrics_collector {\n');
+    fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+    fprintf(fid,'     };\n');
+end
+fprintf(fid,'}\n\n');
+
+% high-side reactor that represents transmission source impedance
+fprintf(fid,'object line_configuration {\n');
+fprintf(fid,'  name lcon_series_reactor;\n');
+fprintf(fid,'  z11 0.00000+23815.6j;\n');
+fprintf(fid,'  z12 0.00000+0.00000j;\n');
+fprintf(fid,'  z13 0.00000+0.00000j;\n');
+fprintf(fid,'  z21 0.00000+0.00000j;\n');
+fprintf(fid,'  z22 0.00000+23815.6j;\n');
+fprintf(fid,'  z23 0.00000+0.00000j;\n');
+fprintf(fid,'  z31 0.00000+0.00000j;\n');
+fprintf(fid,'  z32 0.00000+0.00000j;\n');
+fprintf(fid,'  z33 0.00000+23815.6j;\n');
+fprintf(fid,'  c11 0.00000;\n');
+fprintf(fid,'  c12 0.00000;\n');
+fprintf(fid,'  c13 0.00000;\n');
+fprintf(fid,'  c21 0.00000;\n');
+fprintf(fid,'  c22 0.00000;\n');
+fprintf(fid,'  c23 0.00000;\n');
+fprintf(fid,'  c31 0.00000;\n');
+fprintf(fid,'  c32 0.00000;\n');
+fprintf(fid,'  c33 0.00000;\n');
+fprintf(fid,'}\n');
+fprintf(fid,'object overhead_line {\n');
+fprintf(fid,'     name series_reactor;\n');
+fprintf(fid,'     phases ABC;\n');
+fprintf(fid,'     from network_node;\n');
+fprintf(fid,'     to HVMV_Sub_HSB;\n');
+fprintf(fid,'     length 3.28084;\n');
+fprintf(fid,'     configuration lcon_series_reactor;\n');
+fprintf(fid,'}\n');
+fprintf(fid,'object node {\n');
+fprintf(fid,'     name HVMV_Sub_HSB;\n');
+fprintf(fid,'     nominal_voltage 66395.3;\n');
+fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'}\n\n');
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1184,7 +1184,7 @@ disp('Printing lines and conductors...');
 for i = 1:length(CondValues{1})
     if (strcmp(char(CondValues{1}(i)),'397_ACSR')||strcmp(char(CondValues{1}(i)),'2/0_ACSR')||strcmp(char(CondValues{1}(i)),'4_ACSR')||strcmp(char(CondValues{1}(i)),'2_ACSR')||strcmp(char(CondValues{1}(i)),'1/0_ACSR')||strcmp(char(CondValues{1}(i)),'4_WPAL')||strcmp(char(CondValues{1}(i)),'1/0_TPX')||strcmp(char(CondValues{1}(i)),'4/0_TPX')||strcmp(char(CondValues{1}(i)),'4_DPX')||strcmp(char(CondValues{1}(i)),'1/0_3W_CS')||strcmp(char(CondValues{1}(i)),'4_TPX')||strcmp(char(CondValues{1}(i)),'6_WPAL')||strcmp(char(CondValues{1}(i)),'2_WPAL')||strcmp(char(CondValues{1}(i)),'2/0_WPAL')||strcmp(char(CondValues{1}(i)),'DEFAULT')||strcmp(char(CondValues{1}(i)),'600_CU'))
         fprintf(fid,'object overhead_line_conductor {\n');
-        fprintf(fid,'     name "%s";\n',char(CondValues{1}(i)));
+        fprintf(fid,'     name %s;\n',gld_strict_name(char(CondValues{1}(i))));
         fprintf(fid,'     geometric_mean_radius %1.6f%s;\n',CondValues{3}(i),GMRunits);
         fprintf(fid,'     resistance %1.6f%s;\n',CondValues{2}(i),Racunits);
         
@@ -1234,562 +1234,562 @@ fprintf(fid,'}\n\n');
 
 % Create all of the line configurations (67 of them + 3 oddballs)
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_ACSRx4_ACSR";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_1PH-x4_ACSRx4_ACSR;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx4_ACSR4_ACSR";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_1PH-xx4_ACSR4_ACSR;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
                           
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x2_ACSRx2_ACSR";\n');
-fprintf(fid,'     conductor_B "2_ACSR";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_1PH-x2_ACSRx2_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_ACSRx4_WPAL";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_1PH-x4_ACSRx4_WPAL;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-2/0_ACSR2/0_ACSR2/0_ACSR2_ACSR";\n');
-fprintf(fid,'     conductor_A "2/0_ACSR";\n');
-fprintf(fid,'     conductor_B "2/0_ACSR";\n');
-fprintf(fid,'     conductor_C "2/0_ACSR";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-2/0_ACSR2/0_ACSR2/0_ACSR2_ACSR;\n');
+fprintf(fid,'     conductor_A gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_C gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-4_ACSR4_ACSR4_ACSR4_ACSR";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-4_ACSR4_ACSR4_ACSR4_ACSR;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_WPALxx2_WPAL";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_1PH-4_WPALxx2_WPAL;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-4_ACSR2_ACSR2_ACSR4_WPAL";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_B "2_ACSR";\n');
-fprintf(fid,'     conductor_C "2_ACSR";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_3PH_H-4_ACSR2_ACSR2_ACSR4_WPAL;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2_ACSR;\n');
+fprintf(fid,'     conductor_C gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_ACSRxx4_ACSR";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_1PH-4_ACSRxx4_ACSR;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-4_ACSR4_ACSR4_ACSR4_WPAL";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_3PH_H-4_ACSR4_ACSR4_ACSR4_WPAL;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-2_ACSRxx2_ACSR";\n');
-fprintf(fid,'     conductor_A "2_ACSR";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_1PH-2_ACSRxx2_ACSR;\n');
+fprintf(fid,'     conductor_A gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_WPALxx4_ACSR";\n');
-fprintf(fid,'     conductor_A "4_WPAL";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_1PH-4_WPALxx4_ACSR;\n');
+fprintf(fid,'     conductor_A gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-397_ACSR397_ACSR397_ACSR2/0_ACSR";\n');
-fprintf(fid,'     conductor_A "397_ACSR";\n');	
-fprintf(fid,'     conductor_B "397_ACSR";\n');
-fprintf(fid,'     conductor_C "397_ACSR";\n');
-fprintf(fid,'     conductor_N "2/0_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-397_ACSR397_ACSR397_ACSR2/0_ACSR;\n');
+fprintf(fid,'     conductor_A gld_397_ACSR;\n');	
+fprintf(fid,'     conductor_B gld_397_ACSR;\n');
+fprintf(fid,'     conductor_C gld_397_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2/0_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 % Page 2 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-2_ACSRxx4_ACSR";\n');
-fprintf(fid,'     conductor_A "2_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_1PH-2_ACSRxx4_ACSR;\n');
+fprintf(fid,'     conductor_A gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx2_ACSR2_ACSR";\n');
-fprintf(fid,'     conductor_C "2_ACSR";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_1PH-xx2_ACSR2_ACSR;\n');
+fprintf(fid,'     conductor_C gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx4_WPAL4_WPAL";\n');
-fprintf(fid,'     conductor_C "4_WPAL";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_1PH-xx4_WPAL4_WPAL;\n');
+fprintf(fid,'     conductor_C gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_WPALx4_WPAL";\n');
-fprintf(fid,'     conductor_B "4_WPAL";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_1PH-x4_WPALx4_WPAL;\n');
+fprintf(fid,'     conductor_B gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx4_WPAL4_ACSR";\n');
-fprintf(fid,'     conductor_C "4_WPAL";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_1PH-xx4_WPAL4_ACSR;\n');
+fprintf(fid,'     conductor_C gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x2_ACSRx1/0_TPX";\n');
-fprintf(fid,'     conductor_B "2_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-x2_ACSRx1/0_TPX;\n');
+fprintf(fid,'     conductor_B gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_ACSRxx4_WPAL";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_1PH-4_ACSRxx4_WPAL;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx4_ACSR1/0_TPX";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-xx4_ACSR1/0_TPX;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-4_WPAL4_WPAL4_WPAL4_ACSR";\n');
-fprintf(fid,'     conductor_A "4_WPAL";\n');
-fprintf(fid,'     conductor_B "4_WPAL";\n');
-fprintf(fid,'     conductor_C "4_WPAL";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-4_WPAL4_WPAL4_WPAL4_ACSR;\n');
+fprintf(fid,'     conductor_A gld_4_WPAL;\n');
+fprintf(fid,'     conductor_B gld_4_WPAL;\n');
+fprintf(fid,'     conductor_C gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_WPALx4_ACSR";\n');
-fprintf(fid,'     conductor_B "4_WPAL";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_1PH-x4_WPALx4_ACSR;\n');
+fprintf(fid,'     conductor_B gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_WPALxx4_WPAL";\n');
-fprintf(fid,'     conductor_A "4_WPAL";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_1PH-4_WPALxx4_WPAL;\n');
+fprintf(fid,'     conductor_A gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-4_WPAL4_WPAL4_WPAL4_WPAL";\n');
-fprintf(fid,'     conductor_A "4_WPAL";\n');
-fprintf(fid,'     conductor_B "4_WPAL";\n');
-fprintf(fid,'     conductor_C "4_WPAL";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_3PH_H-4_WPAL4_WPAL4_WPAL4_WPAL;\n');
+fprintf(fid,'     conductor_A gld_4_WPAL;\n');
+fprintf(fid,'     conductor_B gld_4_WPAL;\n');
+fprintf(fid,'     conductor_C gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-2_ACSR2_ACSR2_ACSR2_ACSR";\n');
-fprintf(fid,'     conductor_A "2_ACSR";\n');
-fprintf(fid,'     conductor_B "2_ACSR";\n');
-fprintf(fid,'     conductor_C "2_ACSR";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-2_ACSR2_ACSR2_ACSR2_ACSR;\n');
+fprintf(fid,'     conductor_A gld_2_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2_ACSR;\n');
+fprintf(fid,'     conductor_C gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_ACSRxx1/0_TPX";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-4_ACSRxx1/0_TPX;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-4_ACSR2_ACSR2_ACSR4_ACSR";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_B "2_ACSR";\n');
-fprintf(fid,'     conductor_C "2_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-4_ACSR2_ACSR2_ACSR4_ACSR;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2_ACSR;\n');
+fprintf(fid,'     conductor_C gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 %Page 3
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx4_ACSR4_WPAL";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_1PH-xx4_ACSR4_WPAL;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_ACSRxx2_ACSR";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_1PH-4_ACSRxx2_ACSR;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_WPALx1/0_TPX";\n');
-fprintf(fid,'     conductor_B "4_WPAL";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-x4_WPALx1/0_TPX;\n');
+fprintf(fid,'     conductor_B gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx4_ACSR1/0_ACSR";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_ACSR";\n');
+fprintf(fid,'     name gld_1PH-xx4_ACSR1/0_ACSR;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-2_ACSRxx4_WPAL";\n');
-fprintf(fid,'     conductor_A "2_ACSR";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_1PH-2_ACSRxx4_WPAL;\n');
+fprintf(fid,'     conductor_A gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx2/0_ACSR1/0_TPX";\n');
-fprintf(fid,'     conductor_C "2/0_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-xx2/0_ACSR1/0_TPX;\n');
+fprintf(fid,'     conductor_C gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "2PH_H-2_ACSRx2_ACSR2_ACSR";\n');
-fprintf(fid,'     conductor_A "2_ACSR";\n');
-fprintf(fid,'     conductor_C "2_ACSR";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_2PH_H-2_ACSRx2_ACSR2_ACSR;\n');
+fprintf(fid,'     conductor_A gld_2_ACSR;\n');
+fprintf(fid,'     conductor_C gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing TwoPhase1AC;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-2_WPALxx2_WPAL";\n');
-fprintf(fid,'     conductor_A "2_WPAL";\n');
-fprintf(fid,'     conductor_N "2_WPAL";\n');
+fprintf(fid,'     name gld_1PH-2_WPALxx2_WPAL;\n');
+fprintf(fid,'     conductor_A gld_2_WPAL;\n');
+fprintf(fid,'     conductor_N gld_2_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-2_ACSRxx4/0_TPX";\n');
-fprintf(fid,'     conductor_A "2_ACSR";\n');
-fprintf(fid,'     conductor_N "4/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-2_ACSRxx4/0_TPX;\n');
+fprintf(fid,'     conductor_A gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-397_ACSR397_ACSR397_ACSR4_WPAL";\n');
-fprintf(fid,'     conductor_A "397_ACSR";\n');
-fprintf(fid,'     conductor_B "397_ACSR";\n');
-fprintf(fid,'     conductor_C "397_ACSR";\n');
-fprintf(fid,'     conductor_N "4_WPAL";\n');
+fprintf(fid,'     name gld_3PH_H-397_ACSR397_ACSR397_ACSR4_WPAL;\n');
+fprintf(fid,'     conductor_A gld_397_ACSR;\n');
+fprintf(fid,'     conductor_B gld_397_ACSR;\n');
+fprintf(fid,'     conductor_C gld_397_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_WPAL;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-397_ACSR397_ACSR397_ACSR397_ACSR";\n');
-fprintf(fid,'     conductor_A "397_ACSR";\n');
-fprintf(fid,'     conductor_B "397_ACSR";\n');
-fprintf(fid,'     conductor_C "397_ACSR";\n');
-fprintf(fid,'     conductor_N "397_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-397_ACSR397_ACSR397_ACSR397_ACSR;\n');
+fprintf(fid,'     conductor_A gld_397_ACSR;\n');
+fprintf(fid,'     conductor_B gld_397_ACSR;\n');
+fprintf(fid,'     conductor_C gld_397_ACSR;\n');
+fprintf(fid,'     conductor_N gld_397_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx2_ACSR1/0_TPX";\n');
-fprintf(fid,'     conductor_C "2_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-xx2_ACSR1/0_TPX;\n');
+fprintf(fid,'     conductor_C gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_ACSRx2_WPAL";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_N "2_WPAL";\n');
+fprintf(fid,'     name gld_1PH-x4_ACSRx2_WPAL;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_ACSRx4_DPX";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_DPX";\n');
+fprintf(fid,'     name gld_1PH-x4_ACSRx4_DPX;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_DPX;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-2_ACSR2_ACSR4_ACSR4_ACSR";\n');
-fprintf(fid,'     conductor_A "2_ACSR";\n');
-fprintf(fid,'     conductor_B "2_ACSR";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-2_ACSR2_ACSR4_ACSR4_ACSR;\n');
+fprintf(fid,'     conductor_A gld_2_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2_ACSR;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 % Page 4
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_WPALxx1/0_TPX";\n');
-fprintf(fid,'     conductor_A "4_WPAL";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-4_WPALxx1/0_TPX;\n');
+fprintf(fid,'     conductor_A gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_ACSRx1/0_TPX";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-x4_ACSRx1/0_TPX;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_ACSRxx1/0_3W_CS";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_3W_CS";\n');
+fprintf(fid,'     name gld_1PH-4_ACSRxx1/0_3W_CS;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_3W_CS;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x2_ACSRx4_ACSR";\n');
-fprintf(fid,'     conductor_B "2_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_1PH-x2_ACSRx4_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x2_ACSRx1/0_3W_CS";\n');
-fprintf(fid,'     conductor_B "2_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_3W_CS";\n');
+fprintf(fid,'     name gld_1PH-x2_ACSRx1/0_3W_CS;\n');
+fprintf(fid,'     conductor_B gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_3W_CS;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-2/0_ACSR2/0_ACSR2/0_ACSR2/0_ACSR";\n');
-fprintf(fid,'     conductor_A "2/0_ACSR";\n');
-fprintf(fid,'     conductor_B "2/0_ACSR";\n');
-fprintf(fid,'     conductor_C "2/0_ACSR";\n');
-fprintf(fid,'     conductor_N "2/0_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-2/0_ACSR2/0_ACSR2/0_ACSR2/0_ACSR;\n');
+fprintf(fid,'     conductor_A gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_C gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2/0_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-2_ACSRxx1/0_TPX";\n');
-fprintf(fid,'     conductor_A "2_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-2_ACSRxx1/0_TPX;\n');
+fprintf(fid,'     conductor_A gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-4_WPAL4_WPAL4_WPAL1/0_TPX";\n');
-fprintf(fid,'     conductor_A "4_WPAL";\n');
-fprintf(fid,'     conductor_B "4_WPAL";\n');
-fprintf(fid,'     conductor_C "4_WPAL";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_3PH_H-4_WPAL4_WPAL4_WPAL1/0_TPX;\n');
+fprintf(fid,'     conductor_A gld_4_WPAL;\n');
+fprintf(fid,'     conductor_B gld_4_WPAL;\n');
+fprintf(fid,'     conductor_C gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_WPALx2_ACSR";\n');
-fprintf(fid,'     conductor_B "4_WPAL";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_1PH-x4_WPALx2_ACSR;\n');
+fprintf(fid,'     conductor_B gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-2/0_ACSR2/0_ACSR2/0_ACSR2_WPAL";\n');
-fprintf(fid,'     conductor_A "2/0_ACSR";\n');
-fprintf(fid,'     conductor_B "2/0_ACSR";\n');
-fprintf(fid,'     conductor_C "2/0_ACSR";\n');
-fprintf(fid,'     conductor_N "2_WPAL";\n');
+fprintf(fid,'     name gld_3PH_H-2/0_ACSR2/0_ACSR2/0_ACSR2_WPAL;\n');
+fprintf(fid,'     conductor_A gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_C gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_WPAL;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx4_ACSR2_ACSR";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_1PH-xx4_ACSR2_ACSR;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_ACSRx4_TPX";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_TPX";\n');
+fprintf(fid,'     name gld_1PH-x4_ACSRx4_TPX;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-4_ACSR4_ACSR4_ACSR4_TPX";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_TPX";\n');
+fprintf(fid,'     name gld_3PH_H-4_ACSR4_ACSR4_ACSR4_TPX;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_TPX;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-4_ACSRxx6_WPAL";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_N "6_WPAL";\n');
+fprintf(fid,'     name gld_1PH-4_ACSRxx6_WPAL;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_6_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx4_ACSR4_TPX";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "4_TPX";\n');
+fprintf(fid,'     name gld_1PH-xx4_ACSR4_TPX;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 % Page 5
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-397_ACSR397_ACSR397_ACSR2/0_WPAL";\n');
-fprintf(fid,'     conductor_A "397_ACSR";\n');
-fprintf(fid,'     conductor_B "397_ACSR";\n');
-fprintf(fid,'     conductor_C "397_ACSR";\n');
-fprintf(fid,'     conductor_N "2/0_WPAL";\n');
+fprintf(fid,'     name gld_3PH_H-397_ACSR397_ACSR397_ACSR2/0_WPAL;\n');
+fprintf(fid,'     conductor_A gld_397_ACSR;\n');
+fprintf(fid,'     conductor_B gld_397_ACSR;\n');
+fprintf(fid,'     conductor_C gld_397_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2/0_WPAL;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-2/0_ACSRxx2_ACSR";\n');
-fprintf(fid,'     conductor_A "2/0_ACSR";\n');
-fprintf(fid,'     conductor_N "2_ACSR";\n');
+fprintf(fid,'     name gld_1PH-2/0_ACSRxx2_ACSR;\n');
+fprintf(fid,'     conductor_A gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-2/0_ACSR2/0_ACSR2/0_ACSR4_ACSR";\n');
-fprintf(fid,'     conductor_A "2/0_ACSR";\n');
-fprintf(fid,'     conductor_B "2/0_ACSR";\n');
-fprintf(fid,'     conductor_C "2/0_ACSR";\n');
-fprintf(fid,'     conductor_N "4_ACSR";\n');
+fprintf(fid,'     name gld_3PH_H-2/0_ACSR2/0_ACSR2/0_ACSR4_ACSR;\n');
+fprintf(fid,'     conductor_A gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_B gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_C gld_2/0_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx4_WPAL1/0_TPX";\n');
-fprintf(fid,'     conductor_C "4_WPAL";\n');
-fprintf(fid,'     conductor_N "1/0_TPX";\n');
+fprintf(fid,'     name gld_1PH-xx4_WPAL1/0_TPX;\n');
+fprintf(fid,'     conductor_C gld_4_WPAL;\n');
+fprintf(fid,'     conductor_N gld_1/0_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx6_WPAL6_WPAL";\n');
-fprintf(fid,'     conductor_C "6_WPAL";\n');
-fprintf(fid,'     conductor_N "6_WPAL";\n');
+fprintf(fid,'     name gld_1PH-xx6_WPAL6_WPAL;\n');
+fprintf(fid,'     conductor_C gld_6_WPAL;\n');
+fprintf(fid,'     conductor_N gld_6_WPAL;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x2_ACSRx4_TPX";\n');
-fprintf(fid,'     conductor_B "2_ACSR";\n');
-fprintf(fid,'     conductor_N "4_TPX";\n');
+fprintf(fid,'     name gld_1PH-x2_ACSRx4_TPX;\n');
+fprintf(fid,'     conductor_B gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_TPX;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH_H-4_ACSR4_ACSR4_ACSR2_WPAL";\n');
-fprintf(fid,'     conductor_A "4_ACSR";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_C "4_ACSR";\n');
-fprintf(fid,'     conductor_N "2_WPAL";\n');
+fprintf(fid,'     name gld_3PH_H-4_ACSR4_ACSR4_ACSR2_WPAL;\n');
+fprintf(fid,'     conductor_A gld_4_ACSR;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_C gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_2_WPAL;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-x4_ACSRx1/0_3W_CS";\n');
-fprintf(fid,'     conductor_B "4_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_3W_CS";\n');
+fprintf(fid,'     name gld_1PH-x4_ACSRx1/0_3W_CS;\n');
+fprintf(fid,'     conductor_B gld_4_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_3W_CS;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1PH-xx2_ACSR4_DPX";\n');
-fprintf(fid,'     conductor_C "2_ACSR";\n');
-fprintf(fid,'     conductor_N "4_DPX";\n');
+fprintf(fid,'     name gld_1PH-xx2_ACSR4_DPX;\n');
+fprintf(fid,'     conductor_C gld_2_ACSR;\n');
+fprintf(fid,'     conductor_N gld_4_DPX;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3P_1/0_AXNJ_DB";\n');
-fprintf(fid,'     conductor_A "1/0_ACSR"; //These are not the correct values,\n'); 
-fprintf(fid,'     conductor_B "1/0_ACSR"; //but are used to approximate for 3P & 1P.\n'); 
-fprintf(fid,'     conductor_C "1/0_ACSR";\n'); 
-fprintf(fid,'     conductor_N "1/0_ACSR";\n');
+fprintf(fid,'     name gld_3P_1/0_AXNJ_DB;\n');
+fprintf(fid,'     conductor_A gld_1/0_ACSR; //These are not the correct values,\n'); 
+fprintf(fid,'     conductor_B gld_1/0_ACSR; //but are used to approximate for 3P & 1P.\n'); 
+fprintf(fid,'     conductor_C gld_1/0_ACSR;\n'); 
+fprintf(fid,'     conductor_N gld_1/0_ACSR;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1P_1/0_AXNJ_DB_A";\n');
-fprintf(fid,'     conductor_A "1/0_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_ACSR";\n');
+fprintf(fid,'     name gld_1P_1/0_AXNJ_DB_A;\n');
+fprintf(fid,'     conductor_A gld_1/0_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1P_1/0_AXNJ_DB_B";\n');
-fprintf(fid,'     conductor_B "1/0_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_ACSR";\n');
+fprintf(fid,'     name gld_1P_1/0_AXNJ_DB_B;\n');
+fprintf(fid,'     conductor_B gld_1/0_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1B;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "1P_1/0_AXNJ_DB_C";\n');
-fprintf(fid,'     conductor_C "1/0_ACSR";\n');
-fprintf(fid,'     conductor_N "1/0_ACSR";\n');
+fprintf(fid,'     name gld_1P_1/0_AXNJ_DB_C;\n');
+fprintf(fid,'     conductor_C gld_1/0_ACSR;\n');
+fprintf(fid,'     conductor_N gld_1/0_ACSR;\n');
 fprintf(fid,'     spacing SinglePhase1C;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "CAP_LINE";      //Also known as 1PH-Connector.\n');
-fprintf(fid,'     conductor_A "600_CU"; //These are not the correct values, but\n');
-fprintf(fid,'     conductor_B "600_CU"; //will be used to approx. low loss lines.\n');
-fprintf(fid,'     conductor_C "600_CU";\n');
-fprintf(fid,'     conductor_N "600_CU";\n');
+fprintf(fid,'     name CAP_LINE;      //Also known as 1PH-Connector.\n');
+fprintf(fid,'     conductor_A gld_600_CU; //These are not the correct values, but\n');
+fprintf(fid,'     conductor_B gld_600_CU; //will be used to approx. low loss lines.\n');
+fprintf(fid,'     conductor_C gld_600_CU;\n');
+fprintf(fid,'     conductor_N gld_600_CU;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object line_configuration {\n');
-fprintf(fid,'     name "3PH-Connector";\n');
-fprintf(fid,'     conductor_A "600_CU";\n');
-fprintf(fid,'     conductor_B "600_CU";\n');
-fprintf(fid,'     conductor_C "600_CU";\n');
-fprintf(fid,'     conductor_N "600_CU";\n');
+fprintf(fid,'     name gld_3PH-Connector;\n');
+fprintf(fid,'     conductor_A gld_600_CU;\n');
+fprintf(fid,'     conductor_B gld_600_CU;\n');
+fprintf(fid,'     conductor_C gld_600_CU;\n');
+fprintf(fid,'     conductor_N gld_600_CU;\n');
 fprintf(fid,'     spacing ThreePhase1;\n');
 fprintf(fid,'}\n\n');
 
@@ -1798,7 +1798,7 @@ fprintf(fid,'}\n\n');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fprintf(fid,'object triplex_line_conductor {\n');
-fprintf(fid,'     name "4/0triplex";\n');
+fprintf(fid,'     name gld_4/0triplex;\n');
 fprintf(fid,'     resistance 1.535;\n');
 fprintf(fid,'     geometric_mean_radius 0.0111;\n');
 fprintf(fid,'     rating.summer.emergency 315 A;\n');
@@ -1808,19 +1808,19 @@ fprintf(fid,'     rating.winter.continuous 315 A;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object triplex_line_configuration {\n');
-fprintf(fid,'     name "4/0Triplex";\n');
-fprintf(fid,'     conductor_1 "4/0triplex";\n'); 
-fprintf(fid,'     conductor_2 "4/0triplex";\n');
-fprintf(fid,'     conductor_N "4/0triplex";\n');
+fprintf(fid,'     name gld_4/0Triplex;\n');
+fprintf(fid,'     conductor_1 gld_4/0triplex;\n'); 
+fprintf(fid,'     conductor_2 gld_4/0triplex;\n');
+fprintf(fid,'     conductor_N gld_4/0triplex;\n');
 fprintf(fid,'     insulation_thickness 0.08;\n');
 fprintf(fid,'     diameter 0.368;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object triplex_line_configuration {\n');
-fprintf(fid,'     name "750_Triplex";       //These values are not correct, but\n');
-fprintf(fid,'     conductor_1 "4/0triplex"; //there are only four of them.\n');
-fprintf(fid,'     conductor_2 "4/0triplex";\n');
-fprintf(fid,'     conductor_N "4/0triplex";\n');
+fprintf(fid,'     name gld_750_Triplex;       //These values are not correct, but\n');
+fprintf(fid,'     conductor_1 gld_4/0triplex; //there are only four of them.\n');
+fprintf(fid,'     conductor_2 gld_4/0triplex;\n');
+fprintf(fid,'     conductor_N gld_4/0triplex;\n');
 fprintf(fid,'     insulation_thickness 0.08;\n');
 fprintf(fid,'     diameter 0.368;\n');
 fprintf(fid,'}\n\n');
@@ -1844,9 +1844,9 @@ for i=1:EndLines
         else
             fprintf(fid,'object switch {\n');
             fprintf(fid,'     phases %sN;\n',char(RawLines{3}(i)));
-            fprintf(fid,'     name "%s";\n',char(RawLines{1}(i)));
-            fprintf(fid,'     from "%s";\n',char(RawLines{2}(i)));
-            fprintf(fid,'     to "%s";\n',char(RawLines{4}(i)));
+            fprintf(fid,'     name %s;\n',gld_strict_name(char(RawLines{1}(i))));
+            fprintf(fid,'     from %s;\n',gld_strict_name(char(RawLines{2}(i))));
+            fprintf(fid,'     to %s;\n',gld_strict_name(char(RawLines{4}(i))));
             status = strtrim(char(RawLines{9}(i)));
             if (~isempty(findstr(status,'open')))
                 fprintf(fid,'     status OPEN;\n');
@@ -1858,12 +1858,12 @@ for i=1:EndLines
     elseif (~isempty(findstr(char(RawLines{8}(i)),'1P_1/0_AXNJ_DB')))
         fprintf(fid,'object overhead_line {\n');
         fprintf(fid,'     phases %sN;\n',char(RawLines{3}(i))); 
-        fprintf(fid,'     name "%s";\n',char(RawLines{1}(i)));
-        fprintf(fid,'     from "%s";\n',char(RawLines{2}(i)));
-        fprintf(fid,'     to "%s";\n',char(RawLines{4}(i)));
+        fprintf(fid,'     name %s;\n',char(RawLines{1}(i)));
+        fprintf(fid,'     from %s;\n',gld_strict_name(char(RawLines{2}(i))));
+        fprintf(fid,'     to %s;\n',gld_strict_name(char(RawLines{4}(i))));
         fprintf(fid,'     length %f%s;\n',LengthLines(i),char(RawLines{7}(i)));
         k = strtrim(char(RawLines{8}(i)));
-        fprintf(fid,'     configuration "%s_%s";\n',k,char(RawLines{3}(i)));
+        fprintf(fid,'     configuration %s;\n',gld_strict_name(strcat(k,'_',char(RawLines{3}(i)))));
         fprintf(fid,'}\n\n');
     else
         % normal lines
@@ -1871,15 +1871,15 @@ for i=1:EndLines
         fprintf(fid,'     phases %sN;\n',char(RawLines{3}(i)));
         % one odd ball line had a node name, so add LN to it
         if (strcmp(char(RawLines{1}(i)),'293471'))
-            fprintf(fid,'     name "LN%s";\n',char(RawLines{1}(i)));
+            fprintf(fid,'     name LN%s;\n',char(RawLines{1}(i)));
         else
-            fprintf(fid,'     name "%s";\n',char(RawLines{1}(i)));
+            fprintf(fid,'     name %s;\n',char(RawLines{1}(i)));
         end
-        fprintf(fid,'     from "%s";\n',char(RawLines{2}(i)));
-        fprintf(fid,'     to "%s";\n',char(RawLines{4}(i)));
+        fprintf(fid,'     from %s;\n',gld_strict_name(char(RawLines{2}(i))));
+        fprintf(fid,'     to %s;\n',gld_strict_name(char(RawLines{4}(i))));
         fprintf(fid,'     length %f%s;\n',LengthLines(i),char(RawLines{7}(i)));
           k = strtrim(char(RawLines{8}(i)));
-        fprintf(fid,'     configuration "%s";\n',k);
+        fprintf(fid,'     configuration %s;\n',gld_strict_name(k));
         fprintf(fid,'}\n\n');
         
     end
@@ -1890,7 +1890,7 @@ fprintf(fid,'     name CAP_1;\n');
 fprintf(fid,'     from Q16642;\n');
 fprintf(fid,'     to Q16642_CAP;\n');
 fprintf(fid,'     length 0.01km;\n');
-fprintf(fid,'     configuration "CAP_LINE";\n');
+fprintf(fid,'     configuration CAP_LINE;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object overhead_line {\n');
@@ -1899,7 +1899,7 @@ fprintf(fid,'     name CAP_2;\n');
 fprintf(fid,'     from Q16483;\n');
 fprintf(fid,'     to Q16483_CAP;\n');
 fprintf(fid,'     length 0.001km;\n');
-fprintf(fid,'     configuration "CAP_LINE";\n');
+fprintf(fid,'     configuration CAP_LINE;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object overhead_line {\n');
@@ -1908,7 +1908,7 @@ fprintf(fid,'     name CAP_3;\n');
 fprintf(fid,'     from L2823592;\n');
 fprintf(fid,'     to L2823592_CAP;\n');
 fprintf(fid,'     length 0.01km;\n');
-fprintf(fid,'     configuration "CAP_LINE";\n');
+fprintf(fid,'     configuration CAP_LINE;\n');
 fprintf(fid,'}\n\n');
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1919,192 +1919,40 @@ fprintf(fid,'// Triplex Lines\n\n');
 disp('Printing triplex lines...');
 for i=1:EndTripLines
     fprintf(fid,'object triplex_line {\n');
-    fprintf(fid,'     name "%s";\n',char(RawTripLines{1}(i)));
+    fprintf(fid,'     name %s;\n',char(RawTripLines{1}(i)));
     Tp = char(RawTripLines{4}(i));
     Tphase = Tp(10);
     fprintf(fid,'     phases %sS;\n',Tphase);
-    fprintf(fid,'     from "%s";\n',char(RawTripLines{2}(i)));
-    fprintf(fid,'     to "%s";\n',char(RawTripLines{4}(i)));
-    if (strcmp(houses,'y')~= 0)
-        fprintf(fid,'     length %.1fft;\n',25-20*rand(1));
-    else
+    fprintf(fid,'     from %s;\n',gld_strict_name(char(RawTripLines{2}(i))));
+    fprintf(fid,'     to %s;\n',gld_strict_name(char(RawTripLines{4}(i))));
+%    if (strcmp(houses,'y')~= 0)
+%        fprintf(fid,'     length %.1fft;\n',25-20*rand(1));
+%    else
         fprintf(fid,'     length %2.0fft;\n',RawTripLines{7}(i));
-    end
-    fprintf(fid,'     configuration "%s";\n',char(RawTripLines{6}(i)));
+%    end
+    fprintf(fid,'     configuration %s;\n',gld_strict_name(char(RawTripLines{6}(i))));
     fprintf(fid,'}\n\n');
-end
-
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Create controllers for the water heaters
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-if with_DR ~= 0
-    total_houses = 0;
-    for i=1:EndTripLoads
-        reload = load_scalar*RawTripLoads{9}(i)*1000;
-        imload = load_scalar*RawTripLoads{9}(i)*1000*tan(acos(RawTripLoads{10}(i)));
-
-        no_of_houses = ceil(sqrt(reload^2 + imload^2) / house_scalar / 1000);
-
-        for jj=1:no_of_houses
-            if (with_DR == 1)
-                fprintf(fid,'object passive_controller {\n');
-                fprintf(fid,'    parent "%s_%.0f_waterheater";\n',char(RawTripLoads{3}(i)),jj);
-                fprintf(fid,'    period 4;\n');
-                fprintf(fid,'	 control_mode PROBABILITY_OFF;\n');
-                fprintf(fid,'	 distribution_type NORMAL;\n');
-                fprintf(fid,'	 observation_object Market_1;\n');
-                fprintf(fid,'	 observation_property past_market.clearing_price;\n');
-                fprintf(fid,'	 stdev_observation_property %s;\n','my_std');
-                fprintf(fid,'	 expectation_object Market_1;\n');
-                fprintf(fid,'	 expectation_property %s;\n','my_avg');
-                fprintf(fid,'	 comfort_level %.2f;\n',9999);
-                fprintf(fid,'	 state_property override;\n');
-                fprintf(fid,'};\n\n'); 
-            elseif (with_DR == 2)
-                fprintf(fid,'object passive_controller {\n');
-                fprintf(fid,'    parent "%s_%.0f_waterheater";\n',char(RawTripLoads{3}(i)),jj);
-                fprintf(fid,'    name "%s_%.0f_waterheater_controller";\n',char(RawTripLoads{3}(i)),jj);
-                fprintf(fid,'    period 1;\n');
-                fprintf(fid,'    control_mode PRIMARY_FREQUENCY_CONTROL;\n');
-                fprintf(fid,'    PFC_mode %s;\n',whc_PFC_mode);
-                fprintf(fid,'    voltage_lockout %.1f;\n',whc_voltage_lockout);
-                fprintf(fid,'    state_observed is_waterheater_on;\n');
-                fprintf(fid,'    power_observed actual_load;\n');
-                fprintf(fid,'    state_property override;\n');
-                fprintf(fid,'    trigger_time_under_frequency %d;\n',whc_trigger_time_under_frequency_vec(total_houses+jj));
-                fprintf(fid,'    trigger_time_over_frequency %d;\n',whc_trigger_time_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    release_time_under_frequency %d;\n',whc_release_time_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    release_time_over_frequency %d;\n',whc_release_time_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    release_point_under_frequency %.6f;\n',whc_release_point_under_frequency_vec(total_houses+jj));
-                fprintf(fid,'    release_point_over_frequency %.6f;\n',whc_release_point_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    trigger_point_under_frequency %.6f;\n',whc_trigger_point_under_frequency_vec(total_houses+jj));
-                fprintf(fid,'    trigger_point_over_frequency %.6f;\n',whc_trigger_point_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    frequency frequency_player.value;\n');
-                fprintf(fid,'};\n\n');                         
-            elseif (with_DR == 3)
-                fprintf(fid,'object passive_controller {\n');
-                fprintf(fid,'    parent "%s_%.0f_waterheater";\n',char(RawTripLoads{3}(i)),jj);
-                fprintf(fid,'    name "%s_%.0f_waterheater_controller";\n',char(RawTripLoads{3}(i)),jj);
-                fprintf(fid,'    period 1;\n');
-                fprintf(fid,'    observation_object supervisor;\n');
-                fprintf(fid,'    control_mode PRIMARY_FREQUENCY_CONTROL;\n');
-                fprintf(fid,'    PFC_mode %s;\n',whc_PFC_mode);
-                fprintf(fid,'    voltage_lockout %.1f;\n',whc_voltage_lockout);
-                fprintf(fid,'    state_observed is_waterheater_on;\n');
-                fprintf(fid,'    power_observed actual_load;\n');
-                fprintf(fid,'    bid_delay %d;\n',whc_bid_delay);
-                fprintf(fid,'    state_property override;\n');
-                fprintf(fid,'    trigger_time_under_frequency %d;\n',whc_trigger_time_under_frequency_vec(total_houses+jj));
-                fprintf(fid,'    trigger_time_over_frequency %d;\n',whc_trigger_time_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    release_time_under_frequency %d;\n',whc_release_time_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    release_time_over_frequency %d;\n',whc_release_time_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    release_point_under_frequency %.6f;\n',whc_release_point_under_frequency_vec(total_houses+jj));
-                fprintf(fid,'    release_point_over_frequency %.6f;\n',whc_release_point_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    trigger_point_under_frequency %.6f;\n',whc_trigger_point_under_frequency_vec(total_houses+jj));
-                fprintf(fid,'    trigger_point_over_frequency %.6f;\n',whc_trigger_point_over_frequency_vec(total_houses+jj));
-                fprintf(fid,'    frequency frequency_player.value;\n');
-                fprintf(fid,'};\n\n');                        
-            end      
-        end
-        total_houses = total_houses + no_of_houses;
-    end
-end
-
-if (with_DR == 1)
-    fprintf(fid,'class auction {\n');
-    fprintf(fid,'     double my_avg;\n');
-    fprintf(fid,'     double my_std;\n');
-    fprintf(fid,'}\n\n');
-
-    fprintf(fid,'object auction {\n');
-    fprintf(fid,'     name Market_1;\n');
-    fprintf(fid,'     period 4;\n');
-    fprintf(fid,'     special_mode BUYERS_ONLY;\n');
-    fprintf(fid,'     unit kW;\n');
-    fprintf(fid,'     my_avg 1;\n');
-    fprintf(fid,'     my_std 1;\n');
-    fprintf(fid,'     object player {\n');
-    fprintf(fid,'          file price_player.player;\n');
-    fprintf(fid,'          property current_market.clearing_price;\n');
-    fprintf(fid,'     };\n');
-    fprintf(fid,'};\n\n');
-elseif (with_DR == 2)   
-    fprintf(fid,'class player {\n');
-    fprintf(fid,'      double value;\n');
-    fprintf(fid,'}\n\n');
-    
-    fprintf(fid,'object player {\n');
-    fprintf(fid,'    name frequency_player;\n');
-    fprintf(fid,'    file %s;\n',whc_frequency_file);
-    fprintf(fid,'}\n\n');
-elseif (with_DR == 3)   
-    fprintf(fid,'class player {\n');
-    fprintf(fid,'      double value;\n');
-    fprintf(fid,'}\n\n');
-    
-    fprintf(fid,'object player {\n');
-    fprintf(fid,'    name frequency_player;\n');
-    fprintf(fid,'    file %s;\n',whc_frequency_file);
-    fprintf(fid,'}\n\n');
-   
-    fprintf(fid,'object supervisory_control {\n');
-    fprintf(fid,'   name supervisor;\n');
-    fprintf(fid,'   period %d;\n',supervisor_period);
-    fprintf(fid,'	unit MW;\n');
-    fprintf(fid,'	nominal_frequency 60;\n');
-    fprintf(fid,'	frequency_deadband %.5f;\n',supervisor_frequency_deadband);
-    fprintf(fid,'	droop %.5f;\n',supervisor_droop);
-    fprintf(fid,'	bid_sort_mode %s;\n',supervisor_bid_sort_mode);
-    fprintf(fid,'	PFC_mode %s;\n',supervisor_PFC_mode);
-    fprintf(fid,'}\n\n');              
-end
-
-if (with_violations)
-    fprintf(fid,'object violation_recorder {\n');
-    fprintf(fid,'    violation_flag VIOLATION1|VIOLATION2|VIOLATION3|VIOLATION7|VIOLATION8;\n');
-    fprintf(fid,'    strict false;\n');
-    fprintf(fid,'    echo false;\n');
-    fprintf(fid,'    summary Violation_Summary_DR%d.csv;\n',with_DR);
-    fprintf(fid,'    file Violation_Log_DR%d.csv;\n',with_DR);
-    fprintf(fid,'    violation_delay 600; // How long to ignore violations at beginning of sim\n');
-    fprintf(fid,'    interval 4;\n');
-    
-    fprintf(fid,'    // Violation 1 - Exceeding device thermal limit\n');
-    fprintf(fid,'    xfrmr_thermal_limit_lower 0;\n');
-    fprintf(fid,'    xfrmr_thermal_limit_upper 2;\n');
-    fprintf(fid,'    line_thermal_limit_upper 1;\n');
-    fprintf(fid,'    line_thermal_limit_lower 0;\n');
-    
-    fprintf(fid,'    // Violation 2 - Instantaneous voltage of node over X pu\n');
-    fprintf(fid,'    node_instantaneous_voltage_limit_upper 1.1;\n');
-    fprintf(fid,'    node_instantaneous_voltage_limit_lower 0;\n');
-    
-    fprintf(fid,'    // Violation 3 - Voltage of node over X pu or under Y pu for Z minutes or more\n');
-    fprintf(fid,'    node_continuous_voltage_limit_lower 0.95;\n');
-    fprintf(fid,'    node_continuous_voltage_interval 60;\n');
-    fprintf(fid,'    node_continuous_voltage_limit_upper 1.05;\n');
-           
-    fprintf(fid,'    // Violation 7 - X percent V rise across the secondary distribution system\n');
-    fprintf(fid,'    secondary_dist_voltage_rise_lower_limit -0.042;\n');
-    fprintf(fid,'    secondary_dist_voltage_rise_upper_limit 0.025;\n');
-    
-    fprintf(fid,'    // Violation 8 - Substation power factor\n');
-    fprintf(fid,'    substation_pf_lower_limit 0.85;\n');
-    fprintf(fid,'    virtual_substation line_10980$ND148913275_10980;\n');
-    
-    fprintf(fid,'};\n\n');
 end
 
 %% Recorders for DR cases
 fprintf(fid,'object recorder {\n');
 fprintf(fid,'	parent FEEDER_REG;\n');
-fprintf(fid,'	interval 4;\n');
-fprintf(fid,'	file main_regulator_DR%d.csv;\n',with_DR);
+fprintf(fid,'	interval %f;\n', minimum_timestep);
+fprintf(fid,'	file main_regulator.csv;\n');
 fprintf(fid,'	property power_in_A.real,power_in_A.imag,power_in_B.real,power_in_B.imag,power_in_C.real,power_in_C.imag;\n');
 fprintf(fid,'};\n');
-    
+fprintf(fid,'object recorder {\n');
+fprintf(fid,'	parent climate;\n');
+fprintf(fid,'	property temperature,humidity,solar_flux;\n');
+fprintf(fid,'	interval 60;\n');
+fprintf(fid,'	file climate.csv;\n');
+fprintf(fid,'};\n');
+fprintf(fid,'object recorder {\n');
+fprintf(fid,'	parent network_node;\n');
+fprintf(fid,'	property distribution_load,positive_sequence_voltage;\n');
+fprintf(fid,'	interval %f;\n', minimum_timestep);
+fprintf(fid,'	file substation_load.csv;\n');
+fprintf(fid,'};\n');
 
 if ( strcmp(houses,'y')~=0 )
     fprintf(fid,'// Floor area: smallest: %.1f, largest: %.1f\n',floor_area_small,floor_area_large);
