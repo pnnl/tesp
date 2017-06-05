@@ -63,10 +63,11 @@ for line in ip:
 			if lst[0] == "rated_power":
 				rating = float(lst[1].strip(" ").strip(";")) * 1.0
 			if lst[1] == "solar":
-				inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastMeterParent,'rated_W':rating,'resource':'solar'}
+				# used to assign billingmeter_id as lastMeterParent
+				inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'rated_W':rating,'resource':'solar'}
 				inInverters = False
 			if lst[1] == "battery":
-				inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastMeterParent,'rated_W':rating,'resource':'battery'}
+				inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'rated_W':rating,'resource':'battery'}
 				inInverters = False
 		if inHouses == True:
 			if lst[0] == "name":

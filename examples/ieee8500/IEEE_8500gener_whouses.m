@@ -13,13 +13,13 @@ solver_method = 'NR'; % 'FBS';
 
 % Start and stop times
 start_date='''2000-09-01';
-stop_date  = '''2000-09-01';
-start_time='8:00:00''';
-stop_time = '9:00:00''';
+stop_date  = '''2000-09-02';
+start_time='0:00:00''';
+stop_time = '0:00:00''';
 timezone='PST+8PDT';
 
 % Minimum timestep
-minimum_timestep = 15; % 4;
+minimum_timestep = 60; % 4;
 
 % Do you want to use houses?
 houses = 'y';   % 'y' indicates you want to use houses, 'n' indicates static loads
@@ -248,6 +248,15 @@ if (solar_fraction > 0) || (battery_fraction > 0)
 end
 fprintf(fid,'module tape;\n\n');
 
+if (solar_fraction > 0)
+    fprintf(fid,'schedule shading_value {\n');
+    fprintf(fid,'  * 0-13 * * * 1.0;\n');
+    fprintf(fid,'  * 14-15 * * * 0.15;\n');
+    fprintf(fid,'  * 16-23 * * * 1.0;\n');
+    fprintf(fid,'//  * * * * * 1.0;\n');
+    fprintf(fid,'}\n\n');
+end
+
 fprintf(fid,'#include "schedules.glm";\n\n');
 
 if (strcmp(houses,'y') ~= 0)
@@ -296,7 +305,7 @@ if strcmp(solver_method,'FBS')
     fprintf(fid,'     compensator_r_setting_C 0.0;\n');
     fprintf(fid,'     compensator_x_setting_C 0.0;\n');
 elseif strcmp(solver_method,'NR')
-    fprintf(fid,'     Control OUTPUT_VOLTAGE;\n');
+    fprintf(fid,'     Control MANUAL; // OUTPUT_VOLTAGE;\n');
     fprintf(fid,'     band_center %4.1f;\n',reg(1,1)*60);
     fprintf(fid,'     band_width %3.1f;\n',reg(1,2)*60);
 else
@@ -325,7 +334,7 @@ if strcmp(solver_method,'FBS')
     fprintf(fid,'     compensator_r_setting_C 0.0;\n');
     fprintf(fid,'     compensator_x_setting_C 0.0;\n');
 elseif strcmp(solver_method,'NR')
-    fprintf(fid,'     Control OUTPUT_VOLTAGE;\n');
+    fprintf(fid,'     Control MANUAL; // OUTPUT_VOLTAGE;\n');
     fprintf(fid,'     band_center %4.1f;\n',reg(2,1)*60);
     fprintf(fid,'     band_width %3.1f;\n',reg(2,2)*60);
 else
@@ -354,7 +363,7 @@ if strcmp(solver_method,'FBS')
     fprintf(fid,'     compensator_r_setting_C 0.0;\n');
     fprintf(fid,'     compensator_x_setting_C 0.0;\n');
 elseif strcmp(solver_method,'NR')
-    fprintf(fid,'     Control OUTPUT_VOLTAGE;\n');
+    fprintf(fid,'     Control MANUAL; // OUTPUT_VOLTAGE;\n');
     % Changed from 125*60 to 123*60
     fprintf(fid,'     band_center %4.1f;\n',reg(3,1)*60);
     fprintf(fid,'     band_width %3.1f;\n',reg(3,2)*60);
@@ -384,7 +393,7 @@ if strcmp(solver_method,'FBS')
     fprintf(fid,'     compensator_r_setting_C 0.0;\n');
     fprintf(fid,'     compensator_x_setting_C 0.0;\n');
 elseif strcmp(solver_method,'NR')
-    fprintf(fid,'     Control OUTPUT_VOLTAGE;\n');
+    fprintf(fid,'     Control MANUAL; // OUTPUT_VOLTAGE;\n');
     fprintf(fid,'     band_center %4.1f;\n',reg(4,1)*60);
     fprintf(fid,'     band_width %3.1f;\n',reg(4,2)*60);
 else
@@ -445,7 +454,10 @@ fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     pt_phase ABC;\n');
 fprintf(fid,'     name CapBank0;\n');
 fprintf(fid,'     phases_connected ABCN;\n');
-fprintf(fid,'     control VARVOLT;\n');
+fprintf(fid,'     control MANUAL; // VARVOLT;\n');
+fprintf(fid,'     switchA OPEN;\n');
+fprintf(fid,'     switchB OPEN;\n');
+fprintf(fid,'     switchC OPEN;\n');
 fprintf(fid,'     capacitor_A 0.4 MVAr;\n');
 fprintf(fid,'     capacitor_B 0.4 MVAr;\n');
 fprintf(fid,'     capacitor_C 0.4 MVAr;\n');
@@ -456,8 +468,8 @@ fprintf(fid,'     VAr_set_high %.1f kVAr;\n', cap(1,3));
 fprintf(fid,'     VAr_set_low %.1f kVAr;\n', cap(1,4));
 fprintf(fid,'     time_delay %.1f;\n', cap(1,5));
 fprintf(fid,'     lockout_time 1;\n');
-fprintf(fid,'     remote_sense CAP_3;\n');
-fprintf(fid,'     remote_sense_B L2823592_CAP;\n');
+fprintf(fid,'     // remote_sense CAP_3;\n');
+fprintf(fid,'     // remote_sense_B L2823592_CAP;\n');
 fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
 fprintf(fid,'}\n\n');
 
@@ -468,7 +480,10 @@ fprintf(fid,'     pt_phase ABC;\n');
 fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     name CapBank1;\n');
 fprintf(fid,'     phases_connected ABCN;\n');
-fprintf(fid,'     control VARVOLT;\n');
+fprintf(fid,'     control MANUAL; // VARVOLT;\n');
+fprintf(fid,'     switchA OPEN;\n');
+fprintf(fid,'     switchB OPEN;\n');
+fprintf(fid,'     switchC OPEN;\n');
 fprintf(fid,'     capacitor_A 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_B 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_C 0.3 MVAr;\n');
@@ -478,9 +493,9 @@ fprintf(fid,'     voltage_set_low %.1f;\n', cap(2,2)*60);
 fprintf(fid,'     VAr_set_high %.1f kVAr;\n', cap(2,3));
 fprintf(fid,'     VAr_set_low %.1f kVAr;\n', cap(2,4));
 fprintf(fid,'     time_delay %.1f;\n', cap(2,5));
-fprintf(fid,'     remote_sense CAP_2;\n');
+fprintf(fid,'     // remote_sense CAP_2;\n');
 fprintf(fid,'     lockout_time 1;\n');
-fprintf(fid,'     remote_sense_B Q16483_CAP;\n');
+fprintf(fid,'     // remote_sense_B Q16483_CAP;\n');
 fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
 fprintf(fid,'}\n\n');
 
@@ -490,7 +505,10 @@ fprintf(fid,'     pt_phase ABC;\n');
 fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     name CapBank2;\n');
 fprintf(fid,'     phases_connected ABCN;\n');
-fprintf(fid,'     control VARVOLT;\n');
+fprintf(fid,'     control MANUAL; // VARVOLT;\n');
+fprintf(fid,'     switchA OPEN;\n');
+fprintf(fid,'     switchB OPEN;\n');
+fprintf(fid,'     switchC OPEN;\n');
 fprintf(fid,'     capacitor_A 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_B 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_C 0.3 MVAr;\n');
@@ -501,8 +519,8 @@ fprintf(fid,'     VAr_set_high %.1f kVAr;\n', cap(3,3));
 fprintf(fid,'     VAr_set_low %.1f kVAr;\n', cap(3,4));
 fprintf(fid,'     time_delay %.1f;\n', cap(3,5));
 fprintf(fid,'     lockout_time 1;\n');
-fprintf(fid,'     remote_sense CAP_1;\n');
-fprintf(fid,'     remote_sense_B Q16642_CAP;\n');
+fprintf(fid,'     // remote_sense CAP_1;\n');
+fprintf(fid,'     // remote_sense_B Q16642_CAP;\n');
 fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
 fprintf(fid,'}\n\n');
 
@@ -516,9 +534,9 @@ fprintf(fid,'     capacitor_A 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_B 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_C 0.3 MVAr;\n');
 fprintf(fid,'     control_level INDIVIDUAL;\n');
-fprintf(fid,'     switchA CLOSED;\n');
-fprintf(fid,'     switchB CLOSED;\n');
-fprintf(fid,'     switchC CLOSED;\n');
+fprintf(fid,'     switchA OPEN; // CLOSED;\n');
+fprintf(fid,'     switchB OPEN; // CLOSED;\n');
+fprintf(fid,'     switchC OPEN; // CLOSED;\n');
 fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
 fprintf(fid,'}\n\n');
 
@@ -881,10 +899,10 @@ if ( strcmp(houses,'y')~=0 )
                 end
                                         
                 array_efficiency = 0.2;
-                sq_feet_to_sq_m = 1/10.74;
-                rated_insolation = 1000; %w/sq. m
-                inverter_undersizing = 0.9;
-                array_power  = panel_area * sq_feet_to_sq_m * rated_insolation * array_efficiency;
+                sq_feet_to_sq_m = 1/10.7636;
+                rated_insolation = 92.902; % W/ft^2 inside solar.cpp; 1000; %w/sq. m
+                inverter_undersizing = 1.0; % 0.9;
+                array_power  = panel_area * rated_insolation * array_efficiency;
                 inverter_power = array_power * inverter_undersizing;
                 
                 fprintf(fid,'object inverter {\n');
@@ -903,7 +921,9 @@ if ( strcmp(houses,'y')~=0 )
                 fprintf(fid,'        generator_status ONLINE;\n');
                 fprintf(fid,'        panel_type SINGLE_CRYSTAL_SILICON;\n');
                 fprintf(fid,'        efficiency 0.2;\n');
-                fprintf(fid,'        area %.0f;\n',floor_area);
+                fprintf(fid,'        shading_factor shading_value*1.0;\n');
+                fprintf(fid,'        rated_power %.0f;\n',array_power);
+                fprintf(fid,'        // area %.0f;\n',panel_area);
                 fprintf(fid,'     };\n');
                 if (metrics_interval > 0)
                     fprintf(fid,'     object metrics_collector {\n');
@@ -959,13 +979,6 @@ if ( strcmp(houses,'y')~=0 )
         end     
         total_houses = total_houses + no_of_houses;
     end
-    
-    disp(['Total houses = ' num2str(total_houses) ' ' num2str(total_floor_area) ' sq ft']);
-    disp(['Total load = ' num2str(0.001*total_reload) ' +j' num2str(0.001*total_imload) ' kW']);
-    disp(['Electric water heaters = ' num2str(total_wh_num) ' ' num2str(total_wh_kw) ' kw']);
-    disp(['Air conditioners = ' num2str(total_ac_num) ' ' num2str(total_ac_kw) ' kw']);
-    disp(['Solar = ' num2str(total_solar_num) ' ' num2str(total_solar_kw) ' kw']);
-    disp(['Storage = ' num2str(total_battery_num) ' ' num2str(total_battery_kw) ' kw']);
 else
     for i=1:EndTripLoads
         fprintf(fid,'object triplex_node {\n');
@@ -1953,13 +1966,43 @@ fprintf(fid,'	property distribution_load,positive_sequence_voltage;\n');
 fprintf(fid,'	interval %f;\n', minimum_timestep);
 fprintf(fid,'	file substation_load.csv;\n');
 fprintf(fid,'};\n');
+fprintf(fid,'object group_recorder {\n');
+fprintf(fid,'	group "class=house";\n');
+fprintf(fid,'	property UA;\n');
+fprintf(fid,'	interval 86401;\n');
+fprintf(fid,'	file house_ua.csv;\n');
+fprintf(fid,'};\n');
+fprintf(fid,'object group_recorder {\n');
+fprintf(fid,'	group "class=house";\n');
+fprintf(fid,'	property air_heat_capacity;\n');
+fprintf(fid,'	interval 86401;\n');
+fprintf(fid,'	file house_ca.csv;\n');
+fprintf(fid,'};\n');
+fprintf(fid,'object group_recorder {\n');
+fprintf(fid,'	group "class=house";\n');
+fprintf(fid,'	property mass_heat_coeff;\n');
+fprintf(fid,'	interval 86401;\n');
+fprintf(fid,'	file house_um.csv;\n');
+fprintf(fid,'};\n');
+fprintf(fid,'object group_recorder {\n');
+fprintf(fid,'	group "class=house";\n');
+fprintf(fid,'	property mass_heat_capacity;\n');
+fprintf(fid,'	interval 86401;\n');
+fprintf(fid,'	file house_cm.csv;\n');
+fprintf(fid,'};\n');
 
 if ( strcmp(houses,'y')~=0 )
-    fprintf(fid,'// Floor area: smallest: %.1f, largest: %.1f\n',floor_area_small,floor_area_large);
-    fprintf(fid,'// Total number of houses: %d\n',total_houses);
-    fprintf(fid,'// Load Scalar: %f\n',load_scalar);
-    fprintf(fid,'// House Scalar: %f\n',house_scalar);
-    fprintf(fid,'// ZIP Scalar: %f\n',zip_scalar);
+    fprintf(fid,'// Nominal peak load = %.1f + j%.1f kVA\n', 0.001*total_reload, 0.001*total_imload);
+    fprintf(fid,'// Houses: %d from %.1f to %.1f sq feet, total area %.1f sq ft\n', ...
+        total_houses, floor_area_small, floor_area_large, total_floor_area);
+    fprintf(fid,'// Electric water heaters: %d totaling %.1f kW\n', total_wh_num, total_wh_kw);
+    fprintf(fid,'// Air conditioners:       %d totaling %.1f kW\n', total_ac_num, total_ac_kw);
+    fprintf(fid,'// Solar:                  %d totaling %.1f kW\n', total_solar_num, total_solar_kw);
+    fprintf(fid,'// Storage:                %d totaling %.1f kW\n', total_battery_num, total_battery_kw);
+    fprintf(fid,'// Waterheater load is resistive\n');
+    fprintf(fid,'// HVAC load ZIP=0.2,0.0,0.8 with variable power factor as input\n');
+    fprintf(fid,'//   (the fan load ZIP=0.2534,0.7332,0.0135 and pf=0.96)\n');
+    fprintf(fid,'// The non-responsive ZIP load is input all constant current, pf=0.95\n');
 end
 
 
