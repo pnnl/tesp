@@ -23,6 +23,8 @@ waterheaters = {}
 billingmeters = {}
 inverters = {}
 feeders = {}
+capacitors = {}
+regulators = {}
 
 inSwing = False
 for line in ip:
@@ -43,6 +45,8 @@ inWaterHeaters = False
 inTriplexMeters = False
 inMeters = False
 inInverters = False
+inCapacitors = False
+inRegulators = False
 for line in ip:
 	lst = line.split()
 	if len(lst) > 1:
@@ -55,8 +59,22 @@ for line in ip:
 			phases = "ABC"
 		if lst[1] == "inverter":
 			inInverters = True
+		if lst[1] == "capacitor":
+			inCapacitors = True
+		if lst[1] == "regulator":
+			inRegulators = True
 		if lst[1] == "waterheater":
 			inWaterHeaters = True
+		if inCapacitors == True:
+			if lst[0] == "name":
+				lastCapacitor = lst[1].strip(";")
+				capacitors[lastCapacitor] = {'feeder_id':feeder_id}
+				inCapacitors = False;
+		if inRegulators == True:
+			if lst[0] == "name":
+				lastRegulator = lst[1].strip(";")
+				regulators[lastRegulator] = {'feeder_id':feeder_id}
+				inRegulators = False;
 		if inInverters == True:
 			if lst[0] == "name":
 				lastInverter = lst[1].strip(";")
@@ -118,6 +136,8 @@ for line in ip:
 		inTriplexMeters = False
 		inMeters = False
 		inInverters = False
+		inCapacitors = False
+		inRegulators = False
 
 for key, val in houses.items():
 	if key in waterheaters:
@@ -132,7 +152,8 @@ for key, val in inverters.items():
 feeders[feeder_id] = {'house_count': len(houses),'inverter_count': len(inverters)}
 substation = {'matpower_id':matpowerBus,
 	'transformer_MVA':substationTransformerMVA,'feeders':feeders, 
-	'billingmeters':billingmeters,'houses':houses,'inverters':inverters}
+	'billingmeters':billingmeters,'houses':houses,'inverters':inverters,
+	'capacitors':capacitors,'regulators':regulators}
 print (json.dumps(substation), file=op)
 
 ip.close()

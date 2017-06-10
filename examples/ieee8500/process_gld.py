@@ -17,6 +17,10 @@ hse_keys = list(dict['houses'].keys())
 hse_keys.sort()
 mtr_keys = list(dict['billingmeters'].keys())
 mtr_keys.sort()
+cap_keys = list(dict['capacitors'].keys())
+cap_keys.sort()
+reg_keys = list(dict['regulators'].keys())
+reg_keys.sort()
 xfMVA = dict['transformer_MVA']
 matBus = dict['matpower_id']
 print ("\n\nFile", sys.argv[1], "has substation", sub_keys[0], "at Matpower bus", matBus, "with", xfMVA, "MVA transformer")
@@ -90,6 +94,10 @@ lp_m = open ("billing_meter_" + sys.argv[1] + "_metrics.json").read()
 lst_m = json.loads(lp_m)
 lp_i = open ("inverter_" + sys.argv[1] + "_metrics.json").read()
 lst_i = json.loads(lp_i)
+lp_c = open ("capacitor_" + sys.argv[1] + "_metrics.json").read()
+lst_c = json.loads(lp_c)
+lp_r = open ("regulator_" + sys.argv[1] + "_metrics.json").read()
+lst_r = json.loads(lp_r)
 
 # houses
 lst_h.pop('StartTime')
@@ -189,6 +197,42 @@ for key in inv_keys:
 		i = i + 1
 	j = j + 1
 
+lst_c.pop('StartTime')
+meta_c = lst_c.pop('Metadata')
+print("\nCapacitor Metadata for", len(lst_c['3600']), "objects")
+for key, val in meta_c.items():
+	if key == 'operation_count':
+		CAP_COUNT_IDX = val['index']
+		CAP_COUNT_UNITS = val['units']
+data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c['3600'][cap_keys[0]])), dtype=np.float)
+print ("\nConstructed", data_c.shape, "NumPy array for Capacitors")
+j = 0
+for key in cap_keys:
+	i = 0
+	for t in times:
+		ary = lst_c[str(t)][cap_keys[j]]
+		data_c[j, i,:] = ary
+		i = i + 1
+	j = j + 1
+
+lst_r.pop('StartTime')
+meta_r = lst_r.pop('Metadata')
+print("\nRegulator Metadata for", len(lst_c['3600']), "objects")
+for key, val in meta_r.items():
+	if key == 'operation_count':
+		REG_COUNT_IDX = val['index']
+		REG_COUNT_UNITS = val['units']
+data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r['3600'][reg_keys[0]])), dtype=np.float)
+print ("\nConstructed", data_r.shape, "NumPy array for Regulators")
+j = 0
+for key in reg_keys:
+	i = 0
+	for t in times:
+		ary = lst_r[str(t)][reg_keys[j]]
+		data_r[j, i,:] = ary
+		i = i + 1
+	j = j + 1
+
 # assemble the total solar and battery inverter power
 j = 0
 solar_kw = np.zeros(len(times), dtype=np.float)
@@ -202,7 +246,7 @@ for key in inv_keys:
 	j = j + 1
 
 # display a plot
-fig, ax = plt.subplots(2, 3, sharex = 'col')
+fig, ax = plt.subplots(2, 4, sharex = 'col')
 
 total1 = (data_h[:,:,HSE_TOTAL_AVG_IDX]).squeeze()
 total2 = total1.sum(axis=0)
@@ -270,6 +314,23 @@ ax[1,2].set_xlabel("Hours")
 ax[1,2].set_ylabel("perunit")
 ax[1,2].set_title ("Inverter Power at " + inv_keys[0])
 ax[1,2].legend(loc='best')
+
+ax[0,3].plot(hrs, data_c[0,:,CAP_COUNT_IDX], color="blue", label=cap_keys[0])
+ax[0,3].plot(hrs, data_c[1,:,CAP_COUNT_IDX], color="red", label=cap_keys[1])
+ax[0,3].plot(hrs, data_c[2,:,CAP_COUNT_IDX], color="green", label=cap_keys[2])
+ax[0,3].plot(hrs, data_c[3,:,CAP_COUNT_IDX], color="magenta", label=cap_keys[3])
+ax[0,3].set_ylabel("")
+ax[0,3].set_title ("Capacitor Switchings")
+ax[0,3].legend(loc='best')
+
+ax[1,3].plot(hrs, data_r[0,:,REG_COUNT_IDX], color="blue", label=reg_keys[0])
+ax[1,3].plot(hrs, data_r[1,:,REG_COUNT_IDX], color="red", label=reg_keys[1])
+ax[1,3].plot(hrs, data_r[2,:,REG_COUNT_IDX], color="green", label=reg_keys[2])
+ax[1,3].plot(hrs, data_r[3,:,REG_COUNT_IDX], color="magenta", label=reg_keys[3])
+ax[1,3].set_xlabel("Hours")
+ax[1,3].set_ylabel("")
+ax[1,3].set_title ("Regulator Tap Changes")
+ax[1,3].legend(loc='best')
 
 plt.show()
 
