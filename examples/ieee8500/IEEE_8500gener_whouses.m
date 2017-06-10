@@ -4,9 +4,9 @@ format long g;
 %% Most of the things you might want to change via a scripting mechanism are located in this section
 
 % Directory for input files (CSVs)
-dir = '~/src/ptesp/examples/ieee8500/backbone/';
+dir = 'c:/tesp/examples/ieee8500/backbone/';
 % Directory for output of GLM files
-dir2 = '~/src/ptesp/examples/ieee8500/';
+dir2 = 'c:/tesp/examples/ieee8500/';
 
 % Power flow solver method
 solver_method = 'NR'; % 'FBS';
@@ -26,12 +26,13 @@ houses = 'y';   % 'y' indicates you want to use houses, 'n' indicates static loa
 use_load = 'y'; % 'y' indicates you want zip loads, 'n' indicates no appliances within the home
 alt_climate_file = '../weather/WA-Yakima_Air_Terminal.tmy3';
 climate_file = '../weather/AZ-Tucson_International_Ap.tmy3';
+initial_air_temperature = 82;
 
 load_scalar = 1.0;   % leave as 1 for house models; if houses='n', then this scales the base load of the original 8500 node system
 house_scalar = 8;%8.7;%6;  % changes square ft (an increase in house_scalar will decrease sqft and decrease load)
 zip_scalar = 0.3;%0.3;%3;   % scales the zip load (an increase in zip_scalar will increase load)
 
-solar_fraction = 0.3;    % portion of houses with solar
+solar_fraction = 0.9;    % portion of houses with solar
 battery_fraction = 0.5;  % portion of solar houses adding storage
 
 gas_perc = 0.5; % ratio of homes that use gas heat (rest use resistive)
@@ -250,10 +251,10 @@ fprintf(fid,'module tape;\n\n');
 
 if (solar_fraction > 0)
     fprintf(fid,'schedule shading_value {\n');
-    fprintf(fid,'  * 0-13 * * * 1.0;\n');
-    fprintf(fid,'  * 14-15 * * * 0.15;\n');
-    fprintf(fid,'  * 16-23 * * * 1.0;\n');
-    fprintf(fid,'//  * * * * * 1.0;\n');
+    fprintf(fid,'//  * 0-13 * * * 1.0;\n');
+    fprintf(fid,'//  * 14-15 * * * 0.15;\n');
+    fprintf(fid,'//  * 16-23 * * * 1.0;\n');
+    fprintf(fid,'  * * * * * 1.0;\n');
     fprintf(fid,'}\n\n');
 end
 
@@ -305,7 +306,8 @@ if strcmp(solver_method,'FBS')
     fprintf(fid,'     compensator_r_setting_C 0.0;\n');
     fprintf(fid,'     compensator_x_setting_C 0.0;\n');
 elseif strcmp(solver_method,'NR')
-    fprintf(fid,'     Control MANUAL; // OUTPUT_VOLTAGE;\n');
+    fprintf(fid,'     // Control MANUAL;\n');
+    fprintf(fid,'     Control OUTPUT_VOLTAGE;\n');
     fprintf(fid,'     band_center %4.1f;\n',reg(1,1)*60);
     fprintf(fid,'     band_width %3.1f;\n',reg(1,2)*60);
 else
@@ -334,7 +336,8 @@ if strcmp(solver_method,'FBS')
     fprintf(fid,'     compensator_r_setting_C 0.0;\n');
     fprintf(fid,'     compensator_x_setting_C 0.0;\n');
 elseif strcmp(solver_method,'NR')
-    fprintf(fid,'     Control MANUAL; // OUTPUT_VOLTAGE;\n');
+    fprintf(fid,'     // Control MANUAL;\n');
+    fprintf(fid,'     Control OUTPUT_VOLTAGE;\n');
     fprintf(fid,'     band_center %4.1f;\n',reg(2,1)*60);
     fprintf(fid,'     band_width %3.1f;\n',reg(2,2)*60);
 else
@@ -363,7 +366,8 @@ if strcmp(solver_method,'FBS')
     fprintf(fid,'     compensator_r_setting_C 0.0;\n');
     fprintf(fid,'     compensator_x_setting_C 0.0;\n');
 elseif strcmp(solver_method,'NR')
-    fprintf(fid,'     Control MANUAL; // OUTPUT_VOLTAGE;\n');
+    fprintf(fid,'     // Control MANUAL;\n');
+    fprintf(fid,'     Control OUTPUT_VOLTAGE;\n');
     % Changed from 125*60 to 123*60
     fprintf(fid,'     band_center %4.1f;\n',reg(3,1)*60);
     fprintf(fid,'     band_width %3.1f;\n',reg(3,2)*60);
@@ -393,7 +397,8 @@ if strcmp(solver_method,'FBS')
     fprintf(fid,'     compensator_r_setting_C 0.0;\n');
     fprintf(fid,'     compensator_x_setting_C 0.0;\n');
 elseif strcmp(solver_method,'NR')
-    fprintf(fid,'     Control MANUAL; // OUTPUT_VOLTAGE;\n');
+    fprintf(fid,'     // Control MANUAL;\n');
+    fprintf(fid,'     Control OUTPUT_VOLTAGE;\n');
     fprintf(fid,'     band_center %4.1f;\n',reg(4,1)*60);
     fprintf(fid,'     band_width %3.1f;\n',reg(4,2)*60);
 else
@@ -413,6 +418,9 @@ fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     from regxfmr_HVMV_Sub_LSB;\n');
 fprintf(fid,'     to _HVMV_Sub_LSB;\n');
 fprintf(fid,'     configuration reg_config_1;\n');
+fprintf(fid,'     object metrics_collector {\n');
+fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+fprintf(fid,'     };\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object regulator {\n');
@@ -421,6 +429,9 @@ fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     from regxfmr_190-8593;\n');
 fprintf(fid,'     to gld_190-8593;\n');
 fprintf(fid,'     configuration reg_config_2;\n');
+fprintf(fid,'     object metrics_collector {\n');
+fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+fprintf(fid,'     };\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object regulator {\n');
@@ -429,6 +440,9 @@ fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     from regxfmr_190-8581;\n');
 fprintf(fid,'     to gld_190-8581;\n');
 fprintf(fid,'     configuration reg_config_3;\n');
+fprintf(fid,'     object metrics_collector {\n');
+fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+fprintf(fid,'     };\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object regulator {\n');
@@ -437,6 +451,9 @@ fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     from regxfmr_190-7361;\n');
 fprintf(fid,'     to gld_190-7361;\n');
 fprintf(fid,'     configuration reg_config_4;\n');
+fprintf(fid,'     object metrics_collector {\n');
+fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+fprintf(fid,'     };\n');
 fprintf(fid,'}\n\n');
 
 
@@ -454,10 +471,11 @@ fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     pt_phase ABC;\n');
 fprintf(fid,'     name CapBank0;\n');
 fprintf(fid,'     phases_connected ABCN;\n');
-fprintf(fid,'     control MANUAL; // VARVOLT;\n');
-fprintf(fid,'     switchA OPEN;\n');
-fprintf(fid,'     switchB OPEN;\n');
-fprintf(fid,'     switchC OPEN;\n');
+fprintf(fid,'     // control MANUAL;\n');
+fprintf(fid,'     control VARVOLT;\n');
+fprintf(fid,'     // switchA OPEN;\n');
+fprintf(fid,'     // switchB OPEN;\n');
+fprintf(fid,'     // switchC OPEN;\n');
 fprintf(fid,'     capacitor_A 0.4 MVAr;\n');
 fprintf(fid,'     capacitor_B 0.4 MVAr;\n');
 fprintf(fid,'     capacitor_C 0.4 MVAr;\n');
@@ -468,11 +486,13 @@ fprintf(fid,'     VAr_set_high %.1f kVAr;\n', cap(1,3));
 fprintf(fid,'     VAr_set_low %.1f kVAr;\n', cap(1,4));
 fprintf(fid,'     time_delay %.1f;\n', cap(1,5));
 fprintf(fid,'     lockout_time 1;\n');
-fprintf(fid,'     // remote_sense CAP_3;\n');
-fprintf(fid,'     // remote_sense_B L2823592_CAP;\n');
+fprintf(fid,'     remote_sense CAP_3;\n');
+fprintf(fid,'     remote_sense_B L2823592_CAP;\n');
 fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
+fprintf(fid,'     object metrics_collector {\n');
+fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+fprintf(fid,'     };\n');
 fprintf(fid,'}\n\n');
-
 
 fprintf(fid,'object capacitor {\n');
 fprintf(fid,'     parent R42247;\n');
@@ -480,10 +500,11 @@ fprintf(fid,'     pt_phase ABC;\n');
 fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     name CapBank1;\n');
 fprintf(fid,'     phases_connected ABCN;\n');
-fprintf(fid,'     control MANUAL; // VARVOLT;\n');
-fprintf(fid,'     switchA OPEN;\n');
-fprintf(fid,'     switchB OPEN;\n');
-fprintf(fid,'     switchC OPEN;\n');
+fprintf(fid,'     // control MANUAL;\n');
+fprintf(fid,'     control VARVOLT;\n');
+fprintf(fid,'     // switchA OPEN;\n');
+fprintf(fid,'     // switchB OPEN;\n');
+fprintf(fid,'     // switchC OPEN;\n');
 fprintf(fid,'     capacitor_A 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_B 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_C 0.3 MVAr;\n');
@@ -493,10 +514,13 @@ fprintf(fid,'     voltage_set_low %.1f;\n', cap(2,2)*60);
 fprintf(fid,'     VAr_set_high %.1f kVAr;\n', cap(2,3));
 fprintf(fid,'     VAr_set_low %.1f kVAr;\n', cap(2,4));
 fprintf(fid,'     time_delay %.1f;\n', cap(2,5));
-fprintf(fid,'     // remote_sense CAP_2;\n');
+fprintf(fid,'     remote_sense CAP_2;\n');
 fprintf(fid,'     lockout_time 1;\n');
-fprintf(fid,'     // remote_sense_B Q16483_CAP;\n');
+fprintf(fid,'     remote_sense_B Q16483_CAP;\n');
 fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
+fprintf(fid,'     object metrics_collector {\n');
+fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+fprintf(fid,'     };\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object capacitor {\n');
@@ -505,10 +529,11 @@ fprintf(fid,'     pt_phase ABC;\n');
 fprintf(fid,'     phases ABCN;\n');
 fprintf(fid,'     name CapBank2;\n');
 fprintf(fid,'     phases_connected ABCN;\n');
-fprintf(fid,'     control MANUAL; // VARVOLT;\n');
-fprintf(fid,'     switchA OPEN;\n');
-fprintf(fid,'     switchB OPEN;\n');
-fprintf(fid,'     switchC OPEN;\n');
+fprintf(fid,'     // control MANUAL;\n');
+fprintf(fid,'     control VARVOLT;\n');
+fprintf(fid,'     // switchA OPEN;\n');
+fprintf(fid,'     // switchB OPEN;\n');
+fprintf(fid,'     // switchC OPEN;\n');
 fprintf(fid,'     capacitor_A 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_B 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_C 0.3 MVAr;\n');
@@ -519,9 +544,12 @@ fprintf(fid,'     VAr_set_high %.1f kVAr;\n', cap(3,3));
 fprintf(fid,'     VAr_set_low %.1f kVAr;\n', cap(3,4));
 fprintf(fid,'     time_delay %.1f;\n', cap(3,5));
 fprintf(fid,'     lockout_time 1;\n');
-fprintf(fid,'     // remote_sense CAP_1;\n');
-fprintf(fid,'     // remote_sense_B Q16642_CAP;\n');
+fprintf(fid,'     remote_sense CAP_1;\n');
+fprintf(fid,'     remote_sense_B Q16642_CAP;\n');
 fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
+fprintf(fid,'     object metrics_collector {\n');
+fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+fprintf(fid,'     };\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object capacitor {\n');
@@ -534,10 +562,13 @@ fprintf(fid,'     capacitor_A 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_B 0.3 MVAr;\n');
 fprintf(fid,'     capacitor_C 0.3 MVAr;\n');
 fprintf(fid,'     control_level INDIVIDUAL;\n');
-fprintf(fid,'     switchA OPEN; // CLOSED;\n');
-fprintf(fid,'     switchB OPEN; // CLOSED;\n');
-fprintf(fid,'     switchC OPEN; // CLOSED;\n');
+fprintf(fid,'     switchA CLOSED;\n');
+fprintf(fid,'     switchB CLOSED;\n');
+fprintf(fid,'     switchC CLOSED;\n');
 fprintf(fid,'     nominal_voltage %s;\n',nom_volt1);
+fprintf(fid,'     object metrics_collector {\n');
+fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
+fprintf(fid,'     };\n');
 fprintf(fid,'}\n\n');
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -756,6 +787,7 @@ if ( strcmp(houses,'y')~=0 )
             end
             
             fprintf(fid,'     thermal_integrity_level %d;\n',ti);
+%            fprintf(fid,'     air_temperature %.1f;\n', initial_air_temperature);
             % for TESP dictionary, print the system types before setpoints
             if (rand(1) < gas_perc)
                 heat_type = 'GAS';
