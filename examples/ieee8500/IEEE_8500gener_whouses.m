@@ -4,11 +4,11 @@ format long g;
 %% Most of the things you might want to change via a scripting mechanism are located in this section
 
 % Directory for input files (CSVs)
-% dir = 'c:/tesp/examples/ieee8500/backbone/';
-dir = '~/src/ptesp/examples/ieee8500/backbone/';
+dir = 'c:/tesp/examples/ieee8500/backbone/';
+% dir = '~/src/ptesp/examples/ieee8500/backbone/';
 % Directory for output of GLM files
-% dir2 = 'c:/tesp/examples/ieee8500/';
-dir2 = '~/src/ptesp/examples/ieee8500/';
+dir2 = 'c:/tesp/examples/ieee8500/';
+% dir2 = '~/src/ptesp/examples/ieee8500/';
 
 % Power flow solver method
 solver_method = 'NR'; % 'FBS';
@@ -279,19 +279,19 @@ if (metrics_interval > 0)
 end
 
 if (strcmp(houses,'y') ~= 0)
-    fprintf(fid,'//object csv_reader {\n');
-    fprintf(fid,'//  name CsvReader;\n');
-    fprintf(fid,'//  filename sunny.csv;\n');
-    fprintf(fid,'//  filename tstorm.csv;\n');
-    fprintf(fid,'//};\n');
+    fprintf(fid,'object csv_reader {\n');
+    fprintf(fid,'  name CsvReader;\n');
+    fprintf(fid,'  filename sunny.csv;\n');
+    fprintf(fid,'//  filename cloudy.csv;\n');
+    fprintf(fid,'};\n');
     fprintf(fid,'object climate {\n');
     fprintf(fid,'     name climate;\n');
-    fprintf(fid,'//     reader CsvReader;\n');
-    fprintf(fid,'//     tmyfile sunny.csv;\n');
-    fprintf(fid,'//     tmyfile tstorm.csv;\n');
-    fprintf(fid,'     tmyfile "%s";\n',climate_file);
+    fprintf(fid,'     reader CsvReader;\n');
+    fprintf(fid,'     tmyfile sunny.csv;\n');
+    fprintf(fid,'//     tmyfile cloudy.csv;\n');
+    fprintf(fid,'//     tmyfile "%s";\n',climate_file);
     fprintf(fid,'//     tmyfile "%s";\n',alt_climate_file);
-    fprintf(fid,'     interpolate QUADRATIC;\n');
+    fprintf(fid,'//     interpolate QUADRATIC;\n');
     fprintf(fid,'}\n\n');
 end
 
