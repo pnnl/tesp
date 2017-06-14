@@ -1,0 +1,332 @@
+//IEEE 8500 node test system.
+//  Generated 13-Jun-2017 10:52:55 using Matlab 9.0.0.341360 (R2016a).
+
+clock {
+     timezone PST+8PDT;
+     starttime '2000-09-01 0:00:00';
+     stoptime '2000-09-02 0:00:00';
+}
+
+module powerflow {
+    solver_method NR;
+    line_limits FALSE;
+    default_maximum_voltage_error 1e-4;
+};
+module residential {
+     implicit_enduses NONE;
+     ANSI_voltage_check FALSE;
+}
+module climate;
+module market;
+module generators;
+module tape;
+
+schedule shading_value {
+//  * 0-13 * * * 1.0;
+//  * 14-15 * * * 0.15;
+//  * 16-23 * * * 1.0;
+  * * * * * 1.0;
+}
+
+#include "schedules.glm";
+
+#set minimum_timestep=300;
+#set profiler=1;
+#set relax_naming_rules=1;
+#set suppress_repeat_messages=1;
+#set randomseed=10
+#define METRICS_INTERVAL=300
+object metrics_collector_writer {
+     interval ${METRICS_INTERVAL};
+     filename test_metrics.json;
+};
+
+object csv_reader {
+  name CsvReader;
+  filename sunny.csv;
+//  filename cloudy.csv;
+};
+object climate {
+     name climate;
+     reader CsvReader;
+     tmyfile sunny.csv;
+//     tmyfile cloudy.csv;
+//     tmyfile "../weather/AZ-Tucson_International_Ap.tmy3";
+//     tmyfile "../weather/WA-Yakima_Air_Terminal.tmy3";
+//     interpolate QUADRATIC;
+}
+
+object regulator_configuration {
+     connect_type 1;
+     name reg_config_1;
+     // Control MANUAL;
+     Control OUTPUT_VOLTAGE;
+     band_center 7500.0;
+     band_width 120.0;
+     time_delay 60.0;
+     raise_taps 16;
+     lower_taps 16;
+     regulation 0.1;
+     Type B;
+}
+
+object regulator {
+     name FEEDER_REG;
+     phases ABCN;
+     from regxfmr_HVMV_Sub_LSB;
+     to _HVMV_Sub_LSB;
+     configuration reg_config_1;
+     object metrics_collector {
+         interval ${METRICS_INTERVAL};
+     };
+}
+
+object capacitor {
+     phases ABCN;
+     parent _HVMV_Sub_LSB;
+     name CapBank3;
+     phases_connected ABCN;
+     control MANUAL;
+     capacitor_A 0.3 MVAr;
+     capacitor_B 0.3 MVAr;
+     capacitor_C 0.3 MVAr;
+     control_level INDIVIDUAL;
+     switchA CLOSED;
+     switchB CLOSED;
+     switchC CLOSED;
+     nominal_voltage 7199.558;
+     object metrics_collector {
+         interval ${METRICS_INTERVAL};
+     };
+}
+
+// Transformer and configuration at feeder
+
+object transformer_configuration:27500 {
+     connect_type DELTA_GWYE;
+     name trans_config_1;
+     install_type PADMOUNT;
+     power_rating 27500kVA;
+     primary_voltage 115.0kV;
+     secondary_voltage 12.47kV;
+     reactance 0.15510;
+     resistance 0.01344;
+}
+
+object transformer {
+     phases ABCN;
+     name HVMV_Sub;
+     from HVMV_Sub_HSB;
+     to regxfmr_HVMV_Sub_LSB;
+     configuration trans_config_1;
+}
+
+object node {
+     phases ABCN;
+     name regxfmr_HVMV_Sub_LSB;
+     nominal_voltage 7199.558;
+}
+
+object node {
+     phases ABCN;
+     name _HVMV_Sub_LSB;
+     nominal_voltage 7199.558;
+}
+
+object substation {
+     name network_node;
+     bustype SWING;
+     nominal_voltage 66395.3;
+     base_power 12MVA;
+     power_convergence_value 100VA;
+     phases ABCN;
+     positive_sequence_voltage 69715.1;
+     object metrics_collector {
+         interval ${METRICS_INTERVAL};
+     };
+}
+
+object line_configuration {
+  name lcon_series_reactor;
+  z11 0.00000+23815.6j;
+  z12 0.00000+0.00000j;
+  z13 0.00000+0.00000j;
+  z21 0.00000+0.00000j;
+  z22 0.00000+23815.6j;
+  z23 0.00000+0.00000j;
+  z31 0.00000+0.00000j;
+  z32 0.00000+0.00000j;
+  z33 0.00000+23815.6j;
+  c11 0.00000;
+  c12 0.00000;
+  c13 0.00000;
+  c21 0.00000;
+  c22 0.00000;
+  c23 0.00000;
+  c31 0.00000;
+  c32 0.00000;
+  c33 0.00000;
+}
+object overhead_line {
+     name series_reactor;
+     phases ABC;
+     from network_node;
+     to HVMV_Sub_HSB;
+     length 3.28084;
+     configuration lcon_series_reactor;
+}
+object node {
+     name HVMV_Sub_HSB;
+     nominal_voltage 66395.3;
+     phases ABCN;
+}
+
+// Triplex Node Objects with loads
+
+object transformer_configuration {
+     name xf1010B;
+     connect_type SINGLE_PHASE_CENTER_TAPPED;
+     install_type POLETOP;
+     primary_voltage 7200.0;
+     secondary_voltage 120.0;
+     power_rating 10.0;
+     powerB_rating 10.0;
+     impedance 0.006+0.0136j;
+     impedance1 0.012+0.0204j;
+     impedance2 0.012+0.0204j;
+     shunt_resistance 500.0;
+     shunt_reactance 200.0;
+}
+
+object transformer {
+     configuration xf1010B;
+     name T5138236B;
+     from _HVMV_Sub_LSB;
+     to X2673305B;
+     nominal_voltage 7199.558;
+     phases BS;
+}
+
+object triplex_node {
+     name X2673305B;
+     nominal_voltage 120;
+     phases BS;
+}
+
+object triplex_line_conductor {
+     name gld_4/0triplex;
+     resistance 1.535;
+     geometric_mean_radius 0.0111;
+     rating.summer.emergency 315 A;
+     rating.summer.continuous 315 A;
+     rating.winter.emergency 315 A;
+     rating.winter.continuous 315 A;
+}
+
+object triplex_line_configuration {
+     name gld_4/0Triplex;
+     conductor_1 gld_4/0triplex;
+     conductor_2 gld_4/0triplex;
+     conductor_N gld_4/0triplex;
+     insulation_thickness 0.08;
+     diameter 0.368;
+}
+
+object triplex_line {
+     name Tpx138236B0;
+     phases BS;
+     from X2673305B;
+     to SX2673305B;
+     length 50ft;
+     configuration gld_4/0Triplex;
+}
+
+object triplex_node {
+     name SX2673305B;
+     nominal_voltage 120;
+     phases BS;
+}
+
+object triplex_meter {
+     name SX2673305B_1;
+     parent SX2673305B;
+     nominal_voltage 120;
+     phases BS;
+     bill_mode NONE;
+     object metrics_collector {
+         interval ${METRICS_INTERVAL};
+     };
+}
+
+object house {
+     parent SX2673305B_1;
+     schedule_skew 2564;
+     name SX2673305B_1_house;
+     floor_area 2200.5;
+     thermal_integrity_level 3;
+     // AC size estimate 54000 BTU/hr or   15.83 kW
+     auxiliary_system_type NONE;
+     heating_system_type GAS;
+     cooling_system_type ELECTRIC;
+     hvac_power_factor 0.878;
+     cooling_setpoint cooling8*1.78+79.92;
+     heating_setpoint heating1*1.72+66.27;
+     object waterheater {
+         schedule_skew -4463;
+         name SX2673305B_1_waterheater;
+         tank_height 3.78 ft;
+         location INSIDE;
+         tank_volume 48.045787;
+         tank_UA 3.669102;
+         heating_element_capacity 4345.336094 W;
+         heat_mode ELECTRIC;
+         tank_setpoint 129.487693;
+         thermostat_deadband 6.770221;
+         temperature 125.617046;
+         water_demand large_3*1.0;
+         object metrics_collector {
+             interval ${METRICS_INTERVAL};
+         };
+     };
+     object ZIPload {
+         schedule_skew 2564;
+         name SX2673305B_1_zip;
+         base_power plug1*3.000000;
+         base_power plug1*0.021818;
+         power_fraction 0.000000;
+         impedance_fraction 0.000000;
+         current_fraction 1.000000;
+         power_pf 0.950000;
+         current_pf 0.950000;
+         impedance_pf 0.950000;
+     };
+     object metrics_collector {
+         interval ${METRICS_INTERVAL};
+     };
+};
+
+object inverter {
+    name SX2673305B_1_solar_inv;
+    parent SX2673305B_1;
+    phases BS;
+    generator_status ONLINE;
+    generator_mode CONSTANT_PF;
+    inverter_type FOUR_QUADRANT;
+    inverter_efficiency 1;
+    rated_power 4089;
+    power_factor 1.0;
+    object solar {
+        name SX2673305B_1_solar;
+        generator_mode SUPPLY_DRIVEN;
+        generator_status ONLINE;
+        panel_type SINGLE_CRYSTAL_SILICON;
+        efficiency 0.2;
+        shading_factor shading_value*1.0;
+        rated_power 4089;
+        // area 220;
+     };
+     object metrics_collector {
+        interval ${METRICS_INTERVAL};
+     };
+};
+
