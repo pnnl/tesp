@@ -4,11 +4,11 @@ format long g;
 %% Most of the things you might want to change via a scripting mechanism are located in this section
 
 % Directory for input files (CSVs)
-dir = 'c:/tesp/examples/ieee8500/backbone/';
-% dir = '~/src/ptesp/examples/ieee8500/backbone/';
+% dir = 'c:/tesp/examples/ieee8500/backbone/';
+dir = '~/src/ptesp/examples/ieee8500/backbone/';
 % Directory for output of GLM files
-dir2 = 'c:/tesp/examples/ieee8500/';
-% dir2 = '~/src/ptesp/examples/ieee8500/';
+% dir2 = 'c:/tesp/examples/ieee8500/';
+dir2 = '~/src/ptesp/examples/ieee8500/';
 
 % Power flow solver method
 solver_method = 'NR'; % 'FBS';
@@ -38,7 +38,7 @@ solar_fraction = 0.9;    % portion of houses with solar
 battery_fraction = 0.5;  % portion of solar houses adding storage
 
 gas_perc = 0.5; % ratio of homes that use gas heat (rest use resistive)
-elec_cool_perc = 0.9; % ratio of homes that use electric AC (rest use NONE)
+elec_cool_perc = 1.0; % ratio of homes that use electric AC (rest use NONE)
 
 perc_gas_wh = 0.5; % ratio of homes with gas waterheaters (rest use electrical)
 
@@ -248,6 +248,7 @@ end
 fprintf(fid,'module market;\n');
 if (solar_fraction > 0) || (battery_fraction > 0)
     fprintf(fid,'module generators;\n');
+    fprintf(fid,'#define BATTERY_STATUS=OFFLINE\n');
 end
 fprintf(fid,'module tape;\n\n');
 
@@ -267,7 +268,7 @@ if (strcmp(houses,'y') ~= 0)
 end
 fprintf(fid,'#set profiler=1;\n');
 fprintf(fid,'#set relax_naming_rules=1;\n');
-fprintf(fid,'#set suppress_repeat_messages=0;\n');
+fprintf(fid,'#set suppress_repeat_messages=1;\n');
 %fprintf(fid,'#set savefile="8500_balanced_%s.xml";\n',solver_method);
 fprintf(fid,'#set randomseed=10\n');
 if (metrics_interval > 0)
@@ -776,7 +777,9 @@ if ( strcmp(houses,'y')~=0 )
             Tph = char(RawTripLoads{3}(i));
             PhLoad = Tph(10);
             fprintf(fid,'     phases %sS;\n',PhLoad);
-            fprintf(fid,'     bill_mode NONE;\n');
+            fprintf(fid,'     bill_mode UNIFORM;\n');
+            fprintf(fid,'     monthly_fee 13.00;\n');
+            fprintf(fid,'     price 0.086652;\n');
             if (metrics_interval > 0)
                 fprintf(fid,'     object metrics_collector {\n');
                 fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
@@ -998,7 +1001,7 @@ if ( strcmp(houses,'y')~=0 )
                     fprintf(fid,'    inverter_efficiency %.3f;\n',0.975);
                     fprintf(fid,'    object battery {\n');
                     fprintf(fid,'        name %s_battery;\n',mtr_root);
-                    fprintf(fid,'        generator_status ONLINE;\n');
+                    fprintf(fid,'        generator_status ${BATTERY_STATUS};\n');
                     fprintf(fid,'        use_internal_battery_model true;\n');
                     fprintf(fid,'        generator_mode CONSTANT_PQ;\n');
                     fprintf(fid,'        battery_type LI_ION;\n');
@@ -1980,11 +1983,8 @@ for i=1:EndTripLines
     fprintf(fid,'     phases %sS;\n',Tphase);
     fprintf(fid,'     from %s;\n',gld_strict_name(char(RawTripLines{2}(i))));
     fprintf(fid,'     to %s;\n',gld_strict_name(char(RawTripLines{4}(i))));
-%    if (strcmp(houses,'y')~= 0)
-%        fprintf(fid,'     length %.1fft;\n',25-20*rand(1));
-%    else
-        fprintf(fid,'     length %2.0fft;\n',RawTripLines{7}(i));
-%    end
+%    fprintf(fid,'     length %2.0fft;\n',RawTripLines{7}(i));
+    fprintf(fid,'     length 100ft;\n');
     fprintf(fid,'     configuration %s;\n',gld_strict_name(char(RawTripLines{6}(i))));
     fprintf(fid,'}\n\n');
 end
