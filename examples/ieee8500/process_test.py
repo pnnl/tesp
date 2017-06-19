@@ -246,7 +246,7 @@ for key in inv_keys:
 	j = j + 1
 
 # display a plot
-fig, ax = plt.subplots(1, 2, sharex = 'col')
+fig, ax = plt.subplots(1, 3, sharex = 'col')
 
 ax[0].plot(hrs, data_h[0,:,HSE_AIR_AVG_IDX], color="blue", label="Mean")
 ax[0].plot(hrs, data_h[0,:,HSE_AIR_MIN_IDX], color="red", label="Min")
@@ -257,11 +257,15 @@ ax[0].set_ylabel(HSE_AIR_AVG_UNITS)
 ax[0].set_title ("House Air at " + hse_keys[0])
 ax[0].legend(loc='best')
 
-ax[1].plot(hrs, solar_kw, color="blue", label="Solar")
+ax[1].plot(hrs, solar_kw, color="blue")
 ax[1].set_xlabel("Hours")
 ax[1].set_ylabel("kW")
-ax[1].set_title ("Total Inverter Power")
-ax[1].legend(loc='best')
+ax[1].set_title ("Total Solar Power")
+
+ax[2].plot(hrs, battery_kw, color="blue")
+ax[2].set_xlabel("Hours")
+ax[2].set_ylabel("kW")
+ax[2].set_title ("Total Battery Power")
 
 plt.show()
 

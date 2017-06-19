@@ -1,18 +1,21 @@
 function [ cloudy_direct ] = adjust_solar_direct( sunny_direct )
-% ramps direct solar from 100% down to 10% between 1200 and 1210
-% then back up to 100% from 1330 to 1400
-% in minutes (index value) ramp down 720 to 730 and up 810 to 840
+% ramps direct solar from 100% down to 10% between 1430 and 1440
+% then back up to 100% from 1600 to 1630
+    start_down = 60 * 14.5;
+    stop_down = start_down + 10;
+    start_up = 60 * 16.0;
+    stop_up = start_up + 30;
     cloudy_direct = sunny_direct;
-    slope_down = (0.1*cloudy_direct(730) - cloudy_direct(720)) / 10;
-    org_up = 0.1*cloudy_direct(810);
-    slope_up = (cloudy_direct(840) - org_up) / 30;
+    slope_down = (0.1*cloudy_direct(stop_down) - cloudy_direct(start_down)) / 10;
+    org_up = 0.1*cloudy_direct(start_up);
+    slope_up = (cloudy_direct(stop_up) - org_up) / 30;
     for i=1:1440
-        if (i >= 720) && (i <= 730)
-            cloudy_direct(i) = cloudy_direct(720) + slope_down*(i-720);
-        elseif (i > 730) && (i < 810)
+        if (i >= start_down) && (i <= stop_down)
+            cloudy_direct(i) = cloudy_direct(start_down) + slope_down*(i-start_down);
+        elseif (i > stop_down) && (i < start_up)
             cloudy_direct(i) = 0.1*cloudy_direct(i);
-        elseif (i >= 810) && (i <= 840)
-            cloudy_direct(i) = org_up + slope_up*(i-810);
+        elseif (i >= start_up) && (i <= stop_up)
+            cloudy_direct(i) = org_up + slope_up*(i-start_up);
         end
     end
 end

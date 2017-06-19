@@ -248,6 +248,7 @@ end
 fprintf(fid,'module market;\n');
 if (solar_fraction > 0) || (battery_fraction > 0)
     fprintf(fid,'module generators;\n');
+    fprintf(fid,'#define SOLAR_STATUS=ONLINE\n');
     fprintf(fid,'#define BATTERY_STATUS=OFFLINE\n');
 end
 fprintf(fid,'module tape;\n\n');
@@ -282,14 +283,14 @@ end
 if (strcmp(houses,'y') ~= 0)
     fprintf(fid,'object csv_reader {\n');
     fprintf(fid,'  name CsvReader;\n');
-    fprintf(fid,'  filename sunny.csv;\n');
-    fprintf(fid,'//  filename cloudy.csv;\n');
+    fprintf(fid,'//  filename sunny.csv;\n');
+    fprintf(fid,'  filename cloudy.csv;\n');
     fprintf(fid,'};\n');
     fprintf(fid,'object climate {\n');
     fprintf(fid,'     name climate;\n');
     fprintf(fid,'     reader CsvReader;\n');
-    fprintf(fid,'     tmyfile sunny.csv;\n');
-    fprintf(fid,'//     tmyfile cloudy.csv;\n');
+    fprintf(fid,'//     tmyfile sunny.csv;\n');
+    fprintf(fid,'     tmyfile cloudy.csv;\n');
     fprintf(fid,'//     tmyfile "%s";\n',climate_file);
     fprintf(fid,'//     tmyfile "%s";\n',alt_climate_file);
     fprintf(fid,'//     interpolate QUADRATIC;\n');
@@ -954,7 +955,7 @@ if ( strcmp(houses,'y')~=0 )
                 fprintf(fid,'    name %s_solar_inv;\n',mtr_root);
                 fprintf(fid,'    parent %s;\n',mtr_root);
                 fprintf(fid,'    phases %sS;\n',PhLoad);
-                fprintf(fid,'    generator_status ONLINE;\n');
+                fprintf(fid,'    generator_status ${SOLAR_STATUS};\n');
                 fprintf(fid,'    generator_mode CONSTANT_PF;\n');
                 fprintf(fid,'    inverter_type FOUR_QUADRANT;\n');
                 fprintf(fid,'    inverter_efficiency %.0f;\n',0.975);
@@ -963,7 +964,7 @@ if ( strcmp(houses,'y')~=0 )
                 fprintf(fid,'    object solar {\n');                    
                 fprintf(fid,'        name %s_solar;\n',mtr_root);
                 fprintf(fid,'        generator_mode SUPPLY_DRIVEN;\n');
-                fprintf(fid,'        generator_status ONLINE;\n');
+                fprintf(fid,'        generator_status ${SOLAR_STATUS};\n');
                 fprintf(fid,'        panel_type SINGLE_CRYSTAL_SILICON;\n');
                 fprintf(fid,'        efficiency 0.2;\n');
                 fprintf(fid,'        shading_factor shading_value*1.0;\n');
@@ -984,7 +985,7 @@ if ( strcmp(houses,'y')~=0 )
                     fprintf(fid,'    name %s_battery_inv;\n',mtr_root);
                     fprintf(fid,'    parent %s;\n',mtr_root);
                     fprintf(fid,'    phases %sS;\n',PhLoad);
-                    fprintf(fid,'    generator_status ONLINE;\n');
+                    fprintf(fid,'    generator_status ${BATTERY_STATUS};\n');
                     fprintf(fid,'    generator_mode CONSTANT_PQ;\n');
                     fprintf(fid,'    inverter_type FOUR_QUADRANT;\n');
                     fprintf(fid,'    four_quadrant_control_mode LOAD_FOLLOWING;\n');
