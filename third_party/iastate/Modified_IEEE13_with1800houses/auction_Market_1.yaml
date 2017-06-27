@@ -1,0 +1,151 @@
+name: auction_Market_1
+time_delta: 60s
+broker: tcp://localhost:5570
+values:
+    voltage645AN:
+        topic: gridlabdSimulator1/voltageM645AN
+        default: 0
+    voltage645BN:
+        topic: gridlabdSimulator1/voltageM645BN
+        default: 0
+    voltage645CN:
+        topic: gridlabdSimulator1/voltageM645CN
+        default: 0
+    voltage646AN:
+        topic: gridlabdSimulator1/voltageM646AN
+        default: 0
+    voltage646BN:
+        topic: gridlabdSimulator1/voltageM646BN
+        default: 0
+    voltage646CN:
+        topic: gridlabdSimulator1/voltageM646CN
+        default: 0
+    voltage611AN:
+        topic: gridlabdSimulator1/voltageM611AN
+        default: 0
+    voltage611BN:
+        topic: gridlabdSimulator1/voltageM611BN
+        default: 0
+    voltage611CN:
+        topic: gridlabdSimulator1/voltageM611CN
+        default: 0
+    voltage652AN:
+        topic: gridlabdSimulator1/voltageM652AN
+        default: 0
+    voltage652BN:
+        topic: gridlabdSimulator1/voltageM652BN
+        default: 0
+    voltage652CN:
+        topic: gridlabdSimulator1/voltageM652CN
+        default: 0
+    voltage692AN:
+        topic: gridlabdSimulator1/voltageM692AN
+        default: 0
+    voltage692BN:
+        topic: gridlabdSimulator1/voltageM692BN
+        default: 0
+    voltage692CN:
+        topic: gridlabdSimulator1/voltageM692CN
+        default: 0
+    voltage675AN:
+        topic: gridlabdSimulator1/voltageM675AN
+        default: 0
+    voltage675BN:
+        topic: gridlabdSimulator1/voltageM675BN
+        default: 0
+    voltage675CN:
+        topic: gridlabdSimulator1/voltageM675CN
+        default: 0
+    voltage635AN:
+        topic: gridlabdSimulator1/voltageM635AN
+        default: 0
+    voltage635BN:
+        topic: gridlabdSimulator1/voltageM635BN
+        default: 0
+    voltage635CN:
+        topic: gridlabdSimulator1/voltageM635CN
+        default: 0
+    tapA:
+        topic: gridlabdSimulator1/RtapA
+        default: 0
+    tapB:
+        topic: gridlabdSimulator1/RtapB
+        default: 0
+    tapC:
+        topic: gridlabdSimulator1/RtapC
+        default: 0
+    power645AN:
+        topic: gridlabdSimulator1/powerM645AN
+        default: 0
+    power645BN:
+        topic: gridlabdSimulator1/powerM645BN
+        default: 0
+    power645CN:
+        topic: gridlabdSimulator1/powerM645CN
+        default: 0
+    power646AN:
+        topic: gridlabdSimulator1/powerM646AN
+        default: 0
+    power646BN:
+        topic: gridlabdSimulator1/powerM646BN
+        default: 0
+    power646CN:
+        topic: gridlabdSimulator1/powerM646CN
+        default: 0
+    power611AN:
+        topic: gridlabdSimulator1/powerM611AN
+        default: 0
+    power611BN:
+        topic: gridlabdSimulator1/powerM611BN
+        default: 0
+    power611CN:
+        topic: gridlabdSimulator1/powerM611CN
+        default: 0
+    power652AN:
+        topic: gridlabdSimulator1/powerM652AN
+        default: 0
+    power652BN:
+        topic: gridlabdSimulator1/powerM652BN
+        default: 0
+    power652CN:
+        topic: gridlabdSimulator1/powerM652CN
+        default: 0
+    power692AN:
+        topic: gridlabdSimulator1/powerM692AN
+        default: 0
+    power692BN:
+        topic: gridlabdSimulator1/powerM692BN
+        default: 0
+    power692CN:
+        topic: gridlabdSimulator1/powerM692CN
+        default: 0
+    power675AN:
+        topic: gridlabdSimulator1/powerM675AN
+        default: 0
+    power675BN:
+        topic: gridlabdSimulator1/powerM675BN
+        default: 0
+    power675CN:
+        topic: gridlabdSimulator1/powerM675CN
+        default: 0
+    power635AN:
+        topic: gridlabdSimulator1/powerM635AN
+        default: 0
+    power635BN:
+        topic: gridlabdSimulator1/powerM635BN
+        default: 0
+    power635CN:
+        topic: gridlabdSimulator1/powerM635CN
+        default: 0
+    energyH11P:
+        topic: gridlabdSimulator1/PH11
+        default: 0
+    energyH11Q:
+        topic: gridlabdSimulator1/QH11
+        default: 0
+    energySH11:
+        topic: gridlabdSimulator1/SH11
+        default: 0
+    # WP:
+        # topic: player/WP
+        # default: 1
