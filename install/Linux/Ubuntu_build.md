@@ -186,4 +186,16 @@ TestCase4 - 30 houses, 1 school, 4 generators over FNCS
 8.	python process_agents.py te_challenge
 9.	python process_gld.py te_challenge
 
+SGIP1b - 1594 houses, 1 school, 4 generators over FNCS
+======================================================
+1.  cd ~/src/tesp/examples/sgip1
+2.	python prep_agents.py SGIP1b
+3.	python glm_dict.py SGIP1b
+4.	./runSGIP1b.sh
+5.  # the simulation takes about 120 minutes, use "cat SGIP*.csv" to show progress up to 172800 seconds
+6.	python process_eplus.py SGIP1b
+7.	python process_pypower.py SGIP1b
+8.	python process_agents.py SGIP1b
+9.	python process_gld.py SGIP1b
+
 

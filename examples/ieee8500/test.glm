@@ -21,6 +21,8 @@ module market;
 module generators;
 module tape;
 
+#define BATTERY_STATUS=OFFLINE
+
 schedule shading_value {
 //  * 0-13 * * * 1.0;
 //  * 14-15 * * * 0.15;
@@ -328,5 +330,41 @@ object inverter {
      object metrics_collector {
         interval ${METRICS_INTERVAL};
      };
+};
+
+object inverter {
+    name SX2673305B_1_battery_inv;
+    parent SX2673305B_1;
+    phases BS;
+    generator_status OFFLINE;
+    generator_mode CONSTANT_PQ;
+    inverter_type FOUR_QUADRANT;
+    four_quadrant_control_mode LOAD_FOLLOWING;
+    charge_lockout_time 1;
+    discharge_lockout_time 1;
+    rated_power 5000;
+    max_charge_rate 5000;
+    max_discharge_rate 5000;
+    sense_object SX2673305B_1;
+    charge_on_threshold -100;
+    charge_off_threshold 0;
+    discharge_off_threshold 2000;
+    discharge_on_threshold 3000;
+    inverter_efficiency 0.975;
+    object battery {
+        name SX2673305B_1_battery;
+        generator_status ${BATTERY_STATUS};
+        use_internal_battery_model true;
+        generator_mode CONSTANT_PQ;
+        battery_type LI_ION;
+        nominal_voltage 480;
+        battery_capacity 13500;
+        round_trip_efficiency 0.86;
+        state_of_charge 0.50;
+        generator_mode SUPPLY_DRIVEN;
+    };
+    object metrics_collector {
+        interval ${METRICS_INTERVAL};
+    };
 };
 
