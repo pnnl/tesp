@@ -34,7 +34,7 @@ mkdir ~/src
 cd ~/src
 git config --global (specify user.name, user.email, color.ui)
 
-git clone -b feature/transactiveEnergyApi https://github.com/FNCS/fncs.git
+git clone -b develop https://github.com/FNCS/fncs.git
 
 git clone -b develop https://github.com/gridlab-d/gridlab-d.git
 
@@ -62,6 +62,7 @@ make
 sudo make install
 
 cd ../fncs
+autoconf
 ./configure
 make
 sudo make install

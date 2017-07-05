@@ -1,4 +1,3 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
 import ctypes
 import platform
 
@@ -72,7 +71,10 @@ def agentPublish(value):
     _agentPublish(str(value).encode('utf-8'))
 
 route = _lib.fncs_route
-route.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+route.argtypes = [ctypes.c_char_p,
+                  ctypes.c_char_p,
+                  ctypes.c_char_p,
+                  ctypes.c_char_p]
 route.restype = None
 
 die = _lib.fncs_die
@@ -87,13 +89,9 @@ update_time_delta = _lib.fncs_update_time_delta
 update_time_delta.argtypes = [ctypes.c_ulonglong]
 update_time_delta.restype = None
 
-_free_char_p = _lib._fncs_free_char_p
-_free_char_p.argtypes = [ctypes.c_char_p]
-_free_char_p.restype = None
-
-_free_char_pp = _lib._fncs_free_char_pp
-_free_char_pp.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.c_size_t]
-_free_char_pp.restype = None
+_free = _lib._fncs_free
+_free.argtypes = [ctypes.c_void_p]
+_free.restype = None
 
 get_events_size = _lib.fncs_get_events_size
 get_events_size.argtypes = []
@@ -107,8 +105,12 @@ def get_events():
     _events = _get_events()
     size = get_events_size()
     events = [_events[i] for i in range(size)]
-    _free_char_pp(_events, size)
+    _free(_events)
     return events
+
+get_event_at = _lib.fncs_get_event_at
+get_event_at.argtypes = [ctypes.c_size_t]
+get_event_at.restype = ctypes.c_char_p
 
 _agentGetEvents = _lib.fncs_agentGetEvents
 _agentGetEvents.argtypes = []
@@ -125,12 +127,9 @@ _get_value = _lib.fncs_get_value
 _get_value.argtypes = [ctypes.c_char_p]
 _get_value.restype = ctypes.POINTER(ctypes.c_char)
 
-def get_value(key):
-    raw = _get_value(key)
-    cast = ctypes.cast(raw, ctypes.c_char_p)
-    string = cast.value
-    _lib._fncs_free_char_p(cast)
-    return string
+get_value = _lib.fncs_get_value
+get_value.argtypes = [ctypes.c_char_p]
+get_value.restype = ctypes.c_char_p
 
 get_values_size = _lib.fncs_get_values_size
 get_values_size.argtypes = [ctypes.c_char_p]
@@ -139,12 +138,17 @@ get_values_size.restype = ctypes.c_size_t
 _get_values = _lib.fncs_get_values
 _get_values.argtypes = [ctypes.c_char_p]
 _get_values.restype = ctypes.POINTER(ctypes.c_char_p)
+
 def get_values(key):
     _values = _get_values(key)
     size = get_values_size(key)
     values = [_values[i] for i in range(size)]
-    _free_char_pp(_values, size)
+    _free(_values)
     return values
+
+get_value_at = _lib.fncs_get_value_at
+get_value_at.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
+get_value_at.restype = ctypes.c_char_p
 
 get_keys_size = _lib.fncs_get_keys_size
 get_keys_size.argtypes = []
@@ -153,21 +157,41 @@ get_keys_size.restype = ctypes.c_size_t
 _get_keys = _lib.fncs_get_keys
 _get_keys.argtypes = []
 _get_keys.restype = ctypes.POINTER(ctypes.c_char_p)
+
 def get_keys():
     _keys = _get_keys()
     size = get_keys_size()
     keys = [_keys[i] for i in range(size)]
-    _free_char_pp(_keys, size)
+    _free(_keys, size)
     return keys
+
+get_key_at = _lib.fncs_get_key_at
+get_key_at.argtypes = [ctypes.c_size_t]
+get_key_at.restype = ctypes.c_char_p
 
 get_name = _lib.fncs_get_name
 get_name.argtypes = []
 get_name.restype = ctypes.c_char_p
 
-get_id =_lib.fncs_get_id
+get_id = _lib.fncs_get_id
 get_id.argtypes = []
 get_id.restype = ctypes.c_int
 
-get_simulator_count =_lib.fncs_get_simulator_count
+get_simulator_count = _lib.fncs_get_simulator_count
 get_simulator_count.argtypes = []
 get_simulator_count.restype = ctypes.c_int
+
+_get_version = _lib.fncs_get_version
+_get_version.argtypes = [ctypes.POINTER(ctypes.c_int),
+                         ctypes.POINTER(ctypes.c_int),
+                         ctypes.POINTER(ctypes.c_int)]
+_get_version.restype = None
+
+def get_version():
+    major = ctypes.c_int()
+    minor = ctypes.c_int()
+    patch = ctypes.c_int()
+    _get_version(ctypes.byref(major),
+                 ctypes.byref(minor),
+                 ctypes.byref(patch))
+    return (major.value, minor.value, patch.value)
