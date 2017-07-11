@@ -253,14 +253,42 @@ if (solar_fraction > 0) || (battery_fraction > 0)
 end
 fprintf(fid,'module tape;\n\n');
 
-if (solar_fraction > 0)
-    fprintf(fid,'schedule shading_value {\n');
-    fprintf(fid,'//  * 0-13 * * * 1.0;\n');
-    fprintf(fid,'//  * 14-15 * * * 0.15;\n');
-    fprintf(fid,'//  * 16-23 * * * 1.0;\n');
-    fprintf(fid,'  * * * * * 1.0;\n');
-    fprintf(fid,'}\n\n');
-end
+fprintf(fid,'// basic residential rate from www.tep.com/rates\n');
+fprintf(fid,'// #define TEPCO_MONTHLY_FEE=13.00\n');
+fprintf(fid,'// #define TEPCO_PRICE_0=0.102013 // 0-500 kwh\n');
+fprintf(fid,'// #define TEPCO_PRICE_1=0.117013 // 501-1000 kwh\n');
+fprintf(fid,'// #define TEPCO_PRICE_2=0.122513 // >1000 kwh\n');
+
+fprintf(fid,'// residential time-of-use rate from www.tep.com\n');
+fprintf(fid,'// winter peak hours are 6-9 a.m. and 6-9 p.m., Oct-Apr\n');
+fprintf(fid,'// summer peak hours are 3-7 p.m., May-Sep\n');
+fprintf(fid,'// only M-F, excluding 6 holidays not accounted for below\n');
+fprintf(fid,'// the holidays are Memorial, Indep, Labor, Thanksgiving, Xmas, New Years\n');
+fprintf(fid,'#define TEPCO_MONTHLY_FEE=10.00\n');
+fprintf(fid,'schedule TEPCO_PRICE_0 { // 0-500 kwh\n');
+fprintf(fid,' *  6-8,18-20       * 10-4 1-5 0.104717;\n');
+fprintf(fid,' *  0-5,9-17,21-23  * 10-4 1-5 0.097803;\n');
+fprintf(fid,' *  *               * 10-4 6-0 0.097803;\n');
+fprintf(fid,' *  15-18           *  5-9 1-5 0.138719;\n');
+fprintf(fid,' *  0-14,19-23      *  5-9 1-5 0.098484;\n');
+fprintf(fid,' *  *               *  5-9 6-0 0.098484;\n');
+fprintf(fid,'}\n');
+fprintf(fid,'schedule TEPCO_PRICE_1 { // 501-1000 kwh\n');
+fprintf(fid,' *  6-8,18-20       * 10-4 1-5 0.113717;\n');
+fprintf(fid,' *  0-5,9-17,21-23  * 10-4 1-5 0.106803;\n');
+fprintf(fid,' *  *               * 10-4 6-0 0.106803;\n');
+fprintf(fid,' *  15-18           *  5-9 1-5 0.147719;\n');
+fprintf(fid,' *  0-14,19-23      *  5-9 1-5 0.107484;\n');
+fprintf(fid,' *  *               *  5-9 6-0 0.107484;\n');
+fprintf(fid,'}\n');
+fprintf(fid,'schedule TEPCO_PRICE_2 { // >1000 kwh\n');
+fprintf(fid,' *  6-8,18-20       * 10-4 1-5 0.119217;\n');
+fprintf(fid,' *  0-5,9-17,21-23  * 10-4 1-5 0.112303;\n');
+fprintf(fid,' *  *               * 10-4 6-0 0.112303;\n');
+fprintf(fid,' *  15-18           *  5-9 1-5 0.153219;\n');
+fprintf(fid,' *  0-14,19-23      *  5-9 1-5 0.112984;\n');
+fprintf(fid,' *  *               *  5-9 6-0 0.112984;\n');
+fprintf(fid,'}\n');
 
 fprintf(fid,'#include "schedules.glm";\n\n');
 
@@ -778,9 +806,14 @@ if ( strcmp(houses,'y')~=0 )
             Tph = char(RawTripLoads{3}(i));
             PhLoad = Tph(10);
             fprintf(fid,'     phases %sS;\n',PhLoad);
-            fprintf(fid,'     bill_mode UNIFORM;\n');
-            fprintf(fid,'     monthly_fee 13.00;\n');
-            fprintf(fid,'     price 0.086652;\n');
+            fprintf(fid,'     bill_day 1;\n');
+            fprintf(fid,'     monthly_fee ${TEPCO_MONTHLY_FEE};\n');
+            fprintf(fid,'     bill_mode TIERED;\n');
+            fprintf(fid,'     price TEPCO_PRICE_0;\n');
+            fprintf(fid,'     first_tier_energy 500;\n');
+            fprintf(fid,'     first_tier_price TEPCO_PRICE_1;\n');
+            fprintf(fid,'     second_tier_energy 1000;\n');
+            fprintf(fid,'     second_tier_price TEPCO_PRICE_2;\n');
             if (metrics_interval > 0)
                 fprintf(fid,'     object metrics_collector {\n');
                 fprintf(fid,'         interval ${METRICS_INTERVAL};\n');
@@ -967,7 +1000,6 @@ if ( strcmp(houses,'y')~=0 )
                 fprintf(fid,'        generator_status ${SOLAR_STATUS};\n');
                 fprintf(fid,'        panel_type SINGLE_CRYSTAL_SILICON;\n');
                 fprintf(fid,'        efficiency 0.2;\n');
-                fprintf(fid,'        shading_factor shading_value*1.0;\n');
                 fprintf(fid,'        rated_power %.0f;\n',array_power);
                 fprintf(fid,'        // area %.0f;\n',panel_area);
                 fprintf(fid,'     };\n');

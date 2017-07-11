@@ -163,6 +163,9 @@ for key, val in meta_m.items():
 	elif key == 'voltage_unbalance_max':
 		MTR_VOLTUNB_MAX_IDX = val['index']
 		MTR_VOLTUNB_MAX_UNITS = val['units']
+	elif key == 'bill':
+		MTR_BILL_IDX = val['index']
+		MTR_BILL_UNITS = val['units']
 
 data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float)
 print ("\nConstructed", data_m.shape, "NumPy array for Meters")
@@ -306,14 +309,10 @@ ax[0,2].set_ylabel("kW")
 ax[0,2].set_title ("Total Inverter Power")
 ax[0,2].legend(loc='best')
 
-vabase = dict['inverters'][inv_keys[0]]['rated_W']
-print ("Inverter base power =", vabase)
-ax[1,2].plot(hrs, data_i[0,:,INV_P_AVG_IDX] / vabase, color="blue", label="Real")
-ax[1,2].plot(hrs, data_i[0,:,INV_Q_AVG_IDX] / vabase, color="red", label="Reactive")
+ax[1,2].plot(hrs, data_m[0,:,MTR_BILL_IDX], color="blue")
 ax[1,2].set_xlabel("Hours")
-ax[1,2].set_ylabel("perunit")
-ax[1,2].set_title ("Inverter Power at " + inv_keys[0])
-ax[1,2].legend(loc='best')
+ax[1,2].set_ylabel(MTR_BILL_UNITS)
+ax[1,2].set_title ("Meter Bill at " + mtr_keys[0])
 
 ax[0,3].plot(hrs, data_c[0,:,CAP_COUNT_IDX], color="blue", label=cap_keys[0])
 ax[0,3].plot(hrs, data_c[1,:,CAP_COUNT_IDX], color="red", label=cap_keys[1])
