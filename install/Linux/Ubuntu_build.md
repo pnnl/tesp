@@ -67,6 +67,10 @@ autoconf
 make
 sudo make install
 
+cd java
+cmake .
+make
+
 GridLAB-D with Prerequisites (installed to /usr/local)
 ======================================================
 
@@ -126,11 +130,8 @@ sudo make install
 PYPOWER
 =======
 
-cd ~/src/tesp/src/pypower
 pip install pypower
-opf # should produce errors
-cp *.py ~/miniconda3/lib/python3.6/site-packages/pypower
-opf Should run correctly
+opf # Should run correctly
 
 TODO: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ================================================
