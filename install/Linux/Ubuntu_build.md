@@ -8,13 +8,14 @@ sudo apt-get install xauth
 
 # This is what works for Mac OS X via XQuartz, (i.e. -X fails)
 # the MobaXterm connection is similar.
-ssh -Y admsuser@172.20.128.10
+ssh -Y admsuser@tesp-ubuntu.pnl.gov
 
 Prep Steps - Python and some other tools
 ========================================
 
 sudo apt-get install git
 sudo apt-get install build-essential
+sudo apt-get install default-jdk
 
 cd /opt
 # may need sudo on the following steps to install for all users
@@ -82,7 +83,7 @@ cd third_party
 chmod +x install_xercesc
 bash install_xercesc or ./install_xercesc # many warnings about changing permissions ... not important?
 ./configure --with-fncs=/usr/local # for debugging, add 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -g -O0'
-make
+sudo make
 sudo make install
 # setting the GLPATH on Ubuntu; other flavors of Linux may differ
 sudo emacs /etc/environment &
@@ -111,7 +112,7 @@ sudo make install
 #  the build products in /usr/local instead of /usr/local/bin and /usr/local/lib
 #  the following commands will copy FNCS-compatible EnergyPlus over the public version
 cd /usr/local
-cp energyplus-8-3-0 EnergyPlus-8-3-0
+cp energyplus-8.3.0 EnergyPlus-8-3-0
 cp libenergyplusapi.so.8.3.0 EnergyPlus-8-3-0
 
 Build eplus_json
