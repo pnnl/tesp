@@ -81,12 +81,18 @@ GridLAB-D with Prerequisites (installed to /usr/local)
 
 sudo apt install autoconf
 sudo apt install libtool
+sudo apt install libxerces-c-dev
+
 cd ~/src/gridlab-d
 autoreconf -isf
-cd third_party
-chmod +x install_xercesc
-bash install_xercesc or ./install_xercesc # many warnings about changing permissions ... not important?
-./configure --with-fncs=/usr/local # for debugging, add 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -g -O0'
+#cd third_party
+#chmod +x install_xercesc
+#bash install_xercesc or ./install_xercesc # many warnings about changing permissions ... not important?
+./configure --with-fncs=/usr/local # for debugging, add 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -g -O0'./configure --prefix=/usr/local 'CXXFLAGS=-w -O3' 'CFLAGS=-w -O3'
+
+brew install gcc
+./configure --with-fncs=/usr/local 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7'
+
 sudo make
 sudo make install
 # setting the GLPATH on Ubuntu; other flavors of Linux may differ
