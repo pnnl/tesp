@@ -10,16 +10,19 @@ sudo apt-get install xauth
 # the MobaXterm connection is similar.
 ssh -Y admsuser@tesp-ubuntu.pnl.gov
 
-Prep Steps - Python and some other tools
-========================================
+Prep Steps - Python, Java and some other tools
+==============================================
 
 sudo apt-get install git
 sudo apt-get install build-essential
+# Java 8 is required; the following works on Ubuntu 16.04
 sudo apt-get install default-jdk
 
 cd /opt
 # may need sudo on the following steps to install for all users
-wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux_x86_64.sh
+wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+chmod +x Miniconda3-latest-Linux-x86_64.sh
+./Miniconda3-latest-Linux-x86_64.sh
 conda update conda
 conda install matplotlib
 conda install scipy
@@ -57,7 +60,7 @@ sudo make install
 cd ..
 wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
 tar -xzf czmq-3.0.2.tar.gz
-cd ../czmq-3.0.2
+cd czmq-3.0.2
 ./configure
 make
 sudo make install
@@ -68,6 +71,7 @@ autoconf
 make
 sudo make install
 
+sudo apt install cmake
 cd java
 cmake .
 make
@@ -94,7 +98,6 @@ gridlabd --validate
 EnergyPlus with Prerequisites (installed to /usr/local)
 =======================================================
 
-sudo apt install cmake
 sudo apt-get install libjsoncpp-dev
 cs ~/src/EnergyPlus
 mkdir build
@@ -164,6 +167,11 @@ TestCase1 - verifies GridLAB-D and Python over FNCS
 2.	python glm_dict.py loadshed
 3.	./run.sh
 4.	python plot_loadshed.py loadshed
+
+TestCase1j - verifies GridLAB-D and Java over FNCS
+==================================================
+same as TestCase1, except
+3.      ./runjava.sh
 
 TestCase2 - verifies EnergyPlus over FNCS
 =========================================
