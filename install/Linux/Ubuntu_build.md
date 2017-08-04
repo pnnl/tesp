@@ -91,7 +91,7 @@ autoreconf -isf
 ./configure --with-fncs=/usr/local # for debugging, add 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -g -O0'./configure --prefix=/usr/local 'CXXFLAGS=-w -O3' 'CFLAGS=-w -O3'
 
 brew install gcc
-./configure --with-fncs=/usr/local 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7'
+./configure --with-fncs=/usr/local 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
 
 sudo make
 sudo make install
