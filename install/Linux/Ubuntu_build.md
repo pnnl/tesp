@@ -34,7 +34,7 @@ mkdir ~/src
 cd ~/src
 git config --global (specify user.name, user.email, color.ui)
 
-git clone -b feature/transactiveEnergyApi https://github.com/FNCS/fncs.git
+git clone -b develop https://github.com/FNCS/fncs.git
 
 git clone -b develop https://github.com/gridlab-d/gridlab-d.git
 
@@ -62,9 +62,14 @@ make
 sudo make install
 
 cd ../fncs
+autoconf
 ./configure
 make
 sudo make install
+
+cd java
+cmake .
+make
 
 GridLAB-D with Prerequisites (installed to /usr/local)
 ======================================================
@@ -125,11 +130,8 @@ sudo make install
 PYPOWER
 =======
 
-cd ~/src/tesp/src/pypower
 pip install pypower
-opf # should produce errors
-cp *.py ~/miniconda3/lib/python3.6/site-packages/pypower
-opf Should run correctly
+opf # Should run correctly
 
 TODO: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ================================================
@@ -185,5 +187,17 @@ TestCase4 - 30 houses, 1 school, 4 generators over FNCS
 7.	python process_pypower.py te_challenge
 8.	python process_agents.py te_challenge
 9.	python process_gld.py te_challenge
+
+SGIP1b - 1594 houses, 1 school, 4 generators over FNCS
+======================================================
+1.  cd ~/src/tesp/examples/sgip1
+2.	python prep_agents.py SGIP1b
+3.	python glm_dict.py SGIP1b
+4.	./runSGIP1b.sh
+5.  # the simulation takes about 120 minutes, use "cat SGIP*.csv" to show progress up to 172800 seconds
+6.	python process_eplus.py SGIP1b
+7.	python process_pypower.py SGIP1b
+8.	python process_agents.py SGIP1b
+9.	python process_gld.py SGIP1b
 
 

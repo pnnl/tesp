@@ -52,6 +52,22 @@ for key, value in controllers.items():
 	i += 1
 op.close()
 
+
+op = open ("launch_windows_" + sys.argv[1] + "_agents.inc", "w")
+print ("rem set FNCS_LOG_LEVEL=", file=op)
+print ("set FNCS_TIME_DELTA=60s", file=op)
+print ("start /b cmd /c python double_auction.py input/auction_registration.json SGIP1b ^>auction.log 2^>^&1", file=op)
+
+print ("set FNCS_LOG_STDOUT=no", file=op)
+print ("set FNCS_LOG_LEVEL=", file=op)
+print ("set FNCS_TIME_DELTA=60s", file=op)
+i = 1
+for key, value in controllers.items():
+	arg = "input/controller_registration_" + key + ".json"
+	print ("start /b cmd /c python house_controller.py", arg, file=op)
+	i += 1
+op.close()
+
 op = open(sys.argv[1] + "_FNCS_Config.txt", "w")
 print ("publish \"commit:network_node.distribution_load -> distribution_load; 1000\";", file=op)
 #print ("publish \"presync:network_node.distribution_load -> distribution_load\";", file=op)

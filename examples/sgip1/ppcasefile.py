@@ -76,9 +76,9 @@ def ppcasefile():
 		[2, 3000, 0, 3, 3.0,   50.0,  1500]  # gas combined cycle (expensive)
 	])
 
-	# bus, fncs topic, amp factor, current value
+	# bus, fncs topic, amp factor (20), current value
 	ppc['FNCS'] = array([
-		[7, 'SUBSTATION7', 20.0, 0.0]
+		[7, 'SUBSTATION7', 0.1, 0.0]
 	])
 
 	# unit, time out, time back in
