@@ -85,9 +85,15 @@ sudo apt install libxerces-c-dev
 
 cd ~/src/gridlab-d
 autoreconf -isf
-#cd third_party
-#chmod +x install_xercesc
-#bash install_xercesc or ./install_xercesc # many warnings about changing permissions ... not important?
+
+cd third_party
+tar -xvzf xerces-c-3.1.1.tar.gz
+cd xerces-c-3.1.1
+./configure
+make
+sudo make install
+cd ../..
+
 ./configure --with-fncs=/usr/local # for debugging, add 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -g -O0'./configure --prefix=/usr/local 'CXXFLAGS=-w -O3' 'CFLAGS=-w -O3'
 
 brew install gcc
