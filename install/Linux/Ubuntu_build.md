@@ -130,6 +130,9 @@ cd /usr/local
 cp energyplus-8.3.0 EnergyPlus-8-3-0
 cp libenergyplusapi.so.8.3.0 EnergyPlus-8-3-0
 
+# if ReadVarsESO not found at the end of a simulation, try this
+/usr/local/EnergyPlus-8-3-0$ sudo ln -s runreadvars ReadVarsESO
+
 Build eplus_json
 ================
 
