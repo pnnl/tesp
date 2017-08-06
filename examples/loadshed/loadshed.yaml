@@ -5,7 +5,4 @@ values:
     sw_status:
         topic: player/sw_status
         default: 1
-    substation:
-        topic: gridlabdSimulator1/distribution_load
-        default: 0
 

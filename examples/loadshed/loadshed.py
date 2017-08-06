@@ -13,12 +13,12 @@ print('# time key value till', time_stop, flush=True)
 
 while time_granted < time_stop:
 	time_granted = fncs.time_request(time_stop) # time_next
-#	print('**', time_granted)
+#   print('**', time_granted)
 	events = fncs.get_events()
 	for key in events:
 		topic = key.decode()
+		print (time_granted, key, topic, fncs.get_value(key), flush=True)
 		value = fncs.get_value(key).decode()
-		print (time_granted, topic, value, flush=True)
 		if topic == 'sw_status':
 			fncs.publish('sw_status', value)
 	time_next = time_granted + 1
