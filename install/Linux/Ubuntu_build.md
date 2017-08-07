@@ -203,8 +203,8 @@ TestCase3 - verifies PYPOWER over FNCS
 TestCase4 - 30 houses, 1 school, 4 generators over FNCS
 =======================================================
 1.  cd ~/src/tesp/examples/te30
-2.	python prep_agents.py te_challenge
-3.	python glm_dict.py te_challenge
+2.	python prep_agents.py TE_Challenge
+3.	python glm_dict.py TE_Challenge
 4.	./run30.sh
 5.  # the simulation takes about 10 minutes, use "cat TE*.csv" to show progress up to 172800 seconds
 6.	python process_eplus.py te_challenge
