@@ -73,7 +73,9 @@ sudo make install
 
 sudo apt install cmake
 cd java
-cmake .
+mkdir build
+cd build
+cmake ..
 make
 
 GridLAB-D with Prerequisites (installed to /usr/local)
@@ -81,7 +83,7 @@ GridLAB-D with Prerequisites (installed to /usr/local)
 
 sudo apt install autoconf
 sudo apt install libtool
-sudo apt install libxerces-c-dev
+# sudo apt install libxerces-c-dev
 
 cd ~/src/gridlab-d
 autoreconf -isf
@@ -111,7 +113,7 @@ EnergyPlus with Prerequisites (installed to /usr/local)
 =======================================================
 
 sudo apt-get install libjsoncpp-dev
-cs ~/src/EnergyPlus
+cd ~/src/EnergyPlus
 mkdir build
 cd build
 cmake ..
