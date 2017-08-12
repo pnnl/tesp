@@ -53,7 +53,7 @@ cd ~/src
 wget --no-check-certificate http://download.zeromq.org/zeromq-4.1.3.tar.gz
 tar -xzf zeromq-4.1.3.tar.gz
 cd zeromq-4.1.3
-./configure --without-libsodium
+./configure --without-libsodium 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
 make
 sudo make install
 
@@ -61,13 +61,13 @@ cd ..
 wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
 tar -xzf czmq-3.0.2.tar.gz
 cd czmq-3.0.2
-./configure
+./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
 make
 sudo make install
 
 cd ../fncs
-autoconf
-./configure
+autoreconf -if
+./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
 make
 sudo make install
 
@@ -75,8 +75,9 @@ sudo apt install cmake
 cd java
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_C_COMPILER="gcc-7" -DCMAKE_CXX_COMPILER="g++-7" ..
 make
+# copy jar and jni library to  tesp/src/java
 
 GridLAB-D with Prerequisites (installed to /usr/local)
 ======================================================
@@ -91,7 +92,7 @@ autoreconf -isf
 cd third_party
 tar -xvzf xerces-c-3.1.1.tar.gz
 cd xerces-c-3.1.1
-./configure
+./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
 make
 sudo make install
 cd ../..
@@ -116,7 +117,7 @@ sudo apt-get install libjsoncpp-dev
 cd ~/src/EnergyPlus
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_C_COMPILER="gcc-7" -DCMAKE_CXX_COMPILER="g++-7" ..
 make
 
 # Before installing, we need components of the public version, including but not limited to the critical Energy+.idd file
@@ -131,6 +132,10 @@ sudo make install
 cd /usr/local
 cp energyplus-8.3.0 EnergyPlus-8-3-0
 cp libenergyplusapi.so.8.3.0 EnergyPlus-8-3-0
+
+# for mac
+cp energyplus-8.3.0 bin
+cp libenergyplusapi.8.3.0.dylib lib
 
 # if ReadVarsESO not found at the end of a simulation, try this
 /usr/local/EnergyPlus-8-3-0$ sudo ln -s runreadvars ReadVarsESO
