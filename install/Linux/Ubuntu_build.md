@@ -138,7 +138,7 @@ cp energyplus-8.3.0 bin
 cp libenergyplusapi.8.3.0.dylib lib
 
 # if ReadVarsESO not found at the end of a simulation, try this
-/usr/local/EnergyPlus-8-3-0$ sudo ln -s runreadvars ReadVarsESO
+/usr/local/EnergyPlus-8-3-0$ sudo ln -s PostProcess/ReadVarsESO ReadVarsESO
 
 Build eplus_json
 ================
