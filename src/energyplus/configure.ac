@@ -12,8 +12,10 @@ AC_LANG([C++])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
 # Checks for programs.
-AC_PROG_CXX([g++-7])
-AC_PROG_CC([gcc-7])
+# AC_PROG_CXX([g++-7])
+# AC_PROG_CC([gcc-7])
+AC_PROG_CXX()
+AC_PROG_CC()
 
 # Checks for libraries.
 FNCS_CHECK_PACKAGE([zmq], [zmq.h], [zmq], [zmq_ctx_new])
