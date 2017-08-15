@@ -38,9 +38,9 @@ mkdir ~/src
 cd ~/src
 git config --global (specify user.name, user.email, color.ui)
 
-git clone -b develop https://github.com/FNCS/fncs.git
+git clone -b feature/transactiveEnergyApi https://github.com/FNCS/fncs.git
 
-git clone -b develop https://github.com/gridlab-d/gridlab-d.git
+git clone -b feature/1048 https://github.com/gridlab-d/gridlab-d.git
 
 git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
 
@@ -53,7 +53,7 @@ cd ~/src
 wget --no-check-certificate http://download.zeromq.org/zeromq-4.1.3.tar.gz
 tar -xzf zeromq-4.1.3.tar.gz
 cd zeromq-4.1.3
-./configure --without-libsodium 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
+./configure --without-libsodium 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7'
 make
 sudo make install
 
@@ -61,13 +61,13 @@ cd ..
 wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
 tar -xzf czmq-3.0.2.tar.gz
 cd czmq-3.0.2
-./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
+./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CPPFLAGS=-Wno-format-truncation'
 make
 sudo make install
 
 cd ../fncs
 autoreconf -if
-./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
+./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w' 'CFLAGS=-w'
 make
 sudo make install
 
@@ -92,7 +92,7 @@ autoreconf -isf
 cd third_party
 tar -xvzf xerces-c-3.1.1.tar.gz
 cd xerces-c-3.1.1
-./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
+./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w' 'CFLAGS=-w'
 make
 sudo make install
 cd ../..
@@ -100,7 +100,7 @@ cd ../..
 ./configure --with-fncs=/usr/local # for debugging, add 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -g -O0'./configure --prefix=/usr/local 'CXXFLAGS=-w -O3' 'CFLAGS=-w -O3'
 
 brew install gcc
-./configure --with-fncs=/usr/local 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -O1' 'CFLAGS=-w -O1'
+./configure --with-fncs=/usr/local 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w' 'CFLAGS=-w'
 
 sudo make
 sudo make install
@@ -149,6 +149,7 @@ autoheader
 aclocal
 automake --add-missing
 autoconf
+# edit configure.ac to use g++-7 on Mac (only)
 ./configure
 make
 sudo make install
