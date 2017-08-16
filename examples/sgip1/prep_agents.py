@@ -25,7 +25,7 @@ meta = {'markets':m_meta,'controllers':c_meta}
 print (json.dumps(meta), file=dp)
 dp.close()
 
-want_logs = False
+want_logs = True
 
 if want_logs:
 	prefix = "(export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec"

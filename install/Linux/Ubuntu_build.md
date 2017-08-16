@@ -65,13 +65,15 @@ cd czmq-3.0.2
 make
 sudo make install
 
+sudo apt-get install autoconf
+sudo apt-get install libtool
 cd ../fncs
 autoreconf -if
 ./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w' 'CFLAGS=-w'
 make
 sudo make install
 
-sudo apt install cmake
+sudo apt-get install cmake
 cd java
 mkdir build
 cd build
