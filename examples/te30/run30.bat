@@ -1,7 +1,7 @@
 set FNCS_FATAL=yes
 set FNCS_LOG_STDOUT=yes
-set FNCS_LOG_LEVEL=DEBUG4
-set FNCS_TRACE=yes
+set FNCS_LOG_LEVEL=DEBUG2
+set FNCS_TRACE=no
 set FNCS_TIME_DELTA=
 
 set FNCS_CONFIG_FILE=
@@ -22,7 +22,7 @@ start /b cmd /c python fncsPYPOWER.py TE_Challenge "2013-07-01 00:00:00" 172800 
 
 
 set FNCS_CONFIG_FILE=
-set FNCS_LOG_LEVEL=DEBUG4
+set FNCS_LOG_LEVEL=DEBUG2
 set FNCS_LOG_STDOUT=yes
 start /b cmd /c gridlabd TE_Challenge.glm ^>gridlabd.log 2^>^&1 
 
