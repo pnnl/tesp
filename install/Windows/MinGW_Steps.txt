@@ -193,3 +193,15 @@ clean:
 czmq-3.0.2/builds/mingw32/Makefile ends
 ===========================================================
 
+
+
+Xterm setup for Mac OS X (XQuartz) and Windows (MobaXterm)
+==========================================================
+
+# This may be necessary for XQuartz
+sudo apt-get install xauth
+
+# This is what works for Mac OS X via XQuartz, (i.e. -X fails)
+# the MobaXterm connection is similar.
+ssh -Y admsuser@tesp-ubuntu.pnl.gov
+
