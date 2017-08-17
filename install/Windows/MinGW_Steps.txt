@@ -1,13 +1,13 @@
-===========================================================
-Start with a PC that builds GridLAB-D (NOTE: assumes already FNCS built?)
-===========================================================
+=====================================
+Start with a PC that builds GridLAB-D
+=====================================
 Follow http://gridlab-d.shoutwiki.com/wiki/MinGW/Eclipse_Installation,
 except for:
 a. Install a GIT command-line version instead of SVN
-b. Clone the "develop" branch from https://github.com/gridlab-d/gridlab-d 
+b. Clone the "feature/1048" branch from https://github.com/gridlab-d/gridlab-d 
 
 autoreconf -if
-./configure --build=x86_64-w64-mingw32 --with-fncs=$HOME/FNCS_install --prefix=$PWD/install64 --with-xerces=/opt/windows_64/mingw 'CXXFLAGS=-g -w -O0' 'CFFLAGS=-g -w -O0'
+./configure --build=x86_64-w64-mingw32 --with-fncs=$HOME/FNCS_install --prefix=$PWD/install64 --with-xerces=/opt/windows_64/mingw 'CXXFLAGS=-w' 'CFFLAGS=-w'
 make
 make install
 
@@ -54,34 +54,24 @@ cd fncs
 make
 make install
 
-Java:
+Java Binding on Windows (cmake process not working yet):
 
 cd java
-cmake -G "MSYS Makefiles" -D CMAKE_INSTALL_PREFIX=C:/MinGW/msys/1.0/home/tom/FNCS_install .
-make
-
-Windows:
-
 javac fncs/JNIfncs.java
 jar cvf fncs.jar fncs/JNIfncs.class
 javah -classpath fncs.jar -jni fncs.JNIfncs
 g++ -DJNIfncs_EXPORTS -I"C:/Program Files/Java/jdk1.8.0_101/include" -I"C:/Program Files/Java/jdk1.8.0_101/include/win32" -IC:/MinGW/msys/1.0/home/tom/fncs-dev/java -IC:/MinGW/msys/1.0/home/tom/FNCS_install/include -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
 g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Program Files/Java/jdk1.8.0_101/lib/jawt.lib" "C:/Program Files/Java/jdk1.8.0_101/lib/jvm.lib" C:/gridlab-d/install64/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
 
+===========================
+Rebuild GridLAB-D with FNCS
+===========================
 
-notes: 
 
-./configure: line 7145: as_fn_executable_p: command not found
-./configure: line 7145: as_fn_executable_p: command not found
-./configure: line 7145: as_fn_executable_p: command not found // many times
-
-./libtool: line 529: ﻿#!: command not found
-  CXX      contrib/yaml-cpp/src/contrib/graphbuilderadapter.lo
-./libtool: line 529: ﻿#!: command not found
-  CXX      contrib/yaml-cpp/src/contrib/graphbuilder.lo
-./libtool: line 529: ﻿#!: command not found
-  CXX      contrib/yaml-cpp/src/conversion.lo
-
+autoreconf -if
+./configure --build=x86_64-w64-mingw32 --with-fncs=$HOME/FNCS_install --prefix=$PWD/install64 --with-xerces=/opt/windows_64/mingw 'CXXFLAGS=-w' 'CFFLAGS=-w'
+make
+make install
 
 ===========================================================
 jsoncpp - build the static library for EnergyPlus
