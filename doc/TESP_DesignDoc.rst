@@ -5,6 +5,8 @@
 Summary of the Transactive Energy Simulation Platform
 =====================================================
 
+|logo|
+
 Pacific Northwest National Laboratory has been working on a multi-year
 transactive systems program (TSP) funded by the United States Department
 of Energy (DOE). The 2016-2017 work included a separate task on
@@ -1247,6 +1249,9 @@ of IEEE Std 1516-2000),* pp. 1-38, 2010.
 Architecture (HLA)-- Object Model Template (OMT) Specification," *IEEE
 Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),* pp. 1-110, 2010.
 
+.. |logo| image:: ./media/Transactive.png
+   :width: 2.0in
+   :height: 2.0in
 .. |image0| image:: ./media/Federates.png
    :width: 6.16667in
    :height: 3.75000in
