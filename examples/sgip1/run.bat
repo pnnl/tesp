@@ -1,10 +1,11 @@
 set FNCS_FATAL=yes
 set FNCS_LOG_STDOUT=yes
-set FNCS_LOG_LEVEL=DEBUG4
+set FNCS_LOG_LEVEL=DEBUG2
 set FNCS_TRACE=yes
 set FNCS_TIME_DELTA=
 
 set FNCS_CONFIG_FILE=
+rem comment this out if running from GDB as "gdb fncs_broker" then "run 761"
 start /b cmd /c fncs_broker 761 ^>broker.log 2^>^&1
 
 rem set FNCS_LOG_LEVEL=
