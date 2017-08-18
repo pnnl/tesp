@@ -2,10 +2,12 @@
    :format: html latex
 ..
 
-Summary of the Transactive Energy Simulation Platform
-=====================================================
+Transactive Energy Simulation Platform
+======================================
 
-|logo|
+.. sidebar:: Transactive Systems Program
+
+  |logo|
 
 Pacific Northwest National Laboratory has been working on a multi-year
 transactive systems program (TSP) funded by the United States Department
@@ -517,11 +519,11 @@ TESP have included:
    projects that need more complicated FNCS message structures.
 
 Using and Customizing the TESP
-------------------------------
+==============================
 
 TESP runs on Linux (Ubuntu tested), Mac OS X, and Microsoft Windows.
-Installers, source code, examples and documentation will be available at
-https://github.com/pnnl/tesp/, and the TESP will also be running under
+Installers, source code, examples and documentation are available at
+https://github.com/pnnl/tesp/, and the TESP also runs under
 Linux at PNNL’s Electricity Infrastructure Operations Center (EIOC) in
 Richland, WA. However, we expect that most users would wish to run TESP
 on their own computers, which offers the possibility of customization
@@ -533,8 +535,7 @@ TESP:
 -  Install TESP: this may require administrator privileges on the target
    computer and supplemental downloads. It will be possible to
    develop new TEAgents and valuation scripts by modifying or
-   developing Python code. Development in Java should also be
-   possible.
+   developing Python, Java or C++ code.
 
 -  Build TESP: in addition to the skill set for installing TESP, users
    should be familiar with configuring environments and using C/C++
@@ -556,6 +557,19 @@ under investigation. At this time, we expect to support MATPOWER only
 for Linux, with the alternative PYPOWER [`17 <#_ENREF_17>`__] supported
 on Windows, Linux and Mac OS X. The code repository should always have
 the most up-to-date information.
+
+.. include:: ../install/Windows/Windows_install.rst
+
+.. include:: ../install/Linux/Ubuntu_build.rst
+
+.. include:: ../install/MacOSX/MacOSX_build.rst
+
+.. include:: ../install/Windows/Windows_build.rst
+
+.. include:: ../examples/Running_Examples.rst
+
+Developing Valuation Scripts and Agents
+---------------------------------------
 
 In order to provide new or customized valuation scripts in Python, the
 user should first study the provided examples. These illustrate how to
