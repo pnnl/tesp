@@ -3,7 +3,7 @@ javac loadshed.java
 set FNCS_CONFIG_FILE=
 set FNCS_FATAL=no
 set FNCS_LOG_STDOUT=yes
-set FNCS_LOG_LEVEL=DEBUG4
+set FNCS_LOG_LEVEL=DEBUG2
 set FNCS_TRACE=yes
 start /b cmd /c fncs_broker 3 ^>broker.log 2^>^&1
 set FNCS_LOG_LEVEL=

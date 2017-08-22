@@ -117,10 +117,12 @@ _agentGetEvents.argtypes = []
 _agentGetEvents.restype = ctypes.POINTER(ctypes.c_char)
 
 def agentGetEvents():
-    raw = _agentGetEvents()
-    cast = ctypes.cast(raw, ctypes.c_char_p)
-    string = cast.value
-    _lib._fncs_free_char_p(cast)
+    _raw = _agentGetEvents()
+    _cast = ctypes.cast(_raw, ctypes.c_char_p)
+    string = _cast.value
+# fncs_free_char_p is no longer there, and cast was not allocated so _free(cast) fails
+#    _lib._fncs_free_char_p(cast)
+    _free(_raw)
     return string
 
 _get_value = _lib.fncs_get_value
