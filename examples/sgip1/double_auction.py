@@ -3,7 +3,6 @@ main file of the auction object, mainly used for assigning data read from input
 '''
 
 # import from library or functions
-import numpy as np
 import csv
 import math
 import fncs

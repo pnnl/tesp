@@ -3,7 +3,6 @@ main file of the controller object, mainly used for assigning data read from inp
 '''
 
 # import from library or functions
-import numpy as np
 import csv
 import fncs
 import sys
@@ -34,7 +33,6 @@ time_granted = 0 # time variable for checking the retuned time from FNCS
 timeSim= 0
 
 # Start simulation for each time step:     
-# for timeSim in np.arange(0, tf*3600, deltaT):
 while (time_granted < tf*3600):
     # =================Simulation for each time step ============================================ 
     # Initialization when time = 0
