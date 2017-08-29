@@ -94,9 +94,6 @@ GridLAB-D with Prerequisites (installed to /usr/local)
 
 ::
 
- sudo apt install autoconf
- sudo apt install libtool
-
  cd ~/src/gridlab-d
  autoreconf -isf
 
@@ -128,7 +125,7 @@ EnergyPlus with Prerequisites (installed to /usr/local)
  cd ~/src/EnergyPlus
  mkdir build
  cd build
- cmake
+ cmake ..
  make
 
  # Before installing, we need components of the public version, including but not limited to the critical Energy+.idd file

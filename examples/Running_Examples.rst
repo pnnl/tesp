@@ -88,6 +88,7 @@ te30 - 30 houses, 1 school, 4 generators over FNCS
  cd ~/src/tesp/examples/te30
  python prep_agents.py TE_Challenge
  python glm_dict.py TE_Challenge
+ chmod +x launch_TE_Challenge_agents.sh
  ./run30.sh
  # the simulation takes about 10 minutes, use "cat TE*.csv" to show progress up to 172800 seconds
  python process_eplus.py te_challenge
