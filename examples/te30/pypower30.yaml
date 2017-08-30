@@ -1,5 +1,5 @@
 name: pypower
-time_delta: 300s
+time_delta: 15s
 broker: tcp://localhost:5570
 values:
     SUBSTATION7:

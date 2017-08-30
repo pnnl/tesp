@@ -179,19 +179,24 @@ class auction_object:
                 # Check if it is rebid. If true, then have to delete the existing bid if any
                 if self.market['market_id'] == fncs_sub_value_String['controller'][controllerKeys[i]]['market_id']['propertyValue']:
                     if fncs_sub_value_String['controller'][controllerKeys[i]]['rebid']['propertyValue'] != 0:
+    #                    print ('found a rebid')
                         # Check if the bid from the same bid_id is stored, if so, delete
-                        if (fncs_sub_value_String['controller'][controllerKeys[i]]['bid_id'] in self.buyer['bid_id']):
-                            index_delete = self.buyer['bid_id'].index(fncs_sub_value_String['controller'][controllerKeys[i]]['bid_id'])
-                            print ('  rebid', index_delete)
-                            for ele in self.buyer.itervalues():
-                                del ele[index_delete]
-                # Add the new bid:
-                self.buyer['name'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['bid_name'])
-                self.buyer['price'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['price']['propertyValue'])
-                self.buyer['quantity'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['quantity']['propertyValue'])
-                self.buyer['state'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['state']['propertyValue'])
-                self.buyer['bid_id'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['bid_id']['propertyValue'])
-                    
+                        if (fncs_sub_value_String['controller'][controllerKeys[i]]['bid_id']['propertyValue'] in self.buyer['bid_id']):
+    #                        print ('found the bid_id from the rebid')
+                            index_delete = self.buyer['bid_id'].index(fncs_sub_value_String['controller'][controllerKeys[i]]['bid_id']['propertyValue'])
+    #                        print ('removing list index', index_delete)
+                            for ele in self.buyer.keys():
+                                del self.buyer[ele][index_delete]
+                    # Add the new bid:
+                    self.buyer['name'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['bid_name'])
+                    self.buyer['price'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['price']['propertyValue'])
+                    self.buyer['quantity'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['quantity']['propertyValue'])
+                    self.buyer['state'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['state']['propertyValue'])
+                    self.buyer['bid_id'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['bid_id']['propertyValue'])
+    #                rebid = fncs_sub_value_String['controller'][controllerKeys[i]]['rebid']['propertyValue']
+    #                bidder_market_id = fncs_sub_value_String['controller'][controllerKeys[i]]['market_id']['propertyValue']
+    #               print (self.market['market_id'], bidder_market_id, rebid, self.buyer['name'][-1], self.buyer['price'][-1], self.buyer['quantity'][-1], self.buyer['state'][-1]);
+    #                
     # turning these off for now
     #            if self.market['market_id'] > fncs_sub_value_String['controller'][controllerKeys[i]]['market_id']['propertyValue']:
     #                if fncs_sub_value_String['controller'][controllerKeys[i]]['market_id']['propertyValue'] == 0:
@@ -583,8 +588,8 @@ class auction_object:
             unresp = refload - curve_buyer.total_on - total_unknown/2
             print('  Unresponsive load bid: Refload,#buyers,on,off,unresp=', refload, curve_buyer.count, curve_buyer.total_on, curve_buyer.total_off, unresp)
 #            unresp = 2000.0
-            unresp = 30.0
-            print('  MANUAL override', unresp, 'kW unresponsive load bid')
+#            unresp = 30.0
+#            print('  MANUAL override', unresp, 'kW unresponsive load bid')
 
             if unresp < -0.001:
                 warnings.warn('capacity_reference has negative unresponsive load--this is probably due to improper bidding')
@@ -906,6 +911,12 @@ class auction_object:
             self.update_statistics()
         
         # End of the clear_market def
+        print ('Seller Curve at ', self.timeSim)
+        for i in range(curve_seller.count):
+            print ('  ', i, curve_seller.bidname[i], curve_seller.quantity[i], curve_seller.price[i])
+        print ('Buyer Curve at ', self.timeSim)
+        for i in range(curve_buyer.count):
+            print ('  ', i, curve_buyer.bidname[i], curve_buyer.quantity[i], curve_buyer.price[i])
         curve_seller = None
         curve_buyer = None
         

@@ -78,7 +78,7 @@ def ppcasefile():
 
 	# bus, fncs topic, amp factor, current value
 	ppc['FNCS'] = array([
-		[7, 'SUBSTATION7', 400.0, 0.0]
+		[7, 'SUBSTATION7', 800.0, 0.0]
 	])
 
 	# unit, time out, time back in

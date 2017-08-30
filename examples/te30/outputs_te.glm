@@ -15,12 +15,12 @@ object recorder {
 }
 
 // Energyplus load
-object recorder {
-	parent Eplus_meter;
-	property measured_real_power,measured_reactive_power,measured_voltage_AB;
-	interval 60;
-	file eplus_load.csv;
-}
+//object recorder {
+//	parent Eplus_meter;
+//	property measured_real_power,measured_reactive_power,measured_voltage_AB;
+//	interval 60;
+//	file eplus_load.csv;
+//}
 
 // house debugging
 object recorder {

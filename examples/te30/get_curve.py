@@ -40,9 +40,9 @@ class curve:
                         self.quantity.insert(0, quantity)
                         self.bidname.insert(0, name)
                     else:
-                        self.price.insert(i+1, price)
-                        self.quantity.insert(i+1, quantity)
-                        self.bidname.insert(i+1, name)
+                        self.price.insert(i, price)
+                        self.quantity.insert(i, quantity)
+                        self.bidname.insert(i, name)
                     self.count += 1
                     value_insert_flag = 1
                     break
