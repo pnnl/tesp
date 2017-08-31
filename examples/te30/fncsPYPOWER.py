@@ -9,6 +9,8 @@ import numpy as np
 import pypower.api as pp
 import math
 import re
+import cProfile
+import pstats
 
 def summarize_opf(res):
 	bus = res['bus']
@@ -109,10 +111,7 @@ def parse_mva(arg):
 
 	return p, q
 
-with warnings.catch_warnings():
-	warnings.simplefilter("ignore") # TODO - pypower is using NumPy doubles for integer indices
-	#warnings.filterwarnings("ignore",category=DeprecationWarning)
-
+def main_loop():
 	if len(sys.argv) == 5:
 		rootname = sys.argv[1]
 		StartTime = sys.argv[2]
@@ -163,7 +162,7 @@ with warnings.catch_warnings():
 #		ts += dt
 
 	while ts <= tmax:
-		print ("looping", ts, tnext, tmax, flush=True)
+#		print ("looping", ts, tnext, tmax, flush=True)
 		if ts >= tnext:
 			idx = int (ts / 300) % nloads
 			bus = ppc['bus']
@@ -186,11 +185,11 @@ with warnings.catch_warnings():
 			Pload = bus[:,2].sum()
 			Pgen = gen[:,1].sum()
 			Ploss = Pgen - Pload
-			print ('  ', res['success'], bus[:,2].sum(), flush=True)
+#			print ('  ', res['success'], bus[:,2].sum(), flush=True)
 			print (ts, res['success'], bus[:,2].sum(), bus[6,2], bus[6,7], bus[6,13], bus[6,14], gen[0,1], gen[1,1], gen[2,1], gen[3,1], sep=',', file=op, flush=True)
 			fncs.publish('LMP_B7', 0.001 * bus[6,13])
 			fncs.publish('three_phase_voltage_B7', 1000.0 * bus[6,7] * bus[6,9])
-			print('  publishing LMP=', 0.001 * bus[6,13], 'vpos=', 1000.0 * bus[6,7] * bus[6,9], flush=True)
+#			print('  publishing LMP=', 0.001 * bus[6,13], 'vpos=', 1000.0 * bus[6,7] * bus[6,9], flush=True)
 			# update the metrics
 			sys_metrics[str(ts)] = {rootname:[Ploss,res['success']]}
 			bus_metrics[str(ts)] = {}
@@ -231,4 +230,17 @@ with warnings.catch_warnings():
 	op.close()
 	print ('finalizing FNCS', flush=True)
 	fncs.finalize()
+
+
+with warnings.catch_warnings():
+#	warnings.simplefilter("ignore") # TODO - pypower is using NumPy doubles for integer indices
+
+	profiler = cProfile.Profile ()
+	profiler.runcall (main_loop)
+	stats = pstats.Stats(profiler)
+	stats.strip_dirs()
+	stats.sort_stats('cumulative')
+	stats.print_stats()
+	
+
 

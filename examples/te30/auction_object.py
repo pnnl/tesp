@@ -60,6 +60,34 @@ def parse_kw(arg):
 
     return p
 
+# aggregates the buyer curve into a straight-line fit, returned as
+# [Punresp, Qunresp, a, b, Qmaxresp]
+def aggregate_bid (crv):
+    p = np.array (crv.price)
+    q = np.array (crv.quantity)
+    idx = np.argwhere (p == p[0])[-1][0]
+    unresp = np.cumsum(q[:idx+1])[-1]
+
+    n = p.size - idx - 1
+
+    if n < 1:
+        a = 0
+        b = 0
+        qmax = 0
+    else:
+        qresp = np.cumsum(q[idx+1:])
+        presp = p[idx+1:]
+        qmax = qresp[-1]
+        if n == 1:
+            a = 0
+            b = presp[-1]
+        else:
+            resp_fit = np.polyfit (qresp, presp, 1)
+            a = resp_fit[0]
+            b = resp_fit[1]
+    bid = [p[0], unresp, a, b, qmax]
+    return bid
+
 # Class definition
 class auction_object:
     # ====================Define instance variables ===================================
@@ -911,12 +939,60 @@ class auction_object:
             self.update_statistics()
         
         # End of the clear_market def
-        print ('Seller Curve at ', self.timeSim)
+        print ('Seller Curve at', self.timeSim, 'has', curve_seller.count, 'points')
         for i in range(curve_seller.count):
-            print ('  ', i, curve_seller.bidname[i], curve_seller.quantity[i], curve_seller.price[i])
-        print ('Buyer Curve at ', self.timeSim)
+            print (curve_seller.price[i], curve_seller.quantity[i])
+        print ('Buyer Curve at', self.timeSim, 'has', curve_buyer.count, 'points')
         for i in range(curve_buyer.count):
-            print ('  ', i, curve_buyer.bidname[i], curve_buyer.quantity[i], curve_buyer.price[i])
+            print (curve_buyer.price[i], curve_buyer.quantity[i])
+        print ('Aggregate Buyer Curve')
+        agg_p = curve_buyer.price[0]
+        agg_q = curve_buyer.quantity[0]
+        agg_to_print = True
+        agg_unresp_p = agg_p
+        agg_unresp_q = agg_q
+        agg_resp_max = 0
+        agg_resp_a = 0
+        agg_resp_b = 0
+        agg_resp_n = 0
+        agg_sum_p = 0
+        agg_sum_q = 0
+        agg_sum_q2 = 0
+        agg_sum_pq = 0
+        for i in range(1, curve_buyer.count):
+            p = curve_buyer.price[i]
+            q = curve_buyer.quantity[i]
+            if p >= agg_unresp_p:
+                agg_unresp_q += q
+            else:
+                agg_resp_n += 1
+                agg_sum_p += p
+                agg_sum_q += q
+                agg_sum_q2 += q * q
+                agg_sum_pq += p * q
+            if p < agg_p:
+                print (agg_p, agg_q)
+                agg_to_print = False
+            agg_p = p
+            agg_q += q
+            agg_to_print = True
+        if agg_to_print:
+            print (agg_p, agg_q)
+        print ('Unresp bid', agg_unresp_p, agg_unresp_q)
+        if agg_resp_n > 1: 
+            agg_denom = agg_resp_n * agg_sum_q2 - agg_sum_q * agg_sum_q
+            agg_resp_a = (agg_sum_p * agg_sum_q2 - agg_sum_q * agg_sum_pq) / agg_denom
+            agg_resp_b = (agg_resp_n * agg_sum_pq - agg_sum_p * agg_sum_q) / agg_denom
+            agg_resp_max = agg_q - agg_unresp_q
+        if agg_resp_n == 1:
+            agg_resp_max = agg_q - agg_unresp_q
+            agg_resp_a = 0
+            agg_resp_b = agg_resp_max
+        print ('Responsive bid', agg_resp_a, 'q +', agg_resp_b, 'up to', agg_resp_max)
+        print ('  ', agg_resp_n, agg_sum_q, agg_sum_p, agg_sum_q2, agg_sum_pq)
+
+        print (aggregate_bid (curve_buyer))
+
         curve_seller = None
         curve_buyer = None
         
