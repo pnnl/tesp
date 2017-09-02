@@ -33,11 +33,14 @@ with warnings.catch_warnings():
 	ppc = ppcasefile()
 
 	gencost = ppc['gencost']
-	ppopt = pp.ppoption(VERBOSE=0, OUT_ALL=0) # , PF_DC=1)
+	ppopt = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
 	bus = ppc['bus']
 	gen = ppc['gen']
 
-	bid = [3.7799999999999998, 100.17391892147002, -0.00017606033522744592, 0.04777692038155331, 79.037081078529994]
+	# linear fit
+	# bid = [3.7799999999999998, 100.17391892147002, -0.00017606033522744592, 0.04777692038155331, 79.037081078529994]
+	# quadratic fit
+	bid = [3.7799999999999998, 100.17391892147002, -3.8787933194275747e-06, 0.00014359848037508779, 0.043262944755715946, 79.037081078529994]
 
 	bus[4,2] = 117.49  # bus 5 and 9 loads at 56400 from the TXT file
 	bus[8,2] = 163.18
@@ -45,15 +48,23 @@ with warnings.catch_warnings():
 	bus[6,2] = 272.97  # GLD at 56400
 
 	unresp = bid[1] * 0.8  # UNRESP at 56400
-	resp_a = bid[2] * 10 / 0.8
-	resp_b = bid[3] * -10
-	resp_max = bid[4] * 0.8
-	print (unresp, resp_a, resp_b, resp_max)
+	# for linear bids
+	#resp_a = bid[2] * 10 / 0.8
+	#resp_b = bid[3] * -10
+	#resp_max = bid[4] * 0.8
+	#print (unresp, resp_a, resp_b, resp_max)
+	resp_c = bid[2] * 10 / 0.8
+	resp_b = bid[3] * 10 / 0.8
+	resp_a = bid[4] * 10
+	resp_max = bid[5] * 0.8
+	print (unresp, resp_a, resp_b, resp_c, resp_max)
 
 	bus[6,2] = unresp
 	gen[4,9] = -resp_max
-	gencost[4,5] = 1000 * resp_a
-	gencost[4,6] = 0 # resp_b
+
+	gencost[4,4] = -1000000 * resp_c
+	gencost[4,5] = -1000 * resp_b
+	gencost[4,6] = -resp_a
 	print(gen)
 	print(gencost)
 
