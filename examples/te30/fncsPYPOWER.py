@@ -9,8 +9,8 @@ import numpy as np
 import pypower.api as pp
 import math
 import re
-import cProfile
-import pstats
+#import cProfile
+#import pstats
 
 def summarize_opf(res):
 	bus = res['bus']
@@ -143,7 +143,7 @@ def main_loop():
 
 	gencost = ppc['gencost']
 	fncsBus = ppc['FNCS']
-	ppopt = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
+	ppopt = pp.ppoption(VERBOSE=0, OUT_ALL=0) # , PF_DC=1)
 	loads = np.loadtxt('NonGLDLoad.txt', delimiter=',')
 
 	outage = ppc['UnitsOut'][0]
@@ -231,16 +231,17 @@ def main_loop():
 	print ('finalizing FNCS', flush=True)
 	fncs.finalize()
 
+main_loop()
 
-with warnings.catch_warnings():
+#with warnings.catch_warnings():
 #	warnings.simplefilter("ignore") # TODO - pypower is using NumPy doubles for integer indices
 
-	profiler = cProfile.Profile ()
-	profiler.runcall (main_loop)
-	stats = pstats.Stats(profiler)
-	stats.strip_dirs()
-	stats.sort_stats('cumulative')
-	stats.print_stats()
+#	profiler = cProfile.Profile ()
+#	profiler.runcall (main_loop)
+#	stats = pstats.Stats(profiler)
+#	stats.strip_dirs()
+#	stats.sort_stats('cumulative')
+#	stats.print_stats()
 	
 
 
