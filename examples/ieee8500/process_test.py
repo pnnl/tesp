@@ -249,9 +249,9 @@ for key in inv_keys:
 fig, ax = plt.subplots(1, 3, sharex = 'col')
 
 ax[0].plot(hrs, data_h[0,:,HSE_AIR_AVG_IDX], color="blue", label="Mean")
-ax[0].plot(hrs, data_h[0,:,HSE_AIR_MIN_IDX], color="red", label="Min")
-ax[0].plot(hrs, data_h[0,:,HSE_AIR_MAX_IDX], color="green", label="Max")
-ax[0].plot(hrs, data_h[0,:,HSE_AIR_MED_IDX], color="magenta", label="Median")
+#ax[0].plot(hrs, data_h[0,:,HSE_AIR_MIN_IDX], color="red", label="Min")
+#ax[0].plot(hrs, data_h[0,:,HSE_AIR_MAX_IDX], color="green", label="Max")
+#ax[0].plot(hrs, data_h[0,:,HSE_AIR_MED_IDX], color="magenta", label="Median")
 ax[0].set_xlabel("Hours")
 ax[0].set_ylabel(HSE_AIR_AVG_UNITS)
 ax[0].set_title ("House Air at " + hse_keys[0])
