@@ -169,6 +169,26 @@ for key, val in meta_m.items():
 	elif key == 'bill':
 		MTR_BILL_IDX = val['index']
 		MTR_BILL_UNITS = val['units']
+	elif key == 'above_RangeA_Count':
+		MTR_AHI_COUNT_IDX = val['index']
+	elif key == 'above_RangeB_Count':
+		MTR_BHI_COUNT_IDX = val['index']
+	elif key == 'below_RangeA_Count':
+		MTR_ALO_COUNT_IDX = val['index']
+	elif key == 'below_RangeB_Count':
+		MTR_BLO_COUNT_IDX = val['index']
+	elif key == 'below_10_percent_NormVol_Count':
+		MTR_OUT_COUNT_IDX = val['index']
+	elif key == 'above_RangeA_Duration':
+		MTR_AHI_DURATION_IDX = val['index']
+	elif key == 'above_RangeB_Duration':
+		MTR_BHI_DURATION_IDX = val['index']
+	elif key == 'below_RangeA_Duration':
+		MTR_ALO_DURATION_IDX = val['index']
+	elif key == 'below_RangeB_Duration':
+		MTR_BLO_DURATION_IDX = val['index']
+	elif key == 'below_10_percent_NormVol_Duration':
+		MTR_OUT_DURATION_IDX = val['index']
 
 data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float)
 print ("\nConstructed", data_m.shape, "NumPy array for Meters")
@@ -252,7 +272,7 @@ for key in inv_keys:
 	j = j + 1
 
 # display a plot
-fig, ax = plt.subplots(2, 4, sharex = 'col')
+fig, ax = plt.subplots(2, 5, sharex = 'col')
 
 total1 = (data_h[:,:,HSE_TOTAL_AVG_IDX]).squeeze()
 total2 = total1.sum(axis=0)
@@ -335,6 +355,26 @@ ax[1,3].set_xlabel("Hours")
 ax[1,3].set_ylabel("")
 ax[1,3].set_title ("Regulator Tap Changes")
 ax[1,3].legend(loc='best')
+
+ax[0,4].plot(hrs, (data_m[:,:,MTR_AHI_COUNT_IDX]).squeeze().sum(axis=0), color="blue", label="Range A Hi")
+ax[0,4].plot(hrs, (data_m[:,:,MTR_BHI_COUNT_IDX]).squeeze().sum(axis=0), color="cyan", label="Range B Hi")
+ax[0,4].plot(hrs, (data_m[:,:,MTR_ALO_COUNT_IDX]).squeeze().sum(axis=0), color="green", label="Range A Lo")
+ax[0,4].plot(hrs, (data_m[:,:,MTR_BLO_COUNT_IDX]).squeeze().sum(axis=0), color="magenta", label="Range B Lo")
+ax[0,4].plot(hrs, (data_m[:,:,MTR_OUT_COUNT_IDX]).squeeze().sum(axis=0), color="red", label="No Voltage")
+ax[0,4].set_ylabel("")
+ax[0,4].set_title ("Voltage Violation Counts")
+ax[0,4].legend(loc='best')
+
+ax[1,4].plot(hrs, (data_m[:,:,MTR_AHI_DURATION_IDX]).squeeze().sum(axis=0), color="blue", label="Range A Hi")
+ax[1,4].plot(hrs, (data_m[:,:,MTR_BHI_DURATION_IDX]).squeeze().sum(axis=0), color="cyan", label="Range B Hi")
+ax[1,4].plot(hrs, (data_m[:,:,MTR_ALO_DURATION_IDX]).squeeze().sum(axis=0), color="green", label="Range A Lo")
+ax[1,4].plot(hrs, (data_m[:,:,MTR_BLO_DURATION_IDX]).squeeze().sum(axis=0), color="magenta", label="Range B Lo")
+ax[1,4].plot(hrs, (data_m[:,:,MTR_OUT_DURATION_IDX]).squeeze().sum(axis=0), color="red", label="No Voltage")
+ax[1,3].set_xlabel("Hours")
+ax[1,4].set_ylabel("Seconds")
+ax[1,4].set_title ("Voltage Violation Durations")
+ax[1,4].legend(loc='best')
+
 
 plt.show()
 
