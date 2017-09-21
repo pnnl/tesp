@@ -66,6 +66,9 @@ for key, val in meta_s.items():
 	if key == 'real_power_avg':
 		SUB_POWER_IDX = val['index']
 		SUB_POWER_UNITS = val['units']
+	elif key == 'real_power_median':
+		SUB_MEDIAN_IDX = val['index']
+		SUB_MEDIAN_UNITS = val['units']
 	elif key == 'real_power_losses_avg':
 		SUB_LOSSES_IDX = val['index']
 		SUB_LOSSES_UNITS = val['units']
@@ -83,7 +86,7 @@ for key in sub_keys:
 	j = j + 1
 
 # display some averages
-print ("Maximum power =", data_s[0,:,SUB_POWER_IDX].max(), SUB_POWER_UNITS)
+print ("Max avg power =", data_s[0,:,SUB_POWER_IDX].max(), SUB_POWER_UNITS)
 print ("Average power =", data_s[0,:,SUB_POWER_IDX].mean(), SUB_POWER_UNITS)
 print ("Average losses =", data_s[0,:,SUB_LOSSES_IDX].mean(), SUB_LOSSES_UNITS)
 
@@ -258,8 +261,10 @@ hvac2 = hvac1.sum(axis=0)
 wh1 = (data_h[:,:,HSE_WH_AVG_IDX]).squeeze()
 wh2 = wh1.sum(axis=0)
 subkw = 0.001 * data_s[0,:,SUB_POWER_IDX]
+submdn = 0.001 * data_s[0,:,SUB_MEDIAN_IDX]
 losskw = 0.001 * data_s[0,:,SUB_LOSSES_IDX]
-ax[0,0].plot(hrs, subkw, color="blue", label="Substation")
+ax[0,0].plot(hrs, subkw, color="blue", label="Substation Mean")
+ax[0,0].plot(hrs, submdn, color="cyan", label="Substation Median")
 ax[0,0].plot(hrs, losskw, color="red", label="Losses")
 ax[0,0].plot(hrs, total2, color="green", label="Houses")
 ax[0,0].plot(hrs, hvac2, color="magenta", label="HVAC")
