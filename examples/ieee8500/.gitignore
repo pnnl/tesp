@@ -1,1 +1,4 @@
 *metrics.json
+*.xml
+*dict.json
+*.csv

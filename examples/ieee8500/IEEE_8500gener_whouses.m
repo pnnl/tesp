@@ -257,9 +257,9 @@ fprintf(fid,'// basic residential rate from www.tep.com/rates\n');
 fprintf(fid,'// #define TEPCO_MONTHLY_FEE=13.00\n');
 fprintf(fid,'// #define TEPCO_PRICE_0=0.102013 // 0-500 kwh\n');
 fprintf(fid,'// #define TEPCO_PRICE_1=0.117013 // 501-1000 kwh\n');
-fprintf(fid,'// #define TEPCO_PRICE_2=0.122513 // >1000 kwh\n');
+fprintf(fid,'// #define TEPCO_PRICE_2=0.122513 // >1000 kwh\n\n');
 
-fprintf(fid,'// residential time-of-use rate from www.tep.com\n');
+fprintf(fid,'// residential time-of-use rate from www.tep.com/rates\n');
 fprintf(fid,'// winter peak hours are 6-9 a.m. and 6-9 p.m., Oct-Apr\n');
 fprintf(fid,'// summer peak hours are 3-7 p.m., May-Sep\n');
 fprintf(fid,'// only M-F, excluding 6 holidays not accounted for below\n');
@@ -288,7 +288,7 @@ fprintf(fid,' *  *               * 10-4 6-0 0.112303;\n');
 fprintf(fid,' *  15-18           *  5-9 1-5 0.153219;\n');
 fprintf(fid,' *  0-14,19-23      *  5-9 1-5 0.112984;\n');
 fprintf(fid,' *  *               *  5-9 6-0 0.112984;\n');
-fprintf(fid,'}\n');
+fprintf(fid,'}\n\n');
 
 fprintf(fid,'#include "schedules.glm";\n\n');
 
@@ -808,7 +808,7 @@ if ( strcmp(houses,'y')~=0 )
             fprintf(fid,'     phases %sS;\n',PhLoad);
             fprintf(fid,'     bill_day 1;\n');
             fprintf(fid,'     monthly_fee ${TEPCO_MONTHLY_FEE};\n');
-            fprintf(fid,'     bill_mode TIERED;\n');
+            fprintf(fid,'     bill_mode TIERED_TOU;\n');
             fprintf(fid,'     price TEPCO_PRICE_0;\n');
             fprintf(fid,'     first_tier_energy 500;\n');
             fprintf(fid,'     first_tier_price TEPCO_PRICE_1;\n');
@@ -2040,6 +2040,12 @@ fprintf(fid,'	parent network_node;\n');
 fprintf(fid,'	property distribution_load,positive_sequence_voltage;\n');
 fprintf(fid,'	interval %f;\n', minimum_timestep);
 fprintf(fid,'	file substation_load.csv;\n');
+fprintf(fid,'};\n');
+fprintf(fid,'object recorder {\n');
+fprintf(fid,'	parent SX0247160B_1;\n');
+fprintf(fid,'	property price,monthly_bill,monthly_energy,measured_real_power;\n');
+fprintf(fid,'	interval %f;\n', minimum_timestep);
+fprintf(fid,'	file bill.csv;\n');
 fprintf(fid,'};\n');
 fprintf(fid,'object group_recorder {\n');
 fprintf(fid,'	group "class=house";\n');
