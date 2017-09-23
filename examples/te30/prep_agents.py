@@ -62,10 +62,17 @@ print ("subscribe \"precommit:network_node.positive_sequence_voltage <- pypower/
 print ("subscribe \"precommit:Eplus_load.constant_power_A <- eplus_json/power_A\";", file=op)
 print ("subscribe \"precommit:Eplus_load.constant_power_B <- eplus_json/power_B\";", file=op)
 print ("subscribe \"precommit:Eplus_load.constant_power_C <- eplus_json/power_C\";", file=op)
+print ("subscribe \"precommit:Eplus_meter.bill_mode <- eplus_json/bill_mode\";", file=op)
+print ("subscribe \"precommit:Eplus_meter.price <- eplus_json/price\";", file=op)
+print ("subscribe \"precommit:Eplus_meter.monthly_fee <- eplus_json/monthly_fee\";", file=op)
 for key, value in controllers.items():
 	arg = value['controller_information']['houseName']
 	print ("publish \"commit:" + arg + ".air_temperature -> " + arg + "/air_temperature\";", file=op)
 	print ("publish \"commit:" + arg + ".power_state -> " + arg + "/power_state\";", file=op)
 	print ("publish \"commit:" + arg + ".hvac_load -> " + arg + "/hvac_load\";", file=op)
 	print ("subscribe \"precommit:" + arg + ".cooling_setpoint <- controller_" + key + "/cooling_setpoint\";", file=op)
+	arg = value['controller_information']['meterName']
+	print ("subscribe \"precommit:" + arg + ".bill_mode <- controller_" + key + "/bill_mode\";", file=op)
+	print ("subscribe \"precommit:" + arg + ".price <- controller_" + key + "/price\";", file=op)
+	print ("subscribe \"precommit:" + arg + ".monthly_fee <- controller_" + key + "/monthly_fee\";", file=op)
 op.close()

@@ -28,7 +28,8 @@ class ramp_controller_object:
          're_override': 'NORMAL'
          }
         
-        self.controller = {'name': 'none','marketName': 'none', 'houseName': 'none', 'simple_mode': 'none', 'setpoint': 'none', 'lastbid_id': -1, 'lastmkt_id': -1, 'bid_id': 'none', \
+        self.controller = {'name': 'none','marketName': 'none', 'houseName': 'none', 'meterName': 'none', 'simple_mode': 'none', \
+              'setpoint': 'none', 'lastbid_id': -1, 'lastmkt_id': -1, 'bid_id': 'none', \
               'slider_setting': -0.001, 'period': -1, 'ramp_low': 0, 'ramp_high': 0, 'range_low': 0, \
               'range_high': 0, 'dir': 0, 'direction': 0, 'use_predictive_bidding': 0, 'deadband': 0, 'last_p': 0, \
               'last_q': 0, 'setpoint0': -1, 'minT': 0, 'maxT': 0, 'bid_delay': 60, 'next_run': 0, 't1': 0, 't2': 0, 
@@ -53,6 +54,7 @@ class ramp_controller_object:
         self.controller['control_mode'] = agentInitialVal['controller_information']['control_mode']
         self.controller['marketName'] = agentInitialVal['controller_information']['marketName']
         self.controller['houseName'] = agentInitialVal['controller_information']['houseName']
+        self.controller['meterName'] = agentInitialVal['controller_information']['meterName']
         self.controller['bid_id'] = agentInitialVal['controller_information']['bid_id']
         self.controller['period'] = agentInitialVal['controller_information']['period']
         self.controller['ramp_low'] = agentInitialVal['controller_information']['ramp_low']
@@ -464,10 +466,12 @@ class ramp_controller_object:
                     set_temp = maxT
                 elif set_temp < minT:
                     set_temp = minT
-                # Update house set point - output delta setpoint0
+                # Update house set point and the cleared price
                 if timeSim != 0:
                     self.house['setpoint0'] = set_temp - self.house['lastsetpoint0'] 
                     fncs.publish('cooling_setpoint', set_temp)
+                    fncs.publish('bill_mode', 'HOURLY')
+                    fncs.publish('price', clear_price)
 #                    print('  ', timeSim,'Setting (clear price, avgP, stdP, range_high, ramp_high, rang_low, ramp_low',
 #                          set_temp, clear_price, avgP, stdP, range_high, ramp_high, range_low, ramp_low)
                     self.house['lastsetpoint0'] = set_temp

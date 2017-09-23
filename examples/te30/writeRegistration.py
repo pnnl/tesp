@@ -65,15 +65,19 @@ def writeRegistration (filename):
     ip.seek(0,0)
     inFNCSmsg = False
     inHouses = False
+    inTriplexMeters = False
     endedHouse = False
     isELECTRIC = False
     
     houseName = ""
+    meterName = ""
     FNCSmsgName = ""
     # Obtain controller dictionary based on house numbers
     for line in ip:
         lst = line.split()
         if len(lst) > 1:
+            if lst[1] == "triplex_meter":
+                inTriplexMeters = True
             if lst[1] == "house":
                 inHouses = True
             # Check fncs_msg object:
@@ -88,6 +92,10 @@ def writeRegistration (filename):
                 if lst[0] == "name":
                     FNCSmsgName = lst[1].strip(";")
                     inFNCSmsg = False
+            if inTriplexMeters == True:
+                if lst[0] == "name":
+                    meterName = lst[1].strip(";")
+                    inTriplexMeters = False
             # Check house object with controller inside
             if inHouses == True:
                 if lst[0] == "name" and endedHouse == False:
@@ -111,7 +119,7 @@ def writeRegistration (filename):
                     ramp_high = np.random.uniform (min_ramp_high, max_ramp_high)
                     range_high = np.random.uniform (min_range_high, max_range_high)
                     base_setpoint = np.random.uniform (min_base_setpoint, max_base_setpoint)
-                    controllers[controller_name]['controller_information'] = {'control_mode': control_mode, 'marketName': marketName, 'houseName': houseName, 'bid_id': controller_name, 'period': periodController, \
+                    controllers[controller_name]['controller_information'] = {'control_mode': control_mode, 'marketName': marketName, 'houseName': houseName, 'meterName': meterName, 'bid_id': controller_name, 'period': periodController, \
                                'ramp_low': ramp_low, 'ramp_high': ramp_high, 'range_low': range_low, 'range_high': range_high, 'base_setpoint': base_setpoint, \
                                'bid_delay': bid_delay, 'use_predictive_bidding': use_predictive_bidding, 'use_override': use_override}
                     controllers[controller_name]['market_information'] = {'market_id': 0, 'market_unit': unit, 'initial_price': initial_price, 'average_price': initial_price, 'std_dev': std_dev, 'clear_price': initial_price, 'price_cap': price_cap, 'period': periodMarket}
