@@ -143,7 +143,7 @@ def main_loop():
 
 	gencost = ppc['gencost']
 	fncsBus = ppc['FNCS']
-	ppopt = pp.ppoption(VERBOSE=0, OUT_ALL=0) # , PF_DC=1)
+	ppopt = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
 	loads = np.loadtxt('NonGLDLoad.txt', delimiter=',')
 
 	outage = ppc['UnitsOut'][0]

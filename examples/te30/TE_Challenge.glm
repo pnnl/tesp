@@ -27,8 +27,13 @@ module generators;
 #include "../schedules/water_and_setpoint_schedule_v3.glm"
 #include "../schedules/appliance_schedules.glm"
 //#include "solar.glm"
-#include "../schedules/fixed_rate_schedule_v2.glm"
+//#include "../schedules/fixed_rate_schedule_v2.glm"
 #include "outputs_te.glm"
+
+// summer
+#define FIXED_PRICE=0.127
+// winter
+//#define FIXED_PRICE=0.088
 
 object metrics_collector_writer {
      interval 300;
@@ -233,16 +238,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -260,19 +259,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B0;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -375,16 +368,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SC;
 	nominal_voltage 120;
-		bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -402,19 +389,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_C1;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -528,16 +509,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -555,19 +530,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_C2;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -670,16 +639,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -697,19 +660,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B3;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -834,16 +791,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -861,19 +812,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B4;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -976,16 +921,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -1003,19 +942,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A5;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -1118,16 +1051,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -1145,19 +1072,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B6;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -1271,16 +1192,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;	
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -1298,19 +1213,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B7;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -1413,16 +1322,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -1440,19 +1343,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A8;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -1566,16 +1463,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -1593,19 +1484,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A9;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -1708,16 +1593,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -1735,19 +1614,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_C10;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -1850,16 +1723,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -1877,19 +1744,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A11;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -2003,16 +1864,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -2030,19 +1885,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A12;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -2145,16 +1994,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -2172,19 +2015,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A13;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -2298,16 +2135,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -2325,19 +2156,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_C14;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -2440,16 +2265,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -2467,19 +2286,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A15;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -2604,16 +2417,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -2631,19 +2438,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A16;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -2757,16 +2558,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -2784,19 +2579,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_C17;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -2910,16 +2699,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -2937,19 +2720,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_C18;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -3052,16 +2829,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -3079,19 +2850,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B19;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -3216,16 +2981,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -3243,19 +3002,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B20;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -3369,16 +3122,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -3396,19 +3143,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_C21;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -3533,16 +3274,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -3560,19 +3295,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B22;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -3697,16 +3426,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -3724,19 +3447,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B23;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -3861,16 +3578,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -3888,19 +3599,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_B24;
 	phases SB;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -4014,16 +3719,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -4041,19 +3740,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A25;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -4156,16 +3849,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -4183,19 +3870,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A26;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -4298,16 +3979,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -4325,19 +4000,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_C27;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -4451,16 +4120,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -4478,19 +4141,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_A28;
 	phases SA;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -4593,16 +4250,10 @@ object triplex_meter {
 	groupid F1_flatrate_meter;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-    bill_day 1;
-    monthly_fee 6;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
 }
 
 object triplex_line {
@@ -4620,19 +4271,13 @@ object triplex_meter {
 	parent F1_tpm_flatrate_C29;
 	phases SC;
 	nominal_voltage 120;
-	bill_mode TIERED;
-    bill_day 1;
-    monthly_fee 6;
-    price FIXED_PRICE;
-    first_tier_price FIXED_TIER1;
-    second_tier_price FIXED_TIER2;
-    third_tier_price FIXED_TIER3;
-    first_tier_energy 800;
-    second_tier_energy 2000;
-    third_tier_energy 15000;
-      object metrics_collector {
-          interval 300;
-      };
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object house {
@@ -4758,9 +4403,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -4792,9 +4437,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -4826,9 +4471,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -4860,9 +4505,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -4894,9 +4539,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -4928,9 +4573,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -4962,9 +4607,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -4996,9 +4641,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5030,9 +4675,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5064,9 +4709,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5098,9 +4743,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5132,9 +4777,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5166,9 +4811,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5200,9 +4845,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5234,9 +4879,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5268,9 +4913,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5302,9 +4947,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5336,9 +4981,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5370,9 +5015,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5404,9 +5049,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5438,9 +5083,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5472,9 +5117,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5506,9 +5151,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5540,9 +5185,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5574,9 +5219,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5608,9 +5253,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5642,9 +5287,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5676,9 +5321,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5710,9 +5355,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+		  interval 300;
+    };
 	};
 }
 
@@ -5744,9 +5389,9 @@ object triplex_meter {
 			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
-         object metrics_collector {
-         	interval 300;
-         };
+    object metrics_collector {
+    	interval 300;
+    };
 	};
 }
 
@@ -5774,28 +5419,40 @@ object transformer {
 }
 
 object meter {
-     phases ABCN;
-     name Eplus_meter;
-     groupid Commercial_Meter;
-     meter_power_consumption 1+15j;
-     nominal_voltage 480.000000;
-     bill_mode UNIFORM;
-     price 0.11420;
-     monthly_fee 25.00;
-     bill_day 1;
-      object metrics_collector {
-          interval 300;
-      };
+  phases ABCN;
+  name Eplus_meter;
+  groupid Commercial_Meter;
+  meter_power_consumption 1+15j;
+  nominal_voltage 480.000000;
+  bill_mode UNIFORM;
+  price 0.11420;
+  monthly_fee 25.00;
+  bill_day 1;
+  object metrics_collector {
+    interval 300;
+  };
 }
 
 object load {
-     name Eplus_load;
-     parent Eplus_meter;
-     phases ABCN;
-     nominal_voltage 480.000000;
-     constant_power_A 25 kVA;
-     constant_power_B 25 kVA;
-     constant_power_C 25 kVA;
+  name Eplus_load;
+  parent Eplus_meter;
+  phases ABCN;
+  nominal_voltage 480.000000;
+  constant_power_A 25 kVA;
+  constant_power_B 25 kVA;
+  constant_power_C 25 kVA;
 }
 
+object recorder {
+	parent Eplus_meter;
+	property bill_mode,monthly_fee,price,monthly_bill,monthly_energy,measured_real_power;
+	interval 60.000000;
+	file Eplus_bill.csv;
+};
+object recorder {
+	parent F1_tpm_rt_C2;
+	property bill_mode,monthly_fee,price,monthly_bill,monthly_energy,measured_real_power;
+	interval 60.000000;
+	file C2_bill.csv;
+};
 
