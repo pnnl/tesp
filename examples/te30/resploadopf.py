@@ -59,12 +59,14 @@ with warnings.catch_warnings():
 	resp_max = bid[5] * 0.8
 	print (unresp, resp_a, resp_b, resp_c, resp_max)
 
-	bus[6,2] = unresp
-	gen[4,9] = -resp_max
+#	bus[6,2] = unresp
+#	gen[4,9] = -resp_max
 
-	gencost[4,4] = -1000000 * resp_c
-	gencost[4,5] = -1000 * resp_b
-	gencost[4,6] = -resp_a
+#	gencost[4,4] = -1000000 * resp_c
+#	gencost[4,5] = -1000 * resp_b
+#	gencost[4,6] = -resp_a
+	gencost[4,3] = 2
+	gencost[4,4] = 300
 	print(gen)
 	print(gencost)
 
