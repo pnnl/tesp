@@ -65,8 +65,14 @@ with warnings.catch_warnings():
 #	gencost[4,4] = -1000000 * resp_c
 #	gencost[4,5] = -1000 * resp_b
 #	gencost[4,6] = -resp_a
-	gencost[4,3] = 2
-	gencost[4,4] = 300
+
+#	gencost[4,3] = 2
+#	gencost[4,4] = 300
+
+	gencost[4,3] = 3
+	gencost[4,4] = -0.653
+	gencost[4,5] = 300
+
 	print(gen)
 	print(gencost)
 
