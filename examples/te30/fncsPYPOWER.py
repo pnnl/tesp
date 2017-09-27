@@ -209,14 +209,39 @@ def main_loop():
 				break
 		ts = fncs.time_request(tnext)
 		events = fncs.get_events()
+		resp_a = 0
+		resp_b = 0
+		resp_max_kw = 0
+		unresp_kw = 0
+		unresp_price = 0
 		for key in events:
 			substation = key.decode()
-			GLDload = parse_mva (fncs.get_value(key).decode())
-#			print ('  **', ts, substation, GLDload)
-			for row in fncsBus:
-				if substation == row[1]:
-#					print('    assigning',substation,GLDload)
-					row[3] = GLDload[0]
+			if substation == 'UNRESPONSIVE_PRICE':
+				unresp_price = float(fncs.get_value(key).decode())
+			elif substation == 'UNRESPONSIVE_KW':
+				unresp_kw = float(fncs.get_value(key).decode())
+			elif substation == 'RESPONSIVE_MAX_KW':
+				resp_max_kw = float(fncs.get_value(key).decode())
+			elif substation == 'RESPONSIVE_A':
+				resp_a = float(fncs.get_value(key).decode())
+			elif substation == 'RESPONSIVE_B':
+				resp_b = float(fncs.get_value(key).decode())
+			else:
+				GLDload = parse_mva (fncs.get_value(key).decode())
+				#			print ('  **', ts, substation, GLDload)
+				for row in fncsBus:
+					if substation == row[1]:
+						#					print('    assigning',substation,GLDload)
+						row[3] = GLDload[0]
+		# update the aggregate buyer curve from GridLAB-D
+		agg_c0 = 0
+		agg_c1 = resp_a
+		agg_c2 = 0.5 * resp_b
+		print ('agg bid', unresp_kw, resp_max_kw, agg_c0, agg_c1, agg_c2)
+		# poke unresp_kw into the ppc bus array
+		# poke resp_max_kw into the ppc gen array
+		# poke agg_c0, c1 and c2 into the ppc gencost array
+		# when we read the GLD load onto FNCS bus, it includes both responsive and unresponsive
 
 #	summarize_opf(res)
 	print ('writing metrics', flush=True)

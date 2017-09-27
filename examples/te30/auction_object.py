@@ -159,6 +159,9 @@ class auction_object:
         # Update market data based on given stats data
         self.market['statistic_count'] = len(self.stats['stat_mode'])
         self.market['longest_statistic'] = max(self.stats['interval'])
+
+        self.curve_buyer = None
+        self.curve_seller = None
         
         # Give the updated mean and std values to the market_output        
         if self.market['statistic_mode'] == 1:
@@ -326,6 +329,16 @@ class auction_object:
         elif self.timeSim % self.market['period'] == 0:
             self.nextClear['from'] = self.nextClear['quantity'] = self.nextClear['price'] = 0
         
+        if timeSim > 0:
+            self.collect_agent_bids()
+            agg_bid = aggregate_bid (self.curve_buyer)
+            print ('Agg Bid[Pu, Qu, a, b, Qmax]', agg_bid)
+            fncs.publish ("unresponsive_price", agg_bid[0])
+            fncs.publish ("unresponsive_kw", agg_bid[1])
+            fncs.publish ("responsive_max_kw", agg_bid[2])
+            fncs.publish ("responsive_a", agg_bid[3])
+            fncs.publish ("responsive_b", agg_bid[4])
+
         # Start market clearing process
         if timeSim >= self.market['clearat']:
             self.clear_market()
@@ -428,27 +441,26 @@ class auction_object:
                     elif self.stats['stat_type'][k] == 'SY_STDEV':
                         self.market_output['std'] = self.stats['value'][k]
 
-    # =========================================== Clear market ======================================================            
-    def clear_market(self):
-        
+    # =========================================== Collect agent bids ================================================            
+    def collect_agent_bids(self):
         bid_offset = 0.0001
         cap_ref_unrep = 0.0
-        
+
         # for metrics output
         self.offers['name'] = self.buyer['name']
         self.offers['price'] = self.buyer['price']
         self.offers['quantity'] = self.buyer['quantity']
 
         # These need to be re-initialized
-        curve_seller = curve()
-        curve_buyer = curve()
+        self.curve_seller = curve()
+        self.curve_buyer = curve()
         unresponsive_sell = unresponsive_buy =  responsive_sell =  responsive_buy = 0
-        
+
         # Bid from the capacity reference (i.e. MATPOWER/PYPOWER)
         if self.market['capacity_reference_object']['name'] != 'none' and self.market['special_mode'] == 'MD_NONE':
             max_capacity_reference_bid_quantity = self.market['capacity_reference_object']['max_capacity_reference_bid_quantity']
             capacity_reference_bid_price = self.market['capacity_reference_object']['capacity_reference_bid_price']
-            print("  Capacity reference bids", capacity_reference_bid_price, "up to", max_capacity_reference_bid_quantity)
+#            print("  Capacity reference bids", capacity_reference_bid_price, "up to", max_capacity_reference_bid_quantity)
             # Submit bid
             if max_capacity_reference_bid_quantity < 0: 
                 # Negative quantity is buyer
@@ -464,25 +476,25 @@ class auction_object:
                 self.seller['quantity'].append(max_capacity_reference_bid_quantity)
                 self.seller['state'].append('ON')
                 self.seller['bid_id'].append(self.market['capacity_reference_object']['name'])
-                
+
         # Check special_mode and sort buyers and sellers curves
         single_quantity = single_price = 0.0
-        
+
         if self.market['special_mode'] == 'MD_SELLERS':
             # Sort offers curve:
             seller = self.seller 
             # Iterate each seller to obtain the final seller curve    
             for i in range (len(seller['name'])):
-                curve_seller.add_to_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], seller['state'][i])
-            
+                self.curve_seller.add_to_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], seller['state'][i])
+
             # Rearranged fixed price or quantity 
             if self.market['fixed_price'] * self.market['fixed_quantity'] != 0:
                 warnings.warn('fixed_price and fixed_quantity are set in the same single auction market ~ only fixed_price will be used')
-           
+
             if self.market['fixed_quantity'] > 0.0:
-                for i in range(curve_seller.count):
-                    single_price = curve_seller.price[i]
-                    single_quantity += curve_seller.quantity[i]
+                for i in range(self.curve_seller.count):
+                    single_price = self.curve_seller.price[i]
+                    single_quantity += self.curve_seller.quantity[i]
                     if single_quantity >= self.market['fixed_quantity']: 
                         break
                 if single_quantity > self.market['fixed_quantity']: 
@@ -493,22 +505,22 @@ class auction_object:
                 else:
                     clearing_type = 'CT_FAILURE'
                     single_quantity = 0.0
-                    single_price = 0 if curve_seller.count == 0 else curve_seller.price[0] - bid_offset
-                    
+                    single_price = 0 if self.curve_seller.count == 0 else self.curve_seller.price[0] - bid_offset
+
             elif self.market['fixed_quantity'] < 0.0:
                 warnings.warn('fixed_quantity is negative')
-                
+
             else:
                 single_price = self.market['fixed_price']
-                for i in range(curve_seller.count):
-                    if curve_seller.price[i] <= self.market['fixed_price']:
-                        single_quantity += curve_seller.quantity[i]
+                for i in range(self.curve_seller.count):
+                    if self.curve_seller.price[i] <= self.market['fixed_price']:
+                        single_quantity += self.curve_seller.quantity[i]
                     else: break
                 if single_quantity > 0.0: 
                     clearing_type = 'CT_EXACT'
                 else: 
                     clearing_type = 'CT_NULL'
-                    
+
             self.nextClear['price'] = single_price
             self.nextClear['quantity'] = single_quantity    
 
@@ -517,16 +529,16 @@ class auction_object:
             buyer = self.buyer 
             # Iterate each buyer to obtain the final buyer curve    
             for i in range (len(buyer['name'])):
-                curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
-            
+                self.curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
+
             # Rearranged fix price or quantity 
             if self.market['fixed_price'] * self.market['fixed_quantity'] != 0:
                 warnings.warn('fixed_price and fixed_quantity are set in the same single auction market ~ only fixed_price will be used')
-            
+
             if self.market['fixed_quantity'] > 0.0:
-                for i in range(curve_buyer.count):
-                    single_price = curve_buyer.price[i]
-                    single_quantity += curve_buyer.quantity[i]
+                for i in range(self.curve_buyer.count):
+                    single_price = self.curve_buyer.price[i]
+                    single_quantity += self.curve_buyer.quantity[i]
                     if single_quantity >= self.market['fixed_quantity']: 
                         break
                 if single_quantity > self.market['fixed_quantity']: 
@@ -537,35 +549,35 @@ class auction_object:
                 else:
                     clearing_type = 'CT_FAILURE'
                     single_quantity = 0.0
-                    single_price = 0 if curve_buyer.count == 0 else curve_buyer.price[0] + bid_offset
-            
+                    single_price = 0 if self.curve_buyer.count == 0 else self.curve_buyer.price[0] + bid_offset
+
             elif self.market['fixed_quantity'] < 0.0:
                 warnings.warn('fixed_quantity is negative')
-           
+
             else:
                 single_price = self.market['fixed_price']
-                for i in range(curve_buyer.count):
-                    if curve_buyer.price[i] >= self.market['fixed_price']:
-                        single_quantity += curve_buyer.quantity[i]
+                for i in range(self.curve_buyer.count):
+                    if self.curve_buyer.price[i] >= self.market['fixed_price']:
+                        single_quantity += self.curve_buyer.quantity[i]
                     else: break
                 if single_quantity > 0.0: 
                     clearing_type = 'CT_EXACT'
                 else: 
                     clearing_type = 'CT_NULL'
-                    
+
             self.nextClear['price'] = single_price
             self.nextClear['quantity'] = single_quantity  
-        
+
         elif self.market['special_mode'] == 'MD_FIXED_SELLER':
             # Sort offers curve:
             buyer = self.buyer
             seller = self.seller 
             # Iterate each seller to obtain the final seller curve    
             for i in range (len(seller['name'])):
-                curve_seller.add_to_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], seller['state'][i])
+                self.curve_seller.add_to_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], seller['state'][i])
             if len(buyer['quantity']) > 0:
                 warnings.warn('Seller-only auction was given purchasing bids')
-            
+
             # Since  assumes no buyers will bid into the market and uses a fixed price or quantity 
             # (defined by fixed_price or fixed_quantity below) for the buyer's market            
             self.buyer['name'].append(self.market['name'])
@@ -574,18 +586,18 @@ class auction_object:
             self.buyer['state'].append('ON')
             # Iterate each buyer to obtain the final buyer curve
             for i in range (len(buyer['name'])):
-                curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
-            
+                self.curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
+
         elif self.market['special_mode'] == 'MD_FIXED_BUYER':
             # Sort buyers curve:
             buyer = self.buyer
             seller = self.seller 
             # Iterate each buyer to obtain the final buyer curve    
             for i in range (len(buyer['name'])):
-                curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
+                self.curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
             if len(seller['quantity']) > 0:
                 warnings.warn('Buyer-only auction was given offering bids')
-            
+
             # Since assuming no sellers are on the system. 
             # The seller's market is then defined by the fixed_price or fixed_quantity inputs.           
             self.seller['name'].append(self.market['name'])
@@ -594,27 +606,27 @@ class auction_object:
             self.seller['state'].append('ON')
             # Iterate each seller to obtain the final seller curve
             for i in range (len(seller['name'])):
-                curve_seller.add_to_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], seller['state'][i])
-                
+                self.curve_seller.add_to_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], seller['state'][i])
+
         elif self.market['special_mode'] == 'MD_NONE':
             # Obtain buyer and seller curves at this time step
             buyer = self.buyer 
             seller = self.seller 
             # Iterate each buyer to obtain the final buyer curve
             for i in range (len(buyer['name'])):
-                curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
+                self.curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
             # Iterate each seller to obtain the final seller curve    
             for i in range (len(seller['name'])):
-                curve_seller.add_to_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], seller['state'][i])
-            
+                self.curve_seller.add_to_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], seller['state'][i])
+
         # "Bid" at the price cap from the unresponsive load (add this last, when we have a summary of the responsive bids)
         if self.market['capacity_reference_object']['name'] != 'none' and self.market['special_mode'] != 'MD_FIXED_BUYER':
-            total_unknown = curve_buyer.total - curve_buyer.total_on - curve_buyer.total_off
+            total_unknown = self.curve_buyer.total - self.curve_buyer.total_on - self.curve_buyer.total_off
             if total_unknown > 0.001:
                 warnings.warn('total_unknown is non-zero; some controllers are not providing their states with their bids')
             refload = self.market['capacity_reference_object']['capacity_reference_property']
-            unresp = refload - curve_buyer.total_on - total_unknown/2
-            print('  Unresponsive load bid: Refload,#buyers,on,off,unresp=', refload, curve_buyer.count, curve_buyer.total_on, curve_buyer.total_off, unresp)
+            unresp = refload - self.curve_buyer.total_on - total_unknown/2
+#            print('  Unresponsive load bid: Refload,#buyers,on,off,unresp=', refload,self.curve_buyer.count, self.curve_buyer.total_on, self.curve_buyer.total_off, unresp)
 #            unresp = 2000.0
 #            unresp = 30.0
 #            print('  MANUAL override', unresp, 'kW unresponsive load bid')
@@ -627,13 +639,23 @@ class auction_object:
                 self.buyer['quantity'].append(unresp) # buyer bid in cpp codes is negative, here bidder quantity always set positive
                 self.buyer['state'].append('ON')
                 self.buyer['bid_id'].append(self.market['capacity_reference_object']['name'])
-                curve_buyer.add_to_curve(self.market['pricecap'], unresp, self.market['capacity_reference_object']['name'], 'ON')
+                self.curve_buyer.add_to_curve(self.market['pricecap'], unresp, self.market['capacity_reference_object']['name'], 'ON')
 
+#        print ('Seller Curve at', self.timeSim, 'has', self.curve_seller.count, 'points')
+#        for i in range(self.curve_seller.count):
+#            print (self.curve_seller.price[i], self.curve_seller.quantity[i])
+#        print ('Buyer Curve at', self.timeSim, 'has', self.curve_buyer.count, 'points')
+#        for i in range(self.curve_buyer.count):
+#            print (self.curve_buyer.price[i], self.curve_buyer.quantity[i])
+
+    # =========================================== Clear market ======================================================            
+    def clear_market(self):
+        
         # Calculate clearing price and quantity
-        if curve_buyer.count > 0:
-            curve_buyer.set_curve_order ('descending')
-        if curve_seller.count > 0:
-            curve_seller.set_curve_order ('ascending')
+        if self.curve_buyer.count > 0:
+            self.curve_buyer.set_curve_order ('descending')
+        if self.curve_seller.count > 0:
+            self.curve_seller.set_curve_order ('ascending')
 
         # If the market mode is MD_SELLERS or MD_BUYERS:
         if self.market['special_mode'] == 'MD_SELLERS' or self.market['special_mode'] == 'MD_BUYERS':
@@ -642,56 +664,56 @@ class auction_object:
             self.market_output['pricecap'] = self.market['pricecap']
             self.market_output['market_id'] = self.market['market_id']
             
-        elif curve_buyer.count > 0 and curve_seller.count > 0:
+        elif self.curve_buyer.count > 0 and self.curve_seller.count > 0:
             
             a = self.market['pricecap']
             b = -self.market['pricecap']
             check = 0 # The flag
             demand_quantity = supply_quantity = 0
 
-            for i in range(curve_seller.count):
+            for i in range(self.curve_seller.count):
                 # Calculate numbers of responsive_sell and unresponsive_sell
-                if curve_seller.price[i] == self.market['pricecap']:
-                    unresponsive_sell += curve_seller.quantity[i]
+                if self.curve_seller.price[i] == self.market['pricecap']:
+                    unresponsive_sell += self.curve_seller.quantity[i]
                 else:
-                    responsive_sell += curve_seller.quantity[i]
+                    responsive_sell += self.curve_seller.quantity[i]
             total_sell = unresponsive_sell + responsive_sell; # Did not see it used anywhere
-            for i in range(curve_buyer.count):
-                if curve_buyer.price[i] == self.market['pricecap']:
-                    unresponsive_buy += curve_buyer.quantity[i]
+            for i in range(self.curve_buyer.count):
+                if self.curve_buyer.price[i] == self.market['pricecap']:
+                    unresponsive_buy += self.curve_buyer.quantity[i]
                 else:
-                    responsive_buy += curve_buyer.quantity[i]
+                    responsive_buy += self.curve_buyer.quantity[i]
             total_buy = unresponsive_buy + responsive_buy; # Did not see it used anywhere
 
-            print('  curve summaries (sell #-resp-unresp, buy #-resp-unresp)',curve_seller.count, responsive_sell, unresponsive_sell, curve_buyer.count, responsive_buy, unresponsive_buy)
+#            print('  curve summaries (sell #-resp-unresp, buy #-resp-unresp)',curve_seller.count, responsive_sell, unresponsive_sell, self.curve_buyer.count, responsive_buy, unresponsive_buy)
             
             # Calculate clearing quantity and price here
             # Define the section number of the buyer and the seller curves respectively as i and j
             i = j = 0
             clearing_type = 'CT_NULL'
             clear_quantity = clear_price = 0
-            while i < curve_buyer.count and j < curve_seller.count and curve_buyer.price[i] >= curve_seller.price[j]:
-                buy_quantity = demand_quantity + curve_buyer.quantity[i]
-                sell_quantity = supply_quantity + curve_seller.quantity[j]
+            while i < self.curve_buyer.count and j < self.curve_seller.count and self.curve_buyer.price[i] >= self.curve_seller.price[j]:
+                buy_quantity = demand_quantity + self.curve_buyer.quantity[i]
+                sell_quantity = supply_quantity + self.curve_seller.quantity[j]
                 # If marginal buyer currently:
                 if buy_quantity > sell_quantity:
                     clear_quantity = supply_quantity = sell_quantity
-                    a = b = curve_buyer.price[i]
+                    a = b = self.curve_buyer.price[i]
                     j += 1
                     check = 0
                     clearing_type = 'CT_BUYER'
                 # If marginal seller currently:
                 elif buy_quantity < sell_quantity:
                     clear_quantity = demand_quantity = buy_quantity
-                    a = b = curve_seller.price[j]
+                    a = b = self.curve_seller.price[j]
                     i += 1
                     check = 0
                     clearing_type = 'CT_SELLER'
                 # Buy quantity equal sell quantity but price split  
                 else:
                     clear_quantity = demand_quantity = supply_quantity = buy_quantity
-                    a = curve_buyer.price[i]
-                    b = curve_seller.price[j]
+                    a = self.curve_buyer.price[i]
+                    b = self.curve_seller.price[j]
                     i += 1
                     j += 1
                     check = 1
@@ -703,16 +725,16 @@ class auction_object:
                 clear_price = a 
                 if supply_quantity == demand_quantity:
                     # At least one side exhausted at same quantity
-                    if i == curve_buyer.count or j == curve_seller.count:
+                    if i == self.curve_buyer.count or j == self.curve_seller.count:
                         if a == b:
                             clearing_type = 'CT_EXACT'
                         else:
                             clearing_type = 'CT_PRICE'
                     # Exhausted buyers, sellers unsatisfied at same price
-                    elif i == curve_buyer.count and b == curve_seller.price[j]:
+                    elif i == self.curve_buyer.count and b == self.curve_seller.price[j]:
                         clearing_type = 'CT_SELLER'
                     # Exhausted sellers, buyers unsatisfied at same price
-                    elif j == curve_seller.count and a == curve_buyer.price[i]:
+                    elif j == self.curve_seller.count and a == self.curve_buyer.price[i]:
                         clearing_type = 'CT_BUYER'
                     # Both sides satisfied at price, but one side exhausted  
                     else:
@@ -723,22 +745,22 @@ class auction_object:
                 # No side exausted
                 else:
                     # Price changed in both directions
-                    if a != curve_buyer.price[i] and b != curve_seller.price[j] and a == b:
+                    if a != self.curve_buyer.price[i] and b != self.curve_seller.price[j] and a == b:
                         clearing_type = 'CT_EXACT'
                     # Sell price increased ~ marginal buyer since all sellers satisfied
-                    elif a == curve_buyer.price[i] and b != curve_seller.price[j]:
+                    elif a == self.curve_buyer.price[i] and b != self.curve_seller.price[j]:
                         clearing_type = 'CT_BUYER'
                     # Buy price increased ~ marginal seller since all buyers satisfied
-                    elif a != curve_buyer.price[i] and b == curve_seller.price[j]:
+                    elif a != self.curve_buyer.price[i] and b == self.curve_seller.price[j]:
                         clearing_type = 'CT_SELLER'
                         clear_price = b # use seller's price, not buyer's price
                     # Possible when a == b, q_buy == q_sell, and either the buyers or sellers are exhausted
-                    elif a == curve_buyer.price[i] and b == curve_seller.price[j]:
-                        if i == curve_buyer.count and j == curve_seller.count:
+                    elif a == self.curve_buyer.price[i] and b == self.curve_seller.price[j]:
+                        if i == self.curve_buyer.count and j == self.curve_seller.count:
                             clearing_type = 'CT_EXACT'
-                        elif i == curve_buyer.count:
+                        elif i == self.curve_buyer.count:
                             clearing_type = 'CT_SELLER'
-                        elif j == curve_seller.count:
+                        elif j == self.curve_seller.count:
                             clearing_type = 'CT_BUYER'
                     else:
                         # Marginal price
@@ -749,36 +771,36 @@ class auction_object:
                 if clearing_type == 'CT_PRICE':
                     avg = (a+b)/2.0
                     # Calculating clearing price limits:   
-                    dHigh = a if i == curve_buyer.count else curve_buyer.price[i]
-                    dLow = b if j == curve_seller.count else curve_seller.price[j]
+                    dHigh = a if i == self.curve_buyer.count else self.curve_buyer.price[i]
+                    dLow = b if j == self.curve_seller.count else self.curve_seller.price[j]
                     # Needs to be just off such that it does not trigger any other bids
                     if a == self.market['pricecap'] and b != -self.market['pricecap']:
-                        if curve_buyer.price[i] > b:
-                            clear_price = curve_buyer.price[i] + bid_offset
+                        if self.curve_buyer.price[i] > b:
+                            clear_price = self.curve_buyer.price[i] + bid_offset
                         else:
                             clear_price = b 
                     elif a != self.market['pricecap'] and b == -self.market['pricecap']:
-                        if curve_seller.price[j] < a:
-                            clear_price = curve_seller.price[j] - bid_offset
+                        if self.curve_seller.price[j] < a:
+                            clear_price = self.curve_seller.price[j] - bid_offset
                         else:
                             clear_price = a 
                     elif a == self.market['pricecap'] and b == -self.market['pricecap']:
-                        if i == curve_buyer.count and j == curve_seller.count:
+                        if i == self.curve_buyer.count and j == self.curve_seller.count:
                             clear_price = 0 # no additional bids on either side
-                        elif j == curve_seller.count: # buyers left
-                            clear_price = curve_buyer.price[i] + bid_offset
-                        elif i == curve_buyer.count: # sellers left
-                            clear_price = curve_seller.price[j] - bid_offset
+                        elif j == self.curve_seller.count: # buyers left
+                            clear_price = self.curve_buyer.price[i] + bid_offset
+                        elif i == self.curve_buyer.count: # sellers left
+                            clear_price = self.curve_seller.price[j] - bid_offset
                         else: # additional bids on both sides, just no clearing
                             clear_price = (dHigh + dLow)/2
                     else:
-                        if i != curve_buyer.count and curve_buyer.price[i] == a:
+                        if i != self.curve_buyer.count and self.curve_buyer.price[i] == a:
                             clear_price = a 
-                        elif j != curve_seller.count and curve_seller.price[j] == b:
+                        elif j != self.curve_seller.count and self.curve_seller.price[j] == b:
                             clear_price = b 
-                        elif i != curve_buyer.count and avg < curve_buyer.price[i]:
+                        elif i != self.curve_buyer.count and avg < self.curve_buyer.price[i]:
                             clear_price = dHigh + bid_offset
-                        elif j != curve_seller.count and avg > curve_seller.price[j]:
+                        elif j != self.curve_seller.count and avg > self.curve_seller.price[j]:
                             clear_price = dLow - bid_offset
                         else:
                             clear_price = avg 
@@ -786,17 +808,17 @@ class auction_object:
             # Check for zero demand but non-zero first unit sell price
             if clear_quantity == 0:
                 clearing_type = 'CT_NULL'
-                if curve_seller.count > 0 and curve_buyer.count == 0:
-                    clear_price = curve_seller.price[0] - bid_offset
-                elif curve_seller.count == 0 and curve_buyer.count > 0:
-                    clear_price = curve_buyer.price[0] + bid_offset
+                if self.curve_seller.count > 0 and self.curve_buyer.count == 0:
+                    clear_price = self.curve_seller.price[0] - bid_offset
+                elif self.curve_seller.count == 0 and self.curve_buyer.count > 0:
+                    clear_price = self.curve_buyer.price[0] + bid_offset
                 else:
-                    if curve_seller.price[0] == self.market['pricecap']:
-                        clear_price = curve_buyer.price[0] + bid_offset
-                    elif curve_seller.price[0] == -self.market['pricecap']:
-                        clear_price = curve_seller.price[0] - bid_offset  
+                    if self.curve_seller.price[0] == self.market['pricecap']:
+                        clear_price = self.curve_buyer.price[0] + bid_offset
+                    elif self.curve_seller.price[0] == -self.market['pricecap']:
+                        clear_price = self.curve_seller.price[0] - bid_offset  
                     else:
-                        clear_price = curve_seller.price[0] + (curve_buyer.price[0] - curve_seller.price[0]) * self.market['clearing_scalar']
+                        clear_price = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.market['clearing_scalar']
            
             elif clear_quantity < unresponsive_buy:
                 clearing_type = 'CT_FAILURE'
@@ -821,20 +843,20 @@ class auction_object:
 
         # If the market mode MD_NONE and at least one side is not given
         else:
-            if curve_seller.count > 0 and curve_buyer.count == 0:
-                self.nextClear['price'] = curve_seller.price[0] - bid_offset
-            elif curve_seller.count == 0 and curve_buyer.count > 0:
-                self.nextClear['price'] = curve_buyer.price[0] + bid_offset
-            elif curve_seller.count > 0 and curve_buyer.count > 0:
-                self.nextClear['price'] = curve_seller.price[0] + (curve_buyer.price[0] - curve_seller.price[0]) * self.market['clearing_scalar']
-            elif curve_seller.count == 0 and curve_buyer.count == 0:
+            if self.curve_seller.count > 0 and self.curve_buyer.count == 0:
+                self.nextClear['price'] = self.curve_seller.price[0] - bid_offset
+            elif self.curve_seller.count == 0 and self.curve_buyer.count > 0:
+                self.nextClear['price'] = self.curve_buyer.price[0] + bid_offset
+            elif self.curve_seller.count > 0 and self.curve_buyer.count > 0:
+                self.nextClear['price'] = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.market['clearing_scalar']
+            elif self.curve_seller.count == 0 and self.curve_buyer.count == 0:
                 self.nextClear['price'] = 0.0
             self.nextClear['quantity'] = 0
             clearing_type = 'CT_NULL'
             # Display warining for CT_NULL case
-            if curve_seller.count == 0 :
+            if self.curve_seller.count == 0 :
                 missingBidder = "seller"
-            elif curve_buyer.count == 0:
+            elif self.curve_buyer.count == 0:
                 missingBidder = "buyer"
             print ('  Market %s fails to clear due to missing %s' % (self.market['name'], missingBidder))
             
@@ -848,15 +870,15 @@ class auction_object:
         if clearing_type == 'CT_BUYER':
             marginal_subtotal = 0
             i = 0
-            for i in range(curve_buyer.count):
-                if curve_buyer.price[i] > self.nextClear['price']:
-                    marginal_subtotal = marginal_subtotal + curve_buyer.quantity[i]
+            for i in range(self.curve_buyer.count):
+                if self.curve_buyer.price[i] > self.nextClear['price']:
+                    marginal_subtotal = marginal_subtotal + self.curve_buyer.quantity[i]
                 else:
                     break
             marginal_quantity =  self.nextClear['quantity'] - marginal_subtotal
-            for j in range(i, curve_buyer.count):
-                if curve_buyer.price[i] == self.nextClear['price']:
-                    marginal_total += curve_buyer.quantity[i]
+            for j in range(i, self.curve_buyer.count):
+                if self.curve_buyer.price[i] == self.nextClear['price']:
+                    marginal_total += self.curve_buyer.quantity[i]
                 else:
                     break
             if marginal_total > 0.0:
@@ -865,15 +887,15 @@ class auction_object:
         elif clearing_type == 'CT_SELLER':
             marginal_subtotal = 0
             i = 0
-            for i in range(0, curve_seller.count):
-                if curve_seller.price[i] > self.nextClear['price']:
-                    marginal_subtotal = marginal_subtotal + curve_seller.quantity[i]
+            for i in range(0, self.curve_seller.count):
+                if self.curve_seller.price[i] > self.nextClear['price']:
+                    marginal_subtotal = marginal_subtotal + self.curve_seller.quantity[i]
                 else:
                     break
             marginal_quantity =  self.nextClear['quantity'] - marginal_subtotal
-            for j in range(i, curve_seller.count):
-                if curve_seller.price[i] == self.nextClear['price']:
-                    marginal_total += curve_seller.quantity[i]
+            for j in range(i, self.curve_seller.count):
+                if self.curve_seller.price[i] == self.nextClear['price']:
+                    marginal_total += self.curve_seller.quantity[i]
                 else:
                     break
             if marginal_total > 0.0:
@@ -884,7 +906,7 @@ class auction_object:
             marginal_frac = 0.0
         
 
-        print(self.timeSim,'(Type,Price,MargQ,MargT,MargF)',clearing_type, self.nextClear['price'], marginal_quantity, marginal_total, marginal_frac)
+#        print(self.timeSim,'(Type,Price,MargQ,MargT,MargF)',clearing_type, self.nextClear['price'], marginal_quantity, marginal_total, marginal_frac)
 
         # Update new_price and price_index, for the calculation of sdv and mean from update_statistics later
         if self.market['history_count'] > 0:
@@ -913,10 +935,10 @@ class auction_object:
         self.market['cleared_frame']['clearing_type'] = clearing_type
         self.market['cleared_frame']['marginal_quantity'] = marginal_quantity
         self.market['cleared_frame']['total_marginal_quantity'] = marginal_total
-        self.market['cleared_frame']['buyer_total_quantity'] = curve_buyer.count
-        self.market['cleared_frame']['seller_total_quantity'] = curve_seller.count
-        if curve_seller.count > 0:
-            self.market['cleared_frame']['seller_min_price'] = min(curve_seller.price)
+        self.market['cleared_frame']['buyer_total_quantity'] = self.curve_buyer.count
+        self.market['cleared_frame']['seller_total_quantity'] = self.curve_seller.count
+        if self.curve_seller.count > 0:
+            self.market['cleared_frame']['seller_min_price'] = min(self.curve_seller.price)
         self.market['cleared_frame']['marginal_frac'] = marginal_frac
         self.market['cleared_frame']['buyer_total_unrep'] = unresponsive_buy
         self.market['cleared_frame']['cap_ref_unrep'] = cap_ref_unrep
@@ -939,62 +961,8 @@ class auction_object:
             self.update_statistics()
         
         # End of the clear_market def
-#        print ('Seller Curve at', self.timeSim, 'has', curve_seller.count, 'points')
-#        for i in range(curve_seller.count):
-#            print (curve_seller.price[i], curve_seller.quantity[i])
-#        print ('Buyer Curve at', self.timeSim, 'has', curve_buyer.count, 'points')
-#        for i in range(curve_buyer.count):
-#            print (curve_buyer.price[i], curve_buyer.quantity[i])
-#        print ('Aggregate Buyer Curve')
-#        agg_p = curve_buyer.price[0]
-#        agg_q = curve_buyer.quantity[0]
-#        agg_to_print = True
-#        agg_unresp_p = agg_p
-#        agg_unresp_q = agg_q
-#        agg_resp_max = 0
-#        agg_resp_a = 0
-#        agg_resp_b = 0
-#        agg_resp_n = 0
-#        agg_sum_p = 0
-#        agg_sum_q = 0
-#        agg_sum_q2 = 0
-#        agg_sum_pq = 0
-#        for i in range(1, curve_buyer.count):
-#            p = curve_buyer.price[i]
-#            q = curve_buyer.quantity[i]
-#            if p >= agg_unresp_p:
-#                agg_unresp_q += q
-#            else:
-#                agg_resp_n += 1
-#                agg_sum_p += p
-#                agg_sum_q += q
-#                agg_sum_q2 += q * q
-#                agg_sum_pq += p * q
-#            if p < agg_p:
-#                print (agg_p, agg_q)
-#                agg_to_print = False
-#            agg_p = p
-#            agg_q += q
-#            agg_to_print = True
-#        if agg_to_print:
-#            print (agg_p, agg_q)
-#        print ('Unresp bid', agg_unresp_p, agg_unresp_q)
-#        if agg_resp_n > 1: 
-#            agg_denom = agg_resp_n * agg_sum_q2 - agg_sum_q * agg_sum_q
-#            agg_resp_a = (agg_sum_p * agg_sum_q2 - agg_sum_q * agg_sum_pq) / agg_denom
-#            agg_resp_b = (agg_resp_n * agg_sum_pq - agg_sum_p * agg_sum_q) / agg_denom
-#            agg_resp_max = agg_q - agg_unresp_q
-#        if agg_resp_n == 1:
-#            agg_resp_max = agg_q - agg_unresp_q
-#            agg_resp_a = 0
-#            agg_resp_b = agg_resp_max
-#        print ('Responsive bid', agg_resp_a, 'q +', agg_resp_b, 'up to', agg_resp_max)
-#        print ('  ', agg_resp_n, agg_sum_q, agg_sum_p, agg_sum_q2, agg_sum_pq)
-
-#        print (aggregate_bid (curve_buyer))
-
-        curve_seller = None
-        curve_buyer = None
+        self.curve_seller = None
+        self.curve_buyer = None
         
         # initialize the seller and buyer dictionary
         self.buyer = {'name': [], 'price': [], 'quantity': [], 'state': [], 'bid_id': []}
