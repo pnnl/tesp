@@ -61,7 +61,7 @@ def parse_kw(arg):
     return p
 
 # aggregates the buyer curve into a straight-line fit, returned as
-# [Punresp, Qunresp, a, b, Qmaxresp]
+# [Punresp, Qunresp, m, b, Qmaxresp]
 def aggregate_bid (crv):
     p = np.array (crv.price)
     q = np.array (crv.quantity)
@@ -71,7 +71,7 @@ def aggregate_bid (crv):
     n = p.size - idx - 1
 
     if n < 1:
-        a = 0
+        m = 0
         b = 0
         qmax = 0
     else:
@@ -79,13 +79,13 @@ def aggregate_bid (crv):
         presp = p[idx+1:]
         qmax = qresp[-1]
         if n == 1:
-            a = 0
+            m = 0
             b = presp[-1]
         else:
             resp_fit = np.polyfit (qresp, presp, 1)
-            a = resp_fit[0]
+            m = resp_fit[0]
             b = resp_fit[1]
-    bid = [p[0], unresp, a, b, qmax]
+    bid = [p[0], unresp, m, b, qmax]
     return bid
 
 # Class definition
@@ -160,9 +160,14 @@ class auction_object:
         self.market['statistic_count'] = len(self.stats['stat_mode'])
         self.market['longest_statistic'] = max(self.stats['interval'])
 
+        # updated in collect_agent_bids, used in clear_market
         self.curve_buyer = None
         self.curve_seller = None
-        
+        self.unresponsive_sell = 0
+        self.unresponsive_buy = 0
+        self.responsive_sell = 0
+        self.responsive_buy = 0
+
         # Give the updated mean and std values to the market_output        
         if self.market['statistic_mode'] == 1:
             for k in range(0, len(self.stats['value'])):
@@ -336,7 +341,7 @@ class auction_object:
             fncs.publish ("unresponsive_price", agg_bid[0])
             fncs.publish ("unresponsive_kw", agg_bid[1])
             fncs.publish ("responsive_max_kw", agg_bid[2])
-            fncs.publish ("responsive_a", agg_bid[3])
+            fncs.publish ("responsive_m", agg_bid[3])
             fncs.publish ("responsive_b", agg_bid[4])
 
         # Start market clearing process
@@ -444,7 +449,6 @@ class auction_object:
     # =========================================== Collect agent bids ================================================            
     def collect_agent_bids(self):
         bid_offset = 0.0001
-        cap_ref_unrep = 0.0
 
         # for metrics output
         self.offers['name'] = self.buyer['name']
@@ -454,7 +458,7 @@ class auction_object:
         # These need to be re-initialized
         self.curve_seller = curve()
         self.curve_buyer = curve()
-        unresponsive_sell = unresponsive_buy =  responsive_sell =  responsive_buy = 0
+        self.unresponsive_sell = self.unresponsive_buy =  self.responsive_sell =  self.responsive_buy = 0
 
         # Bid from the capacity reference (i.e. MATPOWER/PYPOWER)
         if self.market['capacity_reference_object']['name'] != 'none' and self.market['special_mode'] == 'MD_NONE':
@@ -650,7 +654,8 @@ class auction_object:
 
     # =========================================== Clear market ======================================================            
     def clear_market(self):
-        
+        cap_ref_unrep = 0.0
+
         # Calculate clearing price and quantity
         if self.curve_buyer.count > 0:
             self.curve_buyer.set_curve_order ('descending')
@@ -674,18 +679,16 @@ class auction_object:
             for i in range(self.curve_seller.count):
                 # Calculate numbers of responsive_sell and unresponsive_sell
                 if self.curve_seller.price[i] == self.market['pricecap']:
-                    unresponsive_sell += self.curve_seller.quantity[i]
+                    self.unresponsive_sell += self.curve_seller.quantity[i]
                 else:
-                    responsive_sell += self.curve_seller.quantity[i]
-            total_sell = unresponsive_sell + responsive_sell; # Did not see it used anywhere
+                    self.responsive_sell += self.curve_seller.quantity[i]
             for i in range(self.curve_buyer.count):
                 if self.curve_buyer.price[i] == self.market['pricecap']:
-                    unresponsive_buy += self.curve_buyer.quantity[i]
+                    self.unresponsive_buy += self.curve_buyer.quantity[i]
                 else:
-                    responsive_buy += self.curve_buyer.quantity[i]
-            total_buy = unresponsive_buy + responsive_buy; # Did not see it used anywhere
-
-#            print('  curve summaries (sell #-resp-unresp, buy #-resp-unresp)',curve_seller.count, responsive_sell, unresponsive_sell, self.curve_buyer.count, responsive_buy, unresponsive_buy)
+                    self.responsive_buy += self.curve_buyer.quantity[i]
+     
+#            print('  curve summaries (sell #-resp-unresp, buy #-resp-unresp)',curve_seller.count, self.responsive_sell, self.unresponsive_sell, self.curve_buyer.count, self.responsive_buy, self.unresponsive_buy)
             
             # Calculate clearing quantity and price here
             # Define the section number of the buyer and the seller curves respectively as i and j
@@ -820,15 +823,15 @@ class auction_object:
                     else:
                         clear_price = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.market['clearing_scalar']
            
-            elif clear_quantity < unresponsive_buy:
+            elif clear_quantity < self.unresponsive_buy:
                 clearing_type = 'CT_FAILURE'
                 clear_price = self.market['pricecap']
             
-            elif clear_quantity < unresponsive_sell:
+            elif clear_quantity < self.unresponsive_sell:
                 clearing_type = 'CT_FAILURE'
                 clear_price = -self.market['pricecap']
             
-            elif clear_quantity == unresponsive_buy and clear_quantity == unresponsive_sell:
+            elif clear_quantity == self.unresponsive_buy and clear_quantity == self.unresponsive_sell:
                 # only cleared unresponsive loads
                 clearing_type = 'CT_PRICE'
                 clear_price = 0.0
@@ -940,7 +943,7 @@ class auction_object:
         if self.curve_seller.count > 0:
             self.market['cleared_frame']['seller_min_price'] = min(self.curve_seller.price)
         self.market['cleared_frame']['marginal_frac'] = marginal_frac
-        self.market['cleared_frame']['buyer_total_unrep'] = unresponsive_buy
+        self.market['cleared_frame']['buyer_total_unrep'] = self.unresponsive_buy
         self.market['cleared_frame']['cap_ref_unrep'] = cap_ref_unrep
         
         # Update current_frame

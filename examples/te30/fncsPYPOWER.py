@@ -112,18 +112,14 @@ def parse_mva(arg):
 	return p, q
 
 def main_loop():
-	if len(sys.argv) == 5:
+	if len(sys.argv) == 6:
 		rootname = sys.argv[1]
 		StartTime = sys.argv[2]
 		tmax = int(sys.argv[3])
-		dt = int(sys.argv[4])
-	elif len(sys.argv) == 1:
-		rootname = 'ppcase'
-		StartTime = "2013-07-01 00:00:00"
-		dt = 3600
-		tmax = 2 * 24 * 3600
+		period = int(sys.argv[4])  # market clearing period
+		dt = int(sys.argv[5])      # time step for bid and load updates
 	else:
-		print ('usage: python fncsPYPOWER.py [rootname StartTime tmax dt]')
+		print ('usage: python fncsPYPOWER.py [rootname StartTime tmax period dt]')
 		sys.exit()
 
 	ppc = ppcasefile()
@@ -151,45 +147,50 @@ def main_loop():
 
 	nloads = loads.shape[0]
 	ts = 0
-	tnext = 0
+	tnext_opf = -dt
 
 	op = open (rootname + '.csv', 'w')
 	print ('t[s],Converged,Pload,P7,V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4', file=op, flush=True)
 	fncs.initialize()
 
-#	ts = -dt
-#	while ts <= tmax:
-#		ts += dt
+	# transactive load components
+	csv_load = 0
+	scaled_unresp = 0
+	scaled_resp = 0
+	resp_c0 = 0
+	resp_c1 = 0
+	resp_c2 = 0
+	resp_max = 0
+	gld_load = 0 # this is the actual
 
 	while ts <= tmax:
-#		print ("looping", ts, tnext, tmax, flush=True)
-		if ts >= tnext:
-			idx = int (ts / 300) % nloads
+		if ts >= tnext_opf:  # expecting to solve opf one dt before the market clearing period ends, so GridLAB-D has time to use it
+			idx = int ((ts + dt) / period) % nloads
 			bus = ppc['bus']
 			gen = ppc['gen']
-			bus[6,2] = loads[idx,0]
+			csv_load = loads[idx,0]
 			bus[4,2] = loads[idx,1]
 			bus[8,2] = loads[idx,2]
 			if ts >= outage[1] and ts <= outage[2]:
 				gen[outage[0],7] = 0
 			else:
 				gen[outage[0],7] = 1
+			bus[6,2] = csv_load
 			for row in ppc['FNCS']:
-				newload = float(row[2]) * float(row[3])
+				scaled_unresp = float(row[2]) * float(row[3])
 				newidx = int(row[0]) - 1
-				print ('  GLD load', newload, 'at', newidx)
-				bus[newidx,2] += newload
+				bus[newidx,2] += scaled_unresp
 			res = pp.runopf(ppc, ppopt)
 			bus = res['bus']
 			gen = res['gen']
 			Pload = bus[:,2].sum()
 			Pgen = gen[:,1].sum()
 			Ploss = Pgen - Pload
-#			print ('  ', res['success'], bus[:,2].sum(), flush=True)
 			print (ts, res['success'], bus[:,2].sum(), bus[6,2], bus[6,7], bus[6,13], bus[6,14], gen[0,1], gen[1,1], gen[2,1], gen[3,1], sep=',', file=op, flush=True)
+			scaled_resp = -1.0 * gen[4,2]
 			fncs.publish('LMP_B7', 0.001 * bus[6,13])
 			fncs.publish('three_phase_voltage_B7', 1000.0 * bus[6,7] * bus[6,9])
-#			print('  publishing LMP=', 0.001 * bus[6,13], 'vpos=', 1000.0 * bus[6,7] * bus[6,9], flush=True)
+			print('**OPF', ts, csv_load, scaled_unresp, scaled_resp, bus[6,2], gld_load)
 			# update the metrics
 			sys_metrics[str(ts)] = {rootname:[Ploss,res['success']]}
 			bus_metrics[str(ts)] = {}
@@ -203,47 +204,36 @@ def main_loop():
 				row = gen[i].tolist()
 				busidx = int(row[0] - 1)
 				gen_metrics[str(ts)][str(i+1)] = [row[1],row[2],float(bus[busidx,13])*0.001]
-			tnext += dt
-			if tnext > tmax:
-				print ('breaking out at',tnext,flush=True)
+			tnext_opf += period
+			if tnext_opf > tmax:
+				print ('breaking out at',tnext_opf,flush=True)
 				break
-		ts = fncs.time_request(tnext)
+		# apart from the OPF, keep loads updated
+		ts = fncs.time_request(ts + dt)
 		events = fncs.get_events()
-		resp_a = 0
-		resp_b = 0
-		resp_max_kw = 0
-		unresp_kw = 0
-		unresp_price = 0
 		for key in events:
-			substation = key.decode()
-			if substation == 'UNRESPONSIVE_PRICE':
+			topic = key.decode()
+			if topic == 'UNRESPONSIVE_KW':
+				unresp_load = 0.001 * float(fncs.get_value(key).decode())
+				fncsBus[0][3] = unresp_load # poke unresponsive estimate into the bus load slot
+			elif topic == 'RESPONSIVE_MAX_KW':
+				resp_max = 0.001 * float(fncs.get_value(key).decode())
+			elif topic == 'RESPONSIVE_M':
+				resp_c2 = 1000.0 * 0.5 * float(fncs.get_value(key).decode())
+			elif topic == 'RESPONSIVE_B':
+				resp_c1 = 1000.0 * float(fncs.get_value(key).decode())
+			elif topic == 'UNRESPONSIVE_PRICE': # not actually used
 				unresp_price = float(fncs.get_value(key).decode())
-			elif substation == 'UNRESPONSIVE_KW':
-				unresp_kw = float(fncs.get_value(key).decode())
-			elif substation == 'RESPONSIVE_MAX_KW':
-				resp_max_kw = float(fncs.get_value(key).decode())
-			elif substation == 'RESPONSIVE_A':
-				resp_a = float(fncs.get_value(key).decode())
-			elif substation == 'RESPONSIVE_B':
-				resp_b = float(fncs.get_value(key).decode())
 			else:
-				GLDload = parse_mva (fncs.get_value(key).decode())
-				#			print ('  **', ts, substation, GLDload)
-				for row in fncsBus:
-					if substation == row[1]:
-						#					print('    assigning',substation,GLDload)
-						row[3] = GLDload[0]
-		# update the aggregate buyer curve from GridLAB-D
-		agg_c0 = 0
-		agg_c1 = resp_a
-		agg_c2 = 0.5 * resp_b
-		print ('agg bid', unresp_kw, resp_max_kw, agg_c0, agg_c1, agg_c2)
-		# poke unresp_kw into the ppc bus array
-		# poke resp_max_kw into the ppc gen array
-		# poke agg_c0, c1 and c2 into the ppc gencost array
-		# when we read the GLD load onto FNCS bus, it includes both responsive and unresponsive
+				gld_load = parse_mva (fncs.get_value(key).decode()) # actual value, may not match unresp + resp load
+				print('     ', ts, gld_load)
+		# poke responsive bid into the dispatchable load and cost slots
+		gen[4][9] = -resp_max
+		gencost[4][3] = 3
+		gencost[4][4] = resp_c2
+		gencost[4][5] = resp_c1
+		gencost[4][6] = resp_c0 # always 0
 
-#	summarize_opf(res)
 	print ('writing metrics', flush=True)
 	print (json.dumps(bus_metrics), file=bus_mp, flush=True)
 	print (json.dumps(gen_metrics), file=gen_mp, flush=True)

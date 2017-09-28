@@ -1,11 +1,11 @@
 import numpy as np
 
-def writeRegistration (filename):
+def writeRegistration (filename, dt, period):
     import json
     import re
     import os
     import shutil
-    
+
     folderName = "input"
     ip = open (filename + ".glm", "r")
     if not os.path.exists("input"):
@@ -17,7 +17,7 @@ def writeRegistration (filename):
      
     # parameters to be written (in case it is not assigned in glm file)
     # controller data:
-    periodController = 300
+    periodController = period
     control_mode = "CN_RAMP"
     min_ramp_high = 1.5
     max_ramp_high = 2.5
@@ -30,14 +30,14 @@ def writeRegistration (filename):
     max_range_low = -2.0
     min_base_setpoint = 76.0
     max_base_setpoint = 80.0
-    bid_delay = 60
+    bid_delay = 30 # should be at least two gridlab-d time steps
     use_predictive_bidding = 0
     use_override = "OFF"
     
     # market data:
     marketName = "Market_1"
     unit = "kW"
-    periodMarket = 300
+    periodMarket = period
     initial_price = 0.02078
     std_dev = 0.01 # 0.00361
     price_cap = 3.78
@@ -145,7 +145,7 @@ def writeRegistration (filename):
         singleControllerReg = {}
         singleControllerReg['agentType'] = "controller"
         singleControllerReg['agentName'] = key
-        singleControllerReg['timeDelta'] = 60 # Assum time step is always 60 sec for now
+        singleControllerReg['timeDelta'] = dt
         singleControllerReg['broker'] = "tcp://localhost:5570"
         # publications
         publications = {}
@@ -191,7 +191,7 @@ def writeRegistration (filename):
     auctionReg = {}
     auctionReg['agentType'] = "auction"
     auctionReg['agentName'] = list(auctions.items())[0][0]
-    auctionReg['timeDelta'] = 60 # Assum time step is always 60 sec for now
+    auctionReg['timeDelta'] = dt
     auctionReg['broker'] = "tcp://localhost:5570"
     publications = {}
     publications['std_dev'] = {'propertyType': 'double', 'propertyUnit': 'none', 'propertyValue': 0.0}
