@@ -334,15 +334,15 @@ class auction_object:
         elif self.timeSim % self.market['period'] == 0:
             self.nextClear['from'] = self.nextClear['quantity'] = self.nextClear['price'] = 0
         
-        if timeSim > 0:
+        if (self.market['clearat'] - timeSim) == 10:
             self.collect_agent_bids()
             agg_bid = aggregate_bid (self.curve_buyer)
-            print ('Agg Bid[Pu, Qu, a, b, Qmax]', agg_bid)
+            print ('  ', timeSim, 'Agg Bid[Pu, Qu, m, b, Qmax]', agg_bid)
             fncs.publish ("unresponsive_price", agg_bid[0])
             fncs.publish ("unresponsive_kw", agg_bid[1])
-            fncs.publish ("responsive_max_kw", agg_bid[2])
-            fncs.publish ("responsive_m", agg_bid[3])
-            fncs.publish ("responsive_b", agg_bid[4])
+            fncs.publish ("responsive_m", agg_bid[2])
+            fncs.publish ("responsive_b", agg_bid[3])
+            fncs.publish ("responsive_max_kw", agg_bid[4])
 
         # Start market clearing process
         if timeSim >= self.market['clearat']:
@@ -366,6 +366,7 @@ class auction_object:
             fncs_publishString = json.dumps(self.fncs_publish)
             
             fncs.agentPublish(fncs_publishString)
+            print ('**', timeSim, 'Clear Price', self.market_output['clear_price'])
             fncs.publish ("clear_price", self.market_output['clear_price'])
         
     # ====================Sync content============================================================= 

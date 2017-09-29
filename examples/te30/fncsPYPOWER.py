@@ -150,7 +150,7 @@ def main_loop():
 	tnext_opf = -dt
 
 	op = open (rootname + '.csv', 'w')
-	print ('t[s],Converged,Pload,P7,V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4', file=op, flush=True)
+	print ('t[s],Converged,Pload,P7,V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp', file=op, flush=True)
 	fncs.initialize()
 
 	# transactive load components
@@ -186,11 +186,11 @@ def main_loop():
 			Pload = bus[:,2].sum()
 			Pgen = gen[:,1].sum()
 			Ploss = Pgen - Pload
-			print (ts, res['success'], bus[:,2].sum(), bus[6,2], bus[6,7], bus[6,13], bus[6,14], gen[0,1], gen[1,1], gen[2,1], gen[3,1], sep=',', file=op, flush=True)
-			scaled_resp = -1.0 * gen[4,2]
+			scaled_resp = -1.0 * gen[4,1]
+			print (ts, res['success'], bus[:,2].sum(), bus[6,2], bus[6,7], bus[6,13], bus[6,14], gen[0,1], gen[1,1], gen[2,1], gen[3,1], scaled_resp, sep=',', file=op, flush=True)
 			fncs.publish('LMP_B7', 0.001 * bus[6,13])
 			fncs.publish('three_phase_voltage_B7', 1000.0 * bus[6,7] * bus[6,9])
-			print('**OPF', ts, csv_load, scaled_unresp, scaled_resp, bus[6,2], gld_load)
+			print('**OPF', ts, csv_load, scaled_unresp, scaled_resp, bus[6,2], gld_load, 'LMP', 0.001 * bus[6,13])
 			# update the metrics
 			sys_metrics[str(ts)] = {rootname:[Ploss,res['success']]}
 			bus_metrics[str(ts)] = {}
@@ -211,28 +211,37 @@ def main_loop():
 		# apart from the OPF, keep loads updated
 		ts = fncs.time_request(ts + dt)
 		events = fncs.get_events()
+		new_bid = False
 		for key in events:
 			topic = key.decode()
 			if topic == 'UNRESPONSIVE_KW':
 				unresp_load = 0.001 * float(fncs.get_value(key).decode())
 				fncsBus[0][3] = unresp_load # poke unresponsive estimate into the bus load slot
+				new_bid = True
 			elif topic == 'RESPONSIVE_MAX_KW':
 				resp_max = 0.001 * float(fncs.get_value(key).decode())
+				new_bid = True
 			elif topic == 'RESPONSIVE_M':
 				resp_c2 = 1000.0 * 0.5 * float(fncs.get_value(key).decode())
+				new_bid = True
 			elif topic == 'RESPONSIVE_B':
 				resp_c1 = 1000.0 * float(fncs.get_value(key).decode())
+				new_bid = True
 			elif topic == 'UNRESPONSIVE_PRICE': # not actually used
 				unresp_price = float(fncs.get_value(key).decode())
+				new_bid = True
 			else:
 				gld_load = parse_mva (fncs.get_value(key).decode()) # actual value, may not match unresp + resp load
-				print('     ', ts, gld_load)
+				# actual_load = gld_load[0] * fncsBus[0][2]
+				print('     ', ts, gld_load, 'vs', bus[6,2] - gen[4,1])
 		# poke responsive bid into the dispatchable load and cost slots
-		gen[4][9] = -resp_max
-		gencost[4][3] = 3
-		gencost[4][4] = resp_c2
-		gencost[4][5] = resp_c1
-		gencost[4][6] = resp_c0 # always 0
+		if new_bid == True:
+			gen[4][9] = -resp_max
+			gencost[4][3] = 3
+			gencost[4][4] = resp_c2
+			gencost[4][5] = resp_c1
+			gencost[4][6] = resp_c0 # always 0
+			print('**Bid', ts, unresp_load, resp_max, resp_c2, resp_c1)
 
 	print ('writing metrics', flush=True)
 	print (json.dumps(bus_metrics), file=bus_mp, flush=True)
