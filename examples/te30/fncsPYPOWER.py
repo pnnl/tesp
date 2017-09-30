@@ -168,6 +168,7 @@ def main_loop():
 			idx = int ((ts + dt) / period) % nloads
 			bus = ppc['bus']
 			gen = ppc['gen']
+			gencost = ppc['gencost']
 			csv_load = loads[idx,0]
 			bus[4,2] = loads[idx,1]
 			bus[8,2] = loads[idx,2]
@@ -180,7 +181,14 @@ def main_loop():
 				scaled_unresp = float(row[2]) * float(row[3])
 				newidx = int(row[0]) - 1
 				bus[newidx,2] += scaled_unresp
+			gen[4][9] = -resp_max * float(fncsBus[0][2])
+			gencost[4][3] = 3
+			gencost[4][4] = resp_c2
+			gencost[4][5] = resp_c1
+			gencost[4][6] = resp_c0 # always 0
+
 			res = pp.runopf(ppc, ppopt)
+
 			bus = res['bus']
 			gen = res['gen']
 			Pload = bus[:,2].sum()
@@ -190,7 +198,7 @@ def main_loop():
 			print (ts, res['success'], bus[:,2].sum(), bus[6,2], bus[6,7], bus[6,13], bus[6,14], gen[0,1], gen[1,1], gen[2,1], gen[3,1], scaled_resp, sep=',', file=op, flush=True)
 			fncs.publish('LMP_B7', 0.001 * bus[6,13])
 			fncs.publish('three_phase_voltage_B7', 1000.0 * bus[6,7] * bus[6,9])
-			print('**OPF', ts, csv_load, scaled_unresp, scaled_resp, bus[6,2], gld_load, 'LMP', 0.001 * bus[6,13])
+			print('**OPF', ts, csv_load, scaled_unresp, gen[4][9], scaled_resp, bus[6,2], 'LMP', 0.001 * bus[6,13])
 			# update the metrics
 			sys_metrics[str(ts)] = {rootname:[Ploss,res['success']]}
 			bus_metrics[str(ts)] = {}
@@ -232,15 +240,9 @@ def main_loop():
 				new_bid = True
 			else:
 				gld_load = parse_mva (fncs.get_value(key).decode()) # actual value, may not match unresp + resp load
-				# actual_load = gld_load[0] * fncsBus[0][2]
-				print('     ', ts, gld_load, 'vs', bus[6,2] - gen[4,1])
-		# poke responsive bid into the dispatchable load and cost slots
+				actual_load = float(gld_load[0]) * float(fncsBus[0][2])
+				print('     ', ts, actual_load)
 		if new_bid == True:
-			gen[4][9] = -resp_max
-			gencost[4][3] = 3
-			gencost[4][4] = resp_c2
-			gencost[4][5] = resp_c1
-			gencost[4][6] = resp_c0 # always 0
 			print('**Bid', ts, unresp_load, resp_max, resp_c2, resp_c1)
 
 	print ('writing metrics', flush=True)

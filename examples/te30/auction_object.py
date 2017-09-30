@@ -366,7 +366,8 @@ class auction_object:
             fncs_publishString = json.dumps(self.fncs_publish)
             
             fncs.agentPublish(fncs_publishString)
-            print ('**', timeSim, 'Clear Price', self.market_output['clear_price'])
+            print ('**', timeSim, 'LMP', self.market['capacity_reference_object']['capacity_reference_bid_price'],
+                   'Clear Price', self.market_output['clear_price'])
             fncs.publish ("clear_price", self.market_output['clear_price'])
         
     # ====================Sync content============================================================= 
