@@ -23,30 +23,6 @@ nb.pack(fill='both', expand='yes')
 StartTime = "2013-07-01 00:00:00"
 Tmax = 2 * 24 * 3600
 
-vars = [['MATPOWER','GLD Bus',7,''],
-				['MATPOWER','Amp Factor',400,''],
-				['MATPOWER','Unit Out',2,''],
-				['MATPOWER','Outage Start',108000,'s'],
-				['MATPOWER','Outage End',158400,'s'],
-				['EnergyPlus','Base Price',0.02,'$'],
-				['EnergyPlus','Ramp',25,'degF/$'],
-				['EnergyPlus','Max Delta',4,'degF'],
-				['Auction','Initial Price',0.02078,'$'],
-				['Auction','Std Dev Price',0.00361,'$'],
-				['Auction','Price Cap',3.78,'$'],
-				['Houses','Ramp Lo: Mean',2.0,'$(std dev)/degF'],
-				['Houses','Ramp Lo: Band',0.5,'$(std dev)/degF'],
-				['Houses','Ramp Hi: Mean',2.0,'$(std dev)/degF'],
-				['Houses','Ramp Hi: Band',0.0,'$(std dev)/degF'],
-				['Houses','Range Lo: Mean',-3.0,'degF'],
-				['Houses','Range Lo: Band',1.0,'degF'],
-				['Houses','Range Hi: Mean',2.0,'degF'],
-				['Houses','Range Hi: Band',0.0,'degF'],
-				['Houses','Base Cooling: Mean',78.0,'degF'],
-				['Houses','Base Cooling: Band',2.0,'degF'],
-				['Houses','Bid Delay',60,'s']
-				];
-
 fig, ax = plt.subplots(4,1, sharex = 'col')
 plt.ion()
 
@@ -55,15 +31,15 @@ def launch_all():
 	if sys.platform == 'win32':
 		subprocess.Popen ('call run30.bat', shell=True)
 	else:
-		subprocess.Popen ('(exec fncs_broker 36 &> broker.log &)', shell=True)
+		subprocess.Popen ('(export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 36 &> broker.log &)', shell=True)
 		subprocess.Popen ('(export FNCS_CONFIG_FILE=eplus.yaml && exec EnergyPlus -w ../energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw -d output -r ../energyplus/SchoolDualController.idf &> eplus.log &)', shell=True)
 		subprocess.Popen ('(export FNCS_CONFIG_FILE=eplus_json.yaml && exec eplus_json 2d 5m School_DualController eplus_TE_Challenge_metrics.json &> eplus_json.log &)', shell=True)
 		subprocess.Popen ('(exec ./launch_TE_Challenge_agents.sh &)', shell=True)
-		subprocess.Popen ('(export FNCS_CONFIG_FILE=pypower30.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec python fncsPYPOWER.py TE_Challenge "2013-07-01 00:00:00" 172800 300 &> pypower.log &)', shell=True)
+		subprocess.Popen ('(export FNCS_CONFIG_FILE=pypower30.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec python fncsPYPOWER.py TE_Challenge "2013-07-01 00:00:00" 172800 300 5 &> pypower.log &)', shell=True)
 
 	print('launched all simulators')
 
-	nb.select(2)
+	nb.select(1)
 	root.update()
 
 	os.environ['FNCS_CONFIG_FILE'] = 'tesp.yaml'
@@ -126,26 +102,6 @@ def kill_all():
 	else:
 		print('TODO: kill all processes')
 
-f1 = ttk.Frame(nb, name='configuration')
-lab = ttk.Label(f1, text='Simulator', relief=tk.RIDGE)
-lab.grid(row=0, column=0, sticky=tk.NSEW)
-lab = ttk.Label(f1, text='Parameter', relief=tk.RIDGE)
-lab.grid(row=0, column=1, sticky=tk.NSEW)
-lab = ttk.Label(f1, text='Value', relief=tk.RIDGE)
-lab.grid(row=0, column=2, sticky=tk.NSEW)
-lab = ttk.Label(f1, text='Units', relief=tk.RIDGE)
-lab.grid(row=0, column=3, sticky=tk.NSEW)
-for i in range(len(vars)):
-	lab = ttk.Label(f1, text=vars[i][0], relief=tk.RIDGE)
-	lab.grid(row=i+1, column=0, sticky=tk.NSEW)
-	lab = ttk.Label(f1, text=vars[i][1], relief=tk.RIDGE)
-	lab.grid(row=i+1, column=1, sticky=tk.NSEW)
-	ent = ttk.Entry(f1)
-	ent.insert(0, vars[i][2])
-	ent.grid(row=i+1, column=2, sticky=tk.NSEW)
-	lab = ttk.Label(f1, text=vars[i][3], relief=tk.RIDGE)
-	lab.grid(row=i+1, column=3, sticky=tk.NSEW)
-
 f2 = ttk.Frame(nb, name='launch')
 lab = ttk.Label(f2, text='Start Date/Time', relief=tk.RIDGE)
 lab.grid(row=0, column=0, sticky=tk.NSEW)
@@ -193,9 +149,9 @@ toolbar = NavigationToolbar2TkAgg(canvas,f3)
 toolbar.update()
 canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-nb.add(f1, text='Configuration', underline=0, padding=2)
 nb.add(f2, text='Launch', underline=0, padding=2)
 nb.add(f3, text='Plots', underline=0, padding=2)
+root.update()
 
 while True:
 	try:
