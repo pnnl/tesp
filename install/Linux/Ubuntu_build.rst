@@ -69,7 +69,7 @@ FNCS with Prerequisites (installed to /usr/local)
  wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
  tar -xzf czmq-3.0.2.tar.gz
  cd czmq-3.0.2
- ./configure 'CPPFLAGS=-Wno-format-truncation' --with-libzmq=${PATH TO ZeroMQ /lib installation folder}
+ ./configure 'CPPFLAGS=-Wno-format-truncation' --with-libzmq=<PATH TO ZeroMQ /lib installation folder>
  make
  sudo make install
 
@@ -77,7 +77,7 @@ FNCS with Prerequisites (installed to /usr/local)
  sudo apt-get install libtool
  cd ../fncs
  autoreconf -if
- ./configure 'CXXFLAGS=-w' 'CFLAGS=-w' --with-zmq=${PATH TO ZeroMQ and CZMQ /lib installation folder}
+ ./configure 'CXXFLAGS=-w' 'CFLAGS=-w' --with-zmq=<PATH TO ZeroMQ and CZMQ /lib installation folder>
  make
  sudo make install
 
