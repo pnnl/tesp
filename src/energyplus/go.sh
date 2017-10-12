@@ -3,6 +3,6 @@ autoheader
 aclocal
 automake --add-missing
 autoconf
-./configure # --prefix=$HOME/FNCS_install --with-zmq=$HOME/FNCS_install
+./configure --prefix=$FNCS_INSTALL --with-zmq=$FNCS_INSTALL
 make
 sudo make install
