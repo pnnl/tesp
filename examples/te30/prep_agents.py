@@ -3,7 +3,7 @@ import sys
 import json
 from writeRegistration import writeRegistration
 
-auctions, controllers = writeRegistration(sys.argv[1])
+auctions, controllers = writeRegistration(sys.argv[1], 5, 300)
 
 print ("launch_agents.sh executes", 2 + len (controllers), "processes")
 

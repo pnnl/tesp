@@ -39,7 +39,7 @@ controller_metrics = {'Metadata':controller_meta,'StartTime':StartTime}
 # ====================Initialize simulation time step and duration===============
 
 tf = 48 # simulation time in hours
-deltaT = 300 # simulation time interval in seconds, which usually the same as auction period
+deltaT = 5 # should come from JSON config 300 # simulation time interval in seconds, which usually the same as auction period
 
 # ====================Obtain market information====================================
 
@@ -52,11 +52,6 @@ time_granted = 0 # time variable for checking the retuned time from FNCS
 timeSim = 0
 # Start simulation for each time step:
 while (time_granted < tf*3600):
-    # ============================ Value assigned to the auction object from csv files ============================
-    # Obtain the step number for the capacity_reference_bid_price, for read in from csv file only, not for FNCS read in
-    # Bidder prices are given with 5 minute interval: 
-    bidderStepNum = int(math.floor(time_granted / 300))
-    
     # =================Simulation for each time step ============================================================       
     # Initialization when time = 0
     if time_granted == 0:

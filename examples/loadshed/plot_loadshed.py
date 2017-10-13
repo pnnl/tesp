@@ -40,18 +40,20 @@ for key in inv_keys:
 
 lp_m = open ("billing_meter_" + sys.argv[1] + "_metrics.json").read()
 lst_m = json.loads(lp_m)
-# Billing Meters - currently only Triplex Meters but eventually primary Meters as well
+# Billing Meters - both primary and triplex
 lst_m.pop('StartTime')
 meta_m = lst_m.pop('Metadata')
 
 times = list(map(int,list(lst_m.keys())))
 times.sort()
-print ("There are", len (times), "sample times at", times[1] - times[0], "second intervals")
+print ("There are", len (times), "sample times beginning with", times[1] - times[0], "second intervals")
 hrs = np.array(times, dtype=np.float)
 denom = 3600.0
 hrs /= denom
 
-print("\nBilling Meter Metadata for", len(lst_m['3600']), "objects")
+t1 = str(times[0])
+
+print("\nBilling Meter Metadata for", len(lst_m[t1]), "objects")
 for key, val in meta_m.items():
 	print (key, val['index'], val['units'])
 	if key == 'voltage_max':
@@ -66,7 +68,7 @@ for key, val in meta_m.items():
 	elif key == 'voltage12_min':
 		MTR_VOLT12_MIN_IDX = val['index']
 		MTR_VOLT12_MIN_UNITS = val['units']
-data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float)
+data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[t1][mtr_keys[0]])), dtype=np.float)
 print ("\nConstructed", data_m.shape, "NumPy array for Meters")
 j = 0
 for key in mtr_keys:
@@ -82,7 +84,7 @@ lp_s = open ("substation_" + sys.argv[1] + "_metrics.json").read()
 lst_s = json.loads(lp_s)
 lst_s.pop('StartTime')
 meta_s = lst_s.pop('Metadata')
-print ("\nSubstation Metadata for", len(lst_s['3600']), "objects")
+print ("\nSubstation Metadata for", len(lst_s[t1]), "objects")
 for key, val in meta_s.items():
 	print (key, val['index'], val['units'])
 	if key == 'real_power_avg':
@@ -91,7 +93,7 @@ for key, val in meta_s.items():
 	elif key == 'real_power_losses_avg':
 		SUB_LOSSES_IDX = val['index']
 		SUB_LOSSES_UNITS = val['units']
-data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s['3600'][sub_keys[0]])), dtype=np.float)
+data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[t1][sub_keys[0]])), dtype=np.float)
 print ("\nConstructed", data_s.shape, "NumPy array for Substations")
 j = 0
 for key in sub_keys:
