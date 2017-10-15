@@ -15,13 +15,9 @@ from matplotlib.figure import Figure;
 import matplotlib.pyplot as plt;
 
 root = tk.Tk()
-root.title('Transactive Energy Simulation Platform')
+root.title('Transactive Energy Simulation Platform: Solution Monitor')
 
-nb = ttk.Notebook(root)
-nb.pack(fill='both', expand='yes')
-
-StartTime = "2013-07-01 00:00:00"
-Tmax = 2 * 24 * 3600
+#nb.pack(fill='both', expand='yes')
 
 fig, ax = plt.subplots(4,1, sharex = 'col')
 plt.ion()
@@ -39,7 +35,6 @@ def launch_all():
 
 	print('launched all simulators')
 
-	nb.select(1)
 	root.update()
 
 	os.environ['FNCS_CONFIG_FILE'] = 'tesp.yaml'
@@ -102,31 +97,17 @@ def kill_all():
 	else:
 		print('TODO: kill all processes')
 
-f2 = ttk.Frame(nb, name='launch')
-lab = ttk.Label(f2, text='Start Date/Time', relief=tk.RIDGE)
+ttk.Style().configure('TButton', foreground='blue')
+lab = ttk.Label(root, text='Case', relief=tk.RIDGE)
 lab.grid(row=0, column=0, sticky=tk.NSEW)
-ent = ttk.Entry(f2)
-ent.insert(0,StartTime)
+ent = ttk.Entry(root)
+ent.insert(0,'Working Directory')
 ent.grid(row=0, column=1, sticky=tk.NSEW)
-lab = ttk.Label(f2, text='Simulation Length', relief=tk.RIDGE)
-lab.grid(row=1, column=0, sticky=tk.NSEW)
-ent = ttk.Entry(f2)
-ent.insert(0,Tmax)
-ent.grid(row=1, column=1, sticky=tk.NSEW)
-lab = ttk.Label(f2, text='[s]', relief=tk.RIDGE)
-lab.grid(row=1, column=2, sticky=tk.NSEW)
-btn = ttk.Button(f2, text='Start All', command=launch_all)
-btn.grid(row=2, column=1, sticky=tk.NSEW)
-btn = ttk.Button(f2, text='Kill All', command=kill_all)
-btn.grid(row=3, column=1, sticky=tk.NSEW)
+btn = ttk.Button(root, text='Start All', command=launch_all)
+btn.grid(row=0, column=2, sticky=tk.NSEW)
+btn = ttk.Button(root, text='Kill All', command=kill_all)
+btn.grid(row=0, column=3, sticky=tk.NSEW)
 
-f3 = ttk.Frame(nb, name='plots')
-#fig = Figure(figsize=(5,5), dpi=100)
-#a = fig.add_subplot(111)
-#a.plot([1,2,3,4,5,6,7,8],[5,6,1,2,6,1,3,4])
-#fig, ax = plt.subplots(4,1, sharex = 'col')
-
-#ax[0].plot(np.array([1,2,3,4,5,6,7,8]),np.array([5,6,1,2,6,1,3,4]), color='red')
 ax[0].set_ylabel('[pu]')
 ax[0].set_title ('PYPOWER Bus Voltage')
 
@@ -142,15 +123,14 @@ ax[3].set_title ('House Temperature')
 ax[3].set_xlabel('Hours')
 plt.xlim(0.0,48.0)
 
-canvas = FigureCanvasTkAgg(fig, f3)
+canvas = FigureCanvasTkAgg(fig, root)
 canvas.show()
-canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-toolbar = NavigationToolbar2TkAgg(canvas,f3)
-toolbar.update()
-canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+#canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+#toolbar = NavigationToolbar2TkAgg(canvas,root)
+#toolbar.update()
+canvas.get_tk_widget().grid(row=1,columnspan=4)
+#canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-nb.add(f2, text='Launch', underline=0, padding=2)
-nb.add(f3, text='Plots', underline=0, padding=2)
 root.update()
 
 while True:
