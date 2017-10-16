@@ -59,32 +59,42 @@ def launch_all():
 		if idx <= idxlast:
 			continue
 		idxlast = idx
+		bWantX0 = True
+		bWantX1 = True
+		bWantX2 = True
+		bWantX3 = True
 		for key in events:
 			tok = key.decode()
-			if tok == 'power_A':
+			if bWantX1 and tok == 'power_A':
 				val = 3.0 * float (fncs.get_value(key).decode().strip('+ degFkW')) / 1000.0
 				x1[idx] = val
 				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
-			elif tok == 'house_air_temperature':
+				bWantX1 = False
+			elif bWantX3 and tok == 'house_air_temperature':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
 				x3[idx] = val
 				ax[3].plot(hrs[1:idx],x3[1:idx],color='magenta')
-			elif tok == 'vpos7':
+				bWantX3 = False
+			elif bWantX0 and tok == 'vpos7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW')) / 133000.0
 				x0[idx] = val
 				ax[0].plot(hrs[1:idx],x0[1:idx],color='green')
-			elif tok == 'clear_price':
+				bWantX0 = False
+			elif bWantX2 and tok == 'clear_price':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
 				x2[idx] = val
 				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
-			elif tok == 'LMP7':
+				bWantX2 = False
+			elif bWantX2 and tok == 'LMP7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
 				x2[idx] = val
 				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
-			elif tok == 'SUBSTATION7':
+				bWantX2 = False
+			elif bWantX1 and tok == 'SUBSTATION7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW')) # already in kW
 				x1[idx] = val
 				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
+				bWantX1 = False
 #			print (time_granted, key.decode(), fncs.get_value(key).decode())
 		root.update()
 		fig.canvas.draw()
