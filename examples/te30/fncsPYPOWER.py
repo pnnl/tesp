@@ -112,17 +112,17 @@ def parse_mva(arg):
 	return p, q
 
 def main_loop():
-	if len(sys.argv) == 6:
+	if len(sys.argv) == 2:
 		rootname = sys.argv[1]
-		StartTime = sys.argv[2]
-		tmax = int(sys.argv[3])
-		period = int(sys.argv[4])  # market clearing period
-		dt = int(sys.argv[5])      # time step for bid and load updates
 	else:
-		print ('usage: python fncsPYPOWER.py [rootname StartTime tmax period dt]')
+		print ('usage: python fncsPYPOWER.py rootname')
 		sys.exit()
 
 	ppc = ppcasefile()
+	StartTime = ppc['StartTime']
+	tmax = int(ppc['Tmax'])
+	period = int(ppc['Period'])
+	dt = int(ppc['dt'])
 	make_dictionary(ppc, rootname)
 
 	bus_mp = open ("bus_" + rootname + "_metrics.json", "w")
@@ -142,8 +142,10 @@ def main_loop():
 	ppopt = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
 	loads = np.loadtxt('NonGLDLoad.txt', delimiter=',')
 
-	outage = ppc['UnitsOut'][0]
-	print ('unit', outage[0], 'off from', outage[1], 'to', outage[2], flush=True)
+	for row in ppc['UnitsOut']:
+		print ('unit  ', row[0], 'off from', row[1], 'to', row[2], flush=True)
+	for row in ppc['BranchesOut']:
+		print ('branch', row[0], 'out from', row[1], 'to', row[2], flush=True)
 
 	nloads = loads.shape[0]
 	ts = 0
@@ -168,14 +170,22 @@ def main_loop():
 			idx = int ((ts + dt) / period) % nloads
 			bus = ppc['bus']
 			gen = ppc['gen']
+			branch = ppc['branch']
 			gencost = ppc['gencost']
 			csv_load = loads[idx,0]
 			bus[4,2] = loads[idx,1]
 			bus[8,2] = loads[idx,2]
-			if ts >= outage[1] and ts <= outage[2]:
-				gen[outage[0],7] = 0
-			else:
-				gen[outage[0],7] = 1
+			# process the generator and branch outages
+			for row in ppc['UnitsOut']:
+				if ts >= row[1] and ts <= row[2]:
+					gen[row[0],7] = 0
+				else:
+					gen[row[0],7] = 1
+			for row in ppc['BranchesOut']:
+				if ts >= row[1] and ts <= row[2]:
+					branch[row[0],10] = 0
+				else:
+					branch[row[0],10] = 1
 			bus[6,2] = csv_load
 			for row in ppc['FNCS']:
 				scaled_unresp = float(row[2]) * float(row[3])

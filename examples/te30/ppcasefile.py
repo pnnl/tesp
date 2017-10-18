@@ -80,17 +80,24 @@ def ppcasefile():
 
 	# bus, fncs topic, amp factor, current value
 	ppc['FNCS'] = array([
-		[7, 'SUBSTATION7', 525.0, 0.0]
+		[7, 'SUBSTATION7', 525.0, 0.0]  # 125
 	])
 
 	# unit, time out, time back in
 	ppc['UnitsOut'] = array([
-		[2, 108000, 158400]
+		[2, 108000, 158400] # 128-MW unit at bus 3
+#		[2, 108000, 118400], # 128-MW unit at bus 3
+#		[1, 123000, 136000]  # 192-MW unit at bus 2
 	])
 
 	# branch, time out, time back in
 	ppc['BranchesOut'] = array([
-
+#		[3, 149000, 159000]  # GSU for 128-MW unit at bus 3
 	])
+
+	ppc['StartTime'] = '2013-07-01 00:00:00'
+	ppc['Tmax'] = 172800
+	ppc['Period'] = 300  # market clearing period
+	ppc['dt'] = 5        # time step for bids
 
 	return ppc

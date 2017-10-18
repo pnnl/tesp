@@ -31,7 +31,7 @@ def launch_all():
 		subprocess.Popen ('(export FNCS_CONFIG_FILE=eplus.yaml && exec EnergyPlus -w ../energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw -d output -r ../energyplus/SchoolDualController.idf &> eplus.log &)', shell=True)
 		subprocess.Popen ('(export FNCS_CONFIG_FILE=eplus_json.yaml && exec eplus_json 2d 5m School_DualController eplus_TE_Challenge_metrics.json &> eplus_json.log &)', shell=True)
 		subprocess.Popen ('(exec ./launch_TE_Challenge_agents.sh &)', shell=True)
-		subprocess.Popen ('(export FNCS_CONFIG_FILE=pypower30.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec python fncsPYPOWER.py TE_Challenge "2013-07-01 00:00:00" 172800 300 5 &> pypower.log &)', shell=True)
+		subprocess.Popen ('(export FNCS_CONFIG_FILE=pypower30.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec python fncsPYPOWER.py TE_Challenge &> pypower.log &)', shell=True)
 
 	print('launched all simulators')
 
@@ -119,16 +119,16 @@ btn = ttk.Button(root, text='Kill All', command=kill_all)
 btn.grid(row=0, column=3, sticky=tk.NSEW)
 
 ax[0].set_ylabel('[pu]')
-ax[0].set_title ('PYPOWER Bus Voltage')
+ax[0].set_title ('PYPOWER Bus Voltage', fontsize=10)
 
 ax[1].set_ylabel('[kW]')
-ax[1].set_title ('Primary School Load')
+ax[1].set_title ('Primary School Load', fontsize=10)
 
 ax[2].set_ylabel('[$]')
-ax[2].set_title ('Clearing Price')
+ax[2].set_title ('Clearing Price', fontsize=10)
 
 ax[3].set_ylabel('[degF]')
-ax[3].set_title ('House Temperature')
+ax[3].set_title ('House Temperature', fontsize=10)
 
 ax[3].set_xlabel('Hours')
 plt.xlim(0.0,48.0)
