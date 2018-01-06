@@ -20,7 +20,7 @@ controllerDict = json.loads(lp)
 
 # ====================Initialize simulation time step and duration===============   
 tf = 48 # simulation time in hours
-deltaT = 60  # simulation time interval in seconds, which usually the same as controller period 
+deltaT = 3  # simulation time interval in seconds, which usually the same as controller period 
      
 # ====================Obtain controller bid====================================
 

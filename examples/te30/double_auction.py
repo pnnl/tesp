@@ -39,7 +39,7 @@ controller_metrics = {'Metadata':controller_meta,'StartTime':StartTime}
 # ====================Initialize simulation time step and duration===============
 
 tf = 48 # simulation time in hours
-deltaT = 5 # should come from JSON config 300 # simulation time interval in seconds, which usually the same as auction period
+deltaT = 3 # should come from JSON config 300 # simulation time interval in seconds, which usually the same as auction period
 
 # ====================Obtain market information====================================
 
