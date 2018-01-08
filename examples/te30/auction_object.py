@@ -223,7 +223,7 @@ class auction_object:
         return float(''.join(ele for ele in fncs_string if ele.isdigit() or ele == '.'))
 
     # ====================Obtain values from the broker ================================
-    def subscribeVal(self, fncs_sub_value_String):
+    def subscribeVal(self, fncs_sub_value_String, timeSim):
         if 'refload' in fncs_sub_value_String:
             self.market['capacity_reference_object']['capacity_reference_property'] = parse_kw(fncs_sub_value_String['refload'])
         if "LMP" in fncs_sub_value_String:
@@ -251,6 +251,7 @@ class auction_object:
                     self.buyer['quantity'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['quantity']['propertyValue'])
                     self.buyer['state'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['state']['propertyValue'])
                     self.buyer['bid_id'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['bid_id']['propertyValue'])
+                    print ('received at', timeSim, self.buyer['name'][-1], self.buyer['price'][-1], self.buyer['quantity'][-1], self.buyer['state'][-1], self.buyer['bid_id'][-1])
     #                rebid = fncs_sub_value_String['controller'][controllerKeys[i]]['rebid']['propertyValue']
     #                bidder_market_id = fncs_sub_value_String['controller'][controllerKeys[i]]['market_id']['propertyValue']
     #               print (self.market['market_id'], bidder_market_id, rebid, self.buyer['name'][-1], self.buyer['price'][-1], self.buyer['quantity'][-1], self.buyer['state'][-1]);

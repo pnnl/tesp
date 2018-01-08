@@ -30,7 +30,7 @@ def writeRegistration (filename, dt, period):
     max_range_low = -2.0
     min_base_setpoint = 76.0
     max_base_setpoint = 80.0
-    bid_delay = 30 # should be at least two gridlab-d time steps
+    bid_delay = 15 # time controller bids before market clearing
     use_predictive_bidding = 0
     use_override = "OFF"
     

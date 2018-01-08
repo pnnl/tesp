@@ -132,7 +132,7 @@ class ramp_controller_object:
             self.house['powerstate'] = fncs_sub_value_String['power_state'] # fncs.get_value('power_state') #fncs_sub_value_String['values']['power_state']
         if "hvac_load" in fncs_sub_value_String:
             self.house['controlled_load_all'] = self.get_num(fncs_sub_value_String['hvac_load'] ) #fncs_sub_value_String['values']['hvac_load']
-#        print ('  subscribed', self.house['currTemp'], self.house['powerstate'], self.house['controlled_load_all'])
+        print ('GLD', self.house['currTemp'], self.house['powerstate'], self.house['controlled_load_all'])
 
 #         if self.controller['control_mode'] == "CN_DOUBLE_RAMP": # double_ramp controller receive extra data from house      
 #         self.house['thermostat_state'] = house_value['House'][self.controller['houseName']]['thermostat_state']['propertyValue']
@@ -398,7 +398,7 @@ class ramp_controller_object:
         monitor = self.house['currTemp']
         powerstate = self.house['powerstate']
 
-#        print ("  sync:", demand, powerstate, monitor, last_setpoint, deadband, direction, clear_price, avgP, stdP)
+        print ("** sync:", timeSim, demand, powerstate, monitor, last_setpoint, deadband, direction, clear_price, avgP, stdP)
         
         # Check t1 to determine if the sync part is needed to be processed or not
         if self.controller['t1'] == self.controller['next_run'] and marketId == lastmkt_id :
@@ -742,6 +742,9 @@ class ramp_controller_object:
          
         # Update house last power state
         self.house['last_pState'] = powerstate
+        # TEMc - try to ensure the controller accurately reports the current state of its HVAC
+        self.controller_bid['state'] = powerstate
+        print ('to bid', self.controller_bid['bid_price'], self.controller_bid['bid_quantity'], self.controller_bid['state'], self.controller_bid['rebid'])
         
         # Display some outputs for test only when sync part is processed
 #        print ('At %d min, with market_id %d, bidding price is %f, bidding quantity is %f, house set point change is %f, rebid is %d' % (timeSim/60, self.controller_bid['market_id'], self.controller_bid['bid_price'], self.controller_bid['bid_quantity'], self.house['setpoint0'], self.controller_bid['rebid']))

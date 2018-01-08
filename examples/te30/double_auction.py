@@ -63,7 +63,7 @@ while (time_granted < tf*3600):
         fncs_sub_value_unicode = (fncs.agentGetEvents()).decode()
         if fncs_sub_value_unicode != '':
             fncs_sub_value_String = json.loads(fncs_sub_value_unicode)
-            aucObj.subscribeVal(fncs_sub_value_String)
+            aucObj.subscribeVal(fncs_sub_value_String,time_granted)
     
     # Process presync, sync and postsync part for each time step
     # Presync process

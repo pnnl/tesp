@@ -73,7 +73,7 @@ def make_dictionary(ppc, rootname):
   for i in range (branches.shape[0]):
     branchesout.append ({'branch':int(branches[i,0]),'tout':int(branches[i,1]),'tin':int(branches[i,2])})
 
-  dp = open ("./outputFiles/" + rootname + "_m_dict.json", "w")
+  dp = open (rootname + "_m_dict.json", "w")
   ppdict = {'baseMVA':ppc['baseMVA'],'fncsBuses':fncsBuses,'generators':generators,'UnitsOut':unitsout,'BranchesOut':branchesout}
   print (json.dumps(ppdict), file=dp, flush=True)
   dp.close()
@@ -127,9 +127,9 @@ def main_loop():
   dt = int(ppc['dt'])
   make_dictionary(ppc, rootname)
 
-  bus_mp = open ("./outputFiles/bus_" + rootname + "_metrics.json", "w")
-  gen_mp = open ("./outputFiles/gen_" + rootname + "_metrics.json", "w")
-  sys_mp = open ("./outputFiles/sys_" + rootname + "_metrics.json", "w")
+  bus_mp = open ("bus_" + rootname + "_metrics.json", "w")
+  gen_mp = open ("gen_" + rootname + "_metrics.json", "w")
+  sys_mp = open ("sys_" + rootname + "_metrics.json", "w")
   bus_meta = {'LMP_P':{'units':'USD/kwh','index':0},'LMP_Q':{'units':'USD/kvarh','index':1},
     'PD':{'units':'MW','index':2},'QD':{'units':'MVAR','index':3},'Vang':{'units':'deg','index':4},
     'Vmag':{'units':'pu','index':5},'Vmax':{'units':'pu','index':6},'Vmin':{'units':'pu','index':7}}
@@ -153,7 +153,7 @@ def main_loop():
   ts = 0
   tnext_opf = -dt
 
-  op = open ("./outputFiles/" + rootname + '.csv', 'w')
+  op = open (rootname + '.csv', 'w')
   print ('t[s],Converged,Pload,fixed P7 (csv_load), GLD unresonsive, P7, GLD responsive, actual_load, BID?, resp_max, P7_min, V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp, gencost2, gencost1, gencost0', file=op, flush=True)
   # print ('t[s], ppc-Pd5, ppc-Pd9, ppc-Pd7, bus-Pd7, ppc-Pg1, gen-Pg1, ppc-Pg2, gen-Pg2, ppc-Pg3, gen-Pg3, ppc-Pg4, gen-Pg4, ppc-Pg5, gen-Pg5, ppc-Cost2, gencost-Cost2, ppc-Cost1, gencost-Cost1, ppc-Cost0, gencost-Cost0', file=op, flush=True)
   fncs.initialize()

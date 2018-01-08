@@ -9,4 +9,6 @@ __pycache__/
 *.xml
 broker_trace.txt
 *FNCS_Config.txt
+*.mat
+*.xlsx
 

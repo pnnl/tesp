@@ -53,4 +53,7 @@ values:
     RESPONSIVE_B:
         topic: auction_Market_1/responsive_b
         default: 0
+    RESPONSIVE_BB:
+        topic: auction_Market_1/responsive_bb
+        default: 0
 

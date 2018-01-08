@@ -5443,16 +5443,3 @@ object load {
   constant_power_C 25 kVA;
 }
 
-object recorder {
-	parent Eplus_meter;
-	property bill_mode,monthly_fee,price,monthly_bill,monthly_energy,measured_real_power;
-	interval 60.000000;
-	file Eplus_bill.csv;
-};
-object recorder {
-	parent F1_tpm_rt_C2;
-	property bill_mode,monthly_fee,price,monthly_bill,monthly_energy,measured_real_power;
-	interval 60.000000;
-	file C2_bill.csv;
-};
-
