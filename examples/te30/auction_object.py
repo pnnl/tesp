@@ -251,7 +251,7 @@ class auction_object:
                     self.buyer['quantity'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['quantity']['propertyValue'])
                     self.buyer['state'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['state']['propertyValue'])
                     self.buyer['bid_id'].append(fncs_sub_value_String['controller'][controllerKeys[i]]['bid_id']['propertyValue'])
-                    print ('received at', timeSim, self.buyer['name'][-1], self.buyer['price'][-1], self.buyer['quantity'][-1], self.buyer['state'][-1], self.buyer['bid_id'][-1])
+    #                print ('received at', timeSim, self.buyer['name'][-1], self.buyer['price'][-1], self.buyer['quantity'][-1], self.buyer['state'][-1])
     #                rebid = fncs_sub_value_String['controller'][controllerKeys[i]]['rebid']['propertyValue']
     #                bidder_market_id = fncs_sub_value_String['controller'][controllerKeys[i]]['market_id']['propertyValue']
     #               print (self.market['market_id'], bidder_market_id, rebid, self.buyer['name'][-1], self.buyer['price'][-1], self.buyer['quantity'][-1], self.buyer['state'][-1]);
@@ -357,10 +357,9 @@ class auction_object:
         elif self.timeSim % self.market['period'] == 0:
             self.nextClear['from'] = self.nextClear['quantity'] = self.nextClear['price'] = 0
         
-        if (self.market['clearat'] - timeSim) == 6:
+        if (self.market['clearat'] - timeSim) == 6: # TEMC - collect and publish bids two steps before market close
             self.collect_agent_bids()
             agg_bid = aggregate_bid (self.curve_buyer)
-            print ('  ', timeSim, 'Agg Bid[Pu, Qu, m, b, Qmax]', agg_bid)
             fncs.publish ("unresponsive_price", agg_bid[0])
             fncs.publish ("unresponsive_kw", agg_bid[1])
             fncs.publish ("responsive_m", agg_bid[2])
@@ -369,13 +368,17 @@ class auction_object:
             # ==================================================
             # Laurentiu Marinovici
             fncs.publish ("responsive_bb", agg_bid[5])
-            print ('<<<<<<<<<<<<<<<<<< ', timeSim, ' Agg Bid[Pu, Qu, m, b, Qmax, bb] ', agg_bid, ' >>>>>>>>>>>>>>>>>>>>>>>>')
+            print ('<< BIDDING', timeSim, 'Agg Bid[Pu, Qu, m, b, Qmax, bb]', agg_bid, '>>>>>>>>>>>>>>>>>>>>>>>>')
             # ==================================================
 
         # Start market clearing process
         if timeSim >= self.market['clearat']:
             self.clear_market()
             self.market['market_id'] += 1
+
+            # TEMC - we have a new LMP from the wholesale market, so the seller curve should have been reconstructed
+            #        before self.clear_market a few lines above.  Temporarily, overwrite the clear_price with latest LMP
+            self.market_output['clear_price'] = self.market['capacity_reference_object']['capacity_reference_bid_price']
             
             # Display the opening of the next market
             self.market['clearat'] = self.timeSim + self.market['period'] - (self.timeSim + self.market['period']) % self.market['period']
@@ -394,7 +397,7 @@ class auction_object:
             fncs_publishString = json.dumps(self.fncs_publish)
             
             fncs.agentPublish(fncs_publishString)
-            print ('**', timeSim, 'LMP', self.market['capacity_reference_object']['capacity_reference_bid_price'],
+            print ('<< CLEARING', timeSim, 'LMP', self.market['capacity_reference_object']['capacity_reference_bid_price'],
                    'Clear Price', self.market_output['clear_price'])
             fncs.publish ("clear_price", self.market_output['clear_price'])
         
@@ -490,17 +493,17 @@ class auction_object:
         self.curve_buyer = curve()
         self.unresponsive_sell = self.unresponsive_buy =  self.responsive_sell =  self.responsive_buy = 0
 
-        print('<<<<<<<<<<<<<<<<<<<<<<<< {} >>>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(self.market['capacity_reference_object']['name']))
-        print('>>>>>>>>>>>>>>>>>>>>>>>> {} <<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(self.market['special_mode']))
+#        print('<<<<<<<<<<<<<<<<<<<<<<<< {} >>>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(self.market['capacity_reference_object']['name']))
+#        print('>>>>>>>>>>>>>>>>>>>>>>>> {} <<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(self.market['special_mode']))
         # Bid from the capacity reference (i.e. MATPOWER/PYPOWER)
         if self.market['capacity_reference_object']['name'] != 'none' and self.market['special_mode'] == 'MD_NONE':
             max_capacity_reference_bid_quantity = self.market['capacity_reference_object']['max_capacity_reference_bid_quantity']
             capacity_reference_bid_price = self.market['capacity_reference_object']['capacity_reference_bid_price']
-            print("<<<<<< Capacity reference bids {} up to {}. >>>>>>>".format(capacity_reference_bid_price, max_capacity_reference_bid_quantity))
+#            print("<<<<<< Capacity reference bids {} up to {}. >>>>>>>".format(capacity_reference_bid_price, max_capacity_reference_bid_quantity))
             # Submit bid
             if max_capacity_reference_bid_quantity < 0: 
                 # Negative quantity is buyer
-                print('============== NEGATIVE QUANTITY IS BUYER =================================')
+#                print('============== NEGATIVE QUANTITY IS BUYER =================================')
                 self.buyer['name'].append(self.market['capacity_reference_object']['name'])
                 self.buyer['price'].append(capacity_reference_bid_price)
                 self.buyer['quantity'].append(float(-max_capacity_reference_bid_quantity))
@@ -508,7 +511,7 @@ class auction_object:
                 self.buyer['bid_id'].append(self.market['capacity_reference_object']['name'])
             elif max_capacity_reference_bid_quantity > 0: 
                 # Positive quantity is seller
-                print('============== POSITIVE QUANTITY IS SELLER =================================')
+#                print('============== POSITIVE QUANTITY IS SELLER =================================')
                 self.seller['name'].append(self.market['capacity_reference_object']['name'])
                 self.seller['price'].append(capacity_reference_bid_price)
                 self.seller['quantity'].append(max_capacity_reference_bid_quantity)
@@ -648,7 +651,7 @@ class auction_object:
 
         elif self.market['special_mode'] == 'MD_NONE':
             # Obtain buyer and seller curves at this time step
-            print('============== We are in {} market mode. ============'.format(self.market['special_mode']))
+#            print('============== We are in {} market mode. ============'.format(self.market['special_mode']))
             buyer = self.buyer 
             seller = self.seller 
             # Iterate each buyer to obtain the final buyer curve
@@ -665,7 +668,7 @@ class auction_object:
                 warnings.warn('total_unknown is non-zero; some controllers are not providing their states with their bids')
             refload = self.market['capacity_reference_object']['capacity_reference_property']
             unresp = refload - self.curve_buyer.total_on - total_unknown/2
-            print('  Unresponsive load bid: Refload,#buyers,on,off,unresp=', refload,self.curve_buyer.count, self.curve_buyer.total_on, self.curve_buyer.total_off, unresp)
+            print('<< AGGREGATING', self.timeSim, 'Total,Resp,Unresp,#buyers,BuyersOff', refload, self.curve_buyer.total_on, unresp, self.curve_buyer.count, self.curve_buyer.total_off)
 #            unresp = 2000.0
 #            unresp = 30.0
 #            print('  MANUAL override', unresp, 'kW unresponsive load bid')
@@ -680,21 +683,21 @@ class auction_object:
                 self.buyer['bid_id'].append(self.market['capacity_reference_object']['name'])
                 self.curve_buyer.add_to_curve(self.market['pricecap'], unresp, self.market['capacity_reference_object']['name'], 'ON')
 
-#        print ('Seller Curve at', self.timeSim, 'has', self.curve_seller.count, 'points')
-#        for i in range(self.curve_seller.count):
-#            print (self.curve_seller.price[i], self.curve_seller.quantity[i])
-        print('******************************************************************************************************************')
-        print ('Buyer Curve at', self.timeSim, 'has', self.curve_buyer.count, 'points')
-        print('Buyer curve price \t Buyer curve quantity')
-        print('----------------- \t --------------------')
-        for i in range(self.curve_buyer.count):
-            print ('{0:17} \t {1:20}'.format(self.curve_buyer.price[i], self.curve_buyer.quantity[i]))
-        print('==================================================================================================================')
-        print('Buyer name \t\t Buyer state \t Buyer price \t Buyer quantity')
-        print('---------- \t\t ----------- \t ----------- \t --------------')
-        for i in range (len(buyer['name'])):
-            print('{0:20} \t\t {1:11} \t {2:11} \t {3:14}'.format(buyer['name'][i], buyer['state'][i], buyer['price'][i], buyer['quantity'][i]))
-        print('==================================================================================================================')
+        print ('Seller Curve at', self.timeSim, 'has', self.curve_seller.count, 'points')
+        for i in range(self.curve_seller.count):
+            print (self.curve_seller.price[i], self.curve_seller.quantity[i])
+#        print('******************************************************************************************************************')
+#        print ('Buyer Curve at', self.timeSim, 'has', self.curve_buyer.count, 'points')
+#        print('Buyer curve price \t Buyer curve quantity')
+#        print('----------------- \t --------------------')
+#        for i in range(self.curve_buyer.count):
+#            print ('{0:17} \t {1:20}'.format(self.curve_buyer.price[i], self.curve_buyer.quantity[i]))
+#        print('==================================================================================================================')
+#        print('Buyer name \t\t Buyer state \t Buyer price \t Buyer quantity')
+#        print('---------- \t\t ----------- \t ----------- \t --------------')
+#        for i in range (len(buyer['name'])):
+#            print('{0:20} \t\t {1:11} \t {2:11} \t {3:14}'.format(buyer['name'][i], buyer['state'][i], buyer['price'][i], buyer['quantity'][i]))
+#        print('==================================================================================================================')
 
     # =========================================== Clear market ======================================================            
     def clear_market(self):

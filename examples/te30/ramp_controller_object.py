@@ -75,7 +75,7 @@ class ramp_controller_object:
         self.market['average_price'] = agentInitialVal['market_information']['average_price']
         self.market['std_dev'] = agentInitialVal['market_information']['std_dev']
         self.market['clear_price'] = agentInitialVal['market_information']['clear_price']
-        self.market['price_cap'] = agentInitialVal['market_information']['price_cap']
+        self.market['price_cap'] = agentInitialVal['market_information']['price_cap'] #  TEMC - this is the consumer's bidding cap
         self.market['period'] = agentInitialVal['market_information']['period']
         
         # house information  - values will be given after the first time step, thereforely here set as default zero values
@@ -114,7 +114,7 @@ class ramp_controller_object:
         return float(''.join(ele for ele in fncs_string if ele.isdigit() or ele == '.'))
     
     # ====================Obtain values from the broker ===========================
-    def subscribeVal(self, fncs_sub_value_String):    
+    def subscribeVal(self, fncs_sub_value_String, timeSim):    
         
         # Update market and house information at this time step from subscribed key values:  
         if "auction" in fncs_sub_value_String:
@@ -122,7 +122,8 @@ class ramp_controller_object:
             self.market['average_price'] = fncs_sub_value_String['auction'][self.market['name']]['average_price']['propertyValue']
             self.market['std_dev'] = fncs_sub_value_String['auction'][self.market['name']]['std_dev']['propertyValue']
             self.market['clear_price'] = fncs_sub_value_String['auction'][self.market['name']]['clear_price']['propertyValue']
-            self.market['price_cap'] = fncs_sub_value_String['auction'][self.market['name']]['price_cap']['propertyValue']
+            # TEMC - use the customer's personal cap for now
+        #    self.market['price_cap'] = fncs_sub_value_String['auction'][self.market['name']]['price_cap']['propertyValue']
             self.market['initial_price'] = fncs_sub_value_String['auction'][self.market['name']]['initial_price']['propertyValue']
 
         # Read from GLD house published data
@@ -130,9 +131,11 @@ class ramp_controller_object:
             self.house['currTemp'] = self.get_num(fncs_sub_value_String['air_temperature'])  #fncs_sub_value_String['values']['air_temperature']
         if "power_state" in fncs_sub_value_String:
             self.house['powerstate'] = fncs_sub_value_String['power_state'] # fncs.get_value('power_state') #fncs_sub_value_String['values']['power_state']
-        if "hvac_load" in fncs_sub_value_String:
-            self.house['controlled_load_all'] = self.get_num(fncs_sub_value_String['hvac_load'] ) #fncs_sub_value_String['values']['hvac_load']
-        print ('GLD', self.house['currTemp'], self.house['powerstate'], self.house['controlled_load_all'])
+        if "hvac_load" in fncs_sub_value_String: # keep a running estimate of kW needed to run the HVAC
+            newDemand = self.get_num(fncs_sub_value_String['hvac_load'])
+            if newDemand > 0.0:
+                self.house['controlled_load_all'] = newDemand
+#        print ('GLD', timeSim, self.house['currTemp'], self.house['powerstate'], self.house['controlled_load_all'])
 
 #         if self.controller['control_mode'] == "CN_DOUBLE_RAMP": # double_ramp controller receive extra data from house      
 #         self.house['thermostat_state'] = house_value['House'][self.controller['houseName']]['thermostat_state']['propertyValue']
@@ -368,10 +371,10 @@ class ramp_controller_object:
         return sys.maxsize
     
     # ==================================Sync content===========================  
-    def sync(self, timeSim):    
+    def sync(self, t1):    
         
         # Update controller t1 information
-        self.controller['t1'] = timeSim
+        self.controller['t1'] = t1
         
         # Inputs from market object:
         marketId = self.market['market_id']
@@ -391,6 +394,7 @@ class ramp_controller_object:
         minT = self.controller['minT']
         maxT = self.controller['maxT']
         bid_delay = self.controller['bid_delay']
+        next_run = self.controller['next_run']
         direction = self.controller['direction']
         
         # Inputs from house object:
@@ -398,26 +402,43 @@ class ramp_controller_object:
         monitor = self.house['currTemp']
         powerstate = self.house['powerstate']
 
-        print ("** sync:", timeSim, demand, powerstate, monitor, last_setpoint, deadband, direction, clear_price, avgP, stdP)
-        
-        # Check t1 to determine if the sync part is needed to be processed or not
-        if self.controller['t1'] == self.controller['next_run'] and marketId == lastmkt_id :
-            return sys.maxsize
-        
-        if  self.controller['t1'] < self.controller['next_run'] and marketId == lastmkt_id :
-            if self.controller['t1'] <= self.controller['next_run'] - bid_delay :
-                if self.controller['use_predictive_bidding'] == 1 and ((self.controller['control_mode'] == 'CN_RAMP' and setpoint0 != last_setpoint) or (self.controller['control_mode'] == 'CN_DOUBLE_RAMP' and (self.controller['heating_setpoint0']  != self.controller['last_heating_setpoint'] or self.controller['cooling_setpoint0']  != self.controller['last_cooling_setpoint']))):
-                    # Base set point setpoint0 is changed, and therefore sync is needed:
-                    pass
-                elif self.controller['use_override'] == 'ON' and self.controller['t1'] == self.controller['next_run']- bid_delay :
-                    # At the exact time that controller is operating, therefore sync is needed:
-                    pass
-                else:
-                    if self.house['last_pState'] == powerstate:
-                        # If house state not changed, then do not go through sync part:
-                        return self.controller['next_run']
-            else:
-                return self.controller['next_run']
+        # determine what we have to do in this sync step
+        update_setpoints = False
+        update_bid = False
+        if marketId != lastmkt_id:
+            print ('sync: market changed, need to update the setpoints', t1, next_run, marketId, lastmkt_id)
+            update_setpoints = True
+        elif t1 >= next_run - bid_delay and self.controller_bid['rebid'] == 0: # temporarily disable rebids
+            print ('sync: t1 within bidding window, need to publish bid and state', t1, next_run - bid_delay)
+            update_bid = True
+        else:
+#            print ('  returning', next_run)
+            return next_run
+
+        print ('  processing', demand, powerstate, monitor, last_setpoint, deadband, direction, clear_price, avgP, stdP)
+
+   # Check t1 to determine if the sync part is needed to be processed or not
+   #     if t1 == next_run and marketId == lastmkt_id :
+   #         print ('  return because t1 == next_run and marketId == lastmkt_id')
+   #         return sys.maxsize    
+   #     if  t1 < next_run and marketId == lastmkt_id :
+   #         if t1 <= next_run - bid_delay :
+   #             if self.controller['use_predictive_bidding'] == 1 and ((self.controller['control_mode'] == 'CN_RAMP' and setpoint0 != last_setpoint) or (self.controller['control_mode'] == 'CN_DOUBLE_RAMP' and (self.controller['heating_setpoint0']  != self.controller['last_heating_setpoint'] or self.controller['cooling_setpoint0']  != self.controller['last_cooling_setpoint']))):
+   # Base set point setpoint0 is changed, and therefore sync is needed:
+   #                 print (' pass because setpoint0 changed')
+   #                 pass
+   #             elif self.controller['use_override'] == 'ON' and t1 == next_run - bid_delay :
+   # At the exact time that controller is operating, therefore sync is needed:
+   #                 print ('  pass because times match exactly')
+   #                 pass
+   #             else:
+   #                 if self.house['last_pState'] == powerstate:
+   # If house state not changed, then do not go through sync part:
+   #                     print ('  return because house state did not change')
+   #                     return next_run
+   #         else:
+   #             print ('  return because t1 > next_run - bid_delay')
+   #             return next_run
         
         # If market get updated, then update the set point                
         deadband_shift = 0
@@ -427,7 +448,7 @@ class ramp_controller_object:
         
         #  
         if self.controller['control_mode'] == 'CN_RAMP':
-            if marketId != lastmkt_id: 
+            if update_setpoints == True: 
                 
                 # Update controller last market id and bid id
                 self.controller['lastmkt_id'] = marketId
@@ -467,13 +488,12 @@ class ramp_controller_object:
                 elif set_temp < minT:
                     set_temp = minT
                 # Update house set point and the cleared price
-                if timeSim != 0:
+                if t1 != 0:
+                    print('  changing', self.house['lastsetpoint0'], 'to', set_temp, 'at', clear_price)
                     self.house['setpoint0'] = set_temp - self.house['lastsetpoint0'] 
                     fncs.publish('cooling_setpoint', set_temp)
                     fncs.publish('bill_mode', 'HOURLY')
                     fncs.publish('price', clear_price)
-#                    print('  ', timeSim,'Setting (clear price, avgP, stdP, range_high, ramp_high, rang_low, ramp_low',
-#                          set_temp, clear_price, avgP, stdP, range_high, ramp_high, range_low, ramp_low)
                     self.house['lastsetpoint0'] = set_temp
             else:
                 # Change of house setpoint only changes when market changes
@@ -617,7 +637,7 @@ class ramp_controller_object:
                     warnings.warn('Unrecognized resolve_mode when double_ramp overlap resolution is needed')
                     return -1
                 
-            if marketId != lastmkt_id :
+            if update_setpoints == True:
                 
                 # Update controller last market id and bid id
                 self.controller['lastmkt_id'] = marketId
@@ -659,7 +679,7 @@ class ramp_controller_object:
                     set_temp_heating = self.controller['heat_minT']
                     
                 # Update house set point - output delta setpoint0
-                if timeSim != 0:
+                if t1 != 0:
                     self.house['cooling_setpoint0'] = set_temp_cooling - self.house['lastcooling_setpoint0']
                     self.house['lastcooling_setpoint0'] = set_temp_cooling
                     self.house['heating_setpoint0'] = set_temp_heating - self.house['lastheating_setpoint0']
@@ -742,15 +762,9 @@ class ramp_controller_object:
          
         # Update house last power state
         self.house['last_pState'] = powerstate
-        # TEMc - try to ensure the controller accurately reports the current state of its HVAC
-        self.controller_bid['state'] = powerstate
-        print ('to bid', self.controller_bid['bid_price'], self.controller_bid['bid_quantity'], self.controller_bid['state'], self.controller_bid['rebid'])
-        
-        # Display some outputs for test only when sync part is processed
-#        print ('At %d min, with market_id %d, bidding price is %f, bidding quantity is %f, house set point change is %f, rebid is %d' % (timeSim/60, self.controller_bid['market_id'], self.controller_bid['bid_price'], self.controller_bid['bid_quantity'], self.house['setpoint0'], self.controller_bid['rebid']))
         
         # Issue a bid, if appropriate
-        if self.controller_bid['bid_quantity'] > 0.0 and self.controller_bid['bid_price'] > 0.0:
+        if update_bid == True and self.controller_bid['bid_quantity'] > 0 and self.controller_bid['rebid'] == 0: #temporarily disable rebids
             self.fncs_publish['controller'][self.controller['name']]['market_id']['propertyValue'] = self.controller_bid['market_id']
             self.fncs_publish['controller'][self.controller['name']]['bid_id']['propertyValue'] = self.controller['name'] # bid_id is unique for each controller unchanged
             self.fncs_publish['controller'][self.controller['name']]['price']['propertyValue'] = self.controller_bid['bid_price']
@@ -760,20 +774,21 @@ class ramp_controller_object:
             self.fncs_publish['controller'][self.controller['name']]['rebid']['propertyValue'] = self.controller_bid['rebid'] 
             self.fncs_publish['controller'][self.controller['name']]['bid_name'] = self.controller['name']
            
-#            print('  (temp,state,load,avg,std,clear,cap,init)',self.house['currTemp'],self.house['powerstate'],self.house['controlled_load_all'],self.market['average_price'],self.market['std_dev'],self.market['clear_price'],self.market['price_cap'],self.market['initial_price'])      
-#            print (timeSim, 'Bidding PQSrebid',self.controller_bid['bid_price'],self.controller_bid['bid_quantity'],self.controller_bid['state'],self.controller_bid['rebid'])
-            # Set controller_bid rebid value to true after publishing
-            self.controller_bid['rebid'] = 1
-                  
             fncs_publishString = json.dumps(self.fncs_publish)
-            
             fncs.agentPublish(fncs_publishString)
+
+            print ('*** Published Bid at', t1, next_run - bid_delay, self.controller_bid['bid_price'], self.controller_bid['bid_quantity'], self.controller_bid['state'], self.controller_bid['rebid'])
+
+            self.controller_bid['rebid'] = 1
         
         # Return sync time t2
         return sys.maxsize
     
     # ==================================Postsync content===========================   
     def postsync(self):     
+        t1 = self.controller['t1']
+        bid_delay = self.controller['bid_delay']
+        next_run = self.controller['next_run']
         # Update last setpoint if setpoint0 changed
         if self.controller['control_mode'] == 'CN_RAMP' and self.controller['last_setpoint'] != self.controller['setpoint0']:
             self.controller['last_setpoint'] = self.controller['setpoint0']
@@ -785,8 +800,8 @@ class ramp_controller_object:
             self.controller['heating_setpoint0'] = self.controller['heating_setpoint0']   
              
         # Compare t1 with next_run to determine the return time stamp heating_setpoint0
-        if self.controller['t1'] < self.controller['next_run'] - self.controller['bid_delay']:
-            postsyncReturn = self.controller['next_run'] - self.controller['bid_delay']
+        if t1 < next_run - bid_delay:
+            postsyncReturn = next_run - bid_delay
             return postsyncReturn
         
         if self.controller['resolve_mode'] == 'SLIDING':
@@ -804,17 +819,17 @@ class ramp_controller_object:
             elif heat_state == 0 and aux_state == 0 and cool_state == 0:
                 self.controller['thermostat_mode'] = 'OFF'
                 if self.controller['previous_mode'] != 'OFF':
-                    self.controller['time_off'] = self.controller['t1'] + self.controller['sliding_time_delay']
+                    self.controller['time_off'] = t1 + self.controller['sliding_time_delay']
             else:
                 warnings.warn('The HVAC is in two or more modes at once. This is impossible')
                 return -1     
         
-        if self.controller['t1'] - self.controller['next_run'] < self.controller['bid_delay']:
-            postsyncReturn = self.controller['next_run']
+        if t1 - next_run < bid_delay:
+            postsyncReturn = next_run
         
-        if self.controller['t1'] == self.controller['next_run']:
+        if t1 == next_run:
             self.controller['next_run'] += self.controller['period']
-            postsyncReturn = self.controller['next_run'] - self.controller['bid_delay']
+            postsyncReturn = self.controller['next_run'] - bid_delay
         
         return postsyncReturn
         

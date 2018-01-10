@@ -7,7 +7,7 @@ import fncs
 from ppcasefile import ppcasefile
 import numpy as np
 import pypower.api as pp
-import scipy.io as spio
+#import scipy.io as spio
 import math
 import re
 import copy
@@ -154,7 +154,7 @@ def main_loop():
   tnext_opf = -dt
 
   op = open (rootname + '.csv', 'w')
-  print ('t[s],Converged,Pload,fixed P7 (csv_load), GLD unresonsive, P7, GLD responsive, actual_load, BID?, resp_max, P7_min, V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp, gencost2, gencost1, gencost0', file=op, flush=True)
+  print ('t[s],Converged,Pload,P7 (csv), GLD Unresp, P7 (opf), Resp (opf), GLD Pub, BID?, P7 Min, V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp, gencost2, gencost1, gencost0', file=op, flush=True)
   # print ('t[s], ppc-Pd5, ppc-Pd9, ppc-Pd7, bus-Pd7, ppc-Pg1, gen-Pg1, ppc-Pg2, gen-Pg2, ppc-Pg3, gen-Pg3, ppc-Pg4, gen-Pg4, ppc-Pg5, gen-Pg5, ppc-Cost2, gencost-Cost2, ppc-Cost1, gencost-Cost1, ppc-Cost0, gencost-Cost0', file=op, flush=True)
   fncs.initialize()
 
@@ -171,8 +171,8 @@ def main_loop():
   # Laurentiu Marinovici - 2017-12-14
   actual_load = 0
   new_bid = False
-  saveInd = 0
-  saveDataDict = {}
+#  saveInd = 0
+#  saveDataDict = {}
   # ===================================
 
   while ts <= tmax:
@@ -212,7 +212,7 @@ def main_loop():
       gencost[4][3] = 3
       gencost[4][4] = resp_c2
       gencost[4][5] = resp_c1
-      gencost[4][6] = resp_c0 # always 0
+      gencost[4][6] = resp_c0
 
       # =================================
       # Laurentiu Marinovici - 2017-12-14
@@ -232,11 +232,11 @@ def main_loop():
       
       # =================================
       # Laurentiu Marinovici - 2017-12-21
-      mpcKey = 'mpc' + str(saveInd)
-      resKey = 'res' + str(saveInd)
-      saveDataDict[mpcKey] = copy.deepcopy(ppc)
-      saveDataDict[resKey] = copy.deepcopy(res)
-      saveInd += 1
+#      mpcKey = 'mpc' + str(saveInd)
+#      resKey = 'res' + str(saveInd)
+#      saveDataDict[mpcKey] = copy.deepcopy(ppc)
+#      saveDataDict[resKey] = copy.deepcopy(res)
+#      saveInd += 1
       # =================================      
 
       bus = res['bus']
@@ -245,8 +245,28 @@ def main_loop():
       Pgen = gen[:,1].sum()
       Ploss = Pgen - Pload
       scaled_resp = -1.0 * gen[4,1]
-      # print (ts, res['success'], bus[:,2].sum(), csv_load, scaled_unresp, bus[6,2], scaled_resp, actual_load, new_bid, resp_max, gen[4, 9], bus[6,7], bus[6,13], bus[6,14], gen[0,1], gen[1,1], gen[2,1], gen[3,1], scaled_resp, gencost[4, 4], gencost[4, 5], gencost[4, 6], sep=',', file=op, flush=True)    
-      print (ts, res['success'], bus[:,2].sum(), csv_load, scaled_unresp, bus[6,2], scaled_resp, actual_load, new_bid, resp_max, gen[4, 9], bus[6,7], bus[6,13], bus[6,14], gen[0,1], gen[1,1], gen[2,1], gen[3,1], res['gen'][4, 1], ppc['gencost'][4, 4], ppc['gencost'][4, 5], ppc['gencost'][4, 6], sep=',', file=op, flush=True)
+      # CSV file output
+      print (ts, res['success'], 
+             '{:.3f}'.format(bus[:,2].sum()), 
+             '{:.3f}'.format(csv_load), 
+             '{:.3f}'.format(scaled_unresp), 
+             '{:.3f}'.format(bus[6,2]), 
+             '{:.3f}'.format(scaled_resp), 
+             '{:.3f}'.format(actual_load), 
+             new_bid, 
+             '{:.3f}'.format(gen[4,9]), 
+             '{:.3f}'.format(bus[6,7]), 
+             '{:.3f}'.format(bus[6,13]), 
+             '{:.3f}'.format(bus[6,14]), 
+             '{:.2f}'.format(gen[0,1]), 
+             '{:.2f}'.format(gen[1,1]), 
+             '{:.2f}'.format(gen[2,1]), 
+             '{:.2f}'.format(gen[3,1]), 
+             '{:.2f}'.format(res['gen'][4, 1]), 
+             '{:.6f}'.format(ppc['gencost'][4, 4]), 
+             '{:.4f}'.format(ppc['gencost'][4, 5]), 
+             '{:.4f}'.format(ppc['gencost'][4, 6]), 
+             sep=',', file=op, flush=True)
       fncs.publish('LMP_B7', 0.001 * bus[6,13])
       fncs.publish('three_phase_voltage_B7', 1000.0 * bus[6,7] * bus[6,9])
       print('**OPF', ts, csv_load, scaled_unresp, gen[4][9], scaled_resp, bus[6,2], 'LMP', 0.001 * bus[6,13])
@@ -316,7 +336,7 @@ def main_loop():
       print('**Bid', ts, unresp_load, resp_max, resp_c2, resp_c1, resp_c0)
 
   # Laurentiu Marinovici - 2017-12-21
-  spio.savemat('matFile.mat', saveDataDict)
+#  spio.savemat('matFile.mat', saveDataDict)
   # ===================================
   print ('writing metrics', flush=True)
   print (json.dumps(bus_metrics), file=bus_mp, flush=True)

@@ -28,9 +28,11 @@ def writeRegistration (filename, dt, period):
     max_ramp_low = 2.5
     min_range_low = -3.0
     max_range_low = -2.0
+    min_ctrl_cap = 0.5
+    max_ctrl_cap = 3.0
     min_base_setpoint = 76.0
     max_base_setpoint = 80.0
-    bid_delay = 15 # time controller bids before market clearing
+    bid_delay = 9 # time controller bids before market clearing
     use_predictive_bidding = 0
     use_override = "OFF"
     
@@ -119,10 +121,11 @@ def writeRegistration (filename, dt, period):
                     ramp_high = np.random.uniform (min_ramp_high, max_ramp_high)
                     range_high = np.random.uniform (min_range_high, max_range_high)
                     base_setpoint = np.random.uniform (min_base_setpoint, max_base_setpoint)
+                    ctrl_cap = np.random.uniform (min_ctrl_cap, max_ctrl_cap)
                     controllers[controller_name]['controller_information'] = {'control_mode': control_mode, 'marketName': marketName, 'houseName': houseName, 'meterName': meterName, 'bid_id': controller_name, 'period': periodController, \
                                'ramp_low': ramp_low, 'ramp_high': ramp_high, 'range_low': range_low, 'range_high': range_high, 'base_setpoint': base_setpoint, \
                                'bid_delay': bid_delay, 'use_predictive_bidding': use_predictive_bidding, 'use_override': use_override}
-                    controllers[controller_name]['market_information'] = {'market_id': 0, 'market_unit': unit, 'initial_price': initial_price, 'average_price': initial_price, 'std_dev': std_dev, 'clear_price': initial_price, 'price_cap': price_cap, 'period': periodMarket}
+                    controllers[controller_name]['market_information'] = {'market_id': 0, 'market_unit': unit, 'initial_price': initial_price, 'average_price': initial_price, 'std_dev': std_dev, 'clear_price': initial_price, 'price_cap': ctrl_cap, 'period': periodMarket}
 #                   controllers[controller_name]['house_information'] = {'target': 'air_temperature', 'deadband': 0, 'setpoint0': -1, 'currTemp': -1, 'controlled_load_all': 0, 'powerstate': 'ON'}
                     isELECTRIC = False
                        
