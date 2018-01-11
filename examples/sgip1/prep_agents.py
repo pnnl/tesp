@@ -28,7 +28,7 @@ meta = {'markets':m_meta,'controllers':c_meta}
 print (json.dumps(meta), file=dp)
 dp.close()
 
-want_logs = True
+want_logs = False
 
 if want_logs:
 #	prefix = "(export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec"
@@ -79,9 +79,9 @@ print ("subscribe \"precommit:network_node.positive_sequence_voltage <- pypower/
 print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.constant_power_A <- eplus_json/power_A\";", file=op)
 print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.constant_power_B <- eplus_json/power_B\";", file=op)
 print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.constant_power_C <- eplus_json/power_C\";", file=op)
-print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.bill_mode <- eplus_json/bill_mode\";", file=op)
-print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.price <- eplus_json/price\";", file=op)
-print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.monthly_fee <- eplus_json/monthly_fee\";", file=op)
+print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_meter4.bill_mode <- eplus_json/bill_mode\";", file=op)
+print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_meter4.price <- eplus_json/price\";", file=op)
+print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_meter4.monthly_fee <- eplus_json/monthly_fee\";", file=op)
 #print ("subscribe \"precommit:Eplus_load.constant_power_A <- eplus_json/power_A\";", file=op)
 #print ("subscribe \"precommit:Eplus_load.constant_power_B <- eplus_json/power_B\";", file=op)
 #print ("subscribe \"precommit:Eplus_load.constant_power_C <- eplus_json/power_C\";", file=op)
