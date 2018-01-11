@@ -3,7 +3,10 @@ import sys
 import json
 from writeRegistration import writeRegistration
 
-auctions, controllers = writeRegistration(sys.argv[1])
+dt = 3
+period = 300
+
+auctions, controllers = writeRegistration(sys.argv[1], dt, period)
 
 print ("launch_agents.sh executes", 2 + len (controllers), "processes")
 
@@ -28,7 +31,8 @@ dp.close()
 want_logs = True
 
 if want_logs:
-	prefix = "(export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec"
+#	prefix = "(export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec"
+	prefix = "(export FNCS_FATAL=NO && exec"
 else:
 	prefix = "(export FNCS_FATAL=NO && exec"
 suffix_auc = "&> auction.log &)"
@@ -53,20 +57,20 @@ for key, value in controllers.items():
 op.close()
 
 
-op = open ("launch_windows_" + sys.argv[1] + "_agents.inc", "w")
-print ("rem set FNCS_LOG_LEVEL=", file=op)
-print ("set FNCS_TIME_DELTA=60s", file=op)
-print ("start /b cmd /c python double_auction.py input/auction_registration.json SGIP1b ^>auction.log 2^>^&1", file=op)
+#op = open ("launch_windows_" + sys.argv[1] + "_agents.inc", "w")
+#print ("rem set FNCS_LOG_LEVEL=", file=op)
+#print ("set FNCS_TIME_DELTA=60s", file=op)
+#print ("start /b cmd /c python double_auction.py input/auction_registration.json SGIP1b ^>auction.log 2^>^&1", file=op)
 
-print ("set FNCS_LOG_STDOUT=no", file=op)
-print ("set FNCS_LOG_LEVEL=", file=op)
-print ("set FNCS_TIME_DELTA=60s", file=op)
-i = 1
-for key, value in controllers.items():
-	arg = "input/controller_registration_" + key + ".json"
-	print ("start /b cmd /c python house_controller.py", arg, file=op)
-	i += 1
-op.close()
+#print ("set FNCS_LOG_STDOUT=no", file=op)
+#print ("set FNCS_LOG_LEVEL=", file=op)
+#print ("set FNCS_TIME_DELTA=60s", file=op)
+#i = 1
+#for key, value in controllers.items():
+#	arg = "input/controller_registration_" + key + ".json"
+#	print ("start /b cmd /c python house_controller.py", arg, file=op)
+#	i += 1
+#op.close()
 
 op = open(sys.argv[1] + "_FNCS_Config.txt", "w")
 print ("publish \"commit:network_node.distribution_load -> distribution_load; 1000\";", file=op)
@@ -75,10 +79,23 @@ print ("subscribe \"precommit:network_node.positive_sequence_voltage <- pypower/
 print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.constant_power_A <- eplus_json/power_A\";", file=op)
 print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.constant_power_B <- eplus_json/power_B\";", file=op)
 print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.constant_power_C <- eplus_json/power_C\";", file=op)
+print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.bill_mode <- eplus_json/bill_mode\";", file=op)
+print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.price <- eplus_json/price\";", file=op)
+print ("subscribe \"precommit:R1_12_47_1_load_4_Eplus_load4.monthly_fee <- eplus_json/monthly_fee\";", file=op)
+#print ("subscribe \"precommit:Eplus_load.constant_power_A <- eplus_json/power_A\";", file=op)
+#print ("subscribe \"precommit:Eplus_load.constant_power_B <- eplus_json/power_B\";", file=op)
+#print ("subscribe \"precommit:Eplus_load.constant_power_C <- eplus_json/power_C\";", file=op)
+#print ("subscribe \"precommit:Eplus_meter.bill_mode <- eplus_json/bill_mode\";", file=op)
+#print ("subscribe \"precommit:Eplus_meter.price <- eplus_json/price\";", file=op)
+#print ("subscribe \"precommit:Eplus_meter.monthly_fee <- eplus_json/monthly_fee\";", file=op)
 for key, value in controllers.items():
 	arg = value['controller_information']['houseName']
 	print ("publish \"commit:" + arg + ".air_temperature -> " + arg + "/air_temperature\";", file=op)
 	print ("publish \"commit:" + arg + ".power_state -> " + arg + "/power_state\";", file=op)
 	print ("publish \"commit:" + arg + ".hvac_load -> " + arg + "/hvac_load\";", file=op)
 	print ("subscribe \"precommit:" + arg + ".cooling_setpoint <- controller_" + key + "/cooling_setpoint\";", file=op)
+	arg = value['controller_information']['meterName']
+	print ("subscribe \"precommit:" + arg + ".bill_mode <- controller_" + key + "/bill_mode\";", file=op)
+	print ("subscribe \"precommit:" + arg + ".price <- controller_" + key + "/price\";", file=op)
+	print ("subscribe \"precommit:" + arg + ".monthly_fee <- controller_" + key + "/monthly_fee\";", file=op)
 op.close()

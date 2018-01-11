@@ -3,6 +3,7 @@ main file of the auction object, mainly used for assigning data read from input
 '''
 
 # import from library or functions
+import numpy as np
 import csv
 import math
 import fncs
@@ -38,7 +39,7 @@ controller_metrics = {'Metadata':controller_meta,'StartTime':StartTime}
 # ====================Initialize simulation time step and duration===============
 
 tf = 48 # simulation time in hours
-deltaT = 300 # simulation time interval in seconds, which usually the same as auction period
+deltaT = 3 # should come from JSON config 300 # simulation time interval in seconds, which usually the same as auction period
 
 # ====================Obtain market information====================================
 
@@ -51,11 +52,6 @@ time_granted = 0 # time variable for checking the retuned time from FNCS
 timeSim = 0
 # Start simulation for each time step:
 while (time_granted < tf*3600):
-    # ============================ Value assigned to the auction object from csv files ============================
-    # Obtain the step number for the capacity_reference_bid_price, for read in from csv file only, not for FNCS read in
-    # Bidder prices are given with 5 minute interval: 
-    bidderStepNum = int(math.floor(time_granted / 300))
-    
     # =================Simulation for each time step ============================================================       
     # Initialization when time = 0
     if time_granted == 0:
@@ -67,7 +63,7 @@ while (time_granted < tf*3600):
         fncs_sub_value_unicode = (fncs.agentGetEvents()).decode()
         if fncs_sub_value_unicode != '':
             fncs_sub_value_String = json.loads(fncs_sub_value_unicode)
-            aucObj.subscribeVal(fncs_sub_value_String)
+            aucObj.subscribeVal(fncs_sub_value_String,time_granted)
     
     # Process presync, sync and postsync part for each time step
     # Presync process
@@ -99,22 +95,27 @@ while (time_granted < tf*3600):
     # No postsync process in this object
     
     if (time_granted < (timeSim + deltaT)) :
+#        print ('requesting the same', timeSim + deltaT, flush=True)
         time_granted = fncs.time_request(timeSim + deltaT)
     else:
         timeSim = timeSim + deltaT
+#        print ('requesting new', timeSim + deltaT, flush=True)
         time_granted = fncs.time_request(timeSim + deltaT)
-
-fncs.finalize()
 
 
 # ==================== Finalize the metrics output ===========================
 
+print ('writing metrics', flush=True)
 print (json.dumps(auction_metrics), file=auction_op)
 print (json.dumps(controller_metrics), file=controller_op)
 
+print ('closing files', flush=True)
 auction_op.close()
 controller_op.close()
         
+print ('finalizing FNCS', flush=True)
+fncs.finalize()
+
     
 
     

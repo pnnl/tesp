@@ -1,11 +1,11 @@
 import numpy as np
 
-def writeRegistration (filename):
+def writeRegistration (filename, dt, period):
     import json
     import re
     import os
     import shutil
-    
+
     folderName = "input"
     ip = open (filename + ".glm", "r")
     if not os.path.exists("input"):
@@ -17,27 +17,29 @@ def writeRegistration (filename):
      
     # parameters to be written (in case it is not assigned in glm file)
     # controller data:
-    periodController = 300
+    periodController = period
     control_mode = "CN_RAMP"
-    min_ramp_high = 50.0 # 1.5
-    max_ramp_high = 100.0 # 2.5
+    min_ramp_high = 1.5
+    max_ramp_high = 2.5
     min_range_high = 1.5
     max_range_high = 2.5
     # used with np.random.uniform below
-    min_ramp_low = 50.0 # 1.5
-    max_ramp_low = 100.0 # 2.5
+    min_ramp_low = 1.5
+    max_ramp_low = 2.5
     min_range_low = -3.0
     max_range_low = -2.0
+    min_ctrl_cap = 0.5
+    max_ctrl_cap = 3.0
     min_base_setpoint = 76.0
     max_base_setpoint = 80.0
-    bid_delay = 60
+    bid_delay = 9 # time controller bids before market clearing
     use_predictive_bidding = 0
     use_override = "OFF"
     
     # market data:
     marketName = "Market_1"
     unit = "kW"
-    periodMarket = 300
+    periodMarket = period
     initial_price = 0.02078
     std_dev = 0.01 # 0.00361
     price_cap = 3.78
@@ -65,15 +67,19 @@ def writeRegistration (filename):
     ip.seek(0,0)
     inFNCSmsg = False
     inHouses = False
+    inTriplexMeters = False
     endedHouse = False
     isELECTRIC = False
     
     houseName = ""
+    meterName = ""
     FNCSmsgName = ""
     # Obtain controller dictionary based on house numbers
     for line in ip:
         lst = line.split()
         if len(lst) > 1:
+            if lst[1] == "triplex_meter":
+                inTriplexMeters = True
             if lst[1] == "house":
                 inHouses = True
             # Check fncs_msg object:
@@ -88,6 +94,10 @@ def writeRegistration (filename):
                 if lst[0] == "name":
                     FNCSmsgName = lst[1].strip(";")
                     inFNCSmsg = False
+            if inTriplexMeters == True:
+                if lst[0] == "name":
+                    meterName = lst[1].strip(";")
+                    inTriplexMeters = False
             # Check house object with controller inside
             if inHouses == True:
                 if lst[0] == "name" and endedHouse == False:
@@ -111,10 +121,11 @@ def writeRegistration (filename):
                     ramp_high = np.random.uniform (min_ramp_high, max_ramp_high)
                     range_high = np.random.uniform (min_range_high, max_range_high)
                     base_setpoint = np.random.uniform (min_base_setpoint, max_base_setpoint)
-                    controllers[controller_name]['controller_information'] = {'control_mode': control_mode, 'marketName': marketName, 'houseName': houseName, 'bid_id': controller_name, 'period': periodController, \
+                    ctrl_cap = np.random.uniform (min_ctrl_cap, max_ctrl_cap)
+                    controllers[controller_name]['controller_information'] = {'control_mode': control_mode, 'marketName': marketName, 'houseName': houseName, 'meterName': meterName, 'bid_id': controller_name, 'period': periodController, \
                                'ramp_low': ramp_low, 'ramp_high': ramp_high, 'range_low': range_low, 'range_high': range_high, 'base_setpoint': base_setpoint, \
                                'bid_delay': bid_delay, 'use_predictive_bidding': use_predictive_bidding, 'use_override': use_override}
-                    controllers[controller_name]['market_information'] = {'market_id': 0, 'market_unit': unit, 'initial_price': initial_price, 'average_price': initial_price, 'std_dev': std_dev, 'clear_price': initial_price, 'price_cap': price_cap, 'period': periodMarket}
+                    controllers[controller_name]['market_information'] = {'market_id': 0, 'market_unit': unit, 'initial_price': initial_price, 'average_price': initial_price, 'std_dev': std_dev, 'clear_price': initial_price, 'price_cap': ctrl_cap, 'period': periodMarket}
 #                   controllers[controller_name]['house_information'] = {'target': 'air_temperature', 'deadband': 0, 'setpoint0': -1, 'currTemp': -1, 'controlled_load_all': 0, 'powerstate': 'ON'}
                     isELECTRIC = False
                        
@@ -137,7 +148,7 @@ def writeRegistration (filename):
         singleControllerReg = {}
         singleControllerReg['agentType'] = "controller"
         singleControllerReg['agentName'] = key
-        singleControllerReg['timeDelta'] = 60 # Assum time step is always 60 sec for now
+        singleControllerReg['timeDelta'] = dt
         singleControllerReg['broker'] = "tcp://localhost:5570"
         # publications
         publications = {}
@@ -183,7 +194,7 @@ def writeRegistration (filename):
     auctionReg = {}
     auctionReg['agentType'] = "auction"
     auctionReg['agentName'] = list(auctions.items())[0][0]
-    auctionReg['timeDelta'] = 60 # Assum time step is always 60 sec for now
+    auctionReg['timeDelta'] = dt
     auctionReg['broker'] = "tcp://localhost:5570"
     publications = {}
     publications['std_dev'] = {'propertyType': 'double', 'propertyUnit': 'none', 'propertyValue': 0.0}

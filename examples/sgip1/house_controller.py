@@ -20,7 +20,7 @@ controllerDict = json.loads(lp)
 
 # ====================Initialize simulation time step and duration===============   
 tf = 48 # simulation time in hours
-deltaT = 60  # simulation time interval in seconds, which usually the same as controller period 
+deltaT = 3  # simulation time interval in seconds,
      
 # ====================Obtain controller bid====================================
 
@@ -45,7 +45,7 @@ while (time_granted < tf*3600):
         fncs_sub_value_unicode = (fncs.agentGetEvents()).decode()
         if fncs_sub_value_unicode != '':
             fncs_sub_value_String = json.loads(fncs_sub_value_unicode)
-            controller_obj.subscribeVal(fncs_sub_value_String)
+            controller_obj.subscribeVal(fncs_sub_value_String, time_granted)
     
     # Process presync, sync and postsync part for each time step:
     

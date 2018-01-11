@@ -106,9 +106,6 @@ for key, val in meta_h.items():
 	elif key == 'air_temperature_avg':
 		HSE_AIR_AVG_IDX = val['index']
 		HSE_AIR_AVG_UNITS = val['units']
-	elif key == 'air_temperature_median':
-		HSE_AIR_MED_IDX = val['index']
-		HSE_AIR_MED_UNITS = val['units']
 data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h['3600'][hse_keys[0]])), dtype=np.float)
 print ("\nConstructed", data_h.shape, "NumPy array for Houses")
 j = 0
@@ -216,7 +213,6 @@ ax[1,0].legend(loc='best')
 ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_AVG_IDX], color="blue", label="Mean")
 ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MIN_IDX], color="red", label="Min")
 ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MAX_IDX], color="green", label="Max")
-ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MED_IDX], color="magenta", label="Median")
 ax[1,1].set_xlabel("Hours")
 ax[1,1].set_ylabel(HSE_AIR_AVG_UNITS)
 ax[1,1].set_title ("House Air at " + hse_keys[0])
