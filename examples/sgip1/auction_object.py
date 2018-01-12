@@ -371,7 +371,7 @@ class auction_object:
             # ==================================================
             # Laurentiu Marinovici
             fncs.publish ("responsive_bb", agg_bid[5])
-            print ('<< BIDDING', timeSim, 'Agg Bid[Pu, Qu, m, b, Qmax, bb]', agg_bid, '>>>>>>>>>>>>>>>>>>>>>>>>')
+            print ('<< BIDDING', timeSim, 'Agg Bid[Pu, Qu, m, b, bb, Qmax]', agg_bid[0], agg_bid[1], agg_bid[2], agg_bid[3], agg_bid[5], agg_bid[4])
             # ==================================================
 
         # Start market clearing process
