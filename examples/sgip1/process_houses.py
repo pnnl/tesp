@@ -55,6 +55,8 @@ hrs = np.array(times, dtype=np.float)
 denom = 3600.0
 hrs /= denom
 
+time_key = str(times[0])
+
 # read the other JSON files; their times (hrs) should be the same
 lp_h = open ("house_" + sys.argv[1] + "_metrics.json").read()
 lst_h = json.loads(lp_h)
@@ -62,7 +64,7 @@ lst_h = json.loads(lp_h)
 # Houses 
 lst_h.pop('StartTime')
 meta_h = lst_h.pop('Metadata')
-print("\nHouse Metadata for", len(lst_h['3600']), "objects")
+print("\nHouse Metadata for", len(lst_h[time_key]), "objects")
 for key, val in meta_h.items():
 #	print (key, val['index'], val['units'])
 	if key == 'air_temperature_avg':
@@ -94,7 +96,7 @@ for key, val in meta_h.items():
 	elif key == 'air_temperature_deviation_heating':
 		DEV_HEAT_IDX = val['index']
 
-data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h['3600'][hse_keys[0]])), dtype=np.float)
+data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
 print ("\nConstructed", data_h.shape, "NumPy array for Houses")
 j = 0
 for key in hse_keys:
