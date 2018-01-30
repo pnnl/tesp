@@ -83,7 +83,7 @@ FNCS with Prerequisites (installed to /usr/local)
 
  cd ../fncs
  autoreconf -if
- ./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w' 'CFLAGS=-w'
+ ./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -mmacosx-version-min=10.12' 'CFLAGS=-w -mmacosx-version-min=10.12'
  make
  sudo make install
 
