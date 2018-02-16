@@ -2,3 +2,5 @@
 *.xml
 *dict.json
 *.csv
+*.yaml
+*.txt

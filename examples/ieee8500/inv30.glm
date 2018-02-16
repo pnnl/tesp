@@ -27,9 +27,9 @@ module generators;
 #include "../schedules/water_and_setpoint_schedule_v3.glm"
 //#include "../schedules/appliance_schedules.glm"
 
-//#define INVERTER_MODE=CONSTANT_PF
-#define INVERTER_MODE=VOLT_VAR
-#define INVERTER_MODE=VOLT_WATT
+#define INVERTER_MODE=CONSTANT_PF
+//#define INVERTER_MODE=VOLT_VAR
+//#define INVERTER_MODE=VOLT_WATT
 #define INV_VBASE=240.0
 #define INV_V1=0.92
 #define INV_V2=0.95
@@ -148,12 +148,14 @@ object substation {
   };
 }
 
-//object fncs_msg {
-//     name gridlabdSimulator1;
-//     parent network_node;
-//     configure inv30_FNCS_Config.txt;
-//     option "transport:hostname localhost, port 5570";
-//}
+#ifdef USE_FNCS
+object fncs_msg {
+  name gridlabdSimulator1;
+  parent network_node;
+  configure inv30_FNCS_Config.txt;
+  option "transport:hostname localhost, port 5570";
+}
+#endif
 
 object meter {
 	name F1_transformer_meter;
@@ -171,30 +173,30 @@ object transformer {
 }
 
 object load {
-     name unresp_load;
-     nominal_voltage 7200;
-     phases ABCN;
-     parent F1_transformer_meter;
+  name unresp_load;
+  nominal_voltage 7200;
+  phases ABCN;
+  parent F1_transformer_meter;
+	
+  base_power_A 100000.0;
+  base_power_B 100000.0;
+  base_power_C 100000.0;
 	 
-     base_power_A 100000.0;
-     base_power_B 100000.0;
-     base_power_C 100000.0;
-	 
-	 power_pf_A 0.9;
-	 power_pf_B 0.9;
-	 power_pf_C 0.9;
-	 
-	 power_fraction_A 1.0;
-	 power_fraction_B 1.0;
-	 power_fraction_C 1.0;
-	 
-	 current_fraction_A 0.0;
-	 current_fraction_B 0.0;
-	 current_fraction_C 0.0;
-	 
-	 impedance_fraction_A 0.0;
-	 impedance_fraction_B 0.0;
-	 impedance_fraction_C 0.0;
+  power_pf_A 0.9;
+  power_pf_B 0.9;
+  power_pf_C 0.9;
+  
+  power_fraction_A 1.0;
+  power_fraction_B 1.0;
+  power_fraction_C 1.0;
+  
+  current_fraction_A 0.0;
+  current_fraction_B 0.0;
+  current_fraction_C 0.0;
+  
+  impedance_fraction_A 0.0;
+  impedance_fraction_B 0.0;
+  impedance_fraction_C 0.0;
 };
 
 object triplex_meter {
