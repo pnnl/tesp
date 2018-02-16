@@ -1,6 +1,7 @@
 #	Copyright (C) 2018 Battelle Memorial Institute
 import sys
 import json
+import numpy as np
 
 # write yaml for precool.py to subscribe meter voltages and house setpoints
 # write txt for gridlabd to subscribe house setpoints and publish meter voltages
@@ -54,7 +55,14 @@ for line in gp:
 			inHouses = False
 			endedHouse = False
 			if isELECTRIC == True:
-				houses[houseName] = {'meter':meterName}
+				night_set = np.random.uniform (70, 76)
+				day_set = np.random.uniform (78, 82)
+				day_start = np.random.uniform (6, 8)
+				day_end = np.random.uniform (17, 19)
+				deadband = np.random.uniform (2, 3)
+				houses[houseName] = {'meter':meterName,'night_set':float('{:.3f}'.format(night_set)),
+					'day_set':float('{:.3f}'.format(day_set)),'day_start_hour':float('{:.3f}'.format(day_start)),
+					'day_end_hour':float('{:.3f}'.format(day_end)),'deadband':float('{:.3f}'.format(deadband))}
 				print ('  ' + houseName + '_V1:', file=yp)
 				print ('    topic: gridlabdSimulator1/' + meterName + '/measured_voltage_1', file=yp)
 				print ('    default: 120', file=yp)
