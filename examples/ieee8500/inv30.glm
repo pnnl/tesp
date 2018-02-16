@@ -1,0 +1,3709 @@
+#set double_format=%+.12lg
+#set profiler=1
+#set randomseed=10
+#set relax_naming_rules=1
+#set savefile=test.xml
+#set minimum_timestep=60
+
+clock {
+	timezone PST+8PDT;
+	starttime '2013-07-01 00:00:00';
+	stoptime '2013-07-03 00:00:00';
+}
+
+module climate;
+module market;
+module connection; // FNCS
+module powerflow {
+	solver_method FBS;
+	NR_iteration_limit 100;
+}
+module residential {
+	implicit_enduses NONE;
+}
+module tape;
+module generators;
+
+#include "../schedules/water_and_setpoint_schedule_v3.glm"
+//#include "../schedules/appliance_schedules.glm"
+
+//#define INVERTER_MODE=CONSTANT_PF
+#define INVERTER_MODE=VOLT_VAR
+#define INVERTER_MODE=VOLT_WATT
+#define INV_VBASE=240.0
+#define INV_V1=0.92
+#define INV_V2=0.95
+#define INV_V3=1.05
+#define INV_V4=1.10
+#define INV_Q1=0.44
+#define INV_Q2=0.00
+#define INV_Q3=0.00
+#define INV_Q4=-0.44
+#define INV_VIN=200.0
+#define INV_IIN=32.5
+#define INV_VVLOCKOUT=30.0
+#define INV_VW_V1=1.05833
+#define INV_VW_V2=1.10000
+#define INV_VW_P1=1.0
+#define INV_VW_P2=0.0
+
+// summer
+#define FIXED_PRICE=0.127
+// winter
+//#define FIXED_PRICE=0.088
+
+object metrics_collector_writer {
+     interval 300;
+     filename inv30_metrics.json;
+};
+
+object climate {
+     name "RegionalWeather";
+     tmyfile "../weather/AZ-Tucson_International_Ap.tmy3";
+     interpolate QUADRATIC;
+};
+
+class player {
+      double value;
+}
+
+object player {
+    name VOLTAGE;
+    file "../players/voltage.player";
+    loop 1;
+}
+
+object transformer_configuration {
+	name substation_config;
+	connect_type WYE_WYE;
+	install_type PADMOUNT;
+	power_rating 450;
+	powerA_rating 150 kVA;
+	powerB_rating 150;
+	powerC_rating 150;
+	primary_voltage 133000;
+	secondary_voltage 7200;
+	impedance +0.0015+0.00675j;
+}
+
+object transformer_configuration {
+	name default_transformer_A;
+	connect_type SINGLE_PHASE_CENTER_TAPPED;
+	install_type PADMOUNT;
+	power_rating 150;
+	powerA_rating 150 kVA;
+	primary_voltage 7200;
+	secondary_voltage 120;
+	impedance +0.015+0.0675j;
+}
+
+object transformer_configuration {
+	name default_transformer_B;
+	connect_type SINGLE_PHASE_CENTER_TAPPED;
+	install_type PADMOUNT;
+	power_rating 150;
+	powerB_rating 150;
+	primary_voltage 7200;
+	secondary_voltage 120;
+	impedance +0.015+0.0675j;
+}
+
+object transformer_configuration {
+	name default_transformer_C;
+	connect_type SINGLE_PHASE_CENTER_TAPPED;
+	install_type PADMOUNT;
+	power_rating 150;
+	powerC_rating 150;
+	primary_voltage 7200;
+	secondary_voltage 120;
+	impedance +0.015+0.0675j;
+}
+
+object triplex_line_conductor {
+	name Name_1_0_AA_triplex;
+	resistance 0.57;
+	geometric_mean_radius 0.011;
+}
+
+object triplex_line_configuration {
+	name TLCFG;
+	conductor_1 Name_1_0_AA_triplex;
+	conductor_2 Name_1_0_AA_triplex;
+	conductor_N Name_1_0_AA_triplex;
+	insulation_thickness 0.08;
+	diameter 0.368;
+}
+
+// this has to be a substation for the MATPOWER/PYPOWER interface
+object substation {
+	name network_node;
+	phases ABCN;
+	nominal_voltage 133000;
+	positive_sequence_voltage VOLTAGE.value; // 133000;
+	bustype SWING;
+  base_power 12MVA;
+  power_convergence_value 100VA;
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+//object fncs_msg {
+//     name gridlabdSimulator1;
+//     parent network_node;
+//     configure inv30_FNCS_Config.txt;
+//     option "transport:hostname localhost, port 5570";
+//}
+
+object meter {
+	name F1_transformer_meter;
+	phases ABCN;
+	nominal_voltage 7200;
+}
+
+object transformer {
+	name F1_Transformer1;
+	groupid F1_Network_Trans;
+	phases ABCN;
+	from network_node;
+	to F1_transformer_meter;
+	configuration substation_config;
+}
+
+object load {
+     name unresp_load;
+     nominal_voltage 7200;
+     phases ABCN;
+     parent F1_transformer_meter;
+	 
+     base_power_A 100000.0;
+     base_power_B 100000.0;
+     base_power_C 100000.0;
+	 
+	 power_pf_A 0.9;
+	 power_pf_B 0.9;
+	 power_pf_C 0.9;
+	 
+	 power_fraction_A 1.0;
+	 power_fraction_B 1.0;
+	 power_fraction_C 1.0;
+	 
+	 current_fraction_A 0.0;
+	 current_fraction_B 0.0;
+	 current_fraction_C 0.0;
+	 
+	 impedance_fraction_A 0.0;
+	 impedance_fraction_B 0.0;
+	 impedance_fraction_C 0.0;
+};
+
+object triplex_meter {
+	name F1_triplex_node_A;
+	phases SA;
+	nominal_voltage 120;
+}
+
+object triplex_meter {
+	name F1_triplex_node_B;
+	phases SB;
+	nominal_voltage 120;
+}
+
+object triplex_meter {
+	name F1_triplex_node_C;
+	phases SC;
+	nominal_voltage 120;
+}
+
+object transformer {
+	name F1_center_tap_transformer_A;
+	phases SA;
+	from F1_transformer_meter;
+	to F1_triplex_node_A;
+	configuration default_transformer_A;
+}
+
+object transformer {
+	name F1_center_tap_transformer_B;
+	phases SB;
+	from F1_transformer_meter;
+	to F1_triplex_node_B;
+	configuration default_transformer_B;
+}
+
+object transformer {
+	name F1_center_tap_transformer_C;
+	phases SC;
+	from F1_transformer_meter;
+	to F1_triplex_node_C;
+	configuration default_transformer_C;
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B0;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B0;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B0;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B0;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B0;
+	parent F1_tpm_rt_B0;
+	schedule_skew 577;
+	Rroof 17.618;
+	Rwall 6.872;
+	Rfloor 4.818;
+	Rdoors 3;
+	Rwindows 1.315;
+	airchange_per_hour 1.288;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.311;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 2.502;
+	floor_area 637.886;
+	number_of_doors 1;
+	air_temperature 68.886;
+	mass_temperature 68.886;
+	heating_setpoint heating5*1.043+1.41;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_C1;
+	groupid F1_flatrate_meter;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SC;
+	from F1_triplex_node_C;
+	to F1_tpm_flatrate_C1;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_C1;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_C1;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_C1;
+	parent F1_tpm_rt_C1;
+	schedule_skew -745;
+	Rroof 33.903;
+	Rwall 20.296;
+	Rfloor 12.58;
+	Rdoors 5;
+	Rwindows 1.664;
+	airchange_per_hour 0.946;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.581;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.421;
+	floor_area 1094.925;
+	number_of_doors 2;
+	air_temperature 71.924;
+	mass_temperature 71.924;
+	heating_setpoint heating2*0.964+0.50;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_C2;
+	groupid F1_flatrate_meter;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SC;
+	from F1_triplex_node_C;
+	to F1_tpm_flatrate_C2;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_C2;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_C2;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_C2;
+	parent F1_tpm_rt_C2;
+	schedule_skew -1065;
+	Rroof 22.324;
+	Rwall 13.948;
+	Rfloor 10.588;
+	Rdoors 3;
+	Rwindows 1.158;
+	airchange_per_hour 1.017;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.24;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.317;
+	floor_area 618.015;
+	number_of_doors 1;
+	air_temperature 68.511;
+	mass_temperature 68.511;
+	heating_setpoint heating3*1.019+1.33;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B3;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B3;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B3;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B3;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B3;
+	parent F1_tpm_rt_B3;
+	schedule_skew -655;
+	Rroof 25.066;
+	Rwall 18.122;
+	Rfloor 17.734;
+	Rdoors 5;
+	Rwindows 1.428;
+	airchange_per_hour 0.88;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.503;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.523;
+	floor_area 2971.712;
+	number_of_doors 3;
+	air_temperature 69.055;
+	mass_temperature 69.055;
+	heating_setpoint heating4*0.958+1.61;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B4;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B4;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B4;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B4;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B4;
+	parent F1_tpm_rt_B4;
+	schedule_skew -888;
+	Rroof 27.921;
+	Rwall 21.208;
+	Rfloor 13.138;
+	Rdoors 5;
+	Rwindows 1.386;
+	airchange_per_hour 1.156;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.82;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.54;
+	floor_area 1476.721;
+	number_of_doors 2;
+	air_temperature 70.019;
+	mass_temperature 70.019;
+	heating_setpoint heating7*0.978+1.33;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A5;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A5;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A5;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A5;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A5;
+	parent F1_tpm_rt_A5;
+	schedule_skew 350;
+	Rroof 27.117;
+	Rwall 20.54;
+	Rfloor 16.722;
+	Rdoors 5;
+	Rwindows 1.81;
+	airchange_per_hour 0.977;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.509;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.481;
+	floor_area 1067.468;
+	number_of_doors 2;
+	air_temperature 68.735;
+	mass_temperature 68.735;
+	heating_setpoint heating6*0.961+1.26;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B6;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B6;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B6;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B6;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B6;
+	parent F1_tpm_rt_B6;
+	schedule_skew 100;
+	Rroof 27.866;
+	Rwall 20.734;
+	Rfloor 14.831;
+	Rdoors 5;
+	Rwindows 1.408;
+	airchange_per_hour 1.084;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.088;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.544;
+	floor_area 1434.683;
+	number_of_doors 2;
+	air_temperature 70.269;
+	mass_temperature 70.269;
+	heating_setpoint heating2*1.026+0.16;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B7;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;	
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B7;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B7;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B7;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B7;
+	parent F1_tpm_rt_B7;
+	schedule_skew -473;
+	Rroof 31.031;
+	Rwall 19.501;
+	Rfloor 12.947;
+	Rdoors 5;
+	Rwindows 1.334;
+	airchange_per_hour 0.829;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.566;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 4.109;
+	floor_area 1302.331;
+	number_of_doors 2;
+	air_temperature 69.696;
+	mass_temperature 69.696;
+	heating_setpoint heating8*1.036+2.91;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A8;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A8;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A8;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A8;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A8;
+	parent F1_tpm_rt_A8;
+	schedule_skew -496;
+	Rroof 17.496;
+	Rwall 5.723;
+	Rfloor 4.974;
+	Rdoors 3;
+	Rwindows 1.407;
+	airchange_per_hour 1.357;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.379;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 2.552;
+	floor_area 870.493;
+	number_of_doors 1;
+	air_temperature 70.582;
+	mass_temperature 70.582;
+	heating_setpoint heating5*0.960+1.18;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A9;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A9;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A9;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A9;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A9;
+	parent F1_tpm_rt_A9;
+	schedule_skew -1409;
+	Rroof 12.569;
+	Rwall 5.492;
+	Rfloor 5.012;
+	Rdoors 3;
+	Rwindows 1.475;
+	airchange_per_hour 1.444;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.813;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.036;
+	floor_area 799.598;
+	number_of_doors 1;
+	air_temperature 68.251;
+	mass_temperature 68.251;
+	heating_setpoint heating3*0.992+0.90;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_C10;
+	groupid F1_flatrate_meter;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SC;
+	from F1_triplex_node_C;
+	to F1_tpm_flatrate_C10;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_C10;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_C10;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_C10;
+	parent F1_tpm_rt_C10;
+	schedule_skew 1007;
+	Rroof 15.237;
+	Rwall 4.406;
+	Rfloor 5.52;
+	Rdoors 3;
+	Rwindows 1.676;
+	airchange_per_hour 1.305;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.451;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 2.472;
+	floor_area 764.549;
+	number_of_doors 1;
+	air_temperature 71.015;
+	mass_temperature 71.015;
+	heating_setpoint heating5*0.977+1.10;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A11;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A11;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A11;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A11;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A11;
+	parent F1_tpm_rt_A11;
+	schedule_skew -422;
+	Rroof 32.753;
+	Rwall 21.638;
+	Rfloor 13.009;
+	Rdoors 5;
+	Rwindows 1.299;
+	airchange_per_hour 0.878;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.93;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.533;
+	floor_area 770.818;
+	number_of_doors 1;
+	air_temperature 70.59;
+	mass_temperature 70.59;
+	heating_setpoint heating2*0.985+2.33;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A12;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A12;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A12;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A12;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A12;
+	parent F1_tpm_rt_A12;
+	schedule_skew 352;
+	Rroof 30.24;
+	Rwall 19.73;
+	Rfloor 12.649;
+	Rdoors 5;
+	Rwindows 1.67;
+	airchange_per_hour 0.812;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.169;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.834;
+	floor_area 848.429;
+	number_of_doors 1;
+	air_temperature 70.865;
+	mass_temperature 70.865;
+	heating_setpoint heating7*1.049+1.05;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A13;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A13;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A13;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A13;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A13;
+	parent F1_tpm_rt_A13;
+	schedule_skew -4;
+	Rroof 25.019;
+	Rwall 19.629;
+	Rfloor 13.269;
+	Rdoors 5;
+	Rwindows 1.571;
+	airchange_per_hour 1.101;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.883;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.646;
+	floor_area 849.741;
+	number_of_doors 1;
+	air_temperature 70.919;
+	mass_temperature 70.919;
+	heating_setpoint heating5*0.991+2.22;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_C14;
+	groupid F1_flatrate_meter;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SC;
+	from F1_triplex_node_C;
+	to F1_tpm_flatrate_C14;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_C14;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_C14;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_C14;
+	parent F1_tpm_rt_C14;
+	schedule_skew -226;
+	Rroof 19.292;
+	Rwall 9.499;
+	Rfloor 10.952;
+	Rdoors 3;
+	Rwindows 1.413;
+	airchange_per_hour 1.012;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.581;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 2.79;
+	floor_area 1197.418;
+	number_of_doors 2;
+	air_temperature 69.709;
+	mass_temperature 69.709;
+	heating_setpoint heating3*0.982+2.48;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A15;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A15;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A15;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A15;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A15;
+	parent F1_tpm_rt_A15;
+	schedule_skew -2314;
+	Rroof 26.279;
+	Rwall 18.199;
+	Rfloor 15.417;
+	Rdoors 5;
+	Rwindows 2.136;
+	airchange_per_hour 0.862;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.743;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.819;
+	floor_area 3212.13;
+	number_of_doors 4;
+	air_temperature 69.563;
+	mass_temperature 69.563;
+	heating_setpoint heating6*1.033+2.39;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A16;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A16;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A16;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A16;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A16;
+	parent F1_tpm_rt_A16;
+	schedule_skew -1182;
+	Rroof 31.604;
+	Rwall 18.486;
+	Rfloor 12.129;
+	Rdoors 5;
+	Rwindows 1.591;
+	airchange_per_hour 1.055;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.379;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.955;
+	floor_area 1206.328;
+	number_of_doors 2;
+	air_temperature 68.171;
+	mass_temperature 68.171;
+	heating_setpoint heating4*1.005+1.83;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_C17;
+	groupid F1_flatrate_meter;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SC;
+	from F1_triplex_node_C;
+	to F1_tpm_flatrate_C17;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_C17;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_C17;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_C17;
+	parent F1_tpm_rt_C17;
+	schedule_skew -351;
+	Rroof 33.136;
+	Rwall 21.469;
+	Rfloor 13.545;
+	Rdoors 5;
+	Rwindows 1.961;
+	airchange_per_hour 0.95;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.059;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 4.156;
+	floor_area 2699.752;
+	number_of_doors 3;
+	air_temperature 71.855;
+	mass_temperature 71.855;
+	heating_setpoint heating3*0.961+0.81;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_C18;
+	groupid F1_flatrate_meter;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SC;
+	from F1_triplex_node_C;
+	to F1_tpm_flatrate_C18;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_C18;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_C18;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_C18;
+	parent F1_tpm_rt_C18;
+	schedule_skew -7;
+	Rroof 17.469;
+	Rwall 6.715;
+	Rfloor 5.94;
+	Rdoors 3;
+	Rwindows 1.214;
+	airchange_per_hour 1.44;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.463;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 2.96;
+	floor_area 695.064;
+	number_of_doors 1;
+	air_temperature 70.927;
+	mass_temperature 70.927;
+	heating_setpoint heating6*1.032+0.12;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B19;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B19;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B19;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B19;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B19;
+	parent F1_tpm_rt_B19;
+	schedule_skew 555;
+	Rroof 33.982;
+	Rwall 18.772;
+	Rfloor 13.604;
+	Rdoors 5;
+	Rwindows 2.098;
+	airchange_per_hour 1.145;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.925;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.758;
+	floor_area 2504.546;
+	number_of_doors 3;
+	air_temperature 69.462;
+	mass_temperature 69.462;
+	heating_setpoint heating7*0.977+2.45;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B20;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B20;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B20;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B20;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B20;
+	parent F1_tpm_rt_B20;
+	schedule_skew -476;
+	Rroof 31.657;
+	Rwall 16.925;
+	Rfloor 17.361;
+	Rdoors 5;
+	Rwindows 1.349;
+	airchange_per_hour 0.928;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.881;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.529;
+	floor_area 2932.802;
+	number_of_doors 3;
+	air_temperature 71.091;
+	mass_temperature 71.091;
+	heating_setpoint heating3*0.967+0.25;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_C21;
+	groupid F1_flatrate_meter;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SC;
+	from F1_triplex_node_C;
+	to F1_tpm_flatrate_C21;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_C21;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_C21;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_C21;
+	parent F1_tpm_rt_C21;
+	schedule_skew -877;
+	Rroof 25.356;
+	Rwall 21.049;
+	Rfloor 14.667;
+	Rdoors 5;
+	Rwindows 2.041;
+	airchange_per_hour 0.826;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.688;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.475;
+	floor_area 2987.803;
+	number_of_doors 3;
+	air_temperature 71.628;
+	mass_temperature 71.628;
+	heating_setpoint heating8*0.988+2.47;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B22;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B22;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B22;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B22;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B22;
+	parent F1_tpm_rt_B22;
+	schedule_skew 828;
+	Rroof 19.626;
+	Rwall 8.041;
+	Rfloor 10.312;
+	Rdoors 3;
+	Rwindows 0.954;
+	airchange_per_hour 0.979;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.719;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.789;
+	floor_area 3845.028;
+	number_of_doors 4;
+	air_temperature 69.406;
+	mass_temperature 69.406;
+	heating_setpoint heating6*0.978+2.10;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B23;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B23;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B23;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B23;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B23;
+	parent F1_tpm_rt_B23;
+	schedule_skew -631;
+	Rroof 20.605;
+	Rwall 8.848;
+	Rfloor 11.641;
+	Rdoors 3;
+	Rwindows 1.371;
+	airchange_per_hour 0.946;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.609;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 2.825;
+	floor_area 3393.594;
+	number_of_doors 4;
+	air_temperature 71.681;
+	mass_temperature 71.681;
+	heating_setpoint heating8*1.011+0.71;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_B24;
+	groupid F1_flatrate_meter;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SB;
+	from F1_triplex_node_B;
+	to F1_tpm_flatrate_B24;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_B24;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_B24;
+	phases SB;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_B24;
+	parent F1_tpm_rt_B24;
+	schedule_skew -576;
+	Rroof 33.714;
+	Rwall 16.325;
+	Rfloor 17.428;
+	Rdoors 5;
+	Rwindows 1.293;
+	airchange_per_hour 1.194;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.582;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 4.18;
+	floor_area 728.332;
+	number_of_doors 1;
+	air_temperature 70.868;
+	mass_temperature 70.868;
+	heating_setpoint heating3*1.000+2.30;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A25;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A25;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A25;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A25;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A25;
+	parent F1_tpm_rt_A25;
+	schedule_skew -724;
+	Rroof 22.014;
+	Rwall 13.23;
+	Rfloor 10.031;
+	Rdoors 3;
+	Rwindows 0.972;
+	airchange_per_hour 1.027;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.971;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.527;
+	floor_area 949.846;
+	number_of_doors 1;
+	air_temperature 70.71;
+	mass_temperature 70.71;
+	heating_setpoint heating2*1.023+2.71;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A26;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A26;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A26;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A26;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A26;
+	parent F1_tpm_rt_A26;
+	schedule_skew 541;
+	Rroof 21.352;
+	Rwall 11.874;
+	Rfloor 11.93;
+	Rdoors 3;
+	Rwindows 1.101;
+	airchange_per_hour 1.085;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.929;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.663;
+	floor_area 1150.038;
+	number_of_doors 2;
+	air_temperature 68.211;
+	mass_temperature 68.211;
+	heating_setpoint heating3*1.038+0.44;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_C27;
+	groupid F1_flatrate_meter;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SC;
+	from F1_triplex_node_C;
+	to F1_tpm_flatrate_C27;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_C27;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_C27;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_C27;
+	parent F1_tpm_rt_C27;
+	schedule_skew 2928;
+	Rroof 29.13;
+	Rwall 18.845;
+	Rfloor 15.58;
+	Rdoors 5;
+	Rwindows 2.161;
+	airchange_per_hour 1.167;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.176;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 4.101;
+	floor_area 1434.604;
+	number_of_doors 2;
+	air_temperature 68.696;
+	mass_temperature 68.696;
+	heating_setpoint heating8*0.955+2.38;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_A28;
+	groupid F1_flatrate_meter;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SA;
+	from F1_triplex_node_A;
+	to F1_tpm_flatrate_A28;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_A28;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_A28;
+	phases SA;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_A28;
+	parent F1_tpm_rt_A28;
+	schedule_skew -885;
+	Rroof 25.971;
+	Rwall 21.384;
+	Rfloor 13.495;
+	Rdoors 5;
+	Rwindows 1.27;
+	airchange_per_hour 1.102;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 4.445;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.897;
+	floor_area 1350.444;
+	number_of_doors 2;
+	air_temperature 71.874;
+	mass_temperature 71.874;
+	heating_setpoint heating8*0.977+1.57;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name F1_tpm_flatrate_C29;
+	groupid F1_flatrate_meter;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  price ${FIXED_PRICE};
+  bill_day 1;
+  monthly_fee 6;
+}
+
+object triplex_line {
+	groupid F1_Triplex_Line;
+	phases SC;
+	from F1_triplex_node_C;
+	to F1_tpm_flatrate_C29;
+	length 10 ft;
+	configuration TLCFG;
+}
+
+object triplex_meter {
+	name F1_tpm_rt_C29;
+	groupid F1_rt_meter;
+	parent F1_tpm_flatrate_C29;
+	phases SC;
+	nominal_voltage 120;
+	bill_mode UNIFORM;
+  bill_day 1;
+  monthly_fee 6;
+  price ${FIXED_PRICE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object house {
+	name F1_house_C29;
+	parent F1_tpm_rt_C29;
+	schedule_skew -2742;
+	Rroof 16.507;
+	Rwall 9.702;
+	Rfloor 11.46;
+	Rdoors 3;
+	Rwindows 0.988;
+	airchange_per_hour 0.936;
+	hvac_power_factor 0.97;
+	cooling_system_type ELECTRIC;
+	heating_system_type GAS;
+	fan_type ONE_SPEED;
+	hvac_breaker_rating 200;
+	total_thermal_mass_per_floor_area 3.148;
+	motor_efficiency AVERAGE;
+	motor_model BASIC;
+	cooling_COP 3.553;
+	floor_area 1282.961;
+	number_of_doors 2;
+	air_temperature 68.611;
+	mass_temperature 68.611;
+	heating_setpoint heating8*1.013+0.25;
+ object metrics_collector {
+  interval 300;
+ };
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B0;
+	parent F1_tpm_rt_B0;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B0;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B0;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS;
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_C1;
+	parent F1_tpm_rt_C1;
+	phases CS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_C1;
+		phases CS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_C1;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_C2;
+	parent F1_tpm_rt_C2;
+	phases CS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_C2;
+		phases CS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_C2;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B3;
+	parent F1_tpm_rt_B3;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B3;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B3;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B4;
+	parent F1_tpm_rt_B4;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B4;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B4;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A5;
+	parent F1_tpm_rt_A5;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A5;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A5;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B6;
+	parent F1_tpm_rt_B6;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B6;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B6;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B7;
+	parent F1_tpm_rt_B7;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B7;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B7;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A8;
+	parent F1_tpm_rt_A8;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A8;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A8;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A9;
+	parent F1_tpm_rt_A9;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A9;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A9;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_C10;
+	parent F1_tpm_rt_C10;
+	phases CS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_C10;
+		phases CS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_C10;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A11;
+	parent F1_tpm_rt_A11;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A11;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A11;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A12;
+	parent F1_tpm_rt_A12;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A12;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A12;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A13;
+	parent F1_tpm_rt_A13;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A13;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A13;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_C14;
+	parent F1_tpm_rt_C14;
+	phases CS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_C14;
+		phases CS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_C14;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A15;
+	parent F1_tpm_rt_A15;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A15;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A15;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A16;
+	parent F1_tpm_rt_A16;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A16;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A16;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_C17;
+	parent F1_tpm_rt_C17;
+	phases CS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_C17;
+		phases CS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_C17;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_C18;
+	parent F1_tpm_rt_C18;
+	phases CS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_C18;
+		phases CS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_C18;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B19;
+	parent F1_tpm_rt_B19;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B19;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B19;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B20;
+	parent F1_tpm_rt_B20;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B20;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B20;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_C21;
+	parent F1_tpm_rt_C21;
+	phases CS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_C21;
+		phases CS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_C21;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B22;
+	parent F1_tpm_rt_B22;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B22;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B22;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B23;
+	parent F1_tpm_rt_B23;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B23;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B23;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_B24;
+	parent F1_tpm_rt_B24;
+	phases BS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_B24;
+		phases BS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_B24;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A25;
+	parent F1_tpm_rt_A25;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A25;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A25;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A26;
+	parent F1_tpm_rt_A26;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A26;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A26;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_C27;
+	parent F1_tpm_rt_C27;
+	phases CS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_C27;
+		phases CS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_C27;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_A28;
+	parent F1_tpm_rt_A28;
+	phases AS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_A28;
+		phases AS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_A28;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+		  interval 300;
+    };
+	};
+}
+
+object triplex_meter {
+	name solar_F1_tpm_rt_C29;
+	parent F1_tpm_rt_C29;
+	phases CS;
+	nominal_voltage 120;
+	groupid inverter_meter;
+	
+	object inverter {
+		name inv_F1_house_C29;
+		phases CS;
+		inverter_type FOUR_QUADRANT;
+		power_factor 1;
+		use_multipoint_efficiency TRUE;
+		inverter_manufacturer XANTREX;
+		maximum_dc_power 6500; 
+		four_quadrant_control_mode ${INVERTER_MODE};
+		generator_status ONLINE;
+		rated_power 6500;	
+		inverter_efficiency 0.90;
+		V_base ${INV_VBASE};
+		V1 ${INV_V1};
+		Q1 ${INV_Q1};
+		V2 ${INV_V2};
+		Q2 ${INV_Q2};
+		V3 ${INV_V3};
+		Q3 ${INV_Q3};
+		V4 ${INV_V4};
+		Q4 ${INV_Q4};
+		V_In ${INV_VIN};
+		I_In ${INV_IIN};
+		volt_var_control_lockout ${INV_VVLOCKOUT};
+		VW_V1 ${INV_VW_V1};
+		VW_V2 ${INV_VW_V2};
+		VW_P1 ${INV_VW_P1};
+		VW_P2 ${INV_VW_P2};
+
+		object solar {
+			name sol_inv_F1_house_C29;
+			generator_mode SUPPLY_DRIVEN;
+			generator_status ONLINE;
+			panel_type SINGLE_CRYSTAL_SILICON;
+			orientation FIXED_AXIS; 
+			rated_power 7500;
+		};
+    object metrics_collector {
+    	interval 300;
+    };
+	};
+}
+
+///////////////////////////////////////////////////////
+// EnergyPlus Load
+///////////////////////////////////////////////////////
+
+object transformer_configuration {
+	name Eplus_transformer_config;
+	connect_type WYE_WYE;
+	install_type PADMOUNT;
+	power_rating 450 kVA;
+	primary_voltage 12470;
+	secondary_voltage 480;
+	impedance +0.015+0.0675j;
+}
+
+object transformer {
+	name Eplus_Transformer;
+	groupid Commercial_Trans;
+	phases ABCN;
+	from F1_transformer_meter;
+	to Eplus_meter;
+	configuration Eplus_transformer_config;
+}
+
+object meter {
+  phases ABCN;
+  name Eplus_meter;
+  groupid Commercial_Meter;
+  meter_power_consumption 1+15j;
+  nominal_voltage 480.000000;
+  bill_mode UNIFORM;
+  price 0.11420;
+  monthly_fee 25.00;
+  bill_day 1;
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object load {
+  name Eplus_load;
+  parent Eplus_meter;
+  phases ABCN;
+  nominal_voltage 480.000000;
+  constant_power_A 25 kVA;
+  constant_power_B 25 kVA;
+  constant_power_C 25 kVA;
+}
+
