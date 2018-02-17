@@ -3,13 +3,17 @@ import sys
 import json
 import numpy as np
 
+# we want the same psuedo-random thermostat schedules each time, for repeatability
+np.random.seed (0)
+
 # write yaml for precool.py to subscribe meter voltages and house setpoints
 # write txt for gridlabd to subscribe house setpoints and publish meter voltages
 
-dt = 1
+dt = 30
 period = 300
 mean_price = 0.1167
 std_dev_price = 0.0149
+k_slope = 1.0
 
 gp = open (sys.argv[1] + '.glm', 'r')
 dp = open (sys.argv[1] + '_agent_dict.json', 'w')
@@ -63,18 +67,19 @@ for line in gp:
 				houses[houseName] = {'meter':meterName,'night_set':float('{:.3f}'.format(night_set)),
 					'day_set':float('{:.3f}'.format(day_set)),'day_start_hour':float('{:.3f}'.format(day_start)),
 					'day_end_hour':float('{:.3f}'.format(day_end)),'deadband':float('{:.3f}'.format(deadband))}
-				print ('  ' + houseName + '_V1:', file=yp)
+				print ('  ' + houseName + '#V1:', file=yp)
 				print ('    topic: gridlabdSimulator1/' + meterName + '/measured_voltage_1', file=yp)
 				print ('    default: 120', file=yp)
-				print ('  ' + houseName + '_Tair:', file=yp)
+				print ('  ' + houseName + '#Tair:', file=yp)
 				print ('    topic: gridlabdSimulator1/' + houseName + '/air_temperature', file=yp)
 				print ('    default: 80', file=yp)
 				print ('publish \"commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1\";', file=cp)
 				print ('publish \"commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature\";', file=cp)
 				print ('subscribe \"precommit:' + houseName + '.cooling_setpoint <- precool/' + houseName + '_cooling_setpoint\";', file=cp)
+				print ('subscribe \"precommit:' + houseName + '.thermostat_deadband <- precool/' + houseName + '_thermostat_deadband\";', file=cp)
 				isELECTRIC = False
 
-meta = {'houses':houses,'period':period,'mean':mean_price,'stddev':std_dev_price}
+meta = {'houses':houses,'period':period,'dt':dt,'mean':mean_price,'stddev':std_dev_price,'k_slope':k_slope}
 print (json.dumps(meta), file=dp)
 
 dp.close()

@@ -73,6 +73,38 @@ object player {
     loop 1;
 }
 
+//object recorder {
+//	parent F1_house_B4;
+//	property internal_gain,solar_gain,incident_solar_radiation,solar_heatgain_factor;
+//	interval 3600.000000;
+//	file house.csv;
+//};
+//
+//object group_recorder {
+//	group "class=house";
+//	property UA;
+//	interval 86401;
+//	file house_ua.csv;
+//};
+//object group_recorder {
+//	group "class=house";
+//	property air_heat_capacity;
+//	interval 86401;
+//	file house_ca.csv;
+//};
+//object group_recorder {
+//	group "class=house";
+//	property mass_heat_coeff;
+//	interval 86401;
+//	file house_um.csv;
+//};
+//object group_recorder {
+//	group "class=house";
+//	property mass_heat_capacity;
+//	interval 86401;
+//	file house_cm.csv;
+//};
+
 object transformer_configuration {
 	name substation_config;
 	connect_type WYE_WYE;
