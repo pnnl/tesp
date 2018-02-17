@@ -14,6 +14,9 @@ period = 300
 mean_price = 0.1167
 std_dev_price = 0.0149
 k_slope = 1.0
+# autonomous precooling; if the meter voltage_1 exceeds vthresh, change the thermostat by toffset
+vthresh = 126.0
+toffset = -4.0
 
 gp = open (sys.argv[1] + '.glm', 'r')
 dp = open (sys.argv[1] + '_agent_dict.json', 'w')
@@ -66,7 +69,8 @@ for line in gp:
 				deadband = np.random.uniform (2, 3)
 				houses[houseName] = {'meter':meterName,'night_set':float('{:.3f}'.format(night_set)),
 					'day_set':float('{:.3f}'.format(day_set)),'day_start_hour':float('{:.3f}'.format(day_start)),
-					'day_end_hour':float('{:.3f}'.format(day_end)),'deadband':float('{:.3f}'.format(deadband))}
+					'day_end_hour':float('{:.3f}'.format(day_end)),'deadband':float('{:.3f}'.format(deadband)),
+					'vthresh':vthresh,'toffset':toffset}
 				print ('  ' + houseName + '#V1:', file=yp)
 				print ('    topic: gridlabdSimulator1/' + meterName + '/measured_voltage_1', file=yp)
 				print ('    default: 120', file=yp)

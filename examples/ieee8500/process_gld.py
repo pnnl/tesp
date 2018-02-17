@@ -208,7 +208,7 @@ for key, val in meta_i.items():
 		INV_Q_AVG_UNITS = val['units']
 
 data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
-#print ("\nConstructed", data_i.shape, "NumPy array for Inverters")
+print ("\nConstructed", data_i.shape, "NumPy array for Inverters")
 j = 0
 for key in inv_keys:
 	i = 0
@@ -217,6 +217,39 @@ for key in inv_keys:
 		data_i[j, i,:] = ary
 		i = i + 1
 	j = j + 1
+
+# Precooling: won't necessarily have the same times?
+lp_p = open ("precool_" + sys.argv[1] + "_metrics.json").read()
+lst_p = json.loads(lp_p)
+lst_p.pop('StartTime')
+meta_p = lst_p.pop('Metadata')
+times_p = list(map(int,list(lst_p.keys())))
+times_p.sort()
+print ("There are", len (times_p), "agent sample times at", times_p[1] - times_p[0], "second intervals")
+hrs_p = np.array(times_p, dtype=np.float)
+denom = 3600.0
+hrs_p /= denom
+time_p_key = str(times_p[0])
+print("\nPrecooler Metadata for", len(lst_p[time_p_key]), "objects")
+for key, val in meta_p.items():
+	print (key, val['index'], val['units'])
+	if key == 'temperature_deviation_avg':
+		TEMPDEV_AVG_IDX = val['index']
+		TEMPDEV_AVG_UNITS = val['units']
+	elif key == 'temperature_deviation_min':
+		TEMPDEV_MIN_IDX = val['index']
+		TEMPDEV_MIN_UNITS = val['units']
+	elif key == 'temperature_deviation_max':
+		TEMPDEV_MAX_IDX = val['index']
+		TEMPDEV_MAX_UNITS = val['units']
+
+data_p = np.empty(shape=(1, len(times_p), len(lst_p[time_p_key])), dtype=np.float)
+print ("\nConstructed", data_p.shape, "NumPy array for Agents")
+i = 0
+for t in times_p:
+	ary = lst_p[str(t)]
+	data_p[0, i,:] = ary
+	i = i + 1
 
 # Capacitors
 #lst_c.pop('StartTime')
@@ -300,9 +333,12 @@ pavg1 = (data_i[:,:,INV_P_AVG_IDX]).squeeze()
 pavg2 = pavg1.mean(axis=0)
 qavg1 = (data_i[:,:,INV_Q_AVG_IDX]).squeeze()
 qavg2 = qavg1.mean(axis=0)
+vavg = (data_m[:,:,MTR_VOLT_AVG_IDX]).squeeze().mean(axis=0)
+vmin = (data_m[:,:,MTR_VOLT_MIN_IDX]).squeeze().min(axis=0)
+vmax = (data_m[:,:,MTR_VOLT_MAX_IDX]).squeeze().max(axis=0)
 
 # display a plot
-fig, ax = plt.subplots(2, 3, sharex = 'col')
+fig, ax = plt.subplots(2, 4, sharex = 'col')
 
 ax[0,0].plot(hrs, pavg2, color="blue", label="Real")
 ax[0,0].plot(hrs, qavg2, color="red", label="Reactive")
@@ -328,21 +364,20 @@ ax[0,1].plot(hrs, avg2, color="red", label="Max")
 ax[0,1].set_ylabel('degF')
 ax[0,1].set_title ('Average Temperature over All Houses')
 
-ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT_MAX_IDX], color="blue", label="Max LN")
-ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT_MIN_IDX], color="red", label="Min LN")
-ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT12_MAX_IDX], color="green", label="Max LL")
-ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT12_MIN_IDX], color="magenta", label="Min LL")
+ax[1,0].plot(hrs, vmax, color="blue", label="Max")
+ax[1,0].plot(hrs, vmin, color="red", label="Min")
+ax[1,0].plot(hrs, vavg, color="green", label="Avg")
 ax[1,0].set_xlabel("Hours")
 ax[1,0].set_ylabel(MTR_VOLT_MAX_UNITS)
-ax[1,0].set_title ("Meter Voltages at " + mtr_keys[0])
+ax[1,0].set_title ("Voltage over All Meters")
 ax[1,0].legend(loc='best')
 
-ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_AVG_IDX], color="blue", label="Mean")
-ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MIN_IDX], color="red", label="Min")
-ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MAX_IDX], color="green", label="Max")
+ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_AVG_IDX], color="blue", label="Mean")
+ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MIN_IDX], color="red", label="Min")
+ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MAX_IDX], color="green", label="Max")
 ax[1,1].set_xlabel("Hours")
-ax[1,1].set_ylabel(HSE_AIR_AVG_UNITS)
-ax[1,1].set_title ("House Air at " + hse_keys[0])
+ax[1,1].set_ylabel(TEMPDEV_AVG_UNITS)
+ax[1,1].set_title ("House Air Temperature Deviations")
 ax[1,1].legend(loc='best')
 
 ax[0,2].plot(hrs, (data_m[:,:,MTR_AHI_COUNT_IDX]).squeeze().sum(axis=0), color="blue", label="Range A Hi")
@@ -363,6 +398,40 @@ ax[1,2].set_xlabel("Hours")
 ax[1,2].set_ylabel("Seconds")
 ax[1,2].set_title ("Voltage Violation Durations")
 ax[1,2].legend(loc='best')
+
+ax[0,3].plot(hrs, subkw, color="blue", label="Substation Mean")
+ax[0,3].plot(hrs, losskw, color="red", label="Losses")
+ax[0,3].plot(hrs, total2, color="green", label="Houses")
+ax[0,3].plot(hrs, hvac2, color="magenta", label="HVAC")
+ax[0,3].plot(hrs, wh2, color="orange", label="WH")
+ax[0,3].set_ylabel('kW')
+ax[0,3].set_title ("Real Power")
+ax[0,3].set_title ("Feeder Summary")
+ax[0,3].legend(loc='best')
+
+ax[1,3].plot(hrs, data_m[0,:,MTR_BILL_IDX], color="blue")
+ax[1,3].set_xlabel("Hours")
+ax[1,3].set_ylabel(MTR_BILL_UNITS)
+ax[1,3].set_title ("Meter Bill at " + mtr_keys[0])
+
+#--------------------------------------------------------------------------------
+#ax[0,4].plot(hrs, data_c[0,:,CAP_COUNT_IDX], color="blue", label=cap_keys[0])   
+#ax[0,4].plot(hrs, data_c[1,:,CAP_COUNT_IDX], color="red", label=cap_keys[1])    
+#ax[0,4].plot(hrs, data_c[2,:,CAP_COUNT_IDX], color="green", label=cap_keys[2])  
+#ax[0,4].plot(hrs, data_c[3,:,CAP_COUNT_IDX], color="magenta", label=cap_keys[3])
+#ax[0,4].set_ylabel("")                                                          
+#ax[0,4].set_title ("Capacitor Switchings")                                      
+#ax[0,4].legend(loc='best')                                                      
+#                                                                                
+#ax[1,4].plot(hrs, data_r[0,:,REG_COUNT_IDX], color="blue", label=reg_keys[0])   
+#ax[1,4].plot(hrs, data_r[1,:,REG_COUNT_IDX], color="red", label=reg_keys[1])    
+#ax[1,4].plot(hrs, data_r[2,:,REG_COUNT_IDX], color="green", label=reg_keys[2])  
+#ax[1,4].plot(hrs, data_r[3,:,REG_COUNT_IDX], color="magenta", label=reg_keys[3])
+#ax[1,4].set_xlabel("Hours")                                                     
+#ax[1,4].set_ylabel("")                                                          
+#ax[1,4].set_title ("Regulator Tap Changes")                                     
+#ax[1,4].legend(loc='best')                                                      
+#--------------------------------------------------------------------------------
 
 plt.show()
 
