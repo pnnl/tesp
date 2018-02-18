@@ -38,7 +38,6 @@ period = dict['period']
 k = dict['k_slope']
 
 print ('run till', time_stop, 'period', period, 'step', dt, 'mean', mean, 'stddev', stddev, 'k_slope', k)
-#print (dict['houses'])
 
 fncs.initialize()
 
@@ -83,11 +82,13 @@ while time_granted < time_stop:
   min_temp_dev = 10000.0
   max_temp_dev = 0.0
   for house, row in dict['houses'].items():
+    # time-scheduled setpoints
     topic = house + '_cooling_setpoint'
     if hour_of_day >= row['day_start_hour'] and hour_of_day <= row['day_end_hour']:
       value = row['day_set']
     else:
       value = row['night_set']
+    # comfort metrics
     if house in temperatures:
       temp_dev = abs (temperatures[house] - value)
       if temp_dev < min_temp_dev:
@@ -97,8 +98,8 @@ while time_granted < time_stop:
       sum_temp_dev += temp_dev
       count_temp_dev += 1
     # time-of-day price response
-    tdelta = (price - mean) * row['deadband'] / k / stddev
-    value += tdelta
+#    tdelta = (price - mean) * row['deadband'] / k / stddev
+#    value += tdelta
     # overvoltage response
 #    if house in voltages:
 #      if voltages[house] > row['vthresh']:

@@ -251,44 +251,51 @@ for t in times_p:
 	data_p[0, i,:] = ary
 	i = i + 1
 
+have_caps = False
+have_regs = False
+
 # Capacitors
-#lst_c.pop('StartTime')
-#meta_c = lst_c.pop('Metadata')
-#print("\nCapacitor Metadata for", len(lst_c[time_key]), "objects")
-#for key, val in meta_c.items():
-#	if key == 'operation_count':
-#		CAP_COUNT_IDX = val['index']
-#		CAP_COUNT_UNITS = val['units']
-#data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=np.float)
-#print ("\nConstructed", data_c.shape, "NumPy array for Capacitors")
-#j = 0
-#for key in cap_keys:
-#	i = 0
-#	for t in times:
-#		ary = lst_c[str(t)][cap_keys[j]]
-#		data_c[j, i,:] = ary
-#		i = i + 1
-#	j = j + 1
-#
+if len(cap_keys) > 0:
+	have_caps = True
+	lst_c.pop('StartTime')
+	meta_c = lst_c.pop('Metadata')
+	print("\nCapacitor Metadata for", len(lst_c[time_key]), "objects")
+	for key, val in meta_c.items():
+		if key == 'operation_count':
+			CAP_COUNT_IDX = val['index']
+			CAP_COUNT_UNITS = val['units']
+	data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=np.float)
+	print ("\nConstructed", data_c.shape, "NumPy array for Capacitors")
+	j = 0
+	for key in cap_keys:
+		i = 0
+		for t in times:
+			ary = lst_c[str(t)][cap_keys[j]]
+			data_c[j, i,:] = ary
+			i = i + 1
+		j = j + 1
+
 # Regulators
-#lst_r.pop('StartTime')
-#meta_r = lst_r.pop('Metadata')
-#print("\nRegulator Metadata for", len(lst_c[time_key]), "objects")
-#for key, val in meta_r.items():
-#	if key == 'operation_count':
-#		REG_COUNT_IDX = val['index']
-#		REG_COUNT_UNITS = val['units']
-#data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=np.float)
-#print ("\nConstructed", data_r.shape, "NumPy array for Regulators")
-#j = 0
-#for key in reg_keys:
-#	i = 0
-#	for t in times:
-#		ary = lst_r[str(t)][reg_keys[j]]
-#		data_r[j, i,:] = ary
-#		i = i + 1
-#	j = j + 1
-#
+if len(reg_keys) > 0:
+	have_regs = True
+	lst_r.pop('StartTime')
+	meta_r = lst_r.pop('Metadata')
+	print("\nRegulator Metadata for", len(lst_r[time_key]), "objects")
+	for key, val in meta_r.items():
+		if key == 'operation_count':
+			REG_COUNT_IDX = val['index']
+			REG_COUNT_UNITS = val['units']
+	data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=np.float)
+	print ("\nConstructed", data_r.shape, "NumPy array for Regulators")
+	j = 0
+	for key in reg_keys:
+		i = 0
+		for t in times:
+			ary = lst_r[str(t)][reg_keys[j]]
+			data_r[j, i,:] = ary
+			i = i + 1
+		j = j + 1
+
 ## assemble the total solar and battery inverter power
 j = 0
 solar_kw = np.zeros(len(times), dtype=np.float)
@@ -319,6 +326,11 @@ print ("B Range Lo Duration =", '{:.2f}'.format(data_m[:,:,MTR_BLO_DURATION_IDX]
 			 "count =", '{:.2f}'.format(data_m[:,:,MTR_BLO_COUNT_IDX].sum()))
 print ("Zero-Volts Duration =", '{:.2f}'.format(data_m[:,:,MTR_OUT_DURATION_IDX].sum() / 3600.0), 
 			 "count =", '{:.2f}'.format(data_m[:,:,MTR_OUT_COUNT_IDX].sum()))
+if have_caps:
+	print ("Total cap switchings =", '{:.2f}'.format(data_c[:,-1,CAP_COUNT_IDX].sum()))
+if have_regs:
+	print ("Total tap changes =", '{:.2f}'.format(data_r[:,-1,REG_COUNT_IDX].sum()))
+print ("Total meter bill =", '{:.2f}'.format(data_m[:,-1,MTR_BILL_IDX].sum()))
 
 # create summary arrays
 total1 = (data_h[:,:,HSE_TOTAL_AVG_IDX]).squeeze()
@@ -330,22 +342,39 @@ wh2 = wh1.sum(axis=0)
 subkw = 0.001 * data_s[0,:,SUB_POWER_IDX]
 losskw = 0.001 * data_s[0,:,SUB_LOSSES_IDX]
 pavg1 = (data_i[:,:,INV_P_AVG_IDX]).squeeze()
-pavg2 = pavg1.mean(axis=0)
+pavg2 = 0.001 * pavg1.mean(axis=0)
 qavg1 = (data_i[:,:,INV_Q_AVG_IDX]).squeeze()
-qavg2 = qavg1.mean(axis=0)
+qavg2 = 0.001 * qavg1.mean(axis=0)
 tavg1 = (data_h[:,:,HSE_AIR_AVG_IDX]).squeeze()
 tavg2 = tavg1.mean(axis=0)
-vavg = (data_m[:,:,MTR_VOLT_AVG_IDX]).squeeze().mean(axis=0)
-vmin = (data_m[:,:,MTR_VOLT_MIN_IDX]).squeeze().min(axis=0)
-vmax = (data_m[:,:,MTR_VOLT_MAX_IDX]).squeeze().max(axis=0)
+vscale = 100.0 / 120.0
+vavg = vscale * (data_m[:,:,MTR_VOLT_AVG_IDX]).squeeze().mean(axis=0)
+vmin = vscale * (data_m[:,:,MTR_VOLT_MIN_IDX]).squeeze().min(axis=0)
+vmax = vscale * (data_m[:,:,MTR_VOLT_MAX_IDX]).squeeze().max(axis=0)
 
 # display a plot
-fig, ax = plt.subplots(2, 4, sharex = 'col')
 
-ax[0,0].plot(hrs, pavg2, color="blue", label="Real")
-ax[0,0].plot(hrs, qavg2, color="red", label="Reactive")
-ax[0,0].set_ylabel(INV_P_AVG_UNITS)
-ax[0,0].set_title ("Average Inverter Power over All Houses")
+SMALL_SIZE = 8
+MEDIUM_SIZE = 10
+BIGGER_SIZE = 12
+
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
+if have_caps or have_regs:
+	fig, ax = plt.subplots(2, 5, sharex = 'col')
+else:
+	fig, ax = plt.subplots(2, 4, sharex = 'col')
+
+ax[0,0].plot(hrs, pavg2, color="blue", label="P")
+ax[0,0].plot(hrs, qavg2, color="red", label="Q")
+ax[0,0].set_ylabel("kVA")
+ax[0,0].set_title ("Inverter Power")
 ax[0,0].legend(loc='best')
 
 #vabase = dict['inverters'][inv_keys[0]]['rated_W']
@@ -358,14 +387,14 @@ ax[0,0].legend(loc='best')
 
 ax[0,1].plot(hrs, tavg2, color="red", label="Max")
 ax[0,1].set_ylabel('degF')
-ax[0,1].set_title ('Average Temperature over All Houses')
+ax[0,1].set_title ('All House Temperatures')
 
 ax[1,0].plot(hrs, vmax, color="blue", label="Max")
 ax[1,0].plot(hrs, vmin, color="red", label="Min")
 ax[1,0].plot(hrs, vavg, color="green", label="Avg")
 ax[1,0].set_xlabel("Hours")
 ax[1,0].set_ylabel(MTR_VOLT_MAX_UNITS)
-ax[1,0].set_title ("Voltage over All Meters")
+ax[1,0].set_title ("Meter Voltages")
 ax[1,0].legend(loc='best')
 
 ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_AVG_IDX], color="blue", label="Mean")
@@ -373,7 +402,7 @@ ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MIN_IDX], color="red", label="Min")
 ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MAX_IDX], color="green", label="Max")
 ax[1,1].set_xlabel("Hours")
 ax[1,1].set_ylabel(TEMPDEV_AVG_UNITS)
-ax[1,1].set_title ("House Air Temperature Deviations")
+ax[1,1].set_title ("Temperature Deviations")
 ax[1,1].legend(loc='best')
 
 ax[0,2].plot(hrs, (data_m[:,:,MTR_AHI_COUNT_IDX]).squeeze().sum(axis=0), color="blue", label="Range A Hi")
@@ -385,50 +414,55 @@ ax[0,2].set_ylabel("")
 ax[0,2].set_title ("Voltage Violation Counts")
 ax[0,2].legend(loc='best')
 
-ax[1,2].plot(hrs, (data_m[:,:,MTR_AHI_DURATION_IDX]).squeeze().sum(axis=0), color="blue", label="Range A Hi")
-ax[1,2].plot(hrs, (data_m[:,:,MTR_BHI_DURATION_IDX]).squeeze().sum(axis=0), color="cyan", label="Range B Hi")
-ax[1,2].plot(hrs, (data_m[:,:,MTR_ALO_DURATION_IDX]).squeeze().sum(axis=0), color="green", label="Range A Lo")
-ax[1,2].plot(hrs, (data_m[:,:,MTR_BLO_DURATION_IDX]).squeeze().sum(axis=0), color="magenta", label="Range B Lo")
-ax[1,2].plot(hrs, (data_m[:,:,MTR_OUT_DURATION_IDX]).squeeze().sum(axis=0), color="red", label="No Voltage")
+scalem = 1.0 / 3600.0
+ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_AHI_DURATION_IDX]).squeeze().sum(axis=0), color="blue", label="Range A Hi")
+ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_BHI_DURATION_IDX]).squeeze().sum(axis=0), color="cyan", label="Range B Hi")
+ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_ALO_DURATION_IDX]).squeeze().sum(axis=0), color="green", label="Range A Lo")
+ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_BLO_DURATION_IDX]).squeeze().sum(axis=0), color="magenta", label="Range B Lo")
+ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_OUT_DURATION_IDX]).squeeze().sum(axis=0), color="red", label="No Voltage")
 ax[1,2].set_xlabel("Hours")
-ax[1,2].set_ylabel("Seconds")
+ax[1,2].set_ylabel("Hours")
 ax[1,2].set_title ("Voltage Violation Durations")
 ax[1,2].legend(loc='best')
 
-ax[0,3].plot(hrs, subkw, color="blue", label="Substation Mean")
+ax[0,3].plot(hrs, subkw, color="blue", label="Substation")
 ax[0,3].plot(hrs, losskw, color="red", label="Losses")
 ax[0,3].plot(hrs, total2, color="green", label="Houses")
 ax[0,3].plot(hrs, hvac2, color="magenta", label="HVAC")
 ax[0,3].plot(hrs, wh2, color="orange", label="WH")
 ax[0,3].set_ylabel('kW')
-ax[0,3].set_title ("Real Power")
-ax[0,3].set_title ("Feeder Summary")
+ax[0,3].set_title ("Average Real Power")
 ax[0,3].legend(loc='best')
 
-ax[1,3].plot(hrs, data_m[0,:,MTR_BILL_IDX], color="blue")
+#ax[1,3].plot(hrs, data_m[0,:,MTR_BILL_IDX], color="blue")
+ax[1,3].plot(hrs, (data_m[:,:,MTR_BILL_IDX]).squeeze().sum(axis=0), color="blue")
 ax[1,3].set_xlabel("Hours")
 ax[1,3].set_ylabel(MTR_BILL_UNITS)
-ax[1,3].set_title ("Meter Bill at " + mtr_keys[0])
+ax[1,3].set_title ("Meter Bills")
 
-#--------------------------------------------------------------------------------
-#ax[0,4].plot(hrs, data_c[0,:,CAP_COUNT_IDX], color="blue", label=cap_keys[0])   
-#ax[0,4].plot(hrs, data_c[1,:,CAP_COUNT_IDX], color="red", label=cap_keys[1])    
-#ax[0,4].plot(hrs, data_c[2,:,CAP_COUNT_IDX], color="green", label=cap_keys[2])  
-#ax[0,4].plot(hrs, data_c[3,:,CAP_COUNT_IDX], color="magenta", label=cap_keys[3])
-#ax[0,4].set_ylabel("")                                                          
-#ax[0,4].set_title ("Capacitor Switchings")                                      
-#ax[0,4].legend(loc='best')                                                      
-#                                                                                
-#ax[1,4].plot(hrs, data_r[0,:,REG_COUNT_IDX], color="blue", label=reg_keys[0])   
-#ax[1,4].plot(hrs, data_r[1,:,REG_COUNT_IDX], color="red", label=reg_keys[1])    
-#ax[1,4].plot(hrs, data_r[2,:,REG_COUNT_IDX], color="green", label=reg_keys[2])  
-#ax[1,4].plot(hrs, data_r[3,:,REG_COUNT_IDX], color="magenta", label=reg_keys[3])
-#ax[1,4].set_xlabel("Hours")                                                     
-#ax[1,4].set_ylabel("")                                                          
-#ax[1,4].set_title ("Regulator Tap Changes")                                     
-#ax[1,4].legend(loc='best')                                                      
-#--------------------------------------------------------------------------------
+if have_caps:
+	ax[0,4].plot(hrs, data_c[0,:,CAP_COUNT_IDX], color="blue", label=cap_keys[0])
+	ax[0,4].plot(hrs, data_c[1,:,CAP_COUNT_IDX], color="red", label=cap_keys[1])
+	ax[0,4].plot(hrs, data_c[2,:,CAP_COUNT_IDX], color="green", label=cap_keys[2])
+	ax[0,4].plot(hrs, data_c[3,:,CAP_COUNT_IDX], color="magenta", label=cap_keys[3])
+	ax[0,4].set_ylabel("")
+	ax[0,4].set_title ("Cap Switchings")
+	ax[0,4].legend(loc='best')
 
+if have_regs:
+	ax[1,4].plot(hrs, data_r[0,:,REG_COUNT_IDX], color="blue", label=reg_keys[0])
+	ax[1,4].plot(hrs, data_r[1,:,REG_COUNT_IDX], color="red", label=reg_keys[1])
+	ax[1,4].plot(hrs, data_r[2,:,REG_COUNT_IDX], color="green", label=reg_keys[2])
+	ax[1,4].plot(hrs, data_r[3,:,REG_COUNT_IDX], color="magenta", label=reg_keys[3])
+	ax[1,4].set_xlabel("Hours")
+	ax[1,4].set_ylabel("")
+	ax[1,4].set_title ("Tap Changes")
+	ax[1,4].legend(loc='best')
+
+if have_caps or have_regs:
+	ax[1,4].set_xlabel("Hours")
+
+plt.tight_layout(pad=0.2, w_pad=0.2, h_pad=0.2)
 plt.show()
 
 

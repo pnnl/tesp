@@ -15,7 +15,7 @@ mean_price = 0.1167
 std_dev_price = 0.0149
 k_slope = 1.0
 # autonomous precooling; if the meter voltage_1 exceeds vthresh, change the thermostat by toffset
-vthresh = 126.0
+vthresh = 125.0
 toffset = -4.0
 
 gp = open (sys.argv[1] + '.glm', 'r')
