@@ -259,6 +259,10 @@ for key in reg_keys:
 		i = i + 1
 	j = j + 1
 
+print ("Total cap switchings =", data_c[:,-1,CAP_COUNT_IDX].sum())
+print ("Total tap changes =", data_r[:,-1,REG_COUNT_IDX].sum())
+print ("Total meter bill =", data_m[:,-1,MTR_BILL_IDX].sum())
+
 # assemble the total solar and battery inverter power
 j = 0
 solar_kw = np.zeros(len(times), dtype=np.float)
