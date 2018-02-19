@@ -49,7 +49,10 @@ voltages = {}
 temperatures = {}
 setpoints = {} # publish a new one only if changed
 lastchange = {}
-lockout_period = 3600
+precooling_quiet = 4 * 3600
+precooling_off = 19 * 3600
+precooling_status = {}
+lockout_period = 360
 
 bSetDeadbands = True
 
@@ -80,6 +83,7 @@ while time_granted < time_stop:
       fncs.publish (topic, value)
       setpoints[house] = 0.0
       lastchange[house] = -lockout_period
+      precooling_status[house] = False
 
   # update all of the house setpoints
   count_temp_dev = 0
@@ -104,17 +108,23 @@ while time_granted < time_stop:
     # time-of-day price response
     tdelta = (price - mean) * row['deadband'] / k / stddev
     value += tdelta
+    # overvoltage checks
+    if time_granted >= precooling_quiet and not precooling_status[house]:
+      if house in voltages:
+        if voltages[house] > row['vthresh']:
+          precooling_status[house] = True
+    elif time_granted >= precooling_off:
+      precooling_status[house] = False
     # overvoltage response
-    if house in voltages:
-      if voltages[house] > row['vthresh']:
-        value += row['toffset']
+    if precooling_status[house]:
+      value += row['offset']
     if abs(value - setpoints[house]) > 0.1:
       if (time_granted - lastchange[house]) > lockout_period:
         topic = house + '_cooling_setpoint'
         fncs.publish (topic, value)
         setpoints[house] = value
         lastchange[house] = time_granted
-        print ('setting',house,'to',value,'at',time_granted)
+        print ('setting',house,'to',value,'at',time_granted,'precooling',precooling_status[house])
 
   if count_temp_dev < 1:
     count_temp_dev = 1

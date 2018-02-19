@@ -308,6 +308,17 @@ for key in inv_keys:
 		battery_kw += 0.001 * data_i[j,:,INV_P_AVG_IDX]
 	j = j + 1
 
+hour1 = 4.0
+for i in range(0, len(hrs)):
+	if hrs[i] > hour1:
+		ihour1 = i
+		break
+
+for i in range(0, len(hrs_p)):
+	if hrs_p[i] > hour1:
+		ihour1_p = i
+		break
+
 # display some averages
 print ("Maximum feeder power =", '{:.2f}'.format(0.001*data_s[0,:,SUB_POWER_IDX].max()), 'kW')
 print ("Average feeder power =", '{:.2f}'.format(0.001*data_s[0,:,SUB_POWER_IDX].mean()), 'kW')
@@ -332,6 +343,18 @@ if have_regs:
 	print ("Total tap changes =", '{:.2f}'.format(data_r[:,-1,REG_COUNT_IDX].sum()))
 print ("Total meter bill =", '{:.2f}'.format(data_m[:,-1,MTR_BILL_IDX].sum()))
 print ("Average Temperature Deviation =", '{:.2f}'.format(data_p[:,:,TEMPDEV_AVG_IDX].mean()))
+
+print ('Summarizing from', hour1, 'hours to begin at indices', ihour1, ihour1_p)
+print ("Interval A Range Hi Duration =", '{:.2f}'.format(data_m[:,ihour1:-1,MTR_AHI_DURATION_IDX].sum() / 3600.0))
+print ("Interval A Range Lo Duration =", '{:.2f}'.format(data_m[:,ihour1:-1,MTR_ALO_DURATION_IDX].sum() / 3600.0))
+print ("Interval B Range Hi Duration =", '{:.2f}'.format(data_m[:,ihour1:-1,MTR_BHI_DURATION_IDX].sum() / 3600.0))
+print ("Interval B Range Lo Duration =", '{:.2f}'.format(data_m[:,ihour1:-1,MTR_BLO_DURATION_IDX].sum() / 3600.0)) 
+print ("Interval Average Temperature Deviation =", '{:.2f}'.format(data_p[:,ihour1_p:-1,TEMPDEV_AVG_IDX].mean()))
+if have_caps:
+	print ("Interval Cap Switchings =", '{:.2f}'.format(data_c[:,-1,CAP_COUNT_IDX].sum() - data_c[:,ihour1,CAP_COUNT_IDX].sum()))
+if have_regs:
+	print ("Interval Tap Changes =", '{:.2f}'.format(data_r[:,-1,REG_COUNT_IDX].sum() - data_r[:,ihour1,REG_COUNT_IDX].sum()))
+
 
 # create summary arrays
 total1 = (data_h[:,:,HSE_TOTAL_AVG_IDX]).squeeze()
