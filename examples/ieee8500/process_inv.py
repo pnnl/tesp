@@ -309,11 +309,11 @@ for key in inv_keys:
 	j = j + 1
 
 # display some averages
-print ("Maximum feeder power =", '{:.2f}'.format(data_s[0,:,SUB_POWER_IDX].max()), SUB_POWER_UNITS)
-print ("Average feeder power =", '{:.2f}'.format(data_s[0,:,SUB_POWER_IDX].mean()), SUB_POWER_UNITS)
-print ("Average feeder losses =", '{:.2f}'.format(data_s[0,:,SUB_LOSSES_IDX].mean()), SUB_LOSSES_UNITS)
+print ("Maximum feeder power =", '{:.2f}'.format(0.001*data_s[0,:,SUB_POWER_IDX].max()), 'kW')
+print ("Average feeder power =", '{:.2f}'.format(0.001*data_s[0,:,SUB_POWER_IDX].mean()), 'kW')
+print ("Average feeder losses =", '{:.2f}'.format(0.001*data_s[0,:,SUB_LOSSES_IDX].mean()), 'kW')
 print ('Average all house temperatures Noon-8 pm day 1:', '{:.2f}'.format(data_h[:,144:240,HSE_AIR_AVG_IDX].mean()))
-print ('Average all house temperatures Noon-8 pm day 2:', '{:.2f}'.format(data_h[:,432:528,HSE_AIR_AVG_IDX].mean()))
+#print ('Average all house temperatures Noon-8 pm day 2:', '{:.2f}'.format(data_h[:,432:528,HSE_AIR_AVG_IDX].mean()))
 print ("Average inverter P =", '{:.2f}'.format(data_i[:,:,INV_P_AVG_IDX].mean()), INV_P_AVG_UNITS)
 print ("Average inverter Q =", '{:.2f}'.format(data_i[:,:,INV_Q_AVG_IDX].mean()), INV_Q_AVG_UNITS)
 print ("A Range Hi Duration =", '{:.2f}'.format(data_m[:,:,MTR_AHI_DURATION_IDX].sum() / 3600.0), 
@@ -331,6 +331,7 @@ if have_caps:
 if have_regs:
 	print ("Total tap changes =", '{:.2f}'.format(data_r[:,-1,REG_COUNT_IDX].sum()))
 print ("Total meter bill =", '{:.2f}'.format(data_m[:,-1,MTR_BILL_IDX].sum()))
+print ("Average Temperature Deviation =", '{:.2f}'.format(data_p[:,:,TEMPDEV_AVG_IDX].mean()))
 
 # create summary arrays
 total1 = (data_h[:,:,HSE_TOTAL_AVG_IDX]).squeeze()
@@ -354,9 +355,13 @@ vmax = vscale * (data_m[:,:,MTR_VOLT_MAX_IDX]).squeeze().max(axis=0)
 
 # display a plot
 
-SMALL_SIZE = 8
-MEDIUM_SIZE = 10
-BIGGER_SIZE = 12
+tmin = 0.0
+tmax = 24.0
+xticks = [0,4,8,12,16,20,24]
+
+SMALL_SIZE = 6
+MEDIUM_SIZE = 8
+BIGGER_SIZE = 10
 
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
@@ -367,15 +372,17 @@ plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 if have_caps or have_regs:
-	fig, ax = plt.subplots(2, 5, sharex = 'col')
+	fig, ax = plt.subplots(2, 5, sharex = 'col', figsize=(14,6))
 else:
-	fig, ax = plt.subplots(2, 4, sharex = 'col')
+	fig, ax = plt.subplots(2, 4, sharex = 'col', figsize=(14,6))
 
 ax[0,0].plot(hrs, pavg2, color="blue", label="P")
 ax[0,0].plot(hrs, qavg2, color="red", label="Q")
 ax[0,0].set_ylabel("kVA")
-ax[0,0].set_title ("Inverter Power")
+ax[0,0].set_title ("Average Inverter Power")
 ax[0,0].legend(loc='best')
+ax[0,0].set_xlim(tmin,tmax)
+ax[0,0].set_xticks(xticks)
 
 #vabase = dict['inverters'][inv_keys[0]]['rated_W']
 #print ("Inverter base power =", vabase)
@@ -385,25 +392,31 @@ ax[0,0].legend(loc='best')
 #ax[0,1].set_title ("Inverter Power at " + inv_keys[0])
 #ax[0,1].legend(loc='best')
 
-ax[0,1].plot(hrs, tavg2, color="red", label="Max")
-ax[0,1].set_ylabel('degF')
-ax[0,1].set_title ('All House Temperatures')
-
 ax[1,0].plot(hrs, vmax, color="blue", label="Max")
 ax[1,0].plot(hrs, vmin, color="red", label="Min")
 ax[1,0].plot(hrs, vavg, color="green", label="Avg")
 ax[1,0].set_xlabel("Hours")
-ax[1,0].set_ylabel(MTR_VOLT_MAX_UNITS)
-ax[1,0].set_title ("Meter Voltages")
+ax[1,0].set_ylabel("%")
+ax[1,0].set_title ("All Meter Voltages")
 ax[1,0].legend(loc='best')
+ax[1,0].set_xlim(tmin,tmax)
+ax[1,0].set_xticks(xticks)
+
+ax[0,1].plot(hrs, tavg2, color="red", label="Avg")
+ax[0,1].set_ylabel('degF')
+ax[0,1].set_title ('Average House Temperatures')
+ax[0,1].set_xlim(tmin,tmax)
+ax[0,1].set_xticks(xticks)
 
 ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_AVG_IDX], color="blue", label="Mean")
-ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MIN_IDX], color="red", label="Min")
-ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MAX_IDX], color="green", label="Max")
+#ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MIN_IDX], color="red", label="Min")
+#ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MAX_IDX], color="green", label="Max")
 ax[1,1].set_xlabel("Hours")
 ax[1,1].set_ylabel(TEMPDEV_AVG_UNITS)
-ax[1,1].set_title ("Temperature Deviations")
-ax[1,1].legend(loc='best')
+ax[1,1].set_title ("Average Temperature Deviations")
+#ax[1,1].legend(loc='best')
+ax[1,1].set_xlim(tmin,tmax)
+ax[1,1].set_xticks(xticks)
 
 ax[0,2].plot(hrs, (data_m[:,:,MTR_AHI_COUNT_IDX]).squeeze().sum(axis=0), color="blue", label="Range A Hi")
 ax[0,2].plot(hrs, (data_m[:,:,MTR_BHI_COUNT_IDX]).squeeze().sum(axis=0), color="cyan", label="Range B Hi")
@@ -411,8 +424,10 @@ ax[0,2].plot(hrs, (data_m[:,:,MTR_ALO_COUNT_IDX]).squeeze().sum(axis=0), color="
 ax[0,2].plot(hrs, (data_m[:,:,MTR_BLO_COUNT_IDX]).squeeze().sum(axis=0), color="magenta", label="Range B Lo")
 ax[0,2].plot(hrs, (data_m[:,:,MTR_OUT_COUNT_IDX]).squeeze().sum(axis=0), color="red", label="No Voltage")
 ax[0,2].set_ylabel("")
-ax[0,2].set_title ("Voltage Violation Counts")
+ax[0,2].set_title ("All Voltage Violation Counts")
 ax[0,2].legend(loc='best')
+ax[0,2].set_xlim(tmin,tmax)
+ax[0,2].set_xticks(xticks)
 
 scalem = 1.0 / 3600.0
 ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_AHI_DURATION_IDX]).squeeze().sum(axis=0), color="blue", label="Range A Hi")
@@ -422,8 +437,10 @@ ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_BLO_DURATION_IDX]).squeeze().sum(axis
 ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_OUT_DURATION_IDX]).squeeze().sum(axis=0), color="red", label="No Voltage")
 ax[1,2].set_xlabel("Hours")
 ax[1,2].set_ylabel("Hours")
-ax[1,2].set_title ("Voltage Violation Durations")
+ax[1,2].set_title ("All Voltage Violation Durations")
 ax[1,2].legend(loc='best')
+ax[1,2].set_xlim(tmin,tmax)
+ax[1,2].set_xticks(xticks)
 
 ax[0,3].plot(hrs, subkw, color="blue", label="Substation")
 ax[0,3].plot(hrs, losskw, color="red", label="Losses")
@@ -433,12 +450,16 @@ ax[0,3].plot(hrs, wh2, color="orange", label="WH")
 ax[0,3].set_ylabel('kW')
 ax[0,3].set_title ("Average Real Power")
 ax[0,3].legend(loc='best')
+ax[0,3].set_xlim(tmin,tmax)
+ax[0,3].set_xticks(xticks)
 
 #ax[1,3].plot(hrs, data_m[0,:,MTR_BILL_IDX], color="blue")
 ax[1,3].plot(hrs, (data_m[:,:,MTR_BILL_IDX]).squeeze().sum(axis=0), color="blue")
 ax[1,3].set_xlabel("Hours")
 ax[1,3].set_ylabel(MTR_BILL_UNITS)
 ax[1,3].set_title ("Meter Bills")
+ax[1,3].set_xlim(tmin,tmax)
+ax[1,3].set_xticks(xticks)
 
 if have_caps:
 	ax[0,4].plot(hrs, data_c[0,:,CAP_COUNT_IDX], color="blue", label=cap_keys[0])
@@ -448,6 +469,8 @@ if have_caps:
 	ax[0,4].set_ylabel("")
 	ax[0,4].set_title ("Cap Switchings")
 	ax[0,4].legend(loc='best')
+	ax[0,4].set_xlim(tmin,tmax)
+	ax[0,4].set_xticks(xticks)
 
 if have_regs:
 	ax[1,4].plot(hrs, data_r[0,:,REG_COUNT_IDX], color="blue", label=reg_keys[0])
@@ -458,6 +481,8 @@ if have_regs:
 	ax[1,4].set_ylabel("")
 	ax[1,4].set_title ("Tap Changes")
 	ax[1,4].legend(loc='best')
+	ax[1,4].set_xlim(tmin,tmax)
+	ax[1,4].set_xticks(xticks)
 
 if have_caps or have_regs:
 	ax[1,4].set_xlabel("Hours")

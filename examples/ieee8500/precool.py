@@ -20,7 +20,7 @@ def parse_fncs_magnitude (arg):
     vals[0] *= -1.0
   return vals[0]
 
-time_stop = 3600 * int(sys.argv[1])
+time_stop = int (3600 * float(sys.argv[1]))
 
 lp = open (sys.argv[2] + "_agent_dict.json").read()
 dict = json.loads(lp)
@@ -42,21 +42,16 @@ print ('run till', time_stop, 'period', period, 'step', dt, 'mean', mean, 'stdde
 fncs.initialize()
 
 time_granted = 0
-price = mean
+price = 0.11 # mean
 
 # time_next = dt
 voltages = {}
 temperatures = {}
+setpoints = {} # publish a new one only if changed
+lastchange = {}
+lockout_period = 3600
 
-# set all of the house deadbands and initial setpoints
-for house, row in dict['houses'].items():
-  topic = house + '_thermostat_deadband'
-  value = row['deadband']
-  fncs.publish (topic, value)
-  topic = house + '_cooling_setpoint'
-  value = row['night_set']
-  fncs.publish (topic, value)
-
+bSetDeadbands = True
 
 while time_granted < time_stop:
   time_granted = fncs.time_request(time_stop) # time_next
@@ -75,7 +70,17 @@ while time_granted < time_stop:
       elif pair[1] == 'Tair':
         temperatures[houseName] = parse_fncs_magnitude (value)
 
-#  print (time_granted, hour_of_day, price)
+  if bSetDeadbands:
+    bSetDeadbands = False
+    print ('setting thermostat deadbands at', time_granted)
+    # set all of the house deadbands and initial setpoints
+    for house, row in dict['houses'].items():
+      topic = house + '_thermostat_deadband'
+      value = row['deadband']
+      fncs.publish (topic, value)
+      setpoints[house] = 0.0
+      lastchange[house] = -lockout_period
+
   # update all of the house setpoints
   count_temp_dev = 0
   sum_temp_dev = 0.0
@@ -83,7 +88,6 @@ while time_granted < time_stop:
   max_temp_dev = 0.0
   for house, row in dict['houses'].items():
     # time-scheduled setpoints
-    topic = house + '_cooling_setpoint'
     if hour_of_day >= row['day_start_hour'] and hour_of_day <= row['day_end_hour']:
       value = row['day_set']
     else:
@@ -98,18 +102,25 @@ while time_granted < time_stop:
       sum_temp_dev += temp_dev
       count_temp_dev += 1
     # time-of-day price response
-#    tdelta = (price - mean) * row['deadband'] / k / stddev
-#    value += tdelta
+    tdelta = (price - mean) * row['deadband'] / k / stddev
+    value += tdelta
     # overvoltage response
-#    if house in voltages:
-#      if voltages[house] > row['vthresh']:
-#        value += row['toffset']
-    fncs.publish (topic, value)
+    if house in voltages:
+      if voltages[house] > row['vthresh']:
+        value += row['toffset']
+    if abs(value - setpoints[house]) > 0.1:
+      if (time_granted - lastchange[house]) > lockout_period:
+        topic = house + '_cooling_setpoint'
+        fncs.publish (topic, value)
+        setpoints[house] = value
+        lastchange[house] = time_granted
+        print ('setting',house,'to',value,'at',time_granted)
 
   if count_temp_dev < 1:
     count_temp_dev = 1
     min_temp_dev = 0.0
   precool_metrics[str(time_granted)] = [min_temp_dev,max_temp_dev,sum_temp_dev/count_temp_dev]
+
   time_next = time_granted + dt
 
 print('finalizing FNCS', flush=True)

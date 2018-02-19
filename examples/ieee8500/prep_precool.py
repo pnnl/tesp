@@ -9,7 +9,7 @@ np.random.seed (0)
 # write yaml for precool.py to subscribe meter voltages and house setpoints
 # write txt for gridlabd to subscribe house setpoints and publish meter voltages
 
-dt = 30
+dt = 15
 period = 300
 mean_price = 0.1167
 std_dev_price = 0.0149

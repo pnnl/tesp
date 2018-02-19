@@ -246,6 +246,7 @@ if (strcmp(houses,'y') ~= 0)
 end
 
 fprintf(fid,'module market;\n');
+fprintf(fid,'module connection; // FNCS\n');
 if (solar_fraction > 0) || (battery_fraction > 0)
     fprintf(fid,'module generators;\n');
     fprintf(fid,'#define SOLAR_STATUS=ONLINE\n');
