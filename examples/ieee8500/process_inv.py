@@ -159,6 +159,8 @@ for key, val in meta_m.items():
 	elif key == 'voltage_unbalance_max':
 		MTR_VOLTUNB_MAX_IDX = val['index']
 		MTR_VOLTUNB_MAX_UNITS = val['units']
+	elif key == 'real_energy':
+		ENERGY_IDX = val['index']
 	elif key == 'bill':
 		MTR_BILL_IDX = val['index']
 		MTR_BILL_UNITS = val['units']
@@ -341,7 +343,20 @@ if have_caps:
 	print ("Total cap switchings =", '{:.2f}'.format(data_c[:,-1,CAP_COUNT_IDX].sum()))
 if have_regs:
 	print ("Total tap changes =", '{:.2f}'.format(data_r[:,-1,REG_COUNT_IDX].sum()))
-print ("Total meter bill =", '{:.2f}'.format(data_m[:,-1,MTR_BILL_IDX].sum()))
+
+final_bill = np.empty(shape=(len(times)), dtype=np.float)
+final_bill[0] = 0.0
+for i in range (1, len(hrs)):
+	if hrs[i] > 15.0 and hrs[i] <= 19.0:
+		price = 0.15
+	else:
+		price = 0.11
+	kwh = 0.001 * data_m[:,i,ENERGY_IDX].sum()
+	print ('adding', kwh, 'at', price)
+	final_bill[i] = final_bill[i-1] + price * kwh
+
+print ("Initial meter bill =", '{:.2f}'.format(data_m[:,-1,MTR_BILL_IDX].sum() - 19770.0))
+print ("Final meter bill =", '{:.2f}'.format(final_bill[-1]))
 print ("Average Temperature Deviation =", '{:.2f}'.format(data_p[:,:,TEMPDEV_AVG_IDX].mean()))
 
 print ('Summarizing from', hour1, 'hours to begin at indices', ihour1, ihour1_p)
@@ -382,27 +397,27 @@ tmin = 0.0
 tmax = 24.0
 xticks = [0,4,8,12,16,20,24]
 
-SMALL_SIZE = 6
-MEDIUM_SIZE = 8
-BIGGER_SIZE = 10
+SMALL_SIZE = 10
+MEDIUM_SIZE = 12
+BIGGER_SIZE = 14
 
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('axes', labelsize=SMALL_SIZE)    # fontsize of the x and y labels
 plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
-plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+plt.rc('figure', titlesize=SMALL_SIZE)  # fontsize of the figure title
 
 if have_caps or have_regs:
-	fig, ax = plt.subplots(2, 5, sharex = 'col', figsize=(14,6))
+	fig, ax = plt.subplots(2, 5, sharex = 'col', figsize=(14,7))
 else:
 	fig, ax = plt.subplots(2, 4, sharex = 'col', figsize=(14,6))
 
 ax[0,0].plot(hrs, pavg2, color="blue", label="P")
 ax[0,0].plot(hrs, qavg2, color="red", label="Q")
 ax[0,0].set_ylabel("kVA")
-ax[0,0].set_title ("Average Inverter Power")
+ax[0,0].set_title ("Average Inverter Power", size=MEDIUM_SIZE)
 ax[0,0].legend(loc='best')
 ax[0,0].set_xlim(tmin,tmax)
 ax[0,0].set_xticks(xticks)
@@ -420,14 +435,14 @@ ax[1,0].plot(hrs, vmin, color="red", label="Min")
 ax[1,0].plot(hrs, vavg, color="green", label="Avg")
 ax[1,0].set_xlabel("Hours")
 ax[1,0].set_ylabel("%")
-ax[1,0].set_title ("All Meter Voltages")
+ax[1,0].set_title ("All Meter Voltages", size=MEDIUM_SIZE)
 ax[1,0].legend(loc='best')
 ax[1,0].set_xlim(tmin,tmax)
 ax[1,0].set_xticks(xticks)
 
 ax[0,1].plot(hrs, tavg2, color="red", label="Avg")
 ax[0,1].set_ylabel('degF')
-ax[0,1].set_title ('Average House Temperatures')
+ax[0,1].set_title ('Average House Temperatures', size=MEDIUM_SIZE)
 ax[0,1].set_xlim(tmin,tmax)
 ax[0,1].set_xticks(xticks)
 
@@ -436,7 +451,7 @@ ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_AVG_IDX], color="blue", label="Mean")
 #ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MAX_IDX], color="green", label="Max")
 ax[1,1].set_xlabel("Hours")
 ax[1,1].set_ylabel(TEMPDEV_AVG_UNITS)
-ax[1,1].set_title ("Average Temperature Deviations")
+ax[1,1].set_title ("Average Temperature Deviations", size=MEDIUM_SIZE)
 #ax[1,1].legend(loc='best')
 ax[1,1].set_xlim(tmin,tmax)
 ax[1,1].set_xticks(xticks)
@@ -447,7 +462,7 @@ ax[0,2].plot(hrs, (data_m[:,:,MTR_ALO_COUNT_IDX]).squeeze().sum(axis=0), color="
 ax[0,2].plot(hrs, (data_m[:,:,MTR_BLO_COUNT_IDX]).squeeze().sum(axis=0), color="magenta", label="Range B Lo")
 ax[0,2].plot(hrs, (data_m[:,:,MTR_OUT_COUNT_IDX]).squeeze().sum(axis=0), color="red", label="No Voltage")
 ax[0,2].set_ylabel("")
-ax[0,2].set_title ("All Voltage Violation Counts")
+ax[0,2].set_title ("All Voltage Violation Counts", size=MEDIUM_SIZE)
 ax[0,2].legend(loc='best')
 ax[0,2].set_xlim(tmin,tmax)
 ax[0,2].set_xticks(xticks)
@@ -460,7 +475,7 @@ ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_BLO_DURATION_IDX]).squeeze().sum(axis
 ax[1,2].plot(hrs, scalem * (data_m[:,:,MTR_OUT_DURATION_IDX]).squeeze().sum(axis=0), color="red", label="No Voltage")
 ax[1,2].set_xlabel("Hours")
 ax[1,2].set_ylabel("Hours")
-ax[1,2].set_title ("All Voltage Violation Durations")
+ax[1,2].set_title ("All Voltage Violation Durations", size=MEDIUM_SIZE)
 ax[1,2].legend(loc='best')
 ax[1,2].set_xlim(tmin,tmax)
 ax[1,2].set_xticks(xticks)
@@ -471,16 +486,18 @@ ax[0,3].plot(hrs, total2, color="green", label="Houses")
 ax[0,3].plot(hrs, hvac2, color="magenta", label="HVAC")
 ax[0,3].plot(hrs, wh2, color="orange", label="WH")
 ax[0,3].set_ylabel('kW')
-ax[0,3].set_title ("Average Real Power")
+ax[0,3].set_title ("Average Real Power", size=MEDIUM_SIZE)
 ax[0,3].legend(loc='best')
 ax[0,3].set_xlim(tmin,tmax)
 ax[0,3].set_xticks(xticks)
 
 #ax[1,3].plot(hrs, data_m[0,:,MTR_BILL_IDX], color="blue")
-ax[1,3].plot(hrs, (data_m[:,:,MTR_BILL_IDX]).squeeze().sum(axis=0), color="blue")
+ax[1,3].plot(hrs, (data_m[:,:,MTR_BILL_IDX]).squeeze().sum(axis=0) - 19770.0, color='blue', label='Tariff')
+ax[1,3].plot(hrs, final_bill, color='red', label='Dynamic')
 ax[1,3].set_xlabel("Hours")
 ax[1,3].set_ylabel(MTR_BILL_UNITS)
-ax[1,3].set_title ("Meter Bills")
+ax[1,3].set_title ("Meter Bills", size=MEDIUM_SIZE)
+ax[1,3].legend(loc='best')
 ax[1,3].set_xlim(tmin,tmax)
 ax[1,3].set_xticks(xticks)
 
@@ -490,7 +507,7 @@ if have_caps:
 	ax[0,4].plot(hrs, data_c[2,:,CAP_COUNT_IDX], color="green", label=cap_keys[2])
 	ax[0,4].plot(hrs, data_c[3,:,CAP_COUNT_IDX], color="magenta", label=cap_keys[3])
 	ax[0,4].set_ylabel("")
-	ax[0,4].set_title ("Cap Switchings")
+	ax[0,4].set_title ("Cap Switchings", size=MEDIUM_SIZE)
 	ax[0,4].legend(loc='best')
 	ax[0,4].set_xlim(tmin,tmax)
 	ax[0,4].set_xticks(xticks)
@@ -502,7 +519,7 @@ if have_regs:
 	ax[1,4].plot(hrs, data_r[3,:,REG_COUNT_IDX], color="magenta", label=reg_keys[3])
 	ax[1,4].set_xlabel("Hours")
 	ax[1,4].set_ylabel("")
-	ax[1,4].set_title ("Tap Changes")
+	ax[1,4].set_title ("Tap Changes", size=MEDIUM_SIZE)
 	ax[1,4].legend(loc='best')
 	ax[1,4].set_xlim(tmin,tmax)
 	ax[1,4].set_xticks(xticks)
@@ -510,7 +527,7 @@ if have_regs:
 if have_caps or have_regs:
 	ax[1,4].set_xlabel("Hours")
 
-plt.tight_layout(pad=0.2, w_pad=0.2, h_pad=0.2)
+plt.tight_layout(pad=1.0, w_pad=1.0, h_pad=2.0)
 plt.show()
 
 

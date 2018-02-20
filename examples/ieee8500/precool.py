@@ -117,7 +117,7 @@ while time_granted < time_stop:
       precooling_status[house] = False
     # overvoltage response
     if precooling_status[house]:
-      value += row['offset']
+      value += row['toffset']
     if abs(value - setpoints[house]) > 0.1:
       if (time_granted - lastchange[house]) > lockout_period:
         topic = house + '_cooling_setpoint'
