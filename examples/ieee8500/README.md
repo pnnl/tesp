@@ -1,4 +1,4 @@
-# Transactive Energy Simulation Platform (TESP)
+# TESP Examples for the NIST TE Challenge
 
 Copyright (c) 2017-18, Battelle Memorial Institute
 
@@ -16,10 +16,13 @@ These example files are based on the IEEE 8500-node Feeder model, as adapted for
 
 6. inv30.glm is a small 30-house test case with smart inverters, and inv8500.glm is the larger feeder model with smart inverters. Both run over FNCS with the precooling agent in precool.py.  The Mac/Linux run files are run.sh and run8500.sh, respectively.  These simulations take up to 4 hours to run. Example steps are:
 
-a. "Python glm_dict.py inv8500"
-b. "Python prep_precool.py inv8500"
-c. "./run8500.sh"
-d. "Python process_inv.py inv8500" after the simulation completes
+    a. "Python glm_dict.py inv8500"
+
+    b. "Python prep_precool.py inv8500"
+
+    c. "./run8500.sh"
+
+    d. "Python process_inv.py inv8500" after the simulation completes
 
 These simulations require a recent build of GridLAB-D from the feature/1048 (newer than the version posted for step 5), and also FNCS.  Please consult the TESP documentation for more information about customizations, including batch files to run on Windows.
 
