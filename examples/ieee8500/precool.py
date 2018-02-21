@@ -50,11 +50,12 @@ temperatures = {}
 setpoints = {} # publish a new one only if changed
 lastchange = {}
 precooling_quiet = 4 * 3600
-precooling_off = 19 * 3600
+precooling_off = 25 * 3600 # never turns off
 precooling_status = {}
 lockout_period = 360
 
 bSetDeadbands = True
+nPrecoolers = 0
 
 while time_granted < time_stop:
   time_granted = fncs.time_request(time_stop) # time_next
@@ -113,6 +114,7 @@ while time_granted < time_stop:
       if house in voltages:
         if voltages[house] > row['vthresh']:
           precooling_status[house] = True
+          nPrecoolers += 1
     elif time_granted >= precooling_off:
       precooling_status[house] = False
     # overvoltage response
@@ -133,7 +135,8 @@ while time_granted < time_stop:
 
   time_next = time_granted + dt
 
-print('finalizing FNCS', flush=True)
+print (nPrecoolers, 'houses participated in precooling')
+print ('finalizing FNCS', flush=True)
 fncs.finalize()
 print ('writing metrics', flush=True)
 print (json.dumps(precool_metrics), file=mp)

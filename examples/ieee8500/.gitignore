@@ -4,3 +4,9 @@
 *.csv
 *.yaml
 *.txt
+base/
+market/
+precool/
+vvar/
+vwatt/
+__pycache__/

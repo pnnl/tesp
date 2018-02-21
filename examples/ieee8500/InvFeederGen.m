@@ -21,7 +21,7 @@ stop_time = '0:00:00''';
 timezone='PST+8PDT';
 
 % Minimum timestep
-minimum_timestep = 60; % 4;
+minimum_timestep = 15; % 4;
 
 % Do you want to use houses?
 houses = 'y';   % 'y' indicates you want to use houses, 'n' indicates static loads
@@ -268,7 +268,7 @@ fprintf(fid,'#define INV_Q3=0.00\n');
 fprintf(fid,'#define INV_Q4=-0.44\n');
 fprintf(fid,'#define INV_VIN=200.0\n');
 fprintf(fid,'#define INV_IIN=32.5\n');
-fprintf(fid,'#define INV_VVLOCKOUT=30.0\n');
+fprintf(fid,'#define INV_VVLOCKOUT=300.0\n');
 fprintf(fid,'#define INV_VW_V1=1.05 // 1.05833\n');
 fprintf(fid,'#define INV_VW_V2=1.10\n');
 fprintf(fid,'#define INV_VW_P1=1.0\n');
@@ -325,7 +325,7 @@ if (metrics_interval > 0)
     fprintf(fid,'#define METRICS_INTERVAL=%.0f\n',metrics_interval);
     fprintf(fid,'object metrics_collector_writer {\n');
     fprintf(fid,'     interval ${METRICS_INTERVAL};\n');
-    fprintf(fid,'     filename Inv8500_metrics.json;\n');
+    fprintf(fid,'     filename inv8500_metrics.json;\n');
     fprintf(fid,'};\n\n');
 end
 
@@ -379,6 +379,9 @@ fprintf(fid,'     raise_taps 16;\n');
 fprintf(fid,'     lower_taps 16;\n');
 fprintf(fid,'     regulation 0.1;\n');
 fprintf(fid,'     Type B;\n');
+fprintf(fid,'     tap_pos_A 0;\n');
+fprintf(fid,'     tap_pos_B 0;\n');
+fprintf(fid,'     tap_pos_C 0;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object regulator_configuration {\n');
@@ -409,6 +412,9 @@ fprintf(fid,'     raise_taps 16;\n');
 fprintf(fid,'     lower_taps 16;\n');
 fprintf(fid,'     regulation 0.1;\n');
 fprintf(fid,'     Type B;\n');  
+fprintf(fid,'     tap_pos_A 2;\n');
+fprintf(fid,'     tap_pos_B 1;\n');
+fprintf(fid,'     tap_pos_C 0;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object regulator_configuration {\n');
@@ -440,6 +446,9 @@ fprintf(fid,'     raise_taps 16;\n');
 fprintf(fid,'     lower_taps 16;\n');
 fprintf(fid,'     regulation 0.1;\n');
 fprintf(fid,'     Type B;\n');  
+fprintf(fid,'     tap_pos_A 4;\n');
+fprintf(fid,'     tap_pos_B 2;\n');
+fprintf(fid,'     tap_pos_C 0;\n');
 fprintf(fid,'}\n\n');
 
 fprintf(fid,'object regulator_configuration {\n');
@@ -470,6 +479,9 @@ fprintf(fid,'     raise_taps 16;\n');
 fprintf(fid,'     lower_taps 16;\n');
 fprintf(fid,'     regulation 0.1;\n');
 fprintf(fid,'     Type B;\n');  
+fprintf(fid,'     tap_pos_A 2;\n');
+fprintf(fid,'     tap_pos_B 2;\n');
+fprintf(fid,'     tap_pos_C 1;\n');
 fprintf(fid,'}\n\n');
 
 
@@ -2068,6 +2080,43 @@ for i=1:EndTripLines
     fprintf(fid,'}\n\n');
 end
 
+fprintf(fid,'//object group_recorder {\n');
+fprintf(fid,'//	group "class=capacitor";\n');
+fprintf(fid,'//	property switchA;\n');
+fprintf(fid,'//	interval 15;\n');
+fprintf(fid,'//	file capsA.csv;\n');
+fprintf(fid,'//};\n');
+fprintf(fid,'//object group_recorder {\n');
+fprintf(fid,'//	group "class=capacitor";\n');
+fprintf(fid,'//	property switchB;\n');
+fprintf(fid,'//	interval 15;\n');
+fprintf(fid,'//	file capsB.csv;\n');
+fprintf(fid,'//};\n');
+fprintf(fid,'//object group_recorder {\n');
+fprintf(fid,'//	group "class=capacitor";\n');
+fprintf(fid,'//	property switchC;\n');
+fprintf(fid,'//	interval 15;\n');
+fprintf(fid,'//	file capsC.csv;\n');
+fprintf(fid,'//};\n');
+fprintf(fid,'//\n');
+fprintf(fid,'//object group_recorder {\n');
+fprintf(fid,'//	group "class=regulator";\n');
+fprintf(fid,'//	property tap_A;\n');
+fprintf(fid,'//	interval 15;\n');
+fprintf(fid,'//	file regsA.csv;\n');
+fprintf(fid,'//};\n');
+fprintf(fid,'//object group_recorder {\n');
+fprintf(fid,'//	group "class=regulator";\n');
+fprintf(fid,'//	property tap_B;\n');
+fprintf(fid,'//	interval 15;\n');
+fprintf(fid,'//	file regsB.csv;\n');
+fprintf(fid,'//};\n');
+fprintf(fid,'//object group_recorder {\n');
+fprintf(fid,'//	group "class=regulator";\n');
+fprintf(fid,'//	property tap_C;\n');
+fprintf(fid,'//	interval 15;\n');
+fprintf(fid,'//	file regsC.csv;\n');
+fprintf(fid,'//};\n');
 
 if ( strcmp(houses,'y')~=0 )
     fprintf(fid,'// Nominal peak load = %.1f + j%.1f kVA\n', 0.001*total_reload, 0.001*total_imload);
