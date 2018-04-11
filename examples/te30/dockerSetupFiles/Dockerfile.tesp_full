@@ -1,0 +1,242 @@
+ARG PYTHON=python
+ARG PYTHON_VERSION=:3
+
+FROM ${PYTHON}${PYTHON_VERSION}
+
+RUN apt-get update && \
+    apt-get install -y \
+    wget \
+    git \
+    automake \
+    autoconf \
+    make \
+    cmake \
+    g++ \
+    gcc \
+    libtool \
+    ca-certificates \
+    openssl \
+    lsof \
+    psmisc && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/cache/apt/archives/* && \
+    echo "===== PYTHON VERSION =====" && \
+    python --version && \
+    echo "===== PIP VERSION =====" && \
+    pip --version && \
+#    echo "===== install PYTHON-PIP =====" && \
+#    apt-get install -y python-pip && \
+    echo "===== UPGRADE PIP =====" && \
+    pip install --upgrade pip && \
+    echo "===== install NUMPY =====" && \
+    pip install numpy && \
+    echo "===== install MATPLOTLIB =====" && \
+    pip install matplotlib && \
+    echo "===== install SCIPY =====" && \
+    pip install scipy && \
+    echo "===== install PYPOWER =====" && \
+    pip install pypower && \
+    echo "===== current PIP3 modules =====" && \
+    pip list --format=columns
+
+# -----------------------------------------------------
+# Environment variables giving the location where TESP
+# related software will be installed.
+# -----------------------------------------------------
+ENV TESP=/tesp
+ENV FNCS_INSTALL=${TESP}/FNCSInstall
+ENV GLD_INSTALL=${TESP}/GridLABD1048Install
+ENV EPLUS_INSTALL=${TESP}/EnergyPlusInstall
+ENV EPLUSJSON_INSTALL=${TESP}/EPlusJSONInstall
+ENV PYPOWER_INSTALL=${TESP}/PyPowerInstall
+ENV AGENTS_INSTALL=${TESP}/AgentsInstall
+
+# ----------------------------------------------------
+# Because I want to use the software versions I already have
+# installed on the current Dragonstone VM, I am going to use
+# directly the downloads and repositories I have, letting aside
+# the commands that are performing the actual downloads, and 
+# repository cloning.
+# Hence, from the context of the folder where I have all my downloads
+# and clones, I only add the needed ones.
+# I am running the image building script from inside the folder where
+# all repositories have been already cloned in the source folders below.
+# --------------------------------------------------------------
+ENV CZMQ_VERSION 3.0.2
+ENV ZMQ_VERSION 4.1.6
+ENV CZMQ_SOURCE=czmq-${CZMQ_VERSION}
+ENV ZMQ_SOURCE=zeromq-${ZMQ_VERSION}
+# -------------------------------
+# FNCS branch = feature/transactiveEnergyApi
+ENV FNCS_SOURCE=fncs
+# -------------------------------
+# GridLAB-D branch = feature/1048
+ENV GLD_SOURCE=gridlab-d
+# -------------------------------
+# Energy Plus branch = fncs-v8.3.0
+ENV EPLUS_SOURCE=EnergyPlus
+ENV EPLUS_POSTPROC="EPLUS/EnergyPlus-8-3-0/PostProcess/ReadVarsESO"
+ENV EPLUSJSON_SOURCE=EnergyPlusJSON
+# -------------------------------
+# PYPOWER has only 2 main executable scripts
+# however, fncs.py has a hardcoded path that I need to be careful about
+ENV PYPOWER_SOURCE=TESP-pypower
+# -------------------------------
+ENV AG_SOURCE=TESP-agents
+# The folder on the image where all source files will be copied to,
+# so that installation can proceed.
+ENV SOURCE_DIR=/tmp/sources
+
+# --------------------------------------------------------------
+# Environment variables needed for the package installation
+# --------------------------------------------------------------
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${FNCS_INSTALL}/lib
+ENV FNCS_LIBRARY=${FNCS_INSTALL}/lib
+ENV FNCS_INCLUDE_DIR=${FNCS_INSTALL}/include
+ENV PATH="${PATH}:${FNCS_INSTALL}"
+# default values
+ENV FNCS_LOG_FILE=no
+ENV FNCS_LOG_STDOUT=no
+ENV FNCS_LOG_TRACE=no
+ENV FNCS_LOG_LEVEL=DEBUG4
+
+# ------------------------------------------------------------------
+# Adding the host source folders to the Docker image source folders
+# ------------------------------------------------------------------
+ADD ${ZMQ_SOURCE} ${SOURCE_DIR}/${ZMQ_SOURCE}
+ADD ${CZMQ_SOURCE} ${SOURCE_DIR}/${CZMQ_SOURCE}
+ADD ${FNCS_SOURCE} ${SOURCE_DIR}/${FNCS_SOURCE}
+ADD ${GLD_SOURCE} ${SOURCE_DIR}/${GLD_SOURCE}
+ADD ${EPLUS_SOURCE} ${SOURCE_DIR}/${EPLUS_SOURCE}
+ADD ${EPLUS_POSTPROC} ${SOURCE_DIR}
+ADD ${EPLUSJSON_SOURCE} ${SOURCE_DIR}/${EPLUSJSON_SOURCE}
+ADD ${PYPOWER_SOURCE} ${SOURCE_DIR}/${PYPOWER_SOURCE}
+ADD ${AG_SOURCE} ${SOURCE_DIR}/${AG_SOURCE}
+
+RUN mkdir -p ${SOURCE_DIR}
+
+# ----------------------------------------------------
+# INSTALL ZMQ and BINDINGS for c++
+# ----------------------------------------------------
+RUN cd ${SOURCE_DIR}/${ZMQ_SOURCE} && \
+    ./configure --prefix=${FNCS_INSTALL} && \
+    make && \
+    make install && \
+    cd ${SOURCE_DIR} && \
+    /bin/rm -r ${SOURCE_DIR}/${ZMQ_SOURCE}
+
+RUN cd ${SOURCE_DIR}/${CZMQ_SOURCE} && \
+    ./configure --prefix=${FNCS_INSTALL} --with-libzmq=${FNCS_INSTALL} && \
+    make && \
+    make install && \
+    cd /tmp && \
+    /bin/rm -r ${SOURCE_DIR}/${CZMQ_SOURCE}
+
+# ----------------------------------------------------
+# INSTALL FNCS
+# ----------------------------------------------------
+RUN cd ${SOURCE_DIR}/${FNCS_SOURCE} && \
+    autoreconf -if && \
+    ./configure --prefix=${FNCS_INSTALL} --with-zmq=${FNCS_INSTALL} && \
+    make && \
+    make install && \
+    cd /tmp && \
+    /bin/rm -r ${SOURCE_DIR}/${FNCS_SOURCE}
+
+# ----------------------------------------------------
+# INSTALL GridLAB-D
+# ----------------------------------------------------
+RUN cd ${SOURCE_DIR}/${GLD_SOURCE} && \
+    cd ${SOURCE_DIR}/${GLD_SOURCE}/third_party && \
+    tar -xzf xerces-c-3.1.1.tar.gz && \
+    cd ${SOURCE_DIR}/${GLD_SOURCE}/third_party/xerces-c-3.1.1 && \
+    ./configure && \
+    make && \
+    make install && \
+    chmod u=rwx ${SOURCE_DIR}/${GLD_SOURCE}/build-aux/version.sh && \
+    cd ${SOURCE_DIR}/${GLD_SOURCE} && \
+    autoreconf -if && \
+    ./configure --prefix=${GLD_INSTALL} --with-fncs=${FNCS_INSTALL} --enable-silent-rules \
+    'CFLAGS=-g -O0 -w' 'CXXFLAGS=-g -O0 -w' 'LDFLAGS=-g -O0 -w' && \
+    make && \
+    make install && \
+    cd /tmp && \
+    /bin/rm -r ${SOURCE_DIR}/${GLD_SOURCE}
+ENV PATH="${PATH}:${GLD_INSTALL}/bin"
+ENV GLMPATH="${GLD_INSTALL}/lib/gridlabd:${GLD_INSTALL}/share/gridlabd"
+
+# ----------------------------------------------------
+# INSTALL Energy Plus
+# ----------------------------------------------------
+ENV CMAKE_INSTALL_PREFIX=${EPLUS_INSTALL}
+
+RUN mkdir ${EPLUS_INSTALL} && \
+    cd ${EPLUS_INSTALL} && \
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=${EPLUS_INSTALL} \
+          -DCMAKE_PREFIX_PATH=${FNCS_INSTALL} \
+          ${SOURCE_DIR}/${EPLUS_SOURCE} && \
+    make && \
+    make install && \
+    cd /tmp
+    
+# ----------------------------------------------------
+# INSTALL Energy Plus
+# ----------------------------------------------------
+#RUN cd ${SOURCE_DIR}/${EPLUS_SOURCE} && \
+#    mkdir build && \
+#    cd build && \
+#    cmake .. && \
+#    make && \
+#    make install && \
+#    /bin/cp ${EPLUS_POSTPROC} ${EPLUS_INSTALL}/PostProcess && \
+#    cd /tmp && \
+#    /bin/rm -r ${SOURCE_DIR}/${EPLUS_SOURCE} && \
+#    /bin/rm -r ${SOURCE_DIR}/${EPLUS_POSTPROC}
+
+# ----------------------------------------------------
+# Extra installation needed for Energy Plus
+# Copy the ReadVarsESO file needed for postprocessing
+# from a version of EPLUS ready for installation
+# ----------------------------------------------------
+RUN mkdir -p ${EPLUS_INSTALL}/Products/PostProcess && \
+    cd ${SOURCE_DIR} && \
+    /bin/cp ReadVarsESO ${EPLUS_INSTALL}/Products/PostProcess && \
+    cd /tmp && \
+    /bin/rm ${SOURCE_DIR}/ReadVarsESO
+
+# ----------------------------------------------------
+# INSTALL Energy Plus JSON
+# ----------------------------------------------------
+RUN cd ${SOURCE_DIR}/${EPLUSJSON_SOURCE} && \
+    autoheader && \
+    aclocal && \
+    automake --add-missing && \
+    autoreconf -if && \
+    ./configure --prefix=${EPLUSJSON_INSTALL} --with-fncs=${FNCS_INSTALL} && \
+    make && \
+    make install && \
+    cd /tmp && \
+    /bin/rm -r ${SOURCE_DIR}/${EPLUSJSON_SOURCE}
+
+# ----------------------------------------------------
+# INSTALL PYPOWER
+# Actually simply copying the necessary files
+# ----------------------------------------------------
+RUN mkdir ${PYPOWER_INSTALL} && \
+    cd ${SOURCE_DIR}/${PYPOWER_SOURCE} && \
+    /bin/cp *.* ${PYPOWER_INSTALL} && \
+    /bin/cp fncs.py.DockerVersion ${PYPOWER_INSTALL}/fncs.py && \
+    cd /tmp && \
+    /bin/rm -r ${SOURCE_DIR}/${PYPOWER_SOURCE}
+
+# ----------------------------------------------------
+# INSTALL TE AGENTS
+# Actually simply copying the necessary files
+# ----------------------------------------------------
+RUN mkdir ${AGENTS_INSTALL} && \
+    cd ${SOURCE_DIR}/${AG_SOURCE} && \
+    /bin/cp *.* ${AGENTS_INSTALL} && \
+    /bin/cp fncs.py.DockerVersion ${AGENTS_INSTALL}/fncs.py && \
+    cd /tmp && \
+    /bin/rm -r ${SOURCE_DIR}/${AG_SOURCE} && \
+    /bin/rm -r ${SOURCE_DIR}
