@@ -179,14 +179,14 @@ def main_loop():
     if ts >= tnext_opf:  # expecting to solve opf one dt before the market clearing period ends, so GridLAB-D has time to use it
       idx = int ((ts + dt) / period) % nloads
       bus = ppc['bus']
-      print('<<<<< ts = {}, ppc-Pd5 = {}, bus-Pd5 = {}, ppc-Pd7 = {}, bus-Pd7 = {}, ppc-Pd9 = {}, bus-Pd9 = {} >>>>>>>'.format(ts, ppc["bus"][4, 2], bus[4, 2], ppc["bus"][6, 2], bus[6, 2], ppc["bus"][8, 2], bus[8, 2]))
+#      print('<<<<< ts = {}, ppc-Pd5 = {}, bus-Pd5 = {}, ppc-Pd7 = {}, bus-Pd7 = {}, ppc-Pd9 = {}, bus-Pd9 = {} >>>>>>>'.format(ts, ppc["bus"][4, 2], bus[4, 2], ppc["bus"][6, 2], bus[6, 2], ppc["bus"][8, 2], bus[8, 2]))
       gen = ppc['gen']
       branch = ppc['branch']
       gencost = ppc['gencost']
       csv_load = loads[idx,0]
       bus[4,2] = loads[idx,1]
       bus[8,2] = loads[idx,2]
-      print('<<<<< ts = {}, ppc-Pd5 = {}, bus-Pd5 = {}, ppc-Pd7 = {}, bus-Pd7 = {}, ppc-Pd9 = {}, bus-Pd9 = {} >>>>>>>'.format(ts, ppc["bus"][4, 2], bus[4, 2], ppc["bus"][6, 2], bus[6, 2], ppc["bus"][8, 2], bus[8, 2]))
+#      print('<<<<< ts = {}, ppc-Pd5 = {}, bus-Pd5 = {}, ppc-Pd7 = {}, bus-Pd7 = {}, ppc-Pd9 = {}, bus-Pd9 = {} >>>>>>>'.format(ts, ppc["bus"][4, 2], bus[4, 2], ppc["bus"][6, 2], bus[6, 2], ppc["bus"][8, 2], bus[8, 2]))
       # process the generator and branch outages
       for row in ppc['UnitsOut']:
         if ts >= row[1] and ts <= row[2]:
@@ -207,7 +207,7 @@ def main_loop():
         scaled_unresp = float(row[2]) * float(row[3])
         newidx = int(row[0]) - 1
         bus[newidx,2] += scaled_unresp
-      print('<<<<< ts = {}, ppc-Pd5 = {}, bus-Pd5 = {}, ppc-Pd7 = {}, bus-Pd7 = {}, ppc-Pd9 = {}, bus-Pd9 = {} >>>>>>>'.format(ts, ppc["bus"][4, 2], bus[4, 2], ppc["bus"][6, 2], bus[6, 2], ppc["bus"][8, 2], bus[8, 2]))
+#      print('<<<<< ts = {}, ppc-Pd5 = {}, bus-Pd5 = {}, ppc-Pd7 = {}, bus-Pd7 = {}, ppc-Pd9 = {}, bus-Pd9 = {} >>>>>>>'.format(ts, ppc["bus"][4, 2], bus[4, 2], ppc["bus"][6, 2], bus[6, 2], ppc["bus"][8, 2], bus[8, 2]))
       gen[4][9] = -resp_max * float(fncsBus[0][2])
       gencost[4][3] = 3
       gencost[4][4] = resp_c2
@@ -287,7 +287,13 @@ def main_loop():
       if tnext_opf > tmax:
         print ('breaking out at',tnext_opf,flush=True)
         break
-    # apart from the OPF, keep loads updated
+    else: # update the voltages with a regular power flow
+      res = pp.runpf(ppc, ppopt)
+      volts = 1000.0 * bus[6,7] * bus[6,9]
+      fncs.publish('three_phase_voltage_B7', volts)
+      print('**PF', ts, actual_load, volts)
+
+    # apart from the OPF, keep loads updated - TODO - shouldn't this be done first at each time point?
     ts = fncs.time_request(ts + dt)
     events = fncs.get_events()
     new_bid = False
@@ -331,7 +337,7 @@ def main_loop():
         # print('Amp factor = ', float(fncsBus[0][2]))
         # ==================================================================
         actual_load = float(gld_load[0]) * float(fncsBus[0][2])
-        print('  Time = ', ts, '; actual load real = ', actual_load)
+#        print('  Time = ', ts, '; actual load real = ', actual_load)
     if new_bid == True:
       print('**Bid', ts, unresp_load, resp_max, resp_c2, resp_c1, resp_c0)
 
