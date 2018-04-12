@@ -46,15 +46,16 @@ except for:
 - Clone the "feature/1048" branch from https://github.com/gridlab-d/gridlab-d 
 
 ::
+
  cd /c/
  git config --global (specify user.name, user.email, color.ui)
  git clone -b feature/1048 https://github.com/gridlab-d/gridlab-d.git
-::
+
 
 Eclipse is optional. If not using it:
 
-- append (for example) c:\gridlab-d\install64\bin to PATH 
-- create a new environment variable GLPATH=c:\gridlab-d\install64\lib\gridlabd;c:\gridlab-d\install64\share\gridlabd
+- append (for example) c:\\gridlab-d\\install64\\bin to PATH 
+- create a new environment variable GLPATH=c:\\gridlab-d\\install64\\lib\\gridlabd;c:\\gridlab-d\\install64\\share\\gridlabd
 
 At this point, you should have GridLAB-D built without FNCS.
 
@@ -231,7 +232,7 @@ Build JsonCPP for EnergyPlus
 
 Clone the master branch from https://github.com/open-source-parsers/jsoncpp
 
-Install cmake from https://cmake.org/download/ into c:\cmake so it's easy to start from the MSYS terminal.
+Install cmake from https://cmake.org/download/ into c:\\cmake so it's easy to start from the MSYS terminal.
 
 The GridLAB-D setup requires CMake to use MSYS makefiles, not MinGW makefiles.
 In addition, CMake may find conflicting versions of "cc" and "make" from other
@@ -259,13 +260,14 @@ We need this for some critical support files that aren't part of the FNCS-Energy
 process.
 
 ::
+
  cd /c/
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
 
 Start Cmake from the MSYS terminal, as you did for jsoncpp, and configure it as follows:
 
-- source code at c:\energyplus
-- binaries at c:\energyplus\build
+- source code at c:\\energyplus
+- binaries at c:\\energyplus\\build
 - set the Grouped and Advanced check boxes
 - press Configure and choose MSYS Makefiles
 - press Generate
@@ -301,8 +303,12 @@ Copy the following build products from $FNCS_install/bin to c:/gridlab-d/install
 - eplus_json.exe
 - energyplusapi.dll
 
-Copy the following from c:\EnergyPlusV8-3-0 to c:/gridlab-d/install64/bin:
+Copy the following from c:\\EnergyPlusV8-3-0 to c:\\gridlab-d\\install64\\bin:
 
 - Energy+.idd
+- parser.exe
+- RunReadESO.bat
+- ReadVarsESO.exe
+
  
 
