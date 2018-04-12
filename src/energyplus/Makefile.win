@@ -39,4 +39,4 @@ clean:
 	rm -f *.out
 
 install:
-	cp eplus_json.exe INSTALL_PATH/bin
+	cp eplus_json.exe $(INSTALL_PATH)/bin
