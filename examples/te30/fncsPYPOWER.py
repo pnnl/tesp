@@ -79,16 +79,20 @@ def make_dictionary(ppc, rootname):
   dp.close()
 
 def parse_mva(arg):
-  tok = arg.strip('+-; MWVAKdrij')
-  vals = re.split(r'[\+-]+', tok)
-  if len(vals) < 2: # only a real part provided
-    vals.append('0')
-  vals = [float(v) for v in vals]
-
-  if '-' in tok:
-    vals[1] *= -1.0
-  if arg.startswith('-'):
-    vals[0] *= -1.0
+  tok = arg.strip('; MWVAKdrij')
+  bLastDigit = False
+  bParsed = False
+  vals = [0.0,0.0]
+  for i in range(len(tok)):
+    if tok[i] == '+' or tok[i] == '-':
+      if bLastDigit:
+        vals[0] = float(tok[:i])
+        vals[1] = float(tok [i:])
+        bParsed = True
+        break
+    bLastDigit = tok[i].isdigit()
+  if not bParsed:
+    vals[0] = float(tok)
 
   if 'd' in arg:
     vals[1] *= (math.pi / 180.0)
