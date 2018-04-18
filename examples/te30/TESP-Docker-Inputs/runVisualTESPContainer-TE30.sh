@@ -80,9 +80,10 @@ docker cp ${HOST_FOLDER}/Agents/inputFilesPP ${TESP_CONT}:/tesp/AgentsInstall/in
 docker cp ${HOST_FOLDER}/Agents/launch_TE30_Challenge_PYPOWER_agents.sh.DockerVersion ${TESP_CONT}:/tesp/AgentsInstall/launch_TE30_Challenge_PYPOWER_agents.sh
 docker container exec ${TESP_CONT} /bin/sh -c 'chmod u+x ${AGENTS_INSTALL}/launch_TE30_Challenge_PYPOWER_agents.sh'
 
+
 # =================== Run TE30 =========================================================
-echo "===== Run script to simulate."
-docker container exec ${TESP_CONT} /bin/sh -c 'export TERM=xterm && echo "===== TERM = ${TERM}" && export FNCS_LOG_STDOUT=no && echo "===== FNCS_LOG_STDOUT = ${FNCS_LOG_STDOUT}" && cd /tesp/runScripts && python tespTE30.py&'
+# echo "===== Run script to simulate."
+# docker container exec -i ${TESP_CONT} /bin/bash -c 'export TERM=xterm && echo "===== TERM = ${TERM}" && export FNCS_LOG_STDOUT=no && echo "===== FNCS_LOG_STDOUT = ${FNCS_LOG_STDOUT}" && cd /tesp/runScripts && python tespTE30.py&'
 # docker container exec ${TESP_CONT} /bin/sh -c "export TERM=xterm && cd /tesp/ && ./runTE30ChallengeDocker.sh > te30DockerRun.log &"
 # docker container exec ${TESP_CONT} /bin/sh -c "tail -f /tesp/GridLABD1048Install/bin/outputFiles/gld1_1Subst.out"
 
@@ -104,5 +105,5 @@ echo "==========================================================================
 # docker rm $(docker ps -a -q)
 # echo "===== List of containers."
 # docker ps -a
-echo "===== Running bash in the container."
-docker container exec -it ${TESP_CONT} /bin/bash
+#echo "===== Running bash in the container."
+docker container exec -it ${TESP_CONT} /bin/bash -c 'stty cols 200 rows 60 && bash'
