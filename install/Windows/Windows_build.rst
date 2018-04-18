@@ -45,10 +45,17 @@ except for:
 - Install a GIT command-line version instead of SVN
 - Clone the "feature/1048" branch from https://github.com/gridlab-d/gridlab-d 
 
+::
+
+ cd /c/
+ git config --global (specify user.name, user.email, color.ui)
+ git clone -b feature/1048 https://github.com/gridlab-d/gridlab-d.git
+
+
 Eclipse is optional. If not using it:
 
-- append (for example) c:\gridlab-d\install64\bin to PATH 
-- create a new environment variable GLPATH=c:\gridlab-d\install64\lib\gridlabd;c:\gridlab-d\install64\share\gridlabd
+- append (for example) c:\\gridlab-d\\install64\\bin to PATH 
+- create a new environment variable GLPATH=c:\\gridlab-d\\install64\\lib\\gridlabd;c:\\gridlab-d\\install64\\share\\gridlabd
 
 At this point, you should have GridLAB-D built without FNCS.
 
@@ -162,20 +169,40 @@ Here is the Windows Makefile for CZMQ:
  clean:
 	 rm *.o *.a *.dll *.exe
 
-Now build FNCS, with manual adjustment of the required autoconf version:
+MinGW does not distribute the latest version of autoconf, so you need to build that latest version for FNCS:
+
+::
+
+ cd
+ wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+ tar xvfvz autoconf-2.69.tar.gz
+ cd autoconf-2.69
+ ./configure
+ make
+ make install
+
+Now build FNCS:
 
 ::
 
  cd
  git clone https://github.com/FNCS/fncs.git --branch feature/transactiveEnergyApi
  cd fncs
- (manually edit line 7 of configure.ac for version number 2.68) 
  ./configure --prefix=$HOME/FNCS_install --with-zmq=$HOME/FNCS_install
  make
  make install
 
+Copy the following build products from $FNCS_install/bin to c:/gridlab-d/install64/bin:
+
+- fncs_broker.exe
+- fncs_player.exe
+- fncs_tracer.exe
+- libzmq.dll
+- libczmq.dll
+- libfncs.dll
+ 
 Use manual commands for the Java Binding on Windows, because the Linux/Mac CMake files
-don't work on Windows yet:
+don't work on Windows yet. Also make sure that the JDK/bin directory is in your path.
 
 ::
 
@@ -185,6 +212,10 @@ don't work on Windows yet:
  javah -classpath fncs.jar -jni fncs.JNIfncs
  g++ -DJNIfncs_EXPORTS -I"C:/Program Files/Java/jdk1.8.0_101/include" -I"C:/Program Files/Java/jdk1.8.0_101/include/win32" -IC:/MinGW/msys/1.0/home/tom/fncs-dev/java -IC:/MinGW/msys/1.0/home/tom/FNCS_install/include -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
  g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Program Files/Java/jdk1.8.0_101/lib/jawt.lib" "C:/Program Files/Java/jdk1.8.0_101/lib/jvm.lib" C:/gridlab-d/install64/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+ 
+(for Java 9)
+g++ -DJNIfncs_EXPORTS -I"C:/Program Files/Java/jdk-9.0.4/include" -I"C:/Program Files/Java/jdk-9.0.4/include/win32" -IC:/MinGW/msys/1.0/home/tom/FNCS_install/include -I. -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
+g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Program Files/Java/jdk-9.0.4/lib/jawt.lib" "C:/Program Files/Java/jdk-9.0.4/lib/jvm.lib" C:/gridlab-d/install64/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
 
 Finally, rebuild GridLAB-D with FNCS:
 
@@ -201,7 +232,7 @@ Build JsonCPP for EnergyPlus
 
 Clone the master branch from https://github.com/open-source-parsers/jsoncpp
 
-Install cmake from https://cmake.org/download/ into c:\cmake so it's easy to start from the MSYS terminal.
+Install cmake from https://cmake.org/download/ into c:\\cmake so it's easy to start from the MSYS terminal.
 
 The GridLAB-D setup requires CMake to use MSYS makefiles, not MinGW makefiles.
 In addition, CMake may find conflicting versions of "cc" and "make" from other
@@ -215,6 +246,12 @@ development tools, e.g. FPC and Delphi. To mitigate these issues:
 - make
 - make install
 
+Temporary workaround for the EnergyPlus build:
+
+::
+
+ copy \MinGW\msys\1.0\home\Tom\FNCS_install\lib\libjsoncpp.a MinGW\msys\1.0\opt\windows_64\lib64
+
 Build EnergyPlus
 ~~~~~~~~~~~~~~~~
 
@@ -222,10 +259,15 @@ Install the archived version 8.3 from https://github.com/NREL/EnergyPlus/release
 We need this for some critical support files that aren't part of the FNCS-EnergyPlus build
 process.
 
+::
+
+ cd /c/
+ git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
+
 Start Cmake from the MSYS terminal, as you did for jsoncpp, and configure it as follows:
 
-- source code at c:\energyplus
-- binaries at c:\energyplus\build
+- source code at c:\\energyplus
+- binaries at c:\\energyplus\\build
 - set the Grouped and Advanced check boxes
 - press Configure and choose MSYS Makefiles
 - press Generate
@@ -240,4 +282,33 @@ From the MSYS terminal
 - make install
 - the Makefiles put energyplus.exe and its DLL into $HOME/FNCS_install; you have to manually copy these files to $HOME/FNCS_install/bin
 
+Build eplus_json
+~~~~~~~~~~~~~~~~
+
+From the MSYS terminal
+
+::
+
+ cd /c/
+ git clone -b master https://github.com/pnnl/tesp.git
+ cd tesp/src/energyplus
+ cp Makefile.win Makefile
+ cp config.h.win config.h
+ make
+ make install
+
+Copy the following build products from $FNCS_install/bin to c:/gridlab-d/install64/bin:
+
+- energyplus.exe
+- eplus_json.exe
+- energyplusapi.dll
+
+Copy the following from c:\\EnergyPlusV8-3-0 to c:\\gridlab-d\\install64\\bin:
+
+- Energy+.idd
+- parser.exe
+- RunReadESO.bat
+- ReadVarsESO.exe
+
+ 
 

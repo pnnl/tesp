@@ -30,13 +30,13 @@ http://www.oracle.com/technetwork/java/javase/downloads/index.html
 Install TESP (includes GridLAB-D 4.0 feature/1048 build)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Git checkout https://github.com/pnnl/tesp to c:\tesp
-- Create a new folder: c:\gridlab-d
+- Git checkout https://github.com/pnnl/tesp to c:\\tesp
+- Create a new folder: c:\\gridlab-d
 - Find the latest Windows/FNCS GridLAB-D/EnergyPlus release at https://github.com/pnnl/tesp/releases and download install64.zip from there
-- Unzip the archive install64.zip to c:\gridlab-d
-- Unzip the archive c:\tesp\install\windows\MinGWredist.zip archive to c:\gridlab-d\install64\bin
-- Add "c:\gridlab-d\install64\bin" to the system environment variable "Path"
-- Create "GLPATH"  system environment variable, and set GLPATH = C:\gridlab-d\install64\share\gridlabd;C:\gridlab-d\install64\lib\gridlabd
+- Unzip the archive install64.zip to c:\\gridlab-d
+- Unzip the archive c:\\tesp\\install\\windows\\MinGWredist.zip archive to c:\\gridlab-d\\install64\\bin
+- Add "c:\\gridlab-d\\install64\\bin" to the system environment variable "Path"
+- Create "GLPATH"  system environment variable, and set GLPATH = C:\\gridlab-d\\install64\\share\\gridlabd;C:\\gridlab-d\\install64\\lib\\gridlabd
 - From a Command Prompt, enter "gridlabd --version" and "energyplus --version" to verify
 - Try RunExamples_
 

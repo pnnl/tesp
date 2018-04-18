@@ -6,7 +6,7 @@ import matplotlib as mpl;
 import matplotlib.pyplot as plt;
 
 # first, read and print a dictionary of relevant agents
-lp = open (sys.argv[1] + "_agent_dict.json").read()
+lp = open (sys.argv[1] + '_agent_dict.json').read()
 dict = json.loads(lp)
 a_keys = list(dict['markets'].keys())
 a_keys.sort()

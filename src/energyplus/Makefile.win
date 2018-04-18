@@ -1,0 +1,42 @@
+INSTALL_PATH := /home/tom/FNCS_install
+FNCS_PATH := /home/tom/FNCS_install
+CXX = g++
+
+CXXFLAGS =
+CXXFLAGS += -g
+CXXFLAGS += -O0
+CXXFLAGS += -std=c++0x
+
+CPPFLAGS =
+CPPFLAGS += -I$(FNCS_PATH)/include
+CPPFLAGS += -pthread
+
+LDFLAGS =
+LDFLAGS += -L$(FNCS_PATH)/lib
+
+LIBS =
+LIBS += -lfncs
+LIBS += -lczmq
+LIBS += -lzmq
+
+all: eplus_json.exe
+
+eplus_json.o: eplus_json.cpp
+	$(CXX) -c $< -o $@ $(CXXFLAGS) $(CPPFLAGS)
+
+jsoncpp.o: jsoncpp.cpp
+	$(CXX) -c $< -o $@ $(CXXFLAGS) $(CPPFLAGS)
+
+eplus_json.exe: eplus_json.o jsoncpp.o
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LIBS)
+
+clean:
+	rm -f *~
+	rm -f *.o
+	rm -f *.mod
+	rm -f eplus_json.exe
+	rm -f *.chk
+	rm -f *.out
+
+install:
+	cp eplus_json.exe $(INSTALL_PATH)/bin
