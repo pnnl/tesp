@@ -1,0 +1,12 @@
+name: eplus
+time_delta: 5m
+broker: tcp://localhost:5570
+values:
+    COOL_SETP_DELTA:
+        topic: eplus_json/cooling_setpoint_delta
+        default: 0
+    HEAT_SETP_DELTA:
+        topic: eplus_json/heating_setpoint_delta
+        default: 0
+
+
