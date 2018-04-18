@@ -49,7 +49,7 @@ docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${FNCS_INSTALL}/bin/ou
 echo "===== Set-up GridLAB-D paths and folders."
 docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${GLD_INSTALL}/bin/modelFiles; then rmdir ${GLD_INSTALL}/bin/modelFiles; mkdir ${GLD_INSTALL}/bin/modelFiles; else mkdir ${GLD_INSTALL}/bin/modelFiles; fi'
 docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${GLD_INSTALL}/bin/inputFilesTE30; then rmdir ${GLD_INSTALL}/bin/inputFilesTE30; mkdir ${GLD_INSTALL}/bin/inputFilesTE30; else mkdir ${GLD_INSTALL}/bin/inputFilesTE30; fi'
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${GLD_INSTALL}/bin/outputFiles; then rmdir ${GLD_INSTALL}/bin/outlputFiles; mkdir ${GLD_INSTALL}/bin/outputFiles; else mkdir ${GLD_INSTALL}/bin/outputFiles; fi'
+docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${GLD_INSTALL}/bin/outputFiles; then rmdir ${GLD_INSTALL}/bin/outputFiles; mkdir ${GLD_INSTALL}/bin/outputFiles; else mkdir ${GLD_INSTALL}/bin/outputFiles; fi'
 docker cp ${HOST_FOLDER}/GridLABD/modelFiles/ ${TESP_CONT}:/tesp/GridLABD1048Install/bin/
 docker cp ${HOST_FOLDER}/GridLABD/inputFilesTE30/ ${TESP_CONT}:/tesp/GridLABD1048Install/bin/
 # docker cp ${HOST_FOLDER}/GridLABD//outputFiles/ ${TESP_CONT}:/tesp/GridLABD1048Install/bin/
