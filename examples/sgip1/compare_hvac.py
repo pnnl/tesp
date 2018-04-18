@@ -17,6 +17,15 @@ def MakePlotData(root):
 	lp = open (root + "_glm_dict.json")
 	dict = json.loads(lp.read())
 	lp.close()
+
+	sub_keys = list(dict['feeders'].keys())
+	sub_keys.sort()
+	lp_s = open ("substation_" + root + "_metrics.json")
+	lst_s = json.loads(lp_s.read())
+	lp_s.close()
+	lst_s.pop('StartTime')
+	meta_s = lst_s.pop('Metadata')
+
 	hse_keys = list(dict['houses'].keys())
 	hse_keys.sort()
 	for key in hse_keys:
@@ -35,11 +44,26 @@ def MakePlotData(root):
 
 	time_key = str(times[0])
 
+	for key, val in meta_s.items():
+		if key == 'real_power_avg':
+			SUB_POWER_IDX = val['index']
+
 	for key, val in meta_h.items():
 		if key == 'air_temperature_avg':
 			AIR_AVG_IDX = val['index']
 		elif key == 'hvac_load_avg':
 			HVAC_AVG_IDX = val['index']
+
+	data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float)
+	j = 0
+	for key in sub_keys:
+		i = 0
+		for t in times:
+			ary = lst_s[str(t)][sub_keys[j]]
+			data_s[j, i,:] = ary
+			i = i + 1
+		j = j + 1
+	sub_mw = 1.0e-6 * data_s[0,:,SUB_POWER_IDX]
 
 	data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
 	j = 0
@@ -52,7 +76,7 @@ def MakePlotData(root):
 		j = j + 1
 
 	hvac1 = (data_h[:,:,HVAC_AVG_IDX]).squeeze()
-	hvac2 = hvac1.sum(axis=0)
+	hvac2 = 0.001 * hvac1.sum(axis=0)
 
 	j = 0
 	n = 0
@@ -65,25 +89,47 @@ def MakePlotData(root):
 		j = j + 1
 	avg_temp /= n
 	print(n,'HVACs')
-	return hrs, avg_temp, hvac2
+	return hrs, avg_temp, hvac2, sub_mw
 
 # display a plot
-fig, ax = plt.subplots(2, 1, sharex = 'col')
+tmin = 0.0
+tmax = 48.0
+xticks = [0,6,12,18,24,30,36,42,48]
+
+fig, ax = plt.subplots(3, 1, sharex = 'col')
+
 for root in casefiles:
 	print ('Processing', root[0])
-	hrs, avg_temp, hvac2 = MakePlotData(root[0])
+	hrs, avg_temp, hvac2, sub_mw = MakePlotData(root[0])
 	ax[0].plot(hrs, avg_temp, color=root[1], label=root[0])
 	ax[1].plot(hrs, hvac2, color=root[1], label=root[0])
+	ax[2].plot(hrs, sub_mw, color=root[1], label=root[0])
 
+ax[0].set_title ("Temperature at all HVAC Houses")
 ax[0].set_ylabel("Average Degrees")
-ax[1].set_ylabel("Total kW")
-ax[1].set_xlabel("Hours")
-ax[0].set_title ("HVAC at all Houses")
+
+ax[1].set_title ("HVAC Power")
+ax[1].set_ylabel("Total MW")
+
+ax[2].set_title ("Feeder Power")
+ax[2].set_ylabel("Total MW")
+
+ax[2].set_xlabel("Hours")
 
 ax[0].grid()
-ax[1].grid()
 ax[0].legend()
+ax[0].set_xlim(tmin,tmax)
+ax[0].set_xticks(xticks)
+
+ax[1].grid()
 ax[1].legend()
+ax[1].set_xlim(tmin,tmax)
+ax[1].set_xticks(xticks)
+
+ax[2].grid()
+ax[2].legend()
+ax[2].set_xlim(tmin,tmax)
+ax[2].set_xticks(xticks)
 
 plt.show()
 
