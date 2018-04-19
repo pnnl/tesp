@@ -1,7 +1,8 @@
 import ctypes
 import platform
+import os
 
-_libname = "/tesp/FNCSInstall/lib/libfncs.so"
+_libname = os.environ["FNCS_LIBRARY"] + "/libfncs.so"
 
 if platform.system() == 'Darwin':
     _libname = "libfncs.dylib"

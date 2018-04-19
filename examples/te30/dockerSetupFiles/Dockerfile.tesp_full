@@ -24,8 +24,6 @@ RUN apt-get update && \
     python --version && \
     echo "===== PIP VERSION =====" && \
     pip --version && \
-#    echo "===== install PYTHON-PIP =====" && \
-#    apt-get install -y python-pip && \
     echo "===== UPGRADE PIP =====" && \
     pip install --upgrade pip && \
     echo "===== install NUMPY =====" && \
@@ -178,20 +176,6 @@ RUN mkdir ${EPLUS_INSTALL} && \
     make && \
     make install && \
     cd /tmp
-    
-# ----------------------------------------------------
-# INSTALL Energy Plus
-# ----------------------------------------------------
-#RUN cd ${SOURCE_DIR}/${EPLUS_SOURCE} && \
-#    mkdir build && \
-#    cd build && \
-#    cmake .. && \
-#    make && \
-#    make install && \
-#    /bin/cp ${EPLUS_POSTPROC} ${EPLUS_INSTALL}/PostProcess && \
-#    cd /tmp && \
-#    /bin/rm -r ${SOURCE_DIR}/${EPLUS_SOURCE} && \
-#    /bin/rm -r ${SOURCE_DIR}/${EPLUS_POSTPROC}
 
 # ----------------------------------------------------
 # Extra installation needed for Energy Plus
