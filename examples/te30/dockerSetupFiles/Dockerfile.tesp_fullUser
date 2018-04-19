@@ -1,0 +1,10 @@
+ARG REPOSITORY="tesp/full"
+ARG TAG="V1"
+
+FROM ${REPOSITORY}:${TAG}
+
+RUN useradd -m -s /bin/bash tesp-user && \
+    chown -R tesp-user ${TESP}
+
+USER tesp-user
+WORKDIR ${TESP}
