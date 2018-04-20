@@ -3,6 +3,7 @@ import json
 import tkinter as tk
 import tkinter.ttk as ttk
 import numpy as np
+from tkinter import filedialog
 
 root = tk.Tk()
 root.title('Transactive Energy Simulation Platform: Case Configuration')
@@ -91,6 +92,7 @@ varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCool
 					['Tier 3 Price',0,'$/kwh','FeederGenerator','Tier3Price']
 					];
 varsPP = [['OPF Type','DC','AC/DC','PYPOWERConfiguration','ACOPF'],
+					['PF Type','AC','AC/DC','PYPOWERConfiguration','ACPF'],
 					['GLD Bus',7,'','PYPOWERConfiguration','GLDBus'],
 					['GLD Scale',400,'','PYPOWERConfiguration','GLDScale'],
 					['Non-responsive Loads','NonGLDLoad.txt','CSV File','PYPOWERConfiguration','CSVLoadFile'],
@@ -221,7 +223,7 @@ def ReadFrame(f,vars):
 	for w in f.grid_slaves():
 		col = int(w.grid_info()['column'])
 		row = int(w.grid_info()['row'])
-		if col == 1 and row > 0 and row < len(vars):
+		if col == 1 and row > 0 and row <= len(vars):
 			val = w.get()
 			section = vars[row-1][3]
 			attribute = vars[row-1][4]
@@ -261,10 +263,35 @@ def SaveConfig():
 			if col == 3 and use3:
 				val = float(w.get())
 				config['MonteCarloCase']['Samples3'][row-3] = val
-	print (json.dumps(config)) # , file=dp)
+	fname = filedialog.asksaveasfilename(initialdir = '~/src/examples/te30',
+																			 title = 'Save JSON Configuration to',
+																			 defaultextension = 'json')
+	op = open (fname, 'w')
+	print ('Saving configuration to', fname)
+	print (json.dumps(config), file=op)
+	op.close()
+
+def JsonToSection(jsn, vars):
+	for i in range(len(vars)):
+		section = vars[i][3]
+		attribute = vars[i][4]
+		vars[i][1] = jsn[section][attribute]
 
 def OpenConfig():
-	print('TODO: open configuration from JSON')
+	fname = filedialog.askopenfilename(initialdir = '~/src/examples/te30',
+																		title = 'Open JSON Configuration',
+																		filetypes = (("JSON files","*.json"),("all files","*.*")),
+																		defaultextension = 'json')
+	print ('Read from', fname)
+	lp = open (fname)
+	cfg = json.loads(lp.read())
+	lp.close()
+	JsonToSection (cfg, varsTM)
+	JsonToSection (cfg, varsFD)
+	JsonToSection (cfg, varsPP)
+	JsonToSection (cfg, varsEP)
+	JsonToSection (cfg, varsAC)
+	JsonToSection (cfg, varsTS)
 
 #ttk.Style().configure('TButton', background='blue')
 ttk.Style().configure('TButton', foreground='blue')
@@ -277,6 +304,8 @@ btn.grid(row=len(varsTM) + 3, column=1, sticky=tk.NSEW)
 
 def UpdateMonteCarloFrame():
 	SizeMonteCarloFrame (f7)
+
+print('TkInter Version', tk.TkVersion)
 
 lab = ttk.Label(f7, text='Columns', relief=tk.RIDGE)
 lab.grid(row=0, column=0, sticky=tk.NSEW)
