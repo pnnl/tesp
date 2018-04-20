@@ -163,6 +163,12 @@ def AttachFrame(tag, vars):
 		lab.grid(row=i+1, column=2, sticky=tk.NSEW)
 	return f
 
+def ReloadFrame(f, vars):
+	for i in range(len(vars)):
+		ent = f.grid_slaves (row=i+1, column=1)[0]
+		ent.delete (0, tk.END)
+		ent.insert (0, vars[i][1])
+
 def SizeMonteCarloFrame(f):
 	startRow = 2
 	for w in f.grid_slaves():
@@ -243,6 +249,7 @@ def SaveConfig():
 	use1 = col1 != 'None'
 	use2 = col2 != 'None'
 	use3 = col3 != 'None'
+	numCases = int (f7.children['rows'].get())  # TODO - what if user changed entry and didn't click Update...global numCases?
 	config['MonteCarloCase']['NumCases'] = numCases
 	config['MonteCarloCase']['Variable1'] = col1
 	config['MonteCarloCase']['Variable2'] = col2
@@ -267,7 +274,6 @@ def SaveConfig():
 																			 title = 'Save JSON Configuration to',
 																			 defaultextension = 'json')
 	op = open (fname, 'w')
-	print ('Saving configuration to', fname)
 	print (json.dumps(config), file=op)
 	op.close()
 
@@ -276,13 +282,13 @@ def JsonToSection(jsn, vars):
 		section = vars[i][3]
 		attribute = vars[i][4]
 		vars[i][1] = jsn[section][attribute]
+		config[section][attribute] = jsn[section][attribute]
 
 def OpenConfig():
 	fname = filedialog.askopenfilename(initialdir = '~/src/examples/te30',
 																		title = 'Open JSON Configuration',
 																		filetypes = (("JSON files","*.json"),("all files","*.*")),
 																		defaultextension = 'json')
-	print ('Read from', fname)
 	lp = open (fname)
 	cfg = json.loads(lp.read())
 	lp.close()
@@ -292,6 +298,36 @@ def OpenConfig():
 	JsonToSection (cfg, varsEP)
 	JsonToSection (cfg, varsAC)
 	JsonToSection (cfg, varsTS)
+	ReloadFrame (f1, varsTM)
+	ReloadFrame (f2, varsFD)
+	ReloadFrame (f3, varsPP)
+	ReloadFrame (f4, varsEP)
+	ReloadFrame (f5, varsAC)
+	ReloadFrame (f6, varsTS)
+
+	numCases = int (cfg['MonteCarloCase']['NumCases'])
+	config['MonteCarloCase']['NumCases'] = numCases
+	ent = f7.children['rows']
+	ent.delete (0, tk.END)
+	ent.insert (0, str(numCases))
+
+	var1 = cfg['MonteCarloCase']['Variable1']
+	config['MonteCarloCase']['Variable1'] = var1
+	f7.children['cb1'].set(var1)
+
+	var2 = cfg['MonteCarloCase']['Variable2']
+	config['MonteCarloCase']['Variable2'] = var2
+	f7.children['cb2'].set(var2)
+
+	var3 = cfg['MonteCarloCase']['Variable3']
+	config['MonteCarloCase']['Variable3'] = var3
+	f7.children['cb3'].set(var3)
+
+	config['MonteCarloCase']['Samples1'] = [0] * numCases
+	config['MonteCarloCase']['Samples2'] = [0] * numCases
+	config['MonteCarloCase']['Samples3'] = [0] * numCases
+
+	SizeMonteCarloFrame (f7)
 
 #ttk.Style().configure('TButton', background='blue')
 ttk.Style().configure('TButton', foreground='blue')
