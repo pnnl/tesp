@@ -15,8 +15,6 @@ config = {'BackboneFiles':{},'FeederGenerator':{},'EplusConfiguration':{},'PYPOW
 
 StartTime = "2013-07-01 00:00:00"
 EndTime = "2013-07-03 00:00:00"
-global numCases
-numCases = 7
 #Tmax = 2 * 24 * 3600
 
 taxonomyChoices = ['GC-12.47-1',
@@ -45,30 +43,39 @@ taxonomyChoices = ['GC-12.47-1',
 									 'R5-35.00-1'
 									 ];
 
-inverterModes = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
+inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
+inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 
 billingModes = ['TIERED_TOU','TIERED_RTP','HOURLY','TIERED','UNIFORM','NONE'];
 
-monteCarloChoices = ['None','ElectricCoolingParticipation','ThermostatRampLo','ThermostatRampHi'];
+eplusVoltageChoices = ['208', '480'];
 
-weatherChoices = ['TMY','CSV','WeatherBug']
+powerFlowChoices = ['AC','DC'];
+optimalPowerFlowChoices = ['AC','DC'];
+
+# if one of these ends in 'Mid' we need to supply a 'Band' input
+monteCarloChoices = ['None','ElectricCoolingParticipation','ThermostatRampMid','ThermostatOffsetLimitMid',
+										 'WeekdayEveningStartMid','WeekdayEveningSetMid'];
+
+weatherChoices = ['TMY3','CSV','WeatherBug']
 
 # var columns are label, value, hint, JSON class, JSON attribute
 varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'],
 					['End Time',EndTime,'GLD Date/Time','SimulationConfig','EndTime'],
 					['Market Clearing Period',300,'s','AgentPrep','MarketClearingPeriod'],
 					['GridLAB-D Time Step',3,'s','FeederGenerator','MinimumStep'],
-          ['Optimal Power Flow Time Step',300,'s','PYPOWERConfiguration','OPFStep'],
+					['Optimal Power Flow Time Step',300,'s','PYPOWERConfiguration','OPFStep'],
 					['Power Flow Time Step',3,'s','PYPOWERConfiguration','PFStep'],
 					['Energy+ Time Step',60,'s','EplusConfiguration','TimeStep'],
 					['Agent Time Step',3,'s','AgentPrep','TimeStepGldAgents'],
-					['GridLAB-D Taxonomy Choice','Taxonomy.glm','','BackboneFiles','TaxonomyChoice'],
+					['GridLAB-D Taxonomy Choice','R2-35.00-1','','BackboneFiles','TaxonomyChoice','taxonomyChoices'],
 					['Energy+ Base File','SchoolDualController.idf','','BackboneFiles','EnergyPlusFile'],
 					['PYPOWER Base File','ppcasefile.py','','BackboneFiles','PYPOWERFile'],
-					['Weather Type','TMY3','TMY3/CSV/WeatherBug','WeatherPrep','WeatherChoice'],
+					['Weather Type','TMY3','','WeatherPrep','WeatherChoice','weatherChoices'],
 					['Weather Source','WA-Yakima_Air_Terminal.tmy3','File or URL','WeatherPrep','DataSource'],
 					['Airport Code','YKM','','WeatherPrep','AirportCode'],
 					['Weather Year','2001','','WeatherPrep','Year'],
+					['Source Directory','./','Parent directory of base model files','SimulationConfig','SourceDirectory'],
 					['Working Directory','./','','SimulationConfig','WorkingDirectory'],
 					['Case Name','Test','','SimulationConfig','CaseName']
 					];
@@ -76,12 +83,12 @@ varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCool
 					['Electric Cooling Participation',50,'%','FeederGenerator','ElectricCoolingParticipation'],
 					['Solar Penetration',20,'%','FeederGenerator','SolarPercentage'],
 					['Storage Penetration',10,'%','FeederGenerator','StoragePercentage'],
-					['Solar Inverter Mode','CONSTANT_PF','','FeederGenerator','SolarInverterMode'],
-					['Storage Inverter Mode','CONSTANT_PF','','FeederGenerator','StorageInverterMode'],
+					['Solar Inverter Mode','CONSTANT_PF','','FeederGenerator','SolarInverterMode','inverterModesPV'],
+					['Storage Inverter Mode','CONSTANT_PF','','FeederGenerator','StorageInverterMode','inverterModesBattery'],
 					['Eplus Bus','Eplus_load','','FeederGenerator','EnergyPlusBus'],
-					['Eplus Service Voltage',480,'V (480 or 208)','FeederGenerator','EnergyPlusServiceV'],
+					['Eplus Service Voltage',480,'V','FeederGenerator','EnergyPlusServiceV','eplusVoltageChoices'],
 					['Eplus Transformer Size',150,'kVA','FeederGenerator','EnergyPlusXfmrKva'],
-					['Billing Mode','TIERED','','FeederGenerator','BillingMode'],
+					['Billing Mode','TIERED','','FeederGenerator','BillingMode','billingModes'],
 					['Monthly Fee',13,'$','FeederGenerator','MonthlyFee'],
 					['Price',0.102013,'$/kwh','FeederGenerator','Price'],
 					['Tier 1 Energy',500,'kwh','FeederGenerator','Tier1Energy'],
@@ -91,8 +98,8 @@ varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCool
 					['Tier 3 Energy',0,'kwh','FeederGenerator','Tier3Energy'],
 					['Tier 3 Price',0,'$/kwh','FeederGenerator','Tier3Price']
 					];
-varsPP = [['OPF Type','DC','AC/DC','PYPOWERConfiguration','ACOPF'],
-					['PF Type','AC','AC/DC','PYPOWERConfiguration','ACPF'],
+varsPP = [['OPF Type','DC','for dispatch and price','PYPOWERConfiguration','ACOPF','optimalPowerFlowChoices'],
+					['PF Type','AC','for voltage','PYPOWERConfiguration','ACPF','powerFlowChoices'],
 					['GLD Bus',7,'','PYPOWERConfiguration','GLDBus'],
 					['GLD Scale',400,'','PYPOWERConfiguration','GLDScale'],
 					['Non-responsive Loads','NonGLDLoad.txt','CSV File','PYPOWERConfiguration','CSVLoadFile'],
@@ -115,7 +122,7 @@ varsAC = [['Initial Price',0.02078,'$','AgentPrep','InitialPriceMean'],
 					['Band Lo',1.0,'degF','AgentPrep','ThermostatBandLo'],
 					['Band Hi',3.0,'degF','AgentPrep','ThermostatBandHi'],
 					['Offset Limit Lo',2.0,'degF','AgentPrep','ThermostatOffsetLimitLo'],
-					['Offset Limit Hi',6.0,'degF','AgentPrep','ThermostatOffsetLimitLo'],
+					['Offset Limit Hi',6.0,'degF','AgentPrep','ThermostatOffsetLimitHi'],
 					['Price Cap Lo',1.00,'$','AgentPrep','PriceCapLo'],
 					['Price Cap Hi',3.00,'$','AgentPrep','PriceCapHi']
 					];
@@ -156,9 +163,14 @@ def AttachFrame(tag, vars):
 	for i in range(len(vars)):
 		lab = ttk.Label(f, text=vars[i][0], relief=tk.RIDGE)
 		lab.grid(row=i+1, column=0, sticky=tk.NSEW)
-		ent = ttk.Entry(f)
-		ent.insert(0, vars[i][1])
-		ent.grid(row=i+1, column=1, sticky=tk.NSEW)
+		if len(vars[i]) > 5:
+			cb = ttk.Combobox(f, values=globals()[vars[i][5]], name=vars[i][5])
+			cb.set(vars[i][1])
+			cb.grid(row=i+1, column=1, sticky=tk.NSEW)
+		else:
+			ent = ttk.Entry(f)
+			ent.insert(0, vars[i][1])
+			ent.grid(row=i+1, column=1, sticky=tk.NSEW)
 		lab = ttk.Label(f, text=vars[i][2], relief=tk.RIDGE)
 		lab.grid(row=i+1, column=2, sticky=tk.NSEW)
 	return f
@@ -169,50 +181,94 @@ def ReloadFrame(f, vars):
 		ent.delete (0, tk.END)
 		ent.insert (0, vars[i][1])
 
+def SizeMonteCarlo(n):
+	config['MonteCarloCase']['NumCases'] = n
+	config['MonteCarloCase']['Band1'] = 0.0
+	config['MonteCarloCase']['Band2'] = 0.0
+	config['MonteCarloCase']['Band3'] = 0.0
+	config['MonteCarloCase']['Samples1'] = [0] * n
+	config['MonteCarloCase']['Samples2'] = [0] * n
+	config['MonteCarloCase']['Samples3'] = [0] * n
+	for i in range(n):
+		config['MonteCarloCase']['Samples1'][i] = np.random.uniform (0, 1)
+		config['MonteCarloCase']['Samples2'][i] = np.random.uniform (0, 1)
+		config['MonteCarloCase']['Samples3'][i] = np.random.uniform (0, 1)
+
+def InitializeMonteCarlo(n):
+	SizeMonteCarlo(n)
+	config['MonteCarloCase']['Variable1'] = monteCarloChoices[1]
+	config['MonteCarloCase']['Variable2'] = monteCarloChoices[2]
+	config['MonteCarloCase']['Variable3'] = monteCarloChoices[3]
+
+# row 0 for dropdowns, 1 for update controls, 2 for column headers, 3 for range edits
 def SizeMonteCarloFrame(f):
-	startRow = 2
+	startRow = 3
 	for w in f.grid_slaves():
 		if int(w.grid_info()['row']) > startRow:
 			w.grid_forget()
 
-	numCases = int (f.children['rows'].get())
 	col1 = f.children['cb1'].get()
 	col2 = f.children['cb2'].get()
 	col3 = f.children['cb3'].get()
 	use1 = col1 != 'None'
 	use2 = col2 != 'None'
 	use3 = col3 != 'None'
+	band1 = 'Mid' in col1
+	band2 = 'Mid' in col2
+	band3 = 'Mid' in col3
 
 	lab = ttk.Label(f, text='Case #', relief=tk.RIDGE)
-	lab.grid(row=startRow, column=0, sticky=tk.NSEW)
+	lab.grid(row=startRow + 1, column=0, sticky=tk.NSEW)
 	lab = ttk.Label(f, text=col1, relief=tk.RIDGE)
-	lab.grid(row=startRow, column=1, sticky=tk.NSEW)
+	lab.grid(row=startRow - 1, column=1, sticky=tk.NSEW)
 	lab = ttk.Label(f, text=col2, relief=tk.RIDGE)
-	lab.grid(row=startRow, column=2, sticky=tk.NSEW)
+	lab.grid(row=startRow - 1, column=2, sticky=tk.NSEW)
 	lab = ttk.Label(f, text=col3, relief=tk.RIDGE)
-	lab.grid(row=startRow, column=3, sticky=tk.NSEW)
+	lab.grid(row=startRow - 1, column=3, sticky=tk.NSEW)
 
-	for i in range(numCases):
+	lab = ttk.Label(f, text='Band', relief=tk.RIDGE)
+	lab.grid(row=startRow, column=0, sticky=tk.NSEW)
+	if band1:
+		w1 = ttk.Entry(f)
+		w1.insert(0, config['MonteCarloCase']['Band1'])
+	else:
+		w1 = ttk.Label(f, text='n/a', relief=tk.RIDGE)
+	if band2:
+		w2 = ttk.Entry(f)
+		w2.insert(0, config['MonteCarloCase']['Band2'])
+	else:
+		w2 = ttk.Label(f, text='n/a', relief=tk.RIDGE)
+	if band3:
+		w3 = ttk.Entry(f)
+		w3.insert(0, config['MonteCarloCase']['Band3'])
+	else:
+		w3 = ttk.Label(f, text='n/a', relief=tk.RIDGE)
+	w1.grid(row=startRow, column=1, sticky=tk.NSEW)
+	w2.grid(row=startRow, column=2, sticky=tk.NSEW)
+	w3.grid(row=startRow, column=3, sticky=tk.NSEW)
+
+	n = int (config['MonteCarloCase']['NumCases'])
+	for i in range(n):
 		lab = ttk.Label(f, text=str(i+1), relief=tk.RIDGE)
-		lab.grid(row=i+1+startRow, column=0, sticky=tk.NSEW)
+		lab.grid(row=i+2+startRow, column=0, sticky=tk.NSEW)
 		if use1:
 			w1 = ttk.Entry(f)
-			w1.insert(0, np.random.uniform (0, 1))
+			w1.insert(0, config['MonteCarloCase']['Samples1'][i])
 		else:
 			w1 = ttk.Label(f, text='n/a', relief=tk.RIDGE)
 		if use2:
 			w2 = ttk.Entry(f)
-			w2.insert(0, np.random.uniform (0, 1))
+			w2.insert(0, config['MonteCarloCase']['Samples2'][i])
 		else:
 			w2 = ttk.Label(f, text='n/a', relief=tk.RIDGE)
 		if use3:
 			w3 = ttk.Entry(f)
-			w3.insert(0, np.random.uniform (0, 1))
+			w3.insert(0, config['MonteCarloCase']['Samples3'][i])
 		else:
 			w3 = ttk.Label(f, text='n/a', relief=tk.RIDGE)
-		w1.grid(row=i+1+startRow, column=1, sticky=tk.NSEW)
-		w2.grid(row=i+1+startRow, column=2, sticky=tk.NSEW)
-		w3.grid(row=i+1+startRow, column=3, sticky=tk.NSEW)
+		w1.grid(row=i+2+startRow, column=1, sticky=tk.NSEW)
+		w2.grid(row=i+2+startRow, column=2, sticky=tk.NSEW)
+		w3.grid(row=i+2+startRow, column=3, sticky=tk.NSEW)
 
 f1 = AttachFrame ('varsTM', varsTM)
 f2 = AttachFrame ('varsFD', varsFD)
@@ -223,7 +279,7 @@ f6 = AttachFrame ('varsTS', varsTS)
 f7 = ttk.Frame (nb, name='varsMC')
 
 def GenerateFiles():
-	print('TODO: write all files to case working directory')
+	print('TODO: save configuration, separate script will write all files to case working directory')
 
 def ReadFrame(f,vars):
 	for w in f.grid_slaves():
@@ -249,27 +305,34 @@ def SaveConfig():
 	use1 = col1 != 'None'
 	use2 = col2 != 'None'
 	use3 = col3 != 'None'
-	numCases = int (f7.children['rows'].get())  # TODO - what if user changed entry and didn't click Update...global numCases?
-	config['MonteCarloCase']['NumCases'] = numCases
-	config['MonteCarloCase']['Variable1'] = col1
-	config['MonteCarloCase']['Variable2'] = col2
-	config['MonteCarloCase']['Variable3'] = col3
-	config['MonteCarloCase']['Samples1'] = [0] * numCases
-	config['MonteCarloCase']['Samples2'] = [0] * numCases
-	config['MonteCarloCase']['Samples3'] = [0] * numCases
+	band1 = 'Mid' in col1
+	band2 = 'Mid' in col2
+	band3 = 'Mid' in col3
+	numCases = int (f7.children['rows'].get())	# TODO - what if user changed entry and didn't click Update...global numCases?
+	InitializeMonteCarlo (numCases)
 	for w in f7.grid_slaves():
 		row = int(w.grid_info()['row'])
-		if row > 2:
-			col = int(w.grid_info()['column'])
+		col = int(w.grid_info()['column'])
+		if row == 3:
+			if col == 1 and band1:
+				val = float(w.get())
+				config['MonteCarloCase']['Band1'] = val
+			if col == 2 and band2:
+				val = float(w.get())
+				config['MonteCarloCase']['Band2'] = val
+			if col == 3 and band3:
+				val = float(w.get())
+				config['MonteCarloCase']['Band3'] = val
+		elif row > 4:
 			if col == 1 and use1:
 				val = float(w.get())
-				config['MonteCarloCase']['Samples1'][row-3] = val
+				config['MonteCarloCase']['Samples1'][row-5] = val
 			if col == 2 and use2:
 				val = float(w.get())
-				config['MonteCarloCase']['Samples2'][row-3] = val
+				config['MonteCarloCase']['Samples2'][row-5] = val
 			if col == 3 and use3:
 				val = float(w.get())
-				config['MonteCarloCase']['Samples3'][row-3] = val
+				config['MonteCarloCase']['Samples3'][row-5] = val
 	fname = filedialog.asksaveasfilename(initialdir = '~/src/examples/te30',
 																			 title = 'Save JSON Configuration to',
 																			 defaultextension = 'json')
@@ -323,9 +386,18 @@ def OpenConfig():
 	config['MonteCarloCase']['Variable3'] = var3
 	f7.children['cb3'].set(var3)
 
+	config['MonteCarloCase']['Band1'] = cfg['MonteCarloCase']['Band1']
+	config['MonteCarloCase']['Band2'] = cfg['MonteCarloCase']['Band2']
+	config['MonteCarloCase']['Band3'] = cfg['MonteCarloCase']['Band3']
+
 	config['MonteCarloCase']['Samples1'] = [0] * numCases
 	config['MonteCarloCase']['Samples2'] = [0] * numCases
 	config['MonteCarloCase']['Samples3'] = [0] * numCases
+
+	for i in range(numCases):
+		config['MonteCarloCase']['Samples1'][i] = cfg['MonteCarloCase']['Samples1'][i]
+		config['MonteCarloCase']['Samples2'][i] = cfg['MonteCarloCase']['Samples2'][i]
+		config['MonteCarloCase']['Samples3'][i] = cfg['MonteCarloCase']['Samples3'][i]
 
 	SizeMonteCarloFrame (f7)
 
@@ -339,6 +411,8 @@ btn = ttk.Button(f1, text='Open Config...', command=OpenConfig)
 btn.grid(row=len(varsTM) + 3, column=1, sticky=tk.NSEW)
 
 def UpdateMonteCarloFrame():
+	numCases = int (f7.children['rows'].get())
+	SizeMonteCarlo (numCases)
 	SizeMonteCarloFrame (f7)
 
 print('TkInter Version', tk.TkVersion)
@@ -355,13 +429,15 @@ cb = ttk.Combobox(f7, values=monteCarloChoices, name='cb3')
 cb.set(monteCarloChoices[3])
 cb.grid(row=0, column=3, sticky=tk.NSEW)
 
+InitializeMonteCarlo (7)
 lab = ttk.Label(f7, text='Rows', relief=tk.RIDGE)
 lab.grid(row=1, column=0, sticky=tk.NSEW)
 ent = ttk.Entry(f7, name='rows')
-ent.insert(0, str(numCases))
+ent.insert(0, config['MonteCarloCase']['NumCases'])
 ent.grid(row=1, column=1, sticky=tk.NSEW)
 btn = ttk.Button (f7, text='Update', command=UpdateMonteCarloFrame)
 btn.grid(row=1, column=3, sticky=tk.NSEW)
+SizeMonteCarlo (config['MonteCarloCase']['NumCases'])
 SizeMonteCarloFrame (f7)
 
 nb.add(f1, text='Main', underline=0, padding=2)
