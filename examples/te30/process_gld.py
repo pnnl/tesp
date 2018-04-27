@@ -55,8 +55,10 @@ hrs = np.array(times, dtype=np.float)
 denom = 3600.0
 hrs /= denom
 
+time_key = str(times[0])
+
 # parse the substation metadata for 2 things of specific interest
-print ("\nSubstation Metadata for", len(lst_s['3600']), "objects")
+print ("\nSubstation Metadata for", len(lst_s[time_key]), "objects")
 for key, val in meta_s.items():
 	print (key, val['index'], val['units'])
 	if key == 'real_power_avg':
@@ -67,7 +69,7 @@ for key, val in meta_s.items():
 		SUB_LOSSES_UNITS = val['units']
 
 # create a NumPy array of all metrics for the substation
-data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s['3600'][sub_keys[0]])), dtype=np.float)
+data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float)
 print ("\nConstructed", data_s.shape, "NumPy array for Substations")
 j = 0
 for key in sub_keys:
@@ -94,7 +96,7 @@ lst_i = json.loads(lp_i)
 # houses
 lst_h.pop('StartTime')
 meta_h = lst_h.pop('Metadata')
-print("\nHouse Metadata for", len(lst_h['3600']), "objects")
+print("\nHouse Metadata for", len(lst_h[time_key]), "objects")
 for key, val in meta_h.items():
 	print (key, val['index'], val['units'])
 	if key == 'air_temperature_max':
@@ -106,7 +108,7 @@ for key, val in meta_h.items():
 	elif key == 'air_temperature_avg':
 		HSE_AIR_AVG_IDX = val['index']
 		HSE_AIR_AVG_UNITS = val['units']
-data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h['3600'][hse_keys[0]])), dtype=np.float)
+data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
 print ("\nConstructed", data_h.shape, "NumPy array for Houses")
 j = 0
 for key in hse_keys:
@@ -122,7 +124,7 @@ print ('average all house temperatures Noon-8 pm first day:', data_h[:,144:240,H
 # Billing Meters 
 lst_m.pop('StartTime')
 meta_m = lst_m.pop('Metadata')
-print("\nBilling Meter Metadata for", len(lst_m['3600']), "objects")
+print("\nBilling Meter Metadata for", len(lst_m[time_key]), "objects")
 for key, val in meta_m.items():
 	print (key, val['index'], val['units'])
 	if key == 'voltage_max':
@@ -141,7 +143,7 @@ for key, val in meta_m.items():
 		MTR_VOLTUNB_MAX_IDX = val['index']
 		MTR_VOLTUNB_MAX_UNITS = val['units']
 
-data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float)
+data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
 print ("\nConstructed", data_m.shape, "NumPy array for Meters")
 j = 0
 for key in mtr_keys:
@@ -154,7 +156,7 @@ for key in mtr_keys:
 
 #lst_i.pop('StartTime')
 #meta_i = lst_i.pop('Metadata')
-#print("\nInverter Metadata for", len(lst_i['3600']), "objects")
+#print("\nInverter Metadata for", len(lst_i[time_key]), "objects")
 #for key, val in meta_i.items():
 #       	print (key, val['index'], val['units'])
 #       	if key == 'real_power_avg':

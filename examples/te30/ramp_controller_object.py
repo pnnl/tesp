@@ -406,16 +406,16 @@ class ramp_controller_object:
         update_setpoints = False
         update_bid = False
         if marketId != lastmkt_id:
-            print ('sync: market changed, need to update the setpoints', t1, next_run, marketId, lastmkt_id)
+#            print ('sync: market changed, need to update the setpoints', t1, next_run, marketId, lastmkt_id)
             update_setpoints = True
         elif t1 >= next_run - bid_delay and self.controller_bid['rebid'] == 0: # temporarily disable rebids
-            print ('sync: t1 within bidding window, need to publish bid and state', t1, next_run - bid_delay)
+#            print ('sync: t1 within bidding window, need to publish bid and state', t1, next_run - bid_delay)
             update_bid = True
         else:
 #            print ('  returning', next_run)
             return next_run
 
-        print ('  processing', demand, powerstate, monitor, last_setpoint, deadband, direction, clear_price, avgP, stdP)
+#        print ('  processing', demand, powerstate, monitor, last_setpoint, deadband, direction, clear_price, avgP, stdP)
 
    # Check t1 to determine if the sync part is needed to be processed or not
    #     if t1 == next_run and marketId == lastmkt_id :
@@ -489,7 +489,7 @@ class ramp_controller_object:
                     set_temp = minT
                 # Update house set point and the cleared price
                 if t1 != 0:
-                    print('  changing', self.house['lastsetpoint0'], 'to', set_temp, 'at', clear_price)
+#                    print('  changing', self.house['lastsetpoint0'], 'to', set_temp, 'at', clear_price)
                     self.house['setpoint0'] = set_temp - self.house['lastsetpoint0'] 
                     fncs.publish('cooling_setpoint', set_temp)
                     fncs.publish('bill_mode', 'HOURLY')
@@ -777,7 +777,7 @@ class ramp_controller_object:
             fncs_publishString = json.dumps(self.fncs_publish)
             fncs.agentPublish(fncs_publishString)
 
-            print ('*** Published Bid at', t1, next_run - bid_delay, self.controller_bid['bid_price'], self.controller_bid['bid_quantity'], self.controller_bid['state'], self.controller_bid['rebid'])
+#            print ('*** Published Bid at', t1, next_run - bid_delay, self.controller_bid['bid_price'], self.controller_bid['bid_quantity'], self.controller_bid['state'], self.controller_bid['rebid'])
 
             self.controller_bid['rebid'] = 1
         
