@@ -32,7 +32,7 @@ def writeRegistration (filename, dt, period):
     max_ctrl_cap = 3.0
     min_base_setpoint = 76.0
     max_base_setpoint = 80.0
-    bid_delay = 9 # time controller bids before market clearing
+    bid_delay = 3.0 * dt # time controller bids before market clearing
     use_predictive_bidding = 0
     use_override = "OFF"
     

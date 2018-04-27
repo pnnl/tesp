@@ -146,7 +146,7 @@ def main_loop():
   gencost = ppc['gencost']
   fncsBus = ppc['FNCS']
   ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
-  ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=0)
+  ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
   loads = np.loadtxt('NonGLDLoad.txt', delimiter=',')
 
   for row in ppc['UnitsOut']:
@@ -163,15 +163,15 @@ def main_loop():
   fncs.initialize()
 
   # transactive load components
-  csv_load = 0
+  csv_load = 0        # from the file
   scaled_unresp = 0
-  scaled_resp = 0
-  resp_c0 = 0
-  resp_c1 = 0
-  resp_c2 = 0
-  resp_max = 0
-  gld_load = 0 # this is the actual
-  actual_load = 0
+  scaled_resp = 0     # will be the responsive load as dispatched by OPF
+  resp_c0 = 0         # RESPONSIVE_BB from FNCS
+  resp_c1 = 0         # RESPONSIVE_B from FNCS
+  resp_c2 = 0         # RESPONSIVE_M from FNCS
+  resp_max = 0        # RESPONSIVE_MAX_KW from FNCS
+  gld_load = 0        # actual feeder MVA from FNCS
+  actual_load = 0     # amplified feeder MW
 
   while ts <= tmax:
     # start by getting the latest inputs from GridLAB-D and the auction
@@ -244,8 +244,9 @@ def main_loop():
       pgen2 = gen[1,1]
       pgen3 = gen[2,1]
       pgen4 = gen[3,1]
+      scaled_resp = -1.0 * gen[4,1]
       fncs.publish('LMP_B7', lmp)
-      print ("** OPF", ts, lmp, pgen1, pgen2, pgen3, pgen4, gen[4, 1])
+#      print ("** OPF", ts, lmp, pgen1, pgen2, pgen3, pgen4, gen[4, 1])
       tnext_opf += period
     
     # always update the electrical quantities with a regular power flow
@@ -256,15 +257,16 @@ def main_loop():
     gen[1,1] = pgen2
     gen[2,1] = pgen3
     gen[3,1] = pgen4
+    gen[4,1] = -1.0 * scaled_resp
     rpf = pp.runpf(ppc, ppopt_regular)
     bus = rpf[0]['bus']
     gen = rpf[0]['gen']
-    print ("    PF", ts, 0.001 * bus[6, 13], gen[0, 1], gen[1, 1], gen[2, 1], gen[3, 1], gen[4, 1])
+#    print ("    PF", ts, 0.001 * bus[6, 13], gen[0, 1], gen[1, 1], gen[2, 1], gen[3, 1], gen[4, 1])
     
-    Pload = bus[:,2].sum()
-    Pgen = gen[:,1].sum()
+#    scaled_resp = -1.0 * gen[4,1]
+    Pload = bus[:,2].sum() + scaled_resp
+    Pgen = gen[:,1].sum() + scaled_resp
     Ploss = Pgen - Pload
-    scaled_resp = -1.0 * gen[4,1]
 
 #    if ts == 3597:
 #      print (ts, '** OPF Gen =', res['gen'])
@@ -280,11 +282,14 @@ def main_loop():
       busnum = int(fncsBus[i,0])
       busidx = busnum - 1
       row = bus[busidx].tolist()
-      bus_metrics[str(ts)][str(busnum)] = [row[13]*0.001,row[14]*0.001,row[2],row[3],row[8],row[7],row[11],row[12]]
+      # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin
+      PD = row[2] + scaled_resp # TODO, if more than one FNCS bus, track scaled_resp separately
+      bus_metrics[str(ts)][str(busnum)] = [row[13]*0.001,row[14]*0.001,PD,row[3],row[8],row[7],row[11],row[12]]
     gen_metrics[str(ts)] = {}
     for i in range (gen.shape[0]):
       row = gen[i].tolist()
       busidx = int(row[0] - 1)
+      # Pgen, Qgen, LMP_P  (includes the responsive load as dispatched by OPF)
       gen_metrics[str(ts)][str(i+1)] = [row[1],row[2],float(bus[busidx,13])*0.001]
 
     volts = 1000.0 * bus[6,7] * bus[6,9]
@@ -292,22 +297,22 @@ def main_loop():
 
     # CSV file output
     print (ts, res['success'], 
-           '{:.3f}'.format(bus[:,2].sum()), # Pload
+           '{:.3f}'.format(Pload),          # Pload
            '{:.3f}'.format(csv_load),       # P7 (csv)
            '{:.3f}'.format(scaled_unresp),  # GLD Unresp
-           '{:.3f}'.format(bus[6,2]),       # P7 (opf)
-           '{:.3f}'.format(scaled_resp),    # Resp (opf)  0
+           '{:.3f}'.format(bus[6,2]),       # P7 (opf raw, should be csv plus unresp)
+           '{:.3f}'.format(scaled_resp),    # Resp (opf)
            '{:.3f}'.format(actual_load),    # GLD Pub
            new_bid, 
-           '{:.3f}'.format(gen[4,9]),       # P7 Min      0
+           '{:.3f}'.format(gen[4,9]),       # P7 Min
            '{:.3f}'.format(bus[6,7]),       # V7
-           '{:.3f}'.format(bus[6,13]),      # LMP_P7      0
-           '{:.3f}'.format(bus[6,14]),      # LMP_Q7      0
+           '{:.3f}'.format(bus[6,13]),      # LMP_P7
+           '{:.3f}'.format(bus[6,14]),      # LMP_Q7
            '{:.2f}'.format(gen[0,1]),       # Pgen1
            '{:.2f}'.format(gen[1,1]),       # Pgen2 
            '{:.2f}'.format(gen[2,1]),       # Pgen3
-           '{:.2f}'.format(gen[3,1]),       # Pgen4       0
-           '{:.2f}'.format(res['gen'][4, 1]),      # Pdisp   0
+           '{:.2f}'.format(gen[3,1]),       # Pgen4
+           '{:.2f}'.format(res['gen'][4, 1]),      # Pdisp
            '{:.6f}'.format(ppc['gencost'][4, 4]),  # gencost2
            '{:.4f}'.format(ppc['gencost'][4, 5]),  # gencost1 
            '{:.4f}'.format(ppc['gencost'][4, 6]),  # gencost0

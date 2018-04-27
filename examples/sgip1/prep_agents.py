@@ -3,7 +3,7 @@ import sys
 import json
 from writeRegistration import writeRegistration
 
-dt = 3
+dt = 15
 period = 300
 
 auctions, controllers = writeRegistration(sys.argv[1], dt, period)

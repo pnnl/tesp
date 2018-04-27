@@ -360,7 +360,7 @@ class auction_object:
         elif self.timeSim % self.market['period'] == 0:
             self.nextClear['from'] = self.nextClear['quantity'] = self.nextClear['price'] = 0
         
-        if (self.market['clearat'] - timeSim) == 6: # TEMC - collect and publish bids two steps before market close
+        if (self.market['clearat'] - timeSim) == 30: # TEMC - collect and publish bids two steps before market close
             self.collect_agent_bids()
             agg_bid = aggregate_bid (self.curve_buyer)
             fncs.publish ("unresponsive_price", agg_bid[0])
@@ -671,7 +671,7 @@ class auction_object:
                 warnings.warn('total_unknown is non-zero; some controllers are not providing their states with their bids')
             refload = self.market['capacity_reference_object']['capacity_reference_property']
             unresp = refload - self.curve_buyer.total_on - total_unknown/2
-            print('<< AGGREGATING', self.timeSim, 'Total,Resp,Unresp,#buyers,BuyersOff', refload, self.curve_buyer.total_on, unresp, self.curve_buyer.count, self.curve_buyer.total_off)
+#            print('<< AGGREGATING', self.timeSim, 'Total,Resp,Unresp,#buyers,BuyersOff', refload, self.curve_buyer.total_on, unresp, self.curve_buyer.count, self.curve_buyer.total_off)
 #            unresp = 2000.0
 #            unresp = 30.0
 #            print('  MANUAL override', unresp, 'kW unresponsive load bid')
@@ -686,9 +686,9 @@ class auction_object:
                 self.buyer['bid_id'].append(self.market['capacity_reference_object']['name'])
                 self.curve_buyer.add_to_curve(self.market['pricecap'], unresp, self.market['capacity_reference_object']['name'], 'ON')
 
-        print ('Seller Curve at', self.timeSim, 'has', self.curve_seller.count, 'points')
-        for i in range(self.curve_seller.count):
-            print (self.curve_seller.price[i], self.curve_seller.quantity[i])
+#        print ('Seller Curve at', self.timeSim, 'has', self.curve_seller.count, 'points')
+#        for i in range(self.curve_seller.count):
+#            print (self.curve_seller.price[i], self.curve_seller.quantity[i])
 #        print('******************************************************************************************************************')
 #        print ('Buyer Curve at', self.timeSim, 'has', self.curve_buyer.count, 'points')
 #        print('Buyer curve price \t Buyer curve quantity')
