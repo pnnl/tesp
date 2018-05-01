@@ -13,8 +13,6 @@ docker images
 if (docker inspect -f {{.State.Running}} ${TESP_CONT} &> /dev/null); then
   echo "Container ${TESP_CONT} is already running."
 else
-  #echo "===== Create container ${TESP_CONT}."
-  #echo "<<<<<<<<<<<<<<<<< ${IP} >>>>>>>>>>>>>>"
   docker container run --name ${TESP_CONT} \
     -dit \
     -e DISPLAY=$IP:0 \
@@ -22,17 +20,10 @@ else
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     --net=host --ipc=host --user=tesp-user \
     ${TESP_REP}${TESP_TAG}
-  #echo "======== ${IP} ==========="
-  #echo "======== ${DISPLAY} ======"
+  export CONTAINER_ID=$(docker ps -l -q)
+  xhost +local:`docker inspect --format='{{ .Config.Hostname}}' ${CONTAINER_ID}`
 fi
-docker inspect ${TESP_CONT}
-# 192.168.59.3:0 --privileged --rm 
-# export CONTAINER_ID=$(docker ps -l -q)
-# xhost +local:`docker inspect --format='{{ .Config.Hostname}}' ${CONTAINER_ID}`
-#     -e DISPLAY=192.168.59.3:0 \
-#     --env="QT_X11_NO_MITSHM=1" \
-# --env="DISPLAY=$IP:0"
-# --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+# docker inspect ${TESP_CONT}
 echo "===== List of containers on the machine."
 docker ps -a
 docker container start ${TESP_CONT}
