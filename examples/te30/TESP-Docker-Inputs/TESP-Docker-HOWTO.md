@@ -559,6 +559,6 @@ docker container exec -it ${TESP_CONT} /bin/bash -c 'stty cols 200 rows 60 && ba
 
 Once the container is started and the bash command is open, run the simulation
 ```
-cd runningScripts
+cd runScripts
 python tespTE30.py
 ```
