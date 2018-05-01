@@ -18,6 +18,7 @@ else
                         -dit --env="DISPLAY" \
                         --env="QT_X11_NO_MITSHM=1" \
                         --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+                        --volume="${HOST_FOLDER}:/tmp/scenarioData:rw" \
                         ${TESP_REP}${TESP_TAG}
   export CONTAINER_ID=$(docker ps -l -q)
   xhost +local:`docker inspect --format='{{ .Config.Hostname}}' ${CONTAINER_ID}`
@@ -29,56 +30,52 @@ docker container start ${TESP_CONT}
 echo "===== Container ${TESP_CONT} has been started."
 
 # =================== TE30 Challenge Running scripts ====================================================
-echo "===== Create running scripts folder."
-docker container exec ${TESP_CONT} /bin/sh -c 'cd ${TESP} && mkdir runScripts'
-echo "===== Copy running scripts."
-docker cp ${HOST_FOLDER}/RunningScripts/tespTE30.py ${TESP_CONT}:/tesp/runScripts
-docker cp ${HOST_FOLDER}/RunningScripts/tespTE30.yaml ${TESP_CONT}:/tesp/runScripts
-docker cp ${HOST_FOLDER}/RunningScripts/fncs.py.DockerVersion ${TESP_CONT}:/tesp/runScripts/fncs.py
-docker cp ${HOST_FOLDER}/RunningScripts/runVisualTE30ChallengeDocker.sh ${TESP_CONT}:/tesp/runScripts
-docker container exec ${TESP_CONT} /bin/sh -c 'chmod u+x ${TESP}/runScripts/runVisualTE30ChallengeDocker.sh'
+echo "===== Setting up running scripts folder."
+docker container exec ${TESP_CONT} /bin/bash -c 'cd ${TESP} && mkdir runScripts && \
+  cp /tmp/scenarioData/RunningScripts/tespTE30.py /tesp/runScripts && \
+  cp /tmp/scenarioData/RunningScripts/tespTE30.yaml /tesp/runScripts && \
+  cp /tmp/scenarioData/RunningScripts/fncs.py.DockerVersion /tesp/runScripts/fncs.py && \
+  cp /tmp/scenarioData/RunningScripts/runVisualTE30ChallengeDocker.sh /tesp/runScripts && \
+  chmod u+x /tesp/runScripts/runVisualTE30ChallengeDocker.sh'
 
 # =================== FNCS settings =========================================================
-echo "===== Set-up FNCS paths and folders."
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${FNCS_INSTALL}/bin/playerFiles; then rmdir ${FNCS_INSTALL}/bin/playerFiles; mkdir ${FNCS_INSTALL}/bin/playerFiles; else mkdir ${FNCS_INSTALL}/bin/playerFiles; fi'
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${FNCS_INSTALL}/bin/outputFiles; then rmdir ${FNCS_INSTALL}/bin/outputFiles; mkdir ${FNCS_INSTALL}/bin/outputFiles; else mkdir ${FNCS_INSTALL}/bin/outputFiles; fi'
-# docker cp ${HOME}/work/CoSimulation/FNCSinstall/bin/playerFiles/ ${TESP_CONT}:/tesp/FNCSInstall/bin/
-# docker cp ${HOME}/work/CoSimulation/FNCSinstall/bin/outputFiles/ ${TESP_CONT}:/tesp/FNCSInstall/bin/
+echo "===== Setting up FNCS paths and folders."
+docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${FNCS_INSTALL}/bin/playerFiles; then rmdir ${FNCS_INSTALL}/bin/playerFiles; mkdir ${FNCS_INSTALL}/bin/playerFiles; else mkdir ${FNCS_INSTALL}/bin/playerFiles; fi && \
+  if test -e ${FNCS_INSTALL}/bin/outputFiles; then rmdir ${FNCS_INSTALL}/bin/outputFiles; mkdir ${FNCS_INSTALL}/bin/outputFiles; else mkdir ${FNCS_INSTALL}/bin/outputFiles; fi'
 
 # ================== GridLAB-D settings ============================================================
-echo "===== Set-up GridLAB-D paths and folders."
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${GLD_INSTALL}/bin/modelFiles; then rmdir ${GLD_INSTALL}/bin/modelFiles; mkdir ${GLD_INSTALL}/bin/modelFiles; else mkdir ${GLD_INSTALL}/bin/modelFiles; fi'
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${GLD_INSTALL}/bin/inputFilesTE30; then rmdir ${GLD_INSTALL}/bin/inputFilesTE30; mkdir ${GLD_INSTALL}/bin/inputFilesTE30; else mkdir ${GLD_INSTALL}/bin/inputFilesTE30; fi'
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${GLD_INSTALL}/bin/outputFiles; then rmdir ${GLD_INSTALL}/bin/outputFiles; mkdir ${GLD_INSTALL}/bin/outputFiles; else mkdir ${GLD_INSTALL}/bin/outputFiles; fi'
-docker cp ${HOST_FOLDER}/GridLABD/modelFiles/ ${TESP_CONT}:/tesp/GridLABD1048Install/bin/
-docker cp ${HOST_FOLDER}/GridLABD/inputFilesTE30/ ${TESP_CONT}:/tesp/GridLABD1048Install/bin/
-# docker cp ${HOST_FOLDER}/GridLABD//outputFiles/ ${TESP_CONT}:/tesp/GridLABD1048Install/bin/
+echo "===== Setting up GridLAB-D paths and folders."
+docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${GLD_INSTALL}/bin/modelFiles; then rmdir ${GLD_INSTALL}/bin/modelFiles; mkdir ${GLD_INSTALL}/bin/modelFiles; else mkdir ${GLD_INSTALL}/bin/modelFiles; fi && \
+  if test -e ${GLD_INSTALL}/bin/inputFilesTE30; then rmdir ${GLD_INSTALL}/bin/inputFilesTE30; mkdir ${GLD_INSTALL}/bin/inputFilesTE30; else mkdir ${GLD_INSTALL}/bin/inputFilesTE30; fi && \
+  if test -e ${GLD_INSTALL}/bin/outputFiles; then rmdir ${GLD_INSTALL}/bin/outputFiles; mkdir ${GLD_INSTALL}/bin/outputFiles; else mkdir ${GLD_INSTALL}/bin/outputFiles; fi && \
+  cp -R /tmp/scenarioData/GridLABD/modelFiles/ /tesp/GridLABD1048Install/bin/ && \
+  cp -R /tmp/scenarioData/GridLABD/inputFilesTE30/ /tesp/GridLABD1048Install/bin/'
 
 # =================== Energy Plus settings =========================================================
-echo "===== Set-up Energy Plus paths and folders."
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${EPLUS_INSTALL}/outputFiles; then rmdir ${EPLUS_INSTALL}/outputFiles; mkdir ${EPLUS_INSTALL}/outputFiles; else mkdir ${EPLUS_INSTALL}/outputFiles; fi'
-docker cp ${HOST_FOLDER}/EnergyPlus/eplus.yaml ${TESP_CONT}:/tesp/EnergyPlusInstall/
-docker cp ${HOST_FOLDER}/EnergyPlus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw ${TESP_CONT}:/tesp/EnergyPlusInstall/
-docker cp ${HOST_FOLDER}/EnergyPlus/SchoolDualController.idf ${TESP_CONT}:/tesp/EnergyPlusInstall/
+echo "===== Settting up Energy Plus paths and folders."
+docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${EPLUS_INSTALL}/outputFiles; then rmdir ${EPLUS_INSTALL}/outputFiles; mkdir ${EPLUS_INSTALL}/outputFiles; else mkdir ${EPLUS_INSTALL}/outputFiles; fi && \
+  cp /tmp/scenarioData/EnergyPlus/eplus.yaml /tesp/EnergyPlusInstall/ && \
+  cp /tmp/scenarioData/EnergyPlus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw /tesp/EnergyPlusInstall/ && \
+  cp /tmp/scenarioData/EnergyPlus/SchoolDualController.idf /tesp/EnergyPlusInstall/'
 
 # =================== Energy Plus JSON settings =========================================================
-echo "===== Set-up Energy Plus JSON paths and folders."
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${EPLUSJSON_INSTALL}/outputFiles; then rmdir ${EPLUSJSON_INSTALL}/outputFiles; mkdir ${EPLUSJSON_INSTALL}/outputFiles; else mkdir ${EPLUSJSON_INSTALL}/outputFiles; fi'
-docker cp ${HOST_FOLDER}/EnergyPlusJSON/eplus_json.yaml ${TESP_CONT}:/tesp/EPlusJSONInstall/
+echo "===== Setting up Energy Plus JSON paths and folders."
+docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${EPLUSJSON_INSTALL}/outputFiles; then rmdir ${EPLUSJSON_INSTALL}/outputFiles; mkdir ${EPLUSJSON_INSTALL}/outputFiles; else mkdir ${EPLUSJSON_INSTALL}/outputFiles; fi && \
+  cp /tmp/scenarioData/EnergyPlusJSON/eplus_json.yaml /tesp/EPlusJSONInstall/'
 
 # =================== PyPower settings =========================================================
-echo "===== Set-up PyPower paths and folders."
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${PYPOWER_INSTALL}/outputFiles; then rmdir ${PYPOWER_INSTALL}/outputFiles; mkdir ${PYPOWER_INSTALL}/outputFiles; else mkdir ${PYPOWER_INSTALL}/outputFiles; fi'
-docker cp ${HOST_FOLDER}/PyPower/NonGLDLoad.txt ${TESP_CONT}:/tesp/PyPowerInstall/
-docker cp ${HOST_FOLDER}/PyPower/ppcasefile.py ${TESP_CONT}:/tesp/PyPowerInstall/
-docker cp ${HOST_FOLDER}/PyPower/pypowerConfig_TE30dispload.yaml ${TESP_CONT}:/tesp/PyPowerInstall/
+echo "===== Settting up PyPower paths and folders."
+docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${PYPOWER_INSTALL}/outputFiles; then rmdir ${PYPOWER_INSTALL}/outputFiles; mkdir ${PYPOWER_INSTALL}/outputFiles; else mkdir ${PYPOWER_INSTALL}/outputFiles; fi && \
+  cp /tmp/scenarioData/PyPower/NonGLDLoad.txt /tesp/PyPowerInstall/ && \
+  cp /tmp/scenarioData/PyPower/ppcasefile.py /tesp/PyPowerInstall/ && \
+  cp /tmp/scenarioData/PyPower/pypowerConfig_TE30dispload.yaml /tesp/PyPowerInstall/'
 
 # =================== Agents settings =========================================================
-echo "===== Set-up Agents paths and folders."
-docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${AGENTS_INSTALL}/inputFiles; then rmdir ${AGENTS_INSTALL}/inputFiles; mkdir ${AGENTS_INSTALL}/inputFiles; else mkdir ${AGENTS_INSTALL}/inputFiles; fi'
-docker cp ${HOST_FOLDER}/Agents/inputFilesPP ${TESP_CONT}:/tesp/AgentsInstall/inputFilesPP
-docker cp ${HOST_FOLDER}/Agents/launch_TE30_Challenge_PYPOWER_agents.sh.DockerVersion ${TESP_CONT}:/tesp/AgentsInstall/launch_TE30_Challenge_PYPOWER_agents.sh
-docker container exec ${TESP_CONT} /bin/sh -c 'chmod u+x ${AGENTS_INSTALL}/launch_TE30_Challenge_PYPOWER_agents.sh'
+echo "===== Settting up Agents paths and folders."
+docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${AGENTS_INSTALL}/inputFiles; then rmdir ${AGENTS_INSTALL}/inputFiles; mkdir ${AGENTS_INSTALL}/inputFiles; else mkdir ${AGENTS_INSTALL}/inputFiles; fi && \
+  cp -R /tmp/scenarioData/Agents/inputFilesPP /tesp/AgentsInstall/ && \
+  cp /tmp/scenarioData/Agents/launch_TE30_Challenge_PYPOWER_agents.sh.DockerVersion /tesp/AgentsInstall/launch_TE30_Challenge_PYPOWER_agents.sh && \
+  chmod u+x ${AGENTS_INSTALL}/launch_TE30_Challenge_PYPOWER_agents.sh'
 
 
 # =================== Run TE30 =========================================================
