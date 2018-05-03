@@ -39,46 +39,44 @@ with warnings.catch_warnings():
 	fncsBus = ppc['FNCS']
 	outage = ppc['UnitsOut'][0]
 
-	bus[4,2] = 109.21  # bus loads at 129895 from the TXT file
-	bus[8,2] = 151.67
-	csv_load = 128.57
+	bus[4,2] = 97.124  # column 2, bus loads at 165000 from the TXT file
+	bus[8,2] = 134.89  # column 3
+	csv_load = 110.28  # column 1
 
-	gen[outage[0],7] = 0 # unit 2 is out
+#	gen[outage[0],7] = 0 # unit 2 is out
 
-	# mimic the FNCS messages coming in at 129895
-	unresp = 0.001 * 216.42547809924994
-	resp_c0 = 0
-	resp_c1 = 1000 * 0.13800244104838633
-	resp_c2 = 500 * -0.001692562459244351
-	resp_max = 0.001 * 8.8585219007500005
+	scale = float(fncsBus[0][2])
+	# mimic the FNCS messages coming in at 165000 for MW, prep and scale for OPF
+	unresp = 0.17470563 * scale
+	resp_c0 = -0.0128 * scale
+	resp_c1 = 50.12054761
+	resp_c2 = -174.10683 / scale
+	resp_max = 0.13305073 * scale
+
 	fncsBus[0][3] = unresp
 
-	# tweaks
-	boost = 3.2
-	resp_c2 = resp_c2 * boost
-	resp_c1 = resp_c1 * boost
-	resp_max = resp_max * 10
+	bus[6,2] = csv_load + unresp
 
-	# prep and scale for OPF
-	scale = float(fncsBus[0][2])
-	scaled_unresp = scale * float(fncsBus[0][3])
-	bus[6,2] = csv_load + scaled_unresp
-
-	gen[4][9] = -resp_max * scale
+	gen[4][9] = -resp_max
 
 	gencost[4][3] = 3
-	gencost[4][4] = resp_c2
+	gencost[4][4] = -resp_c2
 	gencost[4][5] = resp_c1
-	gencost[4][6] = resp_c0 # always 0
+	gencost[4][6] = -resp_c0 # should always be 0
 
-	print(gen[4])
-	print(gencost[4])
-	print(bus[6])
+	print('scaled unresp, max resp, c2, c1, c0', unresp, resp_max, resp_c2, resp_c1, resp_c0)
+	print('dispatch load', gen[4])
+	print('dispatch cost', gencost[4])
+	print('dispatch bus', bus[6])
 
 	res = pp.runopf(ppc, ppopt)
 	bus = res['bus']
 	gen = res['gen']
-	print (res['success'], bus[:,2].sum(), bus[6,2], bus[6,7], bus[6,13], bus[6,14], gen[0,1], gen[1,1], gen[2,1], gen[3,1], gen[4,1], sep=',')
+	resp = -gen[4,1]
+
+	print (res['success'], bus[:,2].sum() + resp, bus[6,2], bus[6,7], bus[6,13], gen[0,1], gen[1,1], gen[2,1], gen[3,1], gen[4,1], sep=',')
 #	summarize_opf(res)
 
+#	res = pp.runpf(ppc, ppopt)
+#	print (res[0]['success'])
 

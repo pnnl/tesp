@@ -38,22 +38,19 @@ values:
     house_hvac_load:
         topic: gridlabdSimulator1/F1_house_B22/hvac_load
         default: 0
-    UNRESPONSIVE_PRICE:
-        topic: auction_Market_1/unresponsive_price
+    UNRESPONSIVE_MW:
+        topic: auction_Market_1/unresponsive_mw
         default: 0
-    UNRESPONSIVE_KW:
-        topic: auction_Market_1/unresponsive_kw
+    RESPONSIVE_MAX_MW:
+        topic: auction_Market_1/responsive_max_mw
         default: 0
-    RESPONSIVE_MAX_KW:
-        topic: auction_Market_1/responsive_max_kw
+    RESPONSIVE_C2:
+        topic: auction_Market_1/responsive_c2
         default: 0
-    RESPONSIVE_M:
-        topic: auction_Market_1/responsive_m
+    RESPONSIVE_C1:
+        topic: auction_Market_1/responsive_c1
         default: 0
-    RESPONSIVE_B:
-        topic: auction_Market_1/responsive_b
-        default: 0
-    RESPONSIVE_BB:
-        topic: auction_Market_1/responsive_bb
+    RESPONSIVE_DEG:
+        topic: auction_Market_1/responsive_deg
         default: 0
 

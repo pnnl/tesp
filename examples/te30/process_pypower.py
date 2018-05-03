@@ -90,8 +90,8 @@ for key in bus_keys:
 print ("Average real power LMP =", data_b[0,:,LMP_P_IDX].mean(), LMP_P_UNITS)
 print ("Maximum real power LMP =", data_b[0,:,LMP_P_IDX].max(), LMP_P_UNITS)
 print ("First day LMP mean/std dev=", data_b[0,0:25,LMP_P_IDX].mean(), data_b[0,0:25,LMP_P_IDX].std())
-print ("Maximum bus voltage =", data_b[0,:,VMAG_IDX].max(), VMAG_UNITS)
-print ("Minimum bus voltage =", data_b[0,:,VMAG_IDX].min(), VMAG_UNITS)
+print ("Maximum bus voltage =", data_b[0,:,VMAX_IDX].max(), VMAX_UNITS)
+print ("Minimum bus voltage =", data_b[0,:,VMIN_IDX].min(), VMIN_UNITS)
 
 # read the generator metrics file
 lp_g = open ("gen_" + sys.argv[1] + "_metrics.json").read()
@@ -140,9 +140,9 @@ ax[1,0].set_ylabel(LMP_P_UNITS)
 ax[1,0].set_title ("Prices at " + bus_keys[0])
 ax[1,0].legend(loc='best')
 
-ax[2,0].plot(hrs, data_b[0,:,VMAG_IDX], color="blue", label="Magnitude")
-ax[2,0].plot(hrs, data_b[0,:,VMAX_IDX], color="red", label="Vmax")
-ax[2,0].plot(hrs, data_b[0,:,VMIN_IDX], color="green", label="Vmin")
+ax[2,0].plot(hrs, data_b[0,:,VMAG_IDX], color="blue", label="Mean")
+ax[2,0].plot(hrs, data_b[0,:,VMAX_IDX], color="red", label="Max")
+ax[2,0].plot(hrs, data_b[0,:,VMIN_IDX], color="green", label="Min")
 ax[2,0].set_ylabel(VMAG_UNITS)
 ax[2,0].set_title ("Voltages at " + bus_keys[0])
 ax[2,0].legend(loc='best')

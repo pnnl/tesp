@@ -10,7 +10,7 @@ import pypower.api as pp
 #import scipy.io as spio
 import math
 import re
-import copy
+from copy import deepcopy
 #import cProfile
 #import pstats
 
@@ -145,8 +145,9 @@ def main_loop():
 
   gencost = ppc['gencost']
   fncsBus = ppc['FNCS']
+  gen = ppc['gen']
   ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
-  ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
+  ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=0)
   loads = np.loadtxt('NonGLDLoad.txt', delimiter=',')
 
   for row in ppc['UnitsOut']:
@@ -158,51 +159,61 @@ def main_loop():
   ts = 0
   tnext_opf = -dt
 
+  # initializing for metrics collection
+  tnext_metrics = 0
+  loss_accum = 0
+  conv_accum = True
+  n_accum = 0
+  bus_accum = {}
+  gen_accum = {}
+  for i in range (fncsBus.shape[0]):
+    busnum = int(fncsBus[i,0])
+    bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0]
+  for i in range (gen.shape[0]):
+    gen_accum[str(i+1)] = [0,0,0]
+
   op = open (rootname + '.csv', 'w')
-  print ('t[s],Converged,Pload,P7 (csv), GLD Unresp, P7 (opf), Resp (opf), GLD Pub, BID?, P7 Min, V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp, gencost2, gencost1, gencost0', file=op, flush=True)
+  print ('t[s],Converged,Pload,P7 (csv),GLD Unresp,P7 (opf),Resp (opf),GLD Pub,BID?,P7 Min,V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp,Deg,c2,c1', file=op, flush=True)
   fncs.initialize()
 
   # transactive load components
-  csv_load = 0        # from the file
-  scaled_unresp = 0
-  scaled_resp = 0     # will be the responsive load as dispatched by OPF
-  resp_c0 = 0         # RESPONSIVE_BB from FNCS
-  resp_c1 = 0         # RESPONSIVE_B from FNCS
-  resp_c2 = 0         # RESPONSIVE_M from FNCS
-  resp_max = 0        # RESPONSIVE_MAX_KW from FNCS
-  gld_load = 0        # actual feeder MVA from FNCS
-  actual_load = 0     # amplified feeder MW
+  csv_load = 0     # from the file
+  unresp = 0       # unresponsive load estimate from the auction agent
+  resp = 0         # will be the responsive load as dispatched by OPF
+  resp_deg = 0     # RESPONSIVE_DEG from FNCS
+  resp_c1 = 0      # RESPONSIVE_C1 from FNCS
+  resp_c2 = 0      # RESPONSIVE_C2 from FNCS
+  resp_max = 0     # RESPONSIVE_MAX_MW from FNCS
+  feeder_load = 0  # amplified feeder MW
 
   while ts <= tmax:
     # start by getting the latest inputs from GridLAB-D and the auction
     events = fncs.get_events()
     new_bid = False
+    load_scale = float (fncsBus[0][2])
     for key in events:
       topic = key.decode()
-      if topic == 'UNRESPONSIVE_KW':
-        unresp_load = 0.001 * float(fncs.get_value(key).decode())
-        fncsBus[0][3] = unresp_load # poke unresponsive estimate into the bus load slot
+      if topic == 'UNRESPONSIVE_MW':
+        unresp = load_scale * float(fncs.get_value(key).decode())
+        fncsBus[0][3] = unresp # to poke unresponsive estimate into the bus load slot
         new_bid = True
-      elif topic == 'RESPONSIVE_MAX_KW':
-        resp_max = 0.001 * float(fncs.get_value(key).decode()) # in MW
+      elif topic == 'RESPONSIVE_MAX_MW':
+        resp_max = load_scale * float(fncs.get_value(key).decode())
         new_bid = True
-      elif topic == 'RESPONSIVE_M':
-        resp_c2 = -1e6 * float(fncs.get_value(key).decode())
+      elif topic == 'RESPONSIVE_C2':
+        resp_c2 = float(fncs.get_value(key).decode()) / load_scale
         new_bid = True
-      elif topic == 'RESPONSIVE_B':
-        resp_c1 = 1e3 * float(fncs.get_value(key).decode())
+      elif topic == 'RESPONSIVE_C1':
+        resp_c1 = float(fncs.get_value(key).decode())
         new_bid = True
-      elif topic == 'RESPONSIVE_BB':
-        resp_c0 = -float(fncs.get_value(key).decode())
-        new_bid = True
-      elif topic == 'UNRESPONSIVE_PRICE': # not actually used
-        unresp_price = float(fncs.get_value(key).decode())
+      elif topic == 'RESPONSIVE_DEG':
+        resp_deg = int(fncs.get_value(key).decode())
         new_bid = True
       else:
         gld_load = parse_mva (fncs.get_value(key).decode()) # actual value, may not match unresp + resp load
-        actual_load = float(gld_load[0]) * float(fncsBus[0][2])
+        feeder_load = float(gld_load[0]) * load_scale
     if new_bid == True:
-      print('**Bid', ts, unresp_load, resp_max, resp_c2, resp_c1, resp_c0)
+      print('**Bid', ts, unresp, resp_max, resp_deg, resp_c2, resp_c1)
 
     # update the case for bids, outages and CSV loads
     idx = int ((ts + dt) / period) % nloads
@@ -226,71 +237,107 @@ def main_loop():
         branch[row[0],10] = 1
     bus[6,2] = csv_load
     for row in ppc['FNCS']:
-      scaled_unresp = float(row[2]) * float(row[3])
+      unresp = float(row[3])
       newidx = int(row[0]) - 1
-      bus[newidx,2] += scaled_unresp
-    gen[4][9] = -resp_max * float(fncsBus[0][2])
-    gencost[4][3] = 3
-    gencost[4][4] = resp_c2
-    gencost[4][5] = resp_c1
-    gencost[4][6] = resp_c0
+      bus[newidx,2] += unresp
+    gen[4][9] = -resp_max
+
+    if resp_deg == 2:
+      gencost[4][3] = 3
+      gencost[4][4] = -resp_c2
+      gencost[4][5] = resp_c1
+    elif resp_deg == 1:
+      gencost[4][3] = 2
+      gencost[4][4] = resp_c1
+      gencost[4][5] = 0.0
+    else:
+      gencost[4][3] = 1
+      gencost[4][4] = 999.0
+      gencost[4][5] = 0.0
+    gencost[4][6] = 0.0
 
     if ts >= tnext_opf:  # expecting to solve opf one dt before the market clearing period ends, so GridLAB-D has time to use it
       res = pp.runopf(ppc, ppopt_market)
-      bus = res['bus']
-      gen = res['gen']
-      lmp = 0.001 * bus[6,13]
-      pgen1 = gen[0,1]
-      pgen2 = gen[1,1]
-      pgen3 = gen[2,1]
-      pgen4 = gen[3,1]
-      scaled_resp = -1.0 * gen[4,1]
-      fncs.publish('LMP_B7', lmp)
-#      print ("** OPF", ts, lmp, pgen1, pgen2, pgen3, pgen4, gen[4, 1])
+      if res['success'] == False:
+        conv_accum = False
+      opf_bus = deepcopy (res['bus'])
+      opf_gen = deepcopy (res['gen'])
+      lmp = opf_bus[6,13]
+      resp = -1.0 * opf_gen[4,1]
+      fncs.publish('LMP_B7', 0.001 * lmp) # publishing $/kwh
       tnext_opf += period
     
     # always update the electrical quantities with a regular power flow
     bus = ppc['bus']
     gen = ppc['gen']
-    bus[6,13] = 1000.0 * lmp
-    gen[0,1] = pgen1
-    gen[1,1] = pgen2
-    gen[2,1] = pgen3
-    gen[3,1] = pgen4
-    gen[4,1] = -1.0 * scaled_resp
+    bus[6,13] = lmp
+    gen[0,1] = opf_gen[0, 1]
+    gen[1,1] = opf_gen[1, 1]
+    gen[2,1] = opf_gen[2, 1]
+    gen[3,1] = opf_gen[3, 1]
+    gen[4,1] = opf_gen[4, 1]
     rpf = pp.runpf(ppc, ppopt_regular)
+    if rpf[0]['success'] == False:
+      conv_accum = False
     bus = rpf[0]['bus']
     gen = rpf[0]['gen']
-#    print ("    PF", ts, 0.001 * bus[6, 13], gen[0, 1], gen[1, 1], gen[2, 1], gen[3, 1], gen[4, 1])
     
-#    scaled_resp = -1.0 * gen[4,1]
-    Pload = bus[:,2].sum() + scaled_resp
-    Pgen = gen[:,1].sum() + scaled_resp
+    Pload = bus[:,2].sum() + resp
+    Pgen = gen[:,1].sum() + resp
     Ploss = Pgen - Pload
 
-#    if ts == 3597:
-#      print (ts, '** OPF Gen =', res['gen'])
-#      print (ts, '** OPF Bus =', res['bus'])
-#      print (ts, '**  PF Gen =', rpf[0]['gen'])
-#      print (ts, '**  PF Bus =', rpf[0]['bus'])
-#      print (ts, 'LMP', lmp)
-
     # update the metrics
-    sys_metrics[str(ts)] = {rootname:[Ploss,res['success']]}
-    bus_metrics[str(ts)] = {}
+    n_accum += 1
+    loss_accum += Ploss
     for i in range (fncsBus.shape[0]):
       busnum = int(fncsBus[i,0])
       busidx = busnum - 1
       row = bus[busidx].tolist()
-      # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin
-      PD = row[2] + scaled_resp # TODO, if more than one FNCS bus, track scaled_resp separately
-      bus_metrics[str(ts)][str(busnum)] = [row[13]*0.001,row[14]*0.001,PD,row[3],row[8],row[7],row[11],row[12]]
-    gen_metrics[str(ts)] = {}
+      # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
+      PD = row[2] + resp # TODO, if more than one FNCS bus, track scaled_resp separately
+      Vpu = row[7]
+      bus_accum[str(busnum)][0] += row[13]*0.001
+      bus_accum[str(busnum)][1] += row[14]*0.001
+      bus_accum[str(busnum)][2] += PD
+      bus_accum[str(busnum)][3] += row[3]
+      bus_accum[str(busnum)][4] += row[8]
+      bus_accum[str(busnum)][5] += Vpu
+      if Vpu > bus_accum[str(busnum)][6]:
+        bus_accum[str(busnum)][6] = Vpu
+      if Vpu < bus_accum[str(busnum)][7]:
+        bus_accum[str(busnum)][7] = Vpu
     for i in range (gen.shape[0]):
       row = gen[i].tolist()
       busidx = int(row[0] - 1)
       # Pgen, Qgen, LMP_P  (includes the responsive load as dispatched by OPF)
-      gen_metrics[str(ts)][str(i+1)] = [row[1],row[2],float(bus[busidx,13])*0.001]
+      gen_accum[str(i+1)][0] += row[1]
+      gen_accum[str(i+1)][1] += row[2]
+      gen_accum[str(i+1)][2] += float(opf_bus[busidx,13])*0.001
+
+    # write the metrics
+    if ts >= tnext_metrics:
+      sys_metrics[str(ts)] = {rootname:[loss_accum / n_accum,conv_accum]}
+
+      bus_metrics[str(ts)] = {}
+      for i in range (fncsBus.shape[0]):
+        busnum = int(fncsBus[i,0])
+        busidx = busnum - 1
+        row = bus[busidx].tolist()
+        met = bus_accum[str(busnum)]
+        bus_metrics[str(ts)][str(busnum)] = [met[0]/n_accum, met[1]/n_accum, met[2]/n_accum, met[3]/n_accum,
+                                             met[4]/n_accum, met[5]/n_accum, met[6], met[7]]
+        bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0]
+
+      gen_metrics[str(ts)] = {}
+      for i in range (gen.shape[0]):
+        met = gen_accum[str(i+1)]
+        gen_metrics[str(ts)][str(i+1)] = [met[0]/n_accum, met[1]/n_accum, met[2]/n_accum]
+        gen_accum[str(i+1)] = [0,0,0]
+
+      tnext_metrics += period
+      n_accum = 0
+      loss_accum = 0
+      conv_accum = True
 
     volts = 1000.0 * bus[6,7] * bus[6,9]
     fncs.publish('three_phase_voltage_B7', volts)
@@ -299,10 +346,10 @@ def main_loop():
     print (ts, res['success'], 
            '{:.3f}'.format(Pload),          # Pload
            '{:.3f}'.format(csv_load),       # P7 (csv)
-           '{:.3f}'.format(scaled_unresp),  # GLD Unresp
+           '{:.3f}'.format(unresp),  # GLD Unresp
            '{:.3f}'.format(bus[6,2]),       # P7 (opf raw, should be csv plus unresp)
-           '{:.3f}'.format(scaled_resp),    # Resp (opf)
-           '{:.3f}'.format(actual_load),    # GLD Pub
+           '{:.3f}'.format(resp),    # Resp (opf)
+           '{:.3f}'.format(feeder_load),    # GLD Pub
            new_bid, 
            '{:.3f}'.format(gen[4,9]),       # P7 Min
            '{:.3f}'.format(bus[6,7]),       # V7
@@ -312,10 +359,10 @@ def main_loop():
            '{:.2f}'.format(gen[1,1]),       # Pgen2 
            '{:.2f}'.format(gen[2,1]),       # Pgen3
            '{:.2f}'.format(gen[3,1]),       # Pgen4
-           '{:.2f}'.format(res['gen'][4, 1]),      # Pdisp
-           '{:.6f}'.format(ppc['gencost'][4, 4]),  # gencost2
-           '{:.4f}'.format(ppc['gencost'][4, 5]),  # gencost1 
-           '{:.4f}'.format(ppc['gencost'][4, 6]),  # gencost0
+           '{:.2f}'.format(res['gen'][4, 1]), # Pdisp
+           '{:.4f}'.format(resp_deg),       # degree
+           '{:.6f}'.format(ppc['gencost'][4, 4]),  # c2
+           '{:.4f}'.format(ppc['gencost'][4, 5]),  # c1 
            sep=',', file=op, flush=True)
 
     # request the next time step
@@ -327,9 +374,9 @@ def main_loop():
 #  spio.savemat('matFile.mat', saveDataDict)
   # ===================================
   print ('writing metrics', flush=True)
+  print (json.dumps(sys_metrics), file=sys_mp, flush=True)
   print (json.dumps(bus_metrics), file=bus_mp, flush=True)
   print (json.dumps(gen_metrics), file=gen_mp, flush=True)
-  print (json.dumps(sys_metrics), file=sys_mp, flush=True)
   print ('closing files', flush=True)
   bus_mp.close()
   gen_mp.close()

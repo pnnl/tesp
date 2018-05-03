@@ -571,11 +571,16 @@ class ramp_controller_object:
                 T_lim = 0
             
             bid_offset = 0.0001
+#            minimum_bid = 0.005
             if bid_price < 0 and monitor != setpoint0:
                 if abs(stdP) < bid_offset:
                     bid_price = avgP
                 else:
-                    bid_price = avgP + (monitor - setpoint0)*(k_T * stdP) / abs(T_lim)   
+                    bid_price = avgP + (monitor - setpoint0)*(k_T * stdP) / abs(T_lim)
+#                    if bid_price < minimum_bid:
+#                        bid_price = minimum_bid
+#                        print ('negative bid at', t1, self.controller['name'], 
+#                               bid_price, avgP, monitor, setpoint0, k_T, stdP, T_lim)
             elif monitor == setpoint0:
                 bid_price = avgP
             
