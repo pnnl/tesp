@@ -96,7 +96,7 @@ def ppcasefile():
 	])
 
 	ppc['StartTime'] = '2013-07-01 00:00:00'
-	ppc['Tmax'] = 86400 # 172800
+	ppc['Tmax'] = 172800
 	ppc['Period'] = 300  # market clearing period
 	ppc['dt'] = 15        # time step for bids
 
