@@ -1,4 +1,4 @@
-(export FNCS_FATAL=NO && exec gridlabd TE_Challenge.glm &> gridlabd.log &)
+(export FNCS_FATAL=NO && exec gridlabd -D USE_FNCS TE_Challenge.glm &> gridlabd.log &)
 (export FNCS_FATAL=NO && exec python double_auction.py input/auction_registration.json TE_Challenge &> auction.log &)
 (export FNCS_FATAL=NO && exec python house_controller.py input/controller_registration_F1_house_B0_thermostat_controller.json &)
 (export FNCS_FATAL=NO && exec python house_controller.py input/controller_registration_F1_house_C1_thermostat_controller.json &)

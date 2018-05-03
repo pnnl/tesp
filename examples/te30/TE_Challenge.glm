@@ -142,6 +142,7 @@ object substation {
   };
 }
 
+#ifdef USE_FNCS
 object fncs_msg {
      name gridlabdSimulator1;
      parent network_node;
@@ -149,6 +150,7 @@ object fncs_msg {
 //     configure TE_Eplusonly.txt;
      option "transport:hostname localhost, port 5570";
 }
+#endif
 
 object meter {
 	name F1_transformer_meter;

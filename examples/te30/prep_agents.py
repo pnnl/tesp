@@ -43,7 +43,7 @@ metrics = sys.argv[1]
 op = open ("launch_" + sys.argv[1] + "_agents.sh", "w")
 
 arg = sys.argv[1] + ".glm"
-print (prefix, "gridlabd", arg, suffix_gld, file=op)
+print (prefix, "gridlabd -D USE_FNCS", arg, suffix_gld, file=op)
 print (prefix, "python double_auction.py input/auction_registration.json", metrics, suffix_auc, file=op)
 
 i = 1
