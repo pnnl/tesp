@@ -15,8 +15,6 @@ import fncs
 import json
 from pprint import pprint
 
-# per Laurentiu, we need to use the PYPOWER/MATPOWER scaling factor in the bid curve here
-fncs_load_scale = 20.0
 
 def parse_kw(arg):
     tok = arg.strip('; MWVAKdrij')
@@ -63,54 +61,40 @@ def parse_kw(arg):
 
     return p
 
-# aggregates the buyer curve into a straight-line fit, returned as
-# [Punresp, Qunresp, m, b, Qmaxresp]
+# aggregates the buyer curve into a quadratic or straight-line fit with zero intercept, returned as
+# [Qunresp, Qmaxresp, degree, c2, c1]
+# scaled to MW instead of kW for the opf
 def aggregate_bid (crv):
     pInd = np.flip(np.argsort(np.array(crv.price)), 0)
-    p = np.array (crv.price)[pInd]
-    q = fncs_load_scale * np.array (crv.quantity)[pInd]
+    p = 1000.0 * np.array (crv.price)[pInd]  # $/MW
+    q = 0.001 * np.array (crv.quantity)[pInd] # MWhr
     idx = np.argwhere (p == p[0])[-1][0]
     unresp = np.cumsum(q[:idx+1])[-1]
-
+    c2 = 0
+    c1 = 0
+    deg = 0
     n = p.size - idx - 1
 
     if n < 1:
-        m = 0
-        b = 0
         qmax = 0
-        # ===============================
-        # Laurentiu Marinovici
-        bb = 0
-        # ===============================
+        deg = 0
     else:
         qresp = np.cumsum(q[idx+1:])
         presp = p[idx+1:]
         qmax = qresp[-1]
-        if n == 1:
-            m = 0
-            # b = presp[-1]
-            # ===============================
-            # Laurentiu Marinovici
-            b = 0
-            bb = presp[-1] * qresp[-1]
-            # ===============================
+        cost = np.cumsum(np.multiply(presp, q[idx+1:]))
+        if n <= 2:
+            A = np.vstack([qresp, np.ones(len(qresp))]).T
+            ret = np.linalg.lstsq(A[:, :-1],cost)[0]
+            c1 = ret[0]
+            deg = 1
         else:
-            # resp_fit = np.polyfit (qresp, presp, 1)
-            # m = resp_fit[0]
-            # b = resp_fit[1]
-            # =================================================
-            # Laurentiu Marinovici
-            cost = np.cumsum(np.multiply(presp, q[idx+1:]))
-            resp_fit = np.polyfit (qresp, cost, 2)
-            m = resp_fit[0]
-            b = resp_fit[1]
-            bb = resp_fit[2]
-            # =================================================
-    # bid = [p[0], unresp, m, b, qmax]
-    # ===========================================
-    # Laurentiu Marinovici
-    bid = [p[0], unresp/fncs_load_scale, m, b, qmax/fncs_load_scale, bb, p, q, idx]
-    # ===========================================
+            A = np.vstack([qresp**2, qresp, np.ones(len(qresp))]).T
+            ret = np.linalg.lstsq(A[:, :-1],cost)[0]
+            c2 = ret[0]
+            c1 = ret[1]
+            deg = 2
+    bid = [unresp, qmax, deg, c2, c1]
     return bid
 
 # Class definition
@@ -193,6 +177,8 @@ class auction_object:
         self.responsive_sell = 0
         self.responsive_buy = 0
 
+        self.agg_bid = [0,0,0,0,0,0,0,0,0]
+
         # Give the updated mean and std values to the market_output        
         if self.market['statistic_mode'] == 1:
             for k in range(0, len(self.stats['value'])):
@@ -229,7 +215,7 @@ class auction_object:
     def subscribeVal(self, fncs_sub_value_String, timeSim):
         if 'refload' in fncs_sub_value_String:
             self.market['capacity_reference_object']['capacity_reference_property'] = parse_kw(fncs_sub_value_String['refload'])
-        if "LMP" in fncs_sub_value_String:
+        if 'LMP' in fncs_sub_value_String:
             if self.market['capacity_reference_object']['name'] != 'none':
                 self.market['capacity_reference_object']['capacity_reference_bid_price'] = self.get_num(fncs_sub_value_String['LMP'])
         # bidder infromation read from fncs_sub_value
@@ -362,20 +348,23 @@ class auction_object:
         
         if (self.market['clearat'] - timeSim) == 30: # TEMC - collect and publish bids two steps before market close
             self.collect_agent_bids()
-            agg_bid = aggregate_bid (self.curve_buyer)
-            fncs.publish ("unresponsive_price", agg_bid[0])
-            fncs.publish ("unresponsive_kw", agg_bid[1])
-            fncs.publish ("responsive_m", agg_bid[2])
-            fncs.publish ("responsive_b", agg_bid[3])
-            fncs.publish ("responsive_max_kw", agg_bid[4])
-            # ==================================================
-            # Laurentiu Marinovici
-            fncs.publish ("responsive_bb", agg_bid[5])
-            print ('<< BIDDING', timeSim, 'Agg Bid[Pu, Qu, m, b, bb, Qmax]', agg_bid[0], agg_bid[1], agg_bid[2], agg_bid[3], agg_bid[5], agg_bid[4])
-            # ==================================================
+            self.agg_bid = aggregate_bid (self.curve_buyer)
+            fncs.publish ("unresponsive_mw", self.agg_bid[0])
+            fncs.publish ("responsive_max_mw", self.agg_bid[1])
+            fncs.publish ("responsive_deg", self.agg_bid[2])
+            fncs.publish ("responsive_c2", self.agg_bid[3])
+            fncs.publish ("responsive_c1", self.agg_bid[4])
 
         # Start market clearing process
         if timeSim >= self.market['clearat']:
+            nbuyers = self.curve_buyer.count
+            refload = 0.001 * self.market['capacity_reference_object']['capacity_reference_property'] # feeder load published, in MW
+            agg_unresp = self.agg_bid[0]
+            agg_respmax = self.agg_bid[1]
+            agg_deg = self.agg_bid[2]
+            agg_c2 = self.agg_bid[3]
+            agg_c1 = self.agg_bid[4]
+
             self.clear_market()
             self.market['market_id'] += 1
 
@@ -400,9 +389,19 @@ class auction_object:
             fncs_publishString = json.dumps(self.fncs_publish)
             
             fncs.agentPublish(fncs_publishString)
-            print ('<< CLEARING', timeSim, 'LMP', self.market['capacity_reference_object']['capacity_reference_bid_price'],
-                   'Clear Price', self.market_output['clear_price'])
             fncs.publish ("clear_price", self.market_output['clear_price'])
+            lmp_cleared = 1000.0 * self.market_output['clear_price']  # $/MWhr
+            agg_clear = 0.001 * self.market['current_frame']['clearing_quantity']  # MW
+            agg_resp = agg_clear - agg_unresp # MW
+            agg_cost = agg_c2 * agg_resp * agg_resp + agg_c1 * agg_resp
+            fitted_qresp = 0.0
+            if agg_c2 != 0.0:
+                fitted_qresp = (lmp_cleared - agg_c1) / 2.0 / agg_c2
+            elif lmp_cleared <= agg_c1:
+                fitted_qresp = agg_respmax
+            fitted_lmp = 2.0 * agg_c2 * agg_resp + agg_c1 
+            print (timeSim, nbuyers, agg_unresp, agg_respmax, refload, lmp_cleared, agg_clear, agg_resp, agg_cost, 
+                   agg_deg, agg_c2, agg_c1, fitted_lmp, fitted_qresp)
         
     # ====================Sync content============================================================= 
     # Do nothing in sync process
@@ -573,7 +572,9 @@ class auction_object:
             buyer = self.buyer 
             # Iterate each buyer to obtain the final buyer curve    
             for i in range (len(buyer['name'])):
-                self.curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
+                price = buyer['price'][i]
+                if price > 0.0:
+                    self.curve_buyer.add_to_curve(price, buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
 
             # Rearranged fix price or quantity 
             if self.market['fixed_price'] * self.market['fixed_quantity'] != 0:
@@ -630,7 +631,9 @@ class auction_object:
             self.buyer['state'].append('ON')
             # Iterate each buyer to obtain the final buyer curve
             for i in range (len(buyer['name'])):
-                self.curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
+                price = buyer['price'][i]
+                if price > 0.0:
+                    self.curve_buyer.add_to_curve(price, buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
 
         elif self.market['special_mode'] == 'MD_FIXED_BUYER':
             # Sort buyers curve:
@@ -638,7 +641,9 @@ class auction_object:
             seller = self.seller 
             # Iterate each buyer to obtain the final buyer curve    
             for i in range (len(buyer['name'])):
-                self.curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
+                price = buyer['price'][i]
+                if price > 0.0:
+                    self.curve_buyer.add_to_curve(price, buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
             if len(seller['quantity']) > 0:
                 warnings.warn('Buyer-only auction was given offering bids')
 
@@ -659,7 +664,9 @@ class auction_object:
             seller = self.seller 
             # Iterate each buyer to obtain the final buyer curve
             for i in range (len(buyer['name'])):
-                self.curve_buyer.add_to_curve(buyer['price'][i], buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
+                price = buyer['price'][i]
+                if price > 0.0:
+                    self.curve_buyer.add_to_curve(price, buyer['quantity'][i], buyer['name'][i], buyer['state'][i])
             # Iterate each seller to obtain the final seller curve    
             for i in range (len(seller['name'])):
                 self.curve_seller.add_to_curve(seller['price'][i], seller['quantity'][i], seller['name'][i], seller['state'][i])

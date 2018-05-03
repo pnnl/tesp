@@ -90,8 +90,8 @@ for key in bus_keys:
 print ("Average real power LMP =", data_b[0,:,LMP_P_IDX].mean(), LMP_P_UNITS)
 print ("Maximum real power LMP =", data_b[0,:,LMP_P_IDX].max(), LMP_P_UNITS)
 print ("First day LMP mean/std dev=", data_b[0,0:25,LMP_P_IDX].mean(), data_b[0,0:25,LMP_P_IDX].std())
-print ("Maximum bus voltage =", data_b[0,:,VMAG_IDX].max(), VMAG_UNITS)
-print ("Minimum bus voltage =", data_b[0,:,VMAG_IDX].min(), VMAG_UNITS)
+print ("Maximum bus voltage =", data_b[0,:,VMAX_IDX].max(), VMAX_UNITS)
+print ("Minimum bus voltage =", data_b[0,:,VMIN_IDX].min(), VMIN_UNITS)
 
 # read the generator metrics file
 lp_g = open ("gen_" + sys.argv[1] + "_metrics.json").read()
