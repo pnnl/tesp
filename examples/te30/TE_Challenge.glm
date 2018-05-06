@@ -38,7 +38,7 @@ module generators;
 
 object metrics_collector_writer {
      interval 300;
-     filename TE_Challenge_metrics.json;
+     filename ${METRICS_FILE}; // TE_Challenge_metrics.json
 };
 
 object climate {

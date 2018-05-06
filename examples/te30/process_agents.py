@@ -13,15 +13,15 @@ a_keys.sort()
 c_keys = list(dict['controllers'].keys())
 c_keys.sort()
 print("\nMarket Dictionary:")
-print("ID Period Unit Init RefObj")
+print("ID Period Unit Init StDev")
 for key in a_keys:
     row = dict['markets'][key]
-    print (key, row['period'], row['unit'], row['init_price'], row['capacity_reference_object'])
+    print (key, row['period'], row['unit'], row['init_price'], row['init_stdev'])
 print("\nController Dictionary:")
-print("ID House Mode Base RampHi RampLo RangeHi RangeLo")
+print("ID House Mode BaseDaylight Ramp Offset Cap")
 for key in c_keys:
     row = dict['controllers'][key]
-    print (key, row['houseName'], row['control_mode'], row['base_setpoint'], row['ramp_high'], row['ramp_low'], row['range_high'], row['range_low'])
+    print (key, row['houseName'], row['control_mode'], row['daylight_set'], row['ramp'], row['offset_limit'], row['price_cap'])
 
 # read the auction metrics file
 lp_a = open ("auction_" + sys.argv[1] + "_metrics.json").read()

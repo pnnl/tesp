@@ -228,7 +228,8 @@ yp.close ()
 
 op = open ('launch_' + fileroot + '_auction.sh', 'w')
 arg = fileroot + '.glm'
-print ('(export FNCS_FATAL=NO && exec gridlabd -D USE_FNCS', arg, '&> gridlabd.log &)', file=op)
+print ('(export FNCS_FATAL=NO && exec gridlabd -D USE_FNCS -D METRICS_FILE=' + fileroot + '_metrics.json', 
+			 arg, '&> gridlabd.log &)', file=op)
 print ('(export FNCS_CONFIG_FILE=' + yamlfile, '&& export FNCS_FATAL=NO && exec python auction.py', 
 	   dictfile, fileroot, '&> auction.log &)', file=op)
 op.close()
@@ -250,6 +251,7 @@ for key, val in controllers.items():
 	print ('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
 	print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
 	print ('subscribe "precommit:' + houseName + '.cooling_setpoint <- auction/' + key + '/cooling_setpoint";', file=op)
+	print ('subscribe "precommit:' + houseName + '.thermostat_deadband <- auction/' + key + '/thermostat_deadband";', file=op)
 	print ('subscribe "precommit:' + meterName + '.bill_mode <- auction/' + key + '/bill_mode";', file=op)
 	print ('subscribe "precommit:' + meterName + '.price <- auction/' + key + '/price";', file=op)
 	print ('subscribe "precommit:' + meterName + '.monthly_fee <- auction/' + key + '/monthly_fee";', file=op)

@@ -6,17 +6,17 @@ values:
         topic: gridlabdSimulator1/distribution_load
         default: 0
     UNRESPONSIVE_MW:
-        topic: auction_Market_1/unresponsive_mw
+        topic: auction/unresponsive_mw
         default: 0
     RESPONSIVE_MAX_MW:
-        topic: auction_Market_1/responsive_max_mw
+        topic: auction/responsive_max_mw
         default: 0
     RESPONSIVE_C2:
-        topic: auction_Market_1/responsive_c2
+        topic: auction/responsive_c2
         default: 0
     RESPONSIVE_C1:
-        topic: auction_Market_1/responsive_c1
+        topic: auction/responsive_c1
         default: 0
     RESPONSIVE_DEG:
-        topic: auction_Market_1/responsive_deg
+        topic: auction/responsive_deg
         default: 0
