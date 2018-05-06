@@ -5,11 +5,11 @@ import matplotlib as mpl;
 import matplotlib.pyplot as plt;
 
 casefiles = [['SGIP1a','red'],
-						 ['SGIP1b','blue']]
-#						 ['SGIP1c','green'],
-#						 ['SGIP1d','magenta'],
-#						 ['SGIP1e','cyan'],
-#						 ['SGIP1ex','orange']]
+						 ['SGIP1b','blue'],
+						 ['SGIP1c','green'],
+						 ['SGIP1d','magenta'],
+						 ['SGIP1e','cyan'],
+						 ['SGIP1ex','orange']]
 
 # here are the columns, after ignore 'True/False' with usecols
 plotvars = [[0, 't[s]', 'seconds'],

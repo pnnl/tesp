@@ -15,8 +15,8 @@ dt = 15
 period = 300
 broker = 'tcp://localhost:5570'
 network_node = 'network_node'
-Eplus_load = 'Eplus_load'
-Eplus_meter = 'Eplus_meter'
+Eplus_load = 'R1_12_47_1_load_4_Eplus_load4' # Eplus_load
+Eplus_meter = 'R1_12_47_1_load_4_Eplus_meter4' # Eplus_meter
 
 # controller data:
 periodController = period

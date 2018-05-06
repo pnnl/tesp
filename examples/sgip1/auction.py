@@ -7,7 +7,7 @@ from tesp_support import parse_fncs_magnitude
 from tesp_support import parse_kw
 
 # these should be in a configuration file as well; TODO synch the proper hour of day
-bWantMarket = False
+bWantMarket = True
 time_stop = int (48 * 3600) # simulation time in seconds
 StartTime = '2013-07-01 00:00:00 PST'
 
@@ -54,11 +54,11 @@ LMP = aucObj.mean
 refload = 0.0
 bSetDefaults = True
 
-tnext_bid = period - 3 * dt  # controllers calculate their final bids
+tnext_bid = period - 2 * dt  #3 * dt  # controllers calculate their final bids
 tnext_agg = period - 2 * dt  # auction calculates and publishes aggregate bid
 tnext_opf = period - 1 * dt  # PYPOWER executes OPF and publishes LMP (no action here)
 tnext_clear = period         # clear the market with LMP
-tnext_adjust = period + dt   # controllers adjust setpoints based on their bid and clearing
+tnext_adjust = period        # + dt   # controllers adjust setpoints based on their bid and clearing
 
 time_granted = 0
 while (time_granted < time_stop):
