@@ -173,7 +173,7 @@ def main_loop():
     gen_accum[str(i+1)] = [0,0,0]
 
   op = open (rootname + '.csv', 'w')
-  print ('t[s],Converged,Pload,P7 (csv),GLD Unresp,P7 (opf),Resp (opf),GLD Pub,BID?,P7 Min,V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp,Deg,c2,c1', file=op, flush=True)
+  print ('t[s],Converged,Pload,P7 (csv),Unresp (opf),P7 (rpf),Resp (opf),GLD Pub,BID?,P7 Min,V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp,Deg,c2,c1', file=op, flush=True)
   fncs.initialize()
 
   # transactive load components
@@ -235,12 +235,6 @@ def main_loop():
         branch[row[0],10] = 0
       else:
         branch[row[0],10] = 1
-    bus[6,2] = csv_load
-    for row in ppc['FNCS']:
-      unresp = float(row[3])
-      newidx = int(row[0]) - 1
-      bus[newidx,2] += unresp
-    gen[4][9] = -resp_max
 
     if resp_deg == 2:
       gencost[4][3] = 3
@@ -257,6 +251,13 @@ def main_loop():
     gencost[4][6] = 0.0
 
     if ts >= tnext_opf:  # expecting to solve opf one dt before the market clearing period ends, so GridLAB-D has time to use it
+      # for OPF, the FNCS bus load is CSV + Unresponsive estimate, with Responsive separately dispatchable
+      bus[6,2] = csv_load
+      for row in ppc['FNCS']:
+        unresp = float(row[3])
+        newidx = int(row[0]) - 1
+        bus[newidx,2] += unresp
+      gen[4][9] = -resp_max
       res = pp.runopf(ppc, ppopt_market)
       if res['success'] == False:
         conv_accum = False
@@ -275,15 +276,18 @@ def main_loop():
     gen[1,1] = opf_gen[1, 1]
     gen[2,1] = opf_gen[2, 1]
     gen[3,1] = opf_gen[3, 1]
-    gen[4,1] = opf_gen[4, 1]
+    # during regular power flow, we use the actual CSV + feeder load, ignore dispatchable load and use actual
+    bus[6,2] = csv_load + feeder_load
+    gen[4,1] = 0 # opf_gen[4, 1]
+    gen[4,9] = 0
     rpf = pp.runpf(ppc, ppopt_regular)
     if rpf[0]['success'] == False:
       conv_accum = False
     bus = rpf[0]['bus']
     gen = rpf[0]['gen']
     
-    Pload = bus[:,2].sum() + resp
-    Pgen = gen[:,1].sum() + resp
+    Pload = bus[:,2].sum()
+    Pgen = gen[:,1].sum()
     Ploss = Pgen - Pload
 
     # update the metrics
@@ -346,9 +350,9 @@ def main_loop():
     print (ts, res['success'], 
            '{:.3f}'.format(Pload),          # Pload
            '{:.3f}'.format(csv_load),       # P7 (csv)
-           '{:.3f}'.format(unresp),  # GLD Unresp
-           '{:.3f}'.format(bus[6,2]),       # P7 (opf raw, should be csv plus unresp)
-           '{:.3f}'.format(resp),    # Resp (opf)
+           '{:.3f}'.format(unresp),         # GLD Unresp
+           '{:.3f}'.format(bus[6,2]),       # P7 (rpf)
+           '{:.3f}'.format(resp),           # Resp (opf)
            '{:.3f}'.format(feeder_load),    # GLD Pub
            new_bid, 
            '{:.3f}'.format(gen[4,9]),       # P7 Min

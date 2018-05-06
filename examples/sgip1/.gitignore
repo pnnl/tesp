@@ -8,5 +8,6 @@ output/
 launch*.sh
 *.xml
 *.inc
+SGIP*auction.yaml
 
 
