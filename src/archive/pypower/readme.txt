@@ -1,6 +1,8 @@
 Patching PYPOWER if Necessary
 =============================
 
+(This manual patch is no longer required since PYPOWER 5.1)
+
 Run "pf" or "opf" from a Terminal, and you'll see either warnings (up to Python 3.5) or 
 errors (in Python 3.6) from PYPOWER due to deprecated behaviors, primarily the use of 
 floats for array indices.  To fix this: 
