@@ -7,7 +7,7 @@ from tesp_support import parse_fncs_magnitude
 from tesp_support import parse_kw
 
 # these should be in a configuration file as well; TODO synch the proper hour of day
-bWantMarket = True
+bWantMarket = False
 time_stop = int (48 * 3600) # simulation time in seconds
 StartTime = '2013-07-01 00:00:00 PST'
 
