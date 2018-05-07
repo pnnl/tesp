@@ -162,6 +162,7 @@ def aggregate_bid (crv):
             c1 = ret[1]
             deg = 2
     bid = [unresp, qmax, deg, c2, c1]
+#    print ('  ', n, bid, ret, p, q)
     return bid
 
 # Class definition
@@ -233,7 +234,7 @@ class simple_auction:
                    self.curve_buyer.total, self.curve_buyer.total_on, self.curve_buyer.total_off)
         if self.curve_buyer.count > 0:
             self.curve_buyer.set_curve_order ('descending')
-        self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.acc_c1 = aggregate_bid (self.curve_buyer)
+        self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.agg_c1 = aggregate_bid (self.curve_buyer)
 
     def clear_market (self):
         self.curve_seller.add_to_curve (self.lmp, self.max_capacity_reference_bid_quantity, True)

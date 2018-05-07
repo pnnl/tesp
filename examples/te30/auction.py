@@ -8,6 +8,10 @@ from tesp_support import parse_kw
 
 # these should be in a configuration file as well; TODO synch the proper hour of day
 bWantMarket = True
+if len(sys.argv) > 3:
+    if sys.argv[3] == 'NoMarket':
+        bWantMarket = False
+        print ('Disabled the market')
 time_stop = int (48 * 3600) # simulation time in seconds
 StartTime = '2013-07-01 00:00:00 PST'
 
