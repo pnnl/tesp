@@ -213,7 +213,8 @@ def main_loop():
         gld_load = parse_mva (fncs.get_value(key).decode()) # actual value, may not match unresp + resp load
         feeder_load = float(gld_load[0]) * load_scale
     if new_bid == True:
-      print('**Bid', ts, unresp, resp_max, resp_deg, resp_c2, resp_c1)
+      dummy = 2
+#      print('**Bid', ts, unresp, resp_max, resp_deg, resp_c2, resp_c1)
 
     # update the case for bids, outages and CSV loads
     idx = int ((ts + dt) / period) % nloads
@@ -252,11 +253,16 @@ def main_loop():
 
     if ts >= tnext_opf:  # expecting to solve opf one dt before the market clearing period ends, so GridLAB-D has time to use it
       # for OPF, the FNCS bus load is CSV + Unresponsive estimate, with Responsive separately dispatchable
+      bus = ppc['bus']
+      gen = ppc['gen']
       bus[6,2] = csv_load
       for row in ppc['FNCS']:
         unresp = float(row[3])
         newidx = int(row[0]) - 1
-        bus[newidx,2] += unresp
+        if unresp >= feeder_load:
+          bus[newidx,2] += unresp
+        else:
+          bus[newidx,2] += feeder_load
       gen[4][9] = -resp_max
       res = pp.runopf(ppc, ppopt_market)
       if res['success'] == False:
@@ -266,6 +272,19 @@ def main_loop():
       lmp = opf_bus[6,13]
       resp = -1.0 * opf_gen[4,1]
       fncs.publish('LMP_B7', 0.001 * lmp) # publishing $/kwh
+#     print ('  OPF', ts, csv_load, '{:.3f}'.format(unresp), '{:.3f}'.format(resp),
+#            '{:.3f}'.format(feeder_load), '{:.3f}'.format(opf_bus[6,2]),
+#            '{:.3f}'.format(opf_gen[0,1]), '{:.3f}'.format(opf_gen[1,1]), '{:.3f}'.format(opf_gen[2,1]),
+#            '{:.3f}'.format(opf_gen[3,1]), '{:.3f}'.format(opf_gen[4,1]), '{:.3f}'.format(lmp))
+      # if unit 2 (the normal swing bus) is dispatched at max, change the swing bus to 9
+      if opf_gen[1,1] >= 191.0:
+        ppc['bus'][1,1] = 2
+        ppc['bus'][8,1] = 3
+        print ('  SWING Bus 9')
+      else:
+        ppc['bus'][1,1] = 3
+        ppc['bus'][8,1] = 1
+        print ('  SWING Bus 2')
       tnext_opf += period
     
     # always update the electrical quantities with a regular power flow
@@ -365,8 +384,8 @@ def main_loop():
            '{:.2f}'.format(gen[3,1]),       # Pgen4
            '{:.2f}'.format(res['gen'][4, 1]), # Pdisp
            '{:.4f}'.format(resp_deg),       # degree
-           '{:.6f}'.format(ppc['gencost'][4, 4]),  # c2
-           '{:.4f}'.format(ppc['gencost'][4, 5]),  # c1 
+           '{:.8f}'.format(ppc['gencost'][4, 4]),  # c2
+           '{:.8f}'.format(ppc['gencost'][4, 5]),  # c1 
            sep=',', file=op, flush=True)
 
     # request the next time step
