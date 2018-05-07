@@ -1,28 +1,26 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
+#	Copyright (C) 2017-2018 Battelle Memorial Institute
 
 from setuptools import setup, find_packages
 
 
 setup(
-    name='TESP',
-    version='1.0.0',
+    name='tesp_support',
+    version='0.0.1',
     author='Thomas McDermott',
     author_email='Thomas.McDermott@PNNL.gov',
-    description='Transactive Energy Simulation Platform',
+    description='Python support for the Transactive Energy Simulation Platform',
     long_description='\n\n'.join(
         open(f, 'rb').read().decode('utf-8')
         for f in ['README.rst', 'CHANGELOG.rst']),
     url='https://github.com/pnnl/tesp',
     license='BSD',
     install_requires=[
-        # Deactivated to avoid problems with system packages.
-        # Manual installation of NumPy, SciPy, PYPOWER required.
+        'matplotlib',
+        'PYPOWER'
     ],
-    entry_points={'console_scripts': [
-        'tesp = tesp.tesp'
-    ]},
     packages=find_packages(),
     include_package_data=True,
+    python_requires='>=3.5',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -37,4 +35,5 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering',
     ],
+    zip_safe=False
 )

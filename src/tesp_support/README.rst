@@ -17,24 +17,26 @@ on the last item, to push advances in the field.
 Installation
 ============
 
-TESP can be installed using pip_::
+tesp_support can be installed using pip_::
 
-  $ pip install tesp
+  $ pip install tesp_support
 
-In addition, it needs:
-
-* Python 3.5 or later, with Numpy, SciPy_ and PYPOWER
-* Custom versions of GridLAB-D and EnergyPlus
+However, in order to be useful, tesp_support needs custom versions of 
+GridLAB-D and EnergyPlus.  It also requires Python 3.5 or later, with 
+Numpy, SciPy_ and PYPOWER_.  There will be cross-platform installers of 
+the complete TESP for Windows, Linux and Mac OS X made available on GitHub.  
 
 Using TESP
 ==========
 
-To be written.
+This is a developer's platform for electric power grid research.  See 
+http://tesp.readthedocs.io/en/latest/ for user instructions, and 
+http://github.com/pnnl/tesp for source code.  
 
 License & Copyright
 ===================
 
-#	Copyright (C) 2017 Battelle Memorial Institute
+#	Copyright (C) 2017-2018 Battelle Memorial Institute
 
 Links
 =====
@@ -45,4 +47,7 @@ Links
 .. _pip: https://pip.pypa.io
 .. _SciPy: http://www.scipy.org
 .. _MATPOWER: http://www.pserc.cornell.edu/matpower/
-.. _GridLAB-D: http://sourceforge.net/projects/gridlab-d/
+.. _PYPOWER: https://github.com/rwl/PYPOWER
+.. _GridLAB-D: http://gridlab-d.shoutwiki.com
+.. _EnergyPlus: https://energyplus.net/
+.. _TESP: http://tesp.readthedocs.io/en/latest/
