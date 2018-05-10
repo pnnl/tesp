@@ -262,7 +262,7 @@ def main_loop():
         if unresp >= feeder_load:
           bus[newidx,2] += unresp
         else:
-          bus[newidx,2] += feeder_load
+          bus[newidx,2] += unresp # feeder_load
       gen[4][9] = -resp_max
       res = pp.runopf(ppc, ppopt_market)
       if res['success'] == False:
