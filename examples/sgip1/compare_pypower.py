@@ -14,13 +14,15 @@ casefiles = [['SGIP1a','red'],
 						 ['SGIP1ex','orange']]
 
 def MakePlotData(root):
-	lp = open (root + "_m_dict.json")
+	fdir = './'
+#	fdir = './SGIP1new/' + root + '/'
+	lp = open (fdir + root + '_m_dict.json')
 	dict = json.loads(lp.read())
 	lp.close()
 
 	gen_keys = list(dict['generators'].keys())
 	gen_keys.sort()
-	lp_g = open ('gen_' + root + '_metrics.json')
+	lp_g = open (fdir + 'gen_' + root + '_metrics.json')
 	lst_g = json.loads(lp_g.read())
 	lp_g.close()
 	lst_g.pop('StartTime')
@@ -28,7 +30,7 @@ def MakePlotData(root):
 
 	bus_keys = list(dict['fncsBuses'].keys())
 	bus_keys.sort()
-	lp_b = open ('bus_' + root + '_metrics.json')
+	lp_b = open (fdir + 'bus_' + root + '_metrics.json')
 	lst_b = json.loads(lp_b.read())
 	lp_b.close()
 	lst_b.pop('StartTime')
@@ -110,25 +112,27 @@ tmin = 0.0
 tmax = 48.0
 xticks = [0,6,12,18,24,30,36,42,48]
 
-fig, ax = plt.subplots(3, 1, sharex = 'col')
+#fig, ax = plt.subplots(3, 1, sharex = 'col')
+fig, ax = plt.subplots(2, 1, sharex = 'col')
 
 for root in casefiles:
 	print ('Processing', root[0])
 	hrs, pfncs, tgen, lmp = MakePlotData(root[0])
 	ax[0].plot(hrs, pfncs, color=root[1], label=root[0])
-	ax[1].plot(hrs, tgen, color=root[1], label=root[0])
-	ax[2].plot(hrs, lmp, color=root[1], label=root[0])
+	ax[1].plot(hrs, lmp, color=root[1], label=root[0])
+#	ax[2].plot(hrs, tgen, color=root[1], label=root[0])
 
-ax[0].set_title ('FNCS Bus Load')
+ax[0].set_title ('Bus 7 Load')
 ax[0].set_ylabel ('MW')
 
-ax[1].set_title ('Total Generation')
-ax[1].set_ylabel ('MW')
+ax[1].set_title ('Bus 7 LMP')
+ax[1].set_ylabel ('$/kwh')
 
-ax[2].set_title ('FNCS Bus LMP')
-ax[2].set_ylabel ('$/kwh')
+#ax[2].set_title ('Total Generation')
+#ax[2].set_ylabel ('MW')
 
-ax[2].set_xlabel ('Hours')
+#ax[2].set_xlabel ('Hours')
+ax[1].set_xlabel ('Hours')
 
 ax[0].grid()
 ax[0].legend()
@@ -140,10 +144,12 @@ ax[1].legend()
 ax[1].set_xlim(tmin,tmax)
 ax[1].set_xticks(xticks)
 
-ax[2].grid()
-ax[2].legend()
-ax[2].set_xlim(tmin,tmax)
-ax[2].set_xticks(xticks)
+#-------------------------
+#ax[2].grid()             
+#ax[2].legend()           
+#ax[2].set_xlim(tmin,tmax)
+#ax[2].set_xticks(xticks) 
+#-------------------------
 
 plt.show()
 

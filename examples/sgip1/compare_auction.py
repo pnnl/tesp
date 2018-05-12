@@ -14,13 +14,16 @@ casefiles = [['SGIP1a','red'],
 						 ['SGIP1ex','orange']]
 
 def MakePlotData(root):
-	lp = open ("SGIP1b_agent_dict.json")
+#	 fdir = './'
+#  lp = open (fdir + 'SGIP1b_agent_dict.json')
+	fdir = './SGIP1new/' + root + '/'
+	lp = open (fdir + root + '_agent_dict.json')
 	dict = json.loads(lp.read())
 	lp.close()
 
 	a_keys = list(dict['markets'].keys())
 	a_keys.sort()
-	lp_a = open ('auction_' + root + '_metrics.json')
+	lp_a = open (fdir + 'auction_' + root + '_metrics.json')
 	lst_a = json.loads(lp_a.read())
 	lp_a.close()
 	lst_a.pop('StartTime')

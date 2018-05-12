@@ -16,7 +16,7 @@ plotvars = [[0, 't[s]', 'seconds'],
 						[1, 'Pload', 'MW'],
 						[2, 'P7 (csv)', 'MW'],
 						[3, 'GLD Unresp', 'MW'],
-						[4, 'P7 (opf)', 'MW'],
+						[4, 'P7 (rpf)', 'MW'],
 						[5, 'Resp (opf)', 'MW'],
 						[6, 'GLD Pub', 'MW'],
 						[7, 'P7 Min', 'MW'],
@@ -33,7 +33,9 @@ plotvars = [[0, 't[s]', 'seconds'],
 						[18, 'gencost0', '$']]
 
 def MakePlotData(root, idx):
-	d1 = np.loadtxt(root + '.csv', skiprows=1, delimiter=',',
+#	fpath = root + '.csv'
+	fpath = './SGIP1new/' + root + '/' + root + '.csv'
+	d1 = np.loadtxt(fpath, skiprows=1, delimiter=',',
 									usecols=[0,2,3,4,5,6,7,9,10,11,12,13,14,15,16,17,18,19,20])
 	hrs = d1[:,0] / 3600.0
 

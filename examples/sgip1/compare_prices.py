@@ -59,10 +59,10 @@ xticks = [0,6,12,18,24,30,36,42,48]
 fig, ax = plt.subplots(1, 1, sharex = 'col')
 
 hrs, lmp, lmp1, lmp2, lmp3, lmp4, lmp5 = MakePlotData (root)
-#ax.plot(hrs, lmp1, color='blue', label='LMP1')
-#ax.plot(hrs, lmp2, color='green', label='LMP2')
-#ax.plot(hrs, lmp3, color='magenta', label='LMP3')
-#ax.plot(hrs, lmp4, color='cyan', label='LMP4')
+ax.plot(hrs, lmp1, color='blue', label='LMP1')
+ax.plot(hrs, lmp2, color='green', label='LMP2')
+ax.plot(hrs, lmp3, color='magenta', label='LMP3')
+ax.plot(hrs, lmp4, color='cyan', label='LMP4')
 ax.plot(hrs, lmp5, color='orange', label='LMP5')
 ax.plot(hrs, lmp, color='red', label='LMP')
 
