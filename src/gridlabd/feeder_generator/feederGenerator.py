@@ -47,20 +47,32 @@ rgnWeather = ['CA-San_francisco','OH-Cleveland','AZ-Phoenix','TN-Nashville','FL-
 #       1:pre-1960, 2:1960-1989, 3:1990-2005
 #       1:pre-1960, 2:1960-1989, 3:1990-2005
 rgnThermalPct = [[[0.0805,0.0724,0.1090,0.0867,0.1384,0.1264,0.1297],  # Region 1, SF
-                  [0.0356,0.1223,0.0256,0.0000,0.0000,0.0000,0.0000],  #           Apt
-                  [0.0000,0.0554,0.0181,0.0000,0.0000,0.0000,0.0000]], #           MH
+                  [0.0356,0.1223,0.0256],  #           Apt
+                  [0.0000,0.0554,0.0181]], #           MH
                  [[0.1574,0.0702,0.1290,0.0971,0.0941,0.0744,0.1532],
-                  [0.0481,0.0887,0.0303,0.0000,0.0000,0.0000,0.0000],
-                  [0.0000,0.0372,0.0202,0.0000,0.0000,0.0000,0.0000]],
+                  [0.0481,0.0887,0.0303],
+                  [0.0000,0.0372,0.0202]],
                  [[0.0448,0.0252,0.0883,0.0843,0.1185,0.1315,0.2411],
-                  [0.0198,0.1159,0.0478,0.0000,0.0000,0.0000,0.0000],
-                  [0.0000,0.0524,0.0302,0.0000,0.0000,0.0000,0.0000]],
+                  [0.0198,0.1159,0.0478],
+                  [0.0000,0.0524,0.0302]],
                  [[0.0526,0.0337,0.0806,0.0827,0.1081,0.1249,0.2539],
-                  [0.0217,0.1091,0.0502,0.0000,0.0000,0.0000,0.0000],
-                  [0.0000,0.0491,0.0333,0.0000,0.0000,0.0000,0.0000]],
+                  [0.0217,0.1091,0.0502],
+                  [0.0000,0.0491,0.0333]],
                  [[0.0526,0.0337,0.0806,0.0827,0.1081,0.1249,0.2539],
-                  [0.0217,0.1091,0.0502,0.0000,0.0000,0.0000,0.0000],
-                  [0.0000,0.0491,0.0333,0.0000,0.0000,0.0000,0.0000]]]
+                  [0.0217,0.1091,0.0502],
+                  [0.0000,0.0491,0.0333]]]
+
+def selectResidentialBuilding(rgnTable,prob):
+  row = 0
+  total = 0
+  for row in range(len(rgnTable)):
+    for col in range(len(rgnTable[row])):
+      total += rgnTable[row][col]
+      if total >= prob:
+        return row, col
+  row = len(rgnTable) - 1
+  col = len(rgnTable[row]) - 1
+  return row, col
 
 rgnFloorArea = [[2209,820,1054], # single family, apartment, mobile home
                 [2951,798,1035],
@@ -125,6 +137,13 @@ rgnWHSize = [[0.0000,0.3333,0.6667],
 coolingScheduleNumber = 8
 heatingScheduleNumber = 6
 waterHeaterScheduleNumber = 6
+
+# these are in seconds
+commercial_skew_max = 5400
+commercial_skew_std = 1800
+residential_skew_max = 8100
+residential_skew_std = 2700
+
 
 # Index 0 is the level (minus one)
 # Rceiling, Rwall, Rfloor, WindowLayers, WindowGlass,Glazing,WindowFrame,Rdoor,AirInfil,COPhi,COPlo
@@ -475,7 +494,8 @@ def identify_houses (model, h, t, avgHouse, rgn):
 
 def write_houses(basename, op, phs, vnom, vstart):
     nhouse = int(house_nodes[basename][0])
-    rgn = int(house_nodes[basename][0])
+    rgn = int(house_nodes[basename][1])
+    rgnTable = rgnThermalPct[rgn-1]
     for i in range(nhouse):
         tpxname = basename + '_tpx_' + str(i+1)
         mtrname = basename + '_mtr_' + str(i+1)
@@ -495,17 +515,76 @@ def write_houses(basename, op, phs, vnom, vstart):
         print ('  voltage_1 ' + vstart + ';', file=op)
         print ('  voltage_2 ' + vstart + ';', file=op)
         print ('}', file=op)
+        bldg, ti = selectResidentialBuilding (rgnTable, np.random.uniform (0, 1))
+        fa_base = rgnFloorArea[rgn-1][bldg]
+        fa_rand = np.random.uniform (0, 1)
+        if bldg == 0: # SF homes
+            floor_area = fa_base + 0.5 * fa_base * fa_rand * (ti - 3) / 3;
+        else: # apartment or MH
+            floor_area = fa_base + 0.5 * fa_base * (0.5 - fa_rand) # +/- 50%
+
+ #       % Now also adjust square footage as a factor of whether
+ #       % the load modifier (avg_house) rounded up or down
+ #       floor_area = (1 + lg_v_sm) * floor_area;
+
+        if floor_area > 4000:
+            floor_area = 3800 + fa_rand*200;
+        elif floor_area < 300:
+            floor_area = 300 + fa_rand*100;
+        skew_value = residential_skew_std * np.random.uniform (-1, 1)  # TODO vs MATLAB randn
+        if skew_value < -residential_skew_max:
+            skew_value = -residential_skew_max
+        elif skew_value > residential_skew_max:
+            skew_value = residential_skew_max
         print ('object house {', file=op)
         print ('  name', hsename + ';', file=op)
         print ('  parent', mtrname + ';', file=op)
+        print ('  floor_area','{:.0f}'.format(floor_area) + ';', file=op)
         print ('  object ZIPload { // responsive', file=op)
         print ('    heatgain_fraction 0.9;', file=op)
         print ('  };', file=op)
         print ('  object ZIPload { // unresponsive', file=op)
         print ('    heatgain_fraction 0.9;', file=op)
         print ('  };', file=op)
-        if np.random.uniform (0, 1) >= 0.1:
+        if np.random.uniform (0, 1) <= rgnPenElecWH[rgn-1]:
+          heat_element = 3.0 + 0.5 * np.random.randint (1,6);  # numpy randint (lo, hi) returns lo..(hi-1)
+          tank_set = 120 + 16 * np.random.uniform (0, 1);
+          therm_dead = 4 + 4 * np.random.uniform (0, 1);
+          tank_UA = 2 + 2 * np.random.uniform (0, 1);
+          water_sch = round(0.5 + waterHeaterScheduleNumber * np.random.uniform (0, 1)) # TODO vs. MATLAB ceil
+          water_var = 0.95 + np.random.uniform (0, 1) * 0.1 # +/-5% variability
+          wh_demand_type = 'large_'
+          sizeIncr = np.random.randint (0,3)  # MATLAB randi(imax) returns 1..imax
+          sizeProb = np.random.uniform (0, 1);
+          if sizeProb <= rgnWHSize[rgn-1][0]:
+              wh_size = 20 + sizeIncr * 5
+              wh_demand_type = 'small_'
+          elif sizeProb <= (rgnWHSize[rgn-1][0] + rgnWHSize[rgn-1][1]):
+              wh_size = 30 + sizeIncr * 10
+              if floor_area < 2000.0:
+                  wh_demand_type = 'small_'
+          else:
+              if floor_area < 2000.0:
+                  wh_size = 30 + sizeIncr * 10
+              else:
+                  wh_size = 50 + sizeIncr * 10
+          wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
+          wh_skew_value = 3 * residential_skew_std * np.random.uniform (-1, 1)  # TODO vs MATLAB randn
+          if wh_skew_value < -6 * residential_skew_max:
+              wh_skew_value = -6 * residential_skew_max
+          elif wh_skew_value > 6 * residential_skew_max:
+              wh_skew_value = 6 * residential_skew_max
           print ('  object waterheater {', file=op)
+          print ('    schedule_skew','{:.0f}'.format(wh_skew_value) + ';', file=op)
+          print ('    heating_element_capacity','{:.1f}'.format(heat_element), ' kW;', file=op)
+          print ('    tank_setpoint','{:.1f}'.format(tank_set) + ';', file=op)
+          print ('    temperature 132;', file=op) 
+          print ('    thermostat_deadband','{:.1f}'.format(therm_dead) + ';', file=op)
+          print ('    location INSIDE;', file=op)                   
+          print ('    tank_diameter 1.5;', file=op)                  
+          print ('    tank_UA','{:.1f}'.format(tank_UA) + ';', file=op)
+          print ('    demand', wh_demand_str + ';', file=op)
+          print ('    tank_volume','{:.0f}'.format(wh_size) + ';', file=op)
           print ('    object metrics_collector {', file=op)
           print ('      interval', str(metrics_interval) + ';', file=op)
           print ('    };', file=op)
@@ -746,7 +825,7 @@ for c in casefiles:
         rgn = 4
     elif 'R5' in c[0]:
         rgn = 5
-    print ('region', rgn)
+    print ('region', rgn, 'has electric water heater penetration', rgnPenElecWH[rgn-1])
     if os.path.isfile(fname):
         ip = open (fname, 'r')
         lines = []
