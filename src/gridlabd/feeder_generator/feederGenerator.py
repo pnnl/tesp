@@ -33,6 +33,10 @@ solar_inv_mode = 'CONSTANT_PF'
 storage_inv_mode = 'LOAD_FOLLOWING'
 weather_file = 'AZ-Tucson_International_Ap.tmy3'
 
+# heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
+techdata = [0.9,1.0,1.0,1.0,0.2,0.4,0.4]
+
+bldgTypeName = ['Single Family', 'Apartment', 'Mobile Home']
 rgnName = ['West Coast', 'North Central/Northeast', 'Southwest', 'Southeast Central', 'Southeast Coast']
 rgnTimeZone = ['PST+8PDT', 'EST+5EDT', 'MST+7MDT', 'CST+6CDT', 'EST+5EDT']
 rgnWeather = ['CA-San_francisco','OH-Cleveland','AZ-Phoenix','TN-Nashville','FL-Miami']
@@ -63,16 +67,16 @@ rgnThermalPct = [[[0.0805,0.0724,0.1090,0.0867,0.1384,0.1264,0.1297],  # Region 
                   [0.0000,0.0491,0.0333]]]
 
 def selectResidentialBuilding(rgnTable,prob):
-  row = 0
-  total = 0
-  for row in range(len(rgnTable)):
-    for col in range(len(rgnTable[row])):
-      total += rgnTable[row][col]
-      if total >= prob:
-        return row, col
-  row = len(rgnTable) - 1
-  col = len(rgnTable[row]) - 1
-  return row, col
+    row = 0
+    total = 0
+    for row in range(len(rgnTable)):
+        for col in range(len(rgnTable[row])):
+            total += rgnTable[row][col]
+            if total >= prob:
+                return row, col
+    row = len(rgnTable) - 1
+    col = len(rgnTable[row]) - 1
+    return row, col
 
 rgnFloorArea = [[2209,820,1054], # single family, apartment, mobile home
                 [2951,798,1035],
@@ -144,7 +148,6 @@ commercial_skew_std = 1800
 residential_skew_max = 8100
 residential_skew_std = 2700
 
-
 # Index 0 is the level (minus one)
 # Rceiling, Rwall, Rfloor, WindowLayers, WindowGlass,Glazing,WindowFrame,Rdoor,AirInfil,COPhi,COPlo
 singleFamilyProperties = [[16.0, 10.0, 10.0, 1, 1, 1, 1,   3,  .75, 2.8, 2.4],
@@ -159,9 +162,18 @@ apartmentProperties = [[13.4, 11.7,  9.4, 1, 1, 1, 1, 2.2, .75, 2.8,  1.9],
                        [20.3, 11.7, 12.7, 2, 1, 2, 2, 2.7, 0.25, 3.0, 2.0],
                        [28.7, 14.3, 12.7, 2, 2, 3, 4, 6.3, .125, 3.2, 2.1]]
 
-mobileHomeproperties = [[   0,    0,    0, 0, 0, 0, 0,   0,   0,   0,   0],
+mobileHomeProperties = [[   0,    0,    0, 0, 0, 0, 0,   0,   0,   0,   0], # TODO - is it really this bad?
                         [13.4,  9.2, 11.7, 1, 1, 1, 1, 2.2, .75, 2.8, 1.9],
                         [24.1, 11.7, 18.1, 2, 2, 1, 2,   3, .75, 3.5, 2.2]]
+
+def selectThermalProperties(bldgIdx, tiIdx):
+    if bldgIdx == 0:
+        tiProps = singleFamilyProperties[tiIdx]
+    elif bldgIdx == 1:
+        tiProps = apartmentProperties[tiIdx]
+    else:
+        tiProps = mobileHomeProperties[tiIdx]
+    return tiProps
 
 # kva, %r, %x, %nll, %imag
 three_phase = [[30,1.90,1.77,0.79,4.43],
@@ -474,6 +486,9 @@ def write_local_triplex_configurations (op):
     print (' diameter', str(row[4]) + ';', file=op)
     print ('}', file=op)
 
+def buildingTypeLabel (rgn, bldg, ti):
+    return rgnName[rgn-1] + ': ' + bldgTypeName[bldg] + ': TI Level ' + str (ti+1)
+
 house_nodes = {}
 
 def identify_houses (model, h, t, avgHouse, rgn):
@@ -483,18 +498,20 @@ def identify_houses (model, h, t, avgHouse, rgn):
         for o in model[t]:
             if 'power_12' in model[t][o]:
                 tkva = parse_kva (model[t][o]['power_12'])
-                nhouse = int ((tkva / avgHouse) + 0.5)
+                nhouse = int ((tkva / avgHouse) + 0.5) # round to nearest in
                 name = o
                 if nhouse <= 0:
                     print (name, tkva, 'too small for a house')
                 else:
                     total_houses += nhouse
-                    house_nodes[name] = [nhouse,rgn]
+                    lg_v_sm = tkva / avgHouse - nhouse # >0 if we rounded down the number of houses
+                    house_nodes[name] = [nhouse,rgn,lg_v_sm]
     print (total_houses, 'houses at', len(house_nodes), 'nodes')
 
 def write_houses(basename, op, phs, vnom, vstart):
     nhouse = int(house_nodes[basename][0])
     rgn = int(house_nodes[basename][1])
+    lg_v_sm = float(house_nodes[basename][2])
     rgnTable = rgnThermalPct[rgn-1]
     for i in range(nhouse):
         tpxname = basename + '_tpx_' + str(i+1)
@@ -515,43 +532,152 @@ def write_houses(basename, op, phs, vnom, vstart):
         print ('  voltage_1 ' + vstart + ';', file=op)
         print ('  voltage_2 ' + vstart + ';', file=op)
         print ('}', file=op)
+
         bldg, ti = selectResidentialBuilding (rgnTable, np.random.uniform (0, 1))
         fa_base = rgnFloorArea[rgn-1][bldg]
         fa_rand = np.random.uniform (0, 1)
+        stories = 1
+        ceiling_height = 8
         if bldg == 0: # SF homes
             floor_area = fa_base + 0.5 * fa_base * fa_rand * (ti - 3) / 3;
+            if np.random.uniform (0, 1) > rgnOneStory[rgn-1]:
+                stories = 2
+            ceiling_height += np.random.randint (0, 2)
         else: # apartment or MH
             floor_area = fa_base + 0.5 * fa_base * (0.5 - fa_rand) # +/- 50%
-
- #       % Now also adjust square footage as a factor of whether
- #       % the load modifier (avg_house) rounded up or down
- #       floor_area = (1 + lg_v_sm) * floor_area;
-
+        floor_area = (1 + lg_v_sm) * floor_area # adjustment depends on whether nhouses rounded up or down
         if floor_area > 4000:
             floor_area = 3800 + fa_rand*200;
         elif floor_area < 300:
             floor_area = 300 + fa_rand*100;
-        skew_value = residential_skew_std * np.random.uniform (-1, 1)  # TODO vs MATLAB randn
+
+        scalar1 = 324.9/8907 * floor_area**0.442
+        scalar2 = 0.8 + 0.4 * np.random.uniform(0,1)
+        scalar3 = 0.8 + 0.4 * np.random.uniform(0,1)
+        resp_scalar = scalar1 * scalar2
+        unresp_scalar = scalar1 * scalar3
+
+
+        skew_value = residential_skew_std * np.random.randn ()
         if skew_value < -residential_skew_max:
             skew_value = -residential_skew_max
         elif skew_value > residential_skew_max:
             skew_value = residential_skew_max
+
+        oversize = rgnOversizeFactor[rgn-1] * (0.8 + 0.4 * np.random.uniform(0,1))
+        tiProps = selectThermalProperties (bldg, ti)
+        # Rceiling(roof), Rwall, Rfloor, WindowLayers, WindowGlass,Glazing,WindowFrame,Rdoor,AirInfil,COPhi,COPlo
+        Rroof = tiProps[0] * (0.8 + 0.4 * np.random.uniform(0,1))
+        Rwall = tiProps[1] * (0.8 + 0.4 * np.random.uniform(0,1))
+        Rfloor = tiProps[2] * (0.8 + 0.4 * np.random.uniform(0,1))
+        glazing_layers = int(tiProps[3])
+        glass_type = int(tiProps[4])
+        glazing_treatment = int(tiProps[5])
+        window_frame = int(tiProps[6])
+        Rdoor = tiProps[7] * (0.8 + 0.4 * np.random.uniform(0,1))
+        airchange = tiProps[8] * (0.8 + 0.4 * np.random.uniform(0,1))
+        init_temp = 68 + 4 * np.random.uniform(0,1)
+        mass_floor = 2.5 + 1.5 * np.random.uniform(0,1)
+        h_COP = c_COP = tiProps[10] + np.random.uniform(0,1) * (tiProps[9] - tiProps[10])
+
         print ('object house {', file=op)
         print ('  name', hsename + ';', file=op)
         print ('  parent', mtrname + ';', file=op)
-        print ('  floor_area','{:.0f}'.format(floor_area) + ';', file=op)
+        print ('  //', buildingTypeLabel (rgn, bldg, ti), file=op)
+        print ('  schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
+        print ('  floor_area', '{:.0f}'.format(floor_area) + ';', file=op)
+        print ('  number_of_stories', str(stories) + ';', file=op)
+        print ('  ceiling_height', str(ceiling_height) + ';', file=op)
+        print ('  over_sizing_factor', '{:.1f}'.format(oversize) + ';', file=op)
+        print ('  Rroof', '{:.2f}'.format(Rroof) + ';', file=op)
+        print ('  Rwall', '{:.2f}'.format(Rwall) + ';', file=op)
+        print ('  Rfloor', '{:.2f}'.format(Rfloor) + ';', file=op)
+        print ('  glazing_layers', str (glazing_layers) + ';', file=op)
+        print ('  glass_type', str (glass_type) + ';', file=op)
+        print ('  glazing_treatment', str (glazing_treatment) + ';', file=op)
+        print ('  window_frame', str (window_frame) + ';', file=op)
+        print ('  Rdoors', '{:.2f}'.format(Rdoor) + ';', file=op)
+        print ('  airchange_per_hour', '{:.2f}'.format(airchange) + ';', file=op)
+        print ('  cooling_COP', '{:.1f}'.format(c_COP) + ';', file=op)
+        print ('  air_temperature', '{:.2f}'.format(init_temp) + ';', file=op)
+        print ('  mass_temperature', '{:.2f}'.format(init_temp) + ';', file=op)
+        print ('  total_thermal_mass_per_floor_area', '{:.3f}'.format(mass_floor) + ';', file=op)
+        print ('  breaker_amps 1000;', file=op)
+        print ('  hvac_breaker_rating 1000;', file=op)
+        heat_rand = np.random.uniform(0,1)
+        cool_rand = np.random.uniform(0,1)
+        if heat_rand <= rgnPenGasHeat[rgn-1]:
+            print ('  heating_system_type GAS;', file=op)
+            if cool_rand <= rgnPenElecCool[rgn-1]:
+                print ('  cooling_system_type ELECTRIC;', file=op)
+            else:
+                print ('  cooling_system_type NONE;', file=op)
+        elif heat_rand <= rgnPenGasHeat[rgn-1] + rgnPenHeatPump[rgn-1]:
+            print ('  heating_system_type HEAT_PUMP;', file=op);                   
+            print ('  heating_COP', '{:.1f}'.format(h_COP) + ';', file=op);
+            print ('  cooling_system_type ELECTRIC;', file=op);
+            print ('  auxiliary_strategy DEADBAND;', file=op);
+            print ('  auxiliary_system_type ELECTRIC;', file=op);
+            print ('  motor_model BASIC;', file=op);
+            print ('  motor_efficiency AVERAGE;', file=op);
+        elif floor_area * ceiling_height > 12000.0: # electric heat not allowed on large homes
+            print ('  heating_system_type GAS;', file=op)
+            if cool_rand <= rgnPenElecCool[rgn-1]:
+                print ('  cooling_system_type ELECTRIC;', file=op)
+            else:
+                print ('  cooling_system_type NONE;', file=op)
+        else:
+            print ('  heating_system_type ELECTRIC;', file=op)
+            if cool_rand <= rgnPenElecCool[rgn-1]:
+                print ('  cooling_system_type ELECTRIC;', file=op)
+                print ('  motor_model BASIC;', file=op);
+                print ('  motor_efficiency GOOD;', file=op);
+            else:
+                print ('  cooling_system_type NONE;', file=op)
+
+        cooling_sch = np.ceil(coolingScheduleNumber * np.random.uniform (0, 1))
+        heating_sch = np.ceil(heatingScheduleNumber * np.random.uniform (0, 1))
+        # index 2 is Nighttime Ratio, NightTimeAvgDiff,HighBinValue,LowBinValue
+        cooling_row = rgnCoolingSetpoint[rgn-1][bldg]
+        heating_row = rgnHeatingSetpoint[rgn-1][bldg]
+        cooling_set = cooling_row[3] + np.random.uniform(0,1) * (cooling_row[2] - cooling_row[3])
+        heating_set = heating_row[3] + np.random.uniform(0,1) * (heating_row[2] - heating_row[3])
+        cooling_diff = 2.0 * cooling_row[1] * np.random.uniform(0,1)
+        heating_diff = 2.0 * heating_row[1] * np.random.uniform(0,1)
+        cooling_str = 'cooling' + '{:.0f}'.format(cooling_sch) + '*' + '{:.2f}'.format(cooling_diff) + '+' + '{:.2f}'.format(cooling_set)
+        heating_str = 'heating' + '{:.0f}'.format(heating_sch) + '*' + '{:.2f}'.format(heating_diff) + '+' + '{:.2f}'.format(heating_set)
+        print ('  cooling_setpoint', cooling_str + ';', file=op)
+        print ('  heating_setpoint', heating_str + ';', file=op)
+
+        # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
         print ('  object ZIPload { // responsive', file=op)
-        print ('    heatgain_fraction 0.9;', file=op)
+        print ('    schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
+        print ('    base_power', 'responsive_loads*' + '{:.2f}'.format(resp_scalar) + ';', file=op)
+        print ('    heatgain_fraction', '{:.2f}'.format(techdata[0]) + ';', file=op)
+        print ('    impedance_pf', '{:.2f}'.format(techdata[1]) + ';', file=op)
+        print ('    current_pf', '{:.2f}'.format(techdata[2]) + ';', file=op)
+        print ('    power_pf', '{:.2f}'.format(techdata[3]) + ';', file=op)
+        print ('    impedance_fraction', '{:.2f}'.format(techdata[4]) + ';', file=op)
+        print ('    current_fraction', '{:.2f}'.format(techdata[5]) + ';', file=op)
+        print ('    power_fraction', '{:.2f}'.format(techdata[6]) + ';', file=op)
         print ('  };', file=op)
         print ('  object ZIPload { // unresponsive', file=op)
-        print ('    heatgain_fraction 0.9;', file=op)
+        print ('    schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
+        print ('    base_power', 'unresponsive_loads*' + '{:.2f}'.format(unresp_scalar) + ';', file=op)
+        print ('    heatgain_fraction', '{:.2f}'.format(techdata[0]) + ';', file=op)
+        print ('    impedance_pf', '{:.2f}'.format(techdata[1]) + ';', file=op)
+        print ('    current_pf', '{:.2f}'.format(techdata[2]) + ';', file=op)
+        print ('    power_pf', '{:.2f}'.format(techdata[3]) + ';', file=op)
+        print ('    impedance_fraction', '{:.2f}'.format(techdata[4]) + ';', file=op)
+        print ('    current_fraction', '{:.2f}'.format(techdata[5]) + ';', file=op)
+        print ('    power_fraction', '{:.2f}'.format(techdata[6]) + ';', file=op)
         print ('  };', file=op)
         if np.random.uniform (0, 1) <= rgnPenElecWH[rgn-1]:
           heat_element = 3.0 + 0.5 * np.random.randint (1,6);  # numpy randint (lo, hi) returns lo..(hi-1)
           tank_set = 120 + 16 * np.random.uniform (0, 1);
           therm_dead = 4 + 4 * np.random.uniform (0, 1);
           tank_UA = 2 + 2 * np.random.uniform (0, 1);
-          water_sch = round(0.5 + waterHeaterScheduleNumber * np.random.uniform (0, 1)) # TODO vs. MATLAB ceil
+          water_sch = np.ceil(waterHeaterScheduleNumber * np.random.uniform (0, 1))
           water_var = 0.95 + np.random.uniform (0, 1) * 0.1 # +/-5% variability
           wh_demand_type = 'large_'
           sizeIncr = np.random.randint (0,3)  # MATLAB randi(imax) returns 1..imax
@@ -569,14 +695,14 @@ def write_houses(basename, op, phs, vnom, vstart):
               else:
                   wh_size = 50 + sizeIncr * 10
           wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
-          wh_skew_value = 3 * residential_skew_std * np.random.uniform (-1, 1)  # TODO vs MATLAB randn
+          wh_skew_value = 3 * residential_skew_std * np.random.randn ()
           if wh_skew_value < -6 * residential_skew_max:
               wh_skew_value = -6 * residential_skew_max
           elif wh_skew_value > 6 * residential_skew_max:
               wh_skew_value = 6 * residential_skew_max
           print ('  object waterheater {', file=op)
           print ('    schedule_skew','{:.0f}'.format(wh_skew_value) + ';', file=op)
-          print ('    heating_element_capacity','{:.1f}'.format(heat_element), ' kW;', file=op)
+          print ('    heating_element_capacity','{:.1f}'.format(heat_element), 'kW;', file=op)
           print ('    tank_setpoint','{:.1f}'.format(tank_set) + ';', file=op)
           print ('    temperature 132;', file=op) 
           print ('    thermostat_deadband','{:.1f}'.format(therm_dead) + ';', file=op)
@@ -585,13 +711,15 @@ def write_houses(basename, op, phs, vnom, vstart):
           print ('    tank_UA','{:.1f}'.format(tank_UA) + ';', file=op)
           print ('    demand', wh_demand_str + ';', file=op)
           print ('    tank_volume','{:.0f}'.format(wh_size) + ';', file=op)
-          print ('    object metrics_collector {', file=op)
-          print ('      interval', str(metrics_interval) + ';', file=op)
-          print ('    };', file=op)
+          if metrics_interval > 0:
+              print ('    object metrics_collector {', file=op)
+              print ('      interval', str(metrics_interval) + ';', file=op)
+              print ('    };', file=op)
           print ('  };', file=op)
-        print ('  object metrics_collector {', file=op)
-        print ('    interval', str(metrics_interval) + ';', file=op)
-        print ('  };', file=op)
+        if metrics_interval > 0:
+            print ('  object metrics_collector {', file=op)
+            print ('    interval', str(metrics_interval) + ';', file=op)
+            print ('  };', file=op)
         print ('}', file=op)
 
 # if triplex load, node or meter, the nominal voltage is 120
