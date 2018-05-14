@@ -9,6 +9,8 @@ from math import sqrt;
 np.random.seed (0)
 
 glmpath = 'Input_feeders/'
+supportpath = '../../../examples/schedules/'
+weatherpath = '../../../examples/weather/'
 outpath = './'
 
 max208kva = 100.0
@@ -27,11 +29,13 @@ Eplus_Volts = 480.0
 Eplus_kVA = 150.0
 electric_cooling_penetration = 0.9
 electric_cooling_participation = 0.8
-solar_penetration = 0.0
-storage_penetration = 0.0
+solar_penetration = 0.2
+storage_penetration = 0.5
 solar_inv_mode = 'CONSTANT_PF'
 storage_inv_mode = 'LOAD_FOLLOWING'
 weather_file = 'AZ-Tucson_International_Ap.tmy3'
+kwh_price = 0.1243
+monthly_fee = 5.00
 
 # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
 techdata = [0.9,1.0,1.0,1.0,0.2,0.4,0.4]
@@ -92,40 +96,132 @@ rgnPenResHeat =  [0.2628,0.0896,0.2718,0.3592,0.3592]
 rgnPenElecCool = [0.4348,0.7528,0.5259,0.9673,0.9673]
 rgnOversizeFactor = [0.1,0.2,0.2,0.3,0.3]
 
-# index 0 is region (minus one)
-# index 1 is SF, Apt, MH
-# index 2 is Nighttime Ratio, NightTimeAvgDiff,HighBinValue,LowBinValue
-rgnCoolingSetpoint = [[[0.098,0.96,69,65],  # Region 1, SF
-                       [0.155,0.49,69,65],  #           Apt
-                       [0.138,0.97,69,65]], #           MH
-                      [[0.140,0.96,70,70],
-                       [0.207,0.49,70,70],
-                       [0.172,0.97,70,70]],
-                      [[0.166,0.96,73,71],
-                       [0.103,0.49,73,71],
-                       [0.172,0.97,73,71]],
-                      [[0.306,0.96,76,74],
-                       [0.310,0.49,76,74],
-                       [0.276,0.97,76,74]],
-                      [[0.206,0.96,79,77],
-                       [0.155,0.49,79,77],
-                       [0.138,0.97,79,77]]]
+# Average heating and cooling setpoints
+# index 0 for SF, Apt, MH
+# index 1 for histogram bins
+#  [histogram prob, nighttime average difference (+ indicates nightime is cooler), high bin value, low bin value]
+bldgCoolingSetpoints = [[[0.098,0.96,69,65],  # single-family
+                         [0.140,0.96,70,70],
+                         [0.166,0.96,73,71],
+                         [0.306,0.96,76,74],
+                         [0.206,0.96,79,77],
+                         [0.084,0.96,85,80]],
+                        [[0.155,0.49,69,65],  # apartment
+                         [0.207,0.49,70,70],
+                         [0.103,0.49,73,71],
+                         [0.310,0.49,76,74],
+                         [0.155,0.49,79,77],
+                         [0.069,0.49,85,80]],
+                        [[0.138,0.97,69,65],  # mobile home
+                         [0.172,0.97,70,70],
+                         [0.172,0.97,73,71],
+                         [0.276,0.97,76,74],
+                         [0.138,0.97,79,77],
+                         [0.103,0.97,85,80]]]
 
-rgnHeatingSetpoint = [[[0.141,0.80,63,59],  # Region 1, SF
-                       [0.085,0.20,63,59],  #           Apt
-                       [0.129,0.88,63,59]], #           MH
-                      [[0.204,0.80,66,64],
-                       [0.132,0.20,66,64],
-                       [0.177,0.88,66,64]],
-                      [[0.231,0.80,69,67],
-                       [0.147,0.20,69,67],
-                       [0.161,0.88,69,67]],
-                      [[0.163,0.80,70,70],
-                       [0.279,0.20,70,70],
-                       [0.274,0.88,70,70]],
-                      [[0.120,0.80,73,71],
-                       [0.109,0.20,73,71],
-                       [0.081,0.88,73,71]]]
+bldgHeatingSetpoints = [[[0.141,0.80,63,59],  # single-family
+                         [0.204,0.80,66,64],
+                         [0.231,0.80,69,67],
+                         [0.163,0.80,70,70],
+                         [0.120,0.80,73,71],
+                         [0.141,0.80,79,74]],
+                        [[0.085,0.20,63,59],  # apartment
+                         [0.132,0.20,66,64],
+                         [0.147,0.20,69,67],
+                         [0.279,0.20,70,70],
+                         [0.109,0.20,73,71],
+                         [0.248,0.20,79,74]],
+                        [[0.129,0.88,63,59],  # mobile home
+                         [0.177,0.88,66,64],
+                         [0.161,0.88,69,67],
+                         [0.274,0.88,70,70],
+                         [0.081,0.88,73,71],
+                         [0.177,0.88,79,74]]]
+
+# we pick the cooling setpoint bin first, and it must be higher than the cooling setpoint bin
+# given a cooling bin selection, we should be able to figure out conditional probabilities on the heating bin
+allowedHeatingBins = [1, 3, 4, 5, 6, 6]
+#index 0 is the building type
+#index 1 is the cooling bin selection
+# [conditional heating bin probabilities]
+conditionalHeatingBinProb = [[[1.000,0.000,0.000,0.000,0.000,0.000],   # SF, cooling bin 0 
+                              [0.333,0.333,0.333,0.000,0.000,0.000],
+                              [0.250,0.250,0.250,0.250,0.000,0.000],
+                              [0.200,0.200,0.200,0.200,0.200,0.000],
+                              [0.167,0.167,0.167,0.167,0.167,0.167],
+                              [0.167,0.167,0.167,0.167,0.167,0.167]],
+                             [[1.000,0.000,0.000,0.000,0.000,0.000],   # APT, given cooling bin 0
+                              [0.333,0.333,0.333,0.000,0.000,0.000],
+                              [0.250,0.250,0.250,0.250,0.000,0.000],
+                              [0.200,0.200,0.200,0.200,0.200,0.000],
+                              [0.167,0.167,0.167,0.167,0.167,0.167],
+                              [0.167,0.167,0.167,0.167,0.167,0.167]],
+                             [[1.000,0.000,0.000,0.000,0.000,0.000],   # MH, given cooling bin 0
+                              [0.333,0.333,0.333,0.000,0.000,0.000],
+                              [0.250,0.250,0.250,0.250,0.000,0.000],
+                              [0.200,0.200,0.200,0.200,0.200,0.000],
+                              [0.167,0.167,0.167,0.167,0.167,0.167],
+                              [0.167,0.167,0.167,0.167,0.167,0.167]]]
+
+cooling_bins = [[0,0,0,0,0,0],
+                [0,0,0,0,0,0],
+                [0,0,0,0,0,0]]
+heating_bins = [[0,0,0,0,0,0],
+                [0,0,0,0,0,0],
+                [0,0,0,0,0,0]]
+
+def selectSetpointBins (bldg, rand):
+    cBin = hBin = 0
+    total = 0
+    tbl = bldgCoolingSetpoints[bldg]
+    for row in range(len(tbl)):
+        total += tbl[row][0]
+        if total >= rand:
+            cBin = row
+            break
+    tbl = conditionalHeatingBinProb[bldg][cBin]
+    rand_heat = np.random.uniform (0, 1)
+    total = 0
+    for col in range(len(tbl)):
+        total += tbl[col]
+        if total >= rand_heat:
+            hBin = col
+            break
+    cooling_bins[bldg][cBin] -= 1
+    heating_bins[bldg][hBin] -= 1
+    return bldgCoolingSetpoints[bldg][cBin], bldgHeatingSetpoints[bldg][hBin]
+
+def checkResidentialBuildingTable():
+    for tbl in range(len(rgnThermalPct)):
+        total = 0
+        for row in range(len(rgnThermalPct[tbl])):
+            for col in range(len(rgnThermalPct[tbl][row])):
+                total += rgnThermalPct[tbl][row][col]
+        print (rgnName[tbl],'rgnThermalPct sums to', '{:.4f}'.format(total))
+    for tbl in range(len(bldgCoolingSetpoints)):
+        total = 0
+        for row in range(len(bldgCoolingSetpoints[tbl])):
+            total += bldgCoolingSetpoints[tbl][row][0]
+        print ('bldgCoolingSetpoints', tbl, 'histogram sums to', '{:.4f}'.format(total))
+    for tbl in range(len(bldgHeatingSetpoints)):
+        total = 0
+        for row in range(len(bldgHeatingSetpoints[tbl])):
+            total += bldgHeatingSetpoints[tbl][row][0]
+        print ('bldgHeatingSetpoints', tbl, 'histogram sums to', '{:.4f}'.format(total))
+    for bldg in range(3):
+        binZeroReserve = bldgCoolingSetpoints[bldg][0][0]
+        binZeroMargin = bldgHeatingSetpoints[bldg][0][0] - binZeroReserve
+        if binZeroMargin < 0.0:
+            binZeroMargin = 0.0
+#        print (bldg, binZeroReserve, binZeroMargin)
+        for cBin in range(1, 6):
+            denom = binZeroMargin
+            for hBin in range(1, allowedHeatingBins[cBin]):
+                denom += bldgHeatingSetpoints[bldg][hBin][0]
+            conditionalHeatingBinProb[bldg][cBin][0] = binZeroMargin / denom
+            for hBin in range(1, allowedHeatingBins[cBin]):
+                conditionalHeatingBinProb[bldg][cBin][hBin] = bldgHeatingSetpoints[bldg][hBin][0] / denom
+#    print ('conditionalHeatingBinProb', conditionalHeatingBinProb)
 
 rgnPenPoolPump = [0.0904,0.0591,0.0818,0.0657,0.0657]
 
@@ -489,37 +585,143 @@ def write_local_triplex_configurations (op):
 def buildingTypeLabel (rgn, bldg, ti):
     return rgnName[rgn-1] + ': ' + bldgTypeName[bldg] + ': TI Level ' + str (ti+1)
 
-house_nodes = {}
+house_nodes = {} # keyed on node, [nhouse, region, lg_v_sm, phs]
+small_nodes = {} # keyed on node, [kva, phs]
 
-def identify_houses (model, h, t, avgHouse, rgn):
+def identify_xfmr_houses (model, h, t, seg_loads, avgHouse, rgn):
     print ('Average House', avgHouse)
     total_houses = 0
+    total_sf = 0
+    total_apt = 0
+    total_mh = 0
+    total_small = 0
+    total_small_kva = 0
     if t in model:
         for o in model[t]:
-            if 'power_12' in model[t][o]:
-                tkva = parse_kva (model[t][o]['power_12'])
-                nhouse = int ((tkva / avgHouse) + 0.5) # round to nearest in
-                name = o
-                if nhouse <= 0:
-                    print (name, tkva, 'too small for a house')
-                else:
-                    total_houses += nhouse
-                    lg_v_sm = tkva / avgHouse - nhouse # >0 if we rounded down the number of houses
-                    house_nodes[name] = [nhouse,rgn,lg_v_sm]
-    print (total_houses, 'houses at', len(house_nodes), 'nodes')
+            if o in seg_loads:
+                tkva = seg_loads[o][0]
+                phs = seg_loads[o][1]
+                if 'S' in phs:
+                    nhouse = int ((tkva / avgHouse) + 0.5) # round to nearest int
+                    name = o
+                    node = model[t][o]['to']
+                    if nhouse <= 0:
+                        total_small += 1
+                        total_small_kva += tkva
+                        small_nodes[node] = [tkva,phs]
+                    else:
+                        total_houses += nhouse
+                        lg_v_sm = tkva / avgHouse - nhouse # >0 if we rounded down the number of houses
+                        bldg, ti = selectResidentialBuilding (rgnThermalPct[rgn-1], np.random.uniform (0, 1))
+                        if bldg == 0:
+                            total_sf += nhouse
+                        elif bldg == 1:
+                            total_apt += nhouse
+                        else:
+                            total_mh += nhouse
+                        house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti]
+    print (total_small, 'small loads totaling', total_small_kva, 'kva')
+    print (total_houses, 'houses on', len(house_nodes), 'transformers, [SF,APT,MH]=', total_sf, total_apt, total_mh)
+    for i in range(6):
+        heating_bins[0][i] = round (total_sf * bldgHeatingSetpoints[0][i][0] + 0.5)
+        heating_bins[1][i] = round (total_apt * bldgHeatingSetpoints[1][i][0] + 0.5)
+        heating_bins[2][i] = round (total_mh * bldgHeatingSetpoints[2][i][0] + 0.5)
+        cooling_bins[0][i] = round (total_sf * bldgCoolingSetpoints[0][i][0] + 0.5)
+        cooling_bins[1][i] = round (total_apt * bldgCoolingSetpoints[1][i][0] + 0.5)
+        cooling_bins[2][i] = round (total_mh * bldgCoolingSetpoints[2][i][0] + 0.5)
+    print ('cooling bins target', cooling_bins)
+    print ('heating bins target', heating_bins)
 
-def write_houses(basename, op, phs, vnom, vstart):
-    nhouse = int(house_nodes[basename][0])
-    rgn = int(house_nodes[basename][1])
-    lg_v_sm = float(house_nodes[basename][2])
+def write_small_loads(basenode, op, vnom):
+  kva = float(small_nodes[basenode][0])
+  phs = small_nodes[basenode][1]
+
+  if 'A' in phs:
+      vstart = str(vnom) + '+0.0j'
+  elif 'B' in phs:
+      vstart = format(-0.5*vnom,'.2f') + format(-0.866025*vnom,'.2f') + 'j'
+  else:
+      vstart = format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j'
+
+  tpxname = basenode + '_tpx_1'
+  mtrname = basenode + '_mtr_1'
+  loadname = basenode + '_load_1'
+  print ('object triplex_node {', file=op)
+  print ('  name', basenode + ';', file=op)
+  print ('  phases', phs + ';', file=op)
+  print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+  print ('  voltage_1 ' + vstart + ';', file=op)
+  print ('  voltage_2 ' + vstart + ';', file=op)
+  print ('}', file=op)
+  print ('object triplex_line {', file=op)
+  print ('  name', tpxname + ';', file=op)
+  print ('  from', basenode + ';', file=op)
+  print ('  to', mtrname + ';', file=op)
+  print ('  phases', phs + ';', file=op)
+  print ('  length 30;', file=op)
+  print ('  configuration', triplex_configurations[0][0] + ';', file=op)
+  print ('}', file=op)
+  print ('object triplex_meter {', file=op)
+  print ('  name', mtrname + ';', file=op)
+  print ('  phases', phs + ';', file=op)
+  print ('  meter_power_consumption 1+7j;', file=op)
+  print ('  bill_mode UNIFORM;', file=op)
+  print ('  price', '{:.4f}'.format (kwh_price) + ';', file=op)
+  print ('  monthly_fee', '{:.2f}'.format (monthly_fee) + ';', file=op)
+  print ('  bill_day 1;', file=op)
+  print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+  print ('  voltage_1 ' + vstart + ';', file=op)
+  print ('  voltage_2 ' + vstart + ';', file=op)
+  print ('}', file=op)
+  print ('object triplex_load {', file=op)
+  print ('  name', loadname + ';', file=op)
+  print ('  parent', mtrname + ';', file=op)
+  print ('  phases', phs + ';', file=op)
+  print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+  print ('  voltage_1 ' + vstart + ';', file=op)
+  print ('  voltage_2 ' + vstart + ';', file=op)
+  print ('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
+  print ('  power_12_real 10.0;', file=op)
+  print ('  power_12_reac 8.0;', file=op)
+  print ('}', file=op)
+
+def write_houses(basenode, op, vnom):
+    nhouse = int(house_nodes[basenode][0])
+    rgn = int(house_nodes[basenode][1])
+    lg_v_sm = float(house_nodes[basenode][2])
+    phs = house_nodes[basenode][3]
+    bldg = house_nodes[basenode][4]
+    ti = house_nodes[basenode][5]
     rgnTable = rgnThermalPct[rgn-1]
+
+    if 'A' in phs:
+        vstart = str(vnom) + '+0.0j'
+    elif 'B' in phs:
+        vstart = format(-0.5*vnom,'.2f') + format(-0.866025*vnom,'.2f') + 'j'
+    else:
+        vstart = format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j'
+
+    print ('object triplex_node {', file=op)
+    print ('  name', basenode + ';', file=op)
+    print ('  phases', phs + ';', file=op)
+    print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+    print ('  voltage_1 ' + vstart + ';', file=op)
+    print ('  voltage_2 ' + vstart + ';', file=op)
+    print ('}', file=op)
     for i in range(nhouse):
-        tpxname = basename + '_tpx_' + str(i+1)
-        mtrname = basename + '_mtr_' + str(i+1)
-        hsename = basename + '_hse_' + str(i+1)
+        tpxname = basenode + '_tpx_' + str(i+1)
+        mtrname = basenode + '_mtr_' + str(i+1)
+        hsename = basenode + '_hse_' + str(i+1)
+        solname = basenode + '_sol_' + str(i+1)
+        batname = basenode + '_bat_' + str(i+1)
+        sol_i_name = basenode + '_isol_' + str(i+1)
+        bat_i_name = basenode + '_ibat_' + str(i+1)
+        hse_m_name = basenode + '_mhse_' + str(i+1)
+        sol_m_name = basenode + '_msol_' + str(i+1)
+        bat_m_name = basenode + '_mbat_' + str(i+1)
         print ('object triplex_line {', file=op)
         print ('  name', tpxname + ';', file=op)
-        print ('  from', basename + ';', file=op)
+        print ('  from', basenode + ';', file=op)
         print ('  to', mtrname + ';', file=op)
         print ('  phases', phs + ';', file=op)
         print ('  length 30;', file=op)
@@ -528,12 +730,24 @@ def write_houses(basename, op, phs, vnom, vstart):
         print ('object triplex_meter {', file=op)
         print ('  name', mtrname + ';', file=op)
         print ('  phases', phs + ';', file=op)
+        print ('  meter_power_consumption 1+7j;', file=op)
+        print ('  bill_mode UNIFORM;', file=op)
+        print ('  price', '{:.4f}'.format (kwh_price) + ';', file=op)
+        print ('  monthly_fee', '{:.2f}'.format (monthly_fee) + ';', file=op)
+        print ('  bill_day 1;', file=op)
         print ('  nominal_voltage ' + str(vnom) + ';', file=op)
         print ('  voltage_1 ' + vstart + ';', file=op)
         print ('  voltage_2 ' + vstart + ';', file=op)
         print ('}', file=op)
+        print ('object triplex_meter {', file=op)
+        print ('  name', hse_m_name + ';', file=op)
+        print ('  parent', mtrname + ';', file=op)
+        print ('  phases', phs + ';', file=op)
+        print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+#        print ('  voltage_1 ' + vstart + ';', file=op)
+#        print ('  voltage_2 ' + vstart + ';', file=op)
+        print ('}', file=op)
 
-        bldg, ti = selectResidentialBuilding (rgnTable, np.random.uniform (0, 1))
         fa_base = rgnFloorArea[rgn-1][bldg]
         fa_rand = np.random.uniform (0, 1)
         stories = 1
@@ -556,7 +770,6 @@ def write_houses(basename, op, phs, vnom, vstart):
         scalar3 = 0.8 + 0.4 * np.random.uniform(0,1)
         resp_scalar = scalar1 * scalar2
         unresp_scalar = scalar1 * scalar3
-
 
         skew_value = residential_skew_std * np.random.randn ()
         if skew_value < -residential_skew_max:
@@ -582,7 +795,7 @@ def write_houses(basename, op, phs, vnom, vstart):
 
         print ('object house {', file=op)
         print ('  name', hsename + ';', file=op)
-        print ('  parent', mtrname + ';', file=op)
+        print ('  parent', hse_m_name + ';', file=op)
         print ('  //', buildingTypeLabel (rgn, bldg, ti), file=op)
         print ('  schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
         print ('  floor_area', '{:.0f}'.format(floor_area) + ';', file=op)
@@ -627,7 +840,7 @@ def write_houses(basename, op, phs, vnom, vstart):
             else:
                 print ('  cooling_system_type NONE;', file=op)
         else:
-            print ('  heating_system_type ELECTRIC;', file=op)
+            print ('  heating_system_type RESISTANCE;', file=op)
             if cool_rand <= rgnPenElecCool[rgn-1]:
                 print ('  cooling_system_type ELECTRIC;', file=op)
                 print ('  motor_model BASIC;', file=op);
@@ -637,13 +850,13 @@ def write_houses(basename, op, phs, vnom, vstart):
 
         cooling_sch = np.ceil(coolingScheduleNumber * np.random.uniform (0, 1))
         heating_sch = np.ceil(heatingScheduleNumber * np.random.uniform (0, 1))
-        # index 2 is Nighttime Ratio, NightTimeAvgDiff,HighBinValue,LowBinValue
-        cooling_row = rgnCoolingSetpoint[rgn-1][bldg]
-        heating_row = rgnHeatingSetpoint[rgn-1][bldg]
-        cooling_set = cooling_row[3] + np.random.uniform(0,1) * (cooling_row[2] - cooling_row[3])
-        heating_set = heating_row[3] + np.random.uniform(0,1) * (heating_row[2] - heating_row[3])
-        cooling_diff = 2.0 * cooling_row[1] * np.random.uniform(0,1)
-        heating_diff = 2.0 * heating_row[1] * np.random.uniform(0,1)
+        # [Bin Prob, NightTimeAvgDiff, HighBinSetting, LowBinSetting]
+        cooling_bin, heating_bin = selectSetpointBins (bldg, np.random.uniform (0,1))
+        # randomly choose setpoints within bins, and then widen the separation to account for deadband
+        cooling_set = cooling_bin[3] + np.random.uniform(0,1) * (cooling_bin[2] - cooling_bin[3]) + 1
+        heating_set = heating_bin[3] + np.random.uniform(0,1) * (heating_bin[2] - heating_bin[3]) - 1
+        cooling_diff = 2.0 * cooling_bin[1] * np.random.uniform(0,1)
+        heating_diff = 2.0 * heating_bin[1] * np.random.uniform(0,1)
         cooling_str = 'cooling' + '{:.0f}'.format(cooling_sch) + '*' + '{:.2f}'.format(cooling_diff) + '+' + '{:.2f}'.format(cooling_set)
         heating_str = 'heating' + '{:.0f}'.format(heating_sch) + '*' + '{:.2f}'.format(heating_diff) + '+' + '{:.2f}'.format(heating_set)
         print ('  cooling_setpoint', cooling_str + ';', file=op)
@@ -757,17 +970,6 @@ def write_voltage_class (model, h, t, op, vprim, secmtrnode):
                 bHaveS = False
             if bHaveS == True and bHadS == False:
                 prefix = 'triplex_'
-            vstarta = str(vnom) + '+0.0j'
-            vstartb = format(-0.5*vnom,'.2f') + format(-0.866025*vnom,'.2f') + 'j'
-            vstartc = format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j'
-            if name in house_nodes:
-                if 'A' in phs:
-                    vstart = vstarta
-                elif 'B' in phs:
-                    vstart = vstartb
-                else:
-                    vstart = vstartc
-                write_houses (name, op, phs, vnom, vstart)
             print('object ' + prefix + t + ' {', file=op)
             if len(parent) > 0:
                 print('  parent ' + parent + ';', file=op)
@@ -799,6 +1001,9 @@ def write_voltage_class (model, h, t, op, vprim, secmtrnode):
                 print('  power_2 ' + model[t][o]['power_2'] + ';', file=op)
             if 'power_12' in model[t][o]:
                 print('  power_12 ' + model[t][o]['power_12'] + ';', file=op)
+            vstarta = str(vnom) + '+0.0j'
+            vstartb = format(-0.5*vnom,'.2f') + format(-0.866025*vnom,'.2f') + 'j'
+            vstartc = format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j'
             if 'voltage_A' in model[t][o]:
                 if bHaveS == True:
                     print('  voltage_1 ' + vstarta + ';', file=op)
@@ -939,6 +1144,8 @@ for c in casefiles:
     print ('gridlabd -D WANT_VI_DUMP=1', c[0] + '.glm', file=op)
 op.close()
 
+checkResidentialBuildingTable()
+
 for c in casefiles:
     fname = glmpath + c[0] + '.glm'
     print (fname)
@@ -1043,6 +1250,30 @@ for c in casefiles:
 #        for row in seg_loads:
 #            print (' ', row, '{:.2f}'.format(seg_loads[row][0]), seg_loads[row][1])
 
+# preparatory items for TESP
+        print ('module climate;', file=op)
+        print ('module generators;', file=op)
+        print ('module connection;', file=op)
+        print ('module residential {', file=op)
+        print ('     implicit_enduses NONE;', file=op)
+        print ('};', file=op)
+        print ('#include "' + supportpath + 'appliance_schedules.glm";', file=op)
+        print ('#include "' + supportpath + 'water_and_setpoint_schedule_v5.glm";', file=op)
+        print ('#include "' + supportpath + 'commercial_schedules.glm";', file=op)
+        print ('#set minimum_timestep=15;', file=op)
+        print ('#set relax_naming_rules=1;', file=op)
+        print ('#set warn=0;', file=op)
+        if metrics_interval > 0:
+            print ('object metrics_collector_writer {', file=op)
+            print ('  interval', str(metrics_interval) + ';', file=op)
+            print ('  // filename ${METRICS_FILE};', file=op)
+            print ('  filename test_metrics.json;', file=op)
+            print ('};', file=op)
+        print ('object climate {', file=op)
+        print ('  name "RegionalWeather";', file=op)
+        print ('  tmyfile "' + weatherpath + weather_file + '";', file=op)
+        print ('  interpolate QUADRATIC;', file=op)
+        print ('};', file=op)
 # write the optional volt_dump and curr_dump for validation
         print ('#ifdef WANT_VI_DUMP', file=op)
         print ('object voltdump {', file=op)
@@ -1149,21 +1380,28 @@ for c in casefiles:
 
         write_link_class (model, h, 'overhead_line', seg_loads, op)
         write_link_class (model, h, 'underground_line', seg_loads, op)
-        write_link_class (model, h, 'triplex_line', seg_loads, op)
+#        write_link_class (model, h, 'triplex_line', seg_loads, op)
         write_link_class (model, h, 'series_reactor', seg_loads, op)
 
         write_link_class (model, h, 'regulator', seg_loads, op)
         write_link_class (model, h, 'transformer', seg_loads, op)
         write_link_class (model, h, 'capacitor', seg_loads, op)
 
-        identify_houses (model, h, 'triplex_node', 0.001 * c[3], rgn)
+#        identify_houses (model, h, 'triplex_node', 0.001 * c[3], rgn)
+        identify_xfmr_houses (model, h, 'transformer', seg_loads, 0.001 * c[3], rgn)
+        for key in house_nodes:
+            write_houses (key, op, 120.0)
+        for key in small_nodes:
+            write_small_loads (key, op, 120.0)
 
         write_voltage_class (model, h, 'node', op, c[2], secnode)
         write_voltage_class (model, h, 'meter', op, c[2], secnode)
         write_voltage_class (model, h, 'load', op, c[2], secnode)
-        write_voltage_class (model, h, 'triplex_node', op, c[2], secnode)
-        write_voltage_class (model, h, 'triplex_meter', op, c[2], secnode)
-        write_voltage_class (model, h, 'triplex_load', op, c[2], secnode)
+        print ('cooling bins unused', cooling_bins)
+        print ('heating bins unused', heating_bins)
+#        write_voltage_class (model, h, 'triplex_node', op, c[2], secnode)
+#        write_voltage_class (model, h, 'triplex_meter', op, c[2], secnode)
+#        write_voltage_class (model, h, 'triplex_load', op, c[2], secnode)
 
         op.close()
 
