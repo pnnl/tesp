@@ -36,6 +36,9 @@ storage_inv_mode = 'LOAD_FOLLOWING'
 weather_file = 'AZ-Tucson_International_Ap.tmy3'
 kwh_price = 0.1243
 monthly_fee = 5.00
+inv_undersizing = 1.0
+array_efficiency = 0.2
+rated_insolation = 1000.0
 
 # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
 techdata = [0.9,1.0,1.0,1.0,0.2,0.4,0.4]
@@ -588,6 +591,10 @@ def buildingTypeLabel (rgn, bldg, ti):
 house_nodes = {} # keyed on node, [nhouse, region, lg_v_sm, phs]
 small_nodes = {} # keyed on node, [kva, phs]
 
+solar_count = 0
+solar_kw = 0
+battery_count = 0
+
 def identify_xfmr_houses (model, h, t, seg_loads, avgHouse, rgn):
     print ('Average House', avgHouse)
     total_houses = 0
@@ -620,7 +627,7 @@ def identify_xfmr_houses (model, h, t, seg_loads, avgHouse, rgn):
                         else:
                             total_mh += nhouse
                         house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti]
-    print (total_small, 'small loads totaling', total_small_kva, 'kva')
+    print (total_small, 'small loads totaling', '{:.2f}'.format (total_small_kva), 'kva')
     print (total_houses, 'houses on', len(house_nodes), 'transformers, [SF,APT,MH]=', total_sf, total_apt, total_mh)
     for i in range(6):
         heating_bins[0][i] = round (total_sf * bldgHeatingSetpoints[0][i][0] + 0.5)
@@ -686,6 +693,10 @@ def write_small_loads(basenode, op, vnom):
   print ('}', file=op)
 
 def write_houses(basenode, op, vnom):
+    global solar_count
+    global solar_kw
+    global battery_count
+
     nhouse = int(house_nodes[basenode][0])
     rgn = int(house_nodes[basenode][1])
     lg_v_sm = float(house_nodes[basenode][2])
@@ -934,6 +945,89 @@ def write_houses(basenode, op, vnom):
             print ('    interval', str(metrics_interval) + ';', file=op)
             print ('  };', file=op)
         print ('}', file=op)
+        if bldg == 0:  # Single-family homes
+            if np.random.uniform (0, 1) <= solar_penetration:  # some single-family houses have PV
+                panel_area = 0.1 * floor_area
+                if panel_area < 162:
+                    panel_area = 162
+                elif panel_area > 270:
+                    panel_area = 270
+                inv_power = inv_undersizing * (panel_area/10.7642) * rated_insolation * array_efficiency
+                solar_count += 1
+                solar_kw += 0.001 * inv_power
+                print ('object triplex_meter {', file=op)
+                print ('  name', sol_m_name + ';', file=op)
+                print ('  parent', mtrname + ';', file=op)
+                print ('  phases', phs + ';', file=op)
+                print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+                print ('  object inverter {', file=op)
+                print ('    name', sol_i_name + ';', file=op)
+                print ('    phases', phs + ';', file=op)
+                print ('    generator_status ONLINE;', file=op)
+                print ('    generator_mode', solar_inv_mode + ';', file=op)
+                print ('    inverter_type FOUR_QUADRANT;', file=op)
+                print ('    inverter_efficiency 1;', file=op)
+                print ('    rated_power','{:.0f}'.format(inv_power) + ';', file=op)
+                print ('    power_factor 1.0;', file=op)
+                print ('    object solar {', file=op)
+                print ('      name', solname + ';', file=op)
+                print ('      generator_mode SUPPLY_DRIVEN;', file=op)
+                print ('      generator_status ONLINE;', file=op)
+                print ('      panel_type SINGLE_CRYSTAL_SILICON;', file=op)
+                print ('      efficiency','{:.2f}'.format(array_efficiency) + ';', file=op)
+                print ('      area','{:.2f}'.format(panel_area) + ';', file=op)
+                print ('    };', file=op)
+                if metrics_interval > 0:
+                    print ('    object metrics_collector {', file=op)
+                    print ('      interval', str(metrics_interval) + ';', file=op)
+                    print ('    };', file=op)
+                print ('  };', file=op)
+                print ('}', file=op)
+                if np.random.uniform (0, 1) <= storage_penetration:  # some single-family houses with PV have batteries
+                    battery_count += 1
+                    print ('object triplex_meter {', file=op)
+                    print ('  name', bat_m_name + ';', file=op)
+                    print ('  parent', mtrname + ';', file=op)
+                    print ('  phases', phs + ';', file=op)
+                    print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+                    print ('  object inverter {', file=op)
+                    print ('    name', bat_i_name + ';', file=op)
+                    print ('    phases', phs + ';', file=op)
+                    print ('    generator_status ONLINE;', file=op)
+                    print ('    generator_mode CONSTANT_PQ;', file=op)
+                    print ('    inverter_type FOUR_QUADRANT;', file=op)
+                    print ('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
+                    print ('    charge_lockout_time 1;', file=op)
+                    print ('    discharge_lockout_time 1;', file=op)
+                    print ('    rated_power 5000;', file=op)
+                    print ('    max_charge_rate 5000;', file=op)
+                    print ('    max_discharge_rate 5000;', file=op)
+                    print ('    sense_object', mtrname + ';', file=op)
+                    print ('    charge_on_threshold -100;', file=op)
+                    print ('    charge_off_threshold 0;', file=op)
+                    print ('    discharge_off_threshold 2000;', file=op)
+                    print ('    discharge_on_threshold 3000;', file=op)
+                    print ('    inverter_efficiency 0.97;', file=op)
+                    print ('    power_factor 1.0;', file=op)
+                    print ('    object battery { // Tesla Powerwall 2', file=op)
+                    print ('      name', batname + ';', file=op)
+                    print ('      generator_status ONLINE;', file=op)
+                    print ('      use_internal_battery_model true;', file=op)
+                    print ('      generator_mode CONSTANT_PQ;', file=op)
+                    print ('      battery_type LI_ION;', file=op)
+                    print ('      nominal_voltage 480;', file=op)
+                    print ('      battery_capacity 13500;', file=op)
+                    print ('      round_trip_efficiency 0.86;', file=op)
+                    print ('      state_of_charge 0.50;', file=op)
+                    print ('      generator_mode SUPPLY_DRIVEN;', file=op)
+                    print ('    };', file=op)
+                    if metrics_interval > 0:
+                        print ('    object metrics_collector {', file=op)
+                        print ('      interval', str(metrics_interval) + ';', file=op)
+                        print ('    };', file=op)
+                    print ('  };', file=op)
+                    print ('}', file=op)
+
 
 # if triplex load, node or meter, the nominal voltage is 120
 #   if the name or parent attribute is found in secmtrnode, we look up the nominal voltage there
@@ -1399,6 +1493,7 @@ for c in casefiles:
         write_voltage_class (model, h, 'load', op, c[2], secnode)
         print ('cooling bins unused', cooling_bins)
         print ('heating bins unused', heating_bins)
+        print (solar_count, 'pv totaling', '{:.1f}'.format(solar_kw), 'kw with', battery_count, 'batteries')
 #        write_voltage_class (model, h, 'triplex_node', op, c[2], secnode)
 #        write_voltage_class (model, h, 'triplex_meter', op, c[2], secnode)
 #        write_voltage_class (model, h, 'triplex_load', op, c[2], secnode)
