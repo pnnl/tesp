@@ -28,6 +28,7 @@ def launch_all():
 		subprocess.Popen ('call run30.bat', shell=True)
 	else:
 		subprocess.Popen ('(export simNum=36 && ./runVisualTE30ChallengeDocker.sh &)', shell=True)
+
 	print('launched all simulators')
 
 	root.update()
@@ -90,10 +91,9 @@ def launch_all():
 				x1[idx] = val
 				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
 				bWantX1 = False
-#		print (time_granted, key.decode(), fncs.get_value(key).decode())
+#			print (time_granted, key.decode(), fncs.get_value(key).decode())
 		root.update()
 		fig.canvas.draw()
-	print ("==== KILLING FNCS ======")
 	fncs.finalize()
 
 def kill_all():
@@ -130,7 +130,7 @@ ax[3].set_xlabel('Hours')
 plt.xlim(0.0,48.0)
 
 canvas = FigureCanvasTkAgg(fig, root)
-canvas.draw()
+canvas.show()
 #canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 #toolbar = NavigationToolbar2TkAgg(canvas,root)
 #toolbar.update()
@@ -142,7 +142,6 @@ root.update()
 while True:
 	try:
 		root.mainloop()
-		print ("====== In MAIN TRY ===============")
 		break
 	except UnicodeDecodeError:
 		pass
