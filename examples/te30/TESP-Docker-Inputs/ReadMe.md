@@ -91,7 +91,7 @@ which should return *:0* as default.
 
   All files described below are available at the [TESP GitHub](https://github.com/pnnl/tesp/tree/master/examples/te30/dockerSetupFiles "TESP docker setup files").
 
-  Here is the Dockerfile *<Dockerfile.tesp_full>* written to create the TESP image from a host computer containing the sources for the necessary software packages, that is FNCS, GridLAB-D, PyPower, Energy Plus, Energy Plus JSON and the pthon TE agents.
+  Here is the Dockerfile *<Dockerfile.tesp_full>* written to create the TESP image from a host computer containing the sources for the necessary software packages, that is FNCS, GridLAB-D, PyPower, Energy Plus, Energy Plus JSON and the python TE agents.
   ```bash
   ARG PYTHON=python
   ARG PYTHON_VERSION=:3
@@ -392,6 +392,8 @@ which should return *:0* as default.
   docker push laurmarinovici/tesp
   ```
 
+  * As of 2018-05-16, a new auction agent has been developed (new algorithm for demand curve, and consolidation of controller agents under one auction agent), and some updates to the PYPOWER wrapper have been performed. Hence, a new image has been created called *laurmarinovici/tesp:V2*. Also, new scripts and input files have been created for the TE30 scenario to accommodate for these changes. These newly created files have been denoted by appending date (*20180516* or higher) to the file names.
+
 ### For the **users** of the TESP docker container ###
 After installing Docker according to the above-mentioned procedure, run
 ```bash
@@ -411,7 +413,7 @@ at the terminal prompt. Start simulation scenario by clicking **Start All**.
 
 ### Pre-requisites ###
 
-Same as in the Ubuntu case, in order to enable the graphical user interface (GUI) of TESP within its Docker container, the X server MacOS counterpart needs to be installed on the computer running it, that is [XQuartz](https://www.xquartz.org/ "Click to get the dmg"). Once XQUartz is installed, run it at the terminal with
+Same as in the Ubuntu case, in order to enable the graphical user interface (GUI) of TESP within its Docker container, the X server MacOS counterpart needs to be installed on the computer running it, that is [XQuartz](https://www.xquartz.org/ "Click to get the dmg"). Once XQuartz is installed, run it at the terminal with
 ```
 open -a XQuartz
 ```
@@ -430,7 +432,7 @@ to install _socat_, and then give access to the host display.
 
 On another Mac terminal, start XQuartz with
 ```
-open -a xquartz&
+open -a xquartz& 
 ```
 and on the X11 terminal, run
 ```
@@ -442,10 +444,10 @@ to get the IP and add it to the access control list.
 
 **WARNING.**
   - If on WiFi, _en0_ might need to be used instead of _en1_.
-  - If network is changed, this commend needs to be rerun to get the correct IP.
+  - If network is changed, this command needs to be rerun to get the correct IP.
 
 **Lessons learnt**
-Using _docker cp_ command to copy the scenario input files and running scripts from host to container before being able to run the simulation inside the container. It turned out that doing so from MacOS would copy the files under different UID:GID on the container, which made it impossible to run _chmod_ adn set the running scripts as executable. Therefore, I have adopted a different methods, ans seen in _runVisualTESPContainer-TE30-Mac.sh_ docker run command, that is mounting the folder that contains the files on a folder on the container, and then copy them to the simulation folder. See below.
+Using _docker cp_ command to copy the scenario input files and running scripts from host to container before being able to run the simulation inside the container. It turned out that doing so from MacOS would copy the files under different UID:GID on the container, which made it impossible to run _chmod_ and set the running scripts as executable. Therefore, I have adopted a different methods, as seen in _runVisualTESPContainer-TE30-Mac.sh_ docker run command, that is mounting the folder that contains the files on a folder on the container, and then copy them to the simulation folder. See below.
 ```
 #!/bin/bash
 clear
