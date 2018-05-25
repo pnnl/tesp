@@ -91,7 +91,7 @@ which should return *:0* as default.
 
   All files described below are available at the [TESP GitHub](https://github.com/pnnl/tesp/tree/master/examples/te30/dockerSetupFiles "TESP docker setup files").
 
-  Here is the Dockerfile *<Dockerfile.tesp_full>* written to create the TESP image from a host computer containing the sources for the necessary software packages, that is FNCS, GridLAB-D, PyPower, Energy Plus, Energy Plus JSON and the pthon TE agents.
+  Here is the Dockerfile *<Dockerfile.tesp_full>* written to create the TESP image from a host computer containing the sources for the necessary software packages, that is FNCS, GridLAB-D, PyPower, Energy Plus, Energy Plus JSON and the python TE agents.
   ```bash
   ARG PYTHON=python
   ARG PYTHON_VERSION=:3
@@ -392,6 +392,8 @@ which should return *:0* as default.
   docker push laurmarinovici/tesp
   ```
 
+  * As of 2018-05-16, a new auction agent has been developed (new algorithm for demand curve, and consolidation of controller agents under one auction agent), and some updates to the PYPOWER wrapper have been performed. Hence, a new image has been created called *laurmarinovici/tesp:V2*. Also, new scripts and input files have been created for the TE30 scenario to accommodate for these changes. These newly created files have been denoted by appending date (*20180516* or higher) to the file names.
+
 ### For the **users** of the TESP docker container ###
 After installing Docker according to the above-mentioned procedure, run
 ```bash
@@ -411,7 +413,7 @@ at the terminal prompt. Start simulation scenario by clicking **Start All**.
 
 ### Pre-requisites ###
 
-Same as in the Ubuntu case, in order to enable the graphical user interface (GUI) of TESP within its Docker container, the X server MacOS counterpart needs to be installed on the computer running it, that is [XQuartz](https://www.xquartz.org/ "Click to get the dmg"). Once XQUartz is installed, run it at the terminal with
+Same as in the Ubuntu case, in order to enable the graphical user interface (GUI) of TESP within its Docker container, the X server MacOS counterpart needs to be installed on the computer running it, that is [XQuartz](https://www.xquartz.org/ "Click to get the dmg"). Once XQuartz is installed, run it at the terminal with
 ```
 open -a XQuartz
 ```
@@ -430,7 +432,7 @@ to install _socat_, and then give access to the host display.
 
 On another Mac terminal, start XQuartz with
 ```
-open -a quartz&
+open -a xquartz& 
 ```
 and on the X11 terminal, run
 ```
@@ -441,17 +443,17 @@ export IP
 to get the IP and add it to the access control list.
 
 **WARNING.**
-  - If on WiFi, _env0_ might need to be used instead of _env1_.
-  - If network is changed, this commend needs to be rerun to get the correct IP.
+  - If on WiFi, _en0_ might need to be used instead of _en1_.
+  - If network is changed, this command needs to be rerun to get the correct IP.
 
 **Lessons learnt**
-Using _docker cp_ command to copy the scenario input files and running scripts from host to container before being able to run the simulation inside the container. It turned out that doing so from MacOS would copy the files under different UID:GID on the container, which made it impossible to run _chmod_ adn set the running scripts as executable. Therefore, I have adopted a different methods, ans seen in _runVisualTESPContainer-TE30-Mac.sh_ docker run command, that is mounting the folder that contains the files on a folder on the container, and then copy them to the simulation folder. See below.
+Using _docker cp_ command to copy the scenario input files and running scripts from host to container before being able to run the simulation inside the container. It turned out that doing so from MacOS would copy the files under different UID:GID on the container, which made it impossible to run _chmod_ and set the running scripts as executable. Therefore, I have adopted a different methods, as seen in _runVisualTESPContainer-TE30-Mac.sh_ docker run command, that is mounting the folder that contains the files on a folder on the container, and then copy them to the simulation folder. See below.
 ```
 #!/bin/bash
 clear
 # 
 TESP_REP="laurmarinovici/tesp"
-TESP_TAG=":latest"
+TESP_TAG=":V2"
 TESP_CONT="tespV2"
 HOST_FOLDER="$PWD"
 
@@ -462,17 +464,17 @@ docker images
 if (docker inspect -f {{.State.Running}} ${TESP_CONT} &> /dev/null); then
   echo "Container ${TESP_CONT} is already running."
 else
+  echo "===== Create container ${TESP_CONT}."
   docker container run --name ${TESP_CONT} \
-    -dit \
-    -e DISPLAY=$IP:0 \
-    -v ${HOST_FOLDER}:/tmp/scenarioData:rw \
-    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-    --net=host --ipc=host --user=tesp-user \
-    ${TESP_REP}${TESP_TAG}
+                        -dit --env="DISPLAY" \
+                        --env="QT_X11_NO_MITSHM=1" \
+                        --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+                        --volume="${HOST_FOLDER}:/tmp/scenarioData:rw" \
+                        ${TESP_REP}${TESP_TAG}
   export CONTAINER_ID=$(docker ps -l -q)
   xhost +local:`docker inspect --format='{{ .Config.Hostname}}' ${CONTAINER_ID}`
 fi
-# docker inspect ${TESP_CONT}
+
 echo "===== List of containers on the machine."
 docker ps -a
 docker container start ${TESP_CONT}
@@ -480,12 +482,14 @@ echo "===== Container ${TESP_CONT} has been started."
 
 # =================== TE30 Challenge Running scripts ====================================================
 echo "===== Setting up running scripts folder."
-docker container exec ${TESP_CONT} /bin/bash -c 'cd ${TESP} && mkdir runScripts && \
-  cp /tmp/scenarioData/RunningScripts/tespTE30.py /tesp/runScripts && \
-  cp /tmp/scenarioData/RunningScripts/tespTE30.yaml /tesp/runScripts && \
-  cp /tmp/scenarioData/RunningScripts/fncs.py.DockerVersion /tesp/runScripts/fncs.py && \
-  cp /tmp/scenarioData/RunningScripts/runVisualTE30ChallengeDocker.sh /tesp/runScripts && \
-  chmod u+x /tesp/runScripts/runVisualTE30ChallengeDocker.sh'
+docker container exec ${TESP_CONT} /bin/bash -c 'RUN_SCR_DIR=RunningScripts && cd ${TESP} && mkdir ${RUN_SCR_DIR} && \
+  cp /tmp/scenarioData/RunningScripts-20180516/tespTE30.py ${TESP}/${RUN_SCR_DIR} && \
+  cp /tmp/scenarioData/RunningScripts-20180516/tespTE30_20180521.yaml ${TESP}/${RUN_SCR_DIR} && \
+  cp /tmp/scenarioData/RunningScripts-20180516/fncs.py.DockerVersion ${TESP}/${RUN_SCR_DIR}/fncs.py && \
+  cp /tmp/scenarioData/RunningScripts-20180516/runTE30_ChallengePYPOWER_20180516.sh ${TESP}/${RUN_SCR_DIR} && \
+  cp /tmp/scenarioData/RunningScripts-20180516/runGUITE30Challenge.sh ${TESP}/${RUN_SCR_DIR} && \
+  chmod u+x ${TESP}/${RUN_SCR_DIR}/runTE30_ChallengePYPOWER_20180516.sh && \
+  chmod u+x ${TESP}/${RUN_SCR_DIR}/runGUITE30Challenge.sh'
 
 # =================== FNCS settings =========================================================
 echo "===== Setting up FNCS paths and folders."
@@ -497,46 +501,46 @@ echo "===== Setting up GridLAB-D paths and folders."
 docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${GLD_INSTALL}/bin/modelFiles; then rmdir ${GLD_INSTALL}/bin/modelFiles; mkdir ${GLD_INSTALL}/bin/modelFiles; else mkdir ${GLD_INSTALL}/bin/modelFiles; fi && \
   if test -e ${GLD_INSTALL}/bin/inputFilesTE30; then rmdir ${GLD_INSTALL}/bin/inputFilesTE30; mkdir ${GLD_INSTALL}/bin/inputFilesTE30; else mkdir ${GLD_INSTALL}/bin/inputFilesTE30; fi && \
   if test -e ${GLD_INSTALL}/bin/outputFiles; then rmdir ${GLD_INSTALL}/bin/outputFiles; mkdir ${GLD_INSTALL}/bin/outputFiles; else mkdir ${GLD_INSTALL}/bin/outputFiles; fi && \
-  cp -R /tmp/scenarioData/GridLABD/modelFiles/ /tesp/GridLABD1048Install/bin/ && \
-  cp -R /tmp/scenarioData/GridLABD/inputFilesTE30/ /tesp/GridLABD1048Install/bin/'
+  cp /tmp/scenarioData/GridLABD/modelFiles-20180516/* ${GLD_INSTALL}/bin/modelFiles && \
+  cp -R /tmp/scenarioData/GridLABD/inputFilesTE30/ ${GLD_INSTALL}/bin/'
 
 # =================== Energy Plus settings =========================================================
 echo "===== Settting up Energy Plus paths and folders."
 docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${EPLUS_INSTALL}/outputFiles; then rmdir ${EPLUS_INSTALL}/outputFiles; mkdir ${EPLUS_INSTALL}/outputFiles; else mkdir ${EPLUS_INSTALL}/outputFiles; fi && \
-  cp /tmp/scenarioData/EnergyPlus/eplus.yaml /tesp/EnergyPlusInstall/ && \
-  cp /tmp/scenarioData/EnergyPlus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw /tesp/EnergyPlusInstall/ && \
-  cp /tmp/scenarioData/EnergyPlus/SchoolDualController.idf /tesp/EnergyPlusInstall/'
+  cp /tmp/scenarioData/EnergyPlus/eplus.yaml ${EPLUS_INSTALL} && \
+  cp /tmp/scenarioData/EnergyPlus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw ${EPLUS_INSTALL} && \
+  cp /tmp/scenarioData/EnergyPlus/SchoolDualController.idf ${EPLUS_INSTALL}'
 
 # =================== Energy Plus JSON settings =========================================================
 echo "===== Setting up Energy Plus JSON paths and folders."
 docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${EPLUSJSON_INSTALL}/outputFiles; then rmdir ${EPLUSJSON_INSTALL}/outputFiles; mkdir ${EPLUSJSON_INSTALL}/outputFiles; else mkdir ${EPLUSJSON_INSTALL}/outputFiles; fi && \
-  cp /tmp/scenarioData/EnergyPlusJSON/eplus_json.yaml /tesp/EPlusJSONInstall/'
+  cp /tmp/scenarioData/EnergyPlusJSON-20180516/eplus_json.yaml ${EPLUSJSON_INSTALL}'
 
 # =================== PyPower settings =========================================================
 echo "===== Settting up PyPower paths and folders."
 docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${PYPOWER_INSTALL}/outputFiles; then rmdir ${PYPOWER_INSTALL}/outputFiles; mkdir ${PYPOWER_INSTALL}/outputFiles; else mkdir ${PYPOWER_INSTALL}/outputFiles; fi && \
-  cp /tmp/scenarioData/PyPower/NonGLDLoad.txt /tesp/PyPowerInstall/ && \
-  cp /tmp/scenarioData/PyPower/ppcasefile.py /tesp/PyPowerInstall/ && \
-  cp /tmp/scenarioData/PyPower/pypowerConfig_TE30dispload.yaml /tesp/PyPowerInstall/'
+  cp /tmp/scenarioData/PyPower-20180516/NonGLDLoad.txt ${PYPOWER_INSTALL} && \
+  cp /tmp/scenarioData/PyPower-20180516/ppcasefile.py ${PYPOWER_INSTALL} && \
+  cp /tmp/scenarioData/PyPower-20180516/pypowerConfig_TE30dispload.yaml ${PYPOWER_INSTALL} && \
+  cp /tmp/scenarioData/PyPower-20180516/TE30_ChallengePYPOWER_m_dict.json ${PYPOWER_INSTALL}'
 
 # =================== Agents settings =========================================================
 echo "===== Settting up Agents paths and folders."
 docker container exec ${TESP_CONT} /bin/sh -c 'if test -e ${AGENTS_INSTALL}/inputFiles; then rmdir ${AGENTS_INSTALL}/inputFiles; mkdir ${AGENTS_INSTALL}/inputFiles; else mkdir ${AGENTS_INSTALL}/inputFiles; fi && \
-  cp -R /tmp/scenarioData/Agents/inputFilesPP /tesp/AgentsInstall/ && \
-  cp /tmp/scenarioData/Agents/launch_TE30_Challenge_PYPOWER_agents.sh.DockerVersion /tesp/AgentsInstall/launch_TE30_Challenge_PYPOWER_agents.sh && \
-  chmod u+x ${AGENTS_INSTALL}/launch_TE30_Challenge_PYPOWER_agents.sh'
+  if test -e ${AGENTS_INSTALL}/outputFiles; then rmdir ${AGENTS_INSTALL}/outputFiles; mkdir ${AGENTS_INSTALL}/outputFiles; else mkdir ${AGENTS_INSTALL}/outputFiles; fi && \
+  cp -R /tmp/scenarioData/Agents-20180516/inputFiles ${AGENTS_INSTALL}'
 
 
 # =================== Run TE30 =========================================================
 # echo "===== Run script to simulate."
-# docker container exec -i ${TESP_CONT} /bin/bash -c 'export TERM=xterm && echo "===== TERM = ${TERM}" && export FNCS_LOG_STDOUT=no && echo "===== FNCS_LOG_STDOUT = ${FNCS_LOG_STDOUT}" && cd /tesp/runScripts && python tespTE30.py&'
+# docker container exec -i ${TESP_CONT} /bin/bash -c 'export TERM=xterm && echo "===== TERM = ${TERM}" && export FNCS_LOG_STDOUT=no && echo "===== FNCS_LOG_STDOUT = ${FNCS_LOG_STDOUT}" && cd ${TESP}/${RUN_SCR_DIR} && python tespTE30.py&'
 # docker container exec ${TESP_CONT} /bin/sh -c "export TERM=xterm && cd /tesp/ && ./runTE30ChallengeDocker.sh > te30DockerRun.log &"
-# docker container exec ${TESP_CONT} /bin/sh -c "tail -f /tesp/GridLABD1048Install/bin/outputFiles/gld1_1Subst.out"
+# docker container exec ${TESP_CONT} /bin/sh -c "tail -f ${GLD_INSTALL}/bin/outputFiles/gld1_1Subst.out"
 
 # echo "===== Done with running use case. Copying the post processing scripts to the container."
-# docker cp ${HOME}/work/CoSimulation/TESP-pypower/outputFiles/process_pypower.py ${TESP_CONT}:/tesp/PyPowerInstall/outputFiles/
-# docker cp ${HOME}/work/CoSimulation/TESP-GridLABD1048install/bin/outputFiles/process_gld.py ${TESP_CONT}:/tesp/GridLABD1048Install/bin/outputFiles/
-# docker cp ${HOME}/work/CoSimulation/ENERGYPLUS_JSONinstall/outputFiles/process_eplus.py ${TESP_CONT}:/tesp/EPlusJSONInstall/outputFiles/
+# docker cp ${HOME}/work/CoSimulation/TESP-pypower/outputFiles/process_pypower.py ${TESP_CONT}:${PYPOWER_INSTALL}outputFiles/
+# docker cp ${HOME}/work/CoSimulation/TESP-GridLABD1048install/bin/outputFiles/process_gld.py ${TESP_CONT}:${GLD_INSTALL}/bin/outputFiles/
+# docker cp ${HOME}/work/CoSimulation/ENERGYPLUS_JSONinstall/outputFiles/process_eplus.py ${TESP_CONT}:${EPLUSJSON_INSTALL}outputFiles/
 # docker cp ${HOME}/work/CoSimulation/Agents/outputFiles/TE30_Challenge_PYPOWER_agent_dict.json ${TESP_CONT}:/tesp/AgentsInstall
 # docker cp ${HOME}/work/CoSimulation/Agents/outputFiles/process_agents.py ${TESP_CONT}:/tesp/AgentsInstall/
 # echo "===== Transferred post-processing files. Let's run."
@@ -559,6 +563,6 @@ docker container exec -it ${TESP_CONT} /bin/bash -c 'stty cols 200 rows 60 && ba
 
 Once the container is started and the bash command is open, run the simulation
 ```
-cd runScripts
-python tespTE30.py
+cd RunningScripts
+./runGUITE30Challenge.sh
 ```

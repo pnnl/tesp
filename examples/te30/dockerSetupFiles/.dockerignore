@@ -1,0 +1,13 @@
+*.zip
+*.gz
+*.tar
+nodes*
+fncs*
+gridlab*
+MCR*
+Energy*
+EPLUS*
+json*
+cmake*
+tesp*
+CCSI*

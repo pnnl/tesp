@@ -27,14 +27,18 @@ def launch_all():
 	if sys.platform == 'win32':
 		subprocess.Popen ('call run30.bat', shell=True)
 	else:
-		subprocess.Popen ('(export simNum=36 && ./runVisualTE30ChallengeDocker.sh &)', shell=True)
+		# subprocess.Popen ('(export simNum=36 && ./runVisualTE30ChallengeDocker.sh &)', shell=True)
+		subprocess.Popen ('(export simNum=6 && ./runTE30_ChallengePYPOWER_20180516.sh &)', shell=True)
 
 	print('launched all simulators')
 
 	root.update()
 
-	os.environ['FNCS_CONFIG_FILE'] = 'tespTE30.yaml'
+	os.environ['FNCS_CONFIG_FILE'] = 'tespTE30_20180521.yaml'
 	os.environ['FNCS_FATAL'] = 'NO'
+	os.environ['FNCS_DEBUG_LEVEL'] = 'DEBUG4'
+	os.environ['FNCS_LOG_STDOUT'] = 'yes'
+	os.environ['FNCS_LOG_FILE'] = 'no'
 	print('config file =', os.environ['FNCS_CONFIG_FILE'])
 
 	fncs.initialize()
@@ -52,6 +56,7 @@ def launch_all():
 		time_granted = fncs.time_request(time_stop)
 		events = fncs.get_events()
 		idx = int (time_granted / yaml_delta)
+		print ('############# idx = ', idx, ', ------------- idxlast = ', idxlast ,' ####################')
 		if idx <= idxlast:
 			continue
 		idxlast = idx
@@ -65,33 +70,39 @@ def launch_all():
 				val = 3.0 * float (fncs.get_value(key).decode().strip('+ degFkW')) / 1000.0
 				x1[idx] = val
 				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
+				print ('**** Time granted = ', time_granted, 'tok = ', tok, ', fncs.get_value = ', fncs.get_value(key).decode(), ', value = ', val, ' *****')
 				bWantX1 = False
 			elif bWantX3 and tok == 'house_air_temperature':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
 				x3[idx] = val
 				ax[3].plot(hrs[1:idx],x3[1:idx],color='magenta')
+				print ('**** Time granted = ', time_granted, 'tok = ', tok, ', fncs.get_value = ', fncs.get_value(key).decode(), ', value = ', val, ' *****')
 				bWantX3 = False
 			elif bWantX0 and tok == 'vpos7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW')) / 133000.0
 				x0[idx] = val
 				ax[0].plot(hrs[1:idx],x0[1:idx],color='green')
+				print ('**** Time granted = ', time_granted, 'tok = ', tok, ', fncs.get_value = ', fncs.get_value(key).decode(), ', value = ', val, ' *****')
 				bWantX0 = False
 			elif bWantX2 and tok == 'clear_price':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
 				x2[idx] = val
 				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
+				print ('**** Time granted = ', time_granted, 'tok = ', tok, ', fncs.get_value = ', fncs.get_value(key).decode(), ', value = ', val, ' *****')
 				bWantX2 = False
 			elif bWantX2 and tok == 'LMP7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW'))
 				x2[idx] = val
 				ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
+				print ('**** Time granted = ', time_granted, 'tok = ', tok, ', fncs.get_value = ', fncs.get_value(key).decode(), ', value = ', val, ' *****')
 				bWantX2 = False
 			elif bWantX1 and tok == 'SUBSTATION7':
 				val = float (fncs.get_value(key).decode().strip('+ degFkW')) # already in kW
 				x1[idx] = val
 				ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
+				print ('**** Time granted = ', time_granted, 'tok = ', tok, ', fncs.get_value = ', fncs.get_value(key).decode(), ', value = ', val, ' *****')
 				bWantX1 = False
-#			print (time_granted, key.decode(), fncs.get_value(key).decode())
+			print ('<<<<< Time granted = ', time_granted, 'tok = ', tok, ', fncs.get_value = ', fncs.get_value(key).decode(), ', value = ', val, ' >>>>>')
 		root.update()
 		fig.canvas.draw()
 	fncs.finalize()
@@ -136,7 +147,7 @@ canvas.show()
 #toolbar.update()
 canvas.get_tk_widget().grid(row=1,columnspan=4)
 #canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
+print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ *******************************************************')
 root.update()
 
 while True:
