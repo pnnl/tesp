@@ -104,7 +104,8 @@ varsPP = [['OPF Type','DC','for dispatch and price','PYPOWERConfiguration','ACOP
 varsEP = [['Reference Price',0.02,'$','EplusConfiguration','ReferencePrice'],
 					['Ramp',25,'degF/$','EplusConfiguration','Slope'],
 					['Delta Limit Hi',4,'degF','EplusConfiguration','OffsetLimitHi'],
-					['Delta Limit Lo',4,'degF','EplusConfiguration','OffsetLimitLo']
+					['Delta Limit Lo',4,'degF','EplusConfiguration','OffsetLimitLo'],
+					['Energy+ Weather File','USA_AZ_Tucson.Intl.AP.722740_TMY3.epw','','EplusConfiguration','EnergyPlusWeather']
 					];
 varsAC = [['Initial Price',0.02078,'$','AgentPrep','InitialPriceMean'],
 					['Std Dev Price',0.00361,'$','AgentPrep','InitialPriceStdDev'],

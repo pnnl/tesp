@@ -1230,7 +1230,7 @@ def union_of_phases(phs1, phs2):
         phs += 'S'
     return phs
 
-def ProcessTaxonomyFeeder (rootname, vll, vln, avghouse, avgcommercial):
+def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial):
     fname = glmpath + rootname + '.glm'
     print (fname)
     rgn = 0
@@ -1257,7 +1257,7 @@ def ProcessTaxonomyFeeder (rootname, vll, vln, avghouse, avgcommercial):
             line = ip.readline()
         ip.close()
 
-        op = open (outpath + rootname + '.glm', 'w')
+        op = open (outpath + outname + '.glm', 'w')
         octr = 0;
         model = {}
         h = {}		# OID hash
@@ -1509,7 +1509,7 @@ if len(sys.argv) > 1:
                 
     for c in taxchoice:
         if c[0] == rootname:
-            ProcessTaxonomyFeeder (c[0], c[1], c[2], c[3], c[4])
+            ProcessTaxonomyFeeder (config['SimulationConfig']['CaseName'], c[0], c[1], c[2], c[3], c[4])
             quit()
 else:
     if sys.platform == 'win32':
@@ -1521,6 +1521,6 @@ else:
         print ('gridlabd -D WANT_VI_DUMP=1 -D METRICS_FILE='+c[0]+'.json', c[0] + '.glm', file=op)
     op.close()
     for c in casefiles:
-        ProcessTaxonomyFeeder (c[0], c[1], c[2], c[3], c[4])
+        ProcessTaxonomyFeeder (c[0], c[0], c[1], c[2], c[3], c[4])
 
 
