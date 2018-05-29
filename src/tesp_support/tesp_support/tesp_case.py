@@ -3,6 +3,7 @@ import json
 import subprocess
 import os
 import shutil
+from datetime import datetime
 
 cfgfile = 'test.json'
 
@@ -205,6 +206,21 @@ p2 = subprocess.Popen ('python glm_dict.py ' + glmfile, shell=True)
 p2.wait()
 p3 = subprocess.Popen ('python prep_auction.py ' + cfgfile + ' ' + glmfile, shell=True)
 p3.wait()
+
+StartTime = config['SimulationConfig']['StartTime']
+EndTime = config['SimulationConfig']['EndTime']
+
+#timezone = 'EST+5EDT'
+#timestamp = '2000-01-01 0:00:00'
+#stoptime = '2000-01-01 0:01:00'
+
+time_fmt = '%Y-%m-%d %H:%M:%S'
+
+dt1 = datetime.strptime (StartTime, time_fmt)
+dt2 = datetime.strptime (EndTime, time_fmt)
+seconds = int ((dt2 - dt1).total_seconds())
+days = seconds / 86400
+print (days, seconds)
 
 if sys.platform == 'win32':
     batname = 'run.bat'
