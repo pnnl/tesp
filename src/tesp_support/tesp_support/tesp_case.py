@@ -33,9 +33,28 @@ if os.path.exists(casedir):
     shutil.rmtree(casedir)
 os.makedirs(casedir)
 
+StartTime = config['SimulationConfig']['StartTime']
+EndTime = config['SimulationConfig']['EndTime']
+time_fmt = '%Y-%m-%d %H:%M:%S'
+dt1 = datetime.strptime (StartTime, time_fmt)
+dt2 = datetime.strptime (EndTime, time_fmt)
+seconds = int ((dt2 - dt1).total_seconds())
+days = seconds / 86400
+print (days, seconds)
+
+EpRef = config['EplusConfiguration']['ReferencePrice']
+EpRamp = config['EplusConfiguration']['Slope']
+EpLimHi = config['EplusConfiguration']['OffsetLimitHi']
+EpLimLo = config['EplusConfiguration']['OffsetLimitLo']
+EpWeather = config['EplusConfiguration']['EnergyPlusWeather']
+EpStep = config['EplusConfiguration']['TimeStep'] # minutes
+EpFile = config['BackboneFiles']['EnergyPlusFile']
+EpAgentStop = str (seconds) + 's'
+EpAgentStep = str (config['FeederGenerator']['MetricsInterval']) + 's'
+
 weatherfile = weatherdir + config['WeatherPrep']['DataSource']
-eplusfile = eplusdir + config['BackboneFiles']['EnergyPlusFile']
-eplusweather = eplusdir + config['EplusConfiguration']['EnergyPlusWeather']
+eplusfile = eplusdir + EpFile
+eplusweather = eplusdir + EpWeather
 ppfile = ppdir + config['BackboneFiles']['PYPOWERFile']
 shutil.copy (weatherfile, casedir)
 shutil.copy (eplusfile, casedir)
@@ -50,7 +69,7 @@ shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
 # write some YAML files - TODO time steps in each YAML file
 op = open (casedir + '/eplus.yaml', 'w')
 print ('name: eplus', file=op)
-print ('time_delta: 5m', file=op)
+print ('time_delta:', str (EpStep) + 'm', file=op)
 print ('broker: tcp://localhost:5570', file=op)
 print ('values:', file=op)
 print ('    COOL_SETP_DELTA:', file=op)
@@ -89,11 +108,11 @@ print (ppyamlstr, file=op)
 op.close()
 
 epjyamlstr = """name: eplus_json
-time_delta: 5m
+time_delta: """ + EpAgentStep + """
 broker: tcp://localhost:5570
 values:
     kwhr_price:
-        topic: auction_Market_1/clear_price
+        topic: auction/clear_price
         default: 0.10
     cooling_controlled_load:
         topic: eplus/EMS COOLING CONTROLLED LOAD
@@ -207,31 +226,15 @@ p2.wait()
 p3 = subprocess.Popen ('python prep_auction.py ' + cfgfile + ' ' + glmfile, shell=True)
 p3.wait()
 
-StartTime = config['SimulationConfig']['StartTime']
-EndTime = config['SimulationConfig']['EndTime']
-
-#timezone = 'EST+5EDT'
-#timestamp = '2000-01-01 0:00:00'
-#stoptime = '2000-01-01 0:01:00'
-
-time_fmt = '%Y-%m-%d %H:%M:%S'
-
-dt1 = datetime.strptime (StartTime, time_fmt)
-dt2 = datetime.strptime (EndTime, time_fmt)
-seconds = int ((dt2 - dt1).total_seconds())
-days = seconds / 86400
-print (days, seconds)
-
 if sys.platform == 'win32':
     batname = 'run.bat'
 else:
     op = open (casedir + '/run.sh', 'w')
     print ('(export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 5 &> broker.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=eplus.yaml && exec EnergyPlus -w ' 
-           + config['EplusConfiguration']['EnergyPlusWeather']
-           + ' -d output -r ' + config['BackboneFiles']['EnergyPlusFile'] + ' &> eplus.log &)', file=op)
-    print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && exec eplus_json 2d 5m ' 
-           + config['BackboneFiles']['EnergyPlusFile'] + ' eplus_' + casename + '_metrics.json &> eplus_json.log &)', file=op)
+           + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && exec eplus_json', EpAgentStop, EpAgentStep, 
+           EpFile + ' eplus_' + casename + '_metrics.json', EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
     print ('(export FNCS_FATAL=NO && exec gridlabd -D USE_FNCS -D METRICS_FILE='
            + casename + '_metrics.json ' + casename + '.glm &> gridlabd.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=' + casename + '_auction.yaml && export FNCS_FATAL=NO && exec python auction.py '

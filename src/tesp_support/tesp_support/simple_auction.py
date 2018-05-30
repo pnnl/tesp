@@ -480,6 +480,10 @@ class hvac:
         self.daylight_set = float(dict['daylight_set'])
         self.evening_set = float(dict['evening_set'])
         self.night_set = float(dict['night_set'])
+        self.weekend_day_start = float(dict['weekend_day_start'])
+        self.weekend_day_set = float(dict['weekend_day_set'])
+        self.weekend_night_start = float(dict['weekend_night_start'])
+        self.weekend_night_set = float(dict['weekend_night_set'])
         self.deadband = float(dict['deadband'])
         self.offset_limit = float(dict['offset_limit'])
         self.ramp = float(dict['ramp'])
@@ -529,14 +533,19 @@ class hvac:
 #        print ('  bidding', self.name, self.air_temp, self.basepoint, self.bid_price, self.hvac_kw)
         return [self.bid_price, self.hvac_kw, self.hvac_on]
 
-    def change_basepoint (self,hod):
-        val = self.night_set
-        if hod >= self.wakeup_start and hod < self.daylight_start:
-            val = self.wakeup_set
-        elif hod >= self.daylight_start and hod < self.evening_start:
-            val = self.daylight_set
-        elif hod >= self.evening_start and hod < self.night_start:
-            val = self.evening_set
+    def change_basepoint (self,hod,dow):
+        if dow > 4: # a weekend
+            val = self.weekend_night_set
+            if hod >= self.weekend_day_start and hod < self.weekend_night_start:
+                val = self.weekend_day_set
+        else: # a weekday
+            val = self.night_set
+            if hod >= self.wakeup_start and hod < self.daylight_start:
+                val = self.wakeup_set
+            elif hod >= self.daylight_start and hod < self.evening_start:
+                val = self.daylight_set
+            elif hod >= self.evening_start and hod < self.night_start:
+                val = self.evening_set
         if abs(self.basepoint - val) > 0.1:
             self.basepoint = val
             return True

@@ -111,26 +111,21 @@ int main(int argc, char **argv)
 	fncs::time mod;
 	fncs::time hod;
 
-	// for real-time pricing response
+	// for real-time pricing response - can redefine on the command line
 	double base_price = 0.02;
-	double price = 0.02;
-	double heating_delta = 0.0;
-	double cooling_delta = 0.0;
 	double degF_per_price = 25.0;
-	double max_delta = 4.0;
-	double totalWatts = 0.0;
-	double phaseWatts = 0.0;
-	double delta;
+	double max_delta_hi = 4.0;
+	double max_delta_lo = 4.0;
 
 	if (argc < 3) {
 		cerr << "Missing stop time and/or aggregating time parameters." << endl;
-		cerr << "Usage: eplus_json <stop time> <agg time> [bldg id] [output file]" << endl;
+		cerr << "Usage: eplus_json <stop time> <agg time> [bldg id] [output file] [ref price] [ramp] [limit hi] [limit lo]" << endl;
 		exit(EXIT_FAILURE);
 	}
 
-	if (argc > 5) {
+	if (argc > 9) {
 		cerr << "Too many parameters." << endl;
-		cerr << "Usage: eplus_json <stop time> <agg time> <bldg id> <output file>" << endl;
+		cerr << "Usage: eplus_json <stop time> <agg time> <bldg id> <output file> <ref price> <ramp> <limit hi> <limit lo>" << endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -146,6 +141,25 @@ int main(int argc, char **argv)
 		}
 		out.rdbuf(fout.rdbuf()); /* redirect out to use file buffer */
 	}
+	if (argc > 5) {
+		base_price = atof (argv[5]);
+	}
+	if (argc > 6) {
+		degF_per_price = atof (argv[6]);
+	}
+	if (argc > 7) {
+		max_delta_hi = atof (argv[7]);
+	}
+	if (argc > 8) {
+		max_delta_lo = atof (argv[8]);
+	}
+
+	double price = base_price;
+	double cooling_delta = 0.0;
+	double heating_delta = 0.0;
+	double totalWatts = 0.0;
+	double phaseWatts = 0.0;
+	double delta;
 
 	fncs::initialize();
 
@@ -241,13 +255,11 @@ int main(int argc, char **argv)
 		}
 		// this is price response
 		delta = degF_per_price * (price - base_price);
-		if (fabs(delta) > max_delta) {
-			if (delta < 0.0) {
-				delta = -max_delta;
-			} else {
-				delta = max_delta;
-			}
-		}
+	 	if (delta < -max_delta_lo) {
+	 		delta = -max_delta_lo;
+	 	} else if (delta > max_delta_hi) {
+	 		delta = max_delta_hi;
+	 	}
 		update_metric(metrics["cooling_setpoint_delta"], delta);
 		update_metric(metrics["heating_setpoint_delta"], -delta);
 

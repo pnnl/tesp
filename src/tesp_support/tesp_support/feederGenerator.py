@@ -6,6 +6,15 @@ import numpy as np;
 from math import sqrt;
 import json; 
 
+# TODO - put the source information into JSON configuration
+transmissionVoltage = 138000.0
+transmissionXfmrMVAbase = 12.0
+transmissionXfmrXpct = 8.0
+transmissionXfmrRpct = 1.0
+transmissionXfmrNLLpct = 0.4
+transmissionXfmrImagpct = 1.0
+fncs_case = ''
+
 # we want the same pseudo-random variables each time, for repeatability
 np.random.seed (0)
 
@@ -28,15 +37,57 @@ use_Eplus = True
 Eplus_Bus = ''
 Eplus_Volts = 480.0
 Eplus_kVA = 150.0
-electric_cooling_penetration = 0.9
-electric_cooling_participation = 0.8
+electric_cooling_penetration = 0.0 # if not provided in JSON config, use a regional default
 solar_penetration = 0.2
 storage_penetration = 0.5
 solar_inv_mode = 'CONSTANT_PF'
+
+def write_solar_inv_settings (op):
+    print ('    four_quadrant_control_mode ${INVERTER_MODE};', file=op)
+    print ('    V_base ${INV_VBASE};', file=op)
+    print ('    V1 ${INV_V1};', file=op)
+    print ('    Q1 ${INV_Q1};', file=op)
+    print ('    V2 ${INV_V2};', file=op)
+    print ('    Q2 ${INV_Q2};', file=op)
+    print ('    V3 ${INV_V3};', file=op)
+    print ('    Q3 ${INV_Q3};', file=op)
+    print ('    V4 ${INV_V4};', file=op)
+    print ('    Q4 ${INV_Q4};', file=op)
+    print ('    V_In ${INV_VIN};', file=op)
+    print ('    I_In ${INV_IIN};', file=op)
+    print ('    volt_var_control_lockout ${INV_VVLOCKOUT};', file=op)
+    print ('    VW_V1 ${INV_VW_V1};', file=op)
+    print ('    VW_V2 ${INV_VW_V2};', file=op)
+    print ('    VW_P1 ${INV_VW_P1};', file=op)
+    print ('    VW_P2 ${INV_VW_P2};', file=op)
+
 storage_inv_mode = 'LOAD_FOLLOWING'
 weather_file = 'AZ-Tucson_International_Ap.tmy3'
+bill_mode = 'UNIFORM'
 kwh_price = 0.1243
 monthly_fee = 5.00
+tier1_energy = 0.0
+tier1_price = 0.0
+tier2_energy = 0.0
+tier2_price = 0.0
+tier3_energy = 0.0
+tier3_price = 0.0
+def write_tariff (op):
+    print ('  bill_mode', bill_mode + ';', file=op)
+    print ('  price', '{:.4f}'.format (kwh_price) + ';', file=op)
+    print ('  monthly_fee', '{:.2f}'.format (monthly_fee) + ';', file=op)
+    print ('  bill_day 1;', file=op)
+    if 'TIERED' in bill_mode:
+        if tier1_energy > 0.0:
+            print ('  first_tier_energy', '{:.1f}'.format (tier1_energy) + ';', file=op)
+            print ('  first_tier_price', '{:.6f}'.format (tier1_price) + ';', file=op)
+        if tier2_energy > 0.0:
+            print ('  second_tier_energy', '{:.1f}'.format (tier2_energy) + ';', file=op)
+            print ('  second_tier_price', '{:.6f}'.format (tier2_price) + ';', file=op)
+        if tier3_energy > 0.0:
+            print ('  third_tier_energy', '{:.1f}'.format (tier3_energy) + ';', file=op)
+            print ('  third_tier_price', '{:.6f}'.format (tier3_price) + ';', file=op)
+
 inv_undersizing = 1.0
 array_efficiency = 0.2
 rated_insolation = 1000.0
@@ -142,7 +193,7 @@ bldgHeatingSetpoints = [[[0.141,0.80,63,59],  # single-family
                          [0.081,0.88,73,71],
                          [0.177,0.88,79,74]]]
 
-# we pick the cooling setpoint bin first, and it must be higher than the cooling setpoint bin
+# we pick the cooling setpoint bin first, and it must be higher than the heating setpoint bin
 # given a cooling bin selection, we should be able to figure out conditional probabilities on the heating bin
 allowedHeatingBins = [1, 3, 4, 5, 6, 6]
 #index 0 is the building type
@@ -673,10 +724,7 @@ def write_small_loads(basenode, op, vnom):
   print ('  name', mtrname + ';', file=op)
   print ('  phases', phs + ';', file=op)
   print ('  meter_power_consumption 1+7j;', file=op)
-  print ('  bill_mode UNIFORM;', file=op)
-  print ('  price', '{:.4f}'.format (kwh_price) + ';', file=op)
-  print ('  monthly_fee', '{:.2f}'.format (monthly_fee) + ';', file=op)
-  print ('  bill_day 1;', file=op)
+  write_tariff (op)
   print ('  nominal_voltage ' + str(vnom) + ';', file=op)
   print ('  voltage_1 ' + vstart + ';', file=op)
   print ('  voltage_2 ' + vstart + ';', file=op)
@@ -743,10 +791,7 @@ def write_houses(basenode, op, vnom):
         print ('  name', mtrname + ';', file=op)
         print ('  phases', phs + ';', file=op)
         print ('  meter_power_consumption 1+7j;', file=op)
-        print ('  bill_mode UNIFORM;', file=op)
-        print ('  price', '{:.4f}'.format (kwh_price) + ';', file=op)
-        print ('  monthly_fee', '{:.2f}'.format (monthly_fee) + ';', file=op)
-        print ('  bill_day 1;', file=op)
+        write_tariff (op)
         print ('  nominal_voltage ' + str(vnom) + ';', file=op)
         print ('  voltage_1 ' + vstart + ';', file=op)
         print ('  voltage_2 ' + vstart + ';', file=op)
@@ -833,7 +878,7 @@ def write_houses(basenode, op, vnom):
         cool_rand = np.random.uniform(0,1)
         if heat_rand <= rgnPenGasHeat[rgn-1]:
             print ('  heating_system_type GAS;', file=op)
-            if cool_rand <= rgnPenElecCool[rgn-1]:
+            if cool_rand <= electric_cooling_penetration:
                 print ('  cooling_system_type ELECTRIC;', file=op)
             else:
                 print ('  cooling_system_type NONE;', file=op)
@@ -847,13 +892,13 @@ def write_houses(basenode, op, vnom):
             print ('  motor_efficiency AVERAGE;', file=op);
         elif floor_area * ceiling_height > 12000.0: # electric heat not allowed on large homes
             print ('  heating_system_type GAS;', file=op)
-            if cool_rand <= rgnPenElecCool[rgn-1]:
+            if cool_rand <= electric_cooling_penetration:
                 print ('  cooling_system_type ELECTRIC;', file=op)
             else:
                 print ('  cooling_system_type NONE;', file=op)
         else:
             print ('  heating_system_type RESISTANCE;', file=op)
-            if cool_rand <= rgnPenElecCool[rgn-1]:
+            if cool_rand <= electric_cooling_penetration:
                 print ('  cooling_system_type ELECTRIC;', file=op)
                 print ('  motor_model BASIC;', file=op);
                 print ('  motor_efficiency GOOD;', file=op);
@@ -965,11 +1010,11 @@ def write_houses(basenode, op, vnom):
                 print ('    name', sol_i_name + ';', file=op)
                 print ('    phases', phs + ';', file=op)
                 print ('    generator_status ONLINE;', file=op)
-                print ('    generator_mode', solar_inv_mode + ';', file=op)
                 print ('    inverter_type FOUR_QUADRANT;', file=op)
                 print ('    inverter_efficiency 1;', file=op)
                 print ('    rated_power','{:.0f}'.format(inv_power) + ';', file=op)
                 print ('    power_factor 1.0;', file=op)
+                write_solar_inv_settings (op)
                 print ('    object solar {', file=op)
                 print ('      name', solname + ';', file=op)
                 print ('      generator_mode SUPPLY_DRIVEN;', file=op)
@@ -1029,6 +1074,49 @@ def write_houses(basenode, op, vnom):
                     print ('  };', file=op)
                     print ('}', file=op)
 
+def write_substation (op, name, phs, vnom, vll):
+    print ('object transformer_configuration {', file=op)
+    print ('  name substation_xfmr_config;', file=op)
+    print ('  connect_type WYE_WYE;', file=op)
+    print ('  install_type PADMOUNT;', file=op)
+    print ('  primary_voltage', '{:.2f}'.format (transmissionVoltage) + ';', file=op)
+    print ('  secondary_voltage', '{:.2f}'.format (vll) + ';', file=op)
+    print ('  power_rating', '{:.2f}'.format (transmissionXfmrMVAbase * 1000.0) + ';', file=op)
+    print ('  resistance', '{:.2f}'.format (0.01 * transmissionXfmrRpct) + ';', file=op)
+    print ('  reactance', '{:.2f}'.format (0.01 * transmissionXfmrXpct) + ';', file=op)
+    print ('  shunt_resistance', '{:.2f}'.format (100.0 / transmissionXfmrNLLpct) + ';', file=op)
+    print ('  shunt_reactance', '{:.2f}'.format (100.0 / transmissionXfmrImagpct) + ';', file=op)
+    print ('}', file=op)
+    print ('object transformer {', file=op)
+    print ('  name substation_transformer;', file=op)
+    print ('  from network_node;', file=op)
+    print ('  to', name + ';', file=op)
+    print ('  phases', phs + ';', file=op)
+    print ('  configuration substation_xfmr_config;', file=op)
+    print ('}', file=op)
+    vsrcln = transmissionVoltage / sqrt (3.0)
+    print ('object substation {', file=op)
+    print ('  name network_node;', file=op)
+    print ('  bustype SWING;', file=op)
+    print ('  nominal_voltage', '{:.2f}'.format (vsrcln) + ';', file=op)
+    print ('  positive_sequence_voltage', '{:.2f}'.format (vsrcln) + ';', file=op)
+    print ('  base_power', '{:.2f}'.format (transmissionXfmrMVAbase * 1000000.0) + ';', file=op)
+    print ('  power_convergence_value 100.0;', file=op)
+    print ('  phases', phs + ';', file=op)
+    if metrics_interval > 0:
+        print ('  object metrics_collector {', file=op)
+        print ('    interval', str(metrics_interval) + ';', file=op)
+        print ('  };', file=op)
+    print ('}', file=op)
+    if len(fncs_case) > 0:
+        print ('#ifdef USE_FNCS', file=op)
+        print ('object fncs_msg {', file=op)
+        print ('  name gridlabdSimulator1;', file=op)
+        print ('  parent network_node;', file=op)
+        print ('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
+        print ('  option "transport:hostname localhost, port 5570";', file=op)
+        print ('}', file=op)
+        print ('#endif', file=op)
 
 # if triplex load, node or meter, the nominal voltage is 120
 #   if the name or parent attribute is found in secmtrnode, we look up the nominal voltage there
@@ -1037,12 +1125,15 @@ def write_houses(basenode, op, vnom):
 #   the transformer phasing was not changed, and the transformers were up-sized to the largest phase kva
 #   therefore, it should not be necessary to look up kva_total, but phases might have changed N==>S
 # if the phasing did change N==>S, we have to prepend triplex_ to the class, write power_1 and voltage_1
-def write_voltage_class (model, h, t, op, vprim, secmtrnode):
+def write_voltage_class (model, h, t, op, vprim, vll, secmtrnode):
     if t in model:
         for o in model[t]:
             name = o # model[t][o]['name']
             phs = model[t][o]['phases']
             vnom = vprim
+            if 'bustype' in model[t][o]:
+                if model[t][o]['bustype'] == 'SWING':
+                    write_substation (op, name, phs, vnom, vll)
             parent = ''
             prefix = ''
             if str.find(phs, 'S') >= 0:
@@ -1069,8 +1160,9 @@ def write_voltage_class (model, h, t, op, vprim, secmtrnode):
             if len(parent) > 0:
                 print('  parent ' + parent + ';', file=op)
             print('  name ' + name + ';', file=op)
-            if 'bustype' in model[t][o]:
-                print('  bustype ' + model[t][o]['bustype'] + ';', file=op)
+            if 'bustype' in model[t][o]: # already moved the SWING bus behind substation transformer
+                if model[t][o]['bustype'] != 'SWING':
+                    print('  bustype ' + model[t][o]['bustype'] + ';', file=op)
             print('  phases ' + phs + ';', file=op)
             print('  nominal_voltage ' + str(vnom) + ';', file=op)
             if 'load_class' in model[t][o]:
@@ -1244,6 +1336,12 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         rgn = 4
     elif 'R5' in rootname:
         rgn = 5
+    global electric_cooling_penetration
+    if electric_cooling_penetration <= 0.0:
+        electric_cooling_penetration = rgnPenElecCool[rgn-1]
+        print ('using regional default', electric_cooling_penetration, 'air conditioning penetration')
+    else:
+        print ('using', electric_cooling_penetration, 'air conditioning penetration from JSON config')
     print ('region', rgn, 'has electric water heater penetration', rgnPenElecWH[rgn-1])
     if os.path.isfile(fname):
         ip = open (fname, 'r')
@@ -1265,8 +1363,13 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         for line in itr:
             if re.search('object',line):
                 line,octr = obj(None,model,line,itr,h,octr)
-            else:
-                print (line, file=op)
+            else: # should be the pre-amble, need to replace timestamp and stoptime
+                if 'timestamp' in line:
+                    print ('  timestamp \'' + starttime + '\';', file=op)
+                elif 'stoptime' in line:
+                    print ('  stoptime \'' + endtime + '\';', file=op)
+                else:
+                    print (line, file=op)
 
 #        log_model (model, h)
 
@@ -1310,6 +1413,9 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         for n1, data in G.nodes(data=True):
             if 'ndata' in data:
                 kva = accumulate_load_kva (data['ndata'])
+                # need to account for large-building loads added through transformer connections
+                if n1 == Eplus_Bus:
+                    kva += Eplus_kVA
                 if kva > 0:
                     total_kva += kva
                     nodes = nx.shortest_path(G, n1, swing_node)
@@ -1331,33 +1437,52 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         print ('module generators;', file=op)
         print ('module connection;', file=op)
         print ('module residential {', file=op)
-        print ('     implicit_enduses NONE;', file=op)
+        print ('  implicit_enduses NONE;', file=op)
         print ('};', file=op)
         print ('#include "' + supportpath + 'appliance_schedules.glm";', file=op)
         print ('#include "' + supportpath + 'water_and_setpoint_schedule_v5.glm";', file=op)
         print ('#include "' + supportpath + 'commercial_schedules.glm";', file=op)
-        print ('#set minimum_timestep=15;', file=op)
+        print ('#set minimum_timestep=' + str(timestep) + ';', file=op)
         print ('#set relax_naming_rules=1;', file=op)
         print ('#set warn=0;', file=op)
         if metrics_interval > 0:
             print ('object metrics_collector_writer {', file=op)
             print ('  interval', str(metrics_interval) + ';', file=op)
-            print ('  // filename ${METRICS_FILE};', file=op)
-            print ('  filename test_metrics.json;', file=op)
+            print ('  filename ${METRICS_FILE};', file=op)
+            print ('  // filename test_metrics.json;', file=op)
             print ('};', file=op)
         print ('object climate {', file=op)
         print ('  name "RegionalWeather";', file=op)
         print ('  tmyfile "' + weatherpath + weather_file + '";', file=op)
         print ('  interpolate QUADRATIC;', file=op)
         print ('};', file=op)
+        if solar_penetration > 0.0:
+            print ('// default IEEE 1547-2018 for Category B; modes are CONSTANT_PF, VOLT_VAR, VOLT_WATT', file=op)
+            print ('#define INVERTER_MODE=' + solar_inv_mode, file=op)
+            print ('#define INV_VBASE=240.0', file=op)
+            print ('#define INV_V1=0.92', file=op)
+            print ('#define INV_V2=0.98', file=op)
+            print ('#define INV_V3=1.02', file=op)
+            print ('#define INV_V4=1.08', file=op)
+            print ('#define INV_Q1=0.44', file=op)
+            print ('#define INV_Q2=0.00', file=op)
+            print ('#define INV_Q3=0.00', file=op)
+            print ('#define INV_Q4=-0.44', file=op)
+            print ('#define INV_VIN=200.0', file=op)
+            print ('#define INV_IIN=32.5', file=op)
+            print ('#define INV_VVLOCKOUT=300.0', file=op)
+            print ('#define INV_VW_V1=1.05 // 1.05833', file=op)
+            print ('#define INV_VW_V2=1.10', file=op)
+            print ('#define INV_VW_P1=1.0', file=op)
+            print ('#define INV_VW_P2=0.0', file=op)
 # write the optional volt_dump and curr_dump for validation
         print ('#ifdef WANT_VI_DUMP', file=op)
         print ('object voltdump {', file=op)
-        print ('  filename Voltage_Dump_' + c[0] + '.csv;', file=op)
+        print ('  filename Voltage_Dump_' + outname + '.csv;', file=op)
         print ('  mode polar;', file=op)
         print ('}', file=op)
         print ('object currdump {', file=op)
-        print ('  filename Current_Dump_' + c[0] + '.csv;', file=op)
+        print ('  filename Current_Dump_' + outname + '.csv;', file=op)
         print ('  mode polar;', file=op)
         print ('}', file=op)
         print ('#endif', file=op)
@@ -1467,9 +1592,64 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         for key in small_nodes:
             write_small_loads (key, op, 120.0)
 
-        write_voltage_class (model, h, 'node', op, vln, secnode)
-        write_voltage_class (model, h, 'meter', op, vln, secnode)
-        write_voltage_class (model, h, 'load', op, vln, secnode)
+        write_voltage_class (model, h, 'node', op, vln, vll, secnode)
+        write_voltage_class (model, h, 'meter', op, vln, vll, secnode)
+        write_voltage_class (model, h, 'load', op, vln, vll, secnode)
+        if len(Eplus_Bus) > 0 and Eplus_Volts > 0.0 and Eplus_kVA > 0.0:
+            print ('////////// EnergyPlus large-building load ///////////////', file=op)
+            row = Find3PhaseXfmr (Eplus_kVA)
+            actual_kva = row[0]
+            watts_per_phase = 1000.0 * actual_kva / 3.0
+            Eplus_vln = Eplus_Volts / sqrt (3.0)
+            vstarta = format(Eplus_vln,'.2f') + '+0.0j'
+            vstartb = format(-0.5*Eplus_vln,'.2f') + format(-0.866025*Eplus_vln,'.2f') + 'j'
+            vstartc = format(-0.5*Eplus_vln,'.2f') + '+' + format(0.866025*Eplus_vln,'.2f') + 'j'
+            print ('object transformer_configuration {', file=op)
+            print ('  name Eplus_transformer_configuration;', file=op)  
+            print ('  connect_type WYE_WYE;', file=op)
+            print ('  install_type PADMOUNT;', file=op)
+            print ('  power_rating', str(actual_kva) + ';', file=op)   
+            print ('  primary_voltage ' + str(vll) + ';', file=op)
+            print ('  secondary_voltage ' + format(Eplus_Volts, '.1f') + ';', file=op)
+            print ('  resistance ' + format(row[1], '.5f') + ';', file=op)
+            print ('  reactance ' + format(row[2], '.5f') + ';', file=op)
+            print ('  shunt_resistance ' + format(1.0 / row[3], '.2f') + ';', file=op)
+            print ('  shunt_reactance ' + format(1.0 / row[4], '.2f') + ';', file=op)
+            print ('}', file=op)
+            print ('object transformer {', file=op)
+            print ('  name Eplus_transformer;', file=op) 
+            print ('  phases ABCN;', file=op)
+            print ('  from', Eplus_Bus + ';', file=op)
+            print ('  to Eplus_meter;', file=op)
+            print ('  configuration Eplus_transformer_configuration;', file=op)
+            print ('}', file=op)
+            print ('object meter {', file=op)
+            print ('  name Eplus_meter;', file=op)
+            print ('  phases ABCN;', file=op)
+            print ('  meter_power_consumption 1+15j;', file=op)
+            print ('  nominal_voltage', '{:.4f}'.format(Eplus_vln) + ';', file=op)
+            print ('  voltage_A ' + vstarta + ';', file=op)
+            print ('  voltage_B ' + vstartb + ';', file=op)
+            print ('  voltage_C ' + vstartc + ';', file=op)
+            write_tariff (op)
+            if metrics_interval > 0:
+                print ('  object metrics_collector {', file=op)
+                print ('    interval', str(metrics_interval) + ';', file=op)
+                print ('  };', file=op)
+            print ('}', file=op)
+            print ('object load {', file=op)
+            print ('  name Eplus_load;', file=op)
+            print ('  parent Eplus_meter;', file=op)
+            print ('  phases ABCN;', file=op)
+            print ('  nominal_voltage', '{:.4f}'.format(Eplus_vln) + ';', file=op)
+            print ('  voltage_A ' + vstarta + ';', file=op)
+            print ('  voltage_B ' + vstartb + ';', file=op)
+            print ('  voltage_C ' + vstartc + ';', file=op)
+            print ('  constant_power_A', '{:.1f}'.format(watts_per_phase) + ';', file=op)
+            print ('  constant_power_B', '{:.1f}'.format(watts_per_phase) + ';', file=op)
+            print ('  constant_power_C', '{:.1f}'.format(watts_per_phase) + ';', file=op)
+            print ('}', file=op)
+
         print ('cooling bins unused', cooling_bins)
         print ('heating bins unused', heating_bins)
         print (solar_count, 'pv totaling', '{:.1f}'.format(solar_kw), 'kw with', battery_count, 'batteries')
@@ -1488,28 +1668,38 @@ if len(sys.argv) > 1:
     starttime = config['SimulationConfig']['StartTime']
     endtime = config['SimulationConfig']['EndTime']
     timestep = int(config['FeederGenerator']['MinimumStep'])
-    metrics_interval = int(config['AgentPrep']['MarketClearingPeriod'])
+    metrics_interval = int(config['FeederGenerator']['MetricsInterval'])
     electric_cooling_penetration = 0.01 * float(config['FeederGenerator']['ElectricCoolingPercentage'])
-    electric_cooling_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
     solar_penetration = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
     storage_penetration = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
     solar_inv_mode = config['FeederGenerator']['SolarInverterMode']
     storage_inv_mode = config['FeederGenerator']['StorageInverterMode']
     weather_file = config['WeatherPrep']['DataSource']
+    bill_mode = config['FeederGenerator']['BillingMode']
     kwh_price = float(config['FeederGenerator']['Price'])
     monthly_fee = float(config['FeederGenerator']['MonthlyFee'])
+    tier1_energy = float(config['FeederGenerator']['Tier1Energy'])
+    tier1_price = float(config['FeederGenerator']['Tier1Price'])
+    tier2_energy = float(config['FeederGenerator']['Tier2Energy'])
+    tier2_price = float(config['FeederGenerator']['Tier2Price'])
+    tier3_energy = float(config['FeederGenerator']['Tier3Energy'])
+    tier3_price = float(config['FeederGenerator']['Tier3Price'])
+    Eplus_Bus = config['FeederGenerator']['EnergyPlusBus']
+    Eplus_Volts = float(config['FeederGenerator']['EnergyPlusServiceV'])
+    Eplus_kVA = float(config['FeederGenerator']['EnergyPlusXfmrKva'])
 
     print (rootname, 'to', outpath, 'using', weather_file)
     print ('times', starttime, endtime)
     print ('steps', timestep, metrics_interval)
-    print ('hvac', electric_cooling_participation, electric_cooling_penetration)
+    print ('hvac', electric_cooling_penetration)
     print ('pv', solar_penetration, solar_inv_mode)
     print ('storage', storage_penetration, storage_inv_mode)
     print ('billing', kwh_price, monthly_fee)
                 
     for c in taxchoice:
         if c[0] == rootname:
-            ProcessTaxonomyFeeder (config['SimulationConfig']['CaseName'], c[0], c[1], c[2], c[3], c[4])
+            fncs_case = config['SimulationConfig']['CaseName']
+            ProcessTaxonomyFeeder (fncs_case, c[0], c[1], c[2], c[3], c[4])
             quit()
 else:
     if sys.platform == 'win32':

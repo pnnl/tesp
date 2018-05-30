@@ -1,6 +1,8 @@
 import sys
 import fncs
 import json
+from datetime import datetime
+from datetime import timedelta
 from tesp_support import hvac
 from tesp_support import simple_auction
 from tesp_support import parse_fncs_magnitude
@@ -14,6 +16,8 @@ if len(sys.argv) > 3:
         print ('Disabled the market')
 time_stop = int (48 * 3600) # simulation time in seconds
 StartTime = '2013-07-01 00:00:00 PST'
+time_fmt = '%Y-%m-%d %H:%M:%S %Z'
+dt_now = datetime.strptime (StartTime, time_fmt)
 
 # ====== load the JSON dictionary; create the corresponding objects =========
 
@@ -65,9 +69,15 @@ tnext_clear = period         # clear the market with LMP
 tnext_adjust = period        # + dt   # controllers adjust setpoints based on their bid and clearing
 
 time_granted = 0
+time_last = 0
 while (time_granted < time_stop):
     time_granted = fncs.time_request(time_stop)
+    time_delta = time_granted - time_last
+    time_last = time_granted
     hour_of_day = 24.0 * ((float(time_granted) / 86400.0) % 1.0)
+    dt_now = dt_now + timedelta (seconds=time_delta)
+    day_of_week = dt_now.weekday()
+    hour_of_day = dt_now.hour
 
     # update the data from FNCS messages
     events = fncs.get_events()
@@ -92,7 +102,7 @@ while (time_granted < time_stop):
 
     # set the time-of-day schedule
     for key, obj in hvacObjs.items():
-        if obj.change_basepoint (hour_of_day):
+        if obj.change_basepoint (hour_of_day, day_of_week):
             fncs.publish (obj.name + '/cooling_setpoint', obj.basepoint)
     if bSetDefaults:
         for key, obj in hvacObjs.items():
@@ -125,6 +135,7 @@ while (time_granted < time_stop):
     if time_granted >= tnext_clear:
         if bWantMarket:
             aucObj.clear_market()
+            fncs.publish ('clear_price', aucObj.clearing_price)
             for key, obj in hvacObjs.items():
                 obj.inform_bid (aucObj.clearing_price)
         time_key = str (int (tnext_clear))

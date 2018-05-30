@@ -15,8 +15,6 @@ np.random.seed (0)
 # top-level data, not presently configurable from JSON
 broker = 'tcp://localhost:5570'
 network_node = 'network_node'
-Eplus_load = 'R1_12_47_1_load_4_Eplus_load4' # Eplus_load
-Eplus_meter = 'R1_12_47_1_load_4_Eplus_meter4' # Eplus_meter
 marketName = 'Market_1'
 unit = 'kW'
 control_mode = 'CN_RAMP'
@@ -43,6 +41,9 @@ air_temperature = 78.0 # initial house air temperature
 dt = 15
 period = 300
 
+Eplus_Bus = ''
+agent_participation = 0.0
+
 wakeup_start_lo = 5.0
 wakeup_start_hi = 6.5
 daylight_start_lo = 8.0
@@ -60,6 +61,15 @@ evening_set_lo = 78.0
 evening_set_hi = 80.0
 night_set_lo = 72.0
 night_set_hi = 74.0
+
+weekend_day_start_lo = 8.0
+weekend_day_start_hi = 9.0
+weekend_day_set_lo = 76.0
+weekend_day_set_hi = 84.0
+weekend_night_start_lo = 22.0
+weekend_night_start_hi = 24.0
+weekend_night_set_lo = 72.0
+weekend_night_set_hi = 74.0
 
 ramp_lo = 0.5
 ramp_hi = 3.0
@@ -94,6 +104,8 @@ def ProcessGLM (fileroot):
 	inTriplexMeters = False
 	endedHouse = False
 	isELECTRIC = False
+	nAirConditioners = 0
+	nControllers = 0
 
 	houseName = ''
 	meterName = ''
@@ -133,40 +145,52 @@ def ProcessGLM (fileroot):
 				inHouses = False
 				endedHouse = False
 				if isELECTRIC == True:
-					controller_name = houseName + '_hvac'
-	#				controllers[controller_name] = {}
-					wakeup_start = np.random.uniform (wakeup_start_lo, wakeup_start_hi)
-					daylight_start = np.random.uniform (daylight_start_lo, daylight_start_hi)
-					evening_start = np.random.uniform (evening_start_lo, evening_start_hi)
-					night_start = np.random.uniform (night_start_lo, night_start_hi)
-					wakeup_set = np.random.uniform (wakeup_set_lo, wakeup_set_hi)
-					daylight_set = np.random.uniform (daylight_set_lo, daylight_set_hi)
-					evening_set = np.random.uniform (evening_set_lo, evening_set_hi)
-					night_set = np.random.uniform (night_set_lo, night_set_hi)
-					deadband = np.random.uniform (deadband_lo, deadband_hi)
-					offset_limit = np.random.uniform (offset_limit_lo, offset_limit_hi)
-					ramp = np.random.uniform (ramp_lo, ramp_hi)
-					ctrl_cap = np.random.uniform (ctrl_cap_lo, ctrl_cap_hi)
-					controllers[controller_name] = {'control_mode': control_mode, 
-																				 'houseName': houseName, 
-																				 'meterName': meterName, 
-																				 'period': periodController,
-																				 'wakeup_start': float('{:.3f}'.format(wakeup_start)),
-																				 'daylight_start': float('{:.3f}'.format(daylight_start)),
-																				 'evening_start': float('{:.3f}'.format(evening_start)),
-																				 'night_start': float('{:.3f}'.format(night_start)),
-																				 'wakeup_set': float('{:.3f}'.format(wakeup_set)),
-																				 'daylight_set': float('{:.3f}'.format(daylight_set)),
-																				 'evening_set': float('{:.3f}'.format(evening_set)),
-																				 'night_set': float('{:.3f}'.format(night_set)),
-																				 'deadband': float('{:.3f}'.format(deadband)),
-																				 'offset_limit': float('{:.3f}'.format(offset_limit)),
-																				 'ramp': float('{:.4f}'.format(ramp)), 
-																				 'price_cap': float('{:.3f}'.format(ctrl_cap)),
-																				 'bid_delay': bid_delay, 
-																				 'use_predictive_bidding': use_predictive_bidding, 
-																				 'use_override': use_override}
+					nAirConditioners += 1
+					if np.random.uniform (0, 1) <= agent_participation:
+						nControllers += 1
+						controller_name = houseName + '_hvac'
+						wakeup_start = np.random.uniform (wakeup_start_lo, wakeup_start_hi)
+						daylight_start = np.random.uniform (daylight_start_lo, daylight_start_hi)
+						evening_start = np.random.uniform (evening_start_lo, evening_start_hi)
+						night_start = np.random.uniform (night_start_lo, night_start_hi)
+						wakeup_set = np.random.uniform (wakeup_set_lo, wakeup_set_hi)
+						daylight_set = np.random.uniform (daylight_set_lo, daylight_set_hi)
+						evening_set = np.random.uniform (evening_set_lo, evening_set_hi)
+						night_set = np.random.uniform (night_set_lo, night_set_hi)
+						weekend_day_start = np.random.uniform (weekend_day_start_lo, weekend_day_start_hi)
+						weekend_day_set = np.random.uniform (weekend_day_set_lo, weekend_day_set_hi)
+						weekend_night_start = np.random.uniform (weekend_night_start_lo, weekend_night_start_hi)
+						weekend_night_set = np.random.uniform (weekend_night_set_lo, weekend_night_set_hi)
+						deadband = np.random.uniform (deadband_lo, deadband_hi)
+						offset_limit = np.random.uniform (offset_limit_lo, offset_limit_hi)
+						ramp = np.random.uniform (ramp_lo, ramp_hi)
+						ctrl_cap = np.random.uniform (ctrl_cap_lo, ctrl_cap_hi)
+						controllers[controller_name] = {'control_mode': control_mode, 
+																						'houseName': houseName, 
+																						'meterName': meterName, 
+																						'period': periodController,
+																						'wakeup_start': float('{:.3f}'.format(wakeup_start)),
+																						'daylight_start': float('{:.3f}'.format(daylight_start)),
+																						'evening_start': float('{:.3f}'.format(evening_start)),
+																						'night_start': float('{:.3f}'.format(night_start)),
+																						'wakeup_set': float('{:.3f}'.format(wakeup_set)),
+																						'daylight_set': float('{:.3f}'.format(daylight_set)),
+																						'evening_set': float('{:.3f}'.format(evening_set)),
+																						'night_set': float('{:.3f}'.format(night_set)),
+																						'weekend_day_start': float('{:.3f}'.format(weekend_day_start)),
+																						'weekend_day_set': float('{:.3f}'.format(weekend_day_set)),
+																						'weekend_night_start': float('{:.3f}'.format(weekend_night_start)),
+																						'weekend_night_set': float('{:.3f}'.format(weekend_night_set)),
+																						'deadband': float('{:.3f}'.format(deadband)),
+																						'offset_limit': float('{:.3f}'.format(offset_limit)),
+																						'ramp': float('{:.4f}'.format(ramp)), 
+																						'price_cap': float('{:.3f}'.format(ctrl_cap)),
+																						'bid_delay': bid_delay, 
+																						'use_predictive_bidding': use_predictive_bidding, 
+																						'use_override': use_override}
 					isELECTRIC = False
+
+	print ('configured', nControllers, 'controllers for', nAirConditioners, 'air conditioners')
 
 	# Write market dictionary
 	auctions[marketName] = {'market_id': 1, 
@@ -243,12 +267,13 @@ def ProcessGLM (fileroot):
 	op = open (fileroot + '_FNCS_Config.txt', 'w')
 	print ('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
 	print ('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_B7";', file=op)
-	print ('subscribe "precommit:' + Eplus_load + '.constant_power_A <- eplus_json/power_A";', file=op)
-	print ('subscribe "precommit:' + Eplus_load + '.constant_power_B <- eplus_json/power_B";', file=op)
-	print ('subscribe "precommit:' + Eplus_load + '.constant_power_C <- eplus_json/power_C";', file=op)
-	print ('subscribe "precommit:' + Eplus_meter + '.bill_mode <- eplus_json/bill_mode";', file=op)
-	print ('subscribe "precommit:' + Eplus_meter + '.price <- eplus_json/price";', file=op)
-	print ('subscribe "precommit:' + Eplus_meter + '.monthly_fee <- eplus_json/monthly_fee";', file=op)
+	if len(Eplus_Bus) > 0: # hard-wired names for a single building
+		print ('subscribe "precommit:Eplus_load.constant_power_A <- eplus_json/power_A";', file=op)
+		print ('subscribe "precommit:Eplus_load.constant_power_B <- eplus_json/power_B";', file=op)
+		print ('subscribe "precommit:Eplus_load.constant_power_C <- eplus_json/power_C";', file=op)
+		print ('subscribe "precommit:Eplus_meter.bill_mode <- eplus_json/bill_mode";', file=op)
+		print ('subscribe "precommit:Eplus_meter.price <- eplus_json/price";', file=op)
+		print ('subscribe "precommit:Eplus_meter.monthly_fee <- eplus_json/monthly_fee";', file=op)
 	for key, val in controllers.items():
 		houseName = val['houseName']
 		meterName = val['meterName']
@@ -290,6 +315,15 @@ if len(sys.argv) > 1:
 	night_set_lo = float (config['ThermostatSchedule']['WeekdayNightSetLo'])
 	night_set_hi = float (config['ThermostatSchedule']['WeekdayNightSetHi'])
 
+	weekend_day_set_lo = float (config['ThermostatSchedule']['WeekendDaylightSetLo'])
+	weekend_day_set_hi = float (config['ThermostatSchedule']['WeekendDaylightSetHi'])
+	weekend_day_start_lo = float (config['ThermostatSchedule']['WeekendDaylightStartLo'])
+	weekend_day_start_hi = float (config['ThermostatSchedule']['WeekendDaylightStartHi'])
+	weekend_night_set_lo = float (config['ThermostatSchedule']['WeekendNightSetLo'])
+	weekend_night_set_hi = float (config['ThermostatSchedule']['WeekendNightSetHi'])
+	weekend_night_start_lo = float (config['ThermostatSchedule']['WeekendNightStartLo'])
+	weekend_night_start_hi = float (config['ThermostatSchedule']['WeekendNightStartHi'])
+
 	ramp_lo = float (config['AgentPrep']['ThermostatRampLo'])
 	ramp_hi = float (config['AgentPrep']['ThermostatRampHi'])
 	deadband_lo = float (config['AgentPrep']['ThermostatBandLo'])
@@ -300,6 +334,9 @@ if len(sys.argv) > 1:
 	ctrl_cap_hi = float (config['AgentPrep']['PriceCapHi'])
 	initial_price = float (config['AgentPrep']['InitialPriceMean'])
 	std_dev = float (config['AgentPrep']['InitialPriceStdDev'])
+
+	Eplus_Bus = config['FeederGenerator']['EnergyPlusBus']
+	agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
 
 	# process the GLM file with reconfigured parameters
 	fileroot = sys.argv[2]
