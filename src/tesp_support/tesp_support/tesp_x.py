@@ -61,12 +61,12 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
 					['Agent Time Step',3,'s','AgentPrep','TimeStepGldAgents'],
 					['GridLAB-D Taxonomy Choice','R1-12.47-1','','BackboneFiles','TaxonomyChoice','taxonomyChoices'],
 					['Energy+ Base File','SchoolDualController.idf','','BackboneFiles','EnergyPlusFile'],
-					['PYPOWER Base File','ppcasefile.py','','BackboneFiles','PYPOWERFile'],
+					['PYPOWER Base File','ppbasefile.py','','BackboneFiles','PYPOWERFile'],
 					['Weather Type','TMY3','','WeatherPrep','WeatherChoice','weatherChoices'],
 					['Weather Source','WA-Yakima_Air_Terminal.tmy3','File or URL','WeatherPrep','DataSource'],
 					['Airport Code','YKM','','WeatherPrep','AirportCode'],
 					['Weather Year','2001','','WeatherPrep','Year'],
-					['Source Directory','~/src/tesp/','Parent directory of base model files','SimulationConfig','SourceDirectory'],
+					['Source Directory','~/src/tesp/support','Parent directory of base model files','SimulationConfig','SourceDirectory'],
 					['Working Directory','./','','SimulationConfig','WorkingDirectory'],
 					['Case Name','Case1','','SimulationConfig','CaseName']
 					];

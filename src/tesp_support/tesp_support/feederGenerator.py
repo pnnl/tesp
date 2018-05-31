@@ -18,9 +18,9 @@ fncs_case = ''
 # we want the same pseudo-random variables each time, for repeatability
 np.random.seed (0)
 
-glmpath = '../../gridlabd/feeder_generator/Input_feeders/'
-supportpath = '../../../../examples/schedules/' # wrt outpath
-weatherpath = '../../../../examples/weather/'
+glmpath = '../../../support/feeders/'
+supportpath = '../../../../support/schedules/' # wrt outpath
+weatherpath = '../../../../support/weather/'
 outpath = './Dummy/'
 
 max208kva = 100.0

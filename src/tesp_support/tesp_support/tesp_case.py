@@ -12,11 +12,11 @@ config = json.loads(lp)
 
 tespdir = config['SimulationConfig']['SourceDirectory']
 tespdir = '../../../../ptesp/'
-feederdir = tespdir + 'src/gridlabd/feeder_generator/Input_feeders/'
-scheduledir = tespdir + 'examples/schedules/'
-weatherdir = tespdir + 'examples/weather/'
-eplusdir = tespdir + 'examples/energyplus/'
-ppdir = './'
+feederdir = tespdir + 'support/feeders/'
+scheduledir = tespdir + 'support/schedules/'
+weatherdir = tespdir + 'support/weather/'
+eplusdir = tespdir + 'support/energyplus/'
+ppdir = tespdir + 'support/pypower/'
 print ('feeder backbone files from', feederdir)
 print ('schedule files from', scheduledir)
 print ('weather files from', weatherdir)
