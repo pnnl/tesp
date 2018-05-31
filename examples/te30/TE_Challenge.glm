@@ -25,10 +25,10 @@ module residential {
 module tape;
 module generators;
 
-#include "../schedules/water_and_setpoint_schedule_v3.glm"
-#include "../schedules/appliance_schedules.glm"
+#include "../../support/schedules/water_and_setpoint_schedule_v3.glm"
+#include "../../support/schedules/appliance_schedules.glm"
 //#include "solar.glm"
-//#include "../schedules/fixed_rate_schedule_v2.glm"
+//#include "../../support/schedules/fixed_rate_schedule_v2.glm"
 #include "outputs_te.glm"
 
 // summer
@@ -43,7 +43,7 @@ object metrics_collector_writer {
 
 object climate {
      name "RegionalWeather";
-     tmyfile "../weather/AZ-Tucson_International_Ap.tmy3";
+     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
      interpolate QUADRATIC;
 };
 
