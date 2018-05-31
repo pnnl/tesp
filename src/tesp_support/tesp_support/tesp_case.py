@@ -42,6 +42,20 @@ seconds = int ((dt2 - dt1).total_seconds())
 days = seconds / 86400
 print (days, seconds)
 
+ep_dow_names = ['Monday,   ', 'Tuesday,  ', 'Wednesday,', 'Thursday, ', 'Friday,   ', 'Saturday, ', 'Sunday,   ']
+def idf_int(val):
+    sval = str(val)
+    if len(sval) < 2:
+        return sval + ', '
+    return sval + ','
+dow = dt1.weekday()
+begin_month = dt1.month
+begin_day = dt1.day
+end_month = dt2.month
+end_day = dt2.day
+if dt2.hour == 0 and dt2.minute == 0 and dt2.second == 0:
+    end_day -= 1
+
 EpRef = config['EplusConfiguration']['ReferencePrice']
 EpRamp = config['EplusConfiguration']['Slope']
 EpLimHi = config['EplusConfiguration']['OffsetLimitHi']
@@ -55,18 +69,40 @@ EpAgentStep = str (config['FeederGenerator']['MetricsInterval']) + 's'
 weatherfile = weatherdir + config['WeatherPrep']['DataSource']
 eplusfile = eplusdir + EpFile
 eplusweather = eplusdir + EpWeather
+eplusout = casedir + '/' + EpFile
 ppfile = ppdir + config['BackboneFiles']['PYPOWERFile']
+ppcsv = ppdir + config['PYPOWERConfiguration']['CSVLoadFile']
+
+# set the RunPeriod for EnergyPlus
+ip = open (eplusfile, 'r', encoding='latin-1')
+op = open (eplusout, 'w', encoding='latin-1')
+print ('filtering', eplusfile, 'to', eplusout)
+for ln in ip:
+    line = ln.rstrip('\n')
+    if '!- Begin Month' in line:
+        print ('    %s                      !- Begin Month' % idf_int(begin_month), file=op)
+    elif '!- Begin Day of Month' in line:
+        print ('    %s                      !- Begin Day of Month' % idf_int(begin_day), file=op)
+    elif '!- End Month' in line:
+        print ('    %s                      !- End Month' % idf_int(end_month), file=op)
+    elif '!- End Day of Month' in line:
+        print ('    %s                      !- End Day of Month' % idf_int(end_day), file=op)
+    elif '!- Day of Week for Start Day' in line:
+        print ('    %s               !- Day of Week for Start Day' % ep_dow_names[dow], file=op)
+    else:
+        print (line, file=op)
+ip.close()
+op.close()
+
 shutil.copy (weatherfile, casedir)
-shutil.copy (eplusfile, casedir)
 shutil.copy (eplusweather, casedir)
 shutil.copy (ppfile, casedir)
+shutil.copy (ppcsv, casedir)
 shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
 shutil.copy (scheduledir + 'commercial_schedules.glm', casedir)
-#shutil.copy (scheduledir + 'fixed_rate_schedule_v2.glm', casedir)
-#shutil.copy (scheduledir + 'water_and_setpoint_schedule_v3.glm', casedir)
 shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
 
-# write some YAML files - TODO time steps in each YAML file
+# write some YAML files 
 op = open (casedir + '/eplus.yaml', 'w')
 print ('name: eplus', file=op)
 print ('time_delta:', str (EpStep) + 'm', file=op)
