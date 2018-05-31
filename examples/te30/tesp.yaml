@@ -9,7 +9,7 @@ values:
         topic: pypower/three_phase_voltage_B7
         default: 0
     clear_price:
-        topic: auction_Market_1/clear_price
+        topic: auction/clear_price
         default: 0
     distribution_load:
         topic: gridlabdSimulator1/distribution_load

@@ -125,6 +125,7 @@ while (time_granted < time_stop):
     if time_granted >= tnext_clear:
         if bWantMarket:
             aucObj.clear_market()
+            fncs.publish ('clear_price', aucObj.clearing_price)
             for key, obj in hvacObjs.items():
                 obj.inform_bid (aucObj.clearing_price)
         time_key = str (int (tnext_clear))
