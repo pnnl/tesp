@@ -28,10 +28,10 @@ object metrics_collector_writer {
 }
 
 object fncs_msg {
-     name gridlabdSimulator1;
-     parent n650;
-     configure loadshed_fncs.cfg;
-     option "transport:hostname localhost, port 5570";
+  name gridlabdSimulator1;
+  configure loadshed_fncs.cfg;
+  option "transport:hostname localhost, port 5570";
+  parent n650;
 }
 
 // Loadshedding Switch
