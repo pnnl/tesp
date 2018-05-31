@@ -99,5 +99,8 @@ def ppcasefile():
 	ppc['Tmax'] = 172800
 	ppc['Period'] = 300  # market clearing period
 	ppc['dt'] = 15        # time step for bids
+	ppc['CSVFile'] = 'NonGLDLoad.txt'
+	ppc['opf_dc'] = 1
+	ppc['pf_dc'] = 1
 
 	return ppc
