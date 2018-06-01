@@ -61,5 +61,5 @@ res = pp.runopf(ppc, ppopt_market)
 summarize_opf (res)
 
 rpf = pp.runpf(ppc, ppopt_regular)
-summarize_opf (rpf)
+summarize_opf (rpf[0])
 
