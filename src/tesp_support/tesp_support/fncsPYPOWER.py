@@ -1,4 +1,4 @@
-#  Copyright (C) 2017 Battelle Memorial Institute
+#  Copyright (C) 2017-2018 Battelle Memorial Institute
 import json
 import sys
 import warnings
@@ -7,7 +7,7 @@ import fncs
 from ppcasefile import ppcasefile
 import numpy as np
 import pypower.api as pp
-#import scipy.io as spio
+from math import sqrt;
 import math
 import re
 from copy import deepcopy
@@ -34,6 +34,19 @@ def summarize_opf(res):
   for row in gen:
     print(idx,int(row[0]),row[1],row[2],row[21],row[22],row[23],row[24])
     ++idx
+
+def load_json_case(fname):
+  lp = open (fname).read()
+  ppc = json.loads(lp)
+  ppc['bus'] = np.array (ppc['bus'])
+  ppc['gen'] = np.array (ppc['gen'])
+  ppc['branch'] = np.array (ppc['branch'])
+  ppc['areas'] = np.array (ppc['areas'])
+  ppc['gencost'] = np.array (ppc['gencost'])
+  ppc['FNCS'] = np.array (ppc['FNCS'])
+  ppc['UnitsOut'] = np.array (ppc['UnitsOut'])
+  ppc['BranchesOut'] = np.array (ppc['BranchesOut'])
+  return ppc
 
 def make_dictionary(ppc, rootname):
   fncsBuses = {}
@@ -118,18 +131,20 @@ def parse_mva(arg):
   return p, q
 
 def main_loop():
-  if len(sys.argv) == 2:
+  if len(sys.argv) == 3:
     rootname = sys.argv[1]
+    casefile = sys.argv[2]
   else:
-    print ('usage: python fncsPYPOWER.py rootname')
+    print ('usage: python fncsPYPOWER.py metrics_rootname casedata.json')
     sys.exit()
 
-  ppc = ppcasefile()
+#  ppc = ppcasefile()
+  ppc = load_json_case (casefile)
   StartTime = ppc['StartTime']
   tmax = int(ppc['Tmax'])
   period = int(ppc['Period'])
   dt = int(ppc['dt'])
-  make_dictionary(ppc, rootname)
+  make_dictionary (ppc, rootname)
 
   bus_mp = open ("bus_" + rootname + "_metrics.json", "w")
   gen_mp = open ("gen_" + rootname + "_metrics.json", "w")
@@ -146,9 +161,9 @@ def main_loop():
   gencost = ppc['gencost']
   fncsBus = ppc['FNCS']
   gen = ppc['gen']
-  ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
-  ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=1)
-  loads = np.loadtxt('NonGLDLoad.txt', delimiter=',')
+  ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'])
+  ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'])
+  loads = np.loadtxt(ppc['CSVFile'], delimiter=',')
 
   for row in ppc['UnitsOut']:
     print ('unit  ', row[0], 'off from', row[1], 'to', row[2], flush=True)
@@ -362,7 +377,7 @@ def main_loop():
       loss_accum = 0
       conv_accum = True
 
-    volts = 1000.0 * bus[6,7] * bus[6,9]
+    volts = 1000.0 * bus[6,7] * bus[6,9] / sqrt(3.0)  # VLN for GridLAB-D
     fncs.publish('three_phase_voltage_B7', volts)
 
     # CSV file output
@@ -394,7 +409,6 @@ def main_loop():
       print ('breaking out at',ts,flush=True)
       break
 
-#  spio.savemat('matFile.mat', saveDataDict)
   # ===================================
   print ('writing metrics', flush=True)
   print (json.dumps(sys_metrics), file=sys_mp, flush=True)

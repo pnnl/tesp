@@ -6,7 +6,6 @@ import numpy as np;
 from math import sqrt;
 import json; 
 
-# TODO - put the source information into JSON configuration
 transmissionVoltage = 138000.0
 transmissionXfmrMVAbase = 12.0
 transmissionXfmrXpct = 8.0
@@ -1687,6 +1686,8 @@ if len(sys.argv) > 1:
     Eplus_Bus = config['FeederGenerator']['EnergyPlusBus']
     Eplus_Volts = float(config['FeederGenerator']['EnergyPlusServiceV'])
     Eplus_kVA = float(config['FeederGenerator']['EnergyPlusXfmrKva'])
+    transmissionXfmrMVAbase = float(config['PYPOWERConfiguration']['TransformerBase'])
+    transmissionVoltage = 1000.0 * float(config['PYPOWERConfiguration']['TransmissionVoltage'])
 
     print (rootname, 'to', outpath, 'using', weather_file)
     print ('times', starttime, endtime)

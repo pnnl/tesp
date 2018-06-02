@@ -96,13 +96,11 @@ op.close()
 
 shutil.copy (weatherfile, casedir)
 shutil.copy (eplusweather, casedir)
-shutil.copy (ppfile, casedir)
-shutil.copy (ppcsv, casedir)
 shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
 shutil.copy (scheduledir + 'commercial_schedules.glm', casedir)
 shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
 
-# write some YAML files 
+# write the EnergyPlus YAML files 
 op = open (casedir + '/eplus.yaml', 'w')
 print ('name: eplus', file=op)
 print ('time_delta:', str (EpStep) + 'm', file=op)
@@ -114,33 +112,6 @@ print ('        default: 0', file=op)
 print ('    HEAT_SETP_DELTA:', file=op)
 print ('        topic: eplus_json/heating_setpoint_delta', file=op)
 print ('        default: 0', file=op)
-op.close()
-
-ppyamlstr = """name: pypower
-time_delta: 15s
-broker: tcp://localhost:5570
-values:
-    SUBSTATION7:
-        topic: gridlabdSimulator1/distribution_load
-        default: 0
-    UNRESPONSIVE_MW:
-        topic: auction/unresponsive_mw
-        default: 0
-    RESPONSIVE_MAX_MW:
-        topic: auction/responsive_max_mw
-        default: 0
-    RESPONSIVE_C2:
-        topic: auction/responsive_c2
-        default: 0
-    RESPONSIVE_C1:
-        topic: auction/responsive_c1
-        default: 0
-    RESPONSIVE_DEG:
-        topic: auction/responsive_deg
-        default: 0
-"""
-op = open (casedir + '/pypower.yaml', 'w')
-print (ppyamlstr, file=op)
 op.close()
 
 epjyamlstr = """name: eplus_json
@@ -254,6 +225,98 @@ op = open (casedir + '/eplus_json.yaml', 'w')
 print (epjyamlstr, file=op)
 op.close()
 
+###################################
+# dynamically import the base PYPOWER case
+import importlib.util
+spec = importlib.util.spec_from_file_location('ppbasecase', ppfile)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+ppcase = mod.ppcasefile()
+#print (ppcase)
+
+# make ppcase JSON serializable
+ppcase['bus'] = ppcase['bus'].tolist()
+ppcase['gen'] = ppcase['gen'].tolist()
+ppcase['branch'] = ppcase['branch'].tolist()
+ppcase['areas'] = ppcase['areas'].tolist()
+ppcase['gencost'] = ppcase['gencost'].tolist()
+ppcase['FNCS'] = ppcase['FNCS'].tolist()
+ppcase['UnitsOut'] = ppcase['UnitsOut'].tolist()
+ppcase['BranchesOut'] = ppcase['BranchesOut'].tolist()
+
+# update the case from config JSON
+ppcase['StartTime'] = config['SimulationConfig']['StartTime']
+ppcase['Tmax'] = int(seconds)
+ppcase['Period'] = config['AgentPrep']['MarketClearingPeriod']
+ppcase['dt'] = config['PYPOWERConfiguration']['PFStep']
+ppcase['CSVFile'] = config['PYPOWERConfiguration']['CSVLoadFile']
+if config['PYPOWERConfiguration']['ACOPF'] == 'AC':
+    ppcase['opf_dc'] = 0
+else:
+    ppcase['opf_dc'] = 1
+if config['PYPOWERConfiguration']['ACPF'] == 'AC':
+    ppcase['pf_dc'] = 0
+else:
+    ppcase['pf_dc'] = 1
+fncsBus = int (config['PYPOWERConfiguration']['GLDBus'])
+fncsScale = float (config['PYPOWERConfiguration']['GLDScale'])
+ppcase['FNCS'][0][0] = fncsBus
+ppcase['FNCS'][0][2] = fncsScale
+baseKV = float(config['PYPOWERConfiguration']['TransmissionVoltage'])
+for row in ppcase['bus']:
+    if row[0] == fncsBus:
+        row[9] = baseKV
+
+if len(config['PYPOWERConfiguration']['UnitOutStart']) > 0 and len(config['PYPOWERConfiguration']['UnitOutEnd']) > 0:
+    dt3 = datetime.strptime (config['PYPOWERConfiguration']['UnitOutStart'], time_fmt)
+    tout_start = int ((dt3 - dt1).total_seconds())
+    dt3 = datetime.strptime (config['PYPOWERConfiguration']['UnitOutEnd'], time_fmt)
+    tout_end = int ((dt3 - dt1).total_seconds())
+    ppcase['UnitsOut'][0] = [int(config['PYPOWERConfiguration']['UnitOut']), tout_start, tout_end]
+else:
+    ppcase['UnitsOut'] = []
+
+if len(config['PYPOWERConfiguration']['BranchOutStart']) > 0 and len(config['PYPOWERConfiguration']['BranchOutEnd']) > 0:
+    dt3 = datetime.strptime (config['PYPOWERConfiguration']['BranchOutStart'], time_fmt)
+    tout_start = int ((dt3 - dt1).total_seconds())
+    dt3 = datetime.strptime (config['PYPOWERConfiguration']['BranchOutEnd'], time_fmt)
+    tout_end = int ((dt3 - dt1).total_seconds())
+    ppcase['BranchesOut'][0] = [int(config['PYPOWERConfiguration']['BranchOut']), tout_start, tout_end]
+else:
+    ppcase['BranchesOut'] = []
+
+fp = open (casedir + '/' + casename + '_pp.json', 'w')
+json.dump (ppcase, fp, indent=2)
+fp.close ()
+shutil.copy (ppcsv, casedir)
+
+ppyamlstr = """name: pypower
+time_delta: """ + str(config['PYPOWERConfiguration']['PFStep']) + """s
+broker: tcp://localhost:5570
+values:
+    SUBSTATION7:
+        topic: gridlabdSimulator1/distribution_load
+        default: 0
+    UNRESPONSIVE_MW:
+        topic: auction/unresponsive_mw
+        default: 0
+    RESPONSIVE_MAX_MW:
+        topic: auction/responsive_max_mw
+        default: 0
+    RESPONSIVE_C2:
+        topic: auction/responsive_c2
+        default: 0
+    RESPONSIVE_C1:
+        topic: auction/responsive_c1
+        default: 0
+    RESPONSIVE_DEG:
+        topic: auction/responsive_deg
+        default: 0
+"""
+op = open (casedir + '/pypower.yaml', 'w')
+print (ppyamlstr, file=op)
+op.close()
+
 p1 = subprocess.Popen ('python feederGenerator.py ' + cfgfile, shell=True)
 p1.wait()
 glmfile = casedir + '/' + casename
@@ -276,7 +339,7 @@ else:
     print ('(export FNCS_CONFIG_FILE=' + casename + '_auction.yaml && export FNCS_FATAL=NO && exec python auction.py '
            + casename + '_agent_dict.json ' + casename + ' &> auction.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec python fncsPYPOWER.py '
-           + casename + ' &> pypower.log &)', file=op)
+           + casename + ' ' + casename + '_pp.json &> pypower.log &)', file=op)
     op.close()
 
 

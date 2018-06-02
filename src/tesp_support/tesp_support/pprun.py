@@ -40,8 +40,8 @@ def load_json_case(fname):
 	ppc['BranchesOut'] = np.array (ppc['BranchesOut'])
 	return ppc
 
-ppc = load_json_case('ppcase.json')
-print (ppc)
+ppc = load_json_case('./Case1/ppcase.json')
+#print (ppc)
 StartTime = ppc['StartTime']
 tmax = int(ppc['Tmax'])
 period = int(ppc['Period'])
@@ -51,6 +51,9 @@ fncsBus = ppc['FNCS']
 gen = ppc['gen']
 ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'])
 ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'])
+
+print (ppc['UnitsOut'])
+print (ppc['BranchesOut'])
 
 for row in ppc['UnitsOut']:
   print ('unit  ', row[0], 'off from', row[1], 'to', row[2], flush=True)
