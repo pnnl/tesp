@@ -29,7 +29,7 @@ converts a TMY3 file to a TMY2 file. Then, the run.py should be called to conver
 
     cd TMY2EPW\source_code
     gcc -o Tmy3toTMY2_ansi TMY3toTMY2_ansi.c
-    python run3.py FL-Miami_Intl_Ap.tmy3
+    python TMY3EPW.py FL-Miami_Intl_Ap.tmy3
 
 To use TMY2 files, one shall directly call the TMY2EPW.py.
 
