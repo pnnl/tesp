@@ -24,9 +24,16 @@ EnergyPlus uses TMY2 data. This directory includes a converter from TMY2 to TMY3
 that both GridLAB-D and EnergyPlus will use the same weather data when running
 under TESP.
 
+To use TMY3 files, one has to firstly compile a c file (http://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/tmy3/), which basically
+converts a TMY3 file to a TMY2 file. Then, the run.py should be called to convert the generated TMY2 file to a EPW file.
 
+    cd TMY2EPW\source_code
     gcc -o Tmy3toTMY2_ansi TMY3toTMY2_ansi.c
-    ./Tmy3toTMY2_ansi FL-Miami_Intl_Ap.tmy3 > FL-Miami_Intl_Ap.tmy2
+    python run3.py FL-Miami_Intl_Ap.tmy3
+
+To use TMY2 files, one shall directly call the TMY2EPW.py.
+
+    cd TMY2EPW\source_code
     python TMY2EPW.py FL-Miami_Intl_Ap.tmy2
 
 Copyright (c) 2017-2018, Battelle Memorial Institute
