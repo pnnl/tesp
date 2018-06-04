@@ -23,10 +23,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 #define TMY3_FORMAT "%d/%d/%d,%d:%*d,%f,%f,%f,%d,%d,%f,%d,%d,%f,%d,%d,%f,%d,%d,%f,%d,%d,%f,%d,%d,%f,%d,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%f,%c,%d,%*f,%*c,%*d,%*f,%*f,%*c,%*d"
 
-#define TMY2_FORMAT " %02d%02d%02d%02d%04d%04d%04d%c%1d%04d%c%1d%04d%c%1d%04d%c%1d%04d%c%1d%04d%c%1d%04d%c%1d%02d%c%1d%02d%c%1d%04d%c%1d%04d%c%1d%03d%c%1d%04d%c%1d%03d%c%1d%03d%c%1d%04d%c%ld%05d%c%1d%1d%1d%1d%1d%1d%1d%1d%1d%1d%1d%03d%c%1d%03d%c%1d%03d%c%1d%02d%c%1d\n"
+#define TMY2_FORMAT " %02d%02d%02d%02d%04d%04d%04d%c%1d%04d%c%1d%04d%c%1d%04d%c%1d%04d%c%1d%04d%c%1d%04d%c%1d%02d%c%1d%02d%c%1d%04d%c%1d%04d%c%1d%03d%c%1d%04d%c%1d%03d%c%1d%03d%c%1d%04d%c%1d%05d%c%1d%1d%1d%1d%1d%1d%1d%1d%1d%1d%1d%03d%c%1d%03d%c%1d%03d%c%1d%02d%c%1d\n"
 #define DEG2RAD 0.0174532925
 #define VERSION "Version 1.0  (2008-03-18)"
 #define MAX_PATHNAME_LEN 260
