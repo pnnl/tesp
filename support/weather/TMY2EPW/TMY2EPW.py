@@ -25,14 +25,14 @@ WBAN=lines[0][1:6]
 city=lines[0][7:29]
 
 state=lines[0][30:32]
-print state
+print (state)
 for i in range(len(Abbrlines)):
     data=Abbrlines[i].split(',')
     if data[0].lower().find(state.lower())!=-1:
             country=data[2].replace('"','').replace('\n','')
-print country
+print (country)
 tz=lines[0][34:37]
-print tz
+print (tz)
 dir=lines[0][37]
 if dir.lower().find('n')!=-1:
    sim=''
@@ -41,7 +41,7 @@ else:
 deg=float(lines[0][39:41])
 min=round(float(lines[0][39:41])/60,1)
 lat=sim+str(deg+min)
-print lat
+print (lat)
 dir=lines[0][45]
 if dir.lower().find('e')!=-1:
    sim=''
@@ -50,9 +50,9 @@ else:
 deg=float(lines[0][47:50])
 min=round(float(lines[0][51:53])/60,1)
 lot=sim+str(deg+min)
-print lot
+print (lot)
 ele=lines[0][55:59].replace(' ','')
-print ele
+print (ele)
 temp='LOCATION,'+str(city)+','+str(state)+','+str(country)+','+str(WBAN)+',,'+str(lat)+','+str(lot)+','+str(tz)+','+str(ele)
 newline.append(temp)
 
@@ -99,7 +99,7 @@ for i in range(1,len(lines)):
            else:
                 data=data+'?0'		   
     if i==1:
-          print data
+          print (data)
     temp=temp+','+data			  
     drybulb=float(lines[i][67:71])/10
     temp=temp+','+str(drybulb)		
@@ -119,7 +119,7 @@ for i in range(1,len(lines)):
     skyemi=(0.787+0.764*np.log((dewpoi+273.0)/273.0))*(1+0.0224*OpaSkyCov+0.0035*OpaSkyCov*OpaSkyCov+0.00028*OpaSkyCov*OpaSkyCov*OpaSkyCov)
     HorzIRSky=skyemi* 5.6697/100000000*((drybulb+273)*(drybulb+273)*(drybulb+273)*(drybulb+273))
     if i==1:
-          print HorzIRSky
+          print (HorzIRSky)
     temp=temp+','+str(HorzIRSky)		  
     GloHorzRad=float(lines[i][17:21])
     temp=temp+','+str(GloHorzRad)		
