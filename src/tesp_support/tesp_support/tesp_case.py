@@ -56,19 +56,25 @@ end_day = dt2.day
 if dt2.hour == 0 and dt2.minute == 0 and dt2.second == 0:
     end_day -= 1
 
+(rootweather, weatherext) = os.path.splitext(config['WeatherPrep']['DataSource'])
 EpRef = config['EplusConfiguration']['ReferencePrice']
 EpRamp = config['EplusConfiguration']['Slope']
 EpLimHi = config['EplusConfiguration']['OffsetLimitHi']
 EpLimLo = config['EplusConfiguration']['OffsetLimitLo']
-EpWeather = config['EplusConfiguration']['EnergyPlusWeather']
+EpWeather = rootweather + '.epw' # config['EplusConfiguration']['EnergyPlusWeather']
 EpStep = config['EplusConfiguration']['TimeStep'] # minutes
 EpFile = config['BackboneFiles']['EnergyPlusFile']
 EpAgentStop = str (seconds) + 's'
 EpAgentStep = str (config['FeederGenerator']['MetricsInterval']) + 's'
+EpMetricsFile = ' eplus_' + casename + '_metrics.json'
+GldFile = casename + '.glm'
+GldMetricsFile = casename + '_metrics.json'
+AgentDictFile = casename + '_agent_dict.json'
+PPJsonFile = casename + '_pp.json'
+AuctionYamlFile = casename + '_auction.yaml'
 
-weatherfile = weatherdir + config['WeatherPrep']['DataSource']
+weatherfile = weatherdir + rootweather + '.tmy3'
 eplusfile = eplusdir + EpFile
-eplusweather = eplusdir + EpWeather
 eplusout = casedir + '/' + EpFile
 ppfile = ppdir + config['BackboneFiles']['PYPOWERFile']
 ppcsv = ppdir + config['PYPOWERConfiguration']['CSVLoadFile']
@@ -94,8 +100,16 @@ for ln in ip:
 ip.close()
 op.close()
 
+# process TMY3 ==> TMY2 ==> EPW
 shutil.copy (weatherfile, casedir)
-shutil.copy (eplusweather, casedir)
+pw1 = subprocess.Popen ('Tmy3toTMY2_ansi ' + casedir + '/' + rootweather + '.tmy3 > '
+                        + casedir + '/' + rootweather + '.tmy2', shell=True)
+pw1.wait()
+pw2 = subprocess.Popen ('python TMY2EPW.py ' + casedir + '/' + rootweather, shell=True)
+pw2.wait()
+os.remove (casedir + '/' + rootweather + '.tmy2')
+
+# shutil.copy (eplusweather, casedir)
 shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
 shutil.copy (scheduledir + 'commercial_schedules.glm', casedir)
 shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
@@ -317,6 +331,34 @@ op = open (casedir + '/pypower.yaml', 'w')
 print (ppyamlstr, file=op)
 op.close()
 
+# write a YAML for the solution monitor
+tespyamlstr = """name: tesp_monitor
+time_delta: """ + str(config['AgentPrep']['MarketClearingPeriod']) + """s
+broker: tcp://localhost:5570
+values:
+  vpos7:
+    topic: pypower/three_phase_voltage_B7
+    default: 0
+  LMP7:
+    topic: pypower/LMP_B7
+    default: 0
+  clear_price:
+    topic: auction/clear_price
+    default: 0
+  distribution_load:
+    topic: gridlabdSimulator1/distribution_load
+    default: 0
+  power_A:
+    topic: eplus_json/power_A
+    default: 0
+  electric_demand_power:
+    topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
+    default: 0
+"""
+op = open (casedir + '/tesp_monitor.yaml', 'w')
+print (tespyamlstr, file=op)
+op.close()
+
 p1 = subprocess.Popen ('python feederGenerator.py ' + cfgfile, shell=True)
 p1.wait()
 glmfile = casedir + '/' + casename
@@ -324,6 +366,8 @@ p2 = subprocess.Popen ('python glm_dict.py ' + glmfile, shell=True)
 p2.wait()
 p3 = subprocess.Popen ('python prep_auction.py ' + cfgfile + ' ' + glmfile, shell=True)
 p3.wait()
+
+# write the command scripts for console and tesp_monitor execution
 
 if sys.platform == 'win32':
     batname = 'run.bat'
@@ -333,13 +377,28 @@ else:
     print ('(export FNCS_CONFIG_FILE=eplus.yaml && exec EnergyPlus -w ' 
            + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && exec eplus_json', EpAgentStop, EpAgentStep, 
-           EpFile + ' eplus_' + casename + '_metrics.json', EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
+           EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
     print ('(export FNCS_FATAL=NO && exec gridlabd -D USE_FNCS -D METRICS_FILE='
-           + casename + '_metrics.json ' + casename + '.glm &> gridlabd.log &)', file=op)
-    print ('(export FNCS_CONFIG_FILE=' + casename + '_auction.yaml && export FNCS_FATAL=NO && exec python auction.py '
-           + casename + '_agent_dict.json ' + casename + ' &> auction.log &)', file=op)
+           + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=' + AuctionYamlFile + ' && export FNCS_FATAL=NO && exec python auction.py '
+           + AgentDictFile + ' ' + casename + ' &> auction.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec python fncsPYPOWER.py '
-           + casename + ' ' + casename + '_pp.json &> pypower.log &)', file=op)
+           + casename + ' ' + PPJsonFile + ' &> pypower.log &)', file=op)
     op.close()
 
+op = open (casedir + '/tesp_monitor.json', 'w')
+cmds = {'commands':[{},{},{},{},{},{}]}
+cmds['commands'][0] = {'args':['fncs_broker', 5], 'env':[['FNCS_BROKER', 'tcp://*:5570']], 'log':'broker.log'}
+cmds['commands'][1] = {'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', EpFile], 
+           'env':[['FNCS_CONFIG_FILE', 'eplus.yaml']], 'log':'eplus.log'}
+cmds['commands'][2] = {'args':['eplus_json', EpAgentStop, EpAgentStep, EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
+           'env':[['FNCS_CONFIG_FILE', 'eplus_json.yaml']], 'log':'eplus_json.log'}
+cmds['commands'][3] = {'args':['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile], 
+           'env':[['FNCS_FATAL', 'NO']], 'log':'gridlabd.log'}
+cmds['commands'][4] = {'args':['python', 'auction.py', AgentDictFile, casename], 
+           'env':[['FNCS_CONFIG_FILE', AuctionYamlFile],['FNCS_FATAL', 'NO']], 'log':'auction.log'}
+cmds['commands'][5] = {'args':['python', 'fncsPYPOWER.py', casename, PPJsonFile], 
+           'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'NO'],['FNCS_LOG_STDOUT', 'yes']], 'log':'pypower.log'}
+json.dump (cmds, op, indent=2)
+op.close()
 
