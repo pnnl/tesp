@@ -389,8 +389,10 @@ def main_loop():
            sep=',', file=op, flush=True)
 
     # request the next time step
-    ts = fncs.time_request(ts + dt)
-    if ts > tmax:
+    ts = fncs.time_request(min(ts + dt, tmax))
+    print('======== NEXT OPF TIME >>>>>>>>>>>> ', tnext_opf)
+    print('======== TIME REQUEST >>>>>>>>>>>>> ', ts, ', out of tmax = ', tmax)
+    if ts == tmax:
       print ('breaking out at',ts,flush=True)
       break
 
