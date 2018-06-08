@@ -3,8 +3,7 @@ import json
 import sys
 import warnings
 import csv
-import fncs
-from ppcasefile import ppcasefile
+import tesp_support.fncs
 import numpy as np
 import pypower.api as pp
 from math import sqrt;
@@ -130,15 +129,14 @@ def parse_mva(arg):
 
   return p, q
 
-def main_loop():
-  if len(sys.argv) == 3:
-    rootname = sys.argv[1]
-    casefile = sys.argv[2]
-  else:
-    print ('usage: python fncsPYPOWER.py metrics_rootname casedata.json')
-    sys.exit()
+def pypower_loop (rootname, casefile):
+#  if len(sys.argv) == 3:
+#    rootname = sys.argv[1]
+#    casefile = sys.argv[2]
+#  else:
+#    print ('usage: python fncsPYPOWER.py metrics_rootname casedata.json')
+#    sys.exit()
 
-#  ppc = ppcasefile()
   ppc = load_json_case (casefile)
   StartTime = ppc['StartTime']
   tmax = int(ppc['Tmax'])
@@ -422,7 +420,7 @@ def main_loop():
   print ('finalizing FNCS', flush=True)
   fncs.finalize()
 
-main_loop()
+# main_loop()
 
 #with warnings.catch_warnings():
 #  warnings.simplefilter("ignore") # TODO - pypower is using NumPy doubles for integer indices
