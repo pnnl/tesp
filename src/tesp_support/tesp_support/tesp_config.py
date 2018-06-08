@@ -183,24 +183,55 @@ def ReloadFrame(f, vars):
 		ent.delete (0, tk.END)
 		ent.insert (0, vars[i][1])
 
+def mcSample (var):
+	if var == 'ElectricCoolingParticipation':
+		return '{:.3f}'.format(np.random.uniform (0, 100))
+	elif var == 'ThermostatRampMid':
+		return '{:.3f}'.format(np.random.uniform (1.0, 4.0))
+	elif var == 'ThermostatOffsetLimitMid':
+		return '{:.3f}'.format(np.random.uniform (0, 6.0))
+	elif var == 'WeekdayEveningStartMid':
+		return '{:.3f}'.format(np.random.uniform (16.5, 18.0))
+	elif var == 'WeekdayEveningSetMid':
+		return '{:.3f}'.format(np.random.uniform (68.0, 74.0))
+	else:
+		return '{:.3f}'.format(np.random.uniform (0, 1))
+
+def mcBand (var):
+	if var == 'ElectricCoolingParticipation':
+		return 10.0
+	elif var == 'ThermostatRampMid':
+		return 0.5
+	elif var == 'ThermostatOffsetLimitMid':
+		return 2.0
+	elif var == 'WeekdayEveningStartMid':
+		return 1.0
+	elif var == 'WeekdayEveningSetMid':
+		return 1.0
+	else:
+		return 0.0
+
 def SizeMonteCarlo(n):
+	var1 = config['MonteCarloCase']['Variable1']
+	var2 = config['MonteCarloCase']['Variable2']
+	var3 = config['MonteCarloCase']['Variable3']
 	config['MonteCarloCase']['NumCases'] = n
-	config['MonteCarloCase']['Band1'] = 0.0
-	config['MonteCarloCase']['Band2'] = 0.0
-	config['MonteCarloCase']['Band3'] = 0.0
+	config['MonteCarloCase']['Band1'] = mcBand (var1)
+	config['MonteCarloCase']['Band2'] = mcBand (var2)
+	config['MonteCarloCase']['Band3'] = mcBand (var3)
 	config['MonteCarloCase']['Samples1'] = [0] * n
 	config['MonteCarloCase']['Samples2'] = [0] * n
 	config['MonteCarloCase']['Samples3'] = [0] * n
 	for i in range(n):
-		config['MonteCarloCase']['Samples1'][i] = np.random.uniform (0, 1)
-		config['MonteCarloCase']['Samples2'][i] = np.random.uniform (0, 1)
-		config['MonteCarloCase']['Samples3'][i] = np.random.uniform (0, 1)
+		config['MonteCarloCase']['Samples1'][i] = mcSample (var1) 
+		config['MonteCarloCase']['Samples2'][i] = mcSample (var2)
+		config['MonteCarloCase']['Samples3'][i] = mcSample (var3)
 
 def InitializeMonteCarlo(n):
-	SizeMonteCarlo(n)
 	config['MonteCarloCase']['Variable1'] = monteCarloChoices[1]
 	config['MonteCarloCase']['Variable2'] = monteCarloChoices[2]
 	config['MonteCarloCase']['Variable3'] = monteCarloChoices[3]
+	SizeMonteCarlo(n)
 
 # row 0 for dropdowns, 1 for update controls, 2 for column headers, 3 for range edits
 def SizeMonteCarloFrame(f):
