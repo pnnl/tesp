@@ -15,7 +15,6 @@ config = {'BackboneFiles':{},'FeederGenerator':{},'EplusConfiguration':{},'PYPOW
 
 StartTime = "2013-07-01 00:00:00"
 EndTime = "2013-07-03 00:00:00"
-#Tmax = 2 * 24 * 3600
 
 taxonomyChoices = ['GC-12.47-1',
 									 'R1-12.47-1',
@@ -445,10 +444,11 @@ btn.grid(row=len(varsTM) + 3, column=1, sticky=tk.NSEW)
 
 def UpdateMonteCarloFrame():
 	numCases = int (f7.children['rows'].get())
+	config['MonteCarloCase']['Variable1'] = f7.children['cb1'].get()
+	config['MonteCarloCase']['Variable2'] = f7.children['cb2'].get()
+	config['MonteCarloCase']['Variable3'] = f7.children['cb3'].get()
 	SizeMonteCarlo (numCases)
 	SizeMonteCarloFrame (f7)
-
-print('TkInter Version', tk.TkVersion)
 
 lab = ttk.Label(f7, text='Columns', relief=tk.RIDGE)
 lab.grid(row=0, column=0, sticky=tk.NSEW)
