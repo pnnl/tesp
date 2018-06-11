@@ -1,6 +1,6 @@
 # Transactive Energy Simulation Platform (TESP)
 
-Copyright (c) 2017, Battelle Memorial Institute
+Copyright (c) 2017-2018, Battelle Memorial Institute
 
 Documentation: http://tesp.readthedocs.io
 
