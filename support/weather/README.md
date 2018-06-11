@@ -28,7 +28,7 @@ To use TMY3 files, one has to firstly compile a c file (http://rredc.nrel.gov/so
 converts a TMY3 file to a TMY2 file. Then, the run.py should be called to convert the generated TMY2 file to a EPW file.
 
     cd TMY2EPW\source_code
-    gcc -o Tmy3toTMY2_ansi TMY3toTMY2_ansi.c
+    gcc -o TMY3toTMY2_ansi TMY3toTMY2_ansi.c
     python TMY3EPW.py FL-Miami_Intl_Ap.tmy3
 
 To use TMY2 files, one shall directly call the TMY2EPW.py.
