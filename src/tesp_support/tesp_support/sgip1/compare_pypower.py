@@ -105,46 +105,47 @@ def MakePlotData(root):
 	lmp = data_b[0,:,LMP_P_IDX]
 	return hrs, pfncs, tgen, lmp
 
-# display a plot
-tmin = 0.0
-tmax = 48.0
-xticks = [0,6,12,18,24,30,36,42,48]
+def compare_pypower ():
+	# display a plot
+	tmin = 0.0
+	tmax = 48.0
+	xticks = [0,6,12,18,24,30,36,42,48]
 
-fig, ax = plt.subplots(3, 1, sharex = 'col')
+	fig, ax = plt.subplots(3, 1, sharex = 'col')
 
-for root in casefiles:
-	print ('Processing', root[0])
-	hrs, pfncs, tgen, lmp = MakePlotData(root[0])
-	ax[0].plot(hrs, pfncs, color=root[1], label=root[0])
-	ax[1].plot(hrs, tgen, color=root[1], label=root[0])
-	ax[2].plot(hrs, lmp, color=root[1], label=root[0])
+	for root in casefiles:
+		print ('Processing', root[0])
+		hrs, pfncs, tgen, lmp = MakePlotData(root[0])
+		ax[0].plot(hrs, pfncs, color=root[1], label=root[0])
+		ax[1].plot(hrs, tgen, color=root[1], label=root[0])
+		ax[2].plot(hrs, lmp, color=root[1], label=root[0])
 
-ax[0].set_title ('FNCS Bus Load')
-ax[0].set_ylabel ('MW')
+	ax[0].set_title ('FNCS Bus Load')
+	ax[0].set_ylabel ('MW')
 
-ax[1].set_title ('Total Generation')
-ax[1].set_ylabel ('MW')
+	ax[1].set_title ('Total Generation')
+	ax[1].set_ylabel ('MW')
 
-ax[2].set_title ('FNCS Bus LMP')
-ax[2].set_ylabel ('$/kwh')
+	ax[2].set_title ('FNCS Bus LMP')
+	ax[2].set_ylabel ('$/kwh')
 
-ax[2].set_xlabel ('Hours')
+	ax[2].set_xlabel ('Hours')
 
-ax[0].grid()
-ax[0].legend()
-ax[0].set_xlim(tmin,tmax)
-ax[0].set_xticks(xticks)
+	ax[0].grid()
+	ax[0].legend()
+	ax[0].set_xlim(tmin,tmax)
+	ax[0].set_xticks(xticks)
 
-ax[1].grid()
-ax[1].legend()
-ax[1].set_xlim(tmin,tmax)
-ax[1].set_xticks(xticks)
+	ax[1].grid()
+	ax[1].legend()
+	ax[1].set_xlim(tmin,tmax)
+	ax[1].set_xticks(xticks)
 
-ax[2].grid()
-ax[2].legend()
-ax[2].set_xlim(tmin,tmax)
-ax[2].set_xticks(xticks)
+	ax[2].grid()
+	ax[2].legend()
+	ax[2].set_xlim(tmin,tmax)
+	ax[2].set_xticks(xticks)
 
-plt.show()
+	plt.show()
 
 

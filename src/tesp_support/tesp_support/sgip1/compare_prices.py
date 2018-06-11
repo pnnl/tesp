@@ -50,30 +50,30 @@ def MakePlotData(root):
 
 	return hrs, lmp, lmp1, lmp2, lmp3, lmp4, lmp5
 
-# display a plot
-root = sys.argv[1]
-tmin = 0.0
-tmax = 48.0
-xticks = [0,6,12,18,24,30,36,42,48]
+def compare_prices (rootname):
+	# display a plot
+	tmin = 0.0
+	tmax = 48.0
+	xticks = [0,6,12,18,24,30,36,42,48]
 
-fig, ax = plt.subplots(1, 1, sharex = 'col')
+	fig, ax = plt.subplots(1, 1, sharex = 'col')
 
-hrs, lmp, lmp1, lmp2, lmp3, lmp4, lmp5 = MakePlotData (root)
-#ax.plot(hrs, lmp1, color='blue', label='LMP1')
-#ax.plot(hrs, lmp2, color='green', label='LMP2')
-#ax.plot(hrs, lmp3, color='magenta', label='LMP3')
-#ax.plot(hrs, lmp4, color='cyan', label='LMP4')
-ax.plot(hrs, lmp5, color='orange', label='LMP5')
-ax.plot(hrs, lmp, color='red', label='LMP')
+	hrs, lmp, lmp1, lmp2, lmp3, lmp4, lmp5 = MakePlotData (rootname)
+	#ax.plot(hrs, lmp1, color='blue', label='LMP1')
+	#ax.plot(hrs, lmp2, color='green', label='LMP2')
+	#ax.plot(hrs, lmp3, color='magenta', label='LMP3')
+	#ax.plot(hrs, lmp4, color='cyan', label='LMP4')
+	ax.plot(hrs, lmp5, color='orange', label='LMP5')
+	ax.plot(hrs, lmp, color='red', label='LMP')
 
-ax.set_title ('Price Comparison for ' + root)
-ax.set_ylabel ('$/MWHR')
-ax.set_xlabel ('Hours')
-ax.grid()
-ax.legend()
-ax.set_xlim(tmin,tmax)
-ax.set_xticks(xticks)
+	ax.set_title ('Price Comparison for ' + root)
+	ax.set_ylabel ('$/MWHR')
+	ax.set_xlabel ('Hours')
+	ax.grid()
+	ax.legend()
+	ax.set_xlim(tmin,tmax)
+	ax.set_xticks(xticks)
 
-plt.show()
+	plt.show()
 
 

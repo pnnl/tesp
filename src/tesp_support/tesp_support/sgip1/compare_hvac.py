@@ -91,46 +91,47 @@ def MakePlotData(root):
 	print(n,'HVACs')
 	return hrs, avg_temp, hvac2, sub_mw
 
-# display a plot
-tmin = 0.0
-tmax = 48.0
-xticks = [0,6,12,18,24,30,36,42,48]
+def compare_hvac():
+	# display a plot
+	tmin = 0.0
+	tmax = 48.0
+	xticks = [0,6,12,18,24,30,36,42,48]
 
-fig, ax = plt.subplots(3, 1, sharex = 'col')
+	fig, ax = plt.subplots(3, 1, sharex = 'col')
 
-for root in casefiles:
-	print ('Processing', root[0])
-	hrs, avg_temp, hvac2, sub_mw = MakePlotData(root[0])
-	ax[0].plot(hrs, avg_temp, color=root[1], label=root[0])
-	ax[1].plot(hrs, hvac2, color=root[1], label=root[0])
-	ax[2].plot(hrs, sub_mw, color=root[1], label=root[0])
+	for root in casefiles:
+		print ('Processing', root[0])
+		hrs, avg_temp, hvac2, sub_mw = MakePlotData(root[0])
+		ax[0].plot(hrs, avg_temp, color=root[1], label=root[0])
+		ax[1].plot(hrs, hvac2, color=root[1], label=root[0])
+		ax[2].plot(hrs, sub_mw, color=root[1], label=root[0])
 
-ax[0].set_title ("Temperature at all HVAC Houses")
-ax[0].set_ylabel("Average Degrees")
+	ax[0].set_title ("Temperature at all HVAC Houses")
+	ax[0].set_ylabel("Average Degrees")
 
-ax[1].set_title ("HVAC Power")
-ax[1].set_ylabel("Total MW")
+	ax[1].set_title ("HVAC Power")
+	ax[1].set_ylabel("Total MW")
 
-ax[2].set_title ("Feeder Power")
-ax[2].set_ylabel("Total MW")
+	ax[2].set_title ("Feeder Power")
+	ax[2].set_ylabel("Total MW")
 
-ax[2].set_xlabel("Hours")
+	ax[2].set_xlabel("Hours")
 
-ax[0].grid()
-ax[0].legend()
-ax[0].set_xlim(tmin,tmax)
-ax[0].set_xticks(xticks)
+	ax[0].grid()
+	ax[0].legend()
+	ax[0].set_xlim(tmin,tmax)
+	ax[0].set_xticks(xticks)
 
-ax[1].grid()
-ax[1].legend()
-ax[1].set_xlim(tmin,tmax)
-ax[1].set_xticks(xticks)
+	ax[1].grid()
+	ax[1].legend()
+	ax[1].set_xlim(tmin,tmax)
+	ax[1].set_xticks(xticks)
 
-ax[2].grid()
-ax[2].legend()
-ax[2].set_xlim(tmin,tmax)
-ax[2].set_xticks(xticks)
+	ax[2].grid()
+	ax[2].legend()
+	ax[2].set_xlim(tmin,tmax)
+	ax[2].set_xticks(xticks)
 
-plt.show()
+	plt.show()
 
 

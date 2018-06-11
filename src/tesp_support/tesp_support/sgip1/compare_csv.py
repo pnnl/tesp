@@ -39,27 +39,27 @@ def MakePlotData(root, idx):
 
 	return hrs, d1[:,idx]
 
-# display a plot
-idx = int (sys.argv[1])
-tmin = 0.0
-tmax = 48.0
-xticks = [0,6,12,18,24,30,36,42,48]
+def compare_csv (idx):
+	# display a plot - indexed to plotvars
+	tmin = 0.0
+	tmax = 48.0
+	xticks = [0,6,12,18,24,30,36,42,48]
 
-fig, ax = plt.subplots(1, 1, sharex = 'col')
+	fig, ax = plt.subplots(1, 1, sharex = 'col')
 
-for root in casefiles:
-	print ('Processing', root[0])
-	hrs, vals = MakePlotData(root[0],idx)
-	ax.plot(hrs, vals, color=root[1], label=root[0])
+	for root in casefiles:
+		print ('Processing', root[0])
+		hrs, vals = MakePlotData(root[0],idx)
+		ax.plot(hrs, vals, color=root[1], label=root[0])
 
-ax.set_title (plotvars[idx][1])
-ax.set_ylabel (plotvars[idx][2])
-ax.set_xlabel ('Hours')
-ax.grid()
-ax.legend()
-ax.set_xlim(tmin,tmax)
-ax.set_xticks(xticks)
+	ax.set_title (plotvars[idx][1])
+	ax.set_ylabel (plotvars[idx][2])
+	ax.set_xlabel ('Hours')
+	ax.grid()
+	ax.legend()
+	ax.set_xlim(tmin,tmax)
+	ax.set_xticks(xticks)
 
-plt.show()
+	plt.show()
 
 

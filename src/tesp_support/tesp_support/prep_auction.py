@@ -288,61 +288,57 @@ def ProcessGLM (fileroot):
 		print ('subscribe "precommit:' + meterName + '.monthly_fee <- auction/' + key + '/monthly_fee";', file=op)
 	op.close()
 
-# GridLAB-D file parsing
-if len(sys.argv) > 1:
-	lp = open (sys.argv[1]).read()
-	config = json.loads(lp)
 
-	# overwrite the default auction and controller parameters - TODO weekend parameters
-	dt = int (config['AgentPrep']['TimeStepGldAgents'])
-	period = int (config['AgentPrep']['MarketClearingPeriod'])
+def prep_auction (gldfileroot, jsonfile = ''):
+	if jsonfile > 1:
+		lp = open (jsonfile).read()
+		config = json.loads(lp)
 
-	wakeup_start_lo = float (config['ThermostatSchedule']['WeekdayWakeStartLo'])
-	wakeup_start_hi = float (config['ThermostatSchedule']['WeekdayWakeStartHi'])
-	daylight_start_lo = float (config['ThermostatSchedule']['WeekdayDaylightStartLo'])
-	daylight_start_hi = float (config['ThermostatSchedule']['WeekdayDaylightStartHi'])
-	evening_start_lo = float (config['ThermostatSchedule']['WeekdayEveningStartLo'])
-	evening_start_hi = float (config['ThermostatSchedule']['WeekdayEveningStartHi'])
-	night_start_lo = float (config['ThermostatSchedule']['WeekdayNightStartLo'])
-	night_start_hi = float (config['ThermostatSchedule']['WeekdayNightStartHi'])
+		# overwrite the default auction and controller parameters - TODO weekend parameters
+		dt = int (config['AgentPrep']['TimeStepGldAgents'])
+		period = int (config['AgentPrep']['MarketClearingPeriod'])
 
-	wakeup_set_lo = float (config['ThermostatSchedule']['WeekdayWakeSetLo'])
-	wakeup_set_hi = float (config['ThermostatSchedule']['WeekdayWakeSetHi'])
-	daylight_set_lo = float (config['ThermostatSchedule']['WeekdayDaylightSetLo'])
-	daylight_set_hi = float (config['ThermostatSchedule']['WeekdayDaylightSetHi'])
-	evening_set_lo = float (config['ThermostatSchedule']['WeekdayEveningSetLo'])
-	evening_set_hi = float (config['ThermostatSchedule']['WeekdayEveningSetHi'])
-	night_set_lo = float (config['ThermostatSchedule']['WeekdayNightSetLo'])
-	night_set_hi = float (config['ThermostatSchedule']['WeekdayNightSetHi'])
+		wakeup_start_lo = float (config['ThermostatSchedule']['WeekdayWakeStartLo'])
+		wakeup_start_hi = float (config['ThermostatSchedule']['WeekdayWakeStartHi'])
+		daylight_start_lo = float (config['ThermostatSchedule']['WeekdayDaylightStartLo'])
+		daylight_start_hi = float (config['ThermostatSchedule']['WeekdayDaylightStartHi'])
+		evening_start_lo = float (config['ThermostatSchedule']['WeekdayEveningStartLo'])
+		evening_start_hi = float (config['ThermostatSchedule']['WeekdayEveningStartHi'])
+		night_start_lo = float (config['ThermostatSchedule']['WeekdayNightStartLo'])
+		night_start_hi = float (config['ThermostatSchedule']['WeekdayNightStartHi'])
 
-	weekend_day_set_lo = float (config['ThermostatSchedule']['WeekendDaylightSetLo'])
-	weekend_day_set_hi = float (config['ThermostatSchedule']['WeekendDaylightSetHi'])
-	weekend_day_start_lo = float (config['ThermostatSchedule']['WeekendDaylightStartLo'])
-	weekend_day_start_hi = float (config['ThermostatSchedule']['WeekendDaylightStartHi'])
-	weekend_night_set_lo = float (config['ThermostatSchedule']['WeekendNightSetLo'])
-	weekend_night_set_hi = float (config['ThermostatSchedule']['WeekendNightSetHi'])
-	weekend_night_start_lo = float (config['ThermostatSchedule']['WeekendNightStartLo'])
-	weekend_night_start_hi = float (config['ThermostatSchedule']['WeekendNightStartHi'])
+		wakeup_set_lo = float (config['ThermostatSchedule']['WeekdayWakeSetLo'])
+		wakeup_set_hi = float (config['ThermostatSchedule']['WeekdayWakeSetHi'])
+		daylight_set_lo = float (config['ThermostatSchedule']['WeekdayDaylightSetLo'])
+		daylight_set_hi = float (config['ThermostatSchedule']['WeekdayDaylightSetHi'])
+		evening_set_lo = float (config['ThermostatSchedule']['WeekdayEveningSetLo'])
+		evening_set_hi = float (config['ThermostatSchedule']['WeekdayEveningSetHi'])
+		night_set_lo = float (config['ThermostatSchedule']['WeekdayNightSetLo'])
+		night_set_hi = float (config['ThermostatSchedule']['WeekdayNightSetHi'])
 
-	ramp_lo = float (config['AgentPrep']['ThermostatRampLo'])
-	ramp_hi = float (config['AgentPrep']['ThermostatRampHi'])
-	deadband_lo = float (config['AgentPrep']['ThermostatBandLo'])
-	deadband_hi = float (config['AgentPrep']['ThermostatBandHi'])
-	offset_limit_lo = float (config['AgentPrep']['ThermostatOffsetLimitLo'])
-	offset_limit_hi = float (config['AgentPrep']['ThermostatOffsetLimitHi'])
-	ctrl_cap_lo = float (config['AgentPrep']['PriceCapLo'])
-	ctrl_cap_hi = float (config['AgentPrep']['PriceCapHi'])
-	initial_price = float (config['AgentPrep']['InitialPriceMean'])
-	std_dev = float (config['AgentPrep']['InitialPriceStdDev'])
+		weekend_day_set_lo = float (config['ThermostatSchedule']['WeekendDaylightSetLo'])
+		weekend_day_set_hi = float (config['ThermostatSchedule']['WeekendDaylightSetHi'])
+		weekend_day_start_lo = float (config['ThermostatSchedule']['WeekendDaylightStartLo'])
+		weekend_day_start_hi = float (config['ThermostatSchedule']['WeekendDaylightStartHi'])
+		weekend_night_set_lo = float (config['ThermostatSchedule']['WeekendNightSetLo'])
+		weekend_night_set_hi = float (config['ThermostatSchedule']['WeekendNightSetHi'])
+		weekend_night_start_lo = float (config['ThermostatSchedule']['WeekendNightStartLo'])
+		weekend_night_start_hi = float (config['ThermostatSchedule']['WeekendNightStartHi'])
 
-	Eplus_Bus = config['FeederGenerator']['EnergyPlusBus']
-	agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
+		ramp_lo = float (config['AgentPrep']['ThermostatRampLo'])
+		ramp_hi = float (config['AgentPrep']['ThermostatRampHi'])
+		deadband_lo = float (config['AgentPrep']['ThermostatBandLo'])
+		deadband_hi = float (config['AgentPrep']['ThermostatBandHi'])
+		offset_limit_lo = float (config['AgentPrep']['ThermostatOffsetLimitLo'])
+		offset_limit_hi = float (config['AgentPrep']['ThermostatOffsetLimitHi'])
+		ctrl_cap_lo = float (config['AgentPrep']['PriceCapLo'])
+		ctrl_cap_hi = float (config['AgentPrep']['PriceCapHi'])
+		initial_price = float (config['AgentPrep']['InitialPriceMean'])
+		std_dev = float (config['AgentPrep']['InitialPriceStdDev'])
 
-	# process the GLM file with reconfigured parameters
-	fileroot = sys.argv[2]
-	ProcessGLM (fileroot)
-else:
-	fileroot = sys.argv[1]
-	ProcessGLM (fileroot)
+		Eplus_Bus = config['FeederGenerator']['EnergyPlusBus']
+		agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
+
+	ProcessGLM (gldfileroot)
 
 

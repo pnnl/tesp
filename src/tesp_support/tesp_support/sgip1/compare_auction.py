@@ -56,36 +56,37 @@ def MakePlotData(root):
 	ctype = data_a[0,:,TYPE_IDX]
 	return hrs, cprice, ctype
 
-# display a plot
-tmin = 0.0
-tmax = 48.0
-xticks = [0,6,12,18,24,30,36,42,48]
+def compare_auction ():
+	# display a plot
+	tmin = 0.0
+	tmax = 48.0
+	xticks = [0,6,12,18,24,30,36,42,48]
 
-fig, ax = plt.subplots(2, 1, sharex = 'col')
+	fig, ax = plt.subplots(2, 1, sharex = 'col')
 
-for root in casefiles:
-	print ('Processing', root[0])
-	hrs, cprice, ctype = MakePlotData(root[0])
-	ax[0].plot(hrs, cprice, color=root[1], label=root[0])
-	ax[1].plot(hrs, ctype, color=root[1], label=root[0])
+	for root in casefiles:
+		print ('Processing', root[0])
+		hrs, cprice, ctype = MakePlotData(root[0])
+		ax[0].plot(hrs, cprice, color=root[1], label=root[0])
+		ax[1].plot(hrs, ctype, color=root[1], label=root[0])
 
-ax[0].set_title ('Cleared Price')
-ax[0].set_ylabel ('$')
+	ax[0].set_title ('Cleared Price')
+	ax[0].set_ylabel ('$')
 
-ax[1].set_title ('Cleared Type')
+	ax[1].set_title ('Cleared Type')
 
-ax[1].set_xlabel ('Hours')
+	ax[1].set_xlabel ('Hours')
 
-ax[0].grid()
-ax[0].legend()
-ax[0].set_xlim(tmin,tmax)
-ax[0].set_xticks(xticks)
+	ax[0].grid()
+	ax[0].legend()
+	ax[0].set_xlim(tmin,tmax)
+	ax[0].set_xticks(xticks)
 
-ax[1].grid()
-ax[1].legend()
-ax[1].set_xlim(tmin,tmax)
-ax[1].set_xticks(xticks)
+	ax[1].grid()
+	ax[1].legend()
+	ax[1].set_xlim(tmin,tmax)
+	ax[1].set_xticks(xticks)
 
-plt.show()
+	plt.show()
 
 

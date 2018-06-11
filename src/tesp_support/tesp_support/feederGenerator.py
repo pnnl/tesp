@@ -14,9 +14,6 @@ transmissionXfmrNLLpct = 0.4
 transmissionXfmrImagpct = 1.0
 fncs_case = ''
 
-# we want the same pseudo-random variables each time, for repeatability
-np.random.seed (0)
-
 glmpath = '../../../support/feeders/'
 supportpath = '../../../../support/schedules/' # wrt outpath
 weatherpath = '../../../../support/weather/'
@@ -1655,10 +1652,11 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         op.close()
 
-checkResidentialBuildingTable()
-
-if len(sys.argv) > 1:
-    lp = open (sys.argv[1]).read()
+def populate_feeder (configfile):
+    checkResidentialBuildingTable()
+    # we want the same pseudo-random variables each time, for repeatability
+    np.random.seed (0)
+    lp = open (configfile).read()
     config = json.loads(lp)
     rootname = config['BackboneFiles']['TaxonomyChoice']
     supportpath = ''
@@ -1702,7 +1700,8 @@ if len(sys.argv) > 1:
             fncs_case = config['SimulationConfig']['CaseName']
             ProcessTaxonomyFeeder (fncs_case, c[0], c[1], c[2], c[3], c[4])
             quit()
-else:
+
+def populate_all_feeders ():
     if sys.platform == 'win32':
         batname = 'run_all.bat'
     else:
