@@ -2,7 +2,9 @@
     <shortName>tesp</shortName>
     <fullName>OpenDSS</fullName>
     <version>0.2</version>
-    <logoImage>../../Documents/PNNL/Projects/TE/Transactive.png</logoImage>
+    <readmeFile>README.md</readmeFile>
+    <licenseFile>LICENSE</licenseFile>
+    <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
     <componentList>
         <component>
             <name>default</name>
@@ -35,52 +37,61 @@
                 </folder>
                 <folder>
                     <description>Program Files</description>
-                    <destination>${installdir}</destination>
+                    <destination>${unixlocaldir}</destination>
                     <name>programfileslinux</name>
                     <platforms>linux</platforms>
                     <distributionFileList>
-                        <distributionFile>
-                            <origin>install/Linux/readme.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>install/Linux/Ubuntu_build.rst</origin>
-                        </distributionFile>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Linux/bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Linux/lib</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Linux/share</origin>
+                        </distributionDirectory>
                     </distributionFileList>
                 </folder>
                 <folder>
                     <description>Program Files</description>
-                    <destination>${installdir}</destination>
+                    <destination>${gridlabddir}</destination>
                     <name>programfileswindows</name>
                     <platforms>windows</platforms>
                     <distributionFileList>
-                        <distributionFile>
-                            <origin>install/Windows/MinGWredist/libdl.dll</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>install/Windows/MinGWredist/libgcc_s_seh-1.dll</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>install/Windows/MinGWredist/libstdc++-6.dll</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>install/Windows/MinGWredist/libwinpthread-1.dll</origin>
-                        </distributionFile>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Windows/bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Windows/include</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Windows/lib</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Windows/share</origin>
+                        </distributionDirectory>
                     </distributionFileList>
                 </folder>
                 <folder>
                     <description>Program Files</description>
-                    <destination>/usr/local/bin</destination>
+                    <destination>${unixlocaldir}</destination>
                     <name>programfilesosx</name>
                     <platforms>osx</platforms>
                     <distributionFileList>
                         <distributionDirectory>
-                            <origin>install/MacOSX/Archive_usr_local_bin</origin>
+                            <origin>../../Documents/TESPinstall/MacOSX/lib</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/MacOSX/bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/MacOSX/share</origin>
                         </distributionDirectory>
                     </distributionFileList>
                 </folder>
                 <folder>
                     <description>Taxonomy Feeders</description>
-                    <destination>${installdir}/support/feeders</destination>
+                    <destination>${tespdir}/support/feeders</destination>
                     <name>feeders</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -160,7 +171,7 @@
                 </folder>
                 <folder>
                     <description>EnergyPlus Buildings</description>
-                    <destination>${installdir}/support/energyplus</destination>
+                    <destination>${tespdir}/support/energyplus</destination>
                     <name>energyplus</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -171,7 +182,7 @@
                 </folder>
                 <folder>
                     <description>PYPOWER Cases</description>
-                    <destination>${installdir}/support/pypower</destination>
+                    <destination>${tespdir}/support/pypower</destination>
                     <name>pypower</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -185,7 +196,7 @@
                 </folder>
                 <folder>
                     <description>GridLAB-D Schedules</description>
-                    <destination>${installdir}/support/schedules</destination>
+                    <destination>${tespdir}/support/schedules</destination>
                     <name>schedules</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -208,7 +219,7 @@
                 </folder>
                 <folder>
                     <description>Weather Files</description>
-                    <destination>${installdir}/support/weather</destination>
+                    <destination>${tespdir}/support/weather</destination>
                     <name>weather</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -252,7 +263,7 @@
                 </folder>
                 <folder>
                     <description>Examples - EnergyPlus</description>
-                    <destination>${installdir}/examples/energyplus</destination>
+                    <destination>${tespdir}/examples/energyplus</destination>
                     <name>exenergyplus</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -296,7 +307,7 @@
                 </folder>
                 <folder>
                     <description>Examples - IEEE8500</description>
-                    <destination>${installdir}/examples/ieee8500</destination>
+                    <destination>${tespdir}/examples/ieee8500</destination>
                     <name>exieee8500</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -463,7 +474,7 @@
                 </folder>
                 <folder>
                     <description>Examples - Loadshed</description>
-                    <destination>${installdir}/examples/loadshed</destination>
+                    <destination>${tespdir}/examples/loadshed</destination>
                     <name>exloadshed</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -543,7 +554,7 @@
                 </folder>
                 <folder>
                     <description>Examples - Players</description>
-                    <destination>${installdir}/examples/players</destination>
+                    <destination>${tespdir}/examples/players</destination>
                     <name>explayers</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -578,7 +589,7 @@
                 </folder>
                 <folder>
                     <description>Examples - PYPOWER</description>
-                    <destination>${installdir}/examples/pypower</destination>
+                    <destination>${tespdir}/examples/pypower</destination>
                     <name>expypower</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -631,7 +642,7 @@
                 </folder>
                 <folder>
                     <description>Examples - SGIP1</description>
-                    <destination>${installdir}/examples/sgip1</destination>
+                    <destination>${tespdir}/examples/sgip1</destination>
                     <name>exsgip1</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -867,7 +878,7 @@
                 </folder>
                 <folder>
                     <description>Examples - TE30</description>
-                    <destination>${installdir}/examples/te30</destination>
+                    <destination>${tespdir}/examples/te30</destination>
                     <name>exte30</name>
                     <platforms>all</platforms>
                     <distributionFileList>
@@ -1080,40 +1091,6 @@
                         </distributionFile>
                     </distributionFileList>
                 </folder>
-                <folder>
-                    <description>Library Files</description>
-                    <destination>/usr/local/lib</destination>
-                    <name>libfilesosx</name>
-                    <platforms>osx</platforms>
-                    <distributionFileList>
-                        <distributionDirectory>
-                            <origin>install/MacOSX/Archive_usr_local_lib</origin>
-                        </distributionDirectory>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>Library Files</description>
-                    <destination>${installdir}/newfolder</destination>
-                    <name>libfileswindows</name>
-                    <platforms>windows</platforms>
-                </folder>
-                <folder>
-                    <description>Library Files</description>
-                    <destination>${installdir}/newfolder</destination>
-                    <name>libfileslinux</name>
-                    <platforms>linux</platforms>
-                </folder>
-                <folder>
-                    <description>GLD Shared Files</description>
-                    <destination>/usr/local/share/gridlabd</destination>
-                    <name>gldshare</name>
-                    <platforms>all</platforms>
-                    <distributionFileList>
-                        <distributionDirectory>
-                            <origin>install/MacOSX/Archive_usr_local_share_gridlabd</origin>
-                        </distributionDirectory>
-                    </distributionFileList>
-                </folder>
             </folderList>
             <startMenuShortcutList>
                 <startMenuShortcut>
@@ -1134,6 +1111,9 @@
             <program>pip</program>
             <programArguments>install tesp_support</programArguments>
         </runProgram>
+        <launchBrowser>
+            <url>http://tesp.readthedocs.io/en/latest/</url>
+        </launchBrowser>
     </postInstallationActionList>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
@@ -1142,17 +1122,49 @@
     <vendor>Pacific Northwest National Laboratory</vendor>
     <parameterList>
         <directoryParameter>
-            <name>installdir</name>
+            <name>gridlabddir</name>
             <description>Installer.Parameter.installdir.description</description>
             <explanation>Installer.Parameter.installdir.explanation</explanation>
             <value></value>
-            <default>${platform_install_prefix}/${product_shortname}-${product_version}</default>
+            <default>c:\gridlabd</default>
             <allowEmptyValue>0</allowEmptyValue>
-            <ask>yes</ask>
             <cliOptionName>prefix</cliOptionName>
-            <mustBeWritable>yes</mustBeWritable>
+            <mustBeWritable>1</mustBeWritable>
             <mustExist>0</mustExist>
             <width>30</width>
+            <ruleList>
+                <platformTest>
+                    <type>windows</type>
+                </platformTest>
+            </ruleList>
+        </directoryParameter>
+        <directoryParameter>
+            <name>tespdir</name>
+            <description></description>
+            <explanation></explanation>
+            <value></value>
+            <default>${user_home_directory}/tesp</default>
+            <allowEmptyValue>0</allowEmptyValue>
+            <mustBeWritable>0</mustBeWritable>
+            <mustExist>0</mustExist>
+            <width>30</width>
+        </directoryParameter>
+        <directoryParameter>
+            <name>unixlocaldir</name>
+            <description>Installer.Parameter.installdir.description</description>
+            <explanation>Installer.Parameter.installdir.explanation</explanation>
+            <value></value>
+            <default>/usr/local</default>
+            <allowEmptyValue>0</allowEmptyValue>
+            <mustBeWritable>1</mustBeWritable>
+            <mustExist>0</mustExist>
+            <width>30</width>
+            <ruleList>
+                <platformTest>
+                    <negate>1</negate>
+                    <type>windows</type>
+                </platformTest>
+            </ruleList>
         </directoryParameter>
     </parameterList>
 </project>
