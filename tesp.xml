@@ -8,8 +8,9 @@
     <componentList>
         <component>
             <name>default</name>
-            <description>Default Component</description>
+            <description>Data Files</description>
             <canBeEdited>1</canBeEdited>
+            <detailedDescription>Support files and examples</detailedDescription>
             <selected>1</selected>
             <show>1</show>
             <folderList>
@@ -34,60 +35,6 @@
                             <windowsPath>${installdir}</windowsPath>
                         </shortcut>
                     </shortcutList>
-                </folder>
-                <folder>
-                    <description>Program Files</description>
-                    <destination>${unixlocaldir}</destination>
-                    <name>programfileslinux</name>
-                    <platforms>linux</platforms>
-                    <distributionFileList>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/Linux/bin</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/Linux/lib</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/Linux/share</origin>
-                        </distributionDirectory>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>Program Files</description>
-                    <destination>${gridlabddir}</destination>
-                    <name>programfileswindows</name>
-                    <platforms>windows</platforms>
-                    <distributionFileList>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/Windows/bin</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/Windows/include</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/Windows/lib</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/Windows/share</origin>
-                        </distributionDirectory>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>Program Files</description>
-                    <destination>${unixlocaldir}</destination>
-                    <name>programfilesosx</name>
-                    <platforms>osx</platforms>
-                    <distributionFileList>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/MacOSX/lib</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/MacOSX/bin</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../../Documents/TESPinstall/MacOSX/share</origin>
-                        </distributionDirectory>
-                    </distributionFileList>
                 </folder>
                 <folder>
                     <description>Taxonomy Feeders</description>
@@ -1105,12 +1052,73 @@
                 </startMenuShortcut>
             </startMenuShortcutList>
         </component>
+        <component>
+            <name>newcomponent</name>
+            <description>Executables</description>
+            <canBeEdited>1</canBeEdited>
+            <detailedDescription>Platform-dependent GridLAB-D, EnergyPlus and FNCS for TESP.</detailedDescription>
+            <downloadable>1</downloadable>
+            <selected>0</selected>
+            <show>1</show>
+            <folderList>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${gridlabddir}</destination>
+                    <name>execwindows</name>
+                    <platforms>windows</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Windows/bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Windows/include</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Windows/lib</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Windows/share</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${unixlocaldir}</destination>
+                    <name>execlinux</name>
+                    <platforms>linux</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Linux/bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Linux/lib</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/Linux/share</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${unixlocaldir}</destination>
+                    <name>execmacosx</name>
+                    <platforms>osx</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/MacOSX/bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/MacOSX/lib</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../Documents/TESPinstall/MacOSX/share</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+        </component>
     </componentList>
     <postInstallationActionList>
-        <runProgram>
-            <program>pip</program>
-            <programArguments>install tesp_support</programArguments>
-        </runProgram>
         <launchBrowser>
             <url>http://tesp.readthedocs.io/en/latest/</url>
         </launchBrowser>
