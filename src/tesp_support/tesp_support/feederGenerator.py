@@ -1531,13 +1531,13 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         for key in xfused:
             write_xfmr_config (key, xfused[key][0], xfused[key][1], xfused[key][2], xfused[key][3], 
-                               xfused[key][4], c[1], c[2], op)
+                               xfused[key][4], vll, vln, op)
 
         t = 'capacitor'
         if t in model:
             for o in model[t]:
-                model[t][o]['nominal_voltage'] = str(int(c[2]))
-                model[t][o]['cap_nominal_voltage'] = str(int(c[2]))
+                model[t][o]['nominal_voltage'] = str(int(vln))
+                model[t][o]['cap_nominal_voltage'] = str(int(vln))
 
         t = 'fuse'
         for o in model[t]:
@@ -1552,11 +1552,11 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
                 if 'C' in seg_phs:
                     nphs += 1
                 if nphs == 3:
-                    amps = 1000.0 * seg_kva / sqrt(3.0) / c[1]
+                    amps = 1000.0 * seg_kva / sqrt(3.0) / vll
                 elif nphs == 2:
-                    amps = 1000.0 * seg_kva / 2.0 / c[2]
+                    amps = 1000.0 * seg_kva / 2.0 / vln
                 else:
-                    amps = 1000.0 * seg_kva / c[2]
+                    amps = 1000.0 * seg_kva / vln
                 model[t][o]['current_limit'] = str (FindFuseLimit (amps))
 
         write_local_triplex_configurations (op)
@@ -1653,14 +1653,24 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         op.close()
 
 def populate_feeder (configfile):
+    global tier1_energy, tier1_price, tier2_energy, tier2_price, tier3_energy, tier3_price, bill_mode, kwh_price, monthly_fee
+    global Eplus_Bus, Eplus_Volts, Eplus_kVA
+    global transmissionVoltage, transmissionXfmrMVAbase
+    global storage_inv_mode, solar_inv_mode, solar_penetration, storage_penetration
+    global outpath, glmpath, supportpath, weatherpath, weather_file
+    global starttime, endtime, timestep, metrics_interval, electric_cooling_penetration
+    global fncs_case
+
     checkResidentialBuildingTable()
     # we want the same pseudo-random variables each time, for repeatability
     np.random.seed (0)
     lp = open (configfile).read()
     config = json.loads(lp)
     rootname = config['BackboneFiles']['TaxonomyChoice']
-    supportpath = ''
-    weatherpath = ''
+    tespdir = config['SimulationConfig']['SourceDirectory']
+    glmpath = tespdir + '/feeders/'
+    supportpath = '' #tespdir + '/schedules'
+    weatherpath = '' #tespdir + '/weather'
     outpath = './' + config['SimulationConfig']['CaseName'] + '/'
     starttime = config['SimulationConfig']['StartTime']
     endtime = config['SimulationConfig']['EndTime']

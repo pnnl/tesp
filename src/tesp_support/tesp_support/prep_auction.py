@@ -290,7 +290,17 @@ def ProcessGLM (fileroot):
 
 
 def prep_auction (gldfileroot, jsonfile = ''):
-	if jsonfile > 1:
+	global dt, period, Eplus_Bus, agent_participation
+	global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
+	global daylight_start_lo, daylight_start_hi, daylight_set_lo, daylight_set_hi
+	global evening_start_lo, evening_start_hi, evening_set_lo, evening_set_hi
+	global night_start_lo, night_start_hi, night_set_lo, night_set_hi
+	global weekend_day_start_lo, weekend_day_start_hi, weekend_day_set_lo, weekend_day_set_hi
+	global weekend_night_start_lo, weekend_night_start_hi, weekend_night_set_lo, weekend_night_set_hi
+	global ramp_lo, ramp_hi, deadband_lo, deadband_hi, offset_limit_lo, offset_limit_hi
+	global ctrl_cap_lo, ctrl_cap_hi, initial_price, std_dev
+
+	if len(jsonfile) > 1:
 		lp = open (jsonfile).read()
 		config = json.loads(lp)
 

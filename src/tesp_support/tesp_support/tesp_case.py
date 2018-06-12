@@ -17,12 +17,12 @@ def make_tesp_case (cfgfile = 'test.json'):
     config = json.loads(lp)
 
     tespdir = config['SimulationConfig']['SourceDirectory']
-    tespdir = '../../../../ptesp/'
-    feederdir = tespdir + 'support/feeders/'
-    scheduledir = tespdir + 'support/schedules/'
-    weatherdir = tespdir + 'support/weather/'
-    eplusdir = tespdir + 'support/energyplus/'
-    ppdir = tespdir + 'support/pypower/'
+#    tespdir = '../../../../ptesp/support'
+    feederdir = tespdir + '/feeders/'
+    scheduledir = tespdir + '/schedules/'
+    weatherdir = tespdir + '/weather/'
+    eplusdir = tespdir + '/energyplus/'
+    ppdir = tespdir + '/pypower/'
     print ('feeder backbone files from', feederdir)
     print ('schedule files from', scheduledir)
     print ('weather files from', weatherdir)
@@ -106,7 +106,9 @@ def make_tesp_case (cfgfile = 'test.json'):
     pw1 = subprocess.Popen ('Tmy3toTMY2_ansi ' + casedir + '/' + rootweather + '.tmy3 > '
                             + casedir + '/' + rootweather + '.tmy2', shell=True)
     pw1.wait()
-    pw2 = subprocess.Popen ('python TMY2EPW.py ' + casedir + '/' + rootweather, shell=True)
+    cmdline = """python -c "import tesp_support.api as tesp;tesp.convert_tmy2_to_epw('""" + casedir + '/' + rootweather + """')" """
+    print (cmdline)
+    pw2 = subprocess.Popen (cmdline, shell=True)
     pw2.wait()
     os.remove (casedir + '/' + rootweather + '.tmy2')
 
@@ -360,12 +362,20 @@ def make_tesp_case (cfgfile = 'test.json'):
     print (tespyamlstr, file=op)
     op.close()
 
-    p1 = subprocess.Popen ('python feederGenerator.py ' + cfgfile, shell=True)
+    cmdline = """python -c "import tesp_support.api as tesp;tesp.populate_feeder('""" + cfgfile + """')" """
+    print (cmdline)
+    p1 = subprocess.Popen (cmdline, shell=True)
     p1.wait()
     glmfile = casedir + '/' + casename
-    p2 = subprocess.Popen ('python glm_dict.py ' + glmfile, shell=True)
+
+    cmdline = """python -c "import tesp_support.api as tesp;tesp.glm_dict('""" + glmfile + """')" """
+    print (cmdline)
+    p2 = subprocess.Popen (cmdline, shell=True)
     p2.wait()
-    p3 = subprocess.Popen ('python prep_auction.py ' + cfgfile + ' ' + glmfile, shell=True)
+
+    cmdline = """python -c "import tesp_support.api as tesp;tesp.prep_auction('""" + glmfile + """','""" + cfgfile + """')" """
+    print (cmdline)
+    p3 = subprocess.Popen (cmdline, shell=True)
     p3.wait()
 
     # write the command scripts for console and tesp_monitor execution
