@@ -11,11 +11,7 @@ def idf_int(val):
         return sval + ', '
     return sval + ','
 
-def make_tesp_case (cfgfile = 'test.json'):
-
-    lp = open (cfgfile).read()
-    config = json.loads(lp)
-
+def write_tesp_case (config, cfgfile):
     tespdir = config['SimulationConfig']['SourceDirectory']
 #    tespdir = '../../../../ptesp/support'
     feederdir = tespdir + '/feeders/'
@@ -412,4 +408,55 @@ def make_tesp_case (cfgfile = 'test.json'):
                'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'NO'],['FNCS_LOG_STDOUT', 'yes']], 'log':'pypower.log'}
     json.dump (cmds, op, indent=2)
     op.close()
+
+def make_tesp_case (cfgfile = 'test.json'):
+    lp = open (cfgfile).read()
+    config = json.loads(lp)
+    write_tesp_case (config, cfgfile)
+
+def modify_mc_config (config, mcvar, band, sample):
+    if mcvar == 'ElectricCoolingParticipation':
+        config['FeederGenerator'][mcvar] = sample
+    elif mcvar == 'ThermostatRampMid':
+        config['AgentPrep']['ThermostatRampLo'] = sample - 0.5 * band
+        config['AgentPrep']['ThermostatRampHi'] = sample + 0.5 * band
+    elif mcvar == 'ThermostatOffsetLimit':
+        config['AgentPrep']['ThermostatOffsetLimitLo'] = sample - 0.5 * band
+        config['AgentPrep']['ThermostatOffsetLimitHi'] = sample + 0.5 * band
+    elif mcvar == 'WeekdayEveningStartMid':
+        config['ThermostatSchedule']['WeekdayEveningStartLo'] = sample - 0.5 * band
+        config['ThermostatSchedule']['WeekdayEveningStartHi'] = sample + 0.5 * band
+    elif mcvar == 'WeekdayEveningSetMid':
+        config['ThermostatSchedule']['WeekdayEveningSetLo'] = sample - 0.5 * band
+        config['ThermostatSchedule']['WeekdayEveningSetHi'] = sample + 0.5 * band
+
+def make_monte_carlo_cases (cfgfile = 'test.json'):
+    lp = open (cfgfile).read()
+    config = json.loads(lp)
+    mc_cfg = 'monte_carlo_sample_' + cfgfile
+    basecase = config['SimulationConfig']['CaseName']
+
+    mc = config['MonteCarloCase']
+    n = mc['NumCases']
+    var1 = mc['Variable1']
+    var2 = mc['Variable2']
+    var3 = mc['Variable3']
+    band1 = mc['Band1']
+    band2 = mc['Band2']
+    band3 = mc['Band3']
+    samples1 = mc['Samples1']
+    samples2 = mc['Samples2']
+    samples3 = mc['Samples3']
+#    print (var1, var2, var3, n)
+    for i in range(n):
+        mc_case = basecase + '_' + str(i+1)
+        config['SimulationConfig']['CaseName'] = mc_case
+        modify_mc_config (config, var1, band1, samples1[i])
+        modify_mc_config (config, var2, band2, samples2[i])
+        modify_mc_config (config, var3, band3, samples3[i])
+        op = open (mc_cfg, 'w')
+        print (json.dumps(config), file=op)
+        op.close()
+#        print (mc_case, mc['Samples1'][i], mc['Samples2'][i], mc['Samples3'][i])
+        write_tesp_case (config, mc_cfg)
 

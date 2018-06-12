@@ -9,6 +9,7 @@ from .precool import precool_loop
 from .prep_precool import prep_precool
 from .prep_auction import prep_auction
 from .tesp_case import make_tesp_case
+from .tesp_case import make_monte_carlo_cases
 from .TMY2EPW import convert_tmy2_to_epw
 
 #from .process_agents import process_agents
