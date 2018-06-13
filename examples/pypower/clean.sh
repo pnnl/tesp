@@ -5,4 +5,4 @@ rm *.xml
 rm *.audit
 rm broker_trace.txt
 rm *metrics.json
-
+rm *dict.json
