@@ -37,12 +37,12 @@ max_capacity_reference_bid_quantity = 5000
 air_temperature = 78.0 # initial house air temperature
 
 ###################################################
-# top-level data that can be reconfigured from JSON
+# top-level data that can be reconfigured from JSON, defaults for TE30
 dt = 15
 period = 300
 
-Eplus_Bus = ''
-agent_participation = 0.0
+Eplus_Bus = 'Eplus_load'
+agent_participation = 1.0
 
 wakeup_start_lo = 5.0
 wakeup_start_hi = 6.5

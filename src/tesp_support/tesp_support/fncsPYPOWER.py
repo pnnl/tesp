@@ -3,10 +3,10 @@ import json
 import sys
 import warnings
 import csv
-import tesp_support.fncs
+import tesp_support.fncs as fncs
 import numpy as np
 import pypower.api as pp
-from math import sqrt;
+from math import sqrt
 import math
 import re
 from copy import deepcopy
@@ -129,7 +129,7 @@ def parse_mva(arg):
 
   return p, q
 
-def pypower_loop (rootname, casefile):
+def pypower_loop (casefile, rootname):
 #  if len(sys.argv) == 3:
 #    rootname = sys.argv[1]
 #    casefile = sys.argv[2]
@@ -401,11 +401,11 @@ def pypower_loop (rootname, casefile):
            '{:.8f}'.format(ppc['gencost'][4, 5]),  # c1 
            sep=',', file=op, flush=True)
 
-    # request the next time step
-    ts = fncs.time_request(ts + dt)
-    if ts > tmax:
+    # request the next time step, if necessary
+    if ts >= tmax:
       print ('breaking out at',ts,flush=True)
       break
+    ts = fncs.time_request(min(ts + dt, tmax))
 
   # ===================================
   print ('writing metrics', flush=True)

@@ -8,7 +8,6 @@
 clock {
 	timezone PST+8PDT;
 	starttime '2013-07-01 00:00:00';
-//	stoptime '2013-07-01 01:00:00';
 	stoptime '2013-07-03 00:00:00';
 }
 
@@ -27,8 +26,6 @@ module generators;
 
 #include "../../support/schedules/water_and_setpoint_schedule_v3.glm"
 #include "../../support/schedules/appliance_schedules.glm"
-//#include "solar.glm"
-//#include "../../support/schedules/fixed_rate_schedule_v2.glm"
 #include "outputs_te.glm"
 
 // summer

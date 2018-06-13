@@ -5,9 +5,12 @@ import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
 
-def process_inv(nameroot):
+def process_inv(nameroot, dictname = ''):
 	# first, read and print a dictionary of all the monitored GridLAB-D objects
-	lp = open (nameroot + "_glm_dict.json").read()
+	if len (dictname) > 0:
+			lp = open (dictname).read()
+	else:
+			lp = open (nameroot + "_glm_dict.json").read()
 	dict = json.loads(lp)
 	sub_keys = list(dict['feeders'].keys())
 	sub_keys.sort()

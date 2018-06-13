@@ -6,9 +6,12 @@ import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
 
-def process_agents(nameroot):
+def process_agents(nameroot, dictname = ''):
     # first, read and print a dictionary of relevant agents
-    lp = open (nameroot + '_agent_dict.json').read()
+    if len (dictname) > 0:
+        lp = open (dictname).read()
+    else:
+        lp = open (nameroot + '_agent_dict.json').read()
     dict = json.loads(lp)
     a_keys = list(dict['markets'].keys())
     a_keys.sort()

@@ -1,6 +1,6 @@
 import sys
-import tesp_support.fncs
-import tesp_support.simple_auction
+import tesp_support.fncs as fncs
+import tesp_support.simple_auction as simple_auction
 import json
 from datetime import datetime
 from datetime import timedelta
@@ -34,7 +34,7 @@ def auction_loop (configfile, metrics_root, flag='WithMarket'):
     auction_metrics = {'Metadata':auction_meta,'StartTime':StartTime}
     controller_metrics = {'Metadata':controller_meta,'StartTime':StartTime}
 
-    aucObj = simple_auction (market_row, market_key)
+    aucObj = simple_auction.simple_auction (market_row, market_key)
 
     dt = float(dict['dt'])
     period = aucObj.period
@@ -47,7 +47,7 @@ def auction_loop (configfile, metrics_root, flag='WithMarket'):
     hvac_keys = list(dict['controllers'].keys())
     for key in hvac_keys:
       row = dict['controllers'][key]
-      hvacObjs[key] = hvac (row, key, aucObj)
+      hvacObjs[key] = simple_auction.hvac (row, key, aucObj)
       ctl = hvacObjs[key]
       topicMap[key + '#Tair'] = [ctl, 2]
       topicMap[key + '#V1'] = [ctl, 3]
@@ -86,10 +86,10 @@ def auction_loop (configfile, metrics_root, flag='WithMarket'):
             value = fncs.get_value(key).decode()
             row = topicMap[topic]
             if row[1] == 0:
-                LMP = parse_fncs_magnitude (value)
+                LMP = simple_auction.parse_fncs_magnitude (value)
                 aucObj.set_lmp (LMP)
             elif row[1] == 1:
-                refload = parse_kw (value)
+                refload = simple_auction.parse_kw (value)
                 aucObj.set_refload (refload)
             elif row[1] == 2:
                 row[0].set_air_temp (value)
