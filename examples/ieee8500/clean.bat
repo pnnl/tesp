@@ -1,5 +1,5 @@
 del *.log
 del *.out
 del *.xml
-del *metrics.json
+del *.json
 

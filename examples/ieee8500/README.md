@@ -2,28 +2,94 @@
 
 Copyright (c) 2017-18, Battelle Memorial Institute
 
-These example files are based on the IEEE 8500-node Feeder model, as adapted for the SGIP-3 use case and the NIST TE Challenge 2. More information is available at https://pages.nist.gov/TEChallenge/library/ and panel presentations from IEEE ISGT 2018.
+These example files are based on the IEEE 8500-node Feeder model, as adapted
+for the SGIP-3 use case and the NIST TE Challenge 2. More information 
+is available at https://pages.nist.gov/TEChallenge/library/ and panel 
+presentations from IEEE ISGT 2018.  The backbone feeder model is documented at
+https://ieeexplore.ieee.org/document/5484381/
 
-1. Weather CSV files were made from the two adjust*.m files to create sunny and cloudy days from TMY data.
+To run the base case:
 
-2. The two feeder generator MATLAB scripts add houses, water heaters, air conditioners, solar panels and batteries to the 8500-node feeder base model in the backbone subdirectory. One produces IEEE_8500.glm for the base case, used by all teams. The other produces inv8500.glm for PNNL simulations of smart inverters.
+1. A current build of GridLAB-D from branch feature/1048 is required. A Windows binary has been released here: https://github.com/pnnl/tesp/releases/tag/v0.2
 
-3. The house*.csv files contain equivalent thermal parameter (ETP) model parameters exported from GridLAB-D. These may be helpful if simulating houses on your own.
+2. "gridlabd IEEE_8500.glm" runs the base case.  
 
-4. To run the base case, a current build of GridLAB-D from feature/1048 is required. A Windows binary has been released here: https://github.com/pnnl/tesp/releases
+In order to plot results from the JSON files, Python 3 and the matplotlib package can be used:
 
-5. "gridlabd IEEE_8500.glm" runs the base case.  "Python process_gld.py IEEE_8500 &" will plot various metrics when the simulation finishes.  "Python process_voltages.py IEEE_8500" will plot all meter voltages on the same graph.
+1. "python glm_dict.py IEEE_8500" will create circuit metadata for plotting.
 
-6. inv30.glm is a small 30-house test case with smart inverters, and inv8500.glm is the larger feeder model with smart inverters. Both run over FNCS with the precooling agent in precool.py.  The Mac/Linux run files are run.sh and run8500.sh, respectively.  These simulations take up to 4 hours to run. Example steps are:
+2. "python process_gld.py IEEE_8500 &" will plot various metrics when the simulation finishes.
+
+3. "python process_voltages.py IEEE_8500" will plot all meter voltages on the same graph.
+
+Alternatively, you can insert "recorders" into IEEE_8500.glm, which will create CSV files
+for plotting and post-processing. The simulation takes longer with CSV file output.
+
+Notes on building or modifying the base case:
+
+1. Weather CSV files were made from the adjust*.m files to create sunny and cloudy days from TMY data.
+
+2. Feeder generator MATLAB scripts add houses, water heaters, air conditioners, solar panels and batteries to the 8500-node feeder base model in the backbone subdirectory. One produces IEEE_8500.glm for the base case, used by all teams. The other, found under PNNLteam subdirectory, produces inv8500.glm for PNNL simulations of smart inverters.
+
+3. The house*.csv files contain equivalent thermal parameter (ETP) model parameters exported from GridLAB-D. These may be helpful if simulating houses on your own. See http://gridlab-d.shoutwiki.com/wiki/Residential_module_user%27s_guide for information about GridLAB-D's house model, including equivalent thermal parameters (ETP).
+
+### Base File Directory
+
+- *adjust_solar_direct.m*; MATLAB helper function that ramps the direct solar insulation during a postulated cloud transient
+- *adjust_temperature.m*; MATLAB helper function that ramps the temperature during a postulated cloud transient
+- *backbone*; the IEEE 8500-node model as defined by the original authors for OpenDSS
+- *clean.bat*; Windows batch file that removes output and temporary files
+- *clean.sh*; Linux/Mac script that removes output and temporary files
+- *climate.csv*; hourly temperature, humidity, solar_direct, solar_diffuse, pressure, wind_speed read by IEEE_8500.glm; **copy either sunny.csv or cloudy.csv to this file, depending on which case you wish to run**
+- *Cloudy_Day.png*; screen shot of process_gld.py plots for the cloudy day
+- *Cloudy_Voltages.png*; screen shot of process_voltages.py plots for the cloudy day
+- *cloudy.csv*; copy to *climate.csv* to simulate a day with afternoon cloud transient
+- *Cloudy.fig*; MATLAB plot of the correlated cloudy day temperature and solar irradiance
+- *estimate_ac_size.m*; MATLAB helper function that estimates the house HVAC load as determined by GridLAB-D's autosizing feature. These values are embedded as comments in *IEEE_8500.glm*, which may be useful if modeling the HVAC load as a ZIP load.
+- *gld_strict_name.m*; MATLAB helper function to ensure GridLAB-D names don't start with a number, as they can with OpenDSS files under *backbone*, but is not allowed in GridLAB-D
+- *glm_dict.py*; creates output metadata for a GridLAB-D input file; **python glm_dict.py IEEE_8500** before attempting to plot the JSON files
+- *house_ca.csv*; house ETP parameters from the base case; may be useful for your own house models.
+- *house_cm.csv*; house ETP parameters from the base case; may be useful for your own house models.
+- *house_ua.csv*; house ETP parameters from the base case; may be useful for your own house models.
+- *house_um.csv*; house ETP parameters from the base case; may be useful for your own house models.
+- *IEEE_8500.glm*; base case feeder, populated with houses, PV and batteries.
+- *IEEE_8500gener_whouses.m*; MATLAB script that produces *IEEE_8500.glm* from files under *backbone*
+- *main_regulator.csv*; total feeder current in the base case; may be useful in benchmarking your own power flow solver.
+- *PNNLteam*; subdirectory with PNNL's participation files; see next section.
+- *process_gld.py*; sample Python script to plot feeder, capacitor, regulator, voltage, inverter and house variables
+- *process_voltages.py*; sample Python script to plot all house voltages
+- *README.md*; this file
+- *schedules.glm*; cooling, heating, lighting and other end-use appliance schedules referenced by *IEEE_8500.glm*
+- *substation_load.csv*; total feeder load and positive sequence voltage in the base case; may be useful in benchmarking your own power flow solver.
+- *Sunny_Day.png*; screen shot of process_gld.py plots for the sunny day
+- *Sunny_Voltages.png*; screen shot of process_voltages.py plots for the sunny day
+- *sunny.csv*; copy to *climate.csv* to simulate a clear, sunny day
+- *sunny.fig*; MATLAB plot of the correlated sunny day temperature and solar irradiance
+- *TE_Challenge_Metrics.docx*; documentation of the use case metrics of interest to the entire NIST TE Challenge 2 team
+
+### PNNL Team Files
+
+The subdirectory *PNNLteam* contains files used only for the pre-cooling
+thermostat and smart inverter simulations, as presented by PNNL at
+IEEE ISGT 2018.  See the report on NIST TE Challenge 2 for more details.
+To run these simulations, you will need to install TESP, which includes 
+FNCS and the *tesp_support* Python package.These simulations require a 
+recent build of GridLAB-D from the feature/1048 branch (newer than the 
+version posted for the base case), which is included with TESP.  Please 
+consult the TESP documentation for more information about customizations, 
+including batch files to run on Windows.
+
+inv30.glm is a small 30-house test case with smart inverters, and inv8500.glm 
+is the larger feeder model with smart inverters. Both run over FNCS with the 
+precooling agent in precool.py.  The Mac/Linux run files are run.sh and run8500.sh, 
+respectively.  These simulations take up to 4 hours to run. Example steps are:
 
     a. "Python glm_dict.py inv8500"
-
     b. "Python prep_precool.py inv8500"
-
     c. "./run8500.sh"
-
     d. "Python process_inv.py inv8500" after the simulation completes
 
-These simulations require a recent build of GridLAB-D from the feature/1048 (newer than the version posted for step 5), and also FNCS.  Please consult the TESP documentation for more information about customizations, including batch files to run on Windows.
-
-
+*InvFeederGen.m* was adapted from *IEEE_8500gener_whouses.m* in the parent directory,
+to populate *inv8500.glm* in a similar way, but with smart inverter functions added.
+See the TESP documentation for guidance on interpreting the other files in this
+directory.
