@@ -20,9 +20,6 @@ from .TMY2EPW import convert_tmy2_to_epw
 #from .process_pypower import process_pypower
 #from .process_voltages import process_voltages
 
-from .loadshed.loadshed import loadshed_loop
-#from .loadshed.plot_loadshed import plot_loadshed
-
 #from .matpower.matpower_dict import matpower_dict
 #from .matpower.process_matpower import process_matpower
 

@@ -24,6 +24,8 @@ def glm_dict (nameroot):
 	billingmeters = {}
 	inverters = {}
 	feeders = {}
+	capacitors = {}
+	regulators = {}
 
 	inSwing = False
 	for line in ip:
@@ -44,6 +46,8 @@ def glm_dict (nameroot):
 	inTriplexMeters = False
 	inMeters = False
 	inInverters = False
+	inCapacitors = False
+	inRegulators = False
 	for line in ip:
 		lst = line.split()
 		if len(lst) > 1:
@@ -56,18 +60,32 @@ def glm_dict (nameroot):
 				phases = "ABC"
 			if lst[1] == "inverter":
 				inInverters = True
+			if lst[1] == "capacitor":
+				inCapacitors = True
+			if lst[1] == "regulator":
+				inRegulators = True
 			if lst[1] == "waterheater":
 				inWaterHeaters = True
+			if inCapacitors == True:
+				if lst[0] == "name":
+					lastCapacitor = lst[1].strip(";")
+					capacitors[lastCapacitor] = {'feeder_id':feeder_id}
+					inCapacitors = False;
+			if inRegulators == True:
+				if lst[0] == "name":
+					lastRegulator = lst[1].strip(";")
+					regulators[lastRegulator] = {'feeder_id':feeder_id}
+					inRegulators = False;
 			if inInverters == True:
 				if lst[0] == "name":
 					lastInverter = lst[1].strip(";")
 				if lst[0] == "rated_power":
 					rating = float(lst[1].strip(" ").strip(";")) * 1.0
 				if lst[1] == "solar":
-					inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastMeterParent,'rated_W':rating,'resource':'solar'}
+					inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'rated_W':rating,'resource':'solar'}
 					inInverters = False
 				if lst[1] == "battery":
-					inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastMeterParent,'rated_W':rating,'resource':'battery'}
+					inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'rated_W':rating,'resource':'battery'}
 					inInverters = False
 			if inHouses == True:
 				if lst[0] == "name":
@@ -118,6 +136,8 @@ def glm_dict (nameroot):
 			inTriplexMeters = False
 			inMeters = False
 			inInverters = False
+			inCapacitors = False
+			inRegulators = False
 
 	for key, val in houses.items():
 		if key in waterheaters:
@@ -132,7 +152,8 @@ def glm_dict (nameroot):
 	feeders[feeder_id] = {'house_count': len(houses),'inverter_count': len(inverters)}
 	substation = {'matpower_id':matpowerBus,
 		'transformer_MVA':substationTransformerMVA,'feeders':feeders, 
-		'billingmeters':billingmeters,'houses':houses,'inverters':inverters}
+		'billingmeters':billingmeters,'houses':houses,'inverters':inverters,
+		'capacitors':capacitors,'regulators':regulators}
 	print (json.dumps(substation), file=op)
 
 	ip.close()

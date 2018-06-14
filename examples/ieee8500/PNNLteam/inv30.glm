@@ -24,8 +24,8 @@ module residential {
 module tape;
 module generators;
 
-#include "../../support/schedules/water_and_setpoint_schedule_v3.glm"
-//#include "../../support/schedules/appliance_schedules.glm"
+#include "../../../support/schedules/water_and_setpoint_schedule_v3.glm"
+//#include "../../../support/schedules/appliance_schedules.glm"
 
 #define INVERTER_MODE=CONSTANT_PF
 //#define INVERTER_MODE=VOLT_VAR
@@ -59,7 +59,7 @@ object metrics_collector_writer {
 
 object climate {
      name "RegionalWeather";
-     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
+     tmyfile "../../../support/weather/AZ-Tucson_International_Ap.tmy3";
      interpolate QUADRATIC;
 };
 
@@ -69,7 +69,7 @@ class player {
 
 object player {
     name VOLTAGE;
-    file "../players/voltage.player";
+    file "../../players/voltage.player";
     loop 1;
 }
 
