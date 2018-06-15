@@ -84,12 +84,27 @@ is the larger feeder model with smart inverters. Both run over FNCS with the
 precooling agent in precool.py.  The Mac/Linux run files are run.sh and run8500.sh, 
 respectively.  These simulations take up to 4 hours to run. Example steps are:
 
-    a. "Python glm_dict.py inv8500"
-    b. "Python prep_precool.py inv8500"
-    c. "./run8500.sh"
-    d. "Python process_inv.py inv8500" after the simulation completes
+    a. "python prepare_cases.py"
+    b. "./run8500.sh"
+    c. "python plots.py inv8500" after the simulation completes
+    d. "python bill.py inv8500"
+    e. "python plot_invs.py inv8500"
 
 *InvFeederGen.m* was adapted from *IEEE_8500gener_whouses.m* in the parent directory,
 to populate *inv8500.glm* in a similar way, but with smart inverter functions added.
 See the TESP documentation for guidance on interpreting the other files in this
 directory.
+
+- *bill.py*; calculates and plots a summary of meter bills
+- *clean.sh*; script to clean out log files and output files
+- *inv30.glm*; a 30-house test case with smart inverters
+- *inv8500.glm*; the 8500-node test case with smart inverters
+- *invFeederGen.m*; a MATLAB helper script that populates 8500-node with smart inverters, based on the ../backbone directory
+- *kill5570.sh*; script that terminates all processes listening to the default FNCS port 5570
+- *parser.py*; testing script for parsing FNCS values
+- *plot_invs.py*; tabulates and plots the meter with most overvoltage counts; not valid for the 30-house case because it includes a 480-volt load
+- *plots.py*; plots the GridLAB-D and agent outputs using tesp_support functions
+- *prepare_cases.py*; prepares the JSON dictionaries and FNCS configuration for both cases, using tesp_support functions
+- *prices.player*; time-of-day rates to publish over FNCS
+- *run30.sh*; script that runs the 30-house case
+- *run8500.sh*; script that runs the 8500-node case

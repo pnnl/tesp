@@ -1,6 +1,6 @@
 import string;
 import sys;
-import tesp_support.fncs;
+import tesp_support.fncs as fncs;
 import json;
 import math;
 
