@@ -157,7 +157,7 @@ def aggregate_bid (crv):
             deg = 1
         else:
             A = np.vstack([qresp**2, qresp, np.ones(len(qresp))]).T
-            ret = np.linalg.lstsq(A[:, :-1],cost)[0]
+            ret = np.linalg.lstsq(A[:, :-1],cost,rcond=None)[0]
             c2 = ret[0]
             c1 = ret[1]
             deg = 2

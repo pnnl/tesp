@@ -4,10 +4,6 @@ import tesp_support.simple_auction as simple_auction
 import json
 from datetime import datetime
 from datetime import timedelta
-#from simple_auction import hvac
-#from simple_auction import simple_auction
-#from simple_auction import parse_fncs_magnitude
-#from simple_auction import parse_kw
 
 # these should be in a configuration file as well; TODO synch the proper hour of day
 def auction_loop (configfile, metrics_root, flag='WithMarket'):
@@ -75,9 +71,12 @@ def auction_loop (configfile, metrics_root, flag='WithMarket'):
         time_delta = time_granted - time_last
         time_last = time_granted
         hour_of_day = 24.0 * ((float(time_granted) / 86400.0) % 1.0)
+# TODO - getting an overflow error when killing process - investigate whether that happens if simulation runs to completion
+#        print (dt_now, time_delta, timedelta (seconds=time_delta))
         dt_now = dt_now + timedelta (seconds=time_delta)
         day_of_week = dt_now.weekday()
         hour_of_day = dt_now.hour
+#        print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week)
 
         # update the data from FNCS messages
         events = fncs.get_events()
