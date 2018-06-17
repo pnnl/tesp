@@ -81,6 +81,7 @@ def prep_precool (nameroot):
 					print ('publish \"commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1\";', file=cp)
 					print ('publish \"commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature\";', file=cp)
 					print ('subscribe \"precommit:' + houseName + '.cooling_setpoint <- precool/' + houseName + '_cooling_setpoint\";', file=cp)
+					print ('subscribe \"precommit:' + houseName + '.heating_setpoint <- precool/' + houseName + '_heating_setpoint\";', file=cp)
 					print ('subscribe \"precommit:' + houseName + '.thermostat_deadband <- precool/' + houseName + '_thermostat_deadband\";', file=cp)
 					isELECTRIC = False
 

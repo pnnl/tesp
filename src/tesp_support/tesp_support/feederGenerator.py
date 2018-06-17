@@ -38,6 +38,12 @@ solar_penetration = 0.2
 storage_penetration = 0.5
 solar_inv_mode = 'CONSTANT_PF'
 
+# GridLAB-D name should not begin with a number, or contain '-' for FNCS
+def gld_strict_name(val):
+    if val[0].isdigit():
+        val = 'gld_' + val
+    return val.replace ('-', '_')
+
 def write_solar_inv_settings (op):
     print ('    four_quadrant_control_mode ${INVERTER_MODE};', file=op)
     print ('    V_base ${INV_VBASE};', file=op)
@@ -765,16 +771,16 @@ def write_houses(basenode, op, vnom):
     print ('  voltage_2 ' + vstart + ';', file=op)
     print ('}', file=op)
     for i in range(nhouse):
-        tpxname = basenode + '_tpx_' + str(i+1)
-        mtrname = basenode + '_mtr_' + str(i+1)
-        hsename = basenode + '_hse_' + str(i+1)
-        solname = basenode + '_sol_' + str(i+1)
-        batname = basenode + '_bat_' + str(i+1)
-        sol_i_name = basenode + '_isol_' + str(i+1)
-        bat_i_name = basenode + '_ibat_' + str(i+1)
-        hse_m_name = basenode + '_mhse_' + str(i+1)
-        sol_m_name = basenode + '_msol_' + str(i+1)
-        bat_m_name = basenode + '_mbat_' + str(i+1)
+        tpxname = gld_strict_name (basenode + '_tpx_' + str(i+1))
+        mtrname = gld_strict_name (basenode + '_mtr_' + str(i+1))
+        hsename = gld_strict_name (basenode + '_hse_' + str(i+1))
+        solname = gld_strict_name (basenode + '_sol_' + str(i+1))
+        batname = gld_strict_name (basenode + '_bat_' + str(i+1))
+        sol_i_name = gld_strict_name (basenode + '_isol_' + str(i+1))
+        bat_i_name = gld_strict_name (basenode + '_ibat_' + str(i+1))
+        hse_m_name = gld_strict_name (basenode + '_mhse_' + str(i+1))
+        sol_m_name = gld_strict_name (basenode + '_msol_' + str(i+1))
+        bat_m_name = gld_strict_name (basenode + '_mbat_' + str(i+1))
         print ('object triplex_line {', file=op)
         print ('  name', tpxname + ';', file=op)
         print ('  from', basenode + ';', file=op)

@@ -282,6 +282,7 @@ def ProcessGLM (fileroot):
 		print ('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
 		print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
 		print ('subscribe "precommit:' + houseName + '.cooling_setpoint <- auction/' + key + '/cooling_setpoint";', file=op)
+		print ('subscribe "precommit:' + houseName + '.heating_setpoint <- auction/' + key + '/heating_setpoint";', file=op)
 		print ('subscribe "precommit:' + houseName + '.thermostat_deadband <- auction/' + key + '/thermostat_deadband";', file=op)
 		print ('subscribe "precommit:' + meterName + '.bill_mode <- auction/' + key + '/bill_mode";', file=op)
 		print ('subscribe "precommit:' + meterName + '.price <- auction/' + key + '/price";', file=op)

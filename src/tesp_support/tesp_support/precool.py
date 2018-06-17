@@ -77,7 +77,7 @@ def precool_loop (nhours, metrics_root):
 
     if bSetDeadbands:
       bSetDeadbands = False
-      print ('setting thermostat deadbands at', time_granted)
+      print ('setting thermostat deadbands and heating setpoints at', time_granted)
       # set all of the house deadbands and initial setpoints
       for house, row in dict['houses'].items():
         topic = house + '_thermostat_deadband'
@@ -86,6 +86,7 @@ def precool_loop (nhours, metrics_root):
         setpoints[house] = 0.0
         lastchange[house] = -lockout_period
         precooling_status[house] = False
+        fncs.publish (house + '_heating_setpoint', 60.0)
 
     # update all of the house setpoints
     count_temp_dev = 0

@@ -12,8 +12,8 @@ def auction_loop (configfile, metrics_root, flag='WithMarket'):
         bWantMarket = False
         print ('Disabled the market')
     time_stop = int (48 * 3600) # simulation time in seconds
-    StartTime = '2013-07-01 00:00:00 PST'
-    time_fmt = '%Y-%m-%d %H:%M:%S %Z'
+    StartTime = '2013-07-01 00:00:00 -0800'
+    time_fmt = '%Y-%m-%d %H:%M:%S %z'
     dt_now = datetime.strptime (StartTime, time_fmt)
 
     # ====== load the JSON dictionary; create the corresponding objects =========
@@ -108,6 +108,7 @@ def auction_loop (configfile, metrics_root, flag='WithMarket'):
                 fncs.publish (obj.name + '/bill_mode', 'HOURLY')
                 fncs.publish (obj.name + '/monthly_fee', 0.0)
                 fncs.publish (obj.name + '/thermostat_deadband', obj.deadband)
+                fncs.publish (obj.name + '/heating_setpoint', 60.0)
             bSetDefaults = False
 
         if time_granted >= tnext_bid:
