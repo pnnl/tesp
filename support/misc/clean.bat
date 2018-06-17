@@ -1,6 +1,8 @@
 del *.log
 del *.csv
-del *.out
 del *.xml
-del *.audit
+del *metrics.json
+del output\*.*
+rd output
+
 
