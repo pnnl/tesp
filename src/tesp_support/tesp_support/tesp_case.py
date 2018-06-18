@@ -65,7 +65,7 @@ def write_tesp_case (config, cfgfile):
     EpFile = config['BackboneFiles']['EnergyPlusFile']
     EpAgentStop = str (seconds) + 's'
     EpAgentStep = str (config['FeederGenerator']['MetricsInterval']) + 's'
-    EpMetricsFile = ' eplus_' + casename + '_metrics.json'
+    EpMetricsFile = 'eplus_' + casename + '_metrics.json'
     GldFile = casename + '.glm'
     GldMetricsFile = casename + '_metrics.json'
     AgentDictFile = casename + '_agent_dict.json'
@@ -360,8 +360,33 @@ values:
     topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
     default: 0
 """
-    op = open (casedir + '/tesp_monitor.yaml', 'w')
-    print (tespyamlstr, file=op)
+    tespzplstr = """name = tesp_monitor
+time_delta = """ + str(int(int(config['AgentPrep']['MarketClearingPeriod']) / 60)) + """m
+broker = tcp://localhost:5570
+values
+    vpos7
+        topic = pypower/three_phase_voltage_B7
+        default = 0
+    LMP7
+        topic = pypower/LMP_B7
+        default = 0
+    clear_price
+        topic = auction/clear_price
+        default = 0
+    distribution_load
+        topic = gridlabdSimulator1/distribution_load
+        default = 0
+    power_A
+        topic = eplus_json/power_A
+        default = 0
+    electric_demand_power
+        topic = eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
+        default = 0
+"""
+#    op = open (casedir + '/tesp_monitor.yaml', 'w')
+#    print (tespyamlstr, file=op)
+    op = open (casedir + '/fncs.zpl', 'w')
+    print (tespzplstr, file=op)
     op.close()
 
     cmdline = """python -c "import tesp_support.api as tesp;tesp.populate_feeder('""" + cfgfile + """')" """
@@ -407,8 +432,10 @@ values:
         os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     op = open (casedir + '/tesp_monitor.json', 'w')
-    cmds = {'commands':[{},{},{},{},{},{}]}
-    cmds['commands'][0] = {'args':['fncs_broker', 5], 'env':[['FNCS_BROKER', 'tcp://*:5570']], 'log':'broker.log'}
+    cmds = {'time_stop':seconds, 
+            'yaml_delta':int(config['AgentPrep']['MarketClearingPeriod']), 
+            'commands':[{},{},{},{},{},{}]}
+    cmds['commands'][0] = {'args':['fncs_broker', '6'], 'env':[['FNCS_BROKER', 'tcp://*:5570']], 'log':'broker.log'}
     cmds['commands'][1] = {'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', EpFile], 
                'env':[['FNCS_CONFIG_FILE', 'eplus.yaml']], 'log':'eplus.log'}
     cmds['commands'][2] = {'args':['eplus_json', EpAgentStop, EpAgentStep, EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 

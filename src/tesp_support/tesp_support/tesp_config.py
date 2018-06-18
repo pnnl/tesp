@@ -4,6 +4,9 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import numpy as np
 from tkinter import filedialog
+from tkinter import messagebox
+import os
+import shutil
 
 config = {'BackboneFiles':{},'FeederGenerator':{},'EplusConfiguration':{},'PYPOWERConfiguration':{},
 	'AgentPrep':{},'ThermostatSchedule':{},'WeatherPrep':{},'SimulationConfig':{},'MonteCarloCase':{}}
@@ -407,12 +410,17 @@ class TespConfigGUI:
 				if col == 3 and use3:
 					val = float(w.get())
 					config['MonteCarloCase']['Samples3'][row-5] = val
+		support_path = config['SimulationConfig']['SourceDirectory']
+		if not os.path.exists (support_path):
+			if not messagebox.askyesno ('Continue to Save?', 'TESP Support Directory: ' + support_path + ' not found.'):
+				return
 		fname = filedialog.asksaveasfilename(initialdir = '~/src/examples/te30',
 																				 title = 'Save JSON Configuration to',
 																				 defaultextension = 'json')
-		op = open (fname, 'w')
-		print (json.dumps(config), file=op)
-		op.close()
+		if len(fname) > 0:
+			op = open (fname, 'w')
+			print (json.dumps(config), file=op)
+			op.close()
 
 	def JsonToSection(self, jsn, vars):
 		for i in range(len(vars)):

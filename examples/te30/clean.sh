@@ -8,3 +8,5 @@ rm *metrics.json
 rm *dict.json
 rm *FNCS_Config.txt
 rm *auction.yaml
+rm output/*
+rmdir output

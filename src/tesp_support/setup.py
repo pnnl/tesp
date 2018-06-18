@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tesp_support',
-    version='0.0.3',
+    version='0.0.4',
     author='Thomas McDermott',
     author_email='Thomas.McDermott@PNNL.gov',
     description='Python support for the Transactive Energy Simulation Platform',
@@ -21,7 +21,7 @@ setup(
     ],
     packages=find_packages(),
     include_package_data=True,
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -32,7 +32,6 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering',
     ],
