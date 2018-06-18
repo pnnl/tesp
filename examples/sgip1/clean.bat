@@ -8,5 +8,5 @@ del *metrics.json
 del *dict.json
 del *FNCS_Config.txt
 del SGIP1*.yaml
-
-
+del output\*.*
+rd output

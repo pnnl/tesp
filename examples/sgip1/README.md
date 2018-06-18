@@ -2,7 +2,8 @@
 
 Copyright (c) 2017-18, Battelle Memorial Institute
 
-These example files are based on the IEEE Paper ...
+These example files are based on the *IEEE Transactions on Power Systems* paper by Qiuhua Huang 
+et. al., "Simulation-Based Valuation of Transactive Energy Systems", in publication.
 
 To run a case:
 
@@ -23,30 +24,30 @@ results from different cases on the same axes.
 - *compare_hvac.py*; script that plots house temperature and results from all 6 cases on the same axes
 - *compare_prices.py*; script that calculates and plots LMP from all 6 cases on the same axes
 - *compare_pypower.py*; script that plots PYPOWER JSON results from all 6 cases on the same axes
-- *eplus.yaml*;
-- *eplus_json.yaml*;
-- *kill5570.bat*;
-- *kill5570.sh*;
-- *list5570.bat*;
-- *NonGLDLoad.txt*;
-- *NonGldLoad.xlsx*;
-- *outputs_sgip1.glm*;
-- *plots.py*;
-- *prepare_cases.py*;
-- *pypower.yaml*;
-- *README.md*;
-- *run.bat*;
-- *runall.sh*;
-- *runSGIP1a.sh*;
-- *runSGIP1b.sh*;
-- *runSGIP1c.sh*;
-- *runSGIP1d.sh*;
-- *runSGIP1e.sh*;
-- *runSGIP1ex.sh*;
-- *sgip1_pp.json*;
-- *SGIP1a.glm*;
-- *SGIP1b.glm*;
-- *SGIP1c.glm*;
-- *SGIP1d.glm*;
-- *SGIP1e.glm*;
+- *eplus.yaml*; FNCS configuration for EnergyPlus
+- *eplus_json.yaml*; FNCS configuration for EnergyPlus agent
+- *kill5570.bat*; helper script that stops processes listening on port 5570 (Windows)
+- *kill5570.sh*; helper script that stops processes listening on port 5570 (Linux/Mac)
+- *list5570.bat*; helper script that lists processes listening on port 5570 (Windows)
+- *NonGLDLoad.txt*; text file of non-responsive loads on transmission buses
+- *NonGldLoad.xlsx*; spreadsheet with plots of non-responsive loads on transmission buses
+- *outputs_sgip1.glm*; requests for CSV file outputs of GridLAB-D variables
+- *plots.py*; makes 4 pages of plots for a case; eg 'python plots.py SGIP1a'
+- *prepare_cases.py*; sets up the dictionaries and GLD/Agent FNCS configurations for all cases
+- *pypower.yaml*; FNCS configuration for PYPOWER
+- *README.md*; this file
+- *run.bat*; Windows script that runs a case
+- *runall.sh*; Linux/Mac script that runs several cases in sequence, using 'sleep' between them
+- *runSGIP1a.sh*; Linux/Mac script for case A
+- *runSGIP1b.sh*; Linux/Mac script for case B
+- *runSGIP1c.sh*; Linux/Mac script for case C
+- *runSGIP1d.sh*; Linux/Mac script for case D
+- *runSGIP1e.sh*; Linux/Mac script for case E
+- *runSGIP1ex.sh*; Linux/Mac script for case Ex (case E without market)
+- *sgip1_pp.json*; PYPOWER system definition
+- *SGIP1a.glm*; GridLAB-D file for base case with no market and GridLAB-D built-in thermostat schedules
+- *SGIP1b.glm*; GridLAB-D file for case B, with market, also used for case A with NoMarket flag
+- *SGIP1c.glm*; GridLAB-D file for case C, with market, added PV
+- *SGIP1d.glm*; GridLAB-D file for case D, with market, added PV
+- *SGIP1e.glm*; GridLAB-D file for case E, with market, added PV
 

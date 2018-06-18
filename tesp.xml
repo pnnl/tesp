@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>OpenDSS</fullName>
-    <version>0.2</version>
+    <version>0.4</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -242,260 +242,13 @@
                             <origin>examples/energyplus/prices.txt</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/energyplus/process_eplus.py</origin>
-                        </distributionFile>
-                        <distributionFile>
                             <origin>examples/energyplus/eplus.yaml</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/energyplus/tracer.yaml</origin>
                         </distributionFile>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>Examples - IEEE8500</description>
-                    <destination>${tespdir}/examples/ieee8500</destination>
-                    <name>exieee8500</name>
-                    <platforms>all</platforms>
-                    <distributionFileList>
                         <distributionFile>
-                            <origin>examples/ieee8500/Clear_Day.png</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/Clear_Voltages.png</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/Cloudy_Day.png</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/Cloudy_Voltages.png</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/IEEE_8500.png</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/TESP_GUI.png</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/substation_load.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/main_regulator.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/climate.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/house_um.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/house_ua.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/house_cm.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/house_ca.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/bill.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/inv8500_FNCS_Config.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/inv8500_precool.yaml</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/clean.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/clean.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/inv30_FNCS_Config.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/inv30_precool.yaml</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/inv30.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/IEEE_8500.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/inv8500.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/parser.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/README.md</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/InvFeederGen.m</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/precool.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/process_inv.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/plot_invs.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/run8500.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/prices.player</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/prep_precool.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/process_gld.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/house.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/run.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/fncs.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/kill5570.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/IEEE_8500gener_whouses.m</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/process_test.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/TE_Challenge_Metrics.docx</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/cloudy.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/adjust_solar_direct.m</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/adjust_temperature.m</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/test.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/sunny.csv</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/schedules.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/Cloudy.fig</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/sunny.fig</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/weather.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/glm_dict.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/process_voltages.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/gld_strict_name.m</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/ieee8500/estimate_ac_size.m</origin>
-                        </distributionFile>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>Examples - Loadshed</description>
-                    <destination>${tespdir}/examples/loadshed</destination>
-                    <name>exloadshed</name>
-                    <platforms>all</platforms>
-                    <distributionFileList>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed.class</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/metrics.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/testout.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/clean.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/plot_loadshed.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/fncs.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/run.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/runjava.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed.yaml</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed.java</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/runjava.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/fncs.jar</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/kill5570.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/run.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/clean.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed.player</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/kill5570.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/list5570.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed_fncs.cfg</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed_fncs_none.cfg</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/glm_dict.py</origin>
+                            <origin>examples/energyplus/plots.py</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -535,34 +288,315 @@
                     </distributionFileList>
                 </folder>
                 <folder>
+                    <description>Misc Files</description>
+                    <destination>${tespdir}/support/misc</destination>
+                    <name>miscfolder</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>support/misc</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Examples - Loadshed</description>
+                    <destination>${tespdir}/examples/loadshed</destination>
+                    <name>exloadshed</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>examples/loadshed/README.md</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/loadshed_dict.json</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/clean.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/loadshed.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/loadshed.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/plot_loadshed.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/fncs.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/run.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/runjava.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/loadshed.yaml</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/loadshed.java</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/runjava.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/fncs.jar</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/kill5570.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/run.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/clean.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/loadshed.player</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/kill5570.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/list5570.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/loadshed_fncs.cfg</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/loadshed/loadshed_fncs_none.cfg</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Examples - IEEE 8500</description>
+                    <destination>${tespdir}/examples/ieee8500</destination>
+                    <name>exieee8500</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>examples/ieee8500/README.md</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/clean.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/clean.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/Cloudy_Day.png</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/Cloudy_Voltages.png</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/Sunny_Day.png</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/Sunny_Voltages.png</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/substation_load.csv</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/main_regulator.csv</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/climate.csv</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/house_um.csv</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/house_ua.csv</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/house_cm.csv</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/house_ca.csv</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/IEEE_8500.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/process_gld.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/IEEE_8500gener_whouses.m</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/TE_Challenge_Metrics.docx</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/cloudy.csv</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/adjust_solar_direct.m</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/adjust_temperature.m</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/sunny.csv</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/schedules.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/Cloudy.fig</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/sunny.fig</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/glm_dict.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/process_voltages.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/gld_strict_name.m</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/estimate_ac_size.m</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Examples - SGIP1</description>
+                    <destination>${tespdir}/examples/sgip1</destination>
+                    <name>exsgip1</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>examples/sgip1/README.md</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/clean.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/clean.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/SGIP1e.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/SGIP1d.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/SGIP1c.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/SGIP1a.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1e.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1d.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1c.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1b.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1ex.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1a.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/sgip1_pp.json</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/SGIP1b.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/prepare_cases.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/plots.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/eplus_json.yaml</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1ex.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runall.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/compare_pypower.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/compare_prices.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/compare_auction.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/compare_hvac.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/compare_csv.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/pypower.yaml</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/run.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/kill5570.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/list5570.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/outputs_sgip1.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/NonGLDLoad.txt</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/NonGLDLoad.xlsx</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/eplus.yaml</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/kill5570.sh</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
                     <description>Examples - PYPOWER</description>
                     <destination>${tespdir}/examples/pypower</destination>
                     <name>expypower</name>
                     <platforms>all</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>examples/pypower/ppcase_m_dict.json</origin>
+                            <origin>examples/pypower/plots.py</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/pypower/clean.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/pypower/fncs.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/pypower/kill5570.sh</origin>
+                            <origin>examples/pypower/ppcase.json</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/pypower/runpp.sh</origin>
                         </distributionFile>
                         <distributionFile>
+                            <origin>examples/pypower/clean.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/pypower/kill5570.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
                             <origin>examples/pypower/clean.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/pypower/fncsPYPOWER.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/pypower/process_pypower.py</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/pypower/kill5570.bat</origin>
@@ -577,9 +611,6 @@
                             <origin>examples/pypower/pptracer.yaml</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/pypower/ppcasefile.py</origin>
-                        </distributionFile>
-                        <distributionFile>
                             <origin>examples/pypower/pypower.yaml</origin>
                         </distributionFile>
                         <distributionFile>
@@ -588,252 +619,61 @@
                     </distributionFileList>
                 </folder>
                 <folder>
-                    <description>Examples - SGIP1</description>
-                    <destination>${tespdir}/examples/sgip1</destination>
-                    <name>exsgip1</name>
-                    <platforms>all</platforms>
-                    <distributionFileList>
-                        <distributionFile>
-                            <origin>examples/sgip1/clean.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/kill5570.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/list5570.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/run.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/runSGIP1ex.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1a_glm_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1a_m_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1b_agent_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1b_glm_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1b_m_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1c_glm_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1c_m_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1d_glm_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1d_m_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1e_glm_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1e_m_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1ex_glm_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1ex_m_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/test.JSON</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/README.md</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/GLDLoad.xlsx</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/NonGLDLoad.xlsx</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/NonGLDLoad.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/readme.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/real_power_demand_case9_T.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1b_FNCS_Config.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/auction_object.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/auction.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/compare_auction.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/compare_csv.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/compare_hvac.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/compare_prices.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/compare_pypower.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/double_auction.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/fncs.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/fncsPYPOWER.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/get_curve.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/glm_dict.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/house_controller.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/matpower_dict.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/ppcasefile.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/prep_agents.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/prep_auction.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/process_agents.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/process_eplus.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/process_gld.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/process_houses.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/process_matpower.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/process_pypower.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/ramp_controller_object.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/tesp_support.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/writeRegistration.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/clean.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/kill5570.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/launch_0agents.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/launch_SGIP1b_auction.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/run_fncsMATPOWER.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/runall.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/runSGIP1a.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/runSGIP1b.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/runSGIP1c.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/runSGIP1d.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/runSGIP1e.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/runSGIP1ex.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/eplus_json.yaml</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/eplus.yaml</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/fncs.zpl</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/outputs_sgip1.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/pypower.yaml</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1a.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1b_auction.yaml</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1b.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1c.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1d.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/SGIP1e.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/sgip1/tracer.yaml</origin>
-                        </distributionFile>
-                    </distributionFileList>
-                </folder>
-                <folder>
-                    <description>Examples - TE30</description>
+                    <description>Examples - TE 30</description>
                     <destination>${tespdir}/examples/te30</destination>
                     <name>exte30</name>
                     <platforms>all</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>examples/te30/clean.bat</origin>
+                            <origin>examples/te30/gui.sh</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/te30/fncs.zpl</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/tesp_monitor.json</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/gui.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/tesp_monitor.yaml</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/clean.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/clean.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/plots.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/run_new0.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/prepare_case.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/TE_Challenge.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/te30_pp.json</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/run_new.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/eplus_json.yaml</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/run30.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/pypower30.yaml</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/outputs_te.glm</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/te30/kill5570.bat</origin>
@@ -842,199 +682,95 @@
                             <origin>examples/te30/list5570.bat</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/run30.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/TE_Challenge_agent_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/TE_Challenge_glm_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/TE_Challenge_m_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/TE_Challenge0_agent_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/TE_Challenge0_glm_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/TE_Challenge0_m_dict.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/Test.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/Untitled.json</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/NonGLDLoad.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/player.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/TE_Challenge_FNCS_Config.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/TE_Challenge0_FNCS_Config.txt</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/aggbid.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/auction_object.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/auction.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/compare_csv.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/double_auction.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/fncs.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/fncsPYPOWER.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/get_curve.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/glm_dict.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/house_controller.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/matpower_dict.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/ppcasefile.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/prep_agents.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/prep_auction.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/process_agents.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/process_eplus.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/process_gld.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/process_matpower.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/process_pypower.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/ramp_controller_object.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/resploadopf.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/tesp_config.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/tesp_support.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/tesp.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/unrespbid.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/writeRegistration.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/clean.sh</origin>
+                            <origin>examples/te30/eplus.yaml</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/te30/kill5570.sh</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/kill5571.sh</origin>
+                            <origin>examples/te30/NonGLDLoad.txt</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Examples - IEEE 8500 Backbone</description>
+                    <destination>${tespdir}/examples/ieee8500/backbone</destination>
+                    <name>exieee8500backbone</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>examples/ieee8500/backbone/Capacitors.csv</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/launch_0_agents.sh</origin>
+                            <origin>examples/ieee8500/backbone/CapControls.csv</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/launch_TE_Challenge_agents.sh</origin>
+                            <origin>examples/ieee8500/backbone/Lines.csv</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/launch_TE_Challenge_auction.sh</origin>
+                            <origin>examples/ieee8500/backbone/Loads.csv</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/run_new.sh</origin>
+                            <origin>examples/ieee8500/backbone/LoadXfmrs.csv</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/run_new0.sh</origin>
+                            <origin>examples/ieee8500/backbone/Regulators.csv</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/run0.sh</origin>
+                            <origin>examples/ieee8500/backbone/Transformers.csv</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/run1.sh</origin>
+                            <origin>examples/ieee8500/backbone/Triplex_Lines.csv</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/run30.sh</origin>
+                            <origin>examples/ieee8500/backbone/WireData.dss</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Examples - IEEE 8500 PNNL</description>
+                    <destination>${tespdir}/examples/ieee8500/PNNLteam</destination>
+                    <name>exieee8500pnnl</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>examples/ieee8500/PNNLteam/run30.sh</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/eplus_json.yaml</origin>
+                            <origin>examples/ieee8500/PNNLteam/run8500.sh</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/eplus.yaml</origin>
+                            <origin>examples/ieee8500/PNNLteam/clean.sh</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/outputs_te.glm</origin>
+                            <origin>examples/ieee8500/PNNLteam/bill.py</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/outputs_TE30ChallengePYPOWER.glm</origin>
+                            <origin>examples/ieee8500/PNNLteam/plots.py</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/pptracer.yaml</origin>
+                            <origin>examples/ieee8500/PNNLteam/inv8500.glm</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/pypower.yaml</origin>
+                            <origin>examples/ieee8500/PNNLteam/prepare_cases.py</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/pypower30.yaml</origin>
+                            <origin>examples/ieee8500/PNNLteam/inv30.glm</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/pypower30dispload.yaml</origin>
+                            <origin>examples/ieee8500/PNNLteam/parser.py</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/pypowerConfig_TE30dispload.yaml</origin>
+                            <origin>examples/ieee8500/PNNLteam/InvFeederGen.m</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/TE_Challenge_auction.yaml</origin>
+                            <origin>examples/ieee8500/PNNLteam/plot_invs.py</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/TE_Challenge.glm</origin>
+                            <origin>examples/ieee8500/PNNLteam/prices.player</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/TE_Challenge0.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/TE30_ChallengePYPOWER.glm</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/tesp.yaml</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/tracer.yaml</origin>
+                            <origin>examples/ieee8500/PNNLteam/kill5570.sh</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -1057,7 +793,6 @@
             <description>Executables</description>
             <canBeEdited>1</canBeEdited>
             <detailedDescription>Platform-dependent GridLAB-D, EnergyPlus and FNCS for TESP.</detailedDescription>
-            <downloadable>1</downloadable>
             <selected>0</selected>
             <show>1</show>
             <folderList>
@@ -1085,7 +820,7 @@
                     <description>Program Files</description>
                     <destination>${unixlocaldir}</destination>
                     <name>execlinux</name>
-                    <platforms>linux</platforms>
+                    <platforms>linux-x64</platforms>
                     <distributionFileList>
                         <distributionDirectory>
                             <origin>../../Documents/TESPinstall/Linux/bin</origin>
@@ -1115,7 +850,77 @@
                         </distributionDirectory>
                     </distributionFileList>
                 </folder>
+                <folder>
+                    <description>Java Files</description>
+                    <destination>${unixlocaldir}/lib</destination>
+                    <name>javalinux</name>
+                    <platforms>linux-x64</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>src/java/libJNIfncs.so</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Java Files</description>
+                    <destination>${unixlocaldir}/lib</destination>
+                    <name>javamac</name>
+                    <platforms>osx</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>src/java/libJNIfncs.jnilib</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Java Files</description>
+                    <destination>${gridlabddir}/lib</destination>
+                    <name>javawin</name>
+                    <platforms>windows</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>src/java/JNIfncs.dll</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
             </folderList>
+            <parameterList>
+                <directoryParameter>
+                    <name>gridlabddir</name>
+                    <title>Program Installation Directory</title>
+                    <description>Executables and libraries for GridLAB-D, FNCS and EnergyPlus</description>
+                    <explanation></explanation>
+                    <value></value>
+                    <default>c:\gridlabd</default>
+                    <allowEmptyValue>0</allowEmptyValue>
+                    <mustBeWritable>1</mustBeWritable>
+                    <mustExist>0</mustExist>
+                    <width>30</width>
+                    <ruleList>
+                        <platformTest>
+                            <type>windows</type>
+                        </platformTest>
+                    </ruleList>
+                </directoryParameter>
+                <directoryParameter>
+                    <name>unixlocaldir</name>
+                    <title>Program Installation Directory</title>
+                    <description>Executables and libraries for GridLAB-D, FNCS and EnergyPlus</description>
+                    <explanation></explanation>
+                    <value></value>
+                    <default>/usr/local</default>
+                    <allowEmptyValue>0</allowEmptyValue>
+                    <mustBeWritable>1</mustBeWritable>
+                    <mustExist>0</mustExist>
+                    <width>30</width>
+                    <ruleList>
+                        <platformTest>
+                            <negate>1</negate>
+                            <type>windows</type>
+                        </platformTest>
+                    </ruleList>
+                </directoryParameter>
+            </parameterList>
         </component>
     </componentList>
     <postInstallationActionList>
@@ -1123,32 +928,18 @@
             <url>http://tesp.readthedocs.io/en/latest/</url>
         </launchBrowser>
     </postInstallationActionList>
+    <allowComponentSelection>1</allowComponentSelection>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
     <requireInstallationByRootUser>1</requireInstallationByRootUser>
     <saveRelativePaths>1</saveRelativePaths>
+    <uninstallerDirectory>${tespdir}</uninstallerDirectory>
     <vendor>Pacific Northwest National Laboratory</vendor>
     <parameterList>
         <directoryParameter>
-            <name>gridlabddir</name>
-            <description>Installer.Parameter.installdir.description</description>
-            <explanation>Installer.Parameter.installdir.explanation</explanation>
-            <value></value>
-            <default>c:\gridlabd</default>
-            <allowEmptyValue>0</allowEmptyValue>
-            <cliOptionName>prefix</cliOptionName>
-            <mustBeWritable>1</mustBeWritable>
-            <mustExist>0</mustExist>
-            <width>30</width>
-            <ruleList>
-                <platformTest>
-                    <type>windows</type>
-                </platformTest>
-            </ruleList>
-        </directoryParameter>
-        <directoryParameter>
             <name>tespdir</name>
-            <description></description>
+            <title>Data Installation Directory</title>
+            <description>Library and example files for TESP</description>
             <explanation></explanation>
             <value></value>
             <default>${user_home_directory}/tesp</default>
@@ -1156,23 +947,6 @@
             <mustBeWritable>0</mustBeWritable>
             <mustExist>0</mustExist>
             <width>30</width>
-        </directoryParameter>
-        <directoryParameter>
-            <name>unixlocaldir</name>
-            <description>Installer.Parameter.installdir.description</description>
-            <explanation>Installer.Parameter.installdir.explanation</explanation>
-            <value></value>
-            <default>/usr/local</default>
-            <allowEmptyValue>0</allowEmptyValue>
-            <mustBeWritable>1</mustBeWritable>
-            <mustExist>0</mustExist>
-            <width>30</width>
-            <ruleList>
-                <platformTest>
-                    <negate>1</negate>
-                    <type>windows</type>
-                </platformTest>
-            </ruleList>
         </directoryParameter>
     </parameterList>
 </project>

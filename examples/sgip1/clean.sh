@@ -6,3 +6,5 @@ rm *dict.json
 rm *FNCS_Config.txt
 rm SGIP1*.yaml
 rm *.xml
+rm output/*
+rmdir output
