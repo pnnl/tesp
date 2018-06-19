@@ -16,23 +16,23 @@
             <folderList>
                 <folder>
                     <description>Program Files</description>
-                    <destination>${installdir}</destination>
+                    <destination>${tespdir}</destination>
                     <name>programfiles</name>
                     <platforms>all</platforms>
                     <shortcutList>
                         <shortcut>
                             <comment>Uninstall</comment>
-                            <exec>${installdir}/${uninstallerName}</exec>
+                            <exec>${tespdir}/${uninstallerName}</exec>
                             <icon></icon>
-                            <name>Uninstall ${product_fullname}</name>
-                            <path>${installdir}</path>
+                            <name>Uninstall TESP</name>
+                            <path>${tespdir}</path>
                             <platforms>all</platforms>
                             <runAsAdmin>0</runAsAdmin>
                             <runInTerminal>0</runInTerminal>
-                            <windowsExec>${installdir}/${uninstallerName}.exe</windowsExec>
+                            <windowsExec>${tespdir}/${uninstallerName}.exe</windowsExec>
                             <windowsExecArgs></windowsExecArgs>
                             <windowsIcon></windowsIcon>
-                            <windowsPath>${installdir}</windowsPath>
+                            <windowsPath>${tespdir}</windowsPath>
                         </shortcut>
                     </shortcutList>
                 </folder>
@@ -293,9 +293,21 @@
                     <name>miscfolder</name>
                     <platforms>all</platforms>
                     <distributionFileList>
-                        <distributionDirectory>
-                            <origin>support/misc</origin>
-                        </distributionDirectory>
+                        <distributionFile>
+                            <origin>support/misc/clean.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/misc/clean.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/misc/kill5570.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/misc/kill5570.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/misc/list5570.bat</origin>
+                        </distributionFile>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -777,14 +789,14 @@
             </folderList>
             <startMenuShortcutList>
                 <startMenuShortcut>
-                    <comment>Uninstall ${product_fullname}</comment>
-                    <name>Uninstall ${product_fullname}</name>
+                    <comment>Uninstall TESP</comment>
+                    <name>Uninstall TESP</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
-                    <windowsExec>${installdir}/${uninstallerName}.exe</windowsExec>
+                    <windowsExec>${tespdir}/${uninstallerName}.exe</windowsExec>
                     <windowsExecArgs></windowsExecArgs>
                     <windowsIcon></windowsIcon>
-                    <windowsPath>${installdir}/</windowsPath>
+                    <windowsPath>${tespdir}/</windowsPath>
                 </startMenuShortcut>
             </startMenuShortcutList>
         </component>
@@ -874,7 +886,7 @@
                 </folder>
                 <folder>
                     <description>Java Files</description>
-                    <destination>${gridlabddir}/lib</destination>
+                    <destination>${gridlabddir}/bin</destination>
                     <name>javawin</name>
                     <platforms>windows</platforms>
                     <distributionFileList>
@@ -889,7 +901,9 @@
                     <name>gridlabddir</name>
                     <title>Program Installation Directory</title>
                     <description>Executables and libraries for GridLAB-D, FNCS and EnergyPlus</description>
-                    <explanation></explanation>
+                    <explanation>TESP requires a custom FNCS build of EnergyPlus v8.3, a custom GridLAB-D build from branch feature/1048, and FNCS. The custom GridLAB-D features include the updated volt-watt and volt-var functions from IEEE 1547-2018, tiered time-of-use tariffs, a controllable switch, and streamlined metrics collection to JSON files.
+
+For Windows, these files can be installed to any directory.  The installer will set your PATH and GLPATH environment variables accordingly. If you have another GridLAB-D installation, it would be possible to switch between them by adjusting your PATH and GLPATH environment variables.</explanation>
                     <value></value>
                     <default>c:\gridlabd</default>
                     <allowEmptyValue>0</allowEmptyValue>
@@ -906,7 +920,9 @@
                     <name>unixlocaldir</name>
                     <title>Program Installation Directory</title>
                     <description>Executables and libraries for GridLAB-D, FNCS and EnergyPlus</description>
-                    <explanation></explanation>
+                    <explanation>TESP requires a custom FNCS build of EnergyPlus v8.3, a custom GridLAB-D build from branch feature/1048, and FNCS. The custom GridLAB-D features include the updated volt-watt and volt-var functions from IEEE 1547-2018, tiered time-of-use tariffs, a controllable switch, and streamlined metrics collection to JSON files.
+
+For Mac and Linux, these files are installed to /usr/local by default, and other locations have not been tested. If you install to another location, additional steps may be needed to configure the installation.  If you can't install to /usr/local, whether to avoid overwriting another GridLAB-D installation or because of security concerns, the docker installation may be a better choice for you.</explanation>
                     <value></value>
                     <default>/usr/local</default>
                     <allowEmptyValue>0</allowEmptyValue>
@@ -921,18 +937,49 @@
                     </ruleList>
                 </directoryParameter>
             </parameterList>
+            <postInstallationActionList>
+                <addEnvironmentVariable>
+                    <explanation>Setting GLPATH for GridLAB-D</explanation>
+                    <name>GLPATH</name>
+                    <scope>user</scope>
+                    <value>${gridlabddir}\lib\gridlabd;${gridlabddir}\share\gridlabd</value>
+                    <ruleList>
+                        <platformTest>
+                            <type>windows</type>
+                        </platformTest>
+                    </ruleList>
+                </addEnvironmentVariable>
+                <addDirectoryToPath>
+                    <explanation>Adding GridLAB-D to PATH</explanation>
+                    <insertAt>end</insertAt>
+                    <path>${gridlabddir}\bin</path>
+                    <scope>user</scope>
+                    <ruleList>
+                        <platformTest>
+                            <type>windows</type>
+                        </platformTest>
+                    </ruleList>
+                </addDirectoryToPath>
+            </postInstallationActionList>
         </component>
     </componentList>
     <postInstallationActionList>
         <launchBrowser>
             <url>http://tesp.readthedocs.io/en/latest/</url>
         </launchBrowser>
+        <addEnvironmentVariable>
+            <explanation>Setting TESPDIR to support and example files.</explanation>
+            <name>TESPDIR</name>
+            <scope>user</scope>
+            <value>${tespdir}</value>
+        </addEnvironmentVariable>
     </postInstallationActionList>
     <allowComponentSelection>1</allowComponentSelection>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
     <requireInstallationByRootUser>1</requireInstallationByRootUser>
     <saveRelativePaths>1</saveRelativePaths>
+    <startMenuGroupName>TESP</startMenuGroupName>
     <uninstallerDirectory>${tespdir}</uninstallerDirectory>
     <vendor>Pacific Northwest National Laboratory</vendor>
     <parameterList>
@@ -940,7 +987,9 @@
             <name>tespdir</name>
             <title>Data Installation Directory</title>
             <description>Library and example files for TESP</description>
-            <explanation></explanation>
+            <explanation>Under the "support" subdirectory: Feeder taxonomy (backbone), weather, 9-bus transmission system, appliance/thermostat schedules, 2-story school building and helper scripts for TESP simulations. Copy your own feeders, weather files and other data to this subdirectory, in order to have them available for TESP simulation case configuration.
+
+Under the "examples" subdirectory: PYPOWER and EnergyPlus examples verify operation of those simulators. A simple loadshed agent has been implemented twice, in Python and Java, to serve as a starting point for your own agent development. Use the 30-house secondary circuit, under te30, as the next step up in complexity for testing your own agents interacting with other agents. The ieee8500 and sgip1 examples are full-scale feeder simulations, for the NIST TE Challenge 2 and an IEEE journal paper, respectively.</explanation>
             <value></value>
             <default>${user_home_directory}/tesp</default>
             <allowEmptyValue>0</allowEmptyValue>
