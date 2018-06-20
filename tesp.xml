@@ -1,6 +1,6 @@
 <project>
     <shortName>tesp</shortName>
-    <fullName>OpenDSS</fullName>
+    <fullName>TESP</fullName>
     <version>0.4</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
@@ -124,6 +124,12 @@
                     <distributionFileList>
                         <distributionFile>
                             <origin>support/energyplus/SchoolDualController.idf</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
