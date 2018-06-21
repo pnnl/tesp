@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tesp_support',
-    version='0.0.4',
+    version='0.0.5',
     author='Thomas McDermott',
     author_email='Thomas.McDermott@PNNL.gov',
     description='Python support for the Transactive Energy Simulation Platform',
@@ -15,9 +15,9 @@ setup(
     url='https://github.com/pnnl/tesp',
     license='BSD',
     install_requires=[
-        'numpy',
-        'matplotlib',
-        'PYPOWER'
+        'numpy>=1.4.15',
+        'matplotlib>=2.0.2',
+        'PYPOWER>=5.1.3'
     ],
     packages=find_packages(),
     include_package_data=True,

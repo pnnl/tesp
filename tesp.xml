@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.4</version>
+    <version>0.5</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -255,6 +255,9 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/energyplus/plots.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/energyplus/README.md</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -634,6 +637,9 @@
                         <distributionFile>
                             <origin>examples/pypower/runpp.bat</origin>
                         </distributionFile>
+                        <distributionFile>
+                            <origin>examples/pypower/README.md</origin>
+                        </distributionFile>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -643,9 +649,6 @@
                     <platforms>all</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>examples/te30/gui.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
                             <origin>examples/te30/fncs.zpl</origin>
                         </distributionFile>
                         <distributionFile>
@@ -653,9 +656,6 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/te30/gui.py</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/tesp_monitor.yaml</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/te30/clean.bat</origin>
@@ -707,6 +707,9 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/te30/NonGLDLoad.txt</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/README.md</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>

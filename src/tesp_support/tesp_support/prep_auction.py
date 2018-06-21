@@ -256,14 +256,6 @@ def ProcessGLM (fileroot):
 		print ('    default: 0', file=yp)
 	yp.close ()
 
-#	op = open (dirname + 'launch_' + basename + '_auction.sh', 'w')
-#	arg = glmname
-#	print ('(export FNCS_FATAL=NO && exec gridlabd -D USE_FNCS -D METRICS_FILE=' + fileroot + '_metrics.json', 
-#				 arg, '&> gridlabd.log &)', file=op)
-#	print ('(export FNCS_CONFIG_FILE=' + yamlfile, '&& export FNCS_FATAL=NO && exec python auction.py', 
-#			 dictfile, fileroot, '&> auction.log &)', file=op)
-#	op.close()
-
 	op = open (fileroot + '_FNCS_Config.txt', 'w')
 	print ('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
 	print ('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_B7";', file=op)

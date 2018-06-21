@@ -412,17 +412,17 @@ values
     else:
         shfile = casedir + '/run.sh'
         op = open (shfile, 'w')
-        print ('(export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 5 &> broker.log &)', file=op)
-        print ('(export FNCS_CONFIG_FILE=eplus.yaml && exec EnergyPlus -w ' 
+        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 5 &> broker.log &)', file=op)
+        print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec EnergyPlus -w ' 
                + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
-        print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && exec eplus_json', EpAgentStop, EpAgentStep, 
+        print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && export FNCS_FATAL=YES && exec eplus_json', EpAgentStop, EpAgentStep, 
                EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
-        print ('(export FNCS_FATAL=NO && exec gridlabd -D USE_FNCS -D METRICS_FILE='
+        print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
                + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
         cmdline = """python -c "import tesp_support.api as tesp;tesp.auction_loop('""" + AgentDictFile + """','""" + casename + """')" """
-        print ('(export FNCS_CONFIG_FILE=' + AuctionYamlFile + ' && export FNCS_FATAL=NO && exec ' + cmdline + ' &> auction.log &)', file=op)
+        print ('(export FNCS_CONFIG_FILE=' + AuctionYamlFile + ' && export FNCS_FATAL=YES && exec ' + cmdline + ' &> auction.log &)', file=op)
         cmdline = """python -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
-        print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=NO && export FNCS_LOG_STDOUT=yes && exec ' + cmdline + ' &> pypower.log &)', file=op)
+        print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + cmdline + ' &> pypower.log &)', file=op)
         op.close()
         st = os.stat (shfile)
         os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
@@ -435,19 +435,19 @@ values
     cmds = {'time_stop':seconds, 
             'yaml_delta':int(config['AgentPrep']['MarketClearingPeriod']), 
             'commands':[{},{},{},{},{},{}]}
-    cmds['commands'][0] = {'args':['fncs_broker', '6'], 'env':[['FNCS_BROKER', 'tcp://*:5570']], 'log':'broker.log'}
+    cmds['commands'][0] = {'args':['fncs_broker', '6'], 'env':[['FNCS_BROKER', 'tcp://*:5570'],['FNCS_FATAL', 'YES']], 'log':'broker.log'}
     cmds['commands'][1] = {'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', EpFile], 
-               'env':[['FNCS_CONFIG_FILE', 'eplus.yaml']], 'log':'eplus.log'}
+               'env':[['FNCS_CONFIG_FILE', 'eplus.yaml'],['FNCS_FATAL', 'YES']], 'log':'eplus.log'}
     cmds['commands'][2] = {'args':['eplus_json', EpAgentStop, EpAgentStep, EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
-               'env':[['FNCS_CONFIG_FILE', 'eplus_json.yaml']], 'log':'eplus_json.log'}
+               'env':[['FNCS_CONFIG_FILE', 'eplus_json.yaml'],['FNCS_FATAL', 'YES']], 'log':'eplus_json.log'}
     cmds['commands'][3] = {'args':['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile], 
-               'env':[['FNCS_FATAL', 'NO']], 'log':'gridlabd.log'}
+               'env':[['FNCS_FATAL', 'YES']], 'log':'gridlabd.log'}
     pyScript1 = '\"import tesp_support.api as tesp;tesp.auction_loop(\'' + AgentDictFile + '\',\'' + casename + '\')"'
     cmds['commands'][4] = {'args':['python', '-c', pyScript1], 
-               'env':[['FNCS_CONFIG_FILE', AuctionYamlFile],['FNCS_FATAL', 'NO']], 'log':'auction.log'}
+               'env':[['FNCS_CONFIG_FILE', AuctionYamlFile],['FNCS_FATAL', 'YES']], 'log':'auction.log'}
     pyScript2 = '\"import tesp_support.api as tesp;tesp.pypower_loop(\'' + PPJsonFile + '\',\'' + casename + '\')"'
     cmds['commands'][5] = {'args':['python', '-c', pyScript2], 
-               'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'NO'],['FNCS_LOG_STDOUT', 'yes']], 'log':'pypower.log'}
+               'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 'log':'pypower.log'}
     json.dump (cmds, op, indent=2)
     print (pyScript1, pyScript2)
     op.close()
