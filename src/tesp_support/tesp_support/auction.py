@@ -10,7 +10,7 @@ def auction_loop (configfile, metrics_root, flag='WithMarket'):
     bWantMarket = True
     if flag == 'NoMarket':
         bWantMarket = False
-        print ('Disabled the market')
+        print ('Disabled the market', flush=True)
     time_stop = int (48 * 3600) # simulation time in seconds
     StartTime = '2013-07-01 00:00:00 -0800'
     time_fmt = '%Y-%m-%d %H:%M:%S %z'
@@ -76,7 +76,7 @@ def auction_loop (configfile, metrics_root, flag='WithMarket'):
         dt_now = dt_now + timedelta (seconds=time_delta)
         day_of_week = dt_now.weekday()
         hour_of_day = dt_now.hour
-#        print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week)
+        print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, flush=True)
 
         # update the data from FNCS messages
         events = fncs.get_events()
@@ -112,7 +112,7 @@ def auction_loop (configfile, metrics_root, flag='WithMarket'):
             bSetDefaults = False
 
         if time_granted >= tnext_bid:
-            print ('**', tnext_clear)
+            print ('**', tnext_clear, flush=True)
             aucObj.clear_bids()
             time_key = str (int (tnext_clear))
             controller_metrics [time_key] = {}

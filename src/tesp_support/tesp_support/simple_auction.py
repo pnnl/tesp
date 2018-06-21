@@ -132,11 +132,14 @@ def parse_kw(arg):
 # [Qunresp, Qmaxresp, degree, c2, c1]
 # scaled to MW instead of kW for the opf
 def aggregate_bid (crv):
+    unresp = 0
+    idx = 0
     pInd = np.flip(np.argsort(np.array(crv.price)), 0)
     p = 1000.0 * np.array (crv.price)[pInd]  # $/MW
     q = 0.001 * np.array (crv.quantity)[pInd] # MWhr
-    idx = np.argwhere (p == p[0])[-1][0]
-    unresp = np.cumsum(q[:idx+1])[-1]
+    if p.size > 0:
+        idx = np.argwhere (p == p[0])[-1][0]
+        unresp = np.cumsum(q[:idx+1])[-1]
     c2 = 0
     c1 = 0
     deg = 0
@@ -230,7 +233,7 @@ class simple_auction:
             self.curve_buyer.add_to_curve (self.pricecap, self.unresp, True)
         else:
             print ('## unresp < 0', self.unresp, self.curve_buyer.count, 
-                   self.curve_buyer.total, self.curve_buyer.total_on, self.curve_buyer.total_off)
+                   self.curve_buyer.total, self.curve_buyer.total_on, self.curve_buyer.total_off, flush=True)
         if self.curve_buyer.count > 0:
             self.curve_buyer.set_curve_order ('descending')
         self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.agg_c1 = aggregate_bid (self.curve_buyer)
@@ -419,7 +422,7 @@ class simple_auction:
                 missingBidder = "seller"
             elif self.curve_buyer.count == 0:
                 missingBidder = "buyer"
-            print ('  Market %s fails to clear due to missing %s' % (self.name, missingBidder))
+            print ('  Market %s fails to clear due to missing %s' % (self.name, missingBidder), flush=True)
             
         # Calculation of the marginal 
         marginal_total = self.marginal_quantity = self.marginal_frac = 0.0
@@ -463,7 +466,7 @@ class simple_auction:
         print ('##', self.clearing_type, self.clearing_quantity, self.clearing_price, 
                self.curve_buyer.count, self.unresponsive_buy, self.responsive_buy,
                self.curve_seller.count, self.unresponsive_sell, self.responsive_sell,
-               self.marginal_quantity, self.marginal_frac, self.lmp, self.refload)
+               self.marginal_quantity, self.marginal_frac, self.lmp, self.refload, flush=True)
 
 class hvac:
     def __init__(self,dict,key,aucObj):
