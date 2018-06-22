@@ -406,31 +406,49 @@ values
     p3.wait()
 
     # write the command scripts for console and tesp_monitor execution
+    aucline = """python -c "import tesp_support.api as tesp;tesp.auction_loop('""" + AgentDictFile + """','""" + casename + """')" """
+    ppline = """python -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
 
-    if sys.platform == 'win32':
-        batname = 'run.bat'
-    else:
-        shfile = casedir + '/run.sh'
-        op = open (shfile, 'w')
-        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 5 &> broker.log &)', file=op)
-        print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec EnergyPlus -w ' 
-               + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
-        print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && export FNCS_FATAL=YES && exec eplus_json', EpAgentStop, EpAgentStep, 
-               EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
-        print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
-               + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
-        cmdline = """python -c "import tesp_support.api as tesp;tesp.auction_loop('""" + AgentDictFile + """','""" + casename + """')" """
-        print ('(export FNCS_CONFIG_FILE=' + AuctionYamlFile + ' && export FNCS_FATAL=YES && exec ' + cmdline + ' &> auction.log &)', file=op)
-        cmdline = """python -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
-        print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + cmdline + ' &> pypower.log &)', file=op)
-        op.close()
-        st = os.stat (shfile)
-        os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        shfile = casedir + '/kill5570.sh'
-        os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        shfile = casedir + '/clean.sh'
-        os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    # batch file for Windows
+    batfile = casedir + '/run.bat'
+    op = open (batfile, 'w')
+    print ('set FNCS_FATAL=yes', file=op)
+    print ('set FNCS_TIME_DELTA=', file=op)
+    print ('set FNCS_CONFIG_FILE=', file=op)
+    print ('start /b cmd /c fncs_broker 5 ^>broker.log 2^>^&1', file=op)
+    print ('set FNCS_CONFIG_FILE=eplus.yaml', file=op)
+    print ('start /b cmd /c energyplus -w ' + EpWeather + ' -d output -r ' + EpFile + ' ^>eplus.log 2^>^&1', file=op)
+    print ('set FNCS_CONFIG_FILE=eplus_json.yaml', file=op)
+    print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
+    print ('set FNCS_CONFIG_FILE=', file=op)
+    print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gridlabd.log 2^>^&1', file=op)
+    print ('set FNCS_CONFIG_FILE=' + AuctionYamlFile, file=op)
+    print ('start /b cmd /c', aucline + '^>auction.log 2^>^&1', file=op)
+    print ('set FNCS_CONFIG_FILE=pypower.yaml', file=op)
+    print ('start /b cmd /c', ppline + '^>pypower.log 2^>^&1', file=op)
+    op.close()
+    
+    # shell scripts and chmod for Mac/Linux
+    shfile = casedir + '/run.sh'
+    op = open (shfile, 'w')
+    print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 5 &> broker.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec EnergyPlus -w ' 
+           + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && export FNCS_FATAL=YES && exec eplus_json', EpAgentStop, EpAgentStep, 
+           EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
+    print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
+           + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=' + AuctionYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> auction.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + ppline + ' &> pypower.log &)', file=op)
+    op.close()
+    st = os.stat (shfile)
+    os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    shfile = casedir + '/kill5570.sh'
+    os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    shfile = casedir + '/clean.sh'
+    os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
+    # commands for the GUI execution
     op = open (casedir + '/tesp_monitor.json', 'w')
     cmds = {'time_stop':seconds, 
             'yaml_delta':int(config['AgentPrep']['MarketClearingPeriod']), 

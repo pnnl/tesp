@@ -25,7 +25,6 @@ def precool_loop (nhours, metrics_root):
 
   lp = open (metrics_root + "_agent_dict.json").read()
   dict = json.loads(lp)
-  mp = open ("precool_" + metrics_root + "_metrics.json", "w")
   precool_meta = {'temperature_deviation_min':{'units':'degF','index':0},
                   'temperature_deviation_max':{'units':'degF','index':1},
                   'temperature_deviation_avg':{'units':'degF','index':2}}
@@ -138,9 +137,12 @@ def precool_loop (nhours, metrics_root):
     time_next = time_granted + dt
 
   print (nPrecoolers, 'houses participated in precooling')
+  print ('writing metrics', flush=True)
+  mp = open ("precool_" + metrics_root + "_metrics.json", "w")
+  print (json.dumps(precool_metrics), file=mp)
+  mp.close()
+  print ('done', flush=True)
+
   print ('finalizing FNCS', flush=True)
   fncs.finalize()
-  print ('writing metrics', flush=True)
-  print (json.dumps(precool_metrics), file=mp)
-  print ('done', flush=True)
 
