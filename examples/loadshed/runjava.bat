@@ -1,7 +1,7 @@
-set CLASSPATH=.;../../src/java
+set CLASSPATH=.
 javac loadshed.java
 set FNCS_CONFIG_FILE=
-set FNCS_FATAL=no
+set FNCS_FATAL=yes
 set FNCS_LOG_STDOUT=yes
 set FNCS_LOG_LEVEL=DEBUG2
 set FNCS_TRACE=yes

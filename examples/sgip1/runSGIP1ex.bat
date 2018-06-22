@@ -14,11 +14,11 @@ set FNCS_CONFIG_FILE=eplus_json.yaml
 start /b cmd /c eplus_json 2d 5m School_DualController eplus_SGIP1ex_metrics.json ^>eplus_json1ex.log 2^>^&1
 
 set FNCS_CONFIG_FILE=pypower.yaml
-start /b cmd /c python fncsPYPOWER.py SGIP1ex ^>pypower1ex.log 2^>^&1
+start /b cmd /c python -c "import tesp_support.api as tesp;tesp.pypower_loop('sgip1_pp.json','SGIP1ex')" ^>pypower1ex.log 2^>^&1
 
 set FNCS_CONFIG_FILE=
 start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=SGIP1ex_metrics.json SGIP1e.glm ^>gridlabd1ex.log 2^>^&1 
 
-set FNCS_CONFIG_FILE=SGIP1b_auction.yaml
-start /b cmd /c python auction.py SGIP1b_agent_dict.json SGIP1ex NoMarket ^>auction1ex.log 2^>^&1
+set FNCS_CONFIG_FILE=SGIP1e_auction.yaml
+start /b cmd /c python -c "import tesp_support.api as tesp;tesp.auction_loop('SGIP1e_agent_dict.json','SGIP1ex','NoMarket')" ^>auction1ex.log 2^>^&1
 

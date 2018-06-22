@@ -5,7 +5,6 @@ del *.xml
 del *.audit
 del broker_trace.txt
 del *metrics.json
-del metrics.txt
-del testout.txt
-
+del output\*.*
+rd output
 
