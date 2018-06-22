@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.5</version>
+    <version>0.6</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -570,9 +570,6 @@
                             <origin>examples/sgip1/pypower.yaml</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/sgip1/run.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
                             <origin>examples/sgip1/kill5570.bat</origin>
                         </distributionFile>
                         <distributionFile>
@@ -592,6 +589,24 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/sgip1/kill5570.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1a.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1b.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1c.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1d.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1e.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/sgip1/runSGIP1ex.bat</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -667,9 +682,6 @@
                             <origin>examples/te30/plots.py</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/run_new0.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
                             <origin>examples/te30/prepare_case.py</origin>
                         </distributionFile>
                         <distributionFile>
@@ -679,13 +691,7 @@
                             <origin>examples/te30/te30_pp.json</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/run_new.sh</origin>
-                        </distributionFile>
-                        <distributionFile>
                             <origin>examples/te30/eplus_json.yaml</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/te30/run30.bat</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/te30/pypower30.yaml</origin>
@@ -710,6 +716,18 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/te30/README.md</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/run0.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/run.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/run.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/run0.bat</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -792,6 +810,21 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/ieee8500/PNNLteam/kill5570.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/PNNLteam/kill5570.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/PNNLteam/clean.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/PNNLteam/list5570.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/PNNLteam/run30.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/PNNLteam/run8500.bat</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>

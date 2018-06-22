@@ -36,13 +36,18 @@ results from different cases on the same axes.
 - *prepare_cases.py*; sets up the dictionaries and GLD/Agent FNCS configurations for all cases
 - *pypower.yaml*; FNCS configuration for PYPOWER
 - *README.md*; this file
-- *run.bat*; Windows script that runs a case
 - *runall.sh*; Linux/Mac script that runs several cases in sequence, using 'sleep' between them
+- *runSGIP1a.bat*; Windows script for case A
 - *runSGIP1a.sh*; Linux/Mac script for case A
+- *runSGIP1b.bat*; Windows script for case B
 - *runSGIP1b.sh*; Linux/Mac script for case B
+- *runSGIP1c.bat*; Windows script for case C
 - *runSGIP1c.sh*; Linux/Mac script for case C
+- *runSGIP1d.bat*; Windows script for case D
 - *runSGIP1d.sh*; Linux/Mac script for case D
+- *runSGIP1e.bat*; Windows script for case E
 - *runSGIP1e.sh*; Linux/Mac script for case E
+- *runSGIP1ex.bat*; Windows script for case Ex (case E without market)
 - *runSGIP1ex.sh*; Linux/Mac script for case Ex (case E without market)
 - *sgip1_pp.json*; PYPOWER system definition
 - *SGIP1a.glm*; GridLAB-D file for base case with no market and GridLAB-D built-in thermostat schedules

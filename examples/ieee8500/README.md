@@ -96,15 +96,20 @@ See the TESP documentation for guidance on interpreting the other files in this
 directory.
 
 - *bill.py*; calculates and plots a summary of meter bills
-- *clean.sh*; script to clean out log files and output files
+- *clean.bat*; Windows script to clean out log files and output files
+- *clean.sh*; Linux/Mac script to clean out log files and output files
 - *inv30.glm*; a 30-house test case with smart inverters
 - *inv8500.glm*; the 8500-node test case with smart inverters
 - *invFeederGen.m*; a MATLAB helper script that populates 8500-node with smart inverters, based on the ../backbone directory
-- *kill5570.sh*; script that terminates all processes listening to the default FNCS port 5570
+- *kill5570.bat*; helper script that stops processes listening on port 5570 (Windows)
+- *kill5570.sh*; helper script that stops processes listening on port 5570 (Linux/Mac)
+- *list5570.bat*; helper script that lists processes listening on port 5570 (Windows)
 - *parser.py*; testing script for parsing FNCS values
 - *plot_invs.py*; tabulates and plots the meter with most overvoltage counts; not valid for the 30-house case because it includes a 480-volt load
 - *plots.py*; plots the GridLAB-D and agent outputs using tesp_support functions
 - *prepare_cases.py*; prepares the JSON dictionaries and FNCS configuration for both cases, using tesp_support functions
 - *prices.player*; time-of-day rates to publish over FNCS
-- *run30.sh*; script that runs the 30-house case
-- *run8500.sh*; script that runs the 8500-node case
+- *run30.bat*; Windows script that runs the 30-house case
+- *run30.sh*; Linux/Mac script that runs the 30-house case
+- *run8500.bat*; Windows script that runs the 8500-node case
+- *run8500.sh*; Linux/Mac script that runs the 8500-node case

@@ -184,7 +184,7 @@ for ((i=0; i<$gldNum; i++)); do
 done
 
 # ================================================ starting TE Agents ============================================================
-export FNCS_LOG_STDOUT=${agentSTDOUTlog} && export FNCS_LOG_FILE=${agentFILElog} && export FNCS_LOG_LEVEL=$agentLOGlevel && export FNCS_CONFIG_FILE=${agentCONFfile} && export FNCS_FATAL=NO && cd $agentDir && exec python3 auction.py ${agentDICTfile} ${scenarioName} &> ${agentOutFile} &
+export FNCS_LOG_STDOUT=${agentSTDOUTlog} && export FNCS_LOG_FILE=${agentFILElog} && export FNCS_LOG_LEVEL=$agentLOGlevel && export FNCS_CONFIG_FILE=${agentCONFfile} && export FNCS_FATAL=YES && cd $agentDir && exec python3 auction.py ${agentDICTfile} ${scenarioName} &> ${agentOutFile} &
 
 # ================================================ starting Energy Plus ============================================================
 if test -e $epOutFile

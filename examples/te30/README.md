@@ -35,9 +35,10 @@ To run and plot a case with the market:
 - *prepare_case.py*; sets up the dictionaries and GLD/Agent FNCS configurations for all cases
 - *pypower30.yaml*; FNCS configuration for PYPOWER
 - *README.md*; this file
-- *run30.bat*; Windows script that runs a case with market
-- *run_new.sh*; Linux/Mac script for the case with market
-- *run_new0.sh*; Linux/Mac script for the case without market
+- *run.bat*; Windows script that runs a case with market
+- *run.sh*; Linux/Mac script for the case with market
+- *run0.bat*; Windows script that runs a case without market
+- *run0.sh*; Linux/Mac script for the case without market
 - *TE_Challenge.glm*; GridLAB-D system definition
 - *te30_pp.json*; PYPOWER system definition
 - *tesp_monitor.json*; commands for solution monitor to run a case with market
