@@ -1,0 +1,7 @@
+Name,Free,Value,Minimum,Maximum,Covariance,Unit
+C,True,40000,1.00E+04,1.00E+06,1000,J/K
+R,True,0.002,0.001,0.5,0.0001,K/W
+Ci,True,40000,1.00E+04,1.00E+06,1000,J/K
+Ri,True,0.002,0.001,0.5,0.0001,K/W
+shgc,True,5,0,10,0,1
+
