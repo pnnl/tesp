@@ -9,13 +9,13 @@ agents, with or without the double-auction market.
 To run and plot a case without the market:
 
 1. python prepare_case.py
-2. ./run_new0.sh 
+2. ./run0.sh 
 3. python plots.py TE_Challenge0
 
 To run and plot a case with the market:
 
 1. python prepare_case.py  # unless already done above
-2. ./run_new.sh 
+2. ./run.sh 
 3. python plots.py TE_Challenge
 
 ### File Directory
