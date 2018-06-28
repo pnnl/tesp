@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.6</version>
+    <version>0.7</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -728,6 +728,12 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/te30/run0.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/launch_auction.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/launch_pp.py</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
