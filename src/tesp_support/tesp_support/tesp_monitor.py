@@ -3,14 +3,16 @@ import json
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
+from tkinter import messagebox
 import subprocess
 import os
 import tesp_support.fncs as fncs
+import tesp_support.simple_auction as simple_auction
 import time
 
 import numpy as np;
 import matplotlib;
-matplotlib.use("TkAgg");
+matplotlib.use('TkAgg');
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg;
 from matplotlib.figure import Figure;
 import matplotlib.pyplot as plt;
@@ -18,20 +20,36 @@ import matplotlib.pyplot as plt;
 class TespMonitorGUI:
   def __init__ (self, master):
     self.root = master
+    self.root.protocol('WM_DELETE_WINDOW', self.on_closing)
+    self.top = self.root.winfo_toplevel()
+    self.top.rowconfigure (0, weight=1)
+    self.top.columnconfigure (0, weight=1)
     self.fig, self.ax = plt.subplots(4,1, sharex = 'col')
+    plt.subplots_adjust (hspace = 0.35)
     plt.ion()
 
     ttk.Style().configure('TButton', foreground='blue')
+
     btn = ttk.Button(self.root, text='Open...', command=self.OpenConfig)
     btn.grid(row=0, column=0, sticky=tk.NSEW)
     btn = ttk.Button(self.root, text='Start All', command=self.launch_all)
     btn.grid(row=0, column=1, sticky=tk.NSEW)
     btn = ttk.Button(self.root, text='Kill All', command=self.kill_all)
     btn.grid(row=0, column=2, sticky=tk.NSEW)
+    btn = ttk.Button(self.root, text='Quit', command=self.Quit)
+    btn.grid(row=0, column=3, sticky=tk.NSEW)
     self.labelvar = tk.StringVar()
     self.labelvar.set('Case')
     lab = ttk.Label(self.root, textvariable=self.labelvar, relief=tk.RIDGE)
-    lab.grid(row=0, column=3, sticky=tk.NSEW)
+    lab.grid(row=0, column=4, sticky=tk.NSEW)
+
+    self.root.rowconfigure (0, weight=0)
+    self.root.rowconfigure (1, weight=1)
+    self.root.columnconfigure (0, weight=0)
+    self.root.columnconfigure (1, weight=0)
+    self.root.columnconfigure (2, weight=0)
+    self.root.columnconfigure (3, weight=0)
+    self.root.columnconfigure (4, weight=1)
 
     self.ax[0].set_ylabel('[pu]')
     self.ax[0].set_title ('PYPOWER Bus Voltage', fontsize=10)
@@ -50,7 +68,16 @@ class TespMonitorGUI:
 
     self.canvas = FigureCanvasTkAgg(self.fig, self.root)
     self.canvas.show()
-    self.canvas.get_tk_widget().grid(row=1,columnspan=4)
+    self.canvas.get_tk_widget().grid(row=1,columnspan=5, sticky = tk.W + tk.E + tk.N + tk.S)
+
+  def on_closing(self):
+    if messagebox.askokcancel('Quit', 'Do you want to close this window? This is likely to stop all simulations.'):
+      self.root.quit()
+      self.root.destroy()
+
+  def Quit(self):
+    self.root.quit()
+    self.root.destroy()
 
   def OpenConfig(self): 
     fname = filedialog.askopenfilename(initialdir = '.',
@@ -65,18 +92,19 @@ class TespMonitorGUI:
     self.time_stop = int (cfg['time_stop'] / 60)
     self.yaml_delta = int (cfg['yaml_delta'] / 60)
     self.hour_stop = float (self.time_stop / 60.0)
-#    print ('current directory', os.getcwd())
-#    print (fname, self.time_stop, self.yaml_delta)
     dirpath = os.path.dirname (fname)
     os.chdir (dirpath)
-#    print ('current directory', os.getcwd())
     self.labelvar.set(dirpath)
 
   def kill_all(self):
     for proc in self.pids:
-      print ('trying to kill', proc)
-      proc.kill()
+      print ('trying to kill', proc.pid)
+      proc.terminate()
+    self.root.update()
+    print ('trying to finalize FNCS')
     fncs.finalize()
+    print ('FNCS finalized')
+#    self.root.update()
 
   def launch_all(self):
     print('launching all simulators')
@@ -89,14 +117,16 @@ class TespMonitorGUI:
       logfd = None
       if 'log' in row:
         logfd = open (row['log'], 'w')
-#      print (procargs, logfd)
+#      print ('*******************************************************')
+#      print (procargs, procenv)
       proc = subprocess.Popen (procargs, env=procenv, stdout=logfd)
       self.pids.append (proc)
 
+#    print ('*******************************************************')
     print('launched', len(self.pids), 'simulators') # , self.pids)
 
     self.root.update()
-    print ('root update')
+#    print ('root update')
 
     fncs.initialize()
     print ('FNCS initialized')
@@ -130,7 +160,7 @@ class TespMonitorGUI:
           self.ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
           bWantX1 = False
         elif bWantX3 and tok == 'distribution_load':
-          val = float (fncs.get_value(key).decode().strip('+ degFkW'))
+          val = simple_auction.parse_kw (fncs.get_value(key).decode())
           x3[idx] = val
           self.ax[3].plot(hrs[1:idx],x3[1:idx],color='magenta')
           bWantX3 = False
@@ -154,7 +184,7 @@ class TespMonitorGUI:
           x1[idx] = val
           self.ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
           bWantX1 = False
-      print (time_granted, key.decode(), fncs.get_value(key).decode())
+#      print (time_granted, key.decode(), fncs.get_value(key).decode())
       self.root.update()
       self.fig.canvas.draw()
     fncs.finalize()
@@ -171,4 +201,3 @@ def show_tesp_monitor ():
     except UnicodeDecodeError:
       pass
 
-#show_tesp_monitor()

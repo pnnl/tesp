@@ -201,6 +201,8 @@ class simple_auction:
         self.marginal_quantity = 0.0
         self.marginal_frac = 0.0
 
+        self.clearing_scalar = 0.5 # TODO - this used to be configurable
+
     def set_refload (self, kw):
         self.refload = kw
 
@@ -391,7 +393,7 @@ class simple_auction:
                     elif self.curve_seller.price[0] == -self.pricecap:
                         self.clearing_price = self.curve_seller.price[0] - bid_offset  
                     else:
-                        self.clearing_price = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.market['clearing_scalar']
+                        self.clearing_price = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.clearing_scalar
            
             elif self.clearing_quantity < self.unresponsive_buy:
                 self.clearing_type = ClearingType.FAILURE
@@ -413,7 +415,7 @@ class simple_auction:
             elif self.curve_seller.count == 0 and self.curve_buyer.count > 0:
                 self.clearing_price = self.curve_buyer.price[0] + bid_offset
             elif self.curve_seller.count > 0 and self.curve_buyer.count > 0:
-                self.clearing_price = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.market['clearing_scalar']
+                self.clearing_price = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.clearing_scalar
             elif self.curve_seller.count == 0 and self.curve_buyer.count == 0:
                 self.clearing_price = 0.0
             self.clearing_quantity = 0

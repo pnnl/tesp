@@ -28,6 +28,8 @@ To run and plot a case with the market:
 - *gui.py*; invoke "python gui.py" to start a solution monitor
 - *kill5570.bat*; helper script that stops processes listening on port 5570 (Windows)
 - *kill5570.sh*; helper script that stops processes listening on port 5570 (Linux/Mac)
+- *launch_auction.py*; helper script that launches the Python auction from tesp_monitor
+- *launch_pp.py*; helper script that launches PYPOWER from tesp_monitor
 - *list5570.bat*; helper script that lists processes listening on port 5570 (Windows)
 - *NonGLDLoad.txt*; text file of non-responsive loads on transmission buses
 - *outputs_te.glm*; requests for CSV file outputs of GridLAB-D variables

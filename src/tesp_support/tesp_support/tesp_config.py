@@ -78,8 +78,8 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
 					];
 varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCoolingPercentage'],
 					['Electric Cooling Participation',50,'%','FeederGenerator','ElectricCoolingParticipation'],
-					['Solar Penetration',20,'%','FeederGenerator','SolarPercentage'],
-					['Storage Penetration',10,'%','FeederGenerator','StoragePercentage'],
+					['Solar Penetration',0,'%','FeederGenerator','SolarPercentage'],
+					['Storage Penetration',0,'%','FeederGenerator','StoragePercentage'],
 					['Solar Inverter Mode','CONSTANT_PF','','FeederGenerator','SolarInverterMode','inverterModesPV'],
 					['Storage Inverter Mode','CONSTANT_PF','','FeederGenerator','StorageInverterMode','inverterModesBattery'],
 					['Eplus Bus','R1-12-47-1_node_346','','FeederGenerator','EnergyPlusBus'],
@@ -96,11 +96,11 @@ varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCool
 					['Tier 3 Price',0,'$/kwh','FeederGenerator','Tier3Price']
 					];
 varsPP = [['OPF Type','DC','for dispatch and price','PYPOWERConfiguration','ACOPF','optimalPowerFlowChoices'],
-					['PF Type','AC','for voltage','PYPOWERConfiguration','ACPF','powerFlowChoices'],
+					['PF Type','DC','for voltage','PYPOWERConfiguration','ACPF','powerFlowChoices'],
 					['Substation Voltage',230.0,'kV','PYPOWERConfiguration','TransmissionVoltage'],
 					['Substation Base',12.0,'MVA','PYPOWERConfiguration','TransformerBase'],
 					['GLD Bus Number',7,'','PYPOWERConfiguration','GLDBus'],
-					['GLD Load Scale',400,'','PYPOWERConfiguration','GLDScale'],
+					['GLD Load Scale',20,'','PYPOWERConfiguration','GLDScale'],
 					['Non-responsive Loads','NonGLDLoad.txt','CSV File','PYPOWERConfiguration','CSVLoadFile'],
 					['Unit Out',2,'','PYPOWERConfiguration','UnitOut'],
 					['Unit Outage Start','2013-07-02 07:00:00','GLD Date/Time','PYPOWERConfiguration','UnitOutStart'],

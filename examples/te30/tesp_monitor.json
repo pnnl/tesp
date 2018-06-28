@@ -12,6 +12,10 @@
           "FNCS_BROKER",
           "tcp://*:5570"
         ],
+        [
+          "FNCS_LOG_STDOUT",
+          "YES"
+        ],
   			[
 	  			"FNCS_FATAL",
 		  		"YES"
@@ -34,6 +38,10 @@
 	  			"FNCS_FATAL",
 		  		"YES"
 			  ],
+        [
+          "FNCS_LOG_STDOUT",
+          "YES"
+        ],
         [
           "FNCS_CONFIG_FILE",
           "eplus.yaml"
@@ -59,6 +67,10 @@
 		  		"YES"
 			  ],
         [
+          "FNCS_LOG_STDOUT",
+          "YES"
+        ],
+        [
           "FNCS_CONFIG_FILE",
           "eplus_json.yaml"
         ]
@@ -75,6 +87,10 @@
         "TE_Challenge.glm"
       ],
       "env": [
+  			[
+	  			"FNCS_LOG_STDOUT",
+		  		"YES"
+			  ],
         [
           "FNCS_FATAL",
           "YES"
@@ -85,13 +101,16 @@
     {
       "args": [
         "python",
-        "-c",
-        "\"import tesp_support.api as tesp;tesp.auction_loop('TE_Challenge_agent_dict.json','TE_Challenge')\""
+        "launch_auction.py"
       ],
       "env": [
         [
           "FNCS_CONFIG_FILE",
           "TE_Challenge_auction.yaml"
+        ],
+        [
+          "FNCS_LOG_STDOUT",
+          "YES"
         ],
         [
           "FNCS_FATAL",
@@ -103,8 +122,7 @@
     {
       "args": [
         "python",
-        "-c",
-        "\"import tesp_support.api as tesp;tesp.pypower_loop('te30_pp.json','TE_Challenge')\""
+        "launch_pp.py"
       ],
       "env": [
         [
