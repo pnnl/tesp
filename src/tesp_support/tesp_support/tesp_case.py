@@ -449,25 +449,41 @@ values
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     # commands for the GUI execution
+    op = open (casedir + '/gui.py', 'w')
+    print ('import tesp_support.tesp_monitor as tesp', file=op)
+    print ('tesp.show_tesp_monitor()', file=op)
+    op.close()
+    op = open (casedir + '/launch_auction.py', 'w')
+    print ('import tesp_support.api as tesp', file=op)
+    print ('tesp.auction_loop(\'' + AgentDictFile + '\',\'' + casename + '\')', file=op)
+    op.close()
+    op = open (casedir + '/launch_pp.py', 'w')
+    print ('import tesp_support.api as tesp', file=op)
+    print ('tesp.pypower_loop(\'' + PPJsonFile + '\',\'' + casename + '\')', file=op)
+    op.close()
     op = open (casedir + '/tesp_monitor.json', 'w')
     cmds = {'time_stop':seconds, 
             'yaml_delta':int(config['AgentPrep']['MarketClearingPeriod']), 
             'commands':[{},{},{},{},{},{}]}
-    cmds['commands'][0] = {'args':['fncs_broker', '6'], 'env':[['FNCS_BROKER', 'tcp://*:5570'],['FNCS_FATAL', 'YES']], 'log':'broker.log'}
+    cmds['commands'][0] = {'args':['fncs_broker', '6'], 
+                           'env':[['FNCS_BROKER', 'tcp://*:5570'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                           'log':'broker.log'}
     cmds['commands'][1] = {'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', EpFile], 
-               'env':[['FNCS_CONFIG_FILE', 'eplus.yaml'],['FNCS_FATAL', 'YES']], 'log':'eplus.log'}
+                           'env':[['FNCS_CONFIG_FILE', 'eplus.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                           'log':'eplus.log'}
     cmds['commands'][2] = {'args':['eplus_json', EpAgentStop, EpAgentStep, EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
-               'env':[['FNCS_CONFIG_FILE', 'eplus_json.yaml'],['FNCS_FATAL', 'YES']], 'log':'eplus_json.log'}
+                           'env':[['FNCS_CONFIG_FILE', 'eplus_json.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                           'log':'eplus_json.log'}
     cmds['commands'][3] = {'args':['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile], 
-               'env':[['FNCS_FATAL', 'YES']], 'log':'gridlabd.log'}
-    pyScript1 = '\"import tesp_support.api as tesp;tesp.auction_loop(\'' + AgentDictFile + '\',\'' + casename + '\')"'
-    cmds['commands'][4] = {'args':['python', '-c', pyScript1], 
-               'env':[['FNCS_CONFIG_FILE', AuctionYamlFile],['FNCS_FATAL', 'YES']], 'log':'auction.log'}
-    pyScript2 = '\"import tesp_support.api as tesp;tesp.pypower_loop(\'' + PPJsonFile + '\',\'' + casename + '\')"'
-    cmds['commands'][5] = {'args':['python', '-c', pyScript2], 
-               'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 'log':'pypower.log'}
+                           'env':[['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                           'log':'gridlabd.log'}
+    cmds['commands'][4] = {'args':['python', 'launch_auction.py'], 
+                           'env':[['FNCS_CONFIG_FILE', AuctionYamlFile],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                           'log':'auction.log'}
+    cmds['commands'][5] = {'args':['python', 'launch_pp.py'], 
+                           'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                           'log':'pypower.log'}
     json.dump (cmds, op, indent=2)
-    print (pyScript1, pyScript2)
     op.close()
 
 def make_tesp_case (cfgfile = 'test.json'):
