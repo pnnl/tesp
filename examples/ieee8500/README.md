@@ -85,7 +85,7 @@ precooling agent in precool.py.  The Mac/Linux run files are run.sh and run8500.
 respectively.  These simulations take up to 4 hours to run. Example steps are:
 
     a. "python prepare_cases.py"
-    b. "./run8500.sh"
+    b. "./run8500.sh" (Mac/Linux) or "run8500" (Windows)
     c. "python plots.py inv8500" after the simulation completes
     d. "python bill.py inv8500"
     e. "python plot_invs.py inv8500"

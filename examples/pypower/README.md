@@ -5,7 +5,7 @@ Copyright (c) 2017-18, Battelle Memorial Institute
 This example simply verifies that PYPOWER will run a 9-bus case and communicate
 over FNCS. To run and plot it:
 
-1. ./runpp.sh 
+1. ./runpp.sh (Mac/Linux) or runpp (Windows)
 2. python plots.py
 
 In addition, traced FNCS messages will be written to pptracer.out

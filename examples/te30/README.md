@@ -6,17 +6,25 @@ This example file comprises 30 houses and a school building on a small
 stiff circuit. It provides a medium-level test case for multiple transactive
 agents, with or without the double-auction market.
 
-To run and plot a case without the market:
+To run and plot a case without the market, from the Terminal:
 
 1. python prepare_case.py
-2. ./run0.sh 
+2. ./run0.sh (Mac/Linux) or run0 (Windows)
 3. python plots.py TE_Challenge0
 
-To run and plot a case with the market:
+To run and plot a case with the market, from the Terminal:
 
 1. python prepare_case.py  # unless already done above
-2. ./run.sh 
+2. ./run.sh (Mac/Linux) or run (Windows) 
 3. python plots.py TE_Challenge
+
+To run a case from the GUI monitor:
+
+1. python prepare_case.py  # unless already done above
+2. python gui.py
+3. from the GUI, click **Open** to open the file tesp_monitor.json from this directory
+4. from the GUI, click **Start All** to launch the simulations
+5. from the GUI, click **Quit** to stop all simulations and exit the GUI
 
 ### File Directory
 

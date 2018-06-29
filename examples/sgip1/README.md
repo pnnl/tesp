@@ -8,7 +8,7 @@ et. al., "Simulation-Based Valuation of Transactive Energy Systems", in publicat
 To run a case:
 
 1. python prepare_cases.py
-1. ./runSGIP1a.sh
+1. ./runSGIP1a.sh (Mac/Linux) or runSGIP1a (Windows)
 1. python plots.py SGIP1a
 
 These steps are repeatable for SGIP1b, SGIP1c, SGIP1d, SGIP1e, and SGIP1ex.
