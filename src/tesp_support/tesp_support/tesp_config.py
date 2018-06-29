@@ -72,7 +72,7 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
 					['Weather Source','WA-Yakima_Air_Terminal.tmy3','File or URL','WeatherPrep','DataSource'],
 #					['Airport Code','YKM','','WeatherPrep','AirportCode'],
 #					['Weather Year','2001','','WeatherPrep','Year'],
-					['Support Directory','~/src/tesp/support','Parent directory of base model files','SimulationConfig','SourceDirectory'],
+					['Support Directory','~/src/tesp/support','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
 					['Working Directory','./','','SimulationConfig','WorkingDirectory'],
 					['Case Name','Test','','SimulationConfig','CaseName']
 					];
@@ -494,6 +494,10 @@ class TespConfigGUI:
 def show_tesp_config ():
 	root = tk.Tk()
 	root.title('Transactive Energy Simulation Platform: Case Configuration')
+	tespdir = os.environ['tespdir']
+	if len(tespdir) > 0:
+#		config['SimulationConfig']['SourceDirectory'] = tespdir
+		varsTM[13][1] = tespdir
 	my_gui = TespConfigGUI (root)
 	while True:
 		try:
