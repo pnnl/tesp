@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.7</version>
+    <version>0.8</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -316,6 +316,18 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>support/misc/list5570.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/misc/case.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/misc/config.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/misc/monitor.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/misc/monte_carlo.py</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -834,6 +846,17 @@
                         </distributionFile>
                     </distributionFileList>
                 </folder>
+                <folder>
+                    <description>Examples - Java Support</description>
+                    <destination>${tespdir}/examples/loadshed</destination>
+                    <name>javasupport</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>examples/loadshed/java</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
             </folderList>
             <startMenuShortcutList>
                 <startMenuShortcut>
@@ -917,7 +940,7 @@
                     <platforms>linux-x64</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>src/java/libJNIfncs.so</origin>
+                            <origin>examples/loadshed/java/libJNIfncs.so</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -928,7 +951,7 @@
                     <platforms>osx</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>src/java/libJNIfncs.jnilib</origin>
+                            <origin>examples/loadshed/java/libJNIfncs.jnilib</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -939,7 +962,7 @@
                     <platforms>windows</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>src/java/JNIfncs.dll</origin>
+                            <origin>examples/loadshed/java/JNIfncs.dll</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
