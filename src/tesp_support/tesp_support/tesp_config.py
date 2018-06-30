@@ -494,10 +494,14 @@ class TespConfigGUI:
 def show_tesp_config ():
 	root = tk.Tk()
 	root.title('Transactive Energy Simulation Platform: Case Configuration')
-	tespdir = os.environ['tespdir']
-	if len(tespdir) > 0:
-#		config['SimulationConfig']['SourceDirectory'] = tespdir
-		varsTM[13][1] = tespdir
+	if 'tespdir' in os.environ:
+		tespdir = os.environ['tespdir']
+		if len(tespdir) > 0:
+	#		config['SimulationConfig']['SourceDirectory'] = tespdir
+			if sys.platform == 'win32':
+				varsTM[13][1] = tespdir + '\support'
+			else:
+				varsTM[13][1] = tespdir + '/support'
 	my_gui = TespConfigGUI (root)
 	while True:
 		try:
