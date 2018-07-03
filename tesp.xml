@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.8</version>
+    <version>0.1.0</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -328,6 +328,9 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>support/misc/monte_carlo.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>support/misc/plots.py</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
