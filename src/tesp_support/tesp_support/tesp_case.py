@@ -115,6 +115,8 @@ def write_tesp_case (config, cfgfile):
     shutil.copy (miscdir + 'kill5570.sh', casedir)
     shutil.copy (miscdir + 'kill5570.bat', casedir)
     shutil.copy (miscdir + 'list5570.bat', casedir)
+    shutil.copy (miscdir + 'monitor.py', casedir)
+    shutil.copy (miscdir + 'plots.py', casedir)
     shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
     shutil.copy (scheduledir + 'commercial_schedules.glm', casedir)
     shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
