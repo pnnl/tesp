@@ -13,7 +13,7 @@ set FNCS_CONFIG_FILE=
 start /b cmd /c fncs_player 2d prices.txt ^>player.log 2^>^&1
 
 set FNCS_CONFIG_FILE=eplus_json.yaml
-start /b cmd /c eplus_json 2d 5m School_DualController eplus_eplus_metrics.json 0.02078 25 3 3 ^>eplus_json.log 2^>^&1
+start /b cmd /c eplus_json 2d 5m SchoolDualController eplus_eplus_metrics.json 0.02078 25 3 3 ^>eplus_json.log 2^>^&1
 
 set FNCS_CONFIG_FILE=tracer.yaml
 start /b cmd /c fncs_tracer 2d tracer.out ^>tracer.log 2^>^&1

@@ -128,7 +128,7 @@ epjSTOPtime="172800s" # "2d"
 # set Energy Plus JSON aggregation time for results - mandatory parameter
 epjAGGtime="5m"
 # set Energy Plus JSON building ID
-epjBUILDid="School_DualController"
+epjBUILDid="SchoolDualController"
 # set Energy Plus output file
 epjMetricsFile="$epjDir/outputFiles/eplus_${scenarioName}_metrics.json"
 # output info file

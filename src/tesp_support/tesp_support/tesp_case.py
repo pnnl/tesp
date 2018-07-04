@@ -63,6 +63,7 @@ def write_tesp_case (config, cfgfile):
     EpWeather = rootweather + '.epw' # config['EplusConfiguration']['EnergyPlusWeather']
     EpStep = config['EplusConfiguration']['TimeStep'] # minutes
     EpFile = config['BackboneFiles']['EnergyPlusFile']
+    EpMetricsKey = os.path.splitext (EpFile)[0]
     EpAgentStop = str (seconds) + 's'
     EpAgentStep = str (config['FeederGenerator']['MetricsInterval']) + 's'
     EpMetricsFile = 'eplus_' + casename + '_metrics.json'
@@ -421,7 +422,7 @@ values
     print ('set FNCS_CONFIG_FILE=eplus.yaml', file=op)
     print ('start /b cmd /c energyplus -w ' + EpWeather + ' -d output -r ' + EpFile + ' ^>eplus.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=eplus_json.yaml', file=op)
-    print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
+    print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=', file=op)
     print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gridlabd.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=' + AuctionYamlFile, file=op)
@@ -437,7 +438,7 @@ values
     print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec EnergyPlus -w ' 
            + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && export FNCS_FATAL=YES && exec eplus_json', EpAgentStop, EpAgentStep, 
-           EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
+           EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
     print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
            + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=' + AuctionYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> auction.log &)', file=op)
@@ -473,7 +474,7 @@ values
     cmds['commands'][1] = {'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', EpFile], 
                            'env':[['FNCS_CONFIG_FILE', 'eplus.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'eplus.log'}
-    cmds['commands'][2] = {'args':['eplus_json', EpAgentStop, EpAgentStep, EpFile, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
+    cmds['commands'][2] = {'args':['eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
                            'env':[['FNCS_CONFIG_FILE', 'eplus_json.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'eplus_json.log'}
     cmds['commands'][3] = {'args':['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile], 

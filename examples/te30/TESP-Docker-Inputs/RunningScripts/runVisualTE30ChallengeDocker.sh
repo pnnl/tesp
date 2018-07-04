@@ -126,7 +126,7 @@ epjSTOPtime="172800s" # "2d"
 # set Energy Plus JSON aggregation time for results - mandatory parameter
 epjAGGtime="5m"
 # set Energy Plus JSON building ID
-epjBUILDid="School_DualController"
+epjBUILDid="SchoolDualController"
 # set Energy Plus output file
 epjOutFile="${SIM_ROOT}/EPlusJSONInstall/outputFiles/eplus_TE30_Challenge_PYPOWER_metrics.json"
 # out file

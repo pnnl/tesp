@@ -59,7 +59,7 @@ def process_eplus(nameroot):
             HEATING_POWER_UNITS = val['units']
 
     # make sure we found the metric indices of interest
-    ary = lst['3600']['School_DualController']
+    ary = lst['3600']['SchoolDualController']
     print ("There are", len(ary), "metrics")
     print ("1st hour price =", ary[PRICE_IDX], PRICE_UNITS)
 
@@ -69,7 +69,7 @@ def process_eplus(nameroot):
     print ("Constructed", data.shape, "NumPy array")
     i = 0
     for t in times:
-        ary = lst[str(t)]['School_DualController']
+        ary = lst[str(t)]['SchoolDualController']
         data[i,:] = ary
         i = i + 1
     hrs = np.array(times, dtype=np.float)
