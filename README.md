@@ -13,5 +13,9 @@ Installation requires three (or four) steps:
 3. Install the TESP data and (optionally) executable files by choosing your system-specific installer from https://github.com/pnnl/tesp/releases
 4. If you didn't install the executables in step 3, use the docker image as described at https://github.com/pnnl/tesp/tree/master/examples/te30/TESP-Docker-Inputs. The docker option is useful for distributed processing, and for isolating TESP from your other software, including other versions of GridLAB-D. However, it may require a little more data file management and it doesn't support Windows 8 or earlier.
 
+Change log:
+
+- v0.1.2  Patch for tape shield / concentric neutral cables with separate neutral conductor.
+
 
 
