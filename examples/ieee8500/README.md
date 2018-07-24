@@ -38,6 +38,7 @@ Notes on building or modifying the base case:
 - *adjust_solar_direct.m*; MATLAB helper function that ramps the direct solar insulation during a postulated cloud transient
 - *adjust_temperature.m*; MATLAB helper function that ramps the temperature during a postulated cloud transient
 - *backbone*; the IEEE 8500-node model as defined by the original authors for OpenDSS
+- *CAISO_DAM_and_RTP_SG_LNODE13A_20170706-07_data.xlsx*; optional day-ahead market and real-time locational marginal price (LMP) data
 - *clean.bat*; Windows batch file that removes output and temporary files
 - *clean.sh*; Linux/Mac script that removes output and temporary files
 - *climate.csv*; hourly temperature, humidity, solar_direct, solar_diffuse, pressure, wind_speed read by IEEE_8500.glm; **copy either sunny.csv or cloudy.csv to this file, depending on which case you wish to run**
