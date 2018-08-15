@@ -12,6 +12,9 @@ from .tesp_case import make_tesp_case
 from .tesp_case import make_monte_carlo_cases
 from .TMY2EPW import convert_tmy2_to_epw
 
+from .fncsPYPOWER import load_json_case
+from .fncsPYPOWER import summarize_opf
+
 #from .process_agents import process_agents
 #from .process_eplus import process_eplus
 #from .process_gld import process_gld
