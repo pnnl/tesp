@@ -723,7 +723,7 @@ def _tests():
                  ['GC-12.47-1',12470.0, 7200.0, 8000.0, 13000.0]]
    
     
-    k=20
+    k=19
     fname='new_'+tax[k][0]+'.glm' 
     mname=tax[k][0].replace('.','-')
     sim_fname='sim_'+tax[k][0]+'.glm'
