@@ -122,8 +122,8 @@ FNCS with Prerequisites
  cd build
  cmake ..
  make
- cp fncs.jar ~/src/tesp/src/java
- cp libJNIfncs.so ~/src/tesp/src/java
+ cp fncs.jar ~/src/tesp/examples/loadshed/java
+ cp libJNIfncs.so ~/src/tesp/examples/loadshed/java
 
 GridLAB-D with Prerequisites
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

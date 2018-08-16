@@ -92,7 +92,7 @@ FNCS with Prerequisites (installed to /usr/local)
  cd build
  cmake -DCMAKE_C_COMPILER="gcc-7" -DCMAKE_CXX_COMPILER="g++-7" ..
  make
- # copy jar and jni library to  tesp/src/java
+ # copy jar and jni library to  tesp/examples/loadshed/java
 
 GridLAB-D with Prerequisites (installed to /usr/local)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
