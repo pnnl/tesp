@@ -348,10 +348,10 @@ def CreateNode(modelname,seg_number,glmfile):
     f.write('object node {\n')
     f.write('	  name '+modelname+'_node_'+simlist[seg_number]['f_node']+';\n')
     f.write('     phases '+simlist[seg_number]['phase_name']+'N;\n')
-    f.write('	  nominal_voltage 7970.0 ;\n')
-    f.write('	    voltage_A 7970.0+0.0j;\n')
-    f.write('	    voltage_B -3985.00-6902.22j;\n')
-    f.write('	    voltage_C -3985.00+6902.22j;\n')
+    f.write('	  nominal_voltage '+str(v_base)+';\n')
+    f.write('	    voltage_A '+va+';\n')
+    f.write('	    voltage_B '+vb+';\n')
+    f.write('	    voltage_C '+vc+';\n')
     f.write('    }\n')
     return
     
@@ -557,7 +557,6 @@ def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_
     f=open(glmfile,'a')
     f.write('//********************************\n')
     f.write('//Simplified feeder model\n')
-#    f.write('// created by: Boming Liu\n')
     f.write('//\n')
     f.write('\n')
     f.write('clock{\n')
@@ -718,21 +717,23 @@ def _tests():
                  ['R5-12.47-3',13800.0, 7970.0, 4000.0, 15000.0],
                  ['R5-12.47-4',12470.0, 7200.0, 6000.0, 30000.0,'675','7500','60'],
                  ['R5-12.47-5',12470.0, 7200.0, 4500.0, 25000.0,'1100','7500','60'],
-                 ['R5-25.00-1',22900.0,13200.0, 3000.0, 20000.0],
-                 ['R5-35.00-1',34500.0,19920.0, 6000.0, 25000.0],
+                 ['R5-25.00-1',22900.0,13200.0, 3000.0, 20000.0,'953','13773','220'],
+                 ['R5-35.00-1',34500.0,19920.0, 6000.0, 25000.0,'339','20748','332'],
                  ['GC-12.47-1',12470.0, 7200.0, 8000.0, 13000.0]]
    
-    
-    k=19
+#   index of feeder model   16,17,19,20 is avaliable
+    k=20
     fname='new_'+tax[k][0]+'.glm' 
     mname=tax[k][0].replace('.','-')
     sim_fname='sim_'+tax[k][0]+'.glm'
     #caluculate Vbase
+    global va, vb, vc, v_base
     v_base=tax[k][2]
     va1,va2=cmath.polar(v_base); va=cmath.rect(va1,va2)
     va1,va2=cmath.polar(v_base); vb=cmath.rect(va1,-2.094395257234013)
     va1,va2=cmath.polar(v_base); vc=cmath.rect(va1,2.094395257234013)
     v_base=str(v_base)
+
     va=str(va).replace('(',''); va=va.replace(')','');
     vb=str(vb).replace('(',''); vb=vb.replace(')','');
     vc=str(vc).replace('(',''); vc=vc.replace(')','');
