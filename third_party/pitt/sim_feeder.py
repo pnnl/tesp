@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Fri Aug 17 12:16:56 2018
+
+@author: liub725
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu Aug  9 12:50:57 2018
 
 @author: liub725
@@ -12,13 +19,124 @@ Created on Thu Aug  9 08:50:19 2018
 @author: liub725
 """
 
-
+import networkx as nx;
+import re
 import csv
 import matplotlib.pyplot as plt
 import os
 import numpy as np
 from numpy.linalg import inv
 import cmath
+
+def is_node_class(s):
+    if s == 'node':
+        return True
+    if s == 'load':
+        return True
+    if s == 'meter':
+        return True
+    if s == 'triplex_node':
+        return True
+    if s == 'triplex_meter':
+        return True
+    return False
+
+def is_edge_class(s):
+    if s == 'switch':
+        return True
+    if s == 'fuse':
+        return True
+    if s == 'recloser':
+        return True
+    if s == 'regulator':
+        return True
+    if s == 'transformer':
+        return True
+    if s == 'overhead_line':
+        return True
+    if s == 'underground_line':
+        return True
+    if s == 'triplex_line':
+        return True
+    return False
+
+def obj(parent,model,line,itr,oidh,octr):
+    '''
+    Store an object in the model structure
+    Inputs:
+        parent: name of parent object (used for nested object defs)
+        model: dictionary model structure
+        line: glm line containing the object definition
+        itr: iterator over the list of lines
+        oidh: hash of object id's to object names
+        octr: object counter
+    '''
+    octr += 1
+    # Identify the object type
+    m = re.search('object ([^:{\s]+)[:{\s]',line,re.IGNORECASE)
+    type = m.group(1)
+    # If the object has an id number, store it
+    n = re.search('object ([^:]+:[^{\s]+)',line,re.IGNORECASE)
+    if n:
+        oid = n.group(1)
+    line = next(itr)
+    # Collect parameters
+    oend = 0
+    oname = None
+    params = {}
+    if parent is not None:
+        params['parent'] = parent
+        # print('nested '+type)
+    while not oend:
+        m = re.match('\s*(\S+) ([^;{]+)[;{]',line)
+        if m:
+            # found a parameter
+            param = m.group(1)
+            val = m.group(2)
+            intobj = 0
+            if param == 'name':
+                oname = val
+            elif param == 'object':
+                # found a nested object
+                intobj += 1
+                if oname is None:
+                    print('ERROR: nested object defined before parent name')
+                    quit()
+                line,octr = obj(oname,model,line,itr,oidh,octr)
+            elif re.match('object',val):
+                # found an inline object
+                intobj += 1
+                line,octr = obj(None,model,line,itr,oidh,octr)
+                params[param] = 'OBJECT_'+str(octr)
+            else:
+                params[param] = val
+        if re.search('}',line):
+            if intobj:
+                intobj -= 1
+                line = next(itr)
+            else:
+                oend = 1
+        else:
+            line = next(itr)
+    # If undefined, use a default name
+    if oname is None:
+        oname = 'OBJECT_'+str(octr)
+    oidh[oname] = oname
+    # Hash an object identifier to the object name
+    if n:
+        oidh[oid] = oname
+    # Add the object to the model
+    if type not in model:
+        # New object type
+        model[type] = {}
+    model[type][oname] = {}
+    for param in params:
+        model[type][oname][param] = params[param]
+    # Return the 
+    return line,octr
+
+
+
 
 # %% get data from the full model  
 
@@ -51,7 +169,7 @@ def getV(model_name, simlistfile, V_datafile, new_Vdatafile):
     Vcimg=dict(zip(node,[row['voltC_imag'] for row in r6]))
     f2.close()
     # get the segment node from the nodelist file
-    simlistkeys=['phase','phase_name','i_node','f_node','i_branch','f_branch','junction','out_branch_1','out_branch_2','out_branch_3']
+    simlistkeys=['phase_name','i_node','f_node','junction','i_branch','f_branch','out_branch_1','out_branch_2','out_branch_3']
     global simlist
     with open (simlistfile,'r') as nodefile:            
         siminfo=nodefile.read().splitlines()
@@ -557,6 +675,7 @@ def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_
     f=open(glmfile,'a')
     f.write('//********************************\n')
     f.write('//Simplified feeder model\n')
+#    f.write('// created by: Boming Liu\n')
     f.write('//\n')
     f.write('\n')
     f.write('clock{\n')
@@ -745,7 +864,98 @@ def _tests():
     os.system('gridlabd '+fname)
     if os.path.exists('sim_'+tax[k][0]+'.glm'):
         os.remove('sim_'+tax[k][0]+'.glm')
+
+   
+    # read the model
+    ip = open (fname, 'r')
+    lines = []
+    line = ip.readline()
+    while line is not '':
+        while re.match('\s*//',line) or re.match('\s+$',line):
+            # skip comments and white space
+            line = ip.readline()
+        lines.append(line.rstrip())
+        line = ip.readline()
+    ip.close()
+    
+    octr = 0;
+    model = {}
+    h = {}		# OID hash
+    itr = iter(lines)
+    for line in itr:
+        if re.search('object',line):
+            line,octr = obj(None,model,line,itr,h,octr)
+    
+    # construct a graph of the model, starting with known links
+    G = nx.Graph()
+    for t in model:
+        if is_edge_class(t):
+            for o in model[t]:
+                n1 = model[t][o]['from']
+                n2 = model[t][o]['to']
+                G.add_edge(n1,n2,eclass=t,ename=o,edata=model[t][o])
+    
+    # add the parent-child node links
+    for t in model:
+        if is_node_class(t):
+            for o in model[t]:
+                if 'parent' in model[t][o]:
+                    p = model[t][o]['parent']
+                    G.add_edge(o,p,eclass='parent',ename=o,edata={})
+    
+    # now we backfill node attributes
+    for t in model:
+        if is_node_class(t):
+            for o in model[t]:
+                if o in G.nodes():
+                    G.nodes()[o]['nclass'] = t
+                    G.nodes()[o]['ndata'] = model[t][o]
+                else:
+                    print('orphaned node', t, o)
+    
+#    swing_node = ''
+#    for n1, data in G.nodes(data=True):
+#        if 'nclass' in data:
+#            if 'bustype' in data['ndata']:
+#                if data['ndata']['bustype'] == 'SWING':
+#                    swing_node = n1   
+
+
     getV(mname,mname+'_sim_list.csv',mname+'_voltage.csv',mname+'_voltage1.csv')
+    
+    
+    # creat the list with given node : get branch name by networkx 
+    i_branch=[]
+    f_branch=[]
+    segment_node=[]
+    for n in range(len(simlist)): 
+        segment_node=nx.shortest_path(G, source=mname+'_node_'+simlist[n]['i_node'], target=mname+'_node_'+simlist[n]['f_node'])
+        i_branch.append(G.edges[segment_node[0],segment_node[1]]['ename'])
+        f_branch.append(G.edges[segment_node[-2],segment_node[-1]]['ename'])
+    for n in range(len(simlist)):    
+        simlist[n]['i_branch']=i_branch[n]
+        simlist[n]['f_branch']=f_branch[n]
+    
+    
+    
+    for n in range(len(simlist)): 
+        if simlist[n]['junction']=='junction':
+            count=-1
+            junction_outbranch=['','','']
+            for m in range(len(simlist)):
+                if simlist[m]['i_node']==simlist[n]['f_node']:
+                    count+=1
+                    junction_outbranch[count]=(simlist[m]['i_branch'])
+                simlist[n]['out_branch_1']=junction_outbranch[0]
+                simlist[n]['out_branch_2']=junction_outbranch[1]
+                simlist[n]['out_branch_3']=junction_outbranch[2]    
+        else:
+            junction_outbranch=['','','']
+            simlist[n]['out_branch_1']=junction_outbranch[0]
+            simlist[n]['out_branch_2']=junction_outbranch[1]
+            simlist[n]['out_branch_3']=junction_outbranch[2]    
+    
+    #
     getI(mname,mname+'_sim_list.csv',mname+'_current.csv',mname+'_current1.csv')
     getI_agg(mname,mname+'_sim_list.csv',mname+'_current.csv',mname+'_current1.csv')
     calculate_Z_S()
@@ -779,5 +989,5 @@ def _tests():
     
 if __name__ == '__main__':
     _tests()
-
+    
 
