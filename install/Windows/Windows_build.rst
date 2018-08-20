@@ -222,7 +222,7 @@ Finally, rebuild GridLAB-D with FNCS:
 ::
 
  autoreconf -if
- ./configure --build=x86_64-w64-mingw32 --with-fncs=$HOME/FNCS_install --prefix=$PWD/install64 --with-xerces=/opt/windows_64/mingw 'CXXFLAGS=-w' 'CFFLAGS=-w'
+ ./configure --build=x86_64-w64-mingw32 --with-fncs=$HOME/FNCS_install --prefix=$PWD/install64 --with-xerces=/opt/windows_64/mingw 'CXXFLAGS=-w' 'CFLAGS=-w'
  make
  make install
  gridlabd --validate
