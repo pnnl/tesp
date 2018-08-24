@@ -207,7 +207,7 @@ def weathercsv_cloudy_day(start_time,end_time,outputfile):
 
 def _tests():
     #create a csv file contain the weather data for the input time period from the input tmy3 file
-    weathercsv('TX-Houston_Bush_Intercontinental.tmy3','weather.csv','2000-01-01 00:00:00','2000-01-14 00:00:00',2000)
+    weathercsv('../../support/weather/TX-Houston_Bush_Intercontinental.tmy3','weather.csv','2000-01-01 00:00:00','2000-01-14 00:00:00',2000)
     #create a csv file for a cloudy day for the selected date 
     weathercsv_cloudy_day('2000-01-01 00:00:00','2000-01-02 00:00:00','cloudy_day.csv')
 
