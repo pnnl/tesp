@@ -1,0 +1,39 @@
+ARG REPOSITORY="laurmarinovici/tesp"
+ARG TAG="latest"
+
+FROM ${REPOSITORY}:${TAG}
+
+# =========================================================
+# This docker file is meant to create a new image that
+# includes the latest auction agent, and the updates to
+# pypower, as of 2018-05-16.
+# It uses the same environment variable already existing in
+# the image: ${SOURCE_DIR}, ${AGENTS_INSTALL}
+# =========================================================
+ENV LOCAL_PATH=../../
+# /home/laurentiu/work/downloads/
+ENV AG_SOURCE=TESP-agents-20180516
+ADD ${AG_SOURCE} ${SOURCE_DIR}/${AG_SOURCE}
+ENV PYPOWER_SOURCE=TESP-pypower-20180516
+ADD ${PYPOWER_SOURCE} ${SOURCE_DIR}/${PYPOWER_SOURCE}
+USER root
+RUN mkdir -p ${SOURCE_DIR}
+
+# First, I will remove the existing agents, then copy the new ones
+RUN whoami
+RUN cd ${AGENTS_INSTALL} && \
+    rm *.* && \
+    cd ${SOURCE_DIR}/${AG_SOURCE} && \
+    /bin/cp *.py ${AGENTS_INSTALL} && \
+    /bin/cp fncs.py.DockerVersion ${AGENTS_INSTALL}/fncs.py && \
+    /bin/rm -r ${SOURCE_DIR}/${AG_SOURCE} && \
+    cd ${PYPOWER_INSTALL} && \
+    rm *.* && \
+    cd ${SOURCE_DIR}/${PYPOWER_SOURCE} && \
+    /bin/cp *.py ${PYPOWER_INSTALL} && \
+    /bin/cp fncs.py.DockerVersion ${PYPOWER_INSTALL}/fncs.py && \
+    /bin/rm -r ${SOURCE_DIR}/${PYPOWER_SOURCE} && \
+    /bin/rm -r ${SOURCE_DIR}
+
+USER tesp-user
+RUN whoami

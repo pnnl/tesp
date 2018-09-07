@@ -1,0 +1,39 @@
+ARG REPOSITORY="laurmarinovici/tesp"
+ARG TAG="V2"
+
+FROM ${REPOSITORY}:${TAG}
+
+# =========================================================
+# This docker file is meant to create a new image that
+# includes the latest TESP support module for python;
+# this will install pypower and matplotlib, together with the
+# pypower wrapper and the auction agent.
+# Updates on 2018/06/19
+# It uses the same environment variable already existing in
+# the image: ${SOURCE_DIR}, ${AGENTS_INSTALL}
+# =========================================================
+ENV LOCAL_PATH=../../
+# /home/laurentiu/work/downloads/
+# The following pathis relative to the Dockerfile build context; check the build script to see that
+ENV TESPSUPP_SOURCE=src/tesp_support
+ADD ${TESPSUPP_SOURCE} ${SOURCE_DIR}/${TESPSUPP_SOURCE}
+USER root
+RUN echo "root:tesp" | chpasswd && \
+    mkdir -p ${SOURCE_DIR}
+
+# First, I will remove the existing agents, then copy the new ones
+RUN whoami
+RUN apt-get update && \
+    apt-get install nano && \
+    cd ${AGENTS_INSTALL} && \
+    rm *.* && \
+    cd ${SOURCE_DIR}/${TESPSUPP_SOURCE} && \
+    pip install --upgrade pip && \
+    pip install networkx && \
+    pip install tesp_support && \
+    /bin/rm -r ${SOURCE_DIR}
+
+USER tesp-user
+RUN whoami
+RUN PATH=$PATH:/tesp/FNCSInstall/bin:/tesp/EnergyPlusInstall:/tesp/EPlusJSONInstall/bin && \
+    export PATH
