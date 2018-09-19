@@ -7,18 +7,14 @@ clock {
 #set relax_naming_rules=1
 #set profiler=1
 #set minimum_timestep=1
+//#set verbose=1
 
 module powerflow {
 	solver_method NR;
 	line_capacitance true;
 }
 
-module reliability {
-	maximum_event_length 18000;
-	report_event_log true;
-}
-
-module connection; // FNCS
+module connection;
 module tape;
 
 // this has to be the first object defined, so it's the last one committed
@@ -29,50 +25,24 @@ object metrics_collector_writer {
 
 object fncs_msg {
   name gridlabdSimulator1;
-  configure loadshed_fncs.cfg;
+  publish "commit:n650.distribution_load -> distribution_load; 1000";
+  subscribe "precommit:sw_loadshed.phase_A_state <- loadshed/sw_status";
   option "transport:hostname localhost, port 5570";
   parent n650;
 }
 
 // Loadshedding Switch
-object eventgen {
-	name event_loadshed;
-	parent testmetrics;
-	max_outage_length 18000;
-	max_simultaneous_faults 1;
-	fault_type "SW-ABC";
-	controlled_switch "sw_loadshed";
-	switch_state 1;
-	manual_outages "sw_loadshed,2030-01-01 2:00:00,2030-01-01 4:00:00";  // need this, should lie beyond Tmax
-}
 object switch {
 	phases "ABCN";
 	name sw_loadshed;
 	from l671;
 	to l692;
-	status CLOSED;
 }
-
-// boilerplate to get reliability working with powerflow
 object fault_check {
 	name test_fault;
-	check_mode ONCHANGE;
-	output_filename testout.txt;
-	eventgen_object event_loadshed;
+	check_mode SWITCHING;
+	reliability_mode TRUE;
 }
-object power_metrics {
-	name pwrmetrics;
-}
-object metrics {
-	name testmetrics;
-	report_file metrics.txt;						     
-	module_metrics_object pwrmetrics;				 
-	metrics_of_interest "SAIFI,SAIDI,MAIFI"; 
-	customer_group "class=meter";  // TODO: more likely to have triplex_meter in TESP			 
-	metric_interval 1 h; 							       
-	report_interval 1 h;								     
-}
-// end of reliability module prerequisites, beginning of shed load voltage measurements
 
 object meter {
 	name m675;
@@ -91,6 +61,13 @@ object meter {
 	object metrics_collector {
 		interval 60;
 	};
+}
+
+object recorder {
+	parent n650;
+	property distribution_load;
+	interval 900.0;
+	file substation_load.csv;
 }
 
 // end of shed load voltage measurements
