@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import networkx as nx
 import math
+import random
  
 # some of the system modeling assumptions 
 load_pf = 0.98
@@ -52,6 +53,10 @@ if __name__ == '__main__':
 	ppcase = {}
 	ppcase['version'] = 2
 	ppcase['baseMVA'] = 100.0
+	ppcase['StartTime'] = '2013-07-01 00:00:00'
+	ppcase['Tmax'] = 172800
+	ppcase['Period'] = 300  # market clearing period
+	ppcase['dt'] = 5        # time step for bids
 	ppcase['pf_dc'] = 0
 	ppcase['opf_dc'] = 1
 	ppcase['bus'] = []
@@ -78,7 +83,9 @@ if __name__ == '__main__':
 		Sd = Pd / load_pf
 		Qd = Sd * load_qf
 		Qs = float(ln[6])
-		ppcase['bus'].append ([bus1, bustype, Pd, Qd, 0, Qs, 1, 1, 0, 345, 1, 1.1, 0.9]) # no load on 345 kV
+		ppcase['bus'].append ([bus1, bustype, Pd, Qd, 0, Qs, 1, 1, 0, 345, 1, 1.1, 0.9])
+		if Pd > 0.0:
+			ppcase['FNCS'].append ([bus1, 'SUBSTATION' + str(bus1), 0.0, Pd, random.randint (-3600, 3600)])
 	Zbase = 345.0 * 345.0 / 100.0
 	for (n1, n2, npar) in e345:
 		ln = find_line (dlines, n1, n2)
