@@ -85,7 +85,7 @@ if __name__ == '__main__':
 		Qs = float(ln[6])
 		ppcase['bus'].append ([bus1, bustype, Pd, Qd, 0, Qs, 1, 1, 0, 345, 1, 1.1, 0.9])
 		if Pd > 0.0:
-			ppcase['FNCS'].append ([bus1, 'SUBSTATION' + str(bus1), 0.0, Pd, random.randint (-3600, 3600)])
+			ppcase['FNCS'].append ([bus1, 'SUBSTATION' + str(bus1), 0.0, Pd, Qd, 1.0, random.randint (-3600, 3600)])
 	Zbase = 345.0 * 345.0 / 100.0
 	for (n1, n2, npar) in e345:
 		ln = find_line (dlines, n1, n2)
@@ -115,6 +115,8 @@ if __name__ == '__main__':
 		c0 = float(ln[8])
 		ppcase['gen'].append ([n1, Pg, 0.0, Qmax, Qmin, 1.0, Sg, 1, Sg, Pmin, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 		ppcase['gencost'].append ([2, 0, 0, 3, c2, c1, c0])
+
+	ppcase['swing_bus'] = swing_bus
 
 	fp = open ('ercot_8.json', 'w')
 	json.dump (ppcase, fp, indent=2)

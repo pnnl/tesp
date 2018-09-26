@@ -1,2 +1,6 @@
 Buses.csv
 Lines.csv
+ercot_8.csv
+*metrics.json
+*dict.json
+
