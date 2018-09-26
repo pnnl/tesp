@@ -110,7 +110,7 @@ newpts = ip.splev (u3, tck_load)
 
 ppc = tesp.load_json_case (casename + '.json')
 ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'])
-ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'])
+ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)
 StartTime = ppc['StartTime']
 tmax = int(ppc['Tmax'])
 period = int(ppc['Period'])
@@ -222,13 +222,19 @@ while ts <= tmax:
     tnext_opf += period
 
   # always run the regular power flow for voltages and performance metrics
-  bus = ppc['bus']
-  gen = ppc['gen']
-  bus[:,13] = opf_bus[:,13]  # set the lmp
-  gen[:,1] = opf_gen[:, 1]   # set the economic dispatch
+  ppc['bus'][:,13] = opf_bus[:,13]  # set the lmp
+  ppc['gen'][:,1] = opf_gen[:, 1]   # set the economic dispatch
   rpf = pp.runpf (ppc, ppopt_regular)
   if rpf[0]['success'] == False:
     conv_accum = False
+    print ('rpf did not converge at', ts)
+#   pp.printpf (100.0,
+#               bus=rpf[0]['bus'],
+#               gen=rpf[0]['gen'],
+#               branch=rpf[0]['branch'],
+#               fd=sys.stdout,
+#               et=rpf[0]['et'],
+#               success=rpf[0]['success'])
   bus = rpf[0]['bus']
   gen = rpf[0]['gen']
   fncsBus = ppc['FNCS']

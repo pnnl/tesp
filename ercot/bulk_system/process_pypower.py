@@ -6,34 +6,32 @@ import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
 
-def bus_color(i):
-    if i == 0:
+def bus_color(key):
+    if key == '1':
         return 'b'
-    if i == 1:
+    if key == '2':
         return 'g'
-    if i == 2:
+    if key == '3':
         return 'r'
-    if i == 3:
+    if key == '4':
         return 'c'
-    if i == 4:
+    if key == '5':
         return 'm'
-    if i == 5:
+    if key == '6':
         return 'y'
-    if i == 6:
+    if key == '7':
         return 'k'
-    if i == 7:
+    if key == '8':
         return 'cadetblue'
     return 'k'
 
-def unit_width(dict, i):
-    if dict['generators'][str(i+1)]['bustype'] == 'swing':
+def unit_width(dict, key):
+    if dict['generators'][key]['bustype'] == 'swing':
         return 2.0
     return 1.0
 
-def unit_color(dict, i):
-#    bustype = dict['generators'][str(i+1)]['bustype']
-    genfuel = dict['generators'][str(i+1)]['genfuel']
-#    print (i, bustype, genfuel)
+def unit_color(dict, key):
+    genfuel = dict['generators'][key]['genfuel']
     if genfuel == 'wind':
         return 'g'
     if genfuel == 'nuclear':
@@ -178,22 +176,23 @@ def process_pypower(nameroot):
     ax[0,0].set_title ('Total Bus Loads')
     ax[0,0].set_ylabel(PD_UNITS)
     for i in range(data_b.shape[0]):
-        ax[0,0].plot(hrs, data_b[i,:,PD_IDX], color=bus_color(i))
+        ax[0,0].plot(hrs, data_b[i,:,PD_IDX], color=bus_color(bus_keys[i]))
 
     ax[1,0].set_title ('Generator Outputs')
     ax[1,0].set_ylabel(PGEN_UNITS)
     for i in range(data_g.shape[0]):
-        ax[1,0].plot(hrs, data_g[i,:,PGEN_IDX], color=unit_color (dict, i), linewidth=unit_width (dict,i))
+        ax[1,0].plot(hrs, data_g[i,:,PGEN_IDX], color=unit_color (dict, gen_keys[i]), 
+                     linewidth=unit_width (dict,gen_keys[i]))
 
     ax[0,1].set_title ('Bus Voltages')
     ax[0,1].set_ylabel(VMAG_UNITS)
     for i in range(data_b.shape[0]):
-        ax[0,1].plot(hrs, data_b[i,:,VMAG_IDX], color=bus_color(i))
+        ax[0,1].plot(hrs, data_b[i,:,VMAG_IDX], color=bus_color(bus_keys[i]))
 
     ax[1,1].set_title ('Locational Marginal Prices')
     ax[1,1].set_ylabel(LMP_P_UNITS)
     for i in range(data_b.shape[0]):
-        ax[1,1].plot(hrs, data_b[i,:,LMP_P_IDX], color=bus_color(i))
+        ax[1,1].plot(hrs, data_b[i,:,LMP_P_IDX], color=bus_color(bus_keys[i]))
 
     ax[1,0].set_xlabel('Hours')
     ax[1,1].set_xlabel('Hours')
