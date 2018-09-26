@@ -6,12 +6,14 @@ def acf(x, t=1):
   return np.corrcoef(np.array([x[0:len(x)-t], x[t:len(x)]]))
 
 days = 30
-Theta0 = 0.011
-Theta1 = -0.224
-Noise = 1.172
+Pmax = 8700.0
+
+Theta0 = 1.0 # 0.15
+Theta1 = -0.7 # -0.1
+Noise = 5.0 # 1.0
 Psi1 = 1.0
-Ylim = 12.87
-A0 = 6.7
+Ylim = math.sqrt (Pmax) # 12.87
+# A0 = 6.7
 
 n = 24 * days + 1
 h = np.linspace (0, n - 1, n)
@@ -20,8 +22,8 @@ a = np.zeros (n)
 y = np.zeros (n)
 stddev = math.sqrt (Noise)
 
-a[0] = A0
-y[0] = a[0]
+a[0] = Theta0
+y[0] = Ylim
 
 for i in range (n):
   if i > 0:
