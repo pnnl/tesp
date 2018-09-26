@@ -118,7 +118,7 @@ dt = int(ppc['dt'])
 swing_bus = int(ppc['swing_bus'])
 
 period = 900
-dt = 900
+dt = 180
 
 # initialize for metrics collection
 bus_mp = open ('bus_' + casename + '_metrics.json', 'w')
