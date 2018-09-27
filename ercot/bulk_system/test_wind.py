@@ -1,19 +1,27 @@
 import numpy as np;
 import matplotlib.pyplot as plt;
 import math;
+from scipy import stats;
+from statsmodels import api as sm;
 
 def acf(x, t=1):
   return np.corrcoef(np.array([x[0:len(x)-t], x[t:len(x)]]))
 
-days = 30
-Pmax = 8700.0
+days = 365
+Pnorm = 165.6
 
-Theta0 = 1.0 # 0.15
-Theta1 = -0.7 # -0.1
-Noise = 5.0 # 1.0
+#Pmax = 99.8
+#Pmax = 165.6
+#Pmax = 1675.0
+#Pmax = 2242.2
+#Pmax = 3562.2
+Pmax = 8730.3
+
+Theta0 = 0.05 * math.sqrt (Pmax / Pnorm)
+Theta1 = -0.1 * (Pmax / Pnorm)
+Noise = 1.172 * math.sqrt (Pmax / Pnorm)
 Psi1 = 1.0
 Ylim = math.sqrt (Pmax) # 12.87
-# A0 = 6.7
 
 n = 24 * days + 1
 h = np.linspace (0, n - 1, n)
@@ -35,13 +43,38 @@ for i in range (n):
     y[i] = 0.0
   p[i] = y[i] * y[i]
 
-fig, ax = plt.subplots()
-ax.set_title ('LARIMA(0,1,1) Wind Power Output Model')
-ax.set_ylabel ('Power [MW]')
-ax.set_xlabel ('Hours')
-ax.grid (linestyle = '-')
-ax.plot (h, p, 'r')
+p_pa = sm.tsa.pacf (p, 10)
+p_acf = sm.tsa.acf (p, nlags=10)
+y_pa = sm.tsa.pacf (y, 10)
+y_acf = sm.tsa.acf (y, nlags=10)
+
+p_avg = p.mean()
+cf = p_avg / Pmax
+cov = p.std() / p_avg
+
+fig, ax = plt.subplots(4, 1)
+
+ax[0].set_title ('LARIMA(0,1,1) Wind Power Output Model: CF = '
+								 + '{:.2f}'.format (cf) + ', COV = ' + '{:.2f}'.format (cov))
+ax[0].set_ylabel ('MW vs. Hours')
+ax[0].grid (linestyle = '-')
+ax[0].plot (h, p, 'r')
+
+ax[1].set_ylabel ('ACF vs. Lag')
+ax[1].grid (linestyle = '-')
+ax[1].plot (p_acf, 'r', label='P')
+ax[1].plot (y_acf, 'b', label='Y')
+ax[1].legend (loc='best')
+
+ax[2].set_ylabel ('PACF vs. Lag')
+ax[2].grid (linestyle = '-')
+ax[2].plot (p_pa, 'r', label='P')
+ax[2].plot (y_pa, 'b', label='Y')
+ax[2].legend (loc='best')
+
+ax[3].hist (p, histtype='step', density=True, bins=15)
+
 plt.show()
 
-print ('mean', '{:.2f}'.format (p.mean()), 'std', '{:.2f}'.format (p.std()))
-print (acf(p))
+
+
