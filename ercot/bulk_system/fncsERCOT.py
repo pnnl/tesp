@@ -5,9 +5,11 @@ import tesp_support.api as tesp;
 import sys;
 import matplotlib.pyplot as plt;
 import json;
+import math;
 from copy import deepcopy;
 
 casename = 'ercot_8'
+wind_period = 3600
 
 load_shape = [0.6704,
               0.6303,
@@ -41,6 +43,29 @@ def rescale_case(ppc, scale):
   ppc['bus'][:,5] *= (scale * scale)  # Qs
   ppc['gen'][:,1] *= scale  # Pg
   return
+
+# from 'ARIMA-Based Time Series Model of Stochastic Wind Power Generation'
+# return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, p]
+def make_wind_plants(ppc):
+  plants = {}
+  Pnorm = 165.6  
+  gen = ppc['gen']
+  cost = ppc['gencost']
+  for i in range (gen.shape[0]):
+    busnum = int (gen[i,0])
+    c2 = float(cost[i,4])
+    if c2 < 2e-5:  # genfuel would be 'wind'
+      MW = float (gen[i, 8])
+      scale = MW / Pnorm
+      Theta0 = 0.05 * math.sqrt (scale)
+      Theta1 = -0.1 * (scale)
+      StdDev = math.sqrt (1.172 * math.sqrt (scale))
+      Psi1 = 1.0
+      Ylim = math.sqrt (MW)
+      alag = Theta0
+      ylag = Ylim
+      plants[str(i)] = [busnum, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, MW]
+  return plants
 
 # this differs from tesp_support because of additions to FNCS, and Pnom==>Pmin for generators
 def make_dictionary(ppc, rootname):
@@ -158,12 +183,58 @@ for i in range (gen.shape[0]):
 fncs_bus = ppc['FNCS']
 loads = {'h':[],'1':[],'2':[],'3':[],'4':[],'5':[],'6':[],'7':[],'8':[]}
 
+# initialize for variable wind
+tnext_wind = tmax + 2 * dt # by default, never fluctuate the wind plants
+if wind_period > 0:
+  wind_plants = make_wind_plants (ppc)
+  if len(wind_plants) < 1:
+    print ('warning: wind power fluctuation requested, but there are no wind plants in this case')
+  else:
+    tnext_wind = 0
+
+# initialize for OPF and time stepping
 ts = 0
 tnext_opf = 0
 
 op = open (casename + '.csv', 'w')
 print ('seconds,OPFconverged,TotalLoad,TotalGen,SwingGen,LMP1,LMP8,gas1,coal1,nuc1,gas2,coal2,nuc2,gas3,coal3,gas4,gas5,coal5,gas7,coal7,wind1,wind3,wind4,wind6,wind7', sep=',', file=op, flush=True)
 while ts <= tmax:
+  # fluctuate the wind plants
+  if ts >= tnext_wind:
+    for key, row in wind_plants.items():
+      # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, p]
+      wind_bus = row[0]
+      MW = row[1]
+      Theta0 = row[2]
+      Theta1 = row[3]
+      StdDev = row[4]
+      Psi1 = row[5]
+      Ylim = row[6]
+      alag = row[7]
+      ylag = row[8]
+      p = row[9]
+      if ts > 0:
+        a = np.random.normal (0.0, StdDev)
+        y = Theta0 + a - Theta1 * alag + Psi1 * ylag
+        alag = a
+      else:
+        y = ylag
+      if y > Ylim:
+        y = Ylim
+      elif y < 0.0:
+        y = 0.0
+      p = y * y
+      if ts > 0:
+        ylag = y
+      row[7] = alag
+      row[8] = ylag
+      row[9] = p
+      # reset the unit capacity; this will 'stick' for the next wind_period
+      ppc['gen'][int(key), 8] = p
+      if ppc['gen'][int(key), 1] > p:
+        ppc['gen'][int(key), 1] = p
+    tnext_wind += wind_period
+
   # always update the unresponsive load
 #  loads['h'].append (float(ts) / 3600.0)
   for row in fncs_bus:

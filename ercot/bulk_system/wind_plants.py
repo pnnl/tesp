@@ -2,7 +2,7 @@ import numpy as np;
 import matplotlib.pyplot as plt;
 import math;
 
-days = 7
+days = 2
 Pnorm = 165.6
 
 wind_plants = np.array ([99.8, 1657.0, 2242.2, 3562.2, 8730.3])
@@ -12,8 +12,8 @@ n = 24 * days + 1
 
 h = np.linspace (0, n - 1, n)
 p = np.zeros (shape = (nplants, n))
-a = np.zeros (shape = (nplants, n))
-y = np.zeros (shape = (nplants, n))
+alag = np.zeros (nplants)
+ylag = np.zeros (nplants)
 Theta0 = np.ones (nplants)
 Theta1 = np.ones (nplants)
 StdDev = np.ones (nplants)
@@ -27,19 +27,36 @@ for j in range (nplants):
 	StdDev[j] = math.sqrt (1.172 * math.sqrt (scale))
 	Psi1[j] = 1.0
 	Ylim[j] = math.sqrt (wind_plants[j])
-	a[j,0] = Theta0[j]
-	y[j,0] = Ylim[j]
+	alag[j] = Theta0[j]
+	ylag[j] = Ylim[j]
 
-for i in range (n):
-	for j in range (nplants):
-		if i > 0:
-			a[j,i] = np.random.normal (0.0, StdDev[j])
-			y[j,i] = Theta0[j] + a[j,i] - Theta1[j] * a[j,i-1] + Psi1[j] * y[j,i-1]
-		if y[j,i] > Ylim[j]:
-			y[j,i] = Ylim[j]
-		elif y[j,i] < 0.0:
-			y[j,i] = 0.0
-		p[j,i] = y[j,i] * y[j,i]
+# time-stepping to mimic what will happen in fncsERCOT.py
+i = 0
+ts = 0
+tmax = days * 24 * 3600
+tnext_wind = 0
+wind_period = 3600
+dt = 180
+
+while ts <= tmax:
+	if ts >= tnext_wind:
+		for j in range (nplants):
+			if i > 0:
+				a = np.random.normal (0.0, StdDev[j])
+				y = Theta0[j] + a - Theta1[j] * alag[j] + Psi1[j] * ylag[j]
+				alag[j] = a
+			else:
+				y = ylag[j]
+			if y > Ylim[j]:
+				y = Ylim[j]
+			elif y < 0.0:
+				y = 0.0
+			p[j,i] = y * y
+			if i > 0:
+				ylag[j] = y
+		i += 1
+		tnext_wind += wind_period
+	ts += dt
 
 CF = np.zeros (nplants)
 COV = np.zeros (nplants)

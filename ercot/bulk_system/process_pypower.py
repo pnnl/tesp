@@ -70,10 +70,6 @@ def process_pypower(nameroot):
 
     # make a sorted list of the times, and NumPy array of times in hours
     lst_b.pop('StartTime')
-    #lst_b.pop('System base MVA')
-    #lst_b.pop('Number of buses')
-    #lst_b.pop('Number of generators')
-    #lst_b.pop('Network name')
     meta_b = lst_b.pop('Metadata')
     times = list(map(int,list(lst_b.keys())))
     times.sort()
@@ -111,9 +107,11 @@ def process_pypower(nameroot):
             VMIN_IDX = val['index']
             VMIN_UNITS = val['units']
 
-    # create a NumPy array of all bus metrics
+    # create a NumPy array of all bus metrics, display summary information
     data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
     print ('\nConstructed', data_b.shape, 'NumPy array for Buses')
+    print ('LMPavg,LMPmax,LMP1avg,LMP1std,Vmin,Vmax')
+    last1 = int (3600 * 24 / (times[1] - times[0]))
     j = 0
     for key in bus_keys:
         i = 0
@@ -121,14 +119,14 @@ def process_pypower(nameroot):
             ary = lst_b[str(t)][bus_keys[j]]
             data_b[j, i,:] = ary
             i = i + 1
+        print (key,
+               '{:.4f}'.format (data_b[j,:,LMP_P_IDX].mean()),
+               '{:.4f}'.format (data_b[j,:,LMP_P_IDX].max()),
+               '{:.4f}'.format (data_b[j,0:last1,LMP_P_IDX].mean()), 
+               '{:.4f}'.format (data_b[j,0:last1,LMP_P_IDX].std()),
+               '{:.4f}'.format (data_b[j,:,VMIN_IDX].min()),
+               '{:.4f}'.format (data_b[j,:,VMAX_IDX].max()))
         j = j + 1
-
-    # display some averages
-    print ('Average real power LMP =', data_b[0,:,LMP_P_IDX].mean(), LMP_P_UNITS)
-    print ('Maximum real power LMP =', data_b[0,:,LMP_P_IDX].max(), LMP_P_UNITS)
-    print ('First day LMP mean/std dev=', data_b[0,0:25,LMP_P_IDX].mean(), data_b[0,0:25,LMP_P_IDX].std())
-    print ('Maximum bus voltage =', data_b[0,:,VMAX_IDX].max(), VMAX_UNITS)
-    print ('Minimum bus voltage =', data_b[0,:,VMIN_IDX].min(), VMIN_UNITS)
 
     # read the generator metrics file
     lp_g = open ('gen_' + nameroot + '_metrics.json').read()
@@ -150,9 +148,10 @@ def process_pypower(nameroot):
             GENLMP_IDX = val['index']
             GENLMP_UNITS = val['units']
 
-    # create a NumPy array of all bus metrics
+    # create a NumPy array of all generator metrics
     data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
     print ('\nConstructed', data_g.shape, 'NumPy array for Generators')
+    print ('Unit,Bus,Type,Fuel,CF,COV')
     j = 0
     for key in gen_keys:
         i = 0
@@ -160,9 +159,16 @@ def process_pypower(nameroot):
             ary = lst_g[str(t)][gen_keys[j]]
             data_g[j, i,:] = ary
             i = i + 1
+        p_avg = data_g[j,:,PGEN_IDX].mean()
+        p_std = data_g[j,:,PGEN_IDX].std()
+        row = dict['generators'][key]
+        p_max = float (row['Pmax'])
+        print (key, row['bus'], row['bustype'], row['genfuel'],
+               '{:.4f}'.format (p_avg/p_max),
+               '{:.4f}'.format (p_std/p_avg))
         j = j + 1
 
-    # display a plot - hard-wired assumption of 3 generators from Case 9
+    # display a plot 
     fig, ax = plt.subplots(2,2, sharex = 'col')
     tmin = 0.0
     tmax = 48.0
