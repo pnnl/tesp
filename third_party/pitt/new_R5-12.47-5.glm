@@ -33678,3 +33678,11 @@ object triplex_meter {
   voltage_1 120.0+0.0j;
   voltage_2 120.0+0.0j;
 }
+object voltdump {
+	filename R5-12-47-5_voltage.csv;
+}
+
+object currdump {
+	filename R5-12-47-5_current.csv;
+}
+
