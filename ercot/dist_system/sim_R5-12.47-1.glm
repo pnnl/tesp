@@ -2371,7 +2371,6 @@ object load {
    load_class U;
    constant_power_A 3334.04439542+6251.49919908j;
    constant_power_B 30392.7252265+15398.98975559j;
-   constant_power_C 1.9166086e-10+1.01836826e-10j;
 	    voltage_A 7970.0+0.0j;
 	    voltage_B -3985.00-6902.22j;
 	    voltage_C -3985.00+6902.22j;

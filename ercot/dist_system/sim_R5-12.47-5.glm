@@ -2863,8 +2863,6 @@ object load {
    phases ABCN;
    nominal_voltage 7970.0;
    load_class U;
-   constant_power_A -7.8460038e-12-1.96407066e-10j;
-   constant_power_B -0.+0.j;
    constant_power_C 16582.16440532+8333.40442376j;
 	    voltage_A 7970.0+0.0j;
 	    voltage_B -3985.00-6902.22j;

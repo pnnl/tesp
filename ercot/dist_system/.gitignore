@@ -1,3 +1,4 @@
 gridlabd.xml
 *node_voltage*.csv
 *branch_current*.csv
+*metrics.json
