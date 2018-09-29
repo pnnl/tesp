@@ -6,6 +6,8 @@ import numpy as np;
 from math import sqrt;
 import json; 
 
+forERCOT = False
+
 transmissionVoltage = 138000.0
 transmissionXfmrMVAbase = 12.0
 transmissionXfmrXpct = 8.0
@@ -361,7 +363,7 @@ single_phase = [[5,2.10,1.53,0.90,3.38],
                 [333,1.00,4.90,0.34,1.97],
                 [500,1.00,4.90,0.29,1.98]]
 
-def parse_kva(arg):
+def parse_kva_old(arg):
     tok = arg.strip('; MWVAKdrij')
     nsign = nexp = ndot = 0
     for i in range(len(tok)):
@@ -405,6 +407,12 @@ def parse_kva(arg):
         q /= 1000.0
 
     return sqrt (p*p + q*q)
+
+def parse_kva(cplx): # this drops the sign of p and q
+    toks = list(filter(None,re.split('[\+j-]',cplx)))
+    p = float(toks[0])
+    q = float(toks[1])
+    return 0.001 * sqrt(p*p + q*q)
 
 # leave off intermediate fuse sizes 8, 12, 20, 30, 50, 80, 140
 # leave off 6, 10, 15, 25 from the smallest sizes, too easily blown
@@ -649,6 +657,69 @@ solar_count = 0
 solar_kw = 0
 battery_count = 0
 
+# write single-phase transformers for houses and small loads
+def connect_ercot_houses (model, h, op):
+    for key in house_nodes:
+        bus = key[:-2]
+        phs = house_nodes[key][3]
+        xfkva = Find1PhaseXfmrKva (6.0 * house_nodes[key][0])
+        if xfkva > 100.0:
+            npar = int (xfkva / 100.0 + 0.5)
+            xfkva = 100.0
+        else:
+            npar = 1
+        print (key, key[:-2], phs, xfkva, npar)
+
+# look at primary loads, not the service transformers
+def identify_ercot_houses (model, h, t, avgHouse, rgn):
+    print ('Average ERCOT House', avgHouse, rgn)
+    total_houses = {'A': 0, 'B': 0, 'C': 0}
+    total_small =  {'A': 0, 'B': 0, 'C': 0}
+    total_small_kva =  {'A': 0, 'B': 0, 'C': 0}
+    total_sf = 0
+    total_apt = 0
+    total_mh = 0
+    if t in model:
+        for o in model[t]:
+            name = o
+            node = o
+            for phs in ['A', 'B', 'C']:
+                tok = 'constant_power_' + phs
+                key = node + '_' + phs
+                if tok in model[t][o]:
+                    kva = parse_kva (model[t][o][tok])
+                    nh = 0
+                    if (kva > 1.0):
+                        nh = int ((kva / avgHouse) + 0.5)
+                        total_houses[phs] += nh
+                    if nh > 0:
+                        lg_v_sm = kva / avgHouse - nh # >0 if we rounded down the number of houses
+                        bldg, ti = selectResidentialBuilding (rgnThermalPct[rgn-1], np.random.uniform (0, 1))
+                        if bldg == 0:
+                            total_sf += nh
+                        elif bldg == 1:
+                            total_apt += nh
+                        else:
+                            total_mh += nh
+                        house_nodes[key] = [nh, rgn, lg_v_sm, phs, bldg, ti]
+                    elif kva > 0.1:
+                        total_small[phs] += 1
+                        total_small_kva[phs] += kva
+                        small_nodes[key] = [kva, phs]
+    for phs in ['A', 'B', 'C']:
+        print ('phase', phs, ':', total_houses[phs], 'Houses and', total_small[phs], 
+               'Small Loads totaling', '{:.2f}'.format (total_small_kva[phs]), 'kva')
+    print (len(house_nodes), 'primary house nodes, [SF,APT,MH]=', total_sf, total_apt, total_mh)
+    for i in range(6):
+        heating_bins[0][i] = round (total_sf * bldgHeatingSetpoints[0][i][0] + 0.5)
+        heating_bins[1][i] = round (total_apt * bldgHeatingSetpoints[1][i][0] + 0.5)
+        heating_bins[2][i] = round (total_mh * bldgHeatingSetpoints[2][i][0] + 0.5)
+        cooling_bins[0][i] = round (total_sf * bldgCoolingSetpoints[0][i][0] + 0.5)
+        cooling_bins[1][i] = round (total_apt * bldgCoolingSetpoints[1][i][0] + 0.5)
+        cooling_bins[2][i] = round (total_mh * bldgCoolingSetpoints[2][i][0] + 0.5)
+    print ('cooling bins target', cooling_bins)
+    print ('heating bins target', heating_bins)
+
 def identify_xfmr_houses (model, h, t, seg_loads, avgHouse, rgn):
     print ('Average House', avgHouse)
     total_houses = 0
@@ -763,6 +834,9 @@ def write_houses(basenode, op, vnom):
     else:
         vstart = format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j'
 
+    if forERCOT == True:
+        phs = phs + 'S'
+
     print ('object triplex_node {', file=op)
     print ('  name', basenode + ';', file=op)
     print ('  phases', phs + ';', file=op)
@@ -770,17 +844,9 @@ def write_houses(basenode, op, vnom):
     print ('  voltage_1 ' + vstart + ';', file=op)
     print ('  voltage_2 ' + vstart + ';', file=op)
     print ('}', file=op)
-    for i in range(nhouse):
-        tpxname = gld_strict_name (basenode + '_tpx_' + str(i+1))
-        mtrname = gld_strict_name (basenode + '_mtr_' + str(i+1))
-        hsename = gld_strict_name (basenode + '_hse_' + str(i+1))
-        solname = gld_strict_name (basenode + '_sol_' + str(i+1))
-        batname = gld_strict_name (basenode + '_bat_' + str(i+1))
-        sol_i_name = gld_strict_name (basenode + '_isol_' + str(i+1))
-        bat_i_name = gld_strict_name (basenode + '_ibat_' + str(i+1))
-        hse_m_name = gld_strict_name (basenode + '_mhse_' + str(i+1))
-        sol_m_name = gld_strict_name (basenode + '_msol_' + str(i+1))
-        bat_m_name = gld_strict_name (basenode + '_mbat_' + str(i+1))
+    if forERCOT == True:
+        tpxname = gld_strict_name (basenode + '_tpx')
+        mtrname = gld_strict_name (basenode + '_mtr')
         print ('object triplex_line {', file=op)
         print ('  name', tpxname + ';', file=op)
         print ('  from', basenode + ';', file=op)
@@ -798,6 +864,35 @@ def write_houses(basenode, op, vnom):
         print ('  voltage_1 ' + vstart + ';', file=op)
         print ('  voltage_2 ' + vstart + ';', file=op)
         print ('}', file=op)
+    for i in range(nhouse):
+        if forERCOT == False:
+            tpxname = gld_strict_name (basenode + '_tpx_' + str(i+1))
+            mtrname = gld_strict_name (basenode + '_mtr_' + str(i+1))
+            print ('object triplex_line {', file=op)
+            print ('  name', tpxname + ';', file=op)
+            print ('  from', basenode + ';', file=op)
+            print ('  to', mtrname + ';', file=op)
+            print ('  phases', phs + ';', file=op)
+            print ('  length 30;', file=op)
+            print ('  configuration', triplex_configurations[0][0] + ';', file=op)
+            print ('}', file=op)
+            print ('object triplex_meter {', file=op)
+            print ('  name', mtrname + ';', file=op)
+            print ('  phases', phs + ';', file=op)
+            print ('  meter_power_consumption 1+7j;', file=op)
+            write_tariff (op)
+            print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+            print ('  voltage_1 ' + vstart + ';', file=op)
+            print ('  voltage_2 ' + vstart + ';', file=op)
+            print ('}', file=op)
+        hsename = gld_strict_name (basenode + '_hse_' + str(i+1))
+        solname = gld_strict_name (basenode + '_sol_' + str(i+1))
+        batname = gld_strict_name (basenode + '_bat_' + str(i+1))
+        sol_i_name = gld_strict_name (basenode + '_isol_' + str(i+1))
+        bat_i_name = gld_strict_name (basenode + '_ibat_' + str(i+1))
+        hse_m_name = gld_strict_name (basenode + '_mhse_' + str(i+1))
+        sol_m_name = gld_strict_name (basenode + '_msol_' + str(i+1))
+        bat_m_name = gld_strict_name (basenode + '_mbat_' + str(i+1))
         print ('object triplex_meter {', file=op)
         print ('  name', hse_m_name + ';', file=op)
         print ('  parent', mtrname + ';', file=op)
@@ -1284,12 +1379,6 @@ def log_model(model, h):
                 else:
                     print('\t\t'+p+'\t-->\t'+model[t][o][p])
 
-def parse_kva(cplx):
-    toks = re.split('[\+j]',cplx)
-    p = float(toks[0])
-    q = float(toks[1])
-    return 0.001 * sqrt(p*p + q*q)
-
 def accumulate_load_kva(data):
     kva = 0.0
     if 'constant_power_A' in data:
@@ -1450,8 +1539,12 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         if metrics_interval > 0:
             print ('object metrics_collector_writer {', file=op)
             print ('  interval', str(metrics_interval) + ';', file=op)
-            print ('  filename ${METRICS_FILE};', file=op)
-            print ('  // filename test_metrics.json;', file=op)
+            if forERCOT == True:
+                print ('  // filename ${METRICS_FILE};', file=op)
+                print ('  filename ' + outname + '_metrics.json;', file=op)
+            else:
+                print ('  filename ${METRICS_FILE};', file=op)
+                print ('  // filename ' + outname + '_metrics.json;', file=op)
             print ('};', file=op)
         print ('object climate {', file=op)
         print ('  name "RegionalWeather";', file=op)
@@ -1495,6 +1588,8 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         xfused = {} # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
         secnode = {} # Node, st, phases, vnom                                                                  
         t = 'transformer'
+        if t not in model:
+            model[t] = {}
         for o in model[t]:
             seg_kva = seg_loads[o][0]
             seg_phs = seg_loads[o][1]
@@ -1546,6 +1641,8 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
                 model[t][o]['cap_nominal_voltage'] = str(int(vln))
 
         t = 'fuse'
+        if t not in model:
+            model[t] = {}
         for o in model[t]:
             if o in seg_loads:
                 seg_kva = seg_loads[o][0]
@@ -1588,7 +1685,11 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         write_link_class (model, h, 'transformer', seg_loads, op)
         write_link_class (model, h, 'capacitor', seg_loads, op)
 
-        identify_xfmr_houses (model, h, 'transformer', seg_loads, 0.001 * avghouse, rgn)
+        if forERCOT == True:
+            identify_ercot_houses (model, h, 'load', 0.001 * avghouse, rgn)
+            connect_ercot_houses (model, h, op)
+        else:
+            identify_xfmr_houses (model, h, 'transformer', seg_loads, 0.001 * avghouse, rgn)
         for key in house_nodes:
             write_houses (key, op, 120.0)
         for key in small_nodes:
@@ -1596,7 +1697,8 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         write_voltage_class (model, h, 'node', op, vln, vll, secnode)
         write_voltage_class (model, h, 'meter', op, vln, vll, secnode)
-        write_voltage_class (model, h, 'load', op, vln, vll, secnode)
+        if forERCOT == False:
+            write_voltage_class (model, h, 'load', op, vln, vll, secnode)
         if len(Eplus_Bus) > 0 and Eplus_Volts > 0.0 and Eplus_kVA > 0.0:
             print ('////////// EnergyPlus large-building load ///////////////', file=op)
             row = Find3PhaseXfmr (Eplus_kVA)
@@ -1658,20 +1760,23 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         op.close()
 
-def populate_feeder (configfile):
+def populate_feeder (configfile = None, config = None, taxconfig = None):
     global tier1_energy, tier1_price, tier2_energy, tier2_price, tier3_energy, tier3_price, bill_mode, kwh_price, monthly_fee
     global Eplus_Bus, Eplus_Volts, Eplus_kVA
     global transmissionVoltage, transmissionXfmrMVAbase
     global storage_inv_mode, solar_inv_mode, solar_penetration, storage_penetration
     global outpath, glmpath, supportpath, weatherpath, weather_file
     global starttime, endtime, timestep, metrics_interval, electric_cooling_penetration
-    global fncs_case
+    global fncs_case, forERCOT
+    global house_nodes, small_nodes
 
-    checkResidentialBuildingTable()
+    if configfile is not None:
+        checkResidentialBuildingTable()
     # we want the same pseudo-random variables each time, for repeatability
     np.random.seed (0)
-    lp = open (configfile).read()
-    config = json.loads(lp)
+    if config is None:
+        lp = open (configfile).read()
+        config = json.loads(lp)
     rootname = config['BackboneFiles']['TaxonomyChoice']
     tespdir = config['SimulationConfig']['SourceDirectory']
     glmpath = tespdir + '/feeders/'
@@ -1703,19 +1808,41 @@ def populate_feeder (configfile):
     transmissionXfmrMVAbase = float(config['PYPOWERConfiguration']['TransformerBase'])
     transmissionVoltage = 1000.0 * float(config['PYPOWERConfiguration']['TransmissionVoltage'])
 
-    print (rootname, 'to', outpath, 'using', weather_file)
-    print ('times', starttime, endtime)
-    print ('steps', timestep, metrics_interval)
-    print ('hvac', electric_cooling_penetration)
-    print ('pv', solar_penetration, solar_inv_mode)
-    print ('storage', storage_penetration, storage_inv_mode)
-    print ('billing', kwh_price, monthly_fee)
-                
-    for c in taxchoice:
-        if c[0] == rootname:
+    house_nodes = {}
+    small_nodes = {}
+
+    if taxconfig is not None:
+        print ('called with a custom taxonomy configuration')
+        forERCOT = True
+        if rootname in taxconfig['backbone_feeders']:
+            taxrow = taxconfig['backbone_feeders'][rootname]
+            vll = taxrow['vll']
+            vln = taxrow['vln']
+            avg_house = taxrow['avg_house']
+            avg_comm = taxrow['avg_comm']
             fncs_case = config['SimulationConfig']['CaseName']
-            ProcessTaxonomyFeeder (fncs_case, c[0], c[1], c[2], c[3], c[4])
-            quit()
+            glmpath = taxconfig['glmpath']
+            outpath = taxconfig['outpath']
+            supportpath = taxconfig['supportpath']
+            weatherpath = taxconfig['weatherpath']
+            print (fncs_case, rootname, vll, vln, avg_house, avg_comm, glmpath, outpath, supportpath, weatherpath)
+            ProcessTaxonomyFeeder (fncs_case, rootname, vll, vln, avg_house, avg_comm)
+        else:
+            print (rootname, 'not found in taxconfig backbone_feeders')
+    else:
+        print ('using the built-in taxonomy')
+        print (rootname, 'to', outpath, 'using', weather_file)
+        print ('times', starttime, endtime)
+        print ('steps', timestep, metrics_interval)
+        print ('hvac', electric_cooling_penetration)
+        print ('pv', solar_penetration, solar_inv_mode)
+        print ('storage', storage_penetration, storage_inv_mode)
+        print ('billing', kwh_price, monthly_fee)
+        for c in taxchoice:
+            if c[0] == rootname:
+                fncs_case = config['SimulationConfig']['CaseName']
+                ProcessTaxonomyFeeder (fncs_case, c[0], c[1], c[2], c[3], c[4])
+                quit()
 
 def populate_all_feeders ():
     if sys.platform == 'win32':
