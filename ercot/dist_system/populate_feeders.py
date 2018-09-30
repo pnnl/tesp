@@ -18,8 +18,8 @@ backbone_config = {'backbone_feeders': {
 
 case_config = {'SimulationConfig':{
 	'CaseName':'Bus1',
-  'StartTime':'2010-06-01 00:00:00',
-  'EndTime':'2010-06-01 01:00:00',
+  'StartTime':'2013-07-01 00:00:00',
+  'EndTime':'2013-07-02 00:00:00',
 	'SourceDirectory':'~/src/tesp/support'},
                'FeederGenerator':{
                  'MetricsInterval':300,

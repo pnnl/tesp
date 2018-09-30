@@ -658,17 +658,130 @@ solar_kw = 0
 battery_count = 0
 
 # write single-phase transformers for houses and small loads
-def connect_ercot_houses (model, h, op):
+tpxR11 = 2.1645
+tpxX11 = 0.6235
+tpxR12 = 0.8808
+tpxX12 = 0.6737
+tpxAMP = 235.0
+def connect_ercot_houses (model, h, op, vln, vsec):
     for key in house_nodes:
-        bus = key[:-2]
+#        bus = key[:-2]
+        bus = house_nodes[key][6]
         phs = house_nodes[key][3]
-        xfkva = Find1PhaseXfmrKva (6.0 * house_nodes[key][0])
+        nh = house_nodes[key][0]
+        xfkva = Find1PhaseXfmrKva (6.0 * nh)
         if xfkva > 100.0:
             npar = int (xfkva / 100.0 + 0.5)
             xfkva = 100.0
+        elif xfkva <= 0.0:
+            xfkva = 100.0
+            npar = int (0.06 * nh + 0.5)
         else:
             npar = 1
-        print (key, key[:-2], phs, xfkva, npar)
+#        print (key, bus, phs, nh, xfkva, npar)
+        # write the service transformer==>TN==>TPX==>TM for all houses
+        kvat = npar * xfkva
+        row = Find1PhaseXfmr (xfkva)
+        print ('object transformer_configuration {', file=op)
+        print ('  name ' + key + '_xfconfig;', file=op)
+        print ('  power_rating ' + format(kvat, '.2f') + ';', file=op)
+        if 'A' in phs:
+            print ('  powerA_rating ' + format(kvat, '.2f') + ';', file=op)
+        elif 'B' in phs:
+            print ('  powerB_rating ' + format(kvat, '.2f') + ';', file=op)
+        elif 'C' in phs:
+            print ('  powerC_rating ' + format(kvat, '.2f') + ';', file=op)
+        print ('  install_type PADMOUNT;', file=op)
+        print ('  connect_type SINGLE_PHASE_CENTER_TAPPED;', file=op)
+        print ('  primary_voltage ' + str(vln) + ';', file=op)
+        print ('  secondary_voltage ' + format(vsec, '.1f') + ';', file=op)
+        print ('  resistance ' + format(row[1] * 0.5, '.5f') + ';', file=op)
+        print ('  resistance1 ' + format(row[1], '.5f') + ';', file=op)
+        print ('  resistance2 ' + format(row[1], '.5f') + ';', file=op)
+        print ('  reactance ' + format(row[2] * 0.8, '.5f') + ';', file=op)
+        print ('  reactance1 ' + format(row[2] * 0.4, '.5f') + ';', file=op)
+        print ('  reactance2 ' + format(row[2] * 0.4, '.5f') + ';', file=op)
+        print ('  shunt_resistance ' + format(1.0 / row[3], '.2f') + ';', file=op)
+        print ('  shunt_reactance ' + format(1.0 / row[4], '.2f') + ';', file=op)
+        print ('}', file=op)
+        print ('object transformer {', file=op)
+        print ('  name ' + key + '_xf;', file=op)
+        print ('  phases ' + phs + 'S;', file=op)
+        print ('  from ' + bus + ';', file=op)
+        print ('  to ' + key + '_tn;', file=op)
+        print ('  configuration ' + key + '_xfconfig;', file=op)
+        print ('}', file=op)
+        print ('object triplex_line_configuration {', file=op)
+        print ('  name ' + key + '_tpxconfig;', file=op)
+        zs = format (tpxR11/nh, '.5f') + '+' + format (tpxX11/nh, '.5f') + 'j;'
+        zm = format (tpxR12/nh, '.5f') + '+' + format (tpxX12/nh, '.5f') + 'j;'
+        amps = format (tpxAMP * nh, '.1f') + ';'
+        print ('  z11 ' + zs, file=op)
+        print ('  z22 ' + zs, file=op)
+        print ('  z12 ' + zm, file=op)
+        print ('  z21 ' + zm, file=op)
+        print ('  rating.summer.continuous ' + amps, file=op)
+        print ('}', file=op)
+        print ('object triplex_line {', file=op)
+        print ('  name ' + key + '_tpx;', file=op)
+        print ('  phases ' + phs + 'S;', file=op)
+        print ('  from ' + key + '_tn;', file=op)
+        print ('  to ' + key + '_mtr;', file=op)
+        print ('  length 50;', file=op)
+        print ('  configuration ' + key + '_tpxconfig;', file=op)
+        print ('}', file=op)
+        if 'A' in phs:
+            vstart = str(vsec) + '+0.0j;'
+        elif 'B' in phs:
+            vstart = format(-0.5*vsec,'.2f') + format(-0.866025*vsec,'.2f') + 'j;'
+        else:
+            vstart = format(-0.5*vsec,'.2f') + '+' + format(0.866025*vsec,'.2f') + 'j;'
+        print ('object triplex_node {', file=op)
+        print ('  name ' + key + '_tn;', file=op)
+        print ('  phases ' + phs + 'S;', file=op)
+        print ('  voltage_1 ' + vstart, file=op)
+        print ('  voltage_2 ' + vstart, file=op)
+        print ('  voltage_N 0;', file=op)
+        print ('  nominal_voltage ' + format(vsec, '.1f') + ';', file=op)
+        print ('}', file=op)
+        print ('object triplex_meter {', file=op)
+        print ('  name ' + key + '_mtr;', file=op)
+        print ('  phases ' + phs + 'S;', file=op)
+        print ('  voltage_1 ' + vstart, file=op)
+        print ('  voltage_2 ' + vstart, file=op)
+        print ('  voltage_N 0;', file=op)
+        print ('  nominal_voltage ' + format(vsec, '.1f') + ';', file=op)
+        write_tariff (op)
+        if metrics_interval > 0:
+            print ('  object metrics_collector {', file=op)
+            print ('    interval', str(metrics_interval) + ';', file=op)
+            print ('  };', file=op)
+        print ('}', file=op)
+
+def write_ercot_small_loads(basenode, op, vnom):
+  kva = float(small_nodes[basenode][0])
+  phs = small_nodes[basenode][1]
+  parent = small_nodes[basenode][2]
+
+  if 'A' in phs:
+      vstart = '  voltage_A ' + str(vnom) + '+0.0j;'
+      constpower = '  constant_power_A_real ' + format (1000.0 + kva, '.2f') + ';'
+  elif 'B' in phs:
+      vstart = '  voltage_B ' + format(-0.5*vnom,'.2f') + format(-0.866025*vnom,'.2f') + 'j;'
+      constpower = '  constant_power_B_real ' + format (1000.0 + kva, '.2f') + ';'
+  else:
+      vstart = '  voltage_C ' + format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j;'
+      constpower = '  constant_power_C_real ' + format (1000.0 + kva, '.2f') + ';'
+
+  print ('object load {', file=op)
+  print ('  name', basenode + ';', file=op)
+  print ('  parent', parent + ';', file=op)
+  print ('  phases', phs + ';', file=op)
+  print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+  print (vstart, file=op)
+  print ('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
+  print (constpower, file=op)
+  print ('}', file=op)
 
 # look at primary loads, not the service transformers
 def identify_ercot_houses (model, h, t, avgHouse, rgn):
@@ -683,6 +796,7 @@ def identify_ercot_houses (model, h, t, avgHouse, rgn):
         for o in model[t]:
             name = o
             node = o
+            parent = model[t][o]['parent']
             for phs in ['A', 'B', 'C']:
                 tok = 'constant_power_' + phs
                 key = node + '_' + phs
@@ -701,11 +815,11 @@ def identify_ercot_houses (model, h, t, avgHouse, rgn):
                             total_apt += nh
                         else:
                             total_mh += nh
-                        house_nodes[key] = [nh, rgn, lg_v_sm, phs, bldg, ti]
+                        house_nodes[key] = [nh, rgn, lg_v_sm, phs, bldg, ti, parent] # parent is the primary node, only for ERCOT
                     elif kva > 0.1:
                         total_small[phs] += 1
                         total_small_kva[phs] += kva
-                        small_nodes[key] = [kva, phs]
+                        small_nodes[key] = [kva, phs, parent] # parent is the primary node, only for ERCOT
     for phs in ['A', 'B', 'C']:
         print ('phase', phs, ':', total_houses[phs], 'Houses and', total_small[phs], 
                'Small Loads totaling', '{:.2f}'.format (total_small_kva[phs]), 'kva')
@@ -836,34 +950,8 @@ def write_houses(basenode, op, vnom):
 
     if forERCOT == True:
         phs = phs + 'S'
-
-    print ('object triplex_node {', file=op)
-    print ('  name', basenode + ';', file=op)
-    print ('  phases', phs + ';', file=op)
-    print ('  nominal_voltage ' + str(vnom) + ';', file=op)
-    print ('  voltage_1 ' + vstart + ';', file=op)
-    print ('  voltage_2 ' + vstart + ';', file=op)
-    print ('}', file=op)
-    if forERCOT == True:
         tpxname = gld_strict_name (basenode + '_tpx')
         mtrname = gld_strict_name (basenode + '_mtr')
-        print ('object triplex_line {', file=op)
-        print ('  name', tpxname + ';', file=op)
-        print ('  from', basenode + ';', file=op)
-        print ('  to', mtrname + ';', file=op)
-        print ('  phases', phs + ';', file=op)
-        print ('  length 30;', file=op)
-        print ('  configuration', triplex_configurations[0][0] + ';', file=op)
-        print ('}', file=op)
-        print ('object triplex_meter {', file=op)
-        print ('  name', mtrname + ';', file=op)
-        print ('  phases', phs + ';', file=op)
-        print ('  meter_power_consumption 1+7j;', file=op)
-        write_tariff (op)
-        print ('  nominal_voltage ' + str(vnom) + ';', file=op)
-        print ('  voltage_1 ' + vstart + ';', file=op)
-        print ('  voltage_2 ' + vstart + ';', file=op)
-        print ('}', file=op)
     for i in range(nhouse):
         if forERCOT == False:
             tpxname = gld_strict_name (basenode + '_tpx_' + str(i+1))
@@ -898,8 +986,6 @@ def write_houses(basenode, op, vnom):
         print ('  parent', mtrname + ';', file=op)
         print ('  phases', phs + ';', file=op)
         print ('  nominal_voltage ' + str(vnom) + ';', file=op)
-#        print ('  voltage_1 ' + vstart + ';', file=op)
-#        print ('  voltage_2 ' + vstart + ';', file=op)
         print ('}', file=op)
 
         fa_base = rgnFloorArea[rgn-1][bldg]
@@ -1208,7 +1294,10 @@ def write_substation (op, name, phs, vnom, vll):
     if len(fncs_case) > 0:
         print ('#ifdef USE_FNCS', file=op)
         print ('object fncs_msg {', file=op)
-        print ('  name gridlabdSimulator1;', file=op)
+        if forERCOT == True:
+            print ('  name gridlabd' + fncs_case + ';', file=op)
+        else:
+            print ('  name gridlabdSimulator1;', file=op)
         print ('  parent network_node;', file=op)
         print ('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
         print ('  option "transport:hostname localhost, port 5570";', file=op)
@@ -1687,13 +1776,17 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         if forERCOT == True:
             identify_ercot_houses (model, h, 'load', 0.001 * avghouse, rgn)
-            connect_ercot_houses (model, h, op)
+            connect_ercot_houses (model, h, op, vln, 120.0)
+            for key in house_nodes:
+                write_houses (key, op, 120.0)
+            for key in small_nodes:
+                write_ercot_small_loads (key, op, vln)
         else:
             identify_xfmr_houses (model, h, 'transformer', seg_loads, 0.001 * avghouse, rgn)
-        for key in house_nodes:
-            write_houses (key, op, 120.0)
-        for key in small_nodes:
-            write_small_loads (key, op, 120.0)
+            for key in house_nodes:
+                write_houses (key, op, 120.0)
+            for key in small_nodes:
+                write_small_loads (key, op, 120.0)
 
         write_voltage_class (model, h, 'node', op, vln, vll, secnode)
         write_voltage_class (model, h, 'meter', op, vln, vll, secnode)
