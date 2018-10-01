@@ -171,7 +171,11 @@ for key in mtr_keys:
 		i = i + 1
 	j = j + 1
 
-print ('Total meter bill =', data_m[:,-1,MTR_BILL_IDX].sum())
+print ('Total meter bill =', '{:.2f}'.format(data_m[:,-1,MTR_BILL_IDX].sum()))
+print ('Min house voltage = ', '{:.2f}'.format(data_m[:,:,MTR_VOLT_MIN_IDX].min()))
+print ('Min house voltage = ', '{:.2f}'.format(data_m[:,:,MTR_VOLT_MAX_IDX].max()))
+print ('Min feeder power =', '{:.2f}'.format(1.0e-6 * data_s[0,:,SUB_POWER_IDX].min()), 'MW')
+print ('Max feeder power =', '{:.2f}'.format(1.0e-6 * data_s[0,:,SUB_POWER_IDX].max()), 'MW')
 
 # display a plot
 fig, ax = plt.subplots(2, 2, sharex = 'col')
