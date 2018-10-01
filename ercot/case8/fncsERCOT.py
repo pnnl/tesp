@@ -246,7 +246,7 @@ while ts <= tmax:
     if 'SUBSTATION' in topic:
       busnum = int (topic[10:])
       gld_load[busnum] = parse_mva (fncs.get_value(key).decode())
-  print (ts, 'FNCS loads', gld_load, flush=True)
+#  print (ts, 'FNCS loads', gld_load, flush=True)
   # fluctuate the wind plants
   if ts >= tnext_wind:
     for key, row in wind_plants.items():
@@ -302,7 +302,7 @@ while ts <= tmax:
     Qload = Qnom * curve_scale * val[1] + Qgld
     ppc['bus'][busnum-1, 2] = Pload
     ppc['bus'][busnum-1, 3] = Qload
-    print (ts, 'assigning loads', busnum, Pgld, Qgld, Pload, Qload, flush=True)
+#    print (ts, 'assigning loads', busnum, Pgld, Qgld, Pload, Qload, flush=True)
   # run OPF to establish the prices and economic dispatch
   if ts >= tnext_opf:
     ropf = pp.runopf (ppc, ppopt_market)
