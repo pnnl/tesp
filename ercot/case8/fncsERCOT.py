@@ -166,7 +166,7 @@ u3=np.linspace(0,1,num=86400/300 + 1,endpoint=True)
 newpts = ip.splev (u3, tck_load)
 
 ppc = tesp.load_json_case (casename + '.json')
-ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'])
+ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'])
 ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)
 StartTime = ppc['StartTime']
 tmax = int(ppc['Tmax'])
@@ -213,7 +213,6 @@ for i in range (gen.shape[0]):
 # BranchesOut: idx, time out[s], time back in[s]
 # FNCS: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew
 fncs_bus = ppc['FNCS']
-loads = {'h':[],'1':[],'2':[],'3':[],'4':[],'5':[],'6':[],'7':[],'8':[]}
 
 # initialize for variable wind
 tnext_wind = tmax + 2 * dt # by default, never fluctuate the wind plants
@@ -230,6 +229,10 @@ tnext_opf = 0
 gld_load = {}
 for i in range (8):
   gld_load[i+1] = [0,0]
+
+# we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
+for row in ppc['gen']:
+  row[9] = 0.1 * row[8]
 
 fncs.initialize()
 op = open (casename + '.csv', 'w')
