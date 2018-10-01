@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -396,12 +396,6 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>examples/loadshed/list5570.bat</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed_fncs.cfg</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>examples/loadshed/loadshed_fncs_none.cfg</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
