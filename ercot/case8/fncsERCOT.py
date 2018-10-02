@@ -165,10 +165,10 @@ def print_gld_load(ppc, gld_load, msg, ts):
     qcrv = gld_load[busnum]['qcrv']
     pgld = gld_load[busnum]['p'] * gld_scale
     qgld = gld_load[busnum]['q'] * gld_scale
-    resp_max = gld_load[busnum]['resp_max']) * gld_scale
-    unresp = gld_load[busnum]['unresp']) * gld_scale
-    c2 = gld_load[busnum]['c2']) / gld_scale
-    c1 = gld_load[busnum]['c1'])
+    resp_max = gld_load[busnum]['resp_max'] * gld_scale
+    unresp = gld_load[busnum]['unresp'] * gld_scale
+    c2 = gld_load[busnum]['c2'] / gld_scale
+    c1 = gld_load[busnum]['c1']
     deg = gld_load[busnum]['deg']
     genidx = gld_load[busnum]['genidx']
     print (busnum, genidx, 
@@ -357,10 +357,10 @@ while ts <= tmax:
     for row in fncs_bus:
       busnum = int (row[0])
       gld_scale = float (row[2])
-      resp_max = gld_load[busnum]['resp_max']) * gld_scale
-      unresp = gld_load[busnum]['unresp']) * gld_scale
-      c2 = gld_load[busnum]['c2']) / gld_scale
-      c1 = gld_load[busnum]['c1'])
+      resp_max = gld_load[busnum]['resp_max'] * gld_scale
+      unresp = gld_load[busnum]['unresp'] * gld_scale
+      c2 = gld_load[busnum]['c2'] / gld_scale
+      c1 = gld_load[busnum]['c1']
       deg = gld_load[busnum]['deg']
       genidx = gld_load[busnum]['genidx']
       ppc['gen'][genidx, 9] = -resp_max
@@ -423,8 +423,8 @@ while ts <= tmax:
   for row in fncs_bus:
     busnum = int (row[0])
     gld_scale = float (row[2])
-    Pgld = gld_load[busnum]['p']) * gld_scale
-    Qgld = gld_load[busnum]['q']) * gld_scale
+    Pgld = gld_load[busnum]['p'] * gld_scale
+    Qgld = gld_load[busnum]['q'] * gld_scale
     ppc['bus'][busnum-1, 2] += Pgld
     ppc['bus'][busnum-1, 3] += Qgld
     genidx = gld_load[busnum]['genidx']
