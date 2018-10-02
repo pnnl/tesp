@@ -155,6 +155,33 @@ def parse_mva(arg):
 
   return p, q
 
+def print_gld_load(ppc, gld_load, msg, ts):
+  print (msg, 'at', ts)
+  print ('bus,genidx,pcrv,qcrv,pgld,qgld,unresp,resp_max,c2,c1,deg')
+  for row in ppc['FNCS']:
+    busnum = int (row[0])
+    gld_scale = float (row[2])
+    pcrv = gld_load[busnum]['pcrv']
+    qcrv = gld_load[busnum]['qcrv']
+    pgld = gld_load[busnum]['p'] * gld_scale
+    qgld = gld_load[busnum]['q'] * gld_scale
+    resp_max = gld_load[busnum]['resp_max']) * gld_scale
+    unresp = gld_load[busnum]['unresp']) * gld_scale
+    c2 = gld_load[busnum]['c2']) / gld_scale
+    c1 = gld_load[busnum]['c1'])
+    deg = gld_load[busnum]['deg']
+    genidx = gld_load[busnum]['genidx']
+    print (busnum, genidx, 
+           '{:.2f}'.format(pcrv),
+           '{:.2f}'.format(qcrv),
+           '{:.2f}'.format(pgld),
+           '{:.2f}'.format(qgld),
+           '{:.2f}'.format(unresp),
+           '{:.2f}'.format(resp_max),
+           '{:.8f}'.format(c2),
+           '{:.8f}'.format(c1),
+           '{:.1f}'.format(deg))
+
 x = np.array (range (25))
 y = np.array (load_shape)
 l = len(x)
@@ -226,27 +253,56 @@ if wind_period > 0:
 # initialize for OPF and time stepping
 ts = 0
 tnext_opf = 0
-gld_load = {}
-for i in range (8):
-  gld_load[i+1] = [0,0]
-
 # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
 for row in ppc['gen']:
   row[9] = 0.1 * row[8]
 
+# listening to GridLAB-D and its auction objects
+gld_load = {} # key on bus number
+for i in range (8):  # TODO: this is hardwired for 8, more efficient to concatenate outside a loop
+  busnum = i+1
+  genidx = ppc['gen'].shape[0]
+  ppc['gen'] = np.concatenate ((ppc['gen'], np.array ([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
+  ppc['gencost'] = np.concatenate ((ppc['gencost'], np.array ([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
+  gld_load[busnum] = {'pcrv':0,'qcrv':0,'p':0,'q':0,'unresp':0,'resp_max':0,'c2':0,'c1':0,'deg':0,'genidx':genidx} 
+
+#print (gld_load)
+#print (ppc['gen'])
+#print (ppc['gencost'])
+
+#quit()
 fncs.initialize()
 op = open (casename + '.csv', 'w')
 print ('seconds,OPFconverged,TotalLoad,TotalGen,SwingGen,LMP1,LMP8,gas1,coal1,nuc1,gas2,coal2,nuc2,gas3,coal3,gas4,gas5,coal5,gas7,coal7,wind1,wind3,wind4,wind6,wind7', sep=',', file=op, flush=True)
+
+# MAIN LOOP starts here
 while ts <= tmax:
   # start by getting the latest inputs from GridLAB-D and the auction
   events = fncs.get_events()
   for key in events:
     topic = key.decode()
     val = fncs.get_value(key).decode()
-    if 'SUBSTATION' in topic:
+    if 'UNRESPONSIVE_MW_' in topic:
+      busnum = int (topic[16:])
+      gld_load[busnum]['unresp'] = float(fncs.get_value(key).decode())
+    elif 'RESPONSIVE_MAX_MW_' in topic:
+      busnum = int (topic[18:])
+      gld_load[busnum]['resp_max'] = float(fncs.get_value(key).decode())
+    elif 'RESPONSIVE_C2_' in topic:
+      busnum = int (topic[14:])
+      gld_load[busnum]['c2'] = float(fncs.get_value(key).decode())
+    elif 'RESPONSIVE_C1_' in topic:
+      busnum = int (topic[14:])
+      gld_load[busnum]['c1'] = float(fncs.get_value(key).decode())
+    elif 'RESPONSIVE_DEG_' in topic:
+      busnum = int (topic[15:])
+      gld_load[busnum]['deg'] = int(fncs.get_value(key).decode())
+    elif 'SUBSTATION' in topic:
       busnum = int (topic[10:])
-      gld_load[busnum] = parse_mva (fncs.get_value(key).decode())
-#  print (ts, 'FNCS loads', gld_load, flush=True)
+      p, q = parse_mva (fncs.get_value(key).decode())
+      gld_load[busnum]['p'] = float (p)
+      gld_load[busnum]['q'] = float (q)
+  print (ts, 'FNCS inputs', gld_load, flush=True)
   # fluctuate the wind plants
   if ts >= tnext_wind:
     for key, row in wind_plants.items():
@@ -283,28 +339,47 @@ while ts <= tmax:
         ppc['gen'][int(key), 1] = p
     tnext_wind += wind_period
 
-  # always update the unresponsive load
+  # always baseline the loads from the curves
   for row in fncs_bus:
     busnum = int (row[0])
-    topic = str (row[1])
-    gld_scale = float (row[2])
     Pnom = float (row[3])
     Qnom = float (row[4])
     curve_scale = float (row[5])
     curve_skew = int (row[6])
-    Pgld = float(gld_load[busnum][0]) * gld_scale
-    Qgld = float(gld_load[busnum][1]) * gld_scale
-
     sec = (ts + curve_skew) % 86400
     h = float (sec) / 3600.0
     val = ip.splev ([h / 24.0], tck_load)
-    Pload = Pnom * curve_scale * val[1] + Pgld
-    Qload = Qnom * curve_scale * val[1] + Qgld
-    ppc['bus'][busnum-1, 2] = Pload
-    ppc['bus'][busnum-1, 3] = Qload
-#    print (ts, 'assigning loads', busnum, Pgld, Qgld, Pload, Qload, flush=True)
+    gld_load[busnum]['pcrv'] = Pnom * curve_scale * val[1]
+    gld_load[busnum]['qcrv'] = Qnom * curve_scale * val[1]
   # run OPF to establish the prices and economic dispatch
   if ts >= tnext_opf:
+    # update cost coefficients, set dispatchable load, put unresp+curve load on bus
+    for row in fncs_bus:
+      busnum = int (row[0])
+      gld_scale = float (row[2])
+      resp_max = gld_load[busnum]['resp_max']) * gld_scale
+      unresp = gld_load[busnum]['unresp']) * gld_scale
+      c2 = gld_load[busnum]['c2']) / gld_scale
+      c1 = gld_load[busnum]['c1'])
+      deg = gld_load[busnum]['deg']
+      genidx = gld_load[busnum]['genidx']
+      ppc['gen'][genidx, 9] = -resp_max
+      if deg == 2:
+        ppc['gencost'][genidx, 3] = 3
+        ppc['gencost'][genidx, 4] = -c2
+        ppc['gencost'][genidx, 5] = c1
+      elif deg == 1:
+        ppc['gencost'][genidx, 3] = 2
+        ppc['gencost'][genidx, 4] = c1
+        ppc['gencost'][genidx, 5] = 0.0
+      else:
+        ppc['gencost'][genidx, 3] = 1
+        ppc['gencost'][genidx, 4] = 999.0
+        ppc['gencost'][genidx, 5] = 0.0
+      ppc['gencost'][genidx, 6] = 0.0
+      ppc['bus'][busnum-1, 2] = gld_load[busnum]['pcrv'] + unresp
+      ppc['bus'][busnum-1, 3] = gld_load[busnum]['qcrv']
+    print_gld_load (ppc, gld_load, 'OPF', ts)
     ropf = pp.runopf (ppc, ppopt_market)
     if ropf['success'] == False:
       conv_accum = False
@@ -344,6 +419,19 @@ while ts <= tmax:
   # always run the regular power flow for voltages and performance metrics
   ppc['bus'][:,13] = opf_bus[:,13]  # set the lmp
   ppc['gen'][:,1] = opf_gen[:, 1]   # set the economic dispatch
+  # add the actual scaled GridLAB-D loads to the baseline curve loads, turn off dispatchable loads
+  for row in fncs_bus:
+    busnum = int (row[0])
+    gld_scale = float (row[2])
+    Pgld = gld_load[busnum]['p']) * gld_scale
+    Qgld = gld_load[busnum]['q']) * gld_scale
+    ppc['bus'][busnum-1, 2] += Pgld
+    ppc['bus'][busnum-1, 3] += Qgld
+    genidx = gld_load[busnum]['genidx']
+    ppc['gen'][genidx, 1] = 0 # p
+    ppc['gen'][genidx, 2] = 0 # q
+    ppc['gen'][genidx, 9] = 0 # pmin
+  print_gld_load (ppc, gld_load, 'RPF', ts)
   rpf = pp.runpf (ppc, ppopt_regular)
   if rpf[0]['success'] == False:
     conv_accum = False
@@ -369,9 +457,11 @@ while ts <= tmax:
     busnum = int(fncsBus[i,0])
     busidx = busnum - 1
     row = bus[busidx].tolist()
-    # publish the bus VLN for GridLAB-D
+    # publish the bus VLN and LMP [$/kwh] for GridLAB-D
     bus_vln = 1000.0 * row[7] * row[9] / math.sqrt(3.0)
-    fncs.publish('three_phase_voltage_B' + str(busnum), bus_vln)
+    fncs.publish('three_phase_voltage_Bus' + str(busnum), bus_vln)
+    lmp = float(opf_bus[busidx,13])*0.001
+    fncs.publish('LMP_Bus' + str(busnum), lmp) # publishing $/kwh
     # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
     PD = row[2] #  + resp # TODO, if more than one FNCS bus, track scaled_resp separately
     Vpu = row[7]

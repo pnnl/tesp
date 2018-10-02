@@ -6,12 +6,12 @@ from datetime import datetime
 from datetime import timedelta
 
 # these should be in a configuration file as well; TODO synch the proper hour of day
-def auction_loop (configfile, metrics_root, flag='WithMarket'):
+def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
     bWantMarket = True
     if flag == 'NoMarket':
         bWantMarket = False
         print ('Disabled the market', flush=True)
-    time_stop = int (48 * 3600) # simulation time in seconds
+    time_stop = int (hour_stop * 3600) # simulation time in seconds
     StartTime = '2013-07-01 00:00:00 -0800'
     time_fmt = '%Y-%m-%d %H:%M:%S %z'
     dt_now = datetime.strptime (StartTime, time_fmt)
