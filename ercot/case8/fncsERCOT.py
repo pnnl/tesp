@@ -217,19 +217,6 @@ bus_metrics = {'Metadata':bus_meta,'StartTime':StartTime}
 gen_metrics = {'Metadata':gen_meta,'StartTime':StartTime}
 sys_metrics = {'Metadata':sys_meta,'StartTime':StartTime}
 make_dictionary (ppc, casename)
-tnext_metrics = 0
-loss_accum = 0
-conv_accum = True
-n_accum = 0
-bus_accum = {}
-gen_accum = {}
-fncsBus = ppc['FNCS']
-gen = ppc['gen']
-for i in range (fncsBus.shape[0]):
-  busnum = int(fncsBus[i,0])
-  bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0]
-for i in range (gen.shape[0]):
-  gen_accum[str(i+1)] = [0,0,0]
 
 # ppc arrays (bus type 1=load, 2 = gen (PV) and 3 = swing)
 # bus: bus_i, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin
@@ -269,6 +256,19 @@ for i in range (8):  # TODO: this is hardwired for 8, more efficient to concaten
 #print (gld_load)
 #print (ppc['gen'])
 #print (ppc['gencost'])
+tnext_metrics = 0
+loss_accum = 0
+conv_accum = True
+n_accum = 0
+bus_accum = {}
+gen_accum = {}
+fncsBus = ppc['FNCS']
+gen = ppc['gen']
+for i in range (fncsBus.shape[0]):
+  busnum = int(fncsBus[i,0])
+  bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0]
+for i in range (gen.shape[0]):
+  gen_accum[str(i+1)] = [0,0,0]
 
 #quit()
 fncs.initialize()
@@ -349,8 +349,8 @@ while ts <= tmax:
     sec = (ts + curve_skew) % 86400
     h = float (sec) / 3600.0
     val = ip.splev ([h / 24.0], tck_load)
-    gld_load[busnum]['pcrv'] = Pnom * curve_scale * val[1]
-    gld_load[busnum]['qcrv'] = Qnom * curve_scale * val[1]
+    gld_load[busnum]['pcrv'] = Pnom * curve_scale * float(val[1])
+    gld_load[busnum]['qcrv'] = Qnom * curve_scale * float(val[1])
   # run OPF to establish the prices and economic dispatch
   if ts >= tnext_opf:
     # update cost coefficients, set dispatchable load, put unresp+curve load on bus
