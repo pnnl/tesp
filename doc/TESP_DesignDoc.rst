@@ -377,9 +377,10 @@ contains a dictionary (map) of SubstationRecords, each of which contains
 an array of 18 values. This structure, with minimal nesting of JSON
 objects, was designed to facilitate fast loading and navigation of
 arrays in Python. The TESP code repository includes examples of working
-with metrics output in Python.
+with metrics output in Python. Figures 10 and 11 show how capacitor
+switching and regulator tap changing counts are captured as metrics.
 
-Figure 10 shows the structure of billing meter metrics, which is very
+Figure 12 shows the structure of billing meter metrics, which is very
 similar to that of substation metrics, except that each array contains
 30 values. The billing meter metrics aggregate real and reactive power
 for any houses and inverters connected to the meter, with several
@@ -394,7 +395,7 @@ defined.
 
 Figure 8. GridLAB-D dictionary
 
-The Range A and Range B metrics in Figure 10 refer to ANSI C84.1
+The Range A and Range B metrics in Figure 12 refer to ANSI C84.1
 [`11 <#_ENREF_11>`__]. For service voltages less than 600 V, Range A is
 +/- 5% of nominal voltage for normal operation. Range B is -8.33% to
 +5.83% of nominal voltage for limited-extent operation. Voltage
@@ -421,18 +422,26 @@ metrics also support Momentary Average Interruption Frequency Index
 
 Figure 9. GridLAB-D substation metrics
 
+|image19|
+
+Figure 10. GridLAB-D capacitor switching metrics
+
+|image20|
+
+Figure 11. GridLAB-D regulator tap changing metrics
+
 |image9|
 
-Figure 10. GridLAB-D billing meter metrics
+Figure 12. GridLAB-D billing meter metrics
 
-The house metric JSON file structure is shown in Figure 11, following
+The house metric JSON file structure is shown in Figure 13, following
 the same structure as the other GridLAB-D metrics files, with 18 values
 in each array. These relate to the breakdown of total house load into
 HVAC and waterheater components, which are both thermostat controlled.
 The house air temperature, and its deviation from the thermostat
 setpoint, are also included. Note that the house bill would be included
 in billing meter metrics, not the house metrics. Inverter metrics in
-Figure 12 include 8 real and reactive power values in the array, so the
+Figure 14 include 8 real and reactive power values in the array, so the
 connected resource outputs can be disaggregated from the billing meter
 outputs, which always net the connected houses and inverters. In Version
 1, the inverters will be net metered, or have their own meter, but they
@@ -440,13 +449,13 @@ don’t have transactive agents yet.
 
 |image10|
 
-Figure 11. GridLAB-D house metrics
+Figure 13. GridLAB-D house metrics
 
 |image11|
 
-Figure 12. GridLAB-D inverter metrics
+Figure 14. GridLAB-D inverter metrics
 
-Figure 13 shows the transactive agent dictionary and metrics file
+Figure 15 shows the transactive agent dictionary and metrics file
 structures. Currently, these include one double-auction market per
 substation and one double-ramp controller per HVAC. Each dictionary
 (map) is keyed to the controller or market id. The Controller dictionary
@@ -458,7 +467,7 @@ dictionary attributes.
 
 There will be two JSON metrics output files for TEAgents during a
 simulation, one for markets and one for controllers, which are
-structured as shown at the bottom of Figure 13. The use of *StartTime*
+structured as shown at the bottom of Figure 15. The use of *StartTime*
 and Metadata is the same as for MATPOWER and GridLAB-D metrics. For
 controllers, the bid price and quantity (kw, not kwh) is recorded for
 each market clearing interval’s id. For auctions, the actual clearing
@@ -468,9 +477,9 @@ supplemental revenue calculations until more agents are developed.
 
 |image12|
 
-Figure 13. TEAgent dictionary and metrics
+Figure 15. TEAgent dictionary and metrics
 
-The EnergyPlus dictionary and metrics structure in Figure 14 follows
+The EnergyPlus dictionary and metrics structure in Figure 16 follows
 the same pattern as MATPOWER, GridLAB-D and TEAgent metrics. There are
 42 metric values in the array, most of them pertaining to heating and
 cooling system temperatures and states. Each EnergyPlus model is
@@ -484,13 +493,13 @@ hour of day and type of day, then TESP aggregates for the whole
 building. The *electric\_demand\_power* metric is the total three-phase
 power published to GridLAB-D, including HVAC and variable loads from
 lights, refrigeration, office equipment, etc. The *kwhr\_price* will
-correspond to the market clearing price from Figure 13. Finally, the
+correspond to the market clearing price from Figure 15. Finally, the
 *ashrae\_uncomfortable\_hours* is based on a simple standardized model,
 aggregated for all zones [`14 <#_ENREF_14>`__].
 
 |image13|
 
-\ Figure 14. EnergyPlus dictionary and metrics
+\ Figure 16. EnergyPlus dictionary and metrics
 
 GridLAB-D Enhancements
 ----------------------
@@ -649,7 +658,7 @@ customization, code re-use, etc.
 Example Models
 ==============
 
-Figure 15 shows a reduced-order demonstration model that
+Figure 17 shows a reduced-order demonstration model that
 incorporates all three federated co-simulators; GridLAB-D simulating 30
 houses, EnergyPlus simulating one large building, and PYPOWER or
 MATPOWER simulating the bulk system. This model can simulate two days of
@@ -660,7 +669,7 @@ Even so, this model is the recommended starting point for TESP.
 
 |image14|
 
-\ Figure 15. Demonstration model with 30 houses and a school
+\ Figure 17. Demonstration model with 30 houses and a school
 
 The three-phase unresponsive load comes from a GridLAB-D player file on
 each phase, connected to the feeder primary. The EnergyPlus load
@@ -818,7 +827,7 @@ the same.
 SGIP 1 Model Overview
 ---------------------
 
-Figure 16 shows the types of assets and stakeholders considered for the
+Figure 18 shows the types of assets and stakeholders considered for the
 use cases in this version. The active market participants include a
 double-auction market at the substation level, the bulk transmission and
 generation system, a large commercial building with responsive HVAC
@@ -835,13 +844,13 @@ yet been implemented.
 
 \ |image15|
 
-Figure 16. SGIP-1 system configuration with partial PV and storage
+Figure 18. SGIP-1 system configuration with partial PV and storage
 adoption
 
 The Circuit Model
 -----------------
 
-Figure 17 shows the bulk system model in MATPOWER. It is a small system
+Figure 19 shows the bulk system model in MATPOWER. It is a small system
 with three generating units and three load buses that comes with
 MATPOWER, to which we added a high-cost peaking unit to assure
 convergence of the optimal power flow in all cases. In SGIP-1
@@ -853,10 +862,10 @@ other.
 
 |image16|
 
-Figure 17. Bulk System Model with Maximum Generator Real Power Output
+Figure 19. Bulk System Model with Maximum Generator Real Power Output
 Capacities
 
-Figure 18 shows the topology of a 12.47-kV feeder based on the western
+Figure 20 shows the topology of a 12.47-kV feeder based on the western
 region of PNNL’s taxonomy of typical distribution feeders
 [`16 <#_ENREF_16>`__]. We use a MATLAB feeder generator script that
 produces these models from a typical feeder, including random placement
@@ -871,7 +880,7 @@ weekday. A normal day was simulated in order for the auction market
 history to stabilize, and on the second day, a bulk generation outage
 was simulated. See the code repository for more details.
 
-Figure 19 shows the building envelope for an elementary school model
+Figure 21 shows the building envelope for an elementary school model
 that was connected to the GridLAB-D feeder model at a 480-volt,
 three-phase transformer secondary. The total electric load varied from
 48 kW to about 115 kW, depending on the hour of day. The EnergyPlus
@@ -881,12 +890,12 @@ passive response.
 
 |image17|
 
-Figure 18. Distribution Feeder Model
+Figure 20. Distribution Feeder Model
 (http://emac.berkeley.edu/gridlabd/taxonomy\_graphs/)
 
 |image18|
 
-Figure 19. Elementary School Model
+Figure 21. Elementary School Model
 
 The Growth Model
 ----------------
@@ -951,7 +960,7 @@ are much easier to modify and deploy.
 The second lesson relates to EnergyPlus modeling, which is a completely
 different domain than power system modeling. We were able to get help
 from other PNNL staff to make small corrections in the EnergyPlus model
-depicted in Figure 19, but it’s clear we will need more building model
+depicted in Figure 21, but it’s clear we will need more building model
 experts on the team going forward. This will be especially true as we
 integrate VOLTTRON-based agents into TESP.
 
@@ -1044,11 +1053,8 @@ Usability Enhancements
 
 These are also important for usability and widespread adoption of TESP.
 
-1. Capacitor Switching and Tap Changer Metrics – GridLAB-D includes
-   built-in counters for capacitor switching and tap changer operations,
-   which reflect wear-and-tear on utility infrastructure. These should
-   be added to the metrics described in Section 4.5, and this would
-   likely complete the intermediate metrics output from GridLAB-D.
+1. Figure 22 shows the data structure beneath a new case configuration
+   graphical user interface.
 
 2. TE Challenge Message Schemas – NIST has defined several classes and
    message schemas for the TE Challenge project [`2 <#_ENREF_2>`__].
@@ -1099,6 +1105,10 @@ These are also important for usability and widespread adoption of TESP.
    of the simulation. No accuracy would be lost in cumulative metrics,
    and it would still be possible to identify metrics for individual
    stakeholders.
+
+|image21|
+
+Figure 22. Case Configuration Parameters for One Feeder and One Building
 
 The enhancements listed in sections 3.1 and 3.2 are of known complexity,
 and could be implemented within the next year, subject to resource
@@ -1323,3 +1333,13 @@ Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),* pp. 1-110, 2010.
 .. |image18| image:: ./media/School.png
    :width: 6.49167in
    :height: 2.66667in
+.. |image19| image:: ./media/CapacitorMetrics.png
+   :width: 6.0in
+   :height: 3.1in
+.. |image20| image:: ./media/RegulatorMetrics.png
+   :width: 5.8in
+   :height: 2.8in
+.. |image21| image:: ./media/Configuration.png
+   :width: 8.29in
+   :height: 10.08in
+
