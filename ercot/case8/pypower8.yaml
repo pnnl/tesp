@@ -1,0 +1,149 @@
+name: pypower
+time_delta: 15s
+broker: tcp://localhost:5570
+values:
+    SUBSTATION1:
+        topic: gridlabdBus1/distribution_load
+        default: 0
+    UNRESPONSIVE_MW_1:
+        topic: auction1/unresponsive_mw
+        default: 0
+    RESPONSIVE_MAX_MW_1:
+        topic: auction1/responsive_max_mw
+        default: 0
+    RESPONSIVE_C2_1:
+        topic: auction1/responsive_c2
+        default: 0
+    RESPONSIVE_C1_1:
+        topic: auction1/responsive_c1
+        default: 0
+    RESPONSIVE_DEG_1:
+        topic: auction1/responsive_deg
+        default: 0
+    SUBSTATION2:
+        topic: gridlabdBus2/distribution_load
+        default: 0
+    UNRESPONSIVE_MW_2:
+        topic: auction2/unresponsive_mw
+        default: 0
+    RESPONSIVE_MAX_MW_2:
+        topic: auction2/responsive_max_mw
+        default: 0
+    RESPONSIVE_C2_2:
+        topic: auction2/responsive_c2
+        default: 0
+    RESPONSIVE_C1_2:
+        topic: auction2/responsive_c1
+        default: 0
+    RESPONSIVE_DEG_2:
+        topic: auction2/responsive_deg
+        default: 0
+    SUBSTATION3:
+        topic: gridlabdBus3/distribution_load
+        default: 0
+    UNRESPONSIVE_MW_3:
+        topic: auction3/unresponsive_mw
+        default: 0
+    RESPONSIVE_MAX_MW_3:
+        topic: auction3/responsive_max_mw
+        default: 0
+    RESPONSIVE_C2_3:
+        topic: auction3/responsive_c2
+        default: 0
+    RESPONSIVE_C1_3:
+        topic: auction3/responsive_c1
+        default: 0
+    RESPONSIVE_DEG_3:
+        topic: auction3/responsive_deg
+        default: 0
+    SUBSTATION4:
+        topic: gridlabdBus4/distribution_load
+        default: 0
+    UNRESPONSIVE_MW_4:
+        topic: auction4/unresponsive_mw
+        default: 0
+    RESPONSIVE_MAX_MW_4:
+        topic: auction4/responsive_max_mw
+        default: 0
+    RESPONSIVE_C2_4:
+        topic: auction4/responsive_c2
+        default: 0
+    RESPONSIVE_C1_4:
+        topic: auction4/responsive_c1
+        default: 0
+    RESPONSIVE_DEG_4:
+        topic: auction4/responsive_deg
+        default: 0
+    SUBSTATION5:
+        topic: gridlabdBus5/distribution_load
+        default: 0
+    UNRESPONSIVE_MW_5:
+        topic: auction5/unresponsive_mw
+        default: 0
+    RESPONSIVE_MAX_MW_5:
+        topic: auction5/responsive_max_mw
+        default: 0
+    RESPONSIVE_C2_5:
+        topic: auction5/responsive_c2
+        default: 0
+    RESPONSIVE_C1_5:
+        topic: auction5/responsive_c1
+        default: 0
+    RESPONSIVE_DEG_5:
+        topic: auction5/responsive_deg
+        default: 0
+    SUBSTATION6:
+        topic: gridlabdBus6/distribution_load
+        default: 0
+    UNRESPONSIVE_MW_6:
+        topic: auction6/unresponsive_mw
+        default: 0
+    RESPONSIVE_MAX_MW_6:
+        topic: auction6/responsive_max_mw
+        default: 0
+    RESPONSIVE_C2_6:
+        topic: auction6/responsive_c2
+        default: 0
+    RESPONSIVE_C1_6:
+        topic: auction6/responsive_c1
+        default: 0
+    RESPONSIVE_DEG_6:
+        topic: auction6/responsive_deg
+        default: 0
+    SUBSTATION7:
+        topic: gridlabdBus7/distribution_load
+        default: 0
+    UNRESPONSIVE_MW_7:
+        topic: auction7/unresponsive_mw
+        default: 0
+    RESPONSIVE_MAX_MW_7:
+        topic: auction7/responsive_max_mw
+        default: 0
+    RESPONSIVE_C2_7:
+        topic: auction7/responsive_c2
+        default: 0
+    RESPONSIVE_C1_7:
+        topic: auction7/responsive_c1
+        default: 0
+    RESPONSIVE_DEG_7:
+        topic: auction7/responsive_deg
+        default: 0
+    SUBSTATION8:
+        topic: gridlabdBus8/distribution_load
+        default: 0
+    UNRESPONSIVE_MW_8:
+        topic: auction8/unresponsive_mw
+        default: 0
+    RESPONSIVE_MAX_MW_8:
+        topic: auction8/responsive_max_mw
+        default: 0
+    RESPONSIVE_C2_8:
+        topic: auction8/responsive_c2
+        default: 0
+    RESPONSIVE_C1_8:
+        topic: auction8/responsive_c1
+        default: 0
+    RESPONSIVE_DEG_8:
+        topic: auction8/responsive_deg
+        default: 0
+

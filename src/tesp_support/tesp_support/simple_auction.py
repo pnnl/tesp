@@ -67,21 +67,34 @@ class curve:
                 self.count += 1
 
 def parse_fncs_number (arg):
-  return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
+    return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
 
+# strip out extra white space, units (deg, degF, V, MW, MVA, KW, KVA) and ;
 def parse_fncs_magnitude (arg):
-  tok = arg.strip('+-; MWVAFKdegrij')
-  vals = re.split(r'[\+-]+', tok)
-  if len(vals) < 2: # only a real part provided
-    vals.append('0')
-#  vals = [float(v) for v in vals]
-#
-#  if '-' in tok:
-#    vals[1] *= -1.0
-  vals[0] = float(vals[0])
-  if arg.startswith('-'):
-    vals[0] *= -1.0
-  return vals[0]
+    if ('d ' in arg) or ('r ' in arg):  # polar form
+        tok = arg.strip('; MWVAKdrij')
+        nsign = nexp = ndot = 0
+        for i in range(len(tok)):
+            if (tok[i] == '+') or (tok[i] == '-'):
+                nsign += 1
+            elif (tok[i] == 'e') or (tok[i] == 'E'):
+                nexp += 1
+            elif tok[i] == '.':
+                ndot += 1
+            if nsign == 1:
+                kpos = i
+            if nsign == 2 and nexp == 0:
+                kpos = i
+                break
+            if nsign == 3:
+                kpos = i
+                break
+        vals = [tok[:kpos],tok[kpos:]]
+        vals = [float(v) for v in vals]
+        return vals[0]
+    tok = arg.strip('; MWVAFKdegri').replace(" ", "") # rectangular form, including real only
+    b = complex(tok)
+    return abs (b) # b.real
 
 def parse_kw(arg):
     tok = arg.strip('; MWVAKdrij')

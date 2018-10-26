@@ -533,12 +533,12 @@ and in X11 Preferences under Security tab, make sure "Allow connections from net
 
 Also, _socat_ ([Netcat on steroids :)](http://www.dest-unreach.org/socat/)) needs to be installed. And it will be done using the _brew_ ([Homebrew](https://docs.brew.sh/Installation)), which I have installed using
 ```
-ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" /dev/null
 ```
 Run
 ```
 brew install socat
-socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\"
+socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\"&
 ```
 to install _socat_, and then give access to the host display.
 

@@ -1,3 +1,6 @@
 *metrics.json
 *dict.json
 *.xml
+*.yaml
+*.txt
+ercot_8.csv

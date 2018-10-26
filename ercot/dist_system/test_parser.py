@@ -57,8 +57,45 @@ def parse_kva(arg):
     return sqrt (p*p + q*q)
 
 #print (parse_kva ('-0.00681678-0.00373295j'))
-print (parse_kva2 ('-0.00681678+0.00373295j'))
-print (parse_kva2 ('-0.00681678-0.00373295j'))
-print (parse_kva2 ('559966.6667+330033.3333j'))
-print (parse_kva2 ('186283.85296131+110424.29850536j'))
+#print (parse_kva2 ('-0.00681678+0.00373295j'))
+#print (parse_kva2 ('-0.00681678-0.00373295j'))
+#print (parse_kva2 ('559966.6667+330033.3333j'))
+#print (parse_kva2 ('186283.85296131+110424.29850536j'))
+
+def parse_fncs_number (arg):
+    return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
+
+# strip out extra white space, units (deg, degF, V, MW, MVA, KW, KVA) and ;
+def parse_fncs_magnitude (arg):
+    if ('d ' in arg) or ('r ' in arg):  # polar form
+        tok = arg.strip('; MWVAKdrij')
+        nsign = nexp = ndot = 0
+        for i in range(len(tok)):
+            if (tok[i] == '+') or (tok[i] == '-'):
+                nsign += 1
+            elif (tok[i] == 'e') or (tok[i] == 'E'):
+                nexp += 1
+            elif tok[i] == '.':
+                ndot += 1
+            if nsign == 1:
+                kpos = i
+            if nsign == 2 and nexp == 0:
+                kpos = i
+                break
+            if nsign == 3:
+                kpos = i
+                break
+        vals = [tok[:kpos],tok[kpos:]]
+        vals = [float(v) for v in vals]
+        return vals[0]
+    tok = arg.strip('; MWVAFKdegri').replace(" ", "") # rectangular form, including real only
+    b = complex(tok)
+    return abs (b) # b.real
+
+print (parse_fncs_magnitude ('4.544512492208864e-2'))
+print (parse_fncs_magnitude ('120.0;'))
+print (parse_fncs_magnitude ('-60.0 + 103.923 j;'))
+print (parse_fncs_magnitude ('+77.86 degF'))
+print (parse_fncs_magnitude ('+115.781-4.01083d V'))
+
 

@@ -1,5 +1,3 @@
 rm *.xml
-rm *.txt
-rm *.yaml
+rm *auction.yaml
 rm *metrics.json
-rm *dict.json
