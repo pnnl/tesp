@@ -1,5 +1,5 @@
-INSTALL_PATH := /home/tom/FNCS_install
-FNCS_PATH := /home/tom/FNCS_install
+INSTALL_PATH := /usr/local
+FNCS_PATH := /usr/local
 CXX = g++
 
 CXXFLAGS =
