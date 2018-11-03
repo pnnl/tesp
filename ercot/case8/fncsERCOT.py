@@ -157,10 +157,12 @@ def parse_mva(arg):
 
 def print_gld_load(ppc, gld_load, msg, ts):
   print (msg, 'at', ts)
-  print ('bus,genidx,pcrv,qcrv,pgld,qgld,unresp,resp_max,c2,c1,deg')
+  print ('bus,genidx,pbus,qbus,pcrv,qcrv,pgld,qgld,unresp,resp_max,c2,c1,deg')
   for row in ppc['FNCS']:
     busnum = int (row[0])
     gld_scale = float (row[2])
+    pbus = ppc['bus'][busnum-1, 2]
+    qbus = ppc['bus'][busnum-1, 3]
     pcrv = gld_load[busnum]['pcrv']
     qcrv = gld_load[busnum]['qcrv']
     pgld = gld_load[busnum]['p'] * gld_scale
@@ -172,6 +174,8 @@ def print_gld_load(ppc, gld_load, msg, ts):
     deg = gld_load[busnum]['deg']
     genidx = gld_load[busnum]['genidx']
     print (busnum, genidx, 
+           '{:.2f}'.format(pbus),
+           '{:.2f}'.format(qbus),
            '{:.2f}'.format(pcrv),
            '{:.2f}'.format(qcrv),
            '{:.2f}'.format(pgld),
@@ -272,8 +276,10 @@ for i in range (gen.shape[0]):
 
 #quit()
 fncs.initialize()
-op = open (casename + '.csv', 'w')
+op = open (casename + '_opf.csv', 'w')
+vp = open (casename + '_pf.csv', 'w')
 print ('seconds,OPFconverged,TotalLoad,TotalGen,SwingGen,LMP1,LMP8,gas1,coal1,nuc1,gas2,coal2,nuc2,gas3,coal3,gas4,gas5,coal5,gas7,coal7,wind1,wind3,wind4,wind6,wind7', sep=',', file=op, flush=True)
+print ('seconds,PFConverged,TotalLoad,TotalGen,TotalLoss,SwingGen,v1,v2,v3,v4,v5,v6,v7,v8', sep=',', file=vp, flush=True)
 
 # MAIN LOOP starts here
 while ts <= tmax:
@@ -302,7 +308,7 @@ while ts <= tmax:
       p, q = parse_mva (fncs.get_value(key).decode())
       gld_load[busnum]['p'] = float (p)
       gld_load[busnum]['q'] = float (q)
-  print (ts, 'FNCS inputs', gld_load, flush=True)
+#  print (ts, 'FNCS inputs', gld_load, flush=True)
   # fluctuate the wind plants
   if ts >= tnext_wind:
     for key, row in wind_plants.items():
@@ -449,6 +455,24 @@ while ts <= tmax:
   Pload = bus[:,2].sum()
   Pgen = gen[:,1].sum()
   Ploss = Pgen - Pload
+  Pswing = 0
+  for idx in range (gen.shape[0]):
+    if gen[idx, 0] == swing_bus:
+      Pswing += gen[idx, 1]
+  print (ts, rpf[0]['success'], 
+         '{:.2f}'.format(Pload),
+         '{:.2f}'.format(Pgen),
+         '{:.2f}'.format(Ploss),
+         '{:.2f}'.format(Pswing),
+         '{:.3f}'.format(bus[0,7]),
+         '{:.3f}'.format(bus[1,7]),
+         '{:.3f}'.format(bus[2,7]),
+         '{:.3f}'.format(bus[3,7]),
+         '{:.3f}'.format(bus[4,7]),
+         '{:.3f}'.format(bus[5,7]),
+         '{:.3f}'.format(bus[6,7]),
+         '{:.3f}'.format(bus[7,7]),
+         sep=',', file=vp, flush=True)
 
   # update the metrics
   n_accum += 1
@@ -524,6 +548,7 @@ bus_mp.close()
 gen_mp.close()
 sys_mp.close()
 op.close()
+vp.close()
 print ('finalizing FNCS', flush=True)
 fncs.finalize()
 

@@ -16,4 +16,4 @@
 (export FNCS_CONFIG_FILE=Bus6_auction.yaml && export FNCS_FATAL=YES && exec python -c "import tesp_support.api as tesp;tesp.auction_loop('Bus6_agent_dict.json','Bus6', 24)" &> auction6.log &)
 (export FNCS_CONFIG_FILE=Bus7_auction.yaml && export FNCS_FATAL=YES && exec python -c "import tesp_support.api as tesp;tesp.auction_loop('Bus7_agent_dict.json','Bus7', 24)" &> auction7.log &)
 (export FNCS_CONFIG_FILE=Bus8_auction.yaml && export FNCS_FATAL=YES && exec python -c "import tesp_support.api as tesp;tesp.auction_loop('Bus8_agent_dict.json','Bus8', 24)" &> auction8.log &)
-(export FNCS_CONFIG_FILE=pypower8.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec pythonw fncsERCOT.py &> bulk.log &)
+(export FNCS_CONFIG_FILE=pypower8.yaml && export FNCS_FATAL=YES && exec pythonw fncsERCOT.py &> bulk.log &)
