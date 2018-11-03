@@ -5,8 +5,8 @@ This procedure builds all components from scratch. If you've already
 built GridLAB-D on your machine, please take note of the specific
 GitHub branch requirements for TESP:
 
-- feature/1048 for GridLAB-D
-- feature/transactiveEnergyApi for FNCS
+- feature/1146 for GridLAB-D
+- develop for FNCS
 - fncs-v8.3.0 for EnergyPlus
 
 You may also need to upgrade the gcc and g++ compilers. This build 
@@ -16,7 +16,7 @@ LTS and gcc/g++ 5.4.0.
 When you finish the build, try RunExamples_.
 
 
-Preparation - Python, Java, build tools, PYPOWER
+Preparation - Python Packages, Java, build tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
@@ -40,12 +40,9 @@ Preparation - Python, Java, build tools, PYPOWER
  # during following install, accept the choice of adding Miniconda to your PATH
  ./Miniconda3-latest-Linux-x86_64.sh
  conda update conda
- conda install matplotlib
- conda install scipy
  conda install pandas
-
- # verify up-to-date PYPOWER
- pip install pypower
+ # tesp_support, including verification of PYPOWER dependency
+ pip install tesp_support
  opf
 
 Checkout PNNL repositories from github
@@ -56,8 +53,8 @@ Checkout PNNL repositories from github
  cd ~/src
  git config --global user.name "your user name"
  git config --global user.email "your email"
- git clone -b feature/transactiveEnergyApi https://github.com/FNCS/fncs.git
- git clone -b feature/1048 https://github.com/gridlab-d/gridlab-d.git
+ git clone -b develop https://github.com/FNCS/fncs.git
+ git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b master https://github.com/pnnl/tesp.git
 
