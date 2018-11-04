@@ -76,7 +76,7 @@ def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
         dt_now = dt_now + timedelta (seconds=time_delta)
         day_of_week = dt_now.weekday()
         hour_of_day = dt_now.hour
-        print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, flush=True)
+#        print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, flush=True)
 
         # update the data from FNCS messages
         events = fncs.get_events()
@@ -112,7 +112,7 @@ def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
             bSetDefaults = False
 
         if time_granted >= tnext_bid:
-            print ('**', tnext_clear, flush=True)
+#            print ('**', tnext_clear, flush=True)
             aucObj.clear_bids()
             time_key = str (int (tnext_clear))
             controller_metrics [time_key] = {}
@@ -134,7 +134,7 @@ def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
 
         if time_granted >= tnext_clear:
             if bWantMarket:
-                aucObj.clear_market()
+                aucObj.clear_market(tnext_clear, time_granted)
                 fncs.publish ('clear_price', aucObj.clearing_price)
                 for key, obj in hvacObjs.items():
                     obj.inform_bid (aucObj.clearing_price)

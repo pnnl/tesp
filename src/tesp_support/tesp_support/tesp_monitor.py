@@ -13,7 +13,7 @@ import time
 import numpy as np;
 import matplotlib;
 matplotlib.use('TkAgg');
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg;
+from matplotlib.backends.backend_tkagg import FigureCanvasTk, NavigationToolbar2Tk;
 from matplotlib.figure import Figure;
 import matplotlib.pyplot as plt;
 
@@ -66,8 +66,8 @@ class TespMonitorGUI:
     self.ax[3].set_xlabel('Hours')
     plt.xlim(0.0,48.0)
 
-    self.canvas = FigureCanvasTkAgg(self.fig, self.root)
-    self.canvas.show()
+    self.canvas = FigureCanvasTk(self.fig, self.root)
+    self.canvas.draw()
     self.canvas.get_tk_widget().grid(row=1,columnspan=5, sticky = tk.W + tk.E + tk.N + tk.S)
 
   def on_closing(self):
@@ -184,7 +184,7 @@ class TespMonitorGUI:
           x1[idx] = val
           self.ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
           bWantX1 = False
-#      print (time_granted, key.decode(), fncs.get_value(key).decode())
+      print (time_granted, key.decode(), fncs.get_value(key).decode())
       self.root.update()
       self.fig.canvas.draw()
     fncs.finalize()

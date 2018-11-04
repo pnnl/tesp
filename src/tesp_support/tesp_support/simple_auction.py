@@ -253,7 +253,7 @@ class simple_auction:
             self.curve_buyer.set_curve_order ('descending')
         self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.agg_c1 = aggregate_bid (self.curve_buyer)
 
-    def clear_market (self):
+    def clear_market (self, tnext_clear=0, time_granted=0):
         self.curve_seller.add_to_curve (self.lmp, self.max_capacity_reference_bid_quantity, True)
         if self.curve_seller.count > 0:
             self.curve_seller.set_curve_order ('ascending')
@@ -478,7 +478,7 @@ class simple_auction:
         else:
             self.marginal_quantity = 0.0
             self.marginal_frac = 0.0
-        print ('##', self.clearing_type, self.clearing_quantity, self.clearing_price, 
+        print ('##', time_granted, tnext_clear, self.clearing_type, self.clearing_quantity, self.clearing_price, 
                self.curve_buyer.count, self.unresponsive_buy, self.responsive_buy,
                self.curve_seller.count, self.unresponsive_sell, self.responsive_sell,
                self.marginal_quantity, self.marginal_frac, self.lmp, self.refload, flush=True)
