@@ -15,10 +15,10 @@ set FNCS_CONFIG_FILE=eplus_json.yaml
 start /b cmd /c eplus_json 2d 5m SchoolDualController eplus_TE_Challenge_metrics.json ^>eplus_json.log 2^>^&1
 
 set FNCS_CONFIG_FILE=pypower30.yaml
-start /b cmd /c python -c "import tesp_support.api as tesp;tesp.pypower_loop('te30_pp.json','TE_Challenge')" ^>pypower.log 2^>^&1
+start /b cmd /c python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('te30_pp.json','TE_Challenge')" ^>pypower.log 2^>^&1
 
 set FNCS_CONFIG_FILE=TE_Challenge_auction.yaml
-start /b cmd /c python -c "import tesp_support.api as tesp;tesp.auction_loop('TE_Challenge_agent_dict.json','TE_Challenge')" ^>auction.log 2^>^&1
+start /b cmd /c python3 -c "import tesp_support.api as tesp;tesp.auction_loop('TE_Challenge_agent_dict.json','TE_Challenge')" ^>auction.log 2^>^&1
 
 set FNCS_CONFIG_FILE=
 set FNCS_LOG_LEVEL=

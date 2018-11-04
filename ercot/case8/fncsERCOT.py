@@ -385,7 +385,7 @@ while ts <= tmax:
       ppc['gencost'][genidx, 6] = 0.0
       ppc['bus'][busnum-1, 2] = gld_load[busnum]['pcrv'] + unresp
       ppc['bus'][busnum-1, 3] = gld_load[busnum]['qcrv']
-    print_gld_load (ppc, gld_load, 'OPF', ts)
+#    print_gld_load (ppc, gld_load, 'OPF', ts)
     ropf = pp.runopf (ppc, ppopt_market)
     if ropf['success'] == False:
       conv_accum = False
@@ -431,13 +431,13 @@ while ts <= tmax:
     gld_scale = float (row[2])
     Pgld = gld_load[busnum]['p'] * gld_scale
     Qgld = gld_load[busnum]['q'] * gld_scale
-    ppc['bus'][busnum-1, 2] += Pgld
-    ppc['bus'][busnum-1, 3] += Qgld
+    ppc['bus'][busnum-1, 2] = gld_load[busnum]['pcrv'] + Pgld
+    ppc['bus'][busnum-1, 3] = gld_load[busnum]['qcrv'] + Qgld
     genidx = gld_load[busnum]['genidx']
     ppc['gen'][genidx, 1] = 0 # p
     ppc['gen'][genidx, 2] = 0 # q
     ppc['gen'][genidx, 9] = 0 # pmin
-  print_gld_load (ppc, gld_load, 'RPF', ts)
+#  print_gld_load (ppc, gld_load, 'RPF', ts)
   rpf = pp.runpf (ppc, ppopt_regular)
   if rpf[0]['success'] == False:
     conv_accum = False
