@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'numpy>=1.4.15',
         'scipy>=1.1.0',
-        'matplotlib>=2.0.2',
+        'matplotlib>=3.0.0',
         'networkx>=2.1',
         'PYPOWER>=5.1.4'
     ],
