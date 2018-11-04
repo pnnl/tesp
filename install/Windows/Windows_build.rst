@@ -85,6 +85,19 @@ This is done in the Windows Settings tool, choosing "Edit the system environment
 - append c:\\msys64\\usr\\local\\lib\\gridlabd to GLPATH 
 - append c:\\msys64\\usr\\local\\share\\gridlabd to GLPATH 
 
+Insert the following to .bash_profile in your MSYS2 environment.
+
+::
+
+ PATH="/c/ProgramData/Oracle/Java/javapath:${PATH}"
+ PATH="/c/Program Files/Java/jdk-9.0.4/bin:${PATH}"
+ PATH="/c/Users/Tom/Miniconda3:${PATH}"
+ PATH="/c/Users/Tom/Miniconda3/Scripts:${PATH}"
+ PATH="/c/Users/Tom/Miniconda3/Library/mingw-w64/bin:${PATH}"
+ PATH="/c/Users/Tom/Miniconda3/Library/usr/bin:${PATH}"
+ PATH="/c/Users/Tom/Miniconda3/Library/bin:${PATH}"
+
+
 Build FNCS and Link with GridLAB-D
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
