@@ -3,6 +3,7 @@ import sys;
 import tesp_support.fncs as fncs;
 import json;
 import math;
+import resource;
 
 import re;
 
@@ -61,9 +62,8 @@ def precool_loop (nhours, metrics_root):
     time_granted = fncs.time_request(time_stop) # time_next
     hour_of_day = 24.0 * ((float(time_granted) / 86400.0) % 1.0)
     events = fncs.get_events()
-    for key in events:
-      topic = key.decode()
-      value = fncs.get_value(key).decode()
+    for topic in events:
+      value = fncs.get_value(topic)
       if topic == 'price':
         price = float(value)
       else:

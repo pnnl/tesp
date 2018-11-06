@@ -1164,10 +1164,10 @@ def write_houses(basenode, op, vnom):
           print ('    tank_UA','{:.1f}'.format(tank_UA) + ';', file=op)
           print ('    demand', wh_demand_str + ';', file=op)
           print ('    tank_volume','{:.0f}'.format(wh_size) + ';', file=op)
-          if metrics_interval > 0:
-              print ('    object metrics_collector {', file=op)
-              print ('      interval', str(metrics_interval) + ';', file=op)
-              print ('    };', file=op)
+#          if metrics_interval > 0:
+#              print ('    object metrics_collector {', file=op)
+#              print ('      interval', str(metrics_interval) + ';', file=op)
+#              print ('    };', file=op)
           print ('  };', file=op)
         if metrics_interval > 0:
             print ('  object metrics_collector {', file=op)

@@ -152,39 +152,39 @@ class TespMonitorGUI:
       bWantX1 = True # school load
       bWantX2 = True # prices
       bWantX3 = True # total feeder load
-      for key in events:
-        tok = key.decode()
-        if bWantX1 and tok == 'power_A':
-          val = 3.0 * float (fncs.get_value(key).decode().strip('+ degFkW')) / 1000.0
+      for topic in events:
+        value = fncs.get_value(topic)
+        if bWantX1 and topic == 'power_A':
+          val = 3.0 * float (value.strip('+ degFkW')) / 1000.0
           x1[idx] = val
           self.ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
           bWantX1 = False
-        elif bWantX3 and tok == 'distribution_load':
-          val = simple_auction.parse_kw (fncs.get_value(key).decode())
+        elif bWantX3 and topic == 'distribution_load':
+          val = simple_auction.parse_kw (value)
           x3[idx] = val
           self.ax[3].plot(hrs[1:idx],x3[1:idx],color='magenta')
           bWantX3 = False
-        elif bWantX0 and tok == 'vpos7':
-          val = float (fncs.get_value(key).decode().strip('+ degFkW')) / 133000.0
+        elif bWantX0 and topic == 'vpos7':
+          val = float (value.strip('+ degFkW')) / 133000.0
           x0[idx] = val
           self.ax[0].plot(hrs[1:idx],x0[1:idx],color='green')
           bWantX0 = False
-        elif bWantX2 and tok == 'clear_price':
-          val = float (fncs.get_value(key).decode().strip('+ degFkW'))
+        elif bWantX2 and topic == 'clear_price':
+          val = float (value.strip('+ degFkW'))
           x2[idx] = val
           self.ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
           bWantX2 = False
-        elif bWantX2 and tok == 'LMP7':
-          val = float (fncs.get_value(key).decode().strip('+ degFkW'))
+        elif bWantX2 and topic == 'LMP7':
+          val = float (value.strip('+ degFkW'))
           x2[idx] = val
           self.ax[2].plot(hrs[1:idx],x2[1:idx],color='blue')
           bWantX2 = False
-        elif bWantX1 and tok == 'SUBSTATION7':
-          val = float (fncs.get_value(key).decode().strip('+ degFkW')) # already in kW
+        elif bWantX1 and topic == 'SUBSTATION7':
+          val = float (value.strip('+ degFkW')) # already in kW
           x1[idx] = val
           self.ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
           bWantX1 = False
-      print (time_granted, key.decode(), fncs.get_value(key).decode())
+      print (time_granted, topic, value)
       self.root.update()
       self.fig.canvas.draw()
     fncs.finalize()

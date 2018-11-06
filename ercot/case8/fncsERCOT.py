@@ -285,27 +285,26 @@ print ('seconds,PFConverged,TotalLoad,TotalGen,TotalLoss,SwingGen,v1,v2,v3,v4,v5
 while ts <= tmax:
   # start by getting the latest inputs from GridLAB-D and the auction
   events = fncs.get_events()
-  for key in events:
-    topic = key.decode()
-    val = fncs.get_value(key).decode()
+  for topic in events:
+    val = fncs.get_value(topic)
     if 'UNRESPONSIVE_MW_' in topic:
       busnum = int (topic[16:])
-      gld_load[busnum]['unresp'] = float(fncs.get_value(key).decode())
+      gld_load[busnum]['unresp'] = float(val)
     elif 'RESPONSIVE_MAX_MW_' in topic:
       busnum = int (topic[18:])
-      gld_load[busnum]['resp_max'] = float(fncs.get_value(key).decode())
+      gld_load[busnum]['resp_max'] = float(val)
     elif 'RESPONSIVE_C2_' in topic:
       busnum = int (topic[14:])
-      gld_load[busnum]['c2'] = float(fncs.get_value(key).decode())
+      gld_load[busnum]['c2'] = float(val)
     elif 'RESPONSIVE_C1_' in topic:
       busnum = int (topic[14:])
-      gld_load[busnum]['c1'] = float(fncs.get_value(key).decode())
+      gld_load[busnum]['c1'] = float(val)
     elif 'RESPONSIVE_DEG_' in topic:
       busnum = int (topic[15:])
-      gld_load[busnum]['deg'] = int(fncs.get_value(key).decode())
+      gld_load[busnum]['deg'] = int(val)
     elif 'SUBSTATION' in topic:
       busnum = int (topic[10:])
-      p, q = parse_mva (fncs.get_value(key).decode())
+      p, q = parse_mva (val)
       gld_load[busnum]['p'] = float (p)
       gld_load[busnum]['q'] = float (q)
 #  print (ts, 'FNCS inputs', gld_load, flush=True)

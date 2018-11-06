@@ -10,6 +10,7 @@ from math import sqrt
 import math
 import re
 from copy import deepcopy
+import resource
 #import cProfile
 #import pstats
 
@@ -204,26 +205,26 @@ def pypower_loop (casefile, rootname):
     events = fncs.get_events()
     new_bid = False
     load_scale = float (fncsBus[0][2])
-    for key in events:
-      topic = key.decode()
+    for topic in events:
+      value = fncs.get_value(topic)
       if topic == 'UNRESPONSIVE_MW':
-        unresp = load_scale * float(fncs.get_value(key).decode())
+        unresp = load_scale * float(value)
         fncsBus[0][3] = unresp # to poke unresponsive estimate into the bus load slot
         new_bid = True
       elif topic == 'RESPONSIVE_MAX_MW':
-        resp_max = load_scale * float(fncs.get_value(key).decode())
+        resp_max = load_scale * float(value)
         new_bid = True
       elif topic == 'RESPONSIVE_C2':
-        resp_c2 = float(fncs.get_value(key).decode()) / load_scale
+        resp_c2 = float(value) / load_scale
         new_bid = True
       elif topic == 'RESPONSIVE_C1':
-        resp_c1 = float(fncs.get_value(key).decode())
+        resp_c1 = float(value)
         new_bid = True
       elif topic == 'RESPONSIVE_DEG':
-        resp_deg = int(fncs.get_value(key).decode())
+        resp_deg = int(value)
         new_bid = True
       else:
-        gld_load = parse_mva (fncs.get_value(key).decode()) # actual value, may not match unresp + resp load
+        gld_load = parse_mva (value) # actual value, may not match unresp + resp load
         feeder_load = float(gld_load[0]) * load_scale
     if new_bid == True:
       dummy = 2
@@ -419,6 +420,20 @@ def pypower_loop (casefile, rootname):
   op.close()
   print ('finalizing FNCS', flush=True)
   fncs.finalize()
+
+  usage = resource.getrusage(resource.RUSAGE_SELF)
+  RESOURCES = [
+    ('ru_utime', 'User time'),
+    ('ru_stime', 'System time'),
+    ('ru_maxrss', 'Max. Resident Set Size'),
+    ('ru_ixrss', 'Shared Memory Size'),
+    ('ru_idrss', 'Unshared Memory Size'),
+    ('ru_isrss', 'Stack Size'),
+    ('ru_inblock', 'Block inputs'),
+    ('ru_oublock', 'Block outputs')]
+  print('Resource usage:')
+  for name, desc in RESOURCES:
+    print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
 
 # main_loop()
 

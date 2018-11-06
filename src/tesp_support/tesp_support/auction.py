@@ -4,9 +4,16 @@ import tesp_support.simple_auction as simple_auction
 import json
 from datetime import datetime
 from datetime import timedelta
+import resource
+
+#import gc
+#import cProfile
+#import pstats
 
 # these should be in a configuration file as well; TODO synch the proper hour of day
-def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
+def inner_auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
+    print ('starting auction loop', configfile, metrics_root, hour_stop, flag, flush=True)
+    print ('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad', flush=True)
     bWantMarket = True
     if flag == 'NoMarket':
         bWantMarket = False
@@ -42,13 +49,13 @@ def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
     hvacObjs = {}
     hvac_keys = list(dict['controllers'].keys())
     for key in hvac_keys:
-      row = dict['controllers'][key]
-      hvacObjs[key] = simple_auction.hvac (row, key, aucObj)
-      ctl = hvacObjs[key]
-      topicMap[key + '#Tair'] = [ctl, 2]
-      topicMap[key + '#V1'] = [ctl, 3]
-      topicMap[key + '#Load'] = [ctl, 4]
-      topicMap[key + '#On'] = [ctl, 5]
+        row = dict['controllers'][key]
+        hvacObjs[key] = simple_auction.hvac (row, key, aucObj)
+        ctl = hvacObjs[key]
+        topicMap[key + '#Tair'] = [ctl, 2]
+        topicMap[key + '#V1'] = [ctl, 3]
+        topicMap[key + '#Load'] = [ctl, 4]
+        topicMap[key + '#On'] = [ctl, 5]
 
     # ==================== Time step looping under FNCS ===========================
 
@@ -77,12 +84,10 @@ def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
         day_of_week = dt_now.weekday()
         hour_of_day = dt_now.hour
 #        print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, flush=True)
-
         # update the data from FNCS messages
         events = fncs.get_events()
-        for key in events:
-            topic = key.decode()
-            value = fncs.get_value(key).decode()
+        for topic in events:
+            value = fncs.get_value(topic)
             row = topicMap[topic]
             if row[1] == 0:
                 LMP = simple_auction.parse_fncs_magnitude (value)
@@ -112,7 +117,6 @@ def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
             bSetDefaults = False
 
         if time_granted >= tnext_bid:
-#            print ('**', tnext_clear, flush=True)
             aucObj.clear_bids()
             time_key = str (int (tnext_clear))
             controller_metrics [time_key] = {}
@@ -141,6 +145,7 @@ def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
             time_key = str (int (tnext_clear))
             auction_metrics [time_key] = {aucObj.name:[aucObj.clearing_price, aucObj.clearing_type]}
             tnext_clear += period
+#            print ('garbage collecting at', time_granted, 'finds', gc.collect(), 'unreachable objects', flush=True)
 
         if time_granted >= tnext_adjust:
             if bWantMarket:
@@ -162,4 +167,37 @@ def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
 
     print ('finalizing FNCS', flush=True)
     fncs.finalize()
+
+
+def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
+    inner_auction_loop (configfile, metrics_root, hour_stop, flag)
+#    gc.enable() 
+#    gc.set_debug(gc.DEBUG_LEAK) 
+
+#    profiler = cProfile.Profile ()
+#    args = (configfile, metrics_root, hour_stop, flag)
+#    profiler.runcall (inner_auction_loop, *args)
+#    stats = pstats.Stats(profiler)
+#    stats.strip_dirs()
+#    stats.sort_stats('cumulative')
+#    stats.print_stats()
+
+#    print (gc.collect (), 'unreachable objects')
+#    for x in gc.garbage:
+#        s = str(x) 
+#        print (type(x), ':', len(s), flush=True)
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    RESOURCES = [
+        ('ru_utime', 'User time'),
+        ('ru_stime', 'System time'),
+        ('ru_maxrss', 'Max. Resident Set Size'),
+        ('ru_ixrss', 'Shared Memory Size'),
+        ('ru_idrss', 'Unshared Memory Size'),
+        ('ru_isrss', 'Stack Size'),
+        ('ru_inblock', 'Block inputs'),
+        ('ru_oublock', 'Block outputs')]
+    print('Resource usage:')
+    for name, desc in RESOURCES:
+        print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
+ 
 

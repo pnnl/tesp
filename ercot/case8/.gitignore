@@ -3,4 +3,8 @@
 *.xml
 *.yaml
 *.txt
-ercot_8.csv
+ercot_8_pf.csv
+ercot_8_opf.csv
+Bus*.glm
+no_fncs/
+no_market/

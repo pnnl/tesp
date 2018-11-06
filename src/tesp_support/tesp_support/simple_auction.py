@@ -114,8 +114,6 @@ def parse_kw(arg):
             break
 
     vals = [tok[:kpos],tok[kpos:]]
-#    print(arg,vals)
-
     vals = [float(v) for v in vals]
 
     if 'd' in arg:
@@ -247,8 +245,9 @@ class simple_auction:
         if self.unresp > 0:
             self.curve_buyer.add_to_curve (self.pricecap, self.unresp, True)
         else:
-            print ('## unresp < 0', self.unresp, self.curve_buyer.count, 
-                   self.curve_buyer.total, self.curve_buyer.total_on, self.curve_buyer.total_off, flush=True)
+            print ('$$ flag,Unresp,BuyCount,BuyTotal,BuyOn,BuyOff', flush=True)
+            print ('$$ unresp < 0', self.unresp, self.curve_buyer.count, 
+                   self.curve_buyer.total, self.curve_buyer.total_on, self.curve_buyer.total_off, sep=',', flush=True)
         if self.curve_buyer.count > 0:
             self.curve_buyer.set_curve_order ('descending')
         self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.agg_c1 = aggregate_bid (self.curve_buyer)
@@ -481,7 +480,7 @@ class simple_auction:
         print ('##', time_granted, tnext_clear, self.clearing_type, self.clearing_quantity, self.clearing_price, 
                self.curve_buyer.count, self.unresponsive_buy, self.responsive_buy,
                self.curve_seller.count, self.unresponsive_sell, self.responsive_sell,
-               self.marginal_quantity, self.marginal_frac, self.lmp, self.refload, flush=True)
+               self.marginal_quantity, self.marginal_frac, self.lmp, self.refload, sep=',', flush=True)
 
 class hvac:
     def __init__(self,dict,key,aucObj):
@@ -536,7 +535,6 @@ class hvac:
             elif offset > self.offset_limit:
                 offset = self.offset_limit
             self.setpoint = self.basepoint + offset
-#            print ('  adjusting', self.name, self.cleared_price, self.bid_price, self.mean, offset)
             return True
         return False
 
@@ -548,7 +546,6 @@ class hvac:
             self.bid_price = 0.0
         else:
             self.bid_price = p
-#        print ('  bidding', self.name, self.air_temp, self.basepoint, self.bid_price, self.hvac_kw)
         return [self.bid_price, self.hvac_kw, self.hvac_on]
 
     def change_basepoint (self,hod,dow):
