@@ -31,8 +31,12 @@ Then from a command prompt:
 	pip install tesp_support
 	opf
 
-Download and install the Java 8 JDK (1.8.0_192 suggested) from 
+Download and install the Java Development Kit (8u191 suggested, with Public JRE) from 
 http://www.oracle.com/technetwork/java/javase/downloads/index.html
+
+- for MSYS2, install to a folder without spaces, such as c:\Java\jdk1.8.0_191
+- the Oracle javapath doesn't work for MSYS2, and it doesn't find javac in Windows
+- c:\Java\jdk1.8.0_191\bin should be added to your path
 
 Set Up the Build Environment and Code Repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,8 +93,7 @@ Insert the following to .bash_profile in your MSYS2 environment.
 
 ::
 
- PATH="/c/ProgramData/Oracle/Java/javapath:${PATH}"
- PATH="/c/Program Files/Java/jdk-9.0.4/bin:${PATH}"
+ PATH="/c/Java/jdk1.8.0_191/bin:${PATH}"
  PATH="/c/Users/Tom/Miniconda3:${PATH}"
  PATH="/c/Users/Tom/Miniconda3/Scripts:${PATH}"
  PATH="/c/Users/Tom/Miniconda3/Library/mingw-w64/bin:${PATH}"
@@ -223,17 +226,17 @@ don't work on Windows yet. Also make sure that the JDK/bin directory is in your 
 
 ::
 
- cd java
+ cd /c/src/fncs/java
  javac fncs/JNIfncs.java
  jar cvf fncs.jar fncs/JNIfncs.class
  javah -classpath fncs.jar -jni fncs.JNIfncs
- g++ -DJNIfncs_EXPORTS -I"C:/Program Files/Java/jdk1.8.0_101/include" -I"C:/Program Files/Java/jdk1.8.0_101/include/win32" -IC:/MinGW/msys/1.0/home/tom/fncs-dev/java -IC:/MinGW/msys/1.0/home/tom/FNCS_install/include -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
- g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Program Files/Java/jdk1.8.0_101/lib/jawt.lib" "C:/Program Files/Java/jdk1.8.0_101/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+ (for Java 8)
+ g++ -DJNIfncs_EXPORTS -I"C:/Java/jdk1.8.0_191/include" -I"C:/Java/jdk1.8.0_191/include/win32" -I/c/src/fncs/java -I/usr/local/include -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
+ g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Java/jdk1.8.0_191/lib/jawt.lib" "C:/Java/jdk1.8.0_191/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+ (for Java 9)
+ g++ -DJNIfncs_EXPORTS -I"C:/Java/jdk-9.0.4/include" -I"C:/Java/jdk-9.0.4/include/win32" -I/usr/local/include -I. -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
+ g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Java/jdk-9.0.4/lib/jawt.lib" "C:/Java/jdk-9.0.4/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
  
-(for Java 9)
-g++ -DJNIfncs_EXPORTS -I"C:/Program Files/Java/jdk-9.0.4/include" -I"C:/Program Files/Java/jdk-9.0.4/include/win32" -IC:/MinGW/msys/1.0/home/tom/FNCS_install/include -I. -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
-g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Program Files/Java/jdk-9.0.4/lib/jawt.lib" "C:/Program Files/Java/jdk-9.0.4/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
-
 Finally, build and test GridLAB-D with FNCS:
 
 ::
@@ -244,6 +247,14 @@ Finally, build and test GridLAB-D with FNCS:
  make install
  gridlabd --validate
 
+In order to run GridLAB-D from a regular Windows terminal, you have to copy some additional
+libraries from c:\\msys64\\mingw64\\bin to c:\\msys64\\usr\\local\\bin
+
+- libdl.dll
+- libgcc_s_seh_1.dll
+- libstdc++-6.dll
+- libwinpthread-1.dll
+
 Build EnergyPlus
 ~~~~~~~~~~~~~~~~
 
@@ -252,9 +263,7 @@ We need this for some critical support files that aren't part of the FNCS-Energy
 process. Copy the following from c:\\EnergyPlusV8-3-0 to c:\\msys64\\usr\\local\\bin:
 
 - Energy+.idd
-- parser.exe
-- RunReadESO.bat
-- ReadVarsESO.exe
+- PostProcess\\ReadVarsESO.exe
 
 From the MSYS2 terminal:
 
