@@ -3,9 +3,9 @@ import sys;
 import tesp_support.fncs as fncs;
 import json;
 import math;
-import resource;
-
 import re;
+if sys.platform != 'win32':
+  import resource
 
 def parse_fncs_magnitude (arg):
   tok = arg.strip('+-; MWVAFKdegrij')
@@ -145,4 +145,19 @@ def precool_loop (nhours, metrics_root):
 
   print ('finalizing FNCS', flush=True)
   fncs.finalize()
+
+  if sys.platform != 'win32':
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    RESOURCES = [
+      ('ru_utime', 'User time'),
+      ('ru_stime', 'System time'),
+      ('ru_maxrss', 'Max. Resident Set Size'),
+      ('ru_ixrss', 'Shared Memory Size'),
+      ('ru_idrss', 'Unshared Memory Size'),
+      ('ru_isrss', 'Stack Size'),
+      ('ru_inblock', 'Block inputs'),
+      ('ru_oublock', 'Block outputs')]
+    print('Resource usage:')
+    for name, desc in RESOURCES:
+      print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
 

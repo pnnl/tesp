@@ -4,11 +4,11 @@ import tesp_support.simple_auction as simple_auction
 import json
 from datetime import datetime
 from datetime import timedelta
-import resource
-
 #import gc
 #import cProfile
 #import pstats
+if sys.platform != 'win32':
+  import resource
 
 # these should be in a configuration file as well; TODO synch the proper hour of day
 def inner_auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
@@ -186,18 +186,19 @@ def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
 #    for x in gc.garbage:
 #        s = str(x) 
 #        print (type(x), ':', len(s), flush=True)
-    usage = resource.getrusage(resource.RUSAGE_SELF)
-    RESOURCES = [
-        ('ru_utime', 'User time'),
-        ('ru_stime', 'System time'),
-        ('ru_maxrss', 'Max. Resident Set Size'),
-        ('ru_ixrss', 'Shared Memory Size'),
-        ('ru_idrss', 'Unshared Memory Size'),
-        ('ru_isrss', 'Stack Size'),
-        ('ru_inblock', 'Block inputs'),
-        ('ru_oublock', 'Block outputs')]
-    print('Resource usage:')
-    for name, desc in RESOURCES:
-        print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
+    if sys.platform != 'win32':
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        RESOURCES = [
+            ('ru_utime', 'User time'),
+            ('ru_stime', 'System time'),
+            ('ru_maxrss', 'Max. Resident Set Size'),
+            ('ru_ixrss', 'Shared Memory Size'),
+            ('ru_idrss', 'Unshared Memory Size'),
+            ('ru_isrss', 'Stack Size'),
+            ('ru_inblock', 'Block inputs'),
+            ('ru_oublock', 'Block outputs')]
+        print('Resource usage:')
+        for name, desc in RESOURCES:
+            print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
  
 
