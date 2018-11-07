@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.1.4</version>
+    <version>0.1.6</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -1013,7 +1013,7 @@ For Mac and Linux, these files are installed to /usr/local by default, and other
                     <explanation>Setting GLPATH for GridLAB-D</explanation>
                     <name>GLPATH</name>
                     <scope>user</scope>
-                    <value>${gridlabddir}\lib\gridlabd;${gridlabddir}\share\gridlabd</value>
+                    <value>${gridlabddir}\bin;${gridlabddir}\lib\gridlabd;${gridlabddir}\share\gridlabd</value>
                     <ruleList>
                         <platformTest>
                             <type>windows</type>
@@ -1023,7 +1023,7 @@ For Mac and Linux, these files are installed to /usr/local by default, and other
                 <addDirectoryToPath>
                     <explanation>Adding GridLAB-D to PATH</explanation>
                     <insertAt>end</insertAt>
-                    <path>${gridlabddir}\bin</path>
+                    <path>${gridlabddir}\bin;${gridlabddir}\lib</path>
                     <scope>user</scope>
                     <ruleList>
                         <platformTest>
@@ -1031,6 +1031,42 @@ For Mac and Linux, these files are installed to /usr/local by default, and other
                         </platformTest>
                     </ruleList>
                 </addDirectoryToPath>
+                <createSymLink>
+                    <linkName>{unixlocaldir}/lib/libzmq.so</linkName>
+                    <target>{unixlocaldir}/lib/libzmq.so.5.0.0</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>linux</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <createSymLink>
+                    <linkName>{unixlocaldir}/bin/libczmq.so</linkName>
+                    <target>{unixlocaldir}/bin/libczmq.so.3.0.0</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>linux</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <createSymLink>
+                    <linkName>{unixlocaldir}/bin/libfncs.so</linkName>
+                    <target>{unixlocaldir}/bin/libfncs.so.1.1.1</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>linux</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <createSymLink>
+                    <linkName>{unixlocaldir}/bin/libxerces-c.so</linkName>
+                    <target>{unixlocaldir}/bin/libxerces-c-3.1.so</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>linux</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
             </postInstallationActionList>
         </component>
     </componentList>
