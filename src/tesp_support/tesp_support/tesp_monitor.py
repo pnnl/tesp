@@ -13,7 +13,7 @@ import time
 import numpy as np;
 import matplotlib;
 matplotlib.use('TkAgg');
-from matplotlib.backends.backend_tkagg import FigureCanvasTk, NavigationToolbar2Tk;
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk;
 from matplotlib.figure import Figure;
 import matplotlib.pyplot as plt;
 
@@ -66,7 +66,7 @@ class TespMonitorGUI:
     self.ax[3].set_xlabel('Hours')
     plt.xlim(0.0,48.0)
 
-    self.canvas = FigureCanvasTk(self.fig, self.root)
+    self.canvas = FigureCanvasTkAgg(self.fig, self.root)
     self.canvas.draw()
     self.canvas.get_tk_widget().grid(row=1,columnspan=5, sticky = tk.W + tk.E + tk.N + tk.S)
 
@@ -104,7 +104,6 @@ class TespMonitorGUI:
     print ('trying to finalize FNCS')
     fncs.finalize()
     print ('FNCS finalized')
-#    self.root.update()
 
   def launch_all(self):
     print('launching all simulators')
@@ -117,22 +116,17 @@ class TespMonitorGUI:
       logfd = None
       if 'log' in row:
         logfd = open (row['log'], 'w')
-#      print ('*******************************************************')
-#      print (procargs, procenv)
       proc = subprocess.Popen (procargs, env=procenv, stdout=logfd)
       self.pids.append (proc)
 
-#    print ('*******************************************************')
-    print('launched', len(self.pids), 'simulators') # , self.pids)
+    print('launched', len(self.pids), 'simulators')
 
     self.root.update()
-#    print ('root update')
 
     fncs.initialize()
     print ('FNCS initialized')
     time_granted = 0
     nsteps = int (self.time_stop / self.yaml_delta)
-#    plt.xlim(0.0, self.hour_stop)
 
     hrs=np.linspace(0.0, self.hour_stop, nsteps+1)
     print ('time_stop, hour_stop and nsteps =', self.time_stop, self.hour_stop, nsteps)
@@ -184,7 +178,6 @@ class TespMonitorGUI:
           x1[idx] = val
           self.ax[1].plot(hrs[1:idx],x1[1:idx],color='red')
           bWantX1 = False
-      print (time_granted, topic, value)
       self.root.update()
       self.fig.canvas.draw()
     fncs.finalize()
