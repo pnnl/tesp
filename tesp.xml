@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.1.7</version>
+    <version>0.1.8</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -1027,6 +1027,12 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>ercot/case8/run.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/run.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/kill5570.bat</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>

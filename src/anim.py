@@ -1,23 +1,20 @@
 import sys
-import json
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import messagebox
-import subprocess
-import os
-import tesp_support.fncs as fncs
-import tesp_support.simple_auction as simple_auction
 import time
-
-import numpy as np;
-import matplotlib;
-matplotlib.use('TkAgg');
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk;
-from matplotlib.figure import Figure;
+from random import random 
+import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
-import matplotlib.pyplot as plt;
+import matplotlib.pyplot as plt
+
+Tmax = 48.0
 
 class TespMonitorGUI:
   def __init__ (self, master):
@@ -65,7 +62,6 @@ class TespMonitorGUI:
     self.y2max = 0.0
     self.y3min = 0.0
     self.y3max = 0.0
-    self.hour_stop = 4.0
 
     self.ln0 = Line2D (self.hrs, self.y0, color='green')
     self.ln1 = Line2D (self.hrs, self.y1, color='red')
@@ -90,99 +86,51 @@ class TespMonitorGUI:
 
     self.ax[3].set_xlabel('Hours')
 
+    self.ax[0].set_xlim(0.0, Tmax)
+    self.ax[1].set_xlim(0.0, Tmax)
+    self.ax[2].set_xlim(0.0, Tmax)
+    self.ax[3].set_xlim(0.0, Tmax)
+
+    self.ax[0].set_ylim(0.0, 1.1)
+
     self.canvas = FigureCanvasTkAgg(self.fig, self.root)
     self.canvas.draw()
     self.canvas.get_tk_widget().grid(row=1,columnspan=5, sticky = tk.W + tk.E + tk.N + tk.S)
 
-    self.bFNCSactive = False
-
   def on_closing(self):
-    if messagebox.askokcancel('Quit', 'Do you want to close this window? This is likely to stop all simulations.'):
+    if messagebox.askokcancel('Close', 'Do you want to close this window? This is likely to stop all simulations.'):
       self.root.quit()
       self.root.destroy()
-      if self.bFNCSactive:
-        fncs.finalize()
-        self.bFNCSactive = False
 
   def Quit(self):
     self.root.quit()
     self.root.destroy()
-    if self.bFNCSactive:
-      fncs.finalize()
-      self.bFNCSactive = False
 
   def OpenConfig(self): 
-    fname = filedialog.askopenfilename(initialdir = '.',
-                                       initialfile = 'tesp_monitor.json',
-                                       title = 'Open JSON Monitor Configuration', 
-                                       filetypes = (('JSON files','*.json'),('all files','*.*')),
-                                       defaultextension = 'json')
-    lp = open (fname)
-    cfg = json.loads(lp.read())
-    self.commands = cfg['commands']
-    # convert seconds to minutes
-    self.time_stop = int (cfg['time_stop'] / 60)
-    self.yaml_delta = int (cfg['yaml_delta'] / 60)
+    self.time_stop = int (Tmax * 60)
+    self.yaml_delta = int (300 / 60)
     self.hour_stop = float (self.time_stop / 60.0)
-    dirpath = os.path.dirname (fname)
-    os.chdir (dirpath)
-    self.labelvar.set(dirpath)
-
-    self.ax[0].set_xlim(0.0, self.hour_stop)
-    self.ax[1].set_xlim(0.0, self.hour_stop)
-    self.ax[2].set_xlim(0.0, self.hour_stop)
-    self.ax[3].set_xlim(0.0, self.hour_stop)
-    self.ax[0].set_ylim(0.9, 1.1)
-    self.fig.canvas.draw()
+    self.labelvar.set('ready to launch')
 
   def kill_all(self):
-    for proc in self.pids:
-      print ('trying to kill', proc.pid)
-      proc.terminate()
-    self.root.update()
-    print ('trying to finalize FNCS')
-    if self.bFNCSactive:
-      fncs.finalize()
-      self.bFNCSactive = False
-    print ('FNCS finalized')
+    print ('killed all processes')
 
   def update_plots(self, i):
     print ('.', end='')
-#    print ('frame', i, 'of', self.nsteps)
     bRedraw = False
     while self.time_granted < self.time_stop: # time in minutes
-      self.time_granted = fncs.time_request(self.time_stop)
-      events = fncs.get_events()
+      self.time_granted = self.time_granted + 1
       self.root.update()
       idx = int (self.time_granted / self.yaml_delta)
       if idx <= self.idxlast:
         continue
       self.idxlast = idx
 
-      v0 = 0.0
-      v1 = 0.0
-      v2 = 0.0
-      v3 = 0.0
-
-      for topic in events:
-        value = fncs.get_value(topic)
-        if topic == 'power_A':
-          v1 = 3.0 * float (value.strip('+ degFkW')) / 1000.0
-        elif topic == 'distribution_load':
-          v3 = simple_auction.parse_kw (value)
-        elif topic == 'vpos7':
-          v0 = float (value.strip('+ degFkW')) / 133000.0
-        elif topic == 'clear_price':
-          v2 = float (value.strip('+ degFkW'))
-        elif topic == 'LMP7':
-          v2 = float (value.strip('+ degFkW'))
-        elif topic == 'SUBSTATION7':
-          v1 = float (value.strip('+ degFkW')) # already in kW
-
       retval = [self.ln0, self.ln1, self.ln2, self.ln3]
 
       h = float (self.time_granted / 60.0)
       self.hrs.append (h)
+      v0 = 1.0 + 0.05 * random()
       if v0 < self.y0min or v0 > self.y0max:
         if v0 < self.y0min:
           self.y0min = v0
@@ -190,6 +138,7 @@ class TespMonitorGUI:
           self.y0max = v0
         self.ax[0].set_ylim (self.y0min, self.y0max)
         bRedraw = True
+      v1 = 200.0 + 50.0 * random()
       if v1 < self.y1min or v1 > self.y1max:
         if v1 < self.y1min:
           self.y1min = v1
@@ -197,6 +146,7 @@ class TespMonitorGUI:
           self.y1max = v1
         self.ax[1].set_ylim (self.y1min, self.y1max)
         bRedraw = True
+      v2 = 50.0 + 10.0 * random()
       if v2 < self.y2min or v2 > self.y2max:
         if v2 < self.y2min:
           self.y2min = v2
@@ -204,6 +154,7 @@ class TespMonitorGUI:
           self.y2max = v2
         self.ax[2].set_ylim (self.y2min, self.y2max)
         bRedraw = True
+      v3 = 1000.0 + 150.0 * random()
       if v3 < self.y3min or v3 > self.y3max:
         if v3 < self.y3min:
           self.y3min = v3
@@ -223,33 +174,11 @@ class TespMonitorGUI:
 
       if bRedraw:
         self.fig.canvas.draw()
-      if i >= (self.nsteps - 1):
-        fncs.finalize()
-        self.bFNCSactive = False
       return retval
 
   def launch_all(self):
+    print('simulating message traffic')
     self.root.update()
-
-    print('launching all simulators')
-    self.pids = []
-    for row in self.commands:
-      procargs = row['args']
-      procenv = os.environ.copy()
-      for var in row['env']:
-        procenv[var[0]] = var[1]
-      logfd = None
-      if 'log' in row:
-        logfd = open (row['log'], 'w')
-      proc = subprocess.Popen (procargs, env=procenv, stdout=logfd)
-      self.pids.append (proc)
-
-    print('launched', len(self.pids), 'simulators')
-    self.root.update()
-
-    fncs.initialize()
-    self.bFNCSactive = True
-    print ('FNCS initialized')
     self.nsteps = int (self.time_stop / self.yaml_delta)
     self.idxlast = -1
     self.time_granted = 0
@@ -258,17 +187,16 @@ class TespMonitorGUI:
                                    blit=True, repeat=False, interval=0)
     self.fig.canvas.draw()
 
-#    fncs.finalize()
+    print ('done simulating the simulators')
 
-def show_tesp_monitor ():
-  root = tk.Tk()
-  root.title('Transactive Energy Simulation Platform: Solution Monitor')
-  my_gui = TespMonitorGUI (root)
-  root.update()
-  while True:
-    try:
-      root.mainloop()
-      break
-    except UnicodeDecodeError:
-      pass
+root = tk.Tk()
+root.title('Transactive Energy Simulation Platform: Solution Monitor')
+my_gui = TespMonitorGUI (root)
+root.update()
+while True:
+  try:
+    root.mainloop()
+    break
+  except UnicodeDecodeError:
+    pass
 
