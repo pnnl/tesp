@@ -28,7 +28,7 @@ Then from a command prompt:
 	conda update conda
 	conda install pandas
 	# tesp_support, including verification of PYPOWER dependency
-	pip install tesp_support
+	pip install tesp_support --upgrade
 	opf
 
 Download and install the Java Development Kit (8u191 suggested, with Public JRE) from 
@@ -58,8 +58,11 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
 ::
 
  pacman -Su
- pacman -S --needed base-devel mingw-w64-x86_64-toolchain git dlfcn xerces-c jsoncpp cmake
+ pacman -S --needed base-devel mingw-w64-x86_64-toolchain
  pacman -S --needed mingw-w64-x86_64-xerces-c
+ pacman -S --needed mingw-w64-x86_64-dlfcn
+ pacman -S --needed mingw-w64-x86_64-cmake
+ pacman -S --needed git jsoncpp
 
 - Exit MSYS2 and restart from a different Start Menu shortcut for MSYS2 MinGW 64-bit
 - You may wish to create a desktop shortcut for the 64-bit environment, as you will use it often
@@ -89,7 +92,11 @@ This is done in the Windows Settings tool, choosing "Edit the system environment
 - append c:\\msys64\\usr\\local\\lib\\gridlabd to GLPATH 
 - append c:\\msys64\\usr\\local\\share\\gridlabd to GLPATH 
 
-Insert the following to .bash_profile in your MSYS2 environment.
+Verify the correct paths to Java and Python for your installation, either 
+by examining the PATH variable from a Windows (not MSYS) command prompt, 
+or by using the Windows Settings tool.  Insert the following to 
+.bash_profile in your MSYS2 environment, substituting your own paths to 
+Java and Python.  
 
 ::
 
@@ -100,11 +107,20 @@ Insert the following to .bash_profile in your MSYS2 environment.
  PATH="/c/Users/Tom/Miniconda3/Library/usr/bin:${PATH}"
  PATH="/c/Users/Tom/Miniconda3/Library/bin:${PATH}"
 
+The next time you open MSYS2, verify the preceeding as follows:
+
+::
+
+ java -version
+ javac -version
+ python --version
+ python3 --version
 
 Build FNCS and Link with GridLAB-D
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ZeroMQ first, with a header file patch:
+ZeroMQ first, with a header file patch, and please note that newer 
+versions of ZMQ may not work with FNCS: 
 
 ::
 
@@ -113,11 +129,12 @@ ZeroMQ first, with a header file patch:
  tar -xzf zeromq-4.1.4.tar.gz
  cd zeromq-4.1.4
  ./configure --without-libsodium --prefix=/usr/local LDFLAGS="-static-libgcc -static-libstdc++"
- (insert #include<iphlpapi.h> into src/windows.hpp around line 57)
+ (insert #include<iphlpapi.h> into src/windows.hpp around line 57; not needed in v4.2.5)
  make
  make install
 
-CZMQ next, with a special Makefile:
+CZMQ next, with a special Makefile, and please note that newer versions of 
+CZMQ may not work with FNCS: 
 
 ::
 
@@ -133,7 +150,8 @@ CZMQ next, with a special Makefile:
  make
  make install
 
-Here is the Windows Makefile for CZMQ:
+Here is the Windows Makefile for CZMQ (note: space at the beginning of 
+each line should be a tab): 
 
 ::
 
@@ -193,7 +211,10 @@ Here is the Windows Makefile for CZMQ:
  %.o: ../../src/%.c
 	 $(CC) -c -o $@ $< $(CFLAGS)
 
- all: libczmq.dll czmq_selftest.exe
+ all: prep_headers libczmq.dll czmq_selftest.exe
+
+ prep_headers:
+	 cp $(HEADERS) $(PREFIX)/include
 
  install:
 	 cp libczmq.dll $(PREFIX)/bin
@@ -241,6 +262,7 @@ Finally, build and test GridLAB-D with FNCS:
 
 ::
 
+ cd /c/src/gridlab-d
  autoreconf -if
  ./configure --build=x86_64-mingw32 --with-fncs=/usr/local --prefix=/usr/local --with-xerces=/mingw64 --enable-silent-rules 'CXXFLAGS=-g -O2 -w' 'CFLAGS=-g -O2 -w' 'LDFLAGS=-g -O2 -w -L/mingw64/bin'
  make
@@ -251,7 +273,7 @@ In order to run GridLAB-D from a regular Windows terminal, you have to copy some
 libraries from c:\\msys64\\mingw64\\bin to c:\\msys64\\usr\\local\\bin
 
 - libdl.dll
-- libgcc_s_seh_1.dll
+- libgcc_s_seh-1.dll
 - libstdc++-6.dll
 - libwinpthread-1.dll
 
@@ -289,8 +311,7 @@ From the MSYS2 terminal
 
 ::
 
- cd /c/
- cd tesp/src/energyplus
+ cd /c/src/tesp/src/energyplus
  cp Makefile.win Makefile
  cp config.h.win config.h
  make
