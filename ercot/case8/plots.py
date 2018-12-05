@@ -1,17 +1,17 @@
 # usage 'python plots metrics_root'
+import os
 import sys
+import tesp_support.process_gld as gp
+import tesp_support.process_houses as hp
+import tesp_support.process_agents as ap
+
 rootname = sys.argv[1]
 
-#import tesp_support.process_pypower as pp
-#pp.process_pypower (rootname)
-
-import tesp_support.process_gld as gp
 gp.process_gld (rootname)
-
-import tesp_support.process_houses as hp
 hp.process_houses (rootname)
 
-import tesp_support.process_agents as ap
-ap.process_agents (rootname)
+exists = os.path.isfile ('auction_' + rootname + '_metrics.json')
+if exists:
+  ap.process_agents (rootname)
 
 

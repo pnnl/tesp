@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.1.8</version>
+    <version>0.1.9</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -1034,6 +1034,9 @@
                         <distributionFile>
                             <origin>ercot/case8/kill5570.bat</origin>
                         </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/clean.bat</origin>
+                        </distributionFile>
                     </distributionFileList>
                 </folder>
             </folderList>
@@ -1261,6 +1264,7 @@ For Mac and Linux, these files are installed to /usr/local by default, and other
         </addEnvironmentVariable>
     </postInstallationActionList>
     <allowComponentSelection>1</allowComponentSelection>
+    <createOsxBundleDmg>1</createOsxBundleDmg>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
     <requireInstallationByRootUser>1</requireInstallationByRootUser>
