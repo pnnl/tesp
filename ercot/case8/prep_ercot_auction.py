@@ -3,6 +3,7 @@ import sys
 import json
 import numpy as np
 import os
+import math
 
 # write yaml for auction.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -86,11 +87,14 @@ std_dev = 0.0279
 def ProcessGLM (fileroot):
 	dirname = os.path.dirname (fileroot) + '/'
 	basename = os.path.basename (fileroot)
-	glmname = fileroot + '.glm'
+	glmname = fileroot + '_glm_dict.json'
 	aucSimName = 'auction' + fileroot
-	gldSimName = 'gridlabd' + fileroot
+	ip = open (glmname).read()
+	gd = json.loads(ip)
+	gldSimName = gd['FNCS']
+#	gldSimName = 'gridlabd' + fileroot
+
 	print (fileroot, dirname, basename, glmname, gldSimName, aucSimName)
-	ip = open (glmname, 'r')
 
 	# timings based on period and dt
 	periodController = period
@@ -99,127 +103,97 @@ def ProcessGLM (fileroot):
 
 	controllers = {}
 	auctions = {}
-	ip.seek(0,0)
-	inFNCSmsg = False
-	inHouses = False
-	inTriplexMeters = False
-	endedHouse = False
-	isELECTRIC = False
+	batteries = {}
 	nAirConditioners = 0
 	nControllers = 0
-
-	houseName = ''
-	meterName = ''
-	FNCSmsgName = ''
+	nBatteries = 0
 
 	# Obtain controller dictionary based on houses with electric cooling
-	for line in ip:
-		lst = line.split()
-		if len(lst) > 1:
-			if lst[1] == 'triplex_meter':
-				inTriplexMeters = True
-			if lst[1] == 'house':
-				inHouses = True
-			if lst[1] == 'fncs_msg':
-				inFNCSmsg = True
-			# Check for ANY object within the house, and don't use its name:
-			if inHouses == True and lst[0] == 'object' and lst[1] != 'house':
-				endedHouse = True
-			if inFNCSmsg == True:
-				if lst[0] == 'name':
-					FNCSmsgName = lst[1].strip(';')
-					inFNCSmsg = False
-			if inTriplexMeters == True:
-				if lst[0] == 'name':
-					meterName = lst[1].strip(';')
-					inTriplexMeters = False
-			if inHouses == True:
-				if lst[0] == 'name' and endedHouse == False:
-					houseName = lst[1].strip(';')
-				if lst[0] == 'air_temperature':
-					air_temperature = lst[1].strip(';')
-				if lst[0] == 'cooling_system_type':
-					if (lst[1].strip(';') == 'ELECTRIC'):
-						isELECTRIC = True
-		elif len(lst) == 1:
-			if inHouses == True: 
-				inHouses = False
-				endedHouse = False
-				if isELECTRIC == True:
-					nAirConditioners += 1
-					if np.random.uniform (0, 1) <= agent_participation:
-						nControllers += 1
-						controller_name = houseName + '_hvac'
-						wakeup_start = np.random.uniform (wakeup_start_lo, wakeup_start_hi)
-						daylight_start = np.random.uniform (daylight_start_lo, daylight_start_hi)
-						evening_start = np.random.uniform (evening_start_lo, evening_start_hi)
-						night_start = np.random.uniform (night_start_lo, night_start_hi)
-						wakeup_set = np.random.uniform (wakeup_set_lo, wakeup_set_hi)
-						daylight_set = np.random.uniform (daylight_set_lo, daylight_set_hi)
-						evening_set = np.random.uniform (evening_set_lo, evening_set_hi)
-						night_set = np.random.uniform (night_set_lo, night_set_hi)
-						weekend_day_start = np.random.uniform (weekend_day_start_lo, weekend_day_start_hi)
-						weekend_day_set = np.random.uniform (weekend_day_set_lo, weekend_day_set_hi)
-						weekend_night_start = np.random.uniform (weekend_night_start_lo, weekend_night_start_hi)
-						weekend_night_set = np.random.uniform (weekend_night_set_lo, weekend_night_set_hi)
-						deadband = np.random.uniform (deadband_lo, deadband_hi)
-						offset_limit = np.random.uniform (offset_limit_lo, offset_limit_hi)
-						ramp = np.random.uniform (ramp_lo, ramp_hi)
-						ctrl_cap = np.random.uniform (ctrl_cap_lo, ctrl_cap_hi)
-						controllers[controller_name] = {'control_mode': control_mode, 
-																						'houseName': houseName, 
-																						'meterName': meterName, 
-																						'period': periodController,
-																						'wakeup_start': float('{:.3f}'.format(wakeup_start)),
-																						'daylight_start': float('{:.3f}'.format(daylight_start)),
-																						'evening_start': float('{:.3f}'.format(evening_start)),
-																						'night_start': float('{:.3f}'.format(night_start)),
-																						'wakeup_set': float('{:.3f}'.format(wakeup_set)),
-																						'daylight_set': float('{:.3f}'.format(daylight_set)),
-																						'evening_set': float('{:.3f}'.format(evening_set)),
-																						'night_set': float('{:.3f}'.format(night_set)),
-																						'weekend_day_start': float('{:.3f}'.format(weekend_day_start)),
-																						'weekend_day_set': float('{:.3f}'.format(weekend_day_set)),
-																						'weekend_night_start': float('{:.3f}'.format(weekend_night_start)),
-																						'weekend_night_set': float('{:.3f}'.format(weekend_night_set)),
-																						'deadband': float('{:.3f}'.format(deadband)),
-																						'offset_limit': float('{:.3f}'.format(offset_limit)),
-																						'ramp': float('{:.4f}'.format(ramp)), 
-																						'price_cap': float('{:.3f}'.format(ctrl_cap)),
-																						'bid_delay': bid_delay, 
-																						'use_predictive_bidding': use_predictive_bidding, 
-																						'use_override': use_override}
-					isELECTRIC = False
+	for key, val in gd['houses'].items():
+		if val['cooling'] == 'ELECTRIC':
+			nAirConditioners += 1
+			if np.random.uniform (0, 1) <= agent_participation:
+				nControllers += 1
+				houseName = key
+				meterName = val['billingmeter_id']
+				controller_name = houseName + '_hvac'
 
-	print ('configured', nControllers, 'controllers for', nAirConditioners, 'air conditioners')
+				wakeup_start = np.random.uniform (wakeup_start_lo, wakeup_start_hi)
+				daylight_start = np.random.uniform (daylight_start_lo, daylight_start_hi)
+				evening_start = np.random.uniform (evening_start_lo, evening_start_hi)
+				night_start = np.random.uniform (night_start_lo, night_start_hi)
+				wakeup_set = np.random.uniform (wakeup_set_lo, wakeup_set_hi)
+				daylight_set = np.random.uniform (daylight_set_lo, daylight_set_hi)
+				evening_set = np.random.uniform (evening_set_lo, evening_set_hi)
+				night_set = np.random.uniform (night_set_lo, night_set_hi)
+				weekend_day_start = np.random.uniform (weekend_day_start_lo, weekend_day_start_hi)
+				weekend_day_set = np.random.uniform (weekend_day_set_lo, weekend_day_set_hi)
+				weekend_night_start = np.random.uniform (weekend_night_start_lo, weekend_night_start_hi)
+				weekend_night_set = np.random.uniform (weekend_night_set_lo, weekend_night_set_hi)
+				deadband = np.random.uniform (deadband_lo, deadband_hi)
+				offset_limit = np.random.uniform (offset_limit_lo, offset_limit_hi)
+				ramp = np.random.uniform (ramp_lo, ramp_hi)
+				ctrl_cap = np.random.uniform (ctrl_cap_lo, ctrl_cap_hi)
+				controllers[controller_name] = {'control_mode': control_mode, 
+					'houseName': houseName, 
+					'meterName': meterName, 
+					'period': periodController,
+					'wakeup_start': float('{:.3f}'.format(wakeup_start)),
+					'daylight_start': float('{:.3f}'.format(daylight_start)),
+					'evening_start': float('{:.3f}'.format(evening_start)),
+					'night_start': float('{:.3f}'.format(night_start)),
+					'wakeup_set': float('{:.3f}'.format(wakeup_set)),
+					'daylight_set': float('{:.3f}'.format(daylight_set)),
+					'evening_set': float('{:.3f}'.format(evening_set)),
+					'night_set': float('{:.3f}'.format(night_set)),
+					'weekend_day_start': float('{:.3f}'.format(weekend_day_start)),
+					'weekend_day_set': float('{:.3f}'.format(weekend_day_set)),
+					'weekend_night_start': float('{:.3f}'.format(weekend_night_start)),
+					'weekend_night_set': float('{:.3f}'.format(weekend_night_set)),
+					'deadband': float('{:.3f}'.format(deadband)),
+					'offset_limit': float('{:.3f}'.format(offset_limit)),
+					'ramp': float('{:.4f}'.format(ramp)), 
+					'price_cap': float('{:.3f}'.format(ctrl_cap)),
+					'bid_delay': bid_delay, 
+					'use_predictive_bidding': use_predictive_bidding, 
+					'use_override': use_override}
 
+	for key, val in gd['inverters'].items():
+		if val['resource'] == 'battery':
+			nBatteries += 1
+			batName = key
+			meterName = val['billingmeter_id']
+			batteries[batName] = {'meterName': meterName,
+				'capacity': val['capacity'],
+				'rating': val['rated_W'],
+				'charge': val['soc'] * val['capacity'],
+				'efficiency': float('{:.4f}'.format(val['inv_eta'] * math.sqrt (val['bat_eta'])))}
+
+	print ('configured', nControllers, 'controllers for', nAirConditioners, 'air conditioners and', nBatteries, 'batteries')
 	# Write market dictionary
 	auctions[marketName] = {'market_id': 1, 
-													'unit': unit, 
-													'special_mode': special_mode, 
-													'use_future_mean_price': use_future_mean_price, 
-													'pricecap': price_cap, 
-													'clearing_scalar': clearing_scalar,
-													'period': periodMarket, 
-													'latency': latency, 
-													'init_price': initial_price, 
-													'init_stdev': std_dev, 
-													'ignore_pricecap': ignore_pricecap, 
-													'ignore_failedmarket': ignore_failedmarket,
-													'statistic_mode': statistic_mode, 
-													'capacity_reference_object': capacity_reference_object, 
-													'max_capacity_reference_bid_quantity': max_capacity_reference_bid_quantity,
-													'stat_mode': stat_mode, 
-													'stat_interval': interval, 
-													'stat_type': stat_type, 
-													'stat_value': [0 for i in range(len(stat_mode))]}
-
-	# Close files
-	ip.close()
+	   'unit': unit, 
+	   'special_mode': special_mode, 
+	   'use_future_mean_price': use_future_mean_price, 
+	   'pricecap': price_cap, 
+	   'clearing_scalar': clearing_scalar,
+	   'period': periodMarket, 
+	   'latency': latency, 
+	   'init_price': initial_price, 
+	   'init_stdev': std_dev, 
+	   'ignore_pricecap': ignore_pricecap, 
+	   'ignore_failedmarket': ignore_failedmarket,
+	   'statistic_mode': statistic_mode, 
+	   'capacity_reference_object': capacity_reference_object, 
+	   'max_capacity_reference_bid_quantity': max_capacity_reference_bid_quantity,
+	   'stat_mode': stat_mode, 
+	   'stat_interval': interval, 
+	   'stat_type': stat_type, 
+	   'stat_value': [0 for i in range(len(stat_mode))]}
 
 	dictfile = fileroot + '_agent_dict.json'
 	dp = open (dictfile, 'w')
-	meta = {'markets':auctions,'controllers':controllers,'dt':dt,'GridLABD':FNCSmsgName}
+	meta = {'markets':auctions,'controllers':controllers,'batteries':batteries,'dt':dt,'GridLABD':gldSimName}
 	print (json.dumps(meta), file=dp)
 	dp.close()
 
@@ -231,30 +205,30 @@ def ProcessGLM (fileroot):
 	print ('broker:', broker, file=yp)
 	print ('values:', file=yp)
 	print ('  LMP:', file=yp)
-	print ('    topic: pypower/LMP_' + fileroot, file=yp)
-	print ('    default: 0.1', file=yp)
-	print ('    type: double', file=yp)
-	print ('    list: false', file=yp)
+	print ('	topic: pypower/LMP_' + fileroot, file=yp)
+	print ('	default: 0.1', file=yp)
+	print ('	type: double', file=yp)
+	print ('	list: false', file=yp)
 	print ('  refload:', file=yp)
-	print ('    topic: ' + gldSimName + '/distribution_load', file=yp)
-	print ('    default: 0', file=yp)
-	print ('    type: complex', file=yp)
-	print ('    list: false', file=yp)
+	print ('	topic: ' + gldSimName + '/distribution_load', file=yp)
+	print ('	default: 0', file=yp)
+	print ('	type: complex', file=yp)
+	print ('	list: false', file=yp)
 	for key,val in controllers.items():
 		houseName = val['houseName']
 		meterName = val['meterName']
 		print ('  ' + key + '#V1:', file=yp)
-		print ('    topic: ' + gldSimName + '/' + meterName + '/measured_voltage_1', file=yp)
-		print ('    default: 120', file=yp)
+		print ('	topic: ' + gldSimName + '/' + meterName + '/measured_voltage_1', file=yp)
+		print ('	default: 120', file=yp)
 		print ('  ' + key + '#Tair:', file=yp)
-		print ('    topic: ' + gldSimName + '/' + houseName + '/air_temperature', file=yp)
-		print ('    default: 80', file=yp)
+		print ('	topic: ' + gldSimName + '/' + houseName + '/air_temperature', file=yp)
+		print ('	default: 80', file=yp)
 		print ('  ' + key + '#Load:', file=yp)
-		print ('    topic: ' + gldSimName + '/' + houseName + '/hvac_load', file=yp)
-		print ('    default: 0', file=yp)
+		print ('	topic: ' + gldSimName + '/' + houseName + '/hvac_load', file=yp)
+		print ('	default: 0', file=yp)
 		print ('  ' + key + '#On:', file=yp)
-		print ('    topic: ' + gldSimName + '/' + houseName + '/power_state', file=yp)
-		print ('    default: 0', file=yp)
+		print ('	topic: ' + gldSimName + '/' + houseName + '/power_state', file=yp)
+		print ('	default: 0', file=yp)
 	yp.close ()
 
 	op = open (fileroot + '_FNCS_Config.txt', 'w')

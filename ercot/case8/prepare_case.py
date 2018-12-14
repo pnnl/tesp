@@ -1,14 +1,14 @@
-import tesp_support.api as tesp
 import prep_ercot_auction as prep
+import tesp_support.glm_dict as gd
 
-tesp.glm_dict ('Bus1', True)
-tesp.glm_dict ('Bus2', True)
-tesp.glm_dict ('Bus3', True)
-tesp.glm_dict ('Bus4', True)
-tesp.glm_dict ('Bus5', True)
-tesp.glm_dict ('Bus6', True)
-tesp.glm_dict ('Bus7', True)
-tesp.glm_dict ('Bus8', True)
+gd.glm_dict ('Bus1', True)
+gd.glm_dict ('Bus2', True)
+gd.glm_dict ('Bus3', True)
+gd.glm_dict ('Bus4', True)
+gd.glm_dict ('Bus5', True)
+gd.glm_dict ('Bus6', True)
+gd.glm_dict ('Bus7', True)
+gd.glm_dict ('Bus8', True)
 
 prep.prep_ercot_auction ('Bus1')
 prep.prep_ercot_auction ('Bus2')

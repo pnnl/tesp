@@ -6,4 +6,6 @@ rm *_opf.csv
 rm *_pf.csv
 rm ercot_8.csv
 rm *_FNCS_Config.txt
-rm *dict.json
+rm *glm_dict.json
+rm *agent_dict.json
+

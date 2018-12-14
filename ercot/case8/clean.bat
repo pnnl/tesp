@@ -6,4 +6,6 @@ del *_opf.csv
 del *_pf.csv
 del ercot_8.csv
 del *_FNCS_Config.txt
-del *dict.json
+del *glm_dict.json
+del *agent_dict.json
+
