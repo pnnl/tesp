@@ -22,31 +22,31 @@ case_config = {'SimulationConfig':{
   'EndTime':'2013-07-02 00:00:00',
 	'SourceDirectory':'~/src/tesp/support'},
                'FeederGenerator':{
-                 'MetricsInterval':300,
-                 'MinimumStep':15,
-                 'ElectricCoolingPercentage':90,
-                 'ElectricCoolingParticipation':50,
-                 'SolarPercentage':0,
-                 'StoragePercentage':0,
-                 'SolarInverterMode':'CONSTANT_PF',
-                 'StorageInverterMode':'CONSTANT_PF',
-                 'BillingMode':'TIERED',
-                 'MonthlyFee':13,
-                 'Price':0.102013,
-                 'Tier1Energy':500,
-                 'Tier2Energy':1000,
-                 'Tier3Energy':0,
-                 'Tier1Price':0.117013,
-                 'Tier2Price':0.122513,
-                 'Tier3Price':0,
-                 'EnergyPlusBus':'',
-                 'EnergyPlusServiceV': 480, # 208 or 480
-                 'EnergyPlusXfmrKva':250},
+               'MetricsInterval':300,
+               'MinimumStep':15,
+               'ElectricCoolingPercentage':90,
+               'ElectricCoolingParticipation':50,
+               'SolarPercentage':0,
+               'StoragePercentage':20,
+               'SolarInverterMode':'CONSTANT_PF',
+               'StorageInverterMode':'LOAD_FOLLOWING',
+               'BillingMode':'TIERED',
+               'MonthlyFee':13,
+               'Price':0.102013,
+               'Tier1Energy':500,
+               'Tier2Energy':1000,
+               'Tier3Energy':0,
+               'Tier1Price':0.117013,
+               'Tier2Price':0.122513,
+               'Tier3Price':0,
+               'EnergyPlusBus':'',
+               'EnergyPlusServiceV': 480, # 208 or 480
+               'EnergyPlusXfmrKva':250},
                'BackboneFiles':{'TaxonomyChoice':'sim_R5-12.47-1'},
                'WeatherPrep':{'DataSource':'TX-Houston_Bush_Intercontinental.tmy3'},
                'PYPOWERConfiguration':{
-                 'TransformerBase':12,
-								 'TransmissionVoltage':345}
+               'TransformerBase':12,
+							 'TransmissionVoltage':345}
 							 }
 
 bus_config = [

@@ -1164,18 +1164,25 @@ def write_houses(basenode, op, vnom):
           print ('    tank_UA','{:.1f}'.format(tank_UA) + ';', file=op)
           print ('    demand', wh_demand_str + ';', file=op)
           print ('    tank_volume','{:.0f}'.format(wh_size) + ';', file=op)
-#          if metrics_interval > 0:
-#              print ('    object metrics_collector {', file=op)
-#              print ('      interval', str(metrics_interval) + ';', file=op)
-#              print ('    };', file=op)
+          if metrics_interval > 0:
+              print ('    object metrics_collector {', file=op)
+              print ('      interval', str(metrics_interval) + ';', file=op)
+              print ('    };', file=op)
           print ('  };', file=op)
         if metrics_interval > 0:
             print ('  object metrics_collector {', file=op)
             print ('    interval', str(metrics_interval) + ';', file=op)
             print ('  };', file=op)
         print ('}', file=op)
+        # if PV is allowed, then only single-family houses can buy it, and only the single-family houses with PV will also consider storage
+        # if PV is not allowed, then any single-family house may consider storage (if allowed)
+        # apartments and mobile homes may always consider storage, but not PV
+        bConsiderStorage = True
         if bldg == 0:  # Single-family homes
+            if solar_penetration > 0.0:
+                bConsiderStorage = False
             if np.random.uniform (0, 1) <= solar_penetration:  # some single-family houses have PV
+                bConsiderStorage = True
                 panel_area = 0.1 * floor_area
                 if panel_area < 162:
                     panel_area = 162
@@ -1212,50 +1219,51 @@ def write_houses(basenode, op, vnom):
                     print ('    };', file=op)
                 print ('  };', file=op)
                 print ('}', file=op)
-                if np.random.uniform (0, 1) <= storage_penetration:  # some single-family houses with PV have batteries
-                    battery_count += 1
-                    print ('object triplex_meter {', file=op)
-                    print ('  name', bat_m_name + ';', file=op)
-                    print ('  parent', mtrname + ';', file=op)
-                    print ('  phases', phs + ';', file=op)
-                    print ('  nominal_voltage ' + str(vnom) + ';', file=op)
-                    print ('  object inverter {', file=op)
-                    print ('    name', bat_i_name + ';', file=op)
-                    print ('    phases', phs + ';', file=op)
-                    print ('    generator_status ONLINE;', file=op)
-                    print ('    generator_mode CONSTANT_PQ;', file=op)
-                    print ('    inverter_type FOUR_QUADRANT;', file=op)
-                    print ('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
-                    print ('    charge_lockout_time 1;', file=op)
-                    print ('    discharge_lockout_time 1;', file=op)
-                    print ('    rated_power 5000;', file=op)
-                    print ('    max_charge_rate 5000;', file=op)
-                    print ('    max_discharge_rate 5000;', file=op)
-                    print ('    sense_object', mtrname + ';', file=op)
-                    print ('    charge_on_threshold -100;', file=op)
-                    print ('    charge_off_threshold 0;', file=op)
-                    print ('    discharge_off_threshold 2000;', file=op)
-                    print ('    discharge_on_threshold 3000;', file=op)
-                    print ('    inverter_efficiency 0.97;', file=op)
-                    print ('    power_factor 1.0;', file=op)
-                    print ('    object battery { // Tesla Powerwall 2', file=op)
-                    print ('      name', batname + ';', file=op)
-                    print ('      generator_status ONLINE;', file=op)
-                    print ('      use_internal_battery_model true;', file=op)
-                    print ('      generator_mode CONSTANT_PQ;', file=op)
-                    print ('      battery_type LI_ION;', file=op)
-                    print ('      nominal_voltage 480;', file=op)
-                    print ('      battery_capacity 13500;', file=op)
-                    print ('      round_trip_efficiency 0.86;', file=op)
-                    print ('      state_of_charge 0.50;', file=op)
-                    print ('      generator_mode SUPPLY_DRIVEN;', file=op)
+        if bConsiderStorage:
+            if np.random.uniform (0, 1) <= storage_penetration:
+                battery_count += 1
+                print ('object triplex_meter {', file=op)
+                print ('  name', bat_m_name + ';', file=op)
+                print ('  parent', mtrname + ';', file=op)
+                print ('  phases', phs + ';', file=op)
+                print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+                print ('  object inverter {', file=op)
+                print ('    name', bat_i_name + ';', file=op)
+                print ('    phases', phs + ';', file=op)
+                print ('    generator_status ONLINE;', file=op)
+                print ('    generator_mode CONSTANT_PQ;', file=op)
+                print ('    inverter_type FOUR_QUADRANT;', file=op)
+                print ('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
+                print ('    charge_lockout_time 1;', file=op)
+                print ('    discharge_lockout_time 1;', file=op)
+                print ('    rated_power 5000;', file=op)
+                print ('    max_charge_rate 5000;', file=op)
+                print ('    max_discharge_rate 5000;', file=op)
+                print ('    sense_object', mtrname + ';', file=op)
+                print ('    charge_on_threshold -100;', file=op)
+                print ('    charge_off_threshold 0;', file=op)
+                print ('    discharge_off_threshold 2000;', file=op)
+                print ('    discharge_on_threshold 3000;', file=op)
+                print ('    inverter_efficiency 0.97;', file=op)
+                print ('    power_factor 1.0;', file=op)
+                print ('    object battery { // Tesla Powerwall 2', file=op)
+                print ('      name', batname + ';', file=op)
+                print ('      generator_status ONLINE;', file=op)
+                print ('      use_internal_battery_model true;', file=op)
+                print ('      generator_mode CONSTANT_PQ;', file=op)
+                print ('      battery_type LI_ION;', file=op)
+                print ('      nominal_voltage 480;', file=op)
+                print ('      battery_capacity 13500;', file=op)
+                print ('      round_trip_efficiency 0.86;', file=op)
+                print ('      state_of_charge 0.50;', file=op)
+                print ('      generator_mode SUPPLY_DRIVEN;', file=op)
+                print ('    };', file=op)
+                if metrics_interval > 0:
+                    print ('    object metrics_collector {', file=op)
+                    print ('      interval', str(metrics_interval) + ';', file=op)
                     print ('    };', file=op)
-                    if metrics_interval > 0:
-                        print ('    object metrics_collector {', file=op)
-                        print ('      interval', str(metrics_interval) + ';', file=op)
-                        print ('    };', file=op)
-                    print ('  };', file=op)
-                    print ('}', file=op)
+                print ('  };', file=op)
+                print ('}', file=op)
 
 def write_substation (op, name, phs, vnom, vll):
     print ('object transformer_configuration {', file=op)
@@ -1503,6 +1511,11 @@ def union_of_phases(phs1, phs2):
     return phs
 
 def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial):
+    global solar_count, solar_kw, battery_count
+    solar_count = 0
+    solar_kw = 0
+    battery_count = 0
+
     fname = glmpath + rootname + '.glm'
     print (fname)
     rgn = 0
@@ -1516,7 +1529,8 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         rgn = 4
     elif 'R5' in rootname:
         rgn = 5
-    global electric_cooling_penetration
+    global electric_cooling_penetration, storage_penetration, solar_penetration
+    print ('using', solar_penetration, 'solar and', storage_penetration, 'storage penetration')
     if electric_cooling_penetration <= 0.0:
         electric_cooling_penetration = rgnPenElecCool[rgn-1]
         print ('using regional default', electric_cooling_penetration, 'air conditioning penetration')
