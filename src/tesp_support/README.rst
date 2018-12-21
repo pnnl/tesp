@@ -24,7 +24,18 @@ tesp_support can be installed using pip_::
 However, in order to be useful, tesp_support needs custom versions of 
 GridLAB-D and EnergyPlus.  It also requires Python 3.5 or later, with 
 Numpy, SciPy_ and PYPOWER_.  There will be cross-platform installers of 
-the complete TESP for Windows, Linux and Mac OS X made available on GitHub.  
+the complete TESP for Windows, Linux and Mac OS X made available on GitHub. 
+
+Development Work Flow for tesp_support
+======================================
+
+* from this directory, 'pip install -e .' points Python to this cloned repository for any calls to tesp_support functions
+* edit the source code under this directory
+* run tests from any other directory on this computer
+* when ready, edit the tesp_support version number and dependencies in setup.py
+* to deploy, 'python setup.py sdist upload' 
+* any user gets the changes with 'pip install tesp_support --upgrade'
+* use 'pip show tesp_support' to verify the version and location on your computer
 
 Using TESP
 ==========
