@@ -6,12 +6,12 @@ Transactive Energy Simulation Platform (TESP) simulates
 the electric power distribution grid with transactive control
 of loads and resources. Current features include:
 
-* GridLAB-D for the distribution system and residential loads
-* EnergyPlus for large buildings
-* MATPOWER or PYPOWER for the bulk power systems
-* Bindings for transactive agents in Python, Java or C++
+* GridLAB-D_ for the distribution system and residential loads
+* EnergyPlus_ for large buildings
+* MATPOWER_ or PYPOWER_ for the bulk power systems
+* Bindings for transactive agents in Python_, Java or C++
 
-The goal of TESP is that researchers can focus their work
+The goal of TESP_ is that researchers can focus their work
 on the last item, to push advances in the field.
 
 Installation
@@ -23,7 +23,7 @@ tesp_support can be installed using pip_::
 
 However, in order to be useful, tesp_support needs custom versions of 
 GridLAB-D and EnergyPlus.  It also requires Python 3.6 or later, with 
-Numpy, SciPy_, NetworkX_, matplotlib_ and PYPOWER_.  There are 
+NumPy_, SciPy_, NetworkX_, Matplotlib_ and PYPOWER_.  There are 
 cross-platform installers of the complete TESP for Windows, Linux and Mac 
 OS X on GitHub.  A Docker version is also available for users.  
 
@@ -48,7 +48,7 @@ http://github.com/pnnl/tesp for source code.
 License & Copyright
 ===================
 
-#	Copyright (C) 2017-2018 Battelle Memorial Institute
+#	Copyright (C) 2017-2019 Battelle Memorial Institute
 
 Links
 =====
