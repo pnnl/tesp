@@ -22,22 +22,21 @@ tesp_support can be installed using pip_::
   $ pip install tesp_support
 
 However, in order to be useful, tesp_support needs custom versions of 
-GridLAB-D and EnergyPlus.  It also requires Python 3.5 or later, with 
-Numpy, SciPy_ and PYPOWER_.  There will be cross-platform installers of 
-the complete TESP for Windows, Linux and Mac OS X made available on GitHub. 
+GridLAB-D and EnergyPlus.  It also requires Python 3.6 or later, with 
+Numpy, SciPy_, NetworkX_, matplotlib_ and PYPOWER_.  There are 
+cross-platform installers of the complete TESP for Windows, Linux and Mac 
+OS X on GitHub.  A Docker version is also available for users.  
 
 Development Work Flow for tesp_support
 ======================================
 
-* from this directory, 'pip install -e .' points Python to this cloned repository for any calls to tesp_support functions
-* see the http://github.com/pnnl/tesp/src/tesp_support/tesp_support for a 
-roadmap of existing Python source files, and some documentation.  Any 
-changes or additions to the code need to be made in this directory.  
-* run tests from any other directory on this computer
-* when ready, edit the tesp_support version number and dependencies in setup.py
-* to deploy, 'python setup.py sdist upload' 
-* any user gets the changes with 'pip install tesp_support --upgrade'
-* use 'pip show tesp_support' to verify the version and location on your computer
+* From this directory, 'pip install -e .' points Python to this cloned repository for any calls to tesp_support functions
+* See the https://github.com/pnnl/tesp/tree/master/src/tesp_support/tesp_support for a roadmap of existing Python source files, and some documentation.  Any changes or additions to the code need to be made in this directory.  
+* Run tests from any other directory on this computer
+* When ready, edit the tesp_support version number and dependencies in setup.py
+* To deploy, 'python setup.py sdist upload' 
+* Any user gets the changes with 'pip install tesp_support --upgrade'
+* Use 'pip show tesp_support' to verify the version and location on your computer
 
 Using TESP
 ==========
@@ -58,7 +57,10 @@ Links
 
 .. _Python: http://www.python.org
 .. _pip: https://pip.pypa.io
+.. _NumPy: http://www.numpy.org
 .. _SciPy: http://www.scipy.org
+.. _Matplotlib: https://matplotlib.org
+.. _NetworkX: http://networkx.github.io
 .. _MATPOWER: http://www.pserc.cornell.edu/matpower/
 .. _PYPOWER: https://github.com/rwl/PYPOWER
 .. _GridLAB-D: http://gridlab-d.shoutwiki.com
