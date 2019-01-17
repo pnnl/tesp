@@ -25,7 +25,7 @@ However, in order to be useful, tesp_support needs custom versions of
 GridLAB-D and EnergyPlus.  It also requires Python 3.6 or later, with 
 NumPy_, SciPy_, NetworkX_, Matplotlib_ and PYPOWER_.  There are 
 cross-platform installers of the complete TESP for Windows, Linux and Mac 
-OS X on GitHub.  A Docker version is also available for users.  
+OS X on GitHub.  A Docker_ version is also available for users.  
 
 Development Work Flow for tesp_support
 ======================================
@@ -53,6 +53,7 @@ License & Copyright
 Links
 =====
 
+* Docker_
 * EnergyPlus_
 * GridLAB-D_
 * Matplotlib_
@@ -65,6 +66,7 @@ Links
 * SciPy_
 * TESP_
 
+.. _Docker: https://www.docker.com
 .. _Python: http://www.python.org
 .. _pip: https://pip.pypa.io
 .. _NumPy: http://www.numpy.org
