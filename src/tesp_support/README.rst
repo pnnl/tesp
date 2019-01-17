@@ -53,7 +53,17 @@ License & Copyright
 Links
 =====
 
+* EnergyPlus_
 * GridLAB-D_
+* Matplotlib_
+* MATPOWER_
+* NetworkX_
+* NumPy_
+* pip_
+* PYPOWER_
+* Python_
+* SciPy_
+* TESP_
 
 .. _Python: http://www.python.org
 .. _pip: https://pip.pypa.io
