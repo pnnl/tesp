@@ -41,21 +41,21 @@ Suggested sequence of test cases for development:
 - *feederGenerator.py*; from a PNNL taxonomy feeder as the backbone, populates it with houses, solar PV, batteries and smart inverters
 - *fncs.py*; the Python interface to FNCS, which is a C/C++ shared object library, or dynamic link library (Windows)
 - *fncsPYPOWER.py*; manages PYPOWER solutions for the te30 and sgip1 examples, based on a 9-bus textbook model. Note that the ERCOT cases use custom local versions of this code instead.
-- *glm_dict.py*; code
-- *precool.py*; code
-- *prep_auction.py*; code
-- *prep_precool.py*; code
-- *process_agents.py*; code
-- *process_eplus.py*; code
-- *process_gld.py*; code
-- *process_houses.py*; code
-- *process_inv.py*; code
-- *process_pypower.py*; code
-- *process_voltages.py*; code
-- *simple_auction.py*; code
-- *tesp_case.py*; code
-- *tesp_config.py*; code
-- *tesp_monitor.py*; code
+- *glm_dict.py*; parses the GridLAB-D input (GLM) file and produces metafile data in JSON format, describing the houses, meters, DER, capacitors and regulators
+- *precool.py*; manages a set of house thermostats for NIST TE Challenge 2. There is no communication with a market. If the house experiences an overvoltage, the thermostat is turned down and locked for 4 hours, unless the house temperature violates comfort limits.
+- *prep_auction.py*; configures the agent metadata (JSON) and GridLAB-D FNCS subscriptions/publications for the double-auction, double-ramp simulations
+- *prep_precool.py*; configures the agent metadata (JSON) and GridLAB-D FNCS subscriptions/publications for NIST TE Challenge 2 precooling
+- *process_agents.py*; makes tabular and plotted summaries of agent results
+- *process_eplus.py*; makes tabular and plotted summaries of EnergyPlus results
+- *process_gld.py*; makes tabular and plotted summaries of GridLAB-D results (substation power/losses, average and sample house temperatures, meter voltage min/max)
+- *process_houses.py*; plots the HVAC power and air temperature for all houses
+- *process_inv.py*; makes tabular and plotted summaries of results for NIST TE Challenge 2, including inverters, capacitor switching and tap changes
+- *process_pypower.py*; makes tabular and plotted summaries of PYPOWER results for the 9-bus model in te30 or sgip1
+- *process_voltages.py*; plots the minimum and maximum voltage for all houses
+- *simple_auction.py*; implements the double-auction agent and the Olympic Peninsula cooling agent, as separate Python classes, called by auction.py
+- *tesp_case.py*; supervises the assembly of a TESP case with one feeder, one EnergyPlus building and one PYPOWER model. Reads the JSON file from tesp_config.py
+- *tesp_config.py*; a GUI for creating the JSON file used to configure a TESP case
+- *tesp_monitor.py*; a GUI for launching a TESP simulation, monitoring its progress, and terminating it early if necessary
 - *README.md*; this file
 
 ### Subdirectories
@@ -73,5 +73,5 @@ First, please review the platform design documentation at https://tesp.readthedo
 
 The following UML diagrams and narrative provide a more specific roadmap to the tesp_support Python module.
 
-![tesp_support](/media/tesp_support.png)
+![tesp_support](./media/tesp_support.png)
 
