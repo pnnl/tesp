@@ -30,7 +30,9 @@ Development Work Flow for tesp_support
 ======================================
 
 * from this directory, 'pip install -e .' points Python to this cloned repository for any calls to tesp_support functions
-* edit the source code under this directory
+* see the http://github.com/pnnl/tesp/src/tesp_support/tesp_support for a 
+roadmap of existing Python source files, and some documentation.  Any 
+changes or additions to the code need to be made in this directory.  
 * run tests from any other directory on this computer
 * when ready, edit the tesp_support version number and dependencies in setup.py
 * to deploy, 'python setup.py sdist upload' 
