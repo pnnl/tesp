@@ -8,7 +8,8 @@ repositories located elsewhere.  Agent developers will normally work only
 in the *tesp_support* subdirectory.  The other subdirectories are mainly 
 of interest to those building the whole platform.  
 
-### Subdirectories
+Subdirectories
+==============
 
 - *archive/pypower*; legacy files to patch PYPOWER; we have been able to incorporate these patches into the main PYPOWER distribution.
 - *energyplus*; C++ code to build a simple interface agent for EnergyPlus; this is part of the TESP distribution and used in the te30, sgip1 and energyplus examples.
@@ -17,7 +18,8 @@ of interest to those building the whole platform.
 - *matpower/ubuntu*; legacy code that wraps MATPOWER for TESP, but only on Ubuntu. We now use PYPOWER. In 2017, the wrapping process was very difficult on Mac OS X, and unsuccessful on Windows using free compilers.
 - *tesp_support*; runs PYPOWER without FNCS
 
-### Files
+Files
+=====
 
 - *anim.py*; test code for solution monitor performance improvement, to be removed or relocated
 - *monitor.py*; test code for solution monitor performance improvement, to be removed or relocated
@@ -25,5 +27,5 @@ of interest to those building the whole platform.
 License & Copyright
 ===================
 
-#	Copyright (C) 2017-2019 Battelle Memorial Institute
+- Copyright (C) 2017-2019 Battelle Memorial Institute
 
