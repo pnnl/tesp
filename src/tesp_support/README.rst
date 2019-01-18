@@ -45,13 +45,8 @@ This is a developer's platform for electric power grid research.  See
 http://tesp.readthedocs.io/en/latest/ for user instructions, and 
 http://github.com/pnnl/tesp for source code.  
 
-License & Copyright
-===================
-
-#	Copyright (C) 2017-2019 Battelle Memorial Institute
-
-Links
-=====
+Links to Dependencies
+=====================
 
 * Docker_
 * EnergyPlus_
@@ -65,6 +60,16 @@ Links
 * Python_
 * SciPy_
 * TESP_
+
+### Subdirectories
+
+- *tesp_support*; Python code for agents, configuration and post-processing.
+- *test*; scripts that support testing the package; not automated.
+
+License & Copyright
+===================
+
+#	Copyright (C) 2017-2019 Battelle Memorial Institute
 
 .. _Docker: https://www.docker.com
 .. _Python: http://www.python.org
