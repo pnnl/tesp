@@ -54,33 +54,30 @@ adoption of the following objectives:
 Objectives 1-3 specifically support use by others, while objective 4
 ultimately extends the simulation time horizon up to 20 years.
 
-Design Choices for Version 1
-----------------------------
+Design Overview
+---------------
 
-Figure 1 shows the simulation modules federated in Rev 1 of TESP.
-GridLAB-D covers the electric power distribution system
-[`3 <#_ENREF_3>`__], MATPOWER covers the bulk electric power system
-[`4 <#_ENREF_4>`__], and EnergyPlus covers large commercial buildings
-[`5 <#_ENREF_5>`__]. These three simulators have been previously
-federated at PNNL, but only pairwise (i.e. GridLAB-D with MATPOWER, and
-GridLAB-D with EnergyPlus). The use of all three together in a
-transactive simulation is new this year. The integrating Framework for
-Network Co-simulation (FNCS) manages the time step synchronization and
-message exchange among all of the federated simulation modules
-[`6 <#_ENREF_6>`__]. In this way, TESP builds mostly on proven
-components, which helps mitigate risk in software development. Some of
-these components may be upgraded or replaced in future versions, as
-described later. However, the overall platform design in Figure 1 still
-applies.
+Figure 1 shows the simulation modules federated in Rev 1 of TESP.  
+GridLAB-D covers the electric power distribution system [`3 
+<#_ENREF_3>`__], MATPOWER or PYPOWER covers the bulk electric power system 
+[`4 <#_ENREF_4>`__] [`17 <#_ENREF_17>`__], and EnergyPlus covers large 
+commercial buildings [`5 <#_ENREF_5>`__].  These three simulators have 
+been previously federated at PNNL, but only pairwise (i.e.  GridLAB-D with 
+MATPOWER, and GridLAB-D with EnergyPlus).  The use of all three together 
+in a transactive simulation is new this year.  The integrating Framework 
+for Network Co-simulation (FNCS) manages the time step synchronization and 
+message exchange among all of the federated simulation modules [`6 
+<#_ENREF_6>`__].  In this way, TESP builds mostly on proven components, 
+which helps mitigate risk in software development.  Some of these 
+components may be upgraded or replaced in future versions, as described 
+later.  However, the overall platform design in Figure 1 still applies.  
 
 |image0|
 
-Figure 1. TESP Rev 1 components federated through FNCS. New work in
-green.
+Figure 1. TESP Rev 1 components federated through FNCS.
 
-New work in Figure 1 has been highlighted in **green**. This primarily
-represents custom code implemented in the Python programming language,
-which was chosen because:
+Many of the new components in Figure 1 were implemented in the Python 
+programming language, which was chosen because: 
 
 1. Python is now commonly used in colleges to teach new programmers
 
@@ -119,7 +116,7 @@ Language (UML) activity diagram [`8 <#_ENREF_8>`__]. After
 configuration, the simulation begins with a system in the initial
 year-zero state, i.e. with no growth included. The operational model
 then begins to run with federated co-simulators in the form of
-GridLAB-D, TEAgents, MATPOWER and EnergyPlus. The operational model has
+GridLAB-D, TEAgents, PYPOWER and EnergyPlus. The operational model has
 two different time steps, which may vary with time and between
 simulators under supervision by FNCS. These are:
 
@@ -181,14 +178,14 @@ These messages route through FNCS in a format like
 “topic/keyword=value”. In Figure 3, the “id” would refer to a specific
 feeder, house, market, or building, and it would be the message topic.
 Once published via FNCS, any other FNCS simulator can access the value
-by subscription. For example, MATPOWER publishes two values, the
+by subscription. For example, PYPOWER publishes two values, the
 locational marginal price (LMP) at a substation bus and the positive
 sequence three-phase voltage at the bus. GridLAB-D subscribes to the
 voltage, using it to update the power flow solution. The double-auction
 for that substation subscribes to the LMP, using it to represent a
 seller in the next market clearing interval. In turn, GridLAB-D
 publishes a distribution load value at the substation following each
-significantly different power flow solution; MATPOWER subscribes to that
+significantly different power flow solution; PYPOWER subscribes to that
 value for its next optimal power flow solution.
 
 |image3|
@@ -284,35 +281,32 @@ shown, but this is adjustable.
 Figure 6. New metrics collection classes for GridLAB-D
 
 The initial GridLAB-D metrics are detailed in five UML diagrams, so we
-begin the UML metric descriptions with MATPOWER, which is much simpler.
-During each simulation, MATPOWER will produce two JSON files, one for
+begin the UML metric descriptions with PYPOWER, which is much simpler.
+During each simulation, PYPOWER will produce two JSON files, one for
 all of the generators and another for all of the FNCS interface buses to
 GridLAB-D. A third JSON file, called the dictionary, is produced before
-the simulation starts from the MATPOWER case input file. The dictionary
+the simulation starts from the PYPOWER case input file. The dictionary
 serves as an aid to post-processing. Figure 7 shows the schema for all
-three MATPOWER metrics files.
+three PYPOWER metrics files.
 
-The MATPOWER dictionary (top of Figure 7) includes the system MVA base
+The PYPOWER dictionary (top of Figure 7) includes the system MVA base
 (typically 100) and GridLAB-D feeder amplification factor. The
 amplification factor is used to scale up the load from one simulated
 GridLAB-D feeder to represent many similar feeders connected to the same
-MATPOWER bus. Each generator has a bus number (more than one generator
+PYPOWER bus. Each generator has a bus number (more than one generator
 can be at a bus), power rating, cost function
 f(P) = c :sub:`0` + c :sub:`1` P + c :sub:`2` P :sup:`2`, startup cost, shutdown cost, and
 other descriptive information. Each FNCSBus has nominal P and Q that
-MATPOWER can vary outside of GridLAB-D, plus the name of a GridLAB-D
-substation that provides additional load at the bus. (All GridLAB-D
-loads are currently scaled by the same *ampFactor* in MATPOWER, but the
-released version of TESP will have separate *ampFactor* for each
-FNCSBus). In total, the MATPOWER dictionary contains four JSON objects;
+PYPOWER can vary outside of GridLAB-D, plus the name of a GridLAB-D
+substation that provides additional load at the bus. In total, the PYPOWER dictionary contains four JSON objects;
 the *ampFactor*, the *baseMVA*, a dictionary (map) of Generators keyed
 on the generator id, and a dictionary (map) of FNCSBuses keyed on the
-bus id. In MATPOWER, all id values are integers, but the other
+bus id. In PYPOWER, all id values are integers, but the other
 simulators use string ids.
 
 |image6|
 
-Figure 7. MATPOWER dictionary with generator and FNCS bus metrics
+Figure 7. PYPOWER dictionary with generator and FNCS bus metrics
 
 The GenMetrics file (center of Figure 7) includes the simulation
 starting date, time and time zone as *StartTime*, which should be the
@@ -337,7 +331,7 @@ In order to find the cost, one would start with cost function
 coefficients obtained from the dictionary for that generator, and
 substitute *Pgen* into that cost function. In addition, the post
 processing script should add startup and shutdown costs based on *Pgen*
-transitions between zero and non-zero values; MATPOWER itself does not
+transitions between zero and non-zero values; PYPOWER itself does not
 handle startup and shutdown costs. Furthermore, aggregating across
 generators and times would have to be done in post-processing, using
 built-in functions from Python’s NumPy package. The repository includes
@@ -345,7 +339,7 @@ an example of how to do this.
 
 Turning to more complicated GridLAB-D metrics, Figure 8 provides the
 dictionary. At the top level, it includes the substation transformer
-size and the MATPOWER substation name for FNCS connection. There are
+size and the PYPOWER substation name for FNCS connection. There are
 four dictionaries (maps) of component types, namely houses, inverters,
 billing meters and feeders. While real substations often have more than
 one feeder, in this model only one feeder dictionary will exist,
@@ -369,7 +363,7 @@ house’s *sqft* could be useful in weighting some of the metric outputs.
 Figure 9 shows the structure of substation metrics output from
 GridLAB-D, consisting of real power and energy, reactive power and
 energy, and losses from all distribution components in that model. As
-with MATPOWER metrics files, the substation metrics JSON file contains
+with PYPOWER metrics files, the substation metrics JSON file contains
 the *StartTime* of the simulation, Metadata with array index and units
 for each metric value, and a dictionary (map) of time records, keyed on
 the simulation time in seconds from *StartTime*. Each time record
@@ -468,7 +462,7 @@ dictionary attributes.
 There will be two JSON metrics output files for TEAgents during a
 simulation, one for markets and one for controllers, which are
 structured as shown at the bottom of Figure 15. The use of *StartTime*
-and Metadata is the same as for MATPOWER and GridLAB-D metrics. For
+and Metadata is the same as for PYPOWER and GridLAB-D metrics. For
 controllers, the bid price and quantity (kw, not kwh) is recorded for
 each market clearing interval’s id. For auctions, the actual clearing
 price and type are recorded for each market clearing interval’s id. That
@@ -480,7 +474,7 @@ supplemental revenue calculations until more agents are developed.
 Figure 15. TEAgent dictionary and metrics
 
 The EnergyPlus dictionary and metrics structure in Figure 16 follows
-the same pattern as MATPOWER, GridLAB-D and TEAgent metrics. There are
+the same pattern as PYPOWER, GridLAB-D and TEAgent metrics. There are
 42 metric values in the array, most of them pertaining to heating and
 cooling system temperatures and states. Each EnergyPlus model is
 custom-built for a specific commercial building, with detailed models of
@@ -499,7 +493,7 @@ aggregated for all zones [`14 <#_ENREF_14>`__].
 
 |image13|
 
-\ Figure 16. EnergyPlus dictionary and metrics
+Figure 16. EnergyPlus dictionary and metrics
 
 GridLAB-D Enhancements
 ----------------------
@@ -527,8 +521,8 @@ TESP have included:
    FNCS. Again, this should provide efficiency benefits for other
    projects that need more complicated FNCS message structures.
 
-Using and Customizing the TESP
-==============================
+Using the TESP
+==============
 
 TESP runs on Linux (Ubuntu tested), Mac OS X, and Microsoft Windows.
 Installers, source code, examples and documentation are available at
@@ -550,7 +544,14 @@ TESP:
    should be familiar with configuring environments and using C/C++
    compilers on the target computer. This approach will enable the
    user to develop new TEAgents in C/C++, and to replace or upgrade
-   co-simulators (i.e. GridLAB-D, MATPOWER, EnergyPlus) within TESP.
+   co-simulators (i.e. GridLAB-D, PYPOWER, EnergyPlus) within TESP.
+
+.. include:: ../install/Windows/Windows_install.rst
+
+.. include:: ../examples/Running_Examples.rst
+
+Building the TESP
+=================
 
 TESP has been designed to build and run with free compilers, including
 MinGW but not Microsoft Visual C++ (MSVC) on Windows. The Python code
@@ -567,18 +568,14 @@ for Linux, with the alternative PYPOWER [`17 <#_ENREF_17>`__] supported
 on Windows, Linux and Mac OS X. The code repository should always have
 the most up-to-date information.
 
-.. include:: ../install/Windows/Windows_install.rst
-
 .. include:: ../install/Linux/Ubuntu_build.rst
 
 .. include:: ../install/MacOSX/MacOSX_build.rst
 
 .. include:: ../install/Windows/Windows_build.rst
 
-.. include:: ../examples/Running_Examples.rst
-
-Developing Valuation Scripts and Agents
----------------------------------------
+Developing Valuation Scripts
+============================
 
 In order to provide new or customized valuation scripts in Python, the
 user should first study the provided examples. These illustrate how to
@@ -587,21 +584,23 @@ aggregate and post-process the values, make plots, etc. Coupled with
 some experience or learning in Python, this constitutes the easiest
 route to customizing TESP.
 
-The next level of complexity would involve customizing or developing new
-TEAgents in Python. The existing auction and controller agents provide
-examples on how to configure the message subscriptions, publish values,
-and link with FNCS at runtime. Section 1.4 describes the existing
-messages, but these constitute a minimal set for Version 1. It’s
-possible to define your own messages between your own TEAgents, with
-significant freedom. It’s also possible to publish and subscribe, or
-“peek and poke”, any named object / attribute in the GridLAB-D model,
-even those not called out in Section 1.4. For example, if writing a
-waterheater controller, you should be able to read its outlet
-temperature and write its tank setpoint via FNCS messages, without
-modifying GridLAB-D code. You probably also want to define metrics for
-your TEAgent, as in Section 1.5. Your TEAgent will run under supervision
-of a FNCS broker program. This means you can request time steps, but not
-dictate them. The overall pattern of a FNCS-compliant program will be:
+Developing Agents
+=================
+
+The existing auction and controller agents provide examples on how to 
+configure the message subscriptions, publish values, and link with FNCS at 
+runtime.  Section 1.4 describes the existing messages, but these 
+constitute a minimal set for Version 1.  It’s possible to define your own 
+messages between your own TEAgents, with significant freedom.  It’s also 
+possible to publish and subscribe, or “peek and poke”, any named object / 
+attribute in the GridLAB-D model, even those not called out in Section 
+1.4.  For example, if writing a waterheater controller, you should be able 
+to read its outlet temperature and write its tank setpoint via FNCS 
+messages, without modifying GridLAB-D code.  You probably also want to 
+define metrics for your TEAgent, as in Section 1.5.  Your TEAgent will run 
+under supervision of a FNCS broker program.  This means you can request 
+time steps, but not dictate them.  The overall pattern of a FNCS-compliant 
+program will be: 
 
 1. Initialize FNCS and subscribe to messages, i.e. notify the broker.
 
@@ -850,9 +849,9 @@ adoption
 The Circuit Model
 -----------------
 
-Figure 19 shows the bulk system model in MATPOWER. It is a small system
+Figure 19 shows the bulk system model in PYPOWER. It is a small system
 with three generating units and three load buses that comes with
-MATPOWER, to which we added a high-cost peaking unit to assure
+PYPOWER, to which we added a high-cost peaking unit to assure
 convergence of the optimal power flow in all cases. In SGIP-1
 simulations, generating unit 2 was taken offline on the second day to
 simulate a contingency. The GridLAB-D model was connected to Bus 7, and
@@ -909,7 +908,7 @@ and practical.
 
 Table 1 summarizes the growth model used in this report for SGIP-1. In
 row 1, with no (significant) transactive mechanism, one HVAC controller
-and one auction market agent were still used to transmit MATPOWER’s LMP
+and one auction market agent were still used to transmit PYPOWER’s LMP
 down to the EnergyPlus model, which still responded to real-time prices.
 In this version, only the HVAC controllers were transactive. PV systems
 would operate autonomously at full output, and storage systems would
@@ -944,18 +943,18 @@ case simulations over the next couple of release cycles, as described in
 Section 3. Many of these developments will be incremental, while others
 are more forward-looking.
 
-Two significant lessons have been learned in this release cycle, meaning
-those two things need to be done differently going forward. The first
-lesson relates to MATPOWER. It has been difficult to deploy compiled
-versions of MATPOWER on all three operating systems, and it will be
-inconvenient for users to manage different versions of the required
-MATLAB runtime. This is true even for users who might already have a
-full version of MATLAB. Furthermore, we would need to modify MATPOWER
-source code in order to detect non-convergence and summarize
-transmission system losses. This leads us to seriously consider
-alternatives, such as PyPower [`17 <#_ENREF_17>`__] or AMES
-[`18 <#_ENREF_18>`__]; although both have their own limitations, they
-are much easier to modify and deploy.
+Two significant lessons have been learned in this release cycle, meaning 
+those two things need to be done differently going forward.  The first 
+lesson relates to MATPOWER.  It has been difficult to deploy compiled 
+versions of MATPOWER on all three operating systems, and it will be 
+inconvenient for users to manage different versions of the required MATLAB 
+runtime.  This is true even for users who might already have a full 
+version of MATLAB.  Furthermore, we would need to modify MATPOWER source 
+code in order to detect non-convergence and summarize transmission system 
+losses.  This led us to replace MATPOWER with PYPOWER [`17 
+<#_ENREF_17>`__] for the public releases of TESP.  During 2019, TESP will 
+be able to use AMES for day-ahead markets and unit commitment [`18 
+<#_ENREF_18>`__].  
 
 The second lesson relates to EnergyPlus modeling, which is a completely
 different domain than power system modeling. We were able to get help
@@ -1007,13 +1006,13 @@ should be for others to write their own (better) TEAgents.
 4. Passive Controller (Load Shedding) – GridLAB-D includes a built-in
    passive controller, and switches that can isolate sections of a
    circuit. This function would be extracted into a separate TEAgent
-   that implements load shedding in response to a message from MATPOWER.
+   that implements load shedding in response to a message from PYPOWER.
    If the bulk system capacity margin falls below minimum, or worse, if
    the optimal power flow fails to converge, the bulk system operator
-   would have to invoke load shedding. In TESP, the MATPOWER simulator
+   would have to invoke load shedding. In TESP, the PYPOWER simulator
    would initiate load shedding a few seconds prior to the market
    clearing time, which initiates a new GridLAB-D power flow and reduced
-   substation load published to MATPOWER. Load shedding is a traditional
+   substation load published to PYPOWER. Load shedding is a traditional
    approach that will reduce the system reliability indices, whereas
    transactive mechanisms could maintain resource margins without
    impacting the reliability indices.
@@ -1177,8 +1176,8 @@ created. We expect to team with Dartmouth College in formalizing this
 process, and also to work with Case Western University in modeling their
 transactive campus project with NASA.
 
-References
-==========
+Bibliography
+============
 
 [1] D. J. Hammerstrom, C. D. Corbin, N. Fernandez, J. S. Homer, A.
 Makhmalbaf, R. G. Pratt\ *, et al.* (2016). *Valuation of Transactive
@@ -1259,7 +1258,7 @@ multiagent control in the electricity infrastructure," presented at the
 Proceedings of the fourth international joint conference on Autonomous
 agents and multiagent systems, The Netherlands, 2005.
 
-[20] TeMix Inc. (2017). *TeMix*. Available: www.temix.net
+[20] TeMix Inc. (2017). *TeMix*. Available: http://www.temix.net
 
 [21] IEEE, "IEEE Standard for Modeling and Simulation (M&S) High Level
 Architecture (HLA)-- Federate Interface Specification," *IEEE Std
@@ -1294,7 +1293,7 @@ Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),* pp. 1-110, 2010.
 .. |image5| image:: ./media/GLDMetricsClasses.png
    :width: 5.75000in
    :height: 2.83333in
-.. |image6| image:: ./media/MATPOWERMetrics.png
+.. |image6| image:: ./media/PYPOWERMetrics.png
    :width: 6.00000in
    :height: 6.33333in
 .. |image7| image:: ./media/GLDDictionary.png
@@ -1324,7 +1323,7 @@ Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),* pp. 1-110, 2010.
 .. |image15| image:: ./media/SGIP1system.png
    :width: 6.50000in
    :height: 3.66667in
-.. |image16| image:: ./media/MATPOWERsystem.png
+.. |image16| image:: ./media/PYPOWERsystem.png
    :width: 6.36111in
    :height: 3.81944in
 .. |image17| image:: ./media/FeederR1_1.png

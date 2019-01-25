@@ -11,6 +11,7 @@ Transactive Energy Simulation Platform (TESP)
    :caption: Contents:
 
    TESP_DesignDoc
+   TESP_Reference
    LICENSE
 
 Indices and tables

@@ -65,13 +65,4 @@ Code in these subdirectories has been archived. It's not included in the tesp_su
 - *matpower*; legacy code that configures and post-processes MATPOWER v5+ for TESP. We now use PYPOWER and AMES instead.
 - *sgip1*; custom code that plotted curves from different cases on the same graph. Used for a 2018 journal paper on TESP and the SGIP1 example.
 - *valuation*; custom code that post-processed SGIP1 outputs for the 2018 journal paper. May serve as an example, or use Jupyter notebooks instead.
-- *media*; contains image (PNG) files for source code documentation
-
-### Class Diagrams
-
-First, please review the platform design documentation at https://tesp.readthedocs.io/en/latest/TESP_DesignDoc.html
-
-The following UML diagrams and narrative provide a more specific roadmap to the tesp_support Python module.
-
-![tesp_support](./media/tesp_support.png)
 
