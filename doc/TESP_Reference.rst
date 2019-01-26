@@ -117,7 +117,7 @@ Suggested sequence of test cases for development:
 * Any user gets the changes with 'pip install tesp_support --upgrade'
 * Use 'pip show tesp_support' to verify the version and location on your computer
 
-.. include:: ../src/tesp_support/code_reference.rst
+.. include:: ./tesp_support.inc
 
 .. |uml0| image:: ./media/tesp_support.png
 
