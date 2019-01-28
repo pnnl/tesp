@@ -1,0 +1,156 @@
+name: tesp_monitor_ercot
+time_delta: 15s
+broker: tcp://localhost:5570
+values:
+  LMP1:
+    topic: pypower/LMP_Bus1
+    default: 0.1
+    type: double
+    list: false
+  LMP2:
+    topic: pypower/LMP_Bus2
+    default: 0.1
+    type: double
+    list: false
+  LMP3:
+    topic: pypower/LMP_Bus3
+    default: 0.1
+    type: double
+    list: false
+  LMP4:
+    topic: pypower/LMP_Bus4
+    default: 0.1
+    type: double
+    list: false
+  LMP5:
+    topic: pypower/LMP_Bus5
+    default: 0.1
+    type: double
+    list: false
+  LMP6:
+    topic: pypower/LMP_Bus6
+    default: 0.1
+    type: double
+    list: false
+  LMP7:
+    topic: pypower/LMP_Bus7
+    default: 0.1
+    type: double
+    list: false
+  LMP8:
+    topic: pypower/LMP_Bus8
+    default: 0.1
+    type: double
+    list: false
+  distribution_load1:
+    topic: gridlabdBus1/distribution_load
+    default: 0
+    type: complex
+    list: false
+  distribution_load2:
+    topic: gridlabdBus2/distribution_load
+    default: 0
+    type: complex
+    list: false
+  distribution_load3:
+    topic: gridlabdBus3/distribution_load
+    default: 0
+    type: complex
+    list: false
+  distribution_load4:
+    topic: gridlabdBus4/distribution_load
+    default: 0
+    type: complex
+    list: false
+  distribution_load5:
+    topic: gridlabdBus5/distribution_load
+    default: 0
+    type: complex
+    list: false
+  distribution_load6:
+    topic: gridlabdBus6/distribution_load
+    default: 0
+    type: complex
+    list: false
+  distribution_load7:
+    topic: gridlabdBus7/distribution_load
+    default: 0
+    type: complex
+    list: false
+  distribution_load8:
+    topic: gridlabdBus8/distribution_load
+    default: 0
+    type: complex
+    list: false
+  vpos1:
+    topic: pypower/three_phase_voltage_Bus1
+    default: 0
+  vpos2:
+    topic: pypower/three_phase_voltage_Bus2
+    default: 0
+  vpos3:
+    topic: pypower/three_phase_voltage_Bus3
+    default: 0
+  vpos4:
+    topic: pypower/three_phase_voltage_Bus4
+    default: 0
+  vpos5:
+    topic: pypower/three_phase_voltage_Bus5
+    default: 0
+  vpos6:
+    topic: pypower/three_phase_voltage_Bus6
+    default: 0
+  vpos7:
+    topic: pypower/three_phase_voltage_Bus7
+    default: 0
+  vpos8:
+    topic: pypower/three_phase_voltage_Bus8
+    default: 0
+  ab1:
+    topic: auctionBus1/load_seg_0_B_hse_1_hvac/price
+    default: 0
+  ab2:
+    topic: auctionBus2/load_seg_1_A_hse_1_hvac/price
+    default: 0
+  ab3:
+    topic: auctionBus3/load_seg_0_A_hse_1_hvac/price
+    default: 0
+  ab4:
+    topic: auctionBus4/load_seg_1_A_hse_1_hvac/price
+    default: 0
+  ab5:
+    topic: auctionBus5/load_seg_1_A_hse_1_hvac/price
+    default: 0
+  ab6:
+    topic: auctionBus6/load_seg_0_A_hse_1_hvac/price
+    default: 0
+  ab7:
+    topic: auctionBus7/load_seg_0_A_hse_1_hvac/price
+    default: 0        
+  ab8:
+    topic: auctionBus8/load_seg_0_C_hse_1_hvac/price
+    default: 0
+  bus1h1airtemp:
+    topic: gridlabdBus1/load_seg_0_B_hse_1/air_temperature
+    default: 0
+  bus2h1airtemp:
+    topic: gridlabdBus2/load_seg_1_A_hse_1/air_temperature
+    default: 0
+  bus3h1airtemp:
+    topic: gridlabdBus3/load_seg_0_A_hse_1/air_temperature
+    default: 0
+  bus4h1airtemp:
+    topic: gridlabdBus4/load_seg_1_A_hse_1/air_temperature
+    default: 0
+  bus5h1airtemp:
+    topic: gridlabdBus5/load_seg_1_A_hse_1/air_temperature
+    default: 0
+  bus6h1airtemp:
+    topic: gridlabdBus6/load_seg_0_A_hse_1/air_temperature
+    default: 0
+  bus7h1airtemp:
+    topic: gridlabdBus7/load_seg_0_A_hse_1/air_temperature
+    default: 0
+  bus8h1airtemp:
+    topic: gridlabdBus8/load_seg_0_C_hse_1/air_temperature
+    default: 0
