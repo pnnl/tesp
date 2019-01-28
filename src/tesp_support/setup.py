@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tesp_support',
-    version='0.2.0',
+    version='0.2.1',
     author='Thomas McDermott',
     author_email='Thomas.McDermott@PNNL.gov',
     description='Python support for the Transactive Energy Simulation Platform',
