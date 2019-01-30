@@ -1,3 +1,5 @@
+# Copyright (C) 2017-2019 Battelle Memorial Institute
+# file: tesp_monitor.py
 import sys
 import json
 import tkinter as tk

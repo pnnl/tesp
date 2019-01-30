@@ -1,10 +1,13 @@
-#	Copyright (C) 2017-2018 Battelle Memorial Institute
+#	Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: process_pypower.py
 import json;
 #import sys;
 import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+try:
+  import matplotlib as mpl;
+  import matplotlib.pyplot as plt;
+except:
+    pass
 
 def process_pypower(nameroot):
     # first, read and print a dictionary of relevant PYPOWER objects

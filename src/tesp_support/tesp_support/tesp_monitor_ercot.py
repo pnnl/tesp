@@ -1,3 +1,5 @@
+# Copyright (C) 2018-2019 Battelle Memorial Institute
+# file: tesp_monitor_ercot.py
 import sys
 import json
 import tkinter as tk

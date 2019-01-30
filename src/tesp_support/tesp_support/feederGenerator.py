@@ -1,3 +1,5 @@
+# Copyright (C) 2018-2019 Battelle Memorial Institute
+# file: feederGenerator.py
 import sys;
 import re;
 import os.path;

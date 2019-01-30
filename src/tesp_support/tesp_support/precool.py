@@ -1,3 +1,5 @@
+# Copyright (C) 2018-2019 Battelle Memorial Institute
+# file: precool.py
 import string;
 import sys;
 try:

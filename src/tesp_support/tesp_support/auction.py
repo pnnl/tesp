@@ -1,3 +1,5 @@
+# Copyright (C) 2017-2019 Battelle Memorial Institute
+# file: auction.py
 import sys
 try:
   import tesp_support.fncs as fncs
