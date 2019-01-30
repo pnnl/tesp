@@ -3,7 +3,10 @@ import json
 import sys
 import warnings
 import csv
-import tesp_support.fncs as fncs
+try:
+  import tesp_support.fncs as fncs
+except:
+  pass
 import numpy as np
 import pypower.api as pp
 from math import sqrt
