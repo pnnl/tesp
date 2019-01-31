@@ -4,6 +4,7 @@ import json
 import numpy as np
 import os
 import math
+import utilities
 
 # write yaml for auction.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -257,6 +258,8 @@ def ProcessGLM (fileroot):
 		print ('subscribe "precommit:' + meterName + '.monthly_fee <- ' + aucSimKey + '/monthly_fee";', file=op)
 	op.close()
 
+	# write topics to the FNCS config yaml file that will be shown in the monitor
+	utilities.write_FNCS_config_yaml_file_values(fileroot, controllers)
 
 def prep_ercot_auction (gldfileroot, jsonfile = ''):
 	global dt, period, Eplus_Bus, agent_participation

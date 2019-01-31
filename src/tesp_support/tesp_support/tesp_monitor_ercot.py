@@ -198,22 +198,26 @@ class TespMonitorGUI:
         lp = open(fname)
         cfg = json.loads(lp.read())
         self.commands = cfg['commands']
-        for row in self.commands:
-            args = row['args']
-            if "fncs_broker" in args:
-                for en in row['env']:
-                    if "FNCS_CONFIG_FILE" in en:
-                        self.fncsyaml = en[1]
-                        break
-                else:
-                    continue
-                break
-        with open(self.fncsyaml, 'r') as stream:
-            try:
-                dd = yaml.load(stream)['values'].items()
-                self.topicDict = dict((v['topic'], k) for k, v in dd)
-            except yaml.YAMLError as ex:
-                print(ex)
+        # for row in self.commands:
+        #     args = row['args']
+        #     if "fncs_broker" in args:
+        #         for en in row['env']:
+        #             if "FNCS_CONFIG_FILE" in en:
+        #                 self.fncsyaml = en[1]
+        #                 break
+        #         else:
+        #             continue
+        #         break
+        self.fncsyaml = os.environ['FNCS_CONFIG_FILE']
+        if os.path.isfile(self.fncsyaml):
+            with open(self.fncsyaml, 'r') as stream:
+                try:
+                    dd = yaml.load(stream)['values'].items()
+                    self.topicDict = dict((v['topic'], k) for k, v in dd)
+                except yaml.YAMLError as ex:
+                    print(ex)
+        else:
+            print('could not open FNCS_CONFIG_FILE for fncs')
         topics = list(self.topicDict.keys())
         self.plot0.topicDict = self.topicDict
         self.plot0.combobox.config(values=topics)
