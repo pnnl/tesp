@@ -165,9 +165,9 @@ def ProcessGLM (fileroot):
 			batName = key
 			meterName = val['billingmeter_id']
 			batteries[batName] = {'meterName': meterName,
-				'capacity': val['capacity'],
+				'capacity': val['bat_capacity'],
 				'rating': val['rated_W'],
-				'charge': val['soc'] * val['capacity'],
+				'charge': val['bat_soc'] * val['bat_capacity'],
 				'efficiency': float('{:.4f}'.format(val['inv_eta'] * math.sqrt (val['bat_eta'])))}
 
 	print ('configured', nControllers, 'controllers for', nAirConditioners, 'air conditioners and', nBatteries, 'batteries')
