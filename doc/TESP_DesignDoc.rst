@@ -1276,8 +1276,6 @@ Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),* pp. 1-110, 2010.
    :width: 2.0in
    :height: 2.0in
 .. |image0| image:: ./media/Federates.png
-   :width: 6.16667in
-   :height: 3.75000in
 .. |image1| image:: ./media/GrowthOpModel.png
    :width: 6.50000in
    :height: 3.16667in
@@ -1288,11 +1286,7 @@ Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),* pp. 1-110, 2010.
    :width: 6.00000in
    :height: 3.75000in
 .. |image4| image:: ./media/IntermediateMetrics.png
-   :width: 6.16667in
-   :height: 3.33333in
-.. |image5| image:: ./media/GLDMetricsClasses.png
-   :width: 5.75000in
-   :height: 2.83333in
+.. |image5| image:: ./media/GLD_Collector.png
 .. |image6| image:: ./media/PYPOWERMetrics.png
    :width: 6.00000in
    :height: 6.33333in
