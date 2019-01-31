@@ -1,3 +1,5 @@
+# Copyright (C) 2018-2019 Battelle Memorial Institute
+# file: TMY2EPW.py
 import sys
 import numpy as np
 

@@ -1,4 +1,4 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
+#	Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: glm_dict.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
 import json;
@@ -29,7 +29,8 @@ def glm_dict (nameroot, ercot=False):
 	soc = ''
 	capacity = ''
 	stories = ''
-	matpowerBus = 'TBD'
+	thermal_integrity = 'UNKNOWN'
+	bulkpowerBus = 'TBD'
 	substationTransformerMVA = 12
 	houses = {}
 	waterheaters = {}
@@ -117,7 +118,7 @@ def glm_dict (nameroot, ercot=False):
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
 					inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'rated_W':rating,'resource':'battery','inv_eta':inv_eta,
-						'bat_eta':bat_eta,'capacity':capacity,'soc':soc}
+						'bat_eta':bat_eta,'bat_capacity':capacity,'bat_soc':soc}
 					inInverters = False
 			if inHouses == True:
 				if lst[0] == 'name':
@@ -132,10 +133,13 @@ def glm_dict (nameroot, ercot=False):
 					cooling = lst[1].strip(';')
 				if lst[0] == 'heating_system_type':
 					heating = lst[1].strip(';')
+				if lst[0] == 'thermal_integrity_level':
+					thermal_integrity = lst[1].strip(';')
 				if (lst[0] == 'cooling_setpoint') or (lst[0] == 'heating_setpoint'):
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
-					houses[name] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'sqft':sqft,'stories':stories,'cooling':cooling,'heating':heating,'wh_gallons':0}
+					houses[name] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'sqft':sqft,'stories':stories,
+						'thermal_integrity':thermal_integrity,'cooling':cooling,'heating':heating,'wh_gallons':0}
 					lastHouse = name
 					inHouses = False
 			if inWaterHeaters == True:
@@ -187,7 +191,7 @@ def glm_dict (nameroot, ercot=False):
 		mtr['children'].append(key)
 
 	feeders[feeder_id] = {'house_count': len(houses),'inverter_count': len(inverters)}
-	substation = {'matpower_id':matpowerBus,'FNCS':FNCSmsgName,
+	substation = {'bulkpower_bus':bulkpowerBus,'FNCS':FNCSmsgName,
 		'transformer_MVA':substationTransformerMVA,'feeders':feeders, 
 		'billingmeters':billingmeters,'houses':houses,'inverters':inverters,
 		'capacitors':capacitors,'regulators':regulators}

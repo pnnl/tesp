@@ -276,6 +276,7 @@ int main(int argc, char **argv)
 		fncs::publish ("power_C", to_string(phaseWatts));
 		fncs::publish ("bill_mode", "HOURLY");
 		fncs::publish ("price", to_string(price));
+		fncs::publish ("monthly_fee", to_string(0.0));
 	} while (time_granted < time_stop);
 	if (time_granted > time_written) {
 		output_metrics (metrics, root, ary, time_granted, out);

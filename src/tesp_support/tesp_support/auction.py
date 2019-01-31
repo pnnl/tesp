@@ -1,5 +1,10 @@
+# Copyright (C) 2017-2019 Battelle Memorial Institute
+# file: auction.py
 import sys
-import tesp_support.fncs as fncs
+try:
+  import tesp_support.fncs as fncs
+except:
+  pass
 import tesp_support.simple_auction as simple_auction
 import json
 from datetime import datetime

@@ -1,4 +1,5 @@
-#	Copyright (C) 2017-2018 Battelle Memorial Institute
+# Copyright (C) 2017-2019 Battelle Memorial Institute
+# file: setup.py
 
 from setuptools import setup, find_packages
 

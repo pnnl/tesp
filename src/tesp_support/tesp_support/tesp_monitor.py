@@ -1,3 +1,5 @@
+# Copyright (C) 2017-2019 Battelle Memorial Institute
+# file: tesp_monitor.py
 import sys
 import json
 import tkinter as tk
@@ -6,7 +8,10 @@ from tkinter import filedialog
 from tkinter import messagebox
 import subprocess
 import os
-import tesp_support.fncs as fncs
+try:
+  import tesp_support.fncs as fncs
+except:
+  pass
 import tesp_support.simple_auction as simple_auction
 import time
 

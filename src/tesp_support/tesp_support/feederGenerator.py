@@ -1,3 +1,5 @@
+# Copyright (C) 2018-2019 Battelle Memorial Institute
+# file: feederGenerator.py
 import sys;
 import re;
 import os.path;
@@ -522,13 +524,14 @@ def is_edge_class(s):
 def obj(parent,model,line,itr,oidh,octr):
     '''
     Store an object in the model structure
+
     Inputs:
-        parent: name of parent object (used for nested object defs)
-        model: dictionary model structure
-        line: glm line containing the object definition
-        itr: iterator over the list of lines
-        oidh: hash of object id's to object names
-        octr: object counter
+    parent: name of parent object (used for nested object defs)
+    model: dictionary model structure
+    line: glm line containing the object definition
+    itr: iterator over the list of lines
+    oidh: hash of object id's to object names
+    octr: object counter
     '''
     octr += 1
     # Identify the object type

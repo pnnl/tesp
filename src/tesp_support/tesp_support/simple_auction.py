@@ -1,3 +1,5 @@
+# Copyright (C) 2017-2019 Battelle Memorial Institute
+# file: simple_auction.py
 import numpy as np
 import math
 import warnings

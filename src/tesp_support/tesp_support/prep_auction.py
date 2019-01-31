@@ -1,4 +1,5 @@
-#	Copyright (C) 2018 Battelle Memorial Institute
+# Copyright (C) 2018-2019 Battelle Memorial Institute
+# file: prep_auction.py
 import sys
 import json
 import numpy as np
