@@ -167,12 +167,16 @@ only information available at that point in the simulation.
 Messages between Simulators and Agents
 --------------------------------------
 
-In Rev 1, TESP simulators exchange a minimal set of messages shown in
+TESP simulators exchange the sets of messages shown in
 Figure 3 and Figure 4.
 
 |image2|
 
-Figure 3. Message Schemas
+Figure 3a. Message Schemas for GridLAB-D, PYPOWER and residential agents
+
+|image22|
+
+Figure 3b. Message Schemas for EnergyPlus and large-building agents
 
 These messages route through FNCS in a format like
 “topic/keyword=value”. In Figure 3, the “id” would refer to a specific
@@ -190,7 +194,11 @@ value for its next optimal power flow solution.
 
 |image3|
 
-Figure 4. Message Flows
+Figure 4a. Message Flows for Simulators and Transactive Agents
+
+|image23|
+
+Figure 4b. Message Flows for Solution Monitoring
 
 EnergyPlus publishes three phase power values after each of its
 solutions (currently on five-minute intervals). These are all
@@ -1273,66 +1281,28 @@ Architecture (HLA)-- Object Model Template (OMT) Specification," *IEEE
 Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),* pp. 1-110, 2010.
 
 .. |logo| image:: ./media/Transactive.png
-   :width: 2.0in
-   :height: 2.0in
 .. |image0| image:: ./media/Federates.png
 .. |image1| image:: ./media/GrowthOpModel.png
-   :width: 6.50000in
-   :height: 3.16667in
 .. |image2| image:: ./media/MessageClasses.png
-   :width: 6.00000in
-   :height: 5.16667in
 .. |image3| image:: ./media/MessageFlows.png
-   :width: 6.00000in
-   :height: 3.75000in
 .. |image4| image:: ./media/IntermediateMetrics.png
 .. |image5| image:: ./media/GLD_Collector.png
 .. |image6| image:: ./media/PYPOWERMetrics.png
-   :width: 6.00000in
-   :height: 6.33333in
 .. |image7| image:: ./media/GLDDictionary.png
-   :width: 6.00000in
-   :height: 5.75000in
 .. |image8| image:: ./media/SubstationMetrics.png
-   :width: 6.00000in
-   :height: 3.25000in
 .. |image9| image:: ./media/BillingMeterMetrics.png
-   :width: 6.00000in
-   :height: 4.66667in
 .. |image10| image:: ./media/HouseMetrics.png
-   :width: 6.00000in
-   :height: 3.25000in
 .. |image11| image:: ./media/InverterMetrics.png
-   :width: 6.00000in
-   :height: 2.91667in
 .. |image12| image:: ./media/AgentMetrics.png
-   :width: 6.33333in
-   :height: 5.33333in
 .. |image13| image:: ./media/EplusMetrics.png
-   :width: 6.00000in
-   :height: 5.91667in
 .. |image14| image:: ./media/TE30system.png
-   :width: 6.50000in
-   :height: 2.66866in
 .. |image15| image:: ./media/SGIP1system.png
-   :width: 6.50000in
-   :height: 3.66667in
 .. |image16| image:: ./media/PYPOWERsystem.png
-   :width: 6.36111in
-   :height: 3.81944in
 .. |image17| image:: ./media/FeederR1_1.png
-   :width: 6.50000in
-   :height: 5.08333in
 .. |image18| image:: ./media/School.png
-   :width: 6.49167in
-   :height: 2.66667in
 .. |image19| image:: ./media/CapacitorMetrics.png
-   :width: 6.0in
-   :height: 3.1in
 .. |image20| image:: ./media/RegulatorMetrics.png
-   :width: 5.8in
-   :height: 2.8in
 .. |image21| image:: ./media/Configuration.png
-   :width: 8.29in
-   :height: 10.08in
+.. |image22| image:: ./media/EplusMessageClasses.png
+.. |image23| image:: ./media/MonitorFlows.png
 
