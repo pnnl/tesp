@@ -239,6 +239,71 @@ i.e. perfect compliance is built into the code. That’s clearly not a
 realistic assumption, and is within the scope for future versions as
 described in Section 3.
 
+TESP for Agent Developers
+-------------------------
+
+The left-hand portion of Figure 4c shows the main simulators running in 
+TESP and communicating over FNCS.  For the DSO+T study, PYPOWER will be 
+upgraded to AMES and EnergyPlus will be upgraded to a Modelica-based 
+large-building simulator.  The large-building agent will also be updated.  
+The current large-building agent is written in C++.  It's functionality is 
+to write metrics from EnergyPlus, and also to adjust a thermostat slider 
+for the building.  However, it does not formulate bids for the building.  
+The right-hand portion of Figure 4c shows the other transactive agents 
+implemented in Python.  These communicate directly via Python function 
+calls, i.e., not over FNCS.  There are several new agents to implement for 
+the DSO+T study, and this process will require four main tasks: 
+  
+1 - Define the message schema for information exchange with GridLAB-D, AMES or other FNCS federates. The SubstationAgent will actually manage the FNCS messages, i.e., the agent developer will not be writing FNCS interface code.
+
+2 - Design the agent initialization from metadata available in the GridLAB-D or other dictionaries, i.e., from the dictionary JSON files.
+
+3 - Design the metadata for any intermediate metrics that the agent should write (to JSON files) at each time step.
+
+4 - Design and implement the agent code as a Python class within tesp_support. The SubstationAgent will instantiate this agent class at runtime, and call the class as needed in a time step.
+
+|image24|
+
+Figure 4c. Composition of Federates in a Running TESP Simulation
+
+Figure 4d shows the sequence of interactions between GridLAB-D, the 
+SubstationAgent (encapsulating HVAC controllers and a double-auction 
+market) and PYPOWER.  The message hops over FNCS each consume one time 
+step.  The essential messages for market clearing are highlighted in red.  
+Therefore, it takes 3 FNCS time steps to complete a market clearing, from 
+the collection of house air temperatures to the adjustment of thermostat 
+setpoints.  Without the encapsulating SubstationAgent, two additional FNCS 
+messages would be needed.  The first would occur between the self-messages 
+AgentBids and Aggregate, routed between separate HVACController and 
+Auction swimlanes.  The second would occur between ClearMarket and 
+AdjustSetpoints messages, also routed between separate Auction and 
+HVACController swimlanes.  This architecture would produce additional FNCS 
+message traffic, and also increase the market clearing latency from 3 FNCS 
+time steps to 5 FNCS time steps.  
+
+Before and after each market clearing, GridLAB-D and PYPOWER will 
+typically exchange substation load and bus voltage values several times, 
+for each power flow (PF) solution.  These FNCS messages are indicated in 
+black; they represent much less traffic than the market clearing messages.
+  
+Some typical default time steps are:
+  
+1 - 5 seconds, for FNCS, leading to a market clearing latency of 15 seconds
+  
+2 - 15 seconds, for GridLAB-D and PYPOWER's regular power flow (PF)
+  
+3 - 300 seconds, for spot-market clearing, PYPOWER's optimal power flow (OPF), EnergyPlus (not shown in Figure 4d) and the metrics aggregation.
+
+|image25|
+
+Figure 4d. FNCS Message Hops around Market Clearing Time
+
+Figure 4e shows the class structure of tesp_support.  For details, see the :ref:`code-reference-label`.  
+
+|image26|
+
+Figure 4e. Class structure of the tesp_support package
+
 Output Metrics to Support Evaluation
 ------------------------------------
 
@@ -1305,4 +1370,7 @@ Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),* pp. 1-110, 2010.
 .. |image21| image:: ./media/Configuration.png
 .. |image22| image:: ./media/EplusMessageClasses.png
 .. |image23| image:: ./media/MonitorFlows.png
+.. |image24| image:: ./media/TESPComposition.png
+.. |image25| image:: ./media/ClearingSequence.png
+.. |image26| image:: ./media/tesp_support.png
 

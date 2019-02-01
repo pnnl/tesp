@@ -1,3 +1,5 @@
+.. _code-reference-label:
+
 Code Reference
 ==============
 
