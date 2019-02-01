@@ -11,5 +11,4 @@ broker_trace.txt
 *FNCS_Config.txt
 *.mat
 *.xlsx
-*auction.yaml
-*auction.sh
+*substation.yaml

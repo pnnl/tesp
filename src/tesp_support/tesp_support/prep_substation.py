@@ -1,13 +1,13 @@
 # Copyright (C) 2018-2019 Battelle Memorial Institute
-# file: prep_auction.py
+# file: prep_substation.py
 import sys
 import json
 import numpy as np
 import os
 
-# write yaml for auction.py to subscribe meter voltages, house temperatures, hvac load and hvac state
+# write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
-# write the json agent dictionary for post-processing, and run-time configuration of auction.py
+# write the json agent dictionary for post-processing, and run-time configuration of substation.py
 
 # we want the same psuedo-random thermostat schedules each time, for repeatability
 np.random.seed (0)
@@ -224,9 +224,9 @@ def ProcessGLM (fileroot):
 	dp.close()
 
 	# write YAML file
-	yamlfile = fileroot + '_auction.yaml'
+	yamlfile = fileroot + '_substation.yaml'
 	yp = open (yamlfile, 'w')
-	print ('name: auction', file=yp)
+	print ('name: substation', file=yp)
 	print ('time_delta: ' + str(dt) + 's', file=yp)
 	print ('broker:', broker, file=yp)
 	print ('aggregate_sub: true', file=yp)
@@ -276,16 +276,16 @@ def ProcessGLM (fileroot):
 		print ('publish "commit:' + houseName + '.power_state -> ' + houseName + '/power_state";', file=op)
 		print ('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
 		print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
-		print ('subscribe "precommit:' + houseName + '.cooling_setpoint <- auction/' + key + '/cooling_setpoint";', file=op)
-		print ('subscribe "precommit:' + houseName + '.heating_setpoint <- auction/' + key + '/heating_setpoint";', file=op)
-		print ('subscribe "precommit:' + houseName + '.thermostat_deadband <- auction/' + key + '/thermostat_deadband";', file=op)
-		print ('subscribe "precommit:' + meterName + '.bill_mode <- auction/' + key + '/bill_mode";', file=op)
-		print ('subscribe "precommit:' + meterName + '.price <- auction/' + key + '/price";', file=op)
-		print ('subscribe "precommit:' + meterName + '.monthly_fee <- auction/' + key + '/monthly_fee";', file=op)
+		print ('subscribe "precommit:' + houseName + '.cooling_setpoint <- substation/' + key + '/cooling_setpoint";', file=op)
+		print ('subscribe "precommit:' + houseName + '.heating_setpoint <- substation/' + key + '/heating_setpoint";', file=op)
+		print ('subscribe "precommit:' + houseName + '.thermostat_deadband <- substation/' + key + '/thermostat_deadband";', file=op)
+		print ('subscribe "precommit:' + meterName + '.bill_mode <- substation/' + key + '/bill_mode";', file=op)
+		print ('subscribe "precommit:' + meterName + '.price <- substation/' + key + '/price";', file=op)
+		print ('subscribe "precommit:' + meterName + '.monthly_fee <- substation/' + key + '/monthly_fee";', file=op)
 	op.close()
 
 
-def prep_auction (gldfileroot, jsonfile = ''):
+def prep_substation (gldfileroot, jsonfile = ''):
 	global dt, period, Eplus_Bus, agent_participation
 	global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
 	global daylight_start_lo, daylight_start_hi, daylight_set_lo, daylight_set_hi

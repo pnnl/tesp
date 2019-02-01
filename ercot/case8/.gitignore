@@ -6,5 +6,6 @@
 ercot_8_pf.csv
 ercot_8_opf.csv
 Bus*.glm
+tesp_monitor_ercot.json
 no_fncs/
 no_market/

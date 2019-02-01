@@ -9,7 +9,7 @@ values
         topic = pypower/LMP_B7
         default = 0
     clear_price
-        topic = auction/clear_price
+        topic = substation/clear_price
         default = 0
     distribution_load
         topic = gridlabdSimulator1/distribution_load

@@ -73,7 +73,7 @@ def write_tesp_case (config, cfgfile):
     GldMetricsFile = casename + '_metrics.json'
     AgentDictFile = casename + '_agent_dict.json'
     PPJsonFile = casename + '_pp.json'
-    AuctionYamlFile = casename + '_auction.yaml'
+    SubstationYamlFile = casename + '_substation.yaml'
 
     weatherfile = weatherdir + rootweather + '.tmy3'
     eplusfile = eplusdir + EpFile
@@ -405,13 +405,13 @@ values
     p2 = subprocess.Popen (cmdline, shell=True)
     p2.wait()
 
-    cmdline = """python -c "import tesp_support.api as tesp;tesp.prep_auction('""" + glmfile + """','""" + cfgfile + """')" """
+    cmdline = """python -c "import tesp_support.api as tesp;tesp.prep_substation('""" + glmfile + """','""" + cfgfile + """')" """
     print (cmdline)
     p3 = subprocess.Popen (cmdline, shell=True)
     p3.wait()
 
     # write the command scripts for console and tesp_monitor execution
-    aucline = """python -c "import tesp_support.api as tesp;tesp.auction_loop('""" + AgentDictFile + """','""" + casename + """')" """
+    aucline = """python -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
     ppline = """python -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
 
     # batch file for Windows
@@ -428,7 +428,7 @@ values
     print ('set FNCS_CONFIG_FILE=', file=op)
     print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gridlabd.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=' + AuctionYamlFile, file=op)
-    print ('start /b cmd /c', aucline + '^>auction.log 2^>^&1', file=op)
+    print ('start /b cmd /c', aucline + '^>substation.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=pypower.yaml', file=op)
     print ('start /b cmd /c', ppline + '^>pypower.log 2^>^&1', file=op)
     op.close()
@@ -443,7 +443,7 @@ values
            EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
     print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
            + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
-    print ('(export FNCS_CONFIG_FILE=' + AuctionYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> auction.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=' + AuctionYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> substation.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + ppline + ' &> pypower.log &)', file=op)
     op.close()
     st = os.stat (shfile)
@@ -460,7 +460,7 @@ values
     op.close()
     op = open (casedir + '/launch_auction.py', 'w')
     print ('import tesp_support.api as tesp', file=op)
-    print ('tesp.auction_loop(\'' + AgentDictFile + '\',\'' + casename + '\')', file=op)
+    print ('tesp.substation_loop(\'' + AgentDictFile + '\',\'' + casename + '\')', file=op)
     op.close()
     op = open (casedir + '/launch_pp.py', 'w')
     print ('import tesp_support.api as tesp', file=op)
@@ -484,7 +484,7 @@ values
                            'log':'gridlabd.log'}
     cmds['commands'][4] = {'args':['python', 'launch_auction.py'], 
                            'env':[['FNCS_CONFIG_FILE', AuctionYamlFile],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                           'log':'auction.log'}
+                           'log':'substation.log'}
     cmds['commands'][5] = {'args':['python', 'launch_pp.py'], 
                            'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'pypower.log'}

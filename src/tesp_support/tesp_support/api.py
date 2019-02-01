@@ -2,13 +2,13 @@
 # file: api.py
 from __future__ import absolute_import
 
-from .auction import auction_loop
+from .substation import substation_loop
 from .feederGenerator import populate_feeder
 from .fncsPYPOWER import pypower_loop 
 from .glm_dict import glm_dict
 from .precool import precool_loop
 from .prep_precool import prep_precool
-from .prep_auction import prep_auction
+from .prep_substation import prep_substation
 from .tesp_case import make_tesp_case
 from .tesp_case import make_monte_carlo_cases
 from .TMY2EPW import convert_tmy2_to_epw

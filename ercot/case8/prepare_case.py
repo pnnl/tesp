@@ -1,4 +1,4 @@
-import prep_ercot_auction as prep
+import prep_ercot_substation as prep
 import tesp_support.glm_dict as gd
 import utilities
 
@@ -13,13 +13,13 @@ gd.glm_dict ('Bus8', True)
 
 utilities.write_FNCS_config_yaml_file_header()
 
-prep.prep_ercot_auction ('Bus1')
-prep.prep_ercot_auction ('Bus2')
-prep.prep_ercot_auction ('Bus3')
-prep.prep_ercot_auction ('Bus4')
-prep.prep_ercot_auction ('Bus5')
-prep.prep_ercot_auction ('Bus6')
-prep.prep_ercot_auction ('Bus7')
-prep.prep_ercot_auction ('Bus8')
+prep.prep_ercot_substation ('Bus1')
+prep.prep_ercot_substation ('Bus2')
+prep.prep_ercot_substation ('Bus3')
+prep.prep_ercot_substation ('Bus4')
+prep.prep_ercot_substation ('Bus5')
+prep.prep_ercot_substation ('Bus6')
+prep.prep_ercot_substation ('Bus7')
+prep.prep_ercot_substation ('Bus8')
 
 utilities.write_json_for_ercot_monitor(3600, 15, 10)

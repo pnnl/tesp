@@ -1,6 +1,6 @@
 # TE30 Example
 
-Copyright (c) 2017-18, Battelle Memorial Institute
+Copyright (c) 2017-19, Battelle Memorial Institute
 
 This example file comprises 30 houses and a school building on a small
 stiff circuit. It provides a medium-level test case for multiple transactive
@@ -36,7 +36,7 @@ To run a case from the GUI monitor:
 - *gui.py*; invoke "python gui.py" to start a solution monitor
 - *kill5570.bat*; helper script that stops processes listening on port 5570 (Windows)
 - *kill5570.sh*; helper script that stops processes listening on port 5570 (Linux/Mac)
-- *launch_auction.py*; helper script that launches the Python auction from tesp_monitor
+- *launch_substation.py*; helper script that launches the Python substation agents from tesp_monitor
 - *launch_pp.py*; helper script that launches PYPOWER from tesp_monitor
 - *list5570.bat*; helper script that lists processes listening on port 5570 (Windows)
 - *NonGLDLoad.txt*; text file of non-responsive loads on transmission buses

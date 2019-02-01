@@ -101,12 +101,12 @@
     {
       "args": [
         "python",
-        "launch_auction.py"
+        "launch_substation.py"
       ],
       "env": [
         [
           "FNCS_CONFIG_FILE",
-          "TE_Challenge_auction.yaml"
+          "TE_Challenge_substation.yaml"
         ],
         [
           "FNCS_LOG_STDOUT",
@@ -117,7 +117,7 @@
           "YES"
         ]
       ],
-      "log": "auction.log"
+      "log": "substation.log"
     },
     {
       "args": [

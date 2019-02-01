@@ -1,4 +1,4 @@
-#	Copyright (C) 2018 Battelle Memorial Institute
+# Copyright (C) 2018-2019 Battelle Memorial Institute
 import sys
 import json
 import numpy as np
@@ -6,9 +6,9 @@ import os
 import math
 import utilities
 
-# write yaml for auction.py to subscribe meter voltages, house temperatures, hvac load and hvac state
+# write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
-# write the json agent dictionary for post-processing, and run-time configuration of auction.py
+# write the json agent dictionary for post-processing, and run-time configuration of substation.py
 
 # we want the same psuedo-random thermostat schedules each time, for repeatability
 np.random.seed (0)
@@ -89,7 +89,7 @@ def ProcessGLM (fileroot):
 	dirname = os.path.dirname (fileroot) + '/'
 	basename = os.path.basename (fileroot)
 	glmname = fileroot + '_glm_dict.json'
-	aucSimName = 'auction' + fileroot
+	aucSimName = 'substation' + fileroot
 	ip = open (glmname).read()
 	gd = json.loads(ip)
 	gldSimName = gd['FNCS']
@@ -199,7 +199,7 @@ def ProcessGLM (fileroot):
 	dp.close()
 
 	# write YAML file
-	yamlfile = fileroot + '_auction.yaml'
+	yamlfile = fileroot + '_substation.yaml'
 	yp = open (yamlfile, 'w')
 	print ('name:', aucSimName, file=yp)
 	print ('time_delta: ' + str(dt) + 's', file=yp)
@@ -263,7 +263,7 @@ def ProcessGLM (fileroot):
 	# write topics to the FNCS config yaml file that will be shown in the monitor
 	utilities.write_FNCS_config_yaml_file_values(fileroot, controllers)
 
-def prep_ercot_auction (gldfileroot, jsonfile = ''):
+def prep_ercot_substation (gldfileroot, jsonfile = ''):
 	global dt, period, Eplus_Bus, agent_participation
 	global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
 	global daylight_start_lo, daylight_start_hi, daylight_set_lo, daylight_set_hi

@@ -1,11 +1,13 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
-# file: auction.py
+# file: substation.py
 import sys
 try:
   import tesp_support.fncs as fncs
 except:
   pass
-import tesp_support.simple_auction as simple_auction
+import tesp_support.simple_auction as auction
+import tesp_support.hvac as hvac
+import tesp_support.helpers as helpers
 import json
 from datetime import datetime
 from datetime import timedelta
@@ -16,8 +18,8 @@ if sys.platform != 'win32':
   import resource
 
 # these should be in a configuration file as well; TODO synch the proper hour of day
-def inner_auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
-    print ('starting auction loop', configfile, metrics_root, hour_stop, flag, flush=True)
+def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
+    print ('starting substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
     print ('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad', flush=True)
     bWantMarket = True
     if flag == 'NoMarket':
@@ -42,7 +44,7 @@ def inner_auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket
     auction_metrics = {'Metadata':auction_meta,'StartTime':StartTime}
     controller_metrics = {'Metadata':controller_meta,'StartTime':StartTime}
 
-    aucObj = simple_auction.simple_auction (market_row, market_key)
+    aucObj = auction.simple_auction (market_row, market_key)
 
     dt = float(dict['dt'])
     period = aucObj.period
@@ -55,7 +57,7 @@ def inner_auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket
     hvac_keys = list(dict['controllers'].keys())
     for key in hvac_keys:
         row = dict['controllers'][key]
-        hvacObjs[key] = simple_auction.hvac (row, key, aucObj)
+        hvacObjs[key] = hvac.hvac (row, key, aucObj)
         ctl = hvacObjs[key]
         topicMap[key + '#Tair'] = [ctl, 2]
         topicMap[key + '#V1'] = [ctl, 3]
@@ -97,10 +99,10 @@ def inner_auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket
             value = fncs.get_value(topic)
             row = topicMap[topic]
             if row[1] == 0:
-                LMP = simple_auction.parse_fncs_magnitude (value)
+                LMP = helpers.parse_fncs_magnitude (value)
                 aucObj.set_lmp (LMP)
             elif row[1] == 1:
-                refload = simple_auction.parse_kw (value)
+                refload = helpers.parse_kw (value)
                 aucObj.set_refload (refload)
             elif row[1] == 2:
                 row[0].set_air_temp (value)
@@ -176,14 +178,14 @@ def inner_auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket
     fncs.finalize()
 
 
-def auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
-    inner_auction_loop (configfile, metrics_root, hour_stop, flag)
+def substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
+    inner_substation_loop (configfile, metrics_root, hour_stop, flag)
 #    gc.enable() 
 #    gc.set_debug(gc.DEBUG_LEAK) 
 
 #    profiler = cProfile.Profile ()
 #    args = (configfile, metrics_root, hour_stop, flag)
-#    profiler.runcall (inner_auction_loop, *args)
+#    profiler.runcall (inner_substation_loop, *args)
 #    stats = pstats.Stats(profiler)
 #    stats.strip_dirs()
 #    stats.sort_stats('cumulative')
