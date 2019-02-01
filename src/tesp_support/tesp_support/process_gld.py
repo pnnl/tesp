@@ -25,8 +25,8 @@ def process_gld(nameroot, dictname = ''):
 	mtr_keys = list(dict['billingmeters'].keys())
 	mtr_keys.sort()
 	xfMVA = dict['transformer_MVA']
-	matBus = dict['matpower_id']
-	print ("\n\nFile", nameroot, "has substation", sub_keys[0], "at Matpower bus", matBus, "with", xfMVA, "MVA transformer")
+	bulkBus = dict['bulkpower_bus']
+	print ("\n\nFile", nameroot, "has substation", sub_keys[0], "at bulk system bus", bulkBus, "with", xfMVA, "MVA transformer")
 	print("\nFeeder Dictionary:")
 	for key in sub_keys:
 		row = dict['feeders'][key]

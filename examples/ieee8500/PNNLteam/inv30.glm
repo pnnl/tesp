@@ -186,6 +186,8 @@ object fncs_msg {
   parent network_node;
   configure inv30_FNCS_Config.txt;
   option "transport:hostname localhost, port 5570";
+  aggregate_subscriptions true;
+  aggregate_publications true;
 }
 #endif
 

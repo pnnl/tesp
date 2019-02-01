@@ -229,6 +229,8 @@ def ProcessGLM (fileroot):
 	print ('name: auction', file=yp)
 	print ('time_delta: ' + str(dt) + 's', file=yp)
 	print ('broker:', broker, file=yp)
+	print ('aggregate_sub: true', file=yp)
+	print ('aggregate_pub: true', file=yp)
 	print ('values:', file=yp)
 	print ('  LMP:', file=yp)
 	print ('    topic: pypower/LMP_B7', file=yp)

@@ -146,6 +146,8 @@ object fncs_msg {
      configure TE_Challenge_FNCS_Config.txt;
 //     configure TE_Eplusonly.txt;
      option "transport:hostname localhost, port 5570";
+     aggregate_subscriptions true;
+     aggregate_publications true;
 }
 #endif
 

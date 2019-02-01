@@ -204,6 +204,8 @@ def ProcessGLM (fileroot):
 	print ('name:', aucSimName, file=yp)
 	print ('time_delta: ' + str(dt) + 's', file=yp)
 	print ('broker:', broker, file=yp)
+	print ('aggregate_sub: true', file=yp)
+	print ('aggregate_pub: true', file=yp)
 	print ('values:', file=yp)
 	print ('  LMP:', file=yp)
 	print ('    topic: pypower/LMP_' + fileroot, file=yp)

@@ -29,6 +29,8 @@ def prep_precool (nameroot):
 	print ('name: precool', file=yp)
 	print ('time_delta: ' + str(dt) + 's', file=yp)
 	print ('broker: tcp://localhost:5570', file=yp)
+	print ('aggregate_sub: true', file=yp)
+	print ('aggregate_pub: true', file=yp)
 	print ('values:', file=yp)
 	print ('  price:', file=yp)
 	print ('    topic: player/price', file=yp)
@@ -38,26 +40,26 @@ def prep_precool (nameroot):
 	inHouses = False
 	endedHouse = False
 	isELECTRIC = False
-	houseName = ""
-	meterName = ""
+	houseName = ''
+	meterName = ''
 	houses = {}
 
 	for line in gp:
 		lst = line.split()
 		if len(lst) > 1:
-			if lst[1] == "house":
+			if lst[1] == 'house':
 				inHouses = True
 			# Check for ANY object within the house, and don't use its name:
-			if inHouses == True and lst[0] == "object" and lst[1] != "house":
+			if inHouses == True and lst[0] == 'object' and lst[1] != 'house':
 				endedHouse = True
 			# Check house object with controller inside
 			if inHouses == True:
-				if lst[0] == "name" and endedHouse == False:
-					houseName = lst[1].strip(";")
-				if lst[0] == "parent":
-					meterName = lst[1].strip(";")
-				if lst[0] == "cooling_system_type":
-					if (lst[1].strip(";") == "ELECTRIC"):
+				if lst[0] == 'name' and endedHouse == False:
+					houseName = lst[1].strip(';')
+				if lst[0] == 'parent':
+					meterName = lst[1].strip(';')
+				if lst[0] == 'cooling_system_type':
+					if (lst[1].strip(';') == 'ELECTRIC'):
 						isELECTRIC = True
 		elif len(lst) == 1:
 			if inHouses == True: 

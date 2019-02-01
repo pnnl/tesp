@@ -79,7 +79,9 @@ def inner_auction_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket
     time_granted = 0
     time_last = 0
     while (time_granted < time_stop):
-        time_granted = fncs.time_request(time_stop)
+        nextFNCSTime = int(min ([tnext_bid, tnext_agg, tnext_clear, tnext_adjust, time_stop]))
+        fncs.update_time_delta (nextFNCSTime-time_granted)
+        time_granted = fncs.time_request (nextFNCSTime)
         time_delta = time_granted - time_last
         time_last = time_granted
         hour_of_day = 24.0 * ((float(time_granted) / 86400.0) % 1.0)
