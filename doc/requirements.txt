@@ -1,0 +1,5 @@
+sphinx
+sphinx-autobuild
+sphinx-rtd-theme
+recommonmark
+../src/tesp_support
