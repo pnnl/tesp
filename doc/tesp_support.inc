@@ -6,26 +6,10 @@ tesp\_support package
     :undoc-members:
     :show-inheritance:
 
-tesp\_support.TMY2EPW module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: tesp_support.TMY2EPW
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 tesp\_support.api module
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: tesp_support.api
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-tesp\_support.auction module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: tesp_support.auction
     :members:
     :undoc-members:
     :show-inheritance:
@@ -62,6 +46,22 @@ tesp\_support.glm\_dict module
     :undoc-members:
     :show-inheritance:
 
+tesp\_support.hvac module
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: tesp_support.hvac
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tesp\_support.helpers module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: tesp_support.helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 tesp\_support.precool module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -70,18 +70,18 @@ tesp\_support.precool module
     :undoc-members:
     :show-inheritance:
 
-tesp\_support.prep\_auction module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: tesp_support.prep_auction
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 tesp\_support.prep\_precool module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: tesp_support.prep_precool
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tesp\_support.prep\_substation module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: tesp_support.prep_substation
     :members:
     :undoc-members:
     :show-inheritance:
@@ -150,6 +150,14 @@ tesp\_support.simple\_auction module
     :undoc-members:
     :show-inheritance:
 
+tesp\_support.substation module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: tesp_support.substation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 tesp\_support.tesp\_case module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -170,6 +178,22 @@ tesp\_support.tesp\_monitor module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: tesp_support.tesp_monitor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tesp\_support.tesp\_monitor\_ercot module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: tesp_support.tesp_monitor_ercot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tesp\_support.TMY2EPW module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: tesp_support.TMY2EPW
     :members:
     :undoc-members:
     :show-inheritance:
