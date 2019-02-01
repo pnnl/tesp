@@ -8,8 +8,11 @@ from tkinter import filedialog
 from tkinter import messagebox
 import subprocess
 import os
-import tesp_support.fncs as fncs
-import tesp_support.simple_auction as simple_auction
+try:
+  import tesp_support.fncs as fncs
+except:
+  pass
+import tesp_support.helpers as helpers
 import time
 
 import numpy as np;
@@ -292,7 +295,7 @@ class TespMonitorGUI:
             #   if topic == 'vpos1':
             #     v1 = float(value.strip('+ degFkW')) / 199185.0
             #   elif topic == 'distribution_load8':
-            #     v3 = simple_auction.parse_kw (value)
+            #     v3 = helpers.parse_kw (value)
             #   elif topic == 'vpos8':
             #     v0 = float (value.strip('+ degFkW')) / 199185.0
             #   # elif topic == 'clear_price':
@@ -417,7 +420,7 @@ class TespMonitorGUI:
         if 'vpos' in topic:
             return float(value.strip('+ degFkW')) / float(plot.voltageBase.get())
         elif 'distribution_load' in topic:
-            return simple_auction.parse_kw(value)
+            return helpers.parse_kw(value)
         elif 'airtemp' in topic:
             return float(value.strip('+ degFkW'))
         elif 'LMP' in topic:

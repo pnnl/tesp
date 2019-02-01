@@ -12,7 +12,7 @@ try:
   import tesp_support.fncs as fncs
 except:
   pass
-import tesp_support.simple_auction as simple_auction
+import tesp_support.helpers as helpers
 import time
 
 import numpy as np;
@@ -174,7 +174,7 @@ class TespMonitorGUI:
         if topic == 'power_A':
           v1 = 3.0 * float (value.strip('+ degFkW')) / 1000.0
         elif topic == 'distribution_load':
-          v3 = simple_auction.parse_kw (value)
+          v3 = helpers.parse_kw (value)
         elif topic == 'vpos7':
           v0 = float (value.strip('+ degFkW')) / 133000.0
         elif topic == 'clear_price':

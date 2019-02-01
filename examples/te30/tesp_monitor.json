@@ -100,7 +100,7 @@
     },
     {
       "args": [
-        "python",
+        "python3",
         "launch_substation.py"
       ],
       "env": [
@@ -121,7 +121,7 @@
     },
     {
       "args": [
-        "python",
+        "python3",
         "launch_pp.py"
       ],
       "env": [
