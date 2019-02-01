@@ -1,16 +1,50 @@
 #	Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: glm_dict.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
+"""Functions to create metadata from a GridLAB-D input (GLM) file
+
+Metadata is written to a JSON file, for convenient loading into a Python 
+dictionary.  It can be used for agent configuration, e.g., to initialize a 
+forecasting model based on some nominal data.  It's also used with metrics 
+output in post-processing.
+  
+Public Functions:
+	:glm_dict: Writes the JSON metadata file.  
+
+"""
+
 import json;
 import sys;
 
 def ercotMeterName(objname):
+	""" Enforces the meter naming convention for ERCOT
+
+	Replaces anything after the last _ with 'mtr'.
+
+	Args:
+		:objname: the GridLAB-D name of a house or inverter
+
+	Returns:
+		The GridLAB-D name of upstream meter
+	"""
 	k = objname.rfind('_')
 	root1 = objname[:k]
 	k = root1.rfind('_')
 	return root1[:k] + '_mtr'
 
 def glm_dict (nameroot, ercot=False):
+	""" Writes the JSON metadata file from a GLM file
+
+	This function reads 'nameroot.glm' and writes 'nameroot_glm_dict.json' 
+	The GLM file should have some meters and triplex_meters with the
+	bill_mode attribute defined, which identifies them as billing meters
+	that parent houses and inverters. If this is not the case, ERCOT naming
+	rules can be applied to identify billing meters.
+
+	Args:
+		:nameroot: the path and file name of the GLM file, without the extension
+		:ercot: boolean to request ERCOT billing meter naming. Defaults to false.
+	"""
 	ip = open (nameroot + '.glm', 'r')
 	op = open (nameroot + '_glm_dict.json', 'w')
 
