@@ -10,7 +10,7 @@ https://ieeexplore.ieee.org/document/5484381/
 
 To run the base case:
 
-1. A current build of GridLAB-D from branch feature/1048 is required. A Windows binary has been released here: https://github.com/pnnl/tesp/releases/tag/v0.2
+1. A current build of GridLAB-D from branch feature/1048 (or newer feature/1164) is required. A Windows binary has been released here: https://github.com/pnnl/tesp/releases/tag/v0.2
 
 2. "gridlabd IEEE_8500.glm" runs the base case.  
 
@@ -20,7 +20,7 @@ In order to plot results from the JSON files, Python 3 and the matplotlib packag
 
 2. "python process_gld.py IEEE_8500 &" will plot various metrics when the simulation finishes.
 
-3. "python process_voltages.py IEEE_8500" will plot all meter voltages on the same graph.
+3. "python process_voltages.py IEEE_8500 &" will plot all meter voltages on the same graph.
 
 Alternatively, you can insert "recorders" into IEEE_8500.glm, which will create CSV files
 for plotting and post-processing. The simulation takes longer with CSV file output.
@@ -90,6 +90,14 @@ respectively.  These simulations take up to 4 hours to run. Example steps are:
     c. "python plots.py inv8500" after the simulation completes
     d. "python bill.py inv8500"
     e. "python plot_invs.py inv8500"
+
+There are three GridLAB-D definitions near the top of *inv30.glm* and 
+*inv8500.glm*.  These determine the solar inverter control modes, and 
+(only) one of them should be uncommented.  
+
+- //#define INVERTER_MODE=CONSTANT_PF
+- //#define INVERTER_MODE=VOLT_VAR
+- //#define INVERTER_MODE=VOLT_WATT
 
 *InvFeederGen.m* was adapted from *IEEE_8500gener_whouses.m* in the parent directory,
 to populate *inv8500.glm* in a similar way, but with smart inverter functions added.

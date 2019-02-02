@@ -8,6 +8,6 @@ output/
 launch*.sh
 *.xml
 *.inc
-SGIP*auction.yaml
+SGIP*substation.yaml
 SGIP1new/
 

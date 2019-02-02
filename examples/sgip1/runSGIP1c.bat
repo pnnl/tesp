@@ -19,6 +19,6 @@ start /b cmd /c python -c "import tesp_support.api as tesp;tesp.pypower_loop('sg
 set FNCS_CONFIG_FILE=
 start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=SGIP1c_metrics.json SGIP1c.glm ^>gridlabd1c.log 2^>^&1 
 
-set FNCS_CONFIG_FILE=SGIP1c_auction.yaml
-start /b cmd /c python -c "import tesp_support.api as tesp;tesp.auction_loop('SGIP1c_agent_dict.json','SGIP1c')" ^>auction1c.log 2^>^&1
+set FNCS_CONFIG_FILE=SGIP1c_substation.yaml
+start /b cmd /c python -c "import tesp_support.api as tesp;tesp.substation_loop('SGIP1c_agent_dict.json','SGIP1c')" ^>substation1c.log 2^>^&1
 

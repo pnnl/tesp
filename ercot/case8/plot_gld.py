@@ -16,8 +16,8 @@ hse_keys.sort()
 mtr_keys = list(dict['billingmeters'].keys())
 mtr_keys.sort()
 xfMVA = dict['transformer_MVA']
-matBus = dict['matpower_id']
-print ('\n\nFile', sys.argv[1], 'has substation', sub_keys[0], 'at Matpower bus', matBus, 'with', xfMVA, 'MVA transformer')
+bulkBus = dict['bulkpower_bus']
+print ("\n\nFile", sys.argv[1], "has substation", sub_keys[0], "at bulk system bus", bulkBus, "with", xfMVA, "MVA transformer")
 
 # parse the substation metrics file first; there should just be one entity per time sample
 # each metrics file should have matching time points

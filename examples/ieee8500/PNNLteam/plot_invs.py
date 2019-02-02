@@ -1,5 +1,5 @@
-# Copyright (C) 2018 Battelle Memorial Institute
-# file: process_gld.py; custom for the IEEE 8500-node circuit
+# Copyright (C) 2018-2019 Battelle Memorial Institute
+# file: plot_invs.py; custom for the IEEE 8500-node circuit
 import json;
 import sys;
 import numpy as np;
@@ -14,7 +14,7 @@ inv_keys.sort()
 mtr_keys = list(dict['billingmeters'].keys())
 mtr_keys.sort()
 xfMVA = dict['transformer_MVA']
-matBus = dict['matpower_id']
+bulkBus = dict['bulkpower_bus']
 
 # parse the substation metrics file first; there should just be one entity per time sample
 # each metrics file should have matching time points

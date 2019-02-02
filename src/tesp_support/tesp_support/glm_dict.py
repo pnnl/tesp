@@ -32,7 +32,7 @@ def ercotMeterName(objname):
 	k = root1.rfind('_')
 	return root1[:k] + '_mtr'
 
-def glm_dict (nameroot, ercot=False):
+def glm_dict (nameroot, ercot=False, te30=False):
 	""" Writes the JSON metadata file from a GLM file
 
 	This function reads 'nameroot.glm' and writes 'nameroot_glm_dict.json' 
@@ -44,6 +44,7 @@ def glm_dict (nameroot, ercot=False):
 	Args:
 		:nameroot: the path and file name of the GLM file, without the extension
 		:ercot: boolean to request ERCOT billing meter naming. Defaults to false.
+	  :te30: boolean to request hierarchical meter handling in the 30-house test harness.
 	"""
 	ip = open (nameroot + '.glm', 'r')
 	op = open (nameroot + '_glm_dict.json', 'w')
@@ -51,19 +52,6 @@ def glm_dict (nameroot, ercot=False):
 	FNCSmsgName = ''
 	feeder_id = 'feeder'
 	name = ''
-	parent = ''
-	sqft = ''
-	cooling = ''
-	heating = ''
-	gallons = ''
-	phases = ''
-	rating = ''
-	inv_eta = ''
-	bat_eta = ''
-	soc = ''
-	capacity = ''
-	stories = ''
-	thermal_integrity = 'UNKNOWN'
 	bulkpowerBus = 'TBD'
 	substationTransformerMVA = 12
 	houses = {}
@@ -103,23 +91,36 @@ def glm_dict (nameroot, ercot=False):
 				inFNCSmsg = True
 			if lst[1] == 'house':
 				inHouses = True
+				parent = ''
+				sqft = 2500.0
+				cooling = 'NONE'
+				heating = 'NONE'
+				stories = 1
+				thermal_integrity = 'UNKNOWN'
 			if inFNCSmsg == True:
 				if lst[0] == 'name':
 					FNCSmsgName = lst[1].strip(';')
 					inFNCSmsg = False
 			if lst[1] == 'triplex_meter':
 				inTriplexMeters = True
+				phases = ''
 			if lst[1] == 'meter':
 				inMeters = True
 				phases = 'ABC'
 			if lst[1] == 'inverter':
 				inInverters = True
+				rating = 25000.0
+				inv_eta = 0.9
+				bat_eta = 0.8  # defaults without internal battery model
+				soc = 1.0
+				capacity = 300150.0  # 6 hr * 115 V * 435 A
 			if lst[1] == 'capacitor':
 				inCapacitors = True
 			if lst[1] == 'regulator':
 				inRegulators = True
 			if lst[1] == 'waterheater':
 				inWaterHeaters = True
+				gallons = 0.0
 			if inCapacitors == True:
 				if lst[0] == 'name':
 					lastCapacitor = lst[1].strip(';')
@@ -146,11 +147,15 @@ def glm_dict (nameroot, ercot=False):
 				if lst[1] == 'solar':
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
+					elif te30:
+						lastBillingMeter = lastMeterParent
 					inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'rated_W':rating,'resource':'solar','inv_eta':inv_eta}
 					inInverters = False
 				if lst[1] == 'SUPPLY_DRIVEN;':
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
+					elif te30:
+						lastBillingMeter = lastMeterParent
 					inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'rated_W':rating,'resource':'battery','inv_eta':inv_eta,
 						'bat_eta':bat_eta,'bat_capacity':capacity,'bat_soc':soc}
 					inInverters = False
@@ -189,7 +194,11 @@ def glm_dict (nameroot, ercot=False):
 				if lst[0] == 'parent':
 					lastMeterParent = lst[1].strip(';')
 				if lst[0] == 'bill_mode':
-					if 'flatrate' not in name:
+					if te30 == True:
+						if 'flatrate' not in name:
+							billingmeters[name] = {'feeder_id':feeder_id,'phases':phases, 'children':[]}
+							lastBillingMeter = name
+					else:
 						billingmeters[name] = {'feeder_id':feeder_id,'phases':phases, 'children':[]}
 						lastBillingMeter = name
 					inTriplexMeters = False
