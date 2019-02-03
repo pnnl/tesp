@@ -26,16 +26,56 @@ def parse_fncs_magnitude (arg):
     vals[0] *= -1.0
   return vals[0]
 
+thermalIntegrity = {
+  'VERY_LITTLE': {'Rroof':11.0,'Rwall': 4.0,'Rfloor': 4.0,'Rdoors': 3.0,'Rwindows':1/1.27,'airchange_per_hour':1.5},
+  'LITTLE':      {'Rroof':19.0,'Rwall':11.0,'Rfloor': 4.0,'Rdoors': 3.0,'Rwindows':1/0.81,'airchange_per_hour':1.5},
+  'BELOW_NORMAL':{'Rroof':19.0,'Rwall':11.0,'Rfloor':11.0,'Rdoors': 3.0,'Rwindows':1/0.81,'airchange_per_hour':1.0},
+  'NORMAL':      {'Rroof':30.0,'Rwall':11.0,'Rfloor':19.0,'Rdoors': 3.0,'Rwindows':1/0.60,'airchange_per_hour':1.0},
+  'ABOVE_NORMAL':{'Rroof':30.0,'Rwall':19.0,'Rfloor':11.0,'Rdoors': 3.0,'Rwindows':1/0.60,'airchange_per_hour':1.0},
+  'GOOD':        {'Rroof':30.0,'Rwall':19.0,'Rfloor':22.0,'Rdoors': 5.0,'Rwindows':1/0.47,'airchange_per_hour':0.5},
+  'VERY_GOOD':   {'Rroof':48.0,'Rwall':22.0,'Rfloor':30.0,'Rdoors':11.0,'Rwindows':1/0.31,'airchange_per_hour':0.5},
+  'UNKNOWN'  :   {'Rroof':30.0,'Rwall':19.0,'Rfloor':22.0,'Rdoors': 5.0,'Rwindows':1/0.47,'airchange_per_hour':0.5}
+  }
+
 class precooler:
   def make_etp_model(self):
-    self.UA = 0.0
-    self.CA = 0.0
-    self.UM = 0.0
-    self.CM = 0.0
+    Rc = thermalIntegrity[self.ti]['Rroof']
+    Rw = thermalIntegrity[self.ti]['Rwall']
+    Rf = thermalIntegrity[self.ti]['Rfloor']
+    Rg = thermalIntegrity[self.ti]['Rwindows']  # g for glazing
+    Rd = thermalIntegrity[self.ti]['Rdoors']
+    I = thermalIntegrity[self.ti]['airchange_per_hour']
+    # some hard-coded GridLAB-D defaults
+    aspect = 1.5  # footprint x/y ratio
+    A1d = 19.5    # area of one door
+    h = 8.0       # ceiling height
+    ECR = 1.0     # exterior ceiling fraction
+    EFR = 1.0     # exterior floor fraction
+    EWR = 1.0     # exterior wall fraction
+    WWR = 0.15    # window to exterior wall ratio, 0.07 in the Wiki and 0.15 in GLD
+    IWR = 1.5     # interior to exterior wall ratio
+    mf = 2.0      # thermal mass per unit floor area, GridLAB-D default is 2 but the TE30 houses range from 3 to almost 5
+    hs = 1.46     # interior heat transfer coefficient
+    VHa = 0.018
+
+    Ac = (self.sqft / self.stories) * ECR # ceiling area
+    Af = (self.sqft / self.stories) * EFR # floor area
+    perimeter = 2 * (1 + aspect) * math.sqrt(Ac / aspect) # exterior perimeter
+    Awt = self.stories * h * perimeter  # gross exterior wall area
+    Ag = WWR * Awt * EWR                # gross window area
+    Ad = self.doors * A1d               # total door area
+    Aw = (Awt - Ag - Ad) * EWR          # net exterior wall area, taking EWR as 1s
+    Vterm = self.sqft * h * VHa
+
+    self.UA = (Ac/Rc) + (Ad/Rd) + (Af/Rf) + (Ag/Rg) + (Aw/Rw) + Vterm*I
+    self.CA = 3 * Vterm
+    self.HM = hs * (Aw/EWR + Awt*IWR + Ac*self.stories/ECR)
+    self.CM = self.sqft * mf - 2*Vterm
+
     print ('ETP model', self.name, self.ti, '{:.2f}'.format (self.sqft), str(self.stories), str(self.doors))
     print ('  UA', '{:.2f}'.format (self.UA))
     print ('  CA', '{:.2f}'.format (self.CA))
-    print ('  UM', '{:.2f}'.format (self.UM))
+    print ('  HM', '{:.2f}'.format (self.HM))
     print ('  CM', '{:.2f}'.format (self.CM))
 
   def __init__(self,name,agentrow,gldrow,k,mean,stddev,lockout_time,precooling_quiet,precooling_off):

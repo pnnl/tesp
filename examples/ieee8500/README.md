@@ -80,10 +80,19 @@ version posted for the base case), which is included with TESP.  Please
 consult the TESP documentation for more information about customizations, 
 including batch files to run on Windows.
 
-inv30.glm is a small 30-house test case with smart inverters, and inv8500.glm 
-is the larger feeder model with smart inverters. Both run over FNCS with the 
-precooling agent in precool.py.  The Mac/Linux run files are run.sh and run8500.sh, 
-respectively.  These simulations take up to 4 hours to run. Example steps are:
+*inv30.glm* is a small 30-house test case with smart inverters, and 
+*inv8500.glm* is the larger feeder model with smart inverters.  
+
+*invti30.glm* is the 30-house test case with smart inverters, and the 
+house *thermal_integrity_level* attribute specified instead of the 
+individual R values and airchange_per_hour values.  The log file 
+*precoolti30.log* will contain the house equivalent thermal parameter 
+(ETP) model as estimate from the thermal integrity level.  
+
+All three run over FNCS with the precooling agent in tesp_support.precool.  
+The Mac/Linux run files are run30.sh, runti30.sh and run8500.sh, 
+respectively.  These simulations take up to 4 hours to run.  Example steps 
+are: 
 
     a. "python prepare_cases.py"
     b. "./run8500.sh" (Mac/Linux) or "run8500" (Windows)
@@ -91,18 +100,18 @@ respectively.  These simulations take up to 4 hours to run. Example steps are:
     d. "python bill.py inv8500"
     e. "python plot_invs.py inv8500"
 
-There are three GridLAB-D definitions near the top of *inv30.glm* and 
-*inv8500.glm*.  These determine the solar inverter control modes, and 
-(only) one of them should be uncommented.  
+There are three GridLAB-D definitions near the top of *inv30.glm*, 
+*invti30.glm* and *inv8500.glm*.  These determine the solar inverter 
+control modes, and (only) one of them should be uncommented.  
 
 - //#define INVERTER_MODE=CONSTANT_PF
 - //#define INVERTER_MODE=VOLT_VAR
 - //#define INVERTER_MODE=VOLT_WATT
 
-*InvFeederGen.m* was adapted from *IEEE_8500gener_whouses.m* in the parent directory,
-to populate *inv8500.glm* in a similar way, but with smart inverter functions added.
-See the TESP documentation for guidance on interpreting the other files in this
-directory.
+*InvFeederGen.m* was adapted from *IEEE_8500gener_whouses.m* in the parent 
+directory, to populate *inv8500.glm* in a similar way, but with smart 
+inverter functions added.  See the TESP documentation for guidance on 
+interpreting the other files in this directory.  
 
 - *bill.py*; calculates and plots a summary of meter bills
 - *clean.bat*; Windows script to clean out log files and output files
