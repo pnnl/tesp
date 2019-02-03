@@ -97,6 +97,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				heating = 'NONE'
 				stories = 1
 				thermal_integrity = 'UNKNOWN'
+				doors = 4
 			if inFNCSmsg == True:
 				if lst[0] == 'name':
 					FNCSmsgName = lst[1].strip(';')
@@ -166,6 +167,8 @@ def glm_dict (nameroot, ercot=False, te30=False):
 					parent = lst[1].strip(';')
 				if lst[0] == 'floor_area':
 					sqft = float(lst[1].strip(' ').strip(';')) * 1.0
+				if lst[0] == 'number_of_doors':
+					doors = int(lst[1].strip(' ').strip(';'))
 				if lst[0] == 'number_of_stories':
 					stories = int(lst[1].strip(' ').strip(';'))
 				if lst[0] == 'cooling_system_type':
@@ -177,7 +180,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				if (lst[0] == 'cooling_setpoint') or (lst[0] == 'heating_setpoint'):
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
-					houses[name] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'sqft':sqft,'stories':stories,
+					houses[name] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'sqft':sqft,'stories':stories,'doors':doors,
 						'thermal_integrity':thermal_integrity,'cooling':cooling,'heating':heating,'wh_gallons':0}
 					lastHouse = name
 					inHouses = False
