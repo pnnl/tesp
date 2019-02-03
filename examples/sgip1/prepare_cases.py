@@ -1,11 +1,11 @@
 import shutil
 import tesp_support.api as tesp
 
-tesp.glm_dict ('SGIP1a')
-tesp.glm_dict ('SGIP1b')
-tesp.glm_dict ('SGIP1c')
-tesp.glm_dict ('SGIP1d')
-tesp.glm_dict ('SGIP1e')
+tesp.glm_dict ('SGIP1a',te30=True)
+tesp.glm_dict ('SGIP1b',te30=True)
+tesp.glm_dict ('SGIP1c',te30=True)
+tesp.glm_dict ('SGIP1d',te30=True)
+tesp.glm_dict ('SGIP1e',te30=True)
 
 tesp.prep_substation ('SGIP1a')
 tesp.prep_substation ('SGIP1b')
