@@ -20,9 +20,9 @@ results from different cases on the same axes.
 - *clean.bat*; Windows batch file that removes output and temporary files
 - *clean.sh*; Linux/Mac script that removes output and temporary files
 - *compare_auction.py*; script that plots auction clearing results from all 6 cases on the same axes
-- *compare_csv.py*; script that plots PYPOWER CSV results from all 6 cases on the same axes, see file for variable choices by index
+- *compare_csv.py*; script that plots PYPOWER CSV results from all 6 cases on the same axes, see file for variable choices by index, e.g., 'python compare_csv.py 3 &' plots the (estimated) unresponsive load from all 6 cases on the same axes.
 - *compare_hvac.py*; script that plots house temperature and results from all 6 cases on the same axes
-- *compare_prices.py*; script that calculates and plots LMP from all 6 cases on the same axes
+- *compare_prices.py*; script that calculates and plots all bus LMP from one case on the same axes, e.g., 'python compare_prices.py SGIP1e &'
 - *compare_pypower.py*; script that plots PYPOWER JSON results from all 6 cases on the same axes
 - *eplus.yaml*; FNCS configuration for EnergyPlus
 - *eplus_json.yaml*; FNCS configuration for EnergyPlus agent
