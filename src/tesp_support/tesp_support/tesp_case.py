@@ -342,56 +342,44 @@ values:
     op.close()
 
     # write a YAML for the solution monitor
-    tespyamlstr = """name: tesp_monitor
-time_delta: """ + str(config['AgentPrep']['MarketClearingPeriod']) + """s
+    tespyamlstr = """name = tesp_monitor
+time_delta = """ + str(int(config['AgentPrep']['MarketClearingPeriod'])) + """s
 broker: tcp://localhost:5570
+aggregate_sub: true
 values:
   vpos7:
     topic: pypower/three_phase_voltage_B7
     default: 0
+    type: double
+    list: false
   LMP7:
     topic: pypower/LMP_B7
     default: 0
+    type: double
+    list: false
   clear_price:
-    topic: auction/clear_price
+    topic: substation/clear_price
     default: 0
+    type: double
+    list: false
   distribution_load:
     topic: gridlabdSimulator1/distribution_load
     default: 0
+    type: complex
+    list: false
   power_A:
     topic: eplus_json/power_A
     default: 0
+    type: double
+    list: false
   electric_demand_power:
     topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
     default: 0
+    type: double
+    list: false
 """
-    tespzplstr = """name = tesp_monitor
-time_delta = """ + str(int(int(config['AgentPrep']['MarketClearingPeriod']) / 60)) + """m
-broker = tcp://localhost:5570
-values
-    vpos7
-        topic = pypower/three_phase_voltage_B7
-        default = 0
-    LMP7
-        topic = pypower/LMP_B7
-        default = 0
-    clear_price
-        topic = auction/clear_price
-        default = 0
-    distribution_load
-        topic = gridlabdSimulator1/distribution_load
-        default = 0
-    power_A
-        topic = eplus_json/power_A
-        default = 0
-    electric_demand_power
-        topic = eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
-        default = 0
-"""
-#    op = open (casedir + '/tesp_monitor.yaml', 'w')
-#    print (tespyamlstr, file=op)
-    op = open (casedir + '/fncs.zpl', 'w')
-    print (tespzplstr, file=op)
+    op = open (casedir + '/tesp_monitor.yaml', 'w')
+    print (tespyamlstr, file=op)
     op.close()
 
     cmdline = """python -c "import tesp_support.api as tesp;tesp.populate_feeder('""" + cfgfile + """')" """
@@ -427,7 +415,7 @@ values
     print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=', file=op)
     print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gridlabd.log 2^>^&1', file=op)
-    print ('set FNCS_CONFIG_FILE=' + AuctionYamlFile, file=op)
+    print ('set FNCS_CONFIG_FILE=' + SubstationYamlFile, file=op)
     print ('start /b cmd /c', aucline + '^>substation.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=pypower.yaml', file=op)
     print ('start /b cmd /c', ppline + '^>pypower.log 2^>^&1', file=op)
@@ -443,7 +431,7 @@ values
            EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
     print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
            + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
-    print ('(export FNCS_CONFIG_FILE=' + AuctionYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> substation.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> substation.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + ppline + ' &> pypower.log &)', file=op)
     op.close()
     st = os.stat (shfile)
@@ -483,7 +471,7 @@ values
                            'env':[['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'gridlabd.log'}
     cmds['commands'][4] = {'args':['python', 'launch_auction.py'], 
-                           'env':[['FNCS_CONFIG_FILE', AuctionYamlFile],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                           'env':[['FNCS_CONFIG_FILE', SubstationYamlFile],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'substation.log'}
     cmds['commands'][5] = {'args':['python', 'launch_pp.py'], 
                            'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 

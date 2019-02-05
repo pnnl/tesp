@@ -60,8 +60,11 @@ class TespMonitorGUI:
     self.hrs = [0.0]
     self.y0 = [1.0]
     self.y1 = [0.0]
-    self.y2 = [0.0]
-    self.y3 = [0.0]
+    self.y2lmp = [0.0]
+    self.y2auc = [0.0]
+    self.y3fncs = [0.0]  # GridLAB-D publishes only when changed
+    self.gld_load = 0.0
+    self.y3gld = [0.0]
     self.y0min = 1.0
     self.y0max = 1.0
     self.y1min = 0.0
@@ -74,8 +77,10 @@ class TespMonitorGUI:
 
     self.ln0 = Line2D (self.hrs, self.y0, color='green')
     self.ln1 = Line2D (self.hrs, self.y1, color='red')
-    self.ln2 = Line2D (self.hrs, self.y2, color='blue')
-    self.ln3 = Line2D (self.hrs, self.y3, color='magenta')
+    self.ln2auc = Line2D (self.hrs, self.y2auc, color='black')
+    self.ln2lmp = Line2D (self.hrs, self.y2lmp, color='blue')
+    self.ln3fncs = Line2D (self.hrs, self.y3fncs, color='cyan')
+    self.ln3gld = Line2D (self.hrs, self.y3gld, color='magenta')
 
     self.ax[0].add_line (self.ln0)
     self.ax[0].set_ylabel('[pu]')
@@ -85,11 +90,13 @@ class TespMonitorGUI:
     self.ax[1].set_ylabel('[kW]')
     self.ax[1].set_title ('Primary School Load', fontsize=10)
 
-    self.ax[2].add_line (self.ln2)
+    self.ax[2].add_line (self.ln2auc)
+    self.ax[2].add_line (self.ln2lmp)
     self.ax[2].set_ylabel('[$]')
-    self.ax[2].set_title ('Clearing Price and LMP', fontsize=10)
+    self.ax[2].set_title ('LMP and Clearing Price', fontsize=10)
 
-    self.ax[3].add_line (self.ln3)
+    self.ax[3].add_line (self.ln3fncs)
+    self.ax[3].add_line (self.ln3gld)
     self.ax[3].set_ylabel('[kW]')
     self.ax[3].set_title ('Total Feeder Load', fontsize=10)
 
@@ -125,10 +132,10 @@ class TespMonitorGUI:
     lp = open (fname)
     cfg = json.loads(lp.read())
     self.commands = cfg['commands']
-    # convert seconds to minutes
-    self.time_stop = int (cfg['time_stop'] / 60)
-    self.yaml_delta = int (cfg['yaml_delta'] / 60)
-    self.hour_stop = float (self.time_stop / 60.0)
+    # no longer converting seconds to minutes
+    self.time_stop = int (cfg['time_stop'])
+    self.yaml_delta = int (cfg['yaml_delta'])
+    self.hour_stop = float (self.time_stop / 3600.0)
     dirpath = os.path.dirname (fname)
     os.chdir (dirpath)
     self.labelvar.set(dirpath)
@@ -151,11 +158,21 @@ class TespMonitorGUI:
       self.bFNCSactive = False
     print ('FNCS finalized')
 
+  def expand_limits(self, v, vmin, vmax):
+    if v < vmin:
+      vpad = 0.1 * (vmax - v)
+      vmin = v - vpad
+    if v > vmax:
+      vpad = 0.1 * (v - vmin)
+      vmax = v + vpad
+    return vmin, vmax
+
   def update_plots(self, i):
-    print ('.', end='')
+#    print ('.', end='')
 #    print ('frame', i, 'of', self.nsteps)
     bRedraw = False
-    while self.time_granted < self.time_stop: # time in minutes
+    while self.time_granted < self.time_stop: # time in seconds
+      # find the time value and index into the time (X) array
       self.time_granted = fncs.time_request(self.time_stop)
       events = fncs.get_events()
       self.root.update()
@@ -163,75 +180,83 @@ class TespMonitorGUI:
       if idx <= self.idxlast:
         continue
       self.idxlast = idx
+      h = float (self.time_granted / 3600.0)
+      self.hrs.append (h)
 
+      # find the newest Y values
       v0 = 0.0
       v1 = 0.0
-      v2 = 0.0
+      v2auc = 0.0
+      v2lmp = 0.0
       v3 = 0.0
-
       for topic in events:
         value = fncs.get_value(topic)
         if topic == 'power_A':
           v1 = 3.0 * float (value.strip('+ degFkW')) / 1000.0
         elif topic == 'distribution_load':
           v3 = helpers.parse_kw (value)
+          self.gld_load = v3
         elif topic == 'vpos7':
           v0 = float (value.strip('+ degFkW')) / 133000.0
         elif topic == 'clear_price':
-          v2 = float (value.strip('+ degFkW'))
+          v2auc = float (value.strip('+ degFkW'))
         elif topic == 'LMP7':
-          v2 = float (value.strip('+ degFkW'))
+          v2lmp = float (value.strip('+ degFkW'))
         elif topic == 'SUBSTATION7':
           v1 = float (value.strip('+ degFkW')) # already in kW
 
-      retval = [self.ln0, self.ln1, self.ln2, self.ln3]
-
-      h = float (self.time_granted / 60.0)
-      self.hrs.append (h)
+      # expand the Y axis limits if necessary, keeping a 10% padding around the range
       if v0 < self.y0min or v0 > self.y0max:
-        if v0 < self.y0min:
-          self.y0min = v0
-        if v0 > self.y0max:
-          self.y0max = v0
+        self.y0min, self.y0max = self.expand_limits (v0, self.y0min, self.y0max)
         self.ax[0].set_ylim (self.y0min, self.y0max)
         bRedraw = True
       if v1 < self.y1min or v1 > self.y1max:
-        if v1 < self.y1min:
-          self.y1min = v1
-        if v1 > self.y1max:
-          self.y1max = v1
+        self.y1min, self.y1max = self.expand_limits (v1, self.y1min, self.y1max)
         self.ax[1].set_ylim (self.y1min, self.y1max)
         bRedraw = True
-      if v2 < self.y2min or v2 > self.y2max:
-        if v2 < self.y2min:
-          self.y2min = v2
-        if v2 > self.y2max:
-          self.y2max = v2
+      if v2auc > v2lmp:
+        v2max = v2auc
+        v2min = v2lmp
+      else:
+        v2max = v2lmp
+        v2min = v2auc
+      if v2min < self.y2min or v2max > self.y2max:
+        self.y2min, self.y2max = self.expand_limits (v2min, self.y2min, self.y2max)
+        self.y2min, self.y2max = self.expand_limits (v2max, self.y2min, self.y2max)
         self.ax[2].set_ylim (self.y2min, self.y2max)
         bRedraw = True
       if v3 < self.y3min or v3 > self.y3max:
-        if v3 < self.y3min:
-          self.y3min = v3
-        if v3 > self.y3max:
-          self.y3max = v3
+        self.y3min, self.y3max = self.expand_limits (v3, self.y3min, self.y3max)
         self.ax[3].set_ylim (self.y3min, self.y3max)
         bRedraw = True
 
+      # update the Y axis data to draw
       self.y0.append (v0) # Vpu
       self.y1.append (v1) # school kW
-      self.y2.append (v2) # price
-      self.y3.append (v3) # feeder load
+      self.y2auc.append (v2auc) # price
+      self.y2lmp.append (v2lmp) # LMP
+      self.y3fncs.append (v3) # this feeder load from FNCS (could be zero if no update)
+      self.y3gld.append (self.gld_load) # most recent feeder load from FNCS
       self.ln0.set_data (self.hrs, self.y0)
       self.ln1.set_data (self.hrs, self.y1)
-      self.ln2.set_data (self.hrs, self.y2)
-      self.ln3.set_data (self.hrs, self.y3)
+      self.ln2auc.set_data (self.hrs, self.y2auc)
+      self.ln2lmp.set_data (self.hrs, self.y2lmp)
+      self.ln3fncs.set_data (self.hrs, self.y3fncs)
+      self.ln3gld.set_data (self.hrs, self.y3gld)
 
       if bRedraw:
+#        print ('redrawing axes')
         self.fig.canvas.draw()
       if i >= (self.nsteps - 1):
+        print ('finalizing FNCS')
         fncs.finalize()
+        print ('FNCS active to False')
         self.bFNCSactive = False
-      return retval
+
+      return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld,
+
+    print ('not finalizing FNCS')
+    return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld,  # in case we miss the last point
 
   def launch_all(self):
     self.root.update()
@@ -262,8 +287,6 @@ class TespMonitorGUI:
     ani = animation.FuncAnimation (self.fig, self.update_plots, frames=self.nsteps,
                                    blit=True, repeat=False, interval=0)
     self.fig.canvas.draw()
-
-#    fncs.finalize()
 
 def show_tesp_monitor ():
   root = tk.Tk()

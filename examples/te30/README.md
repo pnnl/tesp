@@ -21,7 +21,7 @@ To run and plot a case with the market, from the Terminal:
 To run a case from the GUI monitor:
 
 1. python prepare_case.py  # unless already done above
-2. python gui.py
+2. python gui.py or ./gui.sh
 3. from the GUI, click **Open** to open the file tesp_monitor.json from this directory
 4. from the GUI, click **Start All** to launch the simulations
 5. from the GUI, click **Quit** to stop all simulations and exit the GUI
@@ -32,7 +32,7 @@ To run a case from the GUI monitor:
 - *clean.sh*; Linux/Mac script that removes output and temporary files
 - *eplus.yaml*; FNCS configuration for EnergyPlus
 - *eplus_json.yaml*; FNCS configuration for EnergyPlus agent
-- *fncs.zpl*; FNCS configuration for the solution monitor
+- *gui.sh*; alternative "./gui.sh" to start a solution monitor
 - *gui.py*; invoke "python gui.py" to start a solution monitor
 - *kill5570.bat*; helper script that stops processes listening on port 5570 (Windows)
 - *kill5570.sh*; helper script that stops processes listening on port 5570 (Linux/Mac)
@@ -52,4 +52,5 @@ To run a case from the GUI monitor:
 - *TE_Challenge.glm*; GridLAB-D system definition
 - *te30_pp.json*; PYPOWER system definition
 - *tesp_monitor.json*; commands for solution monitor to run a case with market
+- *TESP_Monitor.yaml*; FNCS configuration for the solution monitor
 
