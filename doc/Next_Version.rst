@@ -87,7 +87,7 @@ Usability Enhancements
 
 These are also important for usability and widespread adoption of TESP.
 
-1. Figure 22 shows the data structure beneath a new case configuration
+1. :numref:`case_config` shows the data structure beneath a new case configuration
    graphical user interface.
 
 2. TE Challenge Message Schemas – NIST has defined several classes and
@@ -140,9 +140,10 @@ These are also important for usability and widespread adoption of TESP.
    and it would still be possible to identify metrics for individual
    stakeholders.
 
-|image21|
+.. figure:: ./media/Configuration.png
+	:name: case_config
 
-Figure 22. Case Configuration Parameters for One Feeder and One Building
+	Case Configuration Parameters for One Feeder and One Building
 
 The enhancements listed in sections 3.1 and 3.2 are of known complexity,
 and could be implemented within the next year, subject to resource
@@ -210,6 +211,4 @@ projects in transactive energy. Other test cases will have to be
 created. We expect to team with Dartmouth College in formalizing this
 process, and also to work with Case Western University in modeling their
 transactive campus project with NASA.
-
-.. |image21| image:: ./media/Configuration.png
 

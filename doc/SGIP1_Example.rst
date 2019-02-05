@@ -4,7 +4,7 @@ SGIP and TE30 Examples
 TE30 Example
 ------------
 
-Figure 17 shows a reduced-order demonstration model that
+:numref:`fig_te30` shows a reduced-order demonstration model that
 incorporates all three federated co-simulators; GridLAB-D simulating 30
 houses, EnergyPlus simulating one large building, and PYPOWER or
 MATPOWER simulating the bulk system. This model can simulate two days of
@@ -13,9 +13,10 @@ demonstrations and early testing of new code. There aren’t enough market
 participants or diverse loads to produce realistic results at scale.
 Even so, this model is the recommended starting point for TESP.
 
-|image14|
+.. figure:: ./media/TE30system.png
+	:name: fig_te30
 
-\ Figure 17. Demonstration model with 30 houses and a school
+	Demonstration model with 30 houses and a school
 
 The three-phase unresponsive load comes from a GridLAB-D player file on
 each phase, connected to the feeder primary. The EnergyPlus load
@@ -173,7 +174,7 @@ the same.
 SGIP 1 Model Overview
 ---------------------
 
-Figure 18 shows the types of assets and stakeholders considered for the
+:numref:`fig_sgip1` shows the types of assets and stakeholders considered for the
 use cases in this version. The active market participants include a
 double-auction market at the substation level, the bulk transmission and
 generation system, a large commercial building with responsive HVAC
@@ -188,15 +189,15 @@ separate TEAgents have not been implemented yet. Likewise, the planned
 new TEAgent that implements load shedding from the substation has not
 yet been implemented.
 
-\ |image15|
+.. figure:: ./media/SGIP1system.png
+	:name: fig_sgip1
 
-Figure 18. SGIP-1 system configuration with partial PV and storage
-adoption
+	SGIP-1 system configuration with partial PV and storage adoption
 
 The Circuit Model
 -----------------
 
-Figure 19 shows the bulk system model in PYPOWER. It is a small system
+:numref:`fig_pp_sgip1` shows the bulk system model in PYPOWER. It is a small system
 with three generating units and three load buses that comes with
 PYPOWER, to which we added a high-cost peaking unit to assure
 convergence of the optimal power flow in all cases. In SGIP-1
@@ -206,12 +207,12 @@ scaled up to represent multiple feeders. In this way, prices, loads and
 resources on transmission and distribution systems can impact each
 other.
 
-|image16|
+.. figure:: ./media/PYPOWERsystem.png
+	:name: fig_pp_sgip1
 
-Figure 19. Bulk System Model with Maximum Generator Real Power Output
-Capacities
+	Bulk System Model with Maximum Generator Real Power Output Capacities
 
-Figure 20 shows the topology of a 12.47-kV feeder based on the western
+:numref:`fig_taxonomy` shows the topology of a 12.47-kV feeder based on the western
 region of PNNL’s taxonomy of typical distribution feeders
 [`16 <#_ENREF_16>`__]. We use a MATLAB feeder generator script that
 produces these models from a typical feeder, including random placement
@@ -226,7 +227,7 @@ weekday. A normal day was simulated in order for the auction market
 history to stabilize, and on the second day, a bulk generation outage
 was simulated. See the code repository for more details.
 
-Figure 21 shows the building envelope for an elementary school model
+:numref:`fig_school` shows the building envelope for an elementary school model
 that was connected to the GridLAB-D feeder model at a 480-volt,
 three-phase transformer secondary. The total electric load varied from
 48 kW to about 115 kW, depending on the hour of day. The EnergyPlus
@@ -234,14 +235,15 @@ agent program collected metrics from the building model, and adjusted
 the thermostat setpoints based on real-time price, which is a form of
 passive response.
 
-|image17|
+.. figure:: ./media/FeederR1_1.png
+	:name: fig_taxonomy
 
-Figure 20. Distribution Feeder Model
-(http://emac.berkeley.edu/gridlabd/taxonomy\_graphs/)
+	Distribution Feeder Model (http://emac.berkeley.edu/gridlabd/taxonomy\_graphs/)
 
-|image18|
+.. figure:: ./media/School.png
+	:name: fig_school
 
-Figure 21. Elementary School Model
+	Elementary School Model
 
 The Growth Model
 ----------------
@@ -253,7 +255,7 @@ growth has actually been used. A planned near-term extension will cover
 automatic transformer upgrades, making use of load growth more robust
 and practical.
 
-Table 1 summarizes the growth model used in this report for SGIP-1. In
+:numref:`tbl_sgip1` summarizes the growth model used in this report for SGIP-1. In
 row 1, with no (significant) transactive mechanism, one HVAC controller
 and one auction market agent were still used to transmit PYPOWER’s LMP
 down to the EnergyPlus model, which still responded to real-time prices.
@@ -261,21 +263,22 @@ In this version, only the HVAC controllers were transactive. PV systems
 would operate autonomously at full output, and storage systems would
 operate autonomously in load-following mode.
 
-Table 1. Growth Model for SGIP-1 Simulations
+.. table:: Growth Model for SGIP-1 Simulations
+  :name: tbl_sgip1
 
-+---------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| **Case**      | **Houses**   | **HVAC Controllers**   | **Waterheaters**   | **PV Systems**   | **Storage Systems**   |
-+===============+==============+========================+====================+==================+=======================+
-| No TE         | 1594         | 1                      | 1151               | 0                | 0                     |
-+---------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| Year 0        | 1594         | 755                    | 1151               | 0                | 0                     |
-+---------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| Year 1        | 1594         | 755                    | 1151               | 159              | 82                    |
-+---------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| Year 2        | 1594         | 755                    | 1151               | 311              | 170                   |
-+---------------+--------------+------------------------+--------------------+------------------+-----------------------+
-| Year 3        | 1594         | 755                    | 1151               | 464              | 253                   |
-+---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+  +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+  | **Case**      | **Houses**   | **HVAC Controllers**   | **Waterheaters**   | **PV Systems**   | **Storage Systems**   |
+  +===============+==============+========================+====================+==================+=======================+
+  | No TE         | 1594         | 1                      | 1151               | 0                | 0                     |
+  +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+  | Year 0        | 1594         | 755                    | 1151               | 0                | 0                     |
+  +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+  | Year 1        | 1594         | 755                    | 1151               | 159              | 82                    |
+  +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+  | Year 2        | 1594         | 755                    | 1151               | 311              | 170                   |
+  +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+  | Year 3        | 1594         | 755                    | 1151               | 464              | 253                   |
+  +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
 
 Insights and Lessons Learned
 ----------------------------
@@ -306,14 +309,7 @@ be able to use AMES for day-ahead markets and unit commitment [`18
 The second lesson relates to EnergyPlus modeling, which is a completely
 different domain than power system modeling. We were able to get help
 from other PNNL staff to make small corrections in the EnergyPlus model
-depicted in Figure 21, but it’s clear we will need more building model
+depicted in :numref:`fig_school`, but it’s clear we will need more building model
 experts on the team going forward. This will be especially true as we
 integrate VOLTTRON-based agents into TESP.
-
-.. |image14| image:: ./media/TE30system.png
-.. |image15| image:: ./media/SGIP1system.png
-.. |image16| image:: ./media/PYPOWERsystem.png
-.. |image17| image:: ./media/FeederR1_1.png
-.. |image18| image:: ./media/School.png
-
 

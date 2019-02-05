@@ -5,18 +5,20 @@ Messages between Simulators and Agents
 --------------------------------------
 
 TESP simulators exchange the sets of messages shown in
-Figure 3 and Figure 4.
+:numref:`fig_msg_classes` and :numref:`fig_msg_eplus`.
 
-|image2|
+.. figure:: ./media/MessageClasses.png
+	:name: fig_msg_classes
 
-Figure 3a. Message Schemas for GridLAB-D, PYPOWER and residential agents
+	Message Schemas for GridLAB-D, PYPOWER and residential agents
 
-|image22|
+.. figure:: ./media/EplusMessageClasses.png
+	:name: fig_msg_eplus
 
-Figure 3b. Message Schemas for EnergyPlus and large-building agents
+	Message Schemas for EnergyPlus and large-building agents
 
 These messages route through FNCS in a format like
-“topic/keyword=value”. In Figure 3, the “id” would refer to a specific
+“topic/keyword=value”. In :numref:`fig_msg_flows`, the “id” would refer to a specific
 feeder, house, market, or building, and it would be the message topic.
 Once published via FNCS, any other FNCS simulator can access the value
 by subscription. For example, PYPOWER publishes two values, the
@@ -29,13 +31,15 @@ publishes a distribution load value at the substation following each
 significantly different power flow solution; PYPOWER subscribes to that
 value for its next optimal power flow solution.
 
-|image3|
+.. figure:: ./media/MessageFlows.png
+	:name: fig_msg_flows
 
-Figure 4a. Message Flows for Simulators and Transactive Agents
+	Message Flows for Simulators and Transactive Agents
 
-|image23|
+.. figure:: ./media/MonitorFlows.png
+	:name: fig_msg_soln
 
-Figure 4b. Message Flows for Solution Monitoring
+	Message Flows for Solution Monitoring
 
 EnergyPlus publishes three phase power values after each of its
 solutions (currently on five-minute intervals). These are all
@@ -48,7 +52,7 @@ double-auction market’s published clearing price, using that value for a
 real-time price (RTP) response of its HVAC load.
 
 Message flows involving the thermostat controller, at the center of
-Figure 4, are a little more involved. From the associated house within
+:numref:`fig_msg_flows`, are a little more involved. From the associated house within
 GridLAB-D, it subscribes to the air temperature, HVAC power state, and
 the HVAC power if turned on. The controller uses this information to
 help formulate a bid for electric power at the next market clearing,
@@ -60,7 +64,7 @@ several values, primarily the clearing price. The house thermostat
 controllers use that clearing price subscription, compared to their bid
 price, to adjust the HVAC thermostat setpoint. As noted above, the
 EnergyPlus building also uses the clearing price to determine how much
-to adjust its thermostat setting. Figure 3 shows several other keyword
+to adjust its thermostat setting. :numref:`fig_msg_flows` shows several other keyword
 values published by the double-auction market and thermostat
 controllers; these are mainly used to define “ramps” for the controller
 bidding strategies. See the GridLAB-D documentation, or TESP design
@@ -79,14 +83,14 @@ described in Section 3.
 TESP for Agent Developers
 -------------------------
 
-The left-hand portion of Figure 4c shows the main simulators running in 
+The left-hand portion of :numref:`fig_composition` shows the main simulators running in 
 TESP and communicating over FNCS.  For the DSO+T study, PYPOWER will be 
 upgraded to AMES and EnergyPlus will be upgraded to a Modelica-based 
 large-building simulator.  The large-building agent will also be updated.  
 The current large-building agent is written in C++.  It's functionality is 
 to write metrics from EnergyPlus, and also to adjust a thermostat slider 
 for the building.  However, it does not formulate bids for the building.  
-The right-hand portion of Figure 4c shows the other transactive agents 
+The right-hand portion of :numref:`fig_composition` shows the other transactive agents 
 implemented in Python.  These communicate directly via Python function 
 calls, i.e., not over FNCS.  There are several new agents to implement for 
 the DSO+T study, and this process will require four main tasks: 
@@ -99,11 +103,12 @@ the DSO+T study, and this process will require four main tasks:
 
 4 - Design and implement the agent code as a Python class within tesp_support. The SubstationAgent will instantiate this agent class at runtime, and call the class as needed in a time step.
 
-|image24|
+.. figure:: ./media/TESPComposition.png
+	:name: fig_composition
 
-Figure 4c. Composition of Federates in a Running TESP Simulation
+	Composition of Federates in a Running TESP Simulation
 
-Figure 4d shows the sequence of interactions between GridLAB-D, the 
+:numref:`fig_sequence` the sequence of interactions between GridLAB-D, the 
 SubstationAgent (encapsulating HVAC controllers and a double-auction 
 market) and PYPOWER.  The message hops over FNCS each consume one time 
 step.  The essential messages for market clearing are highlighted in red.  
@@ -129,17 +134,12 @@ Some typical default time steps are:
   
 2 - 15 seconds, for GridLAB-D and PYPOWER's regular power flow (PF)
   
-3 - 300 seconds, for spot-market clearing, PYPOWER's optimal power flow (OPF), EnergyPlus (not shown in Figure 4d) and the metrics aggregation.
+3 - 300 seconds, for spot-market clearing, PYPOWER's optimal power flow (OPF), EnergyPlus (not shown in :numref:`fig_sequence`) and the metrics aggregation.
 
-|image25|
+.. figure:: ./media/ClearingSequence.png
+	:name: fig_sequence
 
-Figure 4d. FNCS Message Hops around Market Clearing Time
-
-Figure 4e shows the class structure of tesp_support.  For details, see the :ref:`code-reference-label`.  
-
-|image26|
-
-Figure 4e. Class structure of the tesp_support package
+	FNCS Message Hops around Market Clearing Time
 
 Output Metrics to Support Evaluation
 ------------------------------------
@@ -160,13 +160,13 @@ considerable disk space and processing time over the handling of
 multiple CSV files. Python, and other languages, have library functions
 optimized to quickly load JSON files.
 
-|image4|
+.. figure:: ./media/IntermediateMetrics.png
+	:name: fig_int_metrics
 
-Figure 5. Partitioning the valuation metrics between simulation and
-post-processing
+	Partitioning the valuation metrics between simulation and post-processing
 
 To support these intermediate metrics, two new classes were added to the
-“tape” module of GridLAB-D, as shown in Figure 6. The volume and variety
+“tape” module of GridLAB-D, as shown in :numref:`fig_gld_collector`. The volume and variety
 of metrics generated from GridLAB-D is currently the highest among
 simulators within TESP, so it was especially important here to provide
 outputs that take less time and space than CSV files. Most of the
@@ -183,12 +183,13 @@ house or commercial building, or combined on the same meter as in net
 metering. Feeder-level metrics, primarily the real and reactive losses,
 are also collected by a fourth class that iterates over all transformers
 and lines in the model; this substation-level class has just one
-instance not shown in Figure 6. An hourly metrics output interval is
+instance not shown in :numref:`fig_gld_collector`. An hourly metrics output interval is
 shown, but this is adjustable.
 
-|image5|
+.. figure:: ./media/GLD_Collector.png
+	:name: fig_gld_collector
 
-Figure 6. New metrics collection classes for GridLAB-D
+	New metrics collection classes for GridLAB-D
 
 The initial GridLAB-D metrics are detailed in five UML diagrams, so we
 begin the UML metric descriptions with PYPOWER, which is much simpler.
@@ -196,10 +197,10 @@ During each simulation, PYPOWER will produce two JSON files, one for
 all of the generators and another for all of the FNCS interface buses to
 GridLAB-D. A third JSON file, called the dictionary, is produced before
 the simulation starts from the PYPOWER case input file. The dictionary
-serves as an aid to post-processing. Figure 7 shows the schema for all
+serves as an aid to post-processing. :numref:`fig_met_pp` shows the schema for all
 three PYPOWER metrics files.
 
-The PYPOWER dictionary (top of Figure 7) includes the system MVA base
+The PYPOWER dictionary (top of :numref:`fig_met_pp`) includes the system MVA base
 (typically 100) and GridLAB-D feeder amplification factor. The
 amplification factor is used to scale up the load from one simulated
 GridLAB-D feeder to represent many similar feeders connected to the same
@@ -214,11 +215,12 @@ on the generator id, and a dictionary (map) of FNCSBuses keyed on the
 bus id. In PYPOWER, all id values are integers, but the other
 simulators use string ids.
 
-|image6|
+.. figure:: ./media/PYPOWERMetrics.png
+	:name: fig_met_pp
 
-Figure 7. PYPOWER dictionary with generator and FNCS bus metrics
+	PYPOWER dictionary with generator and FNCS bus metrics
 
-The GenMetrics file (center of Figure 7) includes the simulation
+The GenMetrics file (center of :numref:`fig_met_pp`) includes the simulation
 starting date, time and time zone as *StartTime*, which should be the
 same in all metrics output files from that simulation. It also contains
 a dictionary (map) of three MetadataRecords, which define the array
@@ -247,7 +249,7 @@ generators and times would have to be done in post-processing, using
 built-in functions from Python’s NumPy package. The repository includes
 an example of how to do this.
 
-Turning to more complicated GridLAB-D metrics, Figure 8 provides the
+Turning to more complicated GridLAB-D metrics, :numref:`fig_dict_gld` provides the
 dictionary. At the top level, it includes the substation transformer
 size and the PYPOWER substation name for FNCS connection. There are
 four dictionaries (maps) of component types, namely houses, inverters,
@@ -262,7 +264,7 @@ When this restriction is lifted in a future version, attributes like
 *feeder\_id*, *house\_count* and *inverter\_count* will become helpful.
 At present, all *feeder\_id* attributes will have the same value, while
 *house\_count* and *inverter\_count* will simply be the length of their
-corresponding JSON dictionary objects. Figure 8 shows that a
+corresponding JSON dictionary objects. :numref:`fig_dict_gld` shows that a
 BillingMeter must have at least one House or Inverter with no upper
 limit, otherwise it would not appear in the dictionary. The
 *wh\_gallons* attribute can be used to flag a thermostat-controlled
@@ -270,7 +272,7 @@ electric waterheater, but these are not yet treated as responsive loads
 in Version 1. Other attributes like the inverter’s *rated\_W* and the
 house’s *sqft* could be useful in weighting some of the metric outputs.
 
-Figure 9 shows the structure of substation metrics output from
+:numref:`fig_met_sub` shows the structure of substation metrics output from
 GridLAB-D, consisting of real power and energy, reactive power and
 energy, and losses from all distribution components in that model. As
 with PYPOWER metrics files, the substation metrics JSON file contains
@@ -281,10 +283,10 @@ contains a dictionary (map) of SubstationRecords, each of which contains
 an array of 18 values. This structure, with minimal nesting of JSON
 objects, was designed to facilitate fast loading and navigation of
 arrays in Python. The TESP code repository includes examples of working
-with metrics output in Python. Figures 10 and 11 show how capacitor
+with metrics output in Python. :numref:`fig_met_cap` and :numref:`fig_met_reg` show how capacitor
 switching and regulator tap changing counts are captured as metrics.
 
-Figure 12 shows the structure of billing meter metrics, which is very
+:numref:`fig_met_mtr` shows the structure of billing meter metrics, which is very
 similar to that of substation metrics, except that each array contains
 30 values. The billing meter metrics aggregate real and reactive power
 for any houses and inverters connected to the meter, with several
@@ -295,11 +297,12 @@ post-processing to explore different tariff designs. It’s also possible
 to re-calculate the billing determinants from metrics that have been
 defined.
 
-|image7|
+.. figure:: ./media/GLDDictionary.png
+	:name: fig_dict_gld
 
-Figure 8. GridLAB-D dictionary
+	GridLAB-D dictionary
 
-The Range A and Range B metrics in Figure 12 refer to ANSI C84.1
+The Range A and Range B metrics in :numref:`fig_met_mtr` refer to ANSI C84.1
 [`11 <#_ENREF_11>`__]. For service voltages less than 600 V, Range A is
 +/- 5% of nominal voltage for normal operation. Range B is -8.33% to
 +5.83% of nominal voltage for limited-extent operation. Voltage
@@ -308,7 +311,7 @@ divided by average voltage, among all phases present. For three-phase
 meters, the unbalance is based on line-to-line voltages, because that is
 how motor voltage unbalance is evaluated. For triplex meters, unbalance
 is based on line-to-neutral voltages, because there is only one
-line-to-line voltage. In Figure 10, *voltage\_* refers to the
+line-to-line voltage. In :numref:`fig_met_mtr`, *voltage\_* refers to the
 line-to-neutral voltage, while *voltage12\_* refers to the line-to-line
 voltage. The *below\_10\_percent* voltage duration and count metrics
 indicate when the billing meter has no voltage. That information would
@@ -322,44 +325,50 @@ distribution, transmission, or bulk generation event. The voltage-based
 metrics also support Momentary Average Interruption Frequency Index
 (MAIFI) for shorter duration outages.
 
-|image8|
+.. figure:: ./media/SubstationMetrics.png
+	:name: fig_met_sub
 
-Figure 9. GridLAB-D substation metrics
+	GridLAB-D substation metrics
 
-|image19|
+.. figure:: ./media/CapacitorMetrics.png
+	:name: fig_met_cap
 
-Figure 10. GridLAB-D capacitor switching metrics
+	GridLAB-D capacitor switching metrics
 
-|image20|
+.. figure:: ./media/RegulatorMetrics.png
+	:name: fig_met_reg
 
-Figure 11. GridLAB-D regulator tap changing metrics
+	GridLAB-D regulator tap changing metrics
 
-|image9|
+.. figure:: ./media/BillingMeterMetrics.png
+	:name: fig_met_mtr
 
-Figure 12. GridLAB-D billing meter metrics
+	GridLAB-D billing meter metrics
 
-The house metric JSON file structure is shown in Figure 13, following
+The house metric JSON file structure is shown in :numref:`fig_met_house`, following
 the same structure as the other GridLAB-D metrics files, with 18 values
 in each array. These relate to the breakdown of total house load into
 HVAC and waterheater components, which are both thermostat controlled.
 The house air temperature, and its deviation from the thermostat
 setpoint, are also included. Note that the house bill would be included
 in billing meter metrics, not the house metrics. Inverter metrics in
-Figure 14 include 8 real and reactive power values in the array, so the
+:numref:`fig_met_inv` include 8 real and reactive power values in the array, so the
 connected resource outputs can be disaggregated from the billing meter
 outputs, which always net the connected houses and inverters. In Version
 1, the inverters will be net metered, or have their own meter, but they
 don’t have transactive agents yet.
 
-|image10|
+.. figure:: ./media/HouseMetrics.png
+	:name: fig_met_house
 
-Figure 13. GridLAB-D house metrics
+	GridLAB-D house metrics
 
-|image11|
+.. figure:: ./media/InverterMetrics.png
+	:name: fig_met_inv
 
-Figure 14. GridLAB-D inverter metrics
+	GridLAB-D inverter metrics
 
-Figure 15 shows the transactive agent dictionary and metrics file
+:numref:`fig_met_agent` shows the transactive agent dictionary and metrics file
 structures. Currently, these include one double-auction market per
 substation and one double-ramp controller per HVAC. Each dictionary
 (map) is keyed to the controller or market id. The Controller dictionary
@@ -371,7 +380,7 @@ dictionary attributes.
 
 There will be two JSON metrics output files for TEAgents during a
 simulation, one for markets and one for controllers, which are
-structured as shown at the bottom of Figure 15. The use of *StartTime*
+structured as shown at the bottom of :numref:`fig_met_agent`. The use of *StartTime*
 and Metadata is the same as for PYPOWER and GridLAB-D metrics. For
 controllers, the bid price and quantity (kw, not kwh) is recorded for
 each market clearing interval’s id. For auctions, the actual clearing
@@ -379,11 +388,12 @@ price and type are recorded for each market clearing interval’s id. That
 clearing price applies throughout the feeder, so it can be used for
 supplemental revenue calculations until more agents are developed.
 
-|image12|
+.. figure:: ./media/AgentMetrics.png
+	:name: fig_met_agent
 
-Figure 15. TEAgent dictionary and metrics
+	TEAgent dictionary and metrics
 
-The EnergyPlus dictionary and metrics structure in Figure 16 follows
+The EnergyPlus dictionary and metrics structure in :numref:`fig_met_eplus` follows
 the same pattern as PYPOWER, GridLAB-D and TEAgent metrics. There are
 42 metric values in the array, most of them pertaining to heating and
 cooling system temperatures and states. Each EnergyPlus model is
@@ -397,13 +407,14 @@ hour of day and type of day, then TESP aggregates for the whole
 building. The *electric\_demand\_power* metric is the total three-phase
 power published to GridLAB-D, including HVAC and variable loads from
 lights, refrigeration, office equipment, etc. The *kwhr\_price* will
-correspond to the market clearing price from Figure 15. Finally, the
+correspond to the market clearing price from :numref:`fig_met_agent`. Finally, the
 *ashrae\_uncomfortable\_hours* is based on a simple standardized model,
 aggregated for all zones [`14 <#_ENREF_14>`__].
 
-|image13|
+.. figure:: ./media/EplusMetrics.png
+	:name: fig_met_eplus
 
-Figure 16. EnergyPlus dictionary and metrics
+	EnergyPlus dictionary and metrics
 
 GridLAB-D Enhancements
 ----------------------
@@ -514,9 +525,10 @@ customization, code re-use, etc.
 tesp_support Package Design
 ---------------------------
 
-|uml0|
+.. figure:: ./media/tesp_support.png
+	:name: fig_tesp_support
 
-Classes in the tesp_support package.
+	Classes in the tesp_support package.
 
 Development Work Flow for tesp_support
 --------------------------------------
@@ -558,26 +570,5 @@ Suggested sequence of test cases for development:
 * To deploy, 'python setup.py sdist upload' 
 * Any user gets the changes with 'pip install tesp_support --upgrade'
 * Use 'pip show tesp_support' to verify the version and location on your computer
-
-.. |uml0| image:: ./media/tesp_support.png
-.. |image2| image:: ./media/MessageClasses.png
-.. |image3| image:: ./media/MessageFlows.png
-.. |image4| image:: ./media/IntermediateMetrics.png
-.. |image5| image:: ./media/GLD_Collector.png
-.. |image6| image:: ./media/PYPOWERMetrics.png
-.. |image7| image:: ./media/GLDDictionary.png
-.. |image8| image:: ./media/SubstationMetrics.png
-.. |image9| image:: ./media/BillingMeterMetrics.png
-.. |image10| image:: ./media/HouseMetrics.png
-.. |image11| image:: ./media/InverterMetrics.png
-.. |image12| image:: ./media/AgentMetrics.png
-.. |image13| image:: ./media/EplusMetrics.png
-.. |image19| image:: ./media/CapacitorMetrics.png
-.. |image20| image:: ./media/RegulatorMetrics.png
-.. |image22| image:: ./media/EplusMessageClasses.png
-.. |image23| image:: ./media/MonitorFlows.png
-.. |image24| image:: ./media/TESPComposition.png
-.. |image25| image:: ./media/ClearingSequence.png
-.. |image26| image:: ./media/tesp_support.png
 
 

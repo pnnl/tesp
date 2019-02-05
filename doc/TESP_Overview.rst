@@ -57,7 +57,7 @@ ultimately extends the simulation time horizon up to 20 years.
 Design Overview
 ---------------
 
-Figure 1 shows the simulation modules federated in Rev 1 of TESP.  
+:numref:`fig_federates` shows the simulation modules federated in Rev 1 of TESP.  
 GridLAB-D covers the electric power distribution system [`3 
 <#_ENREF_3>`__], MATPOWER or PYPOWER covers the bulk electric power system 
 [`4 <#_ENREF_4>`__] [`17 <#_ENREF_17>`__], and EnergyPlus covers large 
@@ -70,13 +70,14 @@ message exchange among all of the federated simulation modules [`6
 <#_ENREF_6>`__].  In this way, TESP builds mostly on proven components, 
 which helps mitigate risk in software development.  Some of these 
 components may be upgraded or replaced in future versions, as described 
-later.  However, the overall platform design in Figure 1 still applies.  
+later.  However, the overall platform design in :numref:`fig_federates` still applies.  
 
-|image0|
+.. figure:: ./media/Federates.png
+	:name: fig_federates
 
-Figure 1. TESP Rev 1 components federated through FNCS.
+	TESP Rev 1 components federated through FNCS.
 
-Many of the new components in Figure 1 were implemented in the Python 
+Many of the new components in :numref:`fig_federates` were implemented in the Python 
 programming language, which was chosen because: 
 
 1. Python is now commonly used in colleges to teach new programmers
@@ -102,7 +103,7 @@ versions allow others to study and modify just the transactive code
 without having to rebuild all of GridLAB-D. Much of the future work
 envisioned for TESP would focus on significantly expanding the numbers
 and capabilities of TEAgents. Regarding the other new work highlighted
-in Figure 1, section 1.3 (next) describes the Growth Model and section
+in :numref:`fig_federates`, section 1.3 (next) describes the Growth Model and section
 1.5 describes the Valuation scripts.
 
 Operational and Growth Models
@@ -111,7 +112,7 @@ Operational and Growth Models
 TESP adopts a time-stepping simulation that separates the operational
 model, of a system with fixed infrastructure running for hours or days,
 from the growth model, of a system with infrastructure that evolves over
-months or years. Figure 2 shows these two models in a Unified Modeling
+months or years. :numref:`fig_growth_op` shows these two models in a Unified Modeling
 Language (UML) activity diagram [`8 <#_ENREF_8>`__]. After
 configuration, the simulation begins with a system in the initial
 year-zero state, i.e. with no growth included. The operational model
@@ -141,9 +142,10 @@ quarterly or yearly, but could also be as short as weekly. After the
 last growth time step, the simulation ends for valuation by
 post-processing.
 
-|image1|
+.. figure:: ./media/GrowthOpModel.png
+	:name: fig_growth_op
 
-Figure 2. Interaction of growth model with operational model
+	Interaction of growth model with operational model
 
 Early versions of the growth model will only include:
 
@@ -164,8 +166,5 @@ planners and other agents would use in making investment decisions.
 These heuristics will execute between growth model time steps, using
 only information available at that point in the simulation.
 
-
 .. |logo| image:: ./media/Transactive.png
-.. |image0| image:: ./media/Federates.png
-.. |image1| image:: ./media/GrowthOpModel.png
 
