@@ -13,7 +13,7 @@ You may also need to upgrade the gcc and g++ compilers. This build
 procedure has been tested on a clean virtual machine with Ubuntu 16.04 
 LTS and gcc/g++ 5.4.0.
 
-When you finish the build, try RunExamples_.
+When you finish the build, try :ref:`RunExamples`.
 
 
 Preparation - Python Packages, Java, build tools
@@ -191,7 +191,7 @@ Prepare for Testing
 ~~~~~~~~~~~~~~~~~~~
 
 This command ensures Ubuntu will find all the new libraries, 
-before you try RunExamples_.
+before you try :ref:`RunExamples`.
 
 ::
 

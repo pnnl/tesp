@@ -9,7 +9,7 @@ forecasting model based on some nominal data.  It's also used with metrics
 output in post-processing.
   
 Public Functions:
-	:glm_dict: Writes the JSON metadata file.  
+    :glm_dict: Writes the JSON metadata file.  
 
 """
 
@@ -22,10 +22,10 @@ def ercotMeterName(objname):
 	Replaces anything after the last _ with 'mtr'.
 
 	Args:
-		:objname: the GridLAB-D name of a house or inverter
+	    objname (str): the GridLAB-D name of a house or inverter
 
 	Returns:
-		The GridLAB-D name of upstream meter
+		str: The GridLAB-D name of upstream meter
 	"""
 	k = objname.rfind('_')
 	root1 = objname[:k]
@@ -42,9 +42,9 @@ def glm_dict (nameroot, ercot=False, te30=False):
 	rules can be applied to identify billing meters.
 
 	Args:
-		:nameroot: the path and file name of the GLM file, without the extension
-		:ercot: boolean to request ERCOT billing meter naming. Defaults to false.
-	  :te30: boolean to request hierarchical meter handling in the 30-house test harness.
+	    nameroot (str): path and file name of the GLM file, without the extension
+	    ercot (boolean): request ERCOT billing meter naming. Defaults to false.
+	    te30 (boolean): request hierarchical meter handling in the 30-house test harness.
 	"""
 	ip = open (nameroot + '.glm', 'r')
 	op = open (nameroot + '_glm_dict.json', 'w')

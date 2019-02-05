@@ -1,0 +1,96 @@
+Bibliography
+============
+
+[1] D. J. Hammerstrom, C. D. Corbin, N. Fernandez, J. S. Homer, A.
+Makhmalbaf, R. G. Pratt\ *, et al.* (2016). *Valuation of Transactive
+Systems Final Report, PNNL-25323*. Available:
+http://bgintegration.pnnl.gov/pdf/ValuationTransactiveFinalReportPNNL25323.pdf
+
+[2] NIST. (2017). *NIST Transactive Energy Challenge*. Available:
+https://pages.nist.gov/TEChallenge/
+
+[3] D. P. Chassin, J. C. Fuller, and N. Djilali, "GridLAB-D: An
+agent-based simulation framework for smart grids," *Journal of Applied
+Mathematics,* vol. 2014, pp. 1-12, 2014.
+
+[4] R. D. Zimmerman, C. E. Murillo-Sanchez, and R. J. Thomas, "MATPOWER:
+Steady-State Operations, Planning, and Analysis Tools for Power Systems
+Research and Education," *IEEE Transactions on Power Systems,* vol. 26,
+pp. 12-19, 2011.
+
+[5] H. Hao, C. D. Corbin, K. Kalsi, and R. G. Pratt, "Transactive
+Control of Commercial Buildings for Demand Response," *IEEE Transactions
+on Power Systems,* vol. PP, pp. 1-1, 2016.
+
+[6] S. Ciraci, J. Daily, J. Fuller, A. Fisher, L. Marinovici, and K.
+Agarwal, "FNCS: a framework for power system and communication networks
+co-simulation," presented at the Proceedings of the Symposium on Theory
+of Modeling & Simulation - DEVS Integrative, Tampa, Florida, 2014.
+
+[7] J. C. Fuller, K. P. Schneider, and D. Chassin, "Analysis of
+Residential Demand Response and double-auction markets," in *2011 IEEE
+Power and Energy Society General Meeting*, 2011, pp. 1-7.
+
+[8] J. Arlow and I. Neustadt, *UML 2.0 and the Unified Process:
+Practical Object-Oriented Analysis and Design (2nd Edition)*:
+Addison-Wesley Professional, 2005.
+
+[9] H. Zhang, Y. Vorobeychik, J. Letchford, and K. Lakkaraju,
+"Data-Driven Agent-Based Modeling, with Application to Rooftop Solar
+Adoption," presented at the Proceedings of the 2015 International
+Conference on Autonomous Agents and Multiagent Systems, Istanbul,
+Turkey, 2015.
+
+[10] V. Sultan, B. Alsamani, N. Alharbi, Y. Alsuhaibany, and M.
+Alzahrani, "A predictive model to forecast customer adoption of rooftop
+solar," in *2016 4th International Symposium on Computational and
+Business Intelligence (ISCBI)*, 2016, pp. 33-44.
+
+[11] ANSI, "ANSI C84.1-2016; American National Standard for Electric
+Power Systems and Equipment—Voltage Ratings (60 Hz)," ed, 2016.
+
+[12] IEEE, "IEEE Guide for Electric Power Distribution Reliability
+Indices," *IEEE Std 1366-2012 (Revision of IEEE Std 1366-2003),* pp.
+1-43, 2012.
+
+[13] IEEE, "IEEE Guide for Collecting, Categorizing, and Utilizing
+Information Related to Electric Power DistributionInterruption Events,"
+*IEEE Std 1782-2014,* pp. 1-98, 2014.
+
+[14] ASHRAE, "ANSI/ASHRAE standard 55-2010 : thermal environmental
+conditions for human occupancy," 2010.
+
+[15] D. G. Holmberg, D. Hardin, R. Melton, R. Cunningham, and S.
+Widergren, "Transactive Energy Application Landscape Scenarios," Smart
+Grid Interoperability Panel2016.
+
+[16] K. P. Schneider, Y. Chen, D. Engle, and D. Chassin, "A Taxonomy of
+North American radial distribution feeders," in *2009 IEEE Power &
+Energy Society General Meeting*, 2009, pp. 1-6.
+
+[17] R. Lincoln. (2017). *PYPOWER*. Available:
+https://pypi.python.org/pypi/PYPOWER
+
+[18] H. Li and L. Tesfatsion, "The AMES wholesale power market test bed:
+A computational laboratory for research, teaching, and training," in
+*2009 IEEE Power & Energy Society General Meeting*, 2009, pp. 1-8.
+
+[19] J. K. Kok, C. J. Warmer, and I. G. Kamphuis, "PowerMatcher:
+multiagent control in the electricity infrastructure," presented at the
+Proceedings of the fourth international joint conference on Autonomous
+agents and multiagent systems, The Netherlands, 2005.
+
+[20] TeMix Inc. (2017). *TeMix*. Available: http://www.temix.net
+
+[21] IEEE, "IEEE Standard for Modeling and Simulation (M&S) High Level
+Architecture (HLA)-- Federate Interface Specification," *IEEE Std
+1516.1-2010 (Revision of IEEE Std 1516.1-2000),* pp. 1-378, 2010.
+
+[22] IEEE, "IEEE Standard for Modeling and Simulation (M&S) High Level
+Architecture (HLA)-- Framework and Rules," *IEEE Std 1516-2010 (Revision
+of IEEE Std 1516-2000),* pp. 1-38, 2010.
+
+[23] IEEE, "IEEE Standard for Modeling and Simulation (M&S) High Level
+Architecture (HLA)-- Object Model Template (OMT) Specification," *IEEE
+Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000),* pp. 1-110, 2010.
+

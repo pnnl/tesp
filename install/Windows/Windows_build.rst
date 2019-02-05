@@ -13,7 +13,7 @@ The Windows build procedure is very similar to that for Linux and
 Mac OSX, using MSYS2 tools that you'll execute from a MSYS2 command
 window. However, some further adjustments are necessary as described below.
 
-When you finish the build, try RunExamples_.
+When you finish the build, try :ref:`RunExamples`.
 
 Install Python Packages and Java
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

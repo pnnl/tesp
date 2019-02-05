@@ -13,7 +13,7 @@ The Mac OS X build procedure is very similar to that for Linux,
 and should be executed from the Terminal. For consistency among
 platforms, this procedure uses gcc rather than clang.
 
-When you finish the build, try RunExamples_.
+When you finish the build, try :ref:`RunExamples`.
 
 Build GridLAB-D
 ~~~~~~~~~~~~~~~

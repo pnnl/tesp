@@ -17,9 +17,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+#import os
+#import sys
+#sys.path.insert(0, os.path.abspath('.'))
+#sys.path.insert(0, os.path.abspath('../../install/Linux'))
+#sys.path.insert(0, os.path.abspath('../../install/MacOSX'))
+#sys.path.insert(0, os.path.abspath('../../install/Windows'))
 
 
 # -- General configuration ------------------------------------------------
@@ -33,7 +36,8 @@
 # ones.
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.imgmath',
-    'sphinx.ext.githubpages']
+    'sphinx.ext.githubpages',
+    'sphinx.ext.napoleon']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

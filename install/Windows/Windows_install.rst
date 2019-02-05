@@ -10,7 +10,7 @@ Installation requires three basic steps:
 To get started after basic installation:
 
 1. Try the video tutorial at https://github.com/pnnl/tesp/releases
-2. Try RunExamples_ 
+2. Try :ref:`RunExamples` 
 
 Optional steps and troubleshooting:
 
