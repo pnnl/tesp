@@ -265,6 +265,9 @@ class TespMonitorGUI:
     self.pids = []
     for row in self.commands:
       procargs = row['args']
+      if sys.platform == 'win32':
+        if procargs[0] == 'python3':
+          procargs[0] = 'python'  # python3 not defined on Windows
       procenv = os.environ.copy()
       for var in row['env']:
         procenv[var[0]] = var[1]
@@ -277,6 +280,7 @@ class TespMonitorGUI:
     print('launched', len(self.pids), 'simulators')
     self.root.update()
 
+#    print ('want to initialize FNCS', os.environ['FNCS_CONFIG_FILE'], os.getcwd())
     fncs.initialize()
     self.bFNCSactive = True
     print ('FNCS initialized')
