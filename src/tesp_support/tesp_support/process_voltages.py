@@ -1,5 +1,11 @@
 #	Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: process_voltages.py
+"""Functions to plot all billing meter voltages from GridLAB-D
+
+Public Functions:
+		:process_voltages: Reads the data and metadata, then makes the plot.  
+
+"""
 import json;
 import sys;
 import numpy as np;
@@ -10,6 +16,21 @@ except:
 	pass
 
 def process_voltages(nameroot, dictname = ''):
+	""" Plots the min and max line-neutral voltages for every billing meter
+
+	This function reads *substation_nameroot_metrics.json* and 
+	*billing_meter_nameroot_metrics.json* for the voltage data, and 
+	*nameroot_glm_dict.json* for the meter names.  
+	These must all exist in the current working directory.
+	One graph is generated with 2 subplots:
+	
+	1. The Min line-to-neutral voltage at each billing meter  
+	2. The Max line-to-neutral voltage at each billing meter  
+
+	Args:
+		nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
+		dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+	"""
 	# first, read and print a dictionary of all the monitored GridLAB-D objects
 	if len (dictname) > 0:
 			lp = open (dictname).read()

@@ -1,5 +1,11 @@
 #	Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: process_pypower.py
+"""Functions to plot bus and generator data from PYPOWER
+
+Public Functions:
+        :process_pypower: Reads the data and metadata, then makes the plots.  
+
+"""
 import json;
 #import sys;
 import numpy as np;
@@ -10,6 +16,26 @@ except:
     pass
 
 def process_pypower(nameroot):
+    """ Plots bus and generator quantities for the 9-bus system used in te30 or sgip1 examples
+
+    This function reads *bus_nameroot_metrics.json* and 
+    *gen_nameroot_metrics.json* for the data, and 
+    *nameroot_m_dict.json* for the metadata.  
+    These must all exist in the current working directory.  
+    One graph is generated with 8 subplots:
+
+    1. Bus P and Q demands, at the single GridLAB-D connection
+    2. Bus P and Q locational marginal prices (LMP), at the single GridLAB-D connection
+    3. Bus Vmin, Vmax and Vavg, at the single GridLAB-D connection
+    4. All 4 generator prices
+    5. Generator 1 P and Q output 
+    6. Generator 2 P and Q output 
+    7. Generator 3 P and Q output 
+    8. Generator 4 P and Q output 
+
+    Args:
+        nameroot (str): file name of the TESP case, not necessarily the same as the PYPOWER case, without the JSON extension
+    """
     # first, read and print a dictionary of relevant PYPOWER objects
     lp = open (nameroot + "_m_dict.json").read()
     dict = json.loads(lp)

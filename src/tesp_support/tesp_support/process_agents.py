@@ -1,5 +1,11 @@
-#	Copyright (C) 2017-2019 Battelle Memorial Institute
+#   Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: process_agents.py
+"""Functions to plot data from GridLAB-D substation agents
+
+Public Functions:
+        :process_agents: Reads the data and metadata, then makes the plots.  
+
+"""
 import json;
 import sys;
 import numpy as np;
@@ -10,6 +16,21 @@ except:
   pass
 
 def process_agents(nameroot, dictname = ''):
+    """ Plots cleared price, plus bids from the first HVAC controller
+
+    This function reads *auction_nameroot_metrics.json* and  
+    *controller_nameroot_metrics.json* for the data;
+    it reads *nameroot_glm_dict.json* for the metadata. 
+    These must all exist in the current working directory.  
+    Makes one graph with 2 subplots:
+    
+    1. Cleared price from the only auction, and bid price from the first controller
+    2. Bid quantity from the first controller
+
+    Args:
+        nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
+        dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+    """
     # first, read and print a dictionary of relevant agents
     if len (dictname) > 0:
         lp = open (dictname).read()

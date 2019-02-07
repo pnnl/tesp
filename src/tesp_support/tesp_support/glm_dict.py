@@ -19,7 +19,7 @@ import sys;
 def ercotMeterName(objname):
 	""" Enforces the meter naming convention for ERCOT
 
-	Replaces anything after the last _ with 'mtr'.
+	Replaces anything after the last _ with *mtr*.
 
 	Args:
 	    objname (str): the GridLAB-D name of a house or inverter
@@ -35,7 +35,7 @@ def ercotMeterName(objname):
 def glm_dict (nameroot, ercot=False, te30=False):
 	""" Writes the JSON metadata file from a GLM file
 
-	This function reads 'nameroot.glm' and writes 'nameroot_glm_dict.json' 
+	This function reads *nameroot.glm* and writes *nameroot_glm_dict.json* 
 	The GLM file should have some meters and triplex_meters with the
 	bill_mode attribute defined, which identifies them as billing meters
 	that parent houses and inverters. If this is not the case, ERCOT naming
@@ -44,7 +44,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 	Args:
 	    nameroot (str): path and file name of the GLM file, without the extension
 	    ercot (boolean): request ERCOT billing meter naming. Defaults to false.
-	    te30 (boolean): request hierarchical meter handling in the 30-house test harness.
+	    te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false.
 	"""
 	ip = open (nameroot + '.glm', 'r')
 	op = open (nameroot + '_glm_dict.json', 'w')

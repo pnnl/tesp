@@ -1,5 +1,11 @@
 #	Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: process_eplus.py
+"""Functions to plot data from the EnergyPlus agent
+
+Public Functions:
+        :process_eplus: Reads the data and metadata, then makes the plots.  
+
+"""
 import json;
 import sys;
 import numpy as np;
@@ -10,6 +16,19 @@ except:
     pass
 
 def process_eplus(nameroot):
+    """ Plots the min and max line-neutral voltages for every billing meter
+
+    This function reads *eplus_nameroot_metrics.json* for both metadata and data. 
+    This must exist in the current working directory.  
+    One graph is generated with 3 subplots:
+
+    1. Cooling system setpoint, actual temperature and the difference between them.
+    2. Heating system setpoint, actual temperature and the difference between them.
+    3. Price that the building controller responded to.
+
+    Args:
+        nameroot (str): name of the TESP case, not necessarily the same as the EnergyPlus case, without the extension
+    """
     # read the JSON file
     lp = open ("eplus_" + nameroot + "_metrics.json").read()
     lst = json.loads(lp)
