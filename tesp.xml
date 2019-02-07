@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.1.9</version>
+    <version>0.3.0</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -676,9 +676,6 @@
                     <platforms>all</platforms>
                     <distributionFileList>
                         <distributionFile>
-                            <origin>examples/te30/fncs.zpl</origin>
-                        </distributionFile>
-                        <distributionFile>
                             <origin>examples/te30/tesp_monitor.json</origin>
                         </distributionFile>
                         <distributionFile>
@@ -742,10 +739,19 @@
                             <origin>examples/te30/run0.bat</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/launch_auction.py</origin>
+                            <origin>examples/te30/launch_pp.py</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>examples/te30/launch_pp.py</origin>
+                            <origin>examples/te30/gui.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/gui.sh</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/launch_substation.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/te30/TESP_Monitor.yaml</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -844,6 +850,12 @@
                         <distributionFile>
                             <origin>examples/ieee8500/PNNLteam/run8500.bat</origin>
                         </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/PNNLteam/invti30.glm</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>examples/ieee8500/PNNLteam/runti30.sh</origin>
+                        </distributionFile>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -865,6 +877,9 @@
                     <distributionFileList>
                         <distributionFile>
                             <origin>ercot/README.md</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/ReadMeHPC.txt</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -1008,9 +1023,6 @@
                             <origin>ercot/case8/plots.py</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>ercot/case8/prep_ercot_auction.py</origin>
-                        </distributionFile>
-                        <distributionFile>
                             <origin>ercot/case8/prepare_case.py</origin>
                         </distributionFile>
                         <distributionFile>
@@ -1036,6 +1048,30 @@
                         </distributionFile>
                         <distributionFile>
                             <origin>ercot/case8/clean.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/clean.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/Ercot_monitor.yaml</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/kill5570.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/monitor.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/run.bat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/tesp_monitor_ercot.json</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/utilities.py</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>ercot/case8/prep_ercot_substation.py</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
