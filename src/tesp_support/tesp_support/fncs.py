@@ -1,5 +1,35 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: fncs.py
+""" Functions that provide access from Python to the FNCS library
+
+Notes:
+    Depending on the operating system, libfncs.dylib, libfncs.dll 
+    or libfncs.so must already be installed. Besides the defined Python 
+    wrapper functions, these pass-through library calls are always needed:
+
+    - *fncs.finalize*: call after the simulation completes
+    - *fncs.time_request (long long)*: request the next time step; blocks execution of this process until FNCS grants the requested time. Then, the process should check for messages from FNCS.
+
+    These pass-through calls are also available, but not used in TESP:
+
+    - *fncs.route*
+    - *fncs.update_time_delta*
+    - *fncs.get_id*
+    - *fncs.get_simulator_count*
+    - *fncs.get_events_size*
+    - *fncs.get_keys_size*
+    - *fncs.die*: stops FNCS and sends 'die' to other simulators
+
+References:
+    `ctypes <https://docs.python.org/3/library/ctypes.html>`_
+
+    `FNCS <https://github.com/FNCS/fncs/>`_
+
+Examples:
+    - under tesp_support, see substation.py, precool.py and fncsPYPOWER.py
+    - under examples, see loadshed/loadshed.py
+
+"""
 import ctypes
 import platform
 
@@ -137,30 +167,67 @@ except:
     pass
 
 def initialize(config=None):
+    """ Initialize the FNCS configuration
+
+    Args:
+        config (str): a ZPL file. If None (default), provide YAML file in FNCS_CONFIG_FILE environment variable.
+    """
     if config:
         _initialize_config(config)
     else:
         _initialize()
 
 def agentRegister(config=None):
+    """ Initialize the FNCS configuration for the agent interface
+
+    Args:
+        config (str): a ZPL file. If None (default), provide YAML file in FNCS_CONFIG_FILE environment variable.
+    """
     if config:
         _agentRegisterConfig(config)
     else:
         _agentRegister()
 
 def is_initialized():
+    """ Determine whether the FNCS library has been initialized
+
+    Returns:
+        Boolean: True if initialized, False if not.
+    """
     return 1 == _is_initialized()
 
 def publish(key, value):
+    """ Publish a value over FNCS, under the simulator name
+
+    Args:
+        key (str): topic under the simulator name
+        value (str): value
+    """
     _publish(str(key).encode('utf-8'), str(value).encode('utf-8'))
 
 def publish_anon(key, value):
+    """ Publish a value over FNCS, under the 'anonymous' simulator name
+
+    Args:
+        key (str): topic under 'anonymous'
+        value (str): value
+    """
     _publish_anon(str(key).encode('utf-8'), str(value).encode('utf-8'))
 
 def agentPublish(value):
+    """ Publish a value over FNCS, under the configured simulator name / agent name
+
+    Args:
+        value (str): value
+    """
     _agentPublish(str(value).encode('utf-8'))
 
 def get_events():
+    """ Retrieve FNCS messages after time_request returns
+
+    Returns:
+        array: tuple of decoded FNCS events
+    """
     _events = _get_events()
     size = get_events_size()
     events_tmp = [ctypes.cast(_events[i], ctypes.c_char_p).value for i in range(size)]
@@ -171,6 +238,11 @@ def get_events():
     return events
 
 def get_event_at(i):
+    """ Retrieve FNCS message by index number after time_request returns
+
+    Returns:
+        str: one decoded FNCS event
+    """
     _event = _get_event_at(i)
     event_tmp = ctypes.string_at(ctypes.cast(_event, ctypes.c_char_p).value)
     event = event_tmp.decode()
@@ -178,6 +250,11 @@ def get_event_at(i):
     return event
 
 def agentGetEvents():
+    """ Retrieve FNCS agent messages
+
+    Returns:
+        str: concatenation of agent messages
+    """
     _event = _agentGetEvents()
     event_tmp = ctypes.string_at(ctypes.cast(_event, ctypes.c_char_p).value)
     event = event_tmp.decode()
@@ -185,6 +262,14 @@ def agentGetEvents():
     return event
 
 def get_value(key):
+    """ Extract value from a FNCS message
+
+    Args:
+        key (str): the topic
+
+    Returns:
+        str: decoded value
+    """
     _value = _get_value(key.encode('utf-8'))
     value_tmp = ctypes.string_at(ctypes.cast(_value, ctypes.c_char_p).value)
     value = value_tmp.decode()
@@ -192,9 +277,25 @@ def get_value(key):
     return value
 
 def get_values_size(key):
+    """ For list publications, find how many values were published
+
+    Args:
+        key (str): the topic
+
+    Returns:
+        int: the number of values for this topic
+    """
     return _get_values_size(key.encode('utf-8'))
 
 def get_values(key):
+    """ For list publications, get the list of values
+
+    Args:
+        key (str): the topic
+
+    Returns:
+        [str]: decoded values
+    """
     _key = key.encode('utf-8')
     _values = _get_values(_key)
     size = get_values_size(_key)
@@ -206,6 +307,15 @@ def get_values(key):
     return values
 
 def get_value_at(key, i):
+    """ For list publications, get the value by index
+
+    Args:
+        key (str): the topic
+        i (int): the list index number
+
+    Returns:
+        str: decoded value
+    """
     _value = _get_value_at(key.encode('utf-8'), i)
     value_tmp = ctypes.string_at(ctypes.cast(_value, ctypes.c_char_p).value)
     value = value_tmp.decode()
@@ -213,6 +323,11 @@ def get_value_at(key, i):
     return value
 
 def get_keys():
+    """ Find the list of topics
+
+    Returns:
+        [str]: decoded topic names
+    """
     _keys = _get_keys()
     size = get_keys_size()
     keys_tmp = [ctypes.cast(_keys[i], ctypes.c_char_p).value for i in range(size)]
@@ -223,6 +338,14 @@ def get_keys():
     return keys
 
 def get_key_at(i):
+    """ Get the topic by index number
+
+    Args:
+        i (int): the index number
+
+    Returns:
+        str: decoded topic name
+    """
     _key = _get_key_at(i)
     key_tmp = ctypes.string_at(ctypes.cast(_key, ctypes.c_char_p).value)
     key = key_tmp.decode()
@@ -230,6 +353,11 @@ def get_key_at(i):
     return key
 
 def get_name():
+    """ Find the FNCS simulator name
+
+    Returns:
+        str: the name of this simulator as provided in the ZPL or YAML file
+    """
     _name = _get_name()
     name_tmp = ctypes.string_at(ctypes.cast(_name, ctypes.c_char_p).value)
     name = name_tmp.decode()
@@ -237,6 +365,11 @@ def get_name():
     return name
 
 def get_version():
+    """ Find the FNCS version
+
+    Returns:
+        int, int, int: major, minor and patch numbers
+    """
     major = ctypes.c_int()
     minor = ctypes.c_int()
     patch = ctypes.c_int()

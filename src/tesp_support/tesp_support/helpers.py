@@ -1,5 +1,7 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: helpers.py
+""" Utility functions for use within tesp_support, including new agents.
+"""
 import numpy as np
 import math
 import warnings
@@ -9,6 +11,8 @@ from copy import deepcopy
 from enum import IntEnum
 
 class ClearingType (IntEnum):
+    """ Describes the market clearing type
+    """
     NULL = 0
     FAILURE = 1
     PRICE = 2
@@ -17,6 +21,18 @@ class ClearingType (IntEnum):
     BUYER = 5
 
 class curve:
+    """ Accumulates a set of price, quantity bids for later aggregation
+
+    The default order is descending by price.
+
+    Attributes:
+        price ([float]): array of prices, in $/kWh
+        quantity ([float]): array of quantities, in kW
+        count (int): the number of collected bids
+        total (float): the total kW bidding
+        total_on (float): the total kW bidding that are currently on
+        total_off (float): the total kW bidding that are currently off
+    """
     def __init__(self):
         self.price = []
         self.quantity = []
@@ -26,11 +42,23 @@ class curve:
         self.total_off = 0.0  
 
     def set_curve_order(self, flag):
+        """ Set the curve order (by price) to ascending or descending
+
+        Args:
+            flag (str): 'ascending' or 'descending'
+        """
         if flag == 'ascending':
             self.price.reverse()
             self.quantity.reverse()
 
     def add_to_curve(self, price, quantity, is_on):
+        """ Add one point to the curve
+
+        Args:
+            price (float): the bid price, should be $/kWhr
+            quantity (float): the bid quantity, should be kW
+            is_on (Boolean): True if the load is currently on, False if not
+        """
         if quantity == 0:
             return
         self.total += quantity
@@ -69,10 +97,26 @@ class curve:
                 self.count += 1
 
 def parse_fncs_number (arg):
+    """ Parse floating-point number from a FNCS message; must not have leading sign or exponential notation
+
+    Args:
+        arg (str): the FNCS string value
+
+    Returns:
+        float: the parsed number
+    """
     return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
 
 # strip out extra white space, units (deg, degF, V, MW, MVA, KW, KVA) and ;
 def parse_fncs_magnitude (arg):
+    """ Parse the magnitude of a possibly complex number from FNCS
+
+    Args:
+        arg (str): the FNCS string value
+
+    Returns:
+        float: the parsed number, or 0 if parsing fails
+    """
     try:
         if ('d ' in arg) or ('r ' in arg):  # polar form
             tok = arg.strip('; MWVAKdrij')
@@ -103,6 +147,14 @@ def parse_fncs_magnitude (arg):
         return 0
 
 def parse_kw(arg):
+    """ Parse the kilowatt load of a possibly complex number from FNCS
+
+    Args:
+        arg (str): the FNCS string value
+
+    Returns:
+        float: the parsed number in kW, or 0 if parsing fails
+    """
     try:
         tok = arg.strip('; MWVAKdrij')
         nsign = nexp = ndot = 0
@@ -149,10 +201,15 @@ def parse_kw(arg):
         print ('parse_kw does not understand', arg)
         return 0
 
-# aggregates the buyer curve into a quadratic or straight-line fit with zero intercept, returned as
-# [Qunresp, Qmaxresp, degree, c2, c1]
-# scaled to MW instead of kW for the opf
 def aggregate_bid (crv):
+    """aggregates the buyer curve into a quadratic or straight-line fit with zero intercept
+
+    Args:
+        crv (curve): the accumulated buyer bids
+
+    Returns:
+        [float, float, int, float, float]: Qunresp, Qmaxresp, degree, c2 and c1 scaled to MW instead of kW. c0 is always zero.
+    """
     unresp = 0
     idx = 0
     pInd = np.flip(np.argsort(np.array(crv.price)), 0)

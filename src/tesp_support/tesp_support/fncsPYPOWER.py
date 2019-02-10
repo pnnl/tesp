@@ -1,5 +1,10 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: fncsPYPOWER.py
+""" PYPOWER solutions under control of FNCS for te30 and sgip1 examples
+
+Public Functions:
+    :pypower_loop: Initializes and runs the simulation.  
+"""
 import json
 import sys
 import warnings
@@ -20,6 +25,11 @@ if sys.platform != 'win32':
   import resource
 
 def summarize_opf(res):
+  """ Helper function to print optimal power flow solution (debugging)
+
+  Args:
+    res (dict): solved PYPOWER case structure
+  """
   bus = res['bus']
   gen = res['gen']
 
@@ -41,6 +51,14 @@ def summarize_opf(res):
     ++idx
 
 def load_json_case(fname):
+  """ Helper function to load PYPOWER case from a JSON file
+
+  Args:
+    fname (str): the JSON file to open
+
+  Returns:
+    dict: the loaded PYPOWER case structure
+  """
   lp = open (fname).read()
   ppc = json.loads(lp)
   ppc['bus'] = np.array (ppc['bus'])
@@ -54,6 +72,12 @@ def load_json_case(fname):
   return ppc
 
 def make_dictionary(ppc, rootname):
+  """ Helper function to write the JSON metafile for post-processing
+
+  Args:
+    ppc (dict): PYPOWER case file structure
+    rootname (str): to write rootname_m_dict.json
+  """
   fncsBuses = {}
   generators = {}
   unitsout = []
@@ -97,6 +121,14 @@ def make_dictionary(ppc, rootname):
   dp.close()
 
 def parse_mva(arg):
+  """ Helper function to parse P+jQ from a FNCS value
+
+  Args:
+    arg (str): FNCS value in rectangular format
+
+  Returns:
+    float, float: P [MW] and Q [MVAR]
+  """
   tok = arg.strip('; MWVAKdrij')
   bLastDigit = False
   bParsed = False
@@ -136,6 +168,22 @@ def parse_mva(arg):
   return p, q
 
 def pypower_loop (casefile, rootname):
+  """ Public function to start PYPOWER solutions under control of FNCS
+
+  The time step, maximum time, and other data must be set up in a JSON file.
+  This function will run the case under FNCS, manage the FNCS message traffic,
+  and shutdown FNCS upon completion. Five files are written:
+
+  - *rootname.csv*; intermediate solution results during simulation
+  - *rootname_m_dict.json*; metadata for post-processing
+  - *bus_rootname_metrics.json*; bus metrics for GridLAB-D connections, upon completion
+  - *gen_rootname_metrics.json*; bulk system generator metrics, upon completion
+  - *sys_rootname_metrics.json*; bulk system-level metrics, upon completion
+
+  Args:
+    casefile (str): the configuring JSON file name, without extension
+    rootname (str): the root filename for metrics output, without extension
+  """
 #  if len(sys.argv) == 3:
 #    rootname = sys.argv[1]
 #    casefile = sys.argv[2]

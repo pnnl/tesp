@@ -1,9 +1,22 @@
 # Copyright (C) 2018-2019 Battelle Memorial Institute
 # file: TMY2EPW.py
+"""Functions to convert Typical Meteorological Year data for EnergyPlus
+
+The input must be in TMY2 format. If only TMY3 files are available,
+see the TMY3toTMY2_ansi.c program distributed with TESP under the
+support/weather/TMY2EPW/source_code directory.
+
+Public Functions:
+    :convert_tmy2_to_epw: Converts TMY2 file to EPW.  
+
+"""
+
 import sys
 import numpy as np
 
 def removeZero(x):
+    """ helper function to strip leading '0' from a string
+    """
     if x[0]=='0':
        x=x[1:]
     return x
@@ -85,6 +98,13 @@ abbreviations = [
     ['YT','Yukon Territory','CAN']]
 
 def convert_tmy2_to_epw (fileroot):
+  """ Converts TMY2 to EPW
+
+  Reads fileroot.tmy2 and writes fileroot.epw
+
+  Args:
+    fileroot (str): The input path and base file name, without extension
+  """
   f=open(fileroot + '.tmy2','r')
   lines=f.readlines()
   f.close()
