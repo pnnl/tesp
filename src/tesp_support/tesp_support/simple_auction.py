@@ -1,9 +1,58 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: simple_auction.py
+"""Double-auction mechanism for the 5-minute markets in te30 and sgip1 examples
+
+The substation_loop module manages one instance of this class per GridLAB-D substation.
+
+Todo:
+    * Initialize and update price history statistics
+    * Allow for adjustment of clearing_scalar
+    * Handle negative price bids from HVAC agents, currently they are discarded
+    * Distribute marginal quantities and fractions; these are not currently applied to HVACs
+
+"""
 import tesp_support.helpers as helpers
 
 # Class definition
 class simple_auction:
+    """This class implements a simplified version of the double-auction market embedded in GridLAB-D.
+
+    References:
+        `Market Module Overview - Auction <http://gridlab-d.shoutwiki.com/wiki/Market_Auction>`_
+
+    Args:
+        dict (dict): a row from the agent configuration JSON file
+        key (str): the name of this agent, which is the market key from the agent configuration JSON file
+
+    Attributes:
+        name (str): the name of this auction, also the market key from the configuration JSON file
+        std_dev (float): the historical standard deviation of the price, in $/kwh, from dict
+        mean (float): the historical mean price in $/kwh, from dict
+        period (float): the market clearing period in seconds, from dict
+        pricecap (float): the maximum allowed market clearing price, in $/kwh, from dict
+        max_capacity_reference_bid_quantity (float):
+        statistic_mode (int): always 1, not used, from dict
+        stat_mode (str): always ST_CURR, not used, from dict
+        stat_interval (str): always 86400 seconds, for one day, not used, from dict
+        stat_type (str): always mean and standard deviation, not used, from dict
+        stat_value (str): always zero, not used, from dict
+        curve_buyer (curve): data structure to accumulate buyer bids
+        curve_seller (curve): data structure to accumulate seller bids
+        refload (float): the latest substation load from GridLAB-D
+        lmp (float): the latest locational marginal price from the bulk system market
+        unresp (float): unresponsive load, i.e., total substation load less the bidding, running HVACs
+        agg_unresp (float): aggregated unresponsive load, i.e., total substation load less the bidding, running HVACs
+        agg_resp_max (float): total load of the bidding HVACs
+        agg_deg (int): degree of the aggregate bid curve polynomial, should be 0 (zero or one bids), 1 (2 bids) or 2 (more bids)
+        agg_c2 (float): second-order coefficient of the aggregate bid curve
+        agg_c1 (float): first-order coefficient of the aggregate bid curve
+        clearing_type (helpers.ClearingType): describes the solution type or boundary case for the latest market clearing
+        clearing_quantity (float): quantity at the last market clearing
+        clearing_price (float): price at the last market clearing
+        marginal_quantity (float): quantity of a partially accepted bid
+        marginal_frac (float): fraction of the bid quantity accepted from a marginal buyer or seller 
+        clearing_scalar (float): used for interpolation at boundary cases, always 0.5
+    """
     # ====================Define instance variables ===================================
     def __init__(self,dict,key):
         self.name = key
@@ -12,7 +61,7 @@ class simple_auction:
         self.period = float(dict['period'])
         self.pricecap = float(dict['pricecap'])
         self.max_capacity_reference_bid_quantity = float(dict['max_capacity_reference_bid_quantity'])
-        self.statistic_mode = float(dict['statistic_mode'])
+        self.statistic_mode = int(dict['statistic_mode'])
         self.stat_mode = dict['stat_mode']
         self.stat_interval = dict['stat_interval']
         self.stat_type = dict['stat_type']
@@ -36,36 +85,61 @@ class simple_auction:
         self.marginal_quantity = 0.0
         self.marginal_frac = 0.0
 
-        self.clearing_scalar = 0.5 # TODO - this used to be configurable
+        self.clearing_scalar = 0.5
 
     def set_refload (self, kw):
+        """Sets the refload attribute
+
+        Args:
+            kw (float): GridLAB-D substation load in kw
+        """
         self.refload = kw
 
     def set_lmp (self, lmp):
+        """Sets the lmp attribute
+
+        Args:
+            lmp (float): locational marginal price from the bulk system market
+        """
         self.lmp = lmp
                 
     def initAuction (self):
-        # TODO: set up the statistical history
+        """Sets the clearing_price and lmp to the mean price
+        """
         self.clearing_price = self.lmp = self.mean
 
-    def update_statistics (self): # TODO
+    def update_statistics (self):
+        """Update price history statistics - not implemented
+        """
         sample_need = 0
 
     def clear_bids (self):
+        """Re-initializes curve_buyer and curve_seller, sets the unresponsive load estimate to the total substation load.
+        """
         self.curve_buyer = helpers.curve ()
         self.curve_seller = helpers.curve ()
         self.unresp = self.refload
                        
     def collect_bid (self, bid):
+        """Gather HVAC bids into curve_buyer
+
+        Also adjusts the unresponsive load estimate, by subtracting the HVAC power
+        if the HVAC is on.
+
+        Args:
+            bid ([float, float, Boolean]): price in $/kwh, quantity in kW and the HVAC on state
+        """
         price = bid[0]
         quantity = bid[1]
         is_on = bid[2]
         if is_on:
             self.unresp -= quantity
-        if price > 0.0:  # TODO: if bidding negative, this assumes the HVAC load will not respond
+        if price > 0.0:
             self.curve_buyer.add_to_curve (price, quantity, is_on)
 
     def aggregate_bids (self):
+        """Aggregates the unresponsive load and responsive load bids for submission to the bulk system market
+        """
         if self.unresp > 0:
             self.curve_buyer.add_to_curve (self.pricecap, self.unresp, True)
         else:
@@ -77,6 +151,16 @@ class simple_auction:
         self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.agg_c1 = helpers.aggregate_bid (self.curve_buyer)
 
     def clear_market (self, tnext_clear=0, time_granted=0):
+        """Solves for the market clearing price and quantity
+
+        Uses the current contents of curve_seller and curve_buyer.
+        Updates clearing_price, clearing_quantity, clearing_type,
+        marginal_quantity and marginal_frac.
+
+        Args:
+            tnext_clear (int): next clearing time in FNCS seconds, should be <= time_granted, for the log file only
+            time_granted (int): the current time in FNCS seconds, for the log file only
+        """
         self.curve_seller.add_to_curve (self.lmp, self.max_capacity_reference_bid_quantity, True)
         if self.curve_seller.count > 0:
             self.curve_seller.set_curve_order ('ascending')

@@ -4,6 +4,12 @@
 
 Public Functions:
     :substation_loop: initializes and runs the agents
+
+Todo:
+    * Getting an overflow error when killing process - investigate whether that happens if simulation runs to completion
+    * Allow changes in the starting date and time; now it's always midnight on July 1, 2013
+    * Allow multiple markets per substation, e.g., 5-minute and day-ahead for the DSO+T study
+
 """
 import sys
 try:
@@ -22,7 +28,6 @@ from datetime import timedelta
 if sys.platform != 'win32':
   import resource
 
-# these should be in a configuration file as well; TODO synch the proper hour of day
 def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
     """Helper function that initializes and runs the agents
 
@@ -51,7 +56,7 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
     lp = open (configfile).read()
     dict = json.loads(lp)
 
-    market_key = list(dict['markets'].keys())[0]  # TODO: only using the first market
+    market_key = list(dict['markets'].keys())[0]  # only using the first market
     market_row = dict['markets'][market_key]
     unit = market_row['unit']
 
@@ -103,7 +108,6 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
         time_delta = time_granted - time_last
         time_last = time_granted
         hour_of_day = 24.0 * ((float(time_granted) / 86400.0) % 1.0)
-# TODO - getting an overflow error when killing process - investigate whether that happens if simulation runs to completion
 #        print (dt_now, time_delta, timedelta (seconds=time_delta))
         dt_now = dt_now + timedelta (seconds=time_delta)
         day_of_week = dt_now.weekday()

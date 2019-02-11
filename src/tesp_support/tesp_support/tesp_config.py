@@ -1,5 +1,14 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: tesp_config.py
+"""Presents a GUI to configure and package TESP cases
+
+Public Functions:
+		:show_tesp_config: Initializes and runs the GUI
+
+Todo:
+		* Possible data loss if the user updated the number of Monte Carlo cases, but didn't click the Update button before saving the case configuration.
+
+"""
 import sys
 import json
 import tkinter as tk
@@ -168,8 +177,6 @@ class TespConfigGUI:
 
 		#ttk.Style().configure('TButton', background='blue')
 		ttk.Style().configure('TButton', foreground='blue')
-#		btn = ttk.Button(self.f1, text='Generate Case Files', command=self.GenerateFiles)
-#		btn.grid(row=len(varsTM) + 1, column=1, sticky=tk.NSEW)
 		btn = ttk.Button(self.f1, text='Save Config...', command=self.SaveConfig)
 		btn.grid(row=len(varsTM) + 2, column=1, sticky=tk.NSEW)
 		btn = ttk.Button(self.f1, text='Open Config...', command=self.OpenConfig)
@@ -355,9 +362,6 @@ class TespConfigGUI:
 			w2.grid(row=i+2+startRow, column=2, sticky=tk.NSEW)
 			w3.grid(row=i+2+startRow, column=3, sticky=tk.NSEW)
 
-	def GenerateFiles(self):
-		print('TODO: save configuration, separate script will write all files to case working directory')
-
 	def ReadFrame(self, f, vars):
 		for w in f.grid_slaves():
 			col = int(w.grid_info()['column'])
@@ -388,7 +392,7 @@ class TespConfigGUI:
 		band1 = 'Mid' in col1
 		band2 = 'Mid' in col2
 		band3 = 'Mid' in col3
-		numCases = int (self.f7.children['rows'].get())	# TODO - what if user changed entry and didn't click Update...global numCases?
+		numCases = int (self.f7.children['rows'].get())	# what if user changed entry and didn't click Update...global numCases?
 		for w in self.f7.grid_slaves():
 			row = int(w.grid_info()['row'])
 			col = int(w.grid_info()['column'])

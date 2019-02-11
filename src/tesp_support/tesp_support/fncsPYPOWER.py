@@ -384,7 +384,7 @@ def pypower_loop (casefile, rootname):
       busidx = busnum - 1
       row = bus[busidx].tolist()
       # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
-      PD = row[2] + resp # TODO, if more than one FNCS bus, track scaled_resp separately
+      PD = row[2] + resp # the ERCOT version shows how to track scaled_resp separately for each FNCS bus
       Vpu = row[7]
       bus_accum[str(busnum)][0] += row[13]*0.001
       bus_accum[str(busnum)][1] += row[14]*0.001
@@ -490,10 +490,6 @@ def pypower_loop (casefile, rootname):
       print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
 
 # main_loop()
-
-#with warnings.catch_warnings():
-#  warnings.simplefilter("ignore") # TODO - pypower is using NumPy doubles for integer indices
-
 #  profiler = cProfile.Profile ()
 #  profiler.runcall (main_loop)
 #  stats = pstats.Stats(profiler)

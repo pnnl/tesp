@@ -4,6 +4,10 @@
 
 Public Functions:
     :populate_feeder: processes one GridLAB-D input file
+
+Todo:
+    * Verify the level zero mobile home thermal integrity properties; these were copied from the MATLAB feeder generator
+
 """
 import sys;
 import re;
@@ -55,7 +59,7 @@ def gld_strict_name(val):
         val (str): the input name
 
     Returns:
-        str: val with all - replaced by _, and any leading digit replaced by gld_
+        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
     """
     if val[0].isdigit():
         val = 'gld_' + val
@@ -347,7 +351,7 @@ apartmentProperties = [[13.4, 11.7,  9.4, 1, 1, 1, 1, 2.2, .75, 2.8,  1.9],
                        [20.3, 11.7, 12.7, 2, 1, 2, 2, 2.7, 0.25, 3.0, 2.0],
                        [28.7, 14.3, 12.7, 2, 2, 3, 4, 6.3, .125, 3.2, 2.1]]
 
-mobileHomeProperties = [[   0,    0,    0, 0, 0, 0, 0,   0,   0,   0,   0], # TODO - is it really this bad?
+mobileHomeProperties = [[   0,    0,    0, 0, 0, 0, 0,   0,   0,   0,   0], # is it really this bad?
                         [13.4,  9.2, 11.7, 1, 1, 1, 1, 2.2, .75, 2.8, 1.9],
                         [24.1, 11.7, 18.1, 2, 2, 1, 2,   3, .75, 3.5, 2.2]]
 

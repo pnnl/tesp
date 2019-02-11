@@ -340,7 +340,7 @@ def prep_substation (gldfileroot, jsonfile = ''):
         lp = open (jsonfile).read()
         config = json.loads(lp)
 
-        # overwrite the default auction and controller parameters - TODO weekend parameters
+        # overwrite the default auction and controller parameters
         dt = int (config['AgentPrep']['TimeStepGldAgents'])
         period = int (config['AgentPrep']['MarketClearingPeriod'])
 
