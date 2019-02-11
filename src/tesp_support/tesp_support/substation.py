@@ -1,5 +1,10 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: substation.py
+"""Manages the simple_auction and hvac agents for the te30 and sgip1 examples
+
+Public Functions:
+    :substation_loop: initializes and runs the agents
+"""
 import sys
 try:
   import tesp_support.fncs as fncs
@@ -19,6 +24,17 @@ if sys.platform != 'win32':
 
 # these should be in a configuration file as well; TODO synch the proper hour of day
 def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
+    """Helper function that initializes and runs the agents
+
+    Reads configfile. Writes *auction_metrics_root_metrics.json* and
+    *controller_metrics_root_metrics.json* upon completion.
+
+    Args:
+        configfile (str): fully qualified path to the JSON agent configuration file
+        metrics_root (str): base name of the case for metrics output
+        hour_stop (float): number of hours to simulation
+        flag (str): WithMarket or NoMarket to use the simple_auction, or not
+    """
     print ('starting substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
     print ('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad', flush=True)
     bWantMarket = True
@@ -179,6 +195,11 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
 
 
 def substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
+    """Wrapper for *inner_substation_loop*
+
+    When *inner_substation_loop* finishes, timing and memory metrics will be printed
+    for non-Windows platforms.
+    """
     inner_substation_loop (configfile, metrics_root, hour_stop, flag)
 #    gc.enable() 
 #    gc.set_debug(gc.DEBUG_LEAK) 

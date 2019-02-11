@@ -1,5 +1,19 @@
 # Copyright (C) 2018-2019 Battelle Memorial Institute
 # file: precool.py
+"""Classes for NIST TE Challenge 2 example
+
+The precool_loop class manages time stepping and FNCS messages
+for the precooler agents, which adjust thermostat setpoints in 
+response to time-of-use rates and overvoltages. The precooler agents
+also estimate house equivalent thermal parameter (ETP) models based
+on total floor area, number of stories, number of exterior doors and
+and estiamted thermal integrity level. This ETP estimate serves as
+an example for other agent developers; it's not actually used by the
+precooler agent.
+
+Public Functions:
+    :precooler_loop: Initializes and runs the precooler agents.  
+"""
 import string;
 import sys;
 try:
@@ -13,6 +27,11 @@ if sys.platform != 'win32':
   import resource
 
 def parse_fncs_magnitude (arg):
+  """Helper function to find the magnitude of a possibly complex number from FNCS
+
+  Args:
+    arg (str): The FNCS value
+  """
   tok = arg.strip('+-; MWVAFKdegrij')
   vals = re.split(r'[\+-]+', tok)
   if len(vals) < 2: # only a real part provided
@@ -38,7 +57,59 @@ thermalIntegrity = {
   }
 
 class precooler:
+  """This agent manages the house thermostat for time-of-use and overvoltage responses.
+
+  References:
+    `NIST TE Modeling and Simulation Challenge <https://www.nist.gov/engineering-laboratory/smart-grid/hot-topics/transactive-energy-modeling-and-simulation-challenge>`_
+
+  Args:
+    name (str): name of this agent
+    agentrow (dict): row from the FNCS configuration dictionary for this agent
+    gldrow (dict): row from the GridLAB-D metadata dictionary for this agent's house
+    k (float): bidding function denominator, in multiples of stddev
+    mean (float): mean of the price
+    stddev (float): standard deviation of the price
+    lockout_time (float): time in seconds between allowed changes due to voltage
+    precooling_quiet (float): time of day in seconds when precooling is allowed
+    precooling_off (float): time of day in seconds when overvoltage precooling is always turned off
+
+  Attributes:
+    name (str): name of this agent
+    meterName (str):name of the corresponding triplex_meter in GridLAB-D, from agentrow
+    night_set (float): preferred thermostat setpoint during nighttime hours, deg F, from agentrow
+    day_set (float): preferred thermostat setpoint during daytime hours, deg F, from agentrow
+    day_start_hour (float): hour of the day when daytime thermostat setting period begins, from agentrow
+    day_end_hour (float): hour of the day when daytime thermostat setting period ends, from agentrow
+    deadband (float): thermostat deadband in deg F, invariant, from agentrow, from agentrow
+    vthresh (float): meter line-to-neutral voltage that triggers precooling, from agentrow
+    toffset (float): temperature setpoint change for precooling, in deg F, from agentrow
+    k (float): bidding function denominator, in multiples of stddev
+    mean (float): mean of the price
+    stddev (float): standard deviation of the price
+    lockout_time (float): time in seconds between allowed changes due to voltage
+    precooling_quiet (float): time of day in seconds when precooling is allowed
+    precooling_off (float): time of day in seconds when overvoltage precooling is always turned off
+    air_temp (float): current air temperature of the house in deg F
+    mtr_v (float): current line-neutral voltage at the triplex meter
+    basepoint (float): the preferred time-scheduled thermostat setpoint in deg F
+    setpoint (float): the thermostat setpoint, including price response, in deg F
+    lastchange (float): time of day in seconds when the setpoint was last changed
+    precooling (Boolean): True if the house is precooling, False if not
+    ti (int): thermal integrity level, as enumerated for GridLAB-D, from gldrow
+    sqft (float: total floor area in square feet, from gldrow
+    stories (int): number of stories, from gldrow
+    doors (int): number of exterior doors, from gldrow
+    UA (float): heat loss coefficient
+    CA (float): total air thermal mass
+    HM (float): interior mass surface conductance
+    CM (float): total house thermal mass
+  """
   def make_etp_model(self):
+    """ Sets the ETP parameters from configuration data
+
+    References:
+        `Thermal Integrity Table Inputs and Defaults <http://gridlab-d.shoutwiki.com/wiki/Residential_module_user%27s_guide#Thermal_Integrity_Table_Inputs_and_Defaults>`_
+    """
     Rc = thermalIntegrity[self.ti]['Rroof']
     Rw = thermalIntegrity[self.ti]['Rwall']
     Rf = thermalIntegrity[self.ti]['Rfloor']
@@ -112,12 +183,27 @@ class precooler:
     self.make_etp_model()
 
   def set_air_temp (self,str):
+    """Set the air_temp member variable
+
+    Args:
+        str (str): FNCS message with temperature in degrees Fahrenheit
+    """
     self.air_temp = parse_fncs_magnitude (str)
 
   def set_voltage (self,str):
+    """ Sets the mtr_v attribute
+
+    Args:
+        str (str): FNCS message with meter line-neutral voltage
+    """
     self.mtr_v = parse_fncs_magnitude (str)
 
   def check_setpoint_change (self, hour_of_day, price, time_seconds):
+    """Update the setpoint for time of day and price
+
+    Returns:
+        Boolean: True if the setpoint changed, False if not
+    """
     # time-scheduled changes to the basepoint
     if hour_of_day >= self.day_start_hour and hour_of_day <= self.day_end_hour:
       self.basepoint = self.day_set
@@ -144,9 +230,23 @@ class precooler:
     return False
 
   def get_temperature_deviation(self):
+    """For metrics, find the difference between air temperature and time-scheduled (preferred) setpoint
+
+    Returns:
+        float: absolute value of deviation
+    """
     return abs (self.air_temp - self.basepoint)
 
 def precool_loop (nhours, metrics_root):
+  """Function that supervises FNCS messages and time stepping for precooler agents
+
+  Opens metrics_root_agent_dict.json and metrics_root_glm_dict.json for configuration.
+  Writes precool_metrics_root.json at completion.
+
+  Args:
+    nhours (float): number of hours to simulate
+    metrics_root (str): name of the case, without file extension
+  """
   time_stop = int (3600 * nhours)
 
   lp = open (metrics_root + "_agent_dict.json").read()
