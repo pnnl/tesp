@@ -1,5 +1,10 @@
 # Copyright (C) 2018-2019 Battelle Memorial Institute
 # file: feederGenerator.py
+"""Replaces ZIP loads with houses, and optional storage and solar generation.
+
+Public Functions:
+    :populate_feeder: processes one GridLAB-D input file
+"""
 import sys;
 import re;
 import os.path;
@@ -44,11 +49,24 @@ solar_inv_mode = 'CONSTANT_PF'
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
 def gld_strict_name(val):
+    """Sanitizes a name for GridLAB-D publication to FNCS
+
+    Args:
+        val (str): the input name
+
+    Returns:
+        str: val with all - replaced by _, and any leading digit replaced by gld_
+    """
     if val[0].isdigit():
         val = 'gld_' + val
     return val.replace ('-', '_')
 
 def write_solar_inv_settings (op):
+    """Writes volt-var and volt-watt settings for solar inverters
+
+    Args:
+        op (file): an open GridLAB-D input file
+    """
     print ('    four_quadrant_control_mode ${INVERTER_MODE};', file=op)
     print ('    V_base ${INV_VBASE};', file=op)
     print ('    V1 ${INV_V1};', file=op)
@@ -79,6 +97,11 @@ tier2_price = 0.0
 tier3_energy = 0.0
 tier3_price = 0.0
 def write_tariff (op):
+    """Writes tariff information to billing meters
+
+    Args:
+        op (file): an open GridLAB-D input file
+    """
     print ('  bill_mode', bill_mode + ';', file=op)
     print ('  price', '{:.4f}'.format (kwh_price) + ';', file=op)
     print ('  monthly_fee', '{:.2f}'.format (monthly_fee) + ';', file=op)
@@ -132,6 +155,11 @@ rgnThermalPct = [[[0.0805,0.0724,0.1090,0.0867,0.1384,0.1264,0.1297],  # Region 
                   [0.0000,0.0491,0.0333]]]
 
 def selectResidentialBuilding(rgnTable,prob):
+    """Writes volt-var and volt-watt settings for solar inverters
+
+    Args:
+        op (file): an open GridLAB-D input file
+    """
     row = 0
     total = 0
     for row in range(len(rgnTable)):
