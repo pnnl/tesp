@@ -1,5 +1,19 @@
 # Copyright (C) 2018-2019 Battelle Memorial Institute
 # file: tesp_monitor_ercot.py
+"""Presents a GUI to launch a TESP simulation and monitor its progress
+
+This version differs from the one in *tesp_monitor*, in that the
+user can select the FNCS federate and topic to plot. The number of
+monitored plots is still fixed at 4.
+
+Public Functions:
+  :show_tesp_monitor: Initializes and runs the monitor GUI
+
+References:
+  `Graphical User Interfaces with Tk <https://docs.python.org/3/library/tk.html>`_
+
+  `Matplotlib Animation <https://matplotlib.org/api/animation_api.html>`_
+"""
 import sys
 import json
 import tkinter as tk
@@ -28,6 +42,26 @@ import yaml
 
 
 class TespMonitorGUI:
+    """Version of the monitor GUI that hosts 4 choosable plots
+
+    Args:
+        master:
+
+    Attributes:
+        root (Tk): the TCL Tk toolkit instance
+        top (Window): the top-level TCL Tk Window
+        labelvar (StringVar): used to display the monitor JSON configuration file path
+        plot0 (ChoosablePlot): first plot
+        plot1 (ChoosablePlot): second plot
+        plot2 (ChoosablePlot): third plot
+        plot3 (ChoosablePlot): fourth plot
+        topicDict:
+        plots (Frame):
+        scrollbar (Scrollbar):
+        frameInCanvas (Frame):
+        canvas (FigureCanvasTkAgg): a TCL Tk canvas that can host Matplotlib
+        bFNCSactive (Boolean): True if a TESP simulation is running with other FNCS federates, False if not
+    """
     def __init__(self, master):
         self.root = master
         self.root.protocol('WM_DELETE_WINDOW', self.on_closing)
@@ -176,10 +210,16 @@ class TespMonitorGUI:
         #   pass
 
     def onFrameConfigure(self, event):
-        '''Reset the scroll region to encompass the inner frame'''
+        """Reset the scroll region to encompass the inner frame
+        """
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def on_closing(self):
+        """Verify whether the user wants to stop TESP simulations before exiting the monitor
+
+        This monitor is itself a FNCS federate, so it can not be shut down without shutting
+        down all other FNCS federates in the TESP simulation.
+        """
         if messagebox.askokcancel('Quit', 'Do you want to close this window? This is likely to stop all simulations.'):
             self.root.quit()
             self.root.destroy()
@@ -188,6 +228,8 @@ class TespMonitorGUI:
                 self.bFNCSactive = False
 
     def Quit(self):
+        """Shuts down this monitor, and also shuts down FNCS if active
+        """
         self.root.quit()
         self.root.destroy()
         if self.bFNCSactive:
@@ -195,6 +237,8 @@ class TespMonitorGUI:
             self.bFNCSactive = False
 
     def OpenConfig(self):
+        """Read the JSON configuration file for this monitor, and initialize the plot axes
+        """ 
         fname = filedialog.askopenfilename(initialdir='.',
                                            initialfile='tesp_monitor_ercot.json',
                                            title='Open JSON Monitor Configuration',
@@ -260,6 +304,8 @@ class TespMonitorGUI:
         self.plot3.canvas.draw()
 
     def kill_all(self):
+        """Shut down all FNCS federates in TESP, except for this monitor
+        """
         for proc in self.pids:
             print('trying to kill', proc.pid)
             proc.terminate()
@@ -271,6 +317,17 @@ class TespMonitorGUI:
         print('FNCS finalized')
 
     def update_plots(self, i):
+        """This function is called by Matplotlib for each animation frame
+
+        Each time called, collect FNCS messages until the next time to plot
+        has been reached. Then update the plot quantities and return the
+        Line2D objects that have been updated for plotting. Check for new
+        data outside the plotted vertical range, which triggers a full
+        re-draw of the axes. On the last frame, finalize FNCS.
+
+        Args:
+          i (int): the animation frame number
+        """
         print('.', end='')
         #    print ('frame', i, 'of', self.nsteps)
         bRedraw = False
@@ -417,6 +474,16 @@ class TespMonitorGUI:
             return retval
 
     def CalculateValue(self, topic, value, plot):
+        """Parses a value from FNCS to plot
+
+        Args:
+            topic (str): the FNCS topic
+            value (str): the FNCS value
+            plot (ChoosablePlot): the plot that will be updated; contains the voltage base if needed
+
+        Returns:
+            float: the parsed value
+        """
         if 'vpos' in topic:
             return float(value.strip('+ degFkW')) / float(plot.voltageBase.get())
         elif 'distribution_load' in topic:
@@ -429,6 +496,8 @@ class TespMonitorGUI:
             return float(value.strip('+ degFkW'))
 
     def launch_all(self):
+        """Launches the simulators, initializes FNCS and starts the animated plots
+        """
         self.root.update()
 
         print('launching all simulators')
@@ -471,6 +540,8 @@ class TespMonitorGUI:
 #    fncs.finalize()
 
 def show_tesp_monitor():
+    """Creates and displays the monitor GUI
+    """
     root = tk.Tk()
     root.title('Transactive Energy Simulation Platform: Solution Monitor')
     my_gui = TespMonitorGUI(root)
@@ -484,6 +555,36 @@ def show_tesp_monitor():
 
 
 class ChoosablePlot(tk.Frame):
+    """Hosts one Matplotlib animation with a selected variable to plot
+
+    Args:
+        master:
+        color (str): Matplotlib color of the line to plot
+        xLabel (str): label for the x axis
+        topicDict (dict): dictionary of FNCS topic choices to plot
+        kwargs: arbitrary keyword arguments
+    Attributes:
+        topicDict:
+        listOfTopics:
+        root (Tk): the TCL Tk toolkit instance
+        fig (Figure): animated Matplotlib figure hosted on the GUI
+        ax (Axes): set of 4 xy axes to plot on
+        xLabel (str): horizontal axis label
+        yLabel (str): vertical axis label
+        hrs:
+        y:
+        ymin (float):
+        ymax (float):
+        color:
+        title (str):
+        ln (Line2D):
+        topicSelectionRow:
+        topicLabel:
+        combobox:
+        voltageLabel:
+        voltageBase:
+        voltageBaseTextbox:
+    """
     def __init__(self, master, color='red', xLabel='', topicDict={}, **kwargs):
         super().__init__(master, background='#ffffff', **kwargs)
         self.root = master
@@ -549,6 +650,11 @@ class ChoosablePlot(tk.Frame):
         self.canvas.get_tk_widget().grid(row=1)
 
     def onTopicSelected(self, event):
+        """ Change the GUI labels to match selected plot variable
+
+        Args:
+            event:
+        """
         selectedTopic = self.title.get()
         self.ax.set_title(selectedTopic, fontsize=10)
         if 'vpos' in self.topicDict[selectedTopic]:

@@ -1,5 +1,13 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: tesp_case.py
+"""Creates and fills a subdirectory with files to run a TESP simulation
+
+Use *tesp_config* to graphically edit the case configuration
+
+Public Functions:
+    :make_tesp_case: sets up for a single-shot TESP case
+    :make_monte_carlo_cases: sets up for a Monte Carlo TESP case of up to 20 shots
+"""
 import sys
 import json
 import subprocess
@@ -9,12 +17,92 @@ import shutil
 from datetime import datetime
 
 def idf_int(val):
+    """Helper function to format integers for the EnergyPlus IDF input data file
+
+    Args:
+        val (int): the integer to format
+
+    Returns:
+        str: the integer in string format, padded with a comma and zero or one blanks, in order to fill three spaces
+    """
     sval = str(val)
     if len(sval) < 2:
         return sval + ', '
     return sval + ','
 
 def write_tesp_case (config, cfgfile):
+    """Writes the TESP case from data structure to JSON file
+
+    This function assumes one GridLAB-D, one EnergyPlus, one PYPOWER
+    and one substation_loop federate will participate in the TESP simulation.
+    See the DSO+T study functions, which are customized to ERCOT 8-bus and 
+    200-bus models, for examples of other configurations.
+
+    The TESP support directories, working directory and case name are all specified 
+    in *config*. This function will create one directory as follows:
+
+        * workdir = config['SimulationConfig']['WorkingDirectory']
+        * casename = config['SimulationConfig']['CaseName']
+        * new directory created will be *casedir* = workdir/casename
+
+    This function will read or copy several files that are specified in the *config*.
+    They should all exist. These include taxonomy feeders, GridLAB-D schedules, 
+    weather files, a base EnergyPlus model, a base PYPOWER model, and supporting scripts
+    for the end user to invoke from the *casedir*.  The user could add more base model files
+    weather files or schedule files under the TESP support directory, where this *tesp_case*
+    module will be able to find and use them.
+
+    This function will launch and wait for 5 subprocesses to assist in the 
+    case configuration. All must execute successfully:
+
+        * Tmy3toTMY2_ansi, which converts the user-selected TMY3 file to TMY2
+        * tesp.convert_tmy2_to_epw, which converts the TMY2 file to EPW for EnergyPlus
+        * tesp.populate_feeder, which populates the user-selected taxonomy feeder with houses and DER
+        * tesp.glm_dict, which creates metadata for the populated feeder
+        * tesp.prep_substation, which creates metadata and FNCS configurations for the substation agents
+
+    As the configuration process finishes, several files are written to *casedir*:
+
+        * Casename.glm: the GridLAB-D model, copied and modified from the TESP support directory
+        * Casename_FNCS_Config.txt: FNCS subscriptions and publications, included by Casename.glm
+        * Casename_agent_dict.json: metadata for the simple_auction and hvac agents
+        * Casename_glm_dict.json: metadata for Casename.glm
+        * Casename_pp.json: the PYPOWER model, copied and modified from the TESP support directory
+        * Casename_substation.yaml: FNCS subscriptions and time step for the substation, which manages the simple_auction and hvac controllers
+        * NonGLDLoad.txt: non-responsive load data for the PYPOWER model buses, currently hard-wired for the 9-bus model. See the ERCOT case files for examples of expanded options.
+        * SchoolDualController.idf: the EnergyPlus model, copied and modified from the TESP support directory 
+        * WA-Yakima_Air_Terminal.epw: the selected weather file for EnergyPlus, others can be selected
+        * WA-Yakima_Air_Terminal.tmy3: the selected weather file for GridLAB-D, others can be selected
+        * appliance_schedules.glm: time schedules for GridLAB-D
+        * clean.bat: Windows helper to clean up simulation outputs
+        * clean.sh: Linux/Mac OS X helper to clean up simulation outputs
+        * commercial_schedules.glm: non-responsive non-responsive time schedules for GridLAB-D, invariant
+        * eplus.yaml: FNCS subscriptions and time step for EnergyPlus
+        * eplus_json.yaml: FNCS subscriptions and time step for the EnergyPlus agent
+        * gui.py: helper to launch the GUI solution monitor (FNCS_CONFIG_FILE envar must be set for this process, see gui.bat and gui.sh under examples/te30)
+        * kill5570.bat: Windows helper to kill one of the federates listening on port 5570
+        * kill5570.sh: Linux/Mac OS X helper to kill all federates listening on port 5570
+        * launch_auction.py: helper script for the GUI solution monitor to launch the substation federate
+        * launch_pp.py: helper script for the GUI solution monitor to launch the PYPOWER federate
+        * list5570.bat: Windows helper to list all federates listening on port 5570
+        * monitor.py: duplicate of gui.py, should remove
+        * plots.py: helper script that will plot a selection of case outputs
+        * pypower.yaml: FNCS subscriptions and time step for PYPOWER
+        * run.bat: Windows helper to launch the TESP simulation
+        * run.sh: Linux/Mac OS X helper to launch the TESP simulation
+        * tesp_monitor.json: shell commands and other configuration data for the solution monitor GUI
+        * tesp_monitor.yaml: FNCS subscriptions and time step for the solution monitor GUI
+        * water_and_setpoint_schedule_v5.glm: non-responsive time schedules for GridLAB-D, invariant
+
+    Args:
+        config (dict): the complete case data structure
+        cfgfile (str): the name of the JSON file that was read
+
+    Todo:
+        * Write gui.bat and gui.sh, per the te30 examples
+        * do not write monitor.py
+        * Invoke python3 on Mac and Linux when launching processes from within this function
+    """
     tespdir = config['SimulationConfig']['SourceDirectory']
 #    tespdir = '../../../../ptesp/support'
     feederdir = tespdir + '/feeders/'
@@ -480,11 +568,26 @@ values:
     op.close()
 
 def make_tesp_case (cfgfile = 'test.json'):
+    """Wrapper function for a single TESP case configuration.
+
+    This function opens the JSON file, and calls *write_tesp_case*
+
+    Args:
+        cfgfile (str): JSON file containing the TESP case configuration
+    """
     lp = open (cfgfile).read()
     config = json.loads(lp)
     write_tesp_case (config, cfgfile)
 
 def modify_mc_config (config, mcvar, band, sample):
+    """Helper function that modifies the Monte Carlo configuration for a specific sample, i.e., shot
+
+    For variables that have a band associated, the agent preparation code will apply
+    additional randomization. This applies to thermostat ramps, offset limits, and
+    period starting or ending times. For those variables, the Monte Carlo sample
+    value is a mean, and the agent preparation code will apply a uniform distribution
+    to obtain the actual value for each house.
+    """
     if mcvar == 'ElectricCoolingParticipation':
         config['FeederGenerator'][mcvar] = sample
     elif mcvar == 'ThermostatRampMid':
@@ -501,6 +604,13 @@ def modify_mc_config (config, mcvar, band, sample):
         config['ThermostatSchedule']['WeekdayEveningSetHi'] = sample + 0.5 * band
 
 def make_monte_carlo_cases (cfgfile = 'test.json'):
+    """Writes up to 20 TESP simulation case setups to a directory for Monte Carlo simulations
+
+    Latin hypercube sampling is recommended; sample values may be specified via *tesp_config*
+
+    Args:
+        cfgfile (str): JSON file containing the TESP case configuration
+    """
     lp = open (cfgfile).read()
     config = json.loads(lp)
     mc_cfg = 'monte_carlo_sample_' + cfgfile

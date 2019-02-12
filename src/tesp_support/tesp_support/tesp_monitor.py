@@ -1,5 +1,15 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: tesp_monitor.py
+"""Presents a GUI to launch a TESP simulation and monitor its progress
+
+Public Functions:
+  :show_tesp_monitor: Initializes and runs the monitor GUI
+
+References:
+  `Graphical User Interfaces with Tk <https://docs.python.org/3/library/tk.html>`_
+
+  `Matplotlib Animation <https://matplotlib.org/api/animation_api.html>`_
+"""
 import sys
 import json
 import tkinter as tk
@@ -25,6 +35,53 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt;
 
 class TespMonitorGUI:
+  """Manages a GUI with 4 plotted variables, and buttons to stop TESP
+
+  The GUI reads a JSON file with scripted shell commands to launch
+  other FNCS federates, and a YAML file with FNCS subscriptions to update
+  the solution status. Both JSON and YAML files are written by *tesp.tesp_config*
+  The plotted variables provide a sign-of-life and sign-of-stability indication
+  for each of the major federates in the te30 or sgip1 examples, namely
+  GridLAB-D, PYPOWER, EnergPlus, and the substation_loop that manages a simple_auction
+  with multiple hvac agents. If a solution appears to be unstable or must be
+  stopped for any other reason, exiting the solution monitor will do so.
+
+  The plots are created and updated with animated and bit-blitted Matplotlib
+  graphs hosted on a TkInter GUI. When the JSON and YAML files are loaded,
+  the x axis is laid out to match the total TESP simulation time range.
+
+  Args:
+    root (Tk): the TCL Tk toolkit instance
+    top (Window): the top-level TCL Tk Window
+    labelvar (StringVar): used to display the monitor JSON configuration file path
+    hrs ([float]): x-axis data array for time in hours, shared by all plots
+    y0 ([float]): y-axis data array for PYPOWER bus voltage
+    y1 ([float]): y-axis data array for EnergyPlus load
+    y2lmp ([float]): y-axis data array for PYPOWER LMP
+    y2auc ([float]): y-axis data array for simple_auction cleared_price
+    y3fncs ([float]): y-axis data array for GridLAB-D load via FNCS
+    y3gld ([float]): y-axis data array for sample-and-hold GridLAB-D load
+    gld_load (float): the most recent load published by GridLAB-D; due to the deadband, this value isn't necessary published at every FNCS time step
+    y0min (float): the first y axis minimum value
+    y0max (float): the first y axis maximum value
+    y1min (float): the second y axis minimum value
+    y1max (float): the second y axis maximum value
+    y2min (float): the third y axis minimum value
+    y2max (float): the third y axis maximum value
+    y3min (float): the fourth y axis minimum value
+    y3max (float): the fourth y axis maximum value
+    hour_stop (float): the maximum x axis time value to plot
+    ln0 (Line2D): the plotted PYPOWER bus voltage, color GREEN
+    ln1 (Line2D): the plotted EnergyPlus load, color RED
+    ln2lmp (Line2D): the plotted PYPOWER locational marginal price (LMP), color BLUE
+    ln2auc (Line2D): the plotted simple_auction cleared_price, color BLACK
+    ln3gld (Line2D): the plotted sample-and-hold GridLAB-D substation load, color MAGENTA
+    ln3fncs (Line2D): the plotted GridLAB-D substation load published via FNCS; may be zero if not published for the current animation frame, color CYAN
+    fig (Figure): animated Matplotlib figure hosted on the GUI
+    ax (Axes): set of 4 xy axes to plot on
+    canvas (FigureCanvasTkAgg): a TCL Tk canvas that can host Matplotlib
+    bFNCSactive (Boolean): True if a TESP simulation is running with other FNCS federates, False if not
+  """
   def __init__ (self, master):
     self.root = master
     self.root.protocol('WM_DELETE_WINDOW', self.on_closing)
@@ -109,6 +166,11 @@ class TespMonitorGUI:
     self.bFNCSactive = False
 
   def on_closing(self):
+    """Verify whether the user wants to stop TESP simulations before exiting the monitor
+
+    This monitor is itself a FNCS federate, so it can not be shut down without shutting
+    down all other FNCS federates in the TESP simulation.
+    """
     if messagebox.askokcancel('Quit', 'Do you want to close this window? This is likely to stop all simulations.'):
       self.root.quit()
       self.root.destroy()
@@ -117,13 +179,17 @@ class TespMonitorGUI:
         self.bFNCSactive = False
 
   def Quit(self):
+    """Shuts down this monitor, and also shuts down FNCS if active
+    """
     self.root.quit()
     self.root.destroy()
     if self.bFNCSactive:
       fncs.finalize()
       self.bFNCSactive = False
 
-  def OpenConfig(self): 
+  def OpenConfig(self):
+    """Read the JSON configuration file for this monitor, and initialize the plot axes
+    """ 
     fname = filedialog.askopenfilename(initialdir = '.',
                                        initialfile = 'tesp_monitor.json',
                                        title = 'Open JSON Monitor Configuration', 
@@ -148,6 +214,8 @@ class TespMonitorGUI:
     self.fig.canvas.draw()
 
   def kill_all(self):
+    """Shut down all FNCS federates in TESP, except for this monitor
+    """
     for proc in self.pids:
       print ('trying to kill', proc.pid)
       proc.terminate()
@@ -159,6 +227,16 @@ class TespMonitorGUI:
     print ('FNCS finalized')
 
   def expand_limits(self, v, vmin, vmax):
+    """Whenever a variable meets a vertical axis limit, expand the limits with 10% padding above and below
+
+    Args:
+      v (float): the out of range value
+      vmin (float): the current minimum vertical axis value
+      vmax (float): the current maximum vertical axis value
+
+    Returns:
+      float, float: the new vmin and vmax
+    """
     if v < vmin:
       vpad = 0.1 * (vmax - v)
       vmin = v - vpad
@@ -168,6 +246,17 @@ class TespMonitorGUI:
     return vmin, vmax
 
   def update_plots(self, i):
+    """This function is called by Matplotlib for each animation frame
+
+    Each time called, collect FNCS messages until the next time to plot
+    has been reached. Then update the plot quantities and return the
+    Line2D objects that have been updated for plotting. Check for new
+    data outside the plotted vertical range, which triggers a full
+    re-draw of the axes. On the last frame, finalize FNCS.
+
+    Args:
+      i (int): the animation frame number
+    """
 #    print ('.', end='')
 #    print ('frame', i, 'of', self.nsteps)
     bRedraw = False
@@ -259,6 +348,8 @@ class TespMonitorGUI:
     return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld,  # in case we miss the last point
 
   def launch_all(self):
+    """Launches the simulators, initializes FNCS and starts the animated plots
+    """
     self.root.update()
 
     print('launching all simulators')
@@ -293,6 +384,8 @@ class TespMonitorGUI:
     self.fig.canvas.draw()
 
 def show_tesp_monitor ():
+  """Creates and displays the monitor GUI
+  """
   root = tk.Tk()
   root.title('Transactive Energy Simulation Platform: Solution Monitor')
   my_gui = TespMonitorGUI (root)
