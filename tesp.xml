@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.3.0</version>
+    <version>0.3.2</version>
     <readmeFile>README.md</readmeFile>
     <licenseFile>LICENSE</licenseFile>
     <splashImage>../../Documents/PNNL/Projects/TE/Transactive.png</splashImage>
@@ -1189,10 +1189,10 @@
                 <directoryParameter>
                     <name>gridlabddir</name>
                     <title>Program Installation Directory</title>
-                    <description>Executables and libraries for GridLAB-D, FNCS and EnergyPlus</description>
-                    <explanation>TESP requires a custom FNCS build of EnergyPlus v8.3, a custom GridLAB-D build from branch feature/1048, and FNCS. The custom GridLAB-D features include the updated volt-watt and volt-var functions from IEEE 1547-2018, tiered time-of-use tariffs, a controllable switch, and streamlined metrics collection to JSON files.
+                    <description>Executables and Libraries</description>
+                    <explanation>TESP requires custom FNCS builds of EnergyPlus v8.3 and GridLAB-D from branch feature/1146. New GridLAB-D features include the updated volt-watt and volt-var functions from IEEE 1547-2018, tiered time-of-use tariffs, a controllable switch, and streamlined metrics collection to JSON files.
 
-For Windows, these files can be installed to any directory.  The installer will set your PATH and GLPATH environment variables accordingly. If you have another GridLAB-D installation, it would be possible to switch between them by adjusting your PATH and GLPATH environment variables.</explanation>
+For Windows, these files can be installed to any directory.  The installer will set your PATH and GLPATH environment variables accordingly. If you have another GridLAB-D installation, it is possible to switch between them by adjusting your PATH and GLPATH.</explanation>
                     <value></value>
                     <default>c:\gridlabd</default>
                     <allowEmptyValue>0</allowEmptyValue>
@@ -1208,10 +1208,10 @@ For Windows, these files can be installed to any directory.  The installer will 
                 <directoryParameter>
                     <name>unixlocaldir</name>
                     <title>Program Installation Directory</title>
-                    <description>Executables and libraries for GridLAB-D, FNCS and EnergyPlus</description>
-                    <explanation>TESP requires a custom FNCS build of EnergyPlus v8.3, a custom GridLAB-D build from branch feature/1048, and FNCS. The custom GridLAB-D features include the updated volt-watt and volt-var functions from IEEE 1547-2018, tiered time-of-use tariffs, a controllable switch, and streamlined metrics collection to JSON files.
+                    <description>Executables and Libraries</description>
+                    <explanation>TESP requires custom FNCS builds of EnergyPlus v8.3, and GridLAB-D from branch feature/1146. New GridLAB-D features include the updated volt-watt and volt-var functions from IEEE 1547-2018, tiered time-of-use tariffs, a controllable switch, and streamlined metrics collection to JSON files.
 
-For Mac and Linux, these files are installed to /usr/local by default, and other locations have not been tested. If you install to another location, additional steps may be needed to configure the installation.  If you can't install to /usr/local, whether to avoid overwriting another GridLAB-D installation or because of security concerns, the docker installation may be a better choice for you.</explanation>
+For Mac and Linux, these files are installed to /usr/local by default. Other locations have not been tested. If you can not install to /usr/local, additional steps may be needed to configure the installation, or the docker installation may be a better choice for you.</explanation>
                     <value></value>
                     <default>/usr/local</default>
                     <allowEmptyValue>0</allowEmptyValue>
@@ -1250,8 +1250,10 @@ For Mac and Linux, these files are installed to /usr/local by default, and other
                     </ruleList>
                 </addDirectoryToPath>
                 <createSymLink>
-                    <linkName>{unixlocaldir}/lib/libzmq.so</linkName>
-                    <target>{unixlocaldir}/lib/libzmq.so.5.0.0</target>
+                    <explanation>Creating Symlinks</explanation>
+                    <linkName>${unixlocaldir}/lib/libzmq.so</linkName>
+                    <progressText>libzmq</progressText>
+                    <target>${unixlocaldir}/lib/libzmq.so.5.0.0</target>
                     <ruleList>
                         <platformTest>
                             <type>linux</type>
@@ -1259,8 +1261,10 @@ For Mac and Linux, these files are installed to /usr/local by default, and other
                     </ruleList>
                 </createSymLink>
                 <createSymLink>
-                    <linkName>{unixlocaldir}/bin/libczmq.so</linkName>
-                    <target>{unixlocaldir}/bin/libczmq.so.3.0.0</target>
+                    <explanation>Creating Symlinks</explanation>
+                    <linkName>${unixlocaldir}/lib/libczmq.so</linkName>
+                    <progressText>libczmq</progressText>
+                    <target>${unixlocaldir}/lib/libczmq.so.3.0.0</target>
                     <ruleList>
                         <platformTest>
                             <type>linux</type>
@@ -1268,8 +1272,10 @@ For Mac and Linux, these files are installed to /usr/local by default, and other
                     </ruleList>
                 </createSymLink>
                 <createSymLink>
-                    <linkName>{unixlocaldir}/bin/libfncs.so</linkName>
-                    <target>{unixlocaldir}/bin/libfncs.so.1.1.1</target>
+                    <explanation>Creating Symlinks</explanation>
+                    <linkName>${unixlocaldir}/lib/libfncs.so</linkName>
+                    <progressText>libfncs</progressText>
+                    <target>${unixlocaldir}/lib/libfncs.so.1.1.1</target>
                     <ruleList>
                         <platformTest>
                             <type>linux</type>
@@ -1277,11 +1283,91 @@ For Mac and Linux, these files are installed to /usr/local by default, and other
                     </ruleList>
                 </createSymLink>
                 <createSymLink>
-                    <linkName>{unixlocaldir}/bin/libxerces-c.so</linkName>
-                    <target>{unixlocaldir}/bin/libxerces-c-3.1.so</target>
+                    <explanation>Creating Symlinks</explanation>
+                    <linkName>${unixlocaldir}/lib/libfncs.so.1</linkName>
+                    <progressText>libfncs</progressText>
+                    <target>${unixlocaldir}/lib/libfncs.so.1.1.1</target>
                     <ruleList>
                         <platformTest>
                             <type>linux</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <createSymLink>
+                    <explanation>Creating Symlinks</explanation>
+                    <linkName>${unixlocaldir}/lib/libxerces-c.so</linkName>
+                    <progressText>libxerces</progressText>
+                    <target>${unixlocaldir}/lib/libxerces-c-3.1.so</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>linux</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <createSymLink>
+                    <explanation>Creating Symlinks</explanation>
+                    <linkName>${unixlocaldir}/bin/EnergyPlus</linkName>
+                    <progressText>EnergyPlus</progressText>
+                    <target>${unixlocaldir}/bin/energyplus-8.3.0</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>linux</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <createSymLink>
+                    <explanation>Creating Symlinks</explanation>
+                    <linkName>${unixlocaldir}/bin/libenergyplusapi.so</linkName>
+                    <progressText>libenergyplusapi</progressText>
+                    <target>${unixlocaldir}/bin/libenergyplusapi.8.3.0.so</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>linux</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <runProgram>
+                    <program>ldconfig</program>
+                    <programArguments></programArguments>
+                    <ruleList>
+                        <platformTest>
+                            <type>linux</type>
+                        </platformTest>
+                    </ruleList>
+                </runProgram>
+                <createSymLink>
+                    <linkName>${unixlocaldir}/lib/libzmq.dylib</linkName>
+                    <target>${unixlocaldir}/lib/libzmq.5.dylib</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>osx</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <createSymLink>
+                    <linkName>${unixlocaldir}/lib/libfncs.dylib</linkName>
+                    <target>${unixlocaldir}/lib/libfncs.1.dylib</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>osx</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <createSymLink>
+                    <linkName>{unixlocaldir}/lib/libczmq.dylib</linkName>
+                    <target>{unixlocaldir}/lib/libczmq.3.dylib</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>osx</type>
+                        </platformTest>
+                    </ruleList>
+                </createSymLink>
+                <createSymLink>
+                    <linkName>{unixlocaldir}/lib/libxerces-c.dylib</linkName>
+                    <target>{unixlocaldir}/lib/libxerces-c-3.2.dylib</target>
+                    <ruleList>
+                        <platformTest>
+                            <type>osx</type>
                         </platformTest>
                     </ruleList>
                 </createSymLink>
@@ -1313,9 +1399,9 @@ For Mac and Linux, these files are installed to /usr/local by default, and other
             <name>tespdir</name>
             <title>Data Installation Directory</title>
             <description>Library and example files for TESP</description>
-            <explanation>Under the "support" subdirectory: Feeder taxonomy (backbone), weather, 9-bus transmission system, appliance/thermostat schedules, 2-story school building and helper scripts for TESP simulations. Copy your own feeders, weather files and other data to this subdirectory, in order to have them available for TESP simulation case configuration.
+            <explanation>Under the "support" subdirectory: template models, weather files, appliance schedules and helper scripts for TESP simulations. Copy your files to this subdirectory in order to have them available for TESP simulation case configuration.
 
-Under the "examples" subdirectory: PYPOWER and EnergyPlus examples verify operation of those simulators. A simple loadshed agent has been implemented twice, in Python and Java, to serve as a starting point for your own agent development. Use the 30-house secondary circuit, under te30, as the next step up in complexity for testing your own agents interacting with other agents. The ieee8500 and sgip1 examples are full-scale feeder simulations, for the NIST TE Challenge 2 and an IEEE journal paper, respectively.</explanation>
+Under the "examples" subdirectory: small examples for PYPOWER, EnergyPlus, Python loadshed and Java loadshed. Medium 30-house example under te30. Large sgip1 and ieee8500 examples. Under the "ercot" subdirectory: 8-bus and 200-bus DSO+T study models.</explanation>
             <value></value>
             <default>${user_home_directory}/tesp</default>
             <allowEmptyValue>0</allowEmptyValue>
