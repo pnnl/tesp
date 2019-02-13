@@ -245,6 +245,8 @@ Now build FNCS:
 Use manual commands for the Java Binding on Windows, because the Linux/Mac CMake files
 don't work on Windows yet. Also make sure that the JDK/bin directory is in your path.
 
+Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
+
 ::
 
  cd /c/src/fncs/java
@@ -258,7 +260,8 @@ don't work on Windows yet. Also make sure that the JDK/bin directory is in your 
  g++ -DJNIfncs_EXPORTS -I"C:/Java/jdk-9.0.4/include" -I"C:/Java/jdk-9.0.4/include/win32" -I/usr/local/include -I. -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
  g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Java/jdk-9.0.4/lib/jawt.lib" "C:/Java/jdk-9.0.4/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
  
-Finally, build and test GridLAB-D with FNCS:
+Finally, build and test GridLAB-D with FNCS. If you encounter build errors with GridLAB-D, please try
+adding *-std=c++11* to *CXXFLAGS*.
 
 ::
 

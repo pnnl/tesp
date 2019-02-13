@@ -26,6 +26,8 @@ TESP:
 .. toctree::
    :maxdepth: 3
 
-   Running_Examples_Link
    Installing_Windows_Link
+   Installing_Ubuntu_Link
+   Installing_MacOSX_Link
+   Running_Examples_Link
 

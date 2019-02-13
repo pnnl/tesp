@@ -1,23 +1,32 @@
-Installing on Windows, Linux or Mac OSX
----------------------------------------
+Installing on Windows
+---------------------
 
-Installation requires three basic steps:
+This procedure has been tested on Windows 7 and Windows 10, 
+without an existing Python installation. If Python is already installed,
+additional steps may be needed to ensure Python3 support, including
+the Tcl/Tk interface used for plotting and graphical user interfaces (GUI).
 
-1. Install Python 3.6, either from http://www.python.org or https://conda.io/miniconda.html  
-2. From a terminal/command window, install TESP Python package support with "**pip install tesp_support --upgrade**" for you as a user. This automatically installs required packages like numpy, scipy, networkx, matplotlib and PYPOWER.
-3. Install the TESP data and (optionally) executable files by choosing your system-specific installer from https://github.com/pnnl/tesp/releases
+1. Install **64-bit** Python 3.7 from http://www.python.org. Make sure to check the optional **pip** and **Tcl/Tk IDLE** components as well.
+2. Install (or update) Java 8 or later, both runtime (JRE) and development kit (JDK) from https://www.oracle.com/technetwork/java/javase/downloads/index.html 
+3. Download and run the current Windows TESP installer from https://github.com/pnnl/tesp/releases. Install **both** the Data and Executable files.
+4. On Windows 7, the MSVC 2015 Redistributables may also be required for PYPOWER to work. See https://www.microsoft.com/en-us/download/details.aspx?id=52685 
+5. From a terminal/command window, enter the following commands, substituting your own user name for *username*:
 
-To get started after basic installation:
+::
+
+ pip install tesp_support --upgrade
+ opf
+ cd \Users\username\tesp
+
+That last step should place you in the directory above TESP examples. To continue:
 
 1. Try the video tutorial at https://github.com/pnnl/tesp/releases
 2. Try :ref:`RunExamples` 
 
-Optional steps and troubleshooting:
+You may also use the `Docker Version`_. This option is useful for distributed processing, and for 
+isolating TESP from your other software, including other versions of GridLAB-D. 
+However, it may require a little more data file management and it doesn't support Windows 8 or earlier.
 
-1. If you didn't install the executables in step 3, use the docker image as described at https://github.com/pnnl/tesp/tree/master/examples/te30/TESP-Docker-Inputs. The docker option is useful for distributed processing, and for isolating TESP from your other software, including other versions of GridLAB-D. However, it may require a little more data file management and it doesn't support Windows 8 or earlier.
-2. If Miniconda won't install mkl and numpy on Windows, download the "Python wheel" from from http://www.lfd.uci.edu/~gohlke/pythonlibs/ and run "pip install numpy-1.12.1+mkl-cp36-cp36m-win_amd64.whl"
-3. If you'll be developing agents in Java, download and install the Java 8 JDK from http://www.oracle.com/technetwork/java/javase/downloads/index.html
-
-
+.. _`Docker Version`: https://github.com/pnnl/tesp/blob/develop/install/Docker/ReadMe.md
 
 

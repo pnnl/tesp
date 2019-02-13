@@ -15,7 +15,6 @@ LTS and gcc/g++ 5.4.0.
 
 When you finish the build, try :ref:`RunExamples`.
 
-
 Preparation - Python Packages, Java, build tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -29,8 +28,6 @@ Preparation - Python Packages, Java, build tools
  sudo apt-get install libjsoncpp-dev
  # Java 8 is required; the following works on Ubuntu 16.04
  sudo apt-get install default-jdk
- # a non-vi text editor, if desired
- sudo apt-get install emacs24
 
  mkdir ~/src
  cd ~/src
@@ -90,6 +87,8 @@ is for Ubuntu; other flavors of Linux may differ.
 FNCS with Prerequisites
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
+
 ::
 
  cd ~/src
@@ -125,6 +124,9 @@ FNCS with Prerequisites
 GridLAB-D with Prerequisites
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+If you encounter build errors with GridLAB-D, please try
+adding *-std=c++11* to *CXXFLAGS*.
+
 ::
 
  cd ~/src/gridlab-d
@@ -156,7 +158,8 @@ EnergyPlus with Prerequisites
  cmake ..
  make
 
- # Before installing, we need components of the public version, including but not limited to the critical Energy+.idd file
+ # Before installing, we need components of the public version, including but not limited to 
+ #  the critical Energy+.idd file
  # The compatible public version is at https://github.com/NREL/EnergyPlus/releases/tag/v8.3.0
  # That public version should be installed to /usr/local/EnergyPlus-8-3-0 before going further
 
@@ -197,20 +200,23 @@ before you try :ref:`RunExamples`.
 
  sudo ldconfig
 
-If you have both Python 2 and Python 3 installed, the TESP example
-scripts and post-processing programs need to find Python 3 first.
+In case you have both Python 2 and Python 3 installed, the TESP example
+scripts and post-processing programs only invoke *python3*.
 
 ::
 
- emacs ~/.profile
+ gedit ~/.profile
  #
  # edit the line with PATH as follows, to put Python 3 before other
  # directories in the path, and then save the file
  #
  PATH="$HOME/miniconda3/bin:$HOME/bin: and more directories"
 
-TODO: MATPOWER, MATLAB Runtime (MCR) and wrapper
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+DEPRECATED: MATPOWER, MATLAB Runtime (MCR) and wrapper
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This procedure to support MATPOWER is no longer used in TESP at PNNL, but it may
+be useful to others working with TESP and MATPOWER.
 
 ::
 

@@ -1,3 +1,5 @@
+.. _BuildingOnMacOSX:
+
 Building on Mac OS X
 --------------------
 
@@ -11,7 +13,13 @@ GitHub branch requirements for TESP:
 
 The Mac OS X build procedure is very similar to that for Linux,
 and should be executed from the Terminal. For consistency among
-platforms, this procedure uses gcc rather than clang.
+platforms, this procedure uses gcc rather than clang. It's also
+assumed that Homebrew has been installed.
+
+It may also be necessary to disable system integrity protection (SIP),
+in order to modify contents under */usr*. Workarounds to set the
+*LD_LIBRARY_PATH* and *DYLD_LIBRARY_PATH* environment variables 
+have not been tested successfully.
 
 When you finish the build, try :ref:`RunExamples`.
 
@@ -29,13 +37,8 @@ Install Python Packages, Java, updated GCC
 
 ::
 
- cd /opt
- # may need sudo on the following steps to install for all users
- wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
- chmod +x Miniconda3-latest-Linux-x86_64.sh
- ./Miniconda3-latest-Linux-x86_64.sh
- conda update conda
- conda install pandas
+ brew install python3
+ pip install pandas
  # tesp_support, including verification of PYPOWER dependency
  pip install tesp_support
  opf
@@ -59,6 +62,8 @@ Checkout PNNL repositories from github
 
 FNCS with Prerequisites (installed to /usr/local)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
 
 ::
 
@@ -94,6 +99,9 @@ FNCS with Prerequisites (installed to /usr/local)
 GridLAB-D with Prerequisites (installed to /usr/local)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+If you encounter build errors with GridLAB-D, please try
+adding *-std=c++11* to *CXXFLAGS*.
+
 ::
 
  cd ~/src/gridlab-d
@@ -127,7 +135,7 @@ EnergyPlus with Prerequisites (installed to /usr/local)
  make
 
  # Before installing, we need components of the public version, including but not limited 
-	#   to the critical Energy+.idd file
+ #   to the critical Energy+.idd file
  # The compatible public version is at https://github.com/NREL/EnergyPlus/releases/tag/v8.3.0
  # That public version should be installed to /usr/local/EnergyPlus-8-3-0 before going further
 

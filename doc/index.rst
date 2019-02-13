@@ -18,6 +18,7 @@ Transactive Energy Simulation Platform (TESP)
    SGIP1_Example
    Next_Version
    Bibliography
+   DSOT_Study
    LICENSE
 
 Indices and tables
