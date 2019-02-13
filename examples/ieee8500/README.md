@@ -1,7 +1,5 @@
 # TESP Examples for the NIST TE Challenge
 
-Copyright (c) 2017-18, Battelle Memorial Institute
-
 These example files are based on the IEEE 8500-node Feeder model, as adapted
 for the SGIP-3 use case and the NIST TE Challenge 2. More information 
 is available at https://pages.nist.gov/TEChallenge/library/ and panel 
@@ -16,11 +14,11 @@ To run the base case:
 
 In order to plot results from the JSON files, Python 3 and the matplotlib package can be used:
 
-1. "python glm_dict.py IEEE_8500" will create circuit metadata for plotting.
+1. "python3 glm_dict.py IEEE_8500" will create circuit metadata for plotting. On Windows, use "python" instead of "python3".
 
-2. "python process_gld.py IEEE_8500 &" will plot various metrics when the simulation finishes.
+2. "python3 process_gld.py IEEE_8500 &" will plot various metrics when the simulation finishes. On Windows, use "python" instead of "python3".
 
-3. "python process_voltages.py IEEE_8500 &" will plot all meter voltages on the same graph.
+3. "python3 process_voltages.py IEEE_8500 &" will plot all meter voltages on the same graph. On Windows, use "python" instead of "python3".
 
 Alternatively, you can insert "recorders" into IEEE_8500.glm, which will create CSV files
 for plotting and post-processing. The simulation takes longer with CSV file output.
@@ -94,11 +92,15 @@ The Mac/Linux run files are run30.sh, runti30.sh and run8500.sh,
 respectively.  These simulations take up to 4 hours to run.  Example steps 
 are: 
 
-    a. "python prepare_cases.py"
+    a. "python3 prepare_cases.py"
     b. "./run8500.sh" (Mac/Linux) or "run8500" (Windows)
-    c. "python plots.py inv8500" after the simulation completes
-    d. "python bill.py inv8500"
-    e. "python plot_invs.py inv8500"
+    c. "python3 plots.py inv8500" after the simulation completes
+    d. "python3 bill.py inv8500"
+    e. "python3 plot_invs.py inv8500"
+
+Note: in the preceeding steps, on Windows, use "python" instead of 
+"python3". On Mac OS X, use "pythonw" instead of "python3" for
+the last three plotting steps. 
 
 There are three GridLAB-D definitions near the top of *inv30.glm*, 
 *invti30.glm* and *inv8500.glm*.  These determine the solar inverter 
@@ -131,3 +133,7 @@ interpreting the other files in this directory.
 - *run30.sh*; Linux/Mac script that runs the 30-house case
 - *run8500.bat*; Windows script that runs the 8500-node case
 - *run8500.sh*; Linux/Mac script that runs the 8500-node case
+
+Copyright (c) 2017-2019, Battelle Memorial Institute
+
+License: https://github.com/pnnl/tesp/blob/master/LICENSE

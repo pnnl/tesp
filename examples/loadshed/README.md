@@ -28,7 +28,7 @@ To run the simulation with Java agent:
 
 To plot the simulation results from either version:
 
-    python plot_loadshed.py loadshed
+    python3 plot_loadshed.py loadshed  # use pythonw on Mac or just python on Windows
 
 To clean up the simulation results:
 
@@ -41,7 +41,7 @@ may provide a useful starting point. *eplus_json* handles
 time synchronization, FNCS publish, FNCS subscribe, and
 generating JSON output files with metrics.
 
-Copyright (c) 2017-2018, Battelle Memorial Institute
+Copyright (c) 2017-2019, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE
 

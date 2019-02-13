@@ -1,15 +1,13 @@
 # SGIP1 Examples
 
-Copyright (c) 2017-18, Battelle Memorial Institute
-
 These example files are based on the *IEEE Transactions on Power Systems* paper by Qiuhua Huang 
 et. al., "Simulation-Based Valuation of Transactive Energy Systems", in publication.
 
 To run a case:
 
-1. python prepare_cases.py
-1. ./runSGIP1a.sh (Mac/Linux) or runSGIP1a (Windows)
-1. python plots.py SGIP1a
+1. python3 prepare_cases.py # use just python on Windows
+2. ./runSGIP1a.sh (Mac/Linux) or runSGIP1a (Windows)
+3. python3 plots.py SGIP1a  # use pythonw on Mac or just python on Windows
 
 These steps are repeatable for SGIP1b, SGIP1c, SGIP1d, SGIP1e, and SGIP1ex.
 After running all six cases, the compare*.py scripts may be used to plot
@@ -55,4 +53,8 @@ results from different cases on the same axes.
 - *SGIP1c.glm*; GridLAB-D file for case C, with market, added PV
 - *SGIP1d.glm*; GridLAB-D file for case D, with market, added PV
 - *SGIP1e.glm*; GridLAB-D file for case E, with market, added PV
+
+Copyright (c) 2017-2019, Battelle Memorial Institute
+
+License: https://github.com/pnnl/tesp/blob/master/LICENSE
 
