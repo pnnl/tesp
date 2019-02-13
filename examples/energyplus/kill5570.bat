@@ -1,3 +1,4 @@
+rem the following works for Windows 7
 rem FOR /F "tokens=5 delims= " %%P IN ('netstat -a -n -o | findstr :5570') DO TaskKill.exe /PID %%P /F /T
 
 @Echo Off

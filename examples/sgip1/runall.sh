@@ -1,8 +1,8 @@
 ./runSGIP1a.sh
 sleep 10800
 #
-#./runSGIP1b.sh
-#sleep 10800
+./runSGIP1b.sh
+sleep 10800
 #
 ./runSGIP1c.sh
 sleep 10800
