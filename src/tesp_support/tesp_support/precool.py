@@ -201,6 +201,11 @@ class precooler:
   def check_setpoint_change (self, hour_of_day, price, time_seconds):
     """Update the setpoint for time of day and price
 
+    Args:
+        hour_of_day (float): the current time of day, 0..24
+        price (float): the current price in $/kwh
+        time_seconds (long long): the current FNCS time in seconds
+
     Returns:
         Boolean: True if the setpoint changed, False if not
     """
