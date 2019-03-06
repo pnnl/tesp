@@ -24,7 +24,8 @@ config = {'BackboneFiles':{},'FeederGenerator':{},'EplusConfiguration':{},'PYPOW
 StartTime = "2013-07-01 00:00:00"
 EndTime = "2013-07-03 00:00:00"
 
-taxonomyChoices = ['GC-12.47-1',
+taxonomyChoices = ['TE_Base',
+                   'GC-12.47-1',
                    'R1-12.47-1',
                    'R1-12.47-2',
                    'R1-12.47-3',
@@ -77,7 +78,7 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
           ['Power Flow Time Step',15,'s','PYPOWERConfiguration','PFStep'],
           ['Energy+ Time Step',5,'m','EplusConfiguration','TimeStep'],
           ['Agent Time Step',15,'s','AgentPrep','TimeStepGldAgents'],
-          ['GridLAB-D Taxonomy Choice','R1-12.47-1','','BackboneFiles','TaxonomyChoice','taxonomyChoices'],
+          ['GridLAB-D Taxonomy Choice','TE_Base','','BackboneFiles','TaxonomyChoice','taxonomyChoices'],
           ['Energy+ Base File','SchoolDualController.idf','','BackboneFiles','EnergyPlusFile'],
           ['PYPOWER Base File','ppbasefile.py','','BackboneFiles','PYPOWERFile'],
           ['Weather Type','TMY3','','WeatherPrep','WeatherChoice','weatherChoices'],
@@ -94,7 +95,7 @@ varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCool
           ['Storage Penetration',0,'%','FeederGenerator','StoragePercentage'],
           ['Solar Inverter Mode','CONSTANT_PF','','FeederGenerator','SolarInverterMode','inverterModesPV'],
           ['Storage Inverter Mode','CONSTANT_PF','','FeederGenerator','StorageInverterMode','inverterModesBattery'],
-          ['Eplus Bus','R1-12-47-1_node_346','','FeederGenerator','EnergyPlusBus'],
+          ['Eplus Bus','Feeder_head','','FeederGenerator','EnergyPlusBus'],
           ['Eplus Service Voltage',480,'V','FeederGenerator','EnergyPlusServiceV','eplusVoltageChoices'],
           ['Eplus Transformer Size',150,'kVA','FeederGenerator','EnergyPlusXfmrKva'],
           ['Billing Mode','TIERED','','FeederGenerator','BillingMode','billingModes'],

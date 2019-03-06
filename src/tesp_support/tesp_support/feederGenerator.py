@@ -623,7 +623,8 @@ taxchoice = [['R1-12.47-1',12470.0, 7200.0, 4000.0, 20000.0],
              ['R5-12.47-5',12470.0, 7200.0, 4500.0, 25000.0],
              ['R5-25.00-1',22900.0,13200.0, 3000.0, 20000.0],
              ['R5-35.00-1',34500.0,19920.0, 6000.0, 25000.0],
-             ['GC-12.47-1',12470.0, 7200.0, 8000.0, 13000.0]]
+             ['GC-12.47-1',12470.0, 7200.0, 8000.0, 13000.0],
+             ['TE_Base',   12470.0, 7200.0, 8000.0, 13000.0]]
 #casefiles = [['R2-12.47-2',12470.0, 7200.0,15000.0, 25000.0]]
 casefiles = [['R1-12.47-1',12470.0, 7200.0, 4000.0, 20000.0]]
 
@@ -1191,6 +1192,14 @@ def write_houses(basenode, op, vnom):
         phs = phs + 'S'
         tpxname = gld_strict_name (basenode + '_tpx')
         mtrname = gld_strict_name (basenode + '_mtr')
+    else:
+        print ('object triplex_node {', file=op)
+        print ('  name', basenode + ';', file=op)
+        print ('  phases', phs + ';', file=op)
+        print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+        print ('  voltage_1 ' + vstart + ';', file=op)
+        print ('  voltage_2 ' + vstart + ';', file=op)
+        print ('}', file=op)
     for i in range(nhouse):
         if forERCOT == False:
             tpxname = gld_strict_name (basenode + '_tpx_' + str(i+1))

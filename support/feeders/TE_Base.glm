@@ -1,0 +1,69 @@
+clock {
+  timezone PST+8PDT;
+  starttime '2013-07-01 00:00:00';
+  stoptime '2013-07-03 00:00:00';
+}
+#set profiler=1
+module tape;
+module powerflow {
+  solver_method FBS;
+  NR_iteration_limit 100;
+}
+object node {
+	name Feeder_head;
+	phases ABCN;
+	nominal_voltage 7200;
+	bustype SWING;
+}
+object transformer_configuration {
+	name Service_transformer_config;
+	connect_type SINGLE_PHASE_CENTER_TAPPED;
+	install_type PADMOUNT;
+	power_rating 1500 kVA;
+	powerA_rating 500 kVA;
+	powerB_rating 500 kVA;
+	powerC_rating 500 kVA;
+	primary_voltage 7200;
+	secondary_voltage 120;
+	impedance 0.01+0.02j;
+}
+object transformer {
+	name Service_A;
+	phases AN;
+	from Feeder_head;
+	to Houses_A;
+	configuration Service_transformer_config;
+}
+object triplex_node {
+  name Houses_A;
+	phases AS;
+	nominal_voltage 120;
+  power_12 400.0e3+0j;
+}
+object transformer {
+	name Service_B;
+	phases BN;
+	from Feeder_head;
+	to Houses_B;
+	configuration Service_transformer_config;
+}
+object triplex_node {
+  name Houses_B;
+	phases BS;
+	nominal_voltage 120;
+  power_12 400.0e3+0j;
+}
+object transformer {
+	name Service_C;
+	phases CN;
+	from Feeder_head;
+	to Houses_C;
+	configuration Service_transformer_config;
+}
+object triplex_node {
+  name Houses_C;
+	phases CS;
+	nominal_voltage 120;
+  power_12 400.0e3+0j;
+}
+
