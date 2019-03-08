@@ -1,4 +1,4 @@
-#	Copyright (C) 2017-2019 Battelle Memorial Institute
+#   Copyright (C) 2017-2019 Battelle Memorial Institute
 # file: process_eplus.py
 """Functions to plot data from the EnergyPlus agent
 
@@ -13,7 +13,7 @@ try:
   import matplotlib as mpl;
   import matplotlib.pyplot as plt;
 except:
-    pass
+  pass
 
 def process_eplus(nameroot):
     """ Plots the min and max line-neutral voltages for every billing meter
@@ -30,9 +30,13 @@ def process_eplus(nameroot):
         nameroot (str): name of the TESP case, not necessarily the same as the EnergyPlus case, without the extension
     """
     # read the JSON file
-    lp = open ("eplus_" + nameroot + "_metrics.json").read()
-    lst = json.loads(lp)
-    print ("Metrics data starting", lst['StartTime'])
+    try:
+      lp = open ("eplus_" + nameroot + "_metrics.json").read()
+      lst = json.loads(lp)
+      print ("Metrics data starting", lst['StartTime'])
+    except:
+      print ('eplus metrics file could not be read')
+      return
 
     # make a sorted list of the times
     lst.pop('StartTime')

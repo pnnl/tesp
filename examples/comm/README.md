@@ -7,18 +7,14 @@ communication network. To run and plot the base case without comms on Mac/Linux:
 2. cd Nocomm_Base
 3. chmod +x *.sh
 4. ./run.sh
-5. python3 plots.py  # use pythonw on Mac
+5. python3 plots.py Nocomm_Base & # use pythonw on Mac
 
 On Windows:
 
 1. python make_comm_base.py
 2. cd Nocomm_Base
 3. run
-4. python plots.py
-
-In the copied boilerplate Nocomm_Base/plots.py script, the EnergyPlus plot
-requests should be removed or commented out before use, because 
-EnergyPlus is not used in this example.
+4. python plots.py Nocomm_Base
 
 ### File Directory
 
