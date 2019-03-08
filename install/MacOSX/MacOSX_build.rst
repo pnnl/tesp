@@ -150,6 +150,10 @@ To test HELICS:
 
  helics_player --version
  helics_recorder --version
+ ipython
+ import helics
+ helics.helicsGetVersion()
+ quit
 
 Add this to .bash_profile
 
