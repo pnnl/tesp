@@ -59,6 +59,7 @@ Checkout PNNL repositories from github
  git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b master https://github.com/pnnl/tesp.git
+ git clone https://github.com/GMLC-TDC/HELICS-src
 
 FNCS with Prerequisites (installed to /usr/local)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -96,11 +97,71 @@ Your Java version may have removed *javah*.  If that's the case, use *javac -h* 
  make
  # copy jar and jni library to  tesp/examples/loadshed/java
 
+Boost and HELICS (installed to /usr/local, build with gcc7)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Based on https://github.com/GMLC-TDC/HELICS-src/issues/641#issuecomment-470663933
+
+Build zmq 4.1.6 and czmq 4.2.0
+
+::
+
+ cd ~/src
+ tar -xzf boost_1_64_0.tar.gz
+ cd boost_1_64_0
+ ./bootstrap.sh --with-libraries=program_options,filesystem,system,test
+
+Modify project_config.jam as directed at https://solarianprogrammer.com/2018/08/07/compiling-boost-gcc-clang-macos/
+
+For example, using gcc 7.3 instead of 8.1, part of the file should look like this:
+
+::
+
+ # if ! darwin in [ feature.values <toolset> ]
+ # {
+ #     using darwin ; 
+ # }
+
+ # project : default-build <toolset>darwin ;
+ using gcc : 7.3 : /usr/local/bin/g++-7 ;
+
+Then issue the following commands to build and test:
+
+::
+
+ sudo ./b2 cxxflags=-std=c++14 install
+ g++-7 -std=c++14 test.cpp -o test -lboost_system -lboost_filesystem
+ ./test
+
+To build HELICS:
+
+::
+
+ cd ~/src/HELICS-src
+ rm -r build
+ mkdir build
+ cd build
+ cmake -DCMAKE_INSTALL_PREFIX="/usr/local" -DBOOST_ROOT="/usr/local" -DBUILD_PYTHON_INTERFACE=ON -DENABLE_SWIG=OFF -DUSE_BOOST_STATIC_LIBS=ON -DCMAKE_C_COMPILER=/usr/local/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-7 ../
+ make clean
+ make -j 4
+ sudo make install
+
+To test HELICS:
+
+ helics_player --version
+ helics_recorder --version
+
+Add this to .bash_profile
+
+::
+
+ export PYTHONPATH=/usr/local/python:$PYTHONPATH
+
 GridLAB-D with Prerequisites (installed to /usr/local)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you encounter build errors with GridLAB-D, please try
-adding *-std=c++11* to *CXXFLAGS*.
+adding *-std=c++14* to *CXXFLAGS*.
 
 ::
 
@@ -108,19 +169,31 @@ adding *-std=c++11* to *CXXFLAGS*.
  autoreconf -isf
 
  cd third_party
- tar -xvzf xerces-c-3.1.1.tar.gz
- cd xerces-c-3.1.1
+ tar -xvzf xerces-c-3.2.0.tar.gz
+ cd xerces-c-3.2.0
  ./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w' 'CFLAGS=-w'
  make
  sudo make install
  cd ../..
 
- ./configure --with-fncs=/usr/local 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w' 'CFLAGS=-w'
+ ./configure --with-fncs=/usr/local --with-helics=/usr/local --enable-silent-rules 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -std=c++14' 'CFLAGS=-w' LDFLAGS='-g -w'
 
  sudo make
  sudo make install
  # TODO - set the GLPATH?
  gridlabd --validate 
+
+ns-3 with HELICS
+~~~~~~~~~~~~~~~~
+
+::
+
+ cd ~/src
+ git clone https://gitlab.com/nsnam/ns-3-dev.git
+ cd ns-3-dev
+ git clone https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+ ./waf configure --with-helics=/usr/local --disable-werror --enable-examples --enable-tests 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -std=c++14' 'CFLAGS=-w' LDFLAGS='-g -w'
+ ./waf build
 
 EnergyPlus with Prerequisites (installed to /usr/local)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
