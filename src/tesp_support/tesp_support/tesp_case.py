@@ -104,7 +104,6 @@ def write_tesp_case (config, cfgfile):
         * Invoke python3 on Mac and Linux when launching processes from within this function
     """
     tespdir = config['SimulationConfig']['SourceDirectory']
-#    tespdir = '../../../../ptesp/support'
     feederdir = tespdir + '/feeders/'
     scheduledir = tespdir + '/schedules/'
     weatherdir = tespdir + '/weather/'
@@ -169,38 +168,7 @@ def write_tesp_case (config, cfgfile):
     ppfile = ppdir + config['BackboneFiles']['PYPOWERFile']
     ppcsv = ppdir + config['PYPOWERConfiguration']['CSVLoadFile']
 
-    # set the RunPeriod for EnergyPlus
-    ip = open (eplusfile, 'r', encoding='latin-1')
-    op = open (eplusout, 'w', encoding='latin-1')
-    print ('filtering', eplusfile, 'to', eplusout)
-    for ln in ip:
-        line = ln.rstrip('\n')
-        if '!- Begin Month' in line:
-            print ('    %s                      !- Begin Month' % idf_int(begin_month), file=op)
-        elif '!- Begin Day of Month' in line:
-            print ('    %s                      !- Begin Day of Month' % idf_int(begin_day), file=op)
-        elif '!- End Month' in line:
-            print ('    %s                      !- End Month' % idf_int(end_month), file=op)
-        elif '!- End Day of Month' in line:
-            print ('    %s                      !- End Day of Month' % idf_int(end_day), file=op)
-        elif '!- Day of Week for Start Day' in line:
-            print ('    %s               !- Day of Week for Start Day' % ep_dow_names[dow], file=op)
-        else:
-            print (line, file=op)
-    ip.close()
-    op.close()
-
-    # process TMY3 ==> TMY2 ==> EPW
-    shutil.copy (weatherfile, casedir)
-    pw1 = subprocess.Popen ('Tmy3toTMY2_ansi ' + casedir + '/' + rootweather + '.tmy3 > '
-                            + casedir + '/' + rootweather + '.tmy2', shell=True)
-    pw1.wait()
-    cmdline = """python -c "import tesp_support.api as tesp;tesp.convert_tmy2_to_epw('""" + casedir + '/' + rootweather + """')" """
-    print (cmdline)
-    pw2 = subprocess.Popen (cmdline, shell=True)
-    pw2.wait()
-    os.remove (casedir + '/' + rootweather + '.tmy2')
-
+    # copy some boilerplate files
     shutil.copy (miscdir + 'clean.sh', casedir)
     shutil.copy (miscdir + 'clean.bat', casedir)
     shutil.copy (miscdir + 'kill5570.sh', casedir)
@@ -211,22 +179,59 @@ def write_tesp_case (config, cfgfile):
     shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
     shutil.copy (scheduledir + 'commercial_schedules.glm', casedir)
     shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
+    shutil.copy (weatherfile, casedir)
 
-    # write the EnergyPlus YAML files 
-    op = open (casedir + '/eplus.yaml', 'w')
-    print ('name: eplus', file=op)
-    print ('time_delta:', str (EpStep) + 'm', file=op)
-    print ('broker: tcp://localhost:5570', file=op)
-    print ('values:', file=op)
-    print ('    COOL_SETP_DELTA:', file=op)
-    print ('        topic: eplus_json/cooling_setpoint_delta', file=op)
-    print ('        default: 0', file=op)
-    print ('    HEAT_SETP_DELTA:', file=op)
-    print ('        topic: eplus_json/heating_setpoint_delta', file=op)
-    print ('        default: 0', file=op)
-    op.close()
+    #########################################
+    # set up EnergyPlus, if the user wants it
+    bUseEplus = False
+    if len(EpFile) > 0:
+        bUseEplus = True
+        # set the RunPeriod for EnergyPlus
+        ip = open (eplusfile, 'r', encoding='latin-1')
+        op = open (eplusout, 'w', encoding='latin-1')
+        print ('filtering', eplusfile, 'to', eplusout)
+        for ln in ip:
+            line = ln.rstrip('\n')
+            if '!- Begin Month' in line:
+                print ('    %s                      !- Begin Month' % idf_int(begin_month), file=op)
+            elif '!- Begin Day of Month' in line:
+                print ('    %s                      !- Begin Day of Month' % idf_int(begin_day), file=op)
+            elif '!- End Month' in line:
+                print ('    %s                      !- End Month' % idf_int(end_month), file=op)
+            elif '!- End Day of Month' in line:
+                print ('    %s                      !- End Day of Month' % idf_int(end_day), file=op)
+            elif '!- Day of Week for Start Day' in line:
+                print ('    %s               !- Day of Week for Start Day' % ep_dow_names[dow], file=op)
+            else:
+                print (line, file=op)
+        ip.close()
+        op.close()
 
-    epjyamlstr = """name: eplus_json
+        # process TMY3 ==> TMY2 ==> EPW
+        pw1 = subprocess.Popen ('Tmy3toTMY2_ansi ' + casedir + '/' + rootweather + '.tmy3 > '
+                                + casedir + '/' + rootweather + '.tmy2', shell=True)
+        pw1.wait()
+        cmdline = """python -c "import tesp_support.api as tesp;tesp.convert_tmy2_to_epw('""" + casedir + '/' + rootweather + """')" """
+        print (cmdline)
+        pw2 = subprocess.Popen (cmdline, shell=True)
+        pw2.wait()
+        os.remove (casedir + '/' + rootweather + '.tmy2')
+
+        # write the EnergyPlus YAML files 
+        op = open (casedir + '/eplus.yaml', 'w')
+        print ('name: eplus', file=op)
+        print ('time_delta:', str (EpStep) + 'm', file=op)
+        print ('broker: tcp://localhost:5570', file=op)
+        print ('values:', file=op)
+        print ('    COOL_SETP_DELTA:', file=op)
+        print ('        topic: eplus_json/cooling_setpoint_delta', file=op)
+        print ('        default: 0', file=op)
+        print ('    HEAT_SETP_DELTA:', file=op)
+        print ('        topic: eplus_json/heating_setpoint_delta', file=op)
+        print ('        default: 0', file=op)
+        op.close()
+
+        epjyamlstr = """name: eplus_json
 time_delta: """ + EpAgentStep + """
 broker: tcp://localhost:5570
 values:
@@ -333,9 +338,9 @@ values:
         topic: eplus/OFFICES_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
         default: 0
 """
-    op = open (casedir + '/eplus_json.yaml', 'w')
-    print (epjyamlstr, file=op)
-    op.close()
+        op = open (casedir + '/eplus_json.yaml', 'w')
+        print (epjyamlstr, file=op)
+        op.close()
 
     ###################################
     # dynamically import the base PYPOWER case
@@ -496,11 +501,14 @@ values:
     print ('set FNCS_FATAL=yes', file=op)
     print ('set FNCS_TIME_DELTA=', file=op)
     print ('set FNCS_CONFIG_FILE=', file=op)
-    print ('start /b cmd /c fncs_broker 5 ^>broker.log 2^>^&1', file=op)
-    print ('set FNCS_CONFIG_FILE=eplus.yaml', file=op)
-    print ('start /b cmd /c energyplus -w ' + EpWeather + ' -d output -r ' + EpFile + ' ^>eplus.log 2^>^&1', file=op)
-    print ('set FNCS_CONFIG_FILE=eplus_json.yaml', file=op)
-    print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
+    if bUseEplus:
+        print ('start /b cmd /c fncs_broker 5 ^>broker.log 2^>^&1', file=op)
+        print ('set FNCS_CONFIG_FILE=eplus.yaml', file=op)
+        print ('start /b cmd /c energyplus -w ' + EpWeather + ' -d output -r ' + EpFile + ' ^>eplus.log 2^>^&1', file=op)
+        print ('set FNCS_CONFIG_FILE=eplus_json.yaml', file=op)
+        print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
+    else:
+        print ('start /b cmd /c fncs_broker 3 ^>broker.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=', file=op)
     print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gridlabd.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=' + SubstationYamlFile, file=op)
@@ -512,11 +520,14 @@ values:
     # shell scripts and chmod for Mac/Linux
     shfile = casedir + '/run.sh'
     op = open (shfile, 'w')
-    print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 5 &> broker.log &)', file=op)
-    print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec EnergyPlus -w ' 
-           + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
-    print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && export FNCS_FATAL=YES && exec eplus_json', EpAgentStop, EpAgentStep, 
-           EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
+    if bUseEplus:
+        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 5 &> broker.log &)', file=op)
+        print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec EnergyPlus -w ' 
+               + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
+        print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && export FNCS_FATAL=YES && exec eplus_json', EpAgentStop, EpAgentStep, 
+               EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
+    else:
+        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 3 &> broker.log &)', file=op)
     print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
            + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> substation.log &)', file=op)
@@ -545,25 +556,30 @@ values:
     op = open (casedir + '/tesp_monitor.json', 'w')
     cmds = {'time_stop':seconds, 
             'yaml_delta':int(config['AgentPrep']['MarketClearingPeriod']), 
-            'commands':[{},{},{},{},{},{}]}
-    cmds['commands'][0] = {'args':['fncs_broker', '6'], 
+            'commands':[]}
+    if bUseEplus:
+        cmds['commands'].append({'args':['fncs_broker', '6'], 
                            'env':[['FNCS_BROKER', 'tcp://*:5570'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                           'log':'broker.log'}
-    cmds['commands'][1] = {'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', EpFile], 
+                           'log':'broker.log'})
+        cmds['commands'].append({'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', EpFile], 
                            'env':[['FNCS_CONFIG_FILE', 'eplus.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                           'log':'eplus.log'}
-    cmds['commands'][2] = {'args':['eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
+                           'log':'eplus.log'})
+        cmds['commands'].append({'args':['eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
                            'env':[['FNCS_CONFIG_FILE', 'eplus_json.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                           'log':'eplus_json.log'}
-    cmds['commands'][3] = {'args':['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile], 
-                           'env':[['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                           'log':'gridlabd.log'}
-    cmds['commands'][4] = {'args':['python', 'launch_auction.py'], 
-                           'env':[['FNCS_CONFIG_FILE', SubstationYamlFile],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                           'log':'substation.log'}
-    cmds['commands'][5] = {'args':['python', 'launch_pp.py'], 
-                           'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                           'log':'pypower.log'}
+                           'log':'eplus_json.log'})
+    else:
+        cmds['commands'].append({'args':['fncs_broker', '6'], 
+                           'env':[['FNCS_BROKER', 'tcp://*:5570'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                           'log':'broker.log'})
+    cmds['commands'].append({'args':['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile], 
+                       'env':[['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                       'log':'gridlabd.log'})
+    cmds['commands'].append({'args':['python', 'launch_auction.py'], 
+                       'env':[['FNCS_CONFIG_FILE', SubstationYamlFile],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                       'log':'substation.log'})
+    cmds['commands'].append({'args':['python', 'launch_pp.py'], 
+                       'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                       'log':'pypower.log'})
     json.dump (cmds, op, indent=2)
     op.close()
 
