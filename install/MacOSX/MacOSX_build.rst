@@ -137,11 +137,12 @@ To build HELICS:
 
 ::
 
+ brew install swig
  cd ~/src/HELICS-src
  rm -r build
  mkdir build
  cd build
- cmake -DCMAKE_INSTALL_PREFIX="/usr/local" -DBOOST_ROOT="/usr/local" -DBUILD_PYTHON_INTERFACE=ON -DENABLE_SWIG=OFF -DUSE_BOOST_STATIC_LIBS=ON -DCMAKE_C_COMPILER=/usr/local/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-7 ../
+ cmake -DCMAKE_INSTALL_PREFIX="/usr/local" -DBOOST_ROOT="/usr/local" -DBUILD_PYTHON_INTERFACE=ON -DUSE_BOOST_STATIC_LIBS=ON -DCMAKE_C_COMPILER=/usr/local/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-7 ../
  make clean
  make -j 4
  sudo make install
