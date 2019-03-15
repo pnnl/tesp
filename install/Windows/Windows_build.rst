@@ -116,8 +116,21 @@ The next time you open MSYS2, verify the preceeding as follows:
  python --version
  python3 --version
 
-Build FNCS and Link with GridLAB-D
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Build HELICS
+~~~~~~~~~~~~
+
+ZeroMQ 4.3.1 and CZMQ 4.2.0 required from github.com/zeromq
+
+::
+
+ cd /c/src
+ git clone https://github.com/GMLC-TDC/HELICS-src.git
+ cd HELICS-src
+ git checkout develop
+
+
+Build FNCS and HELICS Link with GridLAB-D
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ZeroMQ first, with a header file patch, and please note that newer 
 versions of ZMQ may not work with FNCS: 
@@ -125,11 +138,9 @@ versions of ZMQ may not work with FNCS:
 ::
 
  cd /c/src
- wget --no-check-certificate http://download.zeromq.org/zeromq-4.1.4.tar.gz
- tar -xzf zeromq-4.1.4.tar.gz
- cd zeromq-4.1.4
+ tar -xzf zeromq-4.3.1.tar.gz
+ cd zeromq-4.3.1
  ./configure --without-libsodium --prefix=/usr/local LDFLAGS="-static-libgcc -static-libstdc++"
- (insert #include<iphlpapi.h> into src/windows.hpp around line 57; not needed in v4.2.5)
  make
  make install
 
@@ -139,9 +150,8 @@ CZMQ may not work with FNCS:
 ::
 
  cd /c/src
- wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
- tar -xzf czmq-3.0.2.tar.gz
- cd czmq-3.0.2
+ tar -xzf czmq-4.2.0.tar.gz
+ cd czmq-4.2.0
  ./configure --prefix=/usr/local --with-libzmq=/usr/local
  mkdir builds
  mkdir builds/mingw32
