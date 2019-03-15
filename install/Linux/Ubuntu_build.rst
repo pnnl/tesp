@@ -161,26 +161,24 @@ Then test HELICS from Python 3:
 GridLAB-D
 ~~~~~~~~~
 
-If you encounter build errors with GridLAB-D, please try
-adding *-std=c++11* to *CXXFLAGS*.
+To link with both FNCS and HELICS, and run the autotest suite:
 
 ::
 
  cd ~/src/gridlab-d
  autoreconf -isf
 
- ./configure --with-fncs=$FNCS_INSTALL --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w' 'CXXFLAGS=-w -std=c++11' 'LDFLAGS=-w'
-
  cd third_party
- tar -xvzf xerces-c-3.1.1.tar.gz
- cd xerces-c-3.1.1
+ tar -xvzf xerces-c-3.2.0.tar.gz
+ cd xerces-c-3.2.0
  ./configure 'CXXFLAGS=-w' 'CFLAGS=-w'
  make
  sudo make install
  cd ../..
 
- # for debugging ./configure --with-fncs=$FNCS_INSTALL 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -g -O0'
- ./configure --with-fncs=$FNCS_INSTALL 'CXXFLAGS=-w' 'CFLAGS=-w'
+ ./configure --with-fncs=$FNCS_INSTALL --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w' 'CXXFLAGS=-w -std=c++14' 'LDFLAGS=-w'
+
+ # for debugging use 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -std=c++14 -g -O0' and 'LDFLAGS=-w -g -O0'
 
  sudo make
  sudo make install
