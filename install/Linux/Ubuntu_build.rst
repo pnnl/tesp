@@ -51,6 +51,7 @@ Checkout PNNL repositories from github
 
 ::
 
+ mkdir ~/src
  cd ~/src
  git config --global user.name "your user name"
  git config --global user.email "your email"
@@ -58,7 +59,7 @@ Checkout PNNL repositories from github
  git clone -b develop https://github.com/GMLC-TDC/HELICS-src
  git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
- git clone -b master https://github.com/pnnl/tesp.git
+ git clone -b develop https://github.com/pnnl/tesp.git
 
 Choosing and Configuring the Install Directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

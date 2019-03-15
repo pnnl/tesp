@@ -77,7 +77,7 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b develop https://github.com/FNCS/fncs.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
- git clone -b master https://github.com/pnnl/tesp.git
+ git clone -b develop https://github.com/pnnl/tesp.git
 
 We're going to build everything to /usr/local in the MSYS2 environment. If you accepted the
 installation defaults, this corresponds to c:\msys64\usr\local in the Windows environment. 
@@ -124,7 +124,7 @@ ZeroMQ 4.3.1 and CZMQ 4.2.0 required from github.com/zeromq
 ::
 
  cd /c/src
- git clone https://github.com/GMLC-TDC/HELICS-src.git
+ git clone -b develop https://github.com/GMLC-TDC/HELICS-src.git
  cd HELICS-src
  git checkout develop
 
