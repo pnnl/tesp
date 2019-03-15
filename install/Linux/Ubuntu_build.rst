@@ -31,8 +31,9 @@ Preparation - Python Packages, Java, build tools
  sudo apt-get install default-jdk
 
  # python3 support
- # first install Python 3.6 or later from https://www.python.org/downloads/ or https://repo.continuum.io/
+ # you can also install Python 3.6 or later from https://www.python.org/downloads/ or https://repo.continuum.io/
  sudo apt-get install python3
+ sudo apt-get install python3-dev
  sudo apt-get install python3-pip
  sudo apt-get install python3-tk
  pip3 install tesp_support --upgrade
@@ -45,6 +46,7 @@ Preparation - Python Packages, Java, build tools
  sudo apt-get install libboost-filesystem-dev
  sudo apt-get install libzmq5-dev
  sudo apt-get install libczmq-dev
+ sudo apt-get install swig
 
 Checkout PNNL repositories from github
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,20 +92,22 @@ is for Ubuntu; other flavors of Linux may differ.
  #
  source /etc/environment
 
-FNCS and HELICS with Prerequisites
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FNCS and HELICS
+~~~~~~~~~~~~~~~
 
-Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
+To build the shared libraries for FNCS with Python bindings:
 
 ::
 
- cd ~/src
-
- cd ../fncs
+ cd ~/src/fncs
  autoreconf -if
  ./configure 'CXXFLAGS=-w' 'CFLAGS=-w' --prefix=$FNCS_INSTALL --with-zmq=$FNCS_INSTALL
  make
  sudo make install
+
+To build the Java interface for versions 8 or 9:
+
+::
 
  cd java
  mkdir build
@@ -113,8 +117,49 @@ Your Java version may have removed *javah*.  If that's the case, use *javac -h* 
  cp fncs.jar ~/src/tesp/examples/loadshed/java
  cp libJNIfncs.so ~/src/tesp/examples/loadshed/java
 
-GridLAB-D with Prerequisites
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To build the Java interface for version 10, which has *javah* replaced by *javac -h*:
+
+::
+
+ cd java
+ make
+ make install
+
+To build HELICS 2.0 with Python bindings:
+
+::
+
+ cd ~/src/HELICS-src
+ mkdir build
+ cd build
+ cmake -DBUILD_PYTHON_INTERFACE=ON ..
+ make -j8
+ sudo make install
+
+Test that HELICS and FNCS start:
+
+ sudo ldconfig
+ helics_player --version
+ helics_recorder --version
+ fncs_broker --version # look for the program to start, then exit with error
+
+To set up Python to run with HELICS, add this to your *~/.bashrc* file:
+
+::
+
+ export PYTHONPATH=/usr/local/python:$PYTHONPATH
+
+Then test HELICS from Python 3:
+
+::
+
+ python3
+ >>> import helics
+ >>> helics.helicsGetVersion()
+ >>> quit()
+
+GridLAB-D
+~~~~~~~~~
 
 If you encounter build errors with GridLAB-D, please try
 adding *-std=c++11* to *CXXFLAGS*.
@@ -123,6 +168,8 @@ adding *-std=c++11* to *CXXFLAGS*.
 
  cd ~/src/gridlab-d
  autoreconf -isf
+
+ ./configure --with-fncs=$FNCS_INSTALL --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w' 'CXXFLAGS=-w -std=c++11' 'LDFLAGS=-w'
 
  cd third_party
  tar -xvzf xerces-c-3.1.1.tar.gz
@@ -165,7 +212,8 @@ EnergyPlus with Prerequisites
  cp libenergyplusapi.so.8.3.0 EnergyPlus-8-3-0
 
  # if ReadVarsESO is not found at the end of a simulation, try this
- /usr/local/EnergyPlus-8-3-0$ sudo ln -s PostProcess/ReadVarsESO ReadVarsESO
+ cd /usr/local/EnergyPlus-8-3-0
+ sudo ln -s PostProcess/ReadVarsESO ReadVarsESO
 
 Build eplus_json
 ~~~~~~~~~~~~~~~~
@@ -194,15 +242,6 @@ before you try :ref:`RunExamples`.
 
 In case you have both Python 2 and Python 3 installed, the TESP example
 scripts and post-processing programs only invoke *python3*.
-
-::
-
- gedit ~/.profile
- #
- # edit the line with PATH as follows, to put Python 3 before other
- # directories in the path, and then save the file
- #
- PATH="$HOME/miniconda3/bin:$HOME/bin: and more directories"
 
 DEPRECATED: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
