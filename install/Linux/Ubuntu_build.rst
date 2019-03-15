@@ -228,6 +228,19 @@ Build eplus_json
  make
  sudo make install
 
+Build ns3 with HELICS
+~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+ cd ~/src
+ git clone https://gitlab.com/nsnam/ns-3-dev.git
+ cd ns-3-dev
+ git clone https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+ cd ..
+ ./waf configure --with-helics=/usr/local --disable-werror --enable-examples --enable-tests
+ ./waf build 
+
 Prepare for Testing
 ~~~~~~~~~~~~~~~~~~~
 
