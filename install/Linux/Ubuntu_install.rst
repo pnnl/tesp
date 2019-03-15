@@ -14,7 +14,7 @@ of Python and/or Java have been installed.
 
  sudo apt install python3-pip
  sudo apt install python3-tk
- pip install tesp_support --upgrade
+ pip3 install tesp_support --upgrade
  sudo apt install default-jre
  sudo apt install default-jdk
 

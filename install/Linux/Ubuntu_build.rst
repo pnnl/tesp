@@ -8,10 +8,10 @@ GitHub branch requirements for TESP:
 - feature/1146 for GridLAB-D
 - develop for FNCS
 - fncs-v8.3.0 for EnergyPlus
+- develop for HELICS 2.0
 
 You may also need to upgrade the gcc and g++ compilers. This build 
-procedure has been tested on a clean virtual machine with Ubuntu 16.04 
-LTS and gcc/g++ 5.4.0.
+procedure has been tested with Ubuntu 18.04 LTS and gcc/g++ 7.3.0.
 
 When you finish the build, try :ref:`RunExamples`.
 
@@ -20,27 +20,31 @@ Preparation - Python Packages, Java, build tools
 
 ::
 
+ # build tools and Java support
  sudo apt-get install git
  sudo apt-get install build-essential
  sudo apt-get install autoconf
  sudo apt-get install libtool
  sudo apt-get install cmake
  sudo apt-get install libjsoncpp-dev
- # Java 8 is required; the following works on Ubuntu 16.04
+ sudo apt-get install default-jre
  sudo apt-get install default-jdk
 
- mkdir ~/src
- cd ~/src
- # may need sudo on the following steps to install for all users
- wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
- chmod +x Miniconda3-latest-Linux-x86_64.sh
- # during following install, accept the choice of adding Miniconda to your PATH
- ./Miniconda3-latest-Linux-x86_64.sh
- conda update conda
- conda install pandas
- # tesp_support, including verification of PYPOWER dependency
- pip install tesp_support
- opf
+ # python3 support
+ # first install Python 3.6 or later from https://www.python.org/downloads/ or https://repo.continuum.io/
+ sudo apt-get install python3
+ sudo apt-get install python3-pip
+ sudo apt-get install python3-tk
+ pip3 install tesp_support --upgrade
+ opf 
+
+ # for HELICS and FNCS
+ sudo apt-get install libboost-dev
+ sudo apt-get install libboost-program-options-dev
+ sudo apt-get install libboost-test-dev
+ sudo apt-get install libboost-filesystem-dev
+ sudo apt-get install libzmq5-dev
+ sudo apt-get install libczmq-dev
 
 Checkout PNNL repositories from github
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,6 +55,7 @@ Checkout PNNL repositories from github
  git config --global user.name "your user name"
  git config --global user.email "your email"
  git clone -b develop https://github.com/FNCS/fncs.git
+ git clone -b develop https://github.com/GMLC-TDC/HELICS-src
  git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b master https://github.com/pnnl/tesp.git
@@ -72,40 +77,26 @@ is for Ubuntu; other flavors of Linux may differ.
 
 ::
 
- sudo emacs /etc/environment
- # or sudo gedit /etc/environment
+ sudo gedit /etc/environment
  #
  # add these two lines in the *environment* file, and save it:
  #
  FNCS_INSTALL="$HOME/FNCS_install"
+ # or FNCS_INSTALL="/usr/local"
  GLPATH="$FNCS_INSTALL/lib/gridlabd:$FNCS_INSTALL/share/gridlabd"
  #
  # Use this command before proceeding with the subsequent build steps
  #
  source /etc/environment
 
-FNCS with Prerequisites
-~~~~~~~~~~~~~~~~~~~~~~~
+FNCS and HELICS with Prerequisites
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
 
 ::
 
  cd ~/src
- wget --no-check-certificate http://download.zeromq.org/zeromq-4.1.3.tar.gz
- tar -xzf zeromq-4.1.3.tar.gz
- cd zeromq-4.1.3
- ./configure --without-libsodium --prefix=$FNCS_INSTALL
- make
- sudo make install
-
- cd ..
- wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
- tar -xzf czmq-3.0.2.tar.gz
- cd czmq-3.0.2
- ./configure 'CPPFLAGS=-Wno-format-truncation' --prefix=$FNCS_INSTALL --with-libzmq=$FNCS_INSTALL
- make
- sudo make install
 
  cd ../fncs
  autoreconf -if
