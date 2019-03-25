@@ -132,7 +132,7 @@ To build HELICS 2.0 with Python bindings:
  cd ~/src/HELICS-src
  mkdir build
  cd build
- cmake -DBUILD_PYTHON_INTERFACE=ON ..
+ cmake -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DCMAKE_BUILD_TYPE=Release ..
  make -j8
  sudo make install
 
@@ -143,11 +143,12 @@ Test that HELICS and FNCS start:
  helics_recorder --version
  fncs_broker --version # look for the program to start, then exit with error
 
-To set up Python to run with HELICS, add this to your *~/.bashrc* file:
+To set up Python and Java to run with HELICS, add this to your *~/.bashrc* file:
 
 ::
 
  export PYTHONPATH=/usr/local/python:$PYTHONPATH
+ export JAVAPATH=/usr/local/java:$JAVAPATH
 
 Then test HELICS from Python 3:
 
