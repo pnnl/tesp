@@ -29,7 +29,7 @@ def destroy_federate(fed, broker=None):
 
 def main():
     fed = create_federate()
-    pubid = h.helicsFederateRegisterGlobalPublication(fed, "loadshed/sw_status", h.helics_data_type_int, "")
+    pubid = h.helicsFederateRegisterGlobalPublication(fed, "loadshed/sw_status", h.helics_data_type_string, "")
     subid = h.helicsFederateRegisterSubscription(fed, "gridlabdSimulator1/totalLoad", "")
     h.helicsFederateEnterExecutingMode(fed)
     
@@ -43,7 +43,7 @@ def main():
         while grantedtime < t:
             grantedtime = h.helicsFederateRequestTime(fed, t)
         logger.info('Switching to ' + str(val) + ' at ' + str(t))
-        status = h.helicsPublicationPublishInteger(pubid, val)
+        status = h.helicsPublicationPublishString(pubid, str(val))
     logger.info("Destroying federate")
     destroy_federate(fed)
 

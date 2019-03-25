@@ -16,7 +16,7 @@
 	"subscriptions" : [
 		{
 			"key" : "loadshed/sw_status", 
-			"type" : "integer",
+			"type" : "string",
 			"info" : {
 				"object" : "sw_loadshed",
 				"property" : "phase_A_state"
