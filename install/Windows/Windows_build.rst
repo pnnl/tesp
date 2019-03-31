@@ -63,6 +63,7 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  pacman -S --needed mingw-w64-x86_64-dlfcn
  pacman -S --needed mingw-w64-x86_64-cmake
  pacman -S --needed git jsoncpp
+ pacman -S --needed mingw64/mingw-w64-x86_64-zeromq
 
 - Exit MSYS2 and restart from a different Start Menu shortcut for MSYS2 MinGW 64-bit
 - You may wish to create a desktop shortcut for the 64-bit environment, as you will use it often
@@ -119,7 +120,7 @@ The next time you open MSYS2, verify the preceeding as follows:
 Build HELICS
 ~~~~~~~~~~~~
 
-ZeroMQ 4.3.1 and CZMQ 4.2.0 required from github.com/zeromq
+ZeroMQ 4.3.1 (4.2.5-1) and CZMQ 4.2.0 required from github.com/zeromq
 
 ::
 
