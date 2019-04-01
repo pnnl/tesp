@@ -23,18 +23,22 @@ object metrics_collector_writer {
 	filename loadshed_metrics.json;
 }
 
-//object fncs_msg {
-//  name gridlabdSimulator1;
-//  publish "commit:n650.distribution_load -> distribution_load; 1000";
-//  subscribe "precommit:sw_loadshed.phase_A_state <- loadshed/sw_status";
-//  option "transport:hostname localhost, port 5570";
-//  parent n650;
-//}
+#ifdef WANT_FNCS
+object fncs_msg {
+  name gridlabdSimulator1;
+  publish "commit:n650.distribution_load -> distribution_load; 1000";
+  subscribe "precommit:sw_loadshed.phase_A_state <- loadshed/sw_status";
+  option "transport:hostname localhost, port 5570";
+  parent n650;
+}
+#endif
 
+#ifdef WANT_HELICS
 object helics_msg {
   name gridlabdSimulator1;
   configure helics_gld_msg.json;
 }
+#endif
 
 // Loadshedding Switch
 object switch {
