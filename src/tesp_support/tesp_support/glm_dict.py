@@ -32,6 +32,27 @@ def ercotMeterName(objname):
 	k = root1.rfind('_')
 	return root1[:k] + '_mtr'
 
+def ti_enumeration_string(tok):
+	""" if thermal_integrity_level is an integer, convert to a string for the metadata
+	"""
+	if tok == '0':
+		return 'VERY_LITTLE'
+	if tok == '1':
+		return 'LITTLE'
+	if tok == '2':
+		return 'BELOW_NORMAL'
+	if tok == '3':
+		return 'NORMAL'
+	if tok == '4':
+		return 'ABOVE_NORMAL'
+	if tok == '5':
+		return 'GOOD'
+	if tok == '6':
+		return 'VERY_GOOD'
+	if tok == '7':
+		return 'UNKNOWN'
+	return tok
+
 def glm_dict (nameroot, ercot=False, te30=False):
 	""" Writes the JSON metadata file from a GLM file
 
@@ -176,7 +197,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				if lst[0] == 'heating_system_type':
 					heating = lst[1].strip(';')
 				if lst[0] == 'thermal_integrity_level':
-					thermal_integrity = lst[1].strip(';')
+					thermal_integrity = ti_enumeration_string (lst[1].strip(';'))
 				if (lst[0] == 'cooling_setpoint') or (lst[0] == 'heating_setpoint'):
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
