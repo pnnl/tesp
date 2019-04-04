@@ -388,7 +388,7 @@ def prep_substation (gldfileroot, jsonfile = ''):
         Eplus_Bus = config['FeederGenerator']['EnergyPlusBus']
         agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
 
-        max_capacity_reference_bid_quantity = 5000.0 * float(config['PYPOWERConfiguration']['TransformerBase']) / 3.0  # forced oil, forced air
+        # max_capacity_reference_bid_quantity = 5000.0 * float(config['PYPOWERConfiguration']['TransformerBase']) / 3.0  # forced oil, forced air
 
     ProcessGLM (gldfileroot)
 
