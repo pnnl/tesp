@@ -19,7 +19,7 @@ class hvac:
 
     Attributes:
         name (str): name of this agent
-        control_mode (str): control mode from dict (not implemented)
+        control_mode (str): control mode from dict (CN_RAMP or CN_NONE, which still implements the setpoint schedule)
         houseName (str): name of the corresponding house in GridLAB-D, from dict
         meterName (str): name of the corresponding triplex_meter in GridLAB-D, from dict
         period (float): market clearing period, in seconds, from dict
@@ -112,7 +112,7 @@ class hvac:
         Returns:
             Boolean: True if the thermostat setting changes, False if not.
         """
-        if self.std_dev > 0.0:
+        if self.control_mode == 'CN_RAMP' and self.std_dev > 0.0:
             offset = (self.cleared_price - self.mean) * self.Trange / self.ramp / self.std_dev
             if offset < -self.offset_limit:
                 offset = -self.offset_limit
@@ -126,8 +126,11 @@ class hvac:
         """ Bid to run the air conditioner through the next period
         
         Returns:
-            [float, float, Boolean]: bid price in $/kwh, bid quantity in kW and current HVAC on state 
+            [float, float, Boolean]: bid price in $/kwh, bid quantity in kW and current HVAC on state, or None if not bidding 
         """
+        if self.control_mode == 'CN_NONE':
+            return None
+
         p = self.mean + (self.air_temp - self.basepoint) * self.ramp * self.std_dev / self.Trange
         if p >= self.price_cap:
             self.bid_price = self.price_cap
