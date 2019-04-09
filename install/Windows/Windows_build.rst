@@ -120,7 +120,8 @@ The next time you open MSYS2, verify the preceeding as follows:
 Build HELICS
 ~~~~~~~~~~~~
 
-ZeroMQ 4.3.1 (4.2.5-1) and CZMQ 4.2.0 required from github.com/zeromq
+ZeroMQ 4.3.1 (4.2.5-1) and CZMQ 4.2.0 required from https://github.com/zeromq/libzmq/releases
+and https://github.com/zeromq/czmq/releases
 
 ::
 
@@ -139,9 +140,9 @@ versions of ZMQ may not work with FNCS:
 ::
 
  cd /c/src
- tar -xzf zeromq-4.3.1.tar.gz
- cd zeromq-4.3.1
- ./configure --without-libsodium --prefix=/usr/local LDFLAGS="-static-libgcc -static-libstdc++"
+ tar -xzf zeromq-4.2.5.tar.gz
+ cd zeromq-4.2.5
+ ./configure --prefix=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w'
  make
  make install
 
@@ -151,97 +152,12 @@ CZMQ may not work with FNCS:
 ::
 
  cd /c/src
- tar -xzf czmq-4.2.0.tar.gz
- cd czmq-4.2.0
- ./configure --prefix=/usr/local --with-libzmq=/usr/local
- mkdir builds
- mkdir builds/mingw32
- cd builds/mingw32
- (manually create a Makefile, as shown in the next code block)
+ tar -xzf czmq-4.1.1.tar.gz
+ cd czmq-4.1.1
+ // edit /usr/local/lib/pkgconfig/libzmq.pc to read Libs: -L${libdir} -lzmq -lws2_32 -liphlpapi -lrpcrt4
+ ./configure --prefix=/usr/local --with-libzmq=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w' 'PKG_CONFIG_PATH=/usr/local/lib/pkgconfig'
  make
  make install
-
-Here is the Windows Makefile for CZMQ (note: space at the beginning of 
-each line should be a tab): 
-
-::
-
- # replace the following with locations for libzmq and fncs
- PREFIX=c:/msys64/usr/local
-
- INCDIR=-I$(PREFIX)/include -I.
- LIBDIR=-L$(PREFIX)/lib
-
- CC=gcc
- CFLAGS=-Wall -Os -g -std=c99 -DLIBCZMQ_EXPORTS $(INCDIR)
-
- HEADERS = ../../include/*.h ../../src/zgossip_msg.h
-
- OBJS = zactor.o \
-	 zarmour.o \
-	 zauth.o \
-	 zauth_v2.o \
-	 zbeacon.o \
-	 zbeacon_v2.o \
-	 zcert.o \
-	 zcertstore.o \
-	 zchunk.o \
-	 zclock.o \
-	 zconfig.o \
-	 zctx.o \
-	 zdigest.o \
-	 zdir.o \
-	 zdir_patch.o \
-	 zfile.o \
-	 zframe.o \
-	 zgossip.o \
-	 zgossip_msg.o \
-	 zhash.o \
-	 zhashx.o \
-	 ziflist.o \
-	 zlist.o \
-	 zlistx.o \
-	 zloop.o \
-	 zmonitor.o \
-	 zmonitor_v2.o \
-	 zmsg.o \
-	 zmutex.o \
-	 zpoller.o \
-	 zproxy.o \
-	 zproxy_v2.o \
-	 zrex.o \
-	 zsock.o \
-	 zsock_option.o \
-	 zsocket.o \
-	 zsockopt.o \
-	 zstr.o \
-	 zsys.o \
-	 zthread.o \
-	 zuuid.o
-
- %.o: ../../src/%.c
-	 $(CC) -c -o $@ $< $(CFLAGS)
-
- all: prep_headers libczmq.dll czmq_selftest.exe
-
- prep_headers:
-	 cp $(HEADERS) $(PREFIX)/include
-
- install:
-	 cp libczmq.dll $(PREFIX)/bin
-	 cp libczmq.dll.a $(PREFIX)/lib
-	 cp czmq_selftest.exe $(PREFIX)/bin
-	 cp $(HEADERS) $(PREFIX)/include
-
- libczmq.dll: $(OBJS)
-	 $(CC) -shared -o $@ $(OBJS) -Wl,--out-implib,$@.a $(LIBDIR) -lzmq -lws2_32 -liphlpapi -lrpcrt4
-
- # the test functions are not exported into the DLL
- czmq_selftest.exe: czmq_selftest.o $(OBJS)
-	 $(CC) -o $@ $^ $(LIBDIR) -lzmq -lws2_32 -liphlpapi -lrpcrt4
-
- clean:
-	 rm *.o *.a *.dll *.exe
 
 Now build FNCS:
 
@@ -249,7 +165,7 @@ Now build FNCS:
 
  cd /c/src
  cd fncs
- ./configure --prefix=/usr/local --with-zmq=/usr/local
+ ./configure --prefix=/usr/local --with-zmq=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w'
  make
  make install
 
