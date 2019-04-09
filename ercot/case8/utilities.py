@@ -68,8 +68,8 @@ def write_json_for_ercot_monitor(timeStop, timeDelta, numberOfFederates):
                            ['FNCS_LOG_STDOUT', 'YES']],
                     'log' : 'Bus' + str(i + 1) + '.log'}
         gridlabds.append(gridlabd)
-    python = {'args' : ['python', 'fncsERCOT.py'],
-              'env' : [['FNCS_CONFIG_FILE', 'pypower8.yaml'],
+    python = {'args' : ['python', 'fncsTSO.py'],
+              'env' : [['FNCS_CONFIG_FILE', 'tso8.yaml'],
                        ['FNCS_FATAL', 'YES'],
                        ['FNCS_LOG_STDOUT', 'YES']],
               'log' : 'bulk.log'}

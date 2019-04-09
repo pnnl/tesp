@@ -23,5 +23,5 @@ start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=Bus7_metrics.json Bus7.glm 
 
 start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=Bus8_metrics.json Bus8.glm ^>Bus8.log 2^>^&1 
 
-set FNCS_CONFIG_FILE=pypower8.yaml
-start /b cmd /c python fncsERCOT.py ^>bulk.log 2^>^&1
+set FNCS_CONFIG_FILE=tso8.yaml
+start /b cmd /c python fncsTSO.py ^>bulk.log 2^>^&1

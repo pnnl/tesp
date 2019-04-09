@@ -7,17 +7,17 @@ Directory of input and script files:
 
  - *clean.sh*; removes generated input and output files, EXCEPT Bus?.glm
  - *ercot_8.json*; bulk system model, copied from ../bulk_system and then edited
- - *fncsERCOT.py*; reads ercot_8.json and pypower8.yaml to run the bulk system simulation in PYPOWER, a customization of fncsPYPOWER in tesp_support
+ - *fncsTSO.py*; reads ercot_8.json and tso8.yaml to run the bulk system simulation in PYPOWER, a customization of fncsPYPOWER in tesp_support
  - *kill5570.sh*; helper script to kill all FNCS processes
  - *plot_gld.py*; customization of process_gld for the ERCOT model
  - *plot_pp.py*; customization of process_pypower for the ERCOT model
  - *plots.py*; calls process_gld, process_houses and process_agents from tesp_support, for one bus
  - *prep_ercot_auction.py*; configures the transactive agent dictionary and FNCS subscriptions based on the GridLAB-D dictionary
  - *prepare_case.py*; writes the GridLAB-D dictionary for each bus, then calls prep_ercot_auction.py for each bus
- - *pypower8.yaml*; FNCS subscriptions for the bulk_system
  - *run.sh*; runs the bulk system and 8 feeders, but no transactive agents
  - *run_market.sh*; runs the bulk system and 8 feeders, with transactive agents
  - *run_market_debug.sh*; runs the transactive simulation with extra FNCS output
+ - *tso8.yaml*; FNCS subscriptions for the bulk_system
 
 Directory of generated input files:
 
@@ -29,7 +29,7 @@ Directory of generated input files:
 
 Directory of generated output files (note: metadata is embedded in the json files):
 
- - *ercot_8_m_dict.json*; metadata for bulk system post processing, written by fncsERCOT.py
+ - *ercot_8_m_dict.json*; metadata for bulk system post processing, written by fncsTSO.py
  - *Bus?.log*; GridLAB-D output log, includes resource usage
  - *auction?.log*; transactive agent output log, includes resource usage
  - *auction_Bus?_metrics.json*; intermediate auction metrics for transactive agents 
