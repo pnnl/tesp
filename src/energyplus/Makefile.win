@@ -3,8 +3,8 @@ FNCS_PATH := /usr/local
 CXX = g++
 
 CXXFLAGS =
-CXXFLAGS += -g
-CXXFLAGS += -O0
+#CXXFLAGS += -g
+CXXFLAGS += -O2
 CXXFLAGS += -std=c++0x
 
 CPPFLAGS =
