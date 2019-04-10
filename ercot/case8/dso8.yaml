@@ -1,0 +1,87 @@
+name: dsostub
+time_delta: 15s
+broker: tcp://localhost:5570
+aggregate_sub: true
+aggregate_pub: true
+values:
+  LMP1:
+    topic: pypower/LMP_Bus1
+    default: 0.1
+    type: double
+    list: false
+  V1:
+    topic: pypower/three_phase_voltage_Bus1
+    default: 1.0
+    type: double
+    list: false
+  LMP2:
+    topic: pypower/LMP_Bus2
+    default: 0.1
+    type: double
+    list: false
+  V2:
+    topic: pypower/three_phase_voltage_Bus2
+    default: 1.0
+    type: double
+    list: false
+  LMP3:
+    topic: pypower/LMP_Bus3
+    default: 0.1
+    type: double
+    list: false
+  V3:
+    topic: pypower/three_phase_voltage_Bus3
+    default: 1.0
+    type: double
+    list: false
+  LMP4:
+    topic: pypower/LMP_Bus4
+    default: 0.1
+    type: double
+    list: false
+  V4:
+    topic: pypower/three_phase_voltage_Bus4
+    default: 1.0
+    type: double
+    list: false
+  LMP5:
+    topic: pypower/LMP_Bus5
+    default: 0.1
+    type: double
+    list: false
+  V5:
+    topic: pypower/three_phase_voltage_Bus5
+    default: 1.0
+    type: double
+    list: false
+  LMP6:
+    topic: pypower/LMP_Bus6
+    default: 0.1
+    type: double
+    list: false
+  V6:
+    topic: pypower/three_phase_voltage_Bus6
+    default: 1.0
+    type: double
+    list: false
+  LMP7:
+    topic: pypower/LMP_Bus7
+    default: 0.1
+    type: double
+    list: false
+  V7:
+    topic: pypower/three_phase_voltage_Bus7
+    default: 1.0
+    type: double
+    list: false
+  LMP8:
+    topic: pypower/LMP_Bus8
+    default: 0.1
+    type: double
+    list: false
+  V8:
+    topic: pypower/three_phase_voltage_Bus8
+    default: 1.0
+    type: double
+    list: false
+

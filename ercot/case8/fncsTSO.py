@@ -214,7 +214,9 @@ gen_mp = open ('gen_' + casename + '_metrics.json', 'w')
 sys_mp = open ('sys_' + casename + '_metrics.json', 'w')
 bus_meta = {'LMP_P':{'units':'USD/kwh','index':0},'LMP_Q':{'units':'USD/kvarh','index':1},
   'PD':{'units':'MW','index':2},'QD':{'units':'MVAR','index':3},'Vang':{'units':'deg','index':4},
-  'Vmag':{'units':'pu','index':5},'Vmax':{'units':'pu','index':6},'Vmin':{'units':'pu','index':7}}
+  'Vmag':{'units':'pu','index':5},'Vmax':{'units':'pu','index':6},'Vmin':{'units':'pu','index':7},
+  'unresp':{'units':'MW','index':8},'resp_max':{'units':'MW','index':9},
+  'c1':{'units':'$/MW','index':10},'c2':{'units':'$/MW^2','index':11}}
 gen_meta = {'Pgen':{'units':'MW','index':0},'Qgen':{'units':'MVAR','index':1},'LMP_P':{'units':'USD/kwh','index':2}}
 sys_meta = {'Ploss':{'units':'MW','index':0},'Converged':{'units':'true/false','index':1}}
 bus_metrics = {'Metadata':bus_meta,'StartTime':StartTime}
@@ -270,7 +272,7 @@ fncsBus = ppc['FNCS']
 gen = ppc['gen']
 for i in range (fncsBus.shape[0]):
   busnum = int(fncsBus[i,0])
-  bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0]
+  bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0,0,0,0,0]
 for i in range (gen.shape[0]):
   gen_accum[str(i+1)] = [0,0,0]
 
@@ -367,6 +369,11 @@ while ts <= tmax:
       c2 = gld_load[busnum]['c2'] / gld_scale
       c1 = gld_load[busnum]['c1']
       deg = gld_load[busnum]['deg']
+      # track the latest bid in the metrics
+      bus_accum[str(busnum)][8] = unresp
+      bus_accum[str(busnum)][9] = resp_max
+      bus_accum[str(busnum)][10] = c1
+      bus_accum[str(busnum)][11] = c2
       genidx = gld_load[busnum]['genidx']
       ppc['gen'][genidx, 9] = -resp_max
       if deg == 2:
@@ -517,8 +524,9 @@ while ts <= tmax:
       row = bus[busidx].tolist()
       met = bus_accum[str(busnum)]
       bus_metrics[str(ts)][str(busnum)] = [met[0]/n_accum, met[1]/n_accum, met[2]/n_accum, met[3]/n_accum,
-                                           met[4]/n_accum, met[5]/n_accum, met[6], met[7]]
-      bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0]
+                                           met[4]/n_accum, met[5]/n_accum, met[6], met[7],
+                                           met[8], met[9], met[10], met[11]]
+      bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0,0,0,0,0]
 
     gen_metrics[str(ts)] = {}
     for i in range (gen.shape[0]):

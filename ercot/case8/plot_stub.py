@@ -1,4 +1,4 @@
-#	Copyright (C) 2017-2018 Battelle Memorial Institute
+#   Copyright (C) 2017-2018 Battelle Memorial Institute
 # file: process_pypower.py
 import json;
 #import sys;
@@ -184,13 +184,53 @@ def process_pypower(nameroot):
                '{:.4f}'.format (p_std/p_avg))
         j = j + 1
 
+    # read the dso stub metrics, which uses the same bus keys but different hrs
+    lp_d = open ('dso_' + nameroot + '_metrics.json').read()
+    lst_d = json.loads(lp_d)
+    print ('\nDSO bus data starting', lst_d['StartTime'])
+    lst_d.pop('StartTime')
+    meta_d = lst_d.pop('Metadata')
+    dtimes = list(map(int,list(lst_d.keys())))
+    dtimes.sort()
+    print ('There are', len (dtimes), 'sample times at', dtimes[1] - dtimes[0], 'second intervals')
+    dhrs = np.array(dtimes, dtype=np.float)
+    denom = 3600.0
+    dhrs /= denom
+
+    print ('\nDSO Bus Metadata [Variable Index Units] for', len(lst_d[str(dtimes[0])]), 'objects')
+    for key, val in meta_d.items():
+        print (key, val['index'], val['units'])
+        if key == 'Pdso':
+            PDSO_IDX = val['index']
+            PDSO_UNITS = val['units']
+        elif key == 'Qdso':
+            QDSO_IDX = val['index']
+            QDSO_UNITS = val['units']
+        elif key == 'Pcleared':
+            PCLEARED_IDX = val['index']
+            PCLEARED_UNITS = val['units']
+        elif key == 'LMP':
+            LMP_IDX = val['index']
+            LMP_UNITS = val['units']
+
+    data_d = np.empty(shape=(len(bus_keys), len(dtimes), len(lst_d[str(times[0])][bus_keys[0]])), dtype=np.float)
+    print ('\nConstructed', data_d.shape, 'NumPy array for DSO buses')
+    j = 0
+    for key in bus_keys:
+        i = 0
+        for t in dtimes:
+            ary = lst_d[str(t)][bus_keys[j]]
+            data_d[j, i,:] = ary
+            i = i + 1
+        j = j + 1
+
     # display a plot 
-    fig, ax = plt.subplots(2, 4, sharex = 'col')
+    fig, ax = plt.subplots(2, 5, sharex = 'col')
     tmin = 0.0
     tmax = 24 # 48.0
     xticks = [0,6,12,18,24] # ,30,36,42,48]
     for i in range(2):
-        for j in range(4):
+        for j in range(5):
             ax[i,j].grid (linestyle = '-')
             ax[i,j].set_xlim(tmin,tmax)
             ax[i,j].set_xticks(xticks)
@@ -236,10 +276,21 @@ def process_pypower(nameroot):
     for i in range(data_b.shape[0]):
         ax[1,3].plot(hrs, data_b[i,:,C2_IDX], color=bus_color(bus_keys[i]))
 
+    ax[0,4].set_title ('DSO LMP')
+    ax[0,4].set_ylabel(LMP_UNITS)
+    for i in range(data_d.shape[0]):
+        ax[0,4].plot(dhrs, data_d[i,:,LMP_IDX], color=bus_color(bus_keys[i]))
+
+    ax[1,4].set_title ('DSO Pcleared')
+    ax[1,4].set_ylabel(PCLEARED_UNITS)
+    for i in range(data_d.shape[0]):
+        ax[1,4].plot(dhrs, data_d[i,:,PCLEARED_IDX], color=bus_color(bus_keys[i]))
+
     ax[1,0].set_xlabel('Hours')
     ax[1,1].set_xlabel('Hours')
     ax[1,2].set_xlabel('Hours')
     ax[1,3].set_xlabel('Hours')
+    ax[1,4].set_xlabel('Hours')
 
     plt.show()
 

@@ -12,3 +12,4 @@ eplus_json
 install-sh
 missing
 stamp-h1
+*.dSYM

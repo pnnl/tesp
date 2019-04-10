@@ -854,7 +854,7 @@ def buildingTypeLabel (rgn, bldg, ti):
     """
     return rgnName[rgn-1] + ': ' + bldgTypeName[bldg] + ': TI Level ' + str (ti+1)
 
-house_nodes = {} # keyed on node, [nhouse, region, lg_v_sm, phs]
+house_nodes = {} # keyed on node, [nhouse, region, lg_v_sm, phs, bldg, ti, parent (for ERCOT only)]
 small_nodes = {} # keyed on node, [kva, phs]
 comm_loads = {}  # keyed on load name, [parent, comm_type, nzones, kva, nphs, vln]
 
