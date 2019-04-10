@@ -64,6 +64,8 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  pacman -S --needed mingw-w64-x86_64-cmake
  pacman -S --needed git jsoncpp
  pacman -S --needed mingw64/mingw-w64-x86_64-zeromq
+ pacman -S --needed mingw64/mingw-w64-x86_64-boost
+ pacman -S --needed mingw64/mingw-w64-x86_64-swig
 
 - Exit MSYS2 and restart from a different Start Menu shortcut for MSYS2 MinGW 64-bit
 - You may wish to create a desktop shortcut for the 64-bit environment, as you will use it often
@@ -77,6 +79,7 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  git config --global user.email "YourEmailAddress@YourDomain.com"
  git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b develop https://github.com/FNCS/fncs.git
+ git clone -b develop https://github.com/GMLC-TDC/HELICS-src.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b develop https://github.com/pnnl/tesp.git
 
@@ -117,25 +120,13 @@ The next time you open MSYS2, verify the preceeding as follows:
  python --version
  python3 --version
 
-Build HELICS
-~~~~~~~~~~~~
-
-ZeroMQ 4.3.1 (4.2.5-1) and CZMQ 4.2.0 required from https://github.com/zeromq/libzmq/releases
-and https://github.com/zeromq/czmq/releases
-
-::
-
- cd /c/src
- git clone -b develop https://github.com/GMLC-TDC/HELICS-src.git
- cd HELICS-src
- git checkout develop
-
-
 Build FNCS and HELICS Link with GridLAB-D
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ZeroMQ first, with a header file patch, and please note that newer 
-versions of ZMQ may not work with FNCS: 
+ZeroMQ 4.2.5 and CZMQ 4.1.1 required from https://github.com/zeromq/libzmq/releases
+and https://github.com/zeromq/czmq/releases
+
+Build ZeroMQ first: 
 
 ::
 
@@ -146,8 +137,7 @@ versions of ZMQ may not work with FNCS:
  make
  make install
 
-CZMQ next, with a special Makefile, and please note that newer versions of 
-CZMQ may not work with FNCS: 
+CZMQ next, with customized libraries to link: 
 
 ::
 
@@ -169,7 +159,7 @@ Now build FNCS:
  make
  make install
 
-Use manual commands for the Java Binding on Windows, because the Linux/Mac CMake files
+Use manual commands for the Java FNCS Binding on Windows, because the Linux/Mac CMake files
 don't work on Windows yet. Also make sure that the JDK/bin directory is in your path.
 
 Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
@@ -187,6 +177,17 @@ Your Java version may have removed *javah*.  If that's the case, use *javac -h* 
  g++ -DJNIfncs_EXPORTS -I"C:/Java/jdk-9.0.4/include" -I"C:/Java/jdk-9.0.4/include/win32" -I/usr/local/include -I. -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
  g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Java/jdk-9.0.4/lib/jawt.lib" "C:/Java/jdk-9.0.4/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
  
+To build HELICS 2.0 with Python and Java bindings:
+
+::
+
+ cd ~/src/HELICS-src
+ mkdir build
+ cd build
+ cmake -G "MSYS Makefiles" -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DCMAKE_BUILD_TYPE=Release ..
+ make
+ make install
+
 Finally, build and test GridLAB-D with FNCS. If you encounter build errors with GridLAB-D, please try
 adding *-std=c++11* to *CXXFLAGS*.
 
@@ -194,7 +195,7 @@ adding *-std=c++11* to *CXXFLAGS*.
 
  cd /c/src/gridlab-d
  autoreconf -if
- ./configure --build=x86_64-mingw32 --with-fncs=/usr/local --prefix=/usr/local --with-xerces=/mingw64 --enable-silent-rules 'CXXFLAGS=-g -O2 -w' 'CFLAGS=-g -O2 -w' 'LDFLAGS=-g -O2 -w -L/mingw64/bin'
+ ./configure --build=x86_64-mingw32 --with-fncs=/usr/local --with-helics=/usr/local --prefix=/usr/local --with-xerces=/mingw64 --enable-silent-rules 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w' 'LDFLAGS=-O2 -w -L/mingw64/bin'
  make
  make install
  gridlabd --validate

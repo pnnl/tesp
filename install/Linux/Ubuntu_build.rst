@@ -125,7 +125,7 @@ To build the Java interface for version 10, which has *javah* replaced by *javac
  make
  make install
 
-To build HELICS 2.0 with Python bindings:
+To build HELICS 2.0 with Python and Java bindings:
 
 ::
 
