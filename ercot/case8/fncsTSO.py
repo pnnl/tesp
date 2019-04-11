@@ -231,7 +231,7 @@ make_dictionary (ppc, casename)
 # gencost: 2, startup, shutdown, 3, c2, c1, c0
 # UnitsOut: idx, time out[s], time back in[s]
 # BranchesOut: idx, time out[s], time back in[s]
-# FNCS: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew
+# FNCS: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit
 fncs_bus = ppc['FNCS']
 
 # initialize for variable wind
@@ -252,12 +252,17 @@ for row in ppc['gen']:
 
 # listening to GridLAB-D and its auction objects
 gld_load = {} # key on bus number
+fncsBus = ppc['FNCS']
+print ('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
+print (fncsBus)
 for i in range (8):  # TODO: this is hardwired for 8, more efficient to concatenate outside a loop
   busnum = i+1
   genidx = ppc['gen'].shape[0]
   ppc['gen'] = np.concatenate ((ppc['gen'], np.array ([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
   ppc['gencost'] = np.concatenate ((ppc['gencost'], np.array ([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
-  gld_load[busnum] = {'pcrv':0,'qcrv':0,'p':0,'q':0,'unresp':0,'resp_max':0,'c2':0,'c1':0,'deg':0,'genidx':genidx} 
+  gld_scale = float (fncsBus[i,2])
+  gld_load[busnum] = {'pcrv':0,'qcrv':0,'p':float(fncsBus[i,7])/gld_scale,'q':float(fncsBus[i,8])/gld_scale,
+    'unresp':0,'resp_max':0,'c2':0,'c1':0,'deg':0,'genidx':genidx} 
 
 #print (gld_load)
 #print (ppc['gen'])
@@ -268,7 +273,6 @@ conv_accum = True
 n_accum = 0
 bus_accum = {}
 gen_accum = {}
-fncsBus = ppc['FNCS']
 gen = ppc['gen']
 for i in range (fncsBus.shape[0]):
   busnum = int(fncsBus[i,0])
@@ -389,8 +393,12 @@ while ts <= tmax:
         ppc['gencost'][genidx, 4] = 999.0
         ppc['gencost'][genidx, 5] = 0.0
       ppc['gencost'][genidx, 6] = 0.0
-      ppc['bus'][busnum-1, 2] = gld_load[busnum]['pcrv'] + unresp
-      ppc['bus'][busnum-1, 3] = gld_load[busnum]['qcrv']
+      if ts > 0:
+        ppc['bus'][busnum-1, 2] = gld_load[busnum]['pcrv'] + unresp
+        ppc['bus'][busnum-1, 3] = gld_load[busnum]['qcrv']
+      else: # use the initial condition for GridLAB-D contribution, which may be non-zero
+        ppc['bus'][busnum-1, 2] = gld_load[busnum]['pcrv'] + gld_load[busnum]['p'] * gld_scale
+        ppc['bus'][busnum-1, 3] = gld_load[busnum]['qcrv'] + gld_load[busnum]['q'] * gld_scale
 #    print_gld_load (ppc, gld_load, 'OPF', ts)
     ropf = pp.runopf (ppc, ppopt_market)
     if ropf['success'] == False:

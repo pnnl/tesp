@@ -4,28 +4,28 @@ broker: tcp://localhost:5570
 values:
     SUBSTATION1:
         topic: dsostub/gridlabdBus1/distribution_load
-        default: 4788991.2
+        default: 0
     SUBSTATION2:
         topic: dsostub/gridlabdBus2/distribution_load
-        default: 5151716.5
+        default: 0
     SUBSTATION3:
         topic: dsostub/gridlabdBus3/distribution_load
-        default: 108157.7
+        default: 0
     SUBSTATION4:
         topic: dsostub/gridlabdBus4/distribution_load
-        default: 1398356.1
+        default: 0
     SUBSTATION5:
         topic: dsostub/gridlabdBus5/distribution_load
-        default: 2614785.2
+        default: 0
     SUBSTATION6:
         topic: dsostub/gridlabdBus6/distribution_load
-        default: 154698.8
+        default: 0
     SUBSTATION7:
         topic: dsostub/gridlabdBus7/distribution_load
-        default: 1766920.2
+        default: 0
     SUBSTATION8:
         topic: dsostub/gridlabdBus8/distribution_load
-        default: 37702.8
+        default: 0
     UNRESPONSIVE_MW_1:
         topic: dsostub/substationBus1/unresponsive_mw
         default: 0
