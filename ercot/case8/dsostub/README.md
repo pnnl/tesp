@@ -23,7 +23,7 @@ what the DSO is expected to bid at time zero, i.e., the initial value of the TSO
 non-responsive curve load. If the loading assumptions are changed, the initial P
 and Q values might also need to change.
 
-Currently, some customizations are available at line 8 of fncsDSO.py. These may be
+Currently, some customizations are available at line 8 of *fncsDSO.py*. These may be
 edited before running the simulation:
 
  - *bWantMarket* is True for the DSO to bid, and to use the LMP.
