@@ -5,7 +5,7 @@
   "Tmax": 86400,
   "Period": 300,
   "dt": 15,
-  "pf_dc": 1,
+  "pf_dc": 0,
   "opf_dc": 1,
   "bus": [
     [

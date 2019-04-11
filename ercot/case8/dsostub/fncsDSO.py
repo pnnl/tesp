@@ -5,9 +5,9 @@ import tesp_support.fncs as fncs;
 import json;
 
 casename = 'ercot_8'
-bWantMarket = False
-bid_c2 = 0.1
-bid_c1 = 25.0
+bWantMarket = True
+bid_c2 = -0.1
+bid_c1 = 40.0
 bid_deg = 2
 
 load_shape = [0.6704,
@@ -123,7 +123,9 @@ while ts <= tmax:
     lmp = 1000.0 * gld_bus[busnum]['lmp']
     p_cleared = 0
     if c1 > lmp and bWantMarket:
-      p_cleared = 0.5 * (c1 - lmp) / c2
+      p_cleared = 0.5 * gld_scale * (lmp - c1) / c2
+      if p_cleared > resp_max:
+        p_cleared = resp_max
     p = unresp + p_cleared
     q = p * qf
     gld_bus[busnum]['p'] = p
