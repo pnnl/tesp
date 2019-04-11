@@ -5,6 +5,10 @@ import tesp_support.fncs as fncs;
 import json;
 
 casename = 'ercot_8'
+bWantMarket = False
+bid_c2 = 0.1
+bid_c1 = 25.0
+bid_deg = 2
 
 load_shape = [0.6704,
               0.6303,
@@ -53,7 +57,7 @@ fncs_bus = ppc['FNCS']
 gld_bus = {} # key on bus number
 for i in range (8):
   busnum = i+1
-  gld_bus[busnum] = {'pcrv':0,'qcrv':0,'lmp':0,'v':0,'p':0,'q':0,'unresp':0,'resp_max':0,'c2':0,'c1':0,'deg':2} 
+  gld_bus[busnum] = {'pcrv':0,'qcrv':0,'lmp':0,'v':0,'p':0,'q':0,'unresp':0,'resp_max':0,'c2':bid_c2,'c1':bid_c1,'deg':bid_deg} 
 
 # initialize for time stepping and metrics
 ts = 0
@@ -96,11 +100,18 @@ while ts <= tmax:
     gld_bus[busnum]['qcrv'] = Qnom * curve_scale * float(val[1])
 
     # bid half the curve load as unresponsive, and the other half with a fixed cost curve, i.e., not time responsive
-    resp_max = gld_bus[busnum]['pcrv'] * 0.5
-    unresp = gld_bus[busnum]['pcrv'] * 0.5
-    c2 = 0.1
-    c1 = 25.0
-    deg = gld_bus[busnum]['deg']
+    if bWantMarket:
+      resp_max = gld_bus[busnum]['pcrv'] * 0.5
+      unresp = gld_bus[busnum]['pcrv'] * 0.5
+      c2 = gld_bus[busnum]['c2']
+      c1 = gld_bus[busnum]['c1']
+      deg = gld_bus[busnum]['deg']
+    else:
+      resp_max = 0.0
+      unresp = gld_bus[busnum]['pcrv']
+      c2 = 0
+      c1 = 0
+      deg = 0
     pubtopic = 'substationBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from a substation auction
     fncs.publish (pubtopic + '/unresponsive_mw', unresp / gld_scale)
     fncs.publish (pubtopic + '/responsive_max_mw', resp_max / gld_scale)
@@ -111,7 +122,7 @@ while ts <= tmax:
     # the actual load is the unresponsive load, plus a cleared portion of the responsive load
     lmp = 1000.0 * gld_bus[busnum]['lmp']
     p_cleared = 0
-    if c1 > lmp:
+    if c1 > lmp and bWantMarket:
       p_cleared = 0.5 * (c1 - lmp) / c2
     p = unresp + p_cleared
     q = p * qf

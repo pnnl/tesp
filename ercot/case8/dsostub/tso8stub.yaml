@@ -4,7 +4,28 @@ broker: tcp://localhost:5570
 values:
     SUBSTATION1:
         topic: dsostub/gridlabdBus1/distribution_load
-        default: 0
+        default: 4788991.2
+    SUBSTATION2:
+        topic: dsostub/gridlabdBus2/distribution_load
+        default: 5151716.5
+    SUBSTATION3:
+        topic: dsostub/gridlabdBus3/distribution_load
+        default: 108157.7
+    SUBSTATION4:
+        topic: dsostub/gridlabdBus4/distribution_load
+        default: 1398356.1
+    SUBSTATION5:
+        topic: dsostub/gridlabdBus5/distribution_load
+        default: 2614785.2
+    SUBSTATION6:
+        topic: dsostub/gridlabdBus6/distribution_load
+        default: 154698.8
+    SUBSTATION7:
+        topic: dsostub/gridlabdBus7/distribution_load
+        default: 1766920.2
+    SUBSTATION8:
+        topic: dsostub/gridlabdBus8/distribution_load
+        default: 37702.8
     UNRESPONSIVE_MW_1:
         topic: dsostub/substationBus1/unresponsive_mw
         default: 0
@@ -19,9 +40,6 @@ values:
         default: 0
     RESPONSIVE_DEG_1:
         topic: dsostub/substationBus1/responsive_deg
-        default: 0
-    SUBSTATION2:
-        topic: dsostub/gridlabdBus2/distribution_load
         default: 0
     UNRESPONSIVE_MW_2:
         topic: dsostub/substationBus2/unresponsive_mw
@@ -38,9 +56,6 @@ values:
     RESPONSIVE_DEG_2:
         topic: dsostub/substationBus2/responsive_deg
         default: 0
-    SUBSTATION3:
-        topic: dsostub/gridlabdBus3/distribution_load
-        default: 0
     UNRESPONSIVE_MW_3:
         topic: dsostub/substationBus3/unresponsive_mw
         default: 0
@@ -55,9 +70,6 @@ values:
         default: 0
     RESPONSIVE_DEG_3:
         topic: dsostub/substationBus3/responsive_deg
-        default: 0
-    SUBSTATION4:
-        topic: dsostub/gridlabdBus4/distribution_load
         default: 0
     UNRESPONSIVE_MW_4:
         topic: dsostub/substationBus4/unresponsive_mw
@@ -74,9 +86,6 @@ values:
     RESPONSIVE_DEG_4:
         topic: dsostub/substationBus4/responsive_deg
         default: 0
-    SUBSTATION5:
-        topic: dsostub/gridlabdBus5/distribution_load
-        default: 0
     UNRESPONSIVE_MW_5:
         topic: dsostub/substationBus5/unresponsive_mw
         default: 0
@@ -91,9 +100,6 @@ values:
         default: 0
     RESPONSIVE_DEG_5:
         topic: dsostub/substationBus5/responsive_deg
-        default: 0
-    SUBSTATION6:
-        topic: dsostub/gridlabdBus6/distribution_load
         default: 0
     UNRESPONSIVE_MW_6:
         topic: dsostub/substationBus6/unresponsive_mw
@@ -110,9 +116,6 @@ values:
     RESPONSIVE_DEG_6:
         topic: dsostub/substationBus6/responsive_deg
         default: 0
-    SUBSTATION7:
-        topic: dsostub/gridlabdBus7/distribution_load
-        default: 0
     UNRESPONSIVE_MW_7:
         topic: dsostub/substationBus7/unresponsive_mw
         default: 0
@@ -127,9 +130,6 @@ values:
         default: 0
     RESPONSIVE_DEG_7:
         topic: dsostub/substationBus7/responsive_deg
-        default: 0
-    SUBSTATION8:
-        topic: dsostub/gridlabdBus8/distribution_load
         default: 0
     UNRESPONSIVE_MW_8:
         topic: dsostub/substationBus8/unresponsive_mw
