@@ -1,0 +1,278 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "version",
+    "baseMVA",
+    "StartTime",
+    "Tmax",
+    "Period",
+    "dt",
+    "pf_dc",
+    "opf_dc",
+    "bus",
+    "gen",
+    "branch",
+    "areas",
+    "gencost",
+    "FNCS",
+    "UnitsOut",
+    "BranchesOut",
+    "swing_bus"
+  ],
+  "properties": {
+    "version": {
+      "$id": "#/properties/version",
+      "type": "integer",
+      "title": "The Version Schema",
+      "default": 0,
+      "examples": [
+        2
+      ]
+    },
+    "baseMVA": {
+      "$id": "#/properties/baseMVA",
+      "type": "integer",
+      "title": "The Basemva Schema",
+      "default": 0,
+      "examples": [
+        100
+      ]
+    },
+    "StartTime": {
+      "$id": "#/properties/StartTime",
+      "type": "string",
+      "title": "The Starttime Schema",
+      "default": "",
+      "examples": [
+        "2013-07-01 00:00:00"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "Tmax": {
+      "$id": "#/properties/Tmax",
+      "type": "integer",
+      "title": "The Tmax Schema",
+      "default": 0,
+      "examples": [
+        86400
+      ]
+    },
+    "Period": {
+      "$id": "#/properties/Period",
+      "type": "integer",
+      "title": "The Period Schema",
+      "default": 0,
+      "examples": [
+        300
+      ]
+    },
+    "dt": {
+      "$id": "#/properties/dt",
+      "type": "integer",
+      "title": "The Dt Schema",
+      "default": 0,
+      "examples": [
+        60
+      ]
+    },
+    "pf_dc": {
+      "$id": "#/properties/pf_dc",
+      "type": "integer",
+      "title": "The Pf_dc Schema",
+      "default": 0,
+      "examples": [
+        1
+      ]
+    },
+    "opf_dc": {
+      "$id": "#/properties/opf_dc",
+      "type": "integer",
+      "title": "The Opf_dc Schema",
+      "default": 0,
+      "examples": [
+        1
+      ]
+    },
+    "bus": {
+      "$id": "#/properties/bus",
+      "type": "array",
+      "title": "The Bus Schema",
+      "items": {
+        "$id": "#/properties/bus/items",
+        "type": "array",
+        "title": "The Items Schema",
+        "items": {
+          "$id": "#/properties/bus/items/items",
+          "type": "integer",
+          "title": "The Items Schema",
+          "default": 0,
+          "examples": [
+            1,
+            3,
+            15167.5,
+            3079.89223516626,
+            0,
+            5000,
+            1,
+            1,
+            0,
+            345,
+            1,
+            1.1,
+            0.9
+          ]
+        }
+      }
+    },
+    "gen": {
+      "$id": "#/properties/gen",
+      "type": "array",
+      "title": "The Gen Schema",
+      "items": {
+        "$id": "#/properties/gen/items",
+        "type": "array",
+        "title": "The Items Schema",
+        "items": {
+          "$id": "#/properties/gen/items/items",
+          "type": "integer",
+          "title": "The Items Schema",
+          "default": 0,
+          "examples": [
+            1,
+            0,
+            0,
+            6567,
+            -6567,
+            1,
+            19978.8,
+            1,
+            19978.8,
+            1998,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "branch": {
+      "$id": "#/properties/branch",
+      "type": "array",
+      "title": "The Branch Schema",
+      "items": {
+        "$id": "#/properties/branch/items",
+        "type": "array",
+        "title": "The Items Schema",
+        "items": {
+          "$id": "#/properties/branch/items/items",
+          "type": "integer",
+          "title": "The Items Schema",
+          "default": 0,
+          "examples": [
+            5,
+            6,
+            0.004237559756353707,
+            0.035898184793110695,
+            2.4832569936,
+            2168,
+            2168,
+            2168,
+            0,
+            0,
+            1,
+            -360,
+            360
+          ]
+        }
+      }
+    },
+    "areas": {
+      "$id": "#/properties/areas",
+      "type": "array",
+      "title": "The Areas Schema"
+    },
+    "gencost": {
+      "$id": "#/properties/gencost",
+      "type": "array",
+      "title": "The Gencost Schema",
+      "items": {
+        "$id": "#/properties/gencost/items",
+        "type": "array",
+        "title": "The Items Schema",
+        "items": {
+          "$id": "#/properties/gencost/items/items",
+          "type": "integer",
+          "title": "The Items Schema",
+          "default": 0,
+          "examples": [
+            2,
+            0,
+            0,
+            3,
+            0.005,
+            40,
+            0
+          ]
+        }
+      }
+    },
+    "FNCS": {
+      "$id": "#/properties/FNCS",
+      "type": "array",
+      "title": "The Fncs Schema",
+      "items": {
+        "$id": "#/properties/FNCS/items",
+        "type": "array",
+        "title": "The Items Schema",
+        "items": {
+          "$id": "#/properties/FNCS/items/items",
+          "type": "integer",
+          "title": "The Items Schema",
+          "default": 0,
+          "examples": [
+            1,
+            "SUBSTATION1",
+            792,
+            15167.5,
+            3079.89223516626,
+            0.5,
+            1711,
+            4788.99,
+            972.46
+          ]
+        }
+      }
+    },
+    "UnitsOut": {
+      "$id": "#/properties/UnitsOut",
+      "type": "array",
+      "title": "The Unitsout Schema"
+    },
+    "BranchesOut": {
+      "$id": "#/properties/BranchesOut",
+      "type": "array",
+      "title": "The Branchesout Schema"
+    },
+    "swing_bus": {
+      "$id": "#/properties/swing_bus",
+      "type": "integer",
+      "title": "The Swing_bus Schema",
+      "default": 0,
+      "examples": [
+        1
+      ]
+    }
+  }
+}

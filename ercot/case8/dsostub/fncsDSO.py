@@ -6,8 +6,8 @@ import json;
 
 casename = 'ercot_8'
 bWantMarket = True
-bid_c2 = -0.1
-bid_c1 = 40.0
+bid_c2 = -2.0
+bid_c1 = 60.0
 bid_deg = 2
 
 load_shape = [0.6704,
