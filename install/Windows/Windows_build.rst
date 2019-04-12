@@ -62,6 +62,7 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  pacman -S --needed mingw-w64-x86_64-xerces-c
  pacman -S --needed mingw-w64-x86_64-dlfcn
  pacman -S --needed mingw-w64-x86_64-cmake
+ pacman -S --needed mingw-w64-x86_64-cmake-gui
  pacman -S --needed git jsoncpp
  pacman -S --needed mingw64/mingw-w64-x86_64-zeromq
  pacman -S --needed mingw64/mingw-w64-x86_64-boost
@@ -184,9 +185,15 @@ To build HELICS 2.0 with Python and Java bindings:
  cd ~/src/HELICS-src
  mkdir build
  cd build
- cmake -G "MSYS Makefiles" -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DCMAKE_BUILD_TYPE=Release ..
+ cmake -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=ON -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DCMAKE_BUILD_TYPE=Release ..
  make
  make install
+
+Test that HELICS and FNCS start:
+
+ helics_player --version
+ helics_recorder --version
+ fncs_broker --version # look for the program to start, then exit with error
 
 Finally, build and test GridLAB-D with FNCS. If you encounter build errors with GridLAB-D, please try
 adding *-std=c++11* to *CXXFLAGS*.
