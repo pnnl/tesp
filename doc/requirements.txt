@@ -1,5 +1,6 @@
 sphinx
 sphinx-autobuild
 sphinx-rtd-theme
+sphinx-jsonschema
 recommonmark
 src/tesp_support/
