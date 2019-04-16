@@ -186,6 +186,76 @@ def print_gld_load(ppc, gld_load, msg, ts):
            '{:.8f}'.format(c1),
            '{:.1f}'.format(deg))
 
+def write_ames_base_case (ppc, fname):
+  fp = open (fname, 'w')
+  print ('BASE_S 100', file=fp)
+  print ('BASE_V 10', file=fp)
+  print ('MaxDay 1', file=fp)
+  print ('// RandomSeed 695672061', file=fp)
+  print ('// ThresholdProbability 0.999', file=fp)
+  print ('#NodeDataStart', file=fp)
+  print (str(len(ppc['bus'])), '0.5')
+  print ('#NodeDataEnd', file=fp)
+  print ('#LineDataStart', file=fp)
+  branch = ppc['branch']
+  # branch: fbus, tbus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax
+  # AMES wants branch name, from bus (< to bus), to bus, capacity (MVA), total X (pu)
+  for i in range (branch.shape[0]):
+    bname = 'Line' + str(i+1)
+    if branch[i,1] > branch[i,0]:
+      fbus = int (branch[i,0])
+      tbus = int (branch[i,1])
+    else:
+      fbus = int (branch[i,1])
+      tbus = int (branch[i,0])
+    print (bname, fbus, tbus, '{:.2f}'.format (branch[i,5]), '{:.6f}'.format (branch[i,3]), file=fp)
+  print ('#LineDataEnd', file=fp)
+  print ('#GenDataStart', file=fp)
+  gen = ppc['gen']
+  gencost = ppc['gencost']
+  # gen: bus, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin, (11 zeros)
+  # gencost: 2, startup, shutdown, 3, c2, c1, c0
+  # AMES wants name, ID, bus, c0, c1, c2, capL, capU, InitMoney
+  for i in range (gen.shape[0]):
+    bname = 'Gen' + str(i+1)
+    fbus = int (gen[i,0])
+    Pmax = gen[i,8]
+    Pmin = gen[i,9]
+    c0 = gencost[i,6]
+    c1 = gencost[i,5]
+    c2 = gencost[i,4]
+    InitMoney = 10000.0
+    print (bname, str(i+1), fbus, '{:.6f}'.format (c0), '{:.6f}'.format (c1), 
+            '{:.6f}'.format (c2), '{:.2f}'.format (Pmin), '{:.2f}'.format (Pmax),
+            '{:.2f}'.format (InitMoney), file=fp)
+  print ('#GenDataEnd', file=fp)
+  print ('#LSEDataFixedDemandStart', file=fp)
+  # ppc arrays (bus type 1=load, 2 = gen (PV) and 3 = swing)
+  # bus: bus_i, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin
+  # AMES wants name, ID, bus, 8x hourly demands, in three blocks
+  bus = ppc['bus']
+  lse = []
+  for i in range (bus.shape[0]):
+    Pd = bus[i,2]
+    fbus = int (bus[i,0])
+    if Pd > 0:
+      lse.append ([fbus, Pd])
+  print ('// Name ID atBus H-00 H-01 H-02 H-03 H-04 H-05 H-06 H-07', file=fp)
+  for i in range (len (lse)):
+    Pd = '{:.2f}'.format (lse[i][1])
+    print ('LSE'+str(i+1), str(i+1), lse[i][0], Pd, Pd, Pd, Pd, Pd, Pd, Pd, Pd, file=fp)
+  print ('// Name ID atBus H-08 H-09 H-10 H-11 H-12 H-13 H-14 H-15', file=fp)
+  for i in range (len (lse)):
+    Pd = '{:.2f}'.format (lse[i][1])
+    print ('LSE'+str(i+1), str(i+1), lse[i][0], Pd, Pd, Pd, Pd, Pd, Pd, Pd, Pd, file=fp)
+  print ('// Name ID atBus H-16 H-17 H-18 H-19 H-20 H-21 H-22 H-23', file=fp)
+  for i in range (len (lse)):
+    Pd = '{:.2f}'.format (lse[i][1])
+    print ('LSE'+str(i+1), str(i+1), lse[i][0], Pd, Pd, Pd, Pd, Pd, Pd, Pd, Pd, file=fp)
+  print ('#LSEDataFixedDemandEnd', file=fp)
+
+  fp.close()
+
 x = np.array (range (25))
 y = np.array (load_shape)
 l = len(x)
@@ -286,6 +356,8 @@ op = open (casename + '_opf.csv', 'w')
 vp = open (casename + '_pf.csv', 'w')
 print ('seconds,OPFconverged,TotalLoad,TotalGen,SwingGen,LMP1,LMP8,gas1,coal1,nuc1,gas2,coal2,nuc2,gas3,coal3,gas4,gas5,coal5,gas7,coal7,wind1,wind3,wind4,wind6,wind7', sep=',', file=op, flush=True)
 print ('seconds,PFConverged,TotalLoad,TotalGen,TotalLoss,SwingGen,v1,v2,v3,v4,v5,v6,v7,v8', sep=',', file=vp, flush=True)
+
+write_ames_base_case (ppc, casename + '_ames.dat')
 
 # MAIN LOOP starts here
 while ts <= tmax:
