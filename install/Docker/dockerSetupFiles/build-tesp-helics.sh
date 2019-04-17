@@ -1,10 +1,10 @@
 #!/bin/bash
 
-DOCKERFILE="Dockerfile.tesp_fullUserV4"
+DOCKERFILE="Dockerfile.tesp_helics"
 TESP_REP="laurmarinovici/tesp"
-TESP_TAG=":V4"
+TESP_TAG=":helics"
 clear
-docker build --no-cache \
+docker build --no-cache --rm\
              --network=host \
              -f ${DOCKERFILE} \
              -t ${TESP_REP}${TESP_TAG} ../../downloads/
