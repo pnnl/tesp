@@ -193,6 +193,14 @@ EnergyPlus with Prerequisites
  cd ~/src/EnergyPlus
  mkdir build
  cd build
+ cmake -DBUILD_FORTRAN=ON -DBUILD_PACKAGE=ON -DENABLE_INSTALL_REMOTE=OFF ..
+ make -j 4
+ sudo make install
+
+..
+ cd ~/src/EnergyPlus
+ mkdir build
+ cd build
  cmake ..
  make
 
