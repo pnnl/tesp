@@ -18,8 +18,7 @@ Installation requires three (or four) steps:
    choosing your system-specific installer from 
    https://github.com/pnnl/tesp/releases
 4. If you didn't install the executables in step 3, use
-   the docker image as described at 
-   https://github.com/pnnl/tesp/tree/master/examples/te30/TESP-Docker-Inputs. 
+   the docker image as described on [TESP Docker](https://github.com/pnnl/tesp/tree/master/install/Docker "https://github.com/pnnl/tesp/tree/master/install/Docker") page. 
    The docker option is useful for distributed processing, 
    and for isolating TESP from your other software, including 
    other versions of GridLAB-D. However, it may require 
@@ -31,5 +30,3 @@ Change log:
 - v0.1.2  Patch for tape shield / concentric neutral 
           cables with separate neutral conductor.
 - v0.3.0  Refactored agent classes for DSO+T study
-
-
