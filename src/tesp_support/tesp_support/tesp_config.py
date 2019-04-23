@@ -91,6 +91,8 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
           ];
 varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCoolingPercentage'],
           ['Electric Cooling Participation',50,'%','FeederGenerator','ElectricCoolingParticipation'],
+          ['Water Heater Penetration',75,'%','FeederGenerator','WaterHeaterPercentage'],
+          ['Water Heater Participation',25,'%','FeederGenerator','WaterHeaterParticipation'],
           ['Solar Penetration',0,'%','FeederGenerator','SolarPercentage'],
           ['Storage Penetration',0,'%','FeederGenerator','StoragePercentage'],
           ['Solar Inverter Mode','CONSTANT_PF','','FeederGenerator','SolarInverterMode','inverterModesPV'],

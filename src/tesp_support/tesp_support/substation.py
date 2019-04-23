@@ -111,7 +111,7 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
 #        print (dt_now, time_delta, timedelta (seconds=time_delta))
         dt_now = dt_now + timedelta (seconds=time_delta)
         day_of_week = dt_now.weekday()
-        hour_of_day = dt_now.hour
+        hour_of_day = float (3600.0 * dt_now.hour + 60.0 * dt_now.minute + dt_now.second) / 3600.0
 #        print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, flush=True)
         # update the data from FNCS messages
         events = fncs.get_events()
@@ -137,6 +137,7 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
         for key, obj in hvacObjs.items():
             if obj.change_basepoint (hour_of_day, day_of_week):
                 fncs.publish (obj.name + '/cooling_setpoint', obj.basepoint)
+#                print ('setting basepoint', obj.name, '{:.3f}'.format (obj.basepoint), '{:.3f}'.format (hour_of_day))
         if bSetDefaults:
             for key, obj in hvacObjs.items():
                 fncs.publish (obj.name + '/bill_mode', 'HOURLY')

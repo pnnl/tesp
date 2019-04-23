@@ -215,8 +215,13 @@ def glm_dict (nameroot, ercot=False, te30=False):
 			if inWaterHeaters == True:
 				if lst[0] == 'tank_volume':
 					gallons = float(lst[1].strip(' ').strip(';')) * 1.0
-					waterheaters[lastHouse] = gallons
-					inWaterHeaters = False
+					waterheaters[lastHouse] = {'gallons':gallons, 'tmix': 0.0, 'mlayer': False}
+#					inWaterHeaters = False
+				if lst[0] == 'T_mixing_valve':
+					waterheaters[lastHouse]['tmix'] = float(lst[1].strip(' ').strip(';')) * 1.0
+				if lst[0] == 'waterheater_model':
+					if 'MULTILAYER' == lst[1].strip(' ').strip(';'):
+						waterheaters[lastHouse]['mlayer'] = True
 			if inTriplexMeters == True:
 				if lst[0] == 'name':
 					name = lst[1].strip(';')
@@ -281,7 +286,9 @@ def glm_dict (nameroot, ercot=False, te30=False):
 
 	for key, val in houses.items():
 		if key in waterheaters:
-			val['wh_gallons'] = waterheaters[key]
+			val['wh_gallons'] = waterheaters[key]['gallons']
+			val['wh_tmix'] = waterheaters[key]['tmix']
+			val['wh_mlayer'] = waterheaters[key]['mlayer']
 		mtr = billingmeters[val['billingmeter_id']]
 		mtr['children'].append(key)
 

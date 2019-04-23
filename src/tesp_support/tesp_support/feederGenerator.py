@@ -67,6 +67,8 @@ Eplus_kVA = 150.0
 electric_cooling_penetration = 0.0 # if not provided in JSON config, use a regional default
 solar_penetration = 0.2
 storage_penetration = 0.5
+water_heater_penetration = 0.0 # if not provided in JSON config, use a regional default
+water_heater_participation = 0.5
 solar_inv_mode = 'CONSTANT_PF'
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
@@ -1460,7 +1462,7 @@ def write_houses(basenode, op, vnom):
         print ('    current_fraction', '{:.2f}'.format(techdata[5]) + ';', file=op)
         print ('    power_fraction', '{:.2f}'.format(techdata[6]) + ';', file=op)
         print ('  };', file=op)
-        if np.random.uniform (0, 1) <= rgnPenElecWH[rgn-1]:
+        if np.random.uniform (0, 1) <= water_heater_penetration: # rgnPenElecWH[rgn-1]:
           heat_element = 3.0 + 0.5 * np.random.randint (1,6);  # numpy randint (lo, hi) returns lo..(hi-1)
           tank_set = 120 + 16 * np.random.uniform (0, 1);
           therm_dead = 4 + 4 * np.random.uniform (0, 1);
@@ -1491,14 +1493,21 @@ def write_houses(basenode, op, vnom):
           print ('  object waterheater {', file=op)
           print ('    schedule_skew','{:.0f}'.format(wh_skew_value) + ';', file=op)
           print ('    heating_element_capacity','{:.1f}'.format(heat_element), 'kW;', file=op)
-          print ('    tank_setpoint','{:.1f}'.format(tank_set) + ';', file=op)
-          print ('    temperature 132;', file=op) 
+#          print ('    temperature 132;', file=op) 
           print ('    thermostat_deadband','{:.1f}'.format(therm_dead) + ';', file=op)
           print ('    location INSIDE;', file=op)                   
           print ('    tank_diameter 1.5;', file=op)                  
           print ('    tank_UA','{:.1f}'.format(tank_UA) + ';', file=op)
           print ('    water_demand', wh_demand_str + ';', file=op)
           print ('    tank_volume','{:.0f}'.format(wh_size) + ';', file=op)
+          if np.random.uniform (0, 1) <= water_heater_participation:
+              print ('    waterheater_model MULTILAYER;', file=op)
+              print ('    discrete_step_size 60.0;', file=op)
+              print ('    lower_tank_setpoint','{:.1f}'.format(tank_set - 5.0) + ';', file=op)
+              print ('    upper_tank_setpoint','{:.1f}'.format(tank_set + 5.0) + ';', file=op)
+              print ('    T_mixing_valve','{:.1f}'.format(tank_set) + ';', file=op)
+          else:
+              print ('    tank_setpoint','{:.1f}'.format(tank_set) + ';', file=op)
           if metrics_interval > 0:
               print ('    object metrics_collector {', file=op)
               print ('      interval', str(metrics_interval) + ';', file=op)
@@ -1943,13 +1952,18 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
     elif 'R5' in rootname:
         rgn = 5
     global electric_cooling_penetration, storage_penetration, solar_penetration
+    global water_heater_penetration, water_heater_participation
     print ('using', solar_penetration, 'solar and', storage_penetration, 'storage penetration')
     if electric_cooling_penetration <= 0.0:
         electric_cooling_penetration = rgnPenElecCool[rgn-1]
         print ('using regional default', electric_cooling_penetration, 'air conditioning penetration')
     else:
         print ('using', electric_cooling_penetration, 'air conditioning penetration from JSON config')
-    print ('region', rgn, 'has electric water heater penetration', rgnPenElecWH[rgn-1])
+    if water_heater_penetration <= 0.0:
+        water_heater_penetration = rgnPenElecWH[rgn-1]
+        print ('using regional default', water_heater_penetration, 'water heater penetration')
+    else:
+        print ('using', water_heater_penetration, 'water heater penetration from JSON config')
     if os.path.isfile(fname):
         ip = open (fname, 'r')
         lines = []
@@ -2299,6 +2313,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     global storage_inv_mode, solar_inv_mode, solar_penetration, storage_penetration
     global outpath, glmpath, supportpath, weatherpath, weather_file
     global starttime, endtime, timestep, metrics_interval, electric_cooling_penetration
+    global water_heater_percentage, water_heater_penetration
     global fncs_case, forERCOT
     global house_nodes, small_nodes
 
@@ -2320,6 +2335,8 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     timestep = int(config['FeederGenerator']['MinimumStep'])
     metrics_interval = int(config['FeederGenerator']['MetricsInterval'])
     electric_cooling_penetration = 0.01 * float(config['FeederGenerator']['ElectricCoolingPercentage'])
+    water_heater_penetration = 0.01 * float(config['FeederGenerator']['WaterHeaterPercentage'])
+    water_heater_participation = 0.01 * float(config['FeederGenerator']['WaterHeaterParticipation'])
     solar_penetration = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
     storage_penetration = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
     solar_inv_mode = config['FeederGenerator']['SolarInverterMode']
