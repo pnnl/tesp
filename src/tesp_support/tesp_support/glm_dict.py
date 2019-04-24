@@ -156,7 +156,6 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				inRegulators = True
 			if lst[1] == 'waterheater':
 				inWaterHeaters = True
-				gallons = 0.0
 			if inCapacitors == True:
 				if lst[0] == 'name':
 					lastCapacitor = lst[1].strip(';')
@@ -213,10 +212,11 @@ def glm_dict (nameroot, ercot=False, te30=False):
 					lastHouse = name
 					inHouses = False
 			if inWaterHeaters == True:
+				if lst[0] == 'name':
+					whname = lst[1].strip(' ').strip(';')
+					waterheaters[lastHouse] = {'name': whname, 'gallons':0.0, 'tmix': 0.0, 'mlayer': False}
 				if lst[0] == 'tank_volume':
-					gallons = float(lst[1].strip(' ').strip(';')) * 1.0
-					waterheaters[lastHouse] = {'gallons':gallons, 'tmix': 0.0, 'mlayer': False}
-#					inWaterHeaters = False
+					waterheaters[lastHouse]['gallons']= float(lst[1].strip(' ').strip(';')) * 1.0
 				if lst[0] == 'T_mixing_valve':
 					waterheaters[lastHouse]['tmix'] = float(lst[1].strip(' ').strip(';')) * 1.0
 				if lst[0] == 'waterheater_model':
@@ -286,6 +286,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 
 	for key, val in houses.items():
 		if key in waterheaters:
+			val['wh_name'] = waterheaters[key]['name']
 			val['wh_gallons'] = waterheaters[key]['gallons']
 			val['wh_tmix'] = waterheaters[key]['tmix']
 			val['wh_mlayer'] = waterheaters[key]['mlayer']
