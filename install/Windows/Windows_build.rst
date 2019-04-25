@@ -62,7 +62,11 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  pacman -S --needed mingw-w64-x86_64-xerces-c
  pacman -S --needed mingw-w64-x86_64-dlfcn
  pacman -S --needed mingw-w64-x86_64-cmake
+ pacman -S --needed mingw-w64-x86_64-cmake-gui
  pacman -S --needed git jsoncpp
+ pacman -S --needed mingw64/mingw-w64-x86_64-zeromq
+ pacman -S --needed mingw64/mingw-w64-x86_64-boost
+ pacman -S --needed mingw64/mingw-w64-x86_64-swig
 
 - Exit MSYS2 and restart from a different Start Menu shortcut for MSYS2 MinGW 64-bit
 - You may wish to create a desktop shortcut for the 64-bit environment, as you will use it often
@@ -76,8 +80,9 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  git config --global user.email "YourEmailAddress@YourDomain.com"
  git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b develop https://github.com/FNCS/fncs.git
+ git clone -b develop https://github.com/GMLC-TDC/HELICS-src.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
- git clone -b master https://github.com/pnnl/tesp.git
+ git clone -b develop https://github.com/pnnl/tesp.git
 
 We're going to build everything to /usr/local in the MSYS2 environment. If you accepted the
 installation defaults, this corresponds to c:\msys64\usr\local in the Windows environment. 
@@ -116,121 +121,34 @@ The next time you open MSYS2, verify the preceeding as follows:
  python --version
  python3 --version
 
-Build FNCS and Link with GridLAB-D
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Build FNCS and HELICS Link with GridLAB-D
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ZeroMQ first, with a header file patch, and please note that newer 
-versions of ZMQ may not work with FNCS: 
+ZeroMQ 4.2.5 and CZMQ 4.1.1 required from https://github.com/zeromq/libzmq/releases
+and https://github.com/zeromq/czmq/releases
 
-::
-
- cd /c/src
- wget --no-check-certificate http://download.zeromq.org/zeromq-4.1.4.tar.gz
- tar -xzf zeromq-4.1.4.tar.gz
- cd zeromq-4.1.4
- ./configure --without-libsodium --prefix=/usr/local LDFLAGS="-static-libgcc -static-libstdc++"
- (insert #include<iphlpapi.h> into src/windows.hpp around line 57; not needed in v4.2.5)
- make
- make install
-
-CZMQ next, with a special Makefile, and please note that newer versions of 
-CZMQ may not work with FNCS: 
+Build ZeroMQ first: 
 
 ::
 
  cd /c/src
- wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
- tar -xzf czmq-3.0.2.tar.gz
- cd czmq-3.0.2
- ./configure --prefix=/usr/local --with-libzmq=/usr/local
- mkdir builds
- mkdir builds/mingw32
- cd builds/mingw32
- (manually create a Makefile, as shown in the next code block)
+ tar -xzf zeromq-4.2.5.tar.gz
+ cd zeromq-4.2.5
+ ./configure --prefix=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w'
  make
  make install
 
-Here is the Windows Makefile for CZMQ (note: space at the beginning of 
-each line should be a tab): 
+CZMQ next, with customized libraries to link: 
 
 ::
 
- # replace the following with locations for libzmq and fncs
- PREFIX=c:/msys64/usr/local
-
- INCDIR=-I$(PREFIX)/include -I.
- LIBDIR=-L$(PREFIX)/lib
-
- CC=gcc
- CFLAGS=-Wall -Os -g -std=c99 -DLIBCZMQ_EXPORTS $(INCDIR)
-
- HEADERS = ../../include/*.h ../../src/zgossip_msg.h
-
- OBJS = zactor.o \
-	 zarmour.o \
-	 zauth.o \
-	 zauth_v2.o \
-	 zbeacon.o \
-	 zbeacon_v2.o \
-	 zcert.o \
-	 zcertstore.o \
-	 zchunk.o \
-	 zclock.o \
-	 zconfig.o \
-	 zctx.o \
-	 zdigest.o \
-	 zdir.o \
-	 zdir_patch.o \
-	 zfile.o \
-	 zframe.o \
-	 zgossip.o \
-	 zgossip_msg.o \
-	 zhash.o \
-	 zhashx.o \
-	 ziflist.o \
-	 zlist.o \
-	 zlistx.o \
-	 zloop.o \
-	 zmonitor.o \
-	 zmonitor_v2.o \
-	 zmsg.o \
-	 zmutex.o \
-	 zpoller.o \
-	 zproxy.o \
-	 zproxy_v2.o \
-	 zrex.o \
-	 zsock.o \
-	 zsock_option.o \
-	 zsocket.o \
-	 zsockopt.o \
-	 zstr.o \
-	 zsys.o \
-	 zthread.o \
-	 zuuid.o
-
- %.o: ../../src/%.c
-	 $(CC) -c -o $@ $< $(CFLAGS)
-
- all: prep_headers libczmq.dll czmq_selftest.exe
-
- prep_headers:
-	 cp $(HEADERS) $(PREFIX)/include
-
- install:
-	 cp libczmq.dll $(PREFIX)/bin
-	 cp libczmq.dll.a $(PREFIX)/lib
-	 cp czmq_selftest.exe $(PREFIX)/bin
-	 cp $(HEADERS) $(PREFIX)/include
-
- libczmq.dll: $(OBJS)
-	 $(CC) -shared -o $@ $(OBJS) -Wl,--out-implib,$@.a $(LIBDIR) -lzmq -lws2_32 -liphlpapi -lrpcrt4
-
- # the test functions are not exported into the DLL
- czmq_selftest.exe: czmq_selftest.o $(OBJS)
-	 $(CC) -o $@ $^ $(LIBDIR) -lzmq -lws2_32 -liphlpapi -lrpcrt4
-
- clean:
-	 rm *.o *.a *.dll *.exe
+ cd /c/src
+ tar -xzf czmq-4.1.1.tar.gz
+ cd czmq-4.1.1
+ // edit /usr/local/lib/pkgconfig/libzmq.pc to read Libs: -L${libdir} -lzmq -lws2_32 -liphlpapi -lrpcrt4
+ ./configure --prefix=/usr/local --with-libzmq=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w' 'PKG_CONFIG_PATH=/usr/local/lib/pkgconfig'
+ make
+ make install
 
 Now build FNCS:
 
@@ -238,11 +156,11 @@ Now build FNCS:
 
  cd /c/src
  cd fncs
- ./configure --prefix=/usr/local --with-zmq=/usr/local
+ ./configure --prefix=/usr/local --with-zmq=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w'
  make
  make install
 
-Use manual commands for the Java Binding on Windows, because the Linux/Mac CMake files
+Use manual commands for the Java FNCS Binding on Windows, because the Linux/Mac CMake files
 don't work on Windows yet. Also make sure that the JDK/bin directory is in your path.
 
 Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
@@ -260,6 +178,23 @@ Your Java version may have removed *javah*.  If that's the case, use *javac -h* 
  g++ -DJNIfncs_EXPORTS -I"C:/Java/jdk-9.0.4/include" -I"C:/Java/jdk-9.0.4/include/win32" -I/usr/local/include -I. -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
  g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Java/jdk-9.0.4/lib/jawt.lib" "C:/Java/jdk-9.0.4/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
  
+To build HELICS 2.0 with Python and Java bindings:
+
+::
+
+ cd ~/src/HELICS-src
+ mkdir build
+ cd build
+ cmake -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=ON -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DCMAKE_BUILD_TYPE=Release ..
+ make
+ make install
+
+Test that HELICS and FNCS start:
+
+ helics_player --version
+ helics_recorder --version
+ fncs_broker --version # look for the program to start, then exit with error
+
 Finally, build and test GridLAB-D with FNCS. If you encounter build errors with GridLAB-D, please try
 adding *-std=c++11* to *CXXFLAGS*.
 
@@ -267,7 +202,7 @@ adding *-std=c++11* to *CXXFLAGS*.
 
  cd /c/src/gridlab-d
  autoreconf -if
- ./configure --build=x86_64-mingw32 --with-fncs=/usr/local --prefix=/usr/local --with-xerces=/mingw64 --enable-silent-rules 'CXXFLAGS=-g -O2 -w' 'CFLAGS=-g -O2 -w' 'LDFLAGS=-g -O2 -w -L/mingw64/bin'
+ ./configure --build=x86_64-mingw32 --with-fncs=/usr/local --with-helics=/usr/local --prefix=/usr/local --with-xerces=/mingw64 --enable-silent-rules 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w' 'LDFLAGS=-O2 -w -L/mingw64/bin'
  make
  make install
  gridlabd --validate

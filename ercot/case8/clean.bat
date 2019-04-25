@@ -1,5 +1,6 @@
 del *.xml
 del *auction.yaml
+del *substation.yaml
 del *metrics.json
 del *.log
 del *_opf.csv

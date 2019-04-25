@@ -385,8 +385,20 @@ class simple_auction:
         else:
             self.marginal_quantity = 0.0
             self.marginal_frac = 0.0
-        print ('##', time_granted, tnext_clear, self.clearing_type, self.clearing_quantity, self.clearing_price, 
-               self.curve_buyer.count, self.unresponsive_buy, self.responsive_buy,
-               self.curve_seller.count, self.unresponsive_sell, self.responsive_sell,
-               self.marginal_quantity, self.marginal_frac, self.lmp, self.refload, sep=',', flush=True)
+        print ('##', time_granted, 
+               tnext_clear, 
+               self.clearing_type, 
+               '{:.2f}'.format(self.clearing_quantity), 
+               '{:.5f}'.format(self.clearing_price), 
+               self.curve_buyer.count, 
+               '{:.2f}'.format(self.unresponsive_buy), 
+               '{:.2f}'.format(self.responsive_buy),
+               self.curve_seller.count, 
+               '{:.2f}'.format(self.unresponsive_sell), 
+               '{:.2f}'.format(self.responsive_sell),
+               '{:.2f}'.format(self.marginal_quantity), 
+               '{:.5f}'.format(self.marginal_frac), 
+               '{:.5f}'.format(self.lmp), 
+               '{:.2f}'.format(self.refload), 
+               sep=',', flush=True)
 

@@ -1,0 +1,565 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "Transmission System Operator (TSO)",
+  "required": [
+    "version",
+    "baseMVA",
+    "StartTime",
+    "Tmax",
+    "Period",
+    "dt",
+    "pf_dc",
+    "opf_dc",
+    "bus",
+    "gen",
+    "branch",
+    "areas",
+    "gencost",
+    "FNCS",
+    "UnitsOut",
+    "BranchesOut",
+    "swing_bus"
+  ],
+  "properties": {
+    "version": {
+      "$id": "#/properties/version",
+      "type": "integer",
+      "title": "The Version Schema",
+      "description": "not used",
+      "default": 0,
+      "examples": [
+        2
+      ]
+    },
+    "baseMVA": {
+      "$id": "#/properties/baseMVA",
+      "type": "integer",
+      "title": "The Basemva Schema",
+      "description": "MVA base for impedances",
+      "default": 0,
+      "examples": [
+        100
+      ]
+    },
+    "StartTime": {
+      "$id": "#/properties/StartTime",
+      "type": "string",
+      "title": "The Starttime Schema",
+      "description": "Date and time corresponding to 0 seconds in FNCS",
+      "default": "",
+      "examples": [
+        "2013-07-01 00:00:00"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "Tmax": {
+      "$id": "#/properties/Tmax",
+      "type": "integer",
+      "title": "The Tmax Schema",
+      "description": "Number of seconds to simulate",
+      "default": 0,
+      "examples": [
+        86400
+      ]
+    },
+    "Period": {
+      "$id": "#/properties/Period",
+      "type": "integer",
+      "title": "The Period Schema",
+      "description": "Optimal power flow (OPF) interval in seconds",
+      "default": 0,
+      "examples": [
+        300
+      ]
+    },
+    "dt": {
+      "$id": "#/properties/dt",
+      "type": "integer",
+      "title": "The Dt Schema",
+      "description": "Regular power flow (PF) interval in seconds",
+      "default": 0,
+      "examples": [
+        60
+      ]
+    },
+    "pf_dc": {
+      "$id": "#/properties/pf_dc",
+      "type": "integer",
+      "title": "The Pf_dc Schema",
+      "description": "1 for DC PF, 0 for AC PF",
+      "default": 0,
+      "examples": [
+        1
+      ]
+    },
+    "opf_dc": {
+      "$id": "#/properties/opf_dc",
+      "type": "integer",
+      "title": "The Opf_dc Schema",
+      "description": "1 for DC OPF, 0 for AC OPF",
+      "default": 0,
+      "examples": [
+        1
+      ]
+    },
+    "bus": {
+      "$id": "#/properties/bus",
+      "type": "array",
+      "title": "The Bus Schema",
+      "description": "Bus data, including loads and voltage base",
+      "items": {
+        "$id": "#/properties/bus/items",
+        "type": "array",
+        "title": "Bus Array",
+        "items": [
+				{
+					"type": "number",
+					"title": "Bus Number",
+					"examples": [1]
+				},
+				{
+					"type": "number",
+					"title": "Type (1=load,2=gen,3=swing)",
+					"enum": [1, 2, 3],
+					"examples": [3]
+				},
+				{
+					"type": "number",
+					"title": "Pd (load)",
+					"examples": [15167.5]
+				},
+				{
+					"type": "number",
+					"title": "Qd (load)",
+					"examples": [3079.89]
+				},
+				{
+					"type": "number",
+					"title": "Gs (shunt MW)",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Bs (shunt MVA)",
+					"examples": [5000]
+				},
+				{
+					"type": "number",
+					"title": "Area",
+					"examples": [1]
+				},
+				{
+					"type": "number",
+					"title": "V magnitude (pu)",
+					"examples": [1]
+				},
+				{
+					"type": "number",
+					"title": "V angle (deg)",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "kV base",
+					"examples": [345]
+				},
+				{
+					"type": "number",
+					"title": "Zone",
+					"examples": [1]
+				},
+				{
+					"type": "number",
+					"title": "Vmax pu",
+					"examples": [1.1]
+				},
+				{
+					"type": "number",
+					"title": "Vmin pu",
+					"examples": [0.9]
+				}
+				]
+			}
+    },
+    "gen": {
+      "$id": "#/properties/gen",
+      "type": "array",
+      "title": "The Gen Schema",
+      "description": "Generator ratings",
+      "items": {
+        "$id": "#/properties/gen/items",
+        "type": "array",
+        "title": "Generator Array",
+        "items": [
+				{
+					"type": "number",
+					"title": "Bus",
+					"examples": [1]
+				},
+				{
+					"type": "number",
+					"title": "Pg (MW)",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Qg (MVAR)",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Qmax (MVAR)",
+					"examples": [6567]
+				},
+				{
+					"type": "number",
+					"title": "Qmin (MVAR)",
+					"examples": [-6567]
+				},
+				{
+					"type": "number",
+					"title": "Vg (pu)",
+					"examples": [1]
+				},
+				{
+					"type": "number",
+					"title": "MVA base",
+					"examples": [19978.8]
+				},
+				{
+					"type": "number",
+					"title": "Status (1 in service)",
+					"enum": [0, 1],
+					"examples": [1]
+				},
+				{
+					"type": "number",
+					"title": "Pmax (MW)",
+					"examples": [19978.8]
+				},
+				{
+					"type": "number",
+					"title": "Pmin (MW)",
+					"examples": [1998]
+				},
+				{
+					"type": "number",
+					"title": "Pc1",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Pc2",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Qc1min",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Qc1max",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Qc2min",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Qc2max",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "AGC ramp rate",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "10-min ramp rate",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "30-min ramp rate",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Reactive ramp rate",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Area participation factor",
+					"examples": [0]
+				}
+        ]
+      }
+    },
+    "branch": {
+      "$id": "#/properties/branch",
+      "type": "array",
+      "title": "The Branch Schema",
+      "description": "Lines and transformers; pu impedance and ratings",
+      "items": {
+        "$id": "#/properties/branch/items",
+        "type": "array",
+        "title": "Branch Array",
+        "items": [
+				{
+					"type": "number",
+					"title": "From Bus",
+					"examples": [5]
+				},
+				{
+					"type": "number",
+					"title": "To Bus",
+					"examples": [6]
+				},
+				{
+					"type": "number",
+					"title": "R (pu)",
+					"examples": [0.004237]
+				},
+				{
+					"type": "number",
+					"title": "X (pu)",
+					"examples": [0.035898]
+				},
+				{
+					"type": "number",
+					"title": "B (pu)",
+					"examples": [2.48325]
+				},
+				{
+					"type": "number",
+					"title": "Rating A, short term (MVA)",
+					"examples": [2168]
+				},
+				{
+					"type": "number",
+					"title": "Rating B, long term (MVA)",
+					"examples": [2168]
+				},
+				{
+					"type": "number",
+					"title": "Rating C, emergency (MVA)",
+					"examples": [2168]
+				},
+				{
+					"type": "number",
+					"title": "Tap Ratio for Xfmrs (From/To)",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Shift Angle for Xfmrs (deg)",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Status (1 in service)",
+					"enum": [0, 1],
+					"examples": [1]
+				},
+				{
+					"type": "number",
+					"title": "Min Angle Difference From-To (deg)",
+					"examples": [-360]
+				},
+				{
+					"type": "number",
+					"title": "Max Angle Difference From-To (deg)",
+					"examples": [360]
+				}
+        ]
+      }
+    },
+    "areas": {
+      "$id": "#/properties/areas",
+      "type": "array",
+      "title": "The Areas Schema",
+      "description": "PF areas are not currently used in TESP"
+    },
+    "gencost": {
+      "$id": "#/properties/gencost",
+      "type": "array",
+      "title": "The Gencost Schema",
+      "description": "Cost functions for generators and dispatchable loads",
+      "items": {
+        "$id": "#/properties/gencost/items",
+        "type": "array",
+        "title": "Generator Cost Array",
+				"description": "Indexing must match the Generators",
+        "items": [
+				{
+					"type": "number",
+					"title": "Flag - 2 for polynomial, 1 for piecewise linear",
+					"examples": [2]
+				},
+				{
+					"type": "number",
+					"title": "Startup cost",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Shutdown cost",
+					"examples": [0]
+				},
+				{
+					"type": "number",
+					"title": "Number of coefficients",
+					"examples": [3]
+				},
+				{
+					"type": "number",
+					"title": "C2 coefficient",
+					"examples": [0.005]
+				},
+				{
+					"type": "number",
+					"title": "C1 coefficient",
+					"examples": [40]
+				},
+				{
+					"type": "number",
+					"title": "C0 coefficient",
+					"examples": [0]
+				}
+        ]
+      }
+    },
+    "FNCS": {
+      "$id": "#/properties/FNCS",
+      "type": "array",
+      "title": "The FNCS Schema",
+      "description": "FNCS topics, scaling factors and initial conditions at selected buses",
+      "items": {
+        "$id": "#/properties/FNCS/items",
+        "type": "array",
+        "title": "FNCS Bus Array",
+        "items": [
+        {
+          "type": "number",
+          "title": "bus ID",
+          "examples": [1]
+        },
+        {
+          "type": "string",
+          "title": "FNCS Topic",
+          "examples": ["SUBSTATION1"]
+        },
+        {
+          "type": "number",
+          "title": "GridLAB-D Scale Factor",
+          "examples": [792]
+        },
+				{
+					"type": "number",
+					"title": "Nominal P in MW",
+					"examples": [15167.5]
+				},
+				{
+					"type": "number",
+					"title": "Nominal Q in MVAR",
+					"examples": [3079.89]
+				},
+				{
+					"type": "number",
+					"title": "Scale factor for curve load",
+					"examples": [0.5]
+				},
+				{
+					"type": "number",
+					"title": "Skew for curve load in seconds",
+					"examples": [1711]
+				},
+				{
+					"type": "number",
+					"title": "Estimated P at time 0",
+					"examples": [4788.99]
+				},
+				{
+					"type": "number",
+					"title": "Estimated Q at time 0",
+					"examples": [972.66]
+				}
+        ]
+      }
+    },
+    "UnitsOut": {
+      "$id": "#/properties/UnitsOut",
+      "type": "array",
+      "description": "Schedule of generators out of service",
+      "title": "The Units Out Schema",
+			"items": {
+				"$id": "#/properties/UnitsOut/items",
+				"type": "array",
+				"title": "Generator Outage Array",
+				"items": [
+				{
+					"type": "number",
+					"title": "Index into Generators",
+					"examples": [1]
+				},
+				{
+					"type": "number",
+					"title": "Time outage starts in seconds",
+					"examples": [108000]
+				},
+				{
+					"type": "number",
+					"title": "Time outage ends in seconds",
+					"examples": [154000]
+				}
+				]
+			}
+    },
+    "BranchesOut": {
+      "$id": "#/properties/BranchesOut",
+      "type": "array",
+      "description": "Schedules of branches out of service",
+      "title": "The Branches Out Schema",
+			"items": {
+				"$id": "#/properties/BranchesOut/items",
+				"type": "array",
+				"title": "Branch Outage Array",
+				"items": [
+				{
+					"type": "number",
+					"title": "Index into Branches",
+					"examples": [2]
+				},
+				{
+					"type": "number",
+					"title": "Time outage starts in seconds",
+					"examples": [108000]
+				},
+				{
+					"type": "number",
+					"title": "Time outage ends in seconds",
+					"examples": [154000]
+				}
+				]
+			}
+    },
+    "swing_bus": {
+      "$id": "#/properties/swing_bus",
+      "type": "integer",
+      "title": "The Swing_bus Schema",
+      "description": "Swing bus designation, depends on unit commitment",
+      "default": 0,
+      "examples": [
+        1
+      ]
+    }
+  }
+}

@@ -177,8 +177,8 @@ SGIP 1 Model Overview
 :numref:`fig_sgip1` shows the types of assets and stakeholders considered for the
 use cases in this version. The active market participants include a
 double-auction market at the substation level, the bulk transmission and
-generation system, a large commercial building with responsive HVAC
-thermostat, and single-family residences that have a responsive HVAC
+generation system, a large commercial building with one-way responsive HVAC
+thermostat, and single-family residences that have a two-way responsive HVAC
 thermostat. Transactive message flows and key attributes are indicated
 in **orange**.
 

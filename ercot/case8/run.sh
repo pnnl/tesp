@@ -8,4 +8,4 @@
 (export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=Bus6_metrics.json Bus6.glm &> Bus6.log &)
 (export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=Bus7_metrics.json Bus7.glm &> Bus7.log &)
 (export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=Bus8_metrics.json Bus8.glm &> Bus8.log &)
-(export FNCS_CONFIG_FILE=pypower8.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 fncsERCOT.py &> bulk.log &)
+(export FNCS_CONFIG_FILE=tso8.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 fncsTSO.py &> bulk.log &)

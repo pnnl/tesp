@@ -81,7 +81,7 @@ def process_pypower(nameroot):
     # parse the metadata for things of specific interest
     print ('\nBus Metadata [Variable Index Units] for', len(lst_b[str(times[0])]), 'objects')
     for key, val in meta_b.items():
-    #    print (key, val['index'], val['units'])
+        print (key, val['index'], val['units'])
         if key == 'LMP_P':
             LMP_P_IDX = val['index']
             LMP_P_UNITS = val['units']
@@ -106,11 +106,23 @@ def process_pypower(nameroot):
         elif key == 'Vmin':
             VMIN_IDX = val['index']
             VMIN_UNITS = val['units']
+        elif key == 'unresp':
+            UNRESP_IDX = val['index']
+            UNRESP_UNITS = val['units']
+        elif key == 'resp_max':
+            RESP_MAX_IDX = val['index']
+            RESP_MAX_UNITS = val['units']
+        elif key == 'c1':
+            C1_IDX = val['index']
+            C1_UNITS = val['units']
+        elif key == 'c2':
+            C2_IDX = val['index']
+            C2_UNITS = val['units']
 
     # create a NumPy array of all bus metrics, display summary information
     data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
     print ('\nConstructed', data_b.shape, 'NumPy array for Buses')
-    print ('LMPavg,LMPmax,LMP1avg,LMP1std,Vmin,Vmax')
+    print ('LMPavg,LMPmax,LMP1avg,LMP1std,Vmin,Vmax,Unresp_avg,RespMax_avg','C1_avg','C2_avg')
     last1 = int (3600 * 24 / (times[1] - times[0]))
     j = 0
     for key in bus_keys:
@@ -125,7 +137,11 @@ def process_pypower(nameroot):
                '{:.4f}'.format (data_b[j,0:last1,LMP_P_IDX].mean()), 
                '{:.4f}'.format (data_b[j,0:last1,LMP_P_IDX].std()),
                '{:.4f}'.format (data_b[j,:,VMIN_IDX].min()),
-               '{:.4f}'.format (data_b[j,:,VMAX_IDX].max()))
+               '{:.4f}'.format (data_b[j,:,VMAX_IDX].max()),
+               '{:.4f}'.format (data_b[j,0:last1,UNRESP_IDX].mean()), 
+               '{:.4f}'.format (data_b[j,0:last1,RESP_MAX_IDX].mean()), 
+               '{:.4f}'.format (data_b[j,0:last1,C1_IDX].mean()), 
+               '{:.4f}'.format (data_b[j,0:last1,C2_IDX].mean())) 
         j = j + 1
 
     # read the generator metrics file
@@ -169,12 +185,12 @@ def process_pypower(nameroot):
         j = j + 1
 
     # display a plot 
-    fig, ax = plt.subplots(2,2, sharex = 'col')
+    fig, ax = plt.subplots(2, 4, sharex = 'col')
     tmin = 0.0
     tmax = 24 # 48.0
     xticks = [0,6,12,18,24] # ,30,36,42,48]
     for i in range(2):
-        for j in range(2):
+        for j in range(4):
             ax[i,j].grid (linestyle = '-')
             ax[i,j].set_xlim(tmin,tmax)
             ax[i,j].set_xticks(xticks)
@@ -200,8 +216,30 @@ def process_pypower(nameroot):
     for i in range(data_b.shape[0]):
         ax[1,1].plot(hrs, data_b[i,:,LMP_P_IDX], color=bus_color(bus_keys[i]))
 
+    ax[0,2].set_title ('Bus Unresp Load')
+    ax[0,2].set_ylabel(UNRESP_UNITS)
+    for i in range(data_b.shape[0]):
+        ax[0,2].plot(hrs, data_b[i,:,UNRESP_IDX], color=bus_color(bus_keys[i]))
+
+    ax[1,2].set_title ('Bus Max Resp Load')
+    ax[1,2].set_ylabel(RESP_MAX_UNITS)
+    for i in range(data_b.shape[0]):
+        ax[1,2].plot(hrs, data_b[i,:,RESP_MAX_IDX], color=bus_color(bus_keys[i]))
+
+    ax[0,3].set_title ('Bus Bid C1')
+    ax[0,3].set_ylabel(C1_UNITS)
+    for i in range(data_b.shape[0]):
+        ax[0,3].plot(hrs, data_b[i,:,C1_IDX], color=bus_color(bus_keys[i]))
+
+    ax[1,3].set_title ('Bus Bid C2')
+    ax[1,3].set_ylabel(C2_UNITS)
+    for i in range(data_b.shape[0]):
+        ax[1,3].plot(hrs, data_b[i,:,C2_IDX], color=bus_color(bus_keys[i]))
+
     ax[1,0].set_xlabel('Hours')
     ax[1,1].set_xlabel('Hours')
+    ax[1,2].set_xlabel('Hours')
+    ax[1,3].set_xlabel('Hours')
 
     plt.show()
 

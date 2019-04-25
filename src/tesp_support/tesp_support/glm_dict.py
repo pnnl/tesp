@@ -32,6 +32,27 @@ def ercotMeterName(objname):
 	k = root1.rfind('_')
 	return root1[:k] + '_mtr'
 
+def ti_enumeration_string(tok):
+	""" if thermal_integrity_level is an integer, convert to a string for the metadata
+	"""
+	if tok == '0':
+		return 'VERY_LITTLE'
+	if tok == '1':
+		return 'LITTLE'
+	if tok == '2':
+		return 'BELOW_NORMAL'
+	if tok == '3':
+		return 'NORMAL'
+	if tok == '4':
+		return 'ABOVE_NORMAL'
+	if tok == '5':
+		return 'GOOD'
+	if tok == '6':
+		return 'VERY_GOOD'
+	if tok == '7':
+		return 'UNKNOWN'
+	return tok
+
 def glm_dict (nameroot, ercot=False, te30=False):
 	""" Writes the JSON metadata file from a GLM file
 
@@ -53,6 +74,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 	feeder_id = 'feeder'
 	name = ''
 	bulkpowerBus = 'TBD'
+	base_feeder = ''
 	substationTransformerMVA = 12
 	houses = {}
 	waterheaters = {}
@@ -71,9 +93,16 @@ def glm_dict (nameroot, ercot=False, te30=False):
 			if inSwing == True:
 				if lst[0] == 'name':
 					feeder_id = lst[1].strip(';')
+				if lst[0] == 'groupid':
+					base_feeder = lst[1].strip(';')
 				if lst[0] == 'base_power':
-					substationTransformerMVA = float(lst[1].strip(' ').strip('MVA;')) * 1.0
+					substationTransformerMVA = float(lst[1].strip(' ').strip('MVA;')) * 1.0e-6
+					if 'MVA' in line:
+						substationTransformerMVA *= 1.0e6
+					elif 'KVA' in line:
+						substationTransformerMVA *= 1.0e3
 					inSwing = False
+					break
 
 	ip.seek(0,0)
 	inHouses = False
@@ -81,12 +110,14 @@ def glm_dict (nameroot, ercot=False, te30=False):
 	inTriplexMeters = False
 	inMeters = False
 	inInverters = False
+	hasBattery = False
+	hasSolar = False
 	inCapacitors = False
 	inRegulators = False
 	inFNCSmsg = False
 	for line in ip:
 		lst = line.split()
-		if len(lst) > 1:
+		if len(lst) > 1: # terminates with a } or };
 			if lst[1] == 'fncs_msg':
 				inFNCSmsg = True
 			if lst[1] == 'house':
@@ -98,6 +129,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				stories = 1
 				thermal_integrity = 'UNKNOWN'
 				doors = 4
+				house_class = 'SINGLE_FAMILY'
 			if inFNCSmsg == True:
 				if lst[0] == 'name':
 					FNCSmsgName = lst[1].strip(';')
@@ -110,6 +142,9 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				phases = 'ABC'
 			if lst[1] == 'inverter':
 				inInverters = True
+				hasBattery = False
+				hasSolar = False
+				lastInverter = ''
 				rating = 25000.0
 				inv_eta = 0.9
 				bat_eta = 0.8  # defaults without internal battery model
@@ -121,7 +156,6 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				inRegulators = True
 			if lst[1] == 'waterheater':
 				inWaterHeaters = True
-				gallons = 0.0
 			if inCapacitors == True:
 				if lst[0] == 'name':
 					lastCapacitor = lst[1].strip(';')
@@ -133,8 +167,14 @@ def glm_dict (nameroot, ercot=False, te30=False):
 					regulators[lastRegulator] = {'feeder_id':feeder_id}
 					inRegulators = False;
 			if inInverters == True:
-				if lst[0] == 'name':
+				if lst[0] == 'name' and lastInverter == '':
 					lastInverter = lst[1].strip(';')
+				if lst[1] == 'solar':
+					hasSolar = True
+					hasBattery = False
+				elif lst[1] == 'battery':
+					hasSolar = False
+					hasBattery = True
 				if lst[0] == 'rated_power':
 					rating = float(lst[1].strip(' ').strip(';')) * 1.0
 				if lst[0] == 'inverter_efficiency':
@@ -145,21 +185,6 @@ def glm_dict (nameroot, ercot=False, te30=False):
 					soc = float(lst[1].strip(' ').strip(';')) * 1.0
 				if lst[0] == 'battery_capacity':
 					capacity = float(lst[1].strip(' ').strip(';')) * 1.0
-				if lst[1] == 'solar':
-					if ercot:
-						lastBillingMeter = ercotMeterName (name)
-					elif te30:
-						lastBillingMeter = lastMeterParent
-					inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'rated_W':rating,'resource':'solar','inv_eta':inv_eta}
-					inInverters = False
-				if lst[1] == 'SUPPLY_DRIVEN;':
-					if ercot:
-						lastBillingMeter = ercotMeterName (name)
-					elif te30:
-						lastBillingMeter = lastMeterParent
-					inverters[lastInverter] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'rated_W':rating,'resource':'battery','inv_eta':inv_eta,
-						'bat_eta':bat_eta,'bat_capacity':capacity,'bat_soc':soc}
-					inInverters = False
 			if inHouses == True:
 				if lst[0] == 'name':
 					name = lst[1].strip(';')
@@ -175,20 +200,28 @@ def glm_dict (nameroot, ercot=False, te30=False):
 					cooling = lst[1].strip(';')
 				if lst[0] == 'heating_system_type':
 					heating = lst[1].strip(';')
-				if lst[0] == 'thermal_integrity_level':
-					thermal_integrity = lst[1].strip(';')
+				if lst[0] == '//' and lst[1] == 'thermal_integrity_level':
+					thermal_integrity = ti_enumeration_string (lst[2].strip(';'))
+				if lst[0] == 'groupid':
+					house_class = lst[1].strip(';')
 				if (lst[0] == 'cooling_setpoint') or (lst[0] == 'heating_setpoint'):
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
 					houses[name] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'sqft':sqft,'stories':stories,'doors':doors,
-						'thermal_integrity':thermal_integrity,'cooling':cooling,'heating':heating,'wh_gallons':0}
+						'thermal_integrity':thermal_integrity,'cooling':cooling,'heating':heating,'wh_gallons':0,'house_class':house_class}
 					lastHouse = name
 					inHouses = False
 			if inWaterHeaters == True:
+				if lst[0] == 'name':
+					whname = lst[1].strip(' ').strip(';')
+					waterheaters[lastHouse] = {'name': whname, 'gallons':0.0, 'tmix': 0.0, 'mlayer': False}
 				if lst[0] == 'tank_volume':
-					gallons = float(lst[1].strip(' ').strip(';')) * 1.0
-					waterheaters[lastHouse] = gallons
-					inWaterHeaters = False
+					waterheaters[lastHouse]['gallons']= float(lst[1].strip(' ').strip(';')) * 1.0
+				if lst[0] == 'T_mixing_valve':
+					waterheaters[lastHouse]['tmix'] = float(lst[1].strip(' ').strip(';')) * 1.0
+				if lst[0] == 'waterheater_model':
+					if 'MULTILAYER' == lst[1].strip(' ').strip(';'):
+						waterheaters[lastHouse]['mlayer'] = True
 			if inTriplexMeters == True:
 				if lst[0] == 'name':
 					name = lst[1].strip(';')
@@ -217,6 +250,31 @@ def glm_dict (nameroot, ercot=False, te30=False):
 					lastBillingMeter = name
 					inMeters = False
 		elif len(lst) == 1:
+			if hasSolar:
+				if ercot:
+					lastBillingMeter = ercotMeterName (name)
+				elif te30:
+					lastBillingMeter = lastMeterParent
+				inverters[lastInverter] = {'feeder_id':feeder_id,
+																	'billingmeter_id':lastBillingMeter,
+																	'rated_W':rating,
+																	'resource':'solar',
+																	'inv_eta':inv_eta}
+			elif hasBattery:
+				if ercot:
+					lastBillingMeter = ercotMeterName (name)
+				elif te30:
+					lastBillingMeter = lastMeterParent
+				inverters[lastInverter] = {'feeder_id':feeder_id,
+																	'billingmeter_id':lastBillingMeter,
+																	'rated_W':rating,
+																	'resource':'battery',
+																	'inv_eta':inv_eta,
+																	'bat_eta':bat_eta,
+																	'bat_capacity':capacity,
+																	'bat_soc':soc}
+			hasSolar = False
+			hasBattery = False
 			inHouses = False
 			inWaterHeaters = False
 			inTriplexMeters = False
@@ -228,7 +286,10 @@ def glm_dict (nameroot, ercot=False, te30=False):
 
 	for key, val in houses.items():
 		if key in waterheaters:
-			val['wh_gallons'] = waterheaters[key]
+			val['wh_name'] = waterheaters[key]['name']
+			val['wh_gallons'] = waterheaters[key]['gallons']
+			val['wh_tmix'] = waterheaters[key]['tmix']
+			val['wh_mlayer'] = waterheaters[key]['mlayer']
 		mtr = billingmeters[val['billingmeter_id']]
 		mtr['children'].append(key)
 
@@ -238,7 +299,8 @@ def glm_dict (nameroot, ercot=False, te30=False):
 
 	feeders[feeder_id] = {'house_count': len(houses),'inverter_count': len(inverters)}
 	substation = {'bulkpower_bus':bulkpowerBus,'FNCS':FNCSmsgName,
-		'transformer_MVA':substationTransformerMVA,'feeders':feeders, 
+		'transformer_MVA':substationTransformerMVA,
+		'base_feeder':base_feeder,'feeders':feeders, 
 		'billingmeters':billingmeters,'houses':houses,'inverters':inverters,
 		'capacitors':capacitors,'regulators':regulators}
 	print (json.dumps(substation), file=op)

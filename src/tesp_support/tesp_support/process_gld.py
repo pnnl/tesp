@@ -155,7 +155,10 @@ def process_gld(nameroot, dictname = ''):
   # Billing Meters 
   lst_m.pop('StartTime')
   meta_m = lst_m.pop('Metadata')
-  print("\nBilling Meter Metadata for", len(lst_m[time_key]), "objects")
+  nBillingMeters = 0
+  if not lst_m[time_key] is None:
+    nBillingMeters = len(lst_m[time_key])
+  print('\nBilling Meter Metadata for', nBillingMeters, 'objects')
   for key, val in meta_m.items():
     print (key, val['index'], val['units'])
     if key == 'voltage_max':
@@ -174,16 +177,17 @@ def process_gld(nameroot, dictname = ''):
       MTR_VOLTUNB_MAX_IDX = val['index']
       MTR_VOLTUNB_MAX_UNITS = val['units']
 
-  data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
-  print ("\nConstructed", data_m.shape, "NumPy array for Meters")
-  j = 0
-  for key in mtr_keys:
-    i = 0
-    for t in times:
-      ary = lst_m[str(t)][mtr_keys[j]]
-      data_m[j, i,:] = ary
-      i = i + 1
-    j = j + 1
+  if nBillingMeters > 0:
+    data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+    print ('\nConstructed', data_m.shape, 'NumPy array for Meters')
+    j = 0
+    for key in mtr_keys:
+      i = 0
+      for t in times:
+        ary = lst_m[str(t)][mtr_keys[j]]
+        data_m[j, i,:] = ary
+        i = i + 1
+      j = j + 1
 
   #lst_i.pop('StartTime')
   #meta_i = lst_i.pop('Metadata')
@@ -234,14 +238,17 @@ def process_gld(nameroot, dictname = ''):
   ax[0,1].set_ylabel('degF')
   ax[0,1].set_title ('Average Temperature over All Houses')
 
-  ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT_MAX_IDX], color="blue", label="Max LN")
-  ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT_MIN_IDX], color="red", label="Min LN")
-  ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT12_MAX_IDX], color="green", label="Max LL")
-  ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT12_MIN_IDX], color="magenta", label="Min LL")
-  ax[1,0].set_xlabel("Hours")
-  ax[1,0].set_ylabel(MTR_VOLT_MAX_UNITS)
-  ax[1,0].set_title ("Meter Voltages at " + mtr_keys[0])
-  ax[1,0].legend(loc='best')
+  if nBillingMeters > 0:
+    ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT_MAX_IDX], color="blue", label="Max LN")
+    ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT_MIN_IDX], color="red", label="Min LN")
+    ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT12_MAX_IDX], color="green", label="Max LL")
+    ax[1,0].plot(hrs, data_m[0,:,MTR_VOLT12_MIN_IDX], color="magenta", label="Min LL")
+    ax[1,0].set_xlabel("Hours")
+    ax[1,0].set_ylabel(MTR_VOLT_MAX_UNITS)
+    ax[1,0].set_title ("Meter Voltages at " + mtr_keys[0])
+    ax[1,0].legend(loc='best')
+  else:
+    ax[1,0].set_title ('No Billing Meters to Plot')
 
   ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_AVG_IDX], color="blue", label="Mean")
   ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MIN_IDX], color="red", label="Min")

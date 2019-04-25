@@ -3,6 +3,14 @@
 Code Reference
 ==============
 
+TSO Case Data
+-------------
+
+The TSO schema was based on the MATPOWER formats for the network and generator cost data, supplemented with TESP data.
+Code in *fncsTSO.py* reads this data from a JSON file.
+
+.. jsonschema:: tso_schema.json
+
 src Directory Structure
 -----------------------
 

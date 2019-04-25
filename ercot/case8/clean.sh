@@ -1,5 +1,6 @@
 rm *.xml
 rm *auction.yaml
+rm *substation.yaml
 rm *metrics.json
 rm *.log
 rm *_opf.csv

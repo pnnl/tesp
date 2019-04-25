@@ -1,7 +1,7 @@
 clock {
 	timezone EST+5EDT;
 	starttime '2000-01-01 0:00:00';
-	stoptime '2000-01-01 6:00:00';
+	stoptime '2000-01-01 5:59:00';
 }
 
 #set relax_naming_rules=1
@@ -23,6 +23,7 @@ object metrics_collector_writer {
 	filename loadshed_metrics.json;
 }
 
+#ifdef WANT_FNCS
 object fncs_msg {
   name gridlabdSimulator1;
   publish "commit:n650.distribution_load -> distribution_load; 1000";
@@ -30,6 +31,14 @@ object fncs_msg {
   option "transport:hostname localhost, port 5570";
   parent n650;
 }
+#endif
+
+#ifdef WANT_HELICS
+object helics_msg {
+  name gridlabdSimulator1;
+  configure helics_gld_msg.json;
+}
+#endif
 
 // Loadshedding Switch
 object switch {

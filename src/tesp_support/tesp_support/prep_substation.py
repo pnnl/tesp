@@ -28,7 +28,7 @@ broker = 'tcp://localhost:5570'
 network_node = 'network_node'
 marketName = 'Market_1'
 unit = 'kW'
-control_mode = 'CN_RAMP'
+control_mode = 'CN_RAMP' # 'CN_NONE'
 use_predictive_bidding = 0
 use_override = 'OFF'
 price_cap = 3.78
@@ -170,70 +170,73 @@ def ProcessGLM (fileroot):
                     nAirConditioners += 1
                     if np.random.uniform (0, 1) <= agent_participation:
                         nControllers += 1
-                        controller_name = houseName + '_hvac'
-                        wakeup_start = np.random.uniform (wakeup_start_lo, wakeup_start_hi)
-                        daylight_start = np.random.uniform (daylight_start_lo, daylight_start_hi)
-                        evening_start = np.random.uniform (evening_start_lo, evening_start_hi)
-                        night_start = np.random.uniform (night_start_lo, night_start_hi)
-                        wakeup_set = np.random.uniform (wakeup_set_lo, wakeup_set_hi)
-                        daylight_set = np.random.uniform (daylight_set_lo, daylight_set_hi)
-                        evening_set = np.random.uniform (evening_set_lo, evening_set_hi)
-                        night_set = np.random.uniform (night_set_lo, night_set_hi)
-                        weekend_day_start = np.random.uniform (weekend_day_start_lo, weekend_day_start_hi)
-                        weekend_day_set = np.random.uniform (weekend_day_set_lo, weekend_day_set_hi)
-                        weekend_night_start = np.random.uniform (weekend_night_start_lo, weekend_night_start_hi)
-                        weekend_night_set = np.random.uniform (weekend_night_set_lo, weekend_night_set_hi)
-                        deadband = np.random.uniform (deadband_lo, deadband_hi)
-                        offset_limit = np.random.uniform (offset_limit_lo, offset_limit_hi)
-                        ramp = np.random.uniform (ramp_lo, ramp_hi)
-                        ctrl_cap = np.random.uniform (ctrl_cap_lo, ctrl_cap_hi)
-                        controllers[controller_name] = {'control_mode': control_mode, 
-                                                                                        'houseName': houseName, 
-                                                                                        'meterName': meterName, 
-                                                                                        'period': periodController,
-                                                                                        'wakeup_start': float('{:.3f}'.format(wakeup_start)),
-                                                                                        'daylight_start': float('{:.3f}'.format(daylight_start)),
-                                                                                        'evening_start': float('{:.3f}'.format(evening_start)),
-                                                                                        'night_start': float('{:.3f}'.format(night_start)),
-                                                                                        'wakeup_set': float('{:.3f}'.format(wakeup_set)),
-                                                                                        'daylight_set': float('{:.3f}'.format(daylight_set)),
-                                                                                        'evening_set': float('{:.3f}'.format(evening_set)),
-                                                                                        'night_set': float('{:.3f}'.format(night_set)),
-                                                                                        'weekend_day_start': float('{:.3f}'.format(weekend_day_start)),
-                                                                                        'weekend_day_set': float('{:.3f}'.format(weekend_day_set)),
-                                                                                        'weekend_night_start': float('{:.3f}'.format(weekend_night_start)),
-                                                                                        'weekend_night_set': float('{:.3f}'.format(weekend_night_set)),
-                                                                                        'deadband': float('{:.3f}'.format(deadband)),
-                                                                                        'offset_limit': float('{:.3f}'.format(offset_limit)),
-                                                                                        'ramp': float('{:.4f}'.format(ramp)), 
-                                                                                        'price_cap': float('{:.3f}'.format(ctrl_cap)),
-                                                                                        'bid_delay': bid_delay, 
-                                                                                        'use_predictive_bidding': use_predictive_bidding, 
-                                                                                        'use_override': use_override}
+                        control_mode = 'CN_RAMP'
+                    else:
+                        control_mode = 'CN_NONE' # still follows the time-of-day schedule
+                    controller_name = houseName + '_hvac'
+                    wakeup_start = np.random.uniform (wakeup_start_lo, wakeup_start_hi)
+                    daylight_start = np.random.uniform (daylight_start_lo, daylight_start_hi)
+                    evening_start = np.random.uniform (evening_start_lo, evening_start_hi)
+                    night_start = np.random.uniform (night_start_lo, night_start_hi)
+                    wakeup_set = np.random.uniform (wakeup_set_lo, wakeup_set_hi)
+                    daylight_set = np.random.uniform (daylight_set_lo, daylight_set_hi)
+                    evening_set = np.random.uniform (evening_set_lo, evening_set_hi)
+                    night_set = np.random.uniform (night_set_lo, night_set_hi)
+                    weekend_day_start = np.random.uniform (weekend_day_start_lo, weekend_day_start_hi)
+                    weekend_day_set = np.random.uniform (weekend_day_set_lo, weekend_day_set_hi)
+                    weekend_night_start = np.random.uniform (weekend_night_start_lo, weekend_night_start_hi)
+                    weekend_night_set = np.random.uniform (weekend_night_set_lo, weekend_night_set_hi)
+                    deadband = np.random.uniform (deadband_lo, deadband_hi)
+                    offset_limit = np.random.uniform (offset_limit_lo, offset_limit_hi)
+                    ramp = np.random.uniform (ramp_lo, ramp_hi)
+                    ctrl_cap = np.random.uniform (ctrl_cap_lo, ctrl_cap_hi)
+                    controllers[controller_name] = {'control_mode': control_mode, 
+                        'houseName': houseName, 
+                        'meterName': meterName, 
+                        'period': periodController,
+                        'wakeup_start': float('{:.3f}'.format(wakeup_start)),
+                        'daylight_start': float('{:.3f}'.format(daylight_start)),
+                        'evening_start': float('{:.3f}'.format(evening_start)),
+                        'night_start': float('{:.3f}'.format(night_start)),
+                        'wakeup_set': float('{:.3f}'.format(wakeup_set)),
+                        'daylight_set': float('{:.3f}'.format(daylight_set)),
+                        'evening_set': float('{:.3f}'.format(evening_set)),
+                        'night_set': float('{:.3f}'.format(night_set)),
+                        'weekend_day_start': float('{:.3f}'.format(weekend_day_start)),
+                        'weekend_day_set': float('{:.3f}'.format(weekend_day_set)),
+                        'weekend_night_start': float('{:.3f}'.format(weekend_night_start)),
+                        'weekend_night_set': float('{:.3f}'.format(weekend_night_set)),
+                        'deadband': float('{:.3f}'.format(deadband)),
+                        'offset_limit': float('{:.3f}'.format(offset_limit)),
+                        'ramp': float('{:.4f}'.format(ramp)), 
+                        'price_cap': float('{:.3f}'.format(ctrl_cap)),
+                        'bid_delay': bid_delay, 
+                        'use_predictive_bidding': use_predictive_bidding, 
+                        'use_override': use_override}
                     isELECTRIC = False
 
-    print ('configured', nControllers, 'controllers for', nAirConditioners, 'air conditioners')
+    print ('configured', nControllers, 'participating controllers for', nAirConditioners, 'air conditioners')
 
     # Write market dictionary
     auctions[marketName] = {'market_id': 1, 
-                                                    'unit': unit, 
-                                                    'special_mode': special_mode, 
-                                                    'use_future_mean_price': use_future_mean_price, 
-                                                    'pricecap': price_cap, 
-                                                    'clearing_scalar': clearing_scalar,
-                                                    'period': periodMarket, 
-                                                    'latency': latency, 
-                                                    'init_price': initial_price, 
-                                                    'init_stdev': std_dev, 
-                                                    'ignore_pricecap': ignore_pricecap, 
-                                                    'ignore_failedmarket': ignore_failedmarket,
-                                                    'statistic_mode': statistic_mode, 
-                                                    'capacity_reference_object': capacity_reference_object, 
-                                                    'max_capacity_reference_bid_quantity': max_capacity_reference_bid_quantity,
-                                                    'stat_mode': stat_mode, 
-                                                    'stat_interval': interval, 
-                                                    'stat_type': stat_type, 
-                                                    'stat_value': [0 for i in range(len(stat_mode))]}
+                            'unit': unit, 
+                            'special_mode': special_mode, 
+                            'use_future_mean_price': use_future_mean_price, 
+                            'pricecap': price_cap, 
+                            'clearing_scalar': clearing_scalar,
+                            'period': periodMarket, 
+                            'latency': latency, 
+                            'init_price': initial_price, 
+                            'init_stdev': std_dev, 
+                            'ignore_pricecap': ignore_pricecap, 
+                            'ignore_failedmarket': ignore_failedmarket,
+                            'statistic_mode': statistic_mode, 
+                            'capacity_reference_object': capacity_reference_object, 
+                            'max_capacity_reference_bid_quantity': max_capacity_reference_bid_quantity,
+                            'stat_mode': stat_mode, 
+                            'stat_interval': interval, 
+                            'stat_type': stat_type, 
+                            'stat_value': [0 for i in range(len(stat_mode))]}
 
     # Close files
     ip.close()
@@ -326,7 +329,7 @@ def prep_substation (gldfileroot, jsonfile = ''):
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
         jsonfile (str): fully qualified path to an optional JSON configuration file
     """
-    global dt, period, Eplus_Bus, agent_participation
+    global dt, period, Eplus_Bus, agent_participation, max_capacity_reference_bid_quantity
     global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
     global daylight_start_lo, daylight_start_hi, daylight_set_lo, daylight_set_hi
     global evening_start_lo, evening_start_hi, evening_set_lo, evening_set_hi
@@ -384,6 +387,8 @@ def prep_substation (gldfileroot, jsonfile = ''):
 
         Eplus_Bus = config['FeederGenerator']['EnergyPlusBus']
         agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
+
+        # max_capacity_reference_bid_quantity = 5000.0 * float(config['PYPOWERConfiguration']['TransformerBase']) / 3.0  # forced oil, forced air
 
     ProcessGLM (gldfileroot)
 

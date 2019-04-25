@@ -8,10 +8,10 @@ GitHub branch requirements for TESP:
 - feature/1146 for GridLAB-D
 - develop for FNCS
 - fncs-v8.3.0 for EnergyPlus
+- develop for HELICS 2.0
 
 You may also need to upgrade the gcc and g++ compilers. This build 
-procedure has been tested on a clean virtual machine with Ubuntu 16.04 
-LTS and gcc/g++ 5.4.0.
+procedure has been tested with Ubuntu 18.04 LTS and gcc/g++ 7.3.0.
 
 When you finish the build, try :ref:`RunExamples`.
 
@@ -20,40 +20,48 @@ Preparation - Python Packages, Java, build tools
 
 ::
 
+ # build tools and Java support
  sudo apt-get install git
  sudo apt-get install build-essential
  sudo apt-get install autoconf
  sudo apt-get install libtool
  sudo apt-get install cmake
  sudo apt-get install libjsoncpp-dev
- # Java 8 is required; the following works on Ubuntu 16.04
+ sudo apt-get install default-jre
  sudo apt-get install default-jdk
 
- mkdir ~/src
- cd ~/src
- # may need sudo on the following steps to install for all users
- wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
- chmod +x Miniconda3-latest-Linux-x86_64.sh
- # during following install, accept the choice of adding Miniconda to your PATH
- ./Miniconda3-latest-Linux-x86_64.sh
- conda update conda
- conda install pandas
- # tesp_support, including verification of PYPOWER dependency
- pip install tesp_support
- opf
+ # python3 support
+ # you can also install Python 3.6 or later from https://www.python.org/downloads/ or https://repo.continuum.io/
+ sudo apt-get install python3
+ sudo apt-get install python3-dev
+ sudo apt-get install python3-pip
+ sudo apt-get install python3-tk
+ pip3 install tesp_support --upgrade
+ opf 
+
+ # for HELICS and FNCS
+ sudo apt-get install libboost-dev
+ sudo apt-get install libboost-program-options-dev
+ sudo apt-get install libboost-test-dev
+ sudo apt-get install libboost-filesystem-dev
+ sudo apt-get install libzmq5-dev
+ sudo apt-get install libczmq-dev
+ sudo apt-get install swig
 
 Checkout PNNL repositories from github
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
+ mkdir ~/src
  cd ~/src
  git config --global user.name "your user name"
  git config --global user.email "your email"
  git clone -b develop https://github.com/FNCS/fncs.git
+ git clone -b develop https://github.com/GMLC-TDC/HELICS-src
  git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
- git clone -b master https://github.com/pnnl/tesp.git
+ git clone -b develop https://github.com/pnnl/tesp.git
 
 Choosing and Configuring the Install Directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,46 +80,34 @@ is for Ubuntu; other flavors of Linux may differ.
 
 ::
 
- sudo emacs /etc/environment
- # or sudo gedit /etc/environment
+ sudo gedit /etc/environment
  #
  # add these two lines in the *environment* file, and save it:
  #
  FNCS_INSTALL="$HOME/FNCS_install"
+ # or FNCS_INSTALL="/usr/local"
  GLPATH="$FNCS_INSTALL/lib/gridlabd:$FNCS_INSTALL/share/gridlabd"
  #
  # Use this command before proceeding with the subsequent build steps
  #
  source /etc/environment
 
-FNCS with Prerequisites
-~~~~~~~~~~~~~~~~~~~~~~~
+FNCS and HELICS
+~~~~~~~~~~~~~~~
 
-Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
+To build the shared libraries for FNCS with Python bindings:
 
 ::
 
- cd ~/src
- wget --no-check-certificate http://download.zeromq.org/zeromq-4.1.3.tar.gz
- tar -xzf zeromq-4.1.3.tar.gz
- cd zeromq-4.1.3
- ./configure --without-libsodium --prefix=$FNCS_INSTALL
- make
- sudo make install
-
- cd ..
- wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
- tar -xzf czmq-3.0.2.tar.gz
- cd czmq-3.0.2
- ./configure 'CPPFLAGS=-Wno-format-truncation' --prefix=$FNCS_INSTALL --with-libzmq=$FNCS_INSTALL
- make
- sudo make install
-
- cd ../fncs
+ cd ~/src/fncs
  autoreconf -if
  ./configure 'CXXFLAGS=-w' 'CFLAGS=-w' --prefix=$FNCS_INSTALL --with-zmq=$FNCS_INSTALL
  make
  sudo make install
+
+To build the Java interface for versions 8 or 9:
+
+::
 
  cd java
  mkdir build
@@ -121,11 +117,52 @@ Your Java version may have removed *javah*.  If that's the case, use *javac -h* 
  cp fncs.jar ~/src/tesp/examples/loadshed/java
  cp libJNIfncs.so ~/src/tesp/examples/loadshed/java
 
-GridLAB-D with Prerequisites
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To build the Java interface for version 10, which has *javah* replaced by *javac -h*:
 
-If you encounter build errors with GridLAB-D, please try
-adding *-std=c++11* to *CXXFLAGS*.
+::
+
+ cd java
+ make
+ make install
+
+To build HELICS 2.0 with Python and Java bindings:
+
+::
+
+ cd ~/src/HELICS-src
+ mkdir build
+ cd build
+ cmake -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DCMAKE_BUILD_TYPE=Release ..
+ make -j8
+ sudo make install
+
+Test that HELICS and FNCS start:
+
+ sudo ldconfig
+ helics_player --version
+ helics_recorder --version
+ fncs_broker --version # look for the program to start, then exit with error
+
+To set up Python and Java to run with HELICS, add this to your *~/.bashrc* file:
+
+::
+
+ export PYTHONPATH=/usr/local/python:$PYTHONPATH
+ export JAVAPATH=/usr/local/java:$JAVAPATH
+
+Then test HELICS from Python 3:
+
+::
+
+ python3
+ >>> import helics
+ >>> helics.helicsGetVersion()
+ >>> quit()
+
+GridLAB-D
+~~~~~~~~~
+
+To link with both FNCS and HELICS, and run the autotest suite:
 
 ::
 
@@ -133,15 +170,16 @@ adding *-std=c++11* to *CXXFLAGS*.
  autoreconf -isf
 
  cd third_party
- tar -xvzf xerces-c-3.1.1.tar.gz
- cd xerces-c-3.1.1
+ tar -xvzf xerces-c-3.2.0.tar.gz
+ cd xerces-c-3.2.0
  ./configure 'CXXFLAGS=-w' 'CFLAGS=-w'
  make
  sudo make install
  cd ../..
 
- # for debugging ./configure --with-fncs=$FNCS_INSTALL 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -g -O0'
- ./configure --with-fncs=$FNCS_INSTALL 'CXXFLAGS=-w' 'CFLAGS=-w'
+ ./configure --with-fncs=$FNCS_INSTALL --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w' 'CXXFLAGS=-w -std=c++14' 'LDFLAGS=-w'
+
+ # for debugging use 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -std=c++14 -g -O0' and 'LDFLAGS=-w -g -O0'
 
  sudo make
  sudo make install
@@ -152,6 +190,14 @@ EnergyPlus with Prerequisites
 
 ::
 
+ cd ~/src/EnergyPlus
+ mkdir build
+ cd build
+ cmake -DBUILD_FORTRAN=ON -DBUILD_PACKAGE=ON -DENABLE_INSTALL_REMOTE=OFF ..
+ make -j 4
+ sudo make install
+
+..
  cd ~/src/EnergyPlus
  mkdir build
  cd build
@@ -173,7 +219,8 @@ EnergyPlus with Prerequisites
  cp libenergyplusapi.so.8.3.0 EnergyPlus-8-3-0
 
  # if ReadVarsESO is not found at the end of a simulation, try this
- /usr/local/EnergyPlus-8-3-0$ sudo ln -s PostProcess/ReadVarsESO ReadVarsESO
+ cd /usr/local/EnergyPlus-8-3-0
+ sudo ln -s PostProcess/ReadVarsESO ReadVarsESO
 
 Build eplus_json
 ~~~~~~~~~~~~~~~~
@@ -190,6 +237,19 @@ Build eplus_json
  make
  sudo make install
 
+Build ns3 with HELICS
+~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+ cd ~/src
+ git clone https://gitlab.com/nsnam/ns-3-dev.git
+ cd ns-3-dev
+ git clone https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+ cd ..
+ ./waf configure --with-helics=/usr/local --disable-werror --enable-examples --enable-tests
+ ./waf build 
+
 Prepare for Testing
 ~~~~~~~~~~~~~~~~~~~
 
@@ -202,15 +262,6 @@ before you try :ref:`RunExamples`.
 
 In case you have both Python 2 and Python 3 installed, the TESP example
 scripts and post-processing programs only invoke *python3*.
-
-::
-
- gedit ~/.profile
- #
- # edit the line with PATH as follows, to put Python 3 before other
- # directories in the path, and then save the file
- #
- PATH="$HOME/miniconda3/bin:$HOME/bin: and more directories"
 
 DEPRECATED: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
