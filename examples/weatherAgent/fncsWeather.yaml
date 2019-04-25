@@ -1,0 +1,45 @@
+name: weather
+StartTime: "2000-01-01 00:00:00"
+time_stop: 70m
+time_delta: 6m
+Forecast: 1
+ForecastLength: 24h
+PublishTimeAhead: 3s #how much delay to account for
+AddErrorToForecast: 0
+broker: tcp://localhost:5570
+forecastPeriod: 48
+parameters:
+    temperature:
+        # 0: Uniform distribution; 1: Triangular distribution; 2: Truncated normal distribution
+        distribution: 2
+        # pu maximum bias at first hour
+        P_e_bias: 0.5
+        # pu maximum error from mean values
+        P_e_envelope: 0.08
+        # pu of the maximum error at the first hour
+        Lower_e_bound: 0.5
+    humidity:
+        distribution: 2
+        P_e_bias: 0.5
+        P_e_envelope: 0.08
+        Lower_e_bound: 0.5
+    solar_direct:
+        distribution: 2
+        P_e_bias: 0.5
+        P_e_envelope: 0.08
+        Lower_e_bound: 0.5
+    solar_diffuse:
+        distribution: 2
+        P_e_bias: 0.5
+        P_e_envelope: 0.08
+        Lower_e_bound: 0.5
+    pressure:
+        distribution: 2
+        P_e_bias: 0.5
+        P_e_envelope: 0.08
+        Lower_e_bound: 0.5
+    wind_speed:
+        distribution: 2
+        P_e_bias: 0.5
+        P_e_envelope: 0.08
+        Lower_e_bound: 0.5
