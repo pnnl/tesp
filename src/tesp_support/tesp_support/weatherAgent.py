@@ -1,6 +1,10 @@
+"""Weather Agent
+
+This weather agent needs an WEATHER_CONFIG environment variable to be set, which is a json file.
+"""
 import sys, os
 import pandas as pd
-import yaml, json
+import json
 from datetime import datetime
 from datetime import timedelta
 try:
@@ -9,32 +13,35 @@ except:
   pass
 import random
 import numpy
+from scipy.stats import truncnorm
 
 def startWeatherAgent(file):
-    """the weather agent publishes weather data as configured by the yaml file
+    """the weather agent publishes weather data as configured by the json file
 
     :param file: string
         the weather data file
     :return: nothing
     """
     weatherData = pd.DataFrame.from_csv(file) # read the weather data file
-    fncsyaml = os.environ['FNCS_CONFIG_FILE'] # read the weather config yaml file
-    if os.path.isfile(fncsyaml):
-        with open(fncsyaml, 'r') as stream:
+    config = os.environ['WEATHER_CONFIG'] # read the weather config json file
+    if os.path.isfile(config):
+        with open(config, 'r') as stream:
             try:
-                yamlFile = yaml.load(stream)
-                timeStop = yamlFile['time_stop']
-                StartTime = yamlFile['StartTime']
+                conf = json.load(stream)
+                agentName = conf['name']
+                broker = conf['broker']
+                timeStop = conf['time_stop']
+                StartTime = conf['StartTime']
                 timeFormat = '%Y-%m-%d %H:%M:%S'
                 dtStart = datetime.strptime (StartTime, timeFormat)
-                timeDeltaStr = yamlFile['time_delta']
-                forecast = yamlFile['Forecast']
-                addErrorToForecast = yamlFile['AddErrorToForecast']
-                forecastLength = yamlFile['ForecastLength']
-                publishTimeAhead = yamlFile['PublishTimeAhead']
-                forecastPeriod = yamlFile['forecastPeriod']
-                forecastParameters = yamlFile['parameters']
-            except yaml.YAMLError as ex:
+                timeDeltaStr = conf['time_delta']
+                forecast = conf['Forecast']
+                addErrorToForecast = conf['AddErrorToForecast']
+                forecastLength = conf['ForecastLength']
+                publishTimeAhead = conf['PublishTimeAhead']
+                forecastPeriod = conf['forecastPeriod']
+                forecastParameters = conf['parameters']
+            except json.JSONDecodeError as ex:
                 print(ex)
     else:
         print('could not open FNCS_CONFIG_FILE for fncs')
@@ -61,6 +68,14 @@ def startWeatherAgent(file):
     except Exception as ex:
         print("Error in time_stop", ex)
 
+    #write fncs.zpl file here
+    zpl = open("fncs.zpl", "w")
+    print("name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds, timeStopInSeconds, broker), file=zpl)
+    zpl.close()
+    print('fncs.zpl file generated', flush=True)
+    # this config str won't work for fncs initialization.
+    # config = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds, timeStopInSeconds, broker)
+
     # when doing resample(), use timeDeltaInSeconds to make it uniform
     # the reason for that is due to some of the units that we use for fncs, such as 'min',
     # is not recognized by the resample() function
@@ -69,27 +84,28 @@ def startWeatherAgent(file):
     # find weather data on the hour for the hourly forecast
     hourlyWeatherData=weatherData.loc[(weatherData.index.minute == 0) & (weatherData.index.second == 0) & (weatherData.index.microsecond == 0) & (weatherData.index.nanosecond == 0)]
     # make sure time_stop and time_delta have the same unit by converting them to the uniform unit first
-    try:
-        timeDeltaResample = deltaTimeToResmapleFreq(timeDeltaStr)
-    except Exception as ex:
-        print("Error in time_delta", ex)
-    try:
-        timeStopUniformUnit = deltaTimeToResmapleFreq(timeStop)
-    except Exception as ex:
-        print("Error in time_stop", ex)
-    timeStopUnit = ''.join(filter(str.isalpha, timeStopUniformUnit))
-    timeStopNum = int(''.join(filter(str.isdigit, timeStopUniformUnit)))
-    timeDeltaUnit = ''.join(filter(str.isalpha, timeDeltaResample))
-    timeDeltaNum = int(''.join(filter(str.isdigit, timeDeltaResample)))
-    if timeStopUnit != timeDeltaUnit:
-        print('time_stop and time_delta should have the same unit.')
-        sys.exit()
+
+    # try:
+    #     timeDeltaResample = deltaTimeToResmapleFreq(timeDeltaStr)
+    # except Exception as ex:
+    #     print("Error in time_delta", ex)
+    # try:
+    #     timeStopUniformUnit = deltaTimeToResmapleFreq(timeStop)
+    # except Exception as ex:
+    #     print("Error in time_stop", ex)
+    # timeStopUnit = ''.join(filter(str.isalpha, timeStopUniformUnit))
+    # timeStopNum = int(''.join(filter(str.isdigit, timeStopUniformUnit)))
+    # timeDeltaUnit = ''.join(filter(str.isalpha, timeDeltaResample))
+    # timeDeltaNum = int(''.join(filter(str.isdigit, timeDeltaResample)))
+    # if timeStopUnit != timeDeltaUnit:
+    #     print('time_stop and time_delta should have the same unit.')
+    #     sys.exit()
 
     # find time_delta multiplier against second, so we can convert second back to the unit fncs uses
-    try:
-        deltaTimeMultiplier = findDeltaTimeMultiplier(timeDeltaStr)
-    except Exception as ex:
-        print("Error in time_delta", ex)
+    # try:
+    #     deltaTimeMultiplier = findDeltaTimeMultiplier(timeDeltaStr)
+    # except Exception as ex:
+    #     print("Error in time_delta", ex)
 
     # find all the time point that the data at that time need to be published
     timeNeedToPublishRealtime = [0]
@@ -115,15 +131,21 @@ def startWeatherAgent(file):
 
     fncs.initialize()
     print('FNCS initialized', flush=True)
+    os.remove('fncs.zpl')
+    print('fncs.zpl file deleted', flush=True)
     time_granted = 0
 
     for i in range(len(timeNeedToPublish)):
-        timeToRequest = int(timeNeedToPublish[i] / deltaTimeMultiplier)
+        timeToRequest = timeNeedToPublish[i]
         # if requested time is not multiple of time_delta, update time_delta to time requested
         # since fncs require requested time to be multiple of time_delta
-        if timeToRequest % timeDeltaNum != 0:
-            fncs.update_time_delta(timeToRequest)
+        if timeToRequest % timeDeltaInSeconds != 0:
+            if timeToRequest % publishTimeAhead == 0:
+                fncs.update_time_delta(publishTimeAhead)
+            else:
+                fncs.update_time_delta(1)
         time_granted = fncs.time_request(timeToRequest)
+        fncs.update_time_delta(timeDeltaInSeconds)
         # if the time need to be published is real time
         if timeNeedToBePublished[i] in timeNeedToPublishRealtime:
             # find the data by the time point and publish them
@@ -252,7 +274,7 @@ class weather_forecast:
     Attributes:
         weather_variable (str): Type of weather variable being forecasted
         # Type of error insertion
-        distribution (int): type of distribution --> 0 uniform;1 triangular;2 truncated normal 95% of values are within bounds remaining is truncated
+        distribution (int): type of distribution --> 0 uniform;1 triangular;2 truncated normal the standard deviation is computed for 95% of values to be within bounds in a conventional normal distribution
         P_e_bias (float): pu maximum bias at first hour --> [0 to 1]
         P_e_envelope (float): pu maximum error from mean values --> [0 to 1]
         Lower_e_bound (float): pu of the maximum error at the first hour --> [0 to 1]
@@ -279,13 +301,11 @@ class weather_forecast:
     def get_truncated_normal(self, EL, EH):
         """Truncated normal distribution
         """
-        mean = (EL + EH) / 2
-        sd = (abs(EL) + abs(EH)) / 4  # 95% of values are within bounds remaining is truncated
-        sample = numpy.random.normal(loc=mean, scale=sd, size=1)
-        if sample > EH:
-            sample = EH
-        elif sample < EL:
-            sample = EL
+        mean=(EL+EH)/2
+        sd=(abs(EL)+abs(EH))/4 #95% of values are within bounds remaining is truncated
+        a = (EL - mean) / sd
+        b = (EH - mean) / sd
+        sample = truncnorm.rvs(a,b,loc=mean,scale=sd,size=1)[0]
         return sample
 
     def make_forecast(self, weather, t=0):

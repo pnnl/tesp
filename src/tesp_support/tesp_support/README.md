@@ -57,7 +57,7 @@ Suggested sequence of test cases for development:
 - *tesp_config.py*; a GUI for creating the JSON file used to configure a TESP case
 - *tesp_monitor.py*; a GUI for launching a TESP simulation, monitoring its progress, and terminating it early if necessary
 - *README.md*; this file
-- *weatherAgent.py*; the weather agent that reads from a .csv weather data file and publishes real-time weather data and hourly weather forecast. It needs a fncsWeather.yaml config file. The example weather data file and fncsWeather.yaml config file can be found in the tesp\examples\weatherAgent directory. set FNCS_CONFIG_FILE=fncsWeather.yaml and run python weatherAgent.py weather.csv.
+- *weatherAgent.py*; the weather agent that reads from a .csv weather data file and publishes real-time weather data and hourly weather forecast. It needs a WeatherConfig.json config file, and the environment variable WEATHER_CONFIG needs to be set and point to the WeatherConfig.json config file. The example weather data file and WeatherConfig.json config file can be found in the tesp\examples\weatherAgent directory.
 
 ### Subdirectories
 

@@ -1,0 +1,40 @@
+name: tracer
+time_delta: 300s
+broker: tcp://localhost:5570
+values:
+    temperature:
+        topic: weather/temperature
+        default: 0
+    humidity:
+        topic: weather/humidity
+        default: 0
+    solar_direct:
+        topic: weather/solar_direct
+        default: 0
+    solar_diffuse:
+        topic: weather/solar_diffuse
+        default: 0
+    pressure:
+        topic: weather/pressure
+        default: 0
+    wind_speed:
+        topic: weather/wind_speed
+        default: 0
+    temperatureForecast:
+        topic: weather/temperature/forecast
+        default: 0
+    humidityForecast:
+        topic: weather/humidity/forecast
+        default: 0
+    solar_directForecast:
+        topic: weather/solar_direct/forecast
+        default: 0
+    solar_diffuseForecast:
+        topic: weather/solar_diffuse/forecast
+        default: 0
+    pressureForecast:
+        topic: weather/pressure/forecast
+        default: 0
+    wind_speedForecast:
+        topic: weather/wind_speed/forecast
+        default: 0
