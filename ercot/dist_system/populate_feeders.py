@@ -26,6 +26,8 @@ case_config = {'SimulationConfig':{
                'MinimumStep':15,
                'ElectricCoolingPercentage':90,
                'ElectricCoolingParticipation':50,
+               'WaterHeaterPercentage':35,
+               'WaterHeaterParticipation':20,
                'SolarPercentage':0,
                'StoragePercentage':20,
                'SolarInverterMode':'CONSTANT_PF',
