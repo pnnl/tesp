@@ -134,18 +134,24 @@ def startWeatherAgent(file):
     os.remove('fncs.zpl')
     print('fncs.zpl file deleted', flush=True)
     time_granted = 0
-
+    timeDeltaChanged = 0
     for i in range(len(timeNeedToPublish)):
+        # if i > 0:
+        #     timeToRequest = timeNeedToPublish[i] - timeNeedToPublish[i-1]
+        # else:
         timeToRequest = timeNeedToPublish[i]
         # if requested time is not multiple of time_delta, update time_delta to time requested
         # since fncs require requested time to be multiple of time_delta
-        if timeToRequest % timeDeltaInSeconds != 0:
-            if timeToRequest % publishTimeAhead == 0:
-                fncs.update_time_delta(publishTimeAhead)
-            else:
-                fncs.update_time_delta(1)
+        if (timeToRequest - time_granted) % timeDeltaInSeconds != 0:
+            # if timeToRequest % publishTimeAhead == 0:
+            #     fncs.update_time_delta(publishTimeAhead)
+            # else:
+            fncs.update_time_delta(1)
+            timeDeltaChanged = 1
         time_granted = fncs.time_request(timeToRequest)
-        fncs.update_time_delta(timeDeltaInSeconds)
+        if timeDeltaChanged == 1:
+            fncs.update_time_delta(timeDeltaInSeconds)
+            timeDeltaChanged == 0
         # if the time need to be published is real time
         if timeNeedToBePublished[i] in timeNeedToPublishRealtime:
             # find the data by the time point and publish them
@@ -174,6 +180,26 @@ def startWeatherAgent(file):
                 for v in range(len(data)):
                     wd[str(times[v])] = str(data[v])
                 fncs.publish(col + '/forecast', json.dumps(wd))
+
+    # # Jacob suggested implementation
+    # tnext_publish = timeDeltaInSeconds - publishTimeAhead
+    # print("before while, time_granted: ", time_granted, flush=True)
+    # while time_granted < timeStopInSeconds:
+    #     # determine the next FNCS time
+    #     next_fncs_time = int(min([tnext_publish, timeStopInSeconds]))
+    #     # with that new FNCS value update the delta time to ensure we only get returned at that time
+    #     fncs.update_time_delta(next_fncs_time-time_granted)
+    #     print("tnext_publish: ", tnext_publish, flush=True)
+    #     print("next_fncs_time: ", next_fncs_time, flush=True)
+    #     print("next_fncs_time-time_granted: ", next_fncs_time-time_granted, flush=True)
+    #     # call time request to move to this new time
+    #     time_granted = fncs.time_request(next_fncs_time)
+    #     print("time_granted: ", time_granted, flush=True)
+    #
+    #     # update the next time to publish
+    #     tnext_publish += timeDeltaInSeconds
+    #     print("update tnext_publish", flush=True)
+
     print('finalizing FNCS', flush=True)
     fncs.finalize()
 
