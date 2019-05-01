@@ -87,6 +87,11 @@ class simple_auction:
 
         self.clearing_scalar = 0.5
 
+        self.consumerSurplus = 0.0
+        self.averageConsumerSurplus = 0.0
+        self.supplierSurplus = 0.0
+        self.unrespSupplierSurplus = 0.0
+
     def set_refload (self, kw):
         """Sets the refload attribute
 
@@ -385,20 +390,91 @@ class simple_auction:
         else:
             self.marginal_quantity = 0.0
             self.marginal_frac = 0.0
-        print ('##', time_granted, 
-               tnext_clear, 
-               self.clearing_type, 
-               '{:.2f}'.format(self.clearing_quantity), 
-               '{:.5f}'.format(self.clearing_price), 
-               self.curve_buyer.count, 
-               '{:.2f}'.format(self.unresponsive_buy), 
-               '{:.2f}'.format(self.responsive_buy),
-               self.curve_seller.count, 
-               '{:.2f}'.format(self.unresponsive_sell), 
-               '{:.2f}'.format(self.responsive_sell),
-               '{:.2f}'.format(self.marginal_quantity), 
-               '{:.5f}'.format(self.marginal_frac), 
-               '{:.5f}'.format(self.lmp), 
-               '{:.2f}'.format(self.refload), 
-               sep=',', flush=True)
+        # print ('##', time_granted, tnext_clear, self.clearing_type, self.clearing_quantity, self.clearing_price,
+        #        self.curve_buyer.count, self.unresponsive_buy, self.responsive_buy,
+        #        self.curve_seller.count, self.unresponsive_sell, self.responsive_sell,
+        #        self.marginal_quantity, self.marginal_frac, self.lmp, self.refload,
+        #        self.consumerSurplus, self.averageConsumerSurplus, self.supplierSurplus,
+        #        self.unrespSupplierSurplus, sep=',', flush=True)
 
+    def surplusCalculation(self, tnext_clear=0, time_granted=0):
+        """Calculates consumer surplus (and its average) and supplier surplus.
+
+        This function goes through all the bids higher than clearing price from buyers to calculate consumer surplus,
+         and also accumlates the quantities that will be cleared while doing so. Of the cleared quantities,
+         the quantity for unresponsive loads are also collected.
+         Then go through each seller to calculate supplier surplus.
+         Part of the supplier surplus corresponds to unresponsive load are excluded and calculated separately.
+
+        :param tnext_clear (int): next clearing time in FNCS seconds, should be <= time_granted, for the log file only
+        :param time_granted (int): the current time in FNCS seconds, for the log file only
+        :return: None
+        """
+        numberOfUnrespBuyerAboveClearingPrice = 0
+        numberOfResponsiveBuyerAboveClearingPrice = 0
+        self.supplierSurplus = 0.0
+        self.averageConsumerSurplus = 0.0
+        self.consumerSurplus = 0.0
+        self.unrespSupplierSurplus = 0.0
+        grantedRespQuantity = 0.0
+        grantedUnrespQuantity = 0.0
+        declinedQuantity = 0.0
+        # assuming the buyers are ordered descending by price
+        for i in range(self.curve_buyer.count):
+            # if a buyer pays higher than clearing_price, the power is granted
+            if self.curve_buyer.price[i] >= self.clearing_price:
+                # unresponsive load, they pay infinite amount price, here it is set at self.pricecap
+                if self.curve_buyer.price[i] == self.pricecap:
+                    grantedUnrespQuantity += self.curve_buyer.quantity[i]
+                    numberOfUnrespBuyerAboveClearingPrice += 1
+                # responsive load, this is the part consumer surplus is calculated
+                else:
+                    grantedRespQuantity += self.curve_buyer.quantity[i]
+                    numberOfResponsiveBuyerAboveClearingPrice += 1
+                    self.consumerSurplus += (self.curve_buyer.price[i] - self.clearing_price) * self.curve_buyer.quantity[i]
+            # if a buy pays lower than clearing_price, it does not get the quantity requested
+            else:
+                declinedQuantity += self.curve_buyer.quantity[i]
+        self.averageConsumerSurplus = self.consumerSurplus / numberOfResponsiveBuyerAboveClearingPrice
+        # assuming the sellers are ordered ascending by their price
+        for i in range(self.curve_seller.count):
+            # if a seller has a wholesale price/base price lower than clearing_price, their power is used
+            if self.curve_seller.price[i] <= self.clearing_price:
+                # satisfy quantity requested by unresponsive load first since they pay infinite price
+                # when the unresponsive load use up all power from the supplier
+                if grantedUnrespQuantity >= self.curve_seller.quantity[i]:
+                    self.unrespSupplierSurplus += (self.clearing_price - self.curve_seller.price[i]) * self.curve_seller.quantity[i]
+                    grantedUnrespQuantity -= self.curve_seller.quantity[i]
+                # when the unresponsive load use part of the power from the supplier
+                elif grantedUnrespQuantity != 0.0:
+                    self.unrespSupplierSurplus += (self.clearing_price - self.curve_seller.price[i]) * grantedUnrespQuantity
+                    leftOverQuantityFromSeller = self.curve_seller.quantity[i] - grantedUnrespQuantity
+                    grantedUnrespQuantity = 0.0
+                    # leftover quantity from this supplier will be used by responsive load
+                    # when leftover quantity is used up by the responsive load
+                    if grantedRespQuantity >= leftOverQuantityFromSeller:
+                        self.supplierSurplus += (self.clearing_price - self.curve_seller.price[i]) * leftOverQuantityFromSeller
+                        grantedRespQuantity -= leftOverQuantityFromSeller
+                    # when leftover quantity satisfies all the quantity the responsive load asked
+                    else:
+                        self.supplierSurplus += (self.clearing_price - self.curve_seller.price[i]) * grantedRespQuantity
+                        grantedRespQuantity = 0.0
+                        break
+                # if the quantity requested by unresponsive load are satisfied, responsive load requests are considered
+                # when supplier quantity is used up by the responsive load
+                elif grantedRespQuantity >= self.curve_seller.quantity[i]:
+                    self.supplierSurplus += (self.clearing_price - self.curve_seller.price[i]) * self.curve_seller.quantity[i]
+                    grantedRespQuantity -= self.curve_seller.quantity[i]
+                # when supplier quantity satisfies all the quantity the responsive load requested
+                else:
+                    self.supplierSurplus += (self.clearing_price - self.curve_seller.price[i]) * grantedRespQuantity
+                    grantedRespQuantity = 0.0
+                    break
+        if grantedRespQuantity != 0.0:
+            print("cleared {} more quantity than supplied.".format(grantedRespQuantity))
+        print ('##', time_granted, tnext_clear, self.clearing_type, self.clearing_quantity, self.clearing_price,
+               self.curve_buyer.count, self.unresponsive_buy, self.responsive_buy,
+               self.curve_seller.count, self.unresponsive_sell, self.responsive_sell,
+               self.marginal_quantity, self.marginal_frac, self.lmp, self.refload,
+               self.consumerSurplus, self.averageConsumerSurplus, self.supplierSurplus,
+               self.unrespSupplierSurplus, sep=',', flush=True)

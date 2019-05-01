@@ -41,7 +41,7 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
         flag (str): WithMarket or NoMarket to use the simple_auction, or not
     """
     print ('starting substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
-    print ('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad', flush=True)
+    print ('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus', flush=True)
     bWantMarket = True
     if flag == 'NoMarket':
         bWantMarket = False
@@ -60,7 +60,7 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
     market_row = dict['markets'][market_key]
     unit = market_row['unit']
 
-    auction_meta = {'clearing_price':{'units':'USD','index':0},'clearing_type':{'units':'[0..5]=[Null,Fail,Price,Exact,Seller,Buyer]','index':1}}
+    auction_meta = {'clearing_price':{'units':'USD','index':0},'clearing_type':{'units':'[0..5]=[Null,Fail,Price,Exact,Seller,Buyer]','index':1},'consumer_surplus':{'units':'USD','index':2},'average_consumer_surplus':{'units':'USD','index':3},'supplier_surplus':{'units':'USD','index':4}}
     controller_meta = {'bid_price':{'units':'USD','index':0},'bid_quantity':{'units':unit,'index':1}}
     auction_metrics = {'Metadata':auction_meta,'StartTime':StartTime}
     controller_metrics = {'Metadata':controller_meta,'StartTime':StartTime}
@@ -111,7 +111,7 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
 #        print (dt_now, time_delta, timedelta (seconds=time_delta))
         dt_now = dt_now + timedelta (seconds=time_delta)
         day_of_week = dt_now.weekday()
-        hour_of_day = float (3600.0 * dt_now.hour + 60.0 * dt_now.minute + dt_now.second) / 3600.0
+        hour_of_day = dt_now.hour
 #        print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, flush=True)
         # update the data from FNCS messages
         events = fncs.get_events()
@@ -137,7 +137,6 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
         for key, obj in hvacObjs.items():
             if obj.change_basepoint (hour_of_day, day_of_week):
                 fncs.publish (obj.name + '/cooling_setpoint', obj.basepoint)
-#                print ('setting basepoint', obj.name, '{:.3f}'.format (obj.basepoint), '{:.3f}'.format (hour_of_day))
         if bSetDefaults:
             for key, obj in hvacObjs.items():
                 fncs.publish (obj.name + '/bill_mode', 'HOURLY')
@@ -152,9 +151,9 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
             controller_metrics [time_key] = {}
             for key, obj in hvacObjs.items():
                 bid = obj.formulate_bid () # bid is [price, quantity, on_state]
-                if bWantMarket and bid is not None:
+                if bWantMarket:
                     aucObj.collect_bid (bid)
-                    controller_metrics[time_key][obj.name] = [bid[0], bid[1]]
+                controller_metrics[time_key][obj.name] = [bid[0], bid[1]]
             tnext_bid += period
 
         if time_granted >= tnext_agg:
@@ -169,11 +168,12 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
         if time_granted >= tnext_clear:
             if bWantMarket:
                 aucObj.clear_market(tnext_clear, time_granted)
+                aucObj.surplusCalculation(tnext_clear, time_granted)
                 fncs.publish ('clear_price', aucObj.clearing_price)
                 for key, obj in hvacObjs.items():
                     obj.inform_bid (aucObj.clearing_price)
             time_key = str (int (tnext_clear))
-            auction_metrics [time_key] = {aucObj.name:[aucObj.clearing_price, aucObj.clearing_type]}
+            auction_metrics [time_key] = {aucObj.name:[aucObj.clearing_price, aucObj.clearing_type, aucObj.consumerSurplus, aucObj.averageConsumerSurplus, aucObj.supplierSurplus]}
             tnext_clear += period
 #            print ('garbage collecting at', time_granted, 'finds', gc.collect(), 'unreachable objects', flush=True)
 
@@ -237,3 +237,5 @@ def substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMarket'):
             print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
  
 
+if __name__ == '__main__':
+    substation_loop('C:\\Users\\wang690\\Desktop\\projects\\TESP\\tesp_1st\\ercot\\case8\\Bus1_agent_dict.json','Bus1',24)
