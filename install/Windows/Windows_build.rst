@@ -156,6 +156,7 @@ Now build FNCS:
 
  cd /c/src
  cd fncs
+ autoreconf -if
  ./configure --prefix=/usr/local --with-zmq=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w'
  make
  make install

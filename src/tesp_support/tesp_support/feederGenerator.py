@@ -64,9 +64,11 @@ use_Eplus = True
 Eplus_Bus = ''
 Eplus_Volts = 480.0
 Eplus_kVA = 150.0
-electric_cooling_penetration = 0.0 # if not provided in JSON config, use a regional default
-solar_penetration = 0.2
-storage_penetration = 0.5
+electric_cooling_percentage = 0.0 # if not provided in JSON config, use a regional default
+solar_percentage = 0.2
+storage_percentage = 0.5
+water_heater_percentage = 0.0 # if not provided in JSON config, use a regional default
+water_heater_participation = 0.5
 solar_inv_mode = 'CONSTANT_PF'
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
@@ -1306,6 +1308,7 @@ def write_houses(basenode, op, vnom):
                 print ('  };', file=op)
             print ('}', file=op)
         hsename = gld_strict_name (basenode + '_hse_' + str(i+1))
+        whname = gld_strict_name (basenode + '_wh_' + str(i+1))
         solname = gld_strict_name (basenode + '_sol_' + str(i+1))
         batname = gld_strict_name (basenode + '_bat_' + str(i+1))
         sol_i_name = gld_strict_name (basenode + '_isol_' + str(i+1))
@@ -1394,7 +1397,7 @@ def write_houses(basenode, op, vnom):
         cool_rand = np.random.uniform(0,1)
         if heat_rand <= rgnPenGasHeat[rgn-1]:
             print ('  heating_system_type GAS;', file=op)
-            if cool_rand <= electric_cooling_penetration:
+            if cool_rand <= electric_cooling_percentage:
                 print ('  cooling_system_type ELECTRIC;', file=op)
             else:
                 print ('  cooling_system_type NONE;', file=op)
@@ -1408,13 +1411,13 @@ def write_houses(basenode, op, vnom):
             print ('  motor_efficiency AVERAGE;', file=op);
         elif floor_area * ceiling_height > 12000.0: # electric heat not allowed on large homes
             print ('  heating_system_type GAS;', file=op)
-            if cool_rand <= electric_cooling_penetration:
+            if cool_rand <= electric_cooling_percentage:
                 print ('  cooling_system_type ELECTRIC;', file=op)
             else:
                 print ('  cooling_system_type NONE;', file=op)
         else:
             print ('  heating_system_type RESISTANCE;', file=op)
-            if cool_rand <= electric_cooling_penetration:
+            if cool_rand <= electric_cooling_percentage:
                 print ('  cooling_system_type ELECTRIC;', file=op)
                 print ('  motor_model BASIC;', file=op);
                 print ('  motor_efficiency GOOD;', file=op);
@@ -1460,9 +1463,9 @@ def write_houses(basenode, op, vnom):
         print ('    current_fraction', '{:.2f}'.format(techdata[5]) + ';', file=op)
         print ('    power_fraction', '{:.2f}'.format(techdata[6]) + ';', file=op)
         print ('  };', file=op)
-        if np.random.uniform (0, 1) <= rgnPenElecWH[rgn-1]:
+        if np.random.uniform (0, 1) <= water_heater_percentage: # rgnPenElecWH[rgn-1]:
           heat_element = 3.0 + 0.5 * np.random.randint (1,6);  # numpy randint (lo, hi) returns lo..(hi-1)
-          tank_set = 120 + 16 * np.random.uniform (0, 1);
+          tank_set = 110 + 16 * np.random.uniform (0, 1);
           therm_dead = 4 + 4 * np.random.uniform (0, 1);
           tank_UA = 2 + 2 * np.random.uniform (0, 1);
           water_sch = np.ceil(waterHeaterScheduleNumber * np.random.uniform (0, 1))
@@ -1489,16 +1492,23 @@ def write_houses(basenode, op, vnom):
           elif wh_skew_value > 6 * residential_skew_max:
               wh_skew_value = 6 * residential_skew_max
           print ('  object waterheater {', file=op)
+          print ('    name', whname + ';', file=op)
           print ('    schedule_skew','{:.0f}'.format(wh_skew_value) + ';', file=op)
           print ('    heating_element_capacity','{:.1f}'.format(heat_element), 'kW;', file=op)
-          print ('    tank_setpoint','{:.1f}'.format(tank_set) + ';', file=op)
-          print ('    temperature 132;', file=op) 
           print ('    thermostat_deadband','{:.1f}'.format(therm_dead) + ';', file=op)
           print ('    location INSIDE;', file=op)                   
           print ('    tank_diameter 1.5;', file=op)                  
           print ('    tank_UA','{:.1f}'.format(tank_UA) + ';', file=op)
           print ('    water_demand', wh_demand_str + ';', file=op)
           print ('    tank_volume','{:.0f}'.format(wh_size) + ';', file=op)
+          if np.random.uniform (0, 1) <= water_heater_participation:
+              print ('    waterheater_model MULTILAYER;', file=op)
+              print ('    discrete_step_size 60.0;', file=op)
+              print ('    lower_tank_setpoint','{:.1f}'.format(tank_set - 5.0) + ';', file=op)
+              print ('    upper_tank_setpoint','{:.1f}'.format(tank_set + 5.0) + ';', file=op)
+              print ('    T_mixing_valve','{:.1f}'.format(tank_set) + ';', file=op)
+          else:
+              print ('    tank_setpoint','{:.1f}'.format(tank_set) + ';', file=op)
           if metrics_interval > 0:
               print ('    object metrics_collector {', file=op)
               print ('      interval', str(metrics_interval) + ';', file=op)
@@ -1514,9 +1524,9 @@ def write_houses(basenode, op, vnom):
         # apartments and mobile homes may always consider storage, but not PV
         bConsiderStorage = True
         if bldg == 0:  # Single-family homes
-            if solar_penetration > 0.0:
+            if solar_percentage > 0.0:
                 bConsiderStorage = False
-            if np.random.uniform (0, 1) <= solar_penetration:  # some single-family houses have PV
+            if np.random.uniform (0, 1) <= solar_percentage:  # some single-family houses have PV
                 bConsiderStorage = True
                 panel_area = 0.1 * floor_area
                 if panel_area < 162:
@@ -1555,7 +1565,7 @@ def write_houses(basenode, op, vnom):
                 print ('  };', file=op)
                 print ('}', file=op)
         if bConsiderStorage:
-            if np.random.uniform (0, 1) <= storage_penetration:
+            if np.random.uniform (0, 1) <= storage_percentage:
                 battery_count += 1
                 print ('object triplex_meter {', file=op)
                 print ('  name', bat_m_name + ';', file=op)
@@ -1942,14 +1952,19 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         rgn = 4
     elif 'R5' in rootname:
         rgn = 5
-    global electric_cooling_penetration, storage_penetration, solar_penetration
-    print ('using', solar_penetration, 'solar and', storage_penetration, 'storage penetration')
-    if electric_cooling_penetration <= 0.0:
-        electric_cooling_penetration = rgnPenElecCool[rgn-1]
-        print ('using regional default', electric_cooling_penetration, 'air conditioning penetration')
+    global electric_cooling_percentage, storage_percentage, solar_percentage
+    global water_heater_percentage, water_heater_participation
+    print ('using', solar_percentage, 'solar and', storage_percentage, 'storage penetration')
+    if electric_cooling_percentage <= 0.0:
+        electric_cooling_percentage = rgnPenElecCool[rgn-1]
+        print ('using regional default', electric_cooling_percentage, 'air conditioning penetration')
     else:
-        print ('using', electric_cooling_penetration, 'air conditioning penetration from JSON config')
-    print ('region', rgn, 'has electric water heater penetration', rgnPenElecWH[rgn-1])
+        print ('using', electric_cooling_percentage, 'air conditioning penetration from JSON config')
+    if water_heater_percentage <= 0.0:
+        water_heater_percentage = rgnPenElecWH[rgn-1]
+        print ('using regional default', water_heater_percentage, 'water heater penetration')
+    else:
+        print ('using', water_heater_percentage, 'water heater penetration from JSON config')
     if os.path.isfile(fname):
         ip = open (fname, 'r')
         lines = []
@@ -2069,7 +2084,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         print ('};', file=op)
 #        print ('// taxonomy_base_feeder', rootname, file=op)
 #        print ('// region_name', rgnName[rgn-1], file=op)
-        if solar_penetration > 0.0:
+        if solar_percentage > 0.0:
             print ('// default IEEE 1547-2018 for Category B; modes are CONSTANT_PF, VOLT_VAR, VOLT_WATT', file=op)
             print ('#define INVERTER_MODE=' + solar_inv_mode, file=op)
             print ('#define INV_VBASE=240.0', file=op)
@@ -2296,9 +2311,10 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     global tier1_energy, tier1_price, tier2_energy, tier2_price, tier3_energy, tier3_price, bill_mode, kwh_price, monthly_fee
     global Eplus_Bus, Eplus_Volts, Eplus_kVA
     global transmissionVoltage, transmissionXfmrMVAbase
-    global storage_inv_mode, solar_inv_mode, solar_penetration, storage_penetration
+    global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage
     global outpath, glmpath, supportpath, weatherpath, weather_file
-    global starttime, endtime, timestep, metrics_interval, electric_cooling_penetration
+    global starttime, endtime, timestep, metrics_interval, electric_cooling_percentage
+    global water_heater_percentage, water_heater_participation
     global fncs_case, forERCOT
     global house_nodes, small_nodes
 
@@ -2319,9 +2335,11 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     endtime = config['SimulationConfig']['EndTime']
     timestep = int(config['FeederGenerator']['MinimumStep'])
     metrics_interval = int(config['FeederGenerator']['MetricsInterval'])
-    electric_cooling_penetration = 0.01 * float(config['FeederGenerator']['ElectricCoolingPercentage'])
-    solar_penetration = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
-    storage_penetration = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
+    electric_cooling_percentage = 0.01 * float(config['FeederGenerator']['ElectricCoolingPercentage'])
+    water_heater_percentage = 0.01 * float(config['FeederGenerator']['WaterHeaterPercentage'])
+    water_heater_participation = 0.01 * float(config['FeederGenerator']['WaterHeaterParticipation'])
+    solar_percentage = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
+    storage_percentage = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
     solar_inv_mode = config['FeederGenerator']['SolarInverterMode']
     storage_inv_mode = config['FeederGenerator']['StorageInverterMode']
     weather_file = config['WeatherPrep']['DataSource']
@@ -2366,9 +2384,9 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
         print (rootname, 'to', outpath, 'using', weather_file)
         print ('times', starttime, endtime)
         print ('steps', timestep, metrics_interval)
-        print ('hvac', electric_cooling_penetration)
-        print ('pv', solar_penetration, solar_inv_mode)
-        print ('storage', storage_penetration, storage_inv_mode)
+        print ('hvac', electric_cooling_percentage)
+        print ('pv', solar_percentage, solar_inv_mode)
+        print ('storage', storage_percentage, storage_inv_mode)
         print ('billing', kwh_price, monthly_fee)
         for c in taxchoice:
             if c[0] == rootname:
