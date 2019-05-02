@@ -4,10 +4,10 @@ set FNCS_LOG_LEVEL=DEBUG2
 set FNCS_TRACE=yes
 
 set FNCS_CONFIG_FILE=
-start /b cmd /c fncs_broker 2 ^>broker.log 2^>^&1
+start /b cmd /c fncs_broker 3 ^>broker.log 2^>^&1
 
 set FNCS_CONFIG_FILE=tracer.yaml
-start /b cmd /c fncs_tracer 2d tracer.out ^>tracer.log 2^>^&1
+start /b cmd /c fncs_tracer 1d tracer.out ^>tracer.log 2^>^&1
 set FNCS_CONFIG_FILE=
 
 start /b cmd /c gridlabd weatherTester.glm ^>gridlabd.log 2^>^&1
