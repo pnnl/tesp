@@ -1,11 +1,11 @@
 {
 	"name": "weather",
 	"StartTime": "2000-01-01 00:00:00",
-	"time_stop": "70m",
+	"time_stop": "60m",
 	"time_delta": "5m",
 	"Forecast": 1,
 	"ForecastLength": "24h",
-	"PublishTimeAhead": "10s",
+	"PublishTimeAhead": "3s",
 	"AddErrorToForecast": 1,
 	"broker": "tcp://localhost:5570",
 	"forecastPeriod": 48,

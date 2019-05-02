@@ -180,6 +180,15 @@ def startWeatherAgent(file):
                 for v in range(len(data)):
                     wd[str(times[v])] = str(data[v])
                 fncs.publish(col + '/forecast', json.dumps(wd))
+    # if the last time step/stop time is not requested
+    if timeStopInSeconds not in timeNeedToPublish:
+        if (timeStopInSeconds - time_granted) % timeDeltaInSeconds != 0:
+            fncs.update_time_delta(1)
+            timeDeltaChanged = 1
+        time_granted = fncs.time_request(timeStopInSeconds)
+        if timeDeltaChanged == 1:
+            fncs.update_time_delta(timeDeltaInSeconds)
+            timeDeltaChanged == 0
 
     # # Jacob suggested implementation
     # tnext_publish = timeDeltaInSeconds - publishTimeAhead
