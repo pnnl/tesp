@@ -435,7 +435,8 @@ class simple_auction:
             # if a buy pays lower than clearing_price, it does not get the quantity requested
             else:
                 declinedQuantity += self.curve_buyer.quantity[i]
-        self.averageConsumerSurplus = self.consumerSurplus / numberOfResponsiveBuyerAboveClearingPrice
+        if numberOfResponsiveBuyerAboveClearingPrice != 0:
+            self.averageConsumerSurplus = self.consumerSurplus / numberOfResponsiveBuyerAboveClearingPrice
         # assuming the sellers are ordered ascending by their price
         for i in range(self.curve_seller.count):
             # if a seller has a wholesale price/base price lower than clearing_price, their power is used
