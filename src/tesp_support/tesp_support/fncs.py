@@ -63,9 +63,9 @@ try:
     _is_initialized.argtypes = []
     _is_initialized.restype = ctypes.c_int
 
-    time_request = _lib.fncs_time_request
-    time_request.argtypes = [ctypes.c_ulonglong]
-    time_request.restype = ctypes.c_ulonglong
+    _time_request = _lib.fncs_time_request
+    _time_request.argtypes = [ctypes.c_ulonglong]
+    _time_request.restype = ctypes.c_ulonglong
 
     _publish = _lib.fncs_publish
     _publish.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
@@ -79,32 +79,32 @@ try:
     _agentPublish.argtypes = [ctypes.c_char_p]
     _agentPublish.restype = None
 
-    route = _lib.fncs_route
-    route.argtypes = [ctypes.c_char_p,
+    _route = _lib.fncs_route
+    _route.argtypes = [ctypes.c_char_p,
                       ctypes.c_char_p,
                       ctypes.c_char_p,
                       ctypes.c_char_p]
-    route.restype = None
+    _route.restype = None
 
-    die = _lib.fncs_die
-    die.argtypes = []
-    die.restype = None
+    _die = _lib.fncs_die
+    _die.argtypes = []
+    _die.restype = None
 
-    finalize = _lib.fncs_finalize
-    finalize.argtypes = []
-    finalize.restype = None
+    _finalize = _lib.fncs_finalize
+    _finalize.argtypes = []
+    _finalize.restype = None
 
-    update_time_delta = _lib.fncs_update_time_delta
-    update_time_delta.argtypes = [ctypes.c_ulonglong]
-    update_time_delta.restype = None
+    _update_time_delta = _lib.fncs_update_time_delta
+    _update_time_delta.argtypes = [ctypes.c_ulonglong]
+    _update_time_delta.restype = None
 
     _free = _lib._fncs_free
     _free.argtypes = [ctypes.c_void_p]
     _free.restype = None
 
-    get_events_size = _lib.fncs_get_events_size
-    get_events_size.argtypes = []
-    get_events_size.restype = ctypes.c_size_t
+    _get_events_size = _lib.fncs_get_events_size
+    _get_events_size.argtypes = []
+    _get_events_size.restype = ctypes.c_size_t
 
     _get_events = _lib.fncs_get_events
     _get_events.argtypes = []
@@ -134,9 +134,9 @@ try:
     _get_value_at.argtypes = [ctypes.c_char_p, ctypes.c_size_t]
     _get_value_at.restype = ctypes.c_void_p
 
-    get_keys_size = _lib.fncs_get_keys_size
-    get_keys_size.argtypes = []
-    get_keys_size.restype = ctypes.c_size_t
+    _get_keys_size = _lib.fncs_get_keys_size
+    _get_keys_size.argtypes = []
+    _get_keys_size.restype = ctypes.c_size_t
 
     _get_keys = _lib.fncs_get_keys
     _get_keys.argtypes = []
@@ -150,13 +150,13 @@ try:
     _get_name.argtypes = []
     _get_name.restype = ctypes.c_void_p
 
-    get_id = _lib.fncs_get_id
-    get_id.argtypes = []
-    get_id.restype = ctypes.c_int
+    _get_id = _lib.fncs_get_id
+    _get_id.argtypes = []
+    _get_id.restype = ctypes.c_int
 
-    get_simulator_count = _lib.fncs_get_simulator_count
-    get_simulator_count.argtypes = []
-    get_simulator_count.restype = ctypes.c_int
+    _get_simulator_count = _lib.fncs_get_simulator_count
+    _get_simulator_count.argtypes = []
+    _get_simulator_count.restype = ctypes.c_int
 
     _get_version = _lib.fncs_get_version
     _get_version.argtypes = [ctypes.POINTER(ctypes.c_int),
@@ -165,6 +165,14 @@ try:
     _get_version.restype = None
 except:
     pass
+
+def time_request(time):
+    """ FNCS time request
+
+    Args:
+        time (int): requested time.
+    """
+    return _time_request(time)
 
 def initialize(config=None):
     """ Initialize the FNCS configuration
@@ -222,11 +230,22 @@ def agentPublish(value):
     """
     _agentPublish(str(value).encode('utf-8'))
 
+def route(sender, receiver, key, value):
+    """ Route a value over FNCS from sender to receiver
+
+    Args:
+        sender (str): simulator routing the message
+        receiver (str): simulator to route the message to
+        key (str): topic under the simulator name
+        value (str): value
+    """
+    _route(str(sender).encode('utf-8'), str(receiver).encode('utf-8'), str(key).encode('utf-8'), str(value).encode('utf-8'))
+
 def get_events():
     """ Retrieve FNCS messages after time_request returns
 
     Returns:
-        array: tuple of decoded FNCS events
+        list: tuple of decoded FNCS events
     """
     _events = _get_events()
     size = get_events_size()
@@ -377,3 +396,47 @@ def get_version():
                  ctypes.byref(minor),
                  ctypes.byref(patch))
     return (major.value, minor.value, patch.value)
+
+def die():
+    """ Call FNCS die because of simulator error
+
+    """
+    _die()
+
+def finalize():
+    """ Call FNCS finalize to end connection with broker
+
+    """
+    _finalize()
+
+def update_time_delta(delta):
+    """ Update simulator time delta value
+
+    Args:
+        delta (int): time delta.
+    """
+    _update_time_delta(delta)
+
+def get_events_size():
+    """ Get the size of the event queue
+
+    """
+    return _get_events_size()
+
+def get_keys_size():
+    """ Get the size of the keys
+
+    """
+    return _get_keys_size()
+
+def get_simulator_count():
+    """ Find the FNCS simulator count
+
+    """
+    return _get_simulator_count()
+
+def get_id():
+    """ Find the FNCS ID
+
+    """
+    return _get_id()
