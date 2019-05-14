@@ -25,7 +25,7 @@ The WeatherConfig.json sets the following parameters:
 			- *"Lower_e_bound": pu of the maximum error at the first hour, for example: 0.5  
 
 The following topics are published by the agent:  
-    - *weather/temperature  
+	- *weather/temperature  
 	- *weather/humidity  
 	- *weather/solar_direct  
 	- *weather/solar_diffuse  

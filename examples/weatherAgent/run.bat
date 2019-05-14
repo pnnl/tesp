@@ -13,5 +13,5 @@ set FNCS_CONFIG_FILE=
 start /b cmd /c gridlabd weatherTester.glm ^>gridlabd.log 2^>^&1
 
 set WEATHER_CONFIG=WeatherConfig.json
-start /b cmd /c python weatherAgentTest.py weather.csv ^>weather.log 2^>^&1
+start /b cmd /c python weatherAgentTest.py weather.dat ^>weather.log 2^>^&1
 
