@@ -219,7 +219,8 @@ def convertTimeToSeconds(time):
     """Convert time string with unit to integer in seconds
 
     It only parse unit in day, hour, minute and second.
-    It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
+    It will not recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
+
     :param time: str
         time with unit
     :return: int
@@ -243,6 +244,7 @@ def deltaTimeToResmapleFreq(time):
 
     It only parse unit in day, hour, minute and second.
     It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
+
     :param time: str
         time with unit
     :return: str
@@ -266,6 +268,7 @@ def findDeltaTimeMultiplier(time):
 
     It only parse unit in day, hour, minute and second.
     It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
+
     :param time: str
         time with unit
     :return: int

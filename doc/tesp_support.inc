@@ -198,4 +198,20 @@ tesp\_support.TMY2EPW module
     :undoc-members:
     :show-inheritance:
 
+tesp\_support.TMY3toCSV module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: tesp_support.TMY3toCSV
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+tesp\_support.weatherAgent module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: tesp_support.weatherAgent
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 

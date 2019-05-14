@@ -33,6 +33,7 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
   - **tesp_support**; Python code for agents, configuration and post-processing.
 
     - *TMY2EPW.py*; command-line script that converts a TMY2 file to the EnergyPlus EPW format.
+    - *TMY3toCSV.py*; converts TMY3 weather data to CSV format for common use by agents.
     - *__init__.py*; boilerplate for a Python package
     - *api.py*; collects Python import statements needed to use public functions from Python code outside of this directory.
     - *auction.py*; supervises one double-auction and multiple HVAC agents for a feeder; communicates via FNCS with GridLAB-D and PYPOWER/AMES
@@ -54,6 +55,7 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
     - *tesp_case.py*; supervises the assembly of a TESP case with one feeder, one EnergyPlus building and one PYPOWER model. Reads the JSON file from tesp_config.py
     - *tesp_config.py*; a GUI for creating the JSON file used to configure a TESP case
     - *tesp_monitor.py*; a GUI for launching a TESP simulation, monitoring its progress, and terminating it early if necessary
+		- *weatherAgent.py*; publishes weather and forecasts based on a CSV file
     - *README.md*; this file
     - **matpower**; legacy code that configures and post-processes MATPOWER v5+ for TESP. We now use PYPOWER and AMES instead.
     - **sgip1**; custom code that plotted curves from different cases on the same graph. Used for a 2018 journal paper on TESP and the SGIP1 example.
@@ -71,6 +73,7 @@ Links to Dependencies
 * MATPOWER_
 * NetworkX_
 * NumPy_
+* Pandas_
 * pip_
 * PYPOWER_
 * Python_
@@ -82,6 +85,7 @@ Links to Dependencies
 .. _Docker: https://www.docker.com
 .. _Python: http://www.python.org
 .. _pip: https://pip.pypa.io
+.. _Pandas: https://pandas.pydata.org
 .. _NumPy: http://www.numpy.org
 .. _SciPy: http://www.scipy.org
 .. _Matplotlib: https://matplotlib.org
