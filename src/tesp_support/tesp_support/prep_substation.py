@@ -14,6 +14,7 @@ import sys
 import json
 import numpy as np
 import os
+from datetime import datetime
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -126,17 +127,26 @@ def ProcessGLM (fileroot):
     inTriplexMeters = False
     endedHouse = False
     isELECTRIC = False
+    inClimate = False
+    inClock = False
     nAirConditioners = 0
     nControllers = 0
 
     houseName = ''
     meterName = ''
     FNCSmsgName = ''
+    climateName = ''
+    StartTime = ''
+    EndTime = ''
 
     # Obtain controller dictionary based on houses with electric cooling
     for line in ip:
         lst = line.split()
         if len(lst) > 1:
+            if lst[0] == 'clock':
+                inClock = True
+            if lst[1] == 'climate':
+                inClimate = True
             if lst[1] == 'triplex_meter':
                 inTriplexMeters = True
             if lst[1] == 'house':
@@ -146,6 +156,21 @@ def ProcessGLM (fileroot):
             # Check for ANY object within the house, and don't use its name:
             if inHouses == True and lst[0] == 'object' and lst[1] != 'house':
                 endedHouse = True
+            if inClock == True:
+                if lst[0] == 'starttime':
+                    StartTime = lst[1].strip('\';')
+                    if len(lst) > 2:
+                        StartTime = StartTime + ' ' + lst[2].strip('\';')
+                elif lst[0] == 'stoptime':
+                    EndTime = lst[1].strip('\';')
+                    if len(lst) > 2:
+                        EndTime = EndTime + ' ' + lst[2].strip('\';')
+                if len(StartTime) > 0 and len(EndTime) > 0:
+                    inClock = False
+            if inClimate == True:
+                if lst[0] == 'name':
+                    climateName = lst[1].strip(';')
+                    inClimate = False
             if inFNCSmsg == True:
                 if lst[0] == 'name':
                     FNCSmsgName = lst[1].strip(';')
@@ -283,9 +308,43 @@ def ProcessGLM (fileroot):
         print ('    default: 0', file=yp)
     yp.close ()
 
+    # write the weather agent's configuration file
+    if len(climateName) > 0:
+        time_fmt = '%Y-%m-%d %H:%M:%S'
+        dt1 = datetime.strptime (StartTime, time_fmt)
+        dt2 = datetime.strptime (EndTime, time_fmt)
+        seconds = int ((dt2 - dt1).total_seconds())
+        days = int(seconds / 86400)
+        minutes = int(seconds / 60)
+        hours = int(seconds / 3600)
+#        print (days, seconds)
+        wconfig = {'name':climateName,
+                   'StartTime':StartTime,
+                   'time_stop': str(minutes) + 'm',
+                   'time_delta':'5m',
+                   'Forecast':1,
+                   'ForecastLength':'24h',
+                   'PublishTimeAhead':'3s',
+                   'AddErrorToForecast':1,
+                   'broker':'tcp://localhost:5570',
+                   'forecastPeriod':48,
+                   'parameters':{}}
+        for parm in ['temperature', 'humidity', 'pressure', 'solar_diffuse', 'solar_direct', 'wind_speed']:
+            wconfig['parameters'][parm] = {'distribution': 2,
+                                           'P_e_bias': 0.5,
+                                           'P_e_envelope': 0.08,
+                                           'Lower_e_bound': 0.5}
+        wp = open (fileroot + '_Weather_Config.json', 'w')
+        print (json.dumps(wconfig), file=wp)
+        wp.close()
+
+    # write the GridLAB-D publications and subscriptions for FNCS
     op = open (fileroot + '_FNCS_Config.txt', 'w')
     print ('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
     print ('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_B7";', file=op)
+    if len(climateName) > 0:
+        for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
+            print ('subscribe "precommit:' + climateName + '.' + wTopic + ' <- ' + climateName + '/' + wTopic + '";', file=op)
     if len(Eplus_Bus) > 0: # hard-wired names for a single building
         print ('subscribe "precommit:Eplus_load.constant_power_A <- eplus_json/power_A";', file=op)
         print ('subscribe "precommit:Eplus_load.constant_power_B <- eplus_json/power_B";', file=op)
@@ -317,6 +376,7 @@ def prep_substation (gldfileroot, jsonfile = ''):
     - *gldfileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
     - *gldfileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
     - *gldfileroot_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *gldfileroot_Weather_Config.json*, contains configuration data for the weather agent
 
     If provided, this function also reads jsonfile as created by *tesp_config* and used by *tesp_case*.
     This supplemental data includes time-scheduled thermostat setpoints (NB: do not use the scheduled

@@ -52,11 +52,12 @@ def write_tesp_case (config, cfgfile):
     weather files or schedule files under the TESP support directory, where this *tesp_case*
     module will be able to find and use them.
 
-    This function will launch and wait for 5 subprocesses to assist in the 
+    This function will launch and wait for 6 subprocesses to assist in the 
     case configuration. All must execute successfully:
 
         * Tmy3toTMY2_ansi, which converts the user-selected TMY3 file to TMY2
         * tesp.convert_tmy2_to_epw, which converts the TMY2 file to EPW for EnergyPlus
+        * tesp.TMY3toCSV, which converts the TMY3 file to CSV for the weather agent
         * tesp.populate_feeder, which populates the user-selected taxonomy feeder with houses and DER
         * tesp.glm_dict, which creates metadata for the populated feeder
         * tesp.prep_substation, which creates metadata and FNCS configurations for the substation agents
@@ -93,6 +94,7 @@ def write_tesp_case (config, cfgfile):
         * tesp_monitor.json: shell commands and other configuration data for the solution monitor GUI
         * tesp_monitor.yaml: FNCS subscriptions and time step for the solution monitor GUI
         * water_and_setpoint_schedule_v5.glm: non-responsive time schedules for GridLAB-D, invariant
+        * weather.dat: CSV file of temperature, pressure, humidity, solar direct, solar diffuse and wind speed
 
     Args:
         config (dict): the complete case data structure

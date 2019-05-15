@@ -40,8 +40,8 @@ object metrics_collector_writer {
 };
 
 object climate {
-     name "RegionalWeather";
-     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
+     name localWeather;
+//     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
      interpolate QUADRATIC;
 };
 
