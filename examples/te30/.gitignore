@@ -12,3 +12,4 @@ broker_trace.txt
 *.mat
 *.xlsx
 *substation.yaml
+weather.dat

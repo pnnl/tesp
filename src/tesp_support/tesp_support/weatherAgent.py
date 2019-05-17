@@ -287,7 +287,7 @@ def findDeltaTimeMultiplier(time):
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
 
-"""Class that includes error to the know Weather data 
+"""Class that includes error to the known Weather data 
 
 Implements the range of values the errors are randomly selected. The range is time
 dependent, i.e., the next hour range of errors are smaller than other error ranges.
@@ -341,6 +341,8 @@ class weather_forecast:
         """
         mean=(EL+EH)/2
         sd=(abs(EL)+abs(EH))/4 #95% of values are within bounds remaining is truncated
+        if sd <= 0.0:
+            return 0.0
         a = (EL - mean) / sd
         b = (EH - mean) / sd
         sample = truncnorm.rvs(a,b,loc=mean,scale=sd,size=1)[0]

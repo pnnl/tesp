@@ -40,9 +40,11 @@ object metrics_collector_writer {
 };
 
 object climate {
-     name localWeather;
+  name localWeather;
 //     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
-     interpolate QUADRATIC;
+  interpolate QUADRATIC;
+	latitude 32;
+	longitude -111;
 };
 
 class player {

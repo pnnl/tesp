@@ -7,5 +7,6 @@ del *substation.yaml
 del broker_trace.txt
 del *metrics.json
 del output\*.*
+del *.dat
 rd output
 

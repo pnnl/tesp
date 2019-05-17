@@ -8,5 +8,6 @@ rm *metrics.json
 rm *dict.json
 rm *FNCS_Config.txt
 rm *substation.yaml
+rm *.dat
 rm output/*
 rmdir output

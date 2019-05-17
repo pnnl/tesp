@@ -13,6 +13,8 @@ module tape;
 object climate {
   name exampleWeather;
   interpolate QUADRATIC;
+	latitude 32;
+	longitude -97;
 };
 object solar {
 	name solarGenerator;
@@ -20,6 +22,7 @@ object solar {
     generator_mode SUPPLY_DRIVEN;
     generator_status ONLINE;
     panel_type SINGLE_CRYSTAL_SILICON;
+		orientation FIXED_AXIS; 
     efficiency 0.2;
     area 2500 sf;
 }
