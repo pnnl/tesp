@@ -138,7 +138,7 @@ Build ZeroMQ first:
  make
  make install
 
-CZMQ next, with customized libraries to link: 
+CZMQ next, with customized libraries to link (don't use lz4 compression until we are prepared to deploy it): 
 
 ::
 
@@ -146,7 +146,7 @@ CZMQ next, with customized libraries to link:
  tar -xzf czmq-4.1.1.tar.gz
  cd czmq-4.1.1
  // edit /usr/local/lib/pkgconfig/libzmq.pc to read Libs: -L${libdir} -lzmq -lws2_32 -liphlpapi -lrpcrt4
- ./configure --prefix=/usr/local --with-libzmq=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w' 'PKG_CONFIG_PATH=/usr/local/lib/pkgconfig'
+ ./configure --prefix=/usr/local --with-liblz4=no --with-libzmq=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w' 'PKG_CONFIG_PATH=/usr/local/lib/pkgconfig'
  make
  make install
 
@@ -186,7 +186,7 @@ To build HELICS 2.0 with Python and Java bindings:
  cd ~/src/HELICS-src
  mkdir build
  cd build
- cmake -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=ON -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DCMAKE_BUILD_TYPE=Release ..
+ cmake -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=ON -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DBUILD_HELICS_TESTS=OFF -DBUILD_HELICS_BOOST_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ..
  make
  make install
 
@@ -202,7 +202,7 @@ adding *-std=c++11* to *CXXFLAGS*.
 ::
 
  cd /c/src/gridlab-d
- autoreconf -if
+ autoreconf -isf
  ./configure --build=x86_64-mingw32 --with-fncs=/usr/local --with-helics=/usr/local --prefix=/usr/local --with-xerces=/mingw64 --enable-silent-rules 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w' 'LDFLAGS=-O2 -w -L/mingw64/bin'
  make
  make install

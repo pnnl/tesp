@@ -15,6 +15,26 @@ procedure has been tested with Ubuntu 18.04 LTS and gcc/g++ 7.3.0.
 
 When you finish the build, try :ref:`RunExamples`.
 
+Preparation - Virtual Machine or Windows Subsystem for Linux (WSL)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Linux can be installed on Windows (or Mac) using a virtual machine (VM), such as
+VirtualBox from https://www.virtualbox.org/ The following instructions have
+been written for the example of installing Ubuntu 18.04 under VirtualBox for Windows.
+The same instructions also work for Ubuntu 18.04 under VMWare Fusion for Mac OS X.
+
+Another option is to use the WSL feature built in to Windows, as described at
+https://github.com/michaeltreat/Windows-Subsystem-For-Linux-Setup-Guide. WSL does not support
+graphical applications, including the Eclipse IDE, but it may have other advantages for
+building and running command-line tools, like TESP and GridLAB-D. The following
+instructions work for Ubuntu 18.04 set up that way under WSL, with a few suggested 
+changes to the TESP build:
+
+- from the *cdwr* prompt, use *mkdir usrc* instead of *mkdir ~/src* before checking out repositories from GitHub. This makes it easier to keep track of separate source trees for Windows and Linux, if you are building from both on the same machine.
+- the first step of *sudo apt-get install git* may be unnecessary
+- when building the Java 10 binding for FNCS, you have to manually copy the fncs.jar and libFNCSjni.so to the correct place. The paths are different because of how WSL integrates the Windows and Linux file systems
+- for HELICS bindings, add PYTHONPATH and JAVAPATH to *~/.profile* instead of *~/.bashrc*
+
 Preparation - Python Packages, Java, build tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -26,9 +46,13 @@ Preparation - Python Packages, Java, build tools
  sudo apt-get install autoconf
  sudo apt-get install libtool
  sudo apt-get install cmake
- sudo apt-get install libjsoncpp-dev
+ # sudo apt-get install libjsoncpp-dev
  sudo apt-get install default-jre
  sudo apt-get install default-jdk
+
+ # python2 and fortran support is required for the EnergyPlus build
+ sudo apt-get install python-minimal
+ sudo apt-get install gfortran
 
  # python3 support
  # you can also install Python 3.6 or later from https://www.python.org/downloads/ or https://repo.continuum.io/
@@ -39,8 +63,9 @@ Preparation - Python Packages, Java, build tools
  pip3 install tesp_support --upgrade
  opf 
 
- # for HELICS and FNCS
+ # for HELICS and FNCS with ns-3
  sudo apt-get install libboost-dev
+ sudo apt-get install libboost-signals-dev
  sudo apt-get install libboost-program-options-dev
  sudo apt-get install libboost-test-dev
  sudo apt-get install libboost-filesystem-dev
@@ -50,6 +75,8 @@ Preparation - Python Packages, Java, build tools
 
 Checkout PNNL repositories from github
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As noted above, we suggest *mkdir usrc* instead of *mkdir ~/src* on WSL.
 
 ::
 
@@ -125,6 +152,8 @@ To build the Java interface for version 10, which has *javah* replaced by *javac
  make
  make install
 
+The *make install* step may not work on WSL. A manual example is *cp fncs.jar ../../tesp/examples/loadshed/java*
+
 To build HELICS 2.0 with Python and Java bindings:
 
 ::
@@ -138,12 +167,14 @@ To build HELICS 2.0 with Python and Java bindings:
 
 Test that HELICS and FNCS start:
 
+::
+
  sudo ldconfig
  helics_player --version
  helics_recorder --version
  fncs_broker --version # look for the program to start, then exit with error
 
-To set up Python and Java to run with HELICS, add this to your *~/.bashrc* file:
+To set up Python and Java to run with HELICS, add this to your *~/.bashrc* file (try *~/.profile* if using Windows Subsystem for Linux):
 
 ::
 
@@ -177,6 +208,7 @@ To link with both FNCS and HELICS, and run the autotest suite:
  sudo make install
  cd ../..
 
+ # in the following, replace $FNCS_INSTALL with /usr/local to just use the default location
  ./configure --with-fncs=$FNCS_INSTALL --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w' 'CXXFLAGS=-w -std=c++14' 'LDFLAGS=-w'
 
  # for debugging use 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -std=c++14 -g -O0' and 'LDFLAGS=-w -g -O0'
@@ -190,25 +222,16 @@ EnergyPlus with Prerequisites
 
 ::
 
- cd ~/src/EnergyPlus
- mkdir build
- cd build
- cmake -DBUILD_FORTRAN=ON -DBUILD_PACKAGE=ON -DENABLE_INSTALL_REMOTE=OFF ..
- make -j 4
- sudo make install
-
-..
- cd ~/src/EnergyPlus
- mkdir build
- cd build
- cmake ..
- make
-
  # Before installing, we need components of the public version, including but not limited to 
  #  the critical Energy+.idd file
  # The compatible public version is at https://github.com/NREL/EnergyPlus/releases/tag/v8.3.0
  # That public version should be installed to /usr/local/EnergyPlus-8-3-0 before going further
 
+ cd ~/src/EnergyPlus
+ mkdir build
+ cd build
+ cmake -DBUILD_FORTRAN=ON -DBUILD_PACKAGE=ON -DENABLE_INSTALL_REMOTE=OFF ..
+ make -j 4
  sudo make install
 
  # Similar to the experience with Mac and Windows, this installation step wrongly puts
@@ -246,7 +269,6 @@ Build ns3 with HELICS
  git clone https://gitlab.com/nsnam/ns-3-dev.git
  cd ns-3-dev
  git clone https://github.com/GMLC-TDC/helics-ns3 contrib/helics
- cd ..
  ./waf configure --with-helics=/usr/local --disable-werror --enable-examples --enable-tests
  ./waf build 
 
