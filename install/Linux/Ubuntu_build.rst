@@ -85,7 +85,7 @@ As noted above, we suggest *mkdir usrc* instead of *mkdir ~/src* on WSL.
  git config --global user.name "your user name"
  git config --global user.email "your email"
  git clone -b develop https://github.com/FNCS/fncs.git
- git clone -b develop https://github.com/GMLC-TDC/HELICS-src
+ git clone -b master https://github.com/GMLC-TDC/HELICS-src
  git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b develop https://github.com/pnnl/tesp.git

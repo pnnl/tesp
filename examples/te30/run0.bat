@@ -5,7 +5,7 @@ set FNCS_TRACE=no
 set FNCS_TIME_DELTA=
 
 set FNCS_CONFIG_FILE=
-start /b cmd /c fncs_broker 5 ^>broker0.log 2^>^&1
+start /b cmd /c fncs_broker 6 ^>broker0.log 2^>^&1
 
 rem set FNCS_LOG_LEVEL=
 set FNCS_CONFIG_FILE=eplus.yaml
@@ -19,6 +19,10 @@ start /b cmd /c python -c "import tesp_support.api as tesp;tesp.pypower_loop('te
 
 set FNCS_CONFIG_FILE=TE_Challenge_substation.yaml
 start /b cmd /c python -c "import tesp_support.api as tesp;tesp.substation_loop('TE_Challenge_agent_dict.json','TE_Challenge0',flag='NoMarket')" ^>substation0.log 2^>^&1
+
+set FNCS_CONFIG_FILE=
+set WEATHER_CONFIG=TE_Challenge_Weather_Config.json
+start /b cmd /c python -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weather.dat')" ^>weather0.log 2^>^&1
 
 set FNCS_CONFIG_FILE=
 set FNCS_LOG_LEVEL=

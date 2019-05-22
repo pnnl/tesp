@@ -80,7 +80,7 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  git config --global user.email "YourEmailAddress@YourDomain.com"
  git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
  git clone -b develop https://github.com/FNCS/fncs.git
- git clone -b develop https://github.com/GMLC-TDC/HELICS-src.git
+ git clone -b master https://github.com/GMLC-TDC/HELICS-src.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b develop https://github.com/pnnl/tesp.git
 
@@ -134,7 +134,7 @@ Build ZeroMQ first:
  cd /c/src
  tar -xzf zeromq-4.2.5.tar.gz
  cd zeromq-4.2.5
- ./configure --prefix=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w'
+ ./configure --prefix=/usr/local 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w'
  make
  make install
 
@@ -146,7 +146,7 @@ CZMQ next, with customized libraries to link (don't use lz4 compression until we
  tar -xzf czmq-4.1.1.tar.gz
  cd czmq-4.1.1
  // edit /usr/local/lib/pkgconfig/libzmq.pc to read Libs: -L${libdir} -lzmq -lws2_32 -liphlpapi -lrpcrt4
- ./configure --prefix=/usr/local --with-liblz4=no --with-libzmq=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w' 'PKG_CONFIG_PATH=/usr/local/lib/pkgconfig'
+ ./configure --prefix=/usr/local --with-liblz4=no --with-libzmq=/usr/local 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w' 'PKG_CONFIG_PATH=/usr/local/lib/pkgconfig'
  make
  make install
 
@@ -157,7 +157,7 @@ Now build FNCS:
  cd /c/src
  cd fncs
  autoreconf -if
- ./configure --prefix=/usr/local --with-zmq=/usr/local 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w'
+ ./configure --prefix=/usr/local --with-zmq=/usr/local 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w'
  make
  make install
 
@@ -203,7 +203,7 @@ adding *-std=c++11* to *CXXFLAGS*.
 
  cd /c/src/gridlab-d
  autoreconf -isf
- ./configure --build=x86_64-mingw32 --with-fncs=/usr/local --with-helics=/usr/local --prefix=/usr/local --with-xerces=/mingw64 --enable-silent-rules 'CXXFLAGS=-O2 -w' 'CFLAGS=-O2 -w' 'LDFLAGS=-O2 -w -L/mingw64/bin'
+ ./configure --build=x86_64-mingw32 --with-fncs=/usr/local --with-helics=/usr/local --prefix=/usr/local --with-xerces=/mingw64 --enable-silent-rules 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w' 'LDFLAGS=-O2 -w -L/mingw64/bin'
  make
  make install
  gridlabd --validate

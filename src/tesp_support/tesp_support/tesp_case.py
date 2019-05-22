@@ -135,7 +135,8 @@ def write_tesp_case (config, cfgfile):
     dt2 = datetime.strptime (EndTime, time_fmt)
     seconds = int ((dt2 - dt1).total_seconds())
     days = seconds / 86400
-    print (days, seconds)
+    WeatherYear = dt1.year
+    print ('run', days, 'days or', seconds, 'seconds in weather year', WeatherYear)
 
     ep_dow_names = ['Monday,   ', 'Tuesday,  ', 'Wednesday,', 'Thursday, ', 'Friday,   ', 'Saturday, ', 'Sunday,   ']
     dow = dt1.weekday()
@@ -163,6 +164,7 @@ def write_tesp_case (config, cfgfile):
     AgentDictFile = casename + '_agent_dict.json'
     PPJsonFile = casename + '_pp.json'
     SubstationYamlFile = casename + '_substation.yaml'
+    WeatherConfigFile = casename + '_Weather_Config.json'
 
     weatherfile = weatherdir + rootweather + '.tmy3'
     eplusfile = eplusdir + EpFile
@@ -175,13 +177,20 @@ def write_tesp_case (config, cfgfile):
     shutil.copy (miscdir + 'clean.bat', casedir)
     shutil.copy (miscdir + 'kill5570.sh', casedir)
     shutil.copy (miscdir + 'kill5570.bat', casedir)
+    shutil.copy (miscdir + 'killold.bat', casedir)
     shutil.copy (miscdir + 'list5570.bat', casedir)
     shutil.copy (miscdir + 'monitor.py', casedir)
     shutil.copy (miscdir + 'plots.py', casedir)
     shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
     shutil.copy (scheduledir + 'commercial_schedules.glm', casedir)
     shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
-    shutil.copy (weatherfile, casedir)
+#    shutil.copy (weatherfile, casedir)
+    # process TMY3 ==> weather.dat
+    cmdline = """python -c "import tesp_support.api as tesp;tesp.weathercsv('""" + weatherfile + """','""" + casedir + '/weather.dat' + """','""" + StartTime + """','""" + EndTime + """',""" + str(WeatherYear) + """)" """
+    print (cmdline)
+#    quit()
+    pw0 = subprocess.Popen (cmdline, shell=True)
+    pw0.wait()
 
     #########################################
     # set up EnergyPlus, if the user wants it
@@ -496,6 +505,7 @@ values:
     # write the command scripts for console and tesp_monitor execution
     aucline = """python -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
     ppline = """python -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
+    weatherline = """python -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weather.dat')" """
 
     # batch file for Windows
     batfile = casedir + '/run.bat'
@@ -504,36 +514,40 @@ values:
     print ('set FNCS_TIME_DELTA=', file=op)
     print ('set FNCS_CONFIG_FILE=', file=op)
     if bUseEplus:
-        print ('start /b cmd /c fncs_broker 5 ^>broker.log 2^>^&1', file=op)
+        print ('start /b cmd /c fncs_broker 6 ^>broker.log 2^>^&1', file=op)
         print ('set FNCS_CONFIG_FILE=eplus.yaml', file=op)
         print ('start /b cmd /c energyplus -w ' + EpWeather + ' -d output -r ' + EpFile + ' ^>eplus.log 2^>^&1', file=op)
         print ('set FNCS_CONFIG_FILE=eplus_json.yaml', file=op)
         print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
     else:
-        print ('start /b cmd /c fncs_broker 3 ^>broker.log 2^>^&1', file=op)
+        print ('start /b cmd /c fncs_broker 4 ^>broker.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=', file=op)
     print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gridlabd.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=' + SubstationYamlFile, file=op)
     print ('start /b cmd /c', aucline + '^>substation.log 2^>^&1', file=op)
     print ('set FNCS_CONFIG_FILE=pypower.yaml', file=op)
     print ('start /b cmd /c', ppline + '^>pypower.log 2^>^&1', file=op)
+    print ('set FNCS_CONFIG_FILE=', file=op)
+    print ('set WEATHER_CONFIG=' + WeatherConfigFile, file=op)
+    print ('start /b cmd /c', weatherline + '^>weather.log 2^>^&1', file=op)
     op.close()
     
     # shell scripts and chmod for Mac/Linux
     shfile = casedir + '/run.sh'
     op = open (shfile, 'w')
     if bUseEplus:
-        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 5 &> broker.log &)', file=op)
+        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> broker.log &)', file=op)
         print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec EnergyPlus -w ' 
                + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
         print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && export FNCS_FATAL=YES && exec eplus_json', EpAgentStop, EpAgentStep, 
                EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
     else:
-        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 3 &> broker.log &)', file=op)
+        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> broker.log &)', file=op)
     print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
            + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> substation.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + ppline + ' &> pypower.log &)', file=op)
+    print ('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + weatherline + ' &> weather.log &)', file=op)
     op.close()
     st = os.stat (shfile)
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
