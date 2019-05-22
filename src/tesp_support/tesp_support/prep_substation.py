@@ -94,6 +94,9 @@ ctrl_cap_hi = 3.0
 
 initial_price = 0.02078
 std_dev = 0.01
+
+latitude = 30.0
+longitude = -110.0
 #####################################################
 
 def ProcessGLM (fileroot):
@@ -158,6 +161,10 @@ def ProcessGLM (fileroot):
                 endedHouse = True
             if inClock == True:
                 if lst[0] == 'starttime':
+                    StartTime = lst[1].strip('\';')
+                    if len(lst) > 2:
+                        StartTime = StartTime + ' ' + lst[2].strip('\';')
+                elif lst[0] == 'timestamp':
                     StartTime = lst[1].strip('\';')
                     if len(lst) > 2:
                         StartTime = StartTime + ' ' + lst[2].strip('\';')
@@ -398,6 +405,7 @@ def prep_substation (gldfileroot, jsonfile = ''):
     global weekend_night_start_lo, weekend_night_start_hi, weekend_night_set_lo, weekend_night_set_hi
     global ramp_lo, ramp_hi, deadband_lo, deadband_hi, offset_limit_lo, offset_limit_hi
     global ctrl_cap_lo, ctrl_cap_hi, initial_price, std_dev
+    global latitude, longitude
 
     if len(jsonfile) > 1:
         lp = open (jsonfile).read()
@@ -447,6 +455,9 @@ def prep_substation (gldfileroot, jsonfile = ''):
 
         Eplus_Bus = config['FeederGenerator']['EnergyPlusBus']
         agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
+
+#        latitude = float (config['WeatherPrep']['Latitude'])
+#        longitude = float (config['WeatherPrep']['Longitude'])
 
         # max_capacity_reference_bid_quantity = 5000.0 * float(config['PYPOWERConfiguration']['TransformerBase']) / 3.0  # forced oil, forced air
 

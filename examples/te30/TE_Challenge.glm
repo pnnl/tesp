@@ -43,8 +43,8 @@ object climate {
   name localWeather;
 //     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
   interpolate QUADRATIC;
-	latitude 32;
-	longitude -111;
+	latitude 32.133;
+	longitude -111.95;
 };
 
 class player {

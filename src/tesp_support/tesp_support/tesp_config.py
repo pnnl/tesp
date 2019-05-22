@@ -10,6 +10,7 @@ References:
 """
 import sys
 import json
+import csv
 import tkinter as tk
 import tkinter.ttk as ttk
 import numpy as np
@@ -83,8 +84,8 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
           ['PYPOWER Base File','ppbasefile.py','','BackboneFiles','PYPOWERFile'],
           ['Weather Type','TMY3','','WeatherPrep','WeatherChoice','weatherChoices'],
           ['Weather Source','WA-Yakima_Air_Terminal.tmy3','File or URL','WeatherPrep','DataSource'],
-#         ['Airport Code','YKM','','WeatherPrep','AirportCode'],
-#         ['Weather Year','2001','','WeatherPrep','Year'],
+          ['Latitude (N > 0)',32.133,'deg','WeatherPrep','Latitude'],
+          ['Longitude (E > 0)',-110.95,'deg','WeatherPrep','Longitude'],
           ['Support Directory','~/src/tesp/support','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
           ['Working Directory','./','','SimulationConfig','WorkingDirectory'],
           ['Case Name','Test','','SimulationConfig','CaseName']
@@ -198,10 +199,12 @@ class TespConfigGUI:
 
     #ttk.Style().configure('TButton', background='blue')
     ttk.Style().configure('TButton', foreground='blue')
-    btn = ttk.Button(self.f1, text='Save Config...', command=self.SaveConfig)
+    btn = ttk.Button(self.f1, text='Lat/Long from TMY3', command=self.ReadLatLong)
     btn.grid(row=len(varsTM) + 2, column=1, sticky=tk.NSEW)
-    btn = ttk.Button(self.f1, text='Open Config...', command=self.OpenConfig)
+    btn = ttk.Button(self.f1, text='Save Config...', command=self.SaveConfig)
     btn.grid(row=len(varsTM) + 3, column=1, sticky=tk.NSEW)
+    btn = ttk.Button(self.f1, text='Open Config...', command=self.OpenConfig)
+    btn.grid(row=len(varsTM) + 4, column=1, sticky=tk.NSEW)
 
     lab = ttk.Label(self.f7, text='Columns', relief=tk.RIDGE)
     lab.grid(row=0, column=0, sticky=tk.NSEW)
@@ -437,6 +440,39 @@ class TespConfigGUI:
         section = vars[row-1][3]
         attribute = vars[row-1][4]
         config[section][attribute] = val
+
+  def ReadLatLong(self):
+    """Updates the Latitude and Longitude from TMY3 file
+    """
+    self.ReadFrame(self.f1, varsTM)
+    weatherpath = ''
+    weatherfile = ''
+    for i in range(len(varsTM)):
+      if 'SimulationConfig' == varsTM[i][3] and 'SourceDirectory' == varsTM[i][4]:
+        weatherpath = varsTM[i][1]
+      if 'WeatherPrep' == varsTM[i][3] and 'DataSource' == varsTM[i][4]:
+        weatherfile = varsTM[i][1]
+    fname = weatherpath + '/weather/'+ weatherfile
+    if os.path.isfile(fname):
+      fd = open (fname, 'r')
+      rd = csv.reader (fd, delimiter=',', skipinitialspace=True)
+      row = next(rd)
+      tmy3source = row[0]
+      tmy3station = row[1]
+      tmy3state = row[2]
+      tmy3tzoffset = float(row[3])
+      tmy3latitude = float(row[4])
+      tmy3longitude = float(row[5])
+      tmy3altitude = float(row[6])
+      fd.close()
+      for i in range(len(varsTM)):
+        if 'WeatherPrep' == varsTM[i][3] and 'Latitude' == varsTM[i][4]:
+          varsTM[i][1] = tmy3latitude
+        if 'WeatherPrep' == varsTM[i][3] and 'Longitude' == varsTM[i][4]:
+          varsTM[i][1] = tmy3longitude
+      self.ReloadFrame (self.f1, varsTM)
+    else:
+      print (fname, 'not found')
 
   def SaveConfig(self):
     """Updates the local case configuration from the GUI, queries user for a file name, and then saves case configuration to that file
