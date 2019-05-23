@@ -149,8 +149,13 @@ class simple_auction:
             self.curve_buyer.add_to_curve (self.pricecap, self.unresp, True)
         else:
             print ('$$ flag,Unresp,BuyCount,BuyTotal,BuyOn,BuyOff', flush=True)
-            print ('$$ unresp < 0', self.unresp, self.curve_buyer.count, 
-                   self.curve_buyer.total, self.curve_buyer.total_on, self.curve_buyer.total_off, sep=',', flush=True)
+            print ('$$ unresp < 0', 
+                   '{:.3f}'.format(self.unresp), 
+                   self.curve_buyer.count, 
+                   '{:.3f}'.format(self.curve_buyer.total), 
+                   '{:.3f}'.format(self.curve_buyer.total_on), 
+                   '{:.3f}'.format(self.curve_buyer.total_off), 
+                   sep=',', flush=True)
         if self.curve_buyer.count > 0:
             self.curve_buyer.set_curve_order ('descending')
         self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.agg_c1 = helpers.aggregate_bid (self.curve_buyer)
@@ -472,10 +477,25 @@ class simple_auction:
                     grantedRespQuantity = 0.0
                     break
         if grantedRespQuantity != 0.0:
-            print("cleared {} more quantity than supplied.".format(grantedRespQuantity))
-        print ('##', time_granted, tnext_clear, self.clearing_type, self.clearing_quantity, self.clearing_price,
-               self.curve_buyer.count, self.unresponsive_buy, self.responsive_buy,
-               self.curve_seller.count, self.unresponsive_sell, self.responsive_sell,
-               self.marginal_quantity, self.marginal_frac, self.lmp, self.refload,
-               self.consumerSurplus, self.averageConsumerSurplus, self.supplierSurplus,
-               self.unrespSupplierSurplus, sep=',', flush=True)
+            print('cleared {:.4f} more quantity than supplied.'.format(grantedRespQuantity))
+        print ('##', 
+               time_granted, 
+               tnext_clear, 
+               self.clearing_type, 
+               '{:.3f}'.format(self.clearing_quantity), 
+               '{:.6f}'.format(self.clearing_price),
+               self.curve_buyer.count, 
+               '{:.3f}'.format(self.unresponsive_buy), 
+               '{:.3f}'.format(self.responsive_buy),
+               self.curve_seller.count, 
+               '{:.3f}'.format(self.unresponsive_sell), 
+               '{:.3f}'.format(self.responsive_sell),
+               '{:.3f}'.format(self.marginal_quantity), 
+               '{:.6f}'.format(self.marginal_frac), 
+               '{:.6f}'.format(self.lmp), 
+               '{:.3f}'.format(self.refload),
+               '{:.4f}'.format(self.consumerSurplus), 
+               '{:.4f}'.format(self.averageConsumerSurplus), 
+               '{:.4f}'.format(self.supplierSurplus),
+               '{:.4f}'.format(self.unrespSupplierSurplus), 
+               sep=',', flush=True)

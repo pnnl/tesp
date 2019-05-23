@@ -151,9 +151,10 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMar
             controller_metrics [time_key] = {}
             for key, obj in hvacObjs.items():
                 bid = obj.formulate_bid () # bid is [price, quantity, on_state]
-                if bWantMarket:
-                    aucObj.collect_bid (bid)
-                controller_metrics[time_key][obj.name] = [bid[0], bid[1]]
+                if bid is not None:
+                    if bWantMarket:
+                        aucObj.collect_bid (bid)
+                    controller_metrics[time_key][obj.name] = [bid[0], bid[1]]
             tnext_bid += period
 
         if time_granted >= tnext_agg:

@@ -16,6 +16,11 @@ import stat
 import shutil
 from datetime import datetime
 
+if sys.platform == 'win32':
+    pycall = 'python'
+else:
+    pycall = 'python3'
+
 def idf_int(val):
     """Helper function to format integers for the EnergyPlus IDF input data file
 
@@ -103,7 +108,6 @@ def write_tesp_case (config, cfgfile):
     Todo:
         * Write gui.bat and gui.sh, per the te30 examples
         * do not write monitor.py
-        * Invoke python3 on Mac and Linux when launching processes from within this function
     """
     tespdir = config['SimulationConfig']['SourceDirectory']
     feederdir = tespdir + '/feeders/'
@@ -186,7 +190,7 @@ def write_tesp_case (config, cfgfile):
     shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
 #    shutil.copy (weatherfile, casedir)
     # process TMY3 ==> weather.dat
-    cmdline = """python -c "import tesp_support.api as tesp;tesp.weathercsv('""" + weatherfile + """','""" + casedir + '/weather.dat' + """','""" + StartTime + """','""" + EndTime + """',""" + str(WeatherYear) + """)" """
+    cmdline = pycall + """ -c "import tesp_support.api as tesp;tesp.weathercsv('""" + weatherfile + """','""" + casedir + '/weather.dat' + """','""" + StartTime + """','""" + EndTime + """',""" + str(WeatherYear) + """)" """
     print (cmdline)
 #    quit()
     pw0 = subprocess.Popen (cmdline, shell=True)
@@ -222,7 +226,7 @@ def write_tesp_case (config, cfgfile):
         pw1 = subprocess.Popen ('Tmy3toTMY2_ansi ' + casedir + '/' + rootweather + '.tmy3 > '
                                 + casedir + '/' + rootweather + '.tmy2', shell=True)
         pw1.wait()
-        cmdline = """python -c "import tesp_support.api as tesp;tesp.convert_tmy2_to_epw('""" + casedir + '/' + rootweather + """')" """
+        cmdline = pycall + """ -c "import tesp_support.api as tesp;tesp.convert_tmy2_to_epw('""" + casedir + '/' + rootweather + """')" """
         print (cmdline)
         pw2 = subprocess.Popen (cmdline, shell=True)
         pw2.wait()
@@ -486,18 +490,18 @@ values:
     print (tespyamlstr, file=op)
     op.close()
 
-    cmdline = """python -c "import tesp_support.api as tesp;tesp.populate_feeder('""" + cfgfile + """')" """
+    cmdline = pycall + """ -c "import tesp_support.api as tesp;tesp.populate_feeder('""" + cfgfile + """')" """
     print (cmdline)
     p1 = subprocess.Popen (cmdline, shell=True)
     p1.wait()
     glmfile = casedir + '/' + casename
 
-    cmdline = """python -c "import tesp_support.api as tesp;tesp.glm_dict('""" + glmfile + """')" """
+    cmdline = pycall + """ -c "import tesp_support.api as tesp;tesp.glm_dict('""" + glmfile + """')" """
     print (cmdline)
     p2 = subprocess.Popen (cmdline, shell=True)
     p2.wait()
 
-    cmdline = """python -c "import tesp_support.api as tesp;tesp.prep_substation('""" + glmfile + """','""" + cfgfile + """')" """
+    cmdline = pycall + """ -c "import tesp_support.api as tesp;tesp.prep_substation('""" + glmfile + """','""" + cfgfile + """')" """
     print (cmdline)
     p3 = subprocess.Popen (cmdline, shell=True)
     p3.wait()
@@ -532,7 +536,11 @@ values:
     print ('start /b cmd /c', weatherline + '^>weather.log 2^>^&1', file=op)
     op.close()
     
-    # shell scripts and chmod for Mac/Linux
+    # shell scripts and chmod for Mac/Linux - need to specify python3
+    aucline = """python3 -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
+    ppline = """python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
+    weatherline = """python3 -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weather.dat')" """
+
     shfile = casedir + '/run.sh'
     op = open (shfile, 'w')
     if bUseEplus:
@@ -590,10 +598,10 @@ values:
     cmds['commands'].append({'args':['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile], 
                        'env':[['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                        'log':'gridlabd.log'})
-    cmds['commands'].append({'args':['python', 'launch_auction.py'], 
+    cmds['commands'].append({'args':[pycall, 'launch_auction.py'], 
                        'env':[['FNCS_CONFIG_FILE', SubstationYamlFile],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                        'log':'substation.log'})
-    cmds['commands'].append({'args':['python', 'launch_pp.py'], 
+    cmds['commands'].append({'args':[pycall, 'launch_pp.py'], 
                        'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                        'log':'pypower.log'})
     json.dump (cmds, op, indent=2)
