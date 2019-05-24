@@ -8,6 +8,7 @@ ercot_8_pf.csv
 ercot_8_opf.csv
 Bus*.glm
 tesp_monitor_ercot.json
+*ames.dat
 no_fncs/
 no_market/
 market/
