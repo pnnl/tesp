@@ -1244,6 +1244,19 @@ def write_commercial_loads(key, op):
       key (str): GridLAB-D load name that is being replaced
       op (file): open file to write to
   """
+  mtr = comm_loads[key][0]
+  comm_type = comm_loads[key][1]
+  nz = int(comm_loads[key][2])
+  kva = float(comm_loads[key][3])
+  nphs = int(comm_loads[key][4])
+  vln = float(comm_loads[key][5])
+
+  print ('// load', key, 'parent', mtr, 'type', comm_type, 'nz', nz, 'kva', '{:.3f}'.format(kva),
+         'nphs', nphs, 'vln', '{:.3f}'.format(vln), file=op)
+
+  for i in range(nz):
+    zonename = gld_strict_name (key + '_zone_' + str(i+1))
+    print ('//   ' + zonename, file=op)
 
 def write_houses(basenode, op, vnom):
     """Put houses, along with solar panels and batteries, onto a node
@@ -1678,6 +1691,7 @@ def write_substation (op, name, phs, vnom, vll):
 #   the transformer phasing was not changed, and the transformers were up-sized to the largest phase kva
 #   therefore, it should not be necessary to look up kva_total, but phases might have changed N==>S
 # if the phasing did change N==>S, we have to prepend triplex_ to the class, write power_1 and voltage_1
+# when writing commercial buildings, if load_class is present and == C, skip the instance
 def write_voltage_class (model, h, t, op, vprim, vll, secmtrnode):
     """Write GridLAB-D instances that have a primary nominal voltage, i.e., node, meter and load
 
@@ -1692,6 +1706,9 @@ def write_voltage_class (model, h, t, op, vprim, vll, secmtrnode):
     """
     if t in model:
         for o in model[t]:
+#            if 'load_class' in model[t][o]:
+#                if model[t][o]['load_class'] == 'C':
+#                    continue
             name = o # model[t][o]['name']
             phs = model[t][o]['phases']
             vnom = vprim
