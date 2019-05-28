@@ -5,7 +5,7 @@ This procedure builds all components from scratch. If you've already
 built GridLAB-D on your machine, please take note of the specific
 GitHub branch requirements for TESP:
 
-- feature/1146 for GridLAB-D
+- feature/1173 for GridLAB-D
 - develop for FNCS
 - fncs-v8.3.0 for EnergyPlus
 
@@ -78,7 +78,7 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  cd src
  git config --global user.name "Your Name"
  git config --global user.email "YourEmailAddress@YourDomain.com"
- git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
+ git clone -b feature/1173 https://github.com/gridlab-d/gridlab-d.git
  git clone -b develop https://github.com/FNCS/fncs.git
  git clone -b master https://github.com/GMLC-TDC/HELICS-src.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
