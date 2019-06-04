@@ -5,10 +5,10 @@ This procedure builds all components from scratch. If you've already
 built GridLAB-D on your machine, please take note of the specific
 GitHub branch requirements for TESP:
 
-- feature/1146 for GridLAB-D
+- feature/1173 for GridLAB-D
 - develop for FNCS
 - fncs-v8.3.0 for EnergyPlus
-- develop for HELICS 2.0
+- master for HELICS 2.0
 
 You may also need to upgrade the gcc and g++ compilers. This build 
 procedure has been tested with Ubuntu 18.04 LTS and gcc/g++ 7.3.0.
