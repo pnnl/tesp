@@ -8,6 +8,10 @@ import json;
 import math;
 from copy import deepcopy;
 
+# day-ahead market runs at noon every day
+da_period = 86400
+da_offset = 12 * 3600
+
 casename = 'ercot_8'
 wind_period = 3600
 
@@ -211,6 +215,8 @@ def write_ames_base_case (ppc, fname):
     print (bname, fbus, tbus, '{:.2f}'.format (branch[i,5]), '{:.6f}'.format (branch[i,3]), file=fp)
   print ('#LineDataEnd', file=fp)
   print ('#GenDataStart', file=fp)
+  # TODO: replace ppc['gencost'] with dictionary of hourly bids, collected from the
+  #   GridLAB-D agents over FNCS
   gen = ppc['gen']
   gencost = ppc['gencost']
   # gen: bus, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin, (11 zeros)
@@ -233,6 +239,8 @@ def write_ames_base_case (ppc, fname):
   # ppc arrays (bus type 1=load, 2 = gen (PV) and 3 = swing)
   # bus: bus_i, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin
   # AMES wants name, ID, bus, 8x hourly demands, in three blocks
+  # TODO: define a dictionary of hourly load forecasts, 
+  #   collected from GridLAB-D via FNCS, to replace ppc['bus']
   bus = ppc['bus']
   lse = []
   for i in range (bus.shape[0]):
@@ -313,9 +321,10 @@ if wind_period > 0:
   else:
     tnext_wind = 0
 
-# initialize for OPF and time stepping
+# initialize for day-ahead, OPF and time stepping
 ts = 0
 tnext_opf = 0
+tnext_da = da_offset
 # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
 for row in ppc['gen']:
   row[9] = 0.1 * row[8]
@@ -434,6 +443,11 @@ while ts <= tmax:
     val = ip.splev ([h / 24.0], tck_load)
     gld_load[busnum]['pcrv'] = Pnom * curve_scale * float(val[1])
     gld_load[busnum]['qcrv'] = Qnom * curve_scale * float(val[1])
+  # run SCED/SCUC in AMES to establish the next day's unit commmitment and dispatch
+#  if ts >= tnext_da:
+#    write_ames_base_case (ppc, casename + '_ames.dat')
+# collect AMES output and update the dispatch schedules in ppc
+#    tnext_da += da_period
   # run OPF to establish the prices and economic dispatch
   if ts >= tnext_opf:
     # update cost coefficients, set dispatchable load, put unresp+curve load on bus
