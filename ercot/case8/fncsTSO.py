@@ -449,6 +449,11 @@ while ts <= tmax:
       p, q = parse_mva(val)
       gld_load[busnum]['p'] = float(p)
       gld_load[busnum]['q'] = float(q)
+    elif 'DA_BID_' in topic:
+      busnum = int(topic[7: ])
+      da_bid = json.loads(val) # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[24]
+      print ('Day Ahead Bid for Bus', busnum, 'at', ts, '=', da_bid, flush=True)
+
 #  print(ts, 'FNCS inputs', gld_load, flush=True)
   # fluctuate the wind plants
   if ts >= tnext_wind: 

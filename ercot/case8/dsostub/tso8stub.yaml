@@ -146,4 +146,28 @@ values:
     RESPONSIVE_DEG_8:
         topic: dsostub/substationBus8/responsive_deg
         default: 0
+    DA_BID_1:
+        topic: dsostub/substationBus1/da_bid
+        default: 0
+    DA_BID_2:
+        topic: dsostub/substationBus2/da_bid
+        default: 0
+    DA_BID_3:
+        topic: dsostub/substationBus3/da_bid
+        default: 0
+    DA_BID_4:
+        topic: dsostub/substationBus4/da_bid
+        default: 0
+    DA_BID_5:
+        topic: dsostub/substationBus5/da_bid
+        default: 0
+    DA_BID_6:
+        topic: dsostub/substationBus6/da_bid
+        default: 0
+    DA_BID_7:
+        topic: dsostub/substationBus7/da_bid
+        default: 0
+    DA_BID_8:
+        topic: dsostub/substationBus8/da_bid
+        default: 0
 

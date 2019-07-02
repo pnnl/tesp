@@ -146,4 +146,28 @@ values:
     RESPONSIVE_DEG_8:
         topic: substationBus8/responsive_deg
         default: 0
+    DA_BID_1:
+        topic: substationBus1/da_bid
+        default: 0
+    DA_BID_2:
+        topic: substationBus2/da_bid
+        default: 0
+    DA_BID_3:
+        topic: substationBus3/da_bid
+        default: 0
+    DA_BID_4:
+        topic: substationBus4/da_bid
+        default: 0
+    DA_BID_5:
+        topic: substationBus5/da_bid
+        default: 0
+    DA_BID_6:
+        topic: substationBus6/da_bid
+        default: 0
+    DA_BID_7:
+        topic: substationBus7/da_bid
+        default: 0
+    DA_BID_8:
+        topic: substationBus8/da_bid
+        default: 0
 

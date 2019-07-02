@@ -4,6 +4,11 @@ import tesp_support.api as tesp;
 import tesp_support.fncs as fncs;
 import json;
 
+# day-ahead market runs at noon every day
+da_period = 86400
+da_offset = 12 * 3600
+tnext_da = da_offset
+
 casename = 'ercot_8'
 bWantMarket = True
 bid_c2 = -2.0
@@ -80,6 +85,49 @@ while ts <= tmax:
     elif 'V' in topic:
       busnum = int (topic[1:])
       gld_bus[busnum]['v'] = float(val)
+
+  # bid into the day-ahead market for each bus
+  # as with real-time market, half the hourly load will be unresponsive and half responsive
+  # the bid curve is also fixed
+  # however, we will add some noise to the day-ahead bid
+  if ts >= tnext_da:
+    for row in fncs_bus:
+      da_bid = {'unresp_mw':[], 'resp_max_mw':[], 'resp_c2':[], 'resp_c1':[], 'resp_deg':[]}
+      busnum = int (row[0])
+      pubtopic = row[1] # this is what fncsTSO.py receives it as
+      gld_scale = float (row[2]) # divide published P, Q values by gld_scale, because fncsTSO.py multiplies by gld_scale
+      Pnom = float (row[3])
+      curve_scale = float (row[5])
+      curve_skew = int (row[6])
+      if bWantMarket:
+        c2 = gld_bus[busnum]['c2']
+        c1 = gld_bus[busnum]['c1']
+        deg = gld_bus[busnum]['deg']
+      else:
+        c2 = 0
+        c1 = 0
+        deg = 0
+      for i in range(24):
+        sec = (3600 * i + curve_skew) % 86400
+        h = float (sec) / 3600.0
+        val = ip.splev ([h / 24.0], tck_load)
+        Phour = Pnom * curve_scale * float(val[1])
+        if bWantMarket:
+          resp_max = Phour * 0.5
+          unresp = Phour * 0.5
+        else:
+          resp_max = 0.0
+          unresp = Phour
+        da_bid['unresp_mw'].append(unresp)
+        da_bid['resp_max_mw'].append(resp_max)
+        da_bid['resp_c2'].append(c2)
+        da_bid['resp_c1'].append(c1)
+        da_bid['resp_deg'].append(deg)
+
+      pubtopic = 'substationBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from a substation auction
+      print ('Day-Ahead bid for', pubtopic, 'at', ts, '=', da_bid, flush=True)
+      fncs.publish (pubtopic + '/da_bid', json.dumps(da_bid))
+    tnext_da += da_period
 
   # update the bid, and publish simulated load as unresponsive + cleared_responsive
   for row in fncs_bus:

@@ -179,9 +179,15 @@ def process_pypower(nameroot):
         p_std = data_g[j,:,PGEN_IDX].std()
         row = dict['generators'][key]
         p_max = float (row['Pmax'])
+        CF = p_avg/p_max
+        if p_avg > 0.0:
+            COV = p_std/p_avg
+        else:
+            COV = 0.0
+
         print (key, row['bus'], row['bustype'], row['genfuel'],
-               '{:.4f}'.format (p_avg/p_max),
-               '{:.4f}'.format (p_std/p_avg))
+               '{:.4f}'.format (CF),
+               '{:.4f}'.format (COV))
         j = j + 1
 
     # read the dso stub metrics, which uses the same bus keys but different hrs
