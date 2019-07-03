@@ -321,11 +321,13 @@ tmax = int(ppc['Tmax'])
 period = int(ppc['Period'])
 dt = int(ppc['dt'])
 swing_bus = int(ppc['swing_bus'])
+# these can be aliased by PYPOWER in runopf or runpf
 bus = ppc['bus']
-zones = ppc['zones']
 branch = ppc['branch']
 gen = ppc['gen']
 genCost = ppc['gencost']
+# these were added to ppc by PNNL, and won't be aliased in PYPOWER
+zones = ppc['zones']
 fncsBus = ppc['FNCS']
 units = ppc['UnitsOut']
 branches = ppc['BranchesOut']
@@ -375,7 +377,6 @@ tnext_da = da_offset
 # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
 for row in gen: 
   row[9] = 0.1 * row[8]
-
 
 # listening to GridLAB-D and its auction objects
 gld_load = {} # key on bus number
@@ -514,6 +515,7 @@ while ts <= tmax:
   # run OPF to establish the prices and economic dispatch
   if ts >= tnext_opf: 
     # update cost coefficients, set dispatchable load, put unresp+curve load on bus
+    bus = ppc['bus'] # in case of aliasing
     for row in fncsBus: 
       busnum = int(row[0])
       gld_scale = float(row[2])
@@ -588,6 +590,7 @@ while ts <= tmax:
   # always run the regular power flow for voltages and performance metrics
   ppc['bus'][:, 13] = opf_bus[:, 13]  # set the lmp
   ppc['gen'][:, 1] = opf_gen[:, 1]   # set the economic dispatch
+  bus = ppc['bus'] # in case of aliasing
   # add the actual scaled GridLAB-D loads to the baseline curve loads, turn off dispatchable loads
   for row in fncsBus: 
     busnum = int(row[0])
@@ -662,7 +665,7 @@ while ts <= tmax:
     if Vpu < bus_accum[str(busnum)][7]: 
       bus_accum[str(busnum)][7] = Vpu
   for i in range(rGen.shape[0]):
-    row = gen[i].tolist()
+    row = rGen[i].tolist()
     busidx = int(row[0] - 1)
     # Pgen, Qgen, LMP_P (includes the responsive load as dispatched by OPF)
     gen_accum[str(i+1)][0] += row[1]
@@ -677,7 +680,7 @@ while ts <= tmax:
     for i in range(fncsBus.shape[0]): 
       busnum = int(fncsBus[i, 0])
       busidx = busnum - 1
-      row = bus[busidx].tolist()
+      row = rBus[busidx].tolist()
       met = bus_accum[str(busnum)]
       bus_metrics[str(ts)][str(busnum)] = [met[0]/n_accum, met[1]/n_accum, met[2]/n_accum, met[3]/n_accum, 
                                            met[4]/n_accum, met[5]/n_accum, met[6], met[7], 
