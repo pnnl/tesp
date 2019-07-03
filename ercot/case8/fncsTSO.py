@@ -55,7 +55,7 @@ def make_wind_plants():
       MW = float(gen[i, 8])
       scale = MW / Pnorm
       Theta0 = 0.05 * math.sqrt(scale)
-      Theta1 = -0.1 *(scale)
+      Theta1 = -0.1 * scale
       StdDev = math.sqrt(1.172 * math.sqrt(scale))
       Psi1 = 1.0
       Ylim = math.sqrt(MW)
@@ -66,17 +66,11 @@ def make_wind_plants():
 
 
 # this differs from tesp_support because of additions to FNCS, and Pnom==>Pmin for generators
-def make_dictionary(ppc, rootname): 
+def make_dictionary(rootname):
   fncsBuses = {}
   generators = {}
   unitsout = []
   branchesout = []
-#  bus = ppc['bus']
-#  gen = ppc['gen']
-#  cost = ppc['gencost']
-#  fncsBus = ppc['FNCS']
-#  units = ppc['UnitsOut']
-#  branches = ppc['BranchesOut']
 
   for i in range(gen.shape[0]): 
     busnum = int(gen[i, 0])
@@ -161,10 +155,10 @@ def parse_mva(arg):
   return p, q
 
 
-def print_gld_load(ppc, gld_load, msg, ts): 
+def print_gld_load(gld_load, msg, ts):
   print(msg, 'at', ts)
   print('bus, genidx, pbus, qbus, pcrv, qcrv, pgld, qgld, unresp, resp_max, c2, c1, deg')
-  for row in ppc['FNCS']: 
+  for row in fncsBus:
     busnum = int(row[0])
     gld_scale = float(row[2])
     pbus = bus[busnum-1, 2]
@@ -193,7 +187,7 @@ def print_gld_load(ppc, gld_load, msg, ts):
            '{: .1f}'.format(deg))
 
 
-def write_ames_base_case(ppc, fname): 
+def write_ames_base_case(fname):
   fp = open(fname, 'w')
   print('// UNIT SI', file=fp)
   print('BASE_S 100', file=fp)   #TODO
@@ -321,12 +315,12 @@ tmax = int(ppc['Tmax'])
 period = int(ppc['Period'])
 dt = int(ppc['dt'])
 swing_bus = int(ppc['swing_bus'])
-# these can be aliased by PYPOWER in runopf or runpf
+
+# these have been aliased
 bus = ppc['bus']
 branch = ppc['branch']
 gen = ppc['gen']
 genCost = ppc['gencost']
-# these were added to ppc by PNNL, and won't be aliased in PYPOWER
 zones = ppc['zones']
 fncsBus = ppc['FNCS']
 units = ppc['UnitsOut']
@@ -359,7 +353,7 @@ sys_meta = {'Ploss': {'units': 'MW', 'index': 0}, 'Converged': {'units': 'true/f
 bus_metrics = {'Metadata': bus_meta, 'StartTime': StartTime}
 gen_metrics = {'Metadata': gen_meta, 'StartTime': StartTime}
 sys_metrics = {'Metadata': sys_meta, 'StartTime': StartTime}
-make_dictionary(ppc, casename)
+make_dictionary(casename)
 
 # initialize for variable wind
 tnext_wind = tmax + 2 * dt # by default, never fluctuate the wind plants
@@ -393,12 +387,16 @@ for i in range(fncsBus.shape[0]):
 # for ? generator 
 for i in range(8): 
   busnum = i+1
-  genidx = gen.shape[0]
-  gen = np.concatenate((gen, np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
-  genCost = np.concatenate((genCost, np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
+  genidx = ppc['gen'].shape[0]
+  ppc['gen'] = np.concatenate((ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
+  ppc['gencost'] = np.concatenate((ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
   gld_scale = float(fncsBus[i, 2])
   gld_load[busnum] = {'pcrv': 0, 'qcrv': 0, 'p': float(fncsBus[i, 7])/gld_scale, 'q': float(fncsBus[i, 8])/gld_scale, 
     'unresp': 0, 'resp_max': 0, 'c2': 0, 'c1': 0, 'deg': 0, 'genidx': genidx}
+
+# needed to be re-aliased after concatenate
+gen = ppc['gen']
+genCost = ppc['gencost']
 
 #print(gld_load)
 #print(gen)
@@ -422,7 +420,7 @@ vp = open(casename + '_pf.csv', 'w')
 print('seconds, OPFconverged, TotalLoad, TotalGen, SwingGen, LMP1, LMP8, gas1, coal1, nuc1, gas2, coal2, nuc2, gas3, coal3, gas4, gas5, coal5, gas7, coal7, wind1, wind3, wind4, wind6, wind7', sep=', ', file=op, flush=True)
 print('seconds, PFConverged, TotalLoad, TotalGen, TotalLoss, SwingGen, v1, v2, v3, v4, v5, v6, v7, v8', sep=', ', file=vp, flush=True)
 
-write_ames_base_case(ppc, casename + '_ames.dat')
+write_ames_base_case(casename + '_ames.dat')
 
 # MAIN LOOP starts here
 while ts <= tmax: 
@@ -515,8 +513,7 @@ while ts <= tmax:
   # run OPF to establish the prices and economic dispatch
   if ts >= tnext_opf: 
     # update cost coefficients, set dispatchable load, put unresp+curve load on bus
-    bus = ppc['bus'] # in case of aliasing
-    for row in fncsBus: 
+    for row in fncsBus:
       busnum = int(row[0])
       gld_scale = float(row[2])
       resp_max = gld_load[busnum]['resp_max'] * gld_scale
@@ -561,8 +558,8 @@ while ts <= tmax:
       if opf_gen[idx, 0] == swing_bus: 
         Pswing += opf_gen[idx, 1]
     print(ts, ropf['success'], 
-           '{: .2f}'.format(opf_bus[: , 2].sum()), 
-           '{: .2f}'.format(opf_gen[: , 1].sum()), 
+           '{: .2f}'.format(opf_bus[:, 2].sum()),
+           '{: .2f}'.format(opf_gen[:, 1].sum()),
            '{: .2f}'.format(Pswing), 
            '{: .4f}'.format(opf_bus[0, 13]), 
            '{: .4f}'.format(opf_bus[7, 13]), 
@@ -589,8 +586,10 @@ while ts <= tmax:
 
   # always run the regular power flow for voltages and performance metrics
   ppc['bus'][:, 13] = opf_bus[:, 13]  # set the lmp
-  ppc['gen'][:, 1] = opf_gen[:, 1]   # set the economic dispatch
-  bus = ppc['bus'] # in case of aliasing
+  ppc['gen'][:, 1] = opf_gen[:, 1]  # set the economic dispatch
+  bus = ppc['bus']  # needed to be re-aliased because of [:, ] operator
+  gen = ppc['gen']  # needed to be re-aliased because of [:, ] operator
+
   # add the actual scaled GridLAB-D loads to the baseline curve loads, turn off dispatchable loads
   for row in fncsBus: 
     busnum = int(row[0])
@@ -600,9 +599,9 @@ while ts <= tmax:
     bus[busnum-1, 2] = gld_load[busnum]['pcrv'] + Pgld
     bus[busnum-1, 3] = gld_load[busnum]['qcrv'] + Qgld
     genidx = gld_load[busnum]['genidx']
-    gen[genidx, 1] = 0 # p
-    gen[genidx, 2] = 0 # q
-    gen[genidx, 9] = 0 # pmin
+    gen[genidx, 1] = 0  # p
+    gen[genidx, 2] = 0  # q
+    gen[genidx, 9] = 0  # pmin
 #  print_gld_load(ppc, gld_load, 'RPF', ts)
   rpf = pp.runpf(ppc, ppopt_regular)
   if rpf[0]['success'] == False: 
