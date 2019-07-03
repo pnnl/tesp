@@ -6,7 +6,7 @@ import json;
 
 # day-ahead market runs at noon every day
 da_period = 86400
-da_offset = 12 * 3600
+da_offset = 12 * 3600 - 300  # submit the day-ahead bid 5 minutes before closing
 tnext_da = da_offset
 
 casename = 'ercot_8'
