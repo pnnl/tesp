@@ -11,17 +11,6 @@ backbone_config = {'backbone_feeders': {
                    'supportpath':'../../support/schedules/',  # wrt outpath
                    'weatherpath':'../../support/weather/'}    # wrt outpath
 
-# this is for the full-order models
-#backbone_config = {'backbone_feeders': {
-#  'R5-12.47-1':{'vll':13800.0, 'vln':7970.0, 'avg_house':6500.0, 'avg_comm':20000.0},
-#  'R5-12.47-2':{'vll':12470.0, 'vln':7200.0, 'avg_house':4500.0, 'avg_comm':15000.0},
-#  'R5-12.47-4':{'vll':12470.0, 'vln':7200.0, 'avg_house':6000.0, 'avg_comm':30000.0},
-#  'R5-12.47-5':{'vll':12470.0, 'vln':7200.0, 'avg_house':4500.0, 'avg_comm':25000.0}},
-#                   'outpath':'../case8/',
-#                   'glmpath':'../../support/feeders/',
-#                   'supportpath':'../../support/schedules/',  # wrt outpath
-#                   'weatherpath':'../../support/weather/'}    # wrt outpath
-
 #inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 #inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 #billingModes = ['TIERED_TOU','TIERED_RTP','HOURLY','TIERED','UNIFORM','NONE'];
@@ -31,7 +20,8 @@ case_config = {'SimulationConfig':{
   'CaseName':'Bus1',
   'StartTime':'2013-07-01 00:00:00',
   'EndTime':'2013-07-02 00:00:00',
-  'SourceDirectory':'~/src/tesp/support'},
+  'SourceDirectory':'/Users/mcde601/src/ptesp/support',
+  'WorkingDirectory':'../case8'},
                'FeederGenerator':{
                'MetricsInterval':300,
                'MinimumStep':15,
@@ -74,16 +64,14 @@ bus_config = [
   ]
 
 # this uses the full-order feeders
-#bus_config = [
-#  {'bus':1, 'feeder':'R5-12.47-1', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
-#  {'bus':2, 'feeder':'R5-12.47-2', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
-#  {'bus':3, 'feeder':'R5-12.47-4', 'tmy3':'TX-Wichita_Falls_Municipal_Arpt.tmy3'},
-#  {'bus':4, 'feeder':'R5-12.47-2', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
-#  {'bus':5, 'feeder':'R5-12.47-2', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
-#  {'bus':6, 'feeder':'R5-12.47-4', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
-#  {'bus':7, 'feeder':'R5-12.47-4', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
-#  {'bus':8, 'feeder':'R5-12.47-5', 'tmy3':'TX-El_Paso_International_Ap_Ut.tmy3'}
-#  ]
+#bus_config[0]['feeder'] = 'R5-12.47-1'
+#bus_config[1]['feeder'] = 'R5-12.47-2'
+#bus_config[2]['feeder'] = 'R5-12.47-4'
+#bus_config[3]['feeder'] = 'R5-12.47-2'
+#bus_config[4]['feeder'] = 'R5-12.47-2'
+#bus_config[5]['feeder'] = 'R5-12.47-4'
+#bus_config[6]['feeder'] = 'R5-12.47-4'
+#bus_config[7]['feeder'] = 'R5-12.47-5'
 
 for i in range(len(bus_config)):
   print ('** populating', bus_config[i]['feeder'], 'for bus', bus_config[i]['bus'], 'in', bus_config[i]['weather'])
@@ -93,7 +81,8 @@ for i in range(len(bus_config)):
   case_config['WeatherPrep']['Longitude'] = bus_config[i]['lon']
   case_config['WeatherPrep']['AgentName'] = bus_config[i]['weather']
   case_config['SimulationConfig']['CaseName'] = 'Bus' + str(bus_config[i]['bus'])
-  fg.populate_feeder (config=case_config, taxconfig=backbone_config)
+  fg.populate_feeder (config=case_config, taxconfig=backbone_config)  # reduced-order feeders
+#  fg.populate_feeder (config=case_config)  # full-order feeders
 
 
 

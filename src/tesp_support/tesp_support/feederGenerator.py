@@ -1676,6 +1676,7 @@ def write_substation (op, name, phs, vnom, vll):
         if forERCOT == True:
             print ('  name gridlabd' + fncs_case + ';', file=op)
         else:
+#            print ('  name gridlabd' + fncs_case + ';', file=op)  # for full-order DSOT
             print ('  name gridlabdSimulator1;', file=op)
         print ('  parent network_node;', file=op)
         print ('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
@@ -2354,7 +2355,11 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     glmpath = tespdir + '/feeders/'
     supportpath = '' #tespdir + '/schedules'
     weatherpath = '' #tespdir + '/weather'
-    outpath = './' + config['SimulationConfig']['CaseName'] + '/'
+    if 'WorkingDirectory' in config['SimulationConfig']:
+#      outpath = config['SimulationConfig']['WorkingDirectory'] + '/'  # for full-order DSOT
+      outpath = './' + config['SimulationConfig']['CaseName'] + '/'
+    else:
+      outpath = './' + config['SimulationConfig']['CaseName'] + '/'
     starttime = config['SimulationConfig']['StartTime']
     endtime = config['SimulationConfig']['EndTime']
     timestep = int(config['FeederGenerator']['MinimumStep'])
@@ -2420,7 +2425,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
             if c[0] == rootname:
                 fncs_case = config['SimulationConfig']['CaseName']
                 ProcessTaxonomyFeeder (fncs_case, c[0], c[1], c[2], c[3], c[4])
-                quit()
+#                quit()
 
 def populate_all_feeders ():
     """Wrapper function that batch processes all taxonomy feeders in the casefiles table (see source file)

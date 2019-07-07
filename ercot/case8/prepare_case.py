@@ -4,23 +4,20 @@ import utilities
 import json
 from datetime import datetime
 
-tesp.glm_dict ('Bus1', ercot=True)
-tesp.glm_dict ('Bus2', ercot=True)
-tesp.glm_dict ('Bus3', ercot=True)
-tesp.glm_dict ('Bus4', ercot=True)
-tesp.glm_dict ('Bus5', ercot=True)
-tesp.glm_dict ('Bus6', ercot=True)
-tesp.glm_dict ('Bus7', ercot=True)
-tesp.glm_dict ('Bus8', ercot=True)
+# for reduced-order feeder models
+ercotFlag = True 
+# for full-order feeder
+# ercotFlag = False 
+te30Flag = False
 
-#tesp.glm_dict ('Bus1')
-#tesp.glm_dict ('Bus2')
-#tesp.glm_dict ('Bus3')
-#tesp.glm_dict ('Bus4')
-#tesp.glm_dict ('Bus5')
-#tesp.glm_dict ('Bus6')
-#tesp.glm_dict ('Bus7')
-#tesp.glm_dict ('Bus8')
+tesp.glm_dict ('Bus1', ercot=ercotFlag, te30=te30Flag)
+tesp.glm_dict ('Bus2', ercot=ercotFlag, te30=te30Flag)
+tesp.glm_dict ('Bus3', ercot=ercotFlag, te30=te30Flag)
+tesp.glm_dict ('Bus4', ercot=ercotFlag, te30=te30Flag)
+tesp.glm_dict ('Bus5', ercot=ercotFlag, te30=te30Flag)
+tesp.glm_dict ('Bus6', ercot=ercotFlag, te30=te30Flag)
+tesp.glm_dict ('Bus7', ercot=ercotFlag, te30=te30Flag)
+tesp.glm_dict ('Bus8', ercot=ercotFlag, te30=te30Flag)
 
 utilities.write_FNCS_config_yaml_file_header()
 
