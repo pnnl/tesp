@@ -85,7 +85,7 @@ initial_price = 0.0342
 std_dev = 0.0279
 #####################################################
 
-def ProcessGLM (fileroot):
+def ProcessGLM (fileroot, weatherName):
 	dirname = os.path.dirname (fileroot) + '/'
 	basename = os.path.basename (fileroot)
 	glmname = fileroot + '_glm_dict.json'
@@ -93,9 +93,8 @@ def ProcessGLM (fileroot):
 	ip = open (glmname).read()
 	gd = json.loads(ip)
 	gldSimName = gd['FNCS']
-#	gldSimName = 'gridlabd' + fileroot
 
-	print (fileroot, dirname, basename, glmname, gldSimName, aucSimName)
+	print (fileroot, dirname, basename, glmname, gldSimName, aucSimName, weatherName)
 
 	# timings based on period and dt
 	periodController = period
@@ -194,7 +193,7 @@ def ProcessGLM (fileroot):
 
 	dictfile = fileroot + '_agent_dict.json'
 	dp = open (dictfile, 'w')
-	meta = {'markets':auctions,'controllers':controllers,'batteries':batteries,'dt':dt,'GridLABD':gldSimName}
+	meta = {'markets':auctions,'controllers':controllers,'batteries':batteries,'dt':dt,'GridLABD':gldSimName,'Weather':weatherName}
 	print (json.dumps(meta), file=dp)
 	dp.close()
 
@@ -237,6 +236,12 @@ def ProcessGLM (fileroot):
 	op = open (fileroot + '_FNCS_Config.txt', 'w')
 	print ('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
 	print ('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_' + fileroot + '";', file=op)
+	print ('subscribe "precommit:localWeather.temperature <- ' + weatherName + '/temperature";', file=op)
+	print ('subscribe "precommit:localWeather.humidity <- ' + weatherName + '/humidity";', file=op)
+	print ('subscribe "precommit:localWeather.solar_direct <- ' + weatherName + '/solar_direct";', file=op)
+	print ('subscribe "precommit:localWeather.solar_diffuse <- ' + weatherName + '/solar_diffuse";', file=op)
+	print ('subscribe "precommit:localWeather.pressure <- ' + weatherName + '/pressure";', file=op)
+	print ('subscribe "precommit:localWeather.wind_speed <- ' + weatherName + '/wind_speed";', file=op)
 #	if len(Eplus_Bus) > 0: # hard-wired names for a single building
 #		print ('subscribe "precommit:Eplus_load.constant_power_A <- eplus_json/power_A";', file=op)
 #		print ('subscribe "precommit:Eplus_load.constant_power_B <- eplus_json/power_B";', file=op)
@@ -263,7 +268,7 @@ def ProcessGLM (fileroot):
 	# write topics to the FNCS config yaml file that will be shown in the monitor
 	utilities.write_FNCS_config_yaml_file_values(fileroot, controllers)
 
-def prep_ercot_substation (gldfileroot, jsonfile = ''):
+def prep_ercot_substation (gldfileroot, jsonfile = '', weatherName = ''):
 	global dt, period, Eplus_Bus, agent_participation
 	global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
 	global daylight_start_lo, daylight_start_hi, daylight_set_lo, daylight_set_hi
@@ -322,6 +327,6 @@ def prep_ercot_substation (gldfileroot, jsonfile = ''):
 
 		agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
 
-	ProcessGLM (gldfileroot)
+	ProcessGLM (gldfileroot, weatherName)
 
 

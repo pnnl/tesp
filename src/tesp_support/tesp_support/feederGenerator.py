@@ -72,6 +72,7 @@ water_heater_participation = 0.5
 solar_inv_mode = 'CONSTANT_PF'
 latitude = 30.0
 longitude = -110.0
+weatherName = 'weather'
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
 def gld_strict_name(val):
@@ -2099,6 +2100,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         print ('object climate {', file=op)
         print ('  name localWeather;', file=op)
         print ('  // tmyfile "' + weatherpath + weather_file + '";', file=op)
+        print ('  // agent name', weatherName, file=op)
         print ('  interpolate QUADRATIC;', file=op)
         print ('  latitude', str(latitude) + ';', file=op)
         print ('  longitude', str(longitude) + ';', file=op)
@@ -2338,7 +2340,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     global water_heater_percentage, water_heater_participation
     global fncs_case, forERCOT
     global house_nodes, small_nodes
-    global latitude, longitude
+    global latitude, longitude, weatherName
 
     if configfile is not None:
         checkResidentialBuildingTable()
@@ -2381,6 +2383,8 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     transmissionVoltage = 1000.0 * float(config['PYPOWERConfiguration']['TransmissionVoltage'])
     latitude = float(config['WeatherPrep']['Latitude'])
     longitude = float(config['WeatherPrep']['Longitude'])
+    if 'AgentName' in config['WeatherPrep']:
+      weatherName = config['WeatherPrep']['AgentName']
 
     house_nodes = {}
     small_nodes = {}

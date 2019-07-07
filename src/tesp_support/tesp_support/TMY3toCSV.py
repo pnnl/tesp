@@ -153,9 +153,9 @@ def weathercsv(tmyfile,outputfile,start_time,end_time,year_):
     global dts
     global result2
     tmydata=readtmy3(tmyfile)
-    print ('latitude', tmydata[1]['latitude'])
-    print ('longitude', tmydata[1]['longitude'])
-    print ('altitude', tmydata[1]['altitude'], 'm')
+    print ('  latitude', tmydata[1]['latitude'])
+    print ('  longitude', tmydata[1]['longitude'])
+    print ('  altitude', tmydata[1]['altitude'], 'm')
     
     temperature=tmydata[0]['DryBulb']*1.8 + 32.0 # convert to Fahrenheit
     humidity=tmydata[0]['RHum']/100.0            # convert to per-unit

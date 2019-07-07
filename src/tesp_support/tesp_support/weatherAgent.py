@@ -14,6 +14,7 @@ except:
 import random
 import numpy
 from scipy.stats import truncnorm
+import time
 
 def startWeatherAgent(file):
     """the weather agent publishes weather data as configured by the json file
@@ -69,12 +70,8 @@ def startWeatherAgent(file):
         print("Error in time_stop", ex)
 
     #write fncs.zpl file here
-    zpl = open("fncs.zpl", "w")
-    print("name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds, timeStopInSeconds, broker), file=zpl)
-    zpl.close()
-    print('fncs.zpl file generated', flush=True)
-    # this config str won't work for fncs initialization.
-    # config = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds, timeStopInSeconds, broker)
+    # this config str won't work as an argument to fncs::initialize, so write fncs.zpl just in time
+    zplstr = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds, timeStopInSeconds, broker)
 
     # when doing resample(), use timeDeltaInSeconds to make it uniform
     # the reason for that is due to some of the units that we use for fncs, such as 'min',
@@ -129,10 +126,21 @@ def startWeatherAgent(file):
     # each time point in this list pairs with each time point in timeNeedToBePublished list
     timeNeedToPublish = [(i - publishTimeAhead) if (i - publishTimeAhead) >= 0 else 0 for i in timeNeedToBePublished]
 
+    # other weather agents could be initializing from FNCS.zpl, so we might have a race condition
+    #  file locking didn't work, because fncs.initialize() doesn't return until broker hears from all other simulators
+    zplName = agentName + '.zpl'
+    zpl = open(zplName, "w")
+    print(zplstr, file=zpl)
+    zpl.close()
+    print(zplName, 'file generated with:', flush=True)
+    print(zplstr, flush=True)
+    os.environ['FNCS_CONFIG_FILE'] = zplName
+#    print (os.environ, flush=True)
     fncs.initialize()
     print('FNCS initialized', flush=True)
-    os.remove('fncs.zpl')
-    print('fncs.zpl file deleted', flush=True)
+    os.remove(zplName)
+    print(zplName, 'file deleted', flush=True)
+
     time_granted = 0
     timeDeltaChanged = 0
     for i in range(len(timeNeedToPublish)):

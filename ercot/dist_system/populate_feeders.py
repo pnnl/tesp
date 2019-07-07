@@ -22,7 +22,6 @@ backbone_config = {'backbone_feeders': {
 #                   'supportpath':'../../support/schedules/',  # wrt outpath
 #                   'weatherpath':'../../support/weather/'}    # wrt outpath
 
-
 #inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 #inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 #billingModes = ['TIERED_TOU','TIERED_RTP','HOURLY','TIERED','UNIFORM','NONE'];
@@ -64,34 +63,35 @@ case_config = {'SimulationConfig':{
                }
 
 bus_config = [
-  {'bus':1, 'feeder':'sim_R5-12.47-1', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':2, 'feeder':'sim_R5-12.47-2', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':3, 'feeder':'sim_R5-12.47-4', 'weather':'TX-Wichita_Falls_Municipal_Arpt.tmy3'},
-  {'bus':4, 'feeder':'sim_R5-12.47-2', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':5, 'feeder':'sim_R5-12.47-2', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':6, 'feeder':'sim_R5-12.47-4', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':7, 'feeder':'sim_R5-12.47-4', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':8, 'feeder':'sim_R5-12.47-5', 'weather':'TX-El_Paso_International_Ap_Ut.tmy3'},
+  {'bus':1, 'feeder':'sim_R5-12.47-1', 'weather': 'weatherIAH', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3', 'lat':30.000, 'lon': -95.367},
+  {'bus':2, 'feeder':'sim_R5-12.47-2', 'weather': 'weatherIAH', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3', 'lat':30.000, 'lon': -95.367},
+  {'bus':3, 'feeder':'sim_R5-12.47-4', 'weather': 'weatherSPS', 'tmy3':'TX-Wichita_Falls_Municipal_Arpt.tmy3',  'lat':33.983, 'lon': -98.500},
+  {'bus':4, 'feeder':'sim_R5-12.47-2', 'weather': 'weatherIAH', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3', 'lat':30.000, 'lon': -95.367},
+  {'bus':5, 'feeder':'sim_R5-12.47-2', 'weather': 'weatherIAH', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3', 'lat':30.000, 'lon': -95.367},
+  {'bus':6, 'feeder':'sim_R5-12.47-4', 'weather': 'weatherIAH', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3', 'lat':30.000, 'lon': -95.367},
+  {'bus':7, 'feeder':'sim_R5-12.47-4', 'weather': 'weatherIAH', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3', 'lat':30.000, 'lon': -95.367},
+  {'bus':8, 'feeder':'sim_R5-12.47-5', 'weather': 'weatherELP', 'tmy3':'TX-El_Paso_International_Ap_Ut.tmy3',   'lat':31.770, 'lon':-106.500}
   ]
 
 # this uses the full-order feeders
-bus_config = [
-  {'bus':1, 'feeder':'R5-12.47-1', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':2, 'feeder':'R5-12.47-2', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':3, 'feeder':'R5-12.47-4', 'weather':'TX-Wichita_Falls_Municipal_Arpt.tmy3'},
-  {'bus':4, 'feeder':'R5-12.47-2', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':5, 'feeder':'R5-12.47-2', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':6, 'feeder':'R5-12.47-4', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':7, 'feeder':'R5-12.47-4', 'weather':'TX-Houston_Bush_Intercontinental.tmy3'},
-  {'bus':8, 'feeder':'R5-12.47-5', 'weather':'TX-El_Paso_International_Ap_Ut.tmy3'},
-  ]
+#bus_config = [
+#  {'bus':1, 'feeder':'R5-12.47-1', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
+#  {'bus':2, 'feeder':'R5-12.47-2', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
+#  {'bus':3, 'feeder':'R5-12.47-4', 'tmy3':'TX-Wichita_Falls_Municipal_Arpt.tmy3'},
+#  {'bus':4, 'feeder':'R5-12.47-2', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
+#  {'bus':5, 'feeder':'R5-12.47-2', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
+#  {'bus':6, 'feeder':'R5-12.47-4', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
+#  {'bus':7, 'feeder':'R5-12.47-4', 'tmy3':'TX-Houston_Bush_Intercontinental.tmy3'},
+#  {'bus':8, 'feeder':'R5-12.47-5', 'tmy3':'TX-El_Paso_International_Ap_Ut.tmy3'}
+#  ]
 
 for i in range(len(bus_config)):
   print ('** populating', bus_config[i]['feeder'], 'for bus', bus_config[i]['bus'], 'in', bus_config[i]['weather'])
   case_config['BackboneFiles']['TaxonomyChoice'] = bus_config[i]['feeder']
-  case_config['WeatherPrep']['DataSource'] = bus_config[i]['weather']
-  case_config['WeatherPrep']['Latitude'] = 33.0
-  case_config['WeatherPrep']['Longitude'] = -97.0
+  case_config['WeatherPrep']['DataSource'] = bus_config[i]['tmy3']
+  case_config['WeatherPrep']['Latitude'] = bus_config[i]['lat']
+  case_config['WeatherPrep']['Longitude'] = bus_config[i]['lon']
+  case_config['WeatherPrep']['AgentName'] = bus_config[i]['weather']
   case_config['SimulationConfig']['CaseName'] = 'Bus' + str(bus_config[i]['bus'])
   fg.populate_feeder (config=case_config, taxconfig=backbone_config)
 

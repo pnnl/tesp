@@ -9,4 +9,6 @@ rm ercot_8.csv
 rm *_FNCS_Config.txt
 rm *glm_dict.json
 rm *agent_dict.json
-
+rm weather*.dat
+rm weather*.json
+rm *.zpl
