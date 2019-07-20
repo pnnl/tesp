@@ -744,24 +744,11 @@ object overhead_line {
     configuration line_config_seg_25;
 }
 object load {
-   parent R5-12-47-2_node_56;
-   name load_seg_0;
-   phases ABCN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.-0.j;
-   constant_power_B -0.+0.j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
-   voltage_C -3600.00+6235.38j;
-}
-object load {
    parent R5-12-47-2_node_234;
-   name load_seg_1;
-   phases ABCN;
+   name load_seg_1_C;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class C;
+   phases ABCN;
    constant_power_A 246225.32+136907.98j;
    constant_power_B 236326.27+130092.66j;
    constant_power_C 242049.71+133389.96j;
@@ -771,10 +758,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_40;
-   name load_seg_2;
-   phases ABCN;
+   name load_seg_2_C;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class C;
+   phases ABCN;
    constant_power_A 53577.29+29135.83j;
    constant_power_B 33597.58+18058.86j;
    constant_power_C 47201.95+25337.53j;
@@ -784,10 +771,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_307;
-   name load_seg_3;
-   phases ABCN;
+   name load_seg_3_C;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class C;
+   phases ABCN;
    constant_power_A 68353.59+37422.65j;
    constant_power_B 116360.62+63017.46j;
    constant_power_C 57495.62+31241.87j;
@@ -797,23 +784,36 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_14;
-   name load_seg_4;
-   phases ABCN;
+   name load_seg_4_C;
    nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 26259.46+14217.82j;
-   constant_power_B 19092.28+10336.33j;
-   constant_power_C 25805.52+13848.36j;
+   load_class C;
+   phases ABCN;
+   constant_power_A 26118.77+14141.65j;
+   constant_power_B 18989.99+10280.95j;
+   constant_power_C 25667.26+13774.16j;
+   voltage_A 7200.00;
+   voltage_B -3600.00-6235.38j;
+   voltage_C -3600.00+6235.38j;
+}
+object load {
+   parent R5-12-47-2_node_14;
+   name load_seg_4_R;
+   nominal_voltage 7200.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 140.69+76.18j;
+   constant_power_B 102.29+55.38j;
+   constant_power_C 138.26+74.2j;
    voltage_A 7200.00;
    voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_143;
-   name load_seg_5;
-   phases ABCN;
+   name load_seg_5_C;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class C;
+   phases ABCN;
    constant_power_A 56182.91+31101.58j;
    constant_power_B 53922.41+29559.28j;
    constant_power_C 61641.8+33738.78j;
@@ -823,10 +823,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_114;
-   name load_seg_6;
-   phases ABCN;
+   name load_seg_6_C;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class C;
+   phases ABCN;
    constant_power_A 469593.42+271940.07j;
    constant_power_B 453967.55+259809.61j;
    constant_power_C 445732.93+256145.84j;
@@ -836,10 +836,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_9;
-   name load_seg_7;
-   phases ABCN;
+   name load_seg_7_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 2374.4+1378.98j;
    constant_power_B 2374.26+1378.75j;
    constant_power_C 3887.44+2297.33j;
@@ -848,31 +848,20 @@ object load {
    voltage_C -3600.00+6235.38j;
 }
 object load {
-   parent R5-12-47-2_node_129;
-   name load_seg_8;
-   phases ACN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.-0.j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
-   voltage_C -3600.00+6235.38j;
-}
-object load {
    parent R5-12-47-2_node_109;
-   name load_seg_9;
-   phases CN;
+   name load_seg_9_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases CN;
    constant_power_C 58143.88+32816.76j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_8;
-   name load_seg_10;
-   phases ABCN;
+   name load_seg_10_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 2374.4+1379.15j;
    constant_power_B 2374.37+1378.83j;
    constant_power_C 25825.9+14370.41j;
@@ -881,37 +870,11 @@ object load {
    voltage_C -3600.00+6235.38j;
 }
 object load {
-   parent R5-12-47-2_node_7;
-   name load_seg_11;
-   phases ABCN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.-0.j;
-   constant_power_B -0.+0.j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
-   voltage_C -3600.00+6235.38j;
-}
-object load {
-   parent R5-12-47-2_node_226;
-   name load_seg_12;
-   phases ABCN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.+0.j;
-   constant_power_B 0.+0.j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
-   voltage_C -3600.00+6235.38j;
-}
-object load {
    parent R5-12-47-2_node_176;
-   name load_seg_13;
-   phases ABCN;
+   name load_seg_13_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 52202.1+29483.64j;
    constant_power_B 64654.83+36295.49j;
    constant_power_C 24767.73+14155.4j;
@@ -921,10 +884,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_128;
-   name load_seg_14;
-   phases ACN;
+   name load_seg_14_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ACN;
    constant_power_A 20104.64+11518.28j;
    constant_power_C 32733.17+18393.08j;
    voltage_A 7200.00;
@@ -932,10 +895,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_125;
-   name load_seg_15;
-   phases ABCN;
+   name load_seg_15_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 42534.96+24500.13j;
    constant_power_B 35383.69+20377.j;
    constant_power_C 51027.7+29048.98j;
@@ -944,24 +907,11 @@ object load {
    voltage_C -3600.00+6235.38j;
 }
 object load {
-   parent R5-12-47-2_node_5;
-   name load_seg_16;
-   phases ABCN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.-0.j;
-   constant_power_B -0.+0.j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
-   voltage_C -3600.00+6235.38j;
-}
-object load {
    parent R5-12-47-2_node_139;
-   name load_seg_17;
-   phases ABCN;
+   name load_seg_17_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 2374.38+1379.28j;
    constant_power_B 88229.14+49378.28j;
    constant_power_C 2374.46+1379.22j;
@@ -971,54 +921,28 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_96;
-   name load_seg_18;
-   phases BN;
+   name load_seg_18_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases BN;
    constant_power_B 37848.2+21385.37j;
    voltage_B -3600.00-6235.38j;
 }
 object load {
-   parent R5-12-47-2_node_3;
-   name load_seg_19;
-   phases ABCN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.-0.j;
-   constant_power_B -0.+0.j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
-   voltage_C -3600.00+6235.38j;
-}
-object load {
    parent R5-12-47-2_node_95;
-   name load_seg_20;
-   phases CN;
+   name load_seg_20_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases CN;
    constant_power_C 38695.55+21778.88j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
-   parent R5-12-47-2_node_205;
-   name load_seg_21;
-   phases ABCN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.-0.j;
-   constant_power_B -0.+0.j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
-   voltage_C -3600.00+6235.38j;
-}
-object load {
    parent R5-12-47-2_node_29;
-   name load_seg_22;
-   phases ABCN;
+   name load_seg_22_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 41723.37+23686.89j;
    constant_power_B 9496.18+5515.27j;
    constant_power_C 20021.04+11397.33j;
@@ -1027,31 +951,20 @@ object load {
    voltage_C -3600.00+6235.38j;
 }
 object load {
-   parent R5-12-47-2_node_100;
-   name load_seg_23;
-   phases ACN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.-0.j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
-   voltage_C -3600.00+6235.38j;
-}
-object load {
    parent R5-12-47-2_node_69;
-   name load_seg_24;
-   phases AN;
+   name load_seg_24_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases AN;
    constant_power_A 19715.26+11204.82j;
    voltage_A 7200.00;
 }
 object load {
    parent R5-12-47-2_node_146;
-   name load_seg_25;
-   phases ABCN;
+   name load_seg_25_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 15494.32+8817.09j;
    constant_power_B 40220.51+22761.16j;
    constant_power_C 4748.69+2757.63j;
@@ -1061,36 +974,49 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_307;
-   name load_junction_seg_3;
-   phases ABCN;
+   name load_junction_seg_3_C;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class C;
+   phases ABCN;
    constant_power_A 40668.73+22971.01j;
-   constant_power_B 0.+0.j;
-   constant_power_C -0.+0.j;
+   constant_power_B 0+0j;
+   constant_power_C 0+0j;
    voltage_A 7200.00;
    voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_14;
-   name load_junction_seg_4;
-   phases ABCN;
+   name load_junction_seg_4_C;
    nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 8672.33+4708.52j;
-   constant_power_B 8322.3+4477.52j;
-   constant_power_C 8524.63+4588.75j;
+   load_class C;
+   phases ABCN;
+   constant_power_A 8625.86+4683.29j;
+   constant_power_B 8277.71+4453.53j;
+   constant_power_C 8478.95+4564.16j;
+   voltage_A 7200.00;
+   voltage_B -3600.00-6235.38j;
+   voltage_C -3600.00+6235.38j;
+}
+object load {
+   parent R5-12-47-2_node_14;
+   name load_junction_seg_4_R;
+   nominal_voltage 7200.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 46.46+25.23j;
+   constant_power_B 44.59+23.99j;
+   constant_power_C 45.67+24.59j;
    voltage_A 7200.00;
    voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_143;
-   name load_junction_seg_5;
-   phases ABCN;
+   name load_junction_seg_5_C;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class C;
+   phases ABCN;
    constant_power_A 12975.65+7068.06j;
    constant_power_B 12453.33+6721.17j;
    constant_power_C 12755.32+6888.22j;
@@ -1100,10 +1026,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_114;
-   name load_junction_seg_6;
-   phases ABCN;
+   name load_junction_seg_6_C;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class C;
+   phases ABCN;
    constant_power_A 129180.33+73267.28j;
    constant_power_B 124003.87+69581.92j;
    constant_power_C 126998.12+71370.45j;
@@ -1113,10 +1039,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_9;
-   name load_junction_seg_7;
-   phases ABCN;
+   name load_junction_seg_7_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 59144.04+33237.77j;
    constant_power_B 27589.93+15419.29j;
    constant_power_C 28201.53+15753.1j;
@@ -1126,62 +1052,41 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_129;
-   name load_junction_seg_8;
-   phases ACN;
+   name load_junction_seg_8_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ACN;
    constant_power_A 7261.96+4127.4j;
-   constant_power_B 0.+0.j;
    constant_power_C 7138.48+4029.5j;
    voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_109;
-   name load_junction_seg_9;
+   name load_junction_seg_9_R;
+   nominal_voltage 7200.00;
+   load_class R;
    phases CN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.+0.j;
-   constant_power_B 0.+0.j;
    constant_power_C 12898.95+7260.31j;
-   voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
-   voltage_C -3600.00+6235.38j;
-}
-object load {
-   parent R5-12-47-2_node_226;
-   name load_junction_seg_12;
-   phases ABCN;
-   nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.-0.j;
-   constant_power_B -0.+0.j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_128;
-   name load_junction_seg_14;
-   phases ACN;
+   name load_junction_seg_14_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ACN;
    constant_power_A 8543.68+4898.05j;
-   constant_power_B 0.+0.j;
    constant_power_C 8399.52+4782.79j;
    voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_125;
-   name load_junction_seg_15;
-   phases ABCN;
+   name load_junction_seg_15_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 2374.53+1379.27j;
    constant_power_B 9471.59+5358.35j;
    constant_power_C 2374.52+1379.22j;
@@ -1191,10 +1096,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_5;
-   name load_junction_seg_16;
-   phases ABCN;
+   name load_junction_seg_16_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 8543.64+4898.28j;
    constant_power_B 2374.52+1379.11j;
    constant_power_C 8399.47+4783.08j;
@@ -1204,10 +1109,10 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_139;
-   name load_junction_seg_17;
-   phases ABCN;
+   name load_junction_seg_17_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 26273.22+14733.1j;
    constant_power_B 25215.8+14039.35j;
    constant_power_C 25826.59+14373.53j;
@@ -1217,23 +1122,19 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_96;
-   name load_junction_seg_18;
-   phases BN;
+   name load_junction_seg_18_R;
    nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.+0.j;
+   load_class R;
+   phases BN;
    constant_power_B 6330.63+3597.68j;
-   constant_power_C 0.+0.j;
-   voltage_A 7200.00;
    voltage_B -3600.00-6235.38j;
-   voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_3;
-   name load_junction_seg_19;
-   phases ABCN;
+   name load_junction_seg_19_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 2374.52+1379.27j;
    constant_power_B 2374.51+1379.07j;
    constant_power_C 6483.57+3679.84j;
@@ -1243,23 +1144,19 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_95;
-   name load_junction_seg_20;
-   phases CN;
+   name load_junction_seg_20_R;
    nominal_voltage 7200.00;
-   load_class U;
-   constant_power_A 0.+0.j;
-   constant_power_B 0.+0.j;
+   load_class R;
+   phases CN;
    constant_power_C 12898.99+7260.07j;
-   voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_205;
-   name load_junction_seg_21;
-   phases ABCN;
+   name load_junction_seg_21_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 2374.53+1379.27j;
    constant_power_B 18872.02+10602.32j;
    constant_power_C 19326.32+10849.15j;
@@ -1269,36 +1166,30 @@ object load {
 }
 object load {
    parent R5-12-47-2_node_100;
-   name load_junction_seg_23;
-   phases ACN;
+   name load_junction_seg_23_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ACN;
    constant_power_A 5269.59+3056.08j;
-   constant_power_B 0.+0.j;
    constant_power_C 5180.86+2985.7j;
    voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_69;
-   name load_junction_seg_24;
-   phases AN;
+   name load_junction_seg_24_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases AN;
    constant_power_A 13120.22+7436.87j;
-   constant_power_B 0.+0.j;
-   constant_power_C 0.+0.j;
    voltage_A 7200.00;
-   voltage_B -3600.00-6235.38j;
-   voltage_C -3600.00+6235.38j;
 }
 object load {
    parent R5-12-47-2_node_146;
-   name load_junction_seg_25;
-   phases ABCN;
+   name load_junction_seg_25_R;
    nominal_voltage 7200.00;
-   load_class U;
+   load_class R;
+   phases ABCN;
    constant_power_A 2374.52+1379.12j;
    constant_power_B 18872.16+10601.65j;
    constant_power_C 19326.39+10848.86j;

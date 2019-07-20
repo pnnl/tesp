@@ -860,7 +860,7 @@ def buildingTypeLabel (rgn, bldg, ti):
     return rgnName[rgn-1] + ': ' + bldgTypeName[bldg] + ': TI Level ' + str (ti+1)
 
 house_nodes = {} # keyed on node, [nhouse, region, lg_v_sm, phs, bldg, ti, parent (for ERCOT only)]
-small_nodes = {} # keyed on node, [kva, phs]
+small_nodes = {} # keyed on node, [kva, phs, load_class]
 comm_loads = {}  # keyed on load name, [parent, comm_type, nzones, kva, nphs, vln]
 
 solar_count = 0
@@ -988,22 +988,24 @@ def write_ercot_small_loads(basenode, op, vnom):
   kva = float(small_nodes[basenode][0])
   phs = small_nodes[basenode][1]
   parent = small_nodes[basenode][2]
+  cls = small_nodes[basenode][3]
 
   if 'A' in phs:
       vstart = '  voltage_A ' + str(vnom) + '+0.0j;'
-      constpower = '  constant_power_A_real ' + format (1000.0 + kva, '.2f') + ';'
+      constpower = '  constant_power_A_real ' + format (1000.0 * kva, '.2f') + ';'
   elif 'B' in phs:
       vstart = '  voltage_B ' + format(-0.5*vnom,'.2f') + format(-0.866025*vnom,'.2f') + 'j;'
-      constpower = '  constant_power_B_real ' + format (1000.0 + kva, '.2f') + ';'
+      constpower = '  constant_power_B_real ' + format (1000.0 * kva, '.2f') + ';'
   else:
       vstart = '  voltage_C ' + format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j;'
-      constpower = '  constant_power_C_real ' + format (1000.0 + kva, '.2f') + ';'
+      constpower = '  constant_power_C_real ' + format (1000.0 * kva, '.2f') + ';'
 
   print ('object load {', file=op)
   print ('  name', basenode + ';', file=op)
   print ('  parent', parent + ';', file=op)
   print ('  phases', phs + ';', file=op)
   print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+  print ('  load_class ' + cls + ';', file=op)
   print (vstart, file=op)
   print ('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
   print (constpower, file=op)
@@ -1038,9 +1040,14 @@ def identify_ercot_houses (model, h, t, avgHouse, rgn):
                 if tok in model[t][o]:
                     kva = parse_kva (model[t][o][tok])
                     nh = 0
-                    if (kva > 1.0):
-                        nh = int ((kva / avgHouse) + 0.5)
-                        total_houses[phs] += nh
+                    cls = 'U'
+                    # don't populate houses onto A, C, I or U load_class nodes
+                    if 'load_class' in model[t][o]:
+                        cls = model[t][o]['load_class']
+                        if cls == 'R':
+                            if (kva > 1.0):
+                                nh = int ((kva / avgHouse) + 0.5)
+                                total_houses[phs] += nh
                     if nh > 0:
                         lg_v_sm = kva / avgHouse - nh # >0 if we rounded down the number of houses
                         bldg, ti = selectResidentialBuilding (rgnThermalPct[rgn-1], np.random.uniform (0, 1))
@@ -1054,7 +1061,7 @@ def identify_ercot_houses (model, h, t, avgHouse, rgn):
                     elif kva > 0.1:
                         total_small[phs] += 1
                         total_small_kva[phs] += kva
-                        small_nodes[key] = [kva, phs, parent] # parent is the primary node, only for ERCOT
+                        small_nodes[key] = [kva, phs, parent, cls] # parent is the primary node, only for ERCOT
     for phs in ['A', 'B', 'C']:
         print ('phase', phs, ':', total_houses[phs], 'Houses and', total_small[phs], 
                'Small Loads totaling', '{:.2f}'.format (total_small_kva[phs]), 'kva')

@@ -15,6 +15,8 @@ from numpy.linalg import inv
 import cmath
 import math
 
+min_load_size = 10.0
+
 def is_node_class(s):
     if s == 'node':
         return True
@@ -122,11 +124,7 @@ def obj(parent,model,line,itr,oidh,octr):
     # Return the 
     return line,octr
 
-
-
-
 # %% get data from the full model  
-
 def getV(model_name, simlistfile, V_datafile, new_Vdatafile):
 
     with open(V_datafile,'r') as f, open(new_Vdatafile,'w') as f1:
@@ -181,7 +179,6 @@ def getV(model_name, simlistfile, V_datafile, new_Vdatafile):
         Vfc.append(complex(float(Vc[model_name+'_node_'+simlist[n]['f_node']]),float(Vcimg[model_name+'_node_'+simlist[n]['f_node']])))
         
 def getV_sim(model_name, simlistfile, V_datafile, new_Vdatafile):
-
     with open(V_datafile,'r') as f, open(new_Vdatafile,'w') as f1:
         next(f) # skip header line
         for line in f:
@@ -552,107 +549,164 @@ def CreateMeter(model_name,seg_number,glmfile):
     f.write('}\n')
     return
       
-# Create loads   
-def CreateLoad(model_name,seg_number,glmfile):
-    f=open(glmfile,'a')
-    if simlist[seg_number]['phase_name']=='ABC':
-        f.write('object load {\n')
-        f.write('   parent '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
-        f.write('   name load_seg_'+str(seg_number)+';\n')
+def parse_kva(cplx):
+    toks = re.split('[\+j]',cplx)
+    p = float(toks[0])
+    q = float(toks[1])
+    return 0.001 * math.sqrt(p*p + q*q)
+
+def accumulate_load_kva(data):
+    kva = 0.0
+    cls = 'R' # this is the default for triplex nodes
+    if 'constant_power_A' in data:
+        kva += parse_kva(data['constant_power_A'])
+        cls = 'U' # default for primary nodes
+    if 'constant_power_B' in data:
+        kva += parse_kva(data['constant_power_B'])
+        cls = 'U' # default for primary nodes
+    if 'constant_power_C' in data:
+        kva += parse_kva(data['constant_power_C'])
+        cls = 'U' # default for primary nodes
+    if 'constant_power_1' in data:
+        kva += parse_kva(data['constant_power_1'])
+    if 'constant_power_2' in data:
+        kva += parse_kva(data['constant_power_2'])
+    if 'constant_power_12' in data:
+        kva += parse_kva(data['constant_power_12'])
+    if 'power_1' in data:
+        kva += parse_kva(data['power_1'])
+    if 'power_2' in data:
+        kva += parse_kva(data['power_2'])
+    if 'power_12' in data:
+        kva += parse_kva(data['power_12'])
+    if 'load_class' in data:  # explicitly specified
+        cls = data['load_class']
+    return kva, cls
+
+def CreateOneClassLoad (parent_name, load_name, phase_name, cls, p0, p1, p2, f):
+    f.write('object load {\n')
+    f.write('   parent ' + parent_name + ';\n')
+    f.write('   name ' + load_name + ';\n')
+    f.write('   nominal_voltage '+str(v_base)+';\n')
+    f.write('   load_class ' + cls + ';\n')
+    if np.absolute(p0) > 0.1:
+        str_a = np.array2string(p0,precision=2)
+    else:
+        str_a = '0+0j'
+    if np.absolute(p1) > 0.1:
+        str_b = np.array2string(p1,precision=2)
+    else:
+        str_b = '0+0j'
+    if np.absolute(p2) > 0.1:
+        str_c = np.array2string(p2,precision=2)
+    else:
+        str_c = '0+0j'
+    if phase_name == 'ABC':
         f.write('   phases ABCN;\n')
-        f.write('   nominal_voltage '+str(v_base)+';\n')
-        f.write('   load_class U;\n')
-        f.write('   constant_power_A '+np.array2string(S[seg_number][0][0],precision=2)+';\n')
-        f.write('   constant_power_B '+np.array2string(S[seg_number][1][0],precision=2)+';\n')
-        f.write('   constant_power_C '+np.array2string(S[seg_number][2][0],precision=2)+';\n')
+        f.write('   constant_power_A ' + str_a + ';\n')
+        f.write('   constant_power_B ' + str_b + ';\n')
+        f.write('   constant_power_C ' + str_c + ';\n')
         f.write('   voltage_A '+va+';\n')
         f.write('   voltage_B '+vb+';\n')
         f.write('   voltage_C '+vc+';\n')
-        f.write('}\n')
-    elif simlist[seg_number]['phase_name']=='AB':
-        f.write('object load {\n')
-        f.write('   parent '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
-        f.write('   name load_seg_'+str(seg_number)+';\n')
+    elif phase_name == 'AB':
         f.write('   phases ABN;\n')
-        f.write('   nominal_voltage '+str(v_base)+';\n')
-        f.write('   load_class U;\n')
-        f.write('   constant_power_A '+np.array2string(S[seg_number][0][0],precision=2)+';\n')
-        f.write('   constant_power_B '+np.array2string(S[seg_number][1][0],precision=2)+';\n')
+        f.write('   constant_power_A ' + str_a + ';\n')
+        f.write('   constant_power_B ' + str_b + ';\n')
         f.write('   voltage_A '+va+';\n')
         f.write('   voltage_B '+vb+';\n')
-        f.write('}\n')
-    elif simlist[seg_number]['phase_name']=='AC':
-        f.write('object load {\n')
-        f.write('   parent '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
-        f.write('   name load_seg_'+str(seg_number)+';\n')
+    elif phase_name == 'AC':
         f.write('   phases ACN;\n')
-        f.write('   nominal_voltage '+str(v_base)+';\n')
-        f.write('   load_class U;\n')
-        f.write('   constant_power_A '+np.array2string(S[seg_number][0][0],precision=2)+';\n')
-        f.write('   constant_power_C '+np.array2string(S[seg_number][2][0],precision=2)+';\n')
+        f.write('   constant_power_A ' + str_a + ';\n')
+        f.write('   constant_power_C ' + str_c + ';\n')
         f.write('   voltage_A '+va+';\n')
         f.write('   voltage_C '+vc+';\n')
-        f.write('}\n')
-    elif simlist[seg_number]['phase_name']=='BC':
-        f.write('object load {\n')
-        f.write('   parent '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
-        f.write('   name load_seg_'+str(seg_number)+';\n')
+    elif phase_name == 'BC':
         f.write('   phases BCN;\n')
-        f.write('   nominal_voltage '+str(v_base)+';\n')
-        f.write('   load_class U;\n')
-        f.write('   constant_power_B '+np.array2string(S[seg_number][1][0],precision=2)+';\n')
-        f.write('   constant_power_C '+np.array2string(S[seg_number][2][0],precision=2)+';\n')
+        f.write('   constant_power_B ' + str_b + ';\n')
+        f.write('   constant_power_C ' + str_c + ';\n')
         f.write('   voltage_B '+vb+';\n')
         f.write('   voltage_C '+vc+';\n')
-        f.write('}\n')
-    elif simlist[seg_number]['phase_name']=='A':
-        f.write('object load {\n')
-        f.write('   parent '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
-        f.write('   name load_seg_'+str(seg_number)+';\n')
+    elif phase_name == 'A':
         f.write('   phases AN;\n')
-        f.write('   nominal_voltage '+str(v_base)+';\n')
-        f.write('   load_class U;\n')
-        f.write('   constant_power_A '+np.array2string(S[seg_number][0][0],precision=2)+';\n')
+        f.write('   constant_power_A ' + str_a + ';\n')
         f.write('   voltage_A '+va+';\n')
-        f.write('}\n')
-    elif simlist[seg_number]['phase_name']=='B':
-        f.write('object load {\n')
-        f.write('   parent '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
-        f.write('   name load_seg_'+str(seg_number)+';\n')
+    elif phase_name == 'B':
         f.write('   phases BN;\n')
-        f.write('   nominal_voltage '+str(v_base)+';\n')
-        f.write('   load_class U;\n')
-        f.write('   constant_power_B '+np.array2string(S[seg_number][1][0],precision=2)+';\n')
+        f.write('   constant_power_B ' + str_b + ';\n')
         f.write('   voltage_B '+vb+';\n')
-        f.write('}\n')
-    elif simlist[seg_number]['phase_name']=='C':
-        f.write('object load {\n')
-        f.write('   parent '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
-        f.write('   name load_seg_'+str(seg_number)+';\n')
+    elif phase_name == 'C':
         f.write('   phases CN;\n')
-        f.write('   nominal_voltage '+str(v_base)+';\n')
-        f.write('   load_class U;\n')
-        f.write('   constant_power_C '+np.array2string(S[seg_number][2][0],precision=2)+';\n')
+        f.write('   constant_power_C ' + str_c + ';\n')
         f.write('   voltage_C '+vc+';\n')
-        f.write('}\n')
+    f.write('}\n')
     return
 
-def CreateLoad_agg(model_name,seg_number,glmfile):
+# Create loads   
+def CreateLoad(model_name,seg_number,glmfile,class_factors):
+    parent_name = model_name+ '_node_' + simlist[seg_number]['f_node']
+    load_name = 'load_seg_' + str(seg_number)
+    phase_name = simlist[seg_number]['phase_name']
+    p0 = S[seg_number][0][0]
+    p1 = S[seg_number][1][0]
+    p2 = S[seg_number][2][0]
+    if p0+p1+p2 < min_load_size:
+#        print ('skipping near-zero load', load_name, 'at', parent_name)
+        return
     f=open(glmfile,'a')
-    if simlist[seg_number]['junction']=='junction':
-        f.write('object load {\n')
-        f.write('   parent '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
-        f.write('   name load_junction_seg_'+str(seg_number)+';\n')
-        f.write('   phases '+simlist[seg_number]['phase_name']+'N;\n')
-        f.write('   nominal_voltage '+str(v_base)+';\n')
-        f.write('   load_class U;\n')
-        f.write('   constant_power_A '+np.array2string(S_agg[seg_number][0][0],precision=2)+';\n')
-        f.write('   constant_power_B '+np.array2string(S_agg[seg_number][1][0],precision=2)+';\n')
-        f.write('   constant_power_C '+np.array2string(S_agg[seg_number][2][0],precision=2)+';\n') 
-        f.write('   voltage_A '+va+';\n')
-        f.write('   voltage_B '+vb+';\n')
-        f.write('   voltage_C '+vc+';\n')
-        f.write('}\n')
+
+    # look for the original load class allocations from f_node, then i_node if not found
+    class_factor_node = parent_name
+    if class_factor_node not in class_factors:
+        class_factor_node = model_name + '_node_' + simlist[seg_number]['i_node']
+    if class_factor_node in class_factors:
+#        print (class_factor_node, class_factors[class_factor_node])
+        for cls in ['A', 'I', 'C', 'R', 'U']:
+            if class_factors[class_factor_node][cls] > 0.0:
+                CreateOneClassLoad (parent_name, load_name + '_' + cls, phase_name, cls, 
+                                    class_factors[class_factor_node][cls] * p0,
+                                    class_factors[class_factor_node][cls] * p1,
+                                    class_factors[class_factor_node][cls] * p2, f)
+                simple_kva[cls] += class_factors[class_factor_node][cls] * np.absolute(p0 + p1 + p2)
+    else:
+        print ('Defaulting to class U for load at', parent_name)
+        CreateOneClassLoad (parent_name, load_name + '_U', phase_name, 'U', p0, p1, p2, f)
+        simple_kva['U'] += np.absolute(p0 + p1 + p2)
+    return
+
+def CreateLoad_agg(model_name,seg_number,glmfile,class_factors):
+    parent_name = model_name+ '_node_' + simlist[seg_number]['f_node']
+    load_name = 'load_junction_seg_' + str(seg_number)
+    phase_name = simlist[seg_number]['phase_name']
+    p0 = S_agg[seg_number][0][0]
+    p1 = S_agg[seg_number][1][0]
+    p2 = S_agg[seg_number][2][0]
+    if simlist[seg_number]['junction'] != 'junction':
+#        print ('skipping non-junction aggregate load at', parent_name)
+        return
+    if p0+p1+p2 < min_load_size:
+#        print ('skipping near-zero aggregate load', load_name, 'at', parent_name)
+        return
+
+    f=open(glmfile,'a')
+
+    # look for the original load class allocations from f_node, then i_node if not found
+    class_factor_node = parent_name
+    if class_factor_node not in class_factors:
+        class_factor_node = model_name + '_node_' + simlist[seg_number]['i_node']
+    if class_factor_node in class_factors:
+#        print (class_factor_node, class_factors[class_factor_node])
+        for cls in ['A', 'I', 'C', 'R', 'U']:
+            if class_factors[class_factor_node][cls] > 0.0:
+                CreateOneClassLoad (parent_name, load_name + '_' + cls, phase_name, cls, 
+                                    class_factors[class_factor_node][cls] * p0,
+                                    class_factors[class_factor_node][cls] * p1,
+                                    class_factors[class_factor_node][cls] * p2, f)
+                simple_kva[cls] += class_factors[class_factor_node][cls] * np.absolute(p0 + p1 + p2)
+    else:
+        print ('Defaulting to class U for aggregate load at', parent_name)
+        CreateOneClassLoad (parent_name, load_name + '_U', phase_name, 'U', p0, p1, p2, f)
+        simple_kva['U'] += np.absolute(p0 + p1 + p2)
     return
 
 #*********************************************
@@ -744,6 +798,7 @@ def CreateCurrdump(glmfile,outputfileName,):
     f.write("	 filename "+outputfileName+";\n")
     f.write("}\n\n")
     return
+
 def errorplot(baseV):
     global errora
     global errorb
@@ -787,8 +842,6 @@ def errorplot(baseV):
     plt.ylabel('V Error [p.u.]')
     plt.show()
     return
-
-
 
 #%% begin to simplify feeder model
 def _one_test(k):
@@ -856,6 +909,7 @@ def _one_test(k):
             line,octr = obj(None,model,line,itr,h,octr)
     
     # construct a graph of the model, starting with known links
+    global G
     G = nx.Graph()
     for t in model:
         if is_edge_class(t):
@@ -882,20 +936,12 @@ def _one_test(k):
                 else:
                     print('orphaned node', t, o)
     
-#    swing_node = ''
-#    for n1, data in G.nodes(data=True):
-#        if 'nclass' in data:
-#            if 'bustype' in data['ndata']:
-#                if data['ndata']['bustype'] == 'SWING':
-#                    swing_node = n1   
-
-
     getV(mname,
          mname+'_sim_list.csv',
          'Voltage_Dump_' + mname + '.csv', # mname+'_voltage.csv',
          mname+'_voltage1.csv')   
     
-    # creat the list with given node : get branch name by networkx 
+    # create the list with given node : get branch name by networkx 
     i_branch=[]
     f_branch=[]
     segment_node=[]
@@ -934,7 +980,68 @@ def _one_test(k):
              'Current_Dump_' + mname + '.csv',  # mname+'_current.csv',
              mname+'_current1.csv')
     calculate_Z_S()
+
+    # we need the load connected to each primary node, by load_class
+    swing_node = ''
+    for n1, data in G.nodes(data=True):
+        if 'nclass' in data:
+            if data['nclass'] == 'node':
+                data['ndata']['class_load'] = {'A':0,'I':0,'C':0,'R':0,'U':0}
+            if 'bustype' in data['ndata']:
+                if data['ndata']['bustype'] == 'SWING':
+                    swing_node = n1
+    print ('swing node is', swing_node)
+    retained_nodes = set()
+    retained_nodes.add(swing_node)
+    for n in simlist:
+        retained_nodes.add(mname + '_node_' + n['i_node'])
+        retained_nodes.add(mname + '_node_' + n['f_node'])
+#    print (retained_nodes)
+
+    total_kva = {}
+    class_count = {}
+    for cls in ['A', 'I', 'C', 'R', 'U']:
+        total_kva[cls] = 0.0
+        class_count[cls] = 0
+    for n1, data in G.nodes(data=True):
+        if 'ndata' in data:
+            (kva, load_class) = accumulate_load_kva (data['ndata'])
+            if kva > 0:
+                total_kva[load_class] += kva
+                class_count[load_class] += 1
+                nodes = nx.shortest_path(G, n1, swing_node)
+                # assign this class load to the closest upstream primary node that's in the retained set
+                for x in nodes:
+                    n2 = G.node[x]
+                    if 'nclass' in n2:
+                        if n2['nclass'] == 'node':
+                            if x in retained_nodes:
+#                               if load_class == 'C':
+#                                   print ('assigning C load', kva, 'at', n1, 'to', x)
+#                                   for y in nodes:
+#                                       print ('  ', y)
+#                                       if y == x:
+#                                           break
+                                n2['ndata']['class_load'][load_class] += kva
+                                break
+    count_summary = 0
+    class_factors = {}
+    for o in model['node']:
+        cls_ld = G.node[o]['ndata']['class_load']
+        cls_a = cls_ld['A']
+        cls_i = cls_ld['I']
+        cls_c = cls_ld['C']
+        cls_r = cls_ld['R']
+        cls_u = cls_ld['U']
+        cls_sum = cls_a + cls_i + cls_c + cls_r + cls_u
+        if cls_sum > 0.0:
+            count_summary += 1
+#            print ('Node Summary for', o, 'A={:.2f} I={:.2f} C={:.2f} R={:.2f} U={:.2f}'.format (cls_a, cls_i, cls_c, cls_r, cls_u))
+            class_factors[o] = {'A':cls_a/cls_sum, 'I':cls_i/cls_sum, 'C':cls_c/cls_sum, 'R':cls_r/cls_sum, 'U':cls_u/cls_sum}
+    print ('summarized load class allocation factors at', count_summary, 'retained primary nodes')
     
+    global simple_kva
+    simple_kva = {'A':0, 'I': 0, 'C': 0, 'R': 0, 'U': 0}
     CreateHeader(sim_fname,mname,tax[k][5],v_base,va,vb,vc,tax[k][6],tax[k][7])
     for n in range(len(simlist)):
         CreateNode(mname,n,sim_fname)
@@ -943,11 +1050,15 @@ def _one_test(k):
     for n in range(len(simlist)):        
         CreateLine(mname,n,sim_fname)
     for n in range(len(simlist)):        
-        CreateLoad(mname,n,sim_fname)
+        CreateLoad(mname,n,sim_fname,class_factors)
     for n in range(len(simlist)):  
-        CreateLoad_agg(mname,n,sim_fname)
+        CreateLoad_agg(mname,n,sim_fname,class_factors)
     CreateVoltdump(sim_fname,mname+'_node_voltage_sim.csv')
     CreateCurrdump(sim_fname,mname+'_branch_current_sim.csv')
+
+    for cls in ['A', 'I', 'C', 'R', 'U']:
+        print ('class', cls, class_count[cls], 'customers = {:.2f} kva'.format(total_kva[cls]), 
+            'simplified to {:.2f} kva'.format(0.001 * simple_kva[cls]))
 # run the simplified feeder model
     os.system('gridlabd '+sim_fname)
     getV_sim(mname,mname+'_sim_list.csv',mname+'_node_voltage_sim.csv',mname+'_node_voltage_sim1.csv')
@@ -960,6 +1071,8 @@ def _one_test(k):
     print('Average error is '+str(errormean))
     
 if __name__ == '__main__':
+#    _one_test(19)
+#    print (simlist)
     # index of feeder model   16,17,19,20 is avaliable
     for k in (16,17,19,20):
         _one_test(k)
