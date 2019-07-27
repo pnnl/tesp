@@ -30,7 +30,7 @@ import re;
 import os.path;
 import networkx as nx;
 import numpy as np;
-from math import sqrt;
+import math;
 import json; 
 
 forERCOT = False
@@ -381,6 +381,18 @@ commercial_skew_std = 1800
 residential_skew_max = 8100
 residential_skew_std = 2700
 
+# commercial configuration data; over_sizing_factor is by region
+c_z_pf = 0.97
+c_i_pf = 0.97
+c_p_pf = 0.97
+c_z_frac = 0.2
+c_i_frac = 0.4
+c_p_frac = 1.0 - c_z_frac - c_i_frac
+normalized_loadshape_scalar = 1.0
+cooling_COP = 3.0
+light_scalar_comm = 1.0
+over_sizing_factor = [0.1, 0.2, 0.2, 0.3, 0.3, 0.3]
+
 # Index 0 is the level (minus one)
 # Rceiling, Rwall, Rfloor, WindowLayers, WindowGlass,Glazing,WindowFrame,Rdoor,AirInfil,COPhi,COPlo
 singleFamilyProperties = [[16.0, 10.0, 10.0, 1, 1, 1, 1,   3,  .75, 2.8, 2.4],
@@ -500,7 +512,7 @@ def parse_kva_old(arg):
         p /= 1000.0
         q /= 1000.0
 
-    return sqrt (p*p + q*q)
+    return math.sqrt (p*p + q*q)
 
 def parse_kva(cplx): # this drops the sign of p and q
     """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
@@ -514,7 +526,7 @@ def parse_kva(cplx): # this drops the sign of p and q
     toks = list(filter(None,re.split('[\+j-]',cplx)))
     p = float(toks[0])
     q = float(toks[1])
-    return 0.001 * sqrt(p*p + q*q)
+    return 0.001 * math.sqrt(p*p + q*q)
 
 # leave off intermediate fuse sizes 8, 12, 20, 30, 50, 80, 140
 # leave off 6, 10, 15, 25 from the smallest sizes, too easily blown
@@ -1076,6 +1088,8 @@ def identify_ercot_houses (model, h, t, avgHouse, rgn):
     print ('cooling bins target', cooling_bins)
     print ('heating bins target', heating_bins)
 
+extra_billing_meters = set()
+
 def replace_commercial_loads (model, h, t, avgBuilding):
   """For the full-order feeders, scan each load with load_class==C to determine the number of zones it should have
 
@@ -1102,11 +1116,12 @@ def replace_commercial_loads (model, h, t, avgBuilding):
           total_comm_kva += kva
           vln = float(model[t][o]['nominal_voltage'])
           nphs = 0
-          if 'A' in model[t][o]['phases']:
+          phases = model[t][o]['phases']
+          if 'A' in phases:
             nphs += 1
-          if 'B' in model[t][o]['phases']:
+          if 'B' in phases:
             nphs += 1
-          if 'C' in model[t][o]['phases']:
+          if 'C' in phases:
             nphs += 1
           nzones = int ((kva / avgBuilding) + 0.5)
           total_comm_zones += nzones
@@ -1122,9 +1137,11 @@ def replace_commercial_loads (model, h, t, avgBuilding):
           else:
             comm_type = 'ZIPLOAD'
             total_zipload += 1
-          comm_loads[o] = [model[t][o]['parent'], comm_type, nzones, kva, nphs, vln]
+          mtr = model[t][o]['parent']
+          extra_billing_meters.add(mtr)
+          comm_loads[o] = [mtr, comm_type, nzones, kva, nphs, phases, vln]
           model[t][o]['groupid'] = comm_type + '_' + str(nzones)
-#          del model[t][o]
+          del model[t][o]
   print ('found', total_commercial, 'commercial loads totaling ', '{:.2f}'.format(total_comm_kva), 'KVA')
   print (total_office, 'offices,', total_bigbox, 'bigbox retail,', total_stripmall, 'strip malls,',
          total_zipload, 'ZIP loads')
@@ -1245,10 +1262,119 @@ def write_small_loads(basenode, op, vnom):
   print ('  power_12_reac 8.0;', file=op)
   print ('}', file=op)
 
-def write_commercial_loads(key, op):
+def write_one_commercial_zone(bldg, op):
+  """Write one pre-configured commercial zone as a house
+
+  Args:
+      bldg: dictionary of GridLAB-D house and zipload attributes
+      op (file): open file to write to
+  """
+  print ('object house {', file=op)
+  print ('  name', bldg['zonename'] + ';', file=op)
+  print ('  parent', bldg['mtr'] + ';', file=op)
+  print ('  groupid', bldg['groupid'] + ';', file=op)
+  print ('  motor_model BASIC;', file=op)
+  print ('  schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
+  print ('  floor_area {:.0f};'.format(bldg['floor_area']), file=op)
+  print ('  design_internal_gains {:.0f};'.format(bldg['int_gains'] * bldg['floor_area'] * 3.413), file=op)
+  print ('  number_of_doors {:.0f};'.format(bldg['no_of_doors']), file=op)
+  print ('  aspect_ratio {:.2f};'.format(bldg['aspect_ratio']), file=op)
+  print ('  total_thermal_mass_per_floor_area {:1.2f};'.format(bldg['thermal_mass_per_floor_area']), file=op)
+  print ('  interior_surface_heat_transfer_coeff {:1.2f};'.format(bldg['surface_heat_trans_coeff']), file=op)
+  print ('  interior_exterior_wall_ratio {:.2f};'.format(bldg['interior_exterior_wall_ratio']), file=op)
+  print ('  exterior_floor_fraction {:.3f};'.format(bldg['exterior_floor_fraction']), file=op)
+  print ('  exterior_ceiling_fraction {:.3f};'.format(bldg['exterior_ceiling_fraction']), file=op)
+  print ('  Rwall {:2.1f};'.format(bldg['Rwall']), file=op)
+  print ('  Rroof {:2.1f};'.format(bldg['Rroof']), file=op)
+  print ('  Rfloor {:.2f};'.format(bldg['Rfloor']), file=op)
+  print ('  Rdoors {:2.1f};'.format(bldg['Rdoors']), file=op)
+  print ('  exterior_wall_fraction {:.2f};'.format(bldg['exterior_wall_fraction']), file=op)
+  print ('  glazing_layers {:s};'.format(bldg['glazing_layers']), file=op)
+  print ('  glass_type {:s};'.format(bldg['glass_type']), file=op)
+  print ('  glazing_treatment {:s};'.format(bldg['glazing_treatment']), file=op)
+  print ('  window_frame {:s};'.format(bldg['window_frame']), file=op)
+  print ('  airchange_per_hour {:.2f};'.format(bldg['airchange_per_hour']), file=op)
+  print ('  window_wall_ratio {:0.3f};'.format(bldg['window_wall_ratio']), file=op)
+  print ('  heating_system_type {:s};'.format(bldg['heat_type']), file=op)
+  print ('  auxiliary_system_type {:s};'.format(bldg['aux_type']), file=op)
+  print ('  fan_type {:s};'.format(bldg['fan_type']), file=op)
+  print ('  cooling_system_type {:s};'.format(bldg['cool_type']), file=op)
+  print ('  air_temperature {:.2f};'.format(bldg['init_temp']), file=op)
+  print ('  mass_temperature {:.2f};'.format(bldg['init_temp']), file=op)
+  print ('  over_sizing_factor {:.1f};'.format(bldg['os_rand']), file=op)
+  print ('  cooling_COP {:2.2f};'.format(bldg['COP_A']), file=op)
+  print ('  cooling_setpoint 80.0; // {:s}_cooling'.format(bldg['base_schedule']), file=op)
+  print ('  heating_setpoint 60.0; // {:s}_heating'.format(bldg['base_schedule']), file=op)
+  print ('  object ZIPload { // lights', file=op)
+  print ('    schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
+  print ('    heatgain_fraction 1.0;', file=op)
+  print ('    power_fraction {:.2f};'.format(bldg['c_p_frac']), file=op)
+  print ('    impedance_fraction {:.2f};'.format(bldg['c_z_frac']), file=op)
+  print ('    current_fraction {:.2f};'.format(bldg['c_i_frac']), file=op)
+  print ('    power_pf {:.2f};'.format(bldg['c_p_pf']), file=op)
+  print ('    current_pf {:.2f};'.format(bldg['c_i_pf']), file=op)
+  print ('    impedance_pf {:.2f};'.format(bldg['c_z_pf']), file=op)
+  print ('    base_power {:s}_lights*{:.2f};'.format(bldg['base_schedule'], bldg['adj_lights']), file=op)
+  print ('  };', file=op)
+  print ('  object ZIPload { // plug loads', file=op)
+  print ('    schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
+  print ('    heatgain_fraction 1.0;', file=op)
+  print ('    power_fraction {:.2f};'.format(bldg['c_p_frac']), file=op)
+  print ('    impedance_fraction {:.2f};'.format(bldg['c_z_frac']), file=op)
+  print ('    current_fraction {:.2f};'.format(bldg['c_i_frac']), file=op)
+  print ('    power_pf {:.2f};'.format(bldg['c_p_pf']), file=op)
+  print ('    current_pf {:.2f};'.format(bldg['c_i_pf']), file=op)
+  print ('    impedance_pf {:.2f};'.format(bldg['c_z_pf']), file=op)
+  print ('    base_power {:s}_plugs*{:.2f};'.format(bldg['base_schedule'], bldg['adj_plugs']), file=op)
+  print ('  };', file=op)
+  print ('  object ZIPload { // gas waterheater', file=op)
+  print ('    schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
+  print ('    heatgain_fraction 1.0;', file=op)
+  print ('    power_fraction 0;', file=op)
+  print ('    impedance_fraction 0;', file=op)
+  print ('    current_fraction 0;', file=op)
+  print ('    power_pf 1;', file=op)
+  print ('    base_power {:s}_gas*{:.2f};'.format(bldg['base_schedule'], bldg['adj_gas']), file=op)
+  print ('  };', file=op)
+  print ('  object ZIPload { // exterior lights', file=op)
+  print ('    schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
+  print ('    heatgain_fraction 0.0;', file=op)
+  print ('    power_fraction {:.2f};'.format(bldg['c_p_frac']), file=op)
+  print ('    impedance_fraction {:.2f};'.format(bldg['c_z_frac']), file=op)
+  print ('    current_fraction {:.2f};'.format(bldg['c_i_frac']), file=op)
+  print ('    power_pf {:.2f};'.format(bldg['c_p_pf']), file=op)
+  print ('    current_pf {:.2f};'.format(bldg['c_i_pf']), file=op)
+  print ('    impedance_pf {:.2f};'.format(bldg['c_z_pf']), file=op)
+  print ('    base_power {:s}_exterior*{:.2f};'.format(bldg['base_schedule'], bldg['adj_ext']), file=op)
+  print ('  };', file=op)
+  print ('  object ZIPload { // occupancy', file=op)
+  print ('    schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
+  print ('    heatgain_fraction 1.0;', file=op)
+  print ('    power_fraction 0;', file=op)
+  print ('    impedance_fraction 0;', file=op)
+  print ('    current_fraction 0;', file=op)
+  print ('    power_pf 1;', file=op)
+  print ('    base_power {:s}_occupancy*{:.2f};'.format(bldg['base_schedule'], bldg['adj_occ']), file=op)
+  print ('  };', file=op)
+  if metrics_interval > 0:
+    print ('  object metrics_collector {', file=op)
+    print ('    interval', str(metrics_interval) + ';', file=op)
+    print ('  };', file=op)
+  print ('}', file=op)
+
+def randomize_commercial_skew():
+  sk = commercial_skew_std * np.random.randn ()
+  if sk < -commercial_skew_max:
+    sk = -commercial_skew_max
+  elif sk > commercial_skew_max:
+    sk = commercial_skew_max
+  return sk
+
+def write_commercial_loads(rgn, key, op):
   """Put commercial building zones and ZIP loads into the model
 
   Args:
+      rgn (int): region 1..5 where the building is located
       key (str): GridLAB-D load name that is being replaced
       op (file): open file to write to
   """
@@ -1257,14 +1383,228 @@ def write_commercial_loads(key, op):
   nz = int(comm_loads[key][2])
   kva = float(comm_loads[key][3])
   nphs = int(comm_loads[key][4])
-  vln = float(comm_loads[key][5])
+  phases = comm_loads[key][5]
+  vln = float(comm_loads[key][6])
+  idx = mtr.rfind('_')
+  loadnum = int(mtr[idx+1:])
 
-  print ('// load', key, 'parent', mtr, 'type', comm_type, 'nz', nz, 'kva', '{:.3f}'.format(kva),
-         'nphs', nphs, 'vln', '{:.3f}'.format(vln), file=op)
+  bldg = {}
+  bldg['mtr'] = mtr
+  bldg['groupid'] = comm_type + '_' + str(loadnum)
 
-  for i in range(nz):
-    zonename = gld_strict_name (key + '_zone_' + str(i+1))
-    print ('//   ' + zonename, file=op)
+  print ('// load', key, 'parent', bldg['mtr'], 'type', comm_type, 'nz', nz, 'kva', '{:.3f}'.format(kva),
+         'nphs', nphs, 'phases', phases, 'vln', '{:.3f}'.format(vln), file=op)
+
+  bldg['fan_type'] = 'ONE_SPEED'
+  bldg['heat_type'] = 'GAS'
+  bldg['cool_type'] = 'ELECTRIC'
+  bldg['aux_type'] = 'NONE'
+  bldg['no_of_stories'] = 1
+  bldg['surface_heat_trans_coeff'] = 0.59
+  bldg['oversize'] = over_sizing_factor[rgn-1]
+  bldg['glazing_layers'] = 'TWO'
+  bldg['glass_type'] = 'GLASS'
+  bldg['glazing_treatment'] = 'LOW_S'
+  bldg['window_frame'] = 'NONE'
+  bldg['c_z_frac'] = c_z_frac
+  bldg['c_i_frac'] = c_i_frac
+  bldg['c_p_frac'] = c_p_frac
+  bldg['c_z_pf'] = c_z_pf
+  bldg['c_i_pf'] = c_i_pf
+  bldg['c_p_pf'] = c_p_pf
+
+  if comm_type == 'OFFICE':
+    bldg['ceiling_height'] = 13.
+    bldg['airchange_per_hour'] = 0.69
+    bldg['Rroof'] = 19.
+    bldg['Rwall'] = 18.3
+    bldg['Rfloor'] = 46.
+    bldg['Rdoors'] = 3.
+    bldg['int_gains'] = 3.24  # W/sf
+    bldg['thermal_mass_per_floor_area'] = 1 # TODO
+    bldg['exterior_ceiling_fraction'] = 1 # TODO
+    bldg['base_schedule'] = 'office'
+    num_offices = int(round(nz/15))  # each with 3 floors of 5 zones
+    for jjj in range(num_offices):
+      floor_area_choose = 40000. * (0.5 * np.random.random() + 0.5)
+      for floor in range(1, 4):
+        bldg['skew_value'] = randomize_commercial_skew()
+        total_depth = math.sqrt(floor_area_choose / (3. * 1.5))
+        total_width = 1.5 * total_depth
+        if floor == 3:
+          bldg['exterior_ceiling_fraction'] = 1
+        else:
+          bldg['exterior_ceiling_fraction'] = 0
+        for zone in range(1, 6):
+          if zone == 5:
+            bldg['window_wall_ratio'] = 0  # this was not in the CCSI version
+            bldg['exterior_wall_fraction'] = 0
+            w = total_depth - 30.
+            d = total_width - 30.
+          else:
+            bldg['window_wall_ratio'] = 0.33
+            d = 15.
+            if zone == 1 or zone == 3:
+              w = total_width - 15.
+            else:
+              w = total_depth - 15.
+            bldg['exterior_wall_fraction'] = w / (2. * (w + d))
+
+          floor_area = w * d
+          bldg['floor_area'] = floor_area
+          bldg['aspect_ratio'] = w / d
+
+          if floor > 1:
+            bldg['exterior_floor_fraction'] = 0
+          else:
+            bldg['exterior_floor_fraction'] = w / (2. * (w + d)) / (floor_area / (floor_area_choose / 3.))
+
+          bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * np.random.random())
+          bldg['interior_exterior_wall_ratio'] = floor_area / (bldg['ceiling_height'] * 2. * (w + d)) - 1. \
+            + bldg['window_wall_ratio'] * bldg['exterior_wall_fraction']
+          bldg['no_of_doors'] = 0.1  # will round to zero, presumably the exterior doors are treated like windows
+
+          bldg['init_temp'] = 68. + 4. * np.random.random()
+          bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * np.random.random())
+          bldg['COP_A'] = cooling_COP * (0.8 + 0.4 * np.random.random())
+
+          bldg['adj_lights'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.  # randomize 10# then convert W/sf -> kW
+          bldg['adj_plugs'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+          bldg['adj_gas'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+          bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+          bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+
+          bldg['zonename'] = gld_strict_name (key + '_bldg_' + str(jjj+1) + '_floor_' + str(floor) + '_zone_' + str(zone))
+          write_one_commercial_zone (bldg, op)
+
+  elif comm_type == 'BIGBOX':
+    bldg['ceiling_height'] = 14.
+    bldg['airchange_per_hour'] = 1.5
+    bldg['Rroof'] = 19.
+    bldg['Rwall'] = 18.3
+    bldg['Rfloor'] = 46.
+    bldg['Rdoors'] = 3.
+    bldg['int_gains'] = 3.6  # W/sf
+    bldg['thermal_mass_per_floor_area'] = 1 # TODO
+    bldg['exterior_ceiling_fraction'] = 1 # TODO
+    bldg['base_schedule'] = 'bigbox'
+
+    num_bigboxes = int(round(nz / 6.))
+    for jjj in range(num_bigboxes):
+      bldg['skew_value'] = randomize_commercial_skew()
+      floor_area_choose = 20000. * (0.5 + 1. * np.random.random())
+      floor_area = floor_area_choose / 6.
+      bldg['floor_area'] = floor_area
+      bldg['thermal_mass_per_floor_area'] = 3.9 * (0.8 + 0.4 * np.random.random())  # +/- 20#
+      bldg['exterior_ceiling_fraction'] = 1.
+      bldg['aspect_ratio'] = 1.28301275561855
+      total_depth = math.sqrt(floor_area_choose / bldg['aspect_ratio'])
+      total_width = bldg['aspect_ratio'] * total_depth
+      d = total_width / 3.
+      w = total_depth / 2.
+
+      for zone in range(1,7):
+        if zone == 2 or zone == 5:
+          bldg['exterior_wall_fraction'] = d / (2. * (d + w))
+          bldg['exterior_floor_fraction'] = (0. + d) / (2. * (total_width + total_depth)) / (floor_area / floor_area_choose)
+        else:
+          bldg['exterior_wall_fraction'] = 0.5
+          bldg['exterior_floor_fraction'] = (w + d) / (2. * (total_width + total_depth)) / (floor_area / floor_area_choose)
+        if zone == 2:
+          bldg['window_wall_ratio'] = 0.76
+        else:
+          bldg['window_wall_ratio'] = 0.
+
+        if zone < 4:
+          bldg['no_of_doors'] = 0.1  # this will round to 0
+        elif zone == 5:
+          bldg['no_of_doors'] = 24.
+        else:
+          bldg['no_of_doors'] = 1.
+
+        bldg['interior_exterior_wall_ratio'] = (floor_area + bldg['no_of_doors'] * 20.) \
+          / (bldg['ceiling_height'] * 2. * (w + d)) - 1. + bldg['window_wall_ratio'] * bldg['exterior_wall_fraction']
+        bldg['init_temp'] = 68. + 4. * np.random.random()
+        bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * np.random.random())
+        bldg['COP_A'] = cooling_COP * (0.8 + 0.4 * np.random.random())
+
+        bldg['adj_lights'] = 1.2 * (0.9 + 0.1 * np.random.random()) * floor_area / 1000.  # randomize 10# then convert W/sf -> kW
+        bldg['adj_plugs'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+        bldg['adj_gas'] = (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+        bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+        bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+
+        bldg['zonename'] = gld_strict_name (key + '_bldg_' + str(jjj+1) + '_zone_' + str(zone))
+        write_one_commercial_zone (bldg, op)
+
+  elif comm_type == 'STRIPMALL':
+    bldg['ceiling_height'] = 12 # T)D)
+    bldg['airchange_per_hour'] = 1.76
+    bldg['Rroof'] = 19.
+    bldg['Rwall'] = 18.3
+    bldg['Rfloor'] = 40.
+    bldg['Rdoors'] = 3.
+    bldg['int_gains'] = 3.6  # W/sf
+    bldg['exterior_ceiling_fraction'] = 1.
+    bldg['base_schedule'] = 'stripmall'
+    midzone = int (math.floor(nz / 2.) + 1.)
+    for zone in range (1, nz+1):
+      bldg['skew_value'] = randomize_commercial_skew()
+      floor_area_choose = 2400. * (0.7 + 0.6 * np.random.random())
+      bldg['thermal_mass_per_floor_area'] = 3.9 * (0.5 + 1. * np.random.random())
+      bldg['no_of_doors'] = 1
+      if zone == 1 or zone == midzone:
+        floor_area = floor_area_choose
+        bldg['aspect_ratio'] = 1.5
+        bldg['window_wall_ratio'] = 0.05
+        bldg['exterior_wall_fraction'] = 0.4
+        bldg['exterior_floor_fraction'] = 0.8
+        bldg['interior_exterior_wall_ratio'] = -0.05
+      else:
+        floor_area = floor_area_choose / 2.
+        bldg['aspect_ratio'] = 3.0
+        bldg['window_wall_ratio'] = 0.03
+        if zone == nz:
+          bldg['exterior_wall_fraction'] = 0.63
+          bldg['exterior_floor_fraction'] = 2.
+        else:
+          bldg['exterior_wall_fraction'] = 0.25
+          bldg['exterior_floor_fraction'] = 0.8
+        bldg['interior_exterior_wall_ratio'] = -0.40
+
+      bldg['floor_area'] = floor_area
+
+      bldg['init_temp'] = 68. + 4. * np.random.random()
+      bldg['os_rand'] = bldg['oversize'] * (0.8 + 0.4 * np.random.random())
+      bldg['COP_A'] = cooling_COP * (0.8 + 0.4 * np.random.random())
+
+      bldg['adj_lights'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.
+      bldg['adj_plugs'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.
+      bldg['adj_gas'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.
+      bldg['adj_ext'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.
+      bldg['adj_occ'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.
+
+      bldg['zonename'] = gld_strict_name (key + '_zone_' + str(zone))
+      write_one_commercial_zone (bldg, op)
+
+  elif comm_type == 'ZIPLOAD':
+    phsva = 1000.0 * kva / nphs
+    print ('object load { // street lights', file=op)
+    print ('  name {:s};'.format (key + '_streetlights'), file=op)
+    print ('  parent {:s};'.format (mtr), file=op)
+    print ('  groupid STREETLIGHTS;', file=op)
+    print ('  nominal_voltage {:2f};'.format(vln), file=op)
+    print ('  phases {:s};'.format (phases), file=op)
+    for phs in ['A', 'B', 'C']:
+      if phs in phases:
+        print ('  impedance_fraction_{:s} {:f};'.format (phs, c_z_frac), file=op)
+        print ('  current_fraction_{:s} {:f};'.format (phs, c_i_frac), file=op)
+        print ('  power_fraction_{:s} {:f};'.format (phs, c_p_frac), file=op)
+        print ('  impedance_pf_{:s} {:f};'.format (phs, c_z_pf), file=op)
+        print ('  current_pf_{:s} {:f};'.format (phs, c_i_pf), file=op)
+        print ('  power_pf_{:s} {:f};'.format (phs, c_p_pf), file=op)
+        print ('  base_power_{:s} street_lighting*{:.2f};'.format (phs, light_scalar_comm * phsva), file=op)
+    print ('};', file=op)
 
 def write_houses(basenode, op, vnom):
     """Put houses, along with solar panels and batteries, onto a node
@@ -1662,7 +2002,7 @@ def write_substation (op, name, phs, vnom, vll):
     print ('  phases', phs + ';', file=op)
     print ('  configuration substation_xfmr_config;', file=op)
     print ('}', file=op)
-    vsrcln = transmissionVoltage / sqrt (3.0)
+    vsrcln = transmissionVoltage / math.sqrt (3.0)
     print ('object substation {', file=op)
     print ('  name network_node;', file=op)
     print ('  groupid', base_feeder_name + ';', file=op)
@@ -1815,6 +2155,12 @@ def write_voltage_class (model, h, t, op, vprim, vll, secmtrnode):
                 if str.find(phs, 'C') >= 0:
                     print('  voltage_1 ' + vstartc + ';', file=op)
                     print('  voltage_2 ' + vstartc + ';', file=op)
+            if name in extra_billing_meters:
+              write_tariff (op)
+              if metrics_interval > 0:
+                  print ('  object metrics_collector {', file=op)
+                  print ('    interval', str(metrics_interval) + ';', file=op)
+                  print ('  };', file=op)
             print('}', file=op)
 
 def write_xfmr_config (key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln, op):
@@ -2219,7 +2565,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
                 if 'C' in seg_phs:
                     nphs += 1
                 if nphs == 3:
-                    amps = 1000.0 * seg_kva / sqrt(3.0) / vll
+                    amps = 1000.0 * seg_kva / math.sqrt(3.0) / vll
                 elif nphs == 2:
                     amps = 1000.0 * seg_kva / 2.0 / vln
                 else:
@@ -2264,7 +2610,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
             for key in small_nodes:
                 write_small_loads (key, op, 120.0)
             for key in comm_loads:
-                write_commercial_loads (key, op)
+                write_commercial_loads (rgn, key, op)
 
         write_voltage_class (model, h, 'node', op, vln, vll, secnode)
         write_voltage_class (model, h, 'meter', op, vln, vll, secnode)
@@ -2275,7 +2621,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
             row = Find3PhaseXfmr (Eplus_kVA)
             actual_kva = row[0]
             watts_per_phase = 1000.0 * actual_kva / 3.0
-            Eplus_vln = Eplus_Volts / sqrt (3.0)
+            Eplus_vln = Eplus_Volts / math.sqrt (3.0)
             vstarta = format(Eplus_vln,'.2f') + '+0.0j'
             vstartb = format(-0.5*Eplus_vln,'.2f') + format(-0.866025*Eplus_vln,'.2f') + 'j'
             vstartc = format(-0.5*Eplus_vln,'.2f') + '+' + format(0.866025*Eplus_vln,'.2f') + 'j'

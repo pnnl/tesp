@@ -153,6 +153,8 @@ def ProcessGLM (fileroot):
             if lst[1] == 'triplex_meter':
                 inTriplexMeters = True
             if lst[1] == 'house':
+                houseClass = ''
+                houseParent = ''
                 inHouses = True
             if lst[1] == 'fncs_msg':
                 inFNCSmsg = True
@@ -189,6 +191,10 @@ def ProcessGLM (fileroot):
             if inHouses == True:
                 if lst[0] == 'name' and endedHouse == False:
                     houseName = lst[1].strip(';')
+                if lst[0] == 'parent':
+                    houseParent = lst[1].strip(';')
+                if lst[0] == 'groupid':
+                    houseClass = lst[1].strip(';')
                 if lst[0] == 'air_temperature':
                     air_temperature = lst[1].strip(';')
                 if lst[0] == 'cooling_system_type':
@@ -199,6 +205,8 @@ def ProcessGLM (fileroot):
                 inHouses = False
                 endedHouse = False
                 if isELECTRIC == True:
+                    if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
+                        meterName = houseParent
                     nAirConditioners += 1
                     if np.random.uniform (0, 1) <= agent_participation:
                         nControllers += 1
@@ -223,7 +231,8 @@ def ProcessGLM (fileroot):
                     ramp = np.random.uniform (ramp_lo, ramp_hi)
                     ctrl_cap = np.random.uniform (ctrl_cap_lo, ctrl_cap_hi)
                     controllers[controller_name] = {'control_mode': control_mode, 
-                        'houseName': houseName, 
+                        'houseName': houseName,
+                        'houseClass': houseClass, 
                         'meterName': meterName, 
                         'period': periodController,
                         'wakeup_start': float('{:.3f}'.format(wakeup_start)),
@@ -361,11 +370,15 @@ def ProcessGLM (fileroot):
         print ('subscribe "precommit:Eplus_meter.monthly_fee <- eplus_json/monthly_fee";', file=op)
     for key, val in controllers.items():
         houseName = val['houseName']
+        houseClass = val['houseClass']
         meterName = val['meterName']
         print ('publish "commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature";', file=op)
         print ('publish "commit:' + houseName + '.power_state -> ' + houseName + '/power_state";', file=op)
         print ('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
-        print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
+        if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
+            print ('publish "commit:' + meterName + '.measured_voltage_A -> ' + meterName + '/measured_voltage_1";', file=op)
+        else:
+            print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
         print ('subscribe "precommit:' + houseName + '.cooling_setpoint <- substation/' + key + '/cooling_setpoint";', file=op)
         print ('subscribe "precommit:' + houseName + '.heating_setpoint <- substation/' + key + '/heating_setpoint";', file=op)
         print ('subscribe "precommit:' + houseName + '.thermostat_deadband <- substation/' + key + '/thermostat_deadband";', file=op)

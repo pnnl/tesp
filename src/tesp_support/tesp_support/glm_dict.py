@@ -207,6 +207,8 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				if (lst[0] == 'cooling_setpoint') or (lst[0] == 'heating_setpoint'):
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
+					if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
+						lastBillingMeter = parent
 					houses[name] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'sqft':sqft,'stories':stories,'doors':doors,
 						'thermal_integrity':thermal_integrity,'cooling':cooling,'heating':heating,'wh_gallons':0,'house_class':house_class}
 					lastHouse = name
