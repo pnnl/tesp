@@ -2596,12 +2596,15 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         write_link_class (model, h, 'capacitor', seg_loads, op)
 
         if forERCOT == True:
+            replace_commercial_loads (model, h, 'load', 0.001 * avgcommercial)
             identify_ercot_houses (model, h, 'load', 0.001 * avghouse, rgn)
             connect_ercot_houses (model, h, op, vln, 120.0)
             for key in house_nodes:
                 write_houses (key, op, 120.0)
             for key in small_nodes:
                 write_ercot_small_loads (key, op, vln)
+            for key in comm_loads:
+                write_commercial_loads (rgn, key, op)
         else:
             replace_commercial_loads (model, h, 'load', 0.001 * avgcommercial)
             identify_xfmr_houses (model, h, 'transformer', seg_loads, 0.001 * avghouse, rgn)
