@@ -10,6 +10,20 @@ import sys
 from copy import deepcopy
 from enum import IntEnum
 
+# GridLAB-D name should not begin with a number, or contain '-' for FNCS
+def gld_strict_name(val):
+    """Sanitizes a name for GridLAB-D publication to FNCS
+
+    Args:
+        val (str): the input name
+
+    Returns:
+        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
+    """
+    if val[0].isdigit():
+        val = 'gld_' + val
+    return val.replace ('-', '_')
+
 class ClearingType (IntEnum):
     """ Describes the market clearing type
     """

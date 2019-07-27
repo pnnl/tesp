@@ -31,7 +31,8 @@ import os.path;
 import networkx as nx;
 import numpy as np;
 import math;
-import json; 
+import json;
+import tesp_support.helpers as helpers; 
 
 forERCOT = False
 
@@ -73,20 +74,6 @@ solar_inv_mode = 'CONSTANT_PF'
 latitude = 30.0
 longitude = -110.0
 weatherName = 'weather'
-
-# GridLAB-D name should not begin with a number, or contain '-' for FNCS
-def gld_strict_name(val):
-    """Sanitizes a name for GridLAB-D publication to FNCS
-
-    Args:
-        val (str): the input name
-
-    Returns:
-        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
-    """
-    if val[0].isdigit():
-        val = 'gld_' + val
-    return val.replace ('-', '_')
 
 def write_solar_inv_settings (op):
     """Writes volt-var and volt-watt settings for solar inverters
@@ -843,22 +830,22 @@ def write_local_triplex_configurations (op):
   """
   for row in triplex_conductors:
     print ('object triplex_line_conductor {', file=op)
-    print (' name', row[0] + ';', file=op)
-    print (' resistance', str(row[1]) + ';', file=op)
-    print (' geometric_mean_radius', str(row[2]) + ';', file=op)
-    print (' rating.summer.continuous', str(row[3]) + ';', file=op)
-    print (' rating.summer.emergency', str(row[3]) + ';', file=op)
-    print (' rating.winter.continuous', str(row[3]) + ';', file=op)
-    print (' rating.winter.emergency', str(row[3]) + ';', file=op)
+    print ('  name', row[0] + ';', file=op)
+    print ('  resistance', str(row[1]) + ';', file=op)
+    print ('  geometric_mean_radius', str(row[2]) + ';', file=op)
+    print ('  rating.summer.continuous', str(row[3]) + ';', file=op)
+    print ('  rating.summer.emergency', str(row[3]) + ';', file=op)
+    print ('  rating.winter.continuous', str(row[3]) + ';', file=op)
+    print ('  rating.winter.emergency', str(row[3]) + ';', file=op)
     print ('}', file=op)
   for row in triplex_configurations:
     print ('object triplex_line_configuration {', file=op)
-    print (' name', row[0] + ';', file=op)
-    print (' conductor_1', row[1] + ';', file=op)
-    print (' conductor_2', row[1] + ';', file=op)
-    print (' conductor_N', row[2] + ';', file=op)
-    print (' insulation_thickness', str(row[3]) + ';', file=op)
-    print (' diameter', str(row[4]) + ';', file=op)
+    print ('  name', row[0] + ';', file=op)
+    print ('  conductor_1', row[1] + ';', file=op)
+    print ('  conductor_2', row[1] + ';', file=op)
+    print ('  conductor_N', row[2] + ';', file=op)
+    print ('  insulation_thickness', str(row[3]) + ';', file=op)
+    print ('  diameter', str(row[4]) + ';', file=op)
     print ('}', file=op)
 
 def buildingTypeLabel (rgn, bldg, ti):
@@ -1474,7 +1461,7 @@ def write_commercial_loads(rgn, key, op):
           bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
           bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
 
-          bldg['zonename'] = gld_strict_name (key + '_bldg_' + str(jjj+1) + '_floor_' + str(floor) + '_zone_' + str(zone))
+          bldg['zonename'] = helpers.gld_strict_name (key + '_bldg_' + str(jjj+1) + '_floor_' + str(floor) + '_zone_' + str(zone))
           write_one_commercial_zone (bldg, op)
 
   elif comm_type == 'BIGBOX':
@@ -1534,7 +1521,7 @@ def write_commercial_loads(rgn, key, op):
         bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
         bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
 
-        bldg['zonename'] = gld_strict_name (key + '_bldg_' + str(jjj+1) + '_zone_' + str(zone))
+        bldg['zonename'] = helpers.gld_strict_name (key + '_bldg_' + str(jjj+1) + '_zone_' + str(zone))
         write_one_commercial_zone (bldg, op)
 
   elif comm_type == 'STRIPMALL':
@@ -1584,7 +1571,7 @@ def write_commercial_loads(rgn, key, op):
       bldg['adj_ext'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.
       bldg['adj_occ'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.
 
-      bldg['zonename'] = gld_strict_name (key + '_zone_' + str(zone))
+      bldg['zonename'] = helpers.gld_strict_name (key + '_zone_' + str(zone))
       write_one_commercial_zone (bldg, op)
 
   elif comm_type == 'ZIPLOAD':
@@ -1635,8 +1622,8 @@ def write_houses(basenode, op, vnom):
 
     if forERCOT == True:
         phs = phs + 'S'
-        tpxname = gld_strict_name (basenode + '_tpx')
-        mtrname = gld_strict_name (basenode + '_mtr')
+        tpxname = helpers.gld_strict_name (basenode + '_tpx')
+        mtrname = helpers.gld_strict_name (basenode + '_mtr')
     else:
         print ('object triplex_node {', file=op)
         print ('  name', basenode + ';', file=op)
@@ -1647,8 +1634,8 @@ def write_houses(basenode, op, vnom):
         print ('}', file=op)
     for i in range(nhouse):
         if forERCOT == False:
-            tpxname = gld_strict_name (basenode + '_tpx_' + str(i+1))
-            mtrname = gld_strict_name (basenode + '_mtr_' + str(i+1))
+            tpxname = helpers.gld_strict_name (basenode + '_tpx_' + str(i+1))
+            mtrname = helpers.gld_strict_name (basenode + '_mtr_' + str(i+1))
             print ('object triplex_line {', file=op)
             print ('  name', tpxname + ';', file=op)
             print ('  from', basenode + ';', file=op)
@@ -1670,15 +1657,15 @@ def write_houses(basenode, op, vnom):
                 print ('    interval', str(metrics_interval) + ';', file=op)
                 print ('  };', file=op)
             print ('}', file=op)
-        hsename = gld_strict_name (basenode + '_hse_' + str(i+1))
-        whname = gld_strict_name (basenode + '_wh_' + str(i+1))
-        solname = gld_strict_name (basenode + '_sol_' + str(i+1))
-        batname = gld_strict_name (basenode + '_bat_' + str(i+1))
-        sol_i_name = gld_strict_name (basenode + '_isol_' + str(i+1))
-        bat_i_name = gld_strict_name (basenode + '_ibat_' + str(i+1))
-        hse_m_name = gld_strict_name (basenode + '_mhse_' + str(i+1))
-        sol_m_name = gld_strict_name (basenode + '_msol_' + str(i+1))
-        bat_m_name = gld_strict_name (basenode + '_mbat_' + str(i+1))
+        hsename = helpers.gld_strict_name (basenode + '_hse_' + str(i+1))
+        whname = helpers.gld_strict_name (basenode + '_wh_' + str(i+1))
+        solname = helpers.gld_strict_name (basenode + '_sol_' + str(i+1))
+        batname = helpers.gld_strict_name (basenode + '_bat_' + str(i+1))
+        sol_i_name = helpers.gld_strict_name (basenode + '_isol_' + str(i+1))
+        bat_i_name = helpers.gld_strict_name (basenode + '_ibat_' + str(i+1))
+        hse_m_name = helpers.gld_strict_name (basenode + '_mhse_' + str(i+1))
+        sol_m_name = helpers.gld_strict_name (basenode + '_msol_' + str(i+1))
+        bat_m_name = helpers.gld_strict_name (basenode + '_mbat_' + str(i+1))
         print ('object triplex_meter {', file=op)
         print ('  name', hse_m_name + ';', file=op)
         print ('  parent', mtrname + ';', file=op)
@@ -1983,6 +1970,22 @@ def write_substation (op, name, phs, vnom, vll):
         vnom (float): not used
         vll (float): feeder primary line-to-line voltage
     """
+    # if this feeder will be combined with others, need USE_FNCS to appear first as a marker for the substation
+    if len(fncs_case) > 0:
+        print ('#ifdef USE_FNCS', file=op)
+        print ('object fncs_msg {', file=op)
+        if forERCOT == True:
+            print ('  name gridlabd' + fncs_case + ';', file=op)
+        else:
+#            print ('  name gridlabd' + fncs_case + ';', file=op)  # for full-order DSOT
+            print ('  name gridlabdSimulator1;', file=op)
+        print ('  parent network_node;', file=op)
+        print ('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
+        print ('  option "transport:hostname localhost, port 5570";', file=op)
+        print ('  aggregate_subscriptions true;', file=op)
+        print ('  aggregate_publications true;', file=op)
+        print ('}', file=op)
+        print ('#endif', file=op)
     print ('object transformer_configuration {', file=op)
     print ('  name substation_xfmr_config;', file=op)
     print ('  connect_type WYE_WYE;', file=op)
@@ -2017,21 +2020,6 @@ def write_substation (op, name, phs, vnom, vll):
         print ('    interval', str(metrics_interval) + ';', file=op)
         print ('  };', file=op)
     print ('}', file=op)
-    if len(fncs_case) > 0:
-        print ('#ifdef USE_FNCS', file=op)
-        print ('object fncs_msg {', file=op)
-        if forERCOT == True:
-            print ('  name gridlabd' + fncs_case + ';', file=op)
-        else:
-#            print ('  name gridlabd' + fncs_case + ';', file=op)  # for full-order DSOT
-            print ('  name gridlabdSimulator1;', file=op)
-        print ('  parent network_node;', file=op)
-        print ('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
-        print ('  option "transport:hostname localhost, port 5570";', file=op)
-        print ('  aggregate_subscriptions true;', file=op)
-        print ('  aggregate_publications true;', file=op)
-        print ('}', file=op)
-        print ('#endif', file=op)
 
 # if triplex load, node or meter, the nominal voltage is 120
 #   if the name or parent attribute is found in secmtrnode, we look up the nominal voltage there
@@ -2687,6 +2675,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
         configfile (str): JSON file name for the feeder population data, mutually exclusive with config
         config (dict): dictionary of feeder population data already read in, mutually exclusive with configfile
         taxconfig (dict): dictionary of custom taxonomy data for ERCOT processing
+        targetdir (str): directory to receive the output files, defaults to ./CaseName
     """
     global tier1_energy, tier1_price, tier2_energy, tier2_price, tier3_energy, tier3_price, bill_mode, kwh_price, monthly_fee
     global Eplus_Bus, Eplus_Volts, Eplus_kVA
@@ -2712,8 +2701,8 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     supportpath = '' #tespdir + '/schedules'
     weatherpath = '' #tespdir + '/weather'
     if 'WorkingDirectory' in config['SimulationConfig']:
-#      outpath = config['SimulationConfig']['WorkingDirectory'] + '/'  # for full-order DSOT
-      outpath = './' + config['SimulationConfig']['CaseName'] + '/'
+      outpath = config['SimulationConfig']['WorkingDirectory'] + '/'  # for full-order DSOT
+#      outpath = './' + config['SimulationConfig']['CaseName'] + '/'
     else:
       outpath = './' + config['SimulationConfig']['CaseName'] + '/'
     starttime = config['SimulationConfig']['StartTime']

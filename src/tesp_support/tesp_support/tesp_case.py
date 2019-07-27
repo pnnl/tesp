@@ -7,6 +7,8 @@ Use *tesp_config* to graphically edit the case configuration
 Public Functions:
     :make_tesp_case: sets up for a single-shot TESP case
     :make_monte_carlo_cases: sets up for a Monte Carlo TESP case of up to 20 shots
+    :first_tesp_feeder: customization of make_tesp_case that will accept more feeders
+    :add_tesp_feeder: add another feeder to the case directory created by first_tesp_feeder
 """
 import sys
 import json
@@ -35,7 +37,7 @@ def idf_int(val):
         return sval + ', '
     return sval + ','
 
-def write_tesp_case (config, cfgfile):
+def write_tesp_case (config, cfgfile, freshdir = True):
     """Writes the TESP case from data structure to JSON file
 
     This function assumes one GridLAB-D, one EnergyPlus, one PYPOWER
@@ -104,6 +106,7 @@ def write_tesp_case (config, cfgfile):
     Args:
         config (dict): the complete case data structure
         cfgfile (str): the name of the JSON file that was read
+        freshdir (boolean): flag to create the directory and base files anew
 
     Todo:
         * Write gui.bat and gui.sh, per the te30 examples
@@ -124,13 +127,17 @@ def write_tesp_case (config, cfgfile):
 
     casename = config['SimulationConfig']['CaseName']
     workdir = config['SimulationConfig']['WorkingDirectory']
-    casedir = workdir + casename
+    if len(workdir) > 2:
+        casedir = workdir
+    else:
+        casedir = workdir + casename
     glmroot = config['BackboneFiles']['TaxonomyChoice']
     print ('case files written to', casedir)
 
-    if os.path.exists(casedir):
-        shutil.rmtree(casedir)
-    os.makedirs(casedir)
+    if freshdir == True:
+        if os.path.exists(casedir):
+            shutil.rmtree(casedir)
+        os.makedirs(casedir)
 
     StartTime = config['SimulationConfig']['StartTime']
     EndTime = config['SimulationConfig']['EndTime']
@@ -177,24 +184,25 @@ def write_tesp_case (config, cfgfile):
     ppcsv = ppdir + config['PYPOWERConfiguration']['CSVLoadFile']
 
     # copy some boilerplate files
-    shutil.copy (miscdir + 'clean.sh', casedir)
-    shutil.copy (miscdir + 'clean.bat', casedir)
-    shutil.copy (miscdir + 'kill5570.sh', casedir)
-    shutil.copy (miscdir + 'kill5570.bat', casedir)
-    shutil.copy (miscdir + 'killold.bat', casedir)
-    shutil.copy (miscdir + 'list5570.bat', casedir)
-    shutil.copy (miscdir + 'monitor.py', casedir)
-    shutil.copy (miscdir + 'plots.py', casedir)
-    shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
-    shutil.copy (scheduledir + 'commercial_schedules.glm', casedir)
-    shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
-#    shutil.copy (weatherfile, casedir)
-    # process TMY3 ==> weather.dat
-    cmdline = pycall + """ -c "import tesp_support.api as tesp;tesp.weathercsv('""" + weatherfile + """','""" + casedir + '/weather.dat' + """','""" + StartTime + """','""" + EndTime + """',""" + str(WeatherYear) + """)" """
-    print (cmdline)
-#    quit()
-    pw0 = subprocess.Popen (cmdline, shell=True)
-    pw0.wait()
+    if freshdir == True:
+        shutil.copy (miscdir + 'clean.sh', casedir)
+        shutil.copy (miscdir + 'clean.bat', casedir)
+        shutil.copy (miscdir + 'kill5570.sh', casedir)
+        shutil.copy (miscdir + 'kill5570.bat', casedir)
+        shutil.copy (miscdir + 'killold.bat', casedir)
+        shutil.copy (miscdir + 'list5570.bat', casedir)
+        shutil.copy (miscdir + 'monitor.py', casedir)
+        shutil.copy (miscdir + 'plots.py', casedir)
+        shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
+        shutil.copy (scheduledir + 'commercial_schedules.glm', casedir)
+        shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
+    #    shutil.copy (weatherfile, casedir)
+        # process TMY3 ==> weather.dat
+        cmdline = pycall + """ -c "import tesp_support.api as tesp;tesp.weathercsv('""" + weatherfile + """','""" + casedir + '/weather.dat' + """','""" + StartTime + """','""" + EndTime + """',""" + str(WeatherYear) + """)" """
+        print (cmdline)
+    #    quit()
+        pw0 = subprocess.Popen (cmdline, shell=True)
+        pw0.wait()
 
     #########################################
     # set up EnergyPlus, if the user wants it
@@ -420,7 +428,6 @@ values:
     fp = open (casedir + '/' + casename + '_pp.json', 'w')
     json.dump (ppcase, fp, indent=2)
     fp.close ()
-    shutil.copy (ppcsv, casedir)
 
     ppyamlstr = """name: pypower
 time_delta: """ + str(config['PYPOWERConfiguration']['PFStep']) + """s
@@ -445,9 +452,11 @@ values:
         topic: auction/responsive_deg
         default: 0
 """
-    op = open (casedir + '/pypower.yaml', 'w')
-    print (ppyamlstr, file=op)
-    op.close()
+    if freshdir == True:
+        shutil.copy (ppcsv, casedir)
+        op = open (casedir + '/pypower.yaml', 'w')
+        print (ppyamlstr, file=op)
+        op.close()
 
     # write a YAML for the solution monitor
     tespyamlstr = """name = tesp_monitor
@@ -486,9 +495,10 @@ values:
     type: double
     list: false
 """
-    op = open (casedir + '/tesp_monitor.yaml', 'w')
-    print (tespyamlstr, file=op)
-    op.close()
+    if freshdir == True:
+        op = open (casedir + '/tesp_monitor.yaml', 'w')
+        print (tespyamlstr, file=op)
+        op.close()
 
     cmdline = pycall + """ -c "import tesp_support.api as tesp;tesp.populate_feeder('""" + cfgfile + """')" """
     print (cmdline)
@@ -505,6 +515,9 @@ values:
     print (cmdline)
     p3 = subprocess.Popen (cmdline, shell=True)
     p3.wait()
+
+    if freshdir == False:
+        return
 
     # write the command scripts for console and tesp_monitor execution
     aucline = """python -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
@@ -679,4 +692,20 @@ def make_monte_carlo_cases (cfgfile = 'test.json'):
         op.close()
 #        print (mc_case, mc['Samples1'][i], mc['Samples2'][i], mc['Samples3'][i])
         write_tesp_case (config, mc_cfg)
+
+def add_tesp_feeder (cfgfile):
+    """Wrapper function to start a single TESP case configuration.
+
+    This function opens the JSON file, and calls *write_tesp_case* for just the
+    GridLAB-D files. The subdirectory *targetdir* doesn't have to match the 
+    case name in *cfgfile*, and it should be created first with *make_tesp_case*
+
+    Args:
+        cfgfile (str): JSON file containing the TESP case configuration
+        targetdir (str): directory, based on cwd, to receive the TESP case files
+    """
+    print ('additional TESP feeder from', cfgfile)
+    lp = open (cfgfile).read()
+    config = json.loads(lp)
+    write_tesp_case (config, cfgfile, freshdir = False)
 

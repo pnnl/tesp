@@ -14,19 +14,18 @@ Public Functions:
     :precool_loop: Supervises FNCS messages and time steps for a GridLAB-D substation with many price-taking and pre-cooling HVAC controllers.  
     :prep_substation: Writes agent metadata and FNCS subscriptions used in substation_loop.  
     :prep_precool: Writes agent metadata and FNCS subscriptions used in precool_loop.  
-		:glm_dict: Writes the JSON metadata from a GridLAB-D file.
+    :glm_dict: Writes the JSON metadata from a GridLAB-D file.
     :populate_feeder: Replaces the ZIP loads with houses in a GridLAB-D file.
     :make_tesp_case: Makes a subdirectory with all files needed to run a TESP simulation, as directed by a JSON file.
     :make_monte_carlo_cases: Makes a subdirectory with all files needed to run a Monte Carlo TESP simulation, as directed by a JSON file.
     :convert_tmy2_to_epw: Command line utility that converts TMY2 weather files to the EPW format for EnergyPlus.
-		:weathercsv: Converts TMY3 weather data to CSV format.
+    :weathercsv: Converts TMY3 weather data to CSV format.
     :startWeatherAgent: Publishes FNCS messages and forecasts from a weather CSV file.
 
 """
 
 from __future__ import absolute_import
 
-from .substation import substation_loop
 from .feederGenerator import populate_feeder
 from .fncsPYPOWER import pypower_loop 
 from .glm_dict import glm_dict
@@ -35,9 +34,17 @@ from .prep_precool import prep_precool
 from .prep_substation import prep_substation
 from .tesp_case import make_tesp_case
 from .tesp_case import make_monte_carlo_cases
+from .tesp_case import add_tesp_feeder
 from .TMY2EPW import convert_tmy2_to_epw
 from .TMY3toCSV import weathercsv 
+from .substation import substation_loop
 from .weatherAgent import startWeatherAgent
+
+from .case_merge import merge_glm
+from .case_merge import merge_glm_dict
+from .case_merge import merge_agent_dict
+from .case_merge import merge_substation_yaml
+from .case_merge import merge_fncs_config
 
 from .fncsPYPOWER import load_json_case
 from .fncsPYPOWER import summarize_opf
