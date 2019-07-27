@@ -480,651 +480,651 @@ object underground_line_conductor {
   insulation_relative_permitivitty 2.3;
 }
 object fuse {
-  name R1-12-47-3_fuse_1;
+  name R1_12_47_3_fuse_1;
 // downstream 42.94 kva on A
   phases AN;
-  from R1-12-47-3_node_19;
-  to R1-12-47-3_node_20;
+  from R1_12_47_3_node_19;
+  to R1_12_47_3_node_20;
   mean_replacement_time 3600;
   current_limit 40;
   status CLOSED;
 }
 object fuse {
-  name R1-12-47-3_fuse_2;
+  name R1_12_47_3_fuse_2;
 // downstream 29.74 kva on B
   phases BCN;
-  from R1-12-47-3_node_21;
-  to R1-12-47-3_node_23;
+  from R1_12_47_3_node_21;
+  to R1_12_47_3_node_23;
   mean_replacement_time 3600;
   current_limit 40;
   status CLOSED;
 }
 object fuse {
-  name R1-12-47-3_fuse_3;
+  name R1_12_47_3_fuse_3;
 // downstream 171.74 kva on A
   phases AN;
-  from R1-12-47-3_node_27;
-  to R1-12-47-3_node_28;
+  from R1_12_47_3_node_27;
+  to R1_12_47_3_node_28;
   mean_replacement_time 3600;
   current_limit 65;
   status CLOSED;
 }
 object fuse {
-  name R1-12-47-3_fuse_4;
+  name R1_12_47_3_fuse_4;
 // downstream 30.67 kva on A
   phases AN;
-  from R1-12-47-3_node_32;
-  to R1-12-47-3_node_33;
+  from R1_12_47_3_node_32;
+  to R1_12_47_3_node_33;
   mean_replacement_time 3600;
   current_limit 40;
   status CLOSED;
 }
 object fuse {
-  name R1-12-47-3_fuse_5;
+  name R1_12_47_3_fuse_5;
 // downstream 617.84 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_32;
-  to R1-12-47-3_node_35;
+  from R1_12_47_3_node_32;
+  to R1_12_47_3_node_35;
   mean_replacement_time 3600;
   current_limit 100;
   status CLOSED;
 }
 object fuse {
-  name R1-12-47-3_fuse_6;
+  name R1_12_47_3_fuse_6;
 // downstream 105.85 kva on B
   phases BN;
-  from R1-12-47-3_node_36;
-  to R1-12-47-3_node_37;
+  from R1_12_47_3_node_36;
+  to R1_12_47_3_node_37;
   mean_replacement_time 3600;
   current_limit 40;
   status CLOSED;
 }
 object fuse {
-  name R1-12-47-3_fuse_7;
+  name R1_12_47_3_fuse_7;
 // downstream 175.27 kva on BS
   phases BN;
-  from R1-12-47-3_node_36;
-  to R1-12-47-3_node_40;
+  from R1_12_47_3_node_36;
+  to R1_12_47_3_node_40;
   mean_replacement_time 3600;
   current_limit 65;
   status CLOSED;
 }
 object switch {
-  name R1-12-47-3_switch_1;
+  name R1_12_47_3_switch_1;
 // downstream 1340.83 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_52;
-  to R1-12-47-3_node_2;
+  from R1_12_47_3_node_52;
+  to R1_12_47_3_node_2;
   status CLOSED;
 }
 object switch {
-  name R1-12-47-3_switch_2;
+  name R1_12_47_3_switch_2;
   phases ABCN;
-  from R1-12-47-3_node_9;
-  to R1-12-47-3_node_51;
+  from R1_12_47_3_node_9;
+  to R1_12_47_3_node_51;
   status CLOSED;
 }
 object switch {
-  name R1-12-47-3_switch_3;
+  name R1_12_47_3_switch_3;
   phases ABCN;
-  from R1-12-47-3_node_15;
-  to R1-12-47-3_node_49;
+  from R1_12_47_3_node_15;
+  to R1_12_47_3_node_49;
   status CLOSED;
 }
 object switch {
-  name R1-12-47-3_switch_4;
+  name R1_12_47_3_switch_4;
 // downstream 1108.01 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_15;
-  to R1-12-47-3_node_17;
+  from R1_12_47_3_node_15;
+  to R1_12_47_3_node_17;
   status CLOSED;
 }
 object switch {
-  name R1-12-47-3_switch_5;
+  name R1_12_47_3_switch_5;
   phases ABCN;
-  from R1-12-47-3_node_34;
-  to R1-12-47-3_node_1;
+  from R1_12_47_3_node_34;
+  to R1_12_47_3_node_1;
   status CLOSED;
 }
 object switch {
-  name R1-12-47-3_switch_6;
+  name R1_12_47_3_switch_6;
   phases ABCN;
-  from R1-12-47-3_node_34;
-  to R1-12-47-3_node_50;
+  from R1_12_47_3_node_34;
+  to R1_12_47_3_node_50;
   status CLOSED;
 }
 object overhead_line {
-  name R1-12-47-3_ol_1;
+  name R1_12_47_3_ol_1;
 // downstream 1340.83 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_3;
-  to R1-12-47-3_node_4;
+  from R1_12_47_3_node_3;
+  to R1_12_47_3_node_4;
   length 387.401;
   configuration ID_11;
 }
 object overhead_line {
-  name R1-12-47-3_ol_2;
+  name R1_12_47_3_ol_2;
   phases ACN;
-  from R1-12-47-3_node_4;
-  to R1-12-47-3_node_5;
+  from R1_12_47_3_node_4;
+  to R1_12_47_3_node_5;
   length 68.936;
   configuration ID_12;
 }
 object overhead_line {
-  name R1-12-47-3_ol_3;
+  name R1_12_47_3_ol_3;
 // downstream 54.86 kva on C
   phases CN;
-  from R1-12-47-3_node_4;
-  to R1-12-47-3_node_6;
+  from R1_12_47_3_node_4;
+  to R1_12_47_3_node_6;
   length 157.766;
   configuration ID_13;
 }
 object overhead_line {
-  name R1-12-47-3_ol_4;
+  name R1_12_47_3_ol_4;
 // downstream 1285.97 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_4;
-  to R1-12-47-3_node_7;
+  from R1_12_47_3_node_4;
+  to R1_12_47_3_node_7;
   length 139.494;
   configuration ID_11;
 }
 object overhead_line {
-  name R1-12-47-3_ol_5;
+  name R1_12_47_3_ol_5;
 // downstream 1285.97 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_7;
-  to R1-12-47-3_node_8;
+  from R1_12_47_3_node_7;
+  to R1_12_47_3_node_8;
   length 1260.546;
   configuration ID_11;
 }
 object overhead_line {
-  name R1-12-47-3_ol_6;
+  name R1_12_47_3_ol_6;
 // downstream 40.81 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_8;
-  to R1-12-47-3_node_9;
+  from R1_12_47_3_node_8;
+  to R1_12_47_3_node_9;
   length 633.806;
   configuration ID_11;
 }
 object overhead_line {
-  name R1-12-47-3_ol_7;
+  name R1_12_47_3_ol_7;
 // downstream 40.81 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_9;
-  to R1-12-47-3_node_10;
+  from R1_12_47_3_node_9;
+  to R1_12_47_3_node_10;
   length 237.576;
   configuration ID_14;
 }
 object overhead_line {
-  name R1-12-47-3_ol_8;
+  name R1_12_47_3_ol_8;
 // downstream 137.15 kva on AC
   phases ACN;
-  from R1-12-47-3_node_8;
-  to R1-12-47-3_node_11;
+  from R1_12_47_3_node_8;
+  to R1_12_47_3_node_11;
   length 749.489;
   configuration ID_15;
 }
 object overhead_line {
-  name R1-12-47-3_ol_9;
+  name R1_12_47_3_ol_9;
 // downstream 54.86 kva on C
   phases CN;
-  from R1-12-47-3_node_11;
-  to R1-12-47-3_node_12;
+  from R1_12_47_3_node_11;
+  to R1_12_47_3_node_12;
   length 122.880;
   configuration ID_16;
 }
 object overhead_line {
-  name R1-12-47-3_ol_10;
+  name R1_12_47_3_ol_10;
 // downstream 54.86 kva on C
   phases ACN;
-  from R1-12-47-3_node_11;
-  to R1-12-47-3_node_13;
+  from R1_12_47_3_node_11;
+  to R1_12_47_3_node_13;
   length 245.725;
   configuration ID_12;
 }
 object overhead_line {
-  name R1-12-47-3_ol_11;
+  name R1_12_47_3_ol_11;
 // downstream 54.86 kva on C
   phases CN;
-  from R1-12-47-3_node_13;
-  to R1-12-47-3_node_14;
+  from R1_12_47_3_node_13;
+  to R1_12_47_3_node_14;
   length 275.331;
   configuration ID_16;
 }
 object overhead_line {
-  name R1-12-47-3_ol_12;
+  name R1_12_47_3_ol_12;
 // downstream 1108.01 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_8;
-  to R1-12-47-3_node_15;
+  from R1_12_47_3_node_8;
+  to R1_12_47_3_node_15;
   length 275.240;
   configuration ID_11;
 }
 object overhead_line {
-  name R1-12-47-3_ol_13;
+  name R1_12_47_3_ol_13;
   phases ABCN;
-  from R1-12-47-3_node_15;
-  to R1-12-47-3_node_16;
+  from R1_12_47_3_node_15;
+  to R1_12_47_3_node_16;
   length 63.897;
   configuration ID_11;
 }
 object overhead_line {
-  name R1-12-47-3_ol_14;
+  name R1_12_47_3_ol_14;
 // downstream 1108.01 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_17;
-  to R1-12-47-3_node_18;
+  from R1_12_47_3_node_17;
+  to R1_12_47_3_node_18;
   length 1499.769;
   configuration ID_17;
 }
 object overhead_line {
-  name R1-12-47-3_ol_15;
+  name R1_12_47_3_ol_15;
 // downstream 140.69 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_18;
-  to R1-12-47-3_node_19;
+  from R1_12_47_3_node_18;
+  to R1_12_47_3_node_19;
   length 485.017;
   configuration ID_17;
 }
 object overhead_line {
-  name R1-12-47-3_ol_16;
+  name R1_12_47_3_ol_16;
 // downstream 97.75 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_19;
-  to R1-12-47-3_node_21;
+  from R1_12_47_3_node_19;
+  to R1_12_47_3_node_21;
   length 275.614;
   configuration ID_19;
 }
 object overhead_line {
-  name R1-12-47-3_ol_17;
+  name R1_12_47_3_ol_17;
 // downstream 68.01 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_21;
-  to R1-12-47-3_node_22;
+  from R1_12_47_3_node_21;
+  to R1_12_47_3_node_22;
   length 165.147;
   configuration ID_20;
 }
 object overhead_line {
-  name R1-12-47-3_ol_18;
+  name R1_12_47_3_ol_18;
   phases BCN;
-  from R1-12-47-3_node_25;
-  to R1-12-47-3_node_26;
+  from R1_12_47_3_node_25;
+  to R1_12_47_3_node_26;
   length 497.233;
   configuration ID_23;
 }
 object overhead_line {
-  name R1-12-47-3_ol_19;
+  name R1_12_47_3_ol_19;
 // downstream 885.03 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_18;
-  to R1-12-47-3_node_27;
+  from R1_12_47_3_node_18;
+  to R1_12_47_3_node_27;
   length 734.441;
   configuration ID_20;
 }
 object overhead_line {
-  name R1-12-47-3_ol_20;
+  name R1_12_47_3_ol_20;
 // downstream 30.67 kva on A
   phases AN;
-  from R1-12-47-3_node_28;
-  to R1-12-47-3_node_29;
+  from R1_12_47_3_node_28;
+  to R1_12_47_3_node_29;
   length 111.674;
   configuration ID_25;
 }
 object overhead_line {
-  name R1-12-47-3_ol_21;
+  name R1_12_47_3_ol_21;
 // downstream 30.67 kva on A
   phases AN;
-  from R1-12-47-3_node_28;
-  to R1-12-47-3_node_30;
+  from R1_12_47_3_node_28;
+  to R1_12_47_3_node_30;
   length 174.016;
   configuration ID_25;
 }
 object overhead_line {
-  name R1-12-47-3_ol_22;
+  name R1_12_47_3_ol_22;
 // downstream 648.51 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_27;
-  to R1-12-47-3_node_31;
+  from R1_12_47_3_node_27;
+  to R1_12_47_3_node_31;
   length 229.262;
   configuration ID_20;
 }
 object overhead_line {
-  name R1-12-47-3_ol_23;
+  name R1_12_47_3_ol_23;
 // downstream 648.51 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_31;
-  to R1-12-47-3_node_32;
+  from R1_12_47_3_node_31;
+  to R1_12_47_3_node_32;
   length 234.203;
   configuration ID_11;
 }
 object overhead_line {
-  name R1-12-47-3_ol_24;
+  name R1_12_47_3_ol_24;
   phases ABCN;
-  from R1-12-47-3_node_32;
-  to R1-12-47-3_node_34;
+  from R1_12_47_3_node_32;
+  to R1_12_47_3_node_34;
   length 693.760;
   configuration ID_11;
 }
 object overhead_line {
-  name R1-12-47-3_ol_25;
+  name R1_12_47_3_ol_25;
 // downstream 281.12 kva on BS
   phases ABCN;
-  from R1-12-47-3_node_35;
-  to R1-12-47-3_node_36;
+  from R1_12_47_3_node_35;
+  to R1_12_47_3_node_36;
   length 277.512;
   configuration ID_20;
 }
 object overhead_line {
-  name R1-12-47-3_ol_26;
+  name R1_12_47_3_ol_26;
 // downstream 336.72 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_35;
-  to R1-12-47-3_node_41;
+  from R1_12_47_3_node_35;
+  to R1_12_47_3_node_41;
   length 428.598;
   configuration ID_14;
 }
 object overhead_line {
-  name R1-12-47-3_ol_27;
+  name R1_12_47_3_ol_27;
 // downstream 136.02 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_41;
-  to R1-12-47-3_node_42;
+  from R1_12_47_3_node_41;
+  to R1_12_47_3_node_42;
   length 208.252;
   configuration ID_17;
 }
 object overhead_line {
-  name R1-12-47-3_ol_28;
+  name R1_12_47_3_ol_28;
 // downstream 200.70 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_41;
-  to R1-12-47-3_node_43;
+  from R1_12_47_3_node_41;
+  to R1_12_47_3_node_43;
   length 288.056;
   configuration ID_17;
 }
 object overhead_line {
-  name R1-12-47-3_ol_29;
+  name R1_12_47_3_ol_29;
 // downstream 30.67 kva on A
   phases AN;
-  from R1-12-47-3_node_43;
-  to R1-12-47-3_node_44;
+  from R1_12_47_3_node_43;
+  to R1_12_47_3_node_44;
   length 127.857;
   configuration ID_24;
 }
 object overhead_line {
-  name R1-12-47-3_ol_30;
+  name R1_12_47_3_ol_30;
 // downstream 170.03 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_43;
-  to R1-12-47-3_node_45;
+  from R1_12_47_3_node_43;
+  to R1_12_47_3_node_45;
   length 103.017;
   configuration ID_20;
 }
 object underground_line {
-  name R1-12-47-3_ul_1;
+  name R1_12_47_3_ul_1;
 // downstream 1340.83 kva on ABCS
   phases ABCN;
-  from R1-12-47-3_node_2;
-  to R1-12-47-3_node_3;
+  from R1_12_47_3_node_2;
+  to R1_12_47_3_node_3;
   length 84.593;
   configuration ID_10;
 }
 object underground_line {
-  name R1-12-47-3_ul_2;
+  name R1_12_47_3_ul_2;
 // downstream 29.74 kva on B
   phases BN;
-  from R1-12-47-3_node_23;
-  to R1-12-47-3_node_24;
+  from R1_12_47_3_node_23;
+  to R1_12_47_3_node_24;
   length 160.451;
   configuration ID_22;
 }
 object underground_line {
-  name R1-12-47-3_ul_3;
+  name R1_12_47_3_ul_3;
   phases BCN;
-  from R1-12-47-3_node_23;
-  to R1-12-47-3_node_25;
+  from R1_12_47_3_node_23;
+  to R1_12_47_3_node_25;
   length 190.827;
   configuration ID_21;
 }
 object underground_line {
-  name R1-12-47-3_ul_4;
+  name R1_12_47_3_ul_4;
 // downstream 66.23 kva on B
   phases BN;
-  from R1-12-47-3_node_37;
-  to R1-12-47-3_node_38;
+  from R1_12_47_3_node_37;
+  to R1_12_47_3_node_38;
   length 165.500;
   configuration ID_22;
 }
 object underground_line {
-  name R1-12-47-3_ul_5;
+  name R1_12_47_3_ul_5;
 // downstream 19.81 kva on B
   phases BN;
-  from R1-12-47-3_node_37;
-  to R1-12-47-3_node_39;
+  from R1_12_47_3_node_37;
+  to R1_12_47_3_node_39;
   length 74.300;
   configuration ID_22;
 }
 object underground_line {
-  name R1-12-47-3_ul_6;
+  name R1_12_47_3_ul_6;
 // downstream 170.03 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_45;
-  to R1-12-47-3_node_46;
+  from R1_12_47_3_node_45;
+  to R1_12_47_3_node_46;
   length 202.409;
   configuration ID_26;
 }
 object underground_line {
-  name R1-12-47-3_ul_7;
+  name R1_12_47_3_ul_7;
 // downstream 102.02 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_46;
-  to R1-12-47-3_node_47;
+  from R1_12_47_3_node_46;
+  to R1_12_47_3_node_47;
   length 131.003;
   configuration ID_26;
 }
 object underground_line {
-  name R1-12-47-3_ul_8;
+  name R1_12_47_3_ul_8;
 // downstream 68.01 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_46;
-  to R1-12-47-3_node_48;
+  from R1_12_47_3_node_46;
+  to R1_12_47_3_node_48;
   length 258.143;
   configuration ID_26;
 }
 object triplex_line {
-  name R1-12-47-3_tl_1;
+  name R1_12_47_3_tl_1;
 // downstream 175.27 kva on BS
   phases BS;
-  from R1-12-47-3_tn_1;
-  to R1-12-47-3_tm_1;
+  from R1_12_47_3_tn_1;
+  to R1_12_47_3_tm_1;
   length 30;
   configuration ID_211;
 }
 object regulator {
-  name R1-12-47-3_reg_1;
+  name R1_12_47_3_reg_1;
 // downstream 1340.83 kva on ABCS
-  from R1-12-47-3_node_53;
-  to R1-12-47-3_meter_22;
+  from R1_12_47_3_node_53;
+  to R1_12_47_3_meter_22;
   phases ABCN;
   configuration feeder_reg_cfg;
 }
 object transformer {
-  name R1-12-47-3_xfmr_1;
+  name R1_12_47_3_xfmr_1;
 // downstream 175.27 kva on BS
   phases BS;
-  from R1-12-47-3_node_40;
-  to R1-12-47-3_tn_1;
+  from R1_12_47_3_node_40;
+  to R1_12_47_3_tn_1;
   configuration XF1_POLETOP_BS_250;
 }
 object transformer {
-  name R1-12-47-3_xfmr_2;
+  name R1_12_47_3_xfmr_2;
 // downstream 54.86 kva on C
   phases CN;
-  from R1-12-47-3_node_6;
-  to R1-12-47-3_meter_1;
+  from R1_12_47_3_node_6;
+  to R1_12_47_3_meter_1;
   configuration XF1_PADMOUNT_CN_75;
 }
 object transformer {
-  name R1-12-47-3_xfmr_3;
+  name R1_12_47_3_xfmr_3;
 // downstream 40.81 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_10;
-  to R1-12-47-3_meter_2;
+  from R1_12_47_3_node_10;
+  to R1_12_47_3_meter_2;
   configuration XF3_PADMOUNT_ABCN_75;
 }
 object transformer {
-  name R1-12-47-3_xfmr_4;
+  name R1_12_47_3_xfmr_4;
 // downstream 27.43 kva on AC
   phases ACN;
-  from R1-12-47-3_node_11;
-  to R1-12-47-3_meter_3;
+  from R1_12_47_3_node_11;
+  to R1_12_47_3_meter_3;
   configuration XF2_POLETOP_ACN_45;
 }
 object transformer {
-  name R1-12-47-3_xfmr_5;
+  name R1_12_47_3_xfmr_5;
 // downstream 54.86 kva on C
   phases CN;
-  from R1-12-47-3_node_12;
-  to R1-12-47-3_meter_4;
+  from R1_12_47_3_node_12;
+  to R1_12_47_3_meter_4;
   configuration XF1_POLETOP_CN_75;
 }
 object transformer {
-  name R1-12-47-3_xfmr_6;
+  name R1_12_47_3_xfmr_6;
 // downstream 54.86 kva on C
   phases CN;
-  from R1-12-47-3_node_14;
-  to R1-12-47-3_meter_5;
+  from R1_12_47_3_node_14;
+  to R1_12_47_3_meter_5;
   configuration XF1_POLETOP_CN_75;
 }
 object transformer {
-  name R1-12-47-3_xfmr_7;
+  name R1_12_47_3_xfmr_7;
 // downstream 82.29 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_18;
-  to R1-12-47-3_meter_6;
+  from R1_12_47_3_node_18;
+  to R1_12_47_3_meter_6;
   configuration XF3_POLETOP_ABCN_112p5;
 }
 object transformer {
-  name R1-12-47-3_xfmr_8;
+  name R1_12_47_3_xfmr_8;
 // downstream 42.94 kva on A
   phases AN;
-  from R1-12-47-3_node_20;
-  to R1-12-47-3_meter_7;
+  from R1_12_47_3_node_20;
+  to R1_12_47_3_meter_7;
   configuration XF1_POLETOP_AN_75;
 }
 object transformer {
-  name R1-12-47-3_xfmr_9;
+  name R1_12_47_3_xfmr_9;
 // downstream 68.01 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_22;
-  to R1-12-47-3_meter_8;
+  from R1_12_47_3_node_22;
+  to R1_12_47_3_meter_8;
   configuration XF3_POLETOP_ABCN_112p5;
 }
 object transformer {
-  name R1-12-47-3_xfmr_10;
+  name R1_12_47_3_xfmr_10;
 // downstream 29.74 kva on B
   phases BN;
-  from R1-12-47-3_node_24;
-  to R1-12-47-3_meter_9;
+  from R1_12_47_3_node_24;
+  to R1_12_47_3_meter_9;
   configuration XF1_POLETOP_BN_37p5;
 }
 object transformer {
-  name R1-12-47-3_xfmr_11;
+  name R1_12_47_3_xfmr_11;
 // downstream 64.77 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_27;
-  to R1-12-47-3_meter_10;
+  from R1_12_47_3_node_27;
+  to R1_12_47_3_meter_10;
   configuration XF3_POLETOP_ABCN_112p5;
 }
 object transformer {
-  name R1-12-47-3_xfmr_12;
+  name R1_12_47_3_xfmr_12;
 // downstream 110.41 kva on A
   phases AN;
-  from R1-12-47-3_node_28;
-  to R1-12-47-3_meter_11;
+  from R1_12_47_3_node_28;
+  to R1_12_47_3_meter_11;
   configuration XF1_POLETOP_AN_167;
 }
 object transformer {
-  name R1-12-47-3_xfmr_13;
+  name R1_12_47_3_xfmr_13;
 // downstream 30.67 kva on A
   phases AN;
-  from R1-12-47-3_node_29;
-  to R1-12-47-3_meter_12;
+  from R1_12_47_3_node_29;
+  to R1_12_47_3_meter_12;
   configuration XF1_POLETOP_AN_37p5;
 }
 object transformer {
-  name R1-12-47-3_xfmr_14;
+  name R1_12_47_3_xfmr_14;
 // downstream 30.67 kva on A
   phases AN;
-  from R1-12-47-3_node_30;
-  to R1-12-47-3_meter_13;
+  from R1_12_47_3_node_30;
+  to R1_12_47_3_meter_13;
   configuration XF1_POLETOP_AN_37p5;
 }
 object transformer {
-  name R1-12-47-3_xfmr_15;
+  name R1_12_47_3_xfmr_15;
 // downstream 30.67 kva on A
   phases AN;
-  from R1-12-47-3_node_33;
-  to R1-12-47-3_meter_14;
+  from R1_12_47_3_node_33;
+  to R1_12_47_3_meter_14;
   configuration XF1_POLETOP_AN_37p5;
 }
 object transformer {
-  name R1-12-47-3_xfmr_16;
+  name R1_12_47_3_xfmr_16;
 // downstream 19.81 kva on B
   phases BN;
-  from R1-12-47-3_node_37;
-  to R1-12-47-3_meter_15;
+  from R1_12_47_3_node_37;
+  to R1_12_47_3_meter_15;
   configuration XF1_POLETOP_BN_25;
 }
 object transformer {
-  name R1-12-47-3_xfmr_17;
+  name R1_12_47_3_xfmr_17;
 // downstream 66.23 kva on B
   phases BN;
-  from R1-12-47-3_node_38;
-  to R1-12-47-3_meter_16;
+  from R1_12_47_3_node_38;
+  to R1_12_47_3_meter_16;
   configuration XF1_POLETOP_BN_100;
 }
 object transformer {
-  name R1-12-47-3_xfmr_18;
+  name R1_12_47_3_xfmr_18;
 // downstream 19.81 kva on B
   phases BN;
-  from R1-12-47-3_node_39;
-  to R1-12-47-3_meter_17;
+  from R1_12_47_3_node_39;
+  to R1_12_47_3_meter_17;
   configuration XF1_POLETOP_BN_25;
 }
 object transformer {
-  name R1-12-47-3_xfmr_19;
+  name R1_12_47_3_xfmr_19;
 // downstream 136.02 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_42;
-  to R1-12-47-3_meter_18;
+  from R1_12_47_3_node_42;
+  to R1_12_47_3_meter_18;
   configuration XF3_POLETOP_ABCN_225;
 }
 object transformer {
-  name R1-12-47-3_xfmr_20;
+  name R1_12_47_3_xfmr_20;
 // downstream 30.67 kva on A
   phases AN;
-  from R1-12-47-3_node_44;
-  to R1-12-47-3_meter_19;
+  from R1_12_47_3_node_44;
+  to R1_12_47_3_meter_19;
   configuration XF1_POLETOP_AN_37p5;
 }
 object transformer {
-  name R1-12-47-3_xfmr_21;
+  name R1_12_47_3_xfmr_21;
 // downstream 102.02 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_47;
-  to R1-12-47-3_meter_20;
+  from R1_12_47_3_node_47;
+  to R1_12_47_3_meter_20;
   configuration XF3_POLETOP_ABCN_150;
 }
 object transformer {
-  name R1-12-47-3_xfmr_22;
+  name R1_12_47_3_xfmr_22;
 // downstream 68.01 kva on ABC
   phases ABCN;
-  from R1-12-47-3_node_48;
-  to R1-12-47-3_meter_21;
+  from R1_12_47_3_node_48;
+  to R1_12_47_3_meter_21;
   configuration XF3_POLETOP_ABCN_112p5;
 }
 object node {
-  name R1-12-47-3_node_1;
+  name R1_12_47_3_node_1;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1132,7 +1132,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_2;
+  name R1_12_47_3_node_2;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1140,7 +1140,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_3;
+  name R1_12_47_3_node_3;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1148,7 +1148,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_4;
+  name R1_12_47_3_node_4;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1156,20 +1156,20 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_5;
+  name R1_12_47_3_node_5;
   phases ACN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_6;
+  name R1_12_47_3_node_6;
   phases CN;
   nominal_voltage 7200.0;
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_7;
+  name R1_12_47_3_node_7;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1177,7 +1177,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_8;
+  name R1_12_47_3_node_8;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1185,7 +1185,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_9;
+  name R1_12_47_3_node_9;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1193,7 +1193,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_10;
+  name R1_12_47_3_node_10;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1201,33 +1201,33 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_11;
+  name R1_12_47_3_node_11;
   phases ACN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_12;
+  name R1_12_47_3_node_12;
   phases CN;
   nominal_voltage 7200.0;
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_13;
+  name R1_12_47_3_node_13;
   phases ACN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_14;
+  name R1_12_47_3_node_14;
   phases CN;
   nominal_voltage 7200.0;
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_15;
+  name R1_12_47_3_node_15;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1235,7 +1235,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_16;
+  name R1_12_47_3_node_16;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1243,7 +1243,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_17;
+  name R1_12_47_3_node_17;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1251,7 +1251,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_18;
+  name R1_12_47_3_node_18;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1259,7 +1259,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_19;
+  name R1_12_47_3_node_19;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1267,13 +1267,13 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_20;
+  name R1_12_47_3_node_20;
   phases AN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
 }
 object node {
-  name R1-12-47-3_node_21;
+  name R1_12_47_3_node_21;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1281,7 +1281,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_22;
+  name R1_12_47_3_node_22;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1289,34 +1289,34 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_23;
+  name R1_12_47_3_node_23;
   phases BCN;
   nominal_voltage 7200.0;
   voltage_B -3600.00-6235.38j;
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_24;
+  name R1_12_47_3_node_24;
   phases BN;
   nominal_voltage 7200.0;
   voltage_B -3600.00-6235.38j;
 }
 object node {
-  name R1-12-47-3_node_25;
+  name R1_12_47_3_node_25;
   phases BCN;
   nominal_voltage 7200.0;
   voltage_B -3600.00-6235.38j;
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_26;
+  name R1_12_47_3_node_26;
   phases BCN;
   nominal_voltage 7200.0;
   voltage_B -3600.00-6235.38j;
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_27;
+  name R1_12_47_3_node_27;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1324,25 +1324,25 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_28;
+  name R1_12_47_3_node_28;
   phases AN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
 }
 object node {
-  name R1-12-47-3_node_29;
+  name R1_12_47_3_node_29;
   phases AN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
 }
 object node {
-  name R1-12-47-3_node_30;
+  name R1_12_47_3_node_30;
   phases AN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
 }
 object node {
-  name R1-12-47-3_node_31;
+  name R1_12_47_3_node_31;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1350,7 +1350,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_32;
+  name R1_12_47_3_node_32;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1358,13 +1358,13 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_33;
+  name R1_12_47_3_node_33;
   phases AN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
 }
 object node {
-  name R1-12-47-3_node_34;
+  name R1_12_47_3_node_34;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1372,7 +1372,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_35;
+  name R1_12_47_3_node_35;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1380,7 +1380,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_36;
+  name R1_12_47_3_node_36;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1388,31 +1388,31 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_37;
+  name R1_12_47_3_node_37;
   phases BN;
   nominal_voltage 7200.0;
   voltage_B -3600.00-6235.38j;
 }
 object node {
-  name R1-12-47-3_node_38;
+  name R1_12_47_3_node_38;
   phases BN;
   nominal_voltage 7200.0;
   voltage_B -3600.00-6235.38j;
 }
 object node {
-  name R1-12-47-3_node_39;
+  name R1_12_47_3_node_39;
   phases BN;
   nominal_voltage 7200.0;
   voltage_B -3600.00-6235.38j;
 }
 object node {
-  name R1-12-47-3_node_40;
+  name R1_12_47_3_node_40;
   phases BN;
   nominal_voltage 7200.0;
   voltage_B -3600.00-6235.38j;
 }
 object node {
-  name R1-12-47-3_node_41;
+  name R1_12_47_3_node_41;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1420,7 +1420,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_42;
+  name R1_12_47_3_node_42;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1428,7 +1428,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_43;
+  name R1_12_47_3_node_43;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1436,13 +1436,13 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_44;
+  name R1_12_47_3_node_44;
   phases AN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
 }
 object node {
-  name R1-12-47-3_node_45;
+  name R1_12_47_3_node_45;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1450,7 +1450,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_46;
+  name R1_12_47_3_node_46;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1458,7 +1458,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_47;
+  name R1_12_47_3_node_47;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1466,7 +1466,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_48;
+  name R1_12_47_3_node_48;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1474,7 +1474,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_49;
+  name R1_12_47_3_node_49;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1482,7 +1482,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_50;
+  name R1_12_47_3_node_50;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1490,7 +1490,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_51;
+  name R1_12_47_3_node_51;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1498,8 +1498,8 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  parent R1-12-47-3_meter_22;
-  name R1-12-47-3_node_52;
+  parent R1_12_47_3_meter_22;
+  name R1_12_47_3_node_52;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1507,7 +1507,7 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object node {
-  name R1-12-47-3_node_53;
+  name R1_12_47_3_node_53;
   bustype SWING;
   phases ABCN;
   nominal_voltage 7200.0;
@@ -1516,112 +1516,112 @@ object node {
   voltage_C -3600.00+6235.38j;
 }
 object meter {
-  name R1-12-47-3_meter_1;
+  name R1_12_47_3_meter_1;
   phases CN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_2;
+  name R1_12_47_3_meter_2;
   phases ABCN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_3;
+  name R1_12_47_3_meter_3;
   phases ACN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_4;
+  name R1_12_47_3_meter_4;
   phases CN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_5;
+  name R1_12_47_3_meter_5;
   phases CN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_6;
+  name R1_12_47_3_meter_6;
   phases ABCN;
   nominal_voltage 277.0;
 }
 object meter {
-  name R1-12-47-3_meter_7;
+  name R1_12_47_3_meter_7;
   phases AN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_8;
+  name R1_12_47_3_meter_8;
   phases ABCN;
   nominal_voltage 277.0;
 }
 object meter {
-  name R1-12-47-3_meter_9;
+  name R1_12_47_3_meter_9;
   phases BN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_10;
+  name R1_12_47_3_meter_10;
   phases ABCN;
   nominal_voltage 277.0;
 }
 object meter {
-  name R1-12-47-3_meter_11;
+  name R1_12_47_3_meter_11;
   phases AN;
   nominal_voltage 277.0;
 }
 object meter {
-  name R1-12-47-3_meter_12;
+  name R1_12_47_3_meter_12;
   phases AN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_13;
+  name R1_12_47_3_meter_13;
   phases AN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_14;
+  name R1_12_47_3_meter_14;
   phases AN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_15;
+  name R1_12_47_3_meter_15;
   phases BN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_16;
+  name R1_12_47_3_meter_16;
   phases BN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_17;
+  name R1_12_47_3_meter_17;
   phases BN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_18;
+  name R1_12_47_3_meter_18;
   phases ABCN;
   nominal_voltage 277.0;
 }
 object meter {
-  name R1-12-47-3_meter_19;
+  name R1_12_47_3_meter_19;
   phases AN;
   nominal_voltage 120.0;
 }
 object meter {
-  name R1-12-47-3_meter_20;
+  name R1_12_47_3_meter_20;
   phases ABCN;
   nominal_voltage 277.0;
 }
 object meter {
-  name R1-12-47-3_meter_21;
+  name R1_12_47_3_meter_21;
   phases ABCN;
   nominal_voltage 277.0;
 }
 object meter {
-  name R1-12-47-3_meter_22;
+  name R1_12_47_3_meter_22;
   phases ABCN;
   nominal_voltage 7200.0;
   voltage_A 7200.0+0.0j;
@@ -1629,8 +1629,8 @@ object meter {
   voltage_C -3600.00+6235.38j;
 }
 object load {
-  parent R1-12-47-3_meter_1;
-  name R1-12-47-3_load_1;
+  parent R1_12_47_3_meter_1;
+  name R1_12_47_3_load_1;
   phases CN;
   nominal_voltage 120.0;
   load_class C;
@@ -1638,8 +1638,8 @@ object load {
   voltage_C -60.00+103.92j;
 }
 object load {
-  parent R1-12-47-3_meter_2;
-  name R1-12-47-3_load_2;
+  parent R1_12_47_3_meter_2;
+  name R1_12_47_3_load_2;
   phases ABCN;
   nominal_voltage 120.0;
   load_class C;
@@ -1651,8 +1651,8 @@ object load {
   voltage_C -60.00+103.92j;
 }
 object load {
-  parent R1-12-47-3_meter_3;
-  name R1-12-47-3_load_3;
+  parent R1_12_47_3_meter_3;
+  name R1_12_47_3_load_3;
   phases ACN;
   nominal_voltage 120.0;
   load_class C;
@@ -1662,8 +1662,8 @@ object load {
   voltage_C -60.00+103.92j;
 }
 object load {
-  parent R1-12-47-3_meter_4;
-  name R1-12-47-3_load_4;
+  parent R1_12_47_3_meter_4;
+  name R1_12_47_3_load_4;
   phases CN;
   nominal_voltage 120.0;
   load_class C;
@@ -1671,8 +1671,8 @@ object load {
   voltage_C -60.00+103.92j;
 }
 object load {
-  parent R1-12-47-3_meter_5;
-  name R1-12-47-3_load_5;
+  parent R1_12_47_3_meter_5;
+  name R1_12_47_3_load_5;
   phases CN;
   nominal_voltage 120.0;
   load_class C;
@@ -1680,8 +1680,8 @@ object load {
   voltage_C -60.00+103.92j;
 }
 object load {
-  parent R1-12-47-3_meter_6;
-  name R1-12-47-3_load_6;
+  parent R1_12_47_3_meter_6;
+  name R1_12_47_3_load_6;
   phases ABCN;
   nominal_voltage 277.0;
   load_class C;
@@ -1693,8 +1693,8 @@ object load {
   voltage_C -138.50+239.89j;
 }
 object load {
-  parent R1-12-47-3_meter_7;
-  name R1-12-47-3_load_7;
+  parent R1_12_47_3_meter_7;
+  name R1_12_47_3_load_7;
   phases AN;
   nominal_voltage 120.0;
   load_class C;
@@ -1702,8 +1702,8 @@ object load {
   voltage_A 120.0+0.0j;
 }
 object load {
-  parent R1-12-47-3_meter_8;
-  name R1-12-47-3_load_8;
+  parent R1_12_47_3_meter_8;
+  name R1_12_47_3_load_8;
   phases ABCN;
   nominal_voltage 277.0;
   load_class C;
@@ -1715,8 +1715,8 @@ object load {
   voltage_C -138.50+239.89j;
 }
 object load {
-  parent R1-12-47-3_meter_9;
-  name R1-12-47-3_load_9;
+  parent R1_12_47_3_meter_9;
+  name R1_12_47_3_load_9;
   phases BN;
   nominal_voltage 120.0;
   load_class C;
@@ -1724,8 +1724,8 @@ object load {
   voltage_B -60.00-103.92j;
 }
 object load {
-  parent R1-12-47-3_meter_10;
-  name R1-12-47-3_load_10;
+  parent R1_12_47_3_meter_10;
+  name R1_12_47_3_load_10;
   phases ABCN;
   nominal_voltage 277.0;
   load_class C;
@@ -1737,8 +1737,8 @@ object load {
   voltage_C -138.50+239.89j;
 }
 object load {
-  parent R1-12-47-3_meter_11;
-  name R1-12-47-3_load_11;
+  parent R1_12_47_3_meter_11;
+  name R1_12_47_3_load_11;
   phases AN;
   nominal_voltage 277.0;
   load_class C;
@@ -1746,8 +1746,8 @@ object load {
   voltage_A 277.0+0.0j;
 }
 object load {
-  parent R1-12-47-3_meter_12;
-  name R1-12-47-3_load_12;
+  parent R1_12_47_3_meter_12;
+  name R1_12_47_3_load_12;
   phases AN;
   nominal_voltage 120.0;
   load_class C;
@@ -1755,8 +1755,8 @@ object load {
   voltage_A 120.0+0.0j;
 }
 object load {
-  parent R1-12-47-3_meter_13;
-  name R1-12-47-3_load_13;
+  parent R1_12_47_3_meter_13;
+  name R1_12_47_3_load_13;
   phases AN;
   nominal_voltage 120.0;
   load_class C;
@@ -1764,8 +1764,8 @@ object load {
   voltage_A 120.0+0.0j;
 }
 object load {
-  parent R1-12-47-3_meter_14;
-  name R1-12-47-3_load_14;
+  parent R1_12_47_3_meter_14;
+  name R1_12_47_3_load_14;
   phases AN;
   nominal_voltage 120.0;
   load_class C;
@@ -1773,8 +1773,8 @@ object load {
   voltage_A 120.0+0.0j;
 }
 object load {
-  parent R1-12-47-3_meter_15;
-  name R1-12-47-3_load_15;
+  parent R1_12_47_3_meter_15;
+  name R1_12_47_3_load_15;
   phases BN;
   nominal_voltage 120.0;
   load_class C;
@@ -1782,8 +1782,8 @@ object load {
   voltage_B -60.00-103.92j;
 }
 object load {
-  parent R1-12-47-3_meter_16;
-  name R1-12-47-3_load_16;
+  parent R1_12_47_3_meter_16;
+  name R1_12_47_3_load_16;
   phases BN;
   nominal_voltage 120.0;
   load_class C;
@@ -1791,8 +1791,8 @@ object load {
   voltage_B -60.00-103.92j;
 }
 object load {
-  parent R1-12-47-3_meter_17;
-  name R1-12-47-3_load_17;
+  parent R1_12_47_3_meter_17;
+  name R1_12_47_3_load_17;
   phases BN;
   nominal_voltage 120.0;
   load_class C;
@@ -1800,8 +1800,8 @@ object load {
   voltage_B -60.00-103.92j;
 }
 object load {
-  parent R1-12-47-3_meter_18;
-  name R1-12-47-3_load_18;
+  parent R1_12_47_3_meter_18;
+  name R1_12_47_3_load_18;
   phases ABCN;
   nominal_voltage 277.0;
   load_class C;
@@ -1813,8 +1813,8 @@ object load {
   voltage_C -138.50+239.89j;
 }
 object load {
-  parent R1-12-47-3_meter_19;
-  name R1-12-47-3_load_19;
+  parent R1_12_47_3_meter_19;
+  name R1_12_47_3_load_19;
   phases AN;
   nominal_voltage 120.0;
   load_class C;
@@ -1822,8 +1822,8 @@ object load {
   voltage_A 120.0+0.0j;
 }
 object load {
-  parent R1-12-47-3_meter_20;
-  name R1-12-47-3_load_20;
+  parent R1_12_47_3_meter_20;
+  name R1_12_47_3_load_20;
   phases ABCN;
   nominal_voltage 277.0;
   load_class C;
@@ -1835,8 +1835,8 @@ object load {
   voltage_C -138.50+239.89j;
 }
 object load {
-  parent R1-12-47-3_meter_21;
-  name R1-12-47-3_load_21;
+  parent R1_12_47_3_meter_21;
+  name R1_12_47_3_load_21;
   phases ABCN;
   nominal_voltage 277.0;
   load_class C;
@@ -1848,15 +1848,15 @@ object load {
   voltage_C -138.50+239.89j;
 }
 object triplex_node {
-  name R1-12-47-3_tn_1;
+  name R1_12_47_3_tn_1;
   phases BS;
   nominal_voltage 120.0;
   voltage_1 -60.00-103.92j;
   voltage_2 -60.00-103.92j;
 }
 object triplex_node {
-  parent R1-12-47-3_tm_1;
-  name R1-12-47-3_tn_2;
+  parent R1_12_47_3_tm_1;
+  name R1_12_47_3_tn_2;
   phases BS;
   nominal_voltage 120.0;
   power_12 175181.0364+5512.8881j;
@@ -1864,7 +1864,7 @@ object triplex_node {
   voltage_2 -60.00-103.92j;
 }
 object triplex_meter {
-  name R1-12-47-3_tm_1;
+  name R1_12_47_3_tm_1;
   phases BS;
   nominal_voltage 120.0;
   voltage_1 -60.00-103.92j;
