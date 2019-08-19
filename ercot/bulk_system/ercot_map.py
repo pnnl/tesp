@@ -9,6 +9,9 @@ import sys
 
 featureScale = '50m'  # 10, 50 0r 110
 urbanColor = 'seagreen'
+landColor = 'whitesmoke'
+#landColor = cfeature.COLORS['land']
+#print (landColor)
 shapePath = 'z:/Documents/ShapeFiles/'
 
 rdr1 = shpreader.Reader(shapePath + 'Texas_County_Boundaries/Texas_County_Boundaries.shp')
@@ -23,7 +26,7 @@ URBAN = cfeature.ShapelyFeature(urban, ccrs.PlateCarree())
 plt.figure(figsize=(10, 10))
 
 ax = plt.axes(projection=ccrs.PlateCarree())
-ax.add_feature(cfeature.LAND.with_scale(featureScale))
+ax.add_feature(cfeature.LAND.with_scale(featureScale), facecolor=landColor)
 #ax.add_feature(cfeature.BORDERS.with_scale(featureScale))
 ax.add_feature(cfeature.STATES.with_scale(featureScale))
 ax.add_feature(cfeature.OCEAN.with_scale(featureScale))
