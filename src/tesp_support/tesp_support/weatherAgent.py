@@ -23,7 +23,8 @@ def startWeatherAgent(file):
         the weather data file
     :return: nothing
     """
-    weatherData = pd.DataFrame.from_csv(file) # read the weather data file
+    # read the weather data file, arguments to mimic deprecated from_csv function
+    weatherData = pd.read_csv(file, index_col=0, parse_dates=True)
     config = os.environ['WEATHER_CONFIG'] # read the weather config json file
     if os.path.isfile(config):
         with open(config, 'r') as stream:

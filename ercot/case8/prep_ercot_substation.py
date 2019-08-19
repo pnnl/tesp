@@ -116,6 +116,7 @@ def ProcessGLM (fileroot, weatherName):
 				nControllers += 1
 				houseName = key
 				meterName = val['billingmeter_id']
+				houseClass = val['house_class']
 				controller_name = houseName + '_hvac'
 
 				wakeup_start = np.random.uniform (wakeup_start_lo, wakeup_start_hi)
@@ -137,6 +138,7 @@ def ProcessGLM (fileroot, weatherName):
 				controllers[controller_name] = {'control_mode': control_mode, 
 					'houseName': houseName, 
 					'meterName': meterName, 
+					'houseClass': houseClass,
 					'period': periodController,
 					'wakeup_start': float('{:.3f}'.format(wakeup_start)),
 					'daylight_start': float('{:.3f}'.format(daylight_start)),
@@ -251,12 +253,16 @@ def ProcessGLM (fileroot, weatherName):
 #		print ('subscribe "precommit:Eplus_meter.monthly_fee <- eplus_json/monthly_fee";', file=op)
 	for key, val in controllers.items():
 		houseName = val['houseName']
+		houseClass = val['houseClass']
 		meterName = val['meterName']
 		aucSimKey = aucSimName + '/' + key
 		print ('publish "commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature";', file=op)
 		print ('publish "commit:' + houseName + '.power_state -> ' + houseName + '/power_state";', file=op)
 		print ('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
-		print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
+		if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
+			print ('publish "commit:' + meterName + '.measured_voltage_A -> ' + meterName + '/measured_voltage_1";', file=op)
+		else:
+			print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
 		print ('subscribe "precommit:' + houseName + '.cooling_setpoint <- ' + aucSimKey + '/cooling_setpoint";', file=op)
 		print ('subscribe "precommit:' + houseName + '.heating_setpoint <- ' + aucSimKey + '/heating_setpoint";', file=op)
 		print ('subscribe "precommit:' + houseName + '.thermostat_deadband <- ' + aucSimKey + '/thermostat_deadband";', file=op)

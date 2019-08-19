@@ -17,6 +17,20 @@ import math
 
 min_load_size = 10.0
 
+# GridLAB-D name should not begin with a number, or contain '-' for FNCS
+def gld_strict_name(val):
+    """Sanitizes a name for GridLAB-D publication to FNCS
+
+    Args:
+        val (str): the input name
+
+    Returns:
+        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
+    """
+    if val[0].isdigit():
+        val = 'gld_' + val
+    return val.replace ('-', '_')
+
 def is_node_class(s):
     if s == 'node':
         return True
@@ -127,6 +141,8 @@ def obj(parent,model,line,itr,oidh,octr):
 # %% get data from the full model  
 def getV(model_name, simlistfile, V_datafile, new_Vdatafile):
 
+    base_name = gld_strict_name (model_name)
+
     with open(V_datafile,'r') as f, open(new_Vdatafile,'w') as f1:
         next(f) # skip header line
         for line in f:
@@ -171,14 +187,15 @@ def getV(model_name, simlistfile, V_datafile, new_Vdatafile):
     
     for n in range(len(simlist)):
     #    temp_node='R5-12-47-1_'+nodelist[n]['i_node']
-        Via.append(complex(float(Va[model_name+'_node_'+simlist[n]['i_node']]),float(Vaimg[model_name+'_node_'+simlist[n]['i_node']])))
-        Vib.append(complex(float(Vb[model_name+'_node_'+simlist[n]['i_node']]),float(Vbimg[model_name+'_node_'+simlist[n]['i_node']])))
-        Vic.append(complex(float(Vc[model_name+'_node_'+simlist[n]['i_node']]),float(Vcimg[model_name+'_node_'+simlist[n]['i_node']])))
-        Vfa.append(complex(float(Va[model_name+'_node_'+simlist[n]['f_node']]),float(Vaimg[model_name+'_node_'+simlist[n]['f_node']]))) 
-        Vfb.append(complex(float(Vb[model_name+'_node_'+simlist[n]['f_node']]),float(Vbimg[model_name+'_node_'+simlist[n]['f_node']])))
-        Vfc.append(complex(float(Vc[model_name+'_node_'+simlist[n]['f_node']]),float(Vcimg[model_name+'_node_'+simlist[n]['f_node']])))
+        Via.append(complex(float(Va[base_name+'_node_'+simlist[n]['i_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['i_node']])))
+        Vib.append(complex(float(Vb[base_name+'_node_'+simlist[n]['i_node']]),float(Vbimg[base_name+'_node_'+simlist[n]['i_node']])))
+        Vic.append(complex(float(Vc[base_name+'_node_'+simlist[n]['i_node']]),float(Vcimg[base_name+'_node_'+simlist[n]['i_node']])))
+        Vfa.append(complex(float(Va[base_name+'_node_'+simlist[n]['f_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['f_node']]))) 
+        Vfb.append(complex(float(Vb[base_name+'_node_'+simlist[n]['f_node']]),float(Vbimg[base_name+'_node_'+simlist[n]['f_node']])))
+        Vfc.append(complex(float(Vc[base_name+'_node_'+simlist[n]['f_node']]),float(Vcimg[base_name+'_node_'+simlist[n]['f_node']])))
         
 def getV_sim(model_name, simlistfile, V_datafile, new_Vdatafile):
+    base_name = gld_strict_name (model_name)
     with open(V_datafile,'r') as f, open(new_Vdatafile,'w') as f1:
         next(f) # skip header line
         for line in f:
@@ -212,17 +229,18 @@ def getV_sim(model_name, simlistfile, V_datafile, new_Vdatafile):
     
     for n in range(len(simlist)):
     #    temp_node='R5-12-47-1_'+nodelist[n]['i_node']
-        Vias.append(complex(float(Va[model_name+'_node_'+simlist[n]['i_node']]),float(Vaimg[model_name+'_node_'+simlist[n]['i_node']])))
-        Vibs.append(complex(float(Vb[model_name+'_node_'+simlist[n]['i_node']]),float(Vbimg[model_name+'_node_'+simlist[n]['i_node']])))
-        Vics.append(complex(float(Vc[model_name+'_node_'+simlist[n]['i_node']]),float(Vcimg[model_name+'_node_'+simlist[n]['i_node']])))
-        Vfas.append(complex(float(Va[model_name+'_node_'+simlist[n]['f_node']]),float(Vaimg[model_name+'_node_'+simlist[n]['f_node']]))) 
-        Vfbs.append(complex(float(Vb[model_name+'_node_'+simlist[n]['f_node']]),float(Vbimg[model_name+'_node_'+simlist[n]['f_node']])))
-        Vfcs.append(complex(float(Vc[model_name+'_node_'+simlist[n]['f_node']]),float(Vcimg[model_name+'_node_'+simlist[n]['f_node']])))
+        Vias.append(complex(float(Va[base_name+'_node_'+simlist[n]['i_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['i_node']])))
+        Vibs.append(complex(float(Vb[base_name+'_node_'+simlist[n]['i_node']]),float(Vbimg[base_name+'_node_'+simlist[n]['i_node']])))
+        Vics.append(complex(float(Vc[base_name+'_node_'+simlist[n]['i_node']]),float(Vcimg[base_name+'_node_'+simlist[n]['i_node']])))
+        Vfas.append(complex(float(Va[base_name+'_node_'+simlist[n]['f_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['f_node']]))) 
+        Vfbs.append(complex(float(Vb[base_name+'_node_'+simlist[n]['f_node']]),float(Vbimg[base_name+'_node_'+simlist[n]['f_node']])))
+        Vfcs.append(complex(float(Vc[base_name+'_node_'+simlist[n]['f_node']]),float(Vcimg[base_name+'_node_'+simlist[n]['f_node']])))
 
 #***********************************************************************************************************
 # get current from the full model
 def getI(model_name, linelistfile, I_datafile,new_I_datafile):
 
+    base_name = gld_strict_name (model_name)
     with open(I_datafile,'r') as f, open(new_I_datafile,'w') as f1:
         next(f) # skip header line
         for line in f:
@@ -265,6 +283,7 @@ def getI(model_name, linelistfile, I_datafile,new_I_datafile):
 # get current for junction load aggreggation
         
 def getI_agg(model_name, simlistfile, I_datafile, new_I_datafile):
+    base_name = gld_strict_name (model_name)
     with open(I_datafile,'r') as f, open(new_I_datafile,'w') as f1:
         next(f) # skip header line
         for line in f:
@@ -446,9 +465,10 @@ def calculate_Z_S():
 #***********************************************************************************************************               
 # %%write new gld model 
 def CreateNode(modelname,seg_number,glmfile):
+    base_name = gld_strict_name (modelname)
     f=open(glmfile,'a')
     f.write('object node {\n')
-    f.write('   name '+modelname+'_node_'+simlist[seg_number]['f_node']+';\n')
+    f.write('   name '+base_name+'_node_'+simlist[seg_number]['f_node']+';\n')
     f.write('   phases '+simlist[seg_number]['phase_name']+'N;\n')
     f.write('   nominal_voltage '+str(v_base)+';\n')
     f.write('   voltage_A '+va+';\n')
@@ -516,6 +536,7 @@ def CreateLineConfig(seg_number,glmfile):
 
 # Create lines
 def CreateLine(model_name,seg_number,glmfile):
+    base_name = gld_strict_name (model_name)
     f=open(glmfile,'a')
     f.write('object overhead_line {\n')    
     f.write('    name line_seg_'+str(seg_number)+';\n') 
@@ -533,8 +554,8 @@ def CreateLine(model_name,seg_number,glmfile):
         f.write('    phases AC;\n')
     elif simlist[seg_number]['phase_name']=='BC':
         f.write('    phases BC;\n')
-    f.write('    from '+model_name+'_node_'+simlist[seg_number]['i_node']+';\n') 
-    f.write('    to '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
+    f.write('    from '+base_name+'_node_'+simlist[seg_number]['i_node']+';\n') 
+    f.write('    to '+base_name+'_node_'+simlist[seg_number]['f_node']+';\n')
     f.write('    length 5280 ft;\n')
     f.write('    configuration line_config_seg_'+str(seg_number)+';\n')
     f.write('}\n')
@@ -542,10 +563,11 @@ def CreateLine(model_name,seg_number,glmfile):
 
 # Creat Meters to attached the loads    
 def CreateMeter(model_name,seg_number,glmfile):
+    base_name = gld_strict_name (model_name)
     f=open(glmfile,'a')
     f.write('object meter {\n')
     f.write('    name meter_seg_'+str(seg_number)+';\n')
-    f.write('    parent '+model_name+'_node_'+simlist[seg_number]['f_node']+';\n')
+    f.write('    parent '+base_name+'_node_'+simlist[seg_number]['f_node']+';\n')
     f.write('}\n')
     return
       
@@ -644,7 +666,8 @@ def CreateOneClassLoad (parent_name, load_name, phase_name, cls, p0, p1, p2, f):
 
 # Create loads   
 def CreateLoad(model_name,seg_number,glmfile,class_factors):
-    parent_name = model_name+ '_node_' + simlist[seg_number]['f_node']
+    base_name = gld_strict_name (model_name)
+    parent_name = base_name+ '_node_' + simlist[seg_number]['f_node']
     load_name = 'load_seg_' + str(seg_number)
     phase_name = simlist[seg_number]['phase_name']
     p0 = S[seg_number][0][0]
@@ -658,7 +681,7 @@ def CreateLoad(model_name,seg_number,glmfile,class_factors):
     # look for the original load class allocations from f_node, then i_node if not found
     class_factor_node = parent_name
     if class_factor_node not in class_factors:
-        class_factor_node = model_name + '_node_' + simlist[seg_number]['i_node']
+        class_factor_node = base_name + '_node_' + simlist[seg_number]['i_node']
     if class_factor_node in class_factors:
 #        print (class_factor_node, class_factors[class_factor_node])
         for cls in ['A', 'I', 'C', 'R', 'U']:
@@ -675,7 +698,8 @@ def CreateLoad(model_name,seg_number,glmfile,class_factors):
     return
 
 def CreateLoad_agg(model_name,seg_number,glmfile,class_factors):
-    parent_name = model_name+ '_node_' + simlist[seg_number]['f_node']
+    base_name = gld_strict_name (model_name)
+    parent_name = base_name+ '_node_' + simlist[seg_number]['f_node']
     load_name = 'load_junction_seg_' + str(seg_number)
     phase_name = simlist[seg_number]['phase_name']
     p0 = S_agg[seg_number][0][0]
@@ -693,7 +717,7 @@ def CreateLoad_agg(model_name,seg_number,glmfile,class_factors):
     # look for the original load class allocations from f_node, then i_node if not found
     class_factor_node = parent_name
     if class_factor_node not in class_factors:
-        class_factor_node = model_name + '_node_' + simlist[seg_number]['i_node']
+        class_factor_node = base_name + '_node_' + simlist[seg_number]['i_node']
     if class_factor_node in class_factors:
 #        print (class_factor_node, class_factors[class_factor_node])
         for cls in ['A', 'I', 'C', 'R', 'U']:
@@ -711,6 +735,7 @@ def CreateLoad_agg(model_name,seg_number,glmfile,class_factors):
 
 #*********************************************
 def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_band_width):
+    base_name = gld_strict_name (modelname)
     f=open(glmfile,'a')
     f.write('//********************************\n')
     f.write('//Simplified feeder model\n')
@@ -730,7 +755,7 @@ def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_
     
     #swing bus node define
     f.write('object node {\n')
-    f.write('    name '+modelname+'_node_'+swingbus+';\n')
+    f.write('    name '+base_name+'_node_'+swingbus+';\n')
     f.write('    phases ABCN;\n')
     f.write('    nominal_voltage '+v_base+';\n')
     f.write('    bustype SWING;\n')
@@ -755,7 +780,7 @@ def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_
     f.write('}\n')
     
     f.write('object meter {\n')
-    f.write('    name '+modelname+'_meter_head;\n')
+    f.write('    name '+base_name+'_meter_head;\n')
     f.write('    phases ABCN;\n')
     f.write('    nominal_voltage '+v_base+';\n')
     f.write('    voltage_A '+v1+';\n')
@@ -765,16 +790,16 @@ def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_
     
     f.write('object regulator {\n')
     f.write('    name feeder_reg_1;\n')
-    f.write('    from '+modelname+'_node_'+swingbus+';\n')
-    f.write('    to '+modelname+'_meter_head;\n')
+    f.write('    from '+base_name+'_node_'+swingbus+';\n')
+    f.write('    to '+base_name+'_meter_head;\n')
     f.write('    phases ABCN;\n')
     f.write('    configuration feeder_reg_cfg;\n')
     f.write('}\n')
 
     # bus node
     f.write('object node {\n')
-    f.write('    parent '+modelname+'_meter_head;\n')
-    f.write('    name '+modelname+'_node_'+simlist[0]['i_node']+';\n')
+    f.write('    parent '+base_name+'_meter_head;\n')
+    f.write('    name '+base_name+'_node_'+simlist[0]['i_node']+';\n')
     f.write('    phases ABCN;\n')
     f.write('    nominal_voltage '+v_base+';\n')
     f.write('    voltage_A '+v1+';\n')
@@ -872,6 +897,7 @@ def _one_test(k):
    
     fname='new_'+tax[k][0]+'.glm' 
     mname=tax[k][0].replace('.','-')
+    base_name = gld_strict_name (mname)
     sim_fname='sim_'+tax[k][0]+'.glm'
     #calculate Vbase
     global va, vb, vc, v_base
@@ -946,7 +972,7 @@ def _one_test(k):
     f_branch=[]
     segment_node=[]
     for n in range(len(simlist)): 
-        segment_node=nx.shortest_path(G, source=mname+'_node_'+simlist[n]['i_node'], target=mname+'_node_'+simlist[n]['f_node'])
+        segment_node=nx.shortest_path(G, source=base_name+'_node_'+simlist[n]['i_node'], target=base_name+'_node_'+simlist[n]['f_node'])
         i_branch.append(G.edges[segment_node[0],segment_node[1]]['ename'])
         f_branch.append(G.edges[segment_node[-2],segment_node[-1]]['ename'])
     for n in range(len(simlist)):    
@@ -994,8 +1020,8 @@ def _one_test(k):
     retained_nodes = set()
     retained_nodes.add(swing_node)
     for n in simlist:
-        retained_nodes.add(mname + '_node_' + n['i_node'])
-        retained_nodes.add(mname + '_node_' + n['f_node'])
+        retained_nodes.add(base_name + '_node_' + n['i_node'])
+        retained_nodes.add(base_name + '_node_' + n['f_node'])
 #    print (retained_nodes)
 
     total_kva = {}

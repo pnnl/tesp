@@ -860,7 +860,7 @@ def buildingTypeLabel (rgn, bldg, ti):
 
 house_nodes = {} # keyed on node, [nhouse, region, lg_v_sm, phs, bldg, ti, parent (for ERCOT only)]
 small_nodes = {} # keyed on node, [kva, phs, load_class]
-comm_loads = {}  # keyed on load name, [parent, comm_type, nzones, kva, nphs, vln]
+comm_loads = {}  # keyed on load name, [parent, comm_type, nzones, kva, nphs, phases, vln, loadnum]
 
 solar_count = 0
 solar_kw = 0
@@ -975,6 +975,37 @@ def connect_ercot_houses (model, h, op, vln, vsec):
             print ('    interval', str(metrics_interval) + ';', file=op)
             print ('  };', file=op)
         print ('}', file=op)
+
+def connect_ercot_commercial(op):
+  """For the reduced-order ERCOT feeders, add a billing meter to the commercial load points, except small ZIPLOADs
+
+  Args:
+      op (file): an open GridLAB-D input file
+  """
+  meters_added = set()
+  for key in comm_loads:
+    mtr = comm_loads[key][0]
+    comm_type = comm_loads[key][1]
+    if comm_type == 'ZIPLOAD':
+      continue
+    phases = comm_loads[key][5]
+    vln = float(comm_loads[key][6])
+    idx = mtr.rfind('_')
+    parent = mtr[:idx]
+
+    if mtr not in meters_added:
+      meters_added.add(mtr)
+      print ('object meter {', file=op)
+      print ('  name ' + mtr + ';', file=op)
+      print ('  parent ' + parent + ';', file=op)
+      print ('  phases ' + phases + ';', file=op)
+      print ('  nominal_voltage ' + format(vln, '.1f') + ';', file=op)
+      write_tariff (op)
+      if metrics_interval > 0:
+          print ('  object metrics_collector {', file=op)
+          print ('    interval', str(metrics_interval) + ';', file=op)
+          print ('  };', file=op)
+      print ('}', file=op)
 
 def write_ercot_small_loads(basenode, op, vnom):
   """For the reduced-order ERCOT feeders, write loads that are too small for houses
@@ -1125,8 +1156,14 @@ def replace_commercial_loads (model, h, t, avgBuilding):
             comm_type = 'ZIPLOAD'
             total_zipload += 1
           mtr = model[t][o]['parent']
-          extra_billing_meters.add(mtr)
-          comm_loads[o] = [mtr, comm_type, nzones, kva, nphs, phases, vln]
+          if forERCOT == True: 
+          # we will add a child meter (with tariff) to the parent node, 
+          # except for the small ZIPLOADs because GridLAB-D prohibits grandchildren
+            if comm_type != 'ZIPLOAD':
+              mtr = model[t][o]['parent'] + '_mtr'
+          else:
+            extra_billing_meters.add(mtr)
+          comm_loads[o] = [mtr, comm_type, nzones, kva, nphs, phases, vln, total_commercial]
           model[t][o]['groupid'] = comm_type + '_' + str(nzones)
           del model[t][o]
   print ('found', total_commercial, 'commercial loads totaling ', '{:.2f}'.format(total_comm_kva), 'KVA')
@@ -1372,8 +1409,7 @@ def write_commercial_loads(rgn, key, op):
   nphs = int(comm_loads[key][4])
   phases = comm_loads[key][5]
   vln = float(comm_loads[key][6])
-  idx = mtr.rfind('_')
-  loadnum = int(mtr[idx+1:])
+  loadnum = int(comm_loads[key][7])
 
   bldg = {}
   bldg['mtr'] = mtr
@@ -2585,6 +2621,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         if forERCOT == True:
             replace_commercial_loads (model, h, 'load', 0.001 * avgcommercial)
+            connect_ercot_commercial (op)
             identify_ercot_houses (model, h, 'load', 0.001 * avghouse, rgn)
             connect_ercot_houses (model, h, op, vln, 120.0)
             for key in house_nodes:
@@ -2685,8 +2722,8 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     global starttime, endtime, timestep, metrics_interval, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
     global fncs_case, forERCOT
-    global house_nodes, small_nodes
-    global latitude, longitude, weatherName
+    global house_nodes, small_nodes, comm_loads
+    global latitude, longitude, weatherName, feeder_commercial_building_number
 
     if configfile is not None:
         checkResidentialBuildingTable()
@@ -2738,6 +2775,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
 
     house_nodes = {}
     small_nodes = {}
+    comm_loads = {}
 
     if taxconfig is not None:
         print ('called with a custom taxonomy configuration')
