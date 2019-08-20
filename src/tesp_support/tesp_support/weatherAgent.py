@@ -145,23 +145,28 @@ def startWeatherAgent(file):
     time_granted = 0
     timeDeltaChanged = 0
     for i in range(len(timeNeedToPublish)):
-        # if i > 0:
-        #     timeToRequest = timeNeedToPublish[i] - timeNeedToPublish[i-1]
-        # else:
-        timeToRequest = timeNeedToPublish[i]
-        # if requested time is not multiple of time_delta, update time_delta to time requested
-        # since fncs require requested time to be multiple of time_delta
-        if (timeToRequest - time_granted) % timeDeltaInSeconds != 0:
-            # if timeToRequest % publishTimeAhead == 0:
-            #     fncs.update_time_delta(publishTimeAhead)
-            # else:
-            fncs.update_time_delta(1)
-            timeDeltaChanged = 1
-        time_granted = fncs.time_request(timeToRequest)
-        if timeDeltaChanged == 1:
-            fncs.update_time_delta(timeDeltaInSeconds)
-            timeDeltaChanged == 0
-        # if the time need to be published is real time
+        print("i", i)
+        if i > 0:
+	    #     timeToRequest = timeNeedToPublish[i] - timeNeedToPublish[i-1]
+	    # else:
+            timeToRequest = timeNeedToPublish[i]
+            print("timeToRequest", timeToRequest)
+            # if requested time is not multiple of time_delta, update time_delta to time requested
+            # since fncs require requested time to be multiple of time_delta
+            if (timeToRequest - time_granted) % timeDeltaInSeconds != 0:
+                # if timeToRequest % publishTimeAhead == 0:
+                #     fncs.update_time_delta(publishTimeAhead)
+                # else:
+                fncs.update_time_delta(1)
+                print("time delta updated to 1s.", flush=True)
+                timeDeltaChanged = 1
+            time_granted = fncs.time_request(timeToRequest)
+            print("time_granted", time_granted)
+            if timeDeltaChanged == 1:
+                fncs.update_time_delta(timeDeltaInSeconds)
+                print("time delta updated to " + str(timeDeltaInSeconds) + "s.", flush=True)
+                timeDeltaChanged = 0
+	# if the time need to be published is real time
         if timeNeedToBePublished[i] in timeNeedToPublishRealtime:
             # find the data by the time point and publish them
             row = weatherData2.loc[dtStart + timedelta(seconds=timeNeedToBePublished[i])]
