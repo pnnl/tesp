@@ -15,6 +15,7 @@ Public Functions:
 
 import json;
 import sys;
+import math;
 
 def ercotMeterName(objname):
 	""" Enforces the meter naming convention for ERCOT
@@ -136,9 +137,13 @@ def glm_dict (nameroot, ercot=False, te30=False):
 					inFNCSmsg = False
 			if lst[1] == 'triplex_meter':
 				inTriplexMeters = True
+				vln = 120.0
+				vll = 240.0
 				phases = ''
 			if lst[1] == 'meter':
 				inMeters = True
+				vln = 120.0
+				vll = 240.0
 				phases = 'ABC'
 			if lst[1] == 'inverter':
 				inInverters = True
@@ -234,10 +239,10 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				if lst[0] == 'bill_mode':
 					if te30 == True:
 						if 'flatrate' not in name:
-							billingmeters[name] = {'feeder_id':feeder_id,'phases':phases, 'children':[]}
+							billingmeters[name] = {'feeder_id':feeder_id,'phases':phases,'vll':vll,'vln':vln,'children':[]}
 							lastBillingMeter = name
 					else:
-						billingmeters[name] = {'feeder_id':feeder_id,'phases':phases, 'children':[]}
+						billingmeters[name] = {'feeder_id':feeder_id,'phases':phases,'vll':vll,'vln':vln,'children':[]}
 						lastBillingMeter = name
 					inTriplexMeters = False
 			if inMeters == True:
@@ -247,8 +252,11 @@ def glm_dict (nameroot, ercot=False, te30=False):
 					phases = lst[1].strip(';')
 				if lst[0] == 'parent':
 					lastMeterParent = lst[1].strip(';')
+				if lst[0] == 'nominal_voltage':
+					vln = float(lst[1].strip(' ').strip(';')) * 1.0
+					vll = vln * math.sqrt(3.0)
 				if lst[0] == 'bill_mode':
-					billingmeters[name] = {'feeder_id':feeder_id,'phases':phases, 'children':[]}
+					billingmeters[name] = {'feeder_id':feeder_id,'phases':phases,'vll':vll,'vln':vln,'children':[]}
 					lastBillingMeter = name
 					inMeters = False
 		elif len(lst) == 1:
