@@ -37,6 +37,7 @@ def startWeatherAgent(file):
                 timeFormat = '%Y-%m-%d %H:%M:%S'
                 dtStart = datetime.strptime (StartTime, timeFormat)
                 timeDeltaStr = conf['time_delta']
+                publishInterval = conf['publishInterval']
                 forecast = conf['Forecast']
                 addErrorToForecast = conf['AddErrorToForecast']
                 forecastLength = conf['ForecastLength']
@@ -61,6 +62,11 @@ def startWeatherAgent(file):
         print("Error in time_delta", ex)
 
     try:
+        publishIntervalInSeconds = convertTimeToSeconds(publishInterval)
+    except Exception as ex:
+        print("Error in publish Interval", ex)
+
+    try:
         forecastLength = convertTimeToSeconds(forecastLength)
     except Exception as ex:
         print("Error in ForecastLength", ex)
@@ -74,10 +80,10 @@ def startWeatherAgent(file):
     # this config str won't work as an argument to fncs::initialize, so write fncs.zpl just in time
     zplstr = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds, timeStopInSeconds, broker)
 
-    # when doing resample(), use timeDeltaInSeconds to make it uniform
+    # when doing resample(), use publishIntervalInSeconds to make it uniform
     # the reason for that is due to some of the units that we use for fncs, such as 'min',
     # is not recognized by the resample() function
-    weatherData2 = weatherData.resample(rule=str(timeDeltaInSeconds)+"s",closed='left').first()
+    weatherData2 = weatherData.resample(rule=str(publishIntervalInSeconds)+"s",closed='left').first()
     weatherData2 = weatherData2.interpolate(method='quadratic')
     # find weather data on the hour for the hourly forecast
     hourlyWeatherData=weatherData.loc[(weatherData.index.minute == 0) & (weatherData.index.second == 0) & (weatherData.index.microsecond == 0) & (weatherData.index.nanosecond == 0)]
@@ -109,9 +115,9 @@ def startWeatherAgent(file):
     timeNeedToPublishRealtime = [0]
     timeNeedToPublishForecast = [0]
     # real time need to publish
-    numberOfRealtimeBroadcast = timeStopInSeconds // timeDeltaInSeconds + 1
+    numberOfRealtimeBroadcast = timeStopInSeconds // publishIntervalInSeconds + 1
     for i in range(1,numberOfRealtimeBroadcast):
-        timeNeedToPublishRealtime.append(i * timeDeltaInSeconds)
+        timeNeedToPublishRealtime.append(i * publishIntervalInSeconds)
     if forecast == 1:
         # time need to publish forecast, which is on the hour
         numberOfForecast = timeStopInSeconds // 3600 + 1
@@ -143,7 +149,7 @@ def startWeatherAgent(file):
     print(zplName, 'file deleted', flush=True)
 
     time_granted = 0
-    timeDeltaChanged = 0
+    #timeDeltaChanged = 0
     for i in range(len(timeNeedToPublish)):
         print("i", i)
         if i > 0:
@@ -153,19 +159,19 @@ def startWeatherAgent(file):
             print("timeToRequest", timeToRequest)
             # if requested time is not multiple of time_delta, update time_delta to time requested
             # since fncs require requested time to be multiple of time_delta
-            if (timeToRequest - time_granted) % timeDeltaInSeconds != 0:
+            #if (timeToRequest - time_granted) % timeDeltaInSeconds != 0:
                 # if timeToRequest % publishTimeAhead == 0:
                 #     fncs.update_time_delta(publishTimeAhead)
                 # else:
-                fncs.update_time_delta(1)
-                print("time delta updated to 1s.", flush=True)
-                timeDeltaChanged = 1
+            #    fncs.update_time_delta(1)
+            #    print("time delta updated to 1s.", flush=True)
+            #    timeDeltaChanged = 1
             time_granted = fncs.time_request(timeToRequest)
             print("time_granted", time_granted)
-            if timeDeltaChanged == 1:
-                fncs.update_time_delta(timeDeltaInSeconds)
-                print("time delta updated to " + str(timeDeltaInSeconds) + "s.", flush=True)
-                timeDeltaChanged = 0
+            #if timeDeltaChanged == 1:
+            #    fncs.update_time_delta(timeDeltaInSeconds)
+            #    print("time delta updated to " + str(timeDeltaInSeconds) + "s.", flush=True)
+            #    timeDeltaChanged = 0
 	# if the time need to be published is real time
         if timeNeedToBePublished[i] in timeNeedToPublishRealtime:
             # find the data by the time point and publish them
@@ -196,16 +202,16 @@ def startWeatherAgent(file):
                 fncs.publish(col + '/forecast', json.dumps(wd))
     # if the last time step/stop time is not requested
     if timeStopInSeconds not in timeNeedToPublish:
-        if (timeStopInSeconds - time_granted) % timeDeltaInSeconds != 0:
-            fncs.update_time_delta(1)
-            timeDeltaChanged = 1
+        #if (timeStopInSeconds - time_granted) % timeDeltaInSeconds != 0:
+        #    fncs.update_time_delta(1)
+        #    timeDeltaChanged = 1
         time_granted = fncs.time_request(timeStopInSeconds)
-        if timeDeltaChanged == 1:
-            fncs.update_time_delta(timeDeltaInSeconds)
-            timeDeltaChanged == 0
+        #if timeDeltaChanged == 1:
+        #    fncs.update_time_delta(timeDeltaInSeconds)
+        #    timeDeltaChanged == 0
 
     # # Jacob suggested implementation
-    # tnext_publish = timeDeltaInSeconds - publishTimeAhead
+    # tnext_publish = publishIntervalInSeconds - publishTimeAhead
     # print("before while, time_granted: ", time_granted, flush=True)
     # while time_granted < timeStopInSeconds:
     #     # determine the next FNCS time
@@ -220,7 +226,7 @@ def startWeatherAgent(file):
     #     print("time_granted: ", time_granted, flush=True)
     #
     #     # update the next time to publish
-    #     tnext_publish += timeDeltaInSeconds
+    #     tnext_publish += publishIntervalInSeconds
     #     print("update tnext_publish", flush=True)
 
     print('finalizing FNCS', flush=True)
