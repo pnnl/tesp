@@ -123,6 +123,18 @@ def process_voltages(nameroot, dictname = ''):
 			i = i + 1
 		j = j + 1
 
+	# normalize the meter voltages to 100 percent
+	j = 0
+	for key in mtr_keys:
+		vln = dict['billingmeters'][key]['vln'] / 100.0
+		vll = dict['billingmeters'][key]['vll'] / 100.0
+		data_m[j,:,MTR_VOLT_MIN_IDX] /= vln
+		data_m[j,:,MTR_VOLT_MAX_IDX] /= vln
+		data_m[j,:,MTR_VOLT_AVG_IDX] /= vln
+		data_m[j,:,MTR_VOLT12_MIN_IDX] /= vll
+		data_m[j,:,MTR_VOLT12_MAX_IDX] /= vll
+		j = j + 1
+
 	# display a plot
 	fig, ax = plt.subplots(2, 1, sharex = 'col')
 	i = 0
@@ -130,8 +142,8 @@ def process_voltages(nameroot, dictname = ''):
 		ax[0].plot(hrs, data_m[i,:,MTR_VOLT_MIN_IDX], color="blue")
 		ax[1].plot(hrs, data_m[i,:,MTR_VOLT_MAX_IDX], color="red")
 		i = i + 1
-	ax[0].set_ylabel("Min Volts")
-	ax[1].set_ylabel("Max Volts")
+	ax[0].set_ylabel("Min Voltage [%]")
+	ax[1].set_ylabel("Max Voltage [%]")
 	ax[1].set_xlabel("Hours")
 	ax[0].set_title ("Voltage at all Meters")
 

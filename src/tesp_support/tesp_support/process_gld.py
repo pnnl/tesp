@@ -245,14 +245,13 @@ def process_gld(nameroot, dictname = ''):
   # normalize the meter voltages to 100 percent
   j = 0
   for key in mtr_keys:
-    Vbase = 120.0
-    if data_m[j,:,MTR_VOLT_MIN_IDX].max() > 190.0:
-      Vbase = 277.0
-#    print (mtr_keys[j],'base voltage is', '{:.3f}'.format(Vbase))
-    Vbase /= 100.0
-    data_m[j,:,MTR_VOLT_MIN_IDX] /= Vbase
-    data_m[j,:,MTR_VOLT_MAX_IDX] /= Vbase
-    data_m[j,:,MTR_VOLT_AVG_IDX] /= Vbase
+    vln = dict['billingmeters'][key]['vln'] / 100.0
+    vll = dict['billingmeters'][key]['vll'] / 100.0
+    data_m[j,:,MTR_VOLT_MIN_IDX] /= vln
+    data_m[j,:,MTR_VOLT_MAX_IDX] /= vln
+    data_m[j,:,MTR_VOLT_AVG_IDX] /= vln
+    data_m[j,:,MTR_VOLT12_MIN_IDX] /= vll
+    data_m[j,:,MTR_VOLT12_MAX_IDX] /= vll
     j = j + 1
 
   lst_i.pop('StartTime')
