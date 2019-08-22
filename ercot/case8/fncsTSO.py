@@ -45,41 +45,6 @@ load_shape = [0.6704,
               0.6704]  # wrap to the next day
 
 
-def transfer1DNumpyArray2JavaDblAry(pyArray, name):
-    size1 = len(pyArray)
-    dblAry = gateway.new_array(gateway.jvm.double, size1)
-    for i in range(size1):
-        dblAry[i] = pyArray[i+1][name]
-    return dblAry
-
-
-def transfer2DNumpyArray2JavaDblAry(pyArray):
-    sz = pyArray.shape
-    dblAry = gateway.new_array(gateway.jvm.double, sz[0], sz[1])
-    for i in range(sz[0]):
-        for j in range(sz[1]):
-            dblAry[i][j] = pyArray[i][j]
-    return dblAry
-
-
-def transfer1DJavaArray2NumpyArray(ary):
-    size1 = len(ary)
-    np_ary = np.zeros(size1)
-    for i in range(size1):
-        np_ary[i] = ary[i]
-    return np_ary
-
-
-def transfer2DJavaArray2NumpyArray(ary):
-    size1 = len(ary)
-    size2 = len(ary[0])
-    np_ary = np.zeros((size1, size2), dtype=float)
-    for i in range(size1):
-        for j in range(size2):
-            np_ary[i, j] = ary[i][j]
-    return np_ary
-
-
 # from 'ARIMA-Based Time Series Model of Stochastic Wind Power Generation'
 # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, p]
 def make_wind_plants(): 
@@ -634,17 +599,14 @@ def write_ames_base_case(fname):
   print('// Simulation Parameters', file=fp)
 #  print('MaxDay ' + tmax//da_period, file=fp)
   print('MaxDay 3', file=fp)
-  print('RTOPDur 15', file=fp)    #TODO 5 or 15 min  should be multiple of dt and min
+  print('RTOPDur 5', file=fp)    #TODO 5 or 15 min  should be multiple of dt and whole minute
   print('RandomSeed 695672061', file=fp)
   print('// ThresholdProbability 0.999', file=fp)
-  print('PriceSensitiveLSE  1', file=fp)
+  print('PriceSensitiveDemandFlag  1', file=fp)
   print('ReserveDownSystemPercent 0.2', file=fp)
   print('ReserveUpSystemPercent 0.3', file=fp)
   print('BalPenPos  1000000', file=fp)
   print('BalPenNeg  1000000', file=fp)
-
-  print('NDGFlag 0', file=fp)
-  print('', file=fp)
 
   print('// Bus Data', file=fp)
   print('NumberOfBuses', bus.shape[0], file=fp)
@@ -683,8 +645,7 @@ def write_ames_base_case(fname):
   print('', file=fp)
 
   print('#GenDataStart', file=fp)
-  # TODO: replace ppc['gencost'] with dictionary of hourly bids, collected from the
-  #   GridLAB-D agents over FNCS
+  # TODO: replace ppc['gencost'] with dictionary of hourly bids, collected from the GridLAB-D agents over FNCS
   # TODO check units
   # gen: bus, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
   # gencost: 2, startup, shutdown, 3, c2, c1, c0
@@ -697,12 +658,10 @@ def write_ames_base_case(fname):
     c0 = genCost[i, 6]
     c1 = genCost[i, 5]
     c2 = genCost[i, 4]
-    NS = 10                          # TODO what is this?
-    InitMoney = 100000.0
-    if Pmin > 0: 
+    if Pmin > 0:
       print(name, str(i+1), fbus, '{: .2f}'.format(c0), '{: .2f}'.format(c1), 
             '{: .6f}'.format(c2), '{: .2f}'.format(Pmin), '{: .2f}'.format(Pmax),
-            NS, '{: .2f}'.format(InitMoney), file=fp)
+            NS, '{: .2f}'.format(100000.0), file=fp)
   print('#GenDataEnd', file=fp)
   print('', file=fp)
 
@@ -740,7 +699,7 @@ def write_ames_base_case(fname):
   print('', file=fp)
 
   print('#LSEDataPriceSensitiveDemandStart', file=fp)
-  print('// Name   ID    atBus   hourIndex   d   e   f   SLMin   SLMax', file=fp);
+  print('// Name   ID    atBus   hourIndex   d   e   f   pMin   pMax', file=fp);
   lse = []
   for i in range(bus.shape[0]):
     Pd = unRespMW[i]
@@ -875,7 +834,7 @@ for i in range(gen.shape[0]):
 # Pricesenitive data for AMES/PSST
 # day-ahead market runs at noon every day
 da_offset = 12 * 3600
-NS = 10
+NS = 4
 mn = 0
 hour = 0
 day = 1
@@ -902,7 +861,6 @@ for i in range(fncsBus.shape[0]):
     respC2[i][j] = 1.0
     unRespMW[i][j] = bus[i][2] * load_shape[j]  # * scale for each bus
 
-
 #quit()
 fncs.initialize()
 op = open(casename + '_opf.csv', 'w')
@@ -910,30 +868,9 @@ vp = open(casename + '_pf.csv', 'w')
 print('seconds, OPFconverged, TotalLoad, TotalGen, SwingGen, LMP1, LMP8, gas1, coal1, nuc1, gas2, coal2, nuc2, gas3, coal3, gas4, gas5, coal5, gas7, coal7, wind1, wind3, wind4, wind6, wind7', sep=', ', file=op, flush=True)
 print('seconds, PFConverged, TotalLoad, TotalGen, TotalLoss, SwingGen, v1, v2, v3, v4, v5, v6, v7, v8', sep=', ', file=vp, flush=True)
 
-# integrate with AMES
-#write_ames_base_case(casename + '_ames.dat')
-#server_port_num = "26000"
-#ames_case_file = "/home/osboxes/grid/repository/ERCOTTestSystem/AMES-V5.0/DATA/AMESTestInput.dat"
-#ames_case_file = "/home/osboxes/grid/repository/tesp/ercot/case8/" + casename + "_ames.dat"
 ames_DAM_case_file = "/home/osboxes/grid/repository/tesp/ercot/case8/DAMReferenceModel.dat"
-#ames_jar_file = "\"/home/osboxes/grid/repository/ERCOTTestSystem/AMES-V5.0/dist/AMES-V5.0.jar\""
-#write_psst_day_ahead(casename + '_ames.dat')
-
-## start up the AMES Server
-#myCmd = "java -classpath " + ames_jar_file + " Interface.TSOInterface " + server_port_num + " " + ames_case_file + " &"
-#os.system(myCmd)
-
-## set up the connection via Py4j
-# found = False
-# while not found:
-#   try:
-#     gateway = JavaGateway()
-#     ames = gateway.entry_point
-#     # ames.readBaseCase(case_file)  #load the data
-#     ames.startMarket()  # initialize the market
-#     found = True
-#   except:
-#     pass
+ames_case_file = "/home/osboxes/grid/repository/tesp/ercot/case8/" + casename + "_ames.dat"
+write_ames_base_case(casename + '_ames.dat')
 
 
 # MAIN LOOP starts here
@@ -1048,6 +985,7 @@ while ts <= tmax:
     if day > 1:
       #Run the real time and publish the LMP
       # currently 5 minutes
+#      write_psst_file(ames_DAM_case_file + '_' + str(hour) + '_' + str(mn), False)
       write_psst_file(ames_DAM_case_file, False)
       dispatch = scedRTM(ames_DAM_case_file, "RTMResults.dat", "cplex")
 
