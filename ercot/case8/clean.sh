@@ -12,3 +12,5 @@ rm *agent_dict.json
 rm weather*.dat
 rm weather*.json
 rm *.zpl
+rm *.h5
+
