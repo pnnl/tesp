@@ -233,8 +233,8 @@ def process_pypower(nameroot):
     # display a plot 
     fig, ax = plt.subplots(2, 5, sharex = 'col')
     tmin = 0.0
-    tmax = 24 # 48.0
-    xticks = [0,6,12,18,24] # ,30,36,42,48]
+    tmax = 48.0
+    xticks = [0,6,12,18,24,30,36,42,48]
     for i in range(2):
         for j in range(5):
             ax[i,j].grid (linestyle = '-')

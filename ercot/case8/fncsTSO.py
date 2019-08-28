@@ -2,21 +2,23 @@ import numpy as np;
 import scipy.interpolate as ip;
 import pypower.api as pp;
 import tesp_support.api as tesp;
-import tesp_support.fncs as fncs
+import tesp_support.fncs as fncs;
 import json;
 import math;
 from copy import deepcopy;
+import psst.cli as pst;
+import pandas as pd;
 
-# day-ahead market runs at noon every day
-da_period = 86400
-da_offset = 12 * 3600
+from numpy.core._multiarray_umath import ndarray
+from py4j.java_gateway import (JavaGateway, GatewayParameters)
+from py4j.tests.java_gateway_test import gateway
+import os
+
 
 casename = 'ercot_8'
 wind_period = 3600
 
-#for initial load_shape scale 1.3write_ames_base_case
-
-load_shape = [0.6704, 
+load_shape = [0.6704,
               0.6303, 
               0.6041, 
               0.5902, 
@@ -116,7 +118,15 @@ def make_dictionary(rootname):
   dp.close()
 
 
-def parse_mva(arg): 
+def parse_mva(arg):
+  """ Helper function to parse P+jQ from a FNCS value
+
+  Args:
+    arg (str): FNCS value in rectangular format
+
+  Returns:
+    float, float: P [MW] and Q [MVAR]
+  """
   tok = arg.strip('; MWVAKdrij')
   bLastDigit = False
   bParsed = False
@@ -187,24 +197,419 @@ def print_gld_load(gld_load, msg, ts):
            '{: .1f}'.format(deg))
 
 
+def scucDAM(data, output, solver):
+
+  c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
+  model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData)
+  model.solve(solver=solver)
+
+  uc = "./SCUCResultsUC.dat"
+  with open(uc, 'w') as outfile:
+    instance = model._model
+    results = {}
+    resultsPowerGen = {}
+    for g in instance.Generators.value:
+      for t in instance.TimePeriods:
+        results[(g, t)] = instance.UnitOn[g, t]
+        resultsPowerGen[(g, t)] = instance.PowerGenerated[g, t]
+
+    for g in sorted(instance.Generators.value):
+      outfile.write("%s\n" % str(g).ljust(8))
+      for t in sorted(instance.TimePeriods):
+        outfile.write("% 1d \n" % (int(results[(g, t)].value + 0.5)))
+
+  uc_df = pd.DataFrame(pst.read_unit_commitment(uc.strip("'")))
+  c.gen_status = uc_df.astype(int)
+
+  model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData)
+
+  model.solve(solver=solver)
+
+  # with open('./../DAMLMP.dat', 'w') as outfile:
+  #   outfile.write("DAMLMP\n")
+  #   for h, r in model.results.lmp.iterrows():
+  #     bn = 1
+  #     for _, lmp in r.iteritems():
+  #       if lmp is None:
+  #         lmp = 0
+  #       outfile.write(str(bn) + ' : ' + str(h + 1) + ' : ' + str(round(lmp, 2)) + "\n")
+  #       bn = bn + 1
+  #   outfile.write("END_LMP\n")
+
+  DA_LMPs = [[0 for x in range(hours_in_a_day)] for y in range(total_bus_num)]
+  for h, r in model.results.lmp.iterrows():
+    bn = 1
+    for _, lmp in r.iteritems():
+      if lmp is None:
+        lmp = 0
+      DA_LMPs[bn-1][h] = round(lmp * 0.001, 2)  # publishing $/kwh
+      bn = bn + 1
+
+  for i in range(fncsBus.shape[0]):
+    lmps = { 'bus' + str(i+1): [DA_LMPs[i]] }
+    fncs.publish('LMP_DA_Bus_' + str(i+1), json.dumps(lmps))
+
+  with open(output, 'w') as outfile:  #dispatch
+    results = {}
+    resultsPowerGen = {}
+    instance = model._model
+    for g in instance.Generators.value:
+      for t in instance.TimePeriods:
+        results[(g, t)] = instance.UnitOn[g, t]
+        resultsPowerGen[(g, t)] = instance.PowerGenerated[g, t]
+
+    for g in sorted(instance.Generators.value):
+      outfile.write("%s\n" % str(g).ljust(8))
+      for t in sorted(instance.TimePeriods):
+        outfile.write("% 1d %6.3f %6.2f %6.2f\n" % (
+        int(results[(g, t)].value + 0.5), resultsPowerGen[(g, t)].value, 0.0, 0.0))  # not sure why DK added 0.0, 0.0
+
+  dispatch = {}
+  for g in sorted(instance.Generators.value):
+    dispatch[g] = []
+    for t in sorted(instance.TimePeriods):
+      dispatch[g].append(resultsPowerGen[(g, t)].value)
+#              pq  net for RT add to previous day
+
+  with open('./SCUCSVPOutcomes.dat', 'w') as outfile:
+    instance = model._model
+    SlackVariablePower = {}
+    for b in instance.Buses.value:
+      for t in instance.TimePeriods:
+        SlackVariablePower[(b, t)] = instance.LoadGenerateMismatch[b, t]
+
+    for b in sorted(instance.Buses.value):
+      outfile.write("%s\n" % str(b).ljust(8))
+      for t in sorted(instance.TimePeriods):
+        outfile.write(" %6.2f \n" % (SlackVariablePower[(b, t)].value))
+
+  if (len(priceSenLoadData) is not 0):
+    with open('./SCUCPriceSensitiveLoad.dat', 'w') as outfile:
+      instance = model._model
+      PriceSenLoadDemand = {}
+      for l in instance.PriceSensitiveLoads.value:
+        for t in instance.TimePeriods:
+          PriceSenLoadDemand[(l, t)] = instance.PSLoadDemand[l, t].value
+
+      for l in sorted(instance.PriceSensitiveLoads.value):
+        outfile.write("%s\n" % str(l).ljust(8))
+        for t in sorted(instance.TimePeriods):
+          outfile.write(" %6.2f \n" % (PriceSenLoadDemand[(l, t)]))
+    #print('PriceSenLoadDemand = \n', PriceSenLoadDemand)
+
+  return uc_df, dispatch
+
+
+def scedRTM(data, output, solver):
+
+  uc = "./SCUCResultsUC.dat"
+  uc_df = pd.DataFrame(pst.read_unit_commitment(uc.strip("'")))
+
+  c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
+  c.gen_status = uc_df.astype(int)
+
+  model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData)
+  model.solve(solver=solver)
+
+  with open('./SCEDSVPOutcomes.dat', 'w') as outfile:
+    instance = model._model
+    SlackVariablePower = {}
+    for b in instance.Buses.value:
+      for t in instance.TimePeriods:
+        SlackVariablePower[(b, t)] = instance.LoadGenerateMismatch[b, t]
+
+    for b in sorted(instance.Buses.value):
+      outfile.write("%s\n" % str(b).ljust(8))
+      for t in sorted(instance.TimePeriods):
+        outfile.write(" %6.2f \n" % (SlackVariablePower[(b, t)].value))
+
+  RT_LMPs = [[0 for x in range(hours_in_a_day)] for y in range(total_bus_num)]
+  for h, r in model.results.lmp.iterrows():
+    bn = 1
+    for _, lmp in r.iteritems():
+      if lmp is None:
+        lmp = 0
+      RT_LMPs[bn-1][h] = round(lmp * 0.001, 2)  # publishing $/kwh
+      bn = bn + 1
+
+  for i in range(fncsBus.shape[0]):
+    lmps = { 'bus' + str(i+1): [RT_LMPs[i]] }
+    fncs.publish('LMP_RT_Bus_' + str(i+1), json.dumps(lmps))  # publishing $/kwh
+
+  with open(output.strip("'"), 'w') as f:
+    f.write("LMP\n")
+    # click.echo("..." + str(model.results.lmp))
+    for h, r in model.results.lmp.iterrows():
+      bn = 1
+      for _, lmp in r.iteritems():
+        if lmp is None:
+          lmp = 0
+        f.write(str(bn) + ' : ' + str(h + 1) + ' : ' + str(round(lmp, 2)) + "\n")
+        bn = bn + 1
+    f.write("END_LMP\n")
+
+    f.write("GenCoResults\n")
+    instance = model._model
+
+    results = {}
+    resultsPowerGen = {}
+    for g in instance.Generators.value:
+      for t in instance.TimePeriods:
+        resultsPowerGen[(g, t)] = instance.PowerGenerated[g, t]
+
+    dispatch = {}
+    for g in sorted(instance.Generators.value):
+      dispatch[g] = []
+      for t in sorted(instance.TimePeriods):
+        dispatch[g].append(resultsPowerGen[(g, t)].value)
+
+    # for g in instance.Generators.value:
+    #   f.write("%s\n" % str(g).ljust(8))
+    #   for t in instance.TimePeriods:
+    #     f.write("Minute: {}\n".format(str(t + 1)))
+    #     f.write("\tPowerGenerated: {}\n".format(round(instance.PowerGenerated[g, t].value, 3)))
+    #     f.write("\tProductionCost: {}\n".format(round(instance.ProductionCost[g, t].value, 3)))
+    #     f.write("\tStartupCost: {}\n".format(round(instance.StartupCost[g, t].value, 3)))
+    #     f.write("\tShutdownCost: {}\n".format(round(instance.ShutdownCost[g, t].value, 3)))
+    # f.write("END_GenCoResults\n")
+    #
+    # f.write("VOLTAGE_ANGLES\n")
+    # for bus in sorted(instance.Buses):
+    #   for t in instance.TimePeriods:
+    #     f.write('{} {} : {}\n'.format(str(bus), str(t + 1), str(round(instance.Angle[bus, t].value, 3))))
+    # f.write("END_VOLTAGE_ANGLES\n")
+
+    # Write out the Daily LMP
+    # f.write("DAILY_BRANCH_LMP\n")
+    # f.write("END_DAILY_BRANCH_LMP\n")
+    # Write out the Daily Price Sensitive Demand
+    # f.write("DAILY_PRICE_SENSITIVE_DEMAND\n")
+    # f.write("END_DAILY_PRICE_SENSITIVE_DEMAND\n")
+    # Write out which hour has a solution
+
+    f.write("HAS_SOLUTION\n")
+    h = 0
+    max_hour = 24  # FIXME: Hard-coded number of hours.
+    while h < max_hour:
+      f.write("1\t")  # FIXME: Hard-coded every hour has a solution.
+      h += 1
+    f.write("\nEND_HAS_SOLUTION\n")
+
+    return dispatch
+
+
+def write_psst_file(fname, dayahead):
+  fp = open(fname, 'w')
+  print('# Written by fncsTSO.py', file=fp)
+  print('', file=fp)
+  print('set StageSet := FirstStage SecondStage ;', file=fp)
+  print('', file=fp)
+  print('set CommitmentTimeInStage[FirstStage] := 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 ;', file=fp)
+  print('set CommitmentTimeInStage[SecondStage] := ;', file=fp)
+  print('', file=fp)
+  print('set GenerationTimeInStage[FirstStage] := ;', file=fp)
+  print('set GenerationTimeInStage[SecondStage] := 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 ;', file=fp)
+  print('', file=fp)
+
+  writeLine = 'set Buses :='
+  for i in range(bus.shape[0]):
+        writeLine = writeLine + ' Bus' + str(i + 1)
+  writeLine = writeLine + ' ;'
+  print(writeLine, file=fp)
+  print('', file=fp)
+
+  print('set TransmissionLines :=', file=fp)
+  for i in range(branch.shape[0]):
+    if branch[i, 1] > branch[i, 0]:
+      fbus = int(branch[i, 0])
+      tbus = int(branch[i, 1])
+    else:
+      fbus = int(branch[i, 1])
+      tbus = int(branch[i, 0])
+    writeLine = 'Bus' + str(fbus) + ' Bus' + str(tbus)
+    print(writeLine, file=fp)
+  print(';', file=fp)
+  print('', file=fp)
+
+  writeLine = 'param NumTransmissionLines := ' + str(branch.shape[0])+ ' ;'
+  print(writeLine, file=fp)
+  print('', file=fp)
+
+  print('param: BusFrom BusTo ThermalLimit Reactance :=', file=fp)
+  for i in range(branch.shape[0]):
+    if branch[i, 1] > branch[i, 0]:
+      fbus = int(branch[i, 0])
+      tbus = int(branch[i, 1])
+    else:
+      fbus = int(branch[i, 1])
+      tbus = int(branch[i, 0])
+    #  // Convert  MaxCap  from SI to  PU
+    limit = branch[i, 5] / basePU
+    #  // Convert  reactance  from SI to  PU, x(pu) = x / Zo = x / (Vo ^ 2 / So) = (x * So) / Vo ^ 2
+    reactance = branch[i, 3] * 100 / (mva * mva)
+    writeLine = str(i+1) + ' Bus' + str(fbus) + ' Bus' + str(tbus) + '{: .2f}'.format(limit) + '{: .2E}'.format(reactance)
+    print(writeLine, file=fp)
+  print(';', file=fp)
+  print('', file=fp)
+
+  writeLine = 'set ThermalGenerators :='
+  for i in range(gen.shape[0]):
+    if gen[i, 9] > 0:
+      writeLine = writeLine + ' GenCo' + str(i+1)
+  print(writeLine, ';', file=fp)
+  print('', file=fp)
+  for i in range(bus.shape[0]):
+    writeLine = 'set ThermalGeneratorsAtBus[Bus' + str(i+1) +'] :='
+    for j in range(gen.shape[0]):
+      if int(gen[j, 0]) == i+1:
+        if gen[j, 9] > 0:
+          writeLine = writeLine + ' GenCo' + str(j+1)
+    print(writeLine, ';', file=fp)
+  print('', file=fp)
+
+  print('param BalPenPos := 1000000 ;', file=fp)
+  print('', file=fp)
+  print('param BalPenNeg := 1000000 ;', file=fp)
+  print('', file=fp)
+
+  if (dayahead):
+    print('param TimePeriodLength := 1 ;', file=fp)
+    print('', file=fp)
+  else:
+    print('param TimePeriodLength := ' + '{: .4f}'.format(RTDeltaT / 60) + ' ;', file=fp)
+    print('', file=fp)
+
+  print('param NumTimePeriods := ' + str(hours_in_a_day) + ' ;', file=fp)
+  print('', file=fp)
+
+  print('param: PowerGeneratedT0 UnitOnT0State MinimumPowerOutput MaximumPowerOutput MinimumUpTime MinimumDownTime NominalRampUpLimit NominalRampDownLimit StartupRampLimit ShutdownRampLimit ColdStartHours ColdStartCost HotStartCost ShutdownCostCoefficient :=', file=fp)
+  for i in range(gen.shape[0]):
+    if gen[i, 9] > 0:
+      name = 'GenCo' + str(i+1)
+      Pmax = gen[i, 8] / mva
+      Pmin = gen[i, 9] / mva
+      if (Pmin < Pmax):
+        writeLine = name + '{: .6f}'.format(Pmax) + ' 1' + '{: .6f}'.format(Pmin) + '{: .6f}'.format(Pmax) + \
+                  ' 0 0 0.000000 0.000000 0.000000 0.000000 0 0.000000 0.000000 0.000000'
+      else:
+        # wtf
+        writeLine = name + '{: .6f}'.format(Pmax) + ' 1' + '{: .6f}'.format(0.0) + '{: .6f}'.format(Pmax) + \
+                  ' 0 0 0.000000 0.000000 0.000000 0.000000 0 0.000000 0.000000 0.000000'
+        print("Some thing is wrong with " + name + ' in ' + fname)
+      print(writeLine, file=fp)
+  print(' ;', file=fp)
+  print('', file=fp)
+
+  print('param: ID atBus EndPointSoc MaximumEnergy NominalRampDownInput NominalRampUpInput NominalRampDownOutput NominalRampUpOutput MaximumPowerInput MinimumPowerInput MaximumPowerOutput MinimumPowerOutput MinimumSoc EfficiencyEnergy :=', file=fp)
+  print(' ;', file=fp)
+  print('', file=fp)
+
+  print('param StorageFlag := 0.0 ;', file=fp)
+  print('', file=fp)
+  print('param PriceSenLoadFlag := 1 ;', file=fp)
+  print('', file=fp)
+  print('param ReserveDownSystemPercent := 0.2 ;', file=fp)
+  print('', file=fp)
+  print('param ReserveUpSystemPercent := 0.3 ;', file=fp)
+  print('', file=fp)
+  print('param HasZonalReserves := true ;', file=fp)
+  print('', file=fp)
+  print('param NumberOfZones :=', str(len(zones)), ';', file=fp)
+  print('', file=fp)
+
+  writeLine = 'set Zones :='
+  for j in range(len(zones)):
+    writeLine = writeLine + ' Zone' + str(j + 1)
+  print(writeLine, ';', file=fp)
+  print('', file=fp)
+
+  print('param: Buses ReserveDownZonalPercent ReserveUpZonalPercent :=', file=fp)
+  for j in range(len(zones)):
+    buses = ''
+    for i in range(bus.shape[0]):
+      if zones[j][0] == bus[i, 10]:
+        if buses == '':
+          buses = 'Bus' + str(i+1) + ','
+        else:
+          buses = buses + 'Bus' + str(i+1) + ','
+    writeLine = 'Zone' + str(j + 1) + ' ' + buses + '{: .1f}'.format(zones[j][2]) + '{: .1f}'.format(zones[j][3])
+    print(writeLine, file=fp)
+  print(';', file=fp)
+  print('', file=fp)
+
+  print('param: NetDemand :=', file=fp)
+  for i in range(bus.shape[0]):
+    for j in range(hours_in_a_day):
+      writeLine ='Bus' + str(i+1) + ' ' + str(j+1) + '{: .4f}'.format(unRespMW[i][j] / mva)
+      print(writeLine, file=fp)
+    print('', file=fp)
+  print(';', file=fp)
+
+  writeLine = 'set PricesSensitiveLoadNames :='
+  for i in range(bus.shape[0]):
+    writeLine = writeLine + ' LSE' + str(i+1) + ','
+  print(writeLine, ';', file=fp)
+
+  print('param: Name ID atBus hourIndex BenefitCoefficientC0 BenefitCoefficientC1 BenefitCoefficientC2 SLMin SLMax :=', file=fp)
+  if (dayahead):
+    for i in range(bus.shape[0]):
+      for j in range(hours_in_a_day):
+        writeLine = 'LSE' + str(i + 1) + ' ' + str(i + 1) + ' Bus' + str(i+1) + ' ' + str(j+1) + \
+                    ' 0.0' + ' {: .2f}'.format(respC1[i][j]) + ' {: .2f}'.format(respC2[i][j]) + \
+                    ' 0.0' + ' {: .2f}'.format(unRespMW[i][j])
+        print(writeLine, file=fp)
+      print('', file=fp)
+  else:
+    TAU = RTOPDur // RTDeltaT
+    for i in range(bus.shape[0]):
+      bnum = i+1
+      for j in range(hours_in_a_day):
+        writeLine = 'LSE' + str(bnum) + ' ' + str(bnum) + ' Bus' + str(bnum) + ' ' + str(j+1) + \
+                    ' 0.0' + ' {: .2f}'.format(gld_load[bnum]['c1']) + ' {: .2f}'.format(gld_load[bnum]['c2']) + \
+                    ' 0.0' + ' {: .2f}'.format(gld_load[bnum]['unresp'])
+        print(writeLine, file=fp)
+      print('', file=fp)
+  print(';', file=fp)
+  print('', file=fp)
+
+  print('param: ProductionCostA0 ProductionCostA1 ProductionCostA2 NS :=', file=fp)
+  print('', file=fp)
+  for i in range(gen.shape[0]):
+    if gen[i, 9] > 0 and genCost[i, 5] > 0 and genCost[i, 4]:
+      c0 = genCost[i, 6]
+      c1 = genCost[i, 5]
+      c2 = genCost[i, 4]
+      NS = int(4)
+      writeLine = 'GenCo' + str(i + 1) + '{: .5f}'.format(c0) + \
+                '{: .5f}'.format(c1) + '{: .5f}'.format(c2) + ' ' + str(NS)
+      print(writeLine, file=fp)
+  print(';', file=fp)
+
+  fp.close()
+
+
 def write_ames_base_case(fname):
   fp = open(fname, 'w')
-  print('// UNIT SI', file=fp)
-  print('BASE_S 100', file=fp)   #TODO
-  print('BASE_V 10', file=fp)    #TODO
+  print('// ? Base', file=fp)
+  print('BASE_S 100', file=fp)           #TODO unit check
+  print('// Power Base   Megavolt amperes (MVA)', file=fp)
+  print('BASE_V ', str(mva), file=fp)    #TODO unit check
   print('', file=fp)
 
   print('// Simulation Parameters', file=fp)
-  print('MaxDay', 2, file=fp)     #TODO
-  print('RTMDuration 12', file=fp)    #TODO
+#  print('MaxDay ' + tmax//da_period, file=fp)
+  print('MaxDay 3', file=fp)
+  print('RTOPDur 5', file=fp)    #TODO 5 or 15 min  should be multiple of dt and whole minute
   print('RandomSeed 695672061', file=fp)
   print('// ThresholdProbability 0.999', file=fp)
+  print('PriceSensitiveDemandFlag  1', file=fp)
   print('ReserveDownSystemPercent 0.2', file=fp)
   print('ReserveUpSystemPercent 0.3', file=fp)
-  print('', file=fp)
+  print('BalPenPos  1000000', file=fp)
+  print('BalPenNeg  1000000', file=fp)
 
   print('// Bus Data', file=fp)
-  print('NumberofBuses', bus.shape[0], file=fp)
+  print('NumberOfBuses', bus.shape[0], file=fp)
   print('NumberOfReserveZones', len(zones), file=fp)
   print('', file=fp)
 
@@ -218,13 +623,13 @@ def write_ames_base_case(fname):
         if buses == '': 
           buses = str(i+1)
         else: 
-          buses = buses + ', ' + str(i+1)
+          buses = buses + ',' + str(i+1)
     print(name, buses, '{: .1f}'.format(zones[j][2]), '{: .1f}'.format(zones[j][3]), file=fp)
   print('#ZoneDataEnd', file=fp)
   print('', file=fp)
 
   print('#LineDataStart', file=fp)
-  print('// Name   From    To    MaxCap    Reactance', file=fp)
+  print('// Name   From    To    MaxCap(MWs)    Reactance(ohms)', file=fp)
   # branch: fbus, tbus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax
   # AMES wants branch name, from bus(< to bus), to bus, capacity(MVA), total X(pu)
   for i in range(branch.shape[0]): 
@@ -240,25 +645,23 @@ def write_ames_base_case(fname):
   print('', file=fp)
 
   print('#GenDataStart', file=fp)
-  # TODO: replace ppc['gencost'] with dictionary of hourly bids, collected from the
-  #   GridLAB-D agents over FNCS
+  # TODO: replace ppc['gencost'] with dictionary of hourly bids, collected from the GridLAB-D agents over FNCS
   # TODO check units
   # gen: bus, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
   # gencost: 2, startup, shutdown, 3, c2, c1, c0
-  # AMES wants name, ID, bus, c0, c1, c2, capL, capU, InitMoney
+  # AMES wants name, ID, bus, c0, c1, c2, capL, capU, NS, InitMoney
   for i in range(gen.shape[0]): 
-    name = 'Gen' + str(i+1)
+    name = 'GenCo' + str(i+1)
     fbus = int(gen[i, 0])
     Pmax = gen[i, 8]
     Pmin = gen[i, 9]
     c0 = genCost[i, 6]
     c1 = genCost[i, 5]
     c2 = genCost[i, 4]
-    InitMoney = 10000.0
-    if Pmin > 0: 
+    if Pmin > 0:
       print(name, str(i+1), fbus, '{: .2f}'.format(c0), '{: .2f}'.format(c1), 
-            '{: .6f}'.format(c2), '{: .2f}'.format(Pmin), '{: .2f}'.format(Pmax), 
-            '{: .2f}'.format(InitMoney), file=fp)
+            '{: .6f}'.format(c2), '{: .2f}'.format(Pmin), '{: .2f}'.format(Pmax),
+            NS, '{: .2f}'.format(100000.0), file=fp)
   print('#GenDataEnd', file=fp)
   print('', file=fp)
 
@@ -271,7 +674,7 @@ def write_ames_base_case(fname):
   # TODO check units
   lse = []
   for i in range(bus.shape[0]): 
-    Pd = pforecast[i]
+    Pd = unRespMW[i]
     fbus = int(bus[i, 0])
     lse.append([fbus, Pd])
   print('// Name ID atBus H-00 H-01 H-02 H-03 H-04 H-05 H-06 H-07', file=fp)
@@ -293,27 +696,47 @@ def write_ames_base_case(fname):
            '{: .2f}'.format(Pd[18]), '{: .2f}'.format(Pd[19]), '{: .2f}'.format(Pd[20]), 
            '{: .2f}'.format(Pd[21]), '{: .2f}'.format(Pd[22]), '{: .2f}'.format(Pd[23]), file=fp)
   print('#LSEDataFixedDemandEnd', file=fp)
+  print('', file=fp)
+
+  print('#LSEDataPriceSensitiveDemandStart', file=fp)
+  print('// Name   ID    atBus   hourIndex   d   e   f   pMin   pMax', file=fp);
+  lse = []
+  for i in range(bus.shape[0]):
+    Pd = unRespMW[i]
+    fbus = int(bus[i, 0])
+    lse.append([fbus, Pd])
+
+  for i in range(len(lse)):
+    Pd = lse[i][1]
+    for k in range(hours_in_a_day):
+      print('LSE'+str(i+1), str(i+1), lse[i][0], str(k),
+            '{: .2f}'.format(0), '{: .2f}'.format(0.1),
+            '{: .2f}'.format(0), '{: .2f}'.format(Pd[k]), file=fp)
+  print('#LSEDataPriceSensitiveDemandEnd', file=fp)
   fp.close()
 
-#Initialize the program
+
+# Initialize the program
 x = np.array(range(25))
 y = np.array(load_shape)
 l = len(x)
 t = np.linspace(0, 1, l-2, endpoint=True)
 t = np.append([0, 0, 0], t)
 t = np.append(t, [1, 1, 1])
-tck_load=[t, [x, y], 3]
-u3=np.linspace(0, 1, num=86400/300 + 1, endpoint=True)
+tck_load = [t, [x, y], 3]
+u3 = np.linspace(0, 1, num=86400/300 + 1, endpoint=True)
 newpts = ip.splev(u3, tck_load)
 
 ppc = tesp.load_json_case(casename + '.json')
-ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'])
-ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)
+ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)          # dc for
+ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
 StartTime = ppc['StartTime']
 tmax = int(ppc['Tmax'])
 period = int(ppc['Period'])
 dt = int(ppc['dt'])
+mva = int(ppc['baseMVA'])
+basePU = int(100)
 swing_bus = int(ppc['swing_bus'])
 
 # these have been aliased
@@ -367,7 +790,7 @@ if wind_period > 0:
 # initialize for day-ahead, OPF and time stepping
 ts = 0
 tnext_opf = 0
-tnext_da = da_offset
+tnext_ames = 0
 # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
 for row in gen: 
   row[9] = 0.1 * row[8]
@@ -377,11 +800,6 @@ gld_load = {} # key on bus number
 print('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
 print(fncsBus)
 
-#orginal forecast
-pforecast = [[0 for x in range(24)] for y in range(fncsBus.shape[0])]
-for i in range(fncsBus.shape[0]): 
-  for j in range(24): 
-    pforecast[i][j] = bus[i][2] * load_shape[j]  # * scale for each bus
 
 # TODO: this is hardwired for 8, more efficient to concatenate outside a loop
 # for ? generator 
@@ -394,7 +812,7 @@ for i in range(8):
   gld_load[busnum] = {'pcrv': 0, 'qcrv': 0, 'p': float(fncsBus[i, 7])/gld_scale, 'q': float(fncsBus[i, 8])/gld_scale, 
     'unresp': 0, 'resp_max': 0, 'c2': 0, 'c1': 0, 'deg': 0, 'genidx': genidx}
 
-# needed to be re-aliased after concatenate
+# needed to be re-aliased after np.concatenate
 gen = ppc['gen']
 genCost = ppc['gencost']
 
@@ -413,6 +831,36 @@ for i in range(fncsBus.shape[0]):
 for i in range(gen.shape[0]): 
   gen_accum[str(i+1)] = [0, 0, 0]
 
+# Pricesenitive data for AMES/PSST
+# day-ahead market runs at noon every day
+da_offset = 12 * 3600
+NS = 4
+mn = 0
+hour = 0
+day = 1
+RTOPDur = period // 60   # in minutes
+RTDeltaT = 5             # in minutes
+hours_in_a_day = 24
+total_bus_num = fncsBus.shape[0]
+wind_plants_num = fncsBus.shape[0]
+DA_Unit_Schedule = {}
+
+
+unRespMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+respMaxMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+respC2 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+respC1 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+respC0 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+forecast_wind_power = np.zeros([wind_plants_num, hours_in_a_day], dtype=float)
+
+#orginal forecast
+for i in range(fncsBus.shape[0]):
+  for j in range(hours_in_a_day):
+    respC1[i][j] = 0.1
+    respC2[i][j] = 1.0
+    unRespMW[i][j] = bus[i][2] * load_shape[j]  # * scale for each bus
+
 #quit()
 fncs.initialize()
 op = open(casename + '_opf.csv', 'w')
@@ -420,7 +868,10 @@ vp = open(casename + '_pf.csv', 'w')
 print('seconds, OPFconverged, TotalLoad, TotalGen, SwingGen, LMP1, LMP8, gas1, coal1, nuc1, gas2, coal2, nuc2, gas3, coal3, gas4, gas5, coal5, gas7, coal7, wind1, wind3, wind4, wind6, wind7', sep=', ', file=op, flush=True)
 print('seconds, PFConverged, TotalLoad, TotalGen, TotalLoss, SwingGen, v1, v2, v3, v4, v5, v6, v7, v8', sep=', ', file=vp, flush=True)
 
+ames_DAM_case_file = "/home/osboxes/grid/repository/tesp/ercot/case8/DAMReferenceModel.dat"
+ames_case_file = "/home/osboxes/grid/repository/tesp/ercot/case8/" + casename + "_ames.dat"
 write_ames_base_case(casename + '_ames.dat')
+
 
 # MAIN LOOP starts here
 while ts <= tmax: 
@@ -428,29 +879,43 @@ while ts <= tmax:
   events = fncs.get_events()
   for topic in events: 
     val = fncs.get_value(topic)
-    if 'UNRESPONSIVE_MW_' in topic: 
+    if 'UNRESPONSIVE_MW_' in topic:
       busnum = int(topic[16: ])
       gld_load[busnum]['unresp'] = float(val)
-    elif 'RESPONSIVE_MAX_MW_' in topic: 
+#      print ('UNRESPONSIVE_MW_', busnum, 'at', ts, '=', val, flush=True)
+    elif 'RESPONSIVE_MAX_MW_' in topic:
       busnum = int(topic[18: ])
       gld_load[busnum]['resp_max'] = float(val)
-    elif 'RESPONSIVE_C2_' in topic: 
+#      print ('RESPONSIVE_MAX_MW_', busnum, 'at', ts, '=', val, flush=True)
+    elif 'RESPONSIVE_C2_' in topic:
       busnum = int(topic[14: ])
       gld_load[busnum]['c2'] = float(val)
-    elif 'RESPONSIVE_C1_' in topic: 
+#      print ('RESPONSIVE_C2_', busnum, 'at', ts, '=', val, flush=True)
+    elif 'RESPONSIVE_C1_' in topic:
       busnum = int(topic[14: ])
       gld_load[busnum]['c1'] = float(val)
-    elif 'RESPONSIVE_DEG_' in topic: 
+#      print ('RESPONSIVE_C1_', busnum, 'at', ts, '=', val, flush=True)
+    elif 'RESPONSIVE_DEG_' in topic:
       busnum = int(topic[15: ])
       gld_load[busnum]['deg'] = int(val)
-    elif 'SUBSTATION' in topic: 
+#      print ('RESPONSIVE_DEG_', busnum, 'at', ts, '=', val, flush=True)
+#    elif 'wind_power' in topic:
+#      busnum = int(topic[15:])
+#      gld_load[busnum]['windpower'] = int(val)
+    elif 'SUBSTATION' in topic:
       busnum = int(topic[10: ])
       p, q = parse_mva(val)
       gld_load[busnum]['p'] = float(p)
       gld_load[busnum]['q'] = float(q)
     elif 'DA_BID_' in topic:
-      busnum = int(topic[7: ])
-      da_bid = json.loads(val) # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[24]
+      busnum = int(topic[7: ]) - 1
+      da_bid = json.loads(val)   # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[hours_in_a_day]
+      unRespMW[busnum] = da_bid['unresp_mw']     #fix load
+      respMaxMW[busnum] = da_bid['resp_max_mw']  #slmax
+      respC2[busnum] = da_bid['resp_c2']
+      respC1[busnum] = da_bid['resp_c1']
+      respC0[busnum] = 0.0                       #da_bid['resp_c0']
+      resp_deg[busnum] = da_bid['resp_deg']
       print ('Day Ahead Bid for Bus', busnum, 'at', ts, '=', da_bid, flush=True)
 
 #  print(ts, 'FNCS inputs', gld_load, flush=True)
@@ -503,14 +968,50 @@ while ts <= tmax:
     gld_load[busnum]['pcrv'] = Pnom * curve_scale * float(val[1])
     gld_load[busnum]['qcrv'] = Qnom * curve_scale * float(val[1])
 
-   # run SCED/SCUC in AMES to establish the next day's unit commmitment and dispatch
-#  if ts >= tnext_da: 
-#    write_ames_base_case(ppc, casename + '_ames.dat')
-#    subprocess.call(['java', '-jar', '-Djava.library.path=/home/osboxes/grid/repository/fncs/java/build', '"/home/osboxes/grid/repository/ERCOTTESTSystem/AMES-V5.0/dist/AMES-V5.0.jar"', casename + '_ames.dat'])
-#    collect AMES output and update the dispatch schedules in ppc
-#    tnext_da += da_period
+   # run SCED/SCUC in AMES/PSST to establish the next day's unit commmitment and dispatch
+  if ts >= tnext_ames:
 
-  # run OPF to establish the prices and economic dispatch
+    # Day ahead
+    if hour == 12 and mn == 0:
+      #Run the day ahead and publish the LMP
+      write_psst_file(ames_DAM_case_file, True)
+      DA_Unit_Schedule, dispatch = scucDAM(ames_DAM_case_file, "GenCoSchedule.dat", "cplex")
+
+#      TODO: fix swing bus
+#      print("DA LMPs: \n", DA_LMPs)
+#      print("DA Gen dispatches: \n", dispatch)
+
+    # Real time and update the dispatch schedules in ppc
+    if day > 1:
+      #Run the real time and publish the LMP
+      # currently 5 minutes
+#      write_psst_file(ames_DAM_case_file + '_' + str(hour) + '_' + str(mn), False)
+      write_psst_file(ames_DAM_case_file, False)
+      dispatch = scedRTM(ames_DAM_case_file, "RTMResults.dat", "cplex")
+
+      # Change the DA Schedule and the dispatch
+      if (mn == 0):
+        for i in range(fncsBus.shape[0]):
+          name = "GenCo" + str(i+1)
+          # are the schedule from 12 on from the day ahead calculation
+          gen[i][7] = DA_Unit_Schedule.at[hour, name]
+          gen[i][1] = dispatch[name][hour]      #set Pg
+
+#      print("RT LMPs: \n", RT_LMPs)
+#      print("RT Gen dispatches: \n", dispatch)
+
+    mn = mn + RTOPDur   #period / 60
+    if (mn % 60 == 0):
+      hour = hour + 1
+      mn = 0
+      if (hour == 25):
+        mn = 0
+        hour = 0
+        day = day + 1
+
+    tnext_ames += period
+
+  # run OPF to establish the prices and economic dispatch - currently period = 300s
   if ts >= tnext_opf: 
     # update cost coefficients, set dispatchable load, put unresp+curve load on bus
     for row in fncsBus:

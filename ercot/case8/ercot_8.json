@@ -2,37 +2,11 @@
   "version": 2,
   "baseMVA": 100.0,
   "StartTime": "2013-07-01 00:00:00",
-  "Tmax": 86400,
+  "Tmax": 172800,
   "Period": 300,
   "dt": 15,
   "pf_dc": 1,
   "opf_dc": 1,
-  "zones": [
-    [
-      1,
-      "Houston",
-      0.1,
-      0.1
-    ],
-    [
-      2,
-      "North",
-      0.1,
-      0.1
-    ],
-    [
-      3,
-      "South",
-      0.1,
-      0.1
-    ],
-    [
-      4,
-      "West",
-      0.1,
-      0.1
-    ]
-  ],
   "bus": [
     [
       1,
@@ -768,6 +742,32 @@
       360.0
     ]
   ],
+  "zones": [
+    [
+      1,
+      "Houston",
+      0.1,
+      0.1
+    ],
+    [
+      2,
+      "North",
+      0.1,
+      0.1
+    ],
+    [
+      3,
+      "South",
+      0.1,
+      0.1
+    ],
+    [
+      4,
+      "West",
+      0.1,
+      0.1
+    ]
+  ],
   "areas": [],
   "gencost": [
     [
@@ -1025,5 +1025,25 @@
   ],
   "UnitsOut": [],
   "BranchesOut": [],
-  "swing_bus": 1
+  "swing_bus": 1,
+  "metadata" : {
+    "version": "Version Number",
+    "baseMVA": "",
+    "StartTime": "Start time for the simulation run in the form of YYYY-MM-DD HH:MM:SS",
+    "Tmax": "The duration for the simulation in seconds",
+    "Period": "Time interval for the simulation in seconds for opf",
+    "dt": "The delta time for the simulation in seconds for pf",
+    "pf_dc": "",
+    "opf_dc": "",
+    "swing_bus": "",
+    "zones": "An array for each zone [zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]",
+    "bus": "An array for each bus [bus id, type (1=load, 2=gen (PV) and 3=swing), Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin]",
+    "gen": "An array for each generator [bus id, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin, (11 zeros) ]",
+    "gencost": "An array for each generator cost [2, startup, shutdown, 3, c2, c1, c0]",
+    "branch": "An array for each branch [from bus id, to bus id, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax]",
+    "FNCS": "An array for each FNCS/gridlab instance [bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]",
+    "areas": "An array for each areas []",
+    "UnitsOut": "An array for each units out[idx, time out[s], time back in[s]]",
+    "BranchesOut": "An array for each branches out [idx, time out[s], time back in[s]]"
+  }
 }

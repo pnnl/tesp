@@ -2,7 +2,7 @@
   "version": 2,
   "baseMVA": 100.0,
   "StartTime": "2013-07-01 00:00:00",
-  "Tmax": 86400,
+  "Tmax": 172800,
   "Period": 300,
   "dt": 15,
   "pf_dc": 1,

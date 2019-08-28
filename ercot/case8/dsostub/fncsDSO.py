@@ -51,7 +51,7 @@ tck_load=[t,[x,y],3]
 u3=np.linspace(0,1,num=86400/300 + 1,endpoint=True)
 newpts = ip.splev (u3, tck_load)
 
-ppc = tesp.load_json_case (casename + '.json')
+ppc = tesp.load_json_case ('./../' + casename + '.json')
 StartTime = ppc['StartTime']
 tmax = int(ppc['Tmax'])
 period = int(ppc['Period'])
@@ -79,8 +79,14 @@ while ts <= tmax:
   events = fncs.get_events()
   for topic in events:
     val = fncs.get_value(topic)
-    if 'LMP' in topic:
-      busnum = int (topic[3:])
+    if 'LMP_RT_Bus_' in topic:
+      busnum = int (topic[11:])
+#      gld_bus[busnum]['lmpRT'][] = float(val)
+    elif 'LMP_DA_Bus_' in topic:
+      busnum = int(topic[11:])
+#      gld_bus[busnum]['lmpDA'][] = float(val)
+    elif 'LMP' in topic:
+      busnum = int(topic[3:])
       gld_bus[busnum]['lmp'] = float(val)
     elif 'V' in topic:
       busnum = int (topic[1:])

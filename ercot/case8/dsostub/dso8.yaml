@@ -4,8 +4,56 @@ broker: tcp://localhost:5570
 aggregate_sub: true
 aggregate_pub: true
 values:
+  LMP_DA_Bus_1:
+    topic: pypower/LMP_DA_Bus_1
+    default: 0
+  LMP_DA_Bus_2:
+    topic: pypower/LMP_DA_Bus_2
+    default: 0
+  LMP_DA_Bus_3:
+    topic: pypower/LMP_DA_Bus_3
+    default: 0
+  LMP_DA_Bus_4:
+    topic: pypower/LMP_DA_Bus_4
+    default: 0
+  LMP_DA_Bus_5:
+    topic: pypower/LMP_DA_Bus_5
+    default: 0
+  LMP_DA_Bus_6:
+    topic: pypower/LMP_DA_Bus_6
+    default: 0
+  LMP_DA_Bus_7:
+    topic: pypower/LMP_DA_Bus_7
+    default: 0
+  LMP_DA_Bus_8:
+    topic: pypower/LMP_DA_Bus_8
+    default: 0
+  LMP_RT_Bus_1:
+    topic: pypower/LMP_RT_Bus_1
+    default: 0
+  LMP_RT_Bus_2:
+    topic: pypower/LMP_RT_Bus_2
+    default: 0
+  LMP_RT_Bus_3:
+    topic: pypower/LMP_RT_Bus_3
+    default: 0
+  LMP_RT_Bus_4:
+    topic: pypower/LMP_RT_Bus_4
+    default: 0
+  LMP_RT_Bus_5:
+    topic: pypower/LMP_RT_Bus_5
+    default: 0
+  LMP_RT_Bus_6:
+    topic: pypower/LMP_RT_Bus_6
+    default: 0
+  LMP_RT_Bus_7:
+    topic: pypower/LMP_RT_Bus_7
+    default: 0
+  LMP_RT_Bus_8:
+    topic: pypower/LMP_RT_Bus_8
+    default: 0
   LMP1:
-    topic: pypower/LMP_Bus1
+    topic: pypower/LMP_Bus
     default: 0.1
     type: double
     list: false
