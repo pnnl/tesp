@@ -20,51 +20,64 @@ Waits for the FNCS broker process to finish before function returns.
 """
 def RunTestCase(fname):
 	fp = open (fname, 'r')
+	potherList=[]
 	for ln in fp:
 		line = ln.rstrip('\n')
 		if ('#!/bin/bash' in line) or (len(line) < 1):
 			continue
+		if ('javac' in line):
+			jc = subprocess.Popen (line, shell=True)
+			jc.wait()
 		if 'fncs_broker' in line:
-			pbroker = subprocess.Popen (line.replace (' &)', ')'), shell=True)
+			pbroker = subprocess.Popen (line.replace (' &)', ')').replace(' &>', ' >'), shell=True)
+			print("pbroker: ", pbroker)
 		else:
-			pother = subprocess.Popen (line, shell=True)
+			pother = subprocess.Popen (line.replace (' &)', ')').replace(' &>', ' >'), shell=True)
+			potherList.append(pother)
+			print("pother: ", pother)
 	fp.close()
+	print("waiting for broker")
 	pbroker.wait()
+	print("Done waiting for broker")
+	for p in potherList:
+		print("waiting for process: ", p)
+		p.wait()
+		print("Done waiting for process: ", p)
 
 if __name__ == '__main__':
 	basePath = os.getcwd()
 
 	# TE30 example
-	os.chdir ('./examples/te30')
-	p1 = subprocess.Popen ('./clean.sh', shell=True)
-	p1.wait()
-	p1 = subprocess.Popen (pycall + ' prepare_case.py', shell=True)
-	p1.wait()
-	RunTestCase ('run.sh')
-	RunTestCase ('run0.sh')
-	os.chdir (basePath)
+	#os.chdir ('./examples/te30')
+	#p1 = subprocess.Popen ('./clean.sh', shell=True)
+	#p1.wait()
+	#p1 = subprocess.Popen (pycall + ' prepare_case.py', shell=True)
+	#p1.wait()
+	#RunTestCase ('run.sh')
+	#RunTestCase ('run0.sh')
+	#os.chdir (basePath)
 
 	# loadshed example, not including HELICS
-	os.chdir ('./examples/loadshed')
-	p1 = subprocess.Popen ('./clean.sh', shell=True)
-	p1.wait()
-	RunTestCase ('run.sh')
-	RunTestCase ('runjava.sh')
-	os.chdir (basePath)
+	#os.chdir ('./examples/loadshed')
+	#p1 = subprocess.Popen ('./clean.sh', shell=True)
+	#p1.wait()
+	#RunTestCase ('run.sh')
+	#RunTestCase ('runjava.sh')
+	#os.chdir (basePath)
 
 	# EnergyPlus example
-	os.chdir ('./examples/energyplus')
-	p1 = subprocess.Popen ('./clean.sh', shell=True)
-	p1.wait()
-	RunTestCase ('run.sh')
-	os.chdir (basePath)
+	#os.chdir ('./examples/energyplus')
+	#p1 = subprocess.Popen ('./clean.sh', shell=True)
+	#p1.wait()
+	#RunTestCase ('run.sh')
+	#os.chdir (basePath)
 
 	# PYPOWER example
-	os.chdir ('./examples/pypower')
-	p1 = subprocess.Popen ('./clean.sh', shell=True)
-	p1.wait()
-	RunTestCase ('runpp.sh')
-	os.chdir (basePath)
+	#os.chdir ('./examples/pypower')
+	#p1 = subprocess.Popen ('./clean.sh', shell=True)
+	#p1.wait()
+	#RunTestCase ('runpp.sh')
+	#os.chdir (basePath)
 
 	# SGIP1a and SGIP1b examples (c, d, e and ex also available)
 	os.chdir ('./examples/sgip1')
@@ -132,5 +145,6 @@ if __name__ == '__main__':
 	p1.wait()
 	RunTestCase ('run.sh')
 	os.chdir (basePath)
+
 
 
