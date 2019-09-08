@@ -151,12 +151,12 @@ def startWeatherAgent(file):
     time_granted = 0
     #timeDeltaChanged = 0
     for i in range(len(timeNeedToPublish)):
-        print("i", i)
+        #print("i", i)
         if i > 0:
 	    #     timeToRequest = timeNeedToPublish[i] - timeNeedToPublish[i-1]
 	    # else:
             timeToRequest = timeNeedToPublish[i]
-            print("timeToRequest", timeToRequest)
+            #print("timeToRequest", timeToRequest)
             # if requested time is not multiple of time_delta, update time_delta to time requested
             # since fncs require requested time to be multiple of time_delta
             #if (timeToRequest - time_granted) % timeDeltaInSeconds != 0:
@@ -167,7 +167,7 @@ def startWeatherAgent(file):
             #    print("time delta updated to 1s.", flush=True)
             #    timeDeltaChanged = 1
             time_granted = fncs.time_request(timeToRequest)
-            print("time_granted", time_granted)
+            #print("time_granted", time_granted)
             #if timeDeltaChanged == 1:
             #    fncs.update_time_delta(timeDeltaInSeconds)
             #    print("time delta updated to " + str(timeDeltaInSeconds) + "s.", flush=True)

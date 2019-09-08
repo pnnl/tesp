@@ -86,7 +86,7 @@ As noted above, we suggest *mkdir usrc* instead of *mkdir ~/src* on WSL.
  git config --global user.email "your email"
  git clone -b develop https://github.com/FNCS/fncs.git
  git clone -b master https://github.com/GMLC-TDC/HELICS-src
- git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
+ git clone -b feature/1173 https://github.com/gridlab-d/gridlab-d.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b develop https://github.com/pnnl/tesp.git
 
@@ -158,10 +158,14 @@ To build HELICS 2.0 with Python and Java bindings:
 
 ::
 
+ sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+
+::
+
  cd ~/src/HELICS-src
  mkdir build
  cd build
- cmake -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DCMAKE_BUILD_TYPE=Release ..
+ cmake -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ..
  make -j8
  sudo make install
 
@@ -209,11 +213,11 @@ To link with both FNCS and HELICS, and run the autotest suite:
  cd ../..
 
  # in the following, replace $FNCS_INSTALL with /usr/local to just use the default location
- ./configure --with-fncs=$FNCS_INSTALL --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w' 'CXXFLAGS=-w -std=c++14' 'LDFLAGS=-w'
+ ./configure --with-fncs=/usr/local --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w' 'CXXFLAGS=-w -std=c++14' 'LDFLAGS=-w'
 
  # for debugging use 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -std=c++14 -g -O0' and 'LDFLAGS=-w -g -O0'
 
- sudo make
+ make
  sudo make install
  gridlabd --validate 
 
