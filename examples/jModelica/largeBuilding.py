@@ -18,8 +18,9 @@ def startLOSimulation(startDay, duration, timeStep=60):
 	# ------temporary read in from CSVs, eventually read in from FNCS---------------------
 	#TO = np.genfromtxt('./core/_temp/TO.csv', delimiter=',',max_rows=(startDay - 1 + duration)*1440+1)[(startDay-1)*1440+1:,1] 
 
+	weather_init = {"TO":0,"windSpeed":0}
 	# initialize a large office model
-	LO1 = LargeOffice(int(startDay), int(duration)) 
+	LO1 = LargeOffice(int(startDay), int(duration), weather_init) 
 	#LO2 = LargeOffice(startDay, duration,initation2) 
 		
 	# start simulation
@@ -49,7 +50,8 @@ def startLOSimulation(startDay, duration, timeStep=60):
 		control_inputs={} #use default control inputs, or define dynamic values here
 		if weather_current:#['TO'] and weather_current['windSpeed']:
 			P_total,T_room = LO1.step(model_time,weather_current,control_inputs)
-			fncs.publish('total_power', P_total[0])
+			print(P_total)
+			fncs.publish('total_power', P_total)
 			fncs.publish('room_temps', T_room)
 			print('P_total: ', P_total, ', T_room: ', T_room)
 		model_time = model_time + timeStep
