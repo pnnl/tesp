@@ -1,0 +1,112 @@
+clock{
+  timezone EST+5EDT;
+  timestamp '2000-01-01 00:00:00';
+  stoptime '2000-01-02 00:00:00';
+}
+
+module connection;
+module climate;
+module generators;
+module residential;
+module tape;
+module powerflow {
+	solver_method FBS;
+	NR_iteration_limit 100;
+}
+object climate {
+  name exampleWeather;
+  interpolate QUADRATIC;
+	latitude 32;
+	longitude -97;
+};
+object solar {
+	name solarGenerator;
+	weather exampleWeather;
+    generator_mode SUPPLY_DRIVEN;
+    generator_status ONLINE;
+    panel_type SINGLE_CRYSTAL_SILICON;
+		orientation FIXED_AXIS; 
+    efficiency 0.2;
+    area 2500 sf;
+}
+
+object house {
+	name weatherHouse;
+}
+
+//#ifdef USE_FNCS
+object fncs_msg {
+  name gridlabd;
+  configure gridlabd_fncs_Config.txt;
+  option "transport:hostname localhost, port 5570";
+  aggregate_subscriptions true;
+  aggregate_publications true;
+};
+//#endif
+
+object recorder{
+	parent exampleWeather;
+	property temperature,humidity,solar_direct,solar_diffuse,pressure,wind_speed;
+	interval -1;
+	file climate.csv;
+};
+object recorder{
+	parent solarGenerator;
+	property weather,wind_speed,Tmodule,Tambient,NOCT;
+	interval -1;
+	file generator.csv;
+};
+object recorder{
+	parent weatherHouse;
+	property weather,solar_gain,incident_solar_radiation,horizontal_diffuse_solar_radiation,outdoor_temperature,outdoor_rh;
+	interval -1;
+	file house.csv;
+};
+object meter {
+	name F1_transformer_meter;
+	phases ABCN;
+	nominal_voltage 7200;
+};
+object transformer_configuration {
+	name Eplus_transformer_config;
+	connect_type WYE_WYE;
+	install_type PADMOUNT;
+	power_rating 450 kVA;
+	primary_voltage 12470;
+	secondary_voltage 480;
+	impedance +0.015+0.0675j;
+}
+
+object transformer {
+	name Eplus_Transformer;
+	groupid Commercial_Trans;
+	phases ABCN;
+	from F1_transformer_meter;
+	to Eplus_meter;
+	configuration Eplus_transformer_config;
+}
+
+object meter {
+  phases ABCN;
+  name Eplus_meter;
+  groupid Commercial_Meter;
+  meter_power_consumption 1+15j;
+  nominal_voltage 480.000000;
+  bill_mode UNIFORM;
+  price 0.11420;
+  monthly_fee 25.00;
+  bill_day 1;
+  object metrics_collector {
+    interval 300;
+  };
+}
+
+object load {
+  name Eplus_load;
+  parent Eplus_meter;
+  phases ABCN;
+  nominal_voltage 480.000000;
+  constant_power_A 25 kVA;
+  constant_power_B 25 kVA;
+  constant_power_C 25 kVA;
+}

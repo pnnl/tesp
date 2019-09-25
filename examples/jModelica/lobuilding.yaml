@@ -1,0 +1,10 @@
+name: lobuilding
+time_delta: 60s
+broker: tcp://localhost:5570
+values:
+    temperature:
+        topic: weather/temperature
+        default: 0
+    wind_speed:
+        topic: weather/wind_speed
+        default: 0

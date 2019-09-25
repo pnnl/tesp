@@ -20,21 +20,35 @@ Waits for the FNCS broker process to finish before function returns.
 """
 def RunTestCase(fname):
 	fp = open (fname, 'r')
+	potherList=[]
 	for ln in fp:
 		line = ln.rstrip('\n')
 		if ('#!/bin/bash' in line) or (len(line) < 1):
 			continue
+		if ('javac' in line):
+			jc = subprocess.Popen (line, shell=True)
+			jc.wait()
 		if 'fncs_broker' in line:
-			pbroker = subprocess.Popen (line.replace (' &)', ')'), shell=True)
+			pbroker = subprocess.Popen (line.replace (' &)', ')').replace(' &>', ' >'), shell=True)
+			#print("pbroker: ", pbroker)
 		else:
-			pother = subprocess.Popen (line, shell=True)
+			pother = subprocess.Popen (line.replace (' &)', ')').replace(' &>', ' >'), shell=True)
+			potherList.append(pother)
+			#print("pother: ", pother)
 	fp.close()
+	#print("waiting for broker")
 	pbroker.wait()
+	#print("Done waiting for broker")
+	for p in potherList:
+		#print("waiting for process: ", p)
+		p.wait()
+		#print("Done waiting for process: ", p)
 
 if __name__ == '__main__':
 	basePath = os.getcwd()
 
 	# TE30 example
+	print("start TE30 example: ")
 	os.chdir ('./examples/te30')
 	p1 = subprocess.Popen ('./clean.sh', shell=True)
 	p1.wait()
@@ -45,6 +59,7 @@ if __name__ == '__main__':
 	os.chdir (basePath)
 
 	# loadshed example, not including HELICS
+	print("start loadshed example, not including HELICS: ")
 	os.chdir ('./examples/loadshed')
 	p1 = subprocess.Popen ('./clean.sh', shell=True)
 	p1.wait()
@@ -53,6 +68,7 @@ if __name__ == '__main__':
 	os.chdir (basePath)
 
 	# EnergyPlus example
+	print("start EnergyPlus example: ")
 	os.chdir ('./examples/energyplus')
 	p1 = subprocess.Popen ('./clean.sh', shell=True)
 	p1.wait()
@@ -60,6 +76,7 @@ if __name__ == '__main__':
 	os.chdir (basePath)
 
 	# PYPOWER example
+	print("start PYPOWER example: ")
 	os.chdir ('./examples/pypower')
 	p1 = subprocess.Popen ('./clean.sh', shell=True)
 	p1.wait()
@@ -67,6 +84,7 @@ if __name__ == '__main__':
 	os.chdir (basePath)
 
 	# SGIP1a and SGIP1b examples (c, d, e and ex also available)
+	print("start examples sgip1: ")
 	os.chdir ('./examples/sgip1')
 	p1 = subprocess.Popen ('./clean.sh', shell=True)
 	p1.wait()
@@ -77,6 +95,7 @@ if __name__ == '__main__':
 	os.chdir (basePath)
 
 	# weatherAgent example
+	print("start examples weatherAgent: ")
 	os.chdir ('./examples/weatherAgent')
 	p1 = subprocess.Popen ('./clean.sh', shell=True)
 	p1.wait()
@@ -84,14 +103,16 @@ if __name__ == '__main__':
 	os.chdir (basePath)
 
 	# ieee8500 base example
+	print("start examples ieee8500: ")
 	os.chdir ('./examples/ieee8500')
 	p1 = subprocess.Popen ('./clean.sh', shell=True)
 	p1.wait()
-	p1 = subprocess.Popen ('gridlabd IEEE_8500.glm', shell=True)
+	p1 = subprocess.Popen ('gridlabd --lock IEEE_8500.glm', shell=True)
 	p1.wait()
 	os.chdir (basePath)
 
 	# ieee8500 precool example
+	print("start examples ieee8500 PNNLteam: ")
 	os.chdir ('./examples/ieee8500/PNNLteam')
 	p1 = subprocess.Popen ('./clean.sh', shell=True)
 	p1.wait()
@@ -103,6 +124,7 @@ if __name__ == '__main__':
 	os.chdir (basePath)
 
 	# Nocomm_Base example
+	print("start examples Nocomm_Base: ")
 	os.chdir ('./examples/comm')
 	p1 = subprocess.Popen (pycall + ' make_comm_base.py', shell=True)
 	p1.wait()
@@ -113,6 +135,7 @@ if __name__ == '__main__':
 	os.chdir (basePath)
 
 	# CombinedCase example
+	print("start examples CombinedCase: ")
 	os.chdir ('./examples/comm')
 	p1 = subprocess.Popen (pycall + ' combine_feeders.py', shell=True)
 	p1.wait()
@@ -124,6 +147,7 @@ if __name__ == '__main__':
 	os.chdir (basePath)
 
 	# ERCOT Case8 example
+	print("start examples ERCOT Case8: ")
 	os.chdir ('./ercot/dist_system')
 	p1 = subprocess.Popen (pycall + ' populate_feeders.py', shell=True)
 	p1.wait()
@@ -132,5 +156,6 @@ if __name__ == '__main__':
 	p1.wait()
 	RunTestCase ('run.sh')
 	os.chdir (basePath)
+
 
 
