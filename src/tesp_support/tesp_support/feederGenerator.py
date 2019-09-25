@@ -1295,7 +1295,7 @@ def write_one_commercial_zone(bldg, op):
   """
   print ('object house {', file=op)
   print ('  name', bldg['zonename'] + ';', file=op)
-  print ('  parent', bldg['mtr'] + ';', file=op)
+  print ('  parent', bldg['parent'] + ';', file=op)
   print ('  groupid', bldg['groupid'] + ';', file=op)
   print ('  motor_model BASIC;', file=op)
   print ('  schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
@@ -1412,10 +1412,11 @@ def write_commercial_loads(rgn, key, op):
   loadnum = int(comm_loads[key][7])
 
   bldg = {}
+  bldg['parent'] = key
   bldg['mtr'] = mtr
   bldg['groupid'] = comm_type + '_' + str(loadnum)
 
-  print ('// load', key, 'parent', bldg['mtr'], 'type', comm_type, 'nz', nz, 'kva', '{:.3f}'.format(kva),
+  print ('// load', key, 'mtr', bldg['mtr'], 'type', comm_type, 'nz', nz, 'kva', '{:.3f}'.format(kva),
          'nphs', nphs, 'phases', phases, 'vln', '{:.3f}'.format(vln), file=op)
 
   bldg['fan_type'] = 'ONE_SPEED'
@@ -1610,7 +1611,7 @@ def write_commercial_loads(rgn, key, op):
       bldg['zonename'] = helpers.gld_strict_name (key + '_zone_' + str(zone))
       write_one_commercial_zone (bldg, op)
 
-  elif comm_type == 'ZIPLOAD':
+  if comm_type == 'ZIPLOAD':
     phsva = 1000.0 * kva / nphs
     print ('object load { // street lights', file=op)
     print ('  name {:s};'.format (key + '_streetlights'), file=op)
@@ -1628,6 +1629,15 @@ def write_commercial_loads(rgn, key, op):
         print ('  power_pf_{:s} {:f};'.format (phs, c_p_pf), file=op)
         print ('  base_power_{:s} street_lighting*{:.2f};'.format (phs, light_scalar_comm * phsva), file=op)
     print ('};', file=op)
+  else:
+    print ('object load { // accumulate zones', file=op)
+    print ('  name {:s};'.format (key), file=op)
+    print ('  parent {:s};'.format (mtr), file=op)
+    print ('  groupid {:s};'.format (comm_type), file=op)
+    print ('  nominal_voltage {:2f};'.format(vln), file=op)
+    print ('  phases {:s};'.format (phases), file=op)
+    print ('};', file=op)
+
 
 def write_houses(basenode, op, vnom):
     """Put houses, along with solar panels and batteries, onto a node

@@ -33,6 +33,21 @@ def ercotMeterName(objname):
 	k = root1.rfind('_')
 	return root1[:k] + '_mtr'
 
+## TODO: put zoneMeterName in a helpers file
+def zoneMeterName(ldname):
+	""" Enforces the meter naming convention for commercial zones
+
+	Commercial zones must be children of load objects. This routine
+	replaces "_load_" with "_meter".
+
+	Args:
+			objname (str): the GridLAB-D name of a load, ends with _load_##
+
+	Returns:
+		str: The GridLAB-D name of upstream meter
+	"""
+	return ldname.replace ('_load_', '_meter_')
+
 def ti_enumeration_string(tok):
 	""" if thermal_integrity_level is an integer, convert to a string for the metadata
 	"""
@@ -213,7 +228,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
 					if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
-						lastBillingMeter = parent
+						lastBillingMeter = zoneMeterName (parent)
 					houses[name] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'sqft':sqft,'stories':stories,'doors':doors,
 						'thermal_integrity':thermal_integrity,'cooling':cooling,'heating':heating,'wh_gallons':0,'house_class':house_class}
 					lastHouse = name
