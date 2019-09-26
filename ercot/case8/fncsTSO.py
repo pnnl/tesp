@@ -9,20 +9,14 @@ from copy import deepcopy;
 import psst.cli as pst;
 import pandas as pd;
 
-from numpy.core._multiarray_umath import ndarray
-from py4j.java_gateway import (JavaGateway, GatewayParameters)
-from py4j.tests.java_gateway_test import gateway
-import os
-
-
 casename = 'ercot_8'
-wind_period = 3600
-
+#wind_period = 3600
+wind_period = 0
+with_market = 1
 ames = True
+
 ames_DAM_case_file = "./../DAMReferenceModel.dat"
 ames_RTM_case_file = "./../RTMReferenceModel.dat"
-ames_case_file = "./../" + casename + "_ames.dat"
-
 
 load_shape = [0.6704,
               0.6303,
@@ -53,7 +47,9 @@ load_shape = [0.6704,
 
 # from 'ARIMA-Based Time Series Model of Stochastic Wind Power Generation'
 # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, p]
-def make_wind_plants():
+def make_wind_plants(ppc):
+    gen = ppc['gen']
+    genCost = ppc['gencost']
     plants = {}
     Pnorm = 165.6
     for i in range(gen.shape[0]):
@@ -69,16 +65,29 @@ def make_wind_plants():
             Ylim = math.sqrt(MW)
             alag = Theta0
             ylag = Ylim
-            plants[str(i)] = [busnum, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, MW]
+            unRespMW = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            plants[str(i)] = [busnum, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, unRespMW]
     return plants
 
 
 # this differs from tesp_support because of additions to FNCS, and Pnom==>Pmin for generators
-def make_dictionary(rootname):
+def make_dictionary(ppc, rootname):
+    """ Helper function to write the JSON metafile for post-processing
+
+    Args:
+      ppc (dict): PYPOWER case file structure
+      rootname (str): to write rootname_m_dict.json
+    """
     fncsBuses = {}
     generators = {}
     unitsout = []
     branchesout = []
+    bus = ppc['bus']
+    gen = ppc['gen']
+    genCost = ppc['gencost']
+    fncsBus = ppc['FNCS']
+    units = ppc['UnitsOut']
+    branches = ppc['BranchesOut']
 
     for i in range(gen.shape[0]):
         busnum = int(gen[i, 0])
@@ -176,7 +185,9 @@ def parse_mva(arg):
     return p, q
 
 
-def print_gld_load(gld_load, msg, ts):
+def print_gld_load(ppc, gld_load, msg, ts):
+    bus = ppc['bus']
+    fncsBus = ppc['FNCS']
     print(msg, 'at', ts)
     print('bus, genidx, pbus, qbus, pcrv, qcrv, pgld, qgld, unresp, resp_max, c2, c1, deg')
     for row in fncsBus:
@@ -265,11 +276,14 @@ def scucDAM(data, output, solver):
 
     dispatch = {}
     resultsPowerGen = {}
-    for g in sorted(instance.Generators.value):
-        dispatch[g] = []
-        for t in sorted(instance.TimePeriods):
-            resultsPowerGen[(g, t)] = instance.PowerGenerated[g, t]
-            dispatch[g].append(resultsPowerGen[(g, t)].value * baseS)
+    try:
+        for g in sorted(instance.Generators.value):
+            dispatch[g] = []
+            for t in sorted(instance.TimePeriods):
+                resultsPowerGen[(g, t)] = instance.PowerGenerated[g, t]
+                dispatch[g].append(resultsPowerGen[(g, t)].value * baseS)
+    except:
+        return uc_df, {}, [[]]
 
     # with open('./SCUCSVPOutcomes.dat', 'w') as outfile:
     #   instance = model._model
@@ -389,13 +403,16 @@ def scedRTM(data, output, solver):
 
     dispatch = {}
     resultsPowerGen = {}
-    for g in sorted(instance.Generators.value):
-        dispatch[g] = []
-        for t in sorted(instance.TimePeriods):
-            resultsPowerGen[(g, t)] = instance.PowerGenerated[g, t]
-            dispatch[g].append(resultsPowerGen[(g, t)].value * baseS)
-            if t == TAU:
-                break
+    try:
+        for g in sorted(instance.Generators.value):
+            dispatch[g] = []
+            for t in sorted(instance.TimePeriods):
+                resultsPowerGen[(g, t)] = instance.PowerGenerated[g, t]
+                dispatch[g].append(resultsPowerGen[(g, t)].value * baseS)
+                if t == TAU:
+                    break
+    except:
+        return {}, []
 
     return dispatch, RT_LMPs
 
@@ -458,14 +475,14 @@ def write_psst_file(fname, dayahead):
 
     writeLine = 'set ThermalGenerators :='
     for i in range(gen.shape[0]):
-        if gen[i, 9] > 0 and str(i) not in wind_plants.keys():
+        if gen[i, 9] > 0 and  genCost[i, 4] > 2e-5:     # not in wind_plants
             writeLine = writeLine + ' GenCo' + str(i + 1)
     print(writeLine, ';', file=fp)
     print('', file=fp)
     for i in range(bus.shape[0]):
         writeLine = 'set ThermalGeneratorsAtBus[Bus' + str(i + 1) + '] :='
         for j in range(gen.shape[0]):
-            if int(gen[j, 0]) == i + 1 and gen[j, 9] > 0 and str(j) not in wind_plants.keys():
+            if int(gen[j, 0]) == i + 1 and gen[j, 9] > 0 and genCost[j, 4] > 2e-5:   # not in wind_plants
                 writeLine = writeLine + ' GenCo' + str(j + 1)
         print(writeLine, ';', file=fp)
     print('', file=fp)
@@ -475,15 +492,12 @@ def write_psst_file(fname, dayahead):
     print('param BalPenNeg := 1000000 ;', file=fp)
     print('', file=fp)
 
-
     if (dayahead):
         print('param TimePeriodLength := 1 ;', file=fp)
         print('', file=fp)
         print('param NumTimePeriods := ' + str(hours_in_a_day) + ' ;', file=fp)
         print('', file=fp)
     else:
-#        print('param TimePeriodLength := ' + '{: .4f}'.format(RTDeltaT / 60) + ' ;', file=fp)
-#        print('param TimePeriodLength := ' + '{: .4f}'.format(RTOPDur / 60) + ' ;', file=fp)
         print('param TimePeriodLength := 1 ;', file=fp)
         print('', file=fp)
         print('param NumTimePeriods := ' + str(TAU) + ' ;', file=fp)
@@ -493,7 +507,7 @@ def write_psst_file(fname, dayahead):
         'param: PowerGeneratedT0 UnitOnT0State MinimumPowerOutput MaximumPowerOutput MinimumUpTime MinimumDownTime NominalRampUpLimit NominalRampDownLimit StartupRampLimit ShutdownRampLimit ColdStartHours ColdStartCost HotStartCost ShutdownCostCoefficient :=',
         file=fp)
     for i in range(gen.shape[0]):
-        if gen[i, 9] > 0 and str(i) not in wind_plants.keys():
+        if gen[i, 9] > 0 and genCost[i, 4] > 2e-5:   # not in wind_plants
             name = 'GenCo' + str(i + 1)
             Pmax = gen[i, 8] / baseS
             Pmin = gen[i, 9] / baseS
@@ -504,13 +518,12 @@ def write_psst_file(fname, dayahead):
                 powerT0 = rt_dispatch[name][0] / baseS
             # unitOnT0State
             unitOnT0 = gen_ames[str(i)][0]  # counter in hours
-#            unitOnT0 = int(gen[i, 7])
             if Pmin < Pmax:
                 writeLine = name + '{: .6f}'.format(powerT0) + ' ' + str(unitOnT0) + '{: .6f}'.format(
                     Pmin) + '{: .6f}'.format(Pmax) + \
                             ' 0 0 0.000000 0.000000 0.000000 0.000000 0 0.000000 0.000000 0.000000'
             else:
-                # wtf
+                # TODO: wtf should never happen but does
                 writeLine = name + '{: .6f}'.format(powerT0) + ' ' + str(unitOnT0) + '{: .6f}'.format(
                     0.0) + '{: .6f}'.format(Pmax) + \
                             ' 0 0 0.000000 0.000000 0.000000 0.000000 0 0.000000 0.000000 0.000000'
@@ -527,7 +540,7 @@ def write_psst_file(fname, dayahead):
 
     print('param StorageFlag := 0.0 ;', file=fp)
     print('', file=fp)
-    print('param PriceSenLoadFlag := 1 ;', file=fp)
+    print('param PriceSenLoadFlag :=', str(with_market), ';', file=fp)
     print('', file=fp)
     print('param ReserveDownSystemPercent := 0.2 ;', file=fp)
     print('', file=fp)
@@ -558,70 +571,96 @@ def write_psst_file(fname, dayahead):
     print(';', file=fp)
     print('', file=fp)
 
-    print('param: NetDemand :=', file=fp)
-    for i in range(bus.shape[0]):
-        ndg = 0
-        for key, row in wind_plants.items():
-            if row[0] == i + 1:
-                ndg += row[1]
-        if (dayahead):
-            for j in range(hours_in_a_day):
-                net = respMaxMW[i][j] + unRespMW[i][j]
-#                net -= ndg
-                writeLine = 'Bus' + str(i + 1) + ' ' + str(j + 1) + ' {:.4f}'.format(net / baseS)
-                print(writeLine, file=fp)
-        else:
-            gld_scale = float(fncsBus[i][2])
-            net = (gld_load[i + 1]['resp_max'] + gld_load[i + 1]['unresp']) * gld_scale
-#            net -= ndg
-            for j in range(TAU):
-                writeLine = 'Bus' + str(i + 1) + ' ' + str(j  + 1) + ' {:.4f}'.format(net / baseS)
-                print(writeLine, file=fp)
-        print('', file=fp)
-    print(';', file=fp)
-    print('', file=fp)
-
-    writeLine = 'set PricesSensitiveLoadNames :='
-    for i in range(bus.shape[0] - 1):
-        writeLine = writeLine + ' LSE' + str(i + 1) + ','
-    writeLine = writeLine + ' LSE' + str(i + 1)
-    print(writeLine, ';', file=fp)
-    print('', file=fp)
-
-    print(
-        'param: Name ID atBus hourIndex BenefitCoefficientC0 BenefitCoefficientC1 BenefitCoefficientC2 SLMin SLMax :=',
-        file=fp)
-    if (dayahead):
-        for i in range(bus.shape[0]):
-            for j in range(hours_in_a_day):
-                writeLine = 'LSE' + str(i + 1) + ' ' + str(i + 1) + ' Bus' + str(i + 1) + ' ' + str(j + 1) + \
-                            ' 0.0' + ' {: .2f}'.format(respC1[i][j]) + ' {: .2f}'.format(respC2[i][j]) + \
-                            ' 0.0' + ' {: .2f}'.format(respMaxMW[i][j] / baseS)
-                print(writeLine, file=fp)
-            print('', file=fp)
-    else:
+    if not with_market:
+        print('param: NetDemand :=', file=fp)
         for i in range(bus.shape[0]):
             busnum = i + 1
             gld_scale = float(fncsBus[i][2])
-            resp_max = gld_load[busnum]['resp_max'] * gld_scale
-            c2 = gld_load[busnum]['c2'] / gld_scale
-            c1 = gld_load[busnum]['c1']
-            for j in range(TAU):
-                writeLine = 'LSE' + str(busnum) + ' ' + str(busnum) + ' Bus' + str(busnum) + ' ' + str(j + 1) + \
-                            ' 0.0' + ' {: .2f}'.format(c1) + ' {: .2f}'.format(c2) + \
-                            ' 0.0' + ' {: .2f}'.format(resp_max / baseS)
-                print(writeLine, file=fp)
+            if dayahead:
+                for j in range(hours_in_a_day):
+                    ndg = 0
+                    for key, row in wind_plants.items():
+                        if row[0] == busnum:
+                            ndg += row[9][j]
+                    net = (gld_load[busnum]['pcrv'] + gld_load[busnum]['p'] * gld_scale) - ndg
+                    writeLine = 'Bus' + str(busnum) + ' ' + str(j + 1) + ' {:.4f}'.format(net / baseS)
+                    print(writeLine, file=fp)
+            else:
+                ndg = 0
+                for key, row in wind_plants.items():
+                    if row[0] == busnum:
+                        ndg += row[9][wind_hour]
+                net = (gld_load[busnum]['pcrv'] + gld_load[busnum]['p'] * gld_scale) - ndg
+                for j in range(TAU):
+                    writeLine = 'Bus' + str(busnum) + ' ' + str(j + 1) + ' {:.4f}'.format(net / baseS)
+                    print(writeLine, file=fp)
             print('', file=fp)
-    print(';', file=fp)
-    print('', file=fp)
+        print(';', file=fp)
+        print('', file=fp)
+    else:
+        print('param: NetDemand :=', file=fp)
+        for i in range(bus.shape[0]):
+            busnum = i + 1
+            if dayahead:
+                for j in range(hours_in_a_day):
+                    ndg = 0
+                    for key, row in wind_plants.items():
+                        if row[0] == busnum:
+                            ndg += row[9][j]
+                    net = respMaxMW[i][j] + unRespMW[i][j] - ndg
+                    writeLine = 'Bus' + str(busnum) + ' ' + str(j + 1) + ' {:.4f}'.format(net / baseS)
+                    print(writeLine, file=fp)
+            else:
+                ndg = 0
+                for key, row in wind_plants.items():
+                    if row[0] == busnum:
+                        ndg += row[9][wind_hour]
+                gld_scale = float(fncsBus[i][2])
+                net = ((gld_load[busnum]['resp_max'] + gld_load[busnum]['unresp']) * gld_scale) - ndg
+                for j in range(TAU):
+                    writeLine = 'Bus' + str(busnum) + ' ' + str(j + 1) + ' {:.4f}'.format(net / baseS)
+                    print(writeLine, file=fp)
+            print('', file=fp)
+        print(';', file=fp)
+        print('', file=fp)
+
+        writeLine = 'set PricesSensitiveLoadNames :='
+        for i in range(bus.shape[0] - 1):
+            writeLine = writeLine + ' LSE' + str(i + 1) + ','
+        writeLine = writeLine + ' LSE' + str(i + 2)
+        print(writeLine, ';', file=fp)
+        print('', file=fp)
+
+        print('param: Name ID atBus hourIndex BenefitCoefficientC0 BenefitCoefficientC1 BenefitCoefficientC2 SLMin SLMax :=', file=fp)
+        for i in range(bus.shape[0]):
+            busnum = i + 1
+            if (dayahead):
+                for j in range(hours_in_a_day):
+                    writeLine = 'LSE' + str(busnum) + ' ' + str(busnum) + ' Bus' + str(busnum) + ' ' + str(j + 1) + \
+                                ' 0.0' + ' {: .2f}'.format(respC1[i][j]) + ' {: .2f}'.format(respC2[i][j]) + \
+                                ' 0.0' + ' {: .2f}'.format(respMaxMW[i][j] / baseS)
+                    print(writeLine, file=fp)
+                print('', file=fp)
+            else:
+                gld_scale = float(fncsBus[i][2])
+                resp_max = gld_load[busnum]['resp_max'] * gld_scale
+                c2 = gld_load[busnum]['c2'] / gld_scale
+                c1 = gld_load[busnum]['c1']
+                for j in range(TAU):
+                    writeLine = 'LSE' + str(busnum) + ' ' + str(busnum) + ' Bus' + str(busnum) + ' ' + str(j + 1) + \
+                                ' 0.0' + ' {: .2f}'.format(c1) + ' {: .2f}'.format(c2) + \
+                                ' 0.0' + ' {: .2f}'.format(resp_max / baseS)
+                    print(writeLine, file=fp)
+                print('', file=fp)
+        print(';', file=fp)
+        print('', file=fp)
 
     print('param: ProductionCostA0 ProductionCostA1 ProductionCostA2 NS :=', file=fp)
     for i in range(gen.shape[0]):
-        if gen[i, 9] > 0 and genCost[i, 5] > 0 and genCost[i, 4] and str(i) not in wind_plants.keys():
+        if gen[i, 9] > 0 and genCost[i, 5] > 0 and genCost[i, 4] and genCost[i, 4] > 2e-5:  # not in wind_plants
             c0 = genCost[i, 6]
             c1 = genCost[i, 5]
             c2 = genCost[i, 4]
-            NS = int(4)
             writeLine = 'GenCo' + str(i + 1) + '{: .5f}'.format(c0) + \
                         '{: .5f}'.format(c1) + '{: .5f}'.format(c2) + ' ' + str(NS)
             print(writeLine, file=fp)
@@ -701,7 +740,7 @@ def write_ames_base_case(fname):
         c0 = genCost[i, 6]
         c1 = genCost[i, 5]
         c2 = genCost[i, 4]
-        if Pmin > 0 and str(i) not in wind_plants.keys():
+        if Pmin > 0 and genCost[i, 4] > 2e-5:   # not in wind_plants
             print(name, str(i + 1), fbus, '{: .2f}'.format(c0), '{: .2f}'.format(c1),
                   '{: .6f}'.format(c2), '{: .2f}'.format(Pmin), '{: .2f}'.format(Pmax),
                   NS, '{: .2f}'.format(100000.0), file=fp)
@@ -740,35 +779,32 @@ def write_ames_base_case(fname):
     print('#LSEDataFixedDemandEnd', file=fp)
     print('', file=fp)
 
+    # Wind Plants, AMES wants name, ID, bus, 8x hourly demands, in three blocks
     print('#NDGDataStart', file=fp)
-    # # gen: bus, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
-    # # gencost: 2, startup, shutdown, 3, c2, c1, c0
-    # # AMES wants name, ID, bus, 8x hourly demands, in three blocks
-    ndg = []
-    ndgnum = 0
-    for key, row in wind_plants.items():
-        Pd = windUnRespMW[ndgnum]
-        ndg.append([row[0], Pd])
-        ndgnum += 1
-
+    i = 1
     print('// Name ID atBus H-00 H-01 H-02 H-03 H-04 H-05 H-06 H-07', file=fp)
-    for i in range(len(ndg)):
-        Pd = ndg[i][1]
-        print('NDG' + str(i + 1), str(i + 1), ndg[i][0], '{: .2f}'.format(Pd[0]), '{: .2f}'.format(Pd[1]),
+    for key, row in wind_plants.items():
+        Pd = row[9]
+        print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[0]), '{: .2f}'.format(Pd[1]),
               '{: .2f}'.format(Pd[2]), '{: .2f}'.format(Pd[3]), '{: .2f}'.format(Pd[4]),
               '{: .2f}'.format(Pd[5]), '{: .2f}'.format(Pd[6]), '{: .2f}'.format(Pd[7]), file=fp)
+        i += 1
+    i = 1
     print('// Name ID atBus H-08 H-09 H-10 H-11 H-12 H-13 H-14 H-15', file=fp)
-    for i in range(len(ndg)):
-        Pd = ndg[i][1]
-        print('NDG' + str(i + 1), str(i + 1), ndg[i][0], '{: .2f}'.format(Pd[8]), '{: .2f}'.format(Pd[9]),
+    for key, row in wind_plants.items():
+        Pd = row[9]
+        print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[8]), '{: .2f}'.format(Pd[9]),
               '{: .2f}'.format(Pd[10]), '{: .2f}'.format(Pd[11]), '{: .2f}'.format(Pd[12]),
               '{: .2f}'.format(Pd[13]), '{: .2f}'.format(Pd[14]), '{: .2f}'.format(Pd[15]), file=fp)
+        i += 1
+    i = 1
     print('// Name ID atBus H-16 H-17 H-18 H-19 H-20 H-21 H-22 H-23', file=fp)
-    for i in range(len(ndg)):
-        Pd = ndg[i][1]
-        print('NDG' + str(i + 1), str(i + 1), ndg[i][0], '{: .2f}'.format(Pd[16]), '{: .2f}'.format(Pd[17]),
+    for key, row in wind_plants.items():
+        Pd = row[9]
+        print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[16]), '{: .2f}'.format(Pd[17]),
               '{: .2f}'.format(Pd[18]), '{: .2f}'.format(Pd[19]), '{: .2f}'.format(Pd[20]),
               '{: .2f}'.format(Pd[21]), '{: .2f}'.format(Pd[22]), '{: .2f}'.format(Pd[23]), file=fp)
+        i += 1
     print('#NDGDataEnd', file=fp)
     print('', file=fp)
 
@@ -789,8 +825,8 @@ def write_ames_base_case(fname):
     print('#LSEDataPriceSensitiveDemandEnd', file=fp)
     fp.close()
 
-
 # Initialize the program
+
 x = np.array(range(25))
 y = np.array(load_shape)
 l = len(x)
@@ -798,8 +834,8 @@ t = np.linspace(0, 1, l - 2, endpoint=True)
 t = np.append([0, 0, 0], t)
 t = np.append(t, [1, 1, 1])
 tck_load = [t, [x, y], 3]
-u3 = np.linspace(0, 1, num=86400 / 300 + 1, endpoint=True)
-newpts = ip.splev(u3, tck_load)
+#u3 = np.linspace(0, 1, num=86400 / 300 + 1, endpoint=True)
+#newpts = ip.splev(u3, tck_load)
 
 ppc = tesp.load_json_case('./../' + casename + '.json')
 ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
@@ -820,8 +856,6 @@ gen = ppc['gen']
 genCost = ppc['gencost']
 zones = ppc['zones']
 fncsBus = ppc['FNCS']
-units = ppc['UnitsOut']
-branches = ppc['BranchesOut']
 
 # ppc arrays(bus type 1=load, 2 = gen(PV) and 3 = swing)
 # bus: bus id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin
@@ -850,12 +884,13 @@ sys_meta = {'Ploss': {'units': 'MW', 'index': 0}, 'Converged': {'units': 'true/f
 bus_metrics = {'Metadata': bus_meta, 'StartTime': StartTime}
 gen_metrics = {'Metadata': gen_meta, 'StartTime': StartTime}
 sys_metrics = {'Metadata': sys_meta, 'StartTime': StartTime}
-make_dictionary(casename)
+make_dictionary(ppc, casename)
 
 # initialize for variable wind
+wind_plants = {}
 tnext_wind = tmax + 2 * dt  # by default, never fluctuate the wind plants
 if wind_period > 0:
-    wind_plants = make_wind_plants()
+    wind_plants = make_wind_plants(ppc)
     if len(wind_plants) < 1:
         print('warning: wind power fluctuation requested, but there are no wind plants in this case')
     else:
@@ -865,8 +900,7 @@ if wind_period > 0:
 ts = 0
 tnext_opf = 0
 tnext_ames = 0
-# data for AMES/PSST day-ahead market
-NS = 4  # number of segments
+wind_hour = 0
 mn = 0
 hour = -1
 day = 1
@@ -875,6 +909,7 @@ RTOPDur = period // 60  # in minutes
 RTDeltaT = 1  # in minutes
 TAU = RTOPDur // RTDeltaT
 hours_in_a_day = 24
+NS = 4  # number of segments
 gen_ames = {}
 da_schedule = {}
 da_lmps = {}
@@ -892,10 +927,11 @@ print('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_s
 print(fncsBus)
 
 # TODO: this is hardwired for 8, more efficient to concatenate outside a loop
-# for ? generator 
-for i in range(8):
+# for ? generator
+for i in range(fncsBus.shape[0]):
     busnum = i + 1
     genidx = ppc['gen'].shape[0]
+    # I suppose a generator for all sum generator a bus?
     ppc['gen'] = np.concatenate(
         (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
     ppc['gencost'] = np.concatenate((ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
@@ -903,8 +939,6 @@ for i in range(8):
     gld_load[busnum] = {'pcrv': 0, 'qcrv': 0, 'p': float(fncsBus[i, 7]) / gld_scale,
                         'q': float(fncsBus[i, 8]) / gld_scale,
                         'unresp': 0, 'resp_max': 0, 'c2': 0, 'c1': 0, 'deg': 0, 'genidx': genidx}
-
-ppc['bus'] = np.hstack((ppc['bus'], np.array([[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]])))
 
 # needed to be re-aliased after np.concatenate
 bus = ppc['bus']
@@ -936,25 +970,19 @@ respC1 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
 respC0 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
 resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
 
-wind_plants_num = len(wind_plants)
-windUnRespMW = np.zeros([wind_plants_num, hours_in_a_day], dtype=float)
-windrespMaxMW = np.zeros([wind_plants_num, hours_in_a_day], dtype=float)
-
-
 # TODO: orginal forecast
 # for i in range(total_bus_num):
 #     for j in range(hours_in_a_day):
-#         respC1[i][j] = 0.1
-#         respC2[i][j] = 1.0
-#         unRespMW[i][j] = bus[i][2] * load_shape[j]  # * scale for each bus
-# #        respMaxMW[i][j] = bus[i][2] * load_shape[j]  # * scale for each bus
+#          respC1[i][j] = 60.0
+#          respC2[i][j] = -2.0
+#          unRespMW[i][j] = fncsBus[i][3] * 0.5   # * scale for each bus
+#          respMaxMW[i][j] = fncsBus[i][3] * 0.5   # * scale for each bus
 
-ndgnum = 0
-for key, row in wind_plants.items():
-    for j in range(hours_in_a_day):
-        windUnRespMW[ndgnum][j] = row[1] * load_shape[j]  # * scale for each wind plant
-#        windrespMaxMW[ndgnum][j] = row[1] * load_shape[j]  # * scale for each wind plant
-    ndgnum += 1
+if ppc['noscale']:
+    for row in fncsBus:
+        row[2] = 1
+        row[5] = 1
+        row[6] = 1
 
 if ames:
     write_ames_base_case(casename + '_ames.dat')
@@ -977,6 +1005,7 @@ while ts <= tmax:
     events = fncs.get_events()
     for topic in events:
         val = fncs.get_value(topic)
+    # getting the latest inputs from GridLAB-D
         if 'UNRESPONSIVE_MW_' in topic:
             busnum = int(topic[16:])
             gld_load[busnum]['unresp'] = float(val)
@@ -1000,6 +1029,7 @@ while ts <= tmax:
         #    elif 'wind_power' in topic:
         #      busnum = int(topic[15:])
         #      gld_load[busnum]['windpower'] = int(val)
+    # getting the latest inputs from substations (DSO)
         elif 'SUBSTATION' in topic:  # gld
             busnum = int(topic[10:])
             p, q = parse_mva(val)
@@ -1020,38 +1050,43 @@ while ts <= tmax:
     #  print(ts, 'FNCS inputs', gld_load, flush=True)
     # fluctuate the wind plants
     if ts >= tnext_wind:
+        if ts % (wind_period * 24) == 0:
+            for j in range(hours_in_a_day):
+                for key, row in wind_plants.items():
+                    # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, [24 hour p]]
+                    Theta0 = row[2]
+                    Theta1 = row[3]
+                    StdDev = row[4]
+                    Psi1 = row[5]
+                    Ylim = row[6]
+                    alag = row[7]
+                    ylag = row[8]
+                    if j > 0:
+                        a = np.random.normal(0.0, StdDev)
+                        y = Theta0 + a - Theta1 * alag + Psi1 * ylag
+                        alag = a
+                    else:
+                        y = ylag
+                    if y > Ylim:
+                        y = Ylim
+                    elif y < 0.0:
+                        y = 0.0
+                    p = y * y
+                    if j > 0:
+                        ylag = y
+                    row[7] = alag
+                    row[8] = ylag
+                    if gen[int(key), 9] > p:
+                        gen[int(key), 9] = p
+                    row[9][j] = p
+
         for key, row in wind_plants.items():
-            # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, p]
-            wind_bus = row[0]
-            MW = row[1]
-            Theta0 = row[2]
-            Theta1 = row[3]
-            StdDev = row[4]
-            Psi1 = row[5]
-            Ylim = row[6]
-            alag = row[7]
-            ylag = row[8]
-            p = row[9]
-            if ts > 0:
-                a = np.random.normal(0.0, StdDev)
-                y = Theta0 + a - Theta1 * alag + Psi1 * ylag
-                alag = a
-            else:
-                y = ylag
-            if y > Ylim:
-                y = Ylim
-            elif y < 0.0:
-                y = 0.0
-            p = y * y
-            if ts > 0:
-                ylag = y
-            row[7] = alag
-            row[8] = ylag
-            row[9] = p
+            p = row[9][wind_hour]
             # reset the unit capacity; this will 'stick' for the next wind_period
-            gen[int(key), 8] = p
-            if gen[int(key), 1] > p:
-                gen[int(key), 1] = p
+            gen[int(key), 1] = p
+        wind_hour += 1
+        if wind_hour == 23:
+            wind_hour = 0
         tnext_wind += wind_period
 
     # always baseline the loads from the curves
@@ -1107,7 +1142,7 @@ while ts <= tmax:
                 genCost[genidx, 5] = 0.0
             genCost[genidx, 6] = 0.0
             if ts > 0:
-                bus[busnum - 1, 2] = gld_load[busnum]['pcrv'] + unresp
+                bus[busnum - 1, 2] = gld_load[busnum]['pcrv'] + unresp   # + resp_max
                 bus[busnum - 1, 3] = gld_load[busnum]['qcrv']
             else:  # use the initial condition for GridLAB-D contribution, which may be non-zero
                 bus[busnum - 1, 2] = gld_load[busnum]['pcrv'] + gld_load[busnum]['p'] * gld_scale
@@ -1122,14 +1157,13 @@ while ts <= tmax:
             print("DA Gen dispatches: \n", da_dispatch)
             print("DA Unit Schedule: \n", da_schedule)
 
-            #TODO: publish the DA LMPs
-
         # Real time and update the dispatch schedules in ppc
+        sum_g = 0
         if day > 1:
             # Change the DA Schedule and the dispatch
             if mn == 0:
                 for i in range(gen.shape[0]):
-                    if gen[i, 9] > 0 and str(i) not in wind_plants.keys():
+                    if gen[i, 9] > 0 and genCost[i, 4] > 2e-5:    # not in wind_plants
                         name = "GenCo" + str(i + 1)
                         # are the schedule from 12 on from the day ahead calculation
                         gen[i, 7] = da_schedule.at[hour, name]
@@ -1145,43 +1179,36 @@ while ts <= tmax:
             print("RT Gen dispatches: \n", rt_dispatch)
 
             for i in range(bus.shape[0]):
-                bus[i][13] = rt_lmps[i][0]
+                bus[i, 13] = rt_lmps[i][0]
 
             for i in range(gen.shape[0]):
                 name = "GenCo" + str(i + 1)
-                if gen[i, 9] > 0 and str(i) not in wind_plants.keys():
+                if gen[i, 9] > 0 and genCost[i, 4] > 2e-5:    # not in wind_plants
                     gen[i, 1] = rt_dispatch[name][0]
+                    sum_g += rt_dispatch[name][0]
 
 #      TODO: fix swing bus
         Pswing = 0
         for idx in range(gen.shape[0]):
             if gen[idx, 0] == swing_bus:
                 Pswing += gen[idx, 1]
-        print(ts, True,
-              '{: .2f}'.format(bus[:, 2].sum()),
-              '{: .2f}'.format(gen[:, 1].sum()),
-              '{: .2f}'.format(Pswing),
-              '{: .4f}'.format(bus[0, 13]),
-              '{: .4f}'.format(bus[7, 13]),
-              '{: .2f}'.format(gen[0, 1]),
-              '{: .2f}'.format(gen[1, 1]),
-              '{: .2f}'.format(gen[2, 1]),
-              '{: .2f}'.format(gen[3, 1]),
-              '{: .2f}'.format(gen[4, 1]),
-              '{: .2f}'.format(gen[5, 1]),
-              '{: .2f}'.format(gen[6, 1]),
-              '{: .2f}'.format(gen[7, 1]),
-              '{: .2f}'.format(gen[8, 1]),
-              '{: .2f}'.format(gen[9, 1]),
-              '{: .2f}'.format(gen[10, 1]),
-              '{: .2f}'.format(gen[11, 1]),
-              '{: .2f}'.format(gen[12, 1]),
-              '{: .2f}'.format(gen[13, 1]),
-              '{: .2f}'.format(gen[14, 1]),
-              '{: .2f}'.format(gen[15, 1]),
-              '{: .2f}'.format(gen[16, 1]),
-              '{: .2f}'.format(gen[17, 1]),
-              sep=', ', file=op, flush=True)
+
+        sum_w = 0
+        for key, row in wind_plants.items():
+            sum_w += row[9][wind_hour]
+
+        line = str(ts) + ',' + "True" + ','
+        line += '{: .2f}'.format(bus[:, 2].sum()) + ','
+        line += '{: .2f}'.format(gen[:, 1].sum()) + ','
+        line += '{: .2f}'.format(Pswing) + ','
+        for idx in range(bus.shape[0]):
+            line += '{: .4f}'.format(bus[idx, 13]) + ','
+        for idx in range(gen.shape[0]):
+            if gen[idx, 9] > 0 and genCost[idx, 4] > 2e-5:   # not in wind_plants
+                line += '{: .2f}'.format(gen[idx, 1]) + ','
+        line += '{: .2f}'.format(sum_g) + ','
+        line += '{: .2f}'.format(sum_w)
+        print(line, sep=', ', file=op, flush=True)
 
         tnext_ames += period
 
@@ -1232,31 +1259,18 @@ while ts <= tmax:
         for idx in range(opf_gen.shape[0]):
             if opf_gen[idx, 0] == swing_bus:
                 Pswing += opf_gen[idx, 1]
-        print(ts, ropf['success'],
-              '{: .2f}'.format(opf_bus[:, 2].sum()),
-              '{: .2f}'.format(opf_gen[:, 1].sum()),
-              '{: .2f}'.format(Pswing),
-              '{: .4f}'.format(opf_bus[0, 13]),
-              '{: .4f}'.format(opf_bus[7, 13]),
-              '{: .2f}'.format(opf_gen[0, 1]),
-              '{: .2f}'.format(opf_gen[1, 1]),
-              '{: .2f}'.format(opf_gen[2, 1]),
-              '{: .2f}'.format(opf_gen[3, 1]),
-              '{: .2f}'.format(opf_gen[4, 1]),
-              '{: .2f}'.format(opf_gen[5, 1]),
-              '{: .2f}'.format(opf_gen[6, 1]),
-              '{: .2f}'.format(opf_gen[7, 1]),
-              '{: .2f}'.format(opf_gen[8, 1]),
-              '{: .2f}'.format(opf_gen[9, 1]),
-              '{: .2f}'.format(opf_gen[10, 1]),
-              '{: .2f}'.format(opf_gen[11, 1]),
-              '{: .2f}'.format(opf_gen[12, 1]),
-              '{: .2f}'.format(opf_gen[13, 1]),
-              '{: .2f}'.format(opf_gen[14, 1]),
-              '{: .2f}'.format(opf_gen[15, 1]),
-              '{: .2f}'.format(opf_gen[16, 1]),
-              '{: .2f}'.format(opf_gen[17, 1]),
-              sep=', ', file=op, flush=True)
+
+        line = str(ts) + ',' + "True" + ','
+        line += '{: .2f}'.format(opf_bus[:, 2].sum()) + ','
+        line += '{: .2f}'.format(opf_bus[:, 1].sum()) + ','
+        line += '{: .2f}'.format(Pswing) + ','
+        for idx in range(opf_bus.shape[0]):
+            line += '{: .4f}'.format(opf_bus[idx, 13]) + ','
+        for idx in range(opf_gen.shape[0]):
+            if gen[i, 9] > 0 and genCost[idx, 4] > 2e-5:    # not in wind_plants
+                line += '{: .2f}'.format(opf_gen[idx, 1]) + ','
+        print(line, sep=', ', file=op, flush=True)
+
         tnext_opf += period
 
         # always run the regular power flow for voltages and performance metrics
