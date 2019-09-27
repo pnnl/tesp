@@ -10,11 +10,6 @@ import psst.cli as pst;
 import pandas as pd;
 
 casename = 'ercot_8'
-#wind_period = 3600
-wind_period = 0
-with_market = 1
-ames = True
-
 ames_DAM_case_file = "./../DAMReferenceModel.dat"
 ames_RTM_case_file = "./../RTMReferenceModel.dat"
 
@@ -841,6 +836,16 @@ ppc = tesp.load_json_case('./../' + casename + '.json')
 ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
 ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
+ames = ppc['ames']
+
+with_market = 0
+if ppc['withMarket']:
+    with_market = 1
+
+wind_period = 0
+if ppc['windPower']:
+    wind_period = 3600
+
 StartTime = ppc['StartTime']
 tmax = int(ppc['Tmax'])
 period = int(ppc['Period'])
@@ -856,6 +861,12 @@ gen = ppc['gen']
 genCost = ppc['gencost']
 zones = ppc['zones']
 fncsBus = ppc['FNCS']
+
+if ppc['noScale']:
+    for row in fncsBus:
+        row[2] = 1
+        row[5] = 1
+        row[6] = 1
 
 # ppc arrays(bus type 1=load, 2 = gen(PV) and 3 = swing)
 # bus: bus id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin
@@ -977,12 +988,6 @@ resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
 #          respC2[i][j] = -2.0
 #          unRespMW[i][j] = fncsBus[i][3] * 0.5   # * scale for each bus
 #          respMaxMW[i][j] = fncsBus[i][3] * 0.5   # * scale for each bus
-
-if ppc['noscale']:
-    for row in fncsBus:
-        row[2] = 1
-        row[5] = 1
-        row[6] = 1
 
 if ames:
     write_ames_base_case(casename + '_ames.dat')
@@ -1204,7 +1209,7 @@ while ts <= tmax:
         for idx in range(bus.shape[0]):
             line += '{: .4f}'.format(bus[idx, 13]) + ','
         for idx in range(gen.shape[0]):
-            if gen[idx, 9] > 0 and genCost[idx, 4] > 2e-5:   # not in wind_plants
+            if gen[idx, 9] > 0:
                 line += '{: .2f}'.format(gen[idx, 1]) + ','
         line += '{: .2f}'.format(sum_g) + ','
         line += '{: .2f}'.format(sum_w)
@@ -1267,7 +1272,7 @@ while ts <= tmax:
         for idx in range(opf_bus.shape[0]):
             line += '{: .4f}'.format(opf_bus[idx, 13]) + ','
         for idx in range(opf_gen.shape[0]):
-            if gen[i, 9] > 0 and genCost[idx, 4] > 2e-5:    # not in wind_plants
+            if gen[idx, 9] > 0:
                 line += '{: .2f}'.format(opf_gen[idx, 1]) + ','
         print(line, sep=', ', file=op, flush=True)
 
