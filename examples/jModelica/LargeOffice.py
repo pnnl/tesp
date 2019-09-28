@@ -42,6 +42,7 @@ class LargeOffice (object):
     def init(self,init_weather,fmu_init_inputs=None):
 	self.ETP_init()
 	self.internalLoad_init()
+	print ("T_prev: %s" %self.T_prev)
 	if fmu_init_inputs==None:
 		fmu_init_inputs = {'Tout':init_weather['TO'],
 				   'TRetInput':[k+273.15 for k in self.T_prev],
@@ -51,9 +52,17 @@ class LargeOffice (object):
 
 
     def ETP_init(self):
-        self.initTemp = np.genfromtxt(self.etp_init_file, delimiter=',', max_rows=self.startDay -1 + self.duration)[self.startDay-1:,1:] #mid-night reset
-        self.T = self.initTemp[0]
-        self.T_prev = self.initTemp[0]
+        self.initTemp = np.genfromtxt(self.etp_init_file, delimiter=',', max_rows=self.startDay -1 + self.duration) #mid-night reset
+	if self.initTemp.ndim == 1:
+		self.initTemp = self.initTemp[1:]
+       		self.T = self.initTemp
+	else:
+		self.initTemp = self.initTemp[self.startDay-1:,1:]
+       		self.T = self.initTemp[0]
+	
+	print ("initTemp:%s" %self.initTemp)
+        self.T_prev = self.T
+
 
     def internalLoad_init(self): 
         self.loadDefaults()
@@ -127,56 +136,69 @@ class LargeOffice (object):
 	self.systems['mid'].do_step(current_t = current_t, step_size = self.stepSize) 
 	self.systems['top'].do_step(current_t = current_t, step_size = self.stepSize) 
 
-	TSup_basement = self.systems['basement'].get('TSupOutput')
-	TSup_bot_c = self.systems['bot'].get('TSupOutput_C')
-	TSup_bot_1 = self.systems['bot'].get('TSupOutput_P1')
-	TSup_bot_2 = self.systems['bot'].get('TSupOutput_P2')
-	TSup_bot_3 = self.systems['bot'].get('TSupOutput_P3')
-	TSup_bot_4 = self.systems['bot'].get('TSupOutput_P4')
-	TSup_mid_c = self.systems['mid'].get('TSupOutput_C')
-	TSup_mid_1 = self.systems['mid'].get('TSupOutput_P1')
-	TSup_mid_2 = self.systems['mid'].get('TSupOutput_P2')
-	TSup_mid_3 = self.systems['mid'].get('TSupOutput_P3')
-	TSup_mid_4 = self.systems['mid'].get('TSupOutput_P4')
-	TSup_top_c = self.systems['top'].get('TSupOutput_C')
-	TSup_top_1 = self.systems['top'].get('TSupOutput_P1')
-	TSup_top_2 = self.systems['top'].get('TSupOutput_P2')
-	TSup_top_3 = self.systems['top'].get('TSupOutput_P3')
-	TSup_top_4 = self.systems['top'].get('TSupOutput_P4')
+	TSup_basement = self.systems['basement'].get('TSupOutput')[0]
+	TSup_bot_c = self.systems['bot'].get('TSupOutput_C')[0]
+	TSup_bot_1 = self.systems['bot'].get('TSupOutput_P1')[0]
+	TSup_bot_2 = self.systems['bot'].get('TSupOutput_P2')[0]
+	TSup_bot_3 = self.systems['bot'].get('TSupOutput_P3')[0]
+	TSup_bot_4 = self.systems['bot'].get('TSupOutput_P4')[0]
+	TSup_mid_c = self.systems['mid'].get('TSupOutput_C')[0]
+	TSup_mid_1 = self.systems['mid'].get('TSupOutput_P1')[0]
+	TSup_mid_2 = self.systems['mid'].get('TSupOutput_P2')[0]
+	TSup_mid_3 = self.systems['mid'].get('TSupOutput_P3')[0]
+	TSup_mid_4 = self.systems['mid'].get('TSupOutput_P4')[0]
+	TSup_top_c = self.systems['top'].get('TSupOutput_C')[0]
+	TSup_top_1 = self.systems['top'].get('TSupOutput_P1')[0]
+	TSup_top_2 = self.systems['top'].get('TSupOutput_P2')[0]
+	TSup_top_3 = self.systems['top'].get('TSupOutput_P3')[0]
+	TSup_top_4 = self.systems['top'].get('TSupOutput_P4')[0]
+	TSup = [
+		TSup_basement,TSup_bot_c,TSup_mid_c,TSup_top_c,
+		TSup_bot_1,TSup_bot_2,TSup_bot_3,TSup_bot_4,
+		TSup_mid_1,TSup_mid_2,TSup_mid_3,TSup_mid_4,
+		TSup_top_1,TSup_top_2,TSup_top_3,TSup_top_4]
+	print ('GET==>TSup:%s' % [k-273.15 for k in TSup])
 
-	mSup_basement = self.systems['basement'].get('mSupOutput')
-	mSup_bot_c = self.systems['bot'].get('mSupOutput_C')
-	mSup_bot_1 = self.systems['bot'].get('mSupOutput_P1')
-	mSup_bot_2 = self.systems['bot'].get('mSupOutput_P2')
-	mSup_bot_3 = self.systems['bot'].get('mSupOutput_P3')
-	mSup_bot_4 = self.systems['bot'].get('mSupOutput_P4')
-	mSup_mid_c = self.systems['mid'].get('mSupOutput_C')
-	mSup_mid_1 = self.systems['mid'].get('mSupOutput_P1')
-	mSup_mid_2 = self.systems['mid'].get('mSupOutput_P2')
-	mSup_mid_3 = self.systems['mid'].get('mSupOutput_P3')
-	mSup_mid_4 = self.systems['mid'].get('mSupOutput_P4')
-	mSup_top_c = self.systems['top'].get('mSupOutput_C')
-	mSup_top_1 = self.systems['top'].get('mSupOutput_P1')
-	mSup_top_2 = self.systems['top'].get('mSupOutput_P2')
-	mSup_top_3 = self.systems['top'].get('mSupOutput_P3')
-	mSup_top_4 = self.systems['top'].get('mSupOutput_P4')
-
-	QSup_basement = mSup_basement[0] * 1 * (TSup_basement[0] - fmu_inputs['TRetInput'][0])
-	QSup_bot_c    = mSup_bot_c[0]    * 1 * (TSup_bot_c[0]    - fmu_inputs['TRetInput'][1])
-	QSup_mid_c    = mSup_mid_c[0]    * 1 * (TSup_mid_c[0]    - fmu_inputs['TRetInput'][2])
-	QSup_top_c    = mSup_top_c[0]    * 1 * (TSup_top_c[0]    - fmu_inputs['TRetInput'][3])
-	QSup_bot_1    = mSup_bot_1[0]    * 1 * (TSup_bot_1[0]    - fmu_inputs['TRetInput'][4])
-	QSup_bot_2    = mSup_bot_2[0]    * 1 * (TSup_bot_2[0]    - fmu_inputs['TRetInput'][5])
-	QSup_bot_3    = mSup_bot_3[0]    * 1 * (TSup_bot_3[0]    - fmu_inputs['TRetInput'][6])
-	QSup_bot_4    = mSup_bot_4[0]    * 1 * (TSup_bot_4[0]    - fmu_inputs['TRetInput'][7])
-	QSup_mid_1    = mSup_mid_1[0]    * 1 * (TSup_mid_1[0]    - fmu_inputs['TRetInput'][8])
-	QSup_mid_2    = mSup_mid_2[0]    * 1 * (TSup_mid_2[0]    - fmu_inputs['TRetInput'][9])
-	QSup_mid_3    = mSup_mid_3[0]    * 1 * (TSup_mid_3[0]    - fmu_inputs['TRetInput'][10])
-	QSup_mid_4    = mSup_mid_4[0]    * 1 * (TSup_mid_4[0]    - fmu_inputs['TRetInput'][11])
-	QSup_top_1    = mSup_top_1[0]    * 1 * (TSup_top_1[0]    - fmu_inputs['TRetInput'][12])
-	QSup_top_2    = mSup_top_2[0]    * 1 * (TSup_top_2[0]    - fmu_inputs['TRetInput'][13])
-	QSup_top_3    = mSup_top_3[0]    * 1 * (TSup_top_3[0]    - fmu_inputs['TRetInput'][14])
-	QSup_top_4    = mSup_top_4[0]    * 1 * (TSup_top_4[0]    - fmu_inputs['TRetInput'][15])
+	mSup_basement = self.systems['basement'].get('mSupOutput')[0]
+	mSup_bot_c = self.systems['bot'].get('mSupOutput_C')[0]
+	mSup_bot_1 = self.systems['bot'].get('mSupOutput_P1')[0]
+	mSup_bot_2 = self.systems['bot'].get('mSupOutput_P2')[0]
+	mSup_bot_3 = self.systems['bot'].get('mSupOutput_P3')[0]
+	mSup_bot_4 = self.systems['bot'].get('mSupOutput_P4')[0]
+	mSup_mid_c = self.systems['mid'].get('mSupOutput_C')[0]
+	mSup_mid_1 = self.systems['mid'].get('mSupOutput_P1')[0]
+	mSup_mid_2 = self.systems['mid'].get('mSupOutput_P2')[0]
+	mSup_mid_3 = self.systems['mid'].get('mSupOutput_P3')[0]
+	mSup_mid_4 = self.systems['mid'].get('mSupOutput_P4')[0]
+	mSup_top_c = self.systems['top'].get('mSupOutput_C')[0]
+	mSup_top_1 = self.systems['top'].get('mSupOutput_P1')[0]
+	mSup_top_2 = self.systems['top'].get('mSupOutput_P2')[0]
+	mSup_top_3 = self.systems['top'].get('mSupOutput_P3')[0]
+	mSup_top_4 = self.systems['top'].get('mSupOutput_P4')[0]
+	mSup = [
+		mSup_basement,mSup_bot_c,mSup_mid_c,mSup_top_c,
+		mSup_bot_1,mSup_bot_2,mSup_bot_3,mSup_bot_4,
+		mSup_mid_1,mSup_mid_2,mSup_mid_3,mSup_mid_4,
+		mSup_top_1,mSup_top_2,mSup_top_3,mSup_top_4]
+	print ('GET==>mSup:%s' % mSup)
+	
+	Cp_air = 1.005
+	QSup_basement = mSup_basement * Cp_air * (TSup_basement - fmu_inputs['TRetInput'][0]) * self.stepSize
+	QSup_bot_c    = mSup_bot_c    * Cp_air * (TSup_bot_c    - fmu_inputs['TRetInput'][1]) * self.stepSize
+	QSup_mid_c    = mSup_mid_c    * Cp_air * (TSup_mid_c    - fmu_inputs['TRetInput'][2]) * self.stepSize
+	QSup_top_c    = mSup_top_c    * Cp_air * (TSup_top_c    - fmu_inputs['TRetInput'][3]) * self.stepSize
+	QSup_bot_1    = mSup_bot_1    * Cp_air * (TSup_bot_1    - fmu_inputs['TRetInput'][4]) * self.stepSize
+	QSup_bot_2    = mSup_bot_2    * Cp_air * (TSup_bot_2    - fmu_inputs['TRetInput'][5]) * self.stepSize
+	QSup_bot_3    = mSup_bot_3    * Cp_air * (TSup_bot_3    - fmu_inputs['TRetInput'][6]) * self.stepSize
+	QSup_bot_4    = mSup_bot_4    * Cp_air * (TSup_bot_4    - fmu_inputs['TRetInput'][7]) * self.stepSize
+	QSup_mid_1    = mSup_mid_1    * Cp_air * (TSup_mid_1    - fmu_inputs['TRetInput'][8]) * self.stepSize
+	QSup_mid_2    = mSup_mid_2    * Cp_air * (TSup_mid_2    - fmu_inputs['TRetInput'][9]) * self.stepSize
+	QSup_mid_3    = mSup_mid_3    * Cp_air * (TSup_mid_3    - fmu_inputs['TRetInput'][10]) * self.stepSize
+	QSup_mid_4    = mSup_mid_4    * Cp_air * (TSup_mid_4    - fmu_inputs['TRetInput'][11]) * self.stepSize
+	QSup_top_1    = mSup_top_1    * Cp_air * (TSup_top_1    - fmu_inputs['TRetInput'][12]) * self.stepSize
+	QSup_top_2    = mSup_top_2    * Cp_air * (TSup_top_2    - fmu_inputs['TRetInput'][13]) * self.stepSize
+	QSup_top_3    = mSup_top_3    * Cp_air * (TSup_top_3    - fmu_inputs['TRetInput'][14]) * self.stepSize
+	QSup_top_4    = mSup_top_4    * Cp_air * (TSup_top_4    - fmu_inputs['TRetInput'][15]) * self.stepSize
 	QSup = [
 		QSup_basement,QSup_bot_c,QSup_mid_c,QSup_top_c,
 		QSup_bot_1,QSup_bot_2,QSup_bot_3,QSup_bot_4,
@@ -185,15 +207,16 @@ class LargeOffice (object):
 		0,0,0 #last 3 plenum zones
 		]
 	#TODO fix the power outputs
-        #PSup_basement = self.systems['basement'].get('PHVACOutput')
+        PSup_basement = self.systems['basement'].get('PHVACOutput')
 	#PSup_bot      = self.systems['bot'].get('PHVACOutput')
-	#PSup_mid      = self.systems['mid'].get('PHVACOutput')
-	#PSup_top      = self.systems['top'].get('PHVACOutput')
+	PSup_mid      = self.systems['mid'].get('PHVACOutput')
+	PSup_top      = self.systems['top'].get('PHVACOutput')
 	#PSup = PSup_basement + PSup_bot + PSup_mid + PSup_top
-	PSup = 0
+	PSup = PSup_basement + PSup_mid + PSup_top
         return QSup, PSup
 	
     def step(self,current_t,weather,control_inputs): 
+	print ("=======STEP@%s=======" % current_t)
         if 'TSetHeating' in control_inputs.keys():
             TSetHeating = control_inputs['TSetHeating']
         else:
@@ -232,31 +255,34 @@ class LargeOffice (object):
                       'TSetHeating':[k+273.15 for k in TSetHeating],
                       'TSetCooling':[k+273.15 for k in TSetCooling]}
 	#print ("T-FMU: %s" %str(self.T_prev+273.15))
-	#print ("TSetHeating: %s" %str([k+273.15 for k in TSetHeating]))
-	#print ("TSetCooling: %s" %str([k+273.15 for k in TSetCooling]))
+	print ("-->before FMU_step")
+	print ("TO: %s" %weather['TO'])
+	print ("TRetInput: %s" %self.T_prev)
+	print ("TSetHeating: %s" %TSetHeating)
+	print ("TSetCooling: %s" %TSetCooling)
 
         Q_HVAC,P_HVAC = self.FMU_step(current_t,FMU_inputs)
 
 	ETP_inputs = {'T_prev':self.T_prev,
                       'TO_current':weather['TO'],
-                      'Q_current':Q_HVAC,
+                      #'Q_current':Q_HVAC,
+		      'Q_current':-Q_InternalLoad,
                       'TG': 18}
-	self.T_prev = self.ETP_step(current_t, ETP_inputs)
+	self.T = self.ETP_step(current_t, ETP_inputs)
 
-	#print ("Q_HVAC: %s" %str(Q_HVAC))
+	
 	#Q_total = Q_SurfaceConvection + Q_InternalLoad + Q_ThermalStorage + Q_HVAC
 	Q_total = Q_InternalLoad + Q_HVAC
-	#print ("Q_total: %s" %str(Q_total))
 
-	print ("time: %s" %str(current_t))
+	#print ("time: %s" %str(current_t))
+	print ("T_prev: %s" %str(self.T_prev))
 	print ("T: %s" %str(self.T))
 	print ("Q_internalLoad: %s" %str(Q_InternalLoad))
-	print ("P_internalLoad: %s" %str(P_InternalLoad))
+	#print ("P_internalLoad: %s" %str(P_InternalLoad))
 	print ("Q_HVAC: %s" %str(Q_HVAC))
 
         self.T_prev = self.T
         #self.Q_ThermalStorage_prev = Q_ThermalStorage
-        #self.Q_prev = Q_total
 
         P_total = P_HVAC + P_InternalLoad
         
