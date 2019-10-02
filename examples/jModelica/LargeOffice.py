@@ -85,18 +85,18 @@ class LargeOffice (object):
 		self.systems['top'].set(key,value)
 	    else:
 		#print key +' setting: '+str(value) #value is a list of 19
-	    	self.systems['basement'].set(key,value[0])
-	    	self.systems['bot'].set(key+'_C',value[1])
+	    	self.systems['basement'].set(key, value[0])
+	    	self.systems['bot'].set(key+'_C', value[1])
+	    	self.systems['mid'].set(key+'_C', value[2])
+	    	self.systems['top'].set(key+'_C', value[3])
 	    	self.systems['bot'].set(key+'_P1',value[4])
 	    	self.systems['bot'].set(key+'_P2',value[5])
 	    	self.systems['bot'].set(key+'_P3',value[6])
 	    	self.systems['bot'].set(key+'_P4',value[7])
-	    	self.systems['mid'].set(key+'_C',value[2])
 	    	self.systems['mid'].set(key+'_P1',value[8])
 	    	self.systems['mid'].set(key+'_P2',value[9])
 	    	self.systems['mid'].set(key+'_P3',value[10])
 	    	self.systems['mid'].set(key+'_P4',value[11])
-	    	self.systems['top'].set(key+'_C',value[3])
 	    	self.systems['top'].set(key+'_P1',value[12])
 	    	self.systems['top'].set(key+'_P2',value[13])
 	    	self.systems['top'].set(key+'_P3',value[14])
@@ -115,18 +115,18 @@ class LargeOffice (object):
 		self.systems['top'].set(key,value)
 	    else:
 		#print key +' setting: '+str(value) #value is a list of 19
-	    	self.systems['basement'].set(key,value[0])
-	    	self.systems['bot'].set(key+'_C',value[1])
+	    	self.systems['basement'].set(key, value[0])
+	    	self.systems['bot'].set(key+'_C', value[1])
+	    	self.systems['mid'].set(key+'_C', value[2])
+	    	self.systems['top'].set(key+'_C', value[3])
 	    	self.systems['bot'].set(key+'_P1',value[4])
 	    	self.systems['bot'].set(key+'_P2',value[5])
 	    	self.systems['bot'].set(key+'_P3',value[6])
 	    	self.systems['bot'].set(key+'_P4',value[7])
-	    	self.systems['mid'].set(key+'_C',value[2])
 	    	self.systems['mid'].set(key+'_P1',value[8])
 	    	self.systems['mid'].set(key+'_P2',value[9])
 	    	self.systems['mid'].set(key+'_P3',value[10])
 	    	self.systems['mid'].set(key+'_P4',value[11])
-	    	self.systems['top'].set(key+'_C',value[3])
 	    	self.systems['top'].set(key+'_P1',value[12])
 	    	self.systems['top'].set(key+'_P2',value[13])
 	    	self.systems['top'].set(key+'_P3',value[14])
@@ -157,7 +157,7 @@ class LargeOffice (object):
 		TSup_bot_1,TSup_bot_2,TSup_bot_3,TSup_bot_4,
 		TSup_mid_1,TSup_mid_2,TSup_mid_3,TSup_mid_4,
 		TSup_top_1,TSup_top_2,TSup_top_3,TSup_top_4]
-	print ('GET==>TSup:%s' % [k-273.15 for k in TSup])
+	#print ('GET==>TSup:%s' % [k-273.15 for k in TSup])
 
 	mSup_basement = self.systems['basement'].get('mSupOutput')[0]
 	mSup_bot_c = self.systems['bot'].get('mSupOutput_C')[0]
@@ -180,7 +180,7 @@ class LargeOffice (object):
 		mSup_bot_1,mSup_bot_2,mSup_bot_3,mSup_bot_4,
 		mSup_mid_1,mSup_mid_2,mSup_mid_3,mSup_mid_4,
 		mSup_top_1,mSup_top_2,mSup_top_3,mSup_top_4]
-	print ('GET==>mSup:%s' % mSup)
+	#print ('GET==>mSup:%s' % mSup)
 	
 	Cp_air = 1.005
 	QSup_basement = mSup_basement * Cp_air * (TSup_basement - fmu_inputs['TRetInput'][0]) * self.stepSize
@@ -204,25 +204,23 @@ class LargeOffice (object):
 		QSup_bot_1,QSup_bot_2,QSup_bot_3,QSup_bot_4,
 		QSup_mid_1,QSup_mid_2,QSup_mid_3,QSup_mid_4,
 		QSup_top_1,QSup_top_2,QSup_top_3,QSup_top_4,
-		0,0,0 #last 3 plenum zones
-		]
-	#TODO fix the power outputs
+		0,0,0] #last 3 plenum zones
+
         PSup_basement = self.systems['basement'].get('PHVACOutput')
-	#PSup_bot      = self.systems['bot'].get('PHVACOutput')
+	PSup_bot      = self.systems['bot'].get('PHVACOutput')
 	PSup_mid      = self.systems['mid'].get('PHVACOutput')
 	PSup_top      = self.systems['top'].get('PHVACOutput')
-	#PSup = PSup_basement + PSup_bot + PSup_mid + PSup_top
-	PSup = PSup_basement + PSup_mid + PSup_top
+	PSup = PSup_basement + PSup_bot + PSup_mid + PSup_top
+	print ("PSup: %s" %PSup)
         return QSup, PSup
 	
-    def step(self,current_t,weather,control_inputs): 
+    def step(self,current_t,weather,control_inputs,voltage):
 	print ("=======STEP@%s=======" % current_t)
         if 'TSetHeating' in control_inputs.keys():
             TSetHeating = control_inputs['TSetHeating']
         else:
             TSetHeating = [20 for i in range(16)]
             TSetHeating.extend([0,0,0]) #for 16 conditioned zones
-	
 
         if 'TSetCooling' in control_inputs.keys():
             TSetCooling = control_inputs['TSetCooling']
@@ -238,51 +236,31 @@ class LargeOffice (object):
 
         Q_InternalLoad,P_InternalLoad,Output_InternalLoad = self.internalLoad_step(current_t,{"LightDimmer":LightDimmer},weather['windSpeed'])
         
-	#Q_SurfaceConvection = self.SurfaceConvection.predict(TO,self.T_prev) #not converge right on Linux, need further investigation
-        #Q_ThermalStorage = self.ThermalStorage.predict(TO, Q_HVAC, self.Q_ThermalStorage_prev, self.T_prev) #not converge right on Linux, need further investigation
-        #print ("Q_internalLoad: %s" %str(Q_InternalLoad))
-        
-        ETP_inputs = {'T_prev':self.T_prev,
-                      'TO_current':weather['TO'],
-                      'Q_current':Q_InternalLoad,
-                      'TG': 18}
-	#print ("T-pre: %s" %str(self.T_prev))
+	#not converge right on Linux, need further investigation
+	#Q_SurfaceConvection = self.SurfaceConvection.predict(TO,self.T_prev) 
+        #Q_ThermalStorage = self.ThermalStorage.predict(TO, Q_HVAC, self.Q_ThermalStorage_prev, self.T_prev)
+
+        ETP_inputs = {'T_prev':self.T_prev,'TO_current':weather['TO'],'Q_current':Q_InternalLoad,'TG': 18}
+
         self.T_prev = self.ETP_step(current_t, ETP_inputs)
-	#print ("T-post: %s" %str(self.T_prev))
 
 	FMU_inputs = {'Tout':weather['TO'],
 		      'TRetInput':self.T_prev+273.15,
                       'TSetHeating':[k+273.15 for k in TSetHeating],
                       'TSetCooling':[k+273.15 for k in TSetCooling]}
-	#print ("T-FMU: %s" %str(self.T_prev+273.15))
-	print ("-->before FMU_step")
-	print ("TO: %s" %weather['TO'])
-	print ("TRetInput: %s" %self.T_prev)
-	print ("TSetHeating: %s" %TSetHeating)
-	print ("TSetCooling: %s" %TSetCooling)
 
         Q_HVAC,P_HVAC = self.FMU_step(current_t,FMU_inputs)
 
 	ETP_inputs = {'T_prev':self.T_prev,
                       'TO_current':weather['TO'],
-                      #'Q_current':Q_HVAC,
+                      #'Q_current':Q_HVAC, #TODO
 		      'Q_current':-Q_InternalLoad,
                       'TG': 18}
 	self.T = self.ETP_step(current_t, ETP_inputs)
 
-	
-	#Q_total = Q_SurfaceConvection + Q_InternalLoad + Q_ThermalStorage + Q_HVAC
 	Q_total = Q_InternalLoad + Q_HVAC
 
-	#print ("time: %s" %str(current_t))
-	print ("T_prev: %s" %str(self.T_prev))
-	print ("T: %s" %str(self.T))
-	print ("Q_internalLoad: %s" %str(Q_InternalLoad))
-	#print ("P_internalLoad: %s" %str(P_InternalLoad))
-	print ("Q_HVAC: %s" %str(Q_HVAC))
-
         self.T_prev = self.T
-        #self.Q_ThermalStorage_prev = Q_ThermalStorage
 
         P_total = P_HVAC + P_InternalLoad
         
@@ -292,11 +270,11 @@ class LargeOffice (object):
         if current_t%86400 == 0:
             self.T_prev = self.initTemp[int((current_t-self.startTime)/86400)] #mid-night reset
 	    print ("=========================RESET==========================")
-        N_zone = 19
-        T_prev = ETP_inputs['T_prev']
+        N_zone     = 19
+        T_prev     = ETP_inputs['T_prev']
         TO_current = ETP_inputs['TO_current']
-        Q_current = ETP_inputs['Q_current']
-        TG = ETP_inputs['TG']
+        Q_current  = ETP_inputs['Q_current']
+        TG         = ETP_inputs['TG']
         co = self.envelop
         R = np.multiply(T_prev, co[N_zone])+ np.multiply(TO_current,co[N_zone+1])+np.multiply(Q_current,co[N_zone+2])+np.multiply(TG,co[N_zone+3])
         T = np.dot(R,np.transpose(co[0:N_zone,:]))

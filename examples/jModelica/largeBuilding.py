@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsRegressor
 import joblib
 import sys
+import math
 try:
 	import fncs
 except:
@@ -29,6 +30,9 @@ def startLOSimulation(startDay, duration, timeStep=60):
 
 	TO_current = None
 	windSpeed = None
+	voltageAB = 0
+	voltageBC = 0
+	voltageCA = 0
 	#weather_current = {}
 	fncs.initialize()
 	print('FNCS initialized')
@@ -41,6 +45,15 @@ def startLOSimulation(startDay, duration, timeStep=60):
 				TO_current = float(value)
 			if topic == 'wind_speed':
 				windSpeed = float(value)
+			if topic == 'voltageAB':
+				p, q= parse_complex(value)
+				voltageAB = math.sqrt(p**2 + q**2)
+			if topic == 'voltageBC':
+				p, q= parse_complex(value)
+				voltageBC = math.sqrt(p**2 + q**2)
+			if topic == 'voltageCA':
+				p, q= parse_complex(value)
+				voltageCA = math.sqrt(p**2 + q**2)
 			print(topic)
 			print(value)
 		if TO_current is None:
@@ -60,6 +73,7 @@ def startLOSimulation(startDay, duration, timeStep=60):
 
 	print("weather info found!")
 	weather_current = {"TO":TO_current,"windSpeed":windSpeed}
+	voltage = {"voltage_AB":voltageAB, "voltage_BC":voltageBC, "voltage_CA":voltageCA}
 
 	LO1 = LargeOffice(int(startDay), int(duration), weather_current) 
 	#LO2 = LargeOffice(startDay, duration,initation2) 
@@ -71,9 +85,10 @@ def startLOSimulation(startDay, duration, timeStep=60):
 
 	control_inputs={} #use default control inputs, or define dynamic values here
 	if weather_current:#['TO'] and weather_current['windSpeed']:
-		P_total,T_room = LO1.step(model_time,weather_current,control_inputs)
+		P_total,T_room = LO1.step(model_time,weather_current,control_inputs,voltage)
 		#print(P_total)
-		fncs.publish('total_power', P_total)
+		if P_total:
+			fncs.publish('total_power', str(P_total[0]))
 		fncs.publish('room_temps', T_room)
 		print('P_total: ', P_total, ', T_room: ', T_room)
 	#model_time = model_time + timeStep
@@ -108,14 +123,24 @@ def startLOSimulation(startDay, duration, timeStep=60):
 				weather_current['TO'] = float(value)
 			if topic == 'wind_speed':
 				weather_current['windSpeed'] = float(value)
+			if topic == 'voltageAB':
+				p, q= parse_complex(value)
+				voltage['voltage_AB'] = math.sqrt(p**2 + q**2)
+			if topic == 'voltageBC':
+				p, q= parse_complex(value)
+				voltage['voltage_BC'] = math.sqrt(p**2 + q**2)
+			if topic == 'voltageCA':
+				p, q= parse_complex(value)
+				voltage['voltage_CA'] = math.sqrt(p**2 + q**2)
 			print(topic)
 			print(value)
 		#weather_current={'TO':TO_current,'windSpeed':windSpeed}
 		control_inputs={} #use default control inputs, or define dynamic values here
 		if weather_current:#['TO'] and weather_current['windSpeed']:
-			P_total,T_room = LO1.step(model_time,weather_current,control_inputs)
+			P_total,T_room = LO1.step(model_time,weather_current,control_inputs,voltage)
 			#print(P_total)
-			fncs.publish('total_power', P_total)
+			if P_total:
+				fncs.publish('total_power', str(P_total[0]))
 			fncs.publish('room_temps', T_room)
 			print('P_total: ', P_total, ', T_room: ', T_room)
 		print("current time: ", timeElapsed)
@@ -133,6 +158,53 @@ def startLOSimulation(startDay, duration, timeStep=60):
 	print("=======================Simulation Done=======================")
 	print('finalizing FNCS')
 	fncs.finalize()
+
+def parse_complex(arg):
+    """ Helper function to parse P+jQ from a FNCS value
+
+    Args:
+      arg (str): FNCS value in rectangular format
+
+    Returns:
+      float, float: P [MW] and Q [MVAR]
+    """
+    tok = arg.strip('; MWVAKdrij')
+    bLastDigit = False
+    bParsed = False
+    vals = [0.0, 0.0]
+    for i in xrange(len(tok)):
+        if tok[i] == '+' or tok[i] == '-':
+            if bLastDigit:
+                vals[0] = float(tok[: i])
+                vals[1] = float(tok[i:])
+                bParsed = True
+                break
+        bLastDigit = tok[i].isdigit()
+    if not bParsed:
+        vals[0] = float(tok)
+
+    if 'd' in arg:
+        vals[1] *= (math.pi / 180.0)
+        p = vals[0] * math.cos(vals[1])
+        q = vals[0] * math.sin(vals[1])
+    elif 'r' in arg:
+        p = vals[0] * math.cos(vals[1])
+        q = vals[0] * math.sin(vals[1])
+    else:
+        p = vals[0]
+        q = vals[1]
+
+    if 'KVA' in arg:
+        p /= 1000.0
+        q /= 1000.0
+    elif 'MVA' in arg:
+        p *= 1.0
+        q *= 1.0
+    else:  # VA
+        p /= 1000000.0
+        q /= 1000000.0
+    return p, q
+
 
 def usage():
 	print("usage: python largeBuilding.py <startDay of year> <duration by day> <time step by seconds(optional, default to 60 seconds)>")
