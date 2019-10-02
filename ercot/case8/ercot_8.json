@@ -1,7 +1,7 @@
 {
   "ames": false,
   "withMarket" : true,
-  "windPower" : false,
+  "windPower" : true,
   "noScale" : false,
   "caseName": "ercot",
   "version": 2,
