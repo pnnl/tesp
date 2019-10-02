@@ -11,6 +11,9 @@ gp.process_gld (rootname)
 import tesp_support.process_houses as hp
 hp.process_houses (rootname)
 
+import tesp_support.process_voltages as vp
+vp.process_voltages (rootname)
+
 import tesp_support.process_agents as ap
 ap.process_agents (rootname)
 

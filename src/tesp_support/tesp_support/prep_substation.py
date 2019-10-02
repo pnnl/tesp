@@ -98,6 +98,21 @@ std_dev = 0.01
 latitude = 30.0
 longitude = -110.0
 #####################################################
+## TODO: put zoneMeterName in a helpers file
+def zoneMeterName(ldname):
+    """ Enforces the meter naming convention for commercial zones
+
+    Commercial zones must be children of load objects. This routine
+    replaces "_load_" with "_meter".
+
+    Args:
+            objname (str): the GridLAB-D name of a load, ends with _load_##
+
+    Returns:
+        str: The GridLAB-D name of upstream meter
+    """
+    return ldname.replace ('_load_', '_meter_')
+
 
 def ProcessGLM (fileroot):
     """Helper function that processes one GridLAB-D file
@@ -206,7 +221,7 @@ def ProcessGLM (fileroot):
                 endedHouse = False
                 if isELECTRIC == True:
                     if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
-                        meterName = houseParent
+                        meterName = zoneMeterName (houseParent)
                     nAirConditioners += 1
                     if np.random.uniform (0, 1) <= agent_participation:
                         nControllers += 1
@@ -369,6 +384,7 @@ def ProcessGLM (fileroot):
         print ('subscribe "precommit:Eplus_meter.bill_mode <- eplus_json/bill_mode";', file=op)
         print ('subscribe "precommit:Eplus_meter.price <- eplus_json/price";', file=op)
         print ('subscribe "precommit:Eplus_meter.monthly_fee <- eplus_json/monthly_fee";', file=op)
+    pubSubMeters = set()
     for key, val in controllers.items():
         houseName = val['houseName']
         houseClass = val['houseClass']
@@ -376,16 +392,18 @@ def ProcessGLM (fileroot):
         print ('publish "commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature";', file=op)
         print ('publish "commit:' + houseName + '.power_state -> ' + houseName + '/power_state";', file=op)
         print ('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
-        if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
-            print ('publish "commit:' + meterName + '.measured_voltage_A -> ' + meterName + '/measured_voltage_1";', file=op)
-        else:
-            print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
         print ('subscribe "precommit:' + houseName + '.cooling_setpoint <- substation/' + key + '/cooling_setpoint";', file=op)
         print ('subscribe "precommit:' + houseName + '.heating_setpoint <- substation/' + key + '/heating_setpoint";', file=op)
         print ('subscribe "precommit:' + houseName + '.thermostat_deadband <- substation/' + key + '/thermostat_deadband";', file=op)
-        print ('subscribe "precommit:' + meterName + '.bill_mode <- substation/' + key + '/bill_mode";', file=op)
-        print ('subscribe "precommit:' + meterName + '.price <- substation/' + key + '/price";', file=op)
-        print ('subscribe "precommit:' + meterName + '.monthly_fee <- substation/' + key + '/monthly_fee";', file=op)
+        if meterName not in pubSubMeters:
+            pubSubMeters.add(meterName)
+            if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
+                print ('publish "commit:' + meterName + '.measured_voltage_A -> ' + meterName + '/measured_voltage_1";', file=op)
+            else:
+                print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
+            print ('subscribe "precommit:' + meterName + '.bill_mode <- substation/' + key + '/bill_mode";', file=op)
+            print ('subscribe "precommit:' + meterName + '.price <- substation/' + key + '/price";', file=op)
+            print ('subscribe "precommit:' + meterName + '.monthly_fee <- substation/' + key + '/monthly_fee";', file=op)
     op.close()
 
 

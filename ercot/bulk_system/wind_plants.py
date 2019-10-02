@@ -29,6 +29,7 @@ for j in range (nplants):
 	Ylim[j] = math.sqrt (wind_plants[j])
 	alag[j] = Theta0[j]
 	ylag[j] = Ylim[j]
+	print (j, '{:7.2f} {:7.4f} {:7.4f} {:7.4f} {:7.4f} {:7.4f} {:7.2f}'.format(wind_plants[j], scale, Theta0[j], Theta1[j], StdDev[j], Psi1[j], Ylim[j]))
 
 # time-stepping to mimic what will happen in fncsERCOT.py
 i = 0
@@ -36,7 +37,7 @@ ts = 0
 tmax = days * 24 * 3600
 tnext_wind = 0
 wind_period = 3600
-dt = 180
+dt = 300
 
 while ts <= tmax:
 	if ts >= tnext_wind:

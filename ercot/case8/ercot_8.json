@@ -1,7 +1,13 @@
 {
+  "ames": false,
+  "withMarket" : true,
+  "windPower" : true,
+  "noScale" : false,
+  "caseName": "ercot",
   "version": 2,
   "baseMVA": 100.0,
   "StartTime": "2013-07-01 00:00:00",
+  "EndTime": "2013-07-03 00:00:00",
   "Tmax": 172800,
   "Period": 300,
   "dt": 15,
@@ -21,7 +27,9 @@
       345,
       2,
       1.1,
-      0.9
+      0.9,
+      0.0,
+      0.0
     ],
     [
       2,
@@ -36,7 +44,9 @@
       345,
       1,
       1.1,
-      0.9
+      0.9,
+      0.0,
+      0.0
     ],
     [
       3,
@@ -51,7 +61,9 @@
       345,
       4,
       1.1,
-      0.9
+      0.9,
+      0.0,
+      0.0
     ],
     [
       4,
@@ -66,7 +78,9 @@
       345,
       4,
       1.1,
-      0.9
+      0.9,
+      0.0,
+      0.0
     ],
     [
       5,
@@ -81,7 +95,9 @@
       345,
       3,
       1.1,
-      0.9
+      0.9,
+      0.0,
+      0.0
     ],
     [
       6,
@@ -96,7 +112,9 @@
       345,
       3,
       1.1,
-      0.9
+      0.9,
+      0.0,
+      0.0
     ],
     [
       7,
@@ -111,7 +129,9 @@
       345,
       3,
       1.1,
-      0.9
+      0.9,
+      0.0,
+      0.0
     ],
     [
       8,
@@ -126,7 +146,9 @@
       345,
       4,
       1.1,
-      0.9
+      0.9,
+      0.0,
+      0.0
     ]
   ],
   "gen": [
@@ -1027,18 +1049,60 @@
   "BranchesOut": [],
   "swing_bus": 1,
   "metadata" : {
+    "ames": "true == ames running, false == pypower running opf",
+    "withMarket": "true == market price sensitive load, false == no market",
+    "windPower": "true == wind power, false == no wind power",
+    "noScale": "FNCS gld_scale, curve_scale, curve_skew are set to 1 if false",
+    "caseName": "Case name",
     "version": "Version Number",
     "baseMVA": "",
     "StartTime": "Start time for the simulation run in the form of YYYY-MM-DD HH:MM:SS",
+    "EndTime": "End time for the simulation run in the form of YYYY-MM-DD HH:MM:SS",
     "Tmax": "The duration for the simulation in seconds",
-    "Period": "Time interval for the simulation in seconds for opf",
+    "Period": "Time interval for the simulation in seconds for opf/ames",
     "dt": "The delta time for the simulation in seconds for pf",
     "pf_dc": "",
     "opf_dc": "",
     "swing_bus": "",
     "zones": "An array for each zone [zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]",
-    "bus": "An array for each bus [bus id, type (1=load, 2=gen (PV) and 3=swing), Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin]",
-    "gen": "An array for each generator [bus id, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin, (11 zeros) ]",
+    "bus": [
+      "bus id -bus number (positive integer)",
+      "type -(1=load (PQ), 2=gen (PV) and 3=swing)",
+      "Pd -real power demand (MW)",
+      "Qd -reactive power demand (MVAr)",
+      "Gs -shunt conductance (MW demanded at V = 1.0 p.u.)",
+      "Bs -shunt susceptance (MVAr injected at V = 1.0 p.u.)",
+      "area -area number (positive integer)",
+      "Vm -voltage magnitude (p.u.)",
+      "Va -voltage angle (degrees)",
+      "baseKV -base voltage",
+      "zone -loss zone (positive integer)",
+      "Vmax -maximum voltage magnitude (p.u.)",
+      "Vmin -maximum voltage magnitude (p.u.)",
+      "LAM P -Lagrange multiplier on real power mismatch (u/MW)",
+      "LAM Q -Lagrange multiplier on reactive power mismatch (u/MVAr)"],
+    "gen": [
+        "bus id -bus number",
+        "Pg -real power output (MW)",
+        "Qg -reactive power output (MVAr)",
+        "Qmax -maximum reactive power output (MVAr)",
+        "Qmin -minimum reactive power output (MVAr)",
+        "Vg -voltage magnitude set point (p.u.)",
+        "mBase -total MVA base of machine, defaults to baseMVA",
+        "status -machine status > 0 = machine in-service, machine status ≤ 0 = machine out-of-service",
+        "Pmax -maximum real power output (MW)",
+        "Pmin -minimum real power output (MW)",
+        "PC1* -lower real power output of PQ capability curve (MW)",
+        "PC2* -upper real power output of PQ capability curve (MW)",
+        "QC1MIN* -minimum reactive power output at PC1 (MVAr)",
+        "QC1MAX* -maximum reactive power output at PC1 (MVAr)",
+        "QC2MIN* -minimum reactive power output at PC2 (MVAr)",
+        "QC2MAX* -maximum reactive power output at PC2 (MVAr)",
+        "RAMP AGC* -ramp rate for load following/AGC (MW/min)",
+        "RAMP 10* -ramp rate for 10 minute reserves (MW)",
+        "RAMP 30* -ramp rate for 30 minute reserves (MW)",
+        "RAMP Q* -ramp rate for reactive power (2 sec timescale) (MVAr/min)",
+        "APF* -area participation factor"],
     "gencost": "An array for each generator cost [2, startup, shutdown, 3, c2, c1, c0]",
     "branch": "An array for each branch [from bus id, to bus id, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax]",
     "FNCS": "An array for each FNCS/gridlab instance [bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]",
