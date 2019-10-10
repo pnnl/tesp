@@ -1,5 +1,5 @@
 {
-  "ames": false,
+  "ames": true,
   "withMarket" : true,
   "windPower" : true,
   "noScale" : false,

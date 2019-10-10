@@ -907,9 +907,6 @@ if wind_period > 0:
         print('warning: wind power fluctuation requested, but there are no wind plants in this case')
     else:
         tnext_wind = 0
-        print ('Wind Plant Bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim')
-        for key, row in wind_plants.items(): #[busnum, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, unRespMW]
-            print (key, row[0], row[1], row[2], row[3], row[4], row[5], row[6])
 
 # initialize for day-ahead, OPF and time stepping
 ts = 0
@@ -1060,7 +1057,6 @@ while ts <= tmax:
     # fluctuate the wind plants
     if ts >= tnext_wind:
         if ts % (wind_period * 24) == 0:
-            print('Day Ahead Wind at', ts)
             for j in range(hours_in_a_day):
                 for key, row in wind_plants.items():
                     # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, [24 hour p]]
@@ -1082,23 +1078,17 @@ while ts <= tmax:
                     elif y < 0.0:
                         y = 0.0
                     p = y * y
-                    print ('  {0:2d} {1:2s} {2:7.4f} {3:7.4f} {4:7.4f} {5:7.1f}'.format (j, key, ylag, alag, y, p))
                     if j > 0:
                         ylag = y
                     row[7] = alag
                     row[8] = ylag
-#                    if gen[int(key), 9] > p:  #TEMc: this actually indexes Pmin, furthermore we need to do this hourly
-#                        gen[int(key), 9] = p
                     row[9][j] = p
-                print ('  ', flush=True)
 
         for key, row in wind_plants.items():
             p = row[9][wind_hour]
             # reset the unit capacity; this will 'stick' for the next wind_period
             gen[int(key), 1] = p
             gen[int(key), 8] = p  # TEMc: sets the max capacity so that OPF doesn't increase it below
-            print ('     setting wind plant', key, 'to {0:9.2f} at {1:2d}'.format(p, wind_hour))
-        print (' ', flush=True)
         wind_hour += 1
         if wind_hour == 23:
             wind_hour = 0
@@ -1265,7 +1255,6 @@ while ts <= tmax:
                 bus[busnum - 1, 2] = gld_load[busnum]['pcrv'] + gld_load[busnum]['p'] * gld_scale
                 bus[busnum - 1, 3] = gld_load[busnum]['qcrv'] + gld_load[busnum]['q'] * gld_scale
         #    print_gld_load(ppc, gld_load, 'OPF', ts)
-        print ('    First Wind {:9.2f} before runopf'.format(gen[13,1]))
         ropf = pp.runopf(ppc, ppopt_market)
         if ropf['success'] == False:
             conv_accum = False
@@ -1308,7 +1297,6 @@ while ts <= tmax:
         gen[genidx, 2] = 0  # q
         gen[genidx, 9] = 0  # pmin
     #  print_gld_load(ppc, gld_load, 'RPF', ts)
-    print ('    First Wind {:9.2f} before runpf'.format(gen[13,1]))
     rpf = pp.runpf(ppc, ppopt_regular)
     if not rpf[0]['success']:
         conv_accum = False
