@@ -62,7 +62,7 @@ fncs_bus = ppc['FNCS']
 gld_bus = {} # key on bus number
 for i in range (8):
   busnum = i+1
-  gld_bus[busnum] = {'pcrv':0,'qcrv':0,'lmp':0,'v':0,'p':0,'q':0,'unresp':0,'resp_max':0,'c2':bid_c2,'c1':bid_c1,'deg':bid_deg} 
+  gld_bus[busnum] = {'pcrv':0,'qcrv':0,'lmp':0,'v':0,'p':0,'q':0,'unresp':0,'resp_max':0,'c2':bid_c2,'c1':bid_c1,'deg':bid_deg}
 
 # initialize for time stepping and metrics
 ts = 0
@@ -124,8 +124,8 @@ while ts <= tmax:
         else:
           resp_max = 0.0
           unresp = Phour
-        da_bid['unresp_mw'].append(unresp)
-        da_bid['resp_max_mw'].append(resp_max)
+        da_bid['unresp_mw'].append(unresp / gld_scale)
+        da_bid['resp_max_mw'].append(resp_max / gld_scale)
         da_bid['resp_c2'].append(c2)
         da_bid['resp_c1'].append(c1)
         da_bid['resp_deg'].append(deg)
@@ -169,7 +169,7 @@ while ts <= tmax:
     pubtopic = 'substationBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from a substation auction
     fncs.publish (pubtopic + '/unresponsive_mw', unresp / gld_scale)
     fncs.publish (pubtopic + '/responsive_max_mw', resp_max / gld_scale)
-    fncs.publish (pubtopic + '/responsive_c2', c2 * gld_scale)
+    fncs.publish (pubtopic + '/responsive_c2', c2)
     fncs.publish (pubtopic + '/responsive_c1', c1)
     fncs.publish (pubtopic + '/responsive_deg', deg)
 
