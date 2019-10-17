@@ -51,12 +51,13 @@ tck_load=[t,[x,y],3]
 u3=np.linspace(0,1,num=86400/300 + 1,endpoint=True)
 newpts = ip.splev (u3, tck_load)
 
-ppc = tesp.load_json_case ('./../' + casename + '.json')
+ppc = tesp.load_json_case ('../' + casename + '.json')
 StartTime = ppc['StartTime']
 tmax = int(ppc['Tmax'])
 period = int(ppc['Period'])
 dt = int(ppc['dt'])
 dt = 60
+
 # FNCS: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew
 fncs_bus = ppc['FNCS']
 gld_bus = {} # key on bus number
