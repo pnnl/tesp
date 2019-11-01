@@ -124,7 +124,19 @@ class simple_auction:
         self.curve_buyer = helpers.curve ()
         self.curve_seller = helpers.curve ()
         self.unresp = self.refload
-                       
+    
+    def supplier_bid (self, bid):
+        """Gather supplier bids into curve_seller
+
+        Use this to enter curves in step-wise blocks.
+
+        Args:
+            bid ([float, float]): price in $/kwh, quantity in kW
+        """
+        price = bid[0]
+        quantity = bid[1]
+        self.curve_seller.add_to_curve (price, quantity, False)
+
     def collect_bid (self, bid):
         """Gather HVAC bids into curve_buyer
 
@@ -171,7 +183,8 @@ class simple_auction:
             tnext_clear (int): next clearing time in FNCS seconds, should be <= time_granted, for the log file only
             time_granted (int): the current time in FNCS seconds, for the log file only
         """
-        self.curve_seller.add_to_curve (self.lmp, self.max_capacity_reference_bid_quantity, True)
+        if self.max_capacity_reference_bid_quantity > 0:
+            self.curve_seller.add_to_curve (self.lmp, self.max_capacity_reference_bid_quantity, True)
         if self.curve_seller.count > 0:
             self.curve_seller.set_curve_order ('ascending')
 
@@ -395,7 +408,8 @@ class simple_auction:
         else:
             self.marginal_quantity = 0.0
             self.marginal_frac = 0.0
-        # print ('##', time_granted, tnext_clear, self.clearing_type, self.clearing_quantity, self.clearing_price,
+        # print ('##', time_granted, tnext_clear, self.clearing_type, self.clearing_quantity, 
+        #        self.clearing_price,
         #        self.curve_buyer.count, self.unresponsive_buy, self.responsive_buy,
         #        self.curve_seller.count, self.unresponsive_sell, self.responsive_sell,
         #        self.marginal_quantity, self.marginal_frac, self.lmp, self.refload,
