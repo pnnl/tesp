@@ -44,3 +44,12 @@ values:
     lobuilding_temp:
         topic: lobuilding/room_temps
         default: 0
+    voltageAB:
+        topic: gridlabd/measured_voltage_AB
+        default: 0
+    voltageBC:
+        topic: gridlabd/measured_voltage_BC
+        default: 0
+    voltageCA:
+        topic: gridlabd/measured_voltage_CA
+        default: 0

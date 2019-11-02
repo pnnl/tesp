@@ -5,3 +5,6 @@ subscribe "precommit:exampleWeather.solar_diffuse <- weather/solar_diffuse";
 subscribe "precommit:exampleWeather.pressure <- weather/pressure";
 subscribe "precommit:exampleWeather.wind_speed <- weather/wind_speed";
 subscribe "precommit:Eplus_load.constant_power_A <- lobuilding/total_power";
+publish "commit:Eplus_meter.measured_voltage_AB -> measured_voltage_AB";
+publish "commit:Eplus_meter.measured_voltage_BC -> measured_voltage_BC";
+publish "commit:Eplus_meter.measured_voltage_CA -> measured_voltage_CA";
