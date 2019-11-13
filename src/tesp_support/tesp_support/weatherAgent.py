@@ -142,6 +142,12 @@ def startWeatherAgent(file):
     zpl.close()
     print(zplName, 'file generated with:', flush=True)
     print(zplstr, flush=True)
+
+    import platform
+    if platform.system() == "Windows":
+        import ctypes, ctypes.util
+        ctypes.cdll[ctypes.util.find_library("msvcrt")]._putenv(f"FNCS_CONFIG_FILE={zplName}")
+
     os.environ['FNCS_CONFIG_FILE'] = zplName
 #    print (os.environ, flush=True)
     fncs.initialize()
