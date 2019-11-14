@@ -88,6 +88,7 @@ def startWeatherAgent(file):
 
     # find weather data on the hour for the hourly forecast
     hourlyWeatherData=weatherData.loc[(weatherData.index.minute == 0) & (weatherData.index.second == 0) & (weatherData.index.microsecond == 0) & (weatherData.index.nanosecond == 0)]
+    # hourlyWeatherData=weatherData2.resample(rule='1H', how='mean') #average data within 1 hour
     # make sure time_stop and time_delta have the same unit by converting them to the uniform unit first
 
     # try:
