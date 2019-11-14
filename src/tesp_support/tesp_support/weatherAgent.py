@@ -7,10 +7,10 @@ import pandas as pd
 import json
 from datetime import datetime
 from datetime import timedelta
-try:
-  import tesp_support.fncs as fncs;
-except:
-  pass
+# try:
+#   import tesp_support.fncs as fncs;
+# except:
+#   pass
 import random
 import numpy
 from scipy.stats import truncnorm
@@ -77,7 +77,7 @@ def startWeatherAgent(file):
         print("Error in time_stop", ex)
 
     #write fncs.zpl file here
-    # this config str won't work as an argument to fncs::initialize, so write fncs.zpl just in time
+    #it actually worked now. # this config str won't work as an argument to fncs::initialize, so write fncs.zpl just in time
     zplstr = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds, timeStopInSeconds, broker)
 
     # when doing resample(), use publishIntervalInSeconds to make it uniform
@@ -136,24 +136,38 @@ def startWeatherAgent(file):
 
     # other weather agents could be initializing from FNCS.zpl, so we might have a race condition
     #  file locking didn't work, because fncs.initialize() doesn't return until broker hears from all other simulators
-    zplName = agentName + '.zpl'
-    zpl = open(zplName, "w")
-    print(zplstr, file=zpl)
-    zpl.close()
-    print(zplName, 'file generated with:', flush=True)
-    print(zplstr, flush=True)
+    # zplName = agentName + '.zpl'
+    # zpl = open(zplName, "w")
+    # print(zplstr, file=zpl)
+    # zpl.close()
+    # print(zplName, 'file generated with:', flush=True)
+    # print(zplstr, flush=True)
 
-    import platform
-    if platform.system() == "Windows":
-        import ctypes, ctypes.util
-        ctypes.cdll[ctypes.util.find_library("msvcrt")]._putenv(f"FNCS_CONFIG_FILE={zplName}")
-
-    os.environ['FNCS_CONFIG_FILE'] = zplName
+    # import platform
+    # if platform.system() == "Windows":
+    #     import ctypes, ctypes.util
+    #     a = ctypes.util.find_library("msvcrt")
+    #     b = ctypes.cdll[a]
+    #     b._putenv(f"FNCS_CONFIG_FILE={zplName}")
+    #     print(b._environ)
+    #     #ctypes.cdll[ctypes.util.find_library("msvcrt")]._putenv(f"FNCS_CONFIG_FILE={zplName}")
+    #     libc = ctypes.cdll.msvcrt
+    #     libc._putenv(f"FNCS_CONFIG_FILE={zplName}")
+    #     print(libc._environ)
+    #     # error: ctypes.cdll[libc]._putenv(f"FNCS_CONFIG_FILE={zplName}")
+    #
+    # os.environ['FNCS_CONFIG_FILE'] = zplName
 #    print (os.environ, flush=True)
-    fncs.initialize()
+    try:
+        import tesp_support.fncs as fncs
+    except:
+        pass
+    configstr = zplstr.encode('utf-8')
+    fncs.initialize(configstr)
+    #fncs.initialize()
     print('FNCS initialized', flush=True)
-    os.remove(zplName)
-    print(zplName, 'file deleted', flush=True)
+    # os.remove(zplName)
+    # print(zplName, 'file deleted', flush=True)
 
     time_granted = 0
     #timeDeltaChanged = 0
