@@ -62,7 +62,7 @@ object node {
     voltage_B -3600.00-6235.38j;
     voltage_C -3600.00+6235.38j;
 }
-object node {
+object meter { // node {
    name GC_12_47_1_node_16;
    phases ABCN;
    nominal_voltage 7200.00;
@@ -70,7 +70,7 @@ object node {
    voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
-object node {
+object meter { // node {
    name GC_12_47_1_node_8;
    phases ABCN;
    nominal_voltage 7200.00;
@@ -78,7 +78,7 @@ object node {
    voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
-object node {
+object meter { // node {
    name GC_12_47_1_node_11;
    phases ABCN;
    nominal_voltage 7200.00;
@@ -86,7 +86,7 @@ object node {
    voltage_B -3600.00-6235.38j;
    voltage_C -3600.00+6235.38j;
 }
-object node {
+object meter { // node {
    name GC_12_47_1_node_7;
    phases ABCN;
    nominal_voltage 7200.00;

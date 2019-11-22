@@ -481,7 +481,7 @@ def calculate_Z_S():
 def CreateNode(modelname,seg_number,glmfile):
     base_name = gld_strict_name (modelname)
     f=open(glmfile,'a')
-    f.write('object node {\n')
+    f.write('object meter { // node {\n')
     f.write('   name '+base_name+'_node_'+simlist[seg_number]['f_node']+';\n')
     f.write('   phases '+simlist[seg_number]['phase_name']+'N;\n')
     f.write('   nominal_voltage '+str(v_base)+';\n')
