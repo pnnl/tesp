@@ -10,10 +10,16 @@ import re
 import csv
 import matplotlib.pyplot as plt
 import os
+import subprocess
 import numpy as np
 from numpy.linalg import inv
 import cmath
 import math
+
+'''
+switch line 68 to line 69 for feeder #16 #17 #19 #20
+'''
+
 
 min_load_size = 10.0
 
@@ -28,8 +34,8 @@ def gld_strict_name(val):
         str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
     """
     if val[0].isdigit():
-        val = 'gld_' + val
-    return val.replace ('-', '_')
+        val = 'gld_' + val     
+    return val.replace ('-','_')
 
 def is_node_class(s):
     if s == 'node':
@@ -343,6 +349,14 @@ def getI_agg(model_name, simlistfile, I_datafile, new_I_datafile):
             IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']]))+complex(float(Ia[simlist[n]['out_branch_2']]),float(Iaimg[simlist[n]['out_branch_2']]))+complex(float(Ia[simlist[n]['out_branch_3']]),float(Iaimg[simlist[n]['out_branch_3']]))) 
             IobJ.append(complex(float(Ib[simlist[n]['out_branch_1']]),float(Ibimg[simlist[n]['out_branch_1']]))+complex(float(Ib[simlist[n]['out_branch_2']]),float(Ibimg[simlist[n]['out_branch_2']]))+complex(float(Ib[simlist[n]['out_branch_3']]),float(Ibimg[simlist[n]['out_branch_3']])))
             IocJ.append(complex(float(Ic[simlist[n]['out_branch_1']]),float(Icimg[simlist[n]['out_branch_1']]))+complex(float(Ic[simlist[n]['out_branch_2']]),float(Icimg[simlist[n]['out_branch_2']]))+complex(float(Ic[simlist[n]['out_branch_3']]),float(Icimg[simlist[n]['out_branch_3']])))
+        if  simlist[n]['out_branch_4']!='':
+            IiaJ.append(complex(float(Ia[simlist[n]['f_branch']]),float(Iaimg[simlist[n]['f_branch']])))
+            IibJ.append(complex(float(Ib[simlist[n]['f_branch']]),float(Ibimg[simlist[n]['f_branch']])))
+            IicJ.append(complex(float(Ic[simlist[n]['f_branch']]),float(Icimg[simlist[n]['f_branch']])))
+            IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']]))+complex(float(Ia[simlist[n]['out_branch_2']]),float(Iaimg[simlist[n]['out_branch_2']]))+complex(float(Ia[simlist[n]['out_branch_3']]),float(Iaimg[simlist[n]['out_branch_3']]))+complex(float(Ia[simlist[n]['out_branch_4']]),float(Iaimg[simlist[n]['out_branch_4']]))) 
+            IobJ.append(complex(float(Ib[simlist[n]['out_branch_1']]),float(Ibimg[simlist[n]['out_branch_1']]))+complex(float(Ib[simlist[n]['out_branch_2']]),float(Ibimg[simlist[n]['out_branch_2']]))+complex(float(Ib[simlist[n]['out_branch_3']]),float(Ibimg[simlist[n]['out_branch_3']]))+complex(float(Ib[simlist[n]['out_branch_4']]),float(Ibimg[simlist[n]['out_branch_4']])))
+            IocJ.append(complex(float(Ic[simlist[n]['out_branch_1']]),float(Icimg[simlist[n]['out_branch_1']]))+complex(float(Ic[simlist[n]['out_branch_2']]),float(Icimg[simlist[n]['out_branch_2']]))+complex(float(Ic[simlist[n]['out_branch_3']]),float(Icimg[simlist[n]['out_branch_3']]))+complex(float(Ic[simlist[n]['out_branch_4']]),float(Icimg[simlist[n]['out_branch_4']])))
+#a=inv((np.dot(Ii[10],Ii[10].transpose().conjugate())))           
 
 #***********************************************************************************************************
 # calculate impedance and load for simplified model
@@ -834,17 +848,17 @@ def errorplot(baseV):
     errorc=[]
     for n in range(len(Vfa)):
         if Vfas[n]!=0j:      
-            errora.append(abs((abs(Vfa[n])-abs(Vfas[n])))/baseV*100)
+            errora.append(abs((abs(Vfa[n])-abs(Vfas[n])))/baseV)
         else:            
             n=n+1
     for n in range(len(Vfb)):
         if Vfbs[n]!=0j:      
-            errorb.append(abs((abs(Vfb[n])-abs(Vfbs[n])))/baseV*100)
+            errorb.append(abs((abs(Vfb[n])-abs(Vfbs[n])))/baseV)
         else:            
             n=n+1
     for n in range(len(Vfc)):
         if Vfcs[n]!=0j:      
-            errorc.append(abs((abs(Vfc[n])-abs(Vfcs[n])))/baseV*100)
+            errorc.append(abs((abs(Vfc[n])-abs(Vfcs[n])))/baseV)
         else:            
             n=n+1
     errormean=errora+errorb+errorc
@@ -854,48 +868,51 @@ def errorplot(baseV):
     indexc = np.arange(len(errorc))
     plt.subplot(311)
     plt.bar(indexc,errorc,0.3,color='r',align="center")
-    plt.title('Phase A error')
+    plt.title('Phase C error')
     plt.ylabel('V Error [p.u.]')
     plt.subplots_adjust(hspace=0.5)
     plt.subplot(312)
     plt.bar(indexa,errora,0.3,color='b',align="center")
-    plt.title('Phase B error')
+    plt.title('Phase A error')
     plt.ylabel('V Error [p.u.]')
     plt.subplot(313)
     plt.bar(indexb,errorb,0.3,color='g',align="center")
-    plt.title('Phase C error')
+    plt.title('Phase B error')
     plt.ylabel('V Error [p.u.]')
     plt.show()
     return
 
 #%% begin to simplify feeder model
+tax       = [['R1-12.47-1',12470.0, 7200.0, 4000.0, 20000.0,'617','7520','120'],#0 larger error; 0.006 pu
+             ['R1-12.47-2',12470.0, 7200.0, 4500.0, 30000.0,'338','7520','120'],#1 larger error; 0.003 pu
+             ['R1-12.47-3',12470.0, 7200.0, 8000.0, 15000.0,'53','7500','120'],#2
+             ['R1-12.47-4',12470.0, 7200.0, 4000.0, 15000.0,'305','7520','120'],#3
+             ['R1-25.00-1',24900.0,14400.0, 6000.0, 25000.0,'324','14975','240'],#4
+             ['R2-12.47-1',12470.0, 7200.0, 7000.0, 20000.0,'488','7500','120'],#5
+             ['R2-12.47-2',12470.0, 7200.0,15000.0, 25000.0,'253','7500','120'],#6
+             ['R2-12.47-3',12470.0, 7200.0, 5000.0, 30000.0,'832','7500','120'],#7
+             ['R2-25.00-1',24900.0,14400.0, 6000.0, 15000.0,'324','14975','240'],#8
+             ['R2-35.00-1',34500.0,19920.0,15000.0, 30000.0,'1039','20748','332'],#9
+             ['R3-12.47-1',12470.0, 7200.0,12000.0, 40000.0,'634','7500','120'],#10
+             ['R3-12.47-2',12470.0, 7200.0,14000.0, 30000.0,'267','7500','120'],#11
+             ['R3-12.47-3',12470.0, 7200.0, 7000.0, 15000.0,'2001','7520','120'],#12
+             ['R4-12.47-1',13800.0, 7970.0, 9000.0, 30000.0,'572','8300','133'],#13
+             ['R4-12.47-2',12470.0, 7200.0, 6000.0, 20000.0,'273','7518','120'],#14
+             ['R4-25.00-1',24900.0,14400.0, 6000.0, 20000.0,'231','14975','240'],#15
+             ['R5-12.47-1',13800.0, 7970.0, 6500.0, 20000.0,'266','8300','132'], #16
+             ['R5-12.47-2',12470.0, 7200.0, 4500.0, 15000.0,'317','7500','120'], #17
+             ['R5-12.47-3',13800.0, 7970.0, 4000.0, 15000.0,'1469','8300','131'],#18 larger error; 0.005 pu
+             ['R5-12.47-4',12470.0, 7200.0, 6000.0, 30000.0,'675','7500','60'], #19
+             ['R5-12.47-5',12470.0, 7200.0, 4500.0, 25000.0,'1100','7500','60'], #20
+             ['R5-25.00-1',22900.0,13200.0, 3000.0, 20000.0,'953','13773','220'],#21
+             ['R5-35.00-1',34500.0,19920.0, 6000.0, 25000.0,'339','20748','332'],#22
+             ['GC-12.47-1',12470.0, 7200.0, 8000.0, 13000.0,'28','7500','120']]#23
+
+def get_base_gld_path (root):
+    return '../../support/feeders/' + root + '.glm' 
+
 def _one_test(k):
-    tax       = [['R1-12.47-1',12470.0, 7200.0, 4000.0, 20000.0],
-                 ['R1-12.47-2',12470.0, 7200.0, 4500.0, 30000.0],
-                 ['R1-12.47-3',12470.0, 7200.0, 8000.0, 15000.0],
-                 ['R1-12.47-4',12470.0, 7200.0, 4000.0, 15000.0],
-                 ['R1-25.00-1',24900.0,14400.0, 6000.0, 25000.0],
-                 ['R2-12.47-1',12470.0, 7200.0, 7000.0, 20000.0],
-                 ['R2-12.47-2',12470.0, 7200.0,15000.0, 25000.0],
-                 ['R2-12.47-3',12470.0, 7200.0, 5000.0, 30000.0],
-                 ['R2-25.00-1',24900.0,14400.0, 6000.0, 15000.0],
-                 ['R2-35.00-1',34500.0,19920.0,15000.0, 30000.0],
-                 ['R3-12.47-1',12470.0, 7200.0,12000.0, 40000.0],
-                 ['R3-12.47-2',12470.0, 7200.0,14000.0, 30000.0],
-                 ['R3-12.47-3',12470.0, 7200.0, 7000.0, 15000.0],
-                 ['R4-12.47-1',13800.0, 7970.0, 9000.0, 30000.0],
-                 ['R4-12.47-2',12470.0, 7200.0, 6000.0, 20000.0],
-                 ['R4-25.00-1',24900.0,14400.0, 6000.0, 20000.0],
-                 ['R5-12.47-1',13800.0, 7970.0, 6500.0, 20000.0,'266','8300','132'], #16
-                 ['R5-12.47-2',12470.0, 7200.0, 4500.0, 15000.0,'317','7500','120'], #17
-                 ['R5-12.47-3',13800.0, 7970.0, 4000.0, 15000.0],  # rural
-                 ['R5-12.47-4',12470.0, 7200.0, 6000.0, 30000.0,'675','7500','60'], #19
-                 ['R5-12.47-5',12470.0, 7200.0, 4500.0, 25000.0,'1100','7500','60'], #20
-                 ['R5-25.00-1',22900.0,13200.0, 3000.0, 20000.0,'953','13773','220'],
-                 ['R5-35.00-1',34500.0,19920.0, 6000.0, 25000.0,'339','20748','332'],
-                 ['GC-12.47-1',12470.0, 7200.0, 8000.0, 13000.0]]
-   
-    fname='new_'+tax[k][0]+'.glm' 
+    fname = get_base_gld_path (tax[k][0])
     mname=tax[k][0].replace('.','-')
     base_name = gld_strict_name (mname)
     sim_fname='sim_'+tax[k][0]+'.glm'
@@ -907,10 +924,10 @@ def _one_test(k):
     v_base='{:.2f}'.format(v_base)
     va = v_base
 
-#    CreateVoltdump(fname,mname+'_voltage.csv')
-#    CreateCurrdump(fname,mname+'_current.csv')
-    
-    os.system('gridlabd -D WANT_VI_DUMP=1 '+fname)
+    cmdline = 'gridlabd -D WANT_VI_DUMP=1 '+fname
+    pw0 = subprocess.Popen (cmdline, shell=True)
+    pw0.wait()
+
     if os.path.exists('sim_'+tax[k][0]+'.glm'):
         os.remove('sim_'+tax[k][0]+'.glm')
    
@@ -918,7 +935,7 @@ def _one_test(k):
     ip = open (fname, 'r')
     lines = []
     line = ip.readline()
-    while line is not '':
+    while line != '':
         while re.match('\s*//',line) or re.match('\s+$',line):
             # skip comments and white space
             line = ip.readline()
@@ -982,19 +999,21 @@ def _one_test(k):
     for n in range(len(simlist)): 
         if simlist[n]['junction']=='junction':
             count=-1
-            junction_outbranch=['','','']
+            junction_outbranch=['','','','']
             for m in range(len(simlist)):
                 if simlist[m]['i_node']==simlist[n]['f_node']:
                     count+=1
                     junction_outbranch[count]=(simlist[m]['i_branch'])
                 simlist[n]['out_branch_1']=junction_outbranch[0]
                 simlist[n]['out_branch_2']=junction_outbranch[1]
-                simlist[n]['out_branch_3']=junction_outbranch[2]    
+                simlist[n]['out_branch_3']=junction_outbranch[2] 
+                simlist[n]['out_branch_4']=junction_outbranch[3]
         else:
-            junction_outbranch=['','','']
+            junction_outbranch=['','','','']
             simlist[n]['out_branch_1']=junction_outbranch[0]
             simlist[n]['out_branch_2']=junction_outbranch[1]
-            simlist[n]['out_branch_3']=junction_outbranch[2]    
+            simlist[n]['out_branch_3']=junction_outbranch[2]
+            simlist[n]['out_branch_4']=junction_outbranch[3]
     
     #
     getI(mname,
@@ -1038,7 +1057,7 @@ def _one_test(k):
                 nodes = nx.shortest_path(G, n1, swing_node)
                 # assign this class load to the closest upstream primary node that's in the retained set
                 for x in nodes:
-                    n2 = G.node[x]
+                    n2 = G.nodes[x]
                     if 'nclass' in n2:
                         if n2['nclass'] == 'node':
                             if x in retained_nodes:
@@ -1053,7 +1072,7 @@ def _one_test(k):
     count_summary = 0
     class_factors = {}
     for o in model['node']:
-        cls_ld = G.node[o]['ndata']['class_load']
+        cls_ld = G.nodes[o]['ndata']['class_load']
         cls_a = cls_ld['A']
         cls_i = cls_ld['I']
         cls_c = cls_ld['C']
@@ -1088,7 +1107,7 @@ def _one_test(k):
 # run the simplified feeder model
     os.system('gridlabd '+sim_fname)
     getV_sim(mname,mname+'_sim_list.csv',mname+'_node_voltage_sim.csv',mname+'_node_voltage_sim1.csv')
-    errorplot(7970)
+    errorplot(tax[k][2])
     print()
     print()
     print()
@@ -1097,10 +1116,16 @@ def _one_test(k):
     print('Average error is '+str(errormean))
     
 if __name__ == '__main__':
-#    _one_test(19)
 #    print (simlist)
-    # index of feeder model   16,17,19,20 is avaliable
-    for k in (16,17,19,20):
+
+#    _one_test(7)
+#    quit()
+
+    for k in range (len(tax)):
         _one_test(k)
     
-
+##locate the error segment
+    
+#for i in range(45):
+#    
+#    inv((np.dot(Ii[i],Ii[i].transpose().conjugate())))
