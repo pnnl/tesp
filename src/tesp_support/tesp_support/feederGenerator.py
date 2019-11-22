@@ -1157,10 +1157,10 @@ def replace_commercial_loads (model, h, t, avgBuilding):
             total_zipload += 1
           mtr = model[t][o]['parent']
           if forERCOT == True: 
-          # we will add a child meter (with tariff) to the parent node, 
-          # except for the small ZIPLOADs because GridLAB-D prohibits grandchildren
+          # the parent node is actually a meter, but we have to add the tariff and metrics_collector unless only ZIPLOAD
+            mtr = model[t][o]['parent'] # + '_mtr'
             if comm_type != 'ZIPLOAD':
-              mtr = model[t][o]['parent'] + '_mtr'
+              extra_billing_meters.add(mtr)
           else:
             extra_billing_meters.add(mtr)
           comm_loads[o] = [mtr, comm_type, nzones, kva, nphs, phases, vln, total_commercial]
@@ -2437,7 +2437,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
                     if data['ndata']['bustype'] == 'SWING':
                         swing_node = n1
 
-        sub_graphs = nx.connected_component_subgraphs(G)
+        sub_graphs = nx.connected_components(G)
         seg_loads = {} # [name][kva, phases]
         total_kva = 0.0
         for n1, data in G.nodes(data=True):
@@ -2631,7 +2631,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         if forERCOT == True:
             replace_commercial_loads (model, h, 'load', 0.001 * avgcommercial)
-            connect_ercot_commercial (op)
+#            connect_ercot_commercial (op)
             identify_ercot_houses (model, h, 'load', 0.001 * avghouse, rgn)
             connect_ercot_houses (model, h, op, vln, 120.0)
             for key in house_nodes:
