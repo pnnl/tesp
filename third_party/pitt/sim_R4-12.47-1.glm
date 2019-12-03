@@ -1,0 +1,1451 @@
+//********************************
+//Simplified feeder model
+
+clock{
+  timezone EST+5EDT;
+  timestamp '2000-01-01 0:00:00';
+  stoptime '2000-01-01 1:00:00';
+}
+#set profiler=1
+
+
+module tape;
+module powerflow{
+  solver_method NR;
+  default_maximum_voltage_error 1e-6;
+};
+
+object node {
+    name R4_12_47_1_node_572;
+    phases ABCN;
+    nominal_voltage 7970.00;
+    bustype SWING;
+    voltage_A 7970.00;
+    voltage_B -3985.00-6902.22j;
+    voltage_C -3985.00+6902.22j;
+}
+object regulator_configuration {
+    name feeder_reg_cfg;
+    Control OUTPUT_VOLTAGE;
+    band_center 8300;
+    band_width 133;
+    connect_type WYE_WYE;
+    time_delay 30;
+    raise_taps 16;
+    lower_taps 16;
+    regulation 0.10;
+    tap_pos_A 0;
+    tap_pos_B 0;
+    tap_pos_C 0;
+}
+object meter {
+    name R4_12_47_1_meter_head;
+    phases ABCN;
+    nominal_voltage 7970.00;
+    voltage_A 7970.00;
+    voltage_B -3985.00-6902.22j;
+    voltage_C -3985.00+6902.22j;
+}
+object regulator {
+    name feeder_reg_1;
+    from R4_12_47_1_node_572;
+    to R4_12_47_1_meter_head;
+    phases ABCN;
+    configuration feeder_reg_cfg;
+}
+object node {
+    parent R4_12_47_1_meter_head;
+    name R4_12_47_1_node_571;
+    phases ABCN;
+    nominal_voltage 7970.00;
+    voltage_A 7970.00;
+    voltage_B -3985.00-6902.22j;
+    voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_340;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_337;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_331;
+   phases AN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_319;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_34;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_80;
+   phases AN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_341;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_166;
+   phases BN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_342;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_101;
+   phases BN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_291;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_293;
+   phases ACN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_281;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_561;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_190;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_270;
+   phases ACN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_264;
+   phases CN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_182;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_241;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_569;
+   phases AN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_230;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_211;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_196;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_198;
+   phases BCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object meter { // node {
+   name R4_12_47_1_node_394;
+   phases ABCN;
+   nominal_voltage 7970.00;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object line_configuration {
+    name line_config_seg_0;
+    z11 0.04519313+0.12793571j;
+    z12 -0.03917816-0.10175997j;
+    z13 -0.05445111-0.11517056j;
+    z21 -0.03917816-0.10175997j;
+    z22 0.03790703+0.08970174j;
+    z23 -0.05745192-0.09900402j;
+    z31 -0.05445111-0.11517056j;
+    z32 -0.05745192-0.09900402j;
+    z33 0.0679357+0.09974195j;
+}
+object line_configuration {
+    name line_config_seg_1;
+    z11 0.00379447+0.01578422j;
+    z12 -0.00074392-0.00378526j;
+    z13 -0.0010211-0.00352498j;
+    z21 -0.00074392-0.00378526j;
+    z22 -0.00210392+0.00459052j;
+    z23 -0.0019921-0.00861538j;
+    z31 -0.0010211-0.00352498j;
+    z32 -0.0019921-0.00861538j;
+    z33 0.00356705+0.00290982j;
+}
+object line_configuration {
+    name line_config_seg_2;
+    z11 0.16306721+0.15224538j;
+}
+object line_configuration {
+    name line_config_seg_3;
+    z11 0.0195913+0.01780345j;
+    z12 0.01573147-0.05150132j;
+    z13 -0.02713513-0.07905087j;
+    z21 0.01573147-0.05150132j;
+    z22 0.03992206+0.11570165j;
+    z23 -0.03438581-0.03190233j;
+    z31 -0.02713513-0.07905087j;
+    z32 -0.03438581-0.03190233j;
+    z33 -0.02675432+0.07274521j;
+}
+object line_configuration {
+    name line_config_seg_4;
+    z11 0.03696024+0.13795084j;
+    z12 -0.04914103-0.13271668j;
+    z13 -0.06915855-0.14287108j;
+    z21 -0.04914103-0.13271668j;
+    z22 0.05797738+0.10368929j;
+    z23 -0.06229579-0.11352539j;
+    z31 -0.06915855-0.14287108j;
+    z32 -0.06229579-0.11352539j;
+    z33 0.08817892+0.14874422j;
+}
+object line_configuration {
+    name line_config_seg_5;
+    z11 0.2825242+0.16456547j;
+}
+object line_configuration {
+    name line_config_seg_6;
+    z11 0.01384853+0.06468242j;
+    z12 -0.02095696-0.08880848j;
+    z13 -0.04642683-0.08740318j;
+    z21 -0.02095696-0.08880848j;
+    z22 0.04789334+0.06523572j;
+    z23 -0.03963126-0.05597875j;
+    z31 -0.04642683-0.08740318j;
+    z32 -0.03963126-0.05597875j;
+    z33 0.04911929+0.11155517j;
+}
+object line_configuration {
+    name line_config_seg_7;
+    z22 0.17495212+0.4058133j;
+}
+object line_configuration {
+    name line_config_seg_8;
+    z11 -0.00336101+0.08169255j;
+    z12 -0.03307304-0.07179877j;
+    z13 -0.02745123-0.06735554j;
+    z21 -0.03307304-0.07179877j;
+    z22 0.0269524+0.02716545j;
+    z23 -0.02934818-0.05476351j;
+    z31 -0.02745123-0.06735554j;
+    z32 -0.02934818-0.05476351j;
+    z33 0.07719839+0.10921652j;
+}
+object line_configuration {
+    name line_config_seg_9;
+    z22 0.98473484+0.77079987j;
+}
+object line_configuration {
+    name line_config_seg_10;
+    z11 -0.01696727+0.07746197j;
+    z12 -0.03101633-0.03282682j;
+    z13 -0.01041981-0.03783341j;
+    z21 -0.03101633-0.03282682j;
+    z22 0.00751664+0.00298863j;
+    z23 -0.01090672-0.03446238j;
+    z31 -0.01041981-0.03783341j;
+    z32 -0.01090672-0.03446238j;
+    z33 0.08084087+0.08781165j;
+}
+object line_configuration {
+    name line_config_seg_11;
+    z11 -0.05628546+0.14580229j;
+    z13 0.07446085-0.0583631j;
+    z31 0.07446085-0.0583631j;
+    z33 0.15454382+0.31773168j;
+}
+object line_configuration {
+    name line_config_seg_12;
+    z11 -0.01210385+0.04594256j;
+    z12 -0.01807459-0.03548191j;
+    z13 -0.01311799-0.03346288j;
+    z21 -0.01807459-0.03548191j;
+    z22 0.0118231+0.0070746j;
+    z23 -0.01387664-0.02626006j;
+    z31 -0.01311799-0.03346288j;
+    z32 -0.01387664-0.02626006j;
+    z33 0.05082564+0.07010129j;
+}
+object line_configuration {
+    name line_config_seg_13;
+    z11 0.00491517+0.10268954j;
+    z12 -0.09718327-0.19313836j;
+    z13 -0.11802805-0.08140892j;
+    z21 -0.09718327-0.19313836j;
+    z22 0.1291756+0.06940142j;
+    z23 -0.0403478-0.09669347j;
+    z31 -0.11802805-0.08140892j;
+    z32 -0.0403478-0.09669347j;
+    z33 0.15050686+0.27568049j;
+}
+object line_configuration {
+    name line_config_seg_14;
+    z11 -0.00301436+0.00903439j;
+    z12 -0.00493898-0.00851039j;
+    z13 -0.0013626-0.0079368j;
+    z21 -0.00493898-0.00851039j;
+    z22 0.00348056+0.00120355j;
+    z23 -0.00360831-0.00533572j;
+    z31 -0.0013626-0.0079368j;
+    z32 -0.00360831-0.00533572j;
+    z33 0.01299715+0.02000454j;
+}
+object line_configuration {
+    name line_config_seg_15;
+    z11 -0.00115112+0.00065529j;
+    z13 0.00742331+0.00592507j;
+    z31 0.00742331+0.00592507j;
+    z33 0.01327016+0.05093545j;
+}
+object line_configuration {
+    name line_config_seg_16;
+    z33 0.10242457+0.33230422j;
+}
+object line_configuration {
+    name line_config_seg_17;
+    z11 0.03005208+0.00348519j;
+    z12 0.00157962-0.00711j;
+    z13 -0.00520579-0.01262133j;
+    z21 0.00157962-0.00711j;
+    z22 0.02233475+0.04361462j;
+    z23 -0.00462068+0.00059491j;
+    z31 -0.00520579-0.01262133j;
+    z32 -0.00462068+0.00059491j;
+    z33 -0.00094191+0.00116105j;
+}
+object line_configuration {
+    name line_config_seg_18;
+    z11 -0.03991359+0.39274832j;
+    z12 -0.17347918-0.24783528j;
+    z13 -0.13916089-0.40697443j;
+    z21 -0.17347918-0.24783528j;
+    z22 0.12713307+0.06773317j;
+    z23 -0.22281076-0.25318613j;
+    z31 -0.13916089-0.40697443j;
+    z32 -0.22281076-0.25318613j;
+    z33 0.54190183+0.6025659j;
+}
+object line_configuration {
+    name line_config_seg_19;
+    z11 0.93099017+0.72729204j;
+}
+object line_configuration {
+    name line_config_seg_20;
+    z11 -0.01406583+0.09648028j;
+    z12 0.00811805-0.10639255j;
+    z13 -0.00073754-0.21857429j;
+    z21 0.00811805-0.10639255j;
+    z22 0.07643607+0.06725195j;
+    z23 -0.14678444-0.10187932j;
+    z31 -0.00073754-0.21857429j;
+    z32 -0.14678444-0.10187932j;
+    z33 0.04296595+0.33310886j;
+}
+object line_configuration {
+    name line_config_seg_21;
+    z11 -0.02981991+0.0409489j;
+    z12 0.23975939-0.41643117j;
+    z13 -0.20067134-0.4914878j;
+    z21 0.23975939-0.41643117j;
+    z22 0.41864979+0.4221589j;
+    z23 -0.36286587-0.08222558j;
+    z31 -0.20067134-0.4914878j;
+    z32 -0.36286587-0.08222558j;
+    z33 -0.13067862+1.20709928j;
+}
+object line_configuration {
+    name line_config_seg_22;
+    z11 0.07580405+0.04110096j;
+    z12 0.02415455-0.12451893j;
+    z13 -0.22834416-0.28480762j;
+    z21 0.02415455-0.12451893j;
+    z22 0.32483405+0.2494887j;
+    z23 -0.19068595-0.05714943j;
+    z31 -0.22834416-0.28480762j;
+    z32 -0.19068595-0.05714943j;
+    z33 0.07694479+0.40621091j;
+}
+object line_configuration {
+    name line_config_seg_23;
+    z22 2.23774271+0.90213001j;
+    z23 -0.64792843-0.38191275j;
+    z32 -0.64792843-0.38191275j;
+    z33 0.46619764+2.18112229j;
+}
+object line_configuration {
+    name line_config_seg_24;
+    z11 0.13614801+0.61440615j;
+    z12 -0.10289568-0.18153152j;
+    z13 -0.05910798-0.15147425j;
+    z21 -0.10289568-0.18153152j;
+    z22 -0.10921308+0.2279364j;
+    z23 -0.03108396-0.38141133j;
+    z31 -0.05910798-0.15147425j;
+    z32 -0.03108396-0.38141133j;
+    z33 0.11815442+0.13031706j;
+}
+object overhead_line {
+    name line_seg_0;
+    phases ABC;
+    from R4_12_47_1_node_571;
+    to R4_12_47_1_node_340;
+    length 5280 ft;
+    configuration line_config_seg_0;
+}
+object overhead_line {
+    name line_seg_1;
+    phases ABC;
+    from R4_12_47_1_node_340;
+    to R4_12_47_1_node_337;
+    length 5280 ft;
+    configuration line_config_seg_1;
+}
+object overhead_line {
+    name line_seg_2;
+    phases A;
+    from R4_12_47_1_node_337;
+    to R4_12_47_1_node_331;
+    length 5280 ft;
+    configuration line_config_seg_2;
+}
+object overhead_line {
+    name line_seg_3;
+    phases ABC;
+    from R4_12_47_1_node_337;
+    to R4_12_47_1_node_319;
+    length 5280 ft;
+    configuration line_config_seg_3;
+}
+object overhead_line {
+    name line_seg_4;
+    phases ABC;
+    from R4_12_47_1_node_340;
+    to R4_12_47_1_node_34;
+    length 5280 ft;
+    configuration line_config_seg_4;
+}
+object overhead_line {
+    name line_seg_5;
+    phases A;
+    from R4_12_47_1_node_34;
+    to R4_12_47_1_node_80;
+    length 5280 ft;
+    configuration line_config_seg_5;
+}
+object overhead_line {
+    name line_seg_6;
+    phases ABC;
+    from R4_12_47_1_node_34;
+    to R4_12_47_1_node_341;
+    length 5280 ft;
+    configuration line_config_seg_6;
+}
+object overhead_line {
+    name line_seg_7;
+    phases B;
+    from R4_12_47_1_node_341;
+    to R4_12_47_1_node_166;
+    length 5280 ft;
+    configuration line_config_seg_7;
+}
+object overhead_line {
+    name line_seg_8;
+    phases ABC;
+    from R4_12_47_1_node_341;
+    to R4_12_47_1_node_342;
+    length 5280 ft;
+    configuration line_config_seg_8;
+}
+object overhead_line {
+    name line_seg_9;
+    phases B;
+    from R4_12_47_1_node_342;
+    to R4_12_47_1_node_101;
+    length 5280 ft;
+    configuration line_config_seg_9;
+}
+object overhead_line {
+    name line_seg_10;
+    phases ABC;
+    from R4_12_47_1_node_342;
+    to R4_12_47_1_node_291;
+    length 5280 ft;
+    configuration line_config_seg_10;
+}
+object overhead_line {
+    name line_seg_11;
+    phases AC;
+    from R4_12_47_1_node_291;
+    to R4_12_47_1_node_293;
+    length 5280 ft;
+    configuration line_config_seg_11;
+}
+object overhead_line {
+    name line_seg_12;
+    phases ABC;
+    from R4_12_47_1_node_291;
+    to R4_12_47_1_node_281;
+    length 5280 ft;
+    configuration line_config_seg_12;
+}
+object overhead_line {
+    name line_seg_13;
+    phases ABC;
+    from R4_12_47_1_node_281;
+    to R4_12_47_1_node_561;
+    length 5280 ft;
+    configuration line_config_seg_13;
+}
+object overhead_line {
+    name line_seg_14;
+    phases ABC;
+    from R4_12_47_1_node_281;
+    to R4_12_47_1_node_190;
+    length 5280 ft;
+    configuration line_config_seg_14;
+}
+object overhead_line {
+    name line_seg_15;
+    phases AC;
+    from R4_12_47_1_node_190;
+    to R4_12_47_1_node_270;
+    length 5280 ft;
+    configuration line_config_seg_15;
+}
+object overhead_line {
+    name line_seg_16;
+    phases C;
+    from R4_12_47_1_node_270;
+    to R4_12_47_1_node_264;
+    length 5280 ft;
+    configuration line_config_seg_16;
+}
+object overhead_line {
+    name line_seg_17;
+    phases ABC;
+    from R4_12_47_1_node_190;
+    to R4_12_47_1_node_182;
+    length 5280 ft;
+    configuration line_config_seg_17;
+}
+object overhead_line {
+    name line_seg_18;
+    phases ABC;
+    from R4_12_47_1_node_190;
+    to R4_12_47_1_node_241;
+    length 5280 ft;
+    configuration line_config_seg_18;
+}
+object overhead_line {
+    name line_seg_19;
+    phases A;
+    from R4_12_47_1_node_241;
+    to R4_12_47_1_node_569;
+    length 5280 ft;
+    configuration line_config_seg_19;
+}
+object overhead_line {
+    name line_seg_20;
+    phases ABC;
+    from R4_12_47_1_node_241;
+    to R4_12_47_1_node_230;
+    length 5280 ft;
+    configuration line_config_seg_20;
+}
+object overhead_line {
+    name line_seg_21;
+    phases ABC;
+    from R4_12_47_1_node_230;
+    to R4_12_47_1_node_211;
+    length 5280 ft;
+    configuration line_config_seg_21;
+}
+object overhead_line {
+    name line_seg_22;
+    phases ABC;
+    from R4_12_47_1_node_211;
+    to R4_12_47_1_node_196;
+    length 5280 ft;
+    configuration line_config_seg_22;
+}
+object overhead_line {
+    name line_seg_23;
+    phases BC;
+    from R4_12_47_1_node_196;
+    to R4_12_47_1_node_198;
+    length 5280 ft;
+    configuration line_config_seg_23;
+}
+object overhead_line {
+    name line_seg_24;
+    phases ABC;
+    from R4_12_47_1_node_196;
+    to R4_12_47_1_node_394;
+    length 5280 ft;
+    configuration line_config_seg_24;
+}
+object load {
+   parent R4_12_47_1_node_340;
+   name load_seg_0_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 39267.6+21180.71j;
+   constant_power_B 51050.69+28467.7j;
+   constant_power_C 33251.73+17594.27j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_340;
+   name load_seg_0_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 31047.22+16746.68j;
+   constant_power_B 40363.61+22508.2j;
+   constant_power_C 26290.73+13911.04j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_331;
+   name load_seg_2_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases AN;
+   constant_power_A 248137.86+137034.83j;
+   voltage_A 7970.00;
+}
+object load {
+   parent R4_12_47_1_node_319;
+   name load_seg_3_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 172967.71+96217.33j;
+   constant_power_B 102217.75+58276.15j;
+   constant_power_C 220442.85+119903.41j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_34;
+   name load_seg_4_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 23821.72+13205.92j;
+   constant_power_B 34110.06+19313.99j;
+   constant_power_C 26656.72+14427.08j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_34;
+   name load_seg_4_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 132915.22+73683.48j;
+   constant_power_B 190319.81+107763.95j;
+   constant_power_C 148733.28+80497.02j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_80;
+   name load_seg_5_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases AN;
+   constant_power_A 158932.38+87418.13j;
+   voltage_A 7970.00;
+}
+object load {
+   parent R4_12_47_1_node_341;
+   name load_seg_6_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 13651.77+7460.47j;
+   constant_power_B 4865.61+2739.63j;
+   constant_power_C 13871.08+7426.66j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_341;
+   name load_seg_6_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 101985.23+55733.28j;
+   constant_power_B 36348.45+20466.33j;
+   constant_power_C 103623.52+55480.7j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_166;
+   name load_seg_7_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases BN;
+   constant_power_B 326907.47+186703.22j;
+   voltage_B -3985.00-6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_342;
+   name load_seg_8_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 0+0j;
+   constant_power_B 79.69+43.23j;
+   constant_power_C 0+0j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_342;
+   name load_seg_8_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 0+0j;
+   constant_power_B 3644.+1976.79j;
+   constant_power_C 0+0j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_101;
+   name load_seg_9_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases BN;
+   constant_power_B 311130.91+179847.78j;
+   voltage_B -3985.00-6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_291;
+   name load_seg_10_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 1761.14+972.48j;
+   constant_power_B 143.62+82.85j;
+   constant_power_C 211.97+116.35j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_291;
+   name load_seg_10_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 114179.87+63048.67j;
+   constant_power_B 9311.56+5371.24j;
+   constant_power_C 13742.53+7543.61j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_293;
+   name load_seg_11_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ACN;
+   constant_power_A 164250.49+91128.56j;
+   constant_power_C 272511.17+148350.65j;
+   voltage_A 7970.00;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_281;
+   name load_seg_12_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 8031.34+4478.63j;
+   constant_power_B 129.16+75.23j;
+   constant_power_C 756.25+418.05j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_281;
+   name load_seg_12_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 139615.83+77856.j;
+   constant_power_B 2245.23+1307.83j;
+   constant_power_C 13146.52+7267.3j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_561;
+   name load_seg_13_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 75777.97+42818.74j;
+   constant_power_B 80350.92+46356.57j;
+   constant_power_C 109282.51+60116.53j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_264;
+   name load_seg_16_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases CN;
+   constant_power_C 228635.02+124100.18j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_182;
+   name load_seg_17_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 84771.74+47818.95j;
+   constant_power_B 80301.73+46267.92j;
+   constant_power_C 16164.85+8942.65j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_241;
+   name load_seg_18_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 2903.68+1604.35j;
+   constant_power_B 3736.55+2141.58j;
+   constant_power_C 4463.81+2439.17j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_241;
+   name load_seg_18_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 67992.33+37567.35j;
+   constant_power_B 87494.62+50146.94j;
+   constant_power_C 104524.11+57115.39j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_569;
+   name load_seg_19_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases AN;
+   constant_power_A 95741.57+53375.48j;
+   voltage_A 7970.00;
+}
+object load {
+   parent R4_12_47_1_node_230;
+   name load_seg_20_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 16894.4+9421.62j;
+   constant_power_B 6874.59+3988.7j;
+   constant_power_C 75514.02+40708.52j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_230;
+   name load_seg_20_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 44774.61+24969.77j;
+   constant_power_B 18219.46+10571.11j;
+   constant_power_C 200132.+107888.27j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_211;
+   name load_seg_21_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 7384.81+4038.78j;
+   constant_power_B 6593.21+3686.92j;
+   constant_power_C 21869.5+11647.63j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_211;
+   name load_seg_21_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 60959.17+33338.77j;
+   constant_power_B 54424.7+30434.27j;
+   constant_power_C 180525.41+96147.31j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_196;
+   name load_seg_22_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 6002.8-85903.28j;
+   constant_power_B 23962.31-77237.89j;
+   constant_power_C 48644.51-93430.22j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_196;
+   name load_seg_22_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 3448.65-49352.04j;
+   constant_power_B 13766.51-44373.71j;
+   constant_power_C 27946.61-53676.32j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_198;
+   name load_seg_23_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases BCN;
+   constant_power_B 14971.9+8354.96j;
+   constant_power_C 16524.77+8801.87j;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_198;
+   name load_seg_23_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases BCN;
+   constant_power_B 45885.84+25606.26j;
+   constant_power_C 50645.09+26975.96j;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_394;
+   name load_seg_24_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 2031.52+1099.53j;
+   constant_power_B 1494.32+846.04j;
+   constant_power_C 1045.69+556.62j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_394;
+   name load_seg_24_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 100770.81+54540.73j;
+   constant_power_B 74123.86+41966.6j;
+   constant_power_C 51870.18+27610.47j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_331;
+   name load_junction_seg_2_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases AN;
+   constant_power_A 11357.26+6363.36j;
+   voltage_A 7970.00;
+}
+object load {
+   parent R4_12_47_1_node_319;
+   name load_junction_seg_3_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 0+0j;
+   constant_power_B 152892.19+88034.01j;
+   constant_power_C 25393.35+14016.95j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_80;
+   name load_junction_seg_5_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases AN;
+   constant_power_A 22711.23+12519.91j;
+   voltage_A 7970.00;
+}
+object load {
+   parent R4_12_47_1_node_166;
+   name load_junction_seg_7_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases BN;
+   constant_power_B 18843.03+10793.3j;
+   voltage_B -3985.00-6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_342;
+   name load_junction_seg_8_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 50.82+29.61j;
+   constant_power_B 50.82+29.63j;
+   constant_power_C 246.04+133.37j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_342;
+   name load_junction_seg_8_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 2324.03+1354.j;
+   constant_power_B 2324.09+1354.76j;
+   constant_power_C 11251.26+6099.07j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_101;
+   name load_junction_seg_9_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases BN;
+   constant_power_B 3792.49+2290.75j;
+   voltage_B -3985.00-6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_291;
+   name load_junction_seg_10_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 36.07+21.01j;
+   constant_power_B 143.64+82.87j;
+   constant_power_C 36.07+21.j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_291;
+   name load_junction_seg_10_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 2338.76+1362.22j;
+   constant_power_B 9312.43+5372.55j;
+   constant_power_C 2338.7+1361.59j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_293;
+   name load_junction_seg_11_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ACN;
+   constant_power_A 2374.81+1383.13j;
+   constant_power_C 23065.12+12466.1j;
+   voltage_A 7970.00;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_281;
+   name load_junction_seg_12_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 617.78+345.64j;
+   constant_power_B 129.18+75.29j;
+   constant_power_C 129.18+75.18j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_281;
+   name load_junction_seg_12_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 10739.45+6008.57j;
+   constant_power_B 2245.71+1308.84j;
+   constant_power_C 2245.57+1306.99j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_561;
+   name load_junction_seg_13_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 22479.24+12091.65j;
+   constant_power_B 18627.74+10301.93j;
+   constant_power_C 22830.76+12051.8j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_270;
+   name load_junction_seg_15_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ACN;
+   constant_power_A 2534.2+1384.58j;
+   constant_power_C 506.34+275.09j;
+   voltage_A 7970.00;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_270;
+   name load_junction_seg_15_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ACN;
+   constant_power_A 20446.75+11171.27j;
+   constant_power_C 4085.35+2219.55j;
+   voltage_A 7970.00;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_264;
+   name load_junction_seg_16_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases CN;
+   constant_power_C 11531.8+6325.44j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_182;
+   name load_junction_seg_17_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 2374.8+1382.99j;
+   constant_power_B 21218.+12176.91j;
+   constant_power_C 6960.07+3814.66j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_569;
+   name load_junction_seg_19_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases AN;
+   constant_power_A 11357.3+6348.38j;
+   voltage_A 7970.00;
+}
+object load {
+   parent R4_12_47_1_node_230;
+   name load_junction_seg_20_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 28697.16+15800.48j;
+   constant_power_B 2590.64+1494.06j;
+   constant_power_C 650.52+377.98j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_230;
+   name load_junction_seg_20_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 76055.02+41875.43j;
+   constant_power_B 6865.88+3959.66j;
+   constant_power_C 1724.04+1001.76j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_211;
+   name load_junction_seg_21_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 1483.79+835.05j;
+   constant_power_B 409.8+247.62j;
+   constant_power_C 3037.27-13673.1j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_211;
+   name load_junction_seg_21_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 12248.21+6893.07j;
+   constant_power_B 3382.79+2044.02j;
+   constant_power_C 25071.62-112866.88j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_196;
+   name load_junction_seg_22_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 28758.22+15650.98j;
+   constant_power_B 23884.49+13409.96j;
+   constant_power_C 29201.02+15590.8j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_196;
+   name load_junction_seg_22_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 16521.8+8991.6j;
+   constant_power_B 13721.81+7704.11j;
+   constant_power_C 16776.19+8957.02j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_198;
+   name load_junction_seg_23_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases BCN;
+   constant_power_B 584.23-34978.14j;
+   constant_power_C 1698.03-34106.44j;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_198;
+   name load_junction_seg_23_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases BCN;
+   constant_power_B 1790.56-107200.94j;
+   constant_power_C 5204.13-104529.35j;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_394;
+   name load_junction_seg_24_C;
+   nominal_voltage 7970.00;
+   load_class C;
+   phases ABCN;
+   constant_power_A 46.92+27.27j;
+   constant_power_B 46.93+27.32j;
+   constant_power_C 91.46+51.62j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object load {
+   parent R4_12_47_1_node_394;
+   name load_junction_seg_24_R;
+   nominal_voltage 7970.00;
+   load_class R;
+   phases ABCN;
+   constant_power_A 2327.64+1352.54j;
+   constant_power_B 2327.85+1355.35j;
+   constant_power_C 4537.+2560.38j;
+   voltage_A 7970.00;
+   voltage_B -3985.00-6902.22j;
+   voltage_C -3985.00+6902.22j;
+}
+object voltdump {
+	 filename R4-12-47-1_node_voltage_sim.csv;
+}
+
+object currdump {
+	 filename R4-12-47-1_branch_current_sim.csv;
+}
+
