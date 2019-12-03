@@ -216,7 +216,7 @@ if __name__ == '__main__':
     startDay = sys.argv[1]
     duration = sys.argv[2]
     if len(sys.argv) > 3:
-        timeStep = sys.argv[3]
+        timeStep = int(sys.argv[3])
         startLOSimulation(startDay, duration, timeStep)
     else:
         startLOSimulation(startDay, duration)
