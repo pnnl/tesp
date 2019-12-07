@@ -1709,15 +1709,18 @@ def write_houses(basenode, op, vnom):
         batname = helpers.gld_strict_name (basenode + '_bat_' + str(i+1))
         sol_i_name = helpers.gld_strict_name (basenode + '_isol_' + str(i+1))
         bat_i_name = helpers.gld_strict_name (basenode + '_ibat_' + str(i+1))
-        hse_m_name = helpers.gld_strict_name (basenode + '_mhse_' + str(i+1))
         sol_m_name = helpers.gld_strict_name (basenode + '_msol_' + str(i+1))
         bat_m_name = helpers.gld_strict_name (basenode + '_mbat_' + str(i+1))
-        print ('object triplex_meter {', file=op)
-        print ('  name', hse_m_name + ';', file=op)
-        print ('  parent', mtrname + ';', file=op)
-        print ('  phases', phs + ';', file=op)
-        print ('  nominal_voltage ' + str(vnom) + ';', file=op)
-        print ('}', file=op)
+        if forERCOT == True:
+          hse_m_name = mtrname
+        else:
+          hse_m_name = helpers.gld_strict_name (basenode + '_mhse_' + str(i+1))
+          print ('object triplex_meter {', file=op)
+          print ('  name', hse_m_name + ';', file=op)
+          print ('  parent', mtrname + ';', file=op)
+          print ('  phases', phs + ';', file=op)
+          print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+          print ('}', file=op)
 
         fa_base = rgnFloorArea[rgn-1][bldg]
         fa_rand = np.random.uniform (0, 1)
