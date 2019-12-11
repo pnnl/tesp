@@ -1,0 +1,8 @@
+{
+	"name": "largeBuilding",
+	"StartTime": "2000-01-01 00:00:00",
+	"duration": "2d",
+	"time_delta": "60s",
+	"metricsRecordInterval": "5m",
+	"metricsWriteOutInterval": "1d"
+}

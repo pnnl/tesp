@@ -1,4 +1,9 @@
 from __future__ import print_function
+
+from datetime import datetime, timedelta
+
+import os
+import json
 from LargeOffice import LargeOffice
 import sys
 import math
@@ -11,18 +16,41 @@ except:
 from metrics_collector import MetricsCollector, MetricsStore
 
 
-def startLOSimulation(startDay, duration, timeStep=60, metricsRecordInterval=86400):
+# def startLOSimulation(startDay, duration, timeStep=60, metricsRecordInterval=86400):
+def startLOSimulation(configFile):
     # startDay        = 1  # day of year --> 1=Jan; 32=Feb; 60=Mar; 91=Apr; 121=May; 152=Jun; 182=Jul; 213=Aug; 244=Sep; 274=Oct; 305=Nov; 335=Dec;
     # duration        = 2   # number of days
+    if os.path.isfile(configFile):
+        with open(configFile, 'r') as stream:
+            try:
+                conf = json.load(stream)
+                name = str(conf['name'])
+                duration = conf['duration']
+                StartTime = conf['StartTime']
+                timeFormat = '%Y-%m-%d %H:%M:%S'
+                dtStart = datetime.strptime(StartTime, timeFormat)
+                timeDeltaStr = conf['time_delta']
+                metricsRecordInterval = conf['metricsRecordInterval']
+                metricsWriteOutInterval = conf['metricsWriteOutInterval']
+            except ValueError as ex:
+                print(ex)
+    else:
+        print('could not open CONFIG FILE for largeBuilding.')
+        sys.exit()
+
+    startDay = dtStart.timetuple().tm_yday
+    duration = int(filter(lambda x: x.isdigit(), duration))
+    timeStep = convertTimeToSeconds(timeDeltaStr)
+    metricsAddInterval = convertTimeToSeconds(metricsRecordInterval)
+    metricsWriteOutInterval = convertTimeToSeconds(metricsWriteOutInterval)
     startTime = (int(startDay) - 1) * 86400
     print("start time: ", startTime)
     stopTime = (int(startDay) - 1 + int(duration)) * 86400
     print("stop time: ", stopTime)
     timeElapsed = 0
     print("current time: ", timeElapsed)
-    tnext_write_metrics = metricsRecordInterval
+    tnext_write_metrics = metricsWriteOutInterval
     print("metrics record interval: ", tnext_write_metrics)
-    metricsAddInterval = 300
     tnext_add_metrics = metricsAddInterval
 
     # ------temporary read in from CSVs, eventually read in from FNCS---------------------
@@ -79,7 +107,7 @@ def startLOSimulation(startDay, duration, timeStep=60, metricsRecordInterval=864
     voltage = {"voltage_AB": voltageAB, "voltage_BC": voltageBC, "voltage_CA": voltageCA}
 
     # adding the metrics collector object
-    metrics_collector_obj = MetricsCollector.factory(start_time=startTime, write_hdf5=True)
+    metrics_collector_obj = MetricsCollector.factory(start_time=StartTime, write_hdf5=False)
 
     # interval for metrics recording
     metrics_interval_cnt = 1
@@ -91,7 +119,7 @@ def startLOSimulation(startDay, duration, timeStep=60, metricsRecordInterval=864
         name_units_pairs= [
             ('total_power', ['kW']),
             # ('room_temperature', [u"\u2103".encode('utf-8')] * 19)
-            ('room_temperature', [u"\u00B0".encode('utf-8') + 'C'] * 19)
+            ('room_temperature', ['degF'] * 19)
             # ('room_temperature', [u'\N{DEGREE SIGN}'.encode('utf-8') + 'C'] * 19)
         ],
         file_string='large_office_{}_interval'.format(metricsRecordInterval),
@@ -121,9 +149,9 @@ def startLOSimulation(startDay, duration, timeStep=60, metricsRecordInterval=864
         if time_granted >= tnext_add_metrics or time_granted >= stopTime - startTime:
             metrics_collector.append_data(
                 time_granted,
-                'jModelica',
+                name,
                 P_total.tolist(),
-                T_room.tolist()
+                [convertTemperatureFromFtoC(t) for t in T_room]
             )
             tnext_add_metrics+=metricsAddInterval
         # metrics_collector_obj.add_data('large_office_' + str(metricsRecordInterval) + '_interval_', time_granted, {'total_power': [P_total.tolist()], 'room temperature': [T_room.tolist()]})
@@ -182,9 +210,9 @@ def startLOSimulation(startDay, duration, timeStep=60, metricsRecordInterval=864
             if time_granted >= tnext_add_metrics or time_granted >= stopTime - startTime:
                 metrics_collector.append_data(
                     time_granted,
-                    'jModelica',
+                    name,
                     P_total.tolist(),
-                    T_room.tolist()
+                    [convertTemperatureFromFtoC(t) for t in T_room]
                 )
                 tnext_add_metrics+=metricsAddInterval
             # metrics_collector_obj.add_data('large_office_' + str(metricsRecordInterval) + '_interval_', time_granted, {'total_power': [P_total.tolist()], 'room temperature': [T_room.tolist()]})
@@ -210,7 +238,7 @@ def startLOSimulation(startDay, duration, timeStep=60, metricsRecordInterval=864
             # write all known metrics to disk
             # metrics_collector_obj.write_metrics(metrics_interval_cnt)
             metrics_collector_obj.write_metrics()
-            tnext_write_metrics += metricsRecordInterval
+            tnext_write_metrics += metricsWriteOutInterval
             # metrics_interval_cnt += 1
 
     LO1.terminate()
@@ -267,27 +295,63 @@ def parse_complex(arg):
 
 
 def usage():
+    # print(        "usage: python largeBuilding.py <startDay of year> <duration by day> <time step by seconds(optional, default to 60 seconds)> <metrics record interval by seconds(optional, default to 300 seconds)>")
     print(
-        "usage: python largeBuilding.py <startDay of year> <duration by day> <time step by seconds(optional, default to 60 seconds)> <metrics record interval by seconds(optional, default to 300 seconds)>")
+        "usage: python largeBuilding.py <configFile>")
 
+
+def convertTimeToSeconds(time):
+    """Convert time string with unit to integer in seconds
+
+    It only parse unit in day, hour, minute and second.
+    It will not recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
+
+    :param time: str
+        time with unit
+    :return: int
+        represent the input time in second
+    """
+    unit = filter(lambda x: x.isalpha(), time)
+    timeNum = int(filter(lambda x: x.isdigit(), time))
+    if "d" == unit or "day" == unit or "days" == unit:
+        return 24 * 60 * 60 * timeNum
+    elif "h" == unit or "hour" == unit or "hours" == unit:
+        return 60 * 60 * timeNum
+    elif "m" == unit or "min" == unit or "minute" == unit or "minutes" == unit:
+        return 60 * timeNum
+    elif 's' == unit or "sec" == unit or "second" == unit or "seconds" == unit:
+        return timeNum
+    else:
+        raise Exception("unrecognized time unit '" + unit + "'.")
+
+
+def convertTemperatureFromFtoC(t):
+    return t * 9.0 / 5.0 + 32.0
 
 if __name__ == '__main__':
+    # argLength = len(sys.argv)
+    # if argLength == 3:
+    #     startDay = sys.argv[1]
+    #     duration = sys.argv[2]
+    #     startLOSimulation(startDay, duration)
+    # elif argLength == 4:
+    #     startDay = sys.argv[1]
+    #     duration = sys.argv[2]
+    #     timeStep = int(sys.argv[3])
+    #     startLOSimulation(startDay, duration, timeStep)
+    # elif argLength == 5:
+    #     startDay = sys.argv[1]
+    #     duration = sys.argv[2]
+    #     timeStep = int(sys.argv[3])
+    #     metricsRecordInterval = int(sys.argv[4])
+    #     startLOSimulation(startDay, duration, timeStep, metricsRecordInterval)
+    # else:
+    #     usage()
+    #     sys.exit()
     argLength = len(sys.argv)
-    if argLength == 3:
-        startDay = sys.argv[1]
-        duration = sys.argv[2]
-        startLOSimulation(startDay, duration)
-    elif argLength == 4:
-        startDay = sys.argv[1]
-        duration = sys.argv[2]
-        timeStep = int(sys.argv[3])
-        startLOSimulation(startDay, duration, timeStep)
-    elif argLength == 5:
-        startDay = sys.argv[1]
-        duration = sys.argv[2]
-        timeStep = int(sys.argv[3])
-        metricsRecordInterval = int(sys.argv[4])
-        startLOSimulation(startDay, duration, timeStep, metricsRecordInterval)
+    if argLength == 2:
+        configFile = sys.argv[1]
+        startLOSimulation(configFile)
     else:
         usage()
         sys.exit()

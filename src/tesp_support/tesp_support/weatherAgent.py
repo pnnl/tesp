@@ -44,7 +44,7 @@ def startWeatherAgent(file):
                 publishTimeAhead = conf['PublishTimeAhead']
                 forecastPeriod = conf['forecastPeriod']
                 forecastParameters = conf['parameters']
-            except json.JSONDecodeError as ex:
+            except ValueError as ex:
                 print(ex)
     else:
         print('could not open FNCS_CONFIG_FILE for fncs')
