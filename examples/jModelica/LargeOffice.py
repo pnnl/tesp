@@ -267,15 +267,18 @@ class LargeOffice (object):
         return P_total, self.T
 
     def ETP_step(self,current_t, ETP_inputs):
-        if current_t%86400 == 0:
-            self.T_prev = self.initTemp[int((current_t-self.startTime)/86400)] #mid-night reset
-	    print ("=========================RESET==========================")
         N_zone     = 19
         T_prev     = ETP_inputs['T_prev']
         TO_current = ETP_inputs['TO_current']
         Q_current  = ETP_inputs['Q_current']
         TG         = ETP_inputs['TG']
         co = self.envelop
+        print("current_t in ETP_step: ", current_t)
+        if current_t%86400 == 0:
+            self.T_prev = self.initTemp[int((current_t-self.startTime)/86400)] #mid-night reset
+            T_prev = self.T_prev
+	    print ("=========================RESET==========================")
+	    print ("T_prev after reset: ", self.T_prev)
         R = np.multiply(T_prev, co[N_zone])+ np.multiply(TO_current,co[N_zone+1])+np.multiply(Q_current,co[N_zone+2])+np.multiply(TG,co[N_zone+3])
         T = np.dot(R,np.transpose(co[0:N_zone,:]))
         return T

@@ -1157,10 +1157,10 @@ def replace_commercial_loads (model, h, t, avgBuilding):
             total_zipload += 1
           mtr = model[t][o]['parent']
           if forERCOT == True: 
-          # we will add a child meter (with tariff) to the parent node, 
-          # except for the small ZIPLOADs because GridLAB-D prohibits grandchildren
+          # the parent node is actually a meter, but we have to add the tariff and metrics_collector unless only ZIPLOAD
+            mtr = model[t][o]['parent'] # + '_mtr'
             if comm_type != 'ZIPLOAD':
-              mtr = model[t][o]['parent'] + '_mtr'
+              extra_billing_meters.add(mtr)
           else:
             extra_billing_meters.add(mtr)
           comm_loads[o] = [mtr, comm_type, nzones, kva, nphs, phases, vln, total_commercial]
@@ -1709,15 +1709,18 @@ def write_houses(basenode, op, vnom):
         batname = helpers.gld_strict_name (basenode + '_bat_' + str(i+1))
         sol_i_name = helpers.gld_strict_name (basenode + '_isol_' + str(i+1))
         bat_i_name = helpers.gld_strict_name (basenode + '_ibat_' + str(i+1))
-        hse_m_name = helpers.gld_strict_name (basenode + '_mhse_' + str(i+1))
         sol_m_name = helpers.gld_strict_name (basenode + '_msol_' + str(i+1))
         bat_m_name = helpers.gld_strict_name (basenode + '_mbat_' + str(i+1))
-        print ('object triplex_meter {', file=op)
-        print ('  name', hse_m_name + ';', file=op)
-        print ('  parent', mtrname + ';', file=op)
-        print ('  phases', phs + ';', file=op)
-        print ('  nominal_voltage ' + str(vnom) + ';', file=op)
-        print ('}', file=op)
+        if forERCOT == True:
+          hse_m_name = mtrname
+        else:
+          hse_m_name = helpers.gld_strict_name (basenode + '_mhse_' + str(i+1))
+          print ('object triplex_meter {', file=op)
+          print ('  name', hse_m_name + ';', file=op)
+          print ('  parent', mtrname + ';', file=op)
+          print ('  phases', phs + ';', file=op)
+          print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+          print ('}', file=op)
 
         fa_base = rgnFloorArea[rgn-1][bldg]
         fa_rand = np.random.uniform (0, 1)
@@ -2437,7 +2440,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
                     if data['ndata']['bustype'] == 'SWING':
                         swing_node = n1
 
-        sub_graphs = nx.connected_component_subgraphs(G)
+        sub_graphs = nx.connected_components(G)
         seg_loads = {} # [name][kva, phases]
         total_kva = 0.0
         for n1, data in G.nodes(data=True):
@@ -2631,7 +2634,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         if forERCOT == True:
             replace_commercial_loads (model, h, 'load', 0.001 * avgcommercial)
-            connect_ercot_commercial (op)
+#            connect_ercot_commercial (op)
             identify_ercot_houses (model, h, 'load', 0.001 * avghouse, rgn)
             connect_ercot_houses (model, h, op, vln, 120.0)
             for key in house_nodes:

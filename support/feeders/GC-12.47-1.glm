@@ -9,7 +9,14 @@ module powerflow{
      solver_method NR;
      default_maximum_voltage_error 1e-6;
 };
-
+#ifdef WANT_VI_DUMP
+object voltdump {
+  filename Voltage_Dump_GC-12-47-1.csv;
+}
+object currdump {
+  filename Current_Dump_GC-12-47-1.csv;
+}
+#endif
 object transformer_configuration {
   name XF3_PADMOUNT_ABCN_2500;
   power_rating 2500.00;

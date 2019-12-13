@@ -7,7 +7,7 @@ backbone_config = {'backbone_feeders': {
   'sim_R5-12.47-4':{'vll':12470.0, 'vln':7200.0, 'avg_house':6000.0, 'avg_comm':30000.0},
   'sim_R5-12.47-5':{'vll':12470.0, 'vln':7200.0, 'avg_house':4500.0, 'avg_comm':25000.0}},
                    'outpath':'../case8/',
-                   'glmpath':'./',
+                   'glmpath':'../../third_party/pitt/',
                    'supportpath':'../../support/schedules/',  # wrt outpath
                    'weatherpath':'../../support/weather/'}    # wrt outpath
 

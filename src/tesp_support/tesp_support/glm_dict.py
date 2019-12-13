@@ -48,6 +48,11 @@ def zoneMeterName(ldname):
 	"""
 	return ldname.replace ('_load_', '_meter_')
 
+def isCommercialHouse(house_class):
+	if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
+		return True
+	return False
+
 def ti_enumeration_string(tok):
 	""" if thermal_integrity_level is an integer, convert to a string for the metadata
 	"""
@@ -99,6 +104,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 	feeders = {}
 	capacitors = {}
 	regulators = {}
+	loads = {}
 
 	inSwing = False
 	for line in ip:
@@ -130,6 +136,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 	hasSolar = False
 	inCapacitors = False
 	inRegulators = False
+	inLoads = False
 	inFNCSmsg = False
 	for line in ip:
 		lst = line.split()
@@ -176,16 +183,26 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				inRegulators = True
 			if lst[1] == 'waterheater':
 				inWaterHeaters = True
+			if lst[1] == 'load':
+				inLoads = True
+				parent = ''
+			if inLoads == True:
+				if lst[0] == 'name':
+					name = lst[1].strip(';')
+				if lst[0] == 'parent':
+					parent = lst[1].strip(';')
+					loads[name] = {'parent':parent}
+					inLoads = False
 			if inCapacitors == True:
 				if lst[0] == 'name':
 					lastCapacitor = lst[1].strip(';')
 					capacitors[lastCapacitor] = {'feeder_id':feeder_id}
-					inCapacitors = False;
+					inCapacitors = False
 			if inRegulators == True:
 				if lst[0] == 'name':
 					lastRegulator = lst[1].strip(';')
 					regulators[lastRegulator] = {'feeder_id':feeder_id}
-					inRegulators = False;
+					inRegulators = False
 			if inInverters == True:
 				if lst[0] == 'name' and lastInverter == '':
 					lastInverter = lst[1].strip(';')
@@ -227,10 +244,11 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				if (lst[0] == 'cooling_setpoint') or (lst[0] == 'heating_setpoint'):
 					if ercot:
 						lastBillingMeter = ercotMeterName (name)
-					if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
+					elif isCommercialHouse (house_class):
 						lastBillingMeter = zoneMeterName (parent)
 					houses[name] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'sqft':sqft,'stories':stories,'doors':doors,
-						'thermal_integrity':thermal_integrity,'cooling':cooling,'heating':heating,'wh_gallons':0,'house_class':house_class}
+						'thermal_integrity':thermal_integrity,'cooling':cooling,'heating':heating,'wh_gallons':0,'house_class':house_class,
+						'parent':parent}
 					lastHouse = name
 					inHouses = False
 			if inWaterHeaters == True:
@@ -315,6 +333,9 @@ def glm_dict (nameroot, ercot=False, te30=False):
 			val['wh_gallons'] = waterheaters[key]['gallons']
 			val['wh_tmix'] = waterheaters[key]['tmix']
 			val['wh_mlayer'] = waterheaters[key]['mlayer']
+		if ercot and isCommercialHouse (val['house_class']):
+			parent = val['parent']
+			val['billingmeter_id'] = loads[parent]['parent']
 		mtr = billingmeters[val['billingmeter_id']]
 		mtr['children'].append(key)
 
