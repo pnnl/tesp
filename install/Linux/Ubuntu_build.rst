@@ -41,37 +41,24 @@ Preparation - Python Packages, Java, build tools
 ::
 
  # build tools and Java support
- sudo apt-get install git
- sudo apt-get install build-essential
- sudo apt-get install autoconf
- sudo apt-get install libtool
- sudo apt-get install cmake
- # sudo apt-get install libjsoncpp-dev
- sudo apt-get install default-jre
- sudo apt-get install default-jdk
+ sudo apt-get -y install git
+ sudo apt-get -y install build-essential
+ sudo apt-get -y install autoconf
+ sudo apt-get -y install libtool
+ sudo apt-get -y install libjsoncpp-dev
+ sudo apt-get -y install gfortran
+ sudo apt-get -y install openjdk-11-jre-headless
+ sudo apt-get -y install openjdk-11-jdk-headless
 
- # python2 and fortran support is required for the EnergyPlus build
- sudo apt-get install python-minimal
- sudo apt-get install gfortran
+ # install current version of CMake from Kitware
 
- # python3 support
- # you can also install Python 3.6 or later from https://www.python.org/downloads/ or https://repo.continuum.io/
- sudo apt-get install python3
- sudo apt-get install python3-dev
- sudo apt-get install python3-pip
- sudo apt-get install python3-tk
+ # install python3.7+ support from https://repo.continuum.io/
  pip3 install tesp_support --upgrade
  opf 
 
  # for HELICS and FNCS with ns-3
- sudo apt-get install libboost-dev
- sudo apt-get install libboost-signals-dev
- sudo apt-get install libboost-program-options-dev
- sudo apt-get install libboost-test-dev
- sudo apt-get install libboost-filesystem-dev
- sudo apt-get install libzmq5-dev
- sudo apt-get install libczmq-dev
- sudo apt-get install swig
+ sudo apt-get -y install libzmq5-dev
+ sudo apt-get -y install libczmq-dev
 
 Checkout PNNL repositories from github
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,26 +115,15 @@ To build the shared libraries for FNCS with Python bindings:
 
  cd ~/src/fncs
  autoreconf -if
- ./configure 'CXXFLAGS=-w' 'CFLAGS=-w' --prefix=$FNCS_INSTALL --with-zmq=$FNCS_INSTALL
+ ./configure 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2' --prefix=$FNCS_INSTALL --with-zmq=$FNCS_INSTALL
  make
  sudo make install
 
-To build the Java interface for versions 8 or 9:
+To build the Java interface for version 10 or later, which has *javah* replaced by *javac -h*:
 
 ::
 
- cd java
- mkdir build
- cd build
- cmake ..
- make
- cp fncs.jar ~/src/tesp/examples/loadshed/java
- cp libJNIfncs.so ~/src/tesp/examples/loadshed/java
-
-To build the Java interface for version 10, which has *javah* replaced by *javac -h*:
-
-::
-
+ sudo ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
  cd java
  make
  make install
@@ -158,15 +134,11 @@ To build HELICS 2.0 with Python and Java bindings:
 
 ::
 
- sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-
-::
-
  cd ~/src/HELICS-src
  mkdir build
  cd build
- cmake -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ..
- make -j8
+ cmake -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON -DJAVA_AWT_INCLUDE_PATH=NotNeeded -DHELICS_DISABLE_BOOST=ON -DCMAKE_BUILD_TYPE=Release ..
+ make -j4
  sudo make install
 
 Test that HELICS and FNCS start:
@@ -204,16 +176,11 @@ To link with both FNCS and HELICS, and run the autotest suite:
  cd ~/src/gridlab-d
  autoreconf -isf
 
- cd third_party
- tar -xvzf xerces-c-3.2.0.tar.gz
- cd xerces-c-3.2.0
- ./configure 'CXXFLAGS=-w' 'CFLAGS=-w'
- make
- sudo make install
- cd ../..
+ # use current version of Xerces
+ sudo apt-get install libxerces-c-dev
 
  # in the following, replace $FNCS_INSTALL with /usr/local to just use the default location
- ./configure --with-fncs=/usr/local --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w' 'CXXFLAGS=-w -std=c++14' 'LDFLAGS=-w'
+ ./configure --with-fncs=/usr/local --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w -O2' 'CXXFLAGS=-w -O2 -std=c++14' 'LDFLAGS=-w'
 
  # for debugging use 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -std=c++14 -g -O0' and 'LDFLAGS=-w -g -O0'
 
@@ -235,15 +202,15 @@ EnergyPlus with Prerequisites
  mkdir build
  cd build
  cmake -DBUILD_FORTRAN=ON -DBUILD_PACKAGE=ON -DENABLE_INSTALL_REMOTE=OFF ..
- make -j 4
+ make -j4
  sudo make install
 
  # Similar to the experience with Mac and Windows, this installation step wrongly puts
  #  the build products in /usr/local instead of /usr/local/bin and /usr/local/lib
  #  the following commands will copy FNCS-compatible EnergyPlus over the public version
  cd /usr/local
- cp energyplus-8.3.0 EnergyPlus-8-3-0
- cp libenergyplusapi.so.8.3.0 EnergyPlus-8-3-0
+ sudo cp energyplus-8.3.0 EnergyPlus-8-3-0
+ sudo cp libenergyplusapi.so.8.3.0 EnergyPlus-8-3-0
 
  # if ReadVarsESO is not found at the end of a simulation, try this
  cd /usr/local/EnergyPlus-8-3-0
