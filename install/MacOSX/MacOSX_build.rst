@@ -181,7 +181,7 @@ EnergyPlus with Prerequisites (installed to /usr/local)
  cd ~/src/EnergyPlus
  mkdir build
  cd build
- cmake -DCMAKE_C_COMPILER="gcc-7" -DCMAKE_CXX_COMPILER="g++-7" ..
+ cmake -DCMAKE_C_COMPILER="gcc-9" -DCMAKE_CXX_COMPILER="g++-9" ..
  make
 
  # Before installing, we need components of the public version, including but not limited 
@@ -212,7 +212,7 @@ Build eplus_json
  aclocal
  automake --add-missing
  autoconf
- # edit configure.ac to use g++-7 on Mac
+ # edit configure.ac to use g++-9 on Mac
  ./configure
  make
  sudo make install
