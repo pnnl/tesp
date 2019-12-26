@@ -1,0 +1,31 @@
+.demo-header {
+visibility: hidden;
+display: none;
+}
+
+
+circle.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+line.link {
+  stroke: #999;
+  stroke-opacity: .6;
+}
+
+.node text {
+  pointer-events: none;
+  font: 10px sans-serif;
+}
+
+.outlinetext {
+    white-space: pre;
+   -webkit-text-stroke: 1px black;
+   color: white;
+}
+#viz {
+    width: 800px;
+    border: 1px solid black;
+    overflow: hidden; /* will contain if #first is longer than #second */
+}
