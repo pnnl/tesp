@@ -35,6 +35,8 @@ using namespace ::std;
 #define METRICS_MAX 1
 #define METRICS_SUM 2
 #define METRICS_CNT 3
+#define METRICS_LST 4
+#define METRICS_NBR 5 // number of preceding subindices
 
 typedef map<string,double *> metrics_t; // keys to min, max, sum, count
 
@@ -42,11 +44,19 @@ void reset_metric (double *pVals)
 {
 	pVals[METRICS_MIN] = DBL_MAX;
 	pVals[METRICS_MAX] = -DBL_MAX;
+	pVals[METRICS_SUM] = pVals[METRICS_CNT] = pVals[METRICS_LST] = 0.0;
+}
+
+void continue_metric (double *pVals)
+{
+	pVals[METRICS_MIN] = pVals[METRICS_LST];
+	pVals[METRICS_MAX] = pVals[METRICS_LST];
 	pVals[METRICS_SUM] = pVals[METRICS_CNT] = 0.0;
 }
 
 void update_metric (double *pVals, double newval)
 {
+	pVals[METRICS_LST] = newval;
 	if (newval < pVals[METRICS_MIN]) pVals[METRICS_MIN] = newval;
 	if (newval > pVals[METRICS_MAX]) pVals[METRICS_MAX] = newval;
 	pVals[METRICS_SUM] += newval;
@@ -68,12 +78,12 @@ void output_metrics (metrics_t metrics, Json::Value& root, Json::Value& ary, fnc
 			ary[idx++] = pVals[METRICS_SUM] / pVals[METRICS_CNT];
 			ary[idx++] = pVals[METRICS_MAX];
 			ary[idx++] = pVals[METRICS_MIN];
-			reset_metric (pVals);
 		} else {
-			ary[idx++] = 0.0;
-			ary[idx++] = 0.0;
-			ary[idx++] = 0.0;
+			ary[idx++] = pVals[METRICS_LST];
+			ary[idx++] = pVals[METRICS_LST];
+			ary[idx++] = pVals[METRICS_LST];
 		}
+		continue_metric (pVals);
 	}
 	Json::Value bldg;
 	bldg[key2] = ary;
@@ -184,23 +194,23 @@ int main(int argc, char **argv)
 	for (vector<string>::iterator it = keys.begin(); it != keys.end(); ++it) {
 		if ((*it).find("occupants_") == 0) {
 			if (metrics.find("occupants_total") == metrics.end())	{
-				pVals = new double[4];
+				pVals = new double[METRICS_NBR];
 				reset_metric (pVals);
 				metrics["occupants_total"] = pVals;
 				cout << "aggregating occupants_## into occupants_total" << endl;
 			}
 		} else {
-			pVals = new double[4];
+			pVals = new double[METRICS_NBR];
 			reset_metric (pVals);
 			metrics[*it] = pVals;
 			cout << "aggregating " << *it << endl;
 		}
 	}
 	// add the thermostat deltas, which are generated within this agent
-	pVals = new double[4];
+	pVals = new double[METRICS_NBR];
 	reset_metric (pVals);
 	metrics["cooling_setpoint_delta"] = pVals;
-	pVals = new double[4];
+	pVals = new double[METRICS_NBR];
 	reset_metric (pVals);
 	metrics["heating_setpoint_delta"] = pVals;
 
@@ -238,13 +248,13 @@ int main(int argc, char **argv)
 		occupants = 0.0;
 		for (vector<string>::iterator it=events.begin(); it!=events.end(); ++it) {
 			newval = collect_fncs_values (*it);
-				if ((*it).find("kwhr_price") == 0) {
-					price = newval;
-				}
-				if ((*it).find("electric_demand_power") == 0) {
-					totalWatts = newval;
-				}
-				if ((*it).find("occupants_") == 0) {
+			if ((*it).find("kwhr_price") == 0) {
+				price = newval;
+			}
+			if ((*it).find("electric_demand_power") == 0) {
+				totalWatts = newval;
+			}
+			if ((*it).find("occupants_") == 0) {
 				occupants += newval;
 			}	else {
 				update_metric(metrics[*it], newval);

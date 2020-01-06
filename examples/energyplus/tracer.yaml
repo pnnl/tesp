@@ -2,6 +2,10 @@ name: tracer
 time_delta: 5m
 broker: tcp://localhost:5570
 values:
+    player_price:
+        topic: player/clear_price
+    agent_price:
+        topic: eplus_json/price
     power_A:
         topic: eplus_json/power_A
         default: 0
