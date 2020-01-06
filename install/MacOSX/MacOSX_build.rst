@@ -70,22 +70,6 @@ Your Java version may have removed *javah*.  If that's the case, use *javac -h* 
  brew install zeromq
  brew install czmq
 
- # cd ~/src
- # wget --no-check-certificate http://download.zeromq.org/zeromq-4.1.3.tar.gz
- # tar -xzf zeromq-4.1.3.tar.gz
- # cd zeromq-4.1.3
- # ./configure --without-libsodium 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7'
- # make
- # sudo make install
-
- # cd ..
- # wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
- # tar -xzf czmq-3.0.2.tar.gz
- # cd czmq-3.0.2
- # ./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CPPFLAGS=-Wno-format-truncation'
- # make
- # sudo make install
-
  cd ../fncs
  autoreconf -isf
  ./configure --with-zmq=/usr/local --with-czmq=/usr/local 'CPP=gcc-9 -E' 'CXXPP=g++-9 -E' 'CC=gcc-9' 'CXX=g++-9' 'CXXFLAGS=-w -O0 -mmacosx-version-min=10.12' 'CFLAGS=-w -O0 -mmacosx-version-min=10.12'
@@ -177,7 +161,6 @@ EnergyPlus with Prerequisites (installed to /usr/local)
 
 ::
 
- sudo apt-get install libjsoncpp-dev
  cd ~/src/EnergyPlus
  mkdir build
  cd build
@@ -211,9 +194,9 @@ Build eplus_json
  autoheader
  aclocal
  automake --add-missing
- autoconf
  # edit configure.ac to use g++-9 on Mac
- ./configure
+ autoconf
+ ./configure --prefix=/usr/local --with-zmq=/usr/local --with-czmq=/usr/local
  make
  sudo make install
 
