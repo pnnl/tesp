@@ -1,0 +1,498 @@
+** Summary of FullServiceRestaurant
+DINING                             1133.39 Hsched         Csched         Helem          Celem         
+KITCHEN                             425.02 Hsched         Csched         Helem          Celem         
+ATTIC                               856.26 Hsched         Csched         Helem          Celem         
+  3 zones total 2414.67 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of Hospital
+BASEMENT                           9120.27 Hsched         Csched         Helem          Celem         
+CORRIDOR_FLR_1                     2428.80 Hsched         Csched         Helem          Celem         
+CORRIDOR_FLR_2                     2428.80 Hsched         Csched         Helem          Celem         
+CORRIDOR_FLR_5                     2141.31 Hsched         Csched         Helem          Celem         
+CORRIDOR_NW_FLR_3                  2418.88 Hsched         Csched         Helem          Celem         
+CORRIDOR_NW_FLR_4                  2418.88 Hsched         Csched         Helem          Celem         
+CORRIDOR_SE_FLR_3                  2418.88 Hsched         Csched         Helem          Celem         
+CORRIDOR_SE_FLR_4                  2418.88 Hsched         Csched         Helem          Celem         
+DINING_FLR_5                       2974.04 Hsched         Csched         Helem          Celem         
+ER_EXAM1_MULT4_FLR_1                118.96 Hsched         Csched         Helem          Celem         
+ER_EXAM3_MULT4_FLR_1                118.96 Hsched         Csched         Helem          Celem         
+ER_NURSESTN_LOBBY_FLR_1            5273.96 Hsched         Csched         Helem          Celem         
+ER_TRAUMA1_FLR_1                    118.96 Hsched         Csched         Helem          Celem         
+ER_TRAUMA2_FLR_1                    118.96 Hsched         Csched         Helem          Celem         
+ER_TRIAGE_MULT4_FLR_1               118.96 Hsched         Csched         Helem          Celem         
+ICU_FLR_2                          2637.66 Hsched         Csched         Helem          Celem         
+ICU_NURSESTN_LOBBY_FLR_2           2854.50 Hsched         Csched         Helem          Celem         
+IC_PATROOM1_MULT5_FLR_2              89.22 Hsched         Csched         Helem          Celem         
+IC_PATROOM2_FLR_2                   118.96 Hsched         Csched         Helem          Celem         
+IC_PATROOM3_MULT6_FLR_2              89.22 Hsched         Csched         Helem          Celem         
+KITCHEN_FLR_5                      3965.38 Hsched         Csched         Helem          Celem         
+LAB_FLR_3                          1129.43 Hsched         Csched         Helem          Celem         
+LAB_FLR_4                          1129.43 Hsched         Csched         Helem          Celem         
+LOBBY_RECORDS_FLR_1                6294.93 Hsched         Csched         Helem          Celem         
+NURSESTN_LOBBY_FLR_3               3866.25 Hsched         Csched         Helem          Celem         
+NURSESTN_LOBBY_FLR_4               3866.25 Hsched         Csched         Helem          Celem         
+NURSESTN_LOBBY_FLR_5               4441.23 Hsched         Csched         Helem          Celem         
+OR1_FLR_2                           237.92 Hsched         Csched         Helem          Celem         
+OR2_MULT5_FLR_2                     237.92 Hsched         Csched         Helem          Celem         
+OR3_FLR_2                           237.92 Hsched         Csched         Helem          Celem         
+OR4_FLR_2                           951.69 Hsched         Csched         Helem          Celem         
+OR_NURSESTN_LOBBY_FLR_2            4322.26 Hsched         Csched         Helem          Celem         
+OFFICE1_FLR_5                       297.48 Hsched         Csched         Helem          Celem         
+OFFICE1_MULT4_FLR_1                  59.48 Hsched         Csched         Helem          Celem         
+OFFICE2_MULT5_FLR_5                 297.35 Hsched         Csched         Helem          Celem         
+OFFICE3_FLR_5                       297.40 Hsched         Csched         Helem          Celem         
+OFFICE4_MULT6_FLR_5                  59.48 Hsched         Csched         Helem          Celem         
+PATROOM1_MULT10_FLR_3                89.22 Hsched         Csched         Helem          Celem         
+PATROOM1_MULT10_FLR_4                89.22 Hsched         Csched         Helem          Celem         
+PATROOM2_FLR_3                      148.70 Hsched         Csched         Helem          Celem         
+PATROOM2_FLR_4                      148.70 Hsched         Csched         Helem          Celem         
+PATROOM3_MULT10_FLR_3                86.25 Hsched         Csched         Helem          Celem         
+PATROOM3_MULT10_FLR_4                86.25 Hsched         Csched         Helem          Celem         
+PATROOM4_FLR_3                      148.70 Hsched         Csched         Helem          Celem         
+PATROOM4_FLR_4                      148.70 Hsched         Csched         Helem          Celem         
+PATROOM5_MULT10_FLR_3                89.22 Hsched         Csched         Helem          Celem         
+PATROOM5_MULT10_FLR_4                89.22 Hsched         Csched         Helem          Celem         
+PATROOM6_FLR_3                      118.96 Hsched         Csched         Helem          Celem         
+PATROOM6_FLR_4                      118.96 Hsched         Csched         Helem          Celem         
+PATROOM7_MULT10_FLR_3                86.25 Hsched         Csched         Helem          Celem         
+PATROOM7_MULT10_FLR_4                86.25 Hsched         Csched         Helem          Celem         
+PATROOM8_FLR_3                      118.96 Hsched         Csched         Helem          Celem         
+PATROOM8_FLR_4                      118.96 Hsched         Csched         Helem          Celem         
+PHYSTHERAPY_FLR_3                  2081.82 Hsched         Csched         Helem          Celem         
+RADIOLOGY_FLR_4                    2081.82 Hsched         Csched         Helem          Celem         
+ 55 zones total 78055.02 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of LargeHotel
+BANQUET_FLR_6                      1010.89 Hsched         Csched         Helem          Celem         
+BASEMENT                           4826.37 Hsched         Csched         Helem          Celem         
+CAFE_FLR_1                          748.35 Hsched         Csched         Helem          Celem         
+CORRIDOR_FLR_3                     1186.91 Hsched         Csched         Helem          Celem         
+CORRIDOR_FLR_6                     1256.16 Hsched         Csched         Helem          Celem         
+DINING_FLR_6                       1010.89 Hsched         Csched         Helem          Celem         
+KITCHEN_FLR_6                       314.87 Hsched         Csched         Helem          Celem         
+LAUNDRY_FLR_1                       309.22 Hsched         Csched         Helem          Celem         
+LOBBY_FLR_1                        5183.56 Hsched         Csched         Helem          Celem         
+MECH_FLR_1                          650.80 Hsched         Csched         Helem          Celem         
+RETAIL_1_FLR_1                      265.76 Hsched         Csched         Helem          Celem         
+RETAIL_2_FLR_1                      307.76 Hsched         Csched         Helem          Celem         
+ROOM_1_FLR_3                        118.94 Hsched         Csched         Helem          Celem         
+ROOM_1_FLR_6                        118.94 Hsched         Csched         Helem          Celem         
+ROOM_2_FLR_3                        118.93 Hsched         Csched         Helem          Celem         
+ROOM_2_FLR_6                        118.93 Hsched         Csched         Helem          Celem         
+ROOM_3_MULT19_FLR_3                  74.75 Hsched         Csched         Helem          Celem         
+ROOM_3_MULT9_FLR_6                   74.77 Hsched         Csched         Helem          Celem         
+ROOM_4_MULT19_FLR_3                  74.77 Hsched         Csched         Helem          Celem         
+ROOM_5_FLR_3                        118.94 Hsched         Csched         Helem          Celem         
+ROOM_6_FLR_3                        118.93 Hsched         Csched         Helem          Celem         
+STORAGE_FLR_1                       375.47 Hsched         Csched         Helem          Celem         
+ 22 zones total 18384.91 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of LargeOffice
+BASEMENT                           8690.42 Hsched         Csched         Helem          Celem         
+CORE_BOTTOM                        6948.69 Hsched         Csched         Helem          Celem         
+CORE_MID                           6948.69 Hsched         Csched         Helem          Celem         
+CORE_TOP                           6948.69 Hsched         Csched         Helem          Celem         
+GROUNDFLOOR_PLENUM                 4344.14 Hsched         Csched         Helem          Celem         
+MIDFLOOR_PLENUM                    4344.14 Hsched         Csched         Helem          Celem         
+PERIMETER_BOT_ZN_1                  860.02 Hsched         Csched         Helem          Celem         
+PERIMETER_BOT_ZN_2                  554.22 Hsched         Csched         Helem          Celem         
+PERIMETER_BOT_ZN_3                  860.00 Hsched         Csched         Helem          Celem         
+PERIMETER_BOT_ZN_4                  554.22 Hsched         Csched         Helem          Celem         
+PERIMETER_MID_ZN_1                  860.02 Hsched         Csched         Helem          Celem         
+PERIMETER_MID_ZN_2                  554.22 Hsched         Csched         Helem          Celem         
+PERIMETER_MID_ZN_3                  860.00 Hsched         Csched         Helem          Celem         
+PERIMETER_MID_ZN_4                  554.22 Hsched         Csched         Helem          Celem         
+PERIMETER_TOP_ZN_1                  860.02 Hsched         Csched         Helem          Celem         
+PERIMETER_TOP_ZN_2                  554.22 Hsched         Csched         Helem          Celem         
+PERIMETER_TOP_ZN_3                  860.00 Hsched         Csched         Helem          Celem         
+PERIMETER_TOP_ZN_4                  554.22 Hsched         Csched         Helem          Celem         
+TOPFLOOR_PLENUM                    4344.14 Hsched         Csched         Helem          Celem         
+ 19 zones total 51054.29 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of MediumOffice
+CORE_BOTTOM                        2698.04 Hsched         Csched         Helem          Celem         
+CORE_MID                           2698.04 Hsched         Csched         Helem          Celem         
+CORE_TOP                           2698.04 Hsched         Csched         Helem          Celem         
+FIRSTFLOOR_PLENUM                  2024.76 Hsched         Csched         Helem          Celem         
+MIDFLOOR_PLENUM                    2024.76 Hsched         Csched         Helem          Celem         
+PERIMETER_BOT_ZN_1                  568.77 Hsched         Csched         Helem          Celem         
+PERIMETER_BOT_ZN_2                  360.08 Hsched         Csched         Helem          Celem         
+PERIMETER_BOT_ZN_3                  568.77 Hsched         Csched         Helem          Celem         
+PERIMETER_BOT_ZN_4                  360.05 Hsched         Csched         Helem          Celem         
+PERIMETER_MID_ZN_1                  568.77 Hsched         Csched         Helem          Celem         
+PERIMETER_MID_ZN_2                  360.08 Hsched         Csched         Helem          Celem         
+PERIMETER_MID_ZN_3                  568.77 Hsched         Csched         Helem          Celem         
+PERIMETER_MID_ZN_4                  360.05 Hsched         Csched         Helem          Celem         
+PERIMETER_TOP_ZN_1                  568.77 Hsched         Csched         Helem          Celem         
+PERIMETER_TOP_ZN_2                  360.08 Hsched         Csched         Helem          Celem         
+PERIMETER_TOP_ZN_3                  568.77 Hsched         Csched         Helem          Celem         
+PERIMETER_TOP_ZN_4                  360.05 Hsched         Csched         Helem          Celem         
+TOPFLOOR_PLENUM                    2024.76 Hsched         Csched         Helem          Celem         
+ 18 zones total 19741.41 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of MidriseApartment
+G SW APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+G NW APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+OFFICE                              268.96 Hsched         Csched         Helem          Celem         
+G NE APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+G N1 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+G N2 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+G S1 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+G S2 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+M SW APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+M NW APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+M SE APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+M NE APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+M N1 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+M N2 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+M S1 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+M S2 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+T SW APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+T NW APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+T SE APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+T NE APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+T N1 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+T N2 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+T S1 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+T S2 APARTMENT                      268.96 Hsched         Csched         Helem          Celem         
+T CORRIDOR                          236.69 Hsched         Csched         Helem          Celem         
+G CORRIDOR                          236.69 Hsched         Csched         Helem          Celem         
+M CORRIDOR                          236.69 Hsched         Csched         Helem          Celem         
+ 27 zones total 7165.11 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of OutPatient
+FLOOR 1 ANESTHESIA                   30.58 Hsched         Csched         Helem          Celem         
+FLOOR 1 BIO HAZ                      15.86 Hsched         Csched         Helem          Celem         
+FLOOR 1 CAFE                        118.93 Hsched         Csched         Helem          Celem         
+FLOOR 1 CLEAN                        35.68 Hsched         Csched         Helem          Celem         
+FLOOR 1 CLEAN WORK                   46.72 Hsched         Csched         Helem          Celem         
+FLOOR 1 DICTATION                    35.68 Hsched         Csched         Helem          Celem         
+FLOOR 1 DRESSING ROOM                12.74 Hsched         Csched         Helem          Celem         
+FLOOR 1 ELECTRICAL ROOM              27.75 Hsched         Csched         Helem          Celem         
+FLOOR 1 ELEVATOR PUMP ROOM           25.77 Hsched         Csched         Helem          Celem         
+FLOOR 1 HUMID                        15.29 Hsched         Csched         Helem          Celem         
+FLOOR 1 IT HALL                      39.64 Hsched         Csched         Helem          Celem         
+FLOOR 1 IT ROOM                      31.71 Hsched         Csched         Helem          Celem         
+FLOOR 1 LOBBY                       176.13 Hsched         Csched         Helem          Celem         
+FLOOR 1 LOBBY HALL                   67.96 Hsched         Csched         Helem          Celem         
+FLOOR 1 LOBBY TOILET                 15.29 Hsched         Csched         Helem          Celem         
+FLOOR 1 LOCKER ROOM                 186.89 Hsched         Csched         Helem          Celem         
+FLOOR 1 LOCKER ROOM HALL            140.45 Hsched         Csched         Helem          Celem         
+FLOOR 1 LOUNGE                      101.94 Hsched         Csched         Helem          Celem         
+FLOOR 1 MRI CONTROL ROOM             47.57 Hsched         Csched         Helem          Celem         
+FLOOR 1 MRI HALL                     41.63 Hsched         Csched         Helem          Celem         
+FLOOR 1 MRI ROOM                    124.59 Hsched         Csched         Helem          Celem         
+FLOOR 1 MRI TOILET                   15.29 Hsched         Csched         Helem          Celem         
+FLOOR 1 MED GAS                      15.86 Hsched         Csched         Helem          Celem         
+FLOOR 1 NOURISHMENT                  51.54 Hsched         Csched         Helem          Celem         
+FLOOR 1 NURSE HALL                  140.45 Hsched         Csched         Helem          Celem         
+FLOOR 1 NURSE JANITOR                15.29 Hsched         Csched         Helem          Celem         
+FLOOR 1 NURSE STATION                73.91 Hsched         Csched         Helem          Celem         
+FLOOR 1 NURSE TOILET                 15.29 Hsched         Csched         Helem          Celem         
+FLOOR 1 OFFICE                      136.77 Hsched         Csched         Helem          Celem         
+FLOOR 1 OPERATING ROOM 1            130.26 Hsched         Csched         Helem          Celem         
+FLOOR 1 OPERATING ROOM 2            135.92 Hsched         Csched         Helem          Celem         
+FLOOR 1 OPERATING ROOM 3            134.79 Hsched         Csched         Helem          Celem         
+FLOOR 1 PACU                         30.58 Hsched         Csched         Helem          Celem         
+FLOOR 1 PRE-OP HALL                 149.51 Hsched         Csched         Helem          Celem         
+FLOOR 1 PRE-OP ROOM 1                53.52 Hsched         Csched         Helem          Celem         
+FLOOR 1 PRE-OP ROOM 2                95.71 Hsched         Csched         Helem          Celem         
+FLOOR 1 PRE-OP TOILET                15.29 Hsched         Csched         Helem          Celem         
+FLOOR 1 PROCEDURE ROOM               80.70 Hsched         Csched         Helem          Celem         
+FLOOR 1 RECEPTION                   144.13 Hsched         Csched         Helem          Celem         
+FLOOR 1 RECEPTION HALL               36.25 Hsched         Csched         Helem          Celem         
+FLOOR 1 RECOVERY ROOM               152.91 Hsched         Csched         Helem          Celem         
+FLOOR 1 SCHEDULING                   33.70 Hsched         Csched         Helem          Celem         
+FLOOR 1 SCRUB                        23.79 Hsched         Csched         Helem          Celem         
+FLOOR 1 SOIL                         35.68 Hsched         Csched         Helem          Celem         
+FLOOR 1 SOIL HOLD                    15.86 Hsched         Csched         Helem          Celem         
+FLOOR 1 SOIL WORK                    50.97 Hsched         Csched         Helem          Celem         
+FLOOR 1 STEP DOWN                    84.95 Hsched         Csched         Helem          Celem         
+FLOOR 1 STERILE HALL                174.43 Hsched         Csched         Helem          Celem         
+FLOOR 1 STERILE STORAGE             112.13 Hsched         Csched         Helem          Celem         
+FLOOR 1 STORAGE                     260.51 Hsched         Csched         Helem          Celem         
+FLOOR 1 SUB-STERILE                  55.50 Hsched         Csched         Helem          Celem         
+FLOOR 1 UTILITY HALL                 72.49 Hsched         Csched         Helem          Celem         
+FLOOR 1 UTILITY JANITOR              11.89 Hsched         Csched         Helem          Celem         
+FLOOR 1 UTILITY ROOM                101.94 Hsched         Csched         Helem          Celem         
+FLOOR 1 VESTIBULE                    20.39 Hsched         Csched         Helem          Celem         
+FLOOR 2 CONFERENCE                   95.14 Hsched         Csched         Helem          Celem         
+FLOOR 2 CONFERENCE TOILET            18.12 Hsched         Csched         Helem          Celem         
+FLOOR 2 DICTATION                    19.82 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM 1                      101.94 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM 2                      152.91 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM 3                      203.88 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM 4                       23.79 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM 5                       99.11 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM 6                       63.71 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM 7                      224.27 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM 8                       76.46 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM 9                      112.13 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM HALL 1                  50.97 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM HALL 2                  50.97 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM HALL 3                  50.97 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM HALL 4                  56.07 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM HALL 5                  56.07 Hsched         Csched         Helem          Celem         
+FLOOR 2 EXAM HALL 6                  56.07 Hsched         Csched         Helem          Celem         
+FLOOR 2 JANITOR                      17.84 Hsched         Csched         Helem          Celem         
+FLOOR 2 LOUNGE                       22.65 Hsched         Csched         Helem          Celem         
+FLOOR 2 NURSE STATION 1              42.48 Hsched         Csched         Helem          Celem         
+FLOOR 2 NURSE STATION 2              50.97 Hsched         Csched         Helem          Celem         
+FLOOR 2 OFFICE                      158.57 Hsched         Csched         Helem          Celem         
+FLOOR 2 OFFICE HALL                 125.73 Hsched         Csched         Helem          Celem         
+FLOOR 2 RECEPTION                   278.64 Hsched         Csched         Helem          Celem         
+FLOOR 2 RECEPTION HALL              159.71 Hsched         Csched         Helem          Celem         
+FLOOR 2 RECEPTION TOILET             35.68 Hsched         Csched         Helem          Celem         
+FLOOR 2 SCHEDULING 1                 91.75 Hsched         Csched         Helem          Celem         
+FLOOR 2 SCHEDULING 2                 96.84 Hsched         Csched         Helem          Celem         
+FLOOR 2 STORAGE 1                    15.86 Hsched         Csched         Helem          Celem         
+FLOOR 2 STORAGE 2                    33.98 Hsched         Csched         Helem          Celem         
+FLOOR 2 STORAGE 3                    40.78 Hsched         Csched         Helem          Celem         
+FLOOR 2 UTILITY                      35.68 Hsched         Csched         Helem          Celem         
+FLOOR 2 WORK                        478.55 Hsched         Csched         Helem          Celem         
+FLOOR 2 WORK HALL                   236.16 Hsched         Csched         Helem          Celem         
+FLOOR 2 WORK TOILET                  15.29 Hsched         Csched         Helem          Celem         
+FLOOR 2 X-RAY                       254.85 Hsched         Csched         Helem          Celem         
+FLOOR 3 DRESSING ROOM                11.89 Hsched         Csched         Helem          Celem         
+FLOOR 3 ELEVATOR HALL               104.77 Hsched         Csched         Helem          Celem         
+FLOOR 3 HUMID                        30.58 Hsched         Csched         Helem          Celem         
+FLOOR 3 JANITOR                      17.84 Hsched         Csched         Helem          Celem         
+FLOOR 3 LOCKER                       33.98 Hsched         Csched         Helem          Celem         
+FLOOR 3 LOUNGE                      214.92 Hsched         Csched         Helem          Celem         
+FLOOR 3 LOUNGE TOILET                54.37 Hsched         Csched         Helem          Celem         
+FLOOR 3 MECHANICAL                   99.11 Hsched         Csched         Helem          Celem         
+FLOOR 3 MECHANICAL HALL              84.95 Hsched         Csched         Helem          Celem         
+FLOOR 3 OFFICE                      859.70 Hsched         Csched         Helem          Celem         
+FLOOR 3 OFFICE HALL                 236.16 Hsched         Csched         Helem          Celem         
+FLOOR 3 OFFICE TOILET                15.29 Hsched         Csched         Helem          Celem         
+FLOOR 3 PHYSICAL THERAPY 1          368.12 Hsched         Csched         Helem          Celem         
+FLOOR 3 PHYSICAL THERAPY 2          167.64 Hsched         Csched         Helem          Celem         
+FLOOR 3 PHYSICAL THERAPY TOILET      23.79 Hsched         Csched         Helem          Celem         
+FLOOR 3 STORAGE 1                    30.58 Hsched         Csched         Helem          Celem         
+FLOOR 3 STORAGE 2                    23.79 Hsched         Csched         Helem          Celem         
+FLOOR 3 TREATMENT                   134.79 Hsched         Csched         Helem          Celem         
+FLOOR 3 UNDEVELOPED 1               642.23 Hsched         Csched         Helem          Celem         
+FLOOR 3 UNDEVELOPED 2               326.21 Hsched         Csched         Helem          Celem         
+FLOOR 3 UTILITY                      61.16 Hsched         Csched         Helem          Celem         
+FLOOR 3 WORK                        162.54 Hsched         Csched         Helem          Celem         
+NE STAIR                            142.72 Hsched         Csched         Helem          Celem         
+NW ELEVATOR                         118.93 Hsched         Csched         Helem          Celem         
+NW STAIR                            163.11 Hsched         Csched         Helem          Celem         
+SW STAIR                             81.55 Hsched         Csched         Helem          Celem         
+118 zones total 11932.13 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of PrimarySchool
+BATH_ZN_1_FLR_1                     760.00 Hsched         Csched         Helem          Celem         
+CAFETERIA_ZN_1_FLR_1               1260.00 Hsched         Csched         Helem          Celem         
+COMPUTER_CLASS_ZN_1_FLR_1           648.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_1_POD_1_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_1_POD_2_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_1_POD_3_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_2_POD_1_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_2_POD_2_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_2_POD_3_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORRIDOR_POD_1_ZN_1_FLR_1           768.00 Hsched         Csched         Helem          Celem         
+CORRIDOR_POD_2_ZN_1_FLR_1           768.00 Hsched         Csched         Helem          Celem         
+CORRIDOR_POD_3_ZN_1_FLR_1           768.00 Hsched         Csched         Helem          Celem         
+GYM_ZN_1_FLR_1                     1428.00 Hsched         Csched         Helem          Celem         
+KITCHEN_ZN_1_FLR_1                  672.00 Hsched         Csched         Helem          Celem         
+LIBRARY_MEDIA_CENTER_ZN_1_FLR_1    1596.00 Hsched         Csched         Helem          Celem         
+LOBBY_ZN_1_FLR_1                    684.00 Hsched         Csched         Helem          Celem         
+MAIN_CORRIDOR_ZN_1_FLR_1           2184.00 Hsched         Csched         Helem          Celem         
+MECH_ZN_1_FLR_1                    1008.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_1_POD_1_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_1_POD_2_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_1_POD_3_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_2_POD_1_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_2_POD_2_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_2_POD_3_ZN_1_FLR_1      1260.00 Hsched         Csched         Helem          Celem         
+OFFICES_ZN_1_FLR_1                 1764.00 Hsched         Csched         Helem          Celem         
+ 25 zones total 27484.00 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of QuickServiceRestaurant
+DINING                              354.18 Hsched         Csched         Helem          Celem         
+KITCHEN                             354.18 Hsched         Csched         Helem          Celem         
+ATTIC                               262.34 Hsched         Csched         Helem          Celem         
+  3 zones total 970.70 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of SecondarySchool
+AUDITORIUM_ZN_1_FLR_1              7904.00 Hsched         Csched         Helem          Celem         
+AUX_GYM_ZN_1_FLR_1                 9984.00 Hsched         Csched         Helem          Celem         
+BATHROOMS_ZN_1_FLR_1                840.00 Hsched         Csched         Helem          Celem         
+BATHROOMS_ZN_1_FLR_2                840.00 Hsched         Csched         Helem          Celem         
+CAFETERIA_ZN_1_FLR_1               2496.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_1_POD_1_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_1_POD_1_ZN_1_FLR_2     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_1_POD_2_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_1_POD_2_ZN_1_FLR_2     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_1_POD_3_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_1_POD_3_ZN_1_FLR_2     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_2_POD_1_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_2_POD_1_ZN_1_FLR_2     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_2_POD_2_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_2_POD_2_ZN_1_FLR_2     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_2_POD_3_ZN_1_FLR_1     396.00 Hsched         Csched         Helem          Celem         
+CORNER_CLASS_2_POD_3_ZN_1_FLR_2     396.00 Hsched         Csched         Helem          Celem         
+CORRIDOR_POD_1_ZN_1_FLR_1          1280.00 Hsched         Csched         Helem          Celem         
+CORRIDOR_POD_1_ZN_1_FLR_2          1280.00 Hsched         Csched         Helem          Celem         
+CORRIDOR_POD_2_ZN_1_FLR_1          1280.00 Hsched         Csched         Helem          Celem         
+CORRIDOR_POD_2_ZN_1_FLR_2          1280.00 Hsched         Csched         Helem          Celem         
+CORRIDOR_POD_3_ZN_1_FLR_1          1280.00 Hsched         Csched         Helem          Celem         
+CORRIDOR_POD_3_ZN_1_FLR_2          1280.00 Hsched         Csched         Helem          Celem         
+GYM_ZN_1_FLR_1                    15808.00 Hsched         Csched         Helem          Celem         
+KITCHEN_ZN_1_FLR_1                  864.00 Hsched         Csched         Helem          Celem         
+LIBRARY_MEDIA_CENTER_ZN_1_FLR_2    3360.00 Hsched         Csched         Helem          Celem         
+LOBBY_ZN_1_FLR_1                    840.00 Hsched         Csched         Helem          Celem         
+LOBBY_ZN_1_FLR_2                    840.00 Hsched         Csched         Helem          Celem         
+MAIN_CORRIDOR_ZN_1_FLR_1           4560.00 Hsched         Csched         Helem          Celem         
+MAIN_CORRIDOR_ZN_1_FLR_2           4560.00 Hsched         Csched         Helem          Celem         
+MECH_ZN_1_FLR_1                    1368.00 Hsched         Csched         Helem          Celem         
+MECH_ZN_1_FLR_2                    1368.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_1_POD_1_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_1_POD_1_ZN_1_FLR_2      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_1_POD_2_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_1_POD_2_ZN_1_FLR_2      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_1_POD_3_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_1_POD_3_ZN_1_FLR_2      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_2_POD_1_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_2_POD_1_ZN_1_FLR_2      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_2_POD_2_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_2_POD_2_ZN_1_FLR_2      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_2_POD_3_ZN_1_FLR_1      1908.00 Hsched         Csched         Helem          Celem         
+MULT_CLASS_2_POD_3_ZN_1_FLR_2      1908.00 Hsched         Csched         Helem          Celem         
+OFFICES_ZN_1_FLR_1                 2128.00 Hsched         Csched         Helem          Celem         
+OFFICES_ZN_1_FLR_2                 2128.00 Hsched         Csched         Helem          Celem         
+ 46 zones total 95216.00 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of SmallHotel
+CORRIDORFLR1                        504.62 Hsched         Csched         Helem          Celem         
+CORRIDORFLR2                        344.05 Hsched         Csched         Helem          Celem         
+CORRIDORFLR3                        344.05 Hsched         Csched         Helem          Celem         
+CORRIDORFLR4                        344.05 Hsched         Csched         Helem          Celem         
+ELEVATORCOREFLR1                     50.46 Hsched         Csched         Helem          Celem         
+ELEVATORCOREFLR2                     41.29 Hsched         Csched         Helem          Celem         
+ELEVATORCOREFLR3                     41.29 Hsched         Csched         Helem          Celem         
+ELEVATORCOREFLR4                     41.29 Hsched         Csched         Helem          Celem         
+EMPLOYEELOUNGEFLR1                  109.33 Hsched         Csched         Helem          Celem         
+EXERCISECENTERFLR1                  109.33 Hsched         Csched         Helem          Celem         
+FRONTLOUNGEFLR1                     546.70 Hsched         Csched         Helem          Celem         
+FRONTOFFICEFLR1                     437.33 Hsched         Csched         Helem          Celem         
+FRONTSTAIRSFLR1                      67.28 Hsched         Csched         Helem          Celem         
+FRONTSTAIRSFLR2                      55.05 Hsched         Csched         Helem          Celem         
+FRONTSTAIRSFLR3                      55.05 Hsched         Csched         Helem          Celem         
+FRONTSTAIRSFLR4                      55.05 Hsched         Csched         Helem          Celem         
+FRONTSTORAGEFLR1                     42.05 Hsched         Csched         Helem          Celem         
+FRONTSTORAGEFLR2                     34.40 Hsched         Csched         Helem          Celem         
+FRONTSTORAGEFLR3                     34.40 Hsched         Csched         Helem          Celem         
+FRONTSTORAGEFLR4                     34.40 Hsched         Csched         Helem          Celem         
+GUESTROOM101                        109.34 Hsched         Csched         Helem          Celem         
+GUESTROOM102                        109.34 Hsched         Csched         Helem          Celem         
+GUESTROOM103                        109.34 Hsched         Csched         Helem          Celem         
+GUESTROOM104                        109.33 Hsched         Csched         Helem          Celem         
+GUESTROOM105                        109.33 Hsched         Csched         Helem          Celem         
+GUESTROOM201                         89.46 Hsched         Csched         Helem          Celem         
+GUESTROOM202_205                    357.84 Hsched         Csched         Helem          Celem         
+GUESTROOM206_208                    289.02 Hsched         Csched         Helem          Celem         
+GUESTROOM209_212                    357.84 Hsched         Csched         Helem          Celem         
+GUESTROOM213                         89.46 Hsched         Csched         Helem          Celem         
+GUESTROOM214                         89.45 Hsched         Csched         Helem          Celem         
+GUESTROOM215_218                    357.81 Hsched         Csched         Helem          Celem         
+GUESTROOM219                         89.45 Hsched         Csched         Helem          Celem         
+GUESTROOM220_223                    357.81 Hsched         Csched         Helem          Celem         
+GUESTROOM224                         89.45 Hsched         Csched         Helem          Celem         
+GUESTROOM301                         89.46 Hsched         Csched         Helem          Celem         
+GUESTROOM302_305                    357.84 Hsched         Csched         Helem          Celem         
+GUESTROOM306_308                    289.02 Hsched         Csched         Helem          Celem         
+GUESTROOM309_312                    357.84 Hsched         Csched         Helem          Celem         
+GUESTROOM313                         89.46 Hsched         Csched         Helem          Celem         
+GUESTROOM314                         89.45 Hsched         Csched         Helem          Celem         
+GUESTROOM315_318                    357.81 Hsched         Csched         Helem          Celem         
+GUESTROOM319                         89.45 Hsched         Csched         Helem          Celem         
+GUESTROOM320_323                    357.81 Hsched         Csched         Helem          Celem         
+GUESTROOM324                         89.45 Hsched         Csched         Helem          Celem         
+GUESTROOM401                         89.46 Hsched         Csched         Helem          Celem         
+GUESTROOM402_405                    357.84 Hsched         Csched         Helem          Celem         
+GUESTROOM406_408                    289.02 Hsched         Csched         Helem          Celem         
+GUESTROOM409_412                    357.84 Hsched         Csched         Helem          Celem         
+GUESTROOM413                         89.46 Hsched         Csched         Helem          Celem         
+GUESTROOM414                         89.45 Hsched         Csched         Helem          Celem         
+GUESTROOM415_418                    357.81 Hsched         Csched         Helem          Celem         
+GUESTROOM419                         89.45 Hsched         Csched         Helem          Celem         
+GUESTROOM420_423                    357.81 Hsched         Csched         Helem          Celem         
+GUESTROOM424                         89.45 Hsched         Csched         Helem          Celem         
+LAUNDRYROOMFLR1                     327.99 Hsched         Csched         Helem          Celem         
+MECHANICALROOMFLR1                  109.34 Hsched         Csched         Helem          Celem         
+MEETINGROOMFLR1                     269.14 Hsched         Csched         Helem          Celem         
+REARSTAIRSFLR1                       67.30 Hsched         Csched         Helem          Celem         
+REARSTAIRSFLR2                       55.06 Hsched         Csched         Helem          Celem         
+REARSTAIRSFLR3                       55.06 Hsched         Csched         Helem          Celem         
+REARSTAIRSFLR4                       55.06 Hsched         Csched         Helem          Celem         
+REARSTORAGEFLR1                      67.30 Hsched         Csched         Helem          Celem         
+REARSTORAGEFLR2                      55.07 Hsched         Csched         Helem          Celem         
+REARSTORAGEFLR3                      55.07 Hsched         Csched         Helem          Celem         
+REARSTORAGEFLR4                      55.07 Hsched         Csched         Helem          Celem         
+RESTROOMFLR1                        109.34 Hsched         Csched         Helem          Celem         
+ATTIC                              1582.44 Hsched         Csched         Helem          Celem         
+ 68 zones total 13204.16 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of SmallOffice
+ATTIC                               720.19 Hsched         Csched         Helem          Celem         
+CORE_ZN                             456.46 Hsched         Csched         Helem          Celem         
+PERIMETER_ZN_1                      346.02 Hsched         Csched         Helem          Celem         
+PERIMETER_ZN_2                      205.27 Hsched         Csched         Helem          Celem         
+PERIMETER_ZN_3                      346.02 Hsched         Csched         Helem          Celem         
+PERIMETER_ZN_4                      205.27 Hsched         Csched         Helem          Celem         
+  6 zones total 2279.23 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of StandaloneRetail
+BACK_SPACE                         2315.81 Hsched         Csched         Helem          Celem         
+CORE_RETAIL                        9756.54 Hsched         Csched         Helem          Celem         
+FRONT_ENTRY                          73.15 Hsched         Csched         Helem          Celem         
+FRONT_RETAIL                        919.34 Hsched         Csched         Helem          Celem         
+POINT_OF_SALE                       919.34 Hsched         Csched         Helem          Celem         
+  5 zones total 13984.18 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of StripMall
+LGSTORE1                           1804.64 Hsched         Csched         Helem          Celem         
+LGSTORE2                           1804.64 Hsched         Csched         Helem          Celem         
+SMSTORE1                            902.32 Hsched         Csched         Helem          Celem         
+SMSTORE2                            902.32 Hsched         Csched         Helem          Celem         
+SMSTORE3                            902.32 Hsched         Csched         Helem          Celem         
+SMSTORE4                            902.32 Hsched         Csched         Helem          Celem         
+SMSTORE5                            902.32 Hsched         Csched         Helem          Celem         
+SMSTORE6                            902.32 Hsched         Csched         Helem          Celem         
+SMSTORE7                            902.32 Hsched         Csched         Helem          Celem         
+SMSTORE8                            902.32 Hsched         Csched         Helem          Celem         
+ 10 zones total 10827.84 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of SuperMarket
+BAKERY                             1274.31 Hsched         Csched         Helem          Celem         
+DELI                               1369.88 Hsched         Csched         Helem          Celem         
+DRYSTORAGE                         3791.04 Hsched         Csched         Helem          Celem         
+OFFICE                              541.58 Hsched         Csched         Helem          Celem         
+PRODUCE                            4336.48 Hsched         Csched         Helem          Celem         
+SALES                             14172.83 Hsched         Csched         Helem          Celem         
+  6 zones total 25486.12 m3
+Heating Coils: []
+Cooling Coils: []
+** Summary of Warehouse
+BULKSTORAGE                       31313.90 Hsched         Csched         Helem          Celem         
+FINESTORAGE                       11554.44 Hsched         Csched         Helem          Celem         
+OFFICE                             1010.76 Hsched         Csched         Helem          Celem         
+  3 zones total 43879.10 m3
+Heating Coils: []
+Cooling Coils: []
