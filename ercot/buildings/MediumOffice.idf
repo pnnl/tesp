@@ -65,7 +65,7 @@
 ! ***GENERAL SIMULATION PARAMETERS***
 ! Number of Zones: 18
 
-  Version,7.2;
+  Version,8.3;
 
   SimulationControl,
     YES,                     !- Do Zone Sizing Calculation
@@ -232,6 +232,7 @@
     25;                      !- Maximum HVAC Iterations
 
   ShadowCalculation,
+    AverageOverDaysInFrequency,  !- Calculation Method
     7,                       !- Calculation Frequency
     15000;                   !- Maximum Figures in Shadow Overlap Calculations
 
@@ -256,7 +257,7 @@
     -2.4,                    !- Maximum Dry-Bulb Temperature {C}
     0.0,                     !- Daily Dry-Bulb Temperature Range {deltaC}
     ,                        !- Dry-Bulb Temperature Range Modifier Type
-    ,                        !- Dry-Bulb Temperature Range Modifier Schedule Name
+    ,                        !- Dry-Bulb Temperature Range Modifier Day Schedule Name
     Wetbulb,                 !- Humidity Condition Type
     -2.4,                    !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
     ,                        !- Humidity Condition Day Schedule Name
@@ -286,7 +287,7 @@
     32,                      !- Maximum Dry-Bulb Temperature {C}
     10.6,                    !- Daily Dry-Bulb Temperature Range {deltaC}
     ,                        !- Dry-Bulb Temperature Range Modifier Type
-    ,                        !- Dry-Bulb Temperature Range Modifier Schedule Name
+    ,                        !- Dry-Bulb Temperature Range Modifier Day Schedule Name
     Wetbulb,                 !- Humidity Condition Type
     26.7,                    !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
     ,                        !- Humidity Condition Day Schedule Name
@@ -3115,6 +3116,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3135,6 +3138,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3155,6 +3160,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3175,6 +3182,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3195,6 +3204,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3215,6 +3226,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3235,6 +3248,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3255,6 +3270,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3275,6 +3292,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3295,6 +3314,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3315,6 +3336,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3335,6 +3358,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3355,6 +3380,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3375,6 +3402,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -3395,6 +3424,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4324,7 +4355,7 @@
   Fan:VariableVolume,
     VAV_1_Fan,               !- Name
     HVACOperationSchd,       !- Availability Schedule Name
-    0.5915,                  !- Fan Efficiency
+    0.5915,                  !- Fan Total Efficiency
     1109.648,                !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     FixedFlowRate,           !- Fan Power Minimum Flow Rate Input Method
@@ -4344,7 +4375,7 @@
   Fan:VariableVolume,
     VAV_2_Fan,               !- Name
     HVACOperationSchd,       !- Availability Schedule Name
-    0.5915,                  !- Fan Efficiency
+    0.5915,                  !- Fan Total Efficiency
     1109.648,                !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     FixedFlowRate,           !- Fan Power Minimum Flow Rate Input Method
@@ -4364,7 +4395,7 @@
   Fan:VariableVolume,
     VAV_3_Fan,               !- Name
     HVACOperationSchd,       !- Availability Schedule Name
-    0.6006,                  !- Fan Efficiency
+    0.6006,                  !- Fan Total Efficiency
     1109.648,                !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     FixedFlowRate,           !- Fan Power Minimum Flow Rate Input Method
@@ -4411,10 +4442,10 @@
   Coil:Cooling:DX:TwoSpeed,
     VAV_1_CoolC DXCoil,      !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated High Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated High Speed Sensible Heat Ratio
-    2.80075668762656,        !- Rated High Speed COP {W/W}
-    AUTOSIZE,                !- Rated High Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- High Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- High Speed Rated Sensible Heat Ratio
+    2.80075668762656,        !- High Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- High Speed Rated Air Flow Rate {m3/s}
     ,                        !- Unit Internal Static Air Pressure {Pa}
     VAV_1_OA-VAV_1_CoolCNode,!- Air Inlet Node Name
     VAV_1_CoolC-VAV_1_HeatCNode,  !- Air Outlet Node Name
@@ -4423,20 +4454,20 @@
     Measured_CoolCStandard10Ton_EIRFT,  !- Energy Input Ratio Function of Temperature Curve Name
     Measured_CoolCStandard10Ton_EIRFFF,  !- Energy Input Ratio Function of Flow Fraction Curve Name
     No_PLR_Degredation,      !- Part Load Fraction Correlation Curve Name
-    AUTOSIZE,                !- Rated Low Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Low Speed Sensible Heat Ratio
-    2.84245529836045,        !- Rated Low Speed COP {W/W}
-    AUTOSIZE,                !- Rated Low Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Low Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Low Speed Gross Rated Sensible Heat Ratio
+    2.84245529836045,        !- Low Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- Low Speed Rated Air Flow Rate {m3/s}
     Measured_LowSpeedCoolCapLSFT,  !- Low Speed Total Cooling Capacity Function of Temperature Curve Name
     Measured_LowSpeedCoolEIRLSFT;  !- Low Speed Energy Input Ratio Function of Temperature Curve Name
 
   Coil:Cooling:DX:TwoSpeed,
     VAV_2_CoolC DXCoil,      !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated High Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated High Speed Sensible Heat Ratio
-    2.80075668762656,        !- Rated High Speed COP {W/W}
-    AUTOSIZE,                !- Rated High Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- High Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- High Speed Rated Sensible Heat Ratio
+    2.80075668762656,        !- High Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- High Speed Rated Air Flow Rate {m3/s}
     ,                        !- Unit Internal Static Air Pressure {Pa}
     VAV_2_OA-VAV_2_CoolCNode,!- Air Inlet Node Name
     VAV_2_CoolC-VAV_2_HeatCNode,  !- Air Outlet Node Name
@@ -4445,20 +4476,20 @@
     Measured_CoolCStandard10Ton_EIRFT,  !- Energy Input Ratio Function of Temperature Curve Name
     Measured_CoolCStandard10Ton_EIRFFF,  !- Energy Input Ratio Function of Flow Fraction Curve Name
     No_PLR_Degredation,      !- Part Load Fraction Correlation Curve Name
-    AUTOSIZE,                !- Rated Low Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Low Speed Sensible Heat Ratio
-    2.84245529836045,        !- Rated Low Speed COP {W/W}
-    AUTOSIZE,                !- Rated Low Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Low Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Low Speed Gross Rated Sensible Heat Ratio
+    2.84245529836045,        !- Low Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- Low Speed Rated Air Flow Rate {m3/s}
     Measured_LowSpeedCoolCapLSFT,  !- Low Speed Total Cooling Capacity Function of Temperature Curve Name
     Measured_LowSpeedCoolEIRLSFT;  !- Low Speed Energy Input Ratio Function of Temperature Curve Name
 
   Coil:Cooling:DX:TwoSpeed,
     VAV_3_CoolC DXCoil,      !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated High Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated High Speed Sensible Heat Ratio
-    2.80075668762656,        !- Rated High Speed COP {W/W}
-    AUTOSIZE,                !- Rated High Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- High Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- High Speed Rated Sensible Heat Ratio
+    2.80075668762656,        !- High Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- High Speed Rated Air Flow Rate {m3/s}
     ,                        !- Unit Internal Static Air Pressure {Pa}
     VAV_3_OA-VAV_3_CoolCNode,!- Air Inlet Node Name
     VAV_3_CoolC-VAV_3_HeatCNode,  !- Air Outlet Node Name
@@ -4467,10 +4498,10 @@
     Measured_CoolCStandard10Ton_EIRFT,  !- Energy Input Ratio Function of Temperature Curve Name
     Measured_CoolCStandard10Ton_EIRFFF,  !- Energy Input Ratio Function of Flow Fraction Curve Name
     No_PLR_Degredation,      !- Part Load Fraction Correlation Curve Name
-    AUTOSIZE,                !- Rated Low Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Low Speed Sensible Heat Ratio
-    2.84245529836045,        !- Rated Low Speed COP {W/W}
-    AUTOSIZE,                !- Rated Low Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Low Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Low Speed Gross Rated Sensible Heat Ratio
+    2.84245529836045,        !- Low Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- Low Speed Rated Air Flow Rate {m3/s}
     Measured_LowSpeedCoolCapLSFT,  !- Low Speed Total Cooling Capacity Function of Temperature Curve Name
     Measured_LowSpeedCoolEIRLSFT;  !- Low Speed Energy Input Ratio Function of Temperature Curve Name
 
@@ -5653,67 +5684,118 @@
     VAV_1,                   !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    0.3,                     !- Minimum System Air Flow Ratio
+    0.3,                     !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     12.8000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     12.8000,                 !- Central Cooling Design Supply Air Temperature {C}
     16.7000,                 !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     VAV_2,                   !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    0.3,                     !- Minimum System Air Flow Ratio
+    0.3,                     !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     12.8000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     12.8000,                 !- Central Cooling Design Supply Air Temperature {C}
     16.7000,                 !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     VAV_3,                   !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    0.3,                     !- Minimum System Air Flow Ratio
+    0.3,                     !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     12.8000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     12.8000,                 !- Central Cooling Design Supply Air Temperature {C}
     16.7000,                 !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Controller:OutdoorAir,
     VAV_1_OA_Controller,     !- Name
@@ -7463,7 +7545,7 @@
     0.663,                   !- District Heating Efficiency
     4.18,                    !- District Cooling COP {W/W}
     0.585,                   !- Steam Conversion Efficiency
-    80.7272,                 !- Total Carbon Equivalent Emission Factor From NOx {kg/kg}
+    80.7272,                 !- Total Carbon Equivalent Emission Factor From N2O {kg/kg}
     6.2727,                  !- Total Carbon Equivalent Emission Factor From CH4 {kg/kg}
     0.2727;                  !- Total Carbon Equivalent Emission Factor From CO2 {kg/kg}
 

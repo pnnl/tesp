@@ -76,7 +76,7 @@
 ! ***GENERAL SIMULATION PARAMETERS***
 ! Number of Zones: 118
 
-  Version,7.2;
+  Version,8.3;
 
   SimulationControl,
     YES,                     !- Do Zone Sizing Calculation
@@ -243,6 +243,7 @@
     25;                      !- Maximum HVAC Iterations
 
   ShadowCalculation,
+    AverageOverDaysInFrequency,  !- Calculation Method
     7,                       !- Calculation Frequency
     15000;                   !- Maximum Figures in Shadow Overlap Calculations
 
@@ -267,7 +268,7 @@
     -2.4,                    !- Maximum Dry-Bulb Temperature {C}
     0.0,                     !- Daily Dry-Bulb Temperature Range {deltaC}
     ,                        !- Dry-Bulb Temperature Range Modifier Type
-    ,                        !- Dry-Bulb Temperature Range Modifier Schedule Name
+    ,                        !- Dry-Bulb Temperature Range Modifier Day Schedule Name
     Wetbulb,                 !- Humidity Condition Type
     -2.4,                    !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
     ,                        !- Humidity Condition Day Schedule Name
@@ -297,7 +298,7 @@
     32,                      !- Maximum Dry-Bulb Temperature {C}
     10.6,                    !- Daily Dry-Bulb Temperature Range {deltaC}
     ,                        !- Dry-Bulb Temperature Range Modifier Type
-    ,                        !- Dry-Bulb Temperature Range Modifier Schedule Name
+    ,                        !- Dry-Bulb Temperature Range Modifier Day Schedule Name
     Wetbulb,                 !- Humidity Condition Type
     26.7,                    !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
     ,                        !- Humidity Condition Day Schedule Name
@@ -16473,6 +16474,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16493,6 +16496,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16513,6 +16518,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16533,6 +16540,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16553,6 +16562,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16573,6 +16584,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16593,6 +16606,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16613,6 +16628,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16633,6 +16650,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16653,6 +16672,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16673,6 +16694,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16693,6 +16716,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16713,6 +16738,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16733,6 +16760,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16753,6 +16782,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16773,6 +16804,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16793,6 +16826,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16813,6 +16848,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16833,6 +16870,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16853,6 +16892,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16873,6 +16914,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16893,6 +16936,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16913,6 +16958,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16933,6 +16980,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16953,6 +17002,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16973,6 +17024,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -16993,6 +17046,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17013,6 +17068,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17033,6 +17090,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17053,6 +17112,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17073,6 +17134,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17093,6 +17156,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17113,6 +17178,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17133,6 +17200,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17153,6 +17222,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17173,6 +17244,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17193,6 +17266,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17213,6 +17288,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17233,6 +17310,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17253,6 +17332,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17273,6 +17354,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17293,6 +17376,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17313,6 +17398,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17333,6 +17420,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17353,6 +17442,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17373,6 +17464,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17393,6 +17486,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17413,6 +17508,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17433,6 +17530,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17453,6 +17552,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17473,6 +17574,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17493,6 +17596,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17513,6 +17618,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17533,6 +17640,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17553,6 +17662,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17573,6 +17684,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17593,6 +17706,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -17613,6 +17728,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -20823,8 +20940,8 @@
     BLDG_EQUIP_SCH,          !- Schedule Name
     Watts/Area,              !- Design Level Calculation Method
     ,                        !- Design Level {W}
-    75.3,                    !- Watts per Zone Floor Area {W/m2}
-    ,                        !- Watts per Person {W/Person}
+    75.3,                    !- Power per Zone Floor Area {W/m2}
+    ,                        !- Power per Person {W/Person}
     0.0000,                  !- Fraction Latent
     0.0000,                  !- Fraction Radiant
     0.5000,                  !- Fraction Lost
@@ -20837,8 +20954,8 @@
     BLDG_EQUIP_SCH,          !- Schedule Name
     Watts/Area,              !- Design Level Calculation Method
     ,                        !- Design Level {W}
-    75.3,                    !- Watts per Zone Floor Area {W/m2}
-    ,                        !- Watts per Person {W/Person}
+    75.3,                    !- Power per Zone Floor Area {W/m2}
+    ,                        !- Power per Person {W/Person}
     0.0000,                  !- Fraction Latent
     0.0000,                  !- Fraction Radiant
     0.5000,                  !- Fraction Lost
@@ -20851,8 +20968,8 @@
     BLDG_EQUIP_SCH,          !- Schedule Name
     Watts/Area,              !- Design Level Calculation Method
     ,                        !- Design Level {W}
-    75.3,                    !- Watts per Zone Floor Area {W/m2}
-    ,                        !- Watts per Person {W/Person}
+    75.3,                    !- Power per Zone Floor Area {W/m2}
+    ,                        !- Power per Person {W/Person}
     0.0000,                  !- Fraction Latent
     0.0000,                  !- Fraction Radiant
     0.5000,                  !- Fraction Lost
@@ -22895,7 +23012,7 @@
   Fan:VariableVolume,
     AHU-1_Fan,               !- Name
     AHU-1_Fan_Sch,           !- Availability Schedule Name
-    0.6045,                  !- Fan Efficiency
+    0.6045,                  !- Fan Total Efficiency
     1515.192,                !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     FixedFlowRate,           !- Fan Power Minimum Flow Rate Input Method
@@ -22915,7 +23032,7 @@
   Fan:VariableVolume,
     AHU-2_Fan,               !- Name
     AHU-2_Fan_Sch,           !- Availability Schedule Name
-    0.6045,                  !- Fan Efficiency
+    0.6045,                  !- Fan Total Efficiency
     1515.192,                !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     FixedFlowRate,           !- Fan Power Minimum Flow Rate Input Method
@@ -22935,7 +23052,7 @@
   Fan:ZoneExhaust,
     Floor 1 Anesthesia Exhaust Fan,  !- Name
     AHU-1_Fan_Sch,           !- Availability Schedule Name
-    0.338,                   !- Fan Efficiency
+    0.338,                   !- Fan Total Efficiency
     125,                     !- Pressure Rise {Pa}
     0.0680,                  !- Maximum Flow Rate {m3/s}
     Floor 1 Anesthesia Exhaust Fan Node,  !- Air Inlet Node Name
@@ -22945,7 +23062,7 @@
   Fan:ZoneExhaust,
     Floor 1 MRI Control Room Exhaust Fan,  !- Name
     AHU-1_Fan_Sch,           !- Availability Schedule Name
-    0.338,                   !- Fan Efficiency
+    0.338,                   !- Fan Total Efficiency
     125,                     !- Pressure Rise {Pa}
     0.0793,                  !- Maximum Flow Rate {m3/s}
     Floor 1 MRI Control Room Exhaust Fan Node,  !- Air Inlet Node Name
@@ -22955,7 +23072,7 @@
   Fan:ZoneExhaust,
     Floor 1 MRI Room Exhaust Fan,  !- Name
     AHU-1_Fan_Sch,           !- Availability Schedule Name
-    0.338,                   !- Fan Efficiency
+    0.338,                   !- Fan Total Efficiency
     125,                     !- Pressure Rise {Pa}
     0.2077,                  !- Maximum Flow Rate {m3/s}
     Floor 1 MRI Room Exhaust Fan Node,  !- Air Inlet Node Name
@@ -22965,7 +23082,7 @@
   Fan:ZoneExhaust,
     Floor 1 Soil Exhaust Fan,!- Name
     AHU-1_Fan_Sch,           !- Availability Schedule Name
-    0.338,                   !- Fan Efficiency
+    0.338,                   !- Fan Total Efficiency
     125,                     !- Pressure Rise {Pa}
     0.0991,                  !- Maximum Flow Rate {m3/s}
     Floor 1 Soil Exhaust Fan Node,  !- Air Inlet Node Name
@@ -22975,7 +23092,7 @@
   Fan:ZoneExhaust,
     Floor 1 Soil Hold Exhaust Fan,  !- Name
     AHU-1_Fan_Sch,           !- Availability Schedule Name
-    0.338,                   !- Fan Efficiency
+    0.338,                   !- Fan Total Efficiency
     125,                     !- Pressure Rise {Pa}
     0.0440,                  !- Maximum Flow Rate {m3/s}
     Floor 1 Soil Hold Exhaust Fan Node,  !- Air Inlet Node Name
@@ -22985,7 +23102,7 @@
   Fan:ZoneExhaust,
     Floor 1 Soil Work Exhaust Fan,  !- Name
     AHU-1_Fan_Sch,           !- Availability Schedule Name
-    0.338,                   !- Fan Efficiency
+    0.338,                   !- Fan Total Efficiency
     125,                     !- Pressure Rise {Pa}
     0.1416,                  !- Maximum Flow Rate {m3/s}
     Floor 1 Soil Work Exhaust Fan Node,  !- Air Inlet Node Name
@@ -22995,10 +23112,10 @@
   Coil:Cooling:DX:TwoSpeed,
     AHU-1_CoolC DXCoil,      !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated High Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated High Speed Sensible Heat Ratio
-    2.73414686134499,        !- Rated High Speed COP {W/W}
-    AUTOSIZE,                !- Rated High Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- High Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- High Speed Rated Sensible Heat Ratio
+    2.73414686134499,        !- High Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- High Speed Rated Air Flow Rate {m3/s}
     ,                        !- Unit Internal Static Air Pressure {Pa}
     AHU-1_OA-AHU-1_CoolCNode,!- Air Inlet Node Name
     AHU-1_CoolC-AHU-1_HeatCNode,  !- Air Outlet Node Name
@@ -23007,20 +23124,20 @@
     Measured_CoolCStandard10Ton_EIRFT,  !- Energy Input Ratio Function of Temperature Curve Name
     Measured_CoolCStandard10Ton_EIRFFF,  !- Energy Input Ratio Function of Flow Fraction Curve Name
     No_PLR_Degredation,      !- Part Load Fraction Correlation Curve Name
-    AUTOSIZE,                !- Rated Low Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Low Speed Sensible Heat Ratio
-    2.77485376250645,        !- Rated Low Speed COP {W/W}
-    AUTOSIZE,                !- Rated Low Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Low Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Low Speed Gross Rated Sensible Heat Ratio
+    2.77485376250645,        !- Low Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- Low Speed Rated Air Flow Rate {m3/s}
     Measured_LowSpeedCoolCapLSFT,  !- Low Speed Total Cooling Capacity Function of Temperature Curve Name
     Measured_LowSpeedCoolEIRLSFT;  !- Low Speed Energy Input Ratio Function of Temperature Curve Name
 
   Coil:Cooling:DX:TwoSpeed,
     AHU-2_CoolC DXCoil,      !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated High Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated High Speed Sensible Heat Ratio
-    2.73414686134499,        !- Rated High Speed COP {W/W}
-    AUTOSIZE,                !- Rated High Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- High Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- High Speed Rated Sensible Heat Ratio
+    2.73414686134499,        !- High Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- High Speed Rated Air Flow Rate {m3/s}
     ,                        !- Unit Internal Static Air Pressure {Pa}
     AHU-2_OA-AHU-2_CoolCNode,!- Air Inlet Node Name
     AHU-2_CoolC-AHU-2_HeatCNode,  !- Air Outlet Node Name
@@ -23029,10 +23146,10 @@
     Measured_CoolCStandard10Ton_EIRFT,  !- Energy Input Ratio Function of Temperature Curve Name
     Measured_CoolCStandard10Ton_EIRFFF,  !- Energy Input Ratio Function of Flow Fraction Curve Name
     No_PLR_Degredation,      !- Part Load Fraction Correlation Curve Name
-    AUTOSIZE,                !- Rated Low Speed Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Low Speed Sensible Heat Ratio
-    2.77485376250645,        !- Rated Low Speed COP {W/W}
-    AUTOSIZE,                !- Rated Low Speed Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Low Speed Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Low Speed Gross Rated Sensible Heat Ratio
+    2.77485376250645,        !- Low Speed Gross Rated Cooling COP {W/W}
+    AUTOSIZE,                !- Low Speed Rated Air Flow Rate {m3/s}
     Measured_LowSpeedCoolCapLSFT,  !- Low Speed Total Cooling Capacity Function of Temperature Curve Name
     Measured_LowSpeedCoolEIRLSFT;  !- Low Speed Energy Input Ratio Function of Temperature Curve Name
 
@@ -29706,45 +29823,79 @@
     AHU-1,                   !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     7.2000,                  !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1,                    !- Central Cooling Design Supply Air Temperature {C}
     16.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.007,                   !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.007,                   !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    ,                        !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    ,                        !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    ,                        !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    ,                        !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     AHU-2,                   !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    0.3000,                  !- Minimum System Air Flow Ratio
+    0.3000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1,                    !- Central Cooling Design Supply Air Temperature {C}
     16.0,                    !- Central Heating Design Supply Air Temperature {C}
-    Coincident,              !- Sizing Option
+    Coincident,              !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0078,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0078,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    ,                        !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    ,                        !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    ,                        !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    ,                        !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Controller:OutdoorAir,
     AHU-1_OA_Controller,     !- Name
@@ -32151,6 +32302,13 @@
 
 ! ***EQUIPMENT***
 
+  Output:PreprocessorMessage,
+    Conversion 7.2 => 8.0,   !- Preprocessor Name
+    Warning,                 !- Error Severity
+    Boiler:HotWater="HeatSys1 Boiler",  !- Message Line 1
+    defaults for this object have changed. Results may be different than previous. See,  !- Message Line 2
+    InputOutputReference document for details.;  !- Message Line 3
+
   Boiler:HotWater,
     HeatSys1 Boiler,         !- Name
     NATURALGAS,              !- Fuel Type
@@ -32166,7 +32324,7 @@
     HeatSys1 Pump-HeatSys1 BoilerNode,  !- Boiler Water Inlet Node Name
     HeatSys1 Supply Equipment Outlet Node,  !- Boiler Water Outlet Node Name
     95.0,                    !- Water Outlet Upper Temperature Limit {C}
-    VariableFlow,            !- Boiler Flow Mode
+    LeavingSetpointModulated,!- Boiler Flow Mode
     0.0000,                  !- Parasitic Electric Load {W}
     0.3000;                  !- Sizing Factor
 
@@ -34208,7 +34366,7 @@
     0.663,                   !- District Heating Efficiency
     4.18,                    !- District Cooling COP {W/W}
     0.585,                   !- Steam Conversion Efficiency
-    80.7272,                 !- Total Carbon Equivalent Emission Factor From NOx {kg/kg}
+    80.7272,                 !- Total Carbon Equivalent Emission Factor From N2O {kg/kg}
     6.2727,                  !- Total Carbon Equivalent Emission Factor From CH4 {kg/kg}
     0.2727;                  !- Total Carbon Equivalent Emission Factor From CO2 {kg/kg}
 

@@ -65,7 +65,7 @@
 ! ***GENERAL SIMULATION PARAMETERS***
 ! Number of Zones: 27
 
-  Version,7.2;
+  Version,8.3;
 
   SimulationControl,
     YES,                     !- Do Zone Sizing Calculation
@@ -232,6 +232,7 @@
     25;                      !- Maximum HVAC Iterations
 
   ShadowCalculation,
+    AverageOverDaysInFrequency,  !- Calculation Method
     7,                       !- Calculation Frequency
     15000;                   !- Maximum Figures in Shadow Overlap Calculations
 
@@ -256,7 +257,7 @@
     -2.4,                    !- Maximum Dry-Bulb Temperature {C}
     0.0,                     !- Daily Dry-Bulb Temperature Range {deltaC}
     ,                        !- Dry-Bulb Temperature Range Modifier Type
-    ,                        !- Dry-Bulb Temperature Range Modifier Schedule Name
+    ,                        !- Dry-Bulb Temperature Range Modifier Day Schedule Name
     Wetbulb,                 !- Humidity Condition Type
     -2.4,                    !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
     ,                        !- Humidity Condition Day Schedule Name
@@ -286,7 +287,7 @@
     32,                      !- Maximum Dry-Bulb Temperature {C}
     10.6,                    !- Daily Dry-Bulb Temperature Range {deltaC}
     ,                        !- Dry-Bulb Temperature Range Modifier Type
-    ,                        !- Dry-Bulb Temperature Range Modifier Schedule Name
+    ,                        !- Dry-Bulb Temperature Range Modifier Day Schedule Name
     Wetbulb,                 !- Humidity Condition Type
     26.7,                    !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
     ,                        !- Humidity Condition Day Schedule Name
@@ -4677,6 +4678,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4697,6 +4700,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4717,6 +4722,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4737,6 +4744,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4757,6 +4766,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4777,6 +4788,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4797,6 +4810,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4817,6 +4832,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4837,6 +4854,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4857,6 +4876,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4877,6 +4898,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4897,6 +4920,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4917,6 +4942,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4937,6 +4964,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4957,6 +4986,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4977,6 +5008,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -4997,6 +5030,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -5017,6 +5052,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -5037,6 +5074,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -5057,6 +5096,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -5077,6 +5118,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -5097,6 +5140,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -5117,6 +5162,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -5137,6 +5184,8 @@
     ZoneAveraged,            !- Mean Radiant Temperature Calculation Type
     ,                        !- Surface Name/Angle Factor List Name
     WORK_EFF_SCH,            !- Work Efficiency Schedule Name
+    ClothingInsulationSchedule,  !- Clothing Insulation Calculation Method
+    ,                        !- Clothing Insulation Calculation Method Schedule Name
     CLOTHING_SCH,            !- Clothing Insulation Schedule Name
     AIR_VELO_SCH,            !- Air Velocity Schedule Name
     FANGER;                  !- Thermal Comfort Model 1 Type
@@ -6618,7 +6667,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:01_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6632,7 +6681,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:02_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6646,7 +6695,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:03_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6660,7 +6709,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:04_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6674,7 +6723,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:05_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6688,7 +6737,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:06_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6702,7 +6751,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:07_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6716,7 +6765,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:08_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6730,7 +6779,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:09_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6744,7 +6793,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:10_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6758,7 +6807,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:11_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6772,7 +6821,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:12_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6786,7 +6835,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:13_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6800,7 +6849,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:14_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6814,7 +6863,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:15_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6828,7 +6877,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:16_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6842,7 +6891,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:17_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6856,7 +6905,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:18_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6870,7 +6919,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:19_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6884,7 +6933,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:20_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6898,7 +6947,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:21_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6912,7 +6961,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:22_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6926,7 +6975,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:23_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -6940,7 +6989,7 @@
   Fan:OnOff,
     SPLITSYSTEMAC:24_Unitary_Package_fan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     622.0,                   !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -7146,9 +7195,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:01_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:01_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7162,9 +7211,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:02_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:02_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7178,9 +7227,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:03_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:03_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7194,9 +7243,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:04_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:04_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7210,9 +7259,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:05_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:05_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7226,9 +7275,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:06_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:06_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7242,9 +7291,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:07_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:07_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7258,9 +7307,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:08_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:08_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7274,9 +7323,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:09_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:09_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7290,9 +7339,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:10_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:10_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7306,9 +7355,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:11_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:11_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7322,9 +7371,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:12_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:12_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7338,9 +7387,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:13_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:13_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7354,9 +7403,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:14_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:14_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7370,9 +7419,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:15_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:15_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7386,9 +7435,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:16_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:16_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7402,9 +7451,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:17_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:17_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7418,9 +7467,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:18_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:18_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7434,9 +7483,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:19_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:19_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7450,9 +7499,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:20_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:20_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7466,9 +7515,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:21_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:21_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7482,9 +7531,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:22_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:22_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7498,9 +7547,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:23_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:23_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7514,9 +7563,9 @@
   Coil:Cooling:DX:SingleSpeed,
     SPLITSYSTEMAC:24_Unitary_Package_CoolCoil,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    AUTOSIZE,                !- Rated Total Cooling Capacity {W}
-    AUTOSIZE,                !- Rated Sensible Heat Ratio
-    3.13380581903442,        !- Rated COP {W/W}
+    AUTOSIZE,                !- Gross Rated Total Cooling Capacity {W}
+    AUTOSIZE,                !- Gross Rated Sensible Heat Ratio
+    3.13380581903442,        !- Gross Rated Cooling COP {W/W}
     AUTOSIZE,                !- Rated Air Flow Rate {m3/s}
     ,                        !- Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
     SPLITSYSTEMAC:24_Unitary_PackageCoolCoil air inlet,  !- Air Inlet Node Name
@@ -7535,9 +7584,10 @@
     Fan:ConstantVolume,      !- Supply Air Fan Object Type
     G Corridor Unit HeaterFan,  !- Supply Air Fan Name
     AUTOSIZE,                !- Maximum Supply Air Flow Rate {m3/s}
-    OnOff,                   !- Fan Control Type
     Coil:Heating:Electric,   !- Heating Coil Object Type
     G Corridor Unit Heater coil,  !- Heating Coil Name
+    ,                        !- Supply Air Fan Operating Mode Schedule Name
+    No,                      !- Supply Air Fan Operation During No Heating
     AUTOSIZE,                !- Maximum Hot Water or Steam Flow Rate {m3/s}
     0.0,                     !- Minimum Hot Water or Steam Flow Rate {m3/s}
     0.001,                   !- Heating Convergence Tolerance
@@ -7551,9 +7601,10 @@
     Fan:ConstantVolume,      !- Supply Air Fan Object Type
     M Corridor Unit HeaterFan,  !- Supply Air Fan Name
     AUTOSIZE,                !- Maximum Supply Air Flow Rate {m3/s}
-    OnOff,                   !- Fan Control Type
     Coil:Heating:Electric,   !- Heating Coil Object Type
     M Corridor Unit Heater coil,  !- Heating Coil Name
+    ,                        !- Supply Air Fan Operating Mode Schedule Name
+    No,                      !- Supply Air Fan Operation During No Heating
     AUTOSIZE,                !- Maximum Hot Water or Steam Flow Rate {m3/s}
     0.0,                     !- Minimum Hot Water or Steam Flow Rate {m3/s}
     0.001,                   !- Heating Convergence Tolerance
@@ -7567,9 +7618,10 @@
     Fan:ConstantVolume,      !- Supply Air Fan Object Type
     T Corridor Unit HeaterFan,  !- Supply Air Fan Name
     AUTOSIZE,                !- Maximum Supply Air Flow Rate {m3/s}
-    OnOff,                   !- Fan Control Type
     Coil:Heating:Electric,   !- Heating Coil Object Type
     T Corridor Unit Heater coil,  !- Heating Coil Name
+    ,                        !- Supply Air Fan Operating Mode Schedule Name
+    No,                      !- Supply Air Fan Operation During No Heating
     AUTOSIZE,                !- Maximum Hot Water or Steam Flow Rate {m3/s}
     0.0,                     !- Minimum Hot Water or Steam Flow Rate {m3/s}
     0.001,                   !- Heating Convergence Tolerance
@@ -7602,7 +7654,7 @@
   Fan:ConstantVolume,
     G Corridor Unit HeaterFan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     49.8,                    !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -7614,7 +7666,7 @@
   Fan:ConstantVolume,
     M Corridor Unit HeaterFan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     49.8,                    !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -7626,7 +7678,7 @@
   Fan:ConstantVolume,
     T Corridor Unit HeaterFan,  !- Name
     ALWAYS_ON,               !- Availability Schedule Name
-    0.53625,                 !- Fan Efficiency
+    0.53625,                 !- Fan Total Efficiency
     49.8,                    !- Pressure Rise {Pa}
     AUTOSIZE,                !- Maximum Flow Rate {m3/s}
     0.825,                   !- Motor Efficiency
@@ -9231,529 +9283,937 @@
     SPLITSYSTEMAC:01,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:02,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:03,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:04,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:05,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:06,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:07,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:08,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:09,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:10,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:11,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:12,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:13,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:14,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:15,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:16,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:17,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:18,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:19,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:20,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:21,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:22,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:23,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Sizing:System,
     SPLITSYSTEMAC:24,        !- AirLoop Name
     Sensible,                !- Type of Load to Size On
     AUTOSIZE,                !- Design Outdoor Air Flow Rate {m3/s}
-    1.0000,                  !- Minimum System Air Flow Ratio
+    1.0000,                  !- Central Heating Maximum System Air Flow Ratio
     7.0,                     !- Preheat Design Temperature {C}
     0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Precool Design Temperature {C}
     0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
     11.1000,                 !- Central Cooling Design Supply Air Temperature {C}
     40.0,                    !- Central Heating Design Supply Air Temperature {C}
-    NonCoincident,           !- Sizing Option
+    NonCoincident,           !- Type of Zone Sum to Use
     No,                      !- 100% Outdoor Air in Cooling
     No,                      !- 100% Outdoor Air in Heating
     0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
     0.0080,                  !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
-    DesignDay,               !- Cooling Design Air Flow Method
-    0.0,                     !- Cooling Design Air Flow Rate {m3/s}
-    DesignDay,               !- Heating Design Air Flow Method
-    0.0,                     !- Heating Design Air Flow Rate {m3/s}
-    ZoneSum;                 !- System Outdoor Air Method
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0.0,                     !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0.0,                     !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1.0,                     !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    autosize,                !- Cooling Design Capacity {W}
+    ,                        !- Cooling Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    autosize,                !- Heating Design Capacity {W}
+    ,                        !- Heating Design Capacity Per Floor Area {W/m2}
+    ,                        !- Fraction of Autosized Heating Design Capacity
+    OnOff;                   !- Central Cooling Capacity Control Method
 
   Controller:OutdoorAir,
     SPLITSYSTEMAC:01_OA_Controller,  !- Name
@@ -10625,9 +11085,9 @@
     SPLITSYSTEMAC:01 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     G SW Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:01_Unitary_Package_fan,  !- Supply Fan Name
@@ -10647,9 +11107,9 @@
     SPLITSYSTEMAC:02 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     G NW Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:02_Unitary_Package_fan,  !- Supply Fan Name
@@ -10669,9 +11129,9 @@
     SPLITSYSTEMAC:03 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Office_Operation,        !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     Office,                  !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:03_Unitary_Package_fan,  !- Supply Fan Name
@@ -10691,9 +11151,9 @@
     SPLITSYSTEMAC:04 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     G NE Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:04_Unitary_Package_fan,  !- Supply Fan Name
@@ -10713,9 +11173,9 @@
     SPLITSYSTEMAC:05 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     G N1 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:05_Unitary_Package_fan,  !- Supply Fan Name
@@ -10735,9 +11195,9 @@
     SPLITSYSTEMAC:06 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     G N2 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:06_Unitary_Package_fan,  !- Supply Fan Name
@@ -10757,9 +11217,9 @@
     SPLITSYSTEMAC:07 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     G S1 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:07_Unitary_Package_fan,  !- Supply Fan Name
@@ -10779,9 +11239,9 @@
     SPLITSYSTEMAC:08 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     G S2 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:08_Unitary_Package_fan,  !- Supply Fan Name
@@ -10801,9 +11261,9 @@
     SPLITSYSTEMAC:09 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     M SW Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:09_Unitary_Package_fan,  !- Supply Fan Name
@@ -10823,9 +11283,9 @@
     SPLITSYSTEMAC:10 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     M NW Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:10_Unitary_Package_fan,  !- Supply Fan Name
@@ -10845,9 +11305,9 @@
     SPLITSYSTEMAC:11 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     M SE Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:11_Unitary_Package_fan,  !- Supply Fan Name
@@ -10867,9 +11327,9 @@
     SPLITSYSTEMAC:12 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     M NE Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:12_Unitary_Package_fan,  !- Supply Fan Name
@@ -10889,9 +11349,9 @@
     SPLITSYSTEMAC:13 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     M N1 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:13_Unitary_Package_fan,  !- Supply Fan Name
@@ -10911,9 +11371,9 @@
     SPLITSYSTEMAC:14 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     M N2 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:14_Unitary_Package_fan,  !- Supply Fan Name
@@ -10933,9 +11393,9 @@
     SPLITSYSTEMAC:15 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     M S1 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:15_Unitary_Package_fan,  !- Supply Fan Name
@@ -10955,9 +11415,9 @@
     SPLITSYSTEMAC:16 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     M S2 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:16_Unitary_Package_fan,  !- Supply Fan Name
@@ -10977,9 +11437,9 @@
     SPLITSYSTEMAC:17 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     T SW Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:17_Unitary_Package_fan,  !- Supply Fan Name
@@ -10999,9 +11459,9 @@
     SPLITSYSTEMAC:18 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     T NW Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:18_Unitary_Package_fan,  !- Supply Fan Name
@@ -11021,9 +11481,9 @@
     SPLITSYSTEMAC:19 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     T SE Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:19_Unitary_Package_fan,  !- Supply Fan Name
@@ -11043,9 +11503,9 @@
     SPLITSYSTEMAC:20 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     T NE Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:20_Unitary_Package_fan,  !- Supply Fan Name
@@ -11065,9 +11525,9 @@
     SPLITSYSTEMAC:21 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     T N1 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:21_Unitary_Package_fan,  !- Supply Fan Name
@@ -11087,9 +11547,9 @@
     SPLITSYSTEMAC:22 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     T N2 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:22_Unitary_Package_fan,  !- Supply Fan Name
@@ -11109,9 +11569,9 @@
     SPLITSYSTEMAC:23 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     T S1 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:23_Unitary_Package_fan,  !- Supply Fan Name
@@ -11131,9 +11591,9 @@
     SPLITSYSTEMAC:24 Supply Equipment Outlet Node,  !- Unitary System Air Outlet Node Name
     Apt_Operation,           !- Supply Air Fan Operating Mode Schedule Name
     AUTOSIZE,                !- Maximum Supply Air Temperature {C}
-    AUTOSIZE,                !- Supply Air Flow Rate During Cooling Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate During Heating Operation {m3/s}
-    AUTOSIZE,                !- Supply Air Flow Rate When No Cooling or Heating is Needed {m3/s}
+    AUTOSIZE,                !- Cooling Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- Heating Supply Air Flow Rate {m3/s}
+    AUTOSIZE,                !- No Load Supply Air Flow Rate {m3/s}
     T S2 Apartment,          !- Controlling Zone or Thermostat Location
     Fan:OnOff,               !- Supply Fan Object Type
     SPLITSYSTEMAC:24_Unitary_Package_fan,  !- Supply Fan Name
@@ -15085,7 +15545,7 @@
     0.663,                   !- District Heating Efficiency
     4.18,                    !- District Cooling COP {W/W}
     0.585,                   !- Steam Conversion Efficiency
-    80.7272,                 !- Total Carbon Equivalent Emission Factor From NOx {kg/kg}
+    80.7272,                 !- Total Carbon Equivalent Emission Factor From N2O {kg/kg}
     6.2727,                  !- Total Carbon Equivalent Emission Factor From CH4 {kg/kg}
     0.2727;                  !- Total Carbon Equivalent Emission Factor From CO2 {kg/kg}
 
