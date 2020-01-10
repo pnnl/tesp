@@ -45,7 +45,7 @@ def process_eplus(nameroot):
     times.sort()
     print ("There are", len (times), "sample times at", times[1] - times[0], "seconds")
 
-    # parse the metadata for 11 things of specific interest
+    # parse the metadata for 13 things of specific interest
     for key, val in meta.items():
         if key == 'electric_demand_power_avg':
             ELECTRIC_DEMAND_IDX = val['index']
@@ -71,6 +71,9 @@ def process_eplus(nameroot):
         elif key == 'cooling_controlled_load_avg':
             COOLING_POWER_IDX = val['index']
             COOLING_POWER_UNITS = val['units']
+        elif key == 'cooling_power_state_avg':
+            COOLING_STATE_IDX = val['index']
+            COOLING_STATE_UNITS = val['units']
         elif key == 'heating_desired_temperature_avg':
             HEATING_SETPOINT_IDX = val['index']
             HEATING_SETPOINT_UNITS = val['units']
@@ -83,6 +86,9 @@ def process_eplus(nameroot):
         elif key == 'heating_controlled_load_avg':
             HEATING_POWER_IDX = val['index']
             HEATING_POWER_UNITS = val['units']
+        elif key == 'heating_power_state_avg':
+            HEATING_STATE_IDX = val['index']
+            HEATING_STATE_UNITS = val['units']
 
     # make sure we found the metric indices of interest
     ary = lst['3600']['SchoolDualController']
@@ -117,34 +123,50 @@ def process_eplus(nameroot):
     print ('Average heating delta =', data[:,HEATING_DELTA_IDX].mean(), HEATING_DELTA_UNITS)
 
     # display a plot
-    fig, ax = plt.subplots(4,1, sharex = 'col')
+    fig, ax = plt.subplots(4,2, sharex = 'col')
 
-    ax[0].plot(hrs, data[:,COOLING_TEMPERATURE_IDX], color='blue', label='Actual')
-    ax[0].plot(hrs, data[:,COOLING_SETPOINT_IDX], color='red', label='Setpoint')
-    ax[0].plot(hrs, data[:,COOLING_DELTA_IDX], color='green', label='Delta')
-    ax[0].set_ylabel(COOLING_TEMPERATURE_UNITS)
-    ax[0].set_title ('Cooling System Temperatures')
-    ax[0].legend(loc='best')
+    ax[0,0].plot(hrs, data[:,COOLING_TEMPERATURE_IDX], color='blue', label='Actual')
+    ax[0,0].plot(hrs, data[:,COOLING_SETPOINT_IDX], color='red', label='Setpoint')
+    ax[0,0].plot(hrs, data[:,COOLING_DELTA_IDX], color='green', label='Delta')
+    ax[0,0].set_ylabel(COOLING_TEMPERATURE_UNITS)
+    ax[0,0].set_title ('Cooling System Temperatures')
+    ax[0,0].legend(loc='best')
 
-    ax[1].plot(hrs, data[:,HEATING_TEMPERATURE_IDX], color='blue', label='Actual')
-    ax[1].plot(hrs, data[:,HEATING_SETPOINT_IDX], color='red', label='Setpoint')
-    ax[1].plot(hrs, data[:,HEATING_DELTA_IDX], color='green', label='Delta')
-    ax[1].set_ylabel(HEATING_TEMPERATURE_UNITS)
-    ax[1].set_title ('Heating System Temperatures')
-    ax[1].legend(loc='best')
+    ax[1,0].plot(hrs, data[:,HEATING_SETPOINT_IDX], color='red', label='Setpoint')
+    ax[1,0].plot(hrs, data[:,HEATING_TEMPERATURE_IDX], color='blue', label='Actual')
+    ax[1,0].plot(hrs, data[:,HEATING_DELTA_IDX], color='green', label='Delta')
+    ax[1,0].set_ylabel(HEATING_TEMPERATURE_UNITS)
+    ax[1,0].set_title ('Heating System Temperatures')
+    ax[1,0].legend(loc='best')
 
-    ax[2].plot(hrs, data[:,PRICE_IDX], color='blue', label='Actual')
-    ax[2].set_ylabel(PRICE_UNITS)
-    ax[2].set_title ('Real-time Price')
+    ax[2,0].plot(hrs, data[:,PRICE_IDX], color='blue', label='Actual')
+    ax[2,0].set_ylabel(PRICE_UNITS)
+    ax[2,0].set_title ('Real-time Price')
 
-    ax[3].plot(hrs, 0.001 * data[:,COOLING_POWER_IDX], color='blue', label='Cooling')
-    ax[3].plot(hrs, 0.001 * data[:,HEATING_POWER_IDX], color='red', label='Heating')
-    ax[3].plot(hrs, 0.001 * data[:,ELECTRIC_DEMAND_IDX], color='green', label='Total')
-    ax[3].set_ylabel('kW')
-    ax[3].set_title ('Building Demand')
-    ax[3].legend(loc='best')
+    ax[3,0].plot(hrs, 0.001 * data[:,COOLING_POWER_IDX], color='blue', label='Cooling')
+    ax[3,0].plot(hrs, 0.001 * data[:,HEATING_POWER_IDX], color='red', label='Heating')
+    ax[3,0].plot(hrs, 0.001 * data[:,ELECTRIC_DEMAND_IDX], color='green', label='Total')
+    ax[3,0].set_ylabel('kW')
+    ax[3,0].set_title ('Building Demand')
+    ax[3,0].legend(loc='best')
 
-    ax[3].set_xlabel('Hours')
+    ax[3,0].set_xlabel('Hours')
+
+    ax[0,1].plot(hrs, data[:,OCCUPANTS_IDX], color='blue')
+    ax[0,1].set_ylabel(OCCUPANTS_UNITS)
+    ax[0,1].set_title ('Occupants')
+
+    ax[1,1].plot(hrs, data[:,ASHRAE_HOURS_IDX], color='blue')
+    ax[1,1].set_ylabel(ASHRAE_HOURS_UNITS)
+    ax[1,1].set_title ('Uncomfortable Hours')
+
+    ax[2,1].plot(hrs, data[:,HEATING_STATE_IDX], color='blue', label='Cooling')
+    ax[2,1].plot(hrs, data[:,COOLING_STATE_IDX], color='red', label='Heating')
+    ax[2,1].set_ylabel(HEATING_STATE_UNITS)
+    ax[2,1].set_title ('HVAC States')
+    ax[2,1].legend(loc='best')
+
+    ax[3,1].set_xlabel('Hours')
 
     plt.show()
 
