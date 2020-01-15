@@ -72,7 +72,7 @@ Your Java version may have removed *javah*.  If that's the case, use *javac -h* 
 
  cd ../fncs
  autoreconf -isf
- ./configure --with-zmq=/usr/local --with-czmq=/usr/local 'CPP=gcc-9 -E' 'CXXPP=g++-9 -E' 'CC=gcc-9' 'CXX=g++-9' 'CXXFLAGS=-w -O0 -mmacosx-version-min=10.12' 'CFLAGS=-w -O0 -mmacosx-version-min=10.12'
+ ./configure --with-zmq=/usr/local --with-czmq=/usr/local 'CPP=gcc-9 -E' 'CXXPP=g++-9 -E' 'CC=gcc-9' 'CXX=g++-9' 'CXXFLAGS=-w -O2 -mmacosx-version-min=10.12' 'CFLAGS=-w -O2 -mmacosx-version-min=10.12'
  make
  sudo make install
 
@@ -90,7 +90,6 @@ To build HELICS:
 
 ::
 
- # brew install swig
  cd ~/src/HELICS-src
  rm -r build
  mkdir build
@@ -123,20 +122,12 @@ adding *-std=c++14* to *CXXFLAGS*.
 
 ::
 
+ brew install xerces-c
+
  cd ~/src/gridlab-d
  autoreconf -isf
 
- # cd third_party
- # tar -xvzf xerces-c-3.2.0.tar.gz
- # cd xerces-c-3.2.0
- # ./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w' 'CFLAGS=-w'
- # make
- # sudo make install
- # cd ../..
-
- # consider -g flags for CXX, C and LD if debugging
-
- ./configure --with-fncs=/usr/local --with-helics=/usr/local --enable-silent-rules 'CPP=gcc-9 -E' 'CXXPP=g++-9 -E' 'CC=gcc-9' 'CXX=g++-9' 'CXXFLAGS=-O0 -w -std=c++14' 'CFLAGS=-O0 -w' LDFLAGS='-w'
+ ./configure --with-fncs=/usr/local --with-helics=/usr/local --enable-silent-rules 'CPP=gcc-9 -E' 'CXXPP=g++-9 -E' 'CC=gcc-9' 'CXX=g++-9' 'CXXFLAGS=-O2 -w -std=c++14' 'CFLAGS=-O2 -w' LDFLAGS='-w'
 
  sudo make
  sudo make install
