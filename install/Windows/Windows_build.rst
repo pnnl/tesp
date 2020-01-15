@@ -18,31 +18,29 @@ When you finish the build, try :ref:`RunExamples`.
 Install Python Packages and Java
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Download and install the 64-bit Miniconda installer, for Python 3.6 or later, from
-https://conda.io/miniconda.html
+Download and install the 64-bit Miniconda installer, for Python 3.7 or later, from
+https://conda.io/miniconda.html. Install to c:\Miniconda3, for easier use with MSYS2.
 
 Then from a command prompt:
 
 ::
 
 	conda update conda
-	conda install pandas
 	# tesp_support, including verification of PYPOWER dependency
 	pip install tesp_support --upgrade
 	opf
 
-Download and install the Java Development Kit (8u191 suggested, with Public JRE) from 
-http://www.oracle.com/technetwork/java/javase/downloads/index.html
+Download and install the Java Development Kit (11.0.5 suggested) from Oracle.
 
-- for MSYS2, install to a folder without spaces, such as c:\Java\jdk1.8.0_191
+- for MSYS2, install to a folder without spaces, such as c:\Java\jdk-11.0.5\
 - the Oracle javapath doesn't work for MSYS2, and it doesn't find javac in Windows
-- c:\Java\jdk1.8.0_191\bin should be added to your path
+- c:\Java\jdk-11.0.5\bin should be added to your path
 
 Set Up the Build Environment and Code Repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These instructions are based on https://github.com/gridlab-d/gridlab-d/blob/develop/BuildingGridlabdOnWindowsWithMsys2.docx
-For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
+For TESP, we're going to build with FNCS and HELICS, but not MATLAB or MySQL.
 
 - Install a 64-bit version of MSYS2 from https://www.msys2.org. Accept all of the defaults.
 - Start the MSYS2 environment from the Start Menu shortcut for "MSYS2 MSYS"
@@ -62,11 +60,8 @@ For TESP, we're going to build with FNCS, but not with HELICS, MATLAB or MySQL.
  pacman -S --needed mingw-w64-x86_64-xerces-c
  pacman -S --needed mingw-w64-x86_64-dlfcn
  pacman -S --needed mingw-w64-x86_64-cmake
- pacman -S --needed mingw-w64-x86_64-cmake-gui
  pacman -S --needed git jsoncpp
- pacman -S --needed mingw64/mingw-w64-x86_64-zeromq
- pacman -S --needed mingw64/mingw-w64-x86_64-boost
- pacman -S --needed mingw64/mingw-w64-x86_64-swig
+ pacman -S --needed mingw64/mingw-w64-x86_64-zeromq  
 
 - Exit MSYS2 and restart from a different Start Menu shortcut for MSYS2 MinGW 64-bit
 - You may wish to create a desktop shortcut for the 64-bit environment, as you will use it often
@@ -105,7 +100,7 @@ Java and Python.
 
 ::
 
- PATH="/c/Java/jdk1.8.0_191/bin:${PATH}"
+ PATH="/c/Java/jdk-11.0.5/bin:${PATH}"
  PATH="/c/Users/Tom/Miniconda3:${PATH}"
  PATH="/c/Users/Tom/Miniconda3/Scripts:${PATH}"
  PATH="/c/Users/Tom/Miniconda3/Library/mingw-w64/bin:${PATH}"
@@ -124,29 +119,20 @@ The next time you open MSYS2, verify the preceeding as follows:
 Build FNCS and HELICS Link with GridLAB-D
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ZeroMQ 4.2.5 and CZMQ 4.1.1 required from https://github.com/zeromq/libzmq/releases
-and https://github.com/zeromq/czmq/releases
+ZeroMQ has already been installed with pacman to use with both FNCS and HELICS. 
 
-Build ZeroMQ first: 
-
-::
-
- cd /c/src
- tar -xzf zeromq-4.2.5.tar.gz
- cd zeromq-4.2.5
- ./configure --prefix=/usr/local 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w'
- make
- make install
-
-CZMQ next, with customized libraries to link (don't use lz4 compression until we are prepared to deploy it): 
+For FNCS, we still need to download CZMQ 4.1.1 source code from https://github.com/zeromq/czmq/releases
+We aren't prepared to deploy lz4 compression, and we have to specifiy custom libraries to link on Windows.
 
 ::
 
  cd /c/src
  tar -xzf czmq-4.1.1.tar.gz
  cd czmq-4.1.1
- // edit /usr/local/lib/pkgconfig/libzmq.pc to read Libs: -L${libdir} -lzmq -lws2_32 -liphlpapi -lrpcrt4
- ./configure --prefix=/usr/local --with-liblz4=no --with-libzmq=/usr/local 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w' 'PKG_CONFIG_PATH=/usr/local/lib/pkgconfig'
+ // edit two lines of c:/msys64/mingw64/lib/pkgconfig/libzmq.pc so they read 
+ //    Libs: -L${libdir} -lzmq -lws2_32 -liphlpapi -lpthread -lrpcrt4
+ //    Libs.private: -lstdc++
+ ./configure --prefix=/usr/local --with-liblz4=no 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w'
  make
  make install
 
@@ -157,36 +143,30 @@ Now build FNCS:
  cd /c/src
  cd fncs
  autoreconf -if
- ./configure --prefix=/usr/local --with-zmq=/usr/local 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w'
+ ./configure --prefix=/usr/local --with-czmq=/usr/local 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w'
  make
  make install
 
-Use manual commands for the Java FNCS Binding on Windows, because the Linux/Mac CMake files
+Use manual commands for the Java 11 FNCS Binding on Windows, because the Linux/Mac CMake files
 don't work on Windows yet. Also make sure that the JDK/bin directory is in your path.
-
-Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
 
 ::
 
  cd /c/src/fncs/java
  javac fncs/JNIfncs.java
  jar cvf fncs.jar fncs/JNIfncs.class
- javah -classpath fncs.jar -jni fncs.JNIfncs
- (for Java 8)
- g++ -DJNIfncs_EXPORTS -I"C:/Java/jdk1.8.0_191/include" -I"C:/Java/jdk1.8.0_191/include/win32" -I/c/src/fncs/java -I/usr/local/include -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
- g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Java/jdk1.8.0_191/lib/jawt.lib" "C:/Java/jdk1.8.0_191/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
- (for Java 9)
- g++ -DJNIfncs_EXPORTS -I"C:/Java/jdk-9.0.4/include" -I"C:/Java/jdk-9.0.4/include/win32" -I/usr/local/include -I. -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
- g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Java/jdk-9.0.4/lib/jawt.lib" "C:/Java/jdk-9.0.4/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+ javac -h fncs fncs/JNIfncs.java
+ g++ -DJNIfncs_EXPORTS -I"C:/Java/jdk-11.0.5/include" -I"C:/Java/jdk-11.0.5/include/win32" -I/usr/local/include -I. -o fncs/JNIfncs.cpp.o -c fncs/JNIfncs.cpp
+ g++ -shared -o JNIfncs.dll fncs/JNIfncs.cpp.o "C:/Java/jdk-11.0.5/lib/jawt.lib" "C:/Java/jdk-11.0.5/lib/jvm.lib" /usr/local/bin/libfncs.dll -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
  
 To build HELICS 2.0 with Python and Java bindings:
 
 ::
 
- cd ~/src/HELICS-src
+ cd /c/src/HELICS-src
  mkdir build
  cd build
- cmake -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=ON -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DBUILD_HELICS_TESTS=OFF -DBUILD_HELICS_BOOST_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ..
+ cmake -G "MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=ON -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DJAVA_AWT_INCLUDE_PATH=NotNeeded -DHELICS_DISABLE_BOOST=ON -DCMAKE_BUILD_TYPE=Release ..
  make
  make install
 
@@ -209,12 +189,15 @@ adding *-std=c++11* to *CXXFLAGS*.
  gridlabd --validate
 
 In order to run GridLAB-D from a regular Windows terminal, you have to copy some additional
-libraries from c:\\msys64\\mingw64\\bin to c:\\msys64\\usr\\local\\bin
+libraries from c:\\msys64\\mingw64\\bin to c:\\msys64\\usr\\local\\bin. This step must be repeated
+if you update the gcc compiler or ZeroMQ library.s
 
 - libdl.dll
 - libgcc_s_seh-1.dll
+- libsodium-23.dll
 - libstdc++-6.dll
 - libwinpthread-1.dll
+- libzmq.dll
 
 Build EnergyPlus
 ~~~~~~~~~~~~~~~~
@@ -255,6 +238,20 @@ From the MSYS2 terminal
  cp config.h.win config.h
  make
  make install
+
+Build ns3 with HELICS
+~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+ cd /c/src
+ git clone https://gitlab.com/nsnam/ns-3-dev.git
+ cd ns-3-dev
+ git clone https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+ ./waf configure --check-cxx-compiler=g++ --with-helics=/usr/local --disable-werror --enable-examples --enable-tests
+ ./waf build 
+
+
 
 
  

@@ -12728,11 +12728,11 @@
 	  Set H_CUR = H_CUR + CORNER_CLASS_1_POD_1_ZN_1_FLR_1_T * CORNER_CLASS_1_POD_1_ZN_1_FLR_1_V,
 	  Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORNER_CLASS_1_POD_1_ZN_1_FLR_1_V,
 	ENDIF,
-	IF (CORNER_CLASS_1_POD_2_ZN_1_FLR_1_H == 0 && Cooling_Coil_5 <> 0),
+	IF (CORNER_CLASS_1_POD_2_ZN_1_FLR_1_H == 0 && Cooling_Coil_6 <> 0),  ! changed Coil_5 to 6, 8 Jan 2020
 	  Set C_DES = C_DES + C2 * CORNER_CLASS_1_POD_2_ZN_1_FLR_1_V,
 	  Set C_CUR = C_CUR + CORNER_CLASS_1_POD_2_ZN_1_FLR_1_T * CORNER_CLASS_1_POD_2_ZN_1_FLR_1_V,
 	  Set TOTAL_COOL_V = TOTAL_COOL_V + CORNER_CLASS_1_POD_2_ZN_1_FLR_1_V,
-	ELSEIF (CORNER_CLASS_1_POD_2_ZN_1_FLR_1_H == 0 && Cooling_Coil_5 ==0),
+	ELSEIF (CORNER_CLASS_1_POD_2_ZN_1_FLR_1_H == 0 && Cooling_Coil_6 ==0),  ! changed Coil_5 to 6, 8 Jan 2020
 	  Set C_DES = C_DES,
 	  Set C_CUR = C_CUR,
 	ELSE,
@@ -12985,6 +12985,7 @@
 ! This section is added to calculate the current zones air averaged temperature based on air volumes March 3 2007
 
 	Set Total_V = 27484, ! Calculated by summing up all the volumes given in Program "Initialize_Volumes"
+	Set T_CUR = 0,       ! Added 8 Jan 2020
 	Set T_CUR = T_CUR + BATH_ZN_1_FLR_1_T * BATH_ZN_1_FLR_1_V,
 	Set T_CUR = T_CUR + CAFETERIA_ZN_1_FLR_1_T * CAFETERIA_ZN_1_FLR_1_V,
 	Set T_CUR = T_CUR + COMPUTER_CLASS_ZN_1_FLR_1_T * COMPUTER_CLASS_ZN_1_FLR_1_V,
@@ -13013,6 +13014,7 @@
 	Set T_CUR = T_CUR/Total_V*9.0/5.0+32.0,
 
 ! This section is added to calculate the current zones air averaged cooling temperature setpoint based on air volumes March 3 2007
+	Set T_Cooling = 0,       ! Added 8 Jan 2020
 	Set T_Cooling = T_Cooling + C1 * BATH_ZN_1_FLR_1_V,
 	Set T_Cooling = T_Cooling + C1 * CORRIDOR_POD_1_ZN_1_FLR_1_V,
 	Set T_Cooling = T_Cooling + C1 * CORRIDOR_POD_2_ZN_1_FLR_1_V,
@@ -13041,6 +13043,7 @@
 	Set T_Cooling = T_Cooling/Total_V*9.0/5.0+32.0,
 
 ! This section is added to calculate the current zones air averaged heating temperature setpoint based on air volumes March 3 2007
+	Set T_Heating = 0,       ! Added 8 Jan 2020
 	Set T_Heating = T_Heating + H1 * BATH_ZN_1_FLR_1_V,
 	Set T_Heating = T_Heating + H1 * CORRIDOR_POD_1_ZN_1_FLR_1_V,
 	Set T_Heating = T_Heating + H1 * CORRIDOR_POD_2_ZN_1_FLR_1_V,

@@ -1,0 +1,13 @@
+{% extends "!layout.html" %}
+
+{%- block extrahead %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+
+<script type="text/javascript">
+   console.log('Loading javascript')
+</script>
+
+{% endblock %}
+
+{% set script_files = script_files + ['_static/js/plotting.js'] %}

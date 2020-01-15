@@ -12,8 +12,8 @@ AC_LANG([C++])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
 # Checks for programs.
-# AC_PROG_CXX([g++-7])
-# AC_PROG_CC([gcc-7])
+# AC_PROG_CXX([g++-9])
+# AC_PROG_CC([gcc-9])
 AC_PROG_CXX()
 AC_PROG_CC()
 
