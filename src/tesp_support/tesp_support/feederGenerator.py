@@ -2380,7 +2380,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         ip = open (fname, 'r')
         lines = []
         line = ip.readline()
-        while line is not '':
+        while line != '':
             while re.match('\s*//',line) or re.match('\s+$',line):
                 # skip comments and white space
                 line = ip.readline()
