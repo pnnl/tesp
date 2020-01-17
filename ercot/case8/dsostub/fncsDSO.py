@@ -48,10 +48,8 @@ t = np.linspace(0,1,l-2,endpoint=True)
 t = np.append([0,0,0],t)
 t = np.append(t,[1,1,1])
 tck_load=[t,[x,y],3]
-u3=np.linspace(0,1,num=86400/300 + 1,endpoint=True)
-newpts = ip.splev (u3, tck_load)
 
-ppc = tesp.load_json_case ('../' + casename + '.json')
+ppc = tesp.load_json_case (casename + '.json')
 StartTime = ppc['StartTime']
 tmax = int(ppc['Tmax'])
 period = int(ppc['Period'])

@@ -2,14 +2,14 @@ import json;
 import tesp_support.feederGenerator as fg;
 
 backbone_config = {'backbone_feeders': {
-  'sim_R5-12.47-1':{'vll':13800.0, 'vln':7970.0, 'avg_house':6500.0, 'avg_comm':20000.0},
-  'sim_R5-12.47-2':{'vll':12470.0, 'vln':7200.0, 'avg_house':4500.0, 'avg_comm':15000.0},
-  'sim_R5-12.47-4':{'vll':12470.0, 'vln':7200.0, 'avg_house':6000.0, 'avg_comm':30000.0},
-  'sim_R5-12.47-5':{'vll':12470.0, 'vln':7200.0, 'avg_house':4500.0, 'avg_comm':25000.0}},
-                   'outpath':'../case8/',
-                   'glmpath':'../../third_party/pitt/',
-                   'supportpath':'../../support/schedules/',  # wrt outpath
-                   'weatherpath':'../../support/weather/'}    # wrt outpath
+                      'sim_R5-12.47-1': {'vll':13800.0, 'vln':7970.0, 'avg_house':6500.0, 'avg_comm':20000.0},
+                      'sim_R5-12.47-2': {'vll':12470.0, 'vln':7200.0, 'avg_house':4500.0, 'avg_comm':15000.0},
+                      'sim_R5-12.47-4': {'vll':12470.0, 'vln':7200.0, 'avg_house':6000.0, 'avg_comm':30000.0},
+                      'sim_R5-12.47-5': {'vll':12470.0, 'vln':7200.0, 'avg_house':4500.0, 'avg_comm':25000.0}},
+                   'outpath': '../case8/',
+                   'glmpath': '../../third_party/pitt/',
+                   'supportpath': '../../support/schedules/',  # wrt outpath
+                   'weatherpath': '../../support/weather/'}    # wrt outpath
 
 #inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 #inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
@@ -17,39 +17,39 @@ backbone_config = {'backbone_feeders': {
 #eplusVoltageChoices = ['208', '480'];
 
 case_config = {'SimulationConfig':{
-  'CaseName':'Bus1',
-  'StartTime':'2013-07-01 00:00:00',
-  'EndTime':'2013-07-02 00:00:00',
-  'SourceDirectory':'/Users/mcde601/src/ptesp/support',
-  'WorkingDirectory':'../case8'},
+                  'CaseName':'Bus1',
+                  'StartTime':'2013-07-01 00:00:00',
+                  'EndTime':'2013-07-04 00:00:00',
+                  'SourceDirectory':'../../support',
+                  'WorkingDirectory':'../case8'},
                'FeederGenerator':{
-               'MetricsInterval':300,
-               'MinimumStep':15,
-               'ElectricCoolingPercentage':90,
-               'ElectricCoolingParticipation':50,
-               'WaterHeaterPercentage':35,
-               'WaterHeaterParticipation':20,
-               'SolarPercentage':0,
-               'StoragePercentage':20,
-               'SolarInverterMode':'CONSTANT_PF',
-               'StorageInverterMode':'LOAD_FOLLOWING',
-               'BillingMode':'TIERED',
-               'MonthlyFee':13,
-               'Price':0.102013,
-               'Tier1Energy':500,
-               'Tier2Energy':1000,
-               'Tier3Energy':0,
-               'Tier1Price':0.117013,
-               'Tier2Price':0.122513,
-               'Tier3Price':0,
-               'EnergyPlusBus':'',
-               'EnergyPlusServiceV': 480, # 208 or 480
-               'EnergyPlusXfmrKva':250},
+                   'MetricsInterval':300,
+                   'MinimumStep':15,
+                   'ElectricCoolingPercentage':90,
+                   'ElectricCoolingParticipation':50,
+                   'WaterHeaterPercentage':35,
+                   'WaterHeaterParticipation':20,
+                   'SolarPercentage':0,
+                   'StoragePercentage':20,
+                   'SolarInverterMode':'CONSTANT_PF',
+                   'StorageInverterMode':'LOAD_FOLLOWING',
+                   'BillingMode':'TIERED',
+                   'MonthlyFee':13,
+                   'Price':0.102013,
+                   'Tier1Energy':500,
+                   'Tier2Energy':1000,
+                   'Tier3Energy':0,
+                   'Tier1Price':0.117013,
+                   'Tier2Price':0.122513,
+                   'Tier3Price':0,
+                   'EnergyPlusBus':'',
+                   'EnergyPlusServiceV': 480, # 208 or 480
+                   'EnergyPlusXfmrKva':250},
                'BackboneFiles':{'TaxonomyChoice':'sim_R5-12.47-1'},
                'WeatherPrep':{'DataSource':'TX-Houston_Bush_Intercontinental.tmy3'},
                'PYPOWERConfiguration':{
-               'TransformerBase':12,
-               'TransmissionVoltage':345}
+                   'TransformerBase':12,
+                   'TransmissionVoltage':345}
                }
 
 bus_config = [

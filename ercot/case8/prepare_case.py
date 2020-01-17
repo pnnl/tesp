@@ -40,7 +40,7 @@ weather_agents = [
 
 # configure the weather agents to be shared among all the buses
 StartTime = '2013-07-01 00:00:00'
-EndTime = '2013-07-02 00:00:00'
+EndTime = '2013-07-04 00:00:00'
 time_fmt = '%Y-%m-%d %H:%M:%S'
 dt1 = datetime.strptime (StartTime, time_fmt)
 dt2 = datetime.strptime (EndTime, time_fmt)
