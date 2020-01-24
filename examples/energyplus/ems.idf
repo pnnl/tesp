@@ -437,6 +437,7 @@
   ENDIF,
 ! Average temperature over zone air volumes
   Set Total_V = 27484.00,
+  Set T_CUR = 0,
   Set T_CUR = T_CUR + BATH_ZN_1_FLR_1_T * BATH_ZN_1_FLR_1_V,
   Set T_CUR = T_CUR + CAFETERIA_ZN_1_FLR_1_T * CAFETERIA_ZN_1_FLR_1_V,
   Set T_CUR = T_CUR + COMPUTER_CLASS_ZN_1_FLR_1_T * COMPUTER_CLASS_ZN_1_FLR_1_V,
@@ -464,6 +465,7 @@
   Set T_CUR = T_CUR + OFFICES_ZN_1_FLR_1_T * OFFICES_ZN_1_FLR_1_V,
   Set T_CUR = T_CUR/Total_V*9.0/5.0+32.0,
 ! Average cooling setpoint over zone air volumes
+  Set T_Cooling = 0,
   Set T_Cooling = T_Cooling + C1 * BATH_ZN_1_FLR_1_V,
   Set T_Cooling = T_Cooling + C2 * CAFETERIA_ZN_1_FLR_1_V,
   Set T_Cooling = T_Cooling + C2 * COMPUTER_CLASS_ZN_1_FLR_1_V,
@@ -491,6 +493,7 @@
   Set T_Cooling = T_Cooling + C2 * OFFICES_ZN_1_FLR_1_V,
   Set T_Cooling = T_Cooling/Total_V*9.0/5.0+32.0,
 ! Average heating setpoint over zone air volumes
+  Set T_Heating = 0,
   Set T_Heating = T_Heating + H1 * BATH_ZN_1_FLR_1_V,
   Set T_Heating = T_Heating + H2 * CAFETERIA_ZN_1_FLR_1_V,
   Set T_Heating = T_Heating + H2 * COMPUTER_CLASS_ZN_1_FLR_1_V,
@@ -606,33 +609,33 @@
     Schedule:Compact, !- Actuated Component Type
     Schedule Value;   !- Actuated Component Control Type
   EnergyManagementSystem:GlobalVariable,
-    Flexible_Cooling_Demand;  !- Erl Variable Name
+    Flexible_Cooling_Demand;
   EnergyManagementSystem:GlobalVariable,
-    Flexible_Heating_Demand;  !- Erl Variable Name
+    Flexible_Heating_Demand;
   EnergyManagementSystem:GlobalVariable,
-    Desired_Cooling_Temperature;  !- Erl Variable Name
+    Desired_Cooling_Temperature;
   EnergyManagementSystem:GlobalVariable,
-    Desired_Heating_Temperature;  !- Erl Variable Name
+    Desired_Heating_Temperature;
   EnergyManagementSystem:GlobalVariable,
-    Cooling_Deadband;  !- Erl Variable Name
+    Cooling_Deadband;
   EnergyManagementSystem:GlobalVariable,
-    Heating_Deadband;  !- Erl Variable Name
+    Heating_Deadband;
   EnergyManagementSystem:GlobalVariable,
-    Current_Cooling_Temperature;  !- Erl Variable Name
+    Current_Cooling_Temperature;
   EnergyManagementSystem:GlobalVariable,
-    Current_Heating_Temperature;  !- Erl Variable Name
+    Current_Heating_Temperature;
   EnergyManagementSystem:GlobalVariable,
-    Cooling_Power_State;  !- Erl Variable Name
+    Cooling_Power_State;
   EnergyManagementSystem:GlobalVariable,
-    Heating_Power_State;  !- Erl Variable Name
+    Heating_Power_State;
   EnergyManagementSystem:GlobalVariable,
-    H_DES;  !- Erl Variable Name
+    H_DES;
   EnergyManagementSystem:GlobalVariable,
-    C_DES;  !- Erl Variable Name
+    C_DES;
   EnergyManagementSystem:GlobalVariable,
-    H_CUR;  !- Erl Variable Name
+    H_CUR;
   EnergyManagementSystem:GlobalVariable,
-    C_CUR;  !- Erl Variable Name
+    C_CUR;
   EnergyManagementSystem:OutputVariable,
     Cooling Controlled Load,  !- Name
     Flexible_Cooling_Demand,  !- EMS Variable Name
@@ -960,55 +963,55 @@
     OFFICES_ZN_1_FLR_1 VAV Box Reheat Coil, !- Zone/Coil
     Heating Coil Heating Energy;
   EnergyManagementSystem:GlobalVariable,
-    BATH_ZN_1_FLR_1_V;  !- Erl Variable Name
+    BATH_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CAFETERIA_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CAFETERIA_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    COMPUTER_CLASS_ZN_1_FLR_1_V;  !- Erl Variable Name
+    COMPUTER_CLASS_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CORNER_CLASS_1_POD_1_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CORNER_CLASS_1_POD_1_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CORNER_CLASS_1_POD_2_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CORNER_CLASS_1_POD_2_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CORNER_CLASS_1_POD_3_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CORNER_CLASS_1_POD_3_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CORNER_CLASS_2_POD_1_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CORNER_CLASS_2_POD_1_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CORNER_CLASS_2_POD_2_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CORNER_CLASS_2_POD_2_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CORNER_CLASS_2_POD_3_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CORNER_CLASS_2_POD_3_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CORRIDOR_POD_1_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CORRIDOR_POD_1_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CORRIDOR_POD_2_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CORRIDOR_POD_2_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    CORRIDOR_POD_3_ZN_1_FLR_1_V;  !- Erl Variable Name
+    CORRIDOR_POD_3_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    GYM_ZN_1_FLR_1_V;  !- Erl Variable Name
+    GYM_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    KITCHEN_ZN_1_FLR_1_V;  !- Erl Variable Name
+    KITCHEN_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    LIBRARY_MEDIA_CENTER_ZN_1_FLR_1_V;  !- Erl Variable Name
+    LIBRARY_MEDIA_CENTER_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    LOBBY_ZN_1_FLR_1_V;  !- Erl Variable Name
+    LOBBY_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    MAIN_CORRIDOR_ZN_1_FLR_1_V;  !- Erl Variable Name
+    MAIN_CORRIDOR_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    MECH_ZN_1_FLR_1_V;  !- Erl Variable Name
+    MECH_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    MULT_CLASS_1_POD_1_ZN_1_FLR_1_V;  !- Erl Variable Name
+    MULT_CLASS_1_POD_1_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    MULT_CLASS_1_POD_2_ZN_1_FLR_1_V;  !- Erl Variable Name
+    MULT_CLASS_1_POD_2_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    MULT_CLASS_1_POD_3_ZN_1_FLR_1_V;  !- Erl Variable Name
+    MULT_CLASS_1_POD_3_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    MULT_CLASS_2_POD_1_ZN_1_FLR_1_V;  !- Erl Variable Name
+    MULT_CLASS_2_POD_1_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    MULT_CLASS_2_POD_2_ZN_1_FLR_1_V;  !- Erl Variable Name
+    MULT_CLASS_2_POD_2_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    MULT_CLASS_2_POD_3_ZN_1_FLR_1_V;  !- Erl Variable Name
+    MULT_CLASS_2_POD_3_ZN_1_FLR_1_V;
   EnergyManagementSystem:GlobalVariable,
-    OFFICES_ZN_1_FLR_1_V;  !- Erl Variable Name
+    OFFICES_ZN_1_FLR_1_V;
 ! ***EXTERNAL INTERFACE***
   ExternalInterface,
     FNCS;             !- Name of External Interface
@@ -1034,3 +1037,4 @@
   Output:Variable,WHOLE BUILDING,Facility Total Electric Demand Power,timestep;
   Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
   Output:Variable,*,People Occupant Count,timestep;
+  Output:Variable,*,Site Outdoor Air Drybulb Temperature,timestep; 

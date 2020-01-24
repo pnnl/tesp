@@ -5,6 +5,9 @@ values:
     kwhr_price:
         topic: player/clear_price
         default: 0.10
+    outdoor_air:
+        topic: eplus/ENVIRONMENT SITE OUTDOOR AIR DRYBULB TEMPERATURE
+        default: 0
     cooling_controlled_load:
         topic: eplus/EMS COOLING CONTROLLED LOAD
         default: 0

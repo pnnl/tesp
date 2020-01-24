@@ -89,6 +89,9 @@ def process_eplus(nameroot):
         elif key == 'heating_power_state_avg':
             HEATING_STATE_IDX = val['index']
             HEATING_STATE_UNITS = val['units']
+        elif key == 'outdoor_air_avg':
+            OUTDOOR_AIR_IDX = val['index']
+            OUTDOOR_AIR_UNITS = val['units']
 
     # make sure we found the metric indices of interest
     ary = lst['3600']['SchoolDualController']
@@ -121,6 +124,7 @@ def process_eplus(nameroot):
     print ('Average heating temp  =', data[:,HEATING_TEMPERATURE_IDX].mean(), HEATING_TEMPERATURE_UNITS)
     print ('Average heating setpt =', data[:,HEATING_SETPOINT_IDX].mean(), HEATING_SETPOINT_UNITS)
     print ('Average heating delta =', data[:,HEATING_DELTA_IDX].mean(), HEATING_DELTA_UNITS)
+    print ('Average outdoor air =', data[:,OUTDOOR_AIR_IDX].mean(), OUTDOOR_AIR_UNITS)
 
     # display a plot
     fig, ax = plt.subplots(4,2, sharex = 'col')
@@ -165,6 +169,10 @@ def process_eplus(nameroot):
     ax[2,1].set_ylabel(HEATING_STATE_UNITS)
     ax[2,1].set_title ('HVAC States')
     ax[2,1].legend(loc='best')
+
+    ax[3,1].plot(hrs, data[:,OUTDOOR_AIR_IDX], color='blue')
+    ax[3,1].set_ylabel(OUTDOOR_AIR_UNITS)
+    ax[3,1].set_title ('Outdoor Air')
 
     ax[3,1].set_xlabel('Hours')
 

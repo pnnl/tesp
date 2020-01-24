@@ -224,6 +224,7 @@ int main(int argc, char **argv)
 		units = "";
 		if ((it->first).find("temperature") != string::npos) units = "degF";
 		if ((it->first).find("setpoint") != string::npos) units = "degF";
+        if ((it->first).find("outdoor_air") != string::npos) units = "degF";
 		if ((it->first).find("demand_power") != string::npos) units = "W";
 		if ((it->first).find("controlled_load") != string::npos) units = "W";
 		if ((it->first).find("hours") != string::npos) units = "hours";
@@ -254,6 +255,9 @@ int main(int argc, char **argv)
 			if ((*it).find("electric_demand_power") == 0) {
 				totalWatts = newval;
 			}
+            if ((*it).find("outdoor_air") == 0) {
+                newval = newval * 1.8 + 32.0;
+            }
 			if ((*it).find("occupants_") == 0) {
 				occupants += newval;
 			}	else {
