@@ -7,10 +7,9 @@ rm *_opf.csv
 rm *_pf.csv
 rm ercot_8.csv
 rm *_FNCS_Config.txt
-rm *glm_dict.json
-rm *agent_dict.json
-rm weather*.dat
+rm *_ercot.json
+rm *_dict.json
 rm weather*.json
 rm *.zpl
 rm *.h5
-
+rm *.dat

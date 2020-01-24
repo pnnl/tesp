@@ -1,11 +1,11 @@
 {
   "ames": true,
-  "solver": "cplex",
-  "priceSensLoad": false,
+  "solver": "cbc",
+  "priceSensLoad": true,
   "windPower": true,
   "noScale": false,
   "curve": true,
-  "reserveDown":  0.15,
+  "reserveDown": 0.15,
   "reserveUp": 0.15,
   "zonalReserves": false,
   "caseName": "ercot_8",
@@ -802,61 +802,61 @@
       0,
       0,
       3,
-      0.00300,
+      0.0,
       35.0,
-      2230.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00090,
+      0.0,
       19.0,
-      2128.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00019,
+      0.0,
       8.0,
-      1250.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00750,
+      0.0,
       56.50,
-      2230.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00090,
+      0.0,
       19.0,
-      2128.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00019,
+      0.0,
       8.0,
-      1250.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00800,
+      0.0,
       57.03,
       0.0
     ],
@@ -865,16 +865,16 @@
       0,
       0,
       3,
-      0.00900,
+      0.0,
       19.0,
-      2128.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00800,
+      0.0,
       57.03,
       0.0
     ],
@@ -883,43 +883,43 @@
       0,
       0,
       3,
-      0.00600,
+      0.0,
       45.0,
-      2230.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00090,
+      0.0,
       19.0,
-      2128.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00700,
+      0.0,
       50.0,
-      2230.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      0.00090,
+      0.0,
       19.0,
-      2128.0
+      0.0
     ],
     [
       2,
       0,
       0,
       3,
-      1e-05,
+      0.0,
       0.01,
       0.0
     ],
@@ -928,7 +928,7 @@
       0,
       0,
       3,
-      1e-05,
+      0.0,
       0.01,
       0.0
     ],
@@ -937,7 +937,7 @@
       0,
       0,
       3,
-      1e-05,
+      0.0,
       0.01,
       0.0
     ],
@@ -946,7 +946,7 @@
       0,
       0,
       3,
-      1e-05,
+      0.0,
       0.01,
       0.0
     ],
@@ -955,9 +955,65 @@
       0,
       0,
       3,
-      1e-05,
+      0.0,
       0.01,
       0.0
+    ]
+  ],
+  "genfuel": [
+    [
+      "gas"
+    ],
+    [
+      "coal"
+    ],
+    [
+      "nuclear"
+    ],
+    [
+      "gas"
+    ],
+    [
+      "coal"
+    ],
+    [
+      "nuclear"
+    ],
+    [
+      "gas"
+    ],
+    [
+      "coal"
+    ],
+    [
+      "gas"
+    ],
+    [
+      "gas"
+    ],
+    [
+      "coal"
+    ],
+    [
+      "gas"
+    ],
+    [
+      "coal"
+    ],
+    [
+      "wind"
+    ],
+    [
+      "wind"
+    ],
+    [
+      "wind"
+    ],
+    [
+      "wind"
+    ],
+    [
+      "wind"
     ]
   ],
   "FNCS": [
@@ -1053,18 +1109,19 @@
   "UnitsOut": [],
   "BranchesOut": [],
   "swing_bus": 1,
-  "metadata" : {
+  "metadata": {
     "ames": "true == ames running, false == pypower running opf",
+    "solver": "The name for the solver for ames",
     "priceSensLoad": "true == Substation load is flexible, false == only inflexible load",
     "windPower": "true == wind power, false == no wind power",
     "noScale": "FNCS gld_scale set to 1 if false",
     "curve": "FNCS no curve if set to false",
-    "reserveDown":  "Reserve down system percent",
+    "reserveDown": "Reserve down system percent",
     "reserveUp": "Reserve up system percent",
     "zonalReserves": "true = has zonal reserves, false == does not have zonal reserves",
     "caseName": "Case name",
     "version": "Version Number",
-    "baseMVA": "",
+    "baseMVA": "conversion facter to p.u.",
     "StartTime": "Start time for the simulation run in the form of YYYY-MM-DD HH:MM:SS",
     "EndTime": "End time for the simulation run in the form of YYYY-MM-DD HH:MM:SS",
     "Tmax": "The duration for the simulation in seconds",
@@ -1089,29 +1146,31 @@
       "Vmax -maximum voltage magnitude (p.u.)",
       "Vmin -maximum voltage magnitude (p.u.)",
       "LAM P -Lagrange multiplier on real power mismatch (u/MW)",
-      "LAM Q -Lagrange multiplier on reactive power mismatch (u/MVAr)"],
+      "LAM Q -Lagrange multiplier on reactive power mismatch (u/MVAr)"
+    ],
     "gen": [
-        "bus id -bus number",
-        "Pg -real power output (MW)",
-        "Qg -reactive power output (MVAr)",
-        "Qmax -maximum reactive power output (MVAr)",
-        "Qmin -minimum reactive power output (MVAr)",
-        "Vg -voltage magnitude set point (p.u.)",
-        "mBase -total MVA base of machine, defaults to baseMVA",
-        "status -machine status > 0 = machine in-service, machine status ≤ 0 = machine out-of-service",
-        "Pmax -maximum real power output (MW)",
-        "Pmin -minimum real power output (MW)",
-        "PC1* -lower real power output of PQ capability curve (MW)",
-        "PC2* -upper real power output of PQ capability curve (MW)",
-        "QC1MIN* -minimum reactive power output at PC1 (MVAr)",
-        "QC1MAX* -maximum reactive power output at PC1 (MVAr)",
-        "QC2MIN* -minimum reactive power output at PC2 (MVAr)",
-        "QC2MAX* -maximum reactive power output at PC2 (MVAr)",
-        "RAMP AGC* -ramp rate for load following/AGC (MW/min)",
-        "RAMP 10* -ramp rate for 10 minute reserves (MW)",
-        "RAMP 30* -ramp rate for 30 minute reserves (MW)",
-        "RAMP Q* -ramp rate for reactive power (2 sec timescale) (MVAr/min)",
-        "APF* -area participation factor"],
+      "bus id -bus number",
+      "Pg -real power output (MW)",
+      "Qg -reactive power output (MVAr)",
+      "Qmax -maximum reactive power output (MVAr)",
+      "Qmin -minimum reactive power output (MVAr)",
+      "Vg -voltage magnitude set point (p.u.)",
+      "mBase -total MVA base of machine, defaults to baseMVA",
+      "status -machine status > 0 = machine in-service, machine status ≤ 0 = machine out-of-service",
+      "Pmax -maximum real power output (MW)",
+      "Pmin -minimum real power output (MW)",
+      "PC1* -lower real power output of PQ capability curve (MW)",
+      "PC2* -upper real power output of PQ capability curve (MW)",
+      "QC1MIN* -minimum reactive power output at PC1 (MVAr)",
+      "QC1MAX* -maximum reactive power output at PC1 (MVAr)",
+      "QC2MIN* -minimum reactive power output at PC2 (MVAr)",
+      "QC2MAX* -maximum reactive power output at PC2 (MVAr)",
+      "RAMP AGC* -ramp rate for load following/AGC (MW/min)",
+      "RAMP 10* -ramp rate for 10 minute reserves (MW)",
+      "RAMP 30* -ramp rate for 30 minute reserves (MW)",
+      "RAMP Q* -ramp rate for reactive power (2 sec timescale) (MVAr/min)",
+      "APF* -area participation factor"
+    ],
     "gencost": "An array for each generator cost [2, startup, shutdown, 3, c2, c1, c0]",
     "branch": "An array for each branch [from bus id, to bus id, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax]",
     "FNCS": "An array for each FNCS/gridlab instance [bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]",

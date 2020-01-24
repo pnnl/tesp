@@ -44,13 +44,12 @@ load_shape = [0.6704,
 # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, p]
 def make_wind_plants(ppc):
     gen = ppc['gen']
-    genCost = ppc['gencost']
+    genFuel = ppc['genfuel']
     plants = {}
     Pnorm = 165.6
     for i in range(gen.shape[0]):
         busnum = int(gen[i, 0])
-        c2 = float(genCost[i, 4])
-        if c2 < 2e-5:  # genfuel would be 'wind'
+        if "wind" in genFuel[i][0]:
             MW = float(gen[i, 8])
             scale = MW / Pnorm
             Theta0 = 0.05 * math.sqrt(scale)
@@ -81,6 +80,7 @@ def make_dictionary(ppc, rootname):
     bus = ppc['bus']
     gen = ppc['gen']
     genCost = ppc['gencost']
+    genFuel = ppc['genfuel']
     fncsBus = ppc['FNCS']
     units = ppc['UnitsOut']
     branches = ppc['BranchesOut']
@@ -100,16 +100,8 @@ def make_dictionary(ppc, rootname):
         c2 = float(genCost[i, 4])
         c1 = float(genCost[i, 5])
         c0 = float(genCost[i, 6])
-        if c2 < 2e-5:  # assign fuel types from the IA State default costs
-            genfuel = 'wind'
-        elif c2 < 0.0003:
-            genfuel = 'nuclear'
-        elif c1 < 25.0:
-            genfuel = 'coal'
-        else:
-            genfuel = 'gas'
         generators[str(i + 1)] = {'bus': int(busnum), 'bustype': bustypename, 'Pmin': float(gen[i, 9]),
-                                  'Pmax': float(gen[i, 8]), 'genfuel': genfuel, 'gentype': gentype,
+                                  'Pmax': float(gen[i, 8]), 'genfuel': genFuel[i][0], 'gentype': gentype,
                                   'StartupCost': float(genCost[i, 1]), 'ShutdownCost': float(genCost[i, 2]), 'c2': c2,
                                   'c1': c1, 'c0': c0}
 
@@ -381,18 +373,6 @@ def dist_slack(mpc, prev_load):
 
 def tso_loop():
 
-    def genfuel(i):
-        c2 = float(genCost[i, 4])
-        c1 = float(genCost[i, 5])
-        if c2 < 2e-5:  # assign fuel types from the IA State default costs
-            return 'wind'
-        elif c2 < 0.0003:
-            return 'nuclear'
-        elif c1 < 25.0:
-            return 'coal'
-        else:
-            return 'gas'
-
     def scucDAM(data, output, solver):
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         if day > -1:
@@ -647,8 +627,8 @@ def tso_loop():
         uc = uc_df1
         for j in range(5):
             rr = {}
-            for i in range(gen.shape[0]):
-                if numGen > i and genCost[i, 4] > 2e-5:     # not in wind_plants:
+            for i in range(numGen):
+                if "wind" not in genFuel[i][0]:
                     name = "GenCo" + str(i + 1)
                     rr[name] = uc.at[hh, name]
             data.append(rr)
@@ -666,8 +646,8 @@ def tso_loop():
         data = []
         for j in range(24):
             rr = {}
-            for i in range(gen.shape[0]):
-                if numGen > i and genCost[i, 4] > 2e-5:     # not in wind_plants:
+            for i in range(numGen):
+                if "wind" not in genFuel[i][0]:
                     name = "GenCo" + str(i + 1)
                     rr[name] = 1
             data.append(rr)
@@ -731,15 +711,15 @@ def tso_loop():
         print('', file=fp)
 
         writeLine = 'set ThermalGenerators :='
-        for i in range(gen.shape[0]):
-            if numGen > i and genCost[i, 4] > 2e-5:     # not in wind_plants
+        for i in range(numGen):
+            if "wind" not in genFuel[i][0]:
                 writeLine = writeLine + ' GenCo' + str(i + 1)
         print(writeLine, ';', file=fp)
         print('', file=fp)
         for i in range(bus.shape[0]):
             writeLine = 'set ThermalGeneratorsAtBus[Bus' + str(i + 1) + '] :='
-            for j in range(gen.shape[0]):
-                if int(gen[j, 0]) == i + 1 and numGen > j and genCost[j, 4] > 2e-5:    # not in wind_plants
+            for j in range(numGen):
+                if int(gen[j, 0]) == i + 1 and "wind" not in genFuel[j][0]:
                     writeLine = writeLine + ' GenCo' + str(j + 1)
             print(writeLine, ';', file=fp)
         print('', file=fp)
@@ -763,8 +743,8 @@ def tso_loop():
         print(
             'param: PowerGeneratedT0 UnitOnT0State MinimumPowerOutput MaximumPowerOutput MinimumUpTime MinimumDownTime NominalRampUpLimit NominalRampDownLimit StartupRampLimit ShutdownRampLimit ColdStartHours ColdStartCost HotStartCost ShutdownCostCoefficient :=',
             file=fp)
-        for i in range(gen.shape[0]):
-            if numGen > i and genCost[i, 4] > 2e-5:    # not in wind_plants
+        for i in range(numGen):
+            if "wind" not in genFuel[i][0]:
                 name = 'GenCo' + str(i + 1)
                 Pmax = gen[i, 8] / baseS
                 Pmin = gen[i, 9] / baseS
@@ -772,8 +752,6 @@ def tso_loop():
                 #todo fill out gen parameters
                 minDn = 0
                 minUp = 0
-#                if genfuel(i) == 'nuclear' or genfuel(i) == 'coal':
-#                   minUp = 24
 
                 # powerT0
                 if dayahead:
@@ -782,7 +760,6 @@ def tso_loop():
                     else:
                         powerT0 = da_dispatch[name][0] / baseS     # from this time forward
                     # unitOnT0State
-                    # TODO add the other 14 hours
                     unitOnT0 = gen_ames[str(i)][0]  # counter in hours set in day ahead
                 else:
                     if len(rt_dispatch) == 0:
@@ -855,7 +832,7 @@ def tso_loop():
             for i in range(bus.shape[0]):
                 busnum = i + 1
                 gld_scale = float(fncsBus[i][2])
-                if dayahead:  # 12am to 12am
+                if dayahead:                                      # 12am to 12am
                     for j in range(hours_in_a_day):
                         ndg = 0
                         for key, row in wind_plants.items():
@@ -864,7 +841,7 @@ def tso_loop():
                         net = ((respMaxMW[i][j] + unRespMW[i][j]) * gld_scale) - ndg
                         writeLine = 'Bus' + str(busnum) + ' ' + str(j + 1) + ' {:.4f}'.format(net / baseS)
                         print(writeLine, file=fp)
-                else:  # real time
+                else:                                             # real time
                     ndg = 0
                     for key, row in wind_plants.items():
                         if row[0] == busnum:
@@ -889,7 +866,7 @@ def tso_loop():
                 for i in range(bus.shape[0]):
                     busnum = i + 1
                     gld_scale = float(fncsBus[i][2])
-                    if (dayahead):  # 12am to 12am
+                    if (dayahead):                                # 12am to 12am
                         for j in range(hours_in_a_day):
                             writeLine = 'LSE' + str(busnum) + ' ' + str(busnum) + ' Bus' + str(busnum) + ' ' + str(j + 1) + \
                                         ' 0.0' + ' {: .2f}'.format(respC1[i][j] * baseS / gld_scale) + \
@@ -897,7 +874,7 @@ def tso_loop():
                                         ' 0.0' + ' {: .2f}'.format(((respMaxMW[i][j] * gld_scale) / baseS))
                             print(writeLine, file=fp)
                         print('', file=fp)
-                    else:  # real time
+                    else:                                         # real time
                         for j in range(TAU):
                             writeLine = 'LSE' + str(busnum) + ' ' + str(busnum) + ' Bus' + str(busnum) + ' ' + str(j + 1) + \
                                         ' 0.0' + ' {: .2f}'.format(gld_load[busnum]['c1'] * baseS / gld_scale) + \
@@ -941,16 +918,18 @@ def tso_loop():
             print('', file=fp)
 
         print('param: ProductionCostA0 ProductionCostA1 ProductionCostA2 NS :=', file=fp)
-        for i in range(gen.shape[0]):
-            if numGen > i and genCost[i, 5] > 0 and genCost[i, 4] and genCost[i, 4] > 2e-5:  # not in wind_plants
+        for i in range(numGen):
+            if "wind" not in genFuel[i][0]:
                 c0 = genCost[i, 6]
                 c1 = genCost[i, 5]
                 c2 = genCost[i, 4]
+                ns = '1'
+                if c0 > 0 and c1 > 0 and c2 > 0:
+                    ns = str(NS)
                 writeLine = 'GenCo' + str(i + 1) + '{: .5f}'.format(c0) + \
-                            '{: .5f}'.format(c1) + '{: .5f}'.format(c2) + ' ' + str(NS)
+                            '{: .5f}'.format(c1) + '{: .5f}'.format(c2) + ' ' + ns
                 print(writeLine, file=fp)
         print(';', file=fp)
-
         fp.close()
 
     def write_ames_base_case(fname):
@@ -1016,18 +995,19 @@ def tso_loop():
         # gen: bus, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
         # gencost: 2, startup, shutdown, 3, c2, c1, c0
         # AMES wants name, ID, bus, c0, c1, c2, capL, capU, NS, InitMoney
-        for i in range(gen.shape[0]):
-            name = 'GenCo' + str(i + 1)
-            fbus = int(gen[i, 0])
-            Pmax = gen[i, 8]
-            Pmin = gen[i, 9]
-            c0 = genCost[i, 6]
-            c1 = genCost[i, 5]
-            c2 = genCost[i, 4]
-            if Pmin > 0 and genCost[i, 4] > 2e-5:   # not in wind_plants
-                print(name, str(i + 1), fbus, '{: .2f}'.format(c0), '{: .2f}'.format(c1),
-                      '{: .6f}'.format(c2), '{: .2f}'.format(Pmin), '{: .2f}'.format(Pmax),
-                      NS, '{: .2f}'.format(100000.0), file=fp)
+        for i in range(numGen):
+            if "wind" not in genFuel[i][0]:
+                name = 'GenCo' + str(i + 1)
+                fbus = int(gen[i, 0])
+                Pmax = gen[i, 8]
+                Pmin = gen[i, 9]
+                c0 = genCost[i, 6]
+                c1 = genCost[i, 5]
+                c2 = genCost[i, 4]
+                if Pmin > 0:
+                    print(name, str(i + 1), fbus, '{: .2f}'.format(c0), '{: .2f}'.format(c1),
+                          '{: .6f}'.format(c2), '{: .2f}'.format(Pmin), '{: .2f}'.format(Pmax),
+                          NS, '{: .2f}'.format(100000.0), file=fp)
         print('#GenDataEnd', file=fp)
         print('', file=fp)
 
@@ -1162,8 +1142,10 @@ def tso_loop():
     branch = ppc['branch']
     gen = ppc['gen']
     genCost = ppc['gencost']
+    genFuel = ppc['genfuel']
     zones = ppc['zones']
     fncsBus = ppc['FNCS']
+    numGen = gen.shape[0]
 
     # set configurations case name from .json file
     priceSensLoad = 0
@@ -1230,21 +1212,22 @@ def tso_loop():
             tnext_wind = 0
             ngen = []
             ngenCost = []
-            for i in range(gen.shape[0]):
-                # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
-                gen[i, 9] = 0.1 * gen[i, 8]
-                c2 = float(genCost[i, 4])
-                if c2 < 2e-5:  # assign fuel types from the IA State default costs
-                    if wind_period != 0:
-                        ngen.append(gen[i])
-                        ngenCost.append(genCost[i])
+            ngenType = []
+            for i in range(numGen):
+                if "wind" in genFuel[i][0] and wind_period != 0:
+                    ngen.append(gen[i])
+                    ngenCost.append(genCost[i])
+                    ngenType.append(genFuel[i])
                 else:
                     ngen.append(gen[i])
                     ngenCost.append(genCost[i])
+                    ngenType.append(genFuel[i])
             ppc['gen'] = np.array(ngen)
-            ppc['genCost'] = np.array(ngenCost)
+            ppc['gencost'] = np.array(ngenCost)
+            ppc['genfuel'] = np.array(ngenType)
             gen = ppc['gen']
             genCost = ppc['gencost']
+            genFuel = ppc['genfuel']
             numGen = gen.shape[0]
 
 
@@ -1286,7 +1269,10 @@ def tso_loop():
         # I suppose a generator for all sum generator a bus?
         ppc['gen'] = np.concatenate(
             (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
-        ppc['gencost'] = np.concatenate((ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
+        ppc['gencost'] = np.concatenate(
+            (ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
+        ppc['genfuel'] = np.concatenate(
+            (ppc['genfuel'], np.array([['']])))
         gld_scale = float(fncsBus[i, 2])
         gld_load[busnum] = {'pcrv': 0, 'qcrv': 0,
                             'p': float(fncsBus[i, 7]) / gld_scale, 'q': float(fncsBus[i, 8]) / gld_scale,
@@ -1297,6 +1283,7 @@ def tso_loop():
     # needed to be re-aliased after np.concatenate
     gen = ppc['gen']
     genCost = ppc['gencost']
+    genFuel = ppc['genfuel']
 
     # print('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
     # print(fncsBus)
@@ -1307,6 +1294,7 @@ def tso_loop():
 
     # interval for metrics recording
     tnext_metrics = 0
+
     loss_accum = 0
     conv_accum = True
     n_accum = 0
@@ -1341,18 +1329,15 @@ def tso_loop():
         line += ", " + "LMP" + str(i+1)
         line2 += ", " + "v" + str(i + 1)
     w = 0;  n = 0;  c = 0;  g = 0
-    for i in range(gen.shape[0]):
-        if numGen > i:
-            c2 = float(genCost[i, 4])
-            c1 = float(genCost[i, 5])
-            if c2 < 2e-5:  # assign fuel types from the IA State default costs
-                w += 1;    line += ", wind" + str(w)
-            elif c2 < 0.0003:
-                n += 1;    line += ", nuc" + str(n)
-            elif c1 < 25.0:
-                c += 1;    line += ", coal" + str(c)
-            else:
-                g += 1;    line += ", gas" + str(g)
+    for i in range(numGen):
+        if "wind" in genFuel[i][0]:
+            w += 1;    line += ", wind" + str(w)
+        elif "nuclear" in genFuel[i][0]:
+            n += 1;    line += ", nuc" + str(n)
+        elif "coal" in genFuel[i][0]:
+            c += 1;    line += ", coal" + str(c)
+        else:
+            g += 1;    line += ", gas" + str(g)
     line += ", TotalWindGen"
 
     op = open(casename + '_opf.csv', 'w')
@@ -1366,7 +1351,7 @@ def tso_loop():
         events = fncs.get_events()
         for topic in events:
             val = fncs.get_value(topic)
-            # getting the latest inputs from GridLAB-D
+        # getting the latest inputs from DSO Real Time
             if 'UNRESPONSIVE_MW_' in topic:
                 busnum = int(topic[16:])
                 gld_load[busnum]['unresp'] = float(val)
@@ -1390,19 +1375,20 @@ def tso_loop():
             #    elif 'wind_power' in topic:
             #      busnum = int(topic[15:])
             #      gld_load[busnum]['windpower'] = int(val)
-        # getting the latest inputs from substations (DSO)
+        # getting the latest inputs from GridlabD
             elif 'SUBSTATION' in topic:  # gld
                 busnum = int(topic[10:])
                 p, q = parse_mva(val)
                 gld_load[busnum]['p'] = float(p)   # MW
                 gld_load[busnum]['q'] = float(q)   # MW
+        # getting the latest inputs from DSO day Ahead
             elif 'DA_BID_' in topic:
                 da_bid = True
                 busnum = int(topic[7:]) - 1
                 day_ahead_bid = json.loads(val)
                 # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[hours_in_a_day]
-                unRespMW[busnum] = day_ahead_bid['unresp_mw']            # fix load
-                respMaxMW[busnum] = day_ahead_bid['resp_max_mw']         # slmax
+                unRespMW[busnum] = day_ahead_bid['unresp_mw']     # fix load
+                respMaxMW[busnum] = day_ahead_bid['resp_max_mw']  # slmax
                 respC2[busnum] = day_ahead_bid['resp_c2']
                 respC1[busnum] = day_ahead_bid['resp_c1']
                 respC0[busnum] = 0.0  # day_ahead_bid['resp_c0']
@@ -1507,15 +1493,14 @@ def tso_loop():
                 print("DA Unit Schedule: \n", da_schedule, flush=True)
 
             # Real time and update the dispatch schedules in ppc
-            sum_g = 0
             if day > 1:
                 # Change the DA Schedule and the dispatch
                 if day > lastDay:
                     prev_da_schedule = deepcopy(da_schedule)
                     lastDay = day
                 if mn == 0:
-                    for i in range(gen.shape[0]):
-                        if numGen > i and genCost[i, 4] > 2e-5:     # not in wind_plants
+                    for i in range(numGen):
+                        if "wind" not in genFuel[i][0]:
                             name = "GenCo" + str(i + 1)
                             # are the schedule from 12 on from the day ahead calculation
                             gen[i, 7] = prev_da_schedule.at[hour, name]
@@ -1541,9 +1526,9 @@ def tso_loop():
                 try:
                     for i in range(bus.shape[0]):
                         bus[i, 13] = rt_lmps[i][0]
-                    for i in range(gen.shape[0]):
+                    for i in range(numGen):
                         name = "GenCo" + str(i + 1)
-                        if numGen > i and genCost[i, 4] > 2e-5:     # not in wind_plants
+                        if "wind" not in genFuel[i][0]:
                             gen[i, 1] = rt_dispatch[name][0]
                 except:
                     print("We are screwed!!")
@@ -1552,7 +1537,7 @@ def tso_loop():
             #      TODO: fix swing bus
             # write OPF metrics
             Pswing = 0
-            for idx in range(gen.shape[0]):
+            for idx in range(numGen):
                 if gen[idx, 0] == swing_bus:
                     Pswing += gen[idx, 1]
 
@@ -1566,7 +1551,7 @@ def tso_loop():
             line += '{: .2f}'.format(Pswing) + ','
             for idx in range(bus.shape[0]):
                 line += '{: .2f}'.format(bus[idx, 13]) + ','
-            for idx in range(gen.shape[0]):
+            for idx in range(numGen):
                 if numGen > idx:
                     line += '{: .2f}'.format(gen[idx, 1]) + ','
             line += '{: .2f}'.format(sum_w)
@@ -1602,7 +1587,7 @@ def tso_loop():
 
             line = str(ts) + ',' + "True" + ','
             line += '{: .2f}'.format(opf_bus[:, 2].sum()) + ','
-            line += '{: .2f}'.format(opf_gen[:, 2].sum()) + ','
+            line += '{: .2f}'.format(opf_gen[:, 1].sum()) + ','
             line += '{: .2f}'.format(Pswing)
             for idx in range(opf_bus.shape[0]):
                 line += ',' + '{: .4f}'.format(opf_bus[idx, 13])
