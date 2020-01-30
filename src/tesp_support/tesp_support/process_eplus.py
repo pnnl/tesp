@@ -136,8 +136,8 @@ def process_eplus(nameroot):
     ax[0,0].set_title ('Cooling System Temperatures')
     ax[0,0].legend(loc='best')
 
-    ax[1,0].plot(hrs, data[:,HEATING_SETPOINT_IDX], color='red', label='Setpoint')
     ax[1,0].plot(hrs, data[:,HEATING_TEMPERATURE_IDX], color='blue', label='Actual')
+    ax[1,0].plot(hrs, data[:,HEATING_SETPOINT_IDX], color='red', label='Setpoint')
     ax[1,0].plot(hrs, data[:,HEATING_DELTA_IDX], color='green', label='Delta')
     ax[1,0].set_ylabel(HEATING_TEMPERATURE_UNITS)
     ax[1,0].set_title ('Heating System Temperatures')
@@ -164,8 +164,8 @@ def process_eplus(nameroot):
     ax[1,1].set_ylabel(ASHRAE_HOURS_UNITS)
     ax[1,1].set_title ('Uncomfortable Hours')
 
-    ax[2,1].plot(hrs, data[:,HEATING_STATE_IDX], color='blue', label='Cooling')
-    ax[2,1].plot(hrs, data[:,COOLING_STATE_IDX], color='red', label='Heating')
+    ax[2,1].plot(hrs, data[:,COOLING_STATE_IDX], color='blue', label='Cooling')
+    ax[2,1].plot(hrs, data[:,HEATING_STATE_IDX], color='red', label='Heating')
     ax[2,1].set_ylabel(HEATING_STATE_UNITS)
     ax[2,1].set_title ('HVAC States')
     ax[2,1].legend(loc='best')
