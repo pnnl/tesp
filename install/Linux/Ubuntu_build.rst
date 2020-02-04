@@ -57,6 +57,7 @@ Preparation - Build Tools and Java
  sudo apt-get -y install libczmq-dev
  # for GridLAB-D
  sudo apt-get install libxerces-c-dev
+ sudo apt-get install libsuitesparse-dev
 
 Preparation - Python 3 and Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -88,6 +89,9 @@ As noted above, we suggest *mkdir usrc* instead of *mkdir ~/src* on WSL.
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b develop https://github.com/pnnl/tesp.git
  git clone https://gitlab.com/nsnam/ns-3-dev.git
+ mkdir KLU_DLL
+ cd KLU_DLL
+ svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
 
 Choosing and Configuring the Install Directories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -191,6 +195,16 @@ Then test HELICS from Python 3:
 
 GridLAB-D
 ~~~~~~~~~
+
+To build the KLU solver:
+
+::
+
+ cd ~/src/KLU_DLL
+ mkdir build
+ cd build
+ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+ sudo cmake --build . --target install
 
 To link with both FNCS and HELICS, and run the autotest suite:
 
