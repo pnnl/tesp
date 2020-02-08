@@ -89,8 +89,6 @@ As noted above, we suggest *mkdir usrc* instead of *mkdir ~/src* on WSL.
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b develop https://github.com/pnnl/tesp.git
  git clone https://gitlab.com/nsnam/ns-3-dev.git
- mkdir KLU_DLL
- cd KLU_DLL
  svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
 
 Choosing and Configuring the Install Directories
