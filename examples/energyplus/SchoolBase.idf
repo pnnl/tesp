@@ -222,9 +222,9 @@
 
   RunPeriod,
     ,                        !- Name
-    7,                       !- Begin Month
+    8,                       !- Begin Month
     1,                       !- Begin Day of Month
-    7,                       !- End Month
+    8,                       !- End Month
     2,                       !- End Day of Month
     Monday,                  !- Day of Week for Start Day
     No,                      !- Use Weather File Holidays and Special Days
