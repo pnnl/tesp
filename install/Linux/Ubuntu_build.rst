@@ -41,13 +41,14 @@ Preparation - Build Tools and Java
 ::
 
  # build tools
- sudo apt-get -y install git
+ sudo apt-get -y install git-lfs
  sudo apt-get -y install build-essential
  sudo apt-get -y install autoconf
  sudo apt-get -y install libtool
  sudo apt-get -y install libjsoncpp-dev
  sudo apt-get -y install gfortran
  sudo apt-get -y install cmake
+ sudo apt-get -y install subversion
  # Java support
  sudo apt-get -y install openjdk-11-jre-headless
  sudo apt-get -y install openjdk-11-jdk-headless
@@ -56,8 +57,10 @@ Preparation - Build Tools and Java
  sudo apt-get -y install libzmq5-dev
  sudo apt-get -y install libczmq-dev
  # for GridLAB-D
- sudo apt-get install libxerces-c-dev
- sudo apt-get install libsuitesparse-dev
+ sudo apt-get -y install libxerces-c-dev
+ sudo apt-get -y install libklu1
+ # if not using miniconda (avoid Python 3.7 on Ubuntu for now)
+ sudo apt-get -y install python3-pip
 
 Preparation - Python 3 and Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,6 +86,7 @@ As noted above, we suggest *mkdir usrc* instead of *mkdir ~/src* on WSL.
  cd ~/src
  git config --global user.name "your user name"
  git config --global user.email "your email"
+ git config --global credential.helper store
  git clone -b develop https://github.com/FNCS/fncs.git
  git clone -b master https://github.com/GMLC-TDC/HELICS-src
  git clone -b feature/1173 https://github.com/gridlab-d/gridlab-d.git
@@ -100,24 +104,23 @@ can define an environment variable, e.g., *$TESP_INSTALL*, and use that in place
 /usr/local for installation directories. The following examples are for Ubuntu; 
 other flavors of Linux may differ.
 
-For Ubuntu in a *virtual machine*, first edit the */etc/environment* file:
+For Ubuntu in a *virtual machine*, first edit or replace the */etc/environment* file.
+This is not a script file, and it doesn't support the $variable replacement syntax. If using
+$TESP_INSTALL, it has to be spelled out on each line, e.g.:
 
 ::
 
- # optionally, TESP_INSTALL="somePath"
- # then use $TESP_INSTALL instead of /usr/local GLPATH and CXXFLAGS
+ describe the conf and environment helper files
+
+If not using $TESP_INSTALL explicitly, it defaults to /usr/local
+
+::
+
+ # add the following four lines
  GLPATH="/usr/local/lib/gridlabd:/usr/local/share/gridlabd"
- # so the GridLAB-D compiler autotests pass:
  CXXFLAGS="-I/usr/local/share/gridlabd"
-
-For Ubuntu in a *virtual machine*, also add the following to your *~/.bashrc* file so 
-that HELICS can find the Python and Java bindings. If defined, use $TESP_INSTALL in 
-place of /usr/local:
-
-::
-
- export PYTHONPATH="/usr/local/python:$PYTHONPATH"
- export JAVAPATH="/usr/local/java:$JAVAPATH"
+ PYTHONPATH="/usr/local/python"
+ JAVAPATH="/usr/local/java"
 
 For Ubuntu in *WSL*, all changes are made to *~/.profile*.
 
@@ -135,7 +138,8 @@ Afterward, close and reopen the Ubuntu terminal for these changes to take effect
 
 The environment variable, CXXFLAGS, does not conflict with CXXFLAGS passed to various
 build tools. Only GridLAB-D uses the CXXFLAGS environment variable, and you should
-not use the variable append mechanism, i.e., :$CXXFLAGS, with it. 
+not use the variable append mechanism, i.e., :$CXXFLAGS, with it. This variable
+enables all of the GridLAB-D autotest cases to pass.
 
 FNCS and HELICS
 ~~~~~~~~~~~~~~~
@@ -146,8 +150,8 @@ To build the shared libraries for FNCS with Python bindings:
 
  cd ~/src/fncs
  autoreconf -if
- ./configure 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2'
- # or ./configure 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2' --prefix=$TESP_INSTALL
+ ./configure 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2' --prefix=$TESP_INSTALL
+ # leave off --prefix if using the default /usr/local
  make
  sudo make install
 
@@ -169,7 +173,10 @@ for configuring a build with $TESP_INSTALL.
  cd ~/src/HELICS-src
  mkdir build
  cd build
- cmake -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON -DJAVA_AWT_INCLUDE_PATH=NotNeeded -DHELICS_DISABLE_BOOST=ON -DCMAKE_BUILD_TYPE=Release ..
+ cmake -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON \
+       -DJAVA_AWT_INCLUDE_PATH=NotNeeded -DHELICS_DISABLE_BOOST=ON \
+       -DCMAKE_INSTALL_PREFIX=$TESP_INSTALL -DCMAKE_BUILD_TYPE=Release ..
+ # leave off -DCMAKE_INSTALL_PREFIX if using the default /usr/local
  make -j4
  sudo make install
 
@@ -211,8 +218,9 @@ To link with both FNCS and HELICS, and run the autotest suite:
  cd ~/src/gridlab-d
  autoreconf -isf
 
- # in the following, --with-fncs and --with-helics can not be left blank, $TESP_INSTALL may be used there
- ./configure --with-fncs=/usr/local --with-helics=/usr/local --enable-silent-rules 'CFLAGS=-w -O2' 'CXXFLAGS=-w -O2 -std=c++14' 'LDFLAGS=-w'
+ # in the following, --with-fncs and --with-helics can not be left blank, so use either $TESP_INSTALL or /usr/local for both
+ # leave off --prefix if using the default /usr/local
+ ./configure --prefix=$TESP_INSTALL --with-fncs=$TESP_INSTALL --with-helics=$TESP_INSTALL --enable-silent-rules 'CFLAGS=-w -O2' 'CXXFLAGS=-w -O2 -std=c++14' 'LDFLAGS=-w'
  # for debugging use 'CXXFLAGS=-w -g -O0' and 'CFLAGS=-w -std=c++14 -g -O0' and 'LDFLAGS=-w -g -O0'
 
  make
@@ -222,33 +230,17 @@ To link with both FNCS and HELICS, and run the autotest suite:
 EnergyPlus
 ~~~~~~~~~~
 
-Before installing, we need components of the public version, including but not limited to 
-the critical Energy+.idd file. The compatible public version is at https://github.com/NREL/EnergyPlus/releases/tag/v8.3.0
-Download and run the Linux install script, as root if installing to the default location
-/usr/local/EnergyPlus-8-3-0
-
-These following instructions install EnergyPlus with FNCS linkage to the default /usr/local directory. 
-Use the graphical version of CMake for configuring a build with $TESP_INSTALL.
+These following instructions install EnergyPlus with FNCS linkage and key portions of the retail v8.3 installation.
 
 ::
 
  cd ~/src/EnergyPlus
  mkdir build
  cd build
- cmake -DBUILD_FORTRAN=ON -DBUILD_PACKAGE=ON -DENABLE_INSTALL_REMOTE=OFF ..
+ cmake -DCMAKE_INSTALL_PREFIX=$TESP_INSTALL -DBUILD_FORTRAN=ON -DBUILD_PACKAGE=ON -DENABLE_INSTALL_REMOTE=OFF ..
+ # leave off -DCMAKE_INSTALL_PREFIX if using the default /usr/local
  make -j4
  sudo make install
-
- # Similar to the experience with Mac and Windows, this installation step wrongly puts
- #  the build products in /usr/local instead of /usr/local/bin and /usr/local/lib
- #  the following commands will copy FNCS-compatible EnergyPlus over the public version
- cd /usr/local
- sudo cp energyplus-8.3.0 EnergyPlus-8-3-0
- sudo cp libenergyplusapi.so.8.3.0 EnergyPlus-8-3-0
-
- # if ReadVarsESO is not found at the end of a simulation, try this
- cd /usr/local/EnergyPlus-8-3-0
- sudo ln -s PostProcess/ReadVarsESO ReadVarsESO
 
 Build eplus_json
 ~~~~~~~~~~~~~~~~
@@ -261,8 +253,8 @@ Build eplus_json
  aclocal
  automake --add-missing
  autoconf
- ./configure 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2'
- # or ./configure --prefix=$TESP_INSTALL 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2'
+ ./configure --prefix=$TESP_INSTALL --with-fncs=$TESP_INSTALL 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2'
+ # leave off --prefix and --with-fncs if using the default /usr/local
  make
  sudo make install
 
@@ -273,7 +265,8 @@ Build ns3 with HELICS
 
  cd ~/src/ns-3-dev
  git clone https://github.com/GMLC-TDC/helics-ns3 contrib/helics
- ./waf configure --with-helics=/usr/local --disable-werror --enable-examples --enable-tests
+ # --with-helics may not be left blank, so use either $TESP_INSTALL or /usr/local
+ ./waf configure --with-helics=$TESP_INSTALL --disable-werror --enable-examples --enable-tests
  ./waf build 
 
 Prepare for Testing
@@ -284,6 +277,9 @@ before you try :ref:`RunExamples`.
 
 ::
 
+ # if using $TESP_INSTALL, edit the helper file tesp_ld.conf accordingly and then:
+ sudo cp ~src/tesp/install/Linux/helpers/tesp_ld.conf /etc/ld.so.conf.d
+ # then, regardless of whether the previous command was necessary:
  sudo ldconfig
 
 In case you have both Python 2 and Python 3 installed, the TESP example
