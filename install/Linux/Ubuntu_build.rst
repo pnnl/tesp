@@ -58,7 +58,8 @@ Preparation - Build Tools and Java
  sudo apt-get -y install libczmq-dev
  # for GridLAB-D
  sudo apt-get -y install libxerces-c-dev
- sudo apt-get -y install libklu1
+ sudo apt-get -y install libsuitesparse-dev
+ # end users need only libklu1, which is licensed LGPL
  # if not using miniconda (avoid Python 3.7 on Ubuntu for now)
  sudo apt-get -y install python3-pip
 
@@ -208,7 +209,8 @@ To build the KLU solver:
  cd ~/src/KLU_DLL
  mkdir build
  cd build
- cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$TESP_INSTALL ..
+ # replace $TESP_INSTALL with /usr/local if using the default
  sudo cmake --build . --target install
 
 To link with both FNCS and HELICS, and run the autotest suite:
