@@ -25,7 +25,7 @@ setup(
     ],
     packages=find_packages(),
     include_package_data=True,
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
