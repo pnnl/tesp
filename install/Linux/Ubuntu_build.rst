@@ -73,7 +73,7 @@ After the script configures Conda and you re-open the Ubuntu terminal as instruc
 
 ::
 
- pip install tesp_support --upgrade
+ pip3 install tesp_support --upgrade
  opf 
 
 Checkout PNNL repositories from github
@@ -111,7 +111,12 @@ $TESP_INSTALL, it has to be spelled out on each line, e.g.:
 
 ::
 
- describe the conf and environment helper files
+ TESP_INSTALL="/opt/tesp"
+ PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tesp/bin:/opt/tesp:/opt/tesp/PreProcess:/opt/tesp/PostProcess"
+ GLPATH="/opt/tesp/lib/gridlabd:/opt/tesp/share/gridlabd"
+ CXXFLAGS="-I/opt/tesp/share/gridlabd"
+ PYTHONPATH="/opt/tesp/python"
+ JAVAPATH="/opt/tesp/java"
 
 If not using $TESP_INSTALL explicitly, it defaults to /usr/local
 
@@ -263,13 +268,27 @@ Build eplus_json
 Build ns3 with HELICS
 ~~~~~~~~~~~~~~~~~~~~~
 
+First, in order to build ns-3 with Python bindings, we need to install the Python
+binding generator that it uses, and then manually patch one of the ns-3 build files.
+
+::
+ 
+ pip3 install pybindgen
+ pip3 show pybindgen
+ # edit line 17 of ~/src/ns-3-dev/bindings/python/wscript to specify the correct matching version, for example:
+ REQUIRED_PYBINDGEN_VERSION = '0.20.1'
+
+Then, we can build ns-3, install that into the same location as other parts of TESP, and test it:
+
 ::
 
  cd ~/src/ns-3-dev
  git clone https://github.com/GMLC-TDC/helics-ns3 contrib/helics
  # --with-helics may not be left blank, so use either $TESP_INSTALL or /usr/local
- ./waf configure --with-helics=$TESP_INSTALL --disable-werror --enable-examples --enable-tests
+ ./waf configure --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --disable-werror --enable-examples --enable-tests
  ./waf build 
+ sudo ./waf install
+ ./test.py
 
 Prepare for Testing
 ~~~~~~~~~~~~~~~~~~~
