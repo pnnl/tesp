@@ -1,2 +1,2 @@
-javac -classpath ".:helics.jar" helicstest.java
-java -classpath ".:helics.jar" -Djava.library.path="/usr/local/java" helicstest
+javac -classpath ".:$JAVAPATH/helics.jar" helicstest.java
+java -classpath ".:$JAVAPATH/helics.jar" -Djava.library.path="$JAVAPATH" helicstest
