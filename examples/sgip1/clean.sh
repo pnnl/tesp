@@ -4,6 +4,7 @@ rm *.log
 rm *metrics.json
 rm *dict.json
 rm *FNCS_Config.txt
+rm *Weather_Config.json
 rm SGIP1*.yaml
 rm *.xml
 rm output/*

@@ -1,6 +1,6 @@
 // Weather information
 object recorder {
-	parent "RegionalWeather";
+	parent "localWeather";
 	property temperature,humidity,solar_flux;
 	interval 60;
 	file weather.csv;
