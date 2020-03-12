@@ -25,8 +25,8 @@ module tape;
 module generators;
 
 // only the heating setpoint schedule is used here
-#include "../../support/schedules/water_and_setpoint_schedule_v3.glm"
-#include "../../support/schedules/appliance_schedules.glm"
+#include "${SCHED_PATH}/water_and_setpoint_schedule_v3.glm"
+#include "${SCHED_PATH}/appliance_schedules.glm"
 #include "outputs_te.glm"
 
 // summer
