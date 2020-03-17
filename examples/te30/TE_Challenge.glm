@@ -5428,7 +5428,7 @@ object meter {
   name Eplus_meter;
   groupid Commercial_Meter;
   meter_power_consumption 1+15j;
-  nominal_voltage 480.000000;
+  nominal_voltage 277.00;
   bill_mode UNIFORM;
   price 0.11420;
   monthly_fee 25.00;
@@ -5442,7 +5442,7 @@ object load {
   name Eplus_load;
   parent Eplus_meter;
   phases ABCN;
-  nominal_voltage 480.000000;
+  nominal_voltage 277.00;
   constant_power_A 25 kVA;
   constant_power_B 25 kVA;
   constant_power_C 25 kVA;
