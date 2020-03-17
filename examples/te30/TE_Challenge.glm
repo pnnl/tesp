@@ -4392,7 +4392,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4426,7 +4426,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4460,7 +4460,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4494,7 +4494,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4528,7 +4528,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4562,7 +4562,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4596,7 +4596,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4630,7 +4630,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4664,7 +4664,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4698,7 +4698,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4732,7 +4732,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4766,7 +4766,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4800,7 +4800,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4834,7 +4834,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4868,7 +4868,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4902,7 +4902,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4936,7 +4936,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4970,7 +4970,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5004,7 +5004,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5038,7 +5038,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5072,7 +5072,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5106,7 +5106,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5140,7 +5140,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5174,7 +5174,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5208,7 +5208,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5242,7 +5242,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5276,7 +5276,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5310,7 +5310,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5344,7 +5344,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5378,7 +5378,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;

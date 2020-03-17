@@ -7,8 +7,9 @@
 
 clock {
 	timezone PST+8PDT;
-	starttime '2013-07-01 00:00:00';
-	stoptime '2013-07-03 00:00:00';
+  timezone PST+8PDT;
+  starttime '2000-09-01 0:00:00';
+  stoptime '2000-09-02 0:00:00';
 }
 
 module climate;
@@ -24,8 +25,8 @@ module residential {
 module tape;
 module generators;
 
-#include "../../../support/schedules/water_and_setpoint_schedule_v3.glm"
-//#include "../../../support/schedules/appliance_schedules.glm"
+#include "${SCHED_PATH}/water_and_setpoint_schedule_v3.glm"
+//#include "${SCHED_PATH}/appliance_schedules.glm"
 
 #define INVERTER_MODE=CONSTANT_PF
 //#define INVERTER_MODE=VOLT_VAR
@@ -57,11 +58,17 @@ object metrics_collector_writer {
      filename inv30_metrics.json;
 };
 
-object climate {
-     name "RegionalWeather";
-     tmyfile "../../../support/weather/AZ-Tucson_International_Ap.tmy3";
-     interpolate QUADRATIC;
+object csv_reader {
+  name CsvReader;
+  filename ../cloudy.csv;
 };
+object climate {
+  name climate;
+  reader CsvReader;
+  tmyfile ../cloudy.csv;
+	latitude 32.133;
+	longitude -111.95;
+}
 
 class player {
       double value;
@@ -2207,7 +2214,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2236,7 +2243,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS;
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2257,7 +2263,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2286,7 +2292,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2307,7 +2312,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2336,7 +2341,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2357,7 +2361,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2386,7 +2390,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2407,7 +2410,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2436,7 +2439,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2457,7 +2459,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2486,7 +2488,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2507,7 +2508,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2536,7 +2537,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2557,7 +2557,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2586,7 +2586,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2607,7 +2606,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2636,7 +2635,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2657,7 +2655,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2686,7 +2684,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2707,7 +2704,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2736,7 +2733,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2757,7 +2753,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2786,7 +2782,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2807,7 +2802,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2836,7 +2831,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2857,7 +2851,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2886,7 +2880,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2907,7 +2900,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2936,7 +2929,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -2957,7 +2949,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -2986,7 +2978,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3007,7 +2998,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3036,7 +3027,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3057,7 +3047,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3086,7 +3076,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3107,7 +3096,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3136,7 +3125,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3157,7 +3145,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3186,7 +3174,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3207,7 +3194,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3236,7 +3223,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3257,7 +3243,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3286,7 +3272,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3307,7 +3292,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3336,7 +3321,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3357,7 +3341,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3386,7 +3370,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3407,7 +3390,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3436,7 +3419,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3457,7 +3439,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3486,7 +3468,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3507,7 +3488,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3536,7 +3517,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3557,7 +3537,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3586,7 +3566,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3607,7 +3586,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3636,7 +3615,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3657,7 +3635,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode ${INVERTER_MODE};
@@ -3686,7 +3664,6 @@ object triplex_meter {
 			generator_mode SUPPLY_DRIVEN;
 			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
-			orientation FIXED_AXIS; 
 			rated_power 7500;
 		};
     object metrics_collector {
@@ -3723,7 +3700,7 @@ object meter {
   name Eplus_meter;
   groupid Commercial_Meter;
   meter_power_consumption 1+15j;
-  nominal_voltage 480.000000;
+  nominal_voltage 277.000000;
   bill_mode UNIFORM;
   price 0.11420;
   monthly_fee 25.00;
@@ -3737,7 +3714,7 @@ object load {
   name Eplus_load;
   parent Eplus_meter;
   phases ABCN;
-  nominal_voltage 480.000000;
+  nominal_voltage 277.000000;
   constant_power_A 25 kVA;
   constant_power_B 25 kVA;
   constant_power_C 25 kVA;

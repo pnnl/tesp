@@ -213,6 +213,10 @@ def pypower_loop (casefile, rootname):
   gencost = ppc['gencost']
   fncsBus = ppc['FNCS']
   gen = ppc['gen']
+  pf_dc = ppc['pf_dc']
+  PswingSwitch = 180.0 # if Gen 2 gets close to the max, change swing bus
+  if pf_dc > 0:
+    PswingSwitch = 191.0
   ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'])
   ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'])
   loads = np.loadtxt(ppc['CSVFile'], delimiter=',')
@@ -344,14 +348,14 @@ def pypower_loop (casefile, rootname):
 #            '{:.3f}'.format(opf_gen[0,1]), '{:.3f}'.format(opf_gen[1,1]), '{:.3f}'.format(opf_gen[2,1]),
 #            '{:.3f}'.format(opf_gen[3,1]), '{:.3f}'.format(opf_gen[4,1]), '{:.3f}'.format(lmp))
       # if unit 2 (the normal swing bus) is dispatched at max, change the swing bus to 9
-      if opf_gen[1,1] >= 191.0:
+      if opf_gen[1,1] >= PswingSwitch:
         ppc['bus'][1,1] = 2
         ppc['bus'][8,1] = 3
-        print ('  SWING Bus 9')
+        print ('  Switching to SWING Bus 9 (Gen 4) at {:d} and {:.2f} MW'.format (ts, opf_gen[1,1]))
       else:
         ppc['bus'][1,1] = 3
         ppc['bus'][8,1] = 1
-        print ('  SWING Bus 2')
+        print ('  Keeping SWING Bus 2 (Gen 2) at {:d} and {:.2f} MW'.format (ts, opf_gen[1,1]))
       tnext_opf += period
     
     # always update the electrical quantities with a regular power flow

@@ -63,62 +63,68 @@ lst_m.pop('StartTime')
 meta_m = lst_m.pop('Metadata')
 print("\nBilling Meter Metadata for", len(lst_m[time_key]), "objects")
 for key, val in meta_m.items():
-	print (key, val['index'], val['units'])
-	if key == 'voltage_max':
-		MTR_VOLT_MAX_IDX = val['index']
-		MTR_VOLT_MAX_UNITS = val['units']
-	elif key == 'voltage_min':
-		MTR_VOLT_MIN_IDX = val['index']
-		MTR_VOLT_MIN_UNITS = val['units']
-	elif key == 'voltage_avg':
-		MTR_VOLT_AVG_IDX = val['index']
-		MTR_VOLT_AVG_UNITS = val['units']
+  print (key, val['index'], val['units'])
+  if key == 'voltage_max':
+    MTR_VOLT_MAX_IDX = val['index']
+    MTR_VOLT_MAX_UNITS = val['units']
+  elif key == 'voltage_min':
+    MTR_VOLT_MIN_IDX = val['index']
+    MTR_VOLT_MIN_UNITS = val['units']
+  elif key == 'voltage_avg':
+    MTR_VOLT_AVG_IDX = val['index']
+    MTR_VOLT_AVG_UNITS = val['units']
 
 data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+# find the inverter meter with highest voltage
+keymax = ''
 vmax = 0.0
 jmax = 0
 imax = 0
-keymax = ''
-j = 0
-for key in mtr_keys:
-	i = 0
-	for t in times:
-		val = lst_m[str(t)][mtr_keys[j]][MTR_VOLT_AVG_IDX]
-		data_m[j, i] = val
-		if val > vmax:
-			vmax = val
-			keymax = key
-			jmax = j
-			imax = i
-		i = i + 1
-	j = j + 1
+# construct meter array
+for j, key in enumerate(mtr_keys):
+  hasInverter = False
+  if 'children' in dict['billingmeters'][key]:
+    for s in dict['billingmeters'][key]['children']:
+      if s in dict['inverters']:
+        hasInverter = True
+  for i, t in enumerate (times):
+    val = lst_m[str(t)][mtr_keys[j]][MTR_VOLT_AVG_IDX]
+    data_m[j, i] = val
+    if hasInverter and val > vmax:
+      vmax = val
+      keymax = key
+      jmax = j
+      imax = i
+
+print ('max average inverter voltage {:.3f} at meter {:s} [{:d}] at {:.3f} hrs'.format (vmax, keymax, jmax, hrs[imax]))
+
+# find the inverter meter with most counts over 105%
+mtridx = jmax
+countmax = 0
+vthresh = 1.05
+for i, key in enumerate(mtr_keys):
+  hasInverter = False
+  if 'children' in dict['billingmeters'][key]:
+    for s in dict['billingmeters'][key]['children']:
+      if s in dict['inverters']:
+        hasInverter = True
+        vbase = dict['billingmeters'][key]['vln']
+        val = (data_m[i,:]/vbase > vthresh).sum()
+        if val > countmax:
+          countmax = val
+          keymax = key
+          mtridx = i
+if countmax > 0:
+  print ('Found inverter meter with {:d} points above {:.3f} pu at {:s} [{:d}]'.format (countmax, vthresh, keymax, mtridx))
 
 invmax = ''
 invidx = 0
-i = 0
-print ('max voltage', vmax, 'at meter', keymax, jmax, 'time', hrs[imax])
-
-# look for the meter with most counts over 126
-i = 0
-mtridx = jmax
-countmax = 0
-for key in mtr_keys:
-	val = (data_m[i,:] > 126.0).sum()
-	if val > countmax:
-		countmax = val
-		keymax = key
-		mtridx = i
-	i = i + 1
-print ('meter with', countmax, 'points above 126 is', keymax, mtridx)
-
-i = 0
-for key in inv_keys:
-	if dict['inverters'][key]['billingmeter_id'] == keymax:
-		if dict['inverters'][key]['resource'] == 'solar':
-			invmax = key
-			invidx = i
-	i = i + 1
-print ('inverter is', invmax, invidx)
+for i, key in enumerate (inv_keys):
+  if dict['inverters'][key]['billingmeter_id'] == keymax:
+    if dict['inverters'][key]['resource'] == 'solar':
+      invmax = key
+      invidx = i
+print ('Inverter to plot is {:s} [{:d}]'.format (invmax, invidx))
 
 # display a plot
 fig, ax = plt.subplots(2, 1, sharex = 'col')

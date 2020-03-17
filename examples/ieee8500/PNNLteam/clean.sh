@@ -5,3 +5,5 @@ rm *.json
 rm *.yaml
 rm *FNCS_Config.txt
 rm broker_trace.txt
+rm *.dat
+

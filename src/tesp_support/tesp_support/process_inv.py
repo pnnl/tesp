@@ -426,10 +426,17 @@ def process_inv(nameroot, dictname = ''):
   qavg2 = 0.001 * qavg1.mean(axis=0)
   tavg1 = (data_h[:,:,HSE_AIR_AVG_IDX]).squeeze()
   tavg2 = tavg1.mean(axis=0)
-  vscale = 100.0 / 120.0
-  vavg = vscale * (data_m[:,:,MTR_VOLT_AVG_IDX]).squeeze().mean(axis=0)
-  vmin = vscale * (data_m[:,:,MTR_VOLT_MIN_IDX]).squeeze().min(axis=0)
-  vmax = vscale * (data_m[:,:,MTR_VOLT_MAX_IDX]).squeeze().max(axis=0)
+
+  vavg = np.zeros(shape=(len(times)), dtype=np.float)
+  vmin = np.full(shape=(len(times)), fill_value=1000.0, dtype=np.float)
+  vmax = np.zeros(shape=(len(times)), dtype=np.float)
+  for i, mtr in enumerate(mtr_keys):
+    vbase = dict['billingmeters'][mtr]['vln']
+    vscale = 100.0 / vbase
+    vavg += vscale * data_m[i,:,MTR_VOLT_AVG_IDX]
+    vmin = np.minimum (vmin, vscale * data_m[i,:,MTR_VOLT_MIN_IDX])
+    vmax = np.maximum (vmax, vscale * data_m[i,:,MTR_VOLT_MAX_IDX])
+  vavg /= float (len(mtr_keys))
 
   # display a plot
 
