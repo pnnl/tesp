@@ -604,4 +604,7 @@ object regulator {
 	 from n650;
 	 to n630;
 	 configuration regconfig6506321;
+   object metrics_collector {
+     interval 60;
+   };
 }
