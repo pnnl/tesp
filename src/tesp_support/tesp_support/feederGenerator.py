@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
+# Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: feederGenerator.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
@@ -792,29 +792,33 @@ def write_config_class (model, h, t, op):
                     print ('  ' + p + ' ' + model[t][o][p] + ';', file=op)
             print('}', file=op)
 
-def write_link_class (model, h, t, seg_loads, op):
-    """Write a GridLAB-D link (i.e. edge) class
+def write_link_class (model, h, t, seg_loads, op, want_metrics=False):
+  """Write a GridLAB-D link (i.e. edge) class
 
-    Args:
-        model (dict): the parsed GridLAB-D model
-        h (dict): the object ID hash
-        t (str): the GridLAB-D class
-        seg_loads (dict) : a dictionary of downstream loads for each link
-        op (file): an open GridLAB-D input file
-    """
-    if t in model:
-        for o in model[t]:
+  Args:
+      model (dict): the parsed GridLAB-D model
+      h (dict): the object ID hash
+      t (str): the GridLAB-D class
+      seg_loads (dict) : a dictionary of downstream loads for each link
+      op (file): an open GridLAB-D input file
+  """
+  if t in model:
+    for o in model[t]:
 #            print('object ' + t + ':' + o + ' {', file=op)
-            print('object ' + t + ' {', file=op)
-            print('  name ' + o + ';', file=op)
-            if o in seg_loads:
-                print('// downstream', '{:.2f}'.format(seg_loads[o][0]), 'kva on', seg_loads[o][1], file=op)
-            for p in model[t][o]:
-                if ':' in model[t][o][p]:
-                    print ('  ' + p + ' ' + h[model[t][o][p]] + ';', file=op)
-                else:
-                    print ('  ' + p + ' ' + model[t][o][p] + ';', file=op)
-            print('}', file=op)
+      print('object ' + t + ' {', file=op)
+      print('  name ' + o + ';', file=op)
+      if o in seg_loads:
+        print('// downstream', '{:.2f}'.format(seg_loads[o][0]), 'kva on', seg_loads[o][1], file=op)
+      for p in model[t][o]:
+        if ':' in model[t][o][p]:
+          print ('  ' + p + ' ' + h[model[t][o][p]] + ';', file=op)
+        else:
+          print ('  ' + p + ' ' + model[t][o][p] + ';', file=op)
+      if want_metrics and metrics_interval > 0:
+        print ('  object metrics_collector {', file=op)
+        print ('    interval', str(metrics_interval) + ';', file=op)
+        print ('  };', file=op)
+      print('}', file=op)
 
 # name, r, gmr, ampacity
 triplex_conductors = [['triplex_4/0_aa', 0.48, 0.0158, 1000.0]]
@@ -2351,7 +2355,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
     base_feeder_name = rootname
     fname = glmpath + rootname + '.glm'
-    print (fname)
+    print ('Populating From:', fname)
     rgn = 0
     if 'R1' in rootname:
         rgn = 1
@@ -2628,9 +2632,9 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         write_link_class (model, h, 'underground_line', seg_loads, op)
         write_link_class (model, h, 'series_reactor', seg_loads, op)
 
-        write_link_class (model, h, 'regulator', seg_loads, op)
+        write_link_class (model, h, 'regulator', seg_loads, op, want_metrics=True)
         write_link_class (model, h, 'transformer', seg_loads, op)
-        write_link_class (model, h, 'capacitor', seg_loads, op)
+        write_link_class (model, h, 'capacitor', seg_loads, op, want_metrics=True)
 
         if forERCOT == True:
             replace_commercial_loads (model, h, 'load', 0.001 * avgcommercial)
@@ -2746,7 +2750,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
         lp = open (configfile).read()
         config = json.loads(lp)
     rootname = config['BackboneFiles']['TaxonomyChoice']
-    tespdir = config['SimulationConfig']['SourceDirectory']
+    tespdir = os.path.expandvars (os.path.expanduser (config['SimulationConfig']['SourceDirectory']))
     glmpath = tespdir + '/feeders/'
     supportpath = '' #tespdir + '/schedules'
     weatherpath = '' #tespdir + '/weather'

@@ -112,7 +112,7 @@ def write_tesp_case (config, cfgfile, freshdir = True):
         * Write gui.bat and gui.sh, per the te30 examples
         * do not write monitor.py
     """
-    tespdir = config['SimulationConfig']['SourceDirectory']
+    tespdir = os.path.expandvars (os.path.expanduser (config['SimulationConfig']['SourceDirectory']))
     feederdir = tespdir + '/feeders/'
     scheduledir = tespdir + '/schedules/'
     weatherdir = tespdir + '/weather/'
@@ -185,12 +185,12 @@ def write_tesp_case (config, cfgfile, freshdir = True):
 
     # copy some boilerplate files
     if freshdir == True:
+#        shutil.copy (miscdir + 'clean.bat', casedir)
+#        shutil.copy (miscdir + 'kill5570.bat', casedir)
+#        shutil.copy (miscdir + 'killold.bat', casedir)
+#        shutil.copy (miscdir + 'list5570.bat', casedir)
         shutil.copy (miscdir + 'clean.sh', casedir)
-        shutil.copy (miscdir + 'clean.bat', casedir)
         shutil.copy (miscdir + 'kill5570.sh', casedir)
-        shutil.copy (miscdir + 'kill5570.bat', casedir)
-        shutil.copy (miscdir + 'killold.bat', casedir)
-        shutil.copy (miscdir + 'list5570.bat', casedir)
         shutil.copy (miscdir + 'monitor.py', casedir)
         shutil.copy (miscdir + 'plots.py', casedir)
         shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
@@ -525,29 +525,29 @@ values:
     weatherline = """python -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weather.dat')" """
 
     # batch file for Windows
-    batfile = casedir + '/run.bat'
-    op = open (batfile, 'w')
-    print ('set FNCS_FATAL=yes', file=op)
-    print ('set FNCS_TIME_DELTA=', file=op)
-    print ('set FNCS_CONFIG_FILE=', file=op)
-    if bUseEplus:
-        print ('start /b cmd /c fncs_broker 6 ^>broker.log 2^>^&1', file=op)
-        print ('set FNCS_CONFIG_FILE=eplus.yaml', file=op)
-        print ('start /b cmd /c energyplus -w ' + EpWeather + ' -d output -r ' + EpFile + ' ^>eplus.log 2^>^&1', file=op)
-        print ('set FNCS_CONFIG_FILE=eplus_json.yaml', file=op)
-        print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
-    else:
-        print ('start /b cmd /c fncs_broker 4 ^>broker.log 2^>^&1', file=op)
-    print ('set FNCS_CONFIG_FILE=', file=op)
-    print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gridlabd.log 2^>^&1', file=op)
-    print ('set FNCS_CONFIG_FILE=' + SubstationYamlFile, file=op)
-    print ('start /b cmd /c', aucline + '^>substation.log 2^>^&1', file=op)
-    print ('set FNCS_CONFIG_FILE=pypower.yaml', file=op)
-    print ('start /b cmd /c', ppline + '^>pypower.log 2^>^&1', file=op)
-    print ('set FNCS_CONFIG_FILE=', file=op)
-    print ('set WEATHER_CONFIG=' + WeatherConfigFile, file=op)
-    print ('start /b cmd /c', weatherline + '^>weather.log 2^>^&1', file=op)
-    op.close()
+#   batfile = casedir + '/run.bat'
+#   op = open (batfile, 'w')
+#   print ('set FNCS_FATAL=yes', file=op)
+#   print ('set FNCS_TIME_DELTA=', file=op)
+#   print ('set FNCS_CONFIG_FILE=', file=op)
+#   if bUseEplus:
+#       print ('start /b cmd /c fncs_broker 6 ^>broker.log 2^>^&1', file=op)
+#       print ('set FNCS_CONFIG_FILE=eplus.yaml', file=op)
+#       print ('start /b cmd /c energyplus -w ' + EpWeather + ' -d output -r ' + EpFile + ' ^>eplus.log 2^>^&1', file=op)
+#       print ('set FNCS_CONFIG_FILE=eplus_json.yaml', file=op)
+#       print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
+#   else:
+#       print ('start /b cmd /c fncs_broker 4 ^>broker.log 2^>^&1', file=op)
+#   print ('set FNCS_CONFIG_FILE=', file=op)
+#   print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gridlabd.log 2^>^&1', file=op)
+#   print ('set FNCS_CONFIG_FILE=' + SubstationYamlFile, file=op)
+#   print ('start /b cmd /c', aucline + '^>substation.log 2^>^&1', file=op)
+#   print ('set FNCS_CONFIG_FILE=pypower.yaml', file=op)
+#   print ('start /b cmd /c', ppline + '^>pypower.log 2^>^&1', file=op)
+#   print ('set FNCS_CONFIG_FILE=', file=op)
+#   print ('set WEATHER_CONFIG=' + WeatherConfigFile, file=op)
+#   print ('start /b cmd /c', weatherline + '^>weather.log 2^>^&1', file=op)
+#   op.close()
     
     # shell scripts and chmod for Mac/Linux - need to specify python3
     aucline = """python3 -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
