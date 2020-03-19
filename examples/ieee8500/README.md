@@ -8,7 +8,7 @@ https://ieeexplore.ieee.org/document/5484381/
 
 To run the base case:
 
-1. A current build of GridLAB-D from branch feature/1048 (or newer feature/1164) is required. A Windows binary has been released here: https://github.com/pnnl/tesp/releases/tag/v0.2
+1. A current build of GridLAB-D from branch feature/1048 (or newer feature/1173) is required. A Windows binary has been released here: https://github.com/pnnl/tesp/releases/tag/v0.2
 
 2. "gridlabd IEEE_8500.glm" runs the base case.  
 
@@ -72,11 +72,11 @@ The subdirectory *PNNLteam* contains files used only for the pre-cooling
 thermostat and smart inverter simulations, as presented by PNNL at
 IEEE ISGT 2018.  See the report on NIST TE Challenge 2 for more details.
 To run these simulations, you will need to install TESP, which includes 
-FNCS and the *tesp_support* Python package.These simulations require a 
-recent build of GridLAB-D from the feature/1048 branch (newer than the 
-version posted for the base case), which is included with TESP.  Please 
-consult the TESP documentation for more information about customizations, 
-including batch files to run on Windows.
+FNCS and the *tesp_support* Python package. These simulations require a 
+recent build of GridLAB-D from the feature/1173 branch (newer than the 
+version posted for the base case), which is included with TESP. Also, newer
+versions of TESP run on Linux only. For Windows or Mac OS X, you will have
+to run TESP in a virtual machine or Docker container.
 
 *inv30.glm* is a small 30-house test case with smart inverters, and 
 *inv8500.glm* is the larger feeder model with smart inverters.  
@@ -88,24 +88,27 @@ individual R values and airchange_per_hour values.  The log file
 (ETP) model as estimate from the thermal integrity level.  
 
 All three run over FNCS with the precooling agent in tesp_support.precool.  
-The Mac/Linux run files are run30.sh, runti30.sh and run8500.sh, 
-respectively.  These simulations take up to 4 hours to run.  Example steps 
-are: 
+Since ISGT 2018, some changes have been made to the precooling agent:
+
+- Only 25 houses are allowed to change setpoint at each time step; others wait until a subsequent step
+- The precooling temperature offset is randomized from 1.9 to 2.1 degrees
+
+These simulations take up to 1 hour to run.  Example steps are: 
 
     a. "python3 prepare_cases.py"
-    b. "./run8500.sh" (Mac/Linux) or "run8500" (Windows)
+    b. "./run8500.sh"
     c. "python3 plots.py inv8500" after the simulation completes
     d. "python3 bill.py inv8500"
     e. "python3 plot_invs.py inv8500"
 
-Note: in the preceeding steps, on Windows, use "python" instead of 
-"python3". On Mac OS X, use "pythonw" instead of "python3" for
-the last three plotting steps. 
-
 There are three GridLAB-D definitions near the top of *inv30.glm*, 
 *invti30.glm* and *inv8500.glm*.  These determine the solar inverter 
-control modes, and (only) one of them should be uncommented.  
+control modes, and (only) one of them should be enabled. The script files
+do this on the command line to GridLAB-D, e.g., *-D INV_MODE=VOLT_VAR*.
+Inside the GLM files, one and only one of the following lines must
+be left uncommented:
 
+- #define INVERTER_MODE=${INV_MODE}
 - //#define INVERTER_MODE=CONSTANT_PF
 - //#define INVERTER_MODE=VOLT_VAR
 - //#define INVERTER_MODE=VOLT_WATT
@@ -116,24 +119,26 @@ inverter functions added.  See the TESP documentation for guidance on
 interpreting the other files in this directory.  
 
 - *bill.py*; calculates and plots a summary of meter bills
-- *clean.bat*; Windows script to clean out log files and output files
-- *clean.sh*; Linux/Mac script to clean out log files and output files
+- *clean.sh*; script to clean out log files and output files
 - *inv30.glm*; a 30-house test case with smart inverters
 - *inv8500.glm*; the 8500-node test case with smart inverters
+- *invti30.glm*; a 30-house test case with smart inverters and simplified house thermal integrity inputs
 - *invFeederGen.m*; a MATLAB helper script that populates 8500-node with smart inverters, based on the ../backbone directory
-- *kill5570.bat*; helper script that stops processes listening on port 5570 (Windows)
-- *kill5570.sh*; helper script that stops processes listening on port 5570 (Linux/Mac)
-- *list5570.bat*; helper script that lists processes listening on port 5570 (Windows)
+- *kill5570.sh*; helper script that stops processes listening on port 5570
 - *parser.py*; testing script for parsing FNCS values
-- *plot_invs.py*; tabulates and plots the meter with most overvoltage counts; not valid for the 30-house case because it includes a 480-volt load
+- *plot_invs.py*; tabulates and plots the meter with most overvoltage counts
 - *plots.py*; plots the GridLAB-D and agent outputs using tesp_support functions
 - *prepare_cases.py*; prepares the JSON dictionaries and FNCS configuration for both cases, using tesp_support functions
 - *prices.player*; time-of-day rates to publish over FNCS
-- *run30.bat*; Windows script that runs the 30-house case
-- *run30.sh*; Linux/Mac script that runs the 30-house case
-- *run8500.bat*; Windows script that runs the 8500-node case
-- *run8500.sh*; Linux/Mac script that runs the 8500-node case
+- *run30.sh*; script that runs the 30-house case, inverters in constant power factor mode
+- *runti30.sh*; script that runs the 30-house case with simplified thermal integrity input, and volt-var mode inverters
+- *run8500.sh*; script that runs the 8500-node case with no price, voltage or smart inverter response
+- *run8500base.sh*; script that runs the 8500-node case, responsive to time-of-use rates and overvoltages
+- *run8500tou.sh*; script that runs the 8500-node case, price response to time-of-use rates, no smart inverters
+- *run8500volt.sh*; script that runs the 8500-node case, precooling response to overvoltage, no smart inverters
+- *run8500vvar.sh*; script that runs the 8500-node case, non-transactive, smart inverter volt-var mode
+- *run8500vwatt.sh*; script that runs the 8500-node case, non-transactive, smart inverter volt-watt mode
 
-Copyright (c) 2017-2019, Battelle Memorial Institute
+Copyright (c) 2017-2020, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE

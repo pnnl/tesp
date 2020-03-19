@@ -90,7 +90,7 @@ def process_voltages(nameroot, dictname = ''):
 	# Billing Meters 
 	lst_m.pop('StartTime')
 	meta_m = lst_m.pop('Metadata')
-	print("\nBilling Meter Metadata for", len(lst_m['3600']), "objects")
+	#print("\nBilling Meter Metadata for", len(lst_m['3600']), "objects")
 	for key, val in meta_m.items():
 	#	print (key, val['index'], val['units'])
 		if key == 'voltage_max':

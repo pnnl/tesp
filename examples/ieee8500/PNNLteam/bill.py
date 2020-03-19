@@ -1,13 +1,19 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
+# Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: bill.py; custom for the IEEE 8500-node circuit
 import json;
 import sys;
 import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
+import os.path;
+
+rootname = sys.argv[1]
+dictname = rootname + '_glm_dict.json'
+if not os.path.exists(dictname):
+  dictname = 'inv8500_glm_dict.json'
 
 # first, read and print a dictionary of all the monitored GridLAB-D objects
-lp = open (sys.argv[1] + "_glm_dict.json").read()
+lp = open (dictname).read()
 dict = json.loads(lp)
 inv_keys = list(dict['inverters'].keys())
 inv_keys.sort()
@@ -17,7 +23,7 @@ xfMVA = dict['transformer_MVA']
 bulkBus = dict['bulkpower_bus']
 
 # each metrics file should have matching time points
-lp_m = open ("billing_meter_" + sys.argv[1] + "_metrics.json").read()
+lp_m = open ("billing_meter_" + rootname + "_metrics.json").read()
 lst_m = json.loads(lp_m)
 print ("\nMetrics data starting", lst_m['StartTime'])
 
@@ -33,7 +39,7 @@ hrs /= denom
 time_key = str(times[0])
 
 # parse the metadata for things of specific interest
-print("\nBilling Meter Metadata for", len(lst_m[time_key]), "objects")
+#print("\nBilling Meter Metadata for", len(lst_m[time_key]), "objects")
 for key, val in meta_m.items():
   if key == 'real_power_avg':
     POWER_IDX = val['index']
@@ -61,7 +67,7 @@ for i in range (1, len(hrs)):
 	else:
 		price = 0.11
 	kwh = 0.001 * data_m[:,i,ENERGY_IDX].sum()
-	print ('adding', kwh, 'at', price)
+	# print ('adding', kwh, 'at', price)
 	final_bill[i] = final_bill[i-1] + price * kwh
 
 print ("Initial meter bill =", '{:.2f}'.format(data_m[:,-1,BILL_IDX].sum()))

@@ -92,7 +92,7 @@ def process_houses(nameroot, dictname = ''):
   # Houses 
   lst_h.pop('StartTime')
   meta_h = lst_h.pop('Metadata')
-  print("\nHouse Metadata for", len(lst_h[time_key]), "objects")
+#  print("\nHouse Metadata for", len(lst_h[time_key]), "objects")
   for key, val in meta_h.items():
   # print (key, val['index'], val['units'])
     if key == 'air_temperature_avg':

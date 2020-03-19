@@ -35,8 +35,8 @@ def process_gld(nameroot, dictname = ''):
     dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
   '''
 
-  # the feederGenerator needs to insert metrics_collector objects on capacitors and regulators
-  bCollectedRegCapMetrics = False 
+  # the feederGenerator now inserts metrics_collector objects on capacitors and regulators
+  bCollectedRegCapMetrics = True 
 
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
@@ -56,8 +56,8 @@ def process_gld(nameroot, dictname = ''):
   cap_keys.sort()
   reg_keys = list(dict['regulators'].keys())
   reg_keys.sort()
-  print ('Capacitor Keys', cap_keys)
-  print ('Regulator Keys', reg_keys)
+  #print ('Capacitor Keys', cap_keys)
+  #print ('Regulator Keys', reg_keys)
   xfMVA = dict['transformer_MVA']
   bulkBus = dict['bulkpower_bus']
   print ('\n\nFile', nameroot, 'has substation', sub_keys[0], 'at bulk system bus', bulkBus, 'with', xfMVA, 'MVA transformer')
@@ -97,9 +97,9 @@ def process_gld(nameroot, dictname = ''):
   time_key = str(times[0])
 
   # parse the substation metadata for 2 things of specific interest
-  print ('\nSubstation Metadata for', len(lst_s[time_key]), 'objects')
+#  print ('\nSubstation Metadata for', len(lst_s[time_key]), 'objects')
   for key, val in meta_s.items():
-    print (key, val['index'], val['units'])
+#    print (key, val['index'], val['units'])
     if key == 'real_power_avg':
       SUB_POWER_IDX = val['index']
       SUB_POWER_UNITS = val['units']
@@ -138,9 +138,9 @@ def process_gld(nameroot, dictname = ''):
   # houses
   lst_h.pop('StartTime')
   meta_h = lst_h.pop('Metadata')
-  print('\nHouse Metadata for', len(lst_h[time_key]), 'objects')
+#  print('\nHouse Metadata for', len(lst_h[time_key]), 'objects')
   for key, val in meta_h.items():
-    print (key, val['index'], val['units'])
+#    print (key, val['index'], val['units'])
     if key == 'air_temperature_max':
       HSE_AIR_MAX_IDX = val['index']
       HSE_AIR_MAX_UNITS = val['units']
@@ -185,9 +185,9 @@ def process_gld(nameroot, dictname = ''):
   nBillingMeters = 0
   if not lst_m[time_key] is None:
     nBillingMeters = len(lst_m[time_key])
-  print('\nBilling Meter Metadata for', nBillingMeters, 'objects')
+#  print('\nBilling Meter Metadata for', nBillingMeters, 'objects')
   for key, val in meta_m.items():
-    print (key, val['index'], val['units'])
+#    print (key, val['index'], val['units'])
     if key == 'voltage_max':
       MTR_VOLT_MAX_IDX = val['index']
       MTR_VOLT_MAX_UNITS = val['units']
@@ -259,9 +259,9 @@ def process_gld(nameroot, dictname = ''):
   # assemble the total solar and battery inverter power
   solar_kw = np.zeros(len(times), dtype=np.float)
   battery_kw = np.zeros(len(times), dtype=np.float)
-  print ('\nInverter Metadata for', len(inv_keys), 'objects')
+#  print ('\nInverter Metadata for', len(inv_keys), 'objects')
   for key, val in meta_i.items():
-    print (key, val['index'], val['units'])
+#    print (key, val['index'], val['units'])
     if key == 'real_power_avg':
       INV_P_AVG_IDX = val['index']
       INV_P_AVG_UNITS = val['units']
@@ -296,7 +296,7 @@ def process_gld(nameroot, dictname = ''):
 
   lst_c.pop('StartTime')
   meta_c = lst_c.pop('Metadata')
-  print('\nCapacitor Metadata for', len(cap_keys), 'objects')
+#  print('\nCapacitor Metadata for', len(cap_keys), 'objects')
   for key, val in meta_c.items():
     if key == 'operation_count':
       CAP_COUNT_IDX = val['index']
@@ -316,7 +316,7 @@ def process_gld(nameroot, dictname = ''):
 
   lst_r.pop('StartTime')
   meta_r = lst_r.pop('Metadata')
-  print('\nRegulator Metadata for', len(reg_keys), 'objects')
+#  print('\nRegulator Metadata for', len(reg_keys), 'objects')
   for key, val in meta_r.items():
     if key == 'operation_count':
       REG_COUNT_IDX = val['index']

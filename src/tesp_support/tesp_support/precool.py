@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
+# Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: precool.py
 """Classes for NIST TE Challenge 2 example
 
@@ -149,7 +149,7 @@ class precooler:
     print ('  HM', '{:.2f}'.format (self.HM))
     print ('  CM', '{:.2f}'.format (self.CM))
 
-  def __init__(self,name,agentrow,gldrow,k,mean,stddev,lockout_time,precooling_quiet,precooling_off):
+  def __init__(self,name,agentrow,gldrow,k,mean,stddev,lockout_time,precooling_quiet,precooling_off,bPrice,bVoltage):
     self.name = name # house name
     self.sqft = gldrow['sqft']
     self.ti = gldrow['thermal_integrity']
@@ -165,11 +165,13 @@ class precooler:
     self.toffset = agentrow['toffset']
 
     # price response
+    self.bPrice = bPrice
     self.k = k
     self.mean = mean
     self.stddev = stddev
 
     # voltage response
+    self.bVoltage = bVoltage
     self.lockout_time = lockout_time
     self.precooling_quiet = precooling_quiet
     self.precooling_off = precooling_off
@@ -216,17 +218,19 @@ class precooler:
       self.basepoint = self.night_set
     new_setpoint = self.basepoint
     # time-of-day price response
-    tdelta = (price - self.mean) * self.deadband / self.k / self.stddev
-    new_setpoint += tdelta
-    # overvoltage checks
-    if hour_of_day >= self.precooling_quiet and not self.precooling:
-      if self.mtr_v > self.vthresh:
-        self.precooling = True
-    elif hour_of_day >= self.precooling_off:
-      self.precooling = False
-    # overvoltage response
-    if self.precooling:
-      new_setpoint += self.toffset
+    if self.bPrice:
+      tdelta = (price - self.mean) * self.deadband / self.k / self.stddev
+      new_setpoint += tdelta
+    # overvoltage checks and response
+    if self.bVoltage:
+      if hour_of_day >= self.precooling_quiet and not self.precooling:
+        if self.mtr_v > self.vthresh:
+          self.precooling = True
+      elif hour_of_day >= self.precooling_off:
+        self.precooling = False
+      if self.precooling:
+        new_setpoint += self.toffset
+    # is the new setpoint different from the existing setpoint?
     if abs(new_setpoint - self.setpoint) > 0.1:
       if (time_seconds - self.lastchange) > self.lockout_time:
         self.setpoint = new_setpoint
@@ -242,7 +246,7 @@ class precooler:
     """
     return abs (self.air_temp - self.basepoint)
 
-def precool_loop (nhours, metrics_root):
+def precool_loop (nhours, metrics_root, dict_root, response='PriceVoltage'):
   """Function that supervises FNCS messages and time stepping for precooler agents
 
   Opens metrics_root_agent_dict.json and metrics_root_glm_dict.json for configuration.
@@ -251,18 +255,27 @@ def precool_loop (nhours, metrics_root):
   Args:
     nhours (float): number of hours to simulate
     metrics_root (str): name of the case, without file extension
+    dict_root (str): repeat metrics_root, or the name of a shared case dictionary without file extension
+    response (str): combination of Price and/or Voltage
   """
   time_stop = int (3600 * nhours)
 
-  lp = open (metrics_root + "_agent_dict.json").read()
+  lp = open (dict_root + '_agent_dict.json').read()
   dict = json.loads(lp)
-  gp = open (metrics_root + "_glm_dict.json").read()
+  gp = open (dict_root + '_glm_dict.json').read()
   glm_dict = json.loads(gp)
+
+  bPriceResponse = False
+  bVoltageResponse = False
+  if 'Price' in response:
+    bPriceResponse = True
+  if 'Voltage' in response:
+    bVoltageResponse = True
 
   precool_meta = {'temperature_deviation_min':{'units':'degF','index':0},
                   'temperature_deviation_max':{'units':'degF','index':1},
                   'temperature_deviation_avg':{'units':'degF','index':2}}
-  StartTime = "2013-07-01 00:00:00 PST"
+  StartTime = '2013-07-01 00:00:00 PST'
   precool_metrics = {'Metadata':precool_meta,'StartTime':StartTime}
 
   dt = dict['dt']
@@ -277,15 +290,18 @@ def precool_loop (nhours, metrics_root):
   lockout_period = 360
   precoolerObjs = {}
   house_keys = list(dict['houses'].keys())
+  n_houses = len (house_keys)
   for key in house_keys:
     row = dict['houses'][key]
     gldrow = glm_dict['houses'][key]
     precoolerObjs[key] = precooler (key, row, gldrow, k, mean, stddev, 
-                                    lockout_period, precooling_quiet, precooling_off)
+                                    lockout_period, precooling_quiet, precooling_off,
+                                    bPriceResponse, bVoltageResponse)
 
   print ('run till', time_stop, 'step', dt, 
          'mean', mean, 'stddev', stddev, 'k_slope', k,
-         'lockout_period', lockout_period, 'precooling_quiet', precooling_quiet, 'precooling_off', precooling_off)
+         'lockout_period', lockout_period, 'precooling_quiet', precooling_quiet, 'precooling_off', precooling_off,
+         'bVoltageResponse', bVoltageResponse, 'bPriceResponse', bPriceResponse)
 
   fncs.initialize()
   time_granted = 0
@@ -322,12 +338,16 @@ def precool_loop (nhours, metrics_root):
     sum_temp_dev = 0.0
     min_temp_dev = 10000.0
     max_temp_dev = 0.0
+    n_changes = 0
+    max_changes = 25
     for key, obj in precoolerObjs.items():
-      if obj.check_setpoint_change (hour_of_day, price, time_granted):
-        print ('setting',key,'to',obj.setpoint,'at',time_granted,'precooling',obj.precooling)
-        fncs.publish (key + '_cooling_setpoint', obj.setpoint)
-        if obj.precooling:
-          setPrecoolers.add (obj.name)
+      if n_changes < max_changes:
+        if obj.check_setpoint_change (hour_of_day, price, time_granted):
+          print ('  setting {:s} to {:.3f} at {:d} and {:.2f} volts precooling'.format (key,obj.setpoint,time_granted,obj.mtr_v),obj.precooling)
+          n_changes += 1
+          fncs.publish (key + '_cooling_setpoint', obj.setpoint)
+          if obj.precooling:
+            setPrecoolers.add (obj.name)
       temp_dev = obj.get_temperature_deviation()
       count_temp_dev += 1
       if temp_dev < min_temp_dev:
@@ -335,6 +355,9 @@ def precool_loop (nhours, metrics_root):
       if temp_dev > max_temp_dev:
         max_temp_dev = temp_dev
       sum_temp_dev += temp_dev
+
+    if n_changes > 0:
+      print ('*** {:6.4f} hr, changing {:d} setpoints, {:d} out of {:d} are pre-cooling'.format (hour_of_day, n_changes, len(setPrecoolers), n_houses))
 
     if count_temp_dev < 1:
       count_temp_dev = 1
@@ -345,7 +368,7 @@ def precool_loop (nhours, metrics_root):
 
   print (len(setPrecoolers), 'houses participated in precooling')
   print ('writing metrics', flush=True)
-  mp = open ("precool_" + metrics_root + "_metrics.json", "w")
+  mp = open ('precool_' + metrics_root + '_metrics.json', 'w')
   print (json.dumps(precool_metrics), file=mp)
   mp.close()
   print ('done', flush=True)

@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
+# Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: prep_precool.py
 """Writes the precooling agent and GridLAB-D metadata for NIST TE Challenge 2 example
  
@@ -9,7 +9,7 @@ import sys
 import json
 import numpy as np
 
-def prep_precool (nameroot):
+def prep_precool (nameroot, time_step=15):
     """Sets up agent configurations for the NIST TE Challenge 2 example
 
     Reads the GridLAB-D data from nameroot.glm; it should contain 
@@ -28,14 +28,15 @@ def prep_precool (nameroot):
     # write yaml for precool.py to subscribe meter voltages and house setpoints
     # write txt for gridlabd to subscribe house setpoints and publish meter voltages
 
-    dt = 15
-    period = 300
+    dt = time_step
+    period = 300 # not actually used
     mean_price = 0.1167
     std_dev_price = 0.0149
     k_slope = 1.0
     # autonomous precooling; if the meter voltage_1 exceeds vthresh, change the thermostat by toffset
     vthresh = 125.0
-    toffset = -4.0
+    toffset_min = -1.9
+    toffset_max = -2.1
 
     gp = open (nameroot + '.glm', 'r')
     dp = open (nameroot + '_agent_dict.json', 'w')
@@ -87,7 +88,8 @@ def prep_precool (nameroot):
                     day_set = np.random.uniform (78, 82)
                     day_start = np.random.uniform (6, 8)
                     day_end = np.random.uniform (17, 19)
-                    deadband = np.random.uniform (2, 3)
+                    deadband = np.random.uniform (1, 2)
+                    toffset = np.random.uniform (toffset_min, toffset_max)
                     houses[houseName] = {'meter':meterName,'night_set':float('{:.3f}'.format(night_set)),
                         'day_set':float('{:.3f}'.format(day_set)),'day_start_hour':float('{:.3f}'.format(day_start)),
                         'day_end_hour':float('{:.3f}'.format(day_end)),'deadband':float('{:.3f}'.format(deadband)),

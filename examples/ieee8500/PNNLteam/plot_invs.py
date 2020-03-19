@@ -1,13 +1,19 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
+# Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: plot_invs.py; custom for the IEEE 8500-node circuit
 import json;
 import sys;
 import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
+import os.path
+
+rootname = sys.argv[1]
+dictname = rootname + '_glm_dict.json'
+if not os.path.exists(dictname):
+  dictname = 'inv8500_glm_dict.json'
 
 # first, read and print a dictionary of all the monitored GridLAB-D objects
-lp = open (sys.argv[1] + "_glm_dict.json").read()
+lp = open (dictname).read()
 dict = json.loads(lp)
 inv_keys = list(dict['inverters'].keys())
 inv_keys.sort()
@@ -18,7 +24,7 @@ bulkBus = dict['bulkpower_bus']
 
 # parse the substation metrics file first; there should just be one entity per time sample
 # each metrics file should have matching time points
-lp_i = open ("inverter_" + sys.argv[1] + "_metrics.json").read()
+lp_i = open ("inverter_" + rootname + "_metrics.json").read()
 lst_i = json.loads(lp_i)
 print ("\nMetrics data starting", lst_i['StartTime'])
 
@@ -34,9 +40,9 @@ hrs /= denom
 time_key = str(times[0])
 
 # parse the metadata for things of specific interest
-print("\nInverter Metadata for", len(lst_i[time_key]), "objects")
+#print("\nInverter Metadata for", len(lst_i[time_key]), "objects")
 for key, val in meta_i.items():
-  print (key, val['index'], val['units'])
+  #print (key, val['index'], val['units'])
   if key == 'real_power_avg':
     INV_P_AVG_IDX = val['index']
     INV_P_AVG_UNITS = val['units']
@@ -46,7 +52,7 @@ for key, val in meta_i.items():
 
 # create a NumPy array of all metrics
 data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
-#print ("\nConstructed", data_s.shape, "NumPy array for Substations")
+print ("\nConstructed", data_i.shape, "NumPy array for Inverters")
 j = 0
 for key in inv_keys:
   i = 0
@@ -57,13 +63,13 @@ for key in inv_keys:
   j = j + 1
 
 # Billing Meters 
-lp_m = open ("billing_meter_" + sys.argv[1] + "_metrics.json").read()
+lp_m = open ("billing_meter_" + rootname + "_metrics.json").read()
 lst_m = json.loads(lp_m)
 lst_m.pop('StartTime')
 meta_m = lst_m.pop('Metadata')
-print("\nBilling Meter Metadata for", len(lst_m[time_key]), "objects")
+#print("\nBilling Meter Metadata for", len(lst_m[time_key]), "objects")
 for key, val in meta_m.items():
-  print (key, val['index'], val['units'])
+  #print (key, val['index'], val['units'])
   if key == 'voltage_max':
     MTR_VOLT_MAX_IDX = val['index']
     MTR_VOLT_MAX_UNITS = val['units']
@@ -75,6 +81,7 @@ for key, val in meta_m.items():
     MTR_VOLT_AVG_UNITS = val['units']
 
 data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+print ("\nConstructed", data_m.shape, "NumPy array for Meters")
 # find the inverter meter with highest voltage
 keymax = ''
 vmax = 0.0

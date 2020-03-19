@@ -27,7 +27,8 @@ module generators;
 #include "${SCHED_PATH}/water_and_setpoint_schedule_v3.glm"
 //#include "${SCHED_PATH}/appliance_schedules.glm"
 
-#define INVERTER_MODE=CONSTANT_PF
+#define INVERTER_MODE=${INV_MODE}
+//#define INVERTER_MODE=CONSTANT_PF
 //#define INVERTER_MODE=VOLT_VAR
 //#define INVERTER_MODE=VOLT_WATT
 #define INV_VBASE=240.0
@@ -65,6 +66,8 @@ object climate {
   name climate;
   reader CsvReader;
   tmyfile ../cloudy.csv;
+	latitude 32.133;
+	longitude -111.95;
 }
 
 class player {
@@ -255,7 +258,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -275,7 +278,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -313,7 +316,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -333,7 +336,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -371,7 +374,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -391,7 +394,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -429,7 +432,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -449,7 +452,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -487,7 +490,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -507,7 +510,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -545,7 +548,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -565,7 +568,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -603,7 +606,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -623,7 +626,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -661,7 +664,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -681,7 +684,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -719,7 +722,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -739,7 +742,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -777,7 +780,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -797,7 +800,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -835,7 +838,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -855,7 +858,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -893,7 +896,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -913,7 +916,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -951,7 +954,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -971,7 +974,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1009,7 +1012,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1029,7 +1032,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1067,7 +1070,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1087,7 +1090,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1125,7 +1128,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1145,7 +1148,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1183,7 +1186,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1203,7 +1206,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1241,7 +1244,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1261,7 +1264,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1299,7 +1302,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1319,7 +1322,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1357,7 +1360,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1377,7 +1380,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1415,7 +1418,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1435,7 +1438,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1473,7 +1476,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1493,7 +1496,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1531,7 +1534,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1551,7 +1554,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1589,7 +1592,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1609,7 +1612,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1647,7 +1650,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1667,7 +1670,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1705,7 +1708,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1725,7 +1728,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1763,7 +1766,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1783,7 +1786,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1821,7 +1824,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1841,7 +1844,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1879,7 +1882,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1899,7 +1902,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
@@ -1937,7 +1940,7 @@ object triplex_meter {
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
 }
 
 object triplex_line {
@@ -1957,7 +1960,7 @@ object triplex_meter {
 	nominal_voltage 120;
 	bill_mode UNIFORM;
   bill_day 1;
-  monthly_fee 6;
+  monthly_fee 10;
   price ${FIXED_PRICE};
   object metrics_collector {
     interval 300;
