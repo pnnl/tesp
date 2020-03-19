@@ -1,6 +1,6 @@
 # Weather Agent
 
-Copyright (c) 2017-19, Battelle Memorial Institute
+Copyright (c) 2017-20, Battelle Memorial Institute
 
 This weather agent needs an environment variable WEATHER_CONFIG to be set and point to the WeatherConfig.json file.
 
