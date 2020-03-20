@@ -491,7 +491,8 @@ def prep_substation (gldfileroot, jsonfile = ''):
         latitude = float (config['WeatherPrep']['Latitude'])
         longitude = float (config['WeatherPrep']['Longitude'])
 
-        # max_capacity_reference_bid_quantity = 5000.0 * float(config['PYPOWERConfiguration']['TransformerBase']) / 3.0  # forced oil, forced air
+        # use the forced oil, forced air as 1.67 * transformer rating in kVA
+        max_capacity_reference_bid_quantity = 1.6667 * 1000.0 * float(config['PYPOWERConfiguration']['TransformerBase'])
 
     ProcessGLM (gldfileroot)
 

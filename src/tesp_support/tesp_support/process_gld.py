@@ -44,8 +44,8 @@ def process_gld(nameroot, dictname = ''):
   else:
       lp = open (nameroot + '_glm_dict.json').read()
   dict = json.loads(lp)
-  sub_keys = list(dict['feeders'].keys())
-  sub_keys.sort()
+  fdr_keys = list(dict['feeders'].keys())
+  fdr_keys.sort()
   inv_keys = list(dict['inverters'].keys())
   inv_keys.sort()
   hse_keys = list(dict['houses'].keys())
@@ -60,11 +60,6 @@ def process_gld(nameroot, dictname = ''):
   #print ('Regulator Keys', reg_keys)
   xfMVA = dict['transformer_MVA']
   bulkBus = dict['bulkpower_bus']
-  print ('\n\nFile', nameroot, 'has substation', sub_keys[0], 'at bulk system bus', bulkBus, 'with', xfMVA, 'MVA transformer')
-  print('\nFeeder Dictionary:')
-  for key in sub_keys:
-    row = dict['feeders'][key]
-    print (key, 'has', row['house_count'], 'houses and', row['inverter_count'], 'inverters')
 #  print('\nBilling Meter Dictionary:')
 #  for key in mtr_keys:
 #    row = dict['billingmeters'][key]
@@ -96,6 +91,14 @@ def process_gld(nameroot, dictname = ''):
 
   time_key = str(times[0])
 
+  # find the actual substation name (not a feeder name) as GridLAB-D wrote it to the metrics file
+  sub_key = list(lst_s[time_key].keys())[0]
+  print ('\n\nFile', nameroot, 'has substation', sub_key, 'at bulk system bus', bulkBus, 'with', xfMVA, 'MVA transformer')
+  print('\nFeeder Dictionary:')
+  for key in fdr_keys:
+    row = dict['feeders'][key]
+    print (key, 'has', row['house_count'], 'houses and', row['inverter_count'], 'inverters')
+
   # parse the substation metadata for 2 things of specific interest
 #  print ('\nSubstation Metadata for', len(lst_s[time_key]), 'objects')
   for key, val in meta_s.items():
@@ -108,13 +111,13 @@ def process_gld(nameroot, dictname = ''):
       SUB_LOSSES_UNITS = val['units']
 
   # create a NumPy array of all metrics for the substation
-  data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float)
+  data_s = np.empty(shape=(1, len(times), len(lst_s[time_key][sub_key])), dtype=np.float)
   print ('\nConstructed', data_s.shape, 'NumPy array for Substations')
   j = 0
-  for key in sub_keys:
+  for key in [sub_key]:
     i = 0
     for t in times:
-      ary = lst_s[str(t)][sub_keys[j]]
+      ary = lst_s[str(t)][key]
       data_s[j, i,:] = ary
       i = i + 1
     j = j + 1
@@ -352,7 +355,7 @@ def process_gld(nameroot, dictname = ''):
   ax[0,0].plot(hrs, hvac2, color='magenta', label='HVAC')
   ax[0,0].plot(hrs, wh2, color='orange', label='WH')
   ax[0,0].set_ylabel('kW')
-  ax[0,0].set_title ('Substation Real Power at ' + sub_keys[0])
+  ax[0,0].set_title ('Substation Real Power at ' + sub_key)
   ax[0,0].legend(loc='best')
 
   #vabase = dict['inverters'][inv_keys[0]]['rated_W']

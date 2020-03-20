@@ -83,10 +83,9 @@ def merge_glm(target, sources, xfmva):
 def merge_glm_dict(target, sources, xfmva):
   """Combines GridLAB-D metadata files into target/target.json. The source files must already exist.
 
-  The output JSON won't have a top-level base_feeder attribute. Instead,
-  the base_feeder from each source file will become a feeder key in the
-  output JSON feeders dictionary, and then every child object on that feeder 
-  will have its feeder_id, originally network_node, changed to match the base_feeder.
+  Each constituent feeder has a new ID constructed from the NamePrefix + original base_feeder,
+  then every child object on that feeder will have its feeder_id, originally network_node, 
+  changed to match the new one.
 
   Args:
       target (str): the directory and root case name
@@ -104,11 +103,17 @@ def merge_glm_dict(target, sources, xfmva):
           'regulators' : {}}
   workdir = './' + target + '/'
   for fdr in sources:
+    cp = open (fdr + '.json').read()
+    comb_cfg = json.loads(cp)
+    name_prefix = comb_cfg['BackboneFiles']['NamePrefix']
+
     lp = open (workdir + fdr + '_glm_dict.json').read()
     cfg = json.loads(lp)
-    fdr_id = helpers.gld_strict_name (cfg['base_feeder'])
+    fdr_id = helpers.gld_strict_name (name_prefix + cfg['feeders']['network_node']['base_feeder'])
+    print ('created new feeder id', fdr_id, 'for', fdr)
     dict['feeders'][fdr_id] = {'house_count':cfg['feeders']['network_node']['house_count'], \
-                               'inverter_count':cfg['feeders']['network_node']['inverter_count']}
+                               'inverter_count':cfg['feeders']['network_node']['inverter_count'], \
+                               'base_feeder':cfg['feeders']['network_node']['base_feeder']}
     for key in ['billingmeters', 'houses', 'inverters', 'capacitors', 'regulators']:
       for obj in cfg[key]:
         if 'feeder_id' in cfg[key][obj]:
@@ -118,7 +123,7 @@ def merge_glm_dict(target, sources, xfmva):
   print (json.dumps(dict), file=op)
   op.close()
 
-def merge_agent_dict(target, sources):
+def merge_agent_dict(target, sources, xfmva):
   """Combines the substation agent configuration files into target/target.json. The source files must already exist.
 
   Args:
@@ -137,6 +142,8 @@ def merge_agent_dict(target, sources):
       dict['GridLABD'] = cfg['GridLABD']
     for key in ['markets', 'controllers']:
       dict[key].update(cfg[key])
+  for mkt in dict['markets']:
+    dict['markets'][mkt]['max_capacity_reference_bid_quantity'] = xfmva * 1000.0 * (5.0 / 3.0)
   op = open (workdir + target + '_agent_dict.json', 'w')
   print (json.dumps(dict), file=op)
   op.close()

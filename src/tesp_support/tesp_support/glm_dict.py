@@ -347,10 +347,9 @@ def glm_dict (nameroot, ercot=False, te30=False):
     mtr = billingmeters[val['billingmeter_id']]
     mtr['children'].append(key)
 
-  feeders[feeder_id] = {'house_count': len(houses),'inverter_count': len(inverters)}
+  feeders[feeder_id] = {'house_count': len(houses),'inverter_count': len(inverters),'base_feeder':base_feeder}
   substation = {'bulkpower_bus':bulkpowerBus,'FNCS':FNCSmsgName,
-    'transformer_MVA':substationTransformerMVA,
-    'base_feeder':base_feeder,'feeders':feeders, 
+    'transformer_MVA':substationTransformerMVA,'feeders':feeders, 
     'billingmeters':billingmeters,'houses':houses,'inverters':inverters,
     'capacitors':capacitors,'regulators':regulators}
   print (json.dumps(substation), file=op)
