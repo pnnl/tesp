@@ -253,7 +253,7 @@ time_delta: """ + EpAgentStep + """
 broker: tcp://localhost:5570
 values:
     kwhr_price:
-        topic: auction/clear_price
+        topic: substation/clear_price
         default: 0.10
     cooling_controlled_load:
         topic: eplus/EMS COOLING CONTROLLED LOAD
@@ -431,19 +431,19 @@ values:
         topic: gridlabdSimulator1/distribution_load
         default: 0
     UNRESPONSIVE_MW:
-        topic: auction/unresponsive_mw
+        topic: substation/unresponsive_mw
         default: 0
     RESPONSIVE_MAX_MW:
-        topic: auction/responsive_max_mw
+        topic: substation/responsive_max_mw
         default: 0
     RESPONSIVE_C2:
-        topic: auction/responsive_c2
+        topic: substation/responsive_c2
         default: 0
     RESPONSIVE_C1:
-        topic: auction/responsive_c1
+        topic: substation/responsive_c1
         default: 0
     RESPONSIVE_DEG:
-        topic: auction/responsive_deg
+        topic: substation/responsive_deg
         default: 0
 """
     if freshdir == True:

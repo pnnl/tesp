@@ -8,9 +8,11 @@ tesp.add_tesp_feeder ('Feeder4.json')
 case = 'CombinedCase'
 feeders = ['Feeder1', 'Feeder2', 'Feeder3', 'Feeder4']
 
-tesp.merge_glm (case, feeders, 20.0)
-tesp.merge_glm_dict (case, feeders, 20.0)
-tesp.merge_agent_dict (case, feeders)
+xfmva = 20.0
+
+tesp.merge_glm (case, feeders, xfmva)
+tesp.merge_glm_dict (case, feeders, xfmva)
+tesp.merge_agent_dict (case, feeders, xfmva)
 tesp.merge_substation_yaml (case, feeders)
 tesp.merge_fncs_config (case, feeders)
 
