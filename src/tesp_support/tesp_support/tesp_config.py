@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: tesp_config.py
 """Presents a GUI to configure and package TESP cases
 
@@ -80,16 +80,19 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
           ['Energy+ Time Step',5,'m','EplusConfiguration','TimeStep'],
           ['Agent Time Step',15,'s','AgentPrep','TimeStepGldAgents'],
           ['GridLAB-D Taxonomy Choice','TE_Base','','BackboneFiles','TaxonomyChoice','taxonomyChoices'],
+          ['Feeder Name Prefix','Fdr1_','Prepend to Taxonomy Names','BackboneFiles','NamePrefix'],
           ['Energy+ Base File','SchoolDualController.idf','','BackboneFiles','EnergyPlusFile'],
           ['PYPOWER Base File','ppbasefile.py','','BackboneFiles','PYPOWERFile'],
           ['Weather Type','TMY3','','WeatherPrep','WeatherChoice','weatherChoices'],
           ['Weather Source','WA-Yakima_Air_Terminal.tmy3','File or URL','WeatherPrep','DataSource'],
           ['Latitude (N > 0)',32.133,'deg','WeatherPrep','Latitude'],
           ['Longitude (E > 0)',-110.95,'deg','WeatherPrep','Longitude'],
-          ['Support Directory','~/src/tesp/support','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
+          ['Support Directory','$TESP_INSTALL/share/support','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
           ['Working Directory','./','','SimulationConfig','WorkingDirectory'],
           ['Case Name','Test','','SimulationConfig','CaseName']
           ];
+varsTMSupportDirIndex = 16
+
 varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCoolingPercentage'],
           ['Electric Cooling Participation',50,'%','FeederGenerator','ElectricCoolingParticipation'],
           ['Water Heater Penetration',75,'%','FeederGenerator','WaterHeaterPercentage'],
@@ -520,7 +523,7 @@ class TespConfigGUI:
         if col == 3 and use3:
           val = float(w.get())
           config['MonteCarloCase']['Samples3'][row-5] = val
-    support_path = config['SimulationConfig']['SourceDirectory']
+    support_path = os.path.expandvars (os.path.expanduser (config['SimulationConfig']['SourceDirectory']))
     if not os.path.exists (support_path):
       if not messagebox.askyesno ('Continue to Save?', 'TESP Support Directory: ' + support_path + ' not found.'):
         return
@@ -621,9 +624,9 @@ def show_tesp_config ():
     if len(tespdir) > 0:
   #   config['SimulationConfig']['SourceDirectory'] = tespdir
       if sys.platform == 'win32':
-        varsTM[13][1] = tespdir + '\support'
+        varsTM[varsTMSupportDirIndex][1] = tespdir + '\support'
       else:
-        varsTM[13][1] = tespdir + '/support'
+        varsTM[varsTMSupportDirIndex][1] = tespdir + '/support'
   my_gui = TespConfigGUI (root)
   while True:
     try:

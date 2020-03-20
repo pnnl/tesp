@@ -15,7 +15,7 @@ try:
 except:
   pass
 
-def process_agents(nameroot, dictname = ''):
+def process_agents(nameroot, dictname = '', want_dictionary=False):
     """ Plots cleared price, plus bids from the first HVAC controller
 
     This function reads *auction_nameroot_metrics.json* and  
@@ -41,16 +41,17 @@ def process_agents(nameroot, dictname = ''):
     a_keys.sort()
     c_keys = list(dict['controllers'].keys())
     c_keys.sort()
-    print("\nMarket Dictionary:")
-    print("ID Period Unit Init StDev")
-    for key in a_keys:
-        row = dict['markets'][key]
-        print (key, row['period'], row['unit'], row['init_price'], row['init_stdev'])
-    print("\nController Dictionary:")
-    print("ID House Mode BaseDaylight Ramp Offset Cap")
-    for key in c_keys:
-        row = dict['controllers'][key]
-        print (key, row['houseName'], row['control_mode'], row['daylight_set'], row['ramp'], row['offset_limit'], row['price_cap'])
+    if want_dictionary:
+      print("\nMarket Dictionary:")
+      print("ID Period Unit Init StDev")
+      for key in a_keys:
+          row = dict['markets'][key]
+          print (key, row['period'], row['unit'], row['init_price'], row['init_stdev'])
+      print("\nController Dictionary:")
+      print("ID House Mode BaseDaylight Ramp Offset Cap")
+      for key in c_keys:
+          row = dict['controllers'][key]
+          print (key, row['houseName'], row['control_mode'], row['daylight_set'], row['ramp'], row['offset_limit'], row['price_cap'])
 
     # read the auction metrics file
     lp_a = open ("auction_" + nameroot + "_metrics.json").read()
@@ -68,9 +69,9 @@ def process_agents(nameroot, dictname = ''):
     hrs /= denom
 
     # parse the metadata for things of specific interest
-    print ("\nAuction Metadata [Variable Index Units]")
+    #print ("\nAuction Metadata [Variable Index Units]")
     for key, val in meta_a.items():
-        print (key, val['index'], val['units'])
+        #print (key, val['index'], val['units'])
         if key == 'clearing_price':
             CLEAR_IDX = val['index']
             CLEAR_UNITS = val['units']
@@ -96,9 +97,9 @@ def process_agents(nameroot, dictname = ''):
     # c_keys = ['house1_R1_12_47_1_tm_507_thermostat_controller']
     lst_c.pop('StartTime')
     meta_c = lst_c.pop('Metadata')
-    print ("\nController Metadata [Variable Index Units]")
+    #print ("\nController Metadata [Variable Index Units]")
     for key, val in meta_c.items():
-        print (key, val['index'], val['units'])
+        #print (key, val['index'], val['units'])
         if key == 'bid_price':
             BID_P_IDX = val['index']
             BID_P_UNITS = val['units']

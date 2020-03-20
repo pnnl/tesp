@@ -117,11 +117,12 @@ def process_pypower(nameroot):
         j = j + 1
 
     # display some averages
-    print ("Average real power LMP =", data_b[0,:,LMP_P_IDX].mean(), LMP_P_UNITS)
-    print ("Maximum real power LMP =", data_b[0,:,LMP_P_IDX].max(), LMP_P_UNITS)
-    print ("First day LMP mean/std dev=", data_b[0,0:25,LMP_P_IDX].mean(), data_b[0,0:25,LMP_P_IDX].std())
-    print ("Maximum bus voltage =", data_b[0,:,VMAX_IDX].max(), VMAX_UNITS)
-    print ("Minimum bus voltage =", data_b[0,:,VMIN_IDX].min(), VMIN_UNITS)
+    print ("Average real power LMP = {:.5f} {:s}".format (data_b[0,:,LMP_P_IDX].mean(), LMP_P_UNITS))
+    print ("Maximum real power LMP = {:.5f} {:s}".format (data_b[0,:,LMP_P_IDX].max(), LMP_P_UNITS))
+    print ("First day LMP mean = {:.5f}".format (data_b[0,0:25,LMP_P_IDX].mean()))
+    print ("First day LMP std dev = {:.6f}".format (data_b[0,0:25,LMP_P_IDX].std()))
+    print ("Maximum bus voltage = {:.4f} {:s}".format ( data_b[0,:,VMAX_IDX].max(), VMAX_UNITS))
+    print ("Minimum bus voltage = {:.4f} {:s}".format (data_b[0,:,VMIN_IDX].min(), VMIN_UNITS))
 
     # read the generator metrics file
     lp_g = open ("gen_" + nameroot + "_metrics.json").read()
@@ -130,9 +131,9 @@ def process_pypower(nameroot):
     # make a sorted list of the times, and NumPy array of times in hours
     lst_g.pop('StartTime')
     meta_g = lst_g.pop('Metadata')
-    print ("\nGenerator Metadata [Variable Index Units] for", len(lst_g[str(times[0])]), "objects")
+    #print ("\nGenerator Metadata [Variable Index Units] for", len(lst_g[str(times[0])]), "objects")
     for key, val in meta_g.items():
-        print (key, val['index'], val['units'])
+        #print (key, val['index'], val['units'])
         if key == 'Pgen':
             PGEN_IDX = val['index']
             PGEN_UNITS = val['units']

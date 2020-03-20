@@ -43,6 +43,7 @@ transmissionXfmrRpct = 1.0
 transmissionXfmrNLLpct = 0.4
 transmissionXfmrImagpct = 1.0
 fncs_case = ''
+name_prefix = ''
 
 glmpath = '../../../support/feeders/'
 supportpath = '../../../../support/schedules/' # wrt outpath
@@ -81,7 +82,7 @@ def write_solar_inv_settings (op):
     Args:
         op (file): an open GridLAB-D input file
     """
-    print ('    four_quadrant_control_mode ${INVERTER_MODE};', file=op)
+    print ('    four_quadrant_control_mode ${' + name_prefix + 'INVERTER_MODE};', file=op)
     print ('    V_base ${INV_VBASE};', file=op)
     print ('    V1 ${INV_V1};', file=op)
     print ('    Q1 ${INV_Q1};', file=op)
@@ -732,7 +733,7 @@ def obj(parent,model,line,itr,oidh,octr):
             val = m.group(2)
             intobj = 0
             if param == 'name':
-                oname = val
+                oname = name_prefix + val
             elif param == 'object':
                 # found a nested object
                 intobj += 1
@@ -757,7 +758,7 @@ def obj(parent,model,line,itr,oidh,octr):
             line = next(itr)
     # If undefined, use a default name
     if oname is None:
-        oname = 'ID_'+str(octr)
+        oname = name_prefix + 'ID_'+str(octr)
     oidh[oname] = oname
     # Hash an object identifier to the object name
     if n:
@@ -834,7 +835,7 @@ def write_local_triplex_configurations (op):
   """
   for row in triplex_conductors:
     print ('object triplex_line_conductor {', file=op)
-    print ('  name', row[0] + ';', file=op)
+    print ('  name', name_prefix + row[0] + ';', file=op)
     print ('  resistance', str(row[1]) + ';', file=op)
     print ('  geometric_mean_radius', str(row[2]) + ';', file=op)
     print ('  rating.summer.continuous', str(row[3]) + ';', file=op)
@@ -844,10 +845,10 @@ def write_local_triplex_configurations (op):
     print ('}', file=op)
   for row in triplex_configurations:
     print ('object triplex_line_configuration {', file=op)
-    print ('  name', row[0] + ';', file=op)
-    print ('  conductor_1', row[1] + ';', file=op)
-    print ('  conductor_2', row[1] + ';', file=op)
-    print ('  conductor_N', row[2] + ';', file=op)
+    print ('  name', name_prefix + row[0] + ';', file=op)
+    print ('  conductor_1', name_prefix + row[1] + ';', file=op)
+    print ('  conductor_2', name_prefix + row[1] + ';', file=op)
+    print ('  conductor_N', name_prefix + row[2] + ';', file=op)
     print ('  insulation_thickness', str(row[3]) + ';', file=op)
     print ('  diameter', str(row[4]) + ';', file=op)
     print ('}', file=op)
@@ -1692,7 +1693,7 @@ def write_houses(basenode, op, vnom):
             print ('  to', mtrname + ';', file=op)
             print ('  phases', phs + ';', file=op)
             print ('  length 30;', file=op)
-            print ('  configuration', triplex_configurations[0][0] + ';', file=op)
+            print ('  configuration', name_prefix + triplex_configurations[0][0] + ';', file=op)
             print ('}', file=op)
             print ('object triplex_meter {', file=op)
             print ('  name', mtrname + ';', file=op)
@@ -1982,6 +1983,7 @@ def write_houses(basenode, op, vnom):
                 print ('    generator_mode CONSTANT_PQ;', file=op)
                 print ('    inverter_type FOUR_QUADRANT;', file=op)
                 print ('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
+                print ('    V_base ${INV_VBASE};', file=op)
                 print ('    charge_lockout_time 1;', file=op)
                 print ('    discharge_lockout_time 1;', file=op)
                 print ('    rated_power 5000;', file=op)
@@ -2219,7 +2221,7 @@ def write_xfmr_config (key, phs, kvat, vnom, vsec, install_type, vprimll, vpriml
         op (file): an open GridLAB-D input file
     """
     print ('object transformer_configuration {', file=op)
-    print ('  name ' + key + ';', file=op)
+    print ('  name ' + name_prefix + key + ';', file=op)
     print ('  power_rating ' + format(kvat, '.2f') + ';', file=op)
     kvaphase = kvat
     if 'XF2' in key:
@@ -2408,6 +2410,17 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
                 else:
                     print (line, file=op)
 
+        # apply the nameing prefix if necessary
+        if len(name_prefix) > 0:
+          for t in model:
+            for o in model[t]:
+              elem = model[t][o]
+              for tok in ['name', 'parent', 'from', 'to', 'configuration', 'spacing',
+                          'conductor_1', 'conductor_2', 'conductor_N', 
+                          'conductor_A', 'conductor_B', 'conductor_C']:
+                if tok in elem:
+                  elem[tok] = name_prefix + elem[tok]
+
 #        log_model (model, h)
 
         # construct a graph of the model, starting with known links
@@ -2503,8 +2516,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 #        print ('// taxonomy_base_feeder', rootname, file=op)
 #        print ('// region_name', rgnName[rgn-1], file=op)
         if solar_percentage > 0.0:
-            print ('// default IEEE 1547-2018 for Category B; modes are CONSTANT_PF, VOLT_VAR, VOLT_WATT', file=op)
-            print ('#define INVERTER_MODE=' + solar_inv_mode, file=op)
+            print ('// default IEEE 1547-2018 settings for Category B', file=op)
             print ('#define INV_VBASE=240.0', file=op)
             print ('#define INV_V1=0.92', file=op)
             print ('#define INV_V2=0.98', file=op)
@@ -2531,7 +2543,9 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         print ('  filename Current_Dump_' + outname + '.csv;', file=op)
         print ('  mode polar;', file=op)
         print ('}', file=op)
-        print ('#endif', file=op)
+        print ('#endif // &&& end of common section for combining TESP cases', file=op)
+        print ('// solar inverter mode on this feeder', file=op)
+        print ('#define ' + name_prefix + 'INVERTER_MODE=' + solar_inv_mode, file=op)
 
 # NEW STRATEGY - loop through transformer instances and assign a standard size based on the downstream load
 #              - change the referenced transformer_configuration attributes
@@ -2576,7 +2590,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
             raw_key = 'XF' + str(nphs) + '_' + install_type + '_' + seg_phs + '_' + str(kvat)
             key = raw_key.replace('.', 'p')
 
-            model[t][o]['configuration'] = key
+            model[t][o]['configuration'] = name_prefix + key
             model[t][o]['phases'] = seg_phs
             if key not in xfused:
                 xfused[key] = [seg_phs, kvat, vnom, vsec, install_type]
@@ -2741,6 +2755,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     global fncs_case, forERCOT
     global house_nodes, small_nodes, comm_loads
     global latitude, longitude, weatherName, feeder_commercial_building_number
+    global name_prefix
 
     if configfile is not None:
         checkResidentialBuildingTable()
@@ -2754,6 +2769,8 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     glmpath = tespdir + '/feeders/'
     supportpath = '' #tespdir + '/schedules'
     weatherpath = '' #tespdir + '/weather'
+    if 'NamePrefix' in config['BackboneFiles']:
+      name_prefix = config['BackboneFiles']['NamePrefix']
     if 'WorkingDirectory' in config['SimulationConfig']:
       outpath = config['SimulationConfig']['WorkingDirectory'] + '/'  # for full-order DSOT
 #      outpath = './' + config['SimulationConfig']['CaseName'] + '/'
@@ -2809,7 +2826,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
             supportpath = taxconfig['supportpath']
             weatherpath = taxconfig['weatherpath']
             print (fncs_case, rootname, vll, vln, avg_house, avg_comm, glmpath, outpath, supportpath, weatherpath)
-            ProcessTaxonomyFeeder (fncs_case, rootname, vll, vln, avg_house, avg_comm)
+            ProcessTaxonomyFeeder (fncs_case, rootname, vll, vln, avg_house, avg_comm) # need a name_prefix mechanism
         else:
             print (rootname, 'not found in taxconfig backbone_feeders')
     else:

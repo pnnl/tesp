@@ -82,21 +82,16 @@ def write_tesp_case (config, cfgfile, freshdir = True):
         * WA-Yakima_Air_Terminal.epw: the selected weather file for EnergyPlus, others can be selected
         * WA-Yakima_Air_Terminal.tmy3: the selected weather file for GridLAB-D, others can be selected
         * appliance_schedules.glm: time schedules for GridLAB-D
-        * clean.bat: Windows helper to clean up simulation outputs
         * clean.sh: Linux/Mac OS X helper to clean up simulation outputs
         * commercial_schedules.glm: non-responsive non-responsive time schedules for GridLAB-D, invariant
         * eplus.yaml: FNCS subscriptions and time step for EnergyPlus
         * eplus_json.yaml: FNCS subscriptions and time step for the EnergyPlus agent
-        * gui.py: helper to launch the GUI solution monitor (FNCS_CONFIG_FILE envar must be set for this process, see gui.bat and gui.sh under examples/te30)
-        * kill5570.bat: Windows helper to kill one of the federates listening on port 5570
         * kill5570.sh: Linux/Mac OS X helper to kill all federates listening on port 5570
         * launch_auction.py: helper script for the GUI solution monitor to launch the substation federate
         * launch_pp.py: helper script for the GUI solution monitor to launch the PYPOWER federate
-        * list5570.bat: Windows helper to list all federates listening on port 5570
-        * monitor.py: duplicate of gui.py, should remove
+        * monitor.py: helper to launch the GUI solution monitor (FNCS_CONFIG_FILE envar must be set for this process, see gui.sh under examples/te30)
         * plots.py: helper script that will plot a selection of case outputs
         * pypower.yaml: FNCS subscriptions and time step for PYPOWER
-        * run.bat: Windows helper to launch the TESP simulation
         * run.sh: Linux/Mac OS X helper to launch the TESP simulation
         * tesp_monitor.json: shell commands and other configuration data for the solution monitor GUI
         * tesp_monitor.yaml: FNCS subscriptions and time step for the solution monitor GUI
@@ -109,8 +104,7 @@ def write_tesp_case (config, cfgfile, freshdir = True):
         freshdir (boolean): flag to create the directory and base files anew
 
     Todo:
-        * Write gui.bat and gui.sh, per the te30 examples
-        * do not write monitor.py
+        * Write gui.sh, per the te30 examples
     """
     tespdir = os.path.expandvars (os.path.expanduser (config['SimulationConfig']['SourceDirectory']))
     feederdir = tespdir + '/feeders/'
@@ -577,11 +571,7 @@ values:
     shfile = casedir + '/clean.sh'
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-    # commands for the GUI execution
-    op = open (casedir + '/gui.py', 'w')
-    print ('import tesp_support.tesp_monitor as tesp', file=op)
-    print ('tesp.show_tesp_monitor()', file=op)
-    op.close()
+    # commands for launching Python federates
     op = open (casedir + '/launch_auction.py', 'w')
     print ('import tesp_support.api as tesp', file=op)
     print ('tesp.substation_loop(\'' + AgentDictFile + '\',\'' + casename + '\')', file=op)

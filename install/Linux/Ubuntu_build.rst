@@ -62,6 +62,7 @@ Preparation - Build Tools and Java
  # end users need only libklu1, which is licensed LGPL
  # if not using miniconda (avoid Python 3.7 on Ubuntu for now)
  sudo apt-get -y install python3-pip
+ sudo apt-get -y install python3-tk
 
 Preparation - Python 3 and Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

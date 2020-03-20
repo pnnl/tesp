@@ -48,24 +48,24 @@ def process_houses(nameroot, dictname = ''):
   xfMVA = dict['transformer_MVA']
   bulkBus = dict['bulkpower_bus']
   print ("\n\nFile", nameroot, "has substation", sub_keys[0], "at bulk system bus", bulkBus, "with", xfMVA, "MVA transformer")
-  print("\nFeeder Dictionary:")
-  for key in sub_keys:
-    row = dict['feeders'][key]
-  # print (key, "has", row['house_count'], "houses and", row['inverter_count'], "inverters")
-  print("\nBilling Meter Dictionary:")
-  for key in mtr_keys:
-    row = dict['billingmeters'][key]
-  # print (key, "on phase", row['phases'], "of", row['feeder_id'], "with", row['children'])
-  print("\nHouse Dictionary:")
-  for key in hse_keys:
-    row = dict['houses'][key]
-  # print (key, "on", row['billingmeter_id'], "has", row['sqft'], "sqft", row['cooling'], "cooling", row['heating'], "heating", row['wh_gallons'], "gal WH")
-    # row['feeder_id'] is also available
-  print("\nInverter Dictionary:")
-  for key in inv_keys:
-    row = dict['inverters'][key]
-  # print (key, "on", row['billingmeter_id'], "has", row['rated_W'], "W", row['resource'], "resource")
-    # row['feeder_id'] is also available
+# print("\nFeeder Dictionary:")
+# for key in sub_keys:
+#   row = dict['feeders'][key]
+# # print (key, "has", row['house_count'], "houses and", row['inverter_count'], "inverters")
+# print("\nBilling Meter Dictionary:")
+# for key in mtr_keys:
+#   row = dict['billingmeters'][key]
+# # print (key, "on phase", row['phases'], "of", row['feeder_id'], "with", row['children'])
+# print("\nHouse Dictionary:")
+# for key in hse_keys:
+#   row = dict['houses'][key]
+# # print (key, "on", row['billingmeter_id'], "has", row['sqft'], "sqft", row['cooling'], "cooling", row['heating'], "heating", row['wh_gallons'], "gal WH")
+#   # row['feeder_id'] is also available
+# print("\nInverter Dictionary:")
+# for key in inv_keys:
+#   row = dict['inverters'][key]
+# # print (key, "on", row['billingmeter_id'], "has", row['rated_W'], "W", row['resource'], "resource")
+#   # row['feeder_id'] is also available
 
   # parse the substation metrics file first; there should just be one entity per time sample
   # each metrics file should have matching time points
