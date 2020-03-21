@@ -44,7 +44,7 @@ def main():
             grantedtime = h.helicsFederateRequestTime(fed, t)
             print('Loadshed granted time: ' + str(grantedtime))
         if grantedtime == t:
-            logger.info('Switcht to ' + str(val) + ' at ' + str(t))
+            logger.info('Switch to ' + str(val) + ' at ' + str(t))
             h.helicsEndpointSendMessage(swStatusEp, mesg)
     logger.info("Destroying federate")
     destroy_federate(fed)
