@@ -33,7 +33,14 @@ object fncs_msg {
 }
 #endif
 
-#ifdef WANT_HELICS
+#ifdef WANT_HELICS_NO_NS3
+object helics_msg {
+  name gridlabdSimulator1;
+  configure helics_gld_msg0.json;
+}
+#endif
+
+#ifdef WANT_HELICS_NS3
 object helics_msg {
   name gridlabdSimulator1;
   configure helics_gld_msg.json;

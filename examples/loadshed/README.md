@@ -10,13 +10,13 @@ points in developing your own source files in Python or Java:
 1. *loadshed.py* is a loadshedding agent, implemented in Python for FNCS. Test with *run.sh*. A local copy of *fncs.py* is provided, so this example runs
 without importing the *tesp_support* package.
 2. *loadshed.java* is the same loadshedding agent, implemented in Java for FNCS. Test with *runjava.sh*
-3. *helicshed.py* is the same loadshedding agent, implemented in Python for HELICS. Test with *runhpy.sh*
+3. *helicshed0.py* is the same loadshedding agent, implemented in Python for HELICS. Test with *runhpy.sh*
 4. *helicshed.java* is the same loadshedding agent, implemented in Java for HELICS. Test with *runhjava.sh*
 5. *plot_loadshed.py* is a plotting program for the simulation results
 
-For example, to run the simulations with HELICS Python agent:
+For example, to run the simulations with HELICS Python agent and no ns-3 federate:
 
-    ./runhpy.sh
+    ./runhpy0.sh
 
 To plot the simulation results:
 
