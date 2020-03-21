@@ -1,0 +1,6 @@
+*.out
+*.log
+*.pcap
+*.o
+*metrics.json
+__pycache__/

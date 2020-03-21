@@ -12,17 +12,24 @@ without importing the *tesp_support* package.
 2. *loadshed.java* is the same loadshedding agent, implemented in Java for FNCS. Test with *runjava.sh*
 3. *helicshed0.py* is the same loadshedding agent, implemented in Python for HELICS. Test with *runhpy.sh*
 4. *helicshed.java* is the same loadshedding agent, implemented in Java for HELICS. Test with *runhjava.sh*
-5. *plot_loadshed.py* is a plotting program for the simulation results
+5. *helicshed.py* is the same loadshedding agent, implemented in Python for HELICS with ns-3. Test with *runhpy.sh*
+6. *plot_loadshed.py* is a plotting program for the simulation results
 
 For example, to run the simulations with HELICS Python agent and no ns-3 federate:
 
     ./runhpy0.sh
 
-To plot the simulation results:
+To run the simulation with HELICS Python and ns-3, you first have to build the ns-3 federate, then run the example:
+
+    make
+    sudo make install
+    ./runhpy.sh
+
+To plot the simulation results for any of the agent cases:
 
     python3 plot_loadshed.py loadshed
 
-To clean up the simulation results:
+To clean up the simulation results from any of the agent cases:
 
     ./clean.sh
 

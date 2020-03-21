@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 		std::cerr << "No helics configuration file was given." << std::endl;
 		return 1;
 	}
-	if(helicsConfigFile.compare("") == 0){
+	if(simulationRunTime <= 0.0){
 		std::cerr << "No simulation run time was given." << std::endl;
 		return 1;
 	}
@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
 	p2pInterfaces = address.Assign (p2pDevices);
 
 	//Attach Helics Application to nodes.
+  std::cerr << "Running " << nNodes << " nodes to end time " << Seconds(simulationRunTime) << std::endl;
 	std::vector<ApplicationContainer> helicsFilterApps;
 	for(int i=0; i<nNodes; i++) {
 		ApplicationContainer apps = helicsHelper.InstallFilter(p2pNodes.Get(i), helics_federate->getFilter(i), helics_federate->getEndpoint(i));

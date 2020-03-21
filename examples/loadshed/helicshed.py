@@ -2,12 +2,12 @@ import time
 import helics as h
 import logging
 
-helicsversion = h.helicsGetVersion()
-print("Loadshed Federate: HELICS version = {}".format(helicsversion))
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
+
+helicsversion = h.helicsGetVersion()
+logger.info("Loadshed Federate: HELICS version = {}".format(helicsversion))
 
 def create_federate(deltat=1.0, fedinitstring="--federates=1"):
     fed = h.helicsCreateCombinationFederateFromConfig("loadshedConfig.json")
@@ -39,12 +39,12 @@ def main():
         val = swt[1]
         mesg.data= str(val)
         while grantedtime < t:
-            print('Loadshed current time: ' + str(grantedtime))
-            print('Loadshed requesting time: ' + str(t))
+            logger.info('Loadshed current time: ' + str(grantedtime))
+            logger.info('Loadshed requesting time: ' + str(t))
             grantedtime = h.helicsFederateRequestTime(fed, t)
-            print('Loadshed granted time: ' + str(grantedtime))
+            logger.info('Loadshed granted time: ' + str(grantedtime))
         if grantedtime == t:
-            logger.info('Switch to ' + str(val) + ' at ' + str(t))
+            logger.info(' ** Switch to ' + str(val) + ' at ' + str(t))
             h.helicsEndpointSendMessage(swStatusEp, mesg)
     logger.info("Destroying federate")
     destroy_federate(fed)

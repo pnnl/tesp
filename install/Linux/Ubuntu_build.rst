@@ -284,7 +284,7 @@ Then, we can build ns-3, install that into the same location as other parts of T
 ::
 
  cd ~/src/ns-3-dev
- git clone https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+ git clone -b feature/13b https://github.com/GMLC-TDC/helics-ns3 contrib/helics
  # --with-helics may not be left blank, so use either $TESP_INSTALL or /usr/local
  ./waf configure --build-profile=optimized --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --disable-werror --enable-examples --enable-tests
  ./waf build 

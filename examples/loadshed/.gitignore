@@ -1,7 +1,9 @@
-*.json
 *.out
 *.csv
 *.txt
 *.log
 *.xml
+*.pcap
+*.o
+loadshedCommNetwork
 __pycache__/

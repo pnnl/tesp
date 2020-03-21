@@ -1,8 +1,19 @@
 clock {
 	timezone EST+5EDT;
 	starttime '2000-01-01 0:00:00';
+#ifdef WANT_HELICS_NS3
 	stoptime '2000-01-01 5:59:00';
+//	stoptime '2000-01-01 0:03:35';
+#else
+	stoptime '2000-01-01 5:59:00';
+#endif
 }
+
+#ifdef WANT_HELICS_NS3
+#define METRICS_INTERVAL=60
+#else
+#define METRICS_INTERVAL=60
+#endif
 
 #set relax_naming_rules=1
 #set profiler=1
@@ -18,10 +29,12 @@ module connection;
 module tape;
 
 // this has to be the first object defined, so it's the last one committed
+#ifndef WANT_HELICS_NS3
 object metrics_collector_writer {
-	interval 60;
+	interval ${METRICS_INTERVAL};
 	filename loadshed_metrics.json;
 }
+#endif
 
 #ifdef WANT_FNCS
 object fncs_msg {
@@ -65,24 +78,28 @@ object meter {
 	parent l675;
 	bill_mode UNIFORM;
   nominal_voltage 2401.7771;
+#ifndef WANT_HELICS_NS3
 	object metrics_collector {
-		interval 60;
+		interval ${METRICS_INTERVAL};
 	};
+#endif
 }
 object meter {
 	name m692;
 	parent l692;
 	bill_mode UNIFORM;
   nominal_voltage 2401.7771;
+#ifndef WANT_HELICS_NS3
 	object metrics_collector {
-		interval 60;
+		interval ${METRICS_INTERVAL};
 	};
+#endif
 }
 
 object recorder {
 	parent n650;
 	property distribution_load;
-	interval 900.0;
+	interval ${METRICS_INTERVAL};
 	file substation_load.csv;
 }
 
@@ -410,9 +427,11 @@ object substation { // must be a substation for MATPOWER/PYPOWER and TESP metric
 	positive_sequence_voltage 2400.0;
   base_power 12MVA;
   power_convergence_value 100VA;
+#ifndef WANT_HELICS_NS3
 	object metrics_collector {
-		interval 60;
+		interval ${METRICS_INTERVAL};
 	};
+#endif
 } 
  
 object node { //680 {
@@ -611,7 +630,9 @@ object regulator {
 	 from n650;
 	 to n630;
 	 configuration regconfig6506321;
+#ifndef WANT_HELICS_NS3
    object metrics_collector {
-     interval 60;
+     interval ${METRICS_INTERVAL};
    };
+#endif
 }

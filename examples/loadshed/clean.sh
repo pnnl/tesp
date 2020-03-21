@@ -8,4 +8,5 @@ rm *metrics.json
 rm metrics.txt
 rm testout.txt
 rm *.class
+rm *.pcap
 

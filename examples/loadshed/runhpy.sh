@@ -1,8 +1,7 @@
 #!/bin/bash
-# helics run --path helicsconfig.json
-(exec helics_broker -f 2 --loglevel=3 --name=mainbroker &> broker.log &)
+(exec helics_broker -f 3 --loglevel=3 --name=mainbroker &> broker.log &)
 (exec gridlabd -D WANT_HELICS_NS3 loadshed.glm &> gridlabd.log &)
-# (exec fncs_player 6h loadshed.player &> player.log &)
+(exec loadshedCommNetwork --helicsConfigFile=loadshedCommNetworkConfig.json --simulationRunTime=21600.0 &> network.log &)
 (exec python3 helicshed.py &> loadshed.log &)
 
 
