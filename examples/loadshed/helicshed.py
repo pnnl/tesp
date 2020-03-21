@@ -10,12 +10,7 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
 def create_federate(deltat=1.0, fedinitstring="--federates=1"):
-    fedinfo = h.helicsCreateFederateInfo()
-    h.helicsFederateInfoSetCoreName(fedinfo, "PythonLoadshedFederate")
-    h.helicsFederateInfoSetCoreTypeFromString(fedinfo, "zmq")
-    h.helicsFederateInfoSetCoreInitString(fedinfo, fedinitstring)
-    h.helicsFederateInfoSetTimeProperty(fedinfo, h.helics_property_time_delta, deltat)
-    fed = h.helicsCreateCombinationFederate("PythonLoadshedFederate", fedinfo)
+    fed = h.helicsCreateCombinationFederateFromConfig("loadshedConfig.json")
     return fed
 
 def destroy_federate(fed, broker=None):
@@ -29,21 +24,28 @@ def destroy_federate(fed, broker=None):
 
 def main():
     fed = create_federate()
-    pubid = h.helicsFederateRegisterGlobalPublication(fed, "loadshed/sw_status", h.helics_data_type_string, "")
-    subid = h.helicsFederateRegisterSubscription(fed, "gridlabdSimulator1/totalLoad", "")
+    fedName = h.helicsFederateGetName(fed)
+    swStatusEpName = fedName + "/sw_status"
+    swStatusEp = h.helicsFederateGetEndpoint(fed, swStatusEpName)
     h.helicsFederateEnterExecutingMode(fed)
     
     switchings = [[0,1],[1800,0],[5400,1],[16200,0],[19800,1]]
     hours = 6
     seconds = int(60 * 60 * hours)
-    grantedtime = -1
+    mesg = h.helics_message()
+    grantedtime = 0
     for swt in switchings:
         t = swt[0]
         val = swt[1]
+        mesg.data= str(val)
         while grantedtime < t:
+            print('Loadshed current time: ' + str(grantedtime))
+            print('Loadshed requesting time: ' + str(t))
             grantedtime = h.helicsFederateRequestTime(fed, t)
-        logger.info('Switching to ' + str(val) + ' at ' + str(t))
-        status = h.helicsPublicationPublishString(pubid, str(val))
+            print('Loadshed granted time: ' + str(grantedtime))
+        if grantedtime == t:
+            logger.info('Switcht to ' + str(val) + ' at ' + str(t))
+            h.helicsEndpointSendMessage(swStatusEp, mesg)
     logger.info("Destroying federate")
     destroy_federate(fed)
 
