@@ -18,7 +18,7 @@ clock {
 #set relax_naming_rules=1
 #set profiler=1
 #set minimum_timestep=1
-//#set verbose=1
+#set verbose=1
 
 module powerflow {
 	solver_method NR;
@@ -27,6 +27,7 @@ module powerflow {
 
 module connection;
 module tape;
+module reliability;  // OLD ISLANDING
 
 // this has to be the first object defined, so it's the last one committed
 #ifndef WANT_HELICS_NS3
@@ -67,10 +68,23 @@ object switch {
 	from l671;
 	to l692;
 }
+//object fault_check {
+//	name test_fault;
+//	check_mode SWITCHING;
+//	reliability_mode TRUE;
+//}
+// OLD ISLANDING
 object fault_check {
-	name test_fault;
-	check_mode SWITCHING;
-	reliability_mode TRUE;
+	name base_fault_check_object;
+	check_mode ONCHANGE;
+	strictly_radial false;
+	eventgen_object testgendev;
+	grid_association true;
+}
+object eventgen {
+	name testgendev;
+	fault_type "DLG-X";
+	manual_outages "sw_loadshed,2100-01-01 00:00:05,2100-01-01 00:00:30";
 }
 
 object meter {
