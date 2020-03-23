@@ -18,7 +18,7 @@ clock {
 #set relax_naming_rules=1
 #set profiler=1
 #set minimum_timestep=1
-#set verbose=1
+//#set verbose=1
 
 module powerflow {
 	solver_method NR;
@@ -27,7 +27,13 @@ module powerflow {
 
 module connection;
 module tape;
-module reliability;  // OLD ISLANDING
+
+#ifdef OLD_ISLANDING
+module reliability {
+	maximum_event_length 18000;
+	report_event_log true;
+}
+#endif
 
 // this has to be the first object defined, so it's the last one committed
 #ifndef WANT_HELICS_NS3
@@ -41,7 +47,11 @@ object metrics_collector_writer {
 object fncs_msg {
   name gridlabdSimulator1;
   publish "commit:n650.distribution_load -> distribution_load; 1000";
+#ifdef OLD_ISLANDING
+  subscribe "precommit:event_loadshed.switch_state <- loadshed/sw_status";
+#else
   subscribe "precommit:sw_loadshed.phase_A_state <- loadshed/sw_status";
+#endif
   option "transport:hostname localhost, port 5570";
   parent n650;
 }
@@ -67,25 +77,48 @@ object switch {
 	name sw_loadshed;
 	from l671;
 	to l692;
+  status CLOSED;
 }
-//object fault_check {
-//	name test_fault;
-//	check_mode SWITCHING;
-//	reliability_mode TRUE;
-//}
-// OLD ISLANDING
+
+#ifdef OLD_ISLANDING
 object fault_check {
-	name base_fault_check_object;
+	name test_fault;
 	check_mode ONCHANGE;
 	strictly_radial false;
-	eventgen_object testgendev;
 	grid_association true;
+	output_filename testout.txt;
+	eventgen_object event_loadshed;
 }
 object eventgen {
-	name testgendev;
-	fault_type "DLG-X";
-	manual_outages "sw_loadshed,2100-01-01 00:00:05,2100-01-01 00:00:30";
+	name event_loadshed;
+	parent testmetrics;
+	max_outage_length 18000;
+	max_simultaneous_faults 1;
+	fault_type "SW-ABC";
+	controlled_switch "sw_loadshed";
+	switch_state 1;
+	manual_outages "sw_loadshed,2030-01-01 2:00:00,2030-01-01 4:00:00";  // need this, should lie beyond Tmax
 }
+object power_metrics {
+	name pwrmetrics;
+}
+object metrics {
+	name testmetrics;
+	report_file metrics.txt;						     
+	module_metrics_object pwrmetrics;				 
+	metrics_of_interest "SAIFI,SAIDI,MAIFI"; 
+	customer_group "class=meter";  // TODO: more likely to have triplex_meter in TESP			 
+	metric_interval 1 h; 							       
+	report_interval 1 h;								     
+}
+// end of reliability module prerequisites, beginning of shed load voltage measurements
+#else
+object fault_check {
+	name test_fault;
+	check_mode SWITCHING;
+	reliability_mode TRUE;
+}
+#endif
 
 object meter {
 	name m675;
