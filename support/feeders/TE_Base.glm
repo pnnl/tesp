@@ -19,10 +19,10 @@ object transformer_configuration {
 	name Service_transformer_config;
 	connect_type SINGLE_PHASE_CENTER_TAPPED;
 	install_type PADMOUNT;
-	power_rating 1500 kVA;
-	powerA_rating 500 kVA;
-	powerB_rating 500 kVA;
-	powerC_rating 500 kVA;
+	power_rating 15000 kVA;
+	powerA_rating 5000 kVA;
+	powerB_rating 5000 kVA;
+	powerC_rating 5000 kVA;
 	primary_voltage 7200;
 	secondary_voltage 120;
 	impedance 0.01+0.02j;
@@ -38,7 +38,7 @@ object triplex_node {
   name Houses_A;
 	phases AS;
 	nominal_voltage 120;
-  power_12 400.0e3+0j;
+  power_12 4000.0e3+0j;
 }
 object transformer {
 	name Service_B;
@@ -51,7 +51,7 @@ object triplex_node {
   name Houses_B;
 	phases BS;
 	nominal_voltage 120;
-  power_12 400.0e3+0j;
+  power_12 4000.0e3+0j;
 }
 object transformer {
 	name Service_C;
@@ -64,6 +64,6 @@ object triplex_node {
   name Houses_C;
 	phases CS;
 	nominal_voltage 120;
-  power_12 400.0e3+0j;
+  power_12 4000.0e3+0j;
 }
 
