@@ -156,13 +156,14 @@ def weathercsv(tmyfile,outputfile,start_time,end_time,year_):
     print ('  latitude', tmydata[1]['latitude'])
     print ('  longitude', tmydata[1]['longitude'])
     print ('  altitude', tmydata[1]['altitude'], 'm')
+    print ('  TZmeridian', 15.0 * tmydata[1]['TZ'])
     
     temperature=tmydata[0]['DryBulb']*1.8 + 32.0 # convert to Fahrenheit
     humidity=tmydata[0]['RHum']/100.0            # convert to per-unit
     solar_direct=tmydata[0].DNI*0.09290304       # convert to W/sq foot
     solar_diffuse=tmydata[0].DHI*0.09290304      # convert to W/sq foot
     pressure=tmydata[0]['Pressure']              # stays in mbar
-    wind_speed=tmydata[0]['Wspd']                # stays in m/s
+    wind_speed=tmydata[0]['Wspd']*3600.0/1609.0  # convert to mph
     result=pd.concat([temperature,humidity,solar_direct,solar_diffuse,pressure,wind_speed], 
                      axis=1, 
                      keys=['temperature','humidity','solar_direct','solar_diffuse','pressure','wind_speed'])

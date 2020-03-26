@@ -1,7 +1,7 @@
 {
 	"name": "weather",
-	"StartTime": "2000-01-01 00:00:00",
-	"time_stop": "60m",
+	"StartTime": "2000-01-01 06:00:00",
+	"time_stop": "9h",
 	"time_delta": "1s",
 	"publishInterval": "5m",
 	"Forecast": 1,

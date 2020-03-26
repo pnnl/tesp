@@ -1,7 +1,7 @@
 clock{
-  timezone EST+5EDT;
-  timestamp '2013-07-01 14:00:00';
-  stoptime '2013-07-01 15:00:00';
+  timezone CST+6CDT;
+  timestamp '2000-01-01 6:00:00';
+  stoptime '2000-01-01 15:00:00';
 }
 
 module connection;
@@ -13,8 +13,20 @@ module tape;
 object climate {
   name exampleWeather;
   interpolate QUADRATIC;
-	latitude 32;
-	longitude -97;
+#ifdef USE_FNCS
+	latitude 32.900;
+	longitude -97.017;
+//  altitude 171.0;
+  tz_meridian -90.0;
+  temperature 44.06;
+  humidity 0.60;
+  solar_direct 0.0;
+  solar_diffuse 0.0;
+  pressure 1002.0;
+  wind_speed 10.2921;
+#else
+  tmyfile "${TMY3_PATH}/TX-Dallasfort_Worth_Intl_Ap.tmy3";
+#endif
 };
 object solar {
 	name solarGenerator;
@@ -31,31 +43,43 @@ object house {
 	name weatherHouse;
 }
 
-//#ifdef USE_FNCS
+#ifdef USE_FNCS
 object fncs_msg {
   name gridlabdweatheragent;
   configure weather_FNCS_Config.txt;
   option "transport:hostname localhost, port 5570";
-  aggregate_subscriptions true;
-  aggregate_publications true;
+//  aggregate_subscriptions true;
+//  aggregate_publications true;
 };
-//#endif
+#endif
 
 object recorder{
 	parent exampleWeather;
-	property temperature,humidity,solar_direct,solar_diffuse,pressure,wind_speed;
-	interval -1;
-	file climate.csv;
+	property temperature,humidity,solar_direct,solar_diffuse,pressure,wind_speed,solar_azimuth,solar_elevation,solar_zenith;
+	interval 300;
+#ifdef USE_FNCS
+	file climate_fncs.csv;
+#else
+	file climate_tmy3.csv;
+#endif
 };
 object recorder{
 	parent solarGenerator;
-	property weather,wind_speed,Tmodule,Tambient,NOCT;
-	interval -1;
-	file generator.csv;
+	property Insolation,wind_speed,Tmodule,Tambient,NOCT;
+	interval 300;
+#ifdef USE_FNCS
+	file generator_fncs.csv;
+#else
+	file generator_tmy3.csv;
+#endif
 };
 object recorder{
 	parent weatherHouse;
-	property weather,solar_gain,incident_solar_radiation,horizontal_diffuse_solar_radiation,outdoor_temperature,outdoor_rh;
-	interval -1;
-	file house.csv;
+	property solar_gain,incident_solar_radiation,horizontal_diffuse_solar_radiation,outdoor_temperature,outdoor_rh;
+	interval 300;
+#ifdef USE_FNCS
+	file house_fncs.csv;
+#else
+	file house_tmy3.csv;
+#endif
 };
