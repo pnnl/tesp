@@ -74,6 +74,8 @@ water_heater_participation = 0.5
 solar_inv_mode = 'CONSTANT_PF'
 latitude = 30.0
 longitude = -110.0
+tz_meridian = 0.0
+altitude = 0.0
 weatherName = 'weather'
 
 def write_solar_inv_settings (op):
@@ -2512,6 +2514,8 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         print ('  interpolate QUADRATIC;', file=op)
         print ('  latitude', str(latitude) + ';', file=op)
         print ('  longitude', str(longitude) + ';', file=op)
+        print ('  // altitude', str(altitude) + ';', file=op)
+        print ('  tz_meridian', str(tz_meridian) + ';', file=op)
         print ('};', file=op)
 #        print ('// taxonomy_base_feeder', rootname, file=op)
 #        print ('// region_name', rgnName[rgn-1], file=op)
@@ -2754,7 +2758,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     global water_heater_percentage, water_heater_participation
     global fncs_case, forERCOT
     global house_nodes, small_nodes, comm_loads
-    global latitude, longitude, weatherName, feeder_commercial_building_number
+    global latitude, longitude, altitude, tz_meridian, weatherName, feeder_commercial_building_number
     global name_prefix
 
     if configfile is not None:
@@ -2804,6 +2808,8 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
     transmissionVoltage = 1000.0 * float(config['PYPOWERConfiguration']['TransmissionVoltage'])
     latitude = float(config['WeatherPrep']['Latitude'])
     longitude = float(config['WeatherPrep']['Longitude'])
+    altitude = float(config['WeatherPrep']['Altitude'])
+    tz_meridian = float(config['WeatherPrep']['TZmeridian'])
     if 'AgentName' in config['WeatherPrep']:
       weatherName = config['WeatherPrep']['AgentName']
 

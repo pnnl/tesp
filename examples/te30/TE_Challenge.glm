@@ -45,6 +45,7 @@ object climate {
   interpolate QUADRATIC;
 	latitude 32.133;
 	longitude -111.95;
+  tz_meridian -105.0;
 };
 
 class player {

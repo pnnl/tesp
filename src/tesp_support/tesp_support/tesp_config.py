@@ -87,11 +87,13 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
           ['Weather Source','WA-Yakima_Air_Terminal.tmy3','File or URL','WeatherPrep','DataSource'],
           ['Latitude (N > 0)',32.133,'deg','WeatherPrep','Latitude'],
           ['Longitude (E > 0)',-110.95,'deg','WeatherPrep','Longitude'],
+          ['Altitude (not used yet)', 777.0,'m','WeatherPrep','Altitude'],
+          ['TZmeridian (E > 0)',-105.00,'deg','WeatherPrep','TZmeridian'],
           ['Support Directory','$TESP_INSTALL/share/support','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
           ['Working Directory','./','','SimulationConfig','WorkingDirectory'],
           ['Case Name','Test','','SimulationConfig','CaseName']
           ];
-varsTMSupportDirIndex = 16
+varsTMSupportDirIndex = 18
 
 varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCoolingPercentage'],
           ['Electric Cooling Participation',50,'%','FeederGenerator','ElectricCoolingParticipation'],
@@ -202,7 +204,7 @@ class TespConfigGUI:
 
     #ttk.Style().configure('TButton', background='blue')
     ttk.Style().configure('TButton', foreground='blue')
-    btn = ttk.Button(self.f1, text='Lat/Long from TMY3', command=self.ReadLatLong)
+    btn = ttk.Button(self.f1, text='Lat/Long/Alt/TZ from TMY3', command=self.ReadLatLong)
     btn.grid(row=len(varsTM) + 2, column=1, sticky=tk.NSEW)
     btn = ttk.Button(self.f1, text='Save Config...', command=self.SaveConfig)
     btn.grid(row=len(varsTM) + 3, column=1, sticky=tk.NSEW)
@@ -455,7 +457,7 @@ class TespConfigGUI:
         weatherpath = varsTM[i][1]
       if 'WeatherPrep' == varsTM[i][3] and 'DataSource' == varsTM[i][4]:
         weatherfile = varsTM[i][1]
-    fname = weatherpath + '/weather/'+ weatherfile
+    fname = os.path.expandvars (os.path.expanduser (weatherpath + '/weather/'+ weatherfile))
     if os.path.isfile(fname):
       fd = open (fname, 'r')
       rd = csv.reader (fd, delimiter=',', skipinitialspace=True)
@@ -469,6 +471,10 @@ class TespConfigGUI:
       tmy3altitude = float(row[6])
       fd.close()
       for i in range(len(varsTM)):
+        if 'WeatherPrep' == varsTM[i][3] and 'Altitude' == varsTM[i][4]:
+          varsTM[i][1] = tmy3altitude
+        if 'WeatherPrep' == varsTM[i][3] and 'TZmeridian' == varsTM[i][4]:
+          varsTM[i][1] = tmy3tzoffset * 15.0
         if 'WeatherPrep' == varsTM[i][3] and 'Latitude' == varsTM[i][4]:
           varsTM[i][1] = tmy3latitude
         if 'WeatherPrep' == varsTM[i][3] and 'Longitude' == varsTM[i][4]:
