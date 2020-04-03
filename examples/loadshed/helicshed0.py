@@ -1,13 +1,13 @@
 import time
 import helics as h
-import logging
+#import logging
 
 helicsversion = h.helicsGetVersion()
 print("Loadshed Federate: HELICS version = {}".format(helicsversion))
 
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+#logger = logging.getLogger(__name__)
+#logger.addHandler(logging.StreamHandler())
+#logger.setLevel(logging.DEBUG)
 
 def create_federate(deltat=1.0, fedinitstring="--federates=1"):
     fedinfo = h.helicsCreateFederateInfo()
@@ -30,7 +30,7 @@ def destroy_federate(fed, broker=None):
 def main():
     fed = create_federate()
     pubid = h.helicsFederateRegisterGlobalPublication(fed, "loadshed/sw_status", h.helics_data_type_string, "")
-    subid = h.helicsFederateRegisterSubscription(fed, "gridlabdSimulator1/totalLoad", "")
+#    subid = h.helicsFederateRegisterSubscription(fed, "gridlabdSimulator1/totalLoad", "")
     h.helicsFederateEnterExecutingMode(fed)
     
     switchings = [[0,1],[1800,0],[5400,1],[16200,0],[19800,1]]
@@ -42,11 +42,11 @@ def main():
         val = swt[1]
         while grantedtime < t:
             grantedtime = h.helicsFederateRequestTime(fed, t)
-        logger.info('Switching to ' + str(val) + ' at ' + str(t))
+        print('Switching to ' + str(val) + ' at ' + str(t))
         status = h.helicsPublicationPublishString(pubid, str(val))
-    logger.info("Destroying federate")
+    print("Destroying federate")
     destroy_federate(fed)
 
 if __name__ == "__main__":
     main()
-    logger.info("Done!")
+    print("Done!")

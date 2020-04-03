@@ -1,0 +1,14 @@
+{
+	"log_level": 4,
+	"period" : 1.0,
+  "stop": 21600.0,
+  "marker": 900.0,
+  "mapfile": "pleasewritesomething.txt",
+  "verbose": 1,
+	"subscriptions": [
+		{
+			"key" : "loadshed/sw_status", 
+			"type" : "string"
+		}
+	]
+}

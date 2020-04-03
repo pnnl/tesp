@@ -1,12 +1,10 @@
 {
 	"name" : "gridlabdSimulator1",
 	"period" : 1.0,
-	"log_level": 7,
-	"endpoints" : [
+	"subscriptions" : [
 		{
-			"name" : "sw_status", 
-			"global" : false,
-      "type" : "string",
+			"key" : "loadshed/sw_status", 
+			"type" : "string",
 			"info" : {
 				"object" : "sw_loadshed",
 				"property" : "phase_A_state"

@@ -1,15 +1,17 @@
 {
 	"name": "loadshedCommNetwork",
 	"coretype": "zmq",
-	"log_level": 2,
+	"log_level": 7,
 	"period": 0.000000001,
 	"endpoints": [
 		{
 			"name": "loadshed/sw_status",
+      "info": "1",
 			"global": false
 		},
 		{
 			"name": "gridlabdSimulator1/sw_status",
+      "info": "1",
 			"global": false
 		}
 	],

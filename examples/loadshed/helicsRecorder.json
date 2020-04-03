@@ -1,0 +1,8 @@
+{
+  "name": "rcd",
+	"log_level": 7,
+  "period": 1.0,
+  "timedelta": 1.0,
+  "stop": 21600.0,
+  "restrictive_time_policy": true
+}

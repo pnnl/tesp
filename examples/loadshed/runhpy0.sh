@@ -1,8 +1,6 @@
 #!/bin/bash
-# helics run --path helicsconfig.json
-(exec helics_broker -f 2 --loglevel=3 --name=mainbroker &> broker.log &)
+(exec helics_broker -f 3 --loglevel=7 --name=mainbroker &> broker.log &)
 (exec gridlabd -D WANT_HELICS_NO_NS3 loadshed.glm &> gridlabd.log &)
-# (exec fncs_player 6h loadshed.player &> player.log &)
+(exec helics_recorder --input=helicsRecorder0.txt --timedelta 1s --verbose --mapfile map.out --period 1s --marker 900s --stop 21600s &> recorder.log &)
 (exec python3 helicshed0.py &> loadshed.log &)
-
 
