@@ -1,0 +1,6 @@
+{
+	"name": "pypower",
+	"coretype": "zmq",
+	"log_level": 4,
+	"period": 1.0
+}

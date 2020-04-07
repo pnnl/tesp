@@ -6,5 +6,6 @@
 *.pcap
 *.o
 *.class
+*.pid
 loadshedCommNetwork
 __pycache__/
