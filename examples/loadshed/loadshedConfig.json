@@ -1,8 +1,8 @@
 {
 	"name": "loadshed",
-	"coretype": "zmq",
-	"log_level": 4,
-	"period": 1.0,
+	"coreType": "zmq",
+  "loglevel": 7,
+  "period" : 60.0,
 	"endpoints": [
 		{
 			"global": false,
