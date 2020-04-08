@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt;
 def add_plot (x, y, ax, i, j, key, col, lbl):
   ax[i,j].set_title (key + ':' + lbl)
   ax[i,j].plot(x, y[key+'_tmy3'][:,col], color='red', label='TMY3')
-  ax[i,j].plot(x, y[key+'_fncs'][:,col], color='blue', label='FNCS')
+  ax[i,j].plot(x, y[key+'_agent'][:,col], color='blue', label='Agent')
   ax[i,j].grid()
   ax[i,j].legend()
 
@@ -41,7 +41,7 @@ for froot in ['climate', 'house', 'generator']:
   fname = fkey + '.csv'
   data[fkey] = np.genfromtxt(fname, skip_header=8, delimiter=',')
 
-  fkey = froot + '_fncs'
+  fkey = froot + '_agent'
   fname = fkey + '.csv'
   data[fkey] = np.genfromtxt(fname, skip_header=8, delimiter=',')
 

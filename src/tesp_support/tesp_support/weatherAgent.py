@@ -7,14 +7,23 @@ import pandas as pd
 import json
 from datetime import datetime
 from datetime import timedelta
-# try:
-#   import tesp_support.fncs as fncs;
-# except:
-#   pass
 import random
 import numpy
 from scipy.stats import truncnorm
 import time
+try:
+    import helics  # set the broker = HELICS in WEATHER_CONFIG
+except:
+    pass
+
+def stop_helics_federate (fed):
+  status = helics.helicsFederateFinalize(fed)
+  state = helics.helicsFederateGetState(fed)
+  assert state == 3
+  while helics.helicsBrokerIsConnected(None):
+    time.sleep(1)
+  helics.helicsFederateFree(fed)
+  helics.helicsCloseLibrary()
 
 def startWeatherAgent(file):
     """the weather agent publishes weather data as configured by the json file
@@ -47,7 +56,7 @@ def startWeatherAgent(file):
             except ValueError as ex:
                 print(ex)
     else:
-        print('could not open FNCS_CONFIG_FILE for fncs')
+        print('could not open WEATHER_CONFIG file for FNCS or HELICS')
         sys.exit()
 
     # convert some of the time in config file to seconds
@@ -88,30 +97,6 @@ def startWeatherAgent(file):
 
     # find weather data on the hour for the hourly forecast
     hourlyWeatherData=weatherData.loc[(weatherData.index.minute == 0) & (weatherData.index.second == 0) & (weatherData.index.microsecond == 0) & (weatherData.index.nanosecond == 0)]
-    # hourlyWeatherData=weatherData2.resample(rule='1H', how='mean') #average data within 1 hour
-    # make sure time_stop and time_delta have the same unit by converting them to the uniform unit first
-
-    # try:
-    #     timeDeltaResample = deltaTimeToResmapleFreq(timeDeltaStr)
-    # except Exception as ex:
-    #     print("Error in time_delta", ex)
-    # try:
-    #     timeStopUniformUnit = deltaTimeToResmapleFreq(timeStop)
-    # except Exception as ex:
-    #     print("Error in time_stop", ex)
-    # timeStopUnit = ''.join(filter(str.isalpha, timeStopUniformUnit))
-    # timeStopNum = int(''.join(filter(str.isdigit, timeStopUniformUnit)))
-    # timeDeltaUnit = ''.join(filter(str.isalpha, timeDeltaResample))
-    # timeDeltaNum = int(''.join(filter(str.isdigit, timeDeltaResample)))
-    # if timeStopUnit != timeDeltaUnit:
-    #     print('time_stop and time_delta should have the same unit.')
-    #     sys.exit()
-
-    # find time_delta multiplier against second, so we can convert second back to the unit fncs uses
-    # try:
-    #     deltaTimeMultiplier = findDeltaTimeMultiplier(timeDeltaStr)
-    # except Exception as ex:
-    #     print("Error in time_delta", ex)
 
     # find all the time point that the data at that time need to be published
     timeNeedToPublishRealtime = [0]
@@ -137,74 +122,53 @@ def startWeatherAgent(file):
 
     # other weather agents could be initializing from FNCS.zpl, so we might have a race condition
     #  file locking didn't work, because fncs.initialize() doesn't return until broker hears from all other simulators
-    # zplName = agentName + '.zpl'
-    # zpl = open(zplName, "w")
-    # print(zplstr, file=zpl)
-    # zpl.close()
-    # print(zplName, 'file generated with:', flush=True)
-    # print(zplstr, flush=True)
-
-    # import platform
-    # if platform.system() == "Windows":
-    #     import ctypes, ctypes.util
-    #     a = ctypes.util.find_library("msvcrt")
-    #     b = ctypes.cdll[a]
-    #     b._putenv(f"FNCS_CONFIG_FILE={zplName}")
-    #     print(b._environ)
-    #     #ctypes.cdll[ctypes.util.find_library("msvcrt")]._putenv(f"FNCS_CONFIG_FILE={zplName}")
-    #     libc = ctypes.cdll.msvcrt
-    #     libc._putenv(f"FNCS_CONFIG_FILE={zplName}")
-    #     print(libc._environ)
-    #     # error: ctypes.cdll[libc]._putenv(f"FNCS_CONFIG_FILE={zplName}")
-    #
-    # os.environ['FNCS_CONFIG_FILE'] = zplName
-#    print (os.environ, flush=True)
-    try:
+    hFed = None
+    hPubs = {}
+    fedName = 'weather'
+    if broker == 'HELICS':
+      fedInfo = helics.helicsCreateFederateInfo()
+      helics.helicsFederateInfoSetCoreName(fedInfo, fedName)
+      helics.helicsFederateInfoSetCoreTypeFromString(fedInfo, 'zmq')
+      helics.helicsFederateInfoSetCoreInitString(fedInfo, '--federates=1')
+      helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.helics_property_time_delta, timeDeltaInSeconds)
+      hFed = helics.helicsCreateValueFederate(fedName, fedInfo)
+      for col in weatherData.columns:
+        pubName = fedName + '/' + col
+        hPubs[col] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
+        pubName = pubName + '/forecast'
+        hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
+      helics.helicsFederateEnterExecutingMode(hFed)
+      print('HELICS initialized to publish', hPubs, flush=True)
+    else:
+      try:
         import tesp_support.fncs as fncs
-    except:
+      except:
         pass
-    configstr = zplstr.encode('utf-8')
-    fncs.initialize(configstr)
-    #fncs.initialize()
-    print('FNCS initialized', flush=True)
-    # os.remove(zplName)
-    # print(zplName, 'file deleted', flush=True)
+      configstr = zplstr.encode('utf-8')
+      fncs.initialize(configstr)
+      print('FNCS initialized', flush=True)
 
     time_granted = 0
-    #timeDeltaChanged = 0
     for i in range(len(timeNeedToPublish)):
-        #print("i", i)
         if i > 0:
-	    #     timeToRequest = timeNeedToPublish[i] - timeNeedToPublish[i-1]
-	    # else:
             timeToRequest = timeNeedToPublish[i]
-            #print("timeToRequest", timeToRequest)
-            # if requested time is not multiple of time_delta, update time_delta to time requested
-            # since fncs require requested time to be multiple of time_delta
-            #if (timeToRequest - time_granted) % timeDeltaInSeconds != 0:
-                # if timeToRequest % publishTimeAhead == 0:
-                #     fncs.update_time_delta(publishTimeAhead)
-                # else:
-            #    fncs.update_time_delta(1)
-            #    print("time delta updated to 1s.", flush=True)
-            #    timeDeltaChanged = 1
-            time_granted = fncs.time_request(timeToRequest)
-            #print("time_granted", time_granted)
-            #if timeDeltaChanged == 1:
-            #    fncs.update_time_delta(timeDeltaInSeconds)
-            #    print("time delta updated to " + str(timeDeltaInSeconds) + "s.", flush=True)
-            #    timeDeltaChanged = 0
-	# if the time need to be published is real time
+            if hFed is not None:
+              time_granted = int (helics.helicsFederateRequestTime(hFed, timeToRequest))
+            else:
+              time_granted = fncs.time_request(timeToRequest)
         if timeNeedToBePublished[i] in timeNeedToPublishRealtime:
             # find the data by the time point and publish them
             row = weatherData2.loc[dtStart + timedelta(seconds=timeNeedToBePublished[i])]
             print('publishing at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i]))
                   + ' for weather at ' + str(dtStart + timedelta(seconds=timeNeedToBePublished[i])), flush=True)
             for key, value in row.iteritems():
-                #remove the inproper value generated by interpolation
+                #remove the improper value generated by interpolation
                 if key != "temperature" and value < 1e-4:
                     value = 0
-                fncs.publish(key, value)
+                if hFed is not None:
+                  helics.helicsPublicationPublishDouble(hPubs[key], value)
+                else:
+                  fncs.publish(key, value)
         # if forecasting needed and the time is on the hour
         if forecast == 1 and timeNeedToBePublished[i] in timeNeedToPublishForecast:
             print('forecasting at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i])) + ' for weather starting from '
@@ -213,13 +177,8 @@ def startWeatherAgent(file):
             forecastEnd = dtStart + timedelta(seconds=forecastLength) + timedelta(seconds=timeNeedToBePublished[i])
             # find the data by forecast starting and ending time, should be multiple data point for each weather factor
             rows = hourlyWeatherData.loc[(hourlyWeatherData.index >= forecastStart) & (hourlyWeatherData.index < forecastEnd)].copy()
-            #rows.is_copy = None
-            #remove the inproper value generated by interpolation
-            #rows.solar_direct[rows.solar_direct<0]=0
             rows.solar_direct[rows.solar_direct<1e-4]=0
-            #rows.solar_diffuse[rows.solar_diffuse<0]=0
             rows.solar_diffuse[rows.solar_diffuse<1e-4]=0
-            #rows.wind_speed[rows.wind_speed<0]=0
             rows.wind_speed[rows.wind_speed<1e-4]=0
             rows.humidity[rows.humidity<1e-4]=0
             rows.pressure[rows.pressure<1e-4]=0
@@ -236,38 +195,23 @@ def startWeatherAgent(file):
                     if col != "temperature" and data[v] < 1e-4:
                         data[v] = 0
                     wd[str(times[v])] = str(data[v])
-                fncs.publish(col + '/forecast', json.dumps(wd))
+                if hFed is not None:
+                  helics.helicsPublicationPublishString(hPubs[col + '/forecast'], json.dumps(wd))
+                else:
+                  fncs.publish(col + '/forecast', json.dumps(wd))
+
     # if the last time step/stop time is not requested
     if timeStopInSeconds not in timeNeedToPublish:
-        #if (timeStopInSeconds - time_granted) % timeDeltaInSeconds != 0:
-        #    fncs.update_time_delta(1)
-        #    timeDeltaChanged = 1
-        time_granted = fncs.time_request(timeStopInSeconds)
-        #if timeDeltaChanged == 1:
-        #    fncs.update_time_delta(timeDeltaInSeconds)
-        #    timeDeltaChanged == 0
+        if hFed is not None:
+          time_granted = int (helics.helicsFederateRequestTime(hFed, timeStopInSeconds))
+        else:
+          time_granted = fncs.time_request(timeStopInSeconds)
 
-    # # Jacob suggested implementation
-    # tnext_publish = publishIntervalInSeconds - publishTimeAhead
-    # print("before while, time_granted: ", time_granted, flush=True)
-    # while time_granted < timeStopInSeconds:
-    #     # determine the next FNCS time
-    #     next_fncs_time = int(min([tnext_publish, timeStopInSeconds]))
-    #     # with that new FNCS value update the delta time to ensure we only get returned at that time
-    #     fncs.update_time_delta(next_fncs_time-time_granted)
-    #     print("tnext_publish: ", tnext_publish, flush=True)
-    #     print("next_fncs_time: ", next_fncs_time, flush=True)
-    #     print("next_fncs_time-time_granted: ", next_fncs_time-time_granted, flush=True)
-    #     # call time request to move to this new time
-    #     time_granted = fncs.time_request(next_fncs_time)
-    #     print("time_granted: ", time_granted, flush=True)
-    #
-    #     # update the next time to publish
-    #     tnext_publish += publishIntervalInSeconds
-    #     print("update tnext_publish", flush=True)
-
-    print('finalizing FNCS', flush=True)
-    fncs.finalize()
+    if hFed is not None:
+      stop_helics_federate (hFed)
+    else:
+      print('finalizing FNCS', flush=True)
+      fncs.finalize()
 
 def usage():
     print("usage: python weatherAgent.py <input weather file full path>")

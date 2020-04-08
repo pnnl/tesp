@@ -10,10 +10,17 @@ module generators;
 module residential;
 module tape;
 
+#ifdef USE_FNCS
+#define USING_AGENT=1
+#endif
+#ifdef USE_HELICS
+#define USING_AGENT=1
+#endif
+
 object climate {
   name exampleWeather;
   interpolate QUADRATIC;
-#ifdef USE_FNCS
+#ifdef USING_AGENT
 	latitude 32.900;
 	longitude -97.017;
 //  altitude 171.0;
@@ -48,17 +55,21 @@ object fncs_msg {
   name gridlabdweatheragent;
   configure weather_FNCS_Config.txt;
   option "transport:hostname localhost, port 5570";
-//  aggregate_subscriptions true;
-//  aggregate_publications true;
-};
+}
+#endif
+
+#ifdef USE_HELICS
+object helics_msg {
+  configure helics_gld.json;
+}
 #endif
 
 object recorder{
 	parent exampleWeather;
 	property temperature,humidity,solar_direct,solar_diffuse,pressure,wind_speed,solar_azimuth,solar_elevation,solar_zenith;
 	interval 300;
-#ifdef USE_FNCS
-	file climate_fncs.csv;
+#ifdef USING_AGENT
+	file climate_agent.csv;
 #else
 	file climate_tmy3.csv;
 #endif
@@ -67,8 +78,8 @@ object recorder{
 	parent solarGenerator;
 	property Insolation,wind_speed,Tmodule,Tambient,NOCT;
 	interval 300;
-#ifdef USE_FNCS
-	file generator_fncs.csv;
+#ifdef USING_AGENT
+	file generator_agent.csv;
 #else
 	file generator_tmy3.csv;
 #endif
@@ -77,8 +88,8 @@ object recorder{
 	parent weatherHouse;
 	property solar_gain,incident_solar_radiation,horizontal_diffuse_solar_radiation,outdoor_temperature,outdoor_rh;
 	interval 300;
-#ifdef USE_FNCS
-	file house_fncs.csv;
+#ifdef USING_AGENT
+	file house_agent.csv;
 #else
 	file house_tmy3.csv;
 #endif
