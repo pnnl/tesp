@@ -78,8 +78,8 @@ def ppcasefile():
 		[2,    0, 0, 3, 0.0,    0.0,   0.0]  # responsive load
 	])
 
-	# bus, fncs topic, amp factor, current value
-	ppc['FNCS'] = array([
+	# bus, subscription topic, amplification factor, current value
+	ppc['DSO'] = array([
 		[7, 'SUBSTATION7', 20.0, 0.0]
 	])
 
