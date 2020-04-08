@@ -1,7 +1,7 @@
 {
 	"name" : "gridlabdSimulator1",
 	"period" : 1.0,
-	"log_level": 7,
+	"log_level": 4,
 	"endpoints" : [
 		{
 			"name" : "sw_status", 

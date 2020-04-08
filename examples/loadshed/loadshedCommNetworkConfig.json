@@ -1,7 +1,7 @@
 {
 	"name": "loadshedCommNetwork",
 	"coretype": "zmq",
-	"log_level": 7,
+	"log_level": 4,
 	"period": 0.000000001,
 	"endpoints": [
 		{
