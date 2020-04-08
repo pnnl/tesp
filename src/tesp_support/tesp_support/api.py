@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: api.py
 """Functions intended for public access.
 
@@ -21,6 +21,7 @@ Public Functions:
     :convert_tmy2_to_epw: Command line utility that converts TMY2 weather files to the EPW format for EnergyPlus.
     :weathercsv: Converts TMY3 weather data to CSV format.
     :startWeatherAgent: Publishes FNCS messages and forecasts from a weather CSV file.
+    :make_ems: Creates the energy management system (EMS) for FNCS/HELICS to interface with EnergyPlus.
 
 """
 
@@ -48,6 +49,8 @@ from .case_merge import merge_fncs_config
 
 from .fncsPYPOWER import load_json_case
 from .fncsPYPOWER import summarize_opf
+
+from .make_ems import make_ems
 
 #from .process_agents import process_agents
 #from .process_eplus import process_eplus
