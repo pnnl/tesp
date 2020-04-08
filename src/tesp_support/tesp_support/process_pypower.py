@@ -42,7 +42,7 @@ def process_pypower(nameroot):
     baseMVA = dict['baseMVA']
     gen_keys = list(dict['generators'].keys())
     gen_keys.sort()
-    bus_keys = list(dict['fncsBuses'].keys())
+    bus_keys = list(dict['dsoBuses'].keys())
     bus_keys.sort()
     print ("\n\nFile", nameroot, "has baseMVA", baseMVA)
     print("\nGenerator Dictionary:")
@@ -50,10 +50,10 @@ def process_pypower(nameroot):
     for key in gen_keys:
         row = dict['generators'][key]
         print (key, row['bus'], row['bustype'], row['Pnom'], row['Pmax'], "[", row['StartupCost'], row['ShutdownCost'], row['c2'], row['c1'], row['c0'], "]")
-    print("\nFNCS Bus Dictionary:")
+    print("\nDSO Bus Dictionary:")
     print("Bus Pnom Qnom ampFactor [GridLAB-D Substations]")
     for key in bus_keys:
-        row = dict['fncsBuses'][key]
+        row = dict['dsoBuses'][key]
         print (key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])
 
     # read the bus metrics file
