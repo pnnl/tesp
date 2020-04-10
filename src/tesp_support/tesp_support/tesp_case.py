@@ -255,11 +255,26 @@ values:
     kwhr_price:
         topic: substation/clear_price
         default: 0.10
+    indoor_air:
+        topic: eplus/EMS INDOOR AIR TEMPERATURE
+        default: 0
+    outdoor_air:
+        topic: eplus/ENVIRONMENT SITE OUTDOOR AIR DRYBULB TEMPERATURE
+        default: 0
+    cooling_volume:
+        topic: eplus/EMS COOLING VOLUME
+        default: 0
+    heating_volume:
+        topic: eplus/EMS HEATING VOLUME
+        default: 0
     cooling_controlled_load:
         topic: eplus/EMS COOLING CONTROLLED LOAD
         default: 0
-    cooling_desired_temperature:
-        topic: eplus/EMS COOLING DESIRED TEMPERATURE
+    cooling_schedule_temperature:
+        topic: eplus/EMS COOLING SCHEDULE TEMPERATURE
+        default: 0
+    cooling_setpoint_temperature:
+        topic: eplus/EMS COOLING SETPOINT TEMPERATURE
         default: 0
     cooling_current_temperature:
         topic: eplus/EMS COOLING CURRENT TEMPERATURE
@@ -270,8 +285,11 @@ values:
     heating_controlled_load:
         topic: eplus/EMS HEATING CONTROLLED LOAD
         default: 0
-    heating_desired_temperature:
-        topic: eplus/EMS HEATING DESIRED TEMPERATURE
+    heating_schedule_temperature:
+        topic: eplus/EMS HEATING SCHEDULE TEMPERATURE
+        default: 0
+    heating_setpoint_temperature:
+        topic: eplus/EMS HEATING SETPOINT TEMPERATURE
         default: 0
     heating_current_temperature:
         topic: eplus/EMS HEATING CURRENT TEMPERATURE
@@ -285,74 +303,8 @@ values:
     ashrae_uncomfortable_hours:
         topic: eplus/FACILITY FACILITY THERMAL COMFORT ASHRAE 55 SIMPLE MODEL SUMMER OR WINTER CLOTHES NOT COMFORTABLE TIME
         default: 0
-    occupants_1:
-        topic: eplus/BATH_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_2:
-        topic: eplus/CAFETERIA_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_3:
-        topic: eplus/COMPUTER_CLASS_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_4:
-        topic: eplus/CORNER_CLASS_1_POD_1_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_5:
-        topic: eplus/CORNER_CLASS_1_POD_2_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_6:
-        topic: eplus/CORNER_CLASS_1_POD_3_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_7:
-        topic: eplus/CORNER_CLASS_2_POD_1_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_8:
-        topic: eplus/CORNER_CLASS_2_POD_2_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_9:
-        topic: eplus/CORNER_CLASS_2_POD_3_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_10:
-        topic: eplus/CORRIDOR_POD_1_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_11:
-        topic: eplus/CORRIDOR_POD_2_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_12:
-        topic: eplus/CORRIDOR_POD_3_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_13:
-        topic: eplus/GYM_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_14:
-        topic: eplus/KITCHEN_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_15:
-        topic: eplus/LIBRARY_MEDIA_CENTER_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_17:
-        topic: eplus/MAIN_CORRIDOR_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_18:
-        topic: eplus/MULT_CLASS_1_POD_1_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_19:
-        topic: eplus/MULT_CLASS_1_POD_2_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_20:
-        topic: eplus/MULT_CLASS_1_POD_3_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_21:
-        topic: eplus/MULT_CLASS_2_POD_1_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_22:
-        topic: eplus/MULT_CLASS_2_POD_2_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_23:
-        topic: eplus/MULT_CLASS_2_POD_3_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
-        default: 0
-    occupants_24:
-        topic: eplus/OFFICES_ZN_1_FLR_1 PEOPLE PEOPLE OCCUPANT COUNT
+    occupants_total:
+        topic: eplus/EMS OCCUPANT COUNT
         default: 0
 """
         op = open (casedir + '/eplus_json.yaml', 'w')

@@ -1,4 +1,4 @@
-/*	Copyright (C) 2017 Battelle Memorial Institute */
+/*	Copyright (C) 2017-2020 Battelle Memorial Institute */
 /* autoconf header */
 #include "config.h"
 
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 	Json::Value meta;
 	metrics_t metrics;
 	double *pVals;
-	double newval, occupants;
+	double newval;
 	fncs::time mod;
 	fncs::time hod;
 
@@ -187,24 +187,13 @@ int main(int argc, char **argv)
 	time_multiplier = fncs::parse_time("1m") / 1000000000; // to output in seconds
 	cout << "multiplier from EnergyPlus to FNCS time is " << time_multiplier << endl;
 
-	// build the list of metrics to accumulate
-	// occupants_## is a special case; we'll have a separate FNCS key for occupants in each room,
-	//    but we want to sum these up for total building occupants before aggregating
+	// build the list of metrics to accumulate; zone occupants now accumulated within EnergyPlus EMS
 	keys = fncs::get_keys();
 	for (vector<string>::iterator it = keys.begin(); it != keys.end(); ++it) {
-		if ((*it).find("occupants_") == 0) {
-			if (metrics.find("occupants_total") == metrics.end())	{
-				pVals = new double[METRICS_NBR];
-				reset_metric (pVals);
-				metrics["occupants_total"] = pVals;
-				cout << "aggregating occupants_## into occupants_total" << endl;
-			}
-		} else {
-			pVals = new double[METRICS_NBR];
-			reset_metric (pVals);
-			metrics[*it] = pVals;
-			cout << "aggregating " << *it << endl;
-		}
+		pVals = new double[METRICS_NBR];
+		reset_metric (pVals);
+		metrics[*it] = pVals;
+		cout << "aggregating " << *it << endl;
 	}
 	// add the thermostat deltas, which are generated within this agent
 	pVals = new double[METRICS_NBR];
@@ -224,10 +213,13 @@ int main(int argc, char **argv)
 		units = "";
 		if ((it->first).find("temperature") != string::npos) units = "degF";
 		if ((it->first).find("setpoint") != string::npos) units = "degF";
-        if ((it->first).find("outdoor_air") != string::npos) units = "degF";
+		if ((it->first).find("outdoor_air") != string::npos) units = "degF";
+		if ((it->first).find("indoor_air") != string::npos) units = "degF";
+		if ((it->first).find("volume") != string::npos) units = "m3";
 		if ((it->first).find("demand_power") != string::npos) units = "W";
 		if ((it->first).find("controlled_load") != string::npos) units = "W";
 		if ((it->first).find("hours") != string::npos) units = "hours";
+		if ((it->first).find("kwhr_price") != string::npos) units = "$/kwh";
 		jsn["units"] = units;
 		jsn["index"] = idx++;
 		meta[it->first + "_avg"] = jsn; 
@@ -246,7 +238,6 @@ int main(int argc, char **argv)
 	do {
 		time_granted = fncs::time_request(time_stop);
 		events = fncs::get_events();
-		occupants = 0.0;
 		for (vector<string>::iterator it=events.begin(); it!=events.end(); ++it) {
 			newval = collect_fncs_values (*it);
 			if ((*it).find("kwhr_price") == 0) {
@@ -255,17 +246,10 @@ int main(int argc, char **argv)
 			if ((*it).find("electric_demand_power") == 0) {
 				totalWatts = newval;
 			}
-            if ((*it).find("outdoor_air") == 0) {
-                newval = newval * 1.8 + 32.0;
-            }
-			if ((*it).find("occupants_") == 0) {
-				occupants += newval;
-			}	else {
-				update_metric(metrics[*it], newval);
+			if ((*it).find("outdoor_air") == 0) { // indoor air published from E+ in degF
+				newval = newval * 1.8 + 32.0;
 			}
-		}
-		if (metrics.find("occupants_total") != metrics.end())	{
-			update_metric(metrics["occupants_total"], occupants);
+			update_metric(metrics[*it], newval);
 		}
 		// this is price response
 		delta = degF_per_price * (price - base_price);

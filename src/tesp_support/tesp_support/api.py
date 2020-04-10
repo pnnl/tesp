@@ -51,6 +51,7 @@ from .fncsPYPOWER import load_json_case
 from .fncsPYPOWER import summarize_opf
 
 from .make_ems import make_ems
+from .make_ems import merge_idf
 
 #from .process_agents import process_agents
 #from .process_eplus import process_eplus

@@ -1,6 +1,10 @@
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
 
-cat SchoolBase.idf emsTest.idf > Merged.idf
+#cat SchoolBase.idf emsTest.idf > Merged.idf
+
+python3 -c "import tesp_support.api as tesp;tesp.merge_idf('SchoolBase.idf','emsTest.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf')"
+#python3 -c "import tesp_support.api as tesp;tesp.merge_idf('SchoolBase.idf','emsTest.idf', '2013-08-01 00:00:00', '2013-08-03 00:00:00', 'Merged.idf')"
+
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 4 &> broker.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w $TESP_SUPPORT/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw -d output -r Merged.idf &> eplus.log &)
 (export FNCS_LOG_STDOUT=yes && exec fncs_player 2d prices.txt &> player.log &)
