@@ -116,7 +116,8 @@ def print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoi
   print ('\n  === schedules used                     Alias      Heating')
   for name, row in schedules.items():
     if row['Used']:
-      print ('{:40s} {:10s} {:1}'.format(name, row['Alias'], row['Heating'])) # , row['Schedule']))
+      print ('{:40s} {:10s} {:1}'.format(name, row['Alias'], row['Heating']))
+      print (row['Schedule'])
   print ('\n  === thermostats                        Heating                                  Cooling')
   for name, row in thermostats.items():
     print ('{:40s} {:40s} {:40s}'.format (name, row['Heating'], row['Cooling']))
@@ -172,7 +173,7 @@ def summarize_idf (fname, baseidf):
       zones[zname]['People'] = True
       while ';' not in line:
         line = fp.readline()
-    if 'Coil:Heating:Electric' in line:
+    if ('Coil:Heating:Electric') in line or ('Coil:Heating:DX') in line:
       if ';' not in line:  # bypass a comment line in the IDF header block
         coilname = get_eplus_token (fp.readline())
         if coilname not in hcoils:
@@ -294,14 +295,16 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
   nzones = len(zones)
   nocczones = 0
   nctrlzones = 0
-  volume = 0.0
+  total_volume = 0.0
+  controlled_volume = 0.0
   for zname, row in zones.items():
     zvol = row['zvol']
     if row['People']:
       nocczones += 1
     if row['Controlled']:
       nctrlzones += 1
-    volume += zvol
+      controlled_volume += zvol
+    total_volume += zvol
     if idx == nzones:
       term = ';'
     print ('    Set {:s}_V = {:.2f}{:s}'.format (zname, zvol, term), file=op)
@@ -316,7 +319,8 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
     Set H_SET = 0.0,
     Set C_CUR = 0.0,
     Set H_CUR = 0.0,""", file=op)
-  print ('    Set Total_V = {:.2f},'.format (volume), file=op)
+  print ('    Set Total_V = {:.2f},'.format (total_volume), file=op)
+  print ('    Set Controlled_V = {:.2f},'.format (controlled_volume), file=op)
 
   for zname, row in zones.items():
     if row['Controlled']:
@@ -330,7 +334,8 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
       print ('      Set H_SET = H_SET + {:s} * {:s}_V,'.format (Halias, zname), file=op)
       print ('      Set H_CUR = H_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
       print ('      Set TOTAL_HEAT_V = TOTAL_HEAT_V + {:s}_V,'.format (zname), file=op)
-      print ('    ELSEIF ({:s} > 0),'.format (Csens), file=op)
+      print ('    ENDIF,', file=op)
+      print ('    IF ({:s} > 0),'.format (Csens), file=op)
       print ('      Set C_SET = C_SET + {:s} * {:s}_V,'.format (Calias, zname), file=op)
       print ('      Set C_CUR = C_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
       print ('      Set TOTAL_COOL_V = TOTAL_COOL_V + {:s}_V,'.format (zname), file=op)
@@ -341,7 +346,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
   for zname, row in zones.items():
     if row['Controlled']:
       print ('    Set T_CUR = T_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
-  print ('    Set T_CUR = T_CUR/Total_V*9.0/5.0+32.0,', file=op)
+  print ('    Set T_CUR = T_CUR/Controlled_V*9.0/5.0+32.0,', file=op)
 
   print ("""! Average cooling schedule and setpoint over controlled zone air volumes
     Set Schedule_Cooling_Temperature = 0.0,
@@ -351,8 +356,8 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
       alias = schedules[row['Csched']]['Alias']
       print ('    Set T_Cooling = T_Cooling + {:s} * {:s}_V,'.format (alias, zname), file=op)
       print ('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + {:s}_NOM * {:s}_V,'.format (alias, zname), file=op)
-  print ('    Set T_Cooling = T_Cooling/Total_V*9.0/5.0+32.0,', file=op)
-  print ('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature/Total_V*9.0/5.0+32.0,', file=op)
+  print ('    Set T_Cooling = T_Cooling/Controlled_V*9.0/5.0+32.0,', file=op)
+  print ('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature/Controlled_V*9.0/5.0+32.0,', file=op)
 
   print ("""! Average heating schedule and setpoint over controlled zone air volumes
     Set Schedule_Heating_Temperature = 0.0,
@@ -362,37 +367,44 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
       alias = schedules[row['Hsched']]['Alias']
       print ('    Set T_Heating = T_Heating + {:s} * {:s}_V,'.format (alias, zname), file=op)
       print ('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + {:s}_NOM * {:s}_V,'.format (alias, zname), file=op)
-  print ('    Set T_Heating = T_Heating/Total_V*9.0/5.0+32.0,', file=op)
-  print ('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature/Total_V*9.0/5.0+32.0,', file=op)
+  print ('    Set T_Heating = T_Heating/Controlled_V*9.0/5.0+32.0,', file=op)
+  print ('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature/Controlled_V*9.0/5.0+32.0,', file=op)
 
   print ("""
-    Set Setpoint_Cooling_Temperature = 0.0,
-    Set Current_Cooling_Temperature = 0.0,
-    Set Setpoint_Heating_Temperature = 0.0,
-    Set Current_Heating_Temperature = 0.0,
-
-    IF (C_SET > 0 && H_SET > 0), ! Scenario 1, both heating and cooling
-      Set Setpoint_Cooling_Temperature = C_SET/TOTAL_COOL_V*9.0/5.0+32.0,
-      Set Setpoint_Heating_Temperature = H_SET/TOTAL_HEAT_V*9.0/5.0+32.0,     
-      Set Current_Cooling_Temperature = C_CUR/TOTAL_COOL_V*9.0/5.0+32.0, 
-      Set Current_Heating_Temperature = H_CUR/TOTAL_HEAT_V*9.0/5.0+32.0,   
-    ELSEIF (C_SET == 0 && H_SET == 0),  ! Scenario 2, no heating or cooling
-      Set Setpoint_Cooling_Temperature = T_Cooling,
-      Set Setpoint_Heating_Temperature = T_Heating,     
-      Set Current_Cooling_Temperature = T_Cooling, 
-      Set Current_Heating_Temperature = T_Heating, 
-    ELSEIF (C_SET > 0 && H_SET == 0), ! Scenario 3, only cooling
-      Set Setpoint_Cooling_Temperature = C_SET/TOTAL_COOL_V*9.0/5.0+32.0,
-      Set Setpoint_Heating_Temperature = T_Heating,     
-      Set Current_Cooling_Temperature = C_CUR/TOTAL_COOL_V*9.0/5.0+32.0,
-      Set Current_Heating_Temperature = T_Heating, 
-    ELSEIF (C_SET == 0 && H_SET > 0), ! Scenario 4, only heating
-      Set Setpoint_Cooling_Temperature = T_Cooling,
-      Set Setpoint_Heating_Temperature = H_SET/TOTAL_HEAT_V*9.0/5.0+32.0,   
-      Set Current_Cooling_Temperature = T_Cooling, 
-      Set Current_Heating_Temperature = H_CUR/TOTAL_HEAT_V*9.0/5.0+32.0,
-    ENDIF;
+    Set Setpoint_Cooling_Temperature = T_Cooling,
+    Set Current_Cooling_Temperature = T_CUR,
+    Set Setpoint_Heating_Temperature = T_Heating,
+    Set Current_Heating_Temperature = T_CUR;
 """, file=op)
+
+#  print ("""
+#    Set Setpoint_Cooling_Temperature = 0.0,
+#    Set Current_Cooling_Temperature = 0.0,
+#    Set Setpoint_Heating_Temperature = 0.0,
+#    Set Current_Heating_Temperature = 0.0,
+#
+#    IF (C_SET > 0 && H_SET > 0), ! Scenario 1, both heating and cooling
+#      Set Setpoint_Cooling_Temperature = C_SET/TOTAL_COOL_V*9.0/5.0+32.0,
+#      Set Setpoint_Heating_Temperature = H_SET/TOTAL_HEAT_V*9.0/5.0+32.0,
+#      Set Current_Cooling_Temperature = C_CUR/TOTAL_COOL_V*9.0/5.0+32.0,
+#      Set Current_Heating_Temperature = H_CUR/TOTAL_HEAT_V*9.0/5.0+32.0,
+#    ELSEIF (C_SET == 0 && H_SET == 0),  ! Scenario 2, no heating or cooling
+#      Set Setpoint_Cooling_Temperature = T_Cooling,
+#      Set Setpoint_Heating_Temperature = T_Heating,
+#      Set Current_Cooling_Temperature = T_Cooling,
+#      Set Current_Heating_Temperature = T_Heating,
+#    ELSEIF (C_SET > 0 && H_SET == 0), ! Scenario 3, only cooling
+#      Set Setpoint_Cooling_Temperature = C_SET/TOTAL_COOL_V*9.0/5.0+32.0,
+#      Set Setpoint_Heating_Temperature = T_Heating,
+#      Set Current_Cooling_Temperature = C_CUR/TOTAL_COOL_V*9.0/5.0+32.0,
+#      Set Current_Heating_Temperature = T_Heating,
+#    ELSEIF (C_SET == 0 && H_SET > 0), ! Scenario 4, only heating
+#      Set Setpoint_Cooling_Temperature = T_Cooling,
+#      Set Setpoint_Heating_Temperature = H_SET/TOTAL_HEAT_V*9.0/5.0+32.0,
+#      Set Current_Cooling_Temperature = T_Cooling,
+#      Set Current_Heating_Temperature = H_CUR/TOTAL_HEAT_V*9.0/5.0+32.0,
+#    ENDIF;
+#""", file=op)
 
   print ("""  
   EnergyManagementSystem:Program,
@@ -512,6 +524,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
   Output:Variable,EMS,Occupant Count,timestep;
   Output:Variable,EMS,Indoor Air Temperature,timestep;
   Output:Variable,WHOLE BUILDING,Facility Total Electric Demand Power,timestep;
+  Output:Variable,WHOLE BUILDING,Facility Total HVAC Electric Demand Power,timestep;
   Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
   Output:Variable,*,Site Outdoor Air Drybulb Temperature,timestep; """, file=op)
 
@@ -528,7 +541,7 @@ def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf'):
 
   print ('*** make_ems from', sourcedir, 'to', target)
   zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs = summarize_idf (sourcedir + '/eplusout.eio', baseidf)
-  print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
+#  print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
   return write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
 
 def merge_idf (base, ems, StartTime, EndTime, target):

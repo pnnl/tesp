@@ -6,6 +6,10 @@ values:
         topic: player/clear_price
     agent_price:
         topic: eplus_json/price
+    delta_cooling:
+        topic: eplus_json/cooling_setpoint_delta
+    delta_heating:
+        topic: eplus_json/heating_setpoint_delta
     power_A:
         topic: eplus_json/power_A
         default: 0
@@ -59,6 +63,9 @@ values:
         default: 0
     electric_demand_power:
         topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
+        default: 0
+    hvac_demand_power:
+        topic: eplus/WHOLE BUILDING FACILITY TOTAL HVAC ELECTRIC DEMAND POWER
         default: 0
     ashrae_uncomfortable_hours:
         topic: eplus/FACILITY FACILITY THERMAL COMFORT ASHRAE 55 SIMPLE MODEL SUMMER OR WINTER CLOTHES NOT COMFORTABLE TIME

@@ -300,6 +300,9 @@ values:
     electric_demand_power:
         topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
         default: 0
+    hvac_demand_power:
+        topic: eplus/WHOLE BUILDING FACILITY TOTAL HVAC ELECTRIC DEMAND POWER
+        default: 0
     ashrae_uncomfortable_hours:
         topic: eplus/FACILITY FACILITY THERMAL COMFORT ASHRAE 55 SIMPLE MODEL SUMMER OR WINTER CLOTHES NOT COMFORTABLE TIME
         default: 0

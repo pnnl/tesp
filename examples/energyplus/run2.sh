@@ -1,6 +1,7 @@
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
 
 #python3 -c "import tesp_support.api as tesp;tesp.merge_idf('$TESP_SUPPORT/energyplus/FullServiceRestaurant.idf','emsFullServiceRestaurant.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf')"
+#python3 -c "import tesp_support.api as tesp;tesp.merge_idf('$TESP_SUPPORT/energyplus/FullServiceRestaurant.idf','emsFullServiceRestaurant.idf', '2013-08-01 00:00:00', '2013-08-03 00:00:00', 'Merged.idf')"
 
 #python3 -c "import tesp_support.api as tesp;tesp.merge_idf('SchoolBase.idf','emsSchoolBase.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf')"
 python3 -c "import tesp_support.api as tesp;tesp.merge_idf('SchoolBase.idf','emsSchoolBase.idf', '2013-08-01 00:00:00', '2013-08-03 00:00:00', 'Merged.idf')"

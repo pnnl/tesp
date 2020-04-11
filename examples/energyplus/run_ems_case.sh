@@ -7,8 +7,7 @@ declare -r TARGET=$4
 declare -r METRICS=eplus_${TARGET}_metrics.json
 declare -r EPWFILE=$TESP_SUPPORT/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw
 
-echo $STARTDATE
-echo $ENDDATE
+echo $BUILDING, $TARGET, $STARTDATE, $ENDDATE
 
 python3 -c "import tesp_support.api as tesp;tesp.merge_idf('$TESP_SUPPORT/energyplus/$BUILDING.idf','ems$BUILDING.idf', '$STARTDATE', '$ENDDATE', '$TARGET.idf')"
 

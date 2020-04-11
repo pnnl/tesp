@@ -45,11 +45,14 @@ def process_eplus(nameroot, title=None, pngfile=None):
     times.sort()
     print ("There are", len (times), "sample times at", times[1] - times[0], "seconds")
 
-    # parse the metadata for 13 things of specific interest
+    # parse the metadata for things of specific interest
     for key, val in meta.items():
         if key == 'electric_demand_power_avg':
             ELECTRIC_DEMAND_IDX = val['index']
             ELECTRIC_DEMAND_UNITS = val['units']
+        elif key == 'hvac_demand_power_avg':
+            HVAC_DEMAND_IDX = val['index']
+            HVAC_DEMAND_UNITS = val['units']
         elif key == 'occupants_total_avg':
             OCCUPANTS_IDX = val['index']
             OCCUPANTS_UNITS = val['units']
@@ -131,6 +134,7 @@ def process_eplus(nameroot, title=None, pngfile=None):
     # display some averages
     print ('Average price  = {:.5f}'.format (data[:,PRICE_IDX].mean()), PRICE_UNITS)
     print ('Average demand = {:.2f}'.format (data[:,ELECTRIC_DEMAND_IDX].mean()), ELECTRIC_DEMAND_UNITS)
+    print ('Average HVAC   = {:.2f}'.format (data[:,HVAC_DEMAND_IDX].mean()), HVAC_DEMAND_UNITS)
     print ('Average uncomf = {:.5f}'.format (data[:,ASHRAE_HOURS_IDX].mean()), ASHRAE_HOURS_UNITS)
     print ('Average people = {:.2f}'.format (data[:,OCCUPANTS_IDX].mean()), OCCUPANTS_UNITS)
 
@@ -161,6 +165,7 @@ def process_eplus(nameroot, title=None, pngfile=None):
     ax[0,0].plot(hrs, data[:,COOLING_TEMPERATURE_IDX], color='blue', label='Actual')
     ax[0,0].plot(hrs, data[:,COOLING_SETPOINT_IDX], color='red', label='Setpoint')
     ax[0,0].plot(hrs, data[:,COOLING_SCHEDULE_IDX], color='green', label='Schedule')
+#    ax[0,0].plot(hrs, data[:,INDOOR_AIR_IDX], color='magenta', label='Indoor')
     ax[0,0].set_ylabel(COOLING_TEMPERATURE_UNITS)
     ax[0,0].set_title ('Volume Average Cooling')
     ax[0,0].legend(loc='best')
@@ -168,6 +173,7 @@ def process_eplus(nameroot, title=None, pngfile=None):
     ax[1,0].plot(hrs, data[:,HEATING_TEMPERATURE_IDX], color='blue', label='Actual')
     ax[1,0].plot(hrs, data[:,HEATING_SETPOINT_IDX], color='red', label='Setpoint')
     ax[1,0].plot(hrs, data[:,HEATING_SCHEDULE_IDX], color='green', label='Schedule')
+#    ax[1,0].plot(hrs, data[:,INDOOR_AIR_IDX], color='magenta', label='Indoor')
     ax[1,0].set_ylabel(HEATING_TEMPERATURE_UNITS)
     ax[1,0].set_title ('Volume Average Heating')
     ax[1,0].legend(loc='best')
@@ -182,17 +188,20 @@ def process_eplus(nameroot, title=None, pngfile=None):
     ax[0,1].set_ylabel(PRICE_UNITS)
     ax[0,1].set_title ('Real-time Price')
 
-    ax[1,1].plot(hrs, 0.001 * data[:,COOLING_POWER_IDX], color='blue', label='Cooling')
-    ax[1,1].plot(hrs, 0.001 * data[:,HEATING_POWER_IDX], color='red', label='Heating')
-    ax[1,1].plot(hrs, 0.001 * data[:,ELECTRIC_DEMAND_IDX], color='green', label='Total')
+    ax[1,1].plot(hrs, 0.001 * data[:,ELECTRIC_DEMAND_IDX], color='blue', label='Total')
+    ax[1,1].plot(hrs, 0.001 * data[:,HVAC_DEMAND_IDX], color='red', label='HVAC')
     ax[1,1].set_ylabel('kW')
     ax[1,1].set_title ('Building Electrical Demand')
     ax[1,1].legend(loc='best')
 
-    ax[2,1].plot(hrs, data[:,COOLING_STATE_IDX], color='blue', label='Cooling')
-    ax[2,1].plot(hrs, data[:,HEATING_STATE_IDX], color='red', label='Heating')
-    ax[2,1].set_ylabel(HEATING_STATE_UNITS)
-    ax[2,1].set_title ('HVAC On/Off States')
+#    ax[2,1].plot(hrs, data[:,COOLING_STATE_IDX], color='blue', label='Cooling')
+#    ax[2,1].plot(hrs, data[:,HEATING_STATE_IDX], color='red', label='Heating')
+#    ax[2,1].set_ylabel(HEATING_STATE_UNITS)
+    ax[2,1].plot(hrs, 0.001 * data[:,COOLING_POWER_IDX], color='blue', label='Cooling')
+    ax[2,1].plot(hrs, 0.001 * data[:,HEATING_POWER_IDX], color='red', label='Heating')
+    ax[2,1].plot(hrs, 0.001 * data[:,HVAC_DEMAND_IDX], color='green', label='HVAC')
+    ax[2,1].set_ylabel('kW')
+    ax[2,1].set_title ('DX/Electrical Coil Demand')
     ax[2,1].legend(loc='best')
 
     ax[0,2].plot(hrs, data[:,OCCUPANTS_IDX], color='blue')
@@ -203,6 +212,7 @@ def process_eplus(nameroot, title=None, pngfile=None):
     ax[1,2].set_ylabel(ASHRAE_HOURS_UNITS)
     ax[1,2].set_title ('Uncomfortable Hours')
 
+    ax[2,2].plot(hrs, 0.001 * data[:,HEATING_VOLUME_IDX] + 0.001 * data[:,COOLING_VOLUME_IDX], color='magenta', label='Total')
     ax[2,2].plot(hrs, 0.001 * data[:,COOLING_VOLUME_IDX], color='blue', label='Cooling')
     ax[2,2].plot(hrs, 0.001 * data[:,HEATING_VOLUME_IDX], color='red', label='Heating')
     ax[2,2].set_ylabel('thousand m^3')
