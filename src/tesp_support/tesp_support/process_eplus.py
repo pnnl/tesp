@@ -15,7 +15,7 @@ try:
 except:
   pass
 
-def process_eplus(nameroot):
+def process_eplus(nameroot, title=None, pngfile=None):
     """ Plots the min and max line-neutral voltages for every billing meter
 
     This function reads *eplus_nameroot_metrics.json* for both metadata and data. 
@@ -110,8 +110,9 @@ def process_eplus(nameroot):
 
 
     # make sure we found the metric indices of interest
-    ary = lst['3600']['SchoolDualController']
-    print ('There are', len(ary), 'metrics')
+    building = list(lst['3600'].keys())[0]
+    ary = lst['3600'][building]
+    print ('There are', len(ary), 'metrics for', building)
     print ('1st hour price =', ary[PRICE_IDX], PRICE_UNITS)
 
     # create a NumPy array of all metrics for the first building, 8760*39 doubles
@@ -120,7 +121,7 @@ def process_eplus(nameroot):
     print ('Constructed', data.shape, 'NumPy array')
     i = 0
     for t in times:
-        ary = lst[str(t)]['SchoolDualController']
+        ary = lst[str(t)][building]
         data[i,:] = ary
         i = i + 1
     hrs = np.array(times, dtype=np.float)
@@ -151,7 +152,11 @@ def process_eplus(nameroot):
     print ('Average indoor air    = {:9.2f}'.format (data[:,INDOOR_AIR_IDX].mean()), INDOOR_AIR_UNITS)
 
     # display a plot
-    fig, ax = plt.subplots(3,3, sharex = 'col')
+    width = 12.0
+    height = 8.0
+    fig, ax = plt.subplots(3,3, sharex = 'col', figsize=(width,height), constrained_layout=True)
+    if title is not None:
+      fig.suptitle (title)
 
     ax[0,0].plot(hrs, data[:,COOLING_TEMPERATURE_IDX], color='blue', label='Actual')
     ax[0,0].plot(hrs, data[:,COOLING_SETPOINT_IDX], color='red', label='Setpoint')
@@ -208,5 +213,8 @@ def process_eplus(nameroot):
     ax[2,1].set_xlabel('Hours')
     ax[2,2].set_xlabel('Hours')
 
-    plt.show()
+    if pngfile is not None:
+      plt.savefig(pngfile)
+    else:
+      plt.show()
 

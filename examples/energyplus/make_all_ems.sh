@@ -1,7 +1,7 @@
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support/energyplus
 declare -r EPLUS_OUTDIR=$HOME/tesp_working/examples/energyplus
 
-#python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outFullServiceRestaurant','$TESP_SUPPORT/FullServiceRestaurant.idf','emsFullServiceRestaurant.idf')"
+python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outFullServiceRestaurant','$TESP_SUPPORT/FullServiceRestaurant.idf','emsFullServiceRestaurant.idf')"
 #python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outHospital','$TESP_SUPPORT/Hospital.idf','emsHospital.idf')"
 #python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outLargeHotel','$TESP_SUPPORT/LargeHotel.idf','emsLargeHotel.idf')"
 #python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outLargeOffice','$TESP_SUPPORT/LargeOffice.idf','emsLargeOffice.idf')"
@@ -18,5 +18,5 @@ declare -r EPLUS_OUTDIR=$HOME/tesp_working/examples/energyplus
 #python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outSuperMarket','$TESP_SUPPORT/SuperMarket.idf','emsSuperMarket.idf')"
 #python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outWarehouse','$TESP_SUPPORT/Warehouse.idf','emsWarehouse.idf')"
 
-python3 -c "import tesp_support.api as tesp;tesp.make_ems('./output','SchoolBase.idf','emsTest.idf')"
+#python3 -c "import tesp_support.api as tesp;tesp.make_ems('./outSchoolBase','SchoolBase.idf','emsSchoolBase.idf')"
 

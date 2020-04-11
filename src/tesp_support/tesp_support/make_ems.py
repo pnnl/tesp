@@ -107,25 +107,30 @@ def get_eplus_token (sval):
 
 def print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs):
   print ('  === hvacs', hvacs)
-  print ('  === ccoil', ccoils)
-  print ('  === hcoil', hcoils)
-  print ('  === schedules used')
+  print ('\n  === ccoils                             Sensor')
+  for name, row in ccoils.items():
+    print ('{:40s} {:s}'.format (name, row['Sensor']))
+  print ('\n  === hcoils                             Sensor')
+  for name, row in hcoils.items():
+    print ('{:40s} {:s}'.format (name, row['Sensor']))
+  print ('\n  === schedules used                     Alias      Heating')
   for name, row in schedules.items():
     if row['Used']:
-      print (name, row['Heating'], row['Alias'], row['Schedule'])
-  print ('  === thermostats')
+      print ('{:40s} {:10s} {:1}'.format(name, row['Alias'], row['Heating'])) # , row['Schedule']))
+  print ('\n  === thermostats                        Heating                                  Cooling')
   for name, row in thermostats.items():
-    print (name, row)
-  print ('  === zonecontrols')
+    print ('{:40s} {:40s} {:40s}'.format (name, row['Heating'], row['Cooling']))
+  print ('\n  === zonecontrols                       Thermostat')
   for name, row in zonecontrols.items():
-    print (name, row)
-  print ('  === zones')
+    print ('{:40s} {:40s}'.format (name, row))
+  print ('\n  === zones                                Volume   Heating                                    Cooling                                  People Controlled')
   for zname, row in zones.items():
     zvol = row['zvol']
     Hsched = row['Hsched']
     Csched = row['Csched']
     People = row['People']
-    print ('{:40s} {:8.2f}   {:40s}   {:40s} {:}'.format (zname, zvol, Hsched, Csched, People))
+    Controlled = row['Controlled']
+    print ('{:40s} {:8.2f}   {:40s}   {:40s} {:1}      {:1}'.format (zname, zvol, Hsched, Csched, People, Controlled))
 
 def summarize_idf (fname, baseidf):
   schedules = {}
@@ -155,11 +160,10 @@ def summarize_idf (fname, baseidf):
       zvol = float(row[19])
       nzones += 1
       volume += zvol
-      zones[zname] = {'zvol': zvol, 'Hsched': '', 'Csched': '', 'People': False}
+      zones[zname] = {'zvol': zvol, 'Hsched': '', 'Csched': '', 'People': False, 'Controlled': False}
   fp.close()
 
   fp = open(baseidf, 'r', errors='replace')
-  print ('  parsing', baseidf)
   line = fp.readline()
   while line:
     if 'People,' in line:
@@ -226,6 +230,7 @@ def summarize_idf (fname, baseidf):
         idx_csched += 1
       zones[zone]['Hsched'] = heat
       zones[zone]['Csched'] = cool
+      zones[zone]['Controlled'] = True
     else:
       print ('  ** No Schedule Found for Zone={:s}'.format(zone))
   for name, row in schedules.items():
@@ -287,9 +292,15 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
   term = ','
   idx = 1
   nzones = len(zones)
+  nocczones = 0
+  nctrlzones = 0
   volume = 0.0
   for zname, row in zones.items():
     zvol = row['zvol']
+    if row['People']:
+      nocczones += 1
+    if row['Controlled']:
+      nctrlzones += 1
     volume += zvol
     if idx == nzones:
       term = ';'
@@ -308,45 +319,49 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
   print ('    Set Total_V = {:.2f},'.format (volume), file=op)
 
   for zname, row in zones.items():
-    Hsens = zname + '_H'
-    Csens = zname + '_C'
-    Hsched = row['Hsched']
-    Csched = row['Csched']
-    Halias = schedules[Hsched]['Alias']
-    Calias = schedules[Csched]['Alias']
-    print ('    IF ({:s} > 0),'.format (Csens), file=op)
-    print ('      Set C_SET = C_SET + {:s} * {:s}_V,'.format (Calias, zname), file=op)
-    print ('      Set C_CUR = C_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
-    print ('      Set TOTAL_COOL_V = TOTAL_COOL_V + {:s}_V,'.format (zname), file=op)
-    print ('    ELSEIF ({:s} > 0),'.format (Hsens), file=op)
-    print ('      Set H_SET = H_SET + {:s} * {:s}_V,'.format (Halias, zname), file=op)
-    print ('      Set H_CUR = H_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
-    print ('      Set TOTAL_HEAT_V = TOTAL_HEAT_V + {:s}_V,'.format (zname), file=op)
-    print ('    ENDIF,', file=op)
+    if row['Controlled']:
+      Hsens = zname + '_H'
+      Hsched = row['Hsched']
+      Halias = schedules[Hsched]['Alias']
+      Csens = zname + '_C'
+      Csched = row['Csched']
+      Calias = schedules[Csched]['Alias']
+      print ('    IF ({:s} > 0),'.format (Hsens), file=op)
+      print ('      Set H_SET = H_SET + {:s} * {:s}_V,'.format (Halias, zname), file=op)
+      print ('      Set H_CUR = H_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
+      print ('      Set TOTAL_HEAT_V = TOTAL_HEAT_V + {:s}_V,'.format (zname), file=op)
+      print ('    ELSEIF ({:s} > 0),'.format (Csens), file=op)
+      print ('      Set C_SET = C_SET + {:s} * {:s}_V,'.format (Calias, zname), file=op)
+      print ('      Set C_CUR = C_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
+      print ('      Set TOTAL_COOL_V = TOTAL_COOL_V + {:s}_V,'.format (zname), file=op)
+      print ('    ENDIF,', file=op)
 
-  print ("""! Average temperature over zone air volumes""", file=op)
+  print ("""! Average temperature over controlled zone air volumes""", file=op)
   print ('    Set T_CUR = 0,', file=op)
   for zname, row in zones.items():
-    print ('    Set T_CUR = T_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
+    if row['Controlled']:
+      print ('    Set T_CUR = T_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
   print ('    Set T_CUR = T_CUR/Total_V*9.0/5.0+32.0,', file=op)
 
-  print ("""! Average cooling schedule and setpoint over zone air volumes
+  print ("""! Average cooling schedule and setpoint over controlled zone air volumes
     Set Schedule_Cooling_Temperature = 0.0,
     Set T_Cooling = 0,""", file=op)
   for zname, row in zones.items():
-    alias = schedules[row['Csched']]['Alias']
-    print ('    Set T_Cooling = T_Cooling + {:s} * {:s}_V,'.format (alias, zname), file=op)
-    print ('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + {:s}_NOM * {:s}_V,'.format (alias, zname), file=op)
+    if row['Controlled']:
+      alias = schedules[row['Csched']]['Alias']
+      print ('    Set T_Cooling = T_Cooling + {:s} * {:s}_V,'.format (alias, zname), file=op)
+      print ('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + {:s}_NOM * {:s}_V,'.format (alias, zname), file=op)
   print ('    Set T_Cooling = T_Cooling/Total_V*9.0/5.0+32.0,', file=op)
   print ('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature/Total_V*9.0/5.0+32.0,', file=op)
 
-  print ("""! Average heating schedule and setpoint over zone air volumes
+  print ("""! Average heating schedule and setpoint over controlled zone air volumes
     Set Schedule_Heating_Temperature = 0.0,
     Set T_Heating = 0,""", file=op)
   for zname, row in zones.items():
-    alias = schedules[row['Hsched']]['Alias']
-    print ('    Set T_Heating = T_Heating + {:s} * {:s}_V,'.format (alias, zname), file=op)
-    print ('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + {:s}_NOM * {:s}_V,'.format (alias, zname), file=op)
+    if row['Controlled']:
+      alias = schedules[row['Hsched']]['Alias']
+      print ('    Set T_Heating = T_Heating + {:s} * {:s}_V,'.format (alias, zname), file=op)
+      print ('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + {:s}_NOM * {:s}_V,'.format (alias, zname), file=op)
   print ('    Set T_Heating = T_Heating/Total_V*9.0/5.0+32.0,', file=op)
   print ('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature/Total_V*9.0/5.0+32.0,', file=op)
 
@@ -406,11 +421,11 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
   term = ','
   idx = 1
   for name, row in zones.items():
-    if idx == nzones:
-      term = ';'
     if row['People']:
+      if idx == nocczones:
+        term = ';'
       print ('    Set Total_Occupants = Total_Occupants + {:s}_O{:s}'.format(name, term), file=op)
-    idx += 1
+      idx += 1
 
   for name, row in schedules.items():
     if row['Used']:
@@ -462,11 +477,12 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
     heating_coil_sensor (row['Sensor'], name, op)
 
   for zname, row in zones.items():
-    zone_temperature_sensor (zname, op)
     if row['People']:
       zone_occupant_sensor (zname, op)
-    zone_sensible_heating_sensor (zname, op)
-    zone_sensible_cooling_sensor (zname, op)
+    if row['Controlled']:
+      zone_temperature_sensor (zname, op)
+      zone_sensible_heating_sensor (zname, op)
+      zone_sensible_cooling_sensor (zname, op)
     global_variable (zname + '_V', op)
 
   print ("""! ***EXTERNAL INTERFACE***
@@ -512,7 +528,7 @@ def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf'):
 
   print ('*** make_ems from', sourcedir, 'to', target)
   zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs = summarize_idf (sourcedir + '/eplusout.eio', baseidf)
-#  print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
+  print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
   return write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
 
 def merge_idf (base, ems, StartTime, EndTime, target):
@@ -553,6 +569,8 @@ def merge_idf (base, ems, StartTime, EndTime, target):
       print ('    %s                      !- End Day of Month' % idf_int(end_day), file=op)
     elif '!- Day of Week for Start Day' in line:
       print ('    %s               !- Day of Week for Start Day' % ep_dow_names[dow], file=op)
+    elif 'Timestep,' in line:
+      print ('  Timestep,12;', file=op)
     else:
       print (line, file=op)
   ip.close()

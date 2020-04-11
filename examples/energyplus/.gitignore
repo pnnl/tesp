@@ -1,7 +1,11 @@
 *.log
 *.out
-output/
+out*/
 *.json
 *.audit
 Merged.idf
+ems*.idf
+Summer*.idf
+Winter*.idf
+*.png
 
