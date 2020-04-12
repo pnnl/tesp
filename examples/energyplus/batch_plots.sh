@@ -1,17 +1,18 @@
-#declare ROOT=WinterFullServiceRestaurant
-#python3 plots.py $ROOT 'Full Service Restaurant, January 3-4' $ROOT.png
-#ROOT=SummerFullServiceRestaurant
-#python3 plots.py $ROOT 'Full Service Restaurant, August 1-2' $ROOT.png
-#
-#declare ROOT=WinterQuickServiceRestaurant
-#python3 plots.py $ROOT 'Quick Service Restaurant, January 3-4' $ROOT.png
-#ROOT=SummerQuickServiceRestaurant
-#python3 plots.py $ROOT 'Quick Service Restaurant, August 1-2' $ROOT.png
-
-declare ROOT=SchoolBase
-declare TITLE="Secondary School (Base)"
-python3 plots.py Winter$ROOT '${TITLE}, January 3-4' Winter$ROOT.png
-python3 plots.py Summer$ROOT '${TITLE}, August 1-2' Summer$ROOT.png
-
-
+./seasonal_plots.sh "FullServiceRestaurant" "Full Service Restaurant" 
+./seasonal_plots.sh "Hospital" "Hospital"
+./seasonal_plots.sh "LargeHotel" "Large Hotel"
+./seasonal_plots.sh "LargeOffice" "Large Office"
+./seasonal_plots.sh "MediumOffice" "Medium Office"
+./seasonal_plots.sh "MidriseApartment" "Mid-rise Apartment"
+./seasonal_plots.sh "OutPatient" "Outpatient Facility"
+./seasonal_plots.sh "PrimarySchool" "Primary School"
+./seasonal_plots.sh "QuickServiceRestaurant" "Quick Service Restaurant"
+./seasonal_plots.sh "SchoolBase" "Secondary School (Base)"
+./seasonal_plots.sh "SecondarySchool" "Secondary School"
+./seasonal_plots.sh "SmallHotel" "Small Hotel"
+./seasonal_plots.sh "SmallOffice" "Small Office"
+./seasonal_plots.sh "StandaloneRetail" "Standalone Retail"
+./seasonal_plots.sh "StripMall" "Strip Mall"
+./seasonal_plots.sh "SuperMarket" "Supermarket"
+./seasonal_plots.sh "Warehouse" "Warehouse"
 

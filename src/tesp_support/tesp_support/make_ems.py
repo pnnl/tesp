@@ -30,6 +30,9 @@ def idf_int(val):
     return sval + ', '
   return sval + ','
 
+def valid_var (name):
+  return name.replace (' ', '_').replace ('-', '_')
+
 def schedule_sensor(name, op):
   print ('  EnergyManagementSystem:Sensor,', file=op)
   print ('    {:s},  !- Name'.format (name), file=op)
@@ -58,43 +61,43 @@ def output_variable(name, target, op):
 
 def heating_coil_sensor(name, target, op):
   print ('  EnergyManagementSystem:Sensor,', file=op)
-  print ('    {:s},  !- Name'.format (name), file=op)
+  print ('    {:s},  !- Name'.format (valid_var(name)), file=op)
   print ('    {:s},  !- Coil'.format (target), file=op)
   print ('    Heating Coil Electric Energy;', file=op)
 
 def cooling_coil_sensor(name, target, op):
   print ('  EnergyManagementSystem:Sensor,', file=op)
-  print ('    {:s},  !- Name'.format (name), file=op)
+  print ('    {:s},  !- Name'.format (valid_var(name)), file=op)
   print ('    {:s},  !- Coil'.format (target), file=op)
   print ('    Cooling Coil Electric Energy;', file=op)
 
 def zone_temperature_sensor(name, op):
   print ('  EnergyManagementSystem:Sensor,', file=op)
-  print ('    {:s}_T,  !- Name'.format (name), file=op)
+  print ('    {:s}_T,  !- Name'.format (valid_var(name)), file=op)
   print ('    {:s},    !- Zone'.format (name), file=op)
   print ('    Zone Mean Air Temperature;', file=op)
 
 def zone_heating_sensor(name, op):
   print ('  EnergyManagementSystem:Sensor,', file=op)
-  print ('    {:s}_H,                   !- Name'.format (name), file=op)
+  print ('    {:s}_H,                   !- Name'.format (valid_var(name)), file=op)
   print ('    {:s} VAV Box Reheat Coil, !- Zone/Coil'.format (name), file=op)
   print ('    Heating Coil Heating Energy;', file=op)
 
 def zone_sensible_heating_sensor(name, op):
   print ('  EnergyManagementSystem:Sensor,', file=op)
-  print ('    {:s}_H,  !- Name'.format (name), file=op)
+  print ('    {:s}_H,  !- Name'.format (valid_var(name)), file=op)
   print ('    {:s},    !- Zone'.format (name), file=op)
   print ('    Zone Air System Sensible Heating Energy;', file=op)
 
 def zone_sensible_cooling_sensor(name, op):
   print ('  EnergyManagementSystem:Sensor,', file=op)
-  print ('    {:s}_C,  !- Name'.format (name), file=op)
+  print ('    {:s}_C,  !- Name'.format (valid_var(name)), file=op)
   print ('    {:s},    !- Zone'.format (name), file=op)
   print ('    Zone Air System Sensible Cooling Energy;', file=op)
 
 def zone_occupant_sensor (name, op):
   print ('  EnergyManagementSystem:Sensor,', file=op)
-  print ('    {:s}_O,  !- Name'.format (name), file=op)
+  print ('    {:s}_O,  !- Name'.format (valid_var(name)), file=op)
   print ('    {:s},    !- Zone'.format (name), file=op)
   print ('    Zone People Occupant Count;', file=op)
 
@@ -167,49 +170,48 @@ def summarize_idf (fname, baseidf):
   fp = open(baseidf, 'r', errors='replace')
   line = fp.readline()
   while line:
-    if 'People,' in line:
-      name = get_eplus_token (fp.readline())
-      zname = get_eplus_token (fp.readline())
-      zones[zname]['People'] = True
-      while ';' not in line:
-        line = fp.readline()
-    if ('Coil:Heating:Electric') in line or ('Coil:Heating:DX') in line:
-      if ';' not in line:  # bypass a comment line in the IDF header block
+    if '!' not in line[0]:
+      if 'People,' in line:
+        name = get_eplus_token (fp.readline())
+        zname = get_eplus_token (fp.readline())
+        zones[zname]['People'] = True
+        while ';' not in line:
+          line = fp.readline()
+      if ('Coil:Heating:Electric' in line) or ('Coil:Heating:DX' in line):
         coilname = get_eplus_token (fp.readline())
         if coilname not in hcoils:
           hcoils[coilname] = {'Sensor': 'Heating_Coil_{:d}'.format(idx_hcoil)}
           idx_hcoil += 1
-    if 'Coil:Cooling:DX' in line:
-      if ';' not in line:  # bypass a comment line in the IDF header block
+      if 'Coil:Cooling:DX' in line:
         coilname = get_eplus_token (fp.readline())
         if coilname not in ccoils:
           ccoils[coilname] = {'Sensor': 'Cooling_Coil_{:d}'.format(idx_ccoil)}
           idx_ccoil += 1
-    if 'Schedule:Compact' in line:
-      schedule = line
-      line = fp.readline()
-      schedule += line
-      name = get_eplus_token (line)
-      while True:
+      if 'Schedule:Compact' in line:
+        schedule = line
         line = fp.readline()
         schedule += line
-        if ';' in line:
-          break
-      schedules[name] = {'Schedule': schedule, 'Used': False, 'Heating': False, 'Alias' : ''}
-    if 'ThermostatSetpoint:DualSetpoint' in line:
-      name = get_eplus_token (fp.readline())
-      heat = get_eplus_token (fp.readline())
-      cool = get_eplus_token (fp.readline())
-      thermostats[name] = {'Heating': heat, 'Cooling': cool}
-      nsetpoints += 1
-    if 'ZoneControl:Thermostat' in line:
-      name = get_eplus_token (fp.readline())
-      zone = get_eplus_token (fp.readline())
-      ctrltype = get_eplus_token (fp.readline())
-      objtype = get_eplus_token (fp.readline())
-      ctrlname = get_eplus_token (fp.readline())
-      zonecontrols[zone] = ctrlname
-      ncontrols += 1
+        name = get_eplus_token (line)
+        while True:
+          line = fp.readline()
+          schedule += line
+          if ';' in line:
+            break
+        schedules[name] = {'Schedule': schedule, 'Used': False, 'Heating': False, 'Alias' : ''}
+      if 'ThermostatSetpoint:DualSetpoint' in line:
+        name = get_eplus_token (fp.readline())
+        heat = get_eplus_token (fp.readline())
+        cool = get_eplus_token (fp.readline())
+        thermostats[name] = {'Heating': heat, 'Cooling': cool}
+        nsetpoints += 1
+      if 'ZoneControl:Thermostat' in line:
+        name = get_eplus_token (fp.readline())
+        zone = get_eplus_token (fp.readline())
+        ctrltype = get_eplus_token (fp.readline())
+        objtype = get_eplus_token (fp.readline())
+        ctrlname = get_eplus_token (fp.readline())
+        zonecontrols[zone] = ctrlname
+        ncontrols += 1
     line = fp.readline()
 
   fp.close()
@@ -307,7 +309,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
     total_volume += zvol
     if idx == nzones:
       term = ';'
-    print ('    Set {:s}_V = {:.2f}{:s}'.format (zname, zvol, term), file=op)
+    print ('    Set {:s}_V = {:.2f}{:s}'.format (valid_var(zname), zvol, term), file=op)
     idx += 1
 
   print ("""  
@@ -324,28 +326,30 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
 
   for zname, row in zones.items():
     if row['Controlled']:
-      Hsens = zname + '_H'
+      sname = valid_var(zname)
+      Hsens = sname + '_H'
       Hsched = row['Hsched']
       Halias = schedules[Hsched]['Alias']
-      Csens = zname + '_C'
+      Csens = sname + '_C'
       Csched = row['Csched']
       Calias = schedules[Csched]['Alias']
       print ('    IF ({:s} > 0),'.format (Hsens), file=op)
-      print ('      Set H_SET = H_SET + {:s} * {:s}_V,'.format (Halias, zname), file=op)
-      print ('      Set H_CUR = H_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
-      print ('      Set TOTAL_HEAT_V = TOTAL_HEAT_V + {:s}_V,'.format (zname), file=op)
+      print ('      Set H_SET = H_SET + {:s} * {:s}_V,'.format (Halias, sname), file=op)
+      print ('      Set H_CUR = H_CUR + {:s}_T * {:s}_V,'.format (sname, sname), file=op)
+      print ('      Set TOTAL_HEAT_V = TOTAL_HEAT_V + {:s}_V,'.format (sname), file=op)
       print ('    ENDIF,', file=op)
       print ('    IF ({:s} > 0),'.format (Csens), file=op)
-      print ('      Set C_SET = C_SET + {:s} * {:s}_V,'.format (Calias, zname), file=op)
-      print ('      Set C_CUR = C_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
-      print ('      Set TOTAL_COOL_V = TOTAL_COOL_V + {:s}_V,'.format (zname), file=op)
+      print ('      Set C_SET = C_SET + {:s} * {:s}_V,'.format (Calias, sname), file=op)
+      print ('      Set C_CUR = C_CUR + {:s}_T * {:s}_V,'.format (sname, sname), file=op)
+      print ('      Set TOTAL_COOL_V = TOTAL_COOL_V + {:s}_V,'.format (sname), file=op)
       print ('    ENDIF,', file=op)
 
   print ("""! Average temperature over controlled zone air volumes""", file=op)
   print ('    Set T_CUR = 0,', file=op)
   for zname, row in zones.items():
     if row['Controlled']:
-      print ('    Set T_CUR = T_CUR + {:s}_T * {:s}_V,'.format (zname, zname), file=op)
+      sname = valid_var(zname)
+      print ('    Set T_CUR = T_CUR + {:s}_T * {:s}_V,'.format (sname, sname), file=op)
   print ('    Set T_CUR = T_CUR/Controlled_V*9.0/5.0+32.0,', file=op)
 
   print ("""! Average cooling schedule and setpoint over controlled zone air volumes
@@ -353,9 +357,10 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
     Set T_Cooling = 0,""", file=op)
   for zname, row in zones.items():
     if row['Controlled']:
+      sname = valid_var(zname)
       alias = schedules[row['Csched']]['Alias']
-      print ('    Set T_Cooling = T_Cooling + {:s} * {:s}_V,'.format (alias, zname), file=op)
-      print ('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + {:s}_NOM * {:s}_V,'.format (alias, zname), file=op)
+      print ('    Set T_Cooling = T_Cooling + {:s} * {:s}_V,'.format (alias, sname), file=op)
+      print ('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + {:s}_NOM * {:s}_V,'.format (alias, sname), file=op)
   print ('    Set T_Cooling = T_Cooling/Controlled_V*9.0/5.0+32.0,', file=op)
   print ('    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature/Controlled_V*9.0/5.0+32.0,', file=op)
 
@@ -364,9 +369,10 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
     Set T_Heating = 0,""", file=op)
   for zname, row in zones.items():
     if row['Controlled']:
+      sname = valid_var(zname)
       alias = schedules[row['Hsched']]['Alias']
-      print ('    Set T_Heating = T_Heating + {:s} * {:s}_V,'.format (alias, zname), file=op)
-      print ('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + {:s}_NOM * {:s}_V,'.format (alias, zname), file=op)
+      print ('    Set T_Heating = T_Heating + {:s} * {:s}_V,'.format (alias, sname), file=op)
+      print ('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + {:s}_NOM * {:s}_V,'.format (alias, sname), file=op)
   print ('    Set T_Heating = T_Heating/Controlled_V*9.0/5.0+32.0,', file=op)
   print ('    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature/Controlled_V*9.0/5.0+32.0,', file=op)
 
@@ -436,7 +442,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
     if row['People']:
       if idx == nocczones:
         term = ';'
-      print ('    Set Total_Occupants = Total_Occupants + {:s}_O{:s}'.format(name, term), file=op)
+      print ('    Set Total_Occupants = Total_Occupants + {:s}_O{:s}'.format(valid_var(name), term), file=op)
       idx += 1
 
   for name, row in schedules.items():
@@ -495,7 +501,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
       zone_temperature_sensor (zname, op)
       zone_sensible_heating_sensor (zname, op)
       zone_sensible_cooling_sensor (zname, op)
-    global_variable (zname + '_V', op)
+    global_variable (valid_var (zname) + '_V', op)
 
   print ("""! ***EXTERNAL INTERFACE***
   ExternalInterface,
