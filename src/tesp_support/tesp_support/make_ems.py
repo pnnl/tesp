@@ -550,7 +550,7 @@ def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf'):
 #  print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
   return write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
 
-def merge_idf (base, ems, StartTime, EndTime, target):
+def merge_idf (base, ems, StartTime, EndTime, target, StepsPerHour):
   """Assembles a base EnergyPlus building model with EMS and simulation period
 
   Args:
@@ -589,7 +589,7 @@ def merge_idf (base, ems, StartTime, EndTime, target):
     elif '!- Day of Week for Start Day' in line:
       print ('    %s               !- Day of Week for Start Day' % ep_dow_names[dow], file=op)
     elif 'Timestep,' in line:
-      print ('  Timestep,12;', file=op)
+      print ('  Timestep,%s;' % str(StepsPerHour), file=op)
     else:
       print (line, file=op)
   ip.close()

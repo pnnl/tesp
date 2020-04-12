@@ -1,5 +1,5 @@
 name: eplus
-time_delta: 5m
+time_delta: 15m
 broker: tcp://localhost:5570
 values:
     COOL_SETP_DELTA:

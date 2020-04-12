@@ -18,5 +18,5 @@ python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outStri
 python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outSuperMarket','$TESP_SUPPORT/SuperMarket.idf','emsSuperMarket.idf')"
 python3 -c "import tesp_support.api as tesp;tesp.make_ems('$EPLUS_OUTDIR/outWarehouse','$TESP_SUPPORT/Warehouse.idf','emsWarehouse.idf')"
 
-python3 -c "import tesp_support.api as tesp;tesp.make_ems('./outSchoolBase','SchoolBase.idf','emsSchoolBase.idf')"
+python3 -c "import tesp_support.api as tesp;tesp.make_ems('./forSchoolBase','SchoolBase.idf','emsSchoolBase.idf')"
 
