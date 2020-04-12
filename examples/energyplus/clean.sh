@@ -2,7 +2,12 @@ rm *.log
 rm *.csv
 rm *.out
 rm *.xml
+rm *.png
 rm *metrics.json
-rm output/*
-rmdir output
+rm out*/*
+rmdir out*
+rm Winter*.idf
+rm Summer*.idf
+rm ems*.idf
+rm Merged.idf
 
