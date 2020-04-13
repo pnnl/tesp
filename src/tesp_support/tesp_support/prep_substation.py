@@ -378,12 +378,12 @@ def ProcessGLM (fileroot):
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
             print ('subscribe "precommit:' + climateName + '.' + wTopic + ' <- ' + climateName + '/' + wTopic + '";', file=op)
     if len(Eplus_Bus) > 0: # hard-wired names for a single building
-        print ('subscribe "precommit:Eplus_load.constant_power_A <- eplus_json/power_A";', file=op)
-        print ('subscribe "precommit:Eplus_load.constant_power_B <- eplus_json/power_B";', file=op)
-        print ('subscribe "precommit:Eplus_load.constant_power_C <- eplus_json/power_C";', file=op)
-        print ('subscribe "precommit:Eplus_meter.bill_mode <- eplus_json/bill_mode";', file=op)
-        print ('subscribe "precommit:Eplus_meter.price <- eplus_json/price";', file=op)
-        print ('subscribe "precommit:Eplus_meter.monthly_fee <- eplus_json/monthly_fee";', file=op)
+        print ('subscribe "precommit:Eplus_load.constant_power_A <- eplus_agent/power_A";', file=op)
+        print ('subscribe "precommit:Eplus_load.constant_power_B <- eplus_agent/power_B";', file=op)
+        print ('subscribe "precommit:Eplus_load.constant_power_C <- eplus_agent/power_C";', file=op)
+        print ('subscribe "precommit:Eplus_meter.bill_mode <- eplus_agent/bill_mode";', file=op)
+        print ('subscribe "precommit:Eplus_meter.price <- eplus_agent/price";', file=op)
+        print ('subscribe "precommit:Eplus_meter.monthly_fee <- eplus_agent/monthly_fee";', file=op)
     pubSubMeters = set()
     for key, val in controllers.items():
         houseName = val['houseName']

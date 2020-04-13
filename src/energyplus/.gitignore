@@ -8,7 +8,7 @@ config.h
 config.h.in
 configure
 depcomp
-eplus_json
+eplus_agent
 install-sh
 missing
 stamp-h1

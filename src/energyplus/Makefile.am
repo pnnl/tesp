@@ -18,6 +18,6 @@ LDADD += $(FNCS_LIBS)
 LDADD += $(CZMQ_LIBS)
 LDADD += $(ZMQ_LIBS)
 
-bin_PROGRAMS = eplus_json
-eplus_json_SOURCES = eplus_json.cpp jsoncpp.cpp
+bin_PROGRAMS = eplus_agent
+eplus_agent_SOURCES = eplus_agent.cpp jsoncpp.cpp
 

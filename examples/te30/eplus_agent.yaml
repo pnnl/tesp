@@ -1,4 +1,4 @@
-name: eplus_json
+name: eplus_agent
 time_delta: 5m
 broker: tcp://localhost:5570
 values:

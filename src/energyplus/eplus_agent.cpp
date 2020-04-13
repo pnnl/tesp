@@ -129,13 +129,13 @@ int main(int argc, char **argv)
 
 	if (argc < 3) {
 		cerr << "Missing stop time and/or aggregating time parameters." << endl;
-		cerr << "Usage: eplus_json <stop time> <agg time> [bldg id] [output file] [ref price] [ramp] [limit hi] [limit lo]" << endl;
+		cerr << "Usage: eplus_agent <stop time> <agg time> [bldg id] [output file] [ref price] [ramp] [limit hi] [limit lo]" << endl;
 		exit(EXIT_FAILURE);
 	}
 
 	if (argc > 9) {
 		cerr << "Too many parameters." << endl;
-		cerr << "Usage: eplus_json <stop time> <agg time> <bldg id> <output file> <ref price> <ramp> <limit hi> <limit lo>" << endl;
+		cerr << "Usage: eplus_agent <stop time> <agg time> <bldg id> <output file> <ref price> <ramp> <limit hi> <limit lo>" << endl;
 		exit(EXIT_FAILURE);
 	}
 

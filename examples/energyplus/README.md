@@ -12,7 +12,7 @@ In addition, traced FNCS messages will be written to tracer.out
 
 - *clean.sh*; script that removes output and temporary files
 - *eplus.yaml*; FNCS configuration for EnergyPlus
-- *eplus_json.yaml*; FNCS configuration for EnergyPlus agent
+- *eplus_agent.yaml*; FNCS configuration for EnergyPlus agent
 - *kill5570.sh*; helper script that stops processes listening on port 5570 (Linux/Mac)
 - *NonGLDLoad.txt*; text file of non-responsive loads on transmission buses
 - *plots.py*; makes 1 page of plots for a case; eg 'python plots.py'

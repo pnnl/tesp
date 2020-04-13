@@ -5,19 +5,19 @@ values:
     player_price:
         topic: player/clear_price
     agent_price:
-        topic: eplus_json/price
+        topic: eplus_agent/price
     delta_cooling:
-        topic: eplus_json/cooling_setpoint_delta
+        topic: eplus_agent/cooling_setpoint_delta
     delta_heating:
-        topic: eplus_json/heating_setpoint_delta
+        topic: eplus_agent/heating_setpoint_delta
     power_A:
-        topic: eplus_json/power_A
+        topic: eplus_agent/power_A
         default: 0
     power_B:
-        topic: eplus_json/power_B
+        topic: eplus_agent/power_B
         default: 0
     power_C:
-        topic: eplus_json/power_C
+        topic: eplus_agent/power_C
         default: 0
     indoor_air:
         topic: eplus/EMS INDOOR AIR TEMPERATURE

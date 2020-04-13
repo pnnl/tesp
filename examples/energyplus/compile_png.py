@@ -26,5 +26,5 @@ for fname in files:
 #  document.add_page_break()
   fignum += 1
 
-document.save('plots_15m.docx')
+document.save('plots.docx')
 

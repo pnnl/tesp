@@ -22,7 +22,7 @@ results from different cases on the same axes.
 - *compare_prices.py*; script that calculates and plots all bus LMP from one case on the same axes, e.g., 'python compare_prices.py SGIP1e &'
 - *compare_pypower.py*; script that plots PYPOWER JSON results from all 6 cases on the same axes
 - *eplus.yaml*; FNCS configuration for EnergyPlus
-- *eplus_json.yaml*; FNCS configuration for EnergyPlus agent
+- *eplus_agent.yaml*; FNCS configuration for EnergyPlus agent
 - *kill5570.sh*; helper script that stops processes listening on port 5570 (Linux/Mac)
 - *NonGLDLoad.txt*; text file of non-responsive loads on transmission buses
 - *NonGldLoad.xlsx*; spreadsheet with plots of non-responsive loads on transmission buses

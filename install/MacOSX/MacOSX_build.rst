@@ -175,8 +175,8 @@ EnergyPlus with Prerequisites (installed to /usr/local)
  # if ReadVarsESO not found at the end of a simulation, try this
  /usr/local/EnergyPlus-8-3-0$ sudo ln -s PostProcess/ReadVarsESO ReadVarsESO
 
-Build eplus_json
-~~~~~~~~~~~~~~~~
+Build eplus_agent
+~~~~~~~~~~~~~~~~~
 
 ::
 

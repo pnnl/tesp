@@ -250,8 +250,8 @@ These following instructions install EnergyPlus with FNCS linkage and key portio
  make -j4
  sudo make install
 
-Build eplus_json
-~~~~~~~~~~~~~~~~
+Build eplus_agent
+~~~~~~~~~~~~~~~~~
 
 ::
 

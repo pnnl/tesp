@@ -226,8 +226,8 @@ copy the following build products from /usr/local to /usr/local/bin:
 - energyplus.exe
 - energyplusapi.dll
 
-Build eplus_json
-~~~~~~~~~~~~~~~~
+Build eplus_agent
+~~~~~~~~~~~~~~~~~
 
 From the MSYS2 terminal
 

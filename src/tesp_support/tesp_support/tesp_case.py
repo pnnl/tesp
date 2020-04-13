@@ -85,7 +85,7 @@ def write_tesp_case (config, cfgfile, freshdir = True):
         * clean.sh: Linux/Mac OS X helper to clean up simulation outputs
         * commercial_schedules.glm: non-responsive non-responsive time schedules for GridLAB-D, invariant
         * eplus.yaml: FNCS subscriptions and time step for EnergyPlus
-        * eplus_json.yaml: FNCS subscriptions and time step for the EnergyPlus agent
+        * eplus_agent.yaml: FNCS subscriptions and time step for the EnergyPlus agent
         * kill5570.sh: Linux/Mac OS X helper to kill all federates listening on port 5570
         * launch_auction.py: helper script for the GUI solution monitor to launch the substation federate
         * launch_pp.py: helper script for the GUI solution monitor to launch the PYPOWER federate
@@ -241,14 +241,14 @@ def write_tesp_case (config, cfgfile, freshdir = True):
         print ('broker: tcp://localhost:5570', file=op)
         print ('values:', file=op)
         print ('    COOL_SETP_DELTA:', file=op)
-        print ('        topic: eplus_json/cooling_setpoint_delta', file=op)
+        print ('        topic: eplus_agent/cooling_setpoint_delta', file=op)
         print ('        default: 0', file=op)
         print ('    HEAT_SETP_DELTA:', file=op)
-        print ('        topic: eplus_json/heating_setpoint_delta', file=op)
+        print ('        topic: eplus_agent/heating_setpoint_delta', file=op)
         print ('        default: 0', file=op)
         op.close()
 
-        epjyamlstr = """name: eplus_json
+        epjyamlstr = """name: eplus_agent
 time_delta: """ + EpAgentStep + """
 broker: tcp://localhost:5570
 values:
@@ -310,7 +310,7 @@ values:
         topic: eplus/EMS OCCUPANT COUNT
         default: 0
 """
-        op = open (casedir + '/eplus_json.yaml', 'w')
+        op = open (casedir + '/eplus_agent.yaml', 'w')
         print (epjyamlstr, file=op)
         op.close()
 
@@ -434,7 +434,7 @@ values:
     type: complex
     list: false
   power_A:
-    topic: eplus_json/power_A
+    topic: eplus_agent/power_A
     default: 0
     type: double
     list: false
@@ -483,8 +483,8 @@ values:
 #       print ('start /b cmd /c fncs_broker 6 ^>broker.log 2^>^&1', file=op)
 #       print ('set FNCS_CONFIG_FILE=eplus.yaml', file=op)
 #       print ('start /b cmd /c energyplus -w ' + EpWeather + ' -d output -r ' + EpFile + ' ^>eplus.log 2^>^&1', file=op)
-#       print ('set FNCS_CONFIG_FILE=eplus_json.yaml', file=op)
-#       print ('start /b cmd /c eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_json.log 2^>^&1', file=op)
+#       print ('set FNCS_CONFIG_FILE=eplus_agent.yaml', file=op)
+#       print ('start /b cmd /c eplus_agent', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_agent.log 2^>^&1', file=op)
 #   else:
 #       print ('start /b cmd /c fncs_broker 4 ^>broker.log 2^>^&1', file=op)
 #   print ('set FNCS_CONFIG_FILE=', file=op)
@@ -509,8 +509,8 @@ values:
         print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> broker.log &)', file=op)
         print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec EnergyPlus -w ' 
                + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
-        print ('(export FNCS_CONFIG_FILE=eplus_json.yaml && export FNCS_FATAL=YES && exec eplus_json', EpAgentStop, EpAgentStep, 
-               EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_json.log &)', file=op)
+        print ('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
+               EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_agent.log &)', file=op)
     else:
         print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> broker.log &)', file=op)
     print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
@@ -546,9 +546,9 @@ values:
         cmds['commands'].append({'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', EpFile], 
                            'env':[['FNCS_CONFIG_FILE', 'eplus.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'eplus.log'})
-        cmds['commands'].append({'args':['eplus_json', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
-                           'env':[['FNCS_CONFIG_FILE', 'eplus_json.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                           'log':'eplus_json.log'})
+        cmds['commands'].append({'args':['eplus_agent', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
+                           'env':[['FNCS_CONFIG_FILE', 'eplus_agent.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
+                           'log':'eplus_agent.log'})
     else:
         cmds['commands'].append({'args':['fncs_broker', '6'], 
                            'env':[['FNCS_BROKER', 'tcp://*:5570'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 

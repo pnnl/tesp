@@ -28,7 +28,7 @@ To run a case from the GUI monitor:
 
 - *clean.sh*; script that removes output and temporary files
 - *eplus.yaml*; FNCS configuration for EnergyPlus
-- *eplus_json.yaml*; FNCS configuration for EnergyPlus agent
+- *eplus_agent.yaml*; FNCS configuration for EnergyPlus agent
 - *gui.sh*; invoke "./gui.sh" to start a solution monitor
 - *kill5570.sh*; helper script that stops processes listening on port 5570
 - *launch_substation.py*; helper script that launches the Python substation agents from tesp_monitor
