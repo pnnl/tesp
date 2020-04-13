@@ -3,6 +3,6 @@ autoheader
 aclocal
 automake --add-missing
 autoconf
-./configure --prefix=$TESP_INSTALL --with-zmq=$TESP_INSTALL 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2'
+./configure --prefix=$TESP_INSTALL --with-zmq=$TESP_INSTALL 'CXXFLAGS=-w -O2' 'CFLAGS=std=c++14 -w -O2'
 make
 sudo make install

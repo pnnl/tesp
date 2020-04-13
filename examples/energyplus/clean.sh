@@ -1,6 +1,7 @@
 rm *.log
 rm *.csv
 rm *.out
+rm out.txt
 rm *.xml
 rm *.png
 rm *metrics.json

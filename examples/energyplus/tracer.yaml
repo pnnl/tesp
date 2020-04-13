@@ -4,8 +4,12 @@ broker: tcp://localhost:5570
 values:
     player_price:
         topic: player/clear_price
+    bill_mode:
+        topic: eplus_agent/bill_mode
     agent_price:
         topic: eplus_agent/price
+    monthly_fee:
+        topic: eplus_agent/monthly_fee
     delta_cooling:
         topic: eplus_agent/cooling_setpoint_delta
     delta_heating:
