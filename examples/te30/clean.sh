@@ -12,3 +12,4 @@ rm *substation.yaml
 rm *.dat
 rm output/*
 rmdir output
+rm *.idf
