@@ -13,7 +13,7 @@ clock {
 
 module climate;
 module market;
-module connection; // FNCS
+module connection; // FNCS and HELICS
 module powerflow {
 	solver_method FBS;
 	NR_iteration_limit 100;
@@ -148,10 +148,16 @@ object fncs_msg {
      name gridlabdSimulator1;
      parent network_node;
      configure TE_Challenge_FNCS_Config.txt;
-//     configure TE_Eplusonly.txt;
      option "transport:hostname localhost, port 5570";
      aggregate_subscriptions true;
      aggregate_publications true;
+}
+#endif
+
+#ifdef USE_HELICS
+object helics_msg {
+  name gridlabdSimulator1;
+  configure TE_Challenge_helics_gld_msg.json;
 }
 #endif
 

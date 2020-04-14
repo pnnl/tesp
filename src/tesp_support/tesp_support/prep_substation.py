@@ -366,13 +366,61 @@ def ProcessGLM (fileroot):
                                            'P_e_bias': 0.5,
                                            'P_e_envelope': 0.08,
                                            'Lower_e_bound': 0.5}
-        wp = open (fileroot + '_Weather_Config.json', 'w')
-        print (json.dumps(wconfig), file=wp)
+
+        wp = open (fileroot + '_FNCS_Weather_Config.json', 'w')
+        json.dump (wconfig, wp, ensure_ascii=False, indent=2)
         wp.close()
+
+        wp = open (fileroot + '_HELICS_Weather_Config.json', 'w')
+        wconfig['broker'] = 'HELICS'
+        json.dump (wconfig, wp, ensure_ascii=False, indent=2)
+        wp.close()
+
+    # write the GridLAB-D publications and subscriptions for HELICS
+    pubs = []
+    subs = []
+    pubs.append ({"global":False, "key":"distribution_load", "type":"complex", "info":{"object":network_node,"property":"distribution_load"}})
+    subs.append ({"key":"pypower/three_phase_voltage_B7", "type":"double", "info":{"object":network_node,"property":"positive_sequence_voltage"}})
+    if len(climateName) > 0:
+      for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
+        subs.append ({"key": climateName + '/' + wTopic, "type":"double", "info":{"object":climateName, "property":wTopic}})
+    if len(Eplus_Bus) > 0: # hard-wired names for a single building
+      subs.append ({"key": "eplus_agent/power_A", "type":"double", "info":{"object":"Eplus_load", "property":"constant_power_A"}})
+      subs.append ({"key": "eplus_agent/power_B", "type":"double", "info":{"object":"Eplus_load", "property":"constant_power_B"}})
+      subs.append ({"key": "eplus_agent/power_C", "type":"double", "info":{"object":"Eplus_load", "property":"constant_power_C"}})
+      subs.append ({"key": "eplus_agent/bill_mode", "type":"double", "info":{"object":"Eplus_meter", "property":"bill_mode"}})
+      subs.append ({"key": "eplus_agent/price", "type":"double", "info":{"object":"Eplus_meter", "property":"price"}})
+      subs.append ({"key": "eplus_agent/monthly_fee", "type":"double", "info":{"object":"Eplus_meter", "property":"monthly_fee"}})
+
+    pubSubMeters = set()
+    for key, val in controllers.items():
+      houseName = val['houseName']
+      houseClass = val['houseClass']
+      meterName = val['meterName']
+      for prop in ['air_temperature', 'power_state', 'hvac_load']:
+        pubs.append ({"global":False, "key":houseName + "/" + prop, "type":"double", "info":{"object":houseName,"property":prop}})
+      for prop in ['cooling_setpoint', 'heating_setpoint', 'thermostat_deadband']:
+        subs.append ({"key": "substation/" + key + "/" + prop, "type":"double", "info":{"object":houseName, "property":prop}})
+      if meterName not in pubSubMeters:
+        pubSubMeters.add(meterName)
+        prop = 'measured_voltage_1'
+        if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
+          prop = 'measured_voltage_A'
+        pubs.append ({"global":False, "key":meterName + "/" + prop, "type":"double", "info":{"object":meterName,"property":prop}})
+        for prop in ['bill_mode', 'price', 'monthly_fee']:
+          subs.append ({"key": "substation/" + key + "/" + prop, "type":"double", "info":{"object":meterName, "property":prop}})
+    msg = {}
+    msg["name"] = "gridlabdSimulator1"  # TODO - keep this consistent
+    msg["period"] = 1.0
+    msg["publications"] = pubs
+    msg["subscriptions"] = subs
+    op = open (fileroot + '_helics_gld_msg.json', 'w', encoding='utf-8')
+    json.dump (msg, op, ensure_ascii=False, indent=2)
+    op.close()
 
     # write the GridLAB-D publications and subscriptions for FNCS
     op = open (fileroot + '_FNCS_Config.txt', 'w')
-    print ('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
+    print ('publish "commit:' + network_node + '.distribution_load -> distribution_load; 1000";', file=op)
     print ('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_B7";', file=op)
     if len(climateName) > 0:
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
@@ -405,7 +453,6 @@ def ProcessGLM (fileroot):
             print ('subscribe "precommit:' + meterName + '.price <- substation/' + key + '/price";', file=op)
             print ('subscribe "precommit:' + meterName + '.monthly_fee <- substation/' + key + '/monthly_fee";', file=op)
     op.close()
-
 
 def prep_substation (gldfileroot, jsonfile = ''):
     """ Process a base GridLAB-D file with supplemental JSON configuration data

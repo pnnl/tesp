@@ -1,16 +1,17 @@
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
+declare -r SCHED_PATH=$TESP_SUPPORT/schedules
 
-#python3 -c "import tesp_support.api as tesp;tesp.merge_idf('$TESP_SUPPORT/energyplus/FullServiceRestaurant.idf','emsFullServiceRestaurant.idf', '2013-08-01 00:00:00', '2013-08-03 00:00:00', 'Merged.idf', '12')"
-python3 -c "import tesp_support.api as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-08-01 00:00:00', '2013-08-03 00:00:00', 'Merged.idf', '12')"
+# start a FNCS federation for energyplus with agent
+(export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 2 &> fncs_broker.log &)
+(export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w $TESP_SUPPORT/energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw -d output -r Merged.idf &> helics_eplus.log &)
+(export FNCS_CONFIG_FILE=eplus_agent.yaml && exec eplus_agent 2d 5m SchoolDualController eplus_TE_ChallengeH_metrics.json 0.10 50 6 6 helics_eplus_agent.json &> helics_eplus_agent.log &)
 
-# FNCS federation is energyplus with agent, and a recorder
-(export FNCS_LOG_STDOUT=yes && exec fncs_broker 3 &> fncs_broker.log &)
-(export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w $TESP_SUPPORT/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw -d output -r Merged.idf &> eplus.log &)
-(export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus_agent.yaml && exec eplus_agent 2d 5m SchoolDualController eplus_eplus_metrics.json  0.10 50 6 6 helics_eplus_agent.json &> eplus_agent.log &)
-(export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=tracer.yaml && exec fncs_tracer 2d tracer.out &> fncs_tracer.log &)
+# start a HELICS federation for GridLAB-D, substation, weather and PYPOWER; the E+ agent was already started as part of the FNCS federation
+(exec helics_broker -f 5 --loglevel=4 --name=mainbroker &> helics_broker.log &)
+(exec gridlabd -D SCHED_PATH=$SCHED_PATH -D USE_HELICS -D METRICS_FILE=TE_ChallengeH_metrics.json TE_Challenge.glm &> helics_gridlabd.log &)
+(export WEATHER_CONFIG=TE_Challenge_HELICS_Weather_Config.json && exec python3 -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weather.dat')" &> helics_weather &)
+(exec python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('te30_pp.json','TE_ChallengeH',helicsConfig='pypowerConfig.json')" &> helics_pypower.log &)
 
-# HELICS federation is the pricing with agent, and a recorder; the agent was already started as part of the FNCS federation
-(exec helics_broker -f 3 --loglevel=4 --name=mainbroker &> helics_broker.log &)
-(exec helics_player --input=prices.txt --local --time_units ns --stop 172800s &> helics_player.log &)
-(exec helics_recorder --input=helicsRecorder.txt --timedelta 1s --period 300s --stop 172800s &> helics_recorder.log &)
+(export FNCS_CONFIG_FILE=TE_Challenge_substation.yaml && export FNCS_FATAL=YES && exec python3 -c "import tesp_support.api as tesp;tesp.substation_loop('TE_Challenge_agent_dict.json','TE_Challenge')" &> substation.log &)
+(export FNCS_CONFIG_FILE=pypower30.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('te30_pp.json','TE_Challenge')" &> pypower.log &)
 

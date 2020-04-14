@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: glm_dict.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
 """Functions to create metadata from a GridLAB-D input (GLM) file
@@ -91,7 +91,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
   ip = open (nameroot + '.glm', 'r')
   op = open (nameroot + '_glm_dict.json', 'w')
 
-  FNCSmsgName = ''
+  FedName = 'gld1'
   feeder_id = 'feeder'
   name = ''
   bulkpowerBus = 'TBD'
@@ -138,9 +138,12 @@ def glm_dict (nameroot, ercot=False, te30=False):
   inRegulators = False
   inLoads = False
   inFNCSmsg = False
+  inHELICSmsg = False
   for line in ip:
     lst = line.split()
     if len(lst) > 1: # terminates with a } or };
+      if lst[1] == 'helics_msg':
+        inHELICSmsg = True
       if lst[1] == 'fncs_msg':
         inFNCSmsg = True
       if lst[1] == 'house':
@@ -153,9 +156,13 @@ def glm_dict (nameroot, ercot=False, te30=False):
         thermal_integrity = 'UNKNOWN'
         doors = 4
         house_class = 'SINGLE_FAMILY'
+      if inHELICSmsg == True:
+        if lst[0] == 'name':
+          FedName = lst[1].strip(';')
+          inHELICSmsg = False
       if inFNCSmsg == True:
         if lst[0] == 'name':
-          FNCSmsgName = lst[1].strip(';')
+          FedName = lst[1].strip(';')
           inFNCSmsg = False
       if lst[1] == 'triplex_meter':
         inTriplexMeters = True
@@ -330,6 +337,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
       inCapacitors = False
       inRegulators = False
       inFNCSmsg = False
+      inHELICSmsg = False
 
   for key, val in houses.items():
     if key in waterheaters:
@@ -348,7 +356,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
     mtr['children'].append(key)
 
   feeders[feeder_id] = {'house_count': len(houses),'inverter_count': len(inverters),'base_feeder':base_feeder}
-  substation = {'bulkpower_bus':bulkpowerBus,'FNCS':FNCSmsgName,
+  substation = {'bulkpower_bus':bulkpowerBus,'FedName':FedName,
     'transformer_MVA':substationTransformerMVA,'feeders':feeders, 
     'billingmeters':billingmeters,'houses':houses,'inverters':inverters,
     'capacitors':capacitors,'regulators':regulators}
