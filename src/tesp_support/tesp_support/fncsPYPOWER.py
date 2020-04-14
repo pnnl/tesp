@@ -254,13 +254,44 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
   print ('t[s],Converged,Pload,P7 (csv),Unresp (opf),P7 (rpf),Resp (opf),GLD Pub,BID?,P7 Min,V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp,Deg,c2,c1', file=op, flush=True)
 
   hFed = None
+  pub_lmp = None
+  pub_volts = None
+  sub_load = None
+  sub_unresp = None
+  sub_max = None
+  sub_c2 = None
+  sub_c1 = None
+  sub_deg = None
   if helicsConfig is not None:
     hFed = helics.helicsCreateValueFederateFromConfig(helicsConfig)
     fedName = helics.helicsFederateGetName(hFed)
-    pubName = fedName + '/LMP_B7'
-    pubid_lmp = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
-    pubName = fedName + '/three_phase_voltage_B7'
-    pubid_volts = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
+    pubCount = helics.helicsFederateGetPublicationCount(hFed)
+    subCount = helics.helicsFederateGetInputCount(hFed)
+    for i in range(pubCount):
+      pub = helics.helicsFederateGetPublicationByIndex(hFed, i)
+      key = helics.helicsPublicationGetKey (pub)
+      print ('HELICS publication key', i, key)
+      if 'LMP_' in key:
+        pub_lmp = pub
+      elif 'three_phase_voltage_' in key:
+        pub_volts = pub
+    for i in range(subCount):
+      sub = helics.helicsFederateGetInputByIndex(hFed, i)
+      key = helics.helicsInputGetKey(sub)
+      target = helics.helicsSubscriptionGetKey(sub)
+      print ('HELICS subscription key', i, key, 'target', target)
+      if 'RESPONSIVE_C2' in target:
+        sub_c2 = sub
+      if 'RESPONSIVE_C1' in target:
+        sub_c1 = sub
+      if 'RESPONSIVE_DEG' in target:
+        sub_deg = sub
+      if 'RESPONSIVE_MAX_MW' in target:
+        sub_max = sub
+      if 'UNRESPONSIVE_MW' in target:
+        sub_unresp = sub
+      if 'distribution_load' in target:
+        sub_load = sub
     helics.helicsFederateEnterExecutingMode(hFed)
   else:
     fncs.initialize()
@@ -279,9 +310,25 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
     # start by getting the latest inputs from GridLAB-D and the auction
     new_bid = False
     load_scale = float (dsoBus[0][2])
-    if hFed is not None:
-      print ('HELICS subscriptions not implemented yet', flush=True)
-    else:
+    if hFed is not None: # HELICS inputs, need to be sticky because they were zeroed out just above
+      if sub_unresp is not None:
+        unresp = helics.helicsInputGetDouble(sub_unresp) * load_scale
+        dsoBus[0][3] = unresp # to poke unresponsive estimate into the bus load slot
+      if sub_c2 is not None:
+        resp_c2 = helics.helicsInputGetDouble(sub_c2) / load_scale
+      if sub_c1 is not None:
+        resp_c1 = helics.helicsInputGetDouble(sub_c1)
+      if sub_deg is not None:
+        resp_deg = helics.helicsInputGetInteger(sub_deg)
+      if sub_max is not None:
+        resp_max = helics.helicsInputGetComplex(sub_max) * load_scale
+        if helics.helicsInputIsUpdated(sub_max):
+          new_bid = True
+      if sub_load is not None:
+        gld_load = helics.helicsInputGetComplex(sub_load)
+        feeder_load = gld_load[0] * load_scale / 1.0e6
+      print ('HELICS inputs at', ts, gld_load, load_scale, feeder_load, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid)
+    else:  # inputs coming from FNCS
       events = fncs.get_events()
       for topic in events:
         value = fncs.get_value(topic)
@@ -363,8 +410,8 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
       opf_gen = deepcopy (res['gen'])
       lmp = opf_bus[6,13]
       resp = -1.0 * opf_gen[4,1]
-      if hFed is not None:
-        helics.helicsPublicationPublishString(pubid_lmp, str(0.001 * lmp))
+      if pub_lmp is not None:
+        helics.helicsPublicationPublishDouble(pub_lmp, 0.001 * lmp)
       else:
         fncs.publish('LMP_B7', 0.001 * lmp) # publishing $/kwh
 #     print ('  OPF', ts, csv_load, '{:.3f}'.format(unresp), '{:.3f}'.format(resp),
@@ -458,8 +505,8 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
       conv_accum = True
 
     volts = 1000.0 * bus[6,7] * bus[6,9] / sqrt(3.0)  # VLN for GridLAB-D
-    if hFed is not None:
-      helics.helicsPublicationPublishString(pubid_volts, str(volts))
+    if pub_volts is not None:
+      helics.helicsPublicationPublishDouble(pub_volts, volts)
     else:
       fncs.publish('three_phase_voltage_B7', volts)
 
