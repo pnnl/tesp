@@ -157,7 +157,7 @@ object fncs_msg {
 #ifdef USE_HELICS
 object helics_msg {
   name gridlabdSimulator1;
-  configure TE_Challenge_helics_gld_msg.json;
+  configure TE_Challenge_HELICS_gld_msg.json;
 }
 #endif
 

@@ -41,7 +41,7 @@
   ],
   "subscriptions" : [
     {
-      "key" : "player/clear_price", 
+      "key" : "substation/clear_price", 
       "type" : "double"
     }
   ]

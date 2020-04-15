@@ -303,6 +303,42 @@ def ProcessGLM (fileroot):
     print (json.dumps(meta), file=dp)
     dp.close()
 
+    # write HELICS config file
+    pubs = []
+    pubs.append ({"key":"clear_price", "type":"double", "global": False})
+    pubs.append ({"key":"unresponsive_mw", "type":"double", "global": False})
+    pubs.append ({"key":"responsive_max_mw", "type":"double", "global": False})
+    pubs.append ({"key":"responsive_c2", "type":"double", "global": False})
+    pubs.append ({"key":"responsive_c1", "type":"double", "global": False})
+    pubs.append ({"key":"responsive_deg", "type":"integer", "global": False})
+    subs = []
+    subs.append ({"key":"pypower/LMP_B7", "type":"double"})
+    subs.append ({"key":"gridlabdSimulator1/distribution_load", "type":"complex"})
+    pubSubMeters = set()
+    for key,val in controllers.items():
+      meterName = val['meterName']
+      houseName = val['houseName']
+      subs.append ({"key":houseName+"/air_temperature", "type":"double"}) #Tair
+      subs.append ({"key":houseName+"/hvac_load", "type":"double"}) #Load
+      subs.append ({"key":houseName+"/power_state", "type":"string"})   #On
+      pubs.append ({"key":key+"/cooling_setpoint", "type":"double", "global": False})
+      pubs.append ({"key":key+"/heating_setpoint", "type":"double", "global": False})
+      pubs.append ({"key":key+"/thermostat_deadband", "type":"double", "global": False})
+      if meterName not in pubSubMeters:
+        pubSubMeters.add(meterName)
+        subs.append ({"key":meterName+"/measured_voltage_1", "type":"complex"})  #V1
+        pubs.append ({"key":meterName+"/bill_mode", "type":"string", "global": False})
+        pubs.append ({"key":meterName+"/price", "type":"double", "global": False})
+        pubs.append ({"key":meterName+"/monthly_fee", "type":"double", "global": False})
+    msg = {}
+    msg["name"] = "substation"  # TODO - keep this consistent
+    msg["period"] = dt
+    msg["publications"] = pubs
+    msg["subscriptions"] = subs
+    op = open (fileroot + '_HELICS_substation.json', 'w', encoding='utf-8')
+    json.dump (msg, op, ensure_ascii=False, indent=2)
+    op.close()
+
     # write YAML file
     yamlfile = fileroot + '_substation.yaml'
     yp = open (yamlfile, 'w')
@@ -380,15 +416,15 @@ def ProcessGLM (fileroot):
     pubs = []
     subs = []
     pubs.append ({"global":False, "key":"distribution_load", "type":"complex", "info":{"object":network_node,"property":"distribution_load"}})
-    subs.append ({"key":"pypower/three_phase_voltage_B7", "type":"double", "info":{"object":network_node,"property":"positive_sequence_voltage"}})
+    subs.append ({"key":"pypower/three_phase_voltage_B7", "type":"complex", "info":{"object":network_node,"property":"positive_sequence_voltage"}})
     if len(climateName) > 0:
       for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
         subs.append ({"key": climateName + '/' + wTopic, "type":"double", "info":{"object":climateName, "property":wTopic}})
     if len(Eplus_Bus) > 0: # hard-wired names for a single building
-      subs.append ({"key": "eplus_agent/power_A", "type":"double", "info":{"object":"Eplus_load", "property":"constant_power_A"}})
-      subs.append ({"key": "eplus_agent/power_B", "type":"double", "info":{"object":"Eplus_load", "property":"constant_power_B"}})
-      subs.append ({"key": "eplus_agent/power_C", "type":"double", "info":{"object":"Eplus_load", "property":"constant_power_C"}})
-      subs.append ({"key": "eplus_agent/bill_mode", "type":"double", "info":{"object":"Eplus_meter", "property":"bill_mode"}})
+      subs.append ({"key": "eplus_agent/power_A", "type":"complex", "info":{"object":"Eplus_load", "property":"constant_power_A"}})
+      subs.append ({"key": "eplus_agent/power_B", "type":"complex", "info":{"object":"Eplus_load", "property":"constant_power_B"}})
+      subs.append ({"key": "eplus_agent/power_C", "type":"complex", "info":{"object":"Eplus_load", "property":"constant_power_C"}})
+      subs.append ({"key": "eplus_agent/bill_mode", "type":"string", "info":{"object":"Eplus_meter", "property":"bill_mode"}})
       subs.append ({"key": "eplus_agent/price", "type":"double", "info":{"object":"Eplus_meter", "property":"price"}})
       subs.append ({"key": "eplus_agent/monthly_fee", "type":"double", "info":{"object":"Eplus_meter", "property":"monthly_fee"}})
 
@@ -397,7 +433,9 @@ def ProcessGLM (fileroot):
       houseName = val['houseName']
       houseClass = val['houseClass']
       meterName = val['meterName']
-      for prop in ['air_temperature', 'power_state', 'hvac_load']:
+      for prop in ['power_state']:
+        pubs.append ({"global":False, "key":houseName + "/" + prop, "type":"string", "info":{"object":houseName,"property":prop}})
+      for prop in ['air_temperature', 'hvac_load']:
         pubs.append ({"global":False, "key":houseName + "/" + prop, "type":"double", "info":{"object":houseName,"property":prop}})
       for prop in ['cooling_setpoint', 'heating_setpoint', 'thermostat_deadband']:
         subs.append ({"key": "substation/" + key + "/" + prop, "type":"double", "info":{"object":houseName, "property":prop}})
@@ -406,15 +444,17 @@ def ProcessGLM (fileroot):
         prop = 'measured_voltage_1'
         if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
           prop = 'measured_voltage_A'
-        pubs.append ({"global":False, "key":meterName + "/" + prop, "type":"double", "info":{"object":meterName,"property":prop}})
-        for prop in ['bill_mode', 'price', 'monthly_fee']:
-          subs.append ({"key": "substation/" + key + "/" + prop, "type":"double", "info":{"object":meterName, "property":prop}})
+        pubs.append ({"global":False, "key":meterName + "/" + prop, "type":"complex", "info":{"object":meterName,"property":prop}})
+        for prop in ['bill_mode']:
+          subs.append ({"key": "substation/" + meterName + "/" + prop, "type":"string", "info":{"object":meterName, "property":prop}})
+        for prop in ['price', 'monthly_fee']:
+          subs.append ({"key": "substation/" + meterName + "/" + prop, "type":"double", "info":{"object":meterName, "property":prop}})
     msg = {}
     msg["name"] = "gridlabdSimulator1"  # TODO - keep this consistent
     msg["period"] = 1.0
     msg["publications"] = pubs
     msg["subscriptions"] = subs
-    op = open (fileroot + '_helics_gld_msg.json', 'w', encoding='utf-8')
+    op = open (fileroot + '_HELICS_gld_msg.json', 'w', encoding='utf-8')
     json.dump (msg, op, ensure_ascii=False, indent=2)
     op.close()
 

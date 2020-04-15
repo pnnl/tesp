@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: helpers.py
 """ Utility functions for use within tesp_support, including new agents.
 """
@@ -9,6 +9,21 @@ import re
 import sys
 from copy import deepcopy
 from enum import IntEnum
+try:
+  import helics
+except:
+  pass
+
+def stop_helics_federate (fed):
+  print ('finalizing HELICS', flush=True)
+  status = helics.helicsFederateFinalize(fed)
+  state = helics.helicsFederateGetState(fed)
+  assert state == 3
+  while helics.helicsBrokerIsConnected(None):
+    time.sleep(1)
+  helics.helicsFederateFree(fed)
+  helics.helicsCloseLibrary()
+
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
 def gld_strict_name(val):

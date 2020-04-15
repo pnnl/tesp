@@ -124,7 +124,7 @@ def startWeatherAgent(file):
     #  file locking didn't work, because fncs.initialize() doesn't return until broker hears from all other simulators
     hFed = None
     hPubs = {}
-    fedName = 'weather'
+    fedName = agentName # 'weather'
     if broker == 'HELICS':
       fedInfo = helics.helicsCreateFederateInfo()
       helics.helicsFederateInfoSetCoreName(fedInfo, fedName)

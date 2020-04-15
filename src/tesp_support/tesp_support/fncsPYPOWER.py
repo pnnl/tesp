@@ -23,6 +23,7 @@ from math import sqrt
 import math
 import re
 from copy import deepcopy
+import tesp_support.helpers as helpers
 #import cProfile
 #import pstats
 if sys.platform != 'win32':
@@ -170,15 +171,6 @@ def parse_mva(arg):
     q /= 1000000.0
 
   return p, q
-
-def stop_helics_federate (fed):
-  status = helics.helicsFederateFinalize(fed)
-  state = helics.helicsFederateGetState(fed)
-  assert state == 3
-  while helics.helicsBrokerIsConnected(None):
-    time.sleep(1)
-  helics.helicsFederateFree(fed)
-  helics.helicsCloseLibrary()
 
 def pypower_loop (casefile, rootname, helicsConfig=None):
   """ Public function to start PYPOWER solutions under control of FNCS or HELICS
@@ -553,10 +545,10 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
   gen_mp.close()
   sys_mp.close()
   op.close()
-  print ('finalizing DSO', flush=True)
   if hFed is not None:
-    stop_helics_federate (hFed)
+    helpers.stop_helics_federate (hFed)
   else:
+    print ('finalizing DSO', flush=True)
     fncs.finalize()
 
   if sys.platform != 'win32':
