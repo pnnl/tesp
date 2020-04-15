@@ -4,7 +4,7 @@ broker: tcp://localhost:5570
 values:
     kwhr_price:
         topic: substation/clear_price
-        default: 0.10
+        default: 0.02
     indoor_air:
         topic: eplus/EMS INDOOR AIR TEMPERATURE
         default: 0

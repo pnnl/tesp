@@ -383,7 +383,7 @@ time_delta: """ + str(config['PYPOWERConfiguration']['PFStep']) + """s
 broker: tcp://localhost:5570
 values:
     SUBSTATION7:
-        topic: gridlabdSimulator1/distribution_load
+        topic: gld1/distribution_load
         default: 0
     UNRESPONSIVE_MW:
         topic: substation/unresponsive_mw
@@ -429,7 +429,7 @@ values:
     type: double
     list: false
   distribution_load:
-    topic: gridlabdSimulator1/distribution_load
+    topic: gld1/distribution_load
     default: 0
     type: complex
     list: false

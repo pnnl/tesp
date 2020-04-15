@@ -78,15 +78,15 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
   hFed = helics.helicsCreateValueFederateFromConfig(helicsConfig)
   pubCount = helics.helicsFederateGetPublicationCount(hFed)
   subCount = helics.helicsFederateGetInputCount(hFed)
-  for i in range(pubCount):
-    pub = helics.helicsFederateGetPublicationByIndex(hFed, i)
-    key = helics.helicsPublicationGetKey (pub)
-    print ('** Available HELICS publication key', i, key)
-  for i in range(subCount):
-    sub = helics.helicsFederateGetInputByIndex(hFed, i)
-    key = helics.helicsInputGetKey(sub)
-    target = helics.helicsSubscriptionGetKey(sub)
-    print ('== Available HELICS subscription key', i, key, 'target', target)
+# for i in range(pubCount):
+#   pub = helics.helicsFederateGetPublicationByIndex(hFed, i)
+#   key = helics.helicsPublicationGetKey (pub)
+#   print ('** Available HELICS publication key', i, key)
+# for i in range(subCount):
+#   sub = helics.helicsFederateGetInputByIndex(hFed, i)
+#   key = helics.helicsInputGetKey(sub)
+#   target = helics.helicsSubscriptionGetKey(sub)
+#   print ('== Available HELICS subscription key', i, key, 'target', target)
   gldName = dict['GridLABD']
   fedName = helics.helicsFederateGetName(hFed)
   bulkName = 'pypower'
@@ -106,20 +106,21 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
     row = dict['controllers'][key]
     hvacObjs[key] = hvac.hvac (row, key, aucObj)
     ctl = hvacObjs[key]
-    hseTopic = ctl.houseName # gldName + '/' + ctl.houseName
-    mtrTopic = ctl.meterName
-    ctlTopic = fedName + '/' + ctl.name
-    print (hseTopic, mtrTopic, ctlTopic)
-    subTemp[ctl] = helics.helicsFederateGetSubscription (hFed, hseTopic + '/air_temperature')
-    subVolt[ctl] = helics.helicsFederateGetSubscription (hFed, mtrTopic + '/measured_voltage_1')
-    subState[ctl] = helics.helicsFederateGetSubscription (hFed, hseTopic + '/power_state')
-    subHVAC[ctl] = helics.helicsFederateGetSubscription (hFed, hseTopic + '/hvac_load')
-    pubMtrMode[ctl] = helics.helicsFederateGetPublication (hFed, mtrTopic + '/bill_mode')
-    pubMtrPrice[ctl] = helics.helicsFederateGetPublication (hFed, mtrTopic + '/price')
-    pubMtrMonthly[ctl] = helics.helicsFederateGetPublication (hFed, mtrTopic + '/monthly_fee')
-    pubHeating[ctl] = helics.helicsFederateGetPublication (hFed, ctlTopic + '/heating_setpoint')
-    pubCooling[ctl] = helics.helicsFederateGetPublication (hFed, ctlTopic + '/cooling_setpoint')
-    pubDeadband[ctl] = helics.helicsFederateGetPublication (hFed, ctlTopic + '/thermostat_deadband')
+    hseSubTopic = gldName + '/' + ctl.houseName
+    mtrSubTopic = gldName + '/' + ctl.meterName
+    mtrPubTopic = fedName + '/' + ctl.meterName
+    ctlPubTopic = fedName + '/' + ctl.name
+#    print ('{:s} hseSub={:s} mtrSub={:s}  mtrSub={:s}  ctlPub={:s}'.format (key, hseSubTopic, mtrSubTopic, mtrPubTopic, ctlPubTopic))
+    subTemp[ctl] = helics.helicsFederateGetSubscription (hFed, hseSubTopic + '#air_temperature')
+    subVolt[ctl] = helics.helicsFederateGetSubscription (hFed, mtrSubTopic + '#measured_voltage_1')
+    subState[ctl] = helics.helicsFederateGetSubscription (hFed, hseSubTopic + '#power_state')
+    subHVAC[ctl] = helics.helicsFederateGetSubscription (hFed, hseSubTopic + '#hvac_load')
+    pubMtrMode[ctl] = helics.helicsFederateGetPublication (hFed, mtrPubTopic + '/bill_mode')
+    pubMtrPrice[ctl] = helics.helicsFederateGetPublication (hFed, mtrPubTopic + '/price')
+    pubMtrMonthly[ctl] = helics.helicsFederateGetPublication (hFed, mtrPubTopic + '/monthly_fee')
+    pubHeating[ctl] = helics.helicsFederateGetPublication (hFed, ctlPubTopic + '/heating_setpoint')
+    pubCooling[ctl] = helics.helicsFederateGetPublication (hFed, ctlPubTopic + '/cooling_setpoint')
+    pubDeadband[ctl] = helics.helicsFederateGetPublication (hFed, ctlPubTopic + '/thermostat_deadband')
 
   helics.helicsFederateEnterExecutingMode(hFed)
 
@@ -147,11 +148,12 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
     dt_now = dt_now + timedelta (seconds=time_delta)
     day_of_week = dt_now.weekday()
     hour_of_day = dt_now.hour
-#    print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, flush=True)
+#    print ('STEP', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, tnext_bid, tnext_agg, tnext_opf, tnext_clear, tnext_adjust, flush=True)
     LMP = helics.helicsInputGetDouble (subLMP)
     aucObj.set_lmp (LMP)
     refload = 0.001 * helics.helicsInputGetDouble (subFeeder)  # supposed to be kW?
     aucObj.set_refload (refload)
+#    print ('  REFLOAD', refload, 'LMP', LMP, flush=True)
     for key, obj in hvacObjs.items():
       obj.air_temp = helics.helicsInputGetDouble (subTemp[obj])
       val = helics.helicsInputGetComplex (subVolt[obj])
@@ -162,6 +164,7 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
         obj.hvac_on = False
       else:
         obj.hvac_on = True
+#    print ('  HVAC INPUTS', flush=True)
 
     # set the time-of-day schedule
     for key, obj in hvacObjs.items():
@@ -174,6 +177,7 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
         helics.helicsPublicationPublishDouble (pubDeadband[obj], obj.deadband)
         helics.helicsPublicationPublishDouble (pubHeating[obj], 60.0)
       bSetDefaults = False
+#      print ('  SET DEFAULTS', flush=True)
 
     if time_granted >= tnext_bid:
       aucObj.clear_bids()
@@ -186,6 +190,7 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
             aucObj.collect_bid (bid)
           controller_metrics[time_key][obj.name] = [bid[0], bid[1]]
       tnext_bid += period
+#      print ('  COLLECT BIDS', flush=True)
 
     if time_granted >= tnext_agg:
       aucObj.aggregate_bids()
@@ -195,6 +200,7 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
       helics.helicsPublicationPublishDouble (pubC1, aucObj.agg_c1)
       helics.helicsPublicationPublishInteger (pubDeg, aucObj.agg_deg)
       tnext_agg += period
+#      print ('  AGGREGATE BIDS', flush=True)
 
     if time_granted >= tnext_clear:
       if bWantMarket:
@@ -206,6 +212,7 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
       time_key = str (int (tnext_clear))
       auction_metrics [time_key] = {aucObj.name:[aucObj.clearing_price, aucObj.clearing_type, aucObj.consumerSurplus, aucObj.averageConsumerSurplus, aucObj.supplierSurplus]}
       tnext_clear += period
+#      print ('  CLEARED MARKET', flush=True)
 
     if time_granted >= tnext_adjust:
       if bWantMarket:
@@ -214,6 +221,7 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
           if obj.bid_accepted ():
             helics.helicsPublicationPublishDouble (pubCooling[obj], obj.setpoint)
       tnext_adjust += period
+#      print ('  ADJUSTED', flush=True)
 
   # ==================== Finalize the metrics output ===========================
 

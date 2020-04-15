@@ -95,10 +95,10 @@ def prep_precool (nameroot, time_step=15):
                         'day_end_hour':float('{:.3f}'.format(day_end)),'deadband':float('{:.3f}'.format(deadband)),
                         'vthresh':vthresh,'toffset':toffset}
                     print ('  ' + houseName + '#V1:', file=yp)
-                    print ('    topic: gridlabdSimulator1/' + meterName + '/measured_voltage_1', file=yp)
+                    print ('    topic: gld1/' + meterName + '/measured_voltage_1', file=yp)
                     print ('    default: 120', file=yp)
                     print ('  ' + houseName + '#Tair:', file=yp)
-                    print ('    topic: gridlabdSimulator1/' + houseName + '/air_temperature', file=yp)
+                    print ('    topic: gld1/' + houseName + '/air_temperature', file=yp)
                     print ('    default: 80', file=yp)
                     print ('publish \"commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1\";', file=cp)
                     print ('publish \"commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature\";', file=cp)

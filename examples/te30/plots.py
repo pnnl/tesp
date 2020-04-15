@@ -1,20 +1,23 @@
 # usage 'python plots metrics_root'
 import sys
+import os
+import tesp_support.process_pypower as pp
+import tesp_support.process_agents as ap
+import tesp_support.process_gld as gp
+import tesp_support.process_houses as hp
+import tesp_support.process_eplus as ep
+
 rootname = sys.argv[1]
 
-import tesp_support.process_pypower as pp
 pp.process_pypower (rootname)
 
-import tesp_support.process_agents as ap
-ap.process_agents (rootname, 'TE_Challenge_agent_dict.json')
+if os.path.exists ('auction_' + rootname + '_metrics.json'):
+  ap.process_agents (rootname, 'TE_Challenge_agent_dict.json')
 
-import tesp_support.process_gld as gp
 gp.process_gld (rootname, 'TE_Challenge_glm_dict.json')
 
-import tesp_support.process_houses as hp
 hp.process_houses (rootname, 'TE_Challenge_glm_dict.json')
 
-import tesp_support.process_eplus as ep
 ep.process_eplus (rootname)
 
 

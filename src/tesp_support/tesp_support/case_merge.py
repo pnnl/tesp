@@ -93,7 +93,7 @@ def merge_glm_dict(target, sources, xfmva):
   """
   print ('combining', sources, 'GridLAB-D json files into', target)
   dict = {'bulkpower_bus' : 'TBD', \
-          'FedName' : 'gridlabdSimulator1', \
+          'FedName' : 'gld1', \
           'transformer_MVA' : xfmva, \
           'feeders' : {}, \
           'billingmeters' : {}, \

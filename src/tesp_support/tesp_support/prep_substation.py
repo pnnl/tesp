@@ -313,20 +313,20 @@ def ProcessGLM (fileroot):
     pubs.append ({"key":"responsive_deg", "type":"integer", "global": False})
     subs = []
     subs.append ({"key":"pypower/LMP_B7", "type":"double"})
-    subs.append ({"key":"gridlabdSimulator1/distribution_load", "type":"complex"})
+    subs.append ({"key":"gld1/distribution_load", "type":"complex"})
     pubSubMeters = set()
     for key,val in controllers.items():
       meterName = val['meterName']
       houseName = val['houseName']
-      subs.append ({"key":houseName+"/air_temperature", "type":"double"}) #Tair
-      subs.append ({"key":houseName+"/hvac_load", "type":"double"}) #Load
-      subs.append ({"key":houseName+"/power_state", "type":"string"})   #On
+      subs.append ({"key":"gld1/"+houseName+"#air_temperature", "type":"double"}) #Tair
+      subs.append ({"key":"gld1/"+houseName+"#hvac_load", "type":"double"}) #Load
+      subs.append ({"key":"gld1/"+houseName+"#power_state", "type":"string"})   #On
       pubs.append ({"key":key+"/cooling_setpoint", "type":"double", "global": False})
       pubs.append ({"key":key+"/heating_setpoint", "type":"double", "global": False})
       pubs.append ({"key":key+"/thermostat_deadband", "type":"double", "global": False})
       if meterName not in pubSubMeters:
         pubSubMeters.add(meterName)
-        subs.append ({"key":meterName+"/measured_voltage_1", "type":"complex"})  #V1
+        subs.append ({"key":"gld1/"+meterName+"#measured_voltage_1", "type":"complex"})  #V1
         pubs.append ({"key":meterName+"/bill_mode", "type":"string", "global": False})
         pubs.append ({"key":meterName+"/price", "type":"double", "global": False})
         pubs.append ({"key":meterName+"/monthly_fee", "type":"double", "global": False})
@@ -354,7 +354,7 @@ def ProcessGLM (fileroot):
     print ('    type: double', file=yp)
     print ('    list: false', file=yp)
     print ('  refload:', file=yp)
-    print ('    topic: gridlabdSimulator1/distribution_load', file=yp)
+    print ('    topic: gld1/distribution_load', file=yp)
     print ('    default: 0', file=yp)
     print ('    type: complex', file=yp)
     print ('    list: false', file=yp)
@@ -362,16 +362,16 @@ def ProcessGLM (fileroot):
         houseName = val['houseName']
         meterName = val['meterName']
         print ('  ' + key + '#V1:', file=yp)
-        print ('    topic: gridlabdSimulator1/' + meterName + '/measured_voltage_1', file=yp)
+        print ('    topic: gld1/' + meterName + '/measured_voltage_1', file=yp)
         print ('    default: 120', file=yp)
         print ('  ' + key + '#Tair:', file=yp)
-        print ('    topic: gridlabdSimulator1/' + houseName + '/air_temperature', file=yp)
+        print ('    topic: gld1/' + houseName + '/air_temperature', file=yp)
         print ('    default: 80', file=yp)
         print ('  ' + key + '#Load:', file=yp)
-        print ('    topic: gridlabdSimulator1/' + houseName + '/hvac_load', file=yp)
+        print ('    topic: gld1/' + houseName + '/hvac_load', file=yp)
         print ('    default: 0', file=yp)
         print ('  ' + key + '#On:', file=yp)
-        print ('    topic: gridlabdSimulator1/' + houseName + '/power_state', file=yp)
+        print ('    topic: gld1/' + houseName + '/power_state', file=yp)
         print ('    default: 0', file=yp)
     yp.close ()
 
@@ -434,9 +434,9 @@ def ProcessGLM (fileroot):
       houseClass = val['houseClass']
       meterName = val['meterName']
       for prop in ['power_state']:
-        pubs.append ({"global":False, "key":houseName + "/" + prop, "type":"string", "info":{"object":houseName,"property":prop}})
+        pubs.append ({"global":False, "key":houseName + "#" + prop, "type":"string", "info":{"object":houseName,"property":prop}})
       for prop in ['air_temperature', 'hvac_load']:
-        pubs.append ({"global":False, "key":houseName + "/" + prop, "type":"double", "info":{"object":houseName,"property":prop}})
+        pubs.append ({"global":False, "key":houseName + "#" + prop, "type":"double", "info":{"object":houseName,"property":prop}})
       for prop in ['cooling_setpoint', 'heating_setpoint', 'thermostat_deadband']:
         subs.append ({"key": "substation/" + key + "/" + prop, "type":"double", "info":{"object":houseName, "property":prop}})
       if meterName not in pubSubMeters:
@@ -444,13 +444,13 @@ def ProcessGLM (fileroot):
         prop = 'measured_voltage_1'
         if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
           prop = 'measured_voltage_A'
-        pubs.append ({"global":False, "key":meterName + "/" + prop, "type":"complex", "info":{"object":meterName,"property":prop}})
+        pubs.append ({"global":False, "key":meterName + "#" + prop, "type":"complex", "info":{"object":meterName,"property":prop}})
         for prop in ['bill_mode']:
           subs.append ({"key": "substation/" + meterName + "/" + prop, "type":"string", "info":{"object":meterName, "property":prop}})
         for prop in ['price', 'monthly_fee']:
           subs.append ({"key": "substation/" + meterName + "/" + prop, "type":"double", "info":{"object":meterName, "property":prop}})
     msg = {}
-    msg["name"] = "gridlabdSimulator1"  # TODO - keep this consistent
+    msg["name"] = "gld1"  # TODO - keep this consistent
     msg["period"] = 1.0
     msg["publications"] = pubs
     msg["subscriptions"] = subs

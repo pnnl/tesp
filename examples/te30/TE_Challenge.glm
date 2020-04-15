@@ -145,7 +145,7 @@ object substation {
 
 #ifdef USE_FNCS
 object fncs_msg {
-     name gridlabdSimulator1;
+     name gld1;
      parent network_node;
      configure TE_Challenge_FNCS_Config.txt;
      option "transport:hostname localhost, port 5570";
@@ -156,7 +156,6 @@ object fncs_msg {
 
 #ifdef USE_HELICS
 object helics_msg {
-  name gridlabdSimulator1;
   configure TE_Challenge_HELICS_gld_msg.json;
 }
 #endif

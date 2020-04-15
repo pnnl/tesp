@@ -3,7 +3,7 @@ time_delta: 15s
 broker: tcp://localhost:5570
 values:
     SUBSTATION7:
-        topic: gridlabdSimulator1/distribution_load
+        topic: gld1/distribution_load
         default: 0
     UNRESPONSIVE_MW:
         topic: substation/unresponsive_mw

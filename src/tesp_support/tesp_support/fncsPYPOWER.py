@@ -272,15 +272,16 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
       key = helics.helicsInputGetKey(sub)
       target = helics.helicsSubscriptionGetKey(sub)
       print ('HELICS subscription key', i, key, 'target', target)
-      if 'RESPONSIVE_C2' in target:
+      upper_target = target.upper() # FNCS-compatible matching
+      if 'RESPONSIVE_C2' in upper_target:
         sub_c2 = sub
-      if 'RESPONSIVE_C1' in target:
+      if 'RESPONSIVE_C1' in upper_target:
         sub_c1 = sub
-      if 'RESPONSIVE_DEG' in target:
+      if 'RESPONSIVE_DEG' in upper_target:
         sub_deg = sub
-      if 'RESPONSIVE_MAX_MW' in target:
+      if 'RESPONSIVE_MAX_MW' in upper_target:
         sub_max = sub
-      if 'UNRESPONSIVE_MW' in target:
+      if 'UNRESPONSIVE_MW' in upper_target:
         sub_unresp = sub
       if 'distribution_load' in target:
         sub_load = sub
@@ -313,13 +314,13 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
       if sub_deg is not None:
         resp_deg = helics.helicsInputGetInteger(sub_deg)
       if sub_max is not None:
-        resp_max = helics.helicsInputGetComplex(sub_max) * load_scale
+        resp_max = helics.helicsInputGetComplex(sub_max)[0] * load_scale
         if helics.helicsInputIsUpdated(sub_max):
           new_bid = True
       if sub_load is not None:
         gld_load = helics.helicsInputGetComplex(sub_load)
         feeder_load = gld_load[0] * load_scale / 1.0e6
-      print ('HELICS inputs at', ts, gld_load, load_scale, feeder_load, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid)
+#      print ('HELICS inputs at', ts, feeder_load, load_scale, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid)
     else:  # inputs coming from FNCS
       events = fncs.get_events()
       for topic in events:

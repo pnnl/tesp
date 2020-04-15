@@ -2035,7 +2035,7 @@ def write_substation (op, name, phs, vnom, vll):
             print ('  name gridlabd' + fncs_case + ';', file=op)
         else:
 #            print ('  name gridlabd' + fncs_case + ';', file=op)  # for full-order DSOT
-            print ('  name gridlabdSimulator1;', file=op)
+            print ('  name gld1;', file=op)
         print ('  parent network_node;', file=op)
         print ('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
         print ('  option "transport:hostname localhost, port 5570";', file=op)
