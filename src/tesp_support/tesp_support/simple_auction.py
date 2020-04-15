@@ -92,6 +92,8 @@ class simple_auction:
         self.supplierSurplus = 0.0
         self.unrespSupplierSurplus = 0.0
 
+        self.bid_offset = 1e-4 # for numerical checks
+
     def set_refload (self, kw):
         """Sets the refload attribute
 
@@ -294,21 +296,21 @@ class simple_auction:
                     # Needs to be just off such that it does not trigger any other bids
                     if a == self.pricecap and b != -self.pricecap:
                         if self.curve_buyer.price[i] > b:
-                            self.clearing_price = self.curve_buyer.price[i] + bid_offset
+                            self.clearing_price = self.curve_buyer.price[i] + self.bid_offset
                         else:
                             self.clearing_price = b 
                     elif a != self.pricecap and b == -self.pricecap:
                         if self.curve_seller.price[j] < a:
-                            self.clearing_price = self.curve_seller.price[j] - bid_offset
+                            self.clearing_price = self.curve_seller.price[j] - self.bid_offset
                         else:
                             self.clearing_price = a 
                     elif a == self.pricecap and b == -self.pricecap:
                         if i == self.curve_buyer.count and j == self.curve_seller.count:
                             self.clearing_price = 0 # no additional bids on either side
                         elif j == self.curve_seller.count: # buyers left
-                            self.clearing_price = self.curve_buyer.price[i] + bid_offset
+                            self.clearing_price = self.curve_buyer.price[i] + self.bid_offset
                         elif i == self.curve_buyer.count: # sellers left
-                            self.clearing_price = self.curve_seller.price[j] - bid_offset
+                            self.clearing_price = self.curve_seller.price[j] - self.bid_offset
                         else: # additional bids on both sides, just no clearing
                             self.clearing_price = (dHigh + dLow)/2
                     else:
@@ -317,9 +319,9 @@ class simple_auction:
                         elif j != self.curve_seller.count and self.curve_seller.price[j] == b:
                             self.clearing_price = b 
                         elif i != self.curve_buyer.count and avg < self.curve_buyer.price[i]:
-                            self.clearing_price = dHigh + bid_offset
+                            self.clearing_price = dHigh + self.bid_offset
                         elif j != self.curve_seller.count and avg > self.curve_seller.price[j]:
-                            self.clearing_price = dLow - bid_offset
+                            self.clearing_price = dLow - self.bid_offset
                         else:
                             self.clearing_price = avg 
                                 
@@ -327,14 +329,14 @@ class simple_auction:
             if self.clearing_quantity == 0:
                 self.clearing_type = helpers.ClearingType.NULL
                 if self.curve_seller.count > 0 and self.curve_buyer.count == 0:
-                    self.clearing_price = self.curve_seller.price[0] - bid_offset
+                    self.clearing_price = self.curve_seller.price[0] - self.bid_offset
                 elif self.curve_seller.count == 0 and self.curve_buyer.count > 0:
-                    self.clearing_price = self.curve_buyer.price[0] + bid_offset
+                    self.clearing_price = self.curve_buyer.price[0] + self.bid_offset
                 else:
                     if self.curve_seller.price[0] == self.pricecap:
-                        self.clearing_price = self.curve_buyer.price[0] + bid_offset
+                        self.clearing_price = self.curve_buyer.price[0] + self.bid_offset
                     elif self.curve_seller.price[0] == -self.pricecap:
-                        self.clearing_price = self.curve_seller.price[0] - bid_offset  
+                        self.clearing_price = self.curve_seller.price[0] - self.bid_offset  
                     else:
                         self.clearing_price = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.clearing_scalar
            
@@ -354,9 +356,9 @@ class simple_auction:
         # If the market mode MD_NONE and at least one side is not given
         else:
             if self.curve_seller.count > 0 and self.curve_buyer.count == 0:
-                self.clearing_price = self.curve_seller.price[0] - bid_offset
+                self.clearing_price = self.curve_seller.price[0] - self.bid_offset
             elif self.curve_seller.count == 0 and self.curve_buyer.count > 0:
-                self.clearing_price = self.curve_buyer.price[0] + bid_offset
+                self.clearing_price = self.curve_buyer.price[0] + self.bid_offset
             elif self.curve_seller.count > 0 and self.curve_buyer.count > 0:
                 self.clearing_price = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.clearing_scalar
             elif self.curve_seller.count == 0 and self.curve_buyer.count == 0:
