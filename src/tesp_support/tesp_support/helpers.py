@@ -14,6 +14,20 @@ try:
 except:
   pass
 
+def idf_int(val):
+  """Helper function to format integers for the EnergyPlus IDF input data file
+
+  Args:
+    val (int): the integer to format
+
+  Returns:
+     str: the integer in string format, padded with a comma and zero or one blanks, in order to fill three spaces
+  """
+  sval = str(val)
+  if len(sval) < 2:
+    return sval + ', '
+  return sval + ','
+
 def stop_helics_federate (fed):
   print ('finalizing HELICS', flush=True)
   status = helics.helicsFederateFinalize(fed)
@@ -24,6 +38,19 @@ def stop_helics_federate (fed):
   helics.helicsFederateFree(fed)
   helics.helicsCloseLibrary()
 
+def zoneMeterName(ldname):
+  """ Enforces the meter naming convention for commercial zones
+
+  Commercial zones must be children of load objects. This routine
+  replaces "_load_" with "_meter".
+
+  Args:
+      objname (str): the GridLAB-D name of a load, ends with _load_##
+
+  Returns:
+    str: The GridLAB-D name of upstream meter
+  """
+  return ldname.replace ('_load_', '_meter_')
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
 def gld_strict_name(val):

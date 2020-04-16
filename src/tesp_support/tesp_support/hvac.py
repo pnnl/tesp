@@ -171,7 +171,7 @@ class hvac:
             return True
         return False
 
-    def set_hvac_load (self,str):
+    def set_hvac_load_from_fncs_str (self,str):
         """ Sets the hvac_load attribute, if greater than zero
 
         Args:
@@ -181,7 +181,7 @@ class hvac:
         if val > 0.0:
             self.hvac_kw = val
 
-    def set_hvac_state (self,str):
+    def set_hvac_state_from_fncs_str (self,str):
         """ Sets the hvac_on attribute
 
         Args:
@@ -192,7 +192,7 @@ class hvac:
         else:
             self.hvac_on = True
 
-    def set_air_temp (self,str):
+    def set_air_temp_from_fncs_str (self,str):
         """ Sets the air_temp attribute
 
         Args:
@@ -200,7 +200,7 @@ class hvac:
         """
         self.air_temp = helpers.parse_fncs_number (str)
 
-    def set_voltage (self,str):
+    def set_voltage_from_fncs_str (self,str):
         """ Sets the mtr_v attribute
 
         Args:

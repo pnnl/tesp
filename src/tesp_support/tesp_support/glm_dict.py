@@ -16,6 +16,7 @@ Public Functions:
 import json;
 import sys;
 import math;
+import tesp_support.helpers as helpers;
 
 def ercotMeterName(objname):
   """ Enforces the meter naming convention for ERCOT
@@ -32,21 +33,6 @@ def ercotMeterName(objname):
   root1 = objname[:k]
   k = root1.rfind('_')
   return root1[:k] + '_mtr'
-
-## TODO: put zoneMeterName in a helpers file
-def zoneMeterName(ldname):
-  """ Enforces the meter naming convention for commercial zones
-
-  Commercial zones must be children of load objects. This routine
-  replaces "_load_" with "_meter".
-
-  Args:
-      objname (str): the GridLAB-D name of a load, ends with _load_##
-
-  Returns:
-    str: The GridLAB-D name of upstream meter
-  """
-  return ldname.replace ('_load_', '_meter_')
 
 def isCommercialHouse(house_class):
   if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
@@ -252,7 +238,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
           if ercot:
             lastBillingMeter = ercotMeterName (name)
           elif isCommercialHouse (house_class):
-            lastBillingMeter = zoneMeterName (parent)
+            lastBillingMeter = helpers.zoneMeterName (parent)
           houses[name] = {'feeder_id':feeder_id,'billingmeter_id':lastBillingMeter,'sqft':sqft,'stories':stories,'doors':doors,
             'thermal_integrity':thermal_integrity,'cooling':cooling,'heating':heating,'wh_gallons':0,'house_class':house_class,
             'parent':parent}
@@ -360,7 +346,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
     'transformer_MVA':substationTransformerMVA,'feeders':feeders, 
     'billingmeters':billingmeters,'houses':houses,'inverters':inverters,
     'capacitors':capacitors,'regulators':regulators}
-  print (json.dumps(substation), file=op)
+  json.dump (substation, op, ensure_ascii=False, indent=2)
 
   ip.close()
   op.close()

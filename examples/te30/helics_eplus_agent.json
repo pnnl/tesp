@@ -41,7 +41,7 @@
   ],
   "subscriptions" : [
     {
-      "key" : "substation/clear_price", 
+      "key" : "sub1/clear_price", 
       "type" : "double"
     }
   ]

@@ -122,7 +122,7 @@ def make_dictionary(ppc, rootname):
 
   dp = open (rootname + "_m_dict.json", "w")
   ppdict = {'baseMVA':ppc['baseMVA'],'dsoBuses':dsoBuses,'generators':generators,'UnitsOut':unitsout,'BranchesOut':branchesout}
-  print (json.dumps(ppdict), file=dp, flush=True)
+  json.dump (ppdict, dp, ensure_ascii=False, indent=2)
   dp.close()
 
 def parse_mva(arg):
@@ -315,7 +315,7 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
         resp_deg = helics.helicsInputGetInteger(sub_deg)
       if sub_max is not None:
         resp_max = helics.helicsInputGetComplex(sub_max)[0] * load_scale
-        if helics.helicsInputIsUpdated(sub_max):
+        if helics.helicsInputIsUpdated(sub_max): #TODO: verify this fires; resp_max updates but new_bid always False to CSV
           new_bid = True
       if sub_load is not None:
         gld_load = helics.helicsInputGetComplex(sub_load)

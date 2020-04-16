@@ -331,13 +331,13 @@ def fncs_substation_loop (configfile, metrics_root, hour_stop=48, flag='WithMark
                 refload = helpers.parse_kw (value)
                 aucObj.set_refload (refload)
             elif row[1] == 2:
-                row[0].set_air_temp (value)
+                row[0].set_air_temp_from_fncs_str (value)
             elif row[1] == 3:
-                row[0].set_voltage (value)
+                row[0].set_voltage_from_fncs_str (value)
             elif row[1] == 4:
-                row[0].set_hvac_load (value)
+                row[0].set_hvac_load_from_fncs_str (value)
             elif row[1] == 5:
-                row[0].set_hvac_state (value)
+                row[0].set_hvac_state_from_fncs_str (value)
 
         # set the time-of-day schedule
         for key, obj in hvacObjs.items():

@@ -15,6 +15,7 @@ import json
 import numpy as np
 import os
 from datetime import datetime
+import tesp_support.helpers as helpers
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -98,22 +99,6 @@ std_dev = 0.01
 latitude = 30.0
 longitude = -110.0
 #####################################################
-## TODO: put zoneMeterName in a helpers file
-def zoneMeterName(ldname):
-    """ Enforces the meter naming convention for commercial zones
-
-    Commercial zones must be children of load objects. This routine
-    replaces "_load_" with "_meter".
-
-    Args:
-            objname (str): the GridLAB-D name of a load, ends with _load_##
-
-    Returns:
-        str: The GridLAB-D name of upstream meter
-    """
-    return ldname.replace ('_load_', '_meter_')
-
-
 def ProcessGLM (fileroot):
     """Helper function that processes one GridLAB-D file
 
@@ -141,6 +126,7 @@ def ProcessGLM (fileroot):
     auctions = {}
     ip.seek(0,0)
     inFNCSmsg = False
+    inHELICSmsg = False
     inHouses = False
     inTriplexMeters = False
     endedHouse = False
@@ -152,7 +138,7 @@ def ProcessGLM (fileroot):
 
     houseName = ''
     meterName = ''
-    FNCSmsgName = ''
+    FedName = 'gld1'
     climateName = ''
     StartTime = ''
     EndTime = ''
@@ -173,6 +159,8 @@ def ProcessGLM (fileroot):
                 inHouses = True
             if lst[1] == 'fncs_msg':
                 inFNCSmsg = True
+            if lst[1] == 'helics_msg':
+                inHELICSmsg = True
             # Check for ANY object within the house, and don't use its name:
             if inHouses == True and lst[0] == 'object' and lst[1] != 'house':
                 endedHouse = True
@@ -195,9 +183,13 @@ def ProcessGLM (fileroot):
                 if lst[0] == 'name':
                     climateName = lst[1].strip(';')
                     inClimate = False
+            if inHELICSmsg == True:
+                if lst[0] == 'name':
+                    FedName = lst[1].strip(';')
+                    inHELICSmsg = False
             if inFNCSmsg == True:
                 if lst[0] == 'name':
-                    FNCSmsgName = lst[1].strip(';')
+                    FedName = lst[1].strip(';')
                     inFNCSmsg = False
             if inTriplexMeters == True:
                 if lst[0] == 'name':
@@ -216,12 +208,13 @@ def ProcessGLM (fileroot):
                     if (lst[1].strip(';') == 'ELECTRIC'):
                         isELECTRIC = True
         elif len(lst) == 1:
+            inHELICSmsg = False
             if inHouses == True: 
                 inHouses = False
                 endedHouse = False
                 if isELECTRIC == True:
                     if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
-                        meterName = zoneMeterName (houseParent)
+                        meterName = helpers.zoneMeterName (houseParent)
                     nAirConditioners += 1
                     if np.random.uniform (0, 1) <= agent_participation:
                         nControllers += 1
@@ -297,10 +290,10 @@ def ProcessGLM (fileroot):
     # Close files
     ip.close()
 
+    meta = {'markets':auctions,'controllers':controllers,'dt':dt,'GridLABD':FedName}
     dictfile = fileroot + '_agent_dict.json'
     dp = open (dictfile, 'w')
-    meta = {'markets':auctions,'controllers':controllers,'dt':dt,'GridLABD':FNCSmsgName}
-    print (json.dumps(meta), file=dp)
+    json.dump (meta, dp, ensure_ascii=False, indent=2)
     dp.close()
 
     # write HELICS config file
@@ -331,7 +324,7 @@ def ProcessGLM (fileroot):
         pubs.append ({"key":meterName+"/price", "type":"double", "global": False})
         pubs.append ({"key":meterName+"/monthly_fee", "type":"double", "global": False})
     msg = {}
-    msg["name"] = "substation"  # TODO - keep this consistent
+    msg["name"] = "sub1"
     msg["period"] = dt
     msg["publications"] = pubs
     msg["subscriptions"] = subs
@@ -342,7 +335,7 @@ def ProcessGLM (fileroot):
     # write YAML file
     yamlfile = fileroot + '_substation.yaml'
     yp = open (yamlfile, 'w')
-    print ('name: substation', file=yp)
+    print ('name: sub1', file=yp)
     print ('time_delta: ' + str(dt) + 's', file=yp)
     print ('broker:', broker, file=yp)
     print ('aggregate_sub: true', file=yp)
@@ -438,7 +431,7 @@ def ProcessGLM (fileroot):
       for prop in ['air_temperature', 'hvac_load']:
         pubs.append ({"global":False, "key":houseName + "#" + prop, "type":"double", "info":{"object":houseName,"property":prop}})
       for prop in ['cooling_setpoint', 'heating_setpoint', 'thermostat_deadband']:
-        subs.append ({"key": "substation/" + key + "/" + prop, "type":"double", "info":{"object":houseName, "property":prop}})
+        subs.append ({"key": "sub1/" + key + "/" + prop, "type":"double", "info":{"object":houseName, "property":prop}})
       if meterName not in pubSubMeters:
         pubSubMeters.add(meterName)
         prop = 'measured_voltage_1'
@@ -446,11 +439,11 @@ def ProcessGLM (fileroot):
           prop = 'measured_voltage_A'
         pubs.append ({"global":False, "key":meterName + "#" + prop, "type":"complex", "info":{"object":meterName,"property":prop}})
         for prop in ['bill_mode']:
-          subs.append ({"key": "substation/" + meterName + "/" + prop, "type":"string", "info":{"object":meterName, "property":prop}})
+          subs.append ({"key": "sub1/" + meterName + "/" + prop, "type":"string", "info":{"object":meterName, "property":prop}})
         for prop in ['price', 'monthly_fee']:
-          subs.append ({"key": "substation/" + meterName + "/" + prop, "type":"double", "info":{"object":meterName, "property":prop}})
+          subs.append ({"key": "sub1/" + meterName + "/" + prop, "type":"double", "info":{"object":meterName, "property":prop}})
     msg = {}
-    msg["name"] = "gld1"  # TODO - keep this consistent
+    msg["name"] = "gld1"
     msg["period"] = 1.0
     msg["publications"] = pubs
     msg["subscriptions"] = subs
@@ -480,18 +473,18 @@ def ProcessGLM (fileroot):
         print ('publish "commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature";', file=op)
         print ('publish "commit:' + houseName + '.power_state -> ' + houseName + '/power_state";', file=op)
         print ('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
-        print ('subscribe "precommit:' + houseName + '.cooling_setpoint <- substation/' + key + '/cooling_setpoint";', file=op)
-        print ('subscribe "precommit:' + houseName + '.heating_setpoint <- substation/' + key + '/heating_setpoint";', file=op)
-        print ('subscribe "precommit:' + houseName + '.thermostat_deadband <- substation/' + key + '/thermostat_deadband";', file=op)
+        print ('subscribe "precommit:' + houseName + '.cooling_setpoint <- sub1/' + key + '/cooling_setpoint";', file=op)
+        print ('subscribe "precommit:' + houseName + '.heating_setpoint <- sub1/' + key + '/heating_setpoint";', file=op)
+        print ('subscribe "precommit:' + houseName + '.thermostat_deadband <- sub1/' + key + '/thermostat_deadband";', file=op)
         if meterName not in pubSubMeters:
             pubSubMeters.add(meterName)
             if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
                 print ('publish "commit:' + meterName + '.measured_voltage_A -> ' + meterName + '/measured_voltage_1";', file=op)
             else:
                 print ('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
-            print ('subscribe "precommit:' + meterName + '.bill_mode <- substation/' + key + '/bill_mode";', file=op)
-            print ('subscribe "precommit:' + meterName + '.price <- substation/' + key + '/price";', file=op)
-            print ('subscribe "precommit:' + meterName + '.monthly_fee <- substation/' + key + '/monthly_fee";', file=op)
+            print ('subscribe "precommit:' + meterName + '.bill_mode <- sub1/' + key + '/bill_mode";', file=op)
+            print ('subscribe "precommit:' + meterName + '.price <- sub1/' + key + '/price";', file=op)
+            print ('subscribe "precommit:' + meterName + '.monthly_fee <- sub1/' + key + '/monthly_fee";', file=op)
     op.close()
 
 def prep_substation (gldfileroot, jsonfile = ''):

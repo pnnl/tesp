@@ -10,25 +10,12 @@ import sys
 import re
 import csv
 from datetime import datetime
+import tesp.helpers as helpers
 
 if sys.platform == 'win32':
   pycall = 'python'
 else:
   pycall = 'python3'
-
-def idf_int(val):
-  """Helper function to format integers for the EnergyPlus IDF input data file
-
-  Args:
-    val (int): the integer to format
-
-  Returns:
-     str: the integer in string format, padded with a comma and zero or one blanks, in order to fill three spaces
-  """
-  sval = str(val)
-  if len(sval) < 2:
-    return sval + ', '
-  return sval + ','
 
 def valid_var (name):
   return name.replace (' ', '_').replace ('-', '_')
@@ -579,13 +566,13 @@ def merge_idf (base, ems, StartTime, EndTime, target, StepsPerHour):
   for ln in ip:
     line = ln.rstrip('\n')
     if '!- Begin Month' in line:
-      print ('    %s                      !- Begin Month' % idf_int(begin_month), file=op)
+      print ('    %s                      !- Begin Month' % helpers.idf_int(begin_month), file=op)
     elif '!- Begin Day of Month' in line:
-      print ('    %s                      !- Begin Day of Month' % idf_int(begin_day), file=op)
+      print ('    %s                      !- Begin Day of Month' % helpers.idf_int(begin_day), file=op)
     elif '!- End Month' in line:
-      print ('    %s                      !- End Month' % idf_int(end_month), file=op)
+      print ('    %s                      !- End Month' % helpers.idf_int(end_month), file=op)
     elif '!- End Day of Month' in line:
-      print ('    %s                      !- End Day of Month' % idf_int(end_day), file=op)
+      print ('    %s                      !- End Day of Month' % helpers.idf_int(end_day), file=op)
     elif '!- Day of Week for Start Day' in line:
       print ('    %s               !- Day of Week for Start Day' % ep_dow_names[dow], file=op)
     elif 'Timestep,' in line:

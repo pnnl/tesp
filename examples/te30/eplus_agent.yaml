@@ -3,7 +3,7 @@ time_delta: 5m
 broker: tcp://localhost:5570
 values:
     kwhr_price:
-        topic: substation/clear_price
+        topic: sub1/clear_price
         default: 0.02
     indoor_air:
         topic: eplus/EMS INDOOR AIR TEMPERATURE

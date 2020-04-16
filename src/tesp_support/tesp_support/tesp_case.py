@@ -17,25 +17,12 @@ import os
 import stat
 import shutil
 from datetime import datetime
+import tesp.helpers as helpers
 
 if sys.platform == 'win32':
     pycall = 'python'
 else:
     pycall = 'python3'
-
-def idf_int(val):
-    """Helper function to format integers for the EnergyPlus IDF input data file
-
-    Args:
-        val (int): the integer to format
-
-    Returns:
-        str: the integer in string format, padded with a comma and zero or one blanks, in order to fill three spaces
-    """
-    sval = str(val)
-    if len(sval) < 2:
-        return sval + ', '
-    return sval + ','
 
 def write_tesp_case (config, cfgfile, freshdir = True):
     """Writes the TESP case from data structure to JSON file
@@ -185,6 +172,8 @@ def write_tesp_case (config, cfgfile, freshdir = True):
 #        shutil.copy (miscdir + 'list5570.bat', casedir)
         shutil.copy (miscdir + 'clean.sh', casedir)
         shutil.copy (miscdir + 'kill5570.sh', casedir)
+        shutil.copy (miscdir + 'kill23404.sh', casedir)
+        shutil.copy (miscdir + 'killboth.sh', casedir)
         shutil.copy (miscdir + 'monitor.py', casedir)
         shutil.copy (miscdir + 'plots.py', casedir)
         shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
@@ -210,13 +199,13 @@ def write_tesp_case (config, cfgfile, freshdir = True):
         for ln in ip:
             line = ln.rstrip('\n')
             if '!- Begin Month' in line:
-                print ('    %s                      !- Begin Month' % idf_int(begin_month), file=op)
+                print ('    %s                      !- Begin Month' % helpers.idf_int(begin_month), file=op)
             elif '!- Begin Day of Month' in line:
-                print ('    %s                      !- Begin Day of Month' % idf_int(begin_day), file=op)
+                print ('    %s                      !- Begin Day of Month' % helpers.idf_int(begin_day), file=op)
             elif '!- End Month' in line:
-                print ('    %s                      !- End Month' % idf_int(end_month), file=op)
+                print ('    %s                      !- End Month' % helpers.idf_int(end_month), file=op)
             elif '!- End Day of Month' in line:
-                print ('    %s                      !- End Day of Month' % idf_int(end_day), file=op)
+                print ('    %s                      !- End Day of Month' % helpers.idf_int(end_day), file=op)
             elif '!- Day of Week for Start Day' in line:
                 print ('    %s               !- Day of Week for Start Day' % ep_dow_names[dow], file=op)
             else:
@@ -253,7 +242,7 @@ time_delta: """ + EpAgentStep + """
 broker: tcp://localhost:5570
 values:
     kwhr_price:
-        topic: substation/clear_price
+        topic: sub1/clear_price
         default: 0.10
     indoor_air:
         topic: eplus/EMS INDOOR AIR TEMPERATURE
@@ -386,19 +375,19 @@ values:
         topic: gld1/distribution_load
         default: 0
     UNRESPONSIVE_MW:
-        topic: substation/unresponsive_mw
+        topic: sub1/unresponsive_mw
         default: 0
     RESPONSIVE_MAX_MW:
-        topic: substation/responsive_max_mw
+        topic: sub1/responsive_max_mw
         default: 0
     RESPONSIVE_C2:
-        topic: substation/responsive_c2
+        topic: sub1/responsive_c2
         default: 0
     RESPONSIVE_C1:
-        topic: substation/responsive_c1
+        topic: sub1/responsive_c1
         default: 0
     RESPONSIVE_DEG:
-        topic: substation/responsive_deg
+        topic: sub1/responsive_deg
         default: 0
 """
     if freshdir == True:
@@ -424,7 +413,7 @@ values:
     type: double
     list: false
   clear_price:
-    topic: substation/clear_price
+    topic: sub1/clear_price
     default: 0
     type: double
     list: false
@@ -488,7 +477,7 @@ values:
 #   else:
 #       print ('start /b cmd /c fncs_broker 4 ^>broker.log 2^>^&1', file=op)
 #   print ('set FNCS_CONFIG_FILE=', file=op)
-#   print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gridlabd.log 2^>^&1', file=op)
+#   print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gld1.log 2^>^&1', file=op)
 #   print ('set FNCS_CONFIG_FILE=' + SubstationYamlFile, file=op)
 #   print ('start /b cmd /c', aucline + '^>substation.log 2^>^&1', file=op)
 #   print ('set FNCS_CONFIG_FILE=pypower.yaml', file=op)
@@ -514,8 +503,8 @@ values:
     else:
         print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> broker.log &)', file=op)
     print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
-           + GldMetricsFile + ' ' + GldFile + ' &> gridlabd.log &)', file=op)
-    print ('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> substation.log &)', file=op)
+           + GldMetricsFile + ' ' + GldFile + ' &> gld1.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> sub1.log &)', file=op)
     print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + ppline + ' &> pypower.log &)', file=op)
     print ('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + weatherline + ' &> weather.log &)', file=op)
     op.close()
@@ -555,10 +544,10 @@ values:
                            'log':'broker.log'})
     cmds['commands'].append({'args':['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile], 
                        'env':[['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                       'log':'gridlabd.log'})
+                       'log':'gld1.log'})
     cmds['commands'].append({'args':[pycall, 'launch_auction.py'], 
                        'env':[['FNCS_CONFIG_FILE', SubstationYamlFile],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
-                       'log':'substation.log'})
+                       'log':'sub1.log'})
     cmds['commands'].append({'args':[pycall, 'launch_pp.py'], 
                        'env':[['FNCS_CONFIG_FILE', 'pypower.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                        'log':'pypower.log'})
