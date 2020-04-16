@@ -2,7 +2,6 @@
   "BackboneFiles": {
     "TaxonomyChoice": "R1-12.47-3",
     "NamePrefix": "Fdr3_",
-    "EnergyPlusFile": "",
     "PYPOWERFile": "ppbasefile.py"
   },
   "FeederGenerator": {
@@ -16,9 +15,6 @@
     "StoragePercentage": "0",
     "SolarInverterMode": "CONSTANT_PF",
     "StorageInverterMode": "CONSTANT_PF",
-    "EnergyPlusBus": "",
-    "EnergyPlusServiceV": "480",
-    "EnergyPlusXfmrKva": "150",
     "BillingMode": "TIERED",
     "MonthlyFee": "13",
     "Price": "0.102013",
@@ -30,7 +26,12 @@
     "Tier3Price": "0"
   },
   "EplusConfiguration": {
-    "TimeStep": "5",
+    "BuildingChoice": "SchoolDualController",
+    "EMSFile": "ems/emsSchoolDualController",
+    "StepsPerHour": "12",
+    "EnergyPlusBus": "",
+    "EnergyPlusServiceV": "480",
+    "EnergyPlusXfmrKva": "150",
     "ReferencePrice": "0.02",
     "Slope": "25",
     "OffsetLimitHi": "4",
