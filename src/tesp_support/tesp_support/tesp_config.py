@@ -538,7 +538,7 @@ class TespConfigGUI:
                                          defaultextension = 'json')
     if len(fname) > 0:
       op = open (fname, 'w')
-      print (json.dumps(config), file=op)
+      json.dump (config, op, ensure_ascii=False, indent=2)
       op.close()
 
   def JsonToSection(self, jsn, vars):
