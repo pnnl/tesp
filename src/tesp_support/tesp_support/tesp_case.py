@@ -17,7 +17,8 @@ import os
 import stat
 import shutil
 from datetime import datetime
-import tesp.helpers as helpers
+import tesp_support.helpers as helpers
+import tesp_support.make_ems as idf
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -130,37 +131,34 @@ def write_tesp_case (config, cfgfile, freshdir = True):
     WeatherYear = dt1.year
     print ('run', days, 'days or', seconds, 'seconds in weather year', WeatherYear)
 
-    ep_dow_names = ['Monday,   ', 'Tuesday,  ', 'Wednesday,', 'Thursday, ', 'Friday,   ', 'Saturday, ', 'Sunday,   ']
-    dow = dt1.weekday()
-    begin_month = dt1.month
-    begin_day = dt1.day
-    end_month = dt2.month
-    end_day = dt2.day
-    if dt2.hour == 0 and dt2.minute == 0 and dt2.second == 0:
-        end_day -= 1
-
     (rootweather, weatherext) = os.path.splitext(config['WeatherPrep']['DataSource'])
     EpRef = config['EplusConfiguration']['ReferencePrice']
     EpRamp = config['EplusConfiguration']['Slope']
     EpLimHi = config['EplusConfiguration']['OffsetLimitHi']
     EpLimLo = config['EplusConfiguration']['OffsetLimitLo']
     EpWeather = rootweather + '.epw' # config['EplusConfiguration']['EnergyPlusWeather']
-    EpStep = config['EplusConfiguration']['TimeStep'] # minutes
-    EpFile = config['BackboneFiles']['EnergyPlusFile']
-    EpMetricsKey = os.path.splitext (EpFile)[0]
+    EpStepsPerHour = int (config['EplusConfiguration']['StepsPerHour'])
+    EpBuilding = config['EplusConfiguration']['BuildingChoice']
+    EpEMS = config['EplusConfiguration']['EMSFile']
+    EpXfmrKva = config['EplusConfiguration']['EnergyPlusXfmrKva']
+    EpVolts = config['EplusConfiguration']['EnergyPlusServiceV']
+    EpBus = config['EplusConfiguration']['EnergyPlusBus']
+    EpMetricsKey = EpBuilding # os.path.splitext (EpFile)[0]
     EpAgentStop = str (seconds) + 's'
-    EpAgentStep = str (config['FeederGenerator']['MetricsInterval']) + 's'
+    EpStep = int (60 / EpStepsPerHour) # minutes
+    EpAgentStep = int (3600 / EpStepsPerHour) # seconds
     EpMetricsFile = 'eplus_' + casename + '_metrics.json'
     GldFile = casename + '.glm'
     GldMetricsFile = casename + '_metrics.json'
     AgentDictFile = casename + '_agent_dict.json'
     PPJsonFile = casename + '_pp.json'
     SubstationYamlFile = casename + '_substation.yaml'
-    WeatherConfigFile = casename + '_Weather_Config.json'
+    WeatherConfigFile = casename + '_FNCS_Weather_Config.json'
 
     weatherfile = weatherdir + rootweather + '.tmy3'
-    eplusfile = eplusdir + EpFile
-    eplusout = casedir + '/' + EpFile
+    eplusfile = eplusdir + EpBuilding + '.idf'
+    emsfile = eplusdir + EpEMS + '.idf'
+    eplusout = casedir + '/Merged.idf'
     ppfile = ppdir + config['BackboneFiles']['PYPOWERFile']
     ppcsv = ppdir + config['PYPOWERConfiguration']['CSVLoadFile']
 
@@ -190,32 +188,14 @@ def write_tesp_case (config, cfgfile, freshdir = True):
     #########################################
     # set up EnergyPlus, if the user wants it
     bUseEplus = False
-    if len(EpFile) > 0:
+    if len(EpBus) > 0:
         bUseEplus = True
-        # set the RunPeriod for EnergyPlus
-        ip = open (eplusfile, 'r', encoding='latin-1')
-        op = open (eplusout, 'w', encoding='latin-1')
-        print ('filtering', eplusfile, 'to', eplusout)
-        for ln in ip:
-            line = ln.rstrip('\n')
-            if '!- Begin Month' in line:
-                print ('    %s                      !- Begin Month' % helpers.idf_int(begin_month), file=op)
-            elif '!- Begin Day of Month' in line:
-                print ('    %s                      !- Begin Day of Month' % helpers.idf_int(begin_day), file=op)
-            elif '!- End Month' in line:
-                print ('    %s                      !- End Month' % helpers.idf_int(end_month), file=op)
-            elif '!- End Day of Month' in line:
-                print ('    %s                      !- End Day of Month' % helpers.idf_int(end_day), file=op)
-            elif '!- Day of Week for Start Day' in line:
-                print ('    %s               !- Day of Week for Start Day' % ep_dow_names[dow], file=op)
-            else:
-                print (line, file=op)
-        ip.close()
-        op.close()
+        idf.merge_idf (eplusfile, emsfile, StartTime, EndTime, eplusout, EpStepsPerHour)
 
         # process TMY3 ==> TMY2 ==> EPW
-        pw1 = subprocess.Popen ('Tmy3toTMY2_ansi ' + casedir + '/' + rootweather + '.tmy3 > '
-                                + casedir + '/' + rootweather + '.tmy2', shell=True)
+        cmdline = 'TMY3toTMY2_ansi ' + weatherfile + ' > ' + casedir + '/' + rootweather + '.tmy2'
+        print (cmdline)
+        pw1 = subprocess.Popen (cmdline, shell=True)
         pw1.wait()
         cmdline = pycall + """ -c "import tesp_support.api as tesp;tesp.convert_tmy2_to_epw('""" + casedir + '/' + rootweather + """')" """
         print (cmdline)
@@ -238,7 +218,7 @@ def write_tesp_case (config, cfgfile, freshdir = True):
         op.close()
 
         epjyamlstr = """name: eplus_agent
-time_delta: """ + EpAgentStep + """
+time_delta: """ + str(EpAgentStep) + """s
 broker: tcp://localhost:5570
 values:
     kwhr_price:
@@ -318,7 +298,7 @@ values:
     ppcase['branch'] = ppcase['branch'].tolist()
     ppcase['areas'] = ppcase['areas'].tolist()
     ppcase['gencost'] = ppcase['gencost'].tolist()
-    ppcase['FNCS'] = ppcase['FNCS'].tolist()
+    ppcase['DSO'] = ppcase['DSO'].tolist()
     ppcase['UnitsOut'] = ppcase['UnitsOut'].tolist()
     ppcase['BranchesOut'] = ppcase['BranchesOut'].tolist()
 
@@ -338,8 +318,8 @@ values:
         ppcase['pf_dc'] = 1
     fncsBus = int (config['PYPOWERConfiguration']['GLDBus'])
     fncsScale = float (config['PYPOWERConfiguration']['GLDScale'])
-    ppcase['FNCS'][0][0] = fncsBus
-    ppcase['FNCS'][0][2] = fncsScale
+    ppcase['DSO'][0][0] = fncsBus
+    ppcase['DSO'][0][2] = fncsScale
     baseKV = float(config['PYPOWERConfiguration']['TransmissionVoltage'])
     for row in ppcase['bus']:
         if row[0] == fncsBus:
@@ -394,6 +374,25 @@ values:
         shutil.copy (ppcsv, casedir)
         op = open (casedir + '/pypower.yaml', 'w')
         print (ppyamlstr, file=op)
+        op.close()
+        ppSubs = []
+        ppSubs.append ({"name": "SUBSTATION7","key": "gld1/distribution_load","type": "complex"})
+        ppSubs.append ({"name": "UNRESPONSIVE_MW","key": "sub1/unresponsive_mw","type": "double"})
+        ppSubs.append ({"name": "RESPONSIVE_MAX_MW","key": "sub1/responsive_max_mw","type": "double"})
+        ppSubs.append ({"name": "RESPONSIVE_C1","key": "sub1/responsive_c1","type": "double"})
+        ppSubs.append ({"name": "RESPONSIVE_C2","key": "sub1/responsive_c2","type": "double"})
+        ppSubs.append ({"name": "RESPONSIVE_DEG","key": "sub1/responsive_deg","type": "integer"})
+        ppPubs = []
+        ppPubs.append ({"global":False, "key":"three_phase_voltage_B7", "type":"double"})
+        ppPubs.append ({"global":False, "key":"LMP_B7", "type":"double"})
+        ppConfig = {}
+        ppConfig["name"] = "pypower"
+        ppConfig["log_level"] = 4
+        ppConfig["period"] = int (config['PYPOWERConfiguration']['PFStep'])
+        ppConfig["subscriptions"] = ppSubs
+        ppConfig["publications"] = ppPubs
+        op = open (casedir + '/pypowerConfig.json', 'w', encoding='utf-8')
+        json.dump (ppConfig, op, ensure_ascii=False, indent=2)
         op.close()
 
     # write a YAML for the solution monitor
@@ -457,37 +456,7 @@ values:
     if freshdir == False:
         return
 
-    # write the command scripts for console and tesp_monitor execution
-    aucline = """python -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
-    ppline = """python -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
-    weatherline = """python -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weather.dat')" """
-
-    # batch file for Windows
-#   batfile = casedir + '/run.bat'
-#   op = open (batfile, 'w')
-#   print ('set FNCS_FATAL=yes', file=op)
-#   print ('set FNCS_TIME_DELTA=', file=op)
-#   print ('set FNCS_CONFIG_FILE=', file=op)
-#   if bUseEplus:
-#       print ('start /b cmd /c fncs_broker 6 ^>broker.log 2^>^&1', file=op)
-#       print ('set FNCS_CONFIG_FILE=eplus.yaml', file=op)
-#       print ('start /b cmd /c energyplus -w ' + EpWeather + ' -d output -r ' + EpFile + ' ^>eplus.log 2^>^&1', file=op)
-#       print ('set FNCS_CONFIG_FILE=eplus_agent.yaml', file=op)
-#       print ('start /b cmd /c eplus_agent', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '^>eplus_agent.log 2^>^&1', file=op)
-#   else:
-#       print ('start /b cmd /c fncs_broker 4 ^>broker.log 2^>^&1', file=op)
-#   print ('set FNCS_CONFIG_FILE=', file=op)
-#   print ('start /b cmd /c gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' ^>gld1.log 2^>^&1', file=op)
-#   print ('set FNCS_CONFIG_FILE=' + SubstationYamlFile, file=op)
-#   print ('start /b cmd /c', aucline + '^>substation.log 2^>^&1', file=op)
-#   print ('set FNCS_CONFIG_FILE=pypower.yaml', file=op)
-#   print ('start /b cmd /c', ppline + '^>pypower.log 2^>^&1', file=op)
-#   print ('set FNCS_CONFIG_FILE=', file=op)
-#   print ('set WEATHER_CONFIG=' + WeatherConfigFile, file=op)
-#   print ('start /b cmd /c', weatherline + '^>weather.log 2^>^&1', file=op)
-#   op.close()
-    
-    # shell scripts and chmod for Mac/Linux - need to specify python3
+    # FNCS shell scripts and chmod for Mac/Linux - need to specify python3
     aucline = """python3 -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
     ppline = """python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
     weatherline = """python3 -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weather.dat')" """
@@ -496,8 +465,8 @@ values:
     op = open (shfile, 'w')
     if bUseEplus:
         print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> broker.log &)', file=op)
-        print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec EnergyPlus -w ' 
-               + EpWeather + ' -d output -r ' + EpFile + ' &> eplus.log &)', file=op)
+        print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w ' 
+               + EpWeather + ' -d output -r Merged.idf &> eplus.log &)', file=op)
         print ('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
                EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_agent.log &)', file=op)
     else:
@@ -513,6 +482,31 @@ values:
     shfile = casedir + '/kill5570.sh'
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     shfile = casedir + '/clean.sh'
+    os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+    # HELICS shell scripts and chmod for Mac/Linux - need to specify python3
+    PypowerConfigFile = 'pypowerConfig.json'
+    SubstationConfigFile = casename + '_HELICS_substation.json'
+    WeatherConfigFile = casename + '_HELICS_Weather_Config.json'
+    aucline = """python3 -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """',helicsConfig='""" + SubstationConfigFile + """')" """
+    ppline = """python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """',helicsConfig='""" + PypowerConfigFile + """')" """
+
+    shfile = casedir + '/runh.sh'
+    op = open (shfile, 'w')
+    if bUseEplus:
+        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> broker.log &)', file=op)
+        print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w ' 
+               + EpWeather + ' -d output -r Merged.idf &> eplus.log &)', file=op)
+        print ('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
+               EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_agent.log &)', file=op)
+    else:
+        print ('(exec helics_broker -f 4 --loglevel=4 --name=mainbroker &> helics_broker.log &)', file=op)
+    print ('(exec gridlabd -D USE_HELICS -D METRICS_FILE='+ GldMetricsFile + ' ' + GldFile + ' &> helics_gld1.log &)', file=op)
+    print ('(exec ' + aucline + ' &> helics_sub1.log &)', file=op)
+    print ('(exec ' + ppline + ' &> helics_pypower.log &)', file=op)
+    print ('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec ' + weatherline + ' &> helics_weather.log &)', file=op)
+    op.close()
+    st = os.stat (shfile)
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     # commands for launching Python federates
@@ -532,7 +526,7 @@ values:
         cmds['commands'].append({'args':['fncs_broker', '6'], 
                            'env':[['FNCS_BROKER', 'tcp://*:5570'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'broker.log'})
-        cmds['commands'].append({'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', EpFile], 
+        cmds['commands'].append({'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', 'Merged.idf'], 
                            'env':[['FNCS_CONFIG_FILE', 'eplus.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'eplus.log'})
         cmds['commands'].append({'args':['eplus_agent', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 

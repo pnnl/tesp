@@ -103,7 +103,7 @@
   },
   "SimulationConfig": {
     "CaseName": "Eplus_Restaurant",
-    "WorkingDirectory": "./",
+    "WorkingDirectory": "./Eplus_Restaurant",
     "SourceDirectory": "$TESP_INSTALL/share/support",
     "EndTime": "2013-07-03 00:00:00",
     "StartTime": "2013-07-01 00:00:00"

@@ -10,7 +10,7 @@ import sys
 import re
 import csv
 from datetime import datetime
-import tesp.helpers as helpers
+import tesp_support.helpers as helpers
 
 if sys.platform == 'win32':
   pycall = 'python'

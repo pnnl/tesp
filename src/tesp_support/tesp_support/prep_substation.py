@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
+# Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: prep_substation.py
 """ Sets up the FNCS and agent configurations for te30 and sgip1 examples
 
@@ -54,7 +54,12 @@ air_temperature = 78.0 # initial house air temperature
 dt = 15
 period = 300
 
+name_prefix = ''
+
 Eplus_Bus = 'Eplus_load'
+Eplus_Meter = ''
+Eplus_Load = ''
+
 agent_participation = 1.0
 
 wakeup_start_lo = 5.0
@@ -414,12 +419,12 @@ def ProcessGLM (fileroot):
       for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
         subs.append ({"key": climateName + '/' + wTopic, "type":"double", "info":{"object":climateName, "property":wTopic}})
     if len(Eplus_Bus) > 0: # hard-wired names for a single building
-      subs.append ({"key": "eplus_agent/power_A", "type":"complex", "info":{"object":"Eplus_load", "property":"constant_power_A"}})
-      subs.append ({"key": "eplus_agent/power_B", "type":"complex", "info":{"object":"Eplus_load", "property":"constant_power_B"}})
-      subs.append ({"key": "eplus_agent/power_C", "type":"complex", "info":{"object":"Eplus_load", "property":"constant_power_C"}})
-      subs.append ({"key": "eplus_agent/bill_mode", "type":"string", "info":{"object":"Eplus_meter", "property":"bill_mode"}})
-      subs.append ({"key": "eplus_agent/price", "type":"double", "info":{"object":"Eplus_meter", "property":"price"}})
-      subs.append ({"key": "eplus_agent/monthly_fee", "type":"double", "info":{"object":"Eplus_meter", "property":"monthly_fee"}})
+      subs.append ({"key": "eplus_agent/power_A", "type":"complex", "info":{"object":Eplus_Load, "property":"constant_power_A"}})
+      subs.append ({"key": "eplus_agent/power_B", "type":"complex", "info":{"object":Eplus_Load, "property":"constant_power_B"}})
+      subs.append ({"key": "eplus_agent/power_C", "type":"complex", "info":{"object":Eplus_Load, "property":"constant_power_C"}})
+      subs.append ({"key": "eplus_agent/bill_mode", "type":"string", "info":{"object":Eplus_Meter, "property":"bill_mode"}})
+      subs.append ({"key": "eplus_agent/price", "type":"double", "info":{"object":Eplus_Meter, "property":"price"}})
+      subs.append ({"key": "eplus_agent/monthly_fee", "type":"double", "info":{"object":Eplus_Meter, "property":"monthly_fee"}})
 
     pubSubMeters = set()
     for key, val in controllers.items():
@@ -436,8 +441,8 @@ def ProcessGLM (fileroot):
         pubSubMeters.add(meterName)
         prop = 'measured_voltage_1'
         if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
-          prop = 'measured_voltage_A'
-        pubs.append ({"global":False, "key":meterName + "#" + prop, "type":"complex", "info":{"object":meterName,"property":prop}})
+          prop = 'measured_voltage_A' # TODO: the HELICS substation always expects measured_voltage_1
+        pubs.append ({"global":False, "key":meterName + "#measured_voltage_1", "type":"complex", "info":{"object":meterName,"property":prop}})
         for prop in ['bill_mode']:
           subs.append ({"key": "sub1/" + meterName + "/" + prop, "type":"string", "info":{"object":meterName, "property":prop}})
         for prop in ['price', 'monthly_fee']:
@@ -459,12 +464,12 @@ def ProcessGLM (fileroot):
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
             print ('subscribe "precommit:' + climateName + '.' + wTopic + ' <- ' + climateName + '/' + wTopic + '";', file=op)
     if len(Eplus_Bus) > 0: # hard-wired names for a single building
-        print ('subscribe "precommit:Eplus_load.constant_power_A <- eplus_agent/power_A";', file=op)
-        print ('subscribe "precommit:Eplus_load.constant_power_B <- eplus_agent/power_B";', file=op)
-        print ('subscribe "precommit:Eplus_load.constant_power_C <- eplus_agent/power_C";', file=op)
-        print ('subscribe "precommit:Eplus_meter.bill_mode <- eplus_agent/bill_mode";', file=op)
-        print ('subscribe "precommit:Eplus_meter.price <- eplus_agent/price";', file=op)
-        print ('subscribe "precommit:Eplus_meter.monthly_fee <- eplus_agent/monthly_fee";', file=op)
+        print ('subscribe "precommit:{:s}.constant_power_A <- eplus_agent/power_A";'.format(Eplus_Load), file=op)
+        print ('subscribe "precommit:{:s}.constant_power_B <- eplus_agent/power_B";'.format(Eplus_Load), file=op)
+        print ('subscribe "precommit:{:s}.constant_power_C <- eplus_agent/power_C";'.format(Eplus_Load), file=op)
+        print ('subscribe "precommit:{:s}.bill_mode <- eplus_agent/bill_mode";'.format(Eplus_Meter), file=op)
+        print ('subscribe "precommit:{:s}.price <- eplus_agent/price";'.format(Eplus_Meter), file=op)
+        print ('subscribe "precommit:{:s}.monthly_fee <- eplus_agent/monthly_fee";'.format(Eplus_Meter), file=op)
     pubSubMeters = set()
     for key, val in controllers.items():
         houseName = val['houseName']
@@ -508,7 +513,7 @@ def prep_substation (gldfileroot, jsonfile = ''):
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
         jsonfile (str): fully qualified path to an optional JSON configuration file
     """
-    global dt, period, Eplus_Bus, agent_participation, max_capacity_reference_bid_quantity
+    global dt, period, Eplus_Bus, Eplus_Load, Eplus_Meter, agent_participation, max_capacity_reference_bid_quantity
     global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
     global daylight_start_lo, daylight_start_hi, daylight_set_lo, daylight_set_hi
     global evening_start_lo, evening_start_hi, evening_set_lo, evening_set_hi
@@ -517,11 +522,14 @@ def prep_substation (gldfileroot, jsonfile = ''):
     global weekend_night_start_lo, weekend_night_start_hi, weekend_night_set_lo, weekend_night_set_hi
     global ramp_lo, ramp_hi, deadband_lo, deadband_hi, offset_limit_lo, offset_limit_hi
     global ctrl_cap_lo, ctrl_cap_hi, initial_price, std_dev
-    global latitude, longitude
+    global latitude, longitude, name_prefix
 
     if len(jsonfile) > 1:
         lp = open (jsonfile).read()
         config = json.loads(lp)
+
+        if 'NamePrefix' in config['BackboneFiles']:
+          name_prefix = config['BackboneFiles']['NamePrefix']
 
         # overwrite the default auction and controller parameters
         dt = int (config['AgentPrep']['TimeStepGldAgents'])
@@ -565,7 +573,10 @@ def prep_substation (gldfileroot, jsonfile = ''):
         initial_price = float (config['AgentPrep']['InitialPriceMean'])
         std_dev = float (config['AgentPrep']['InitialPriceStdDev'])
 
-        Eplus_Bus = config['FeederGenerator']['EnergyPlusBus']
+        Eplus_Bus = name_prefix + config['EplusConfiguration']['EnergyPlusBus']
+        if len (Eplus_Bus) > 0:
+          Eplus_Load = name_prefix + 'Eplus_load'
+          Eplus_Meter = name_prefix + 'Eplus_meter'
         agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
 
         latitude = float (config['WeatherPrep']['Latitude'])
