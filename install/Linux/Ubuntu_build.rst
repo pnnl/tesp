@@ -266,6 +266,14 @@ Build eplus_agent
  make
  sudo make install
 
+Build EnergyPlus Weather File Utility
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+ cd ~/src/tesp/support/weather/TMY2EPW/source_code
+ sudu make
+
 Build ns3 with HELICS
 ~~~~~~~~~~~~~~~~~~~~~
 

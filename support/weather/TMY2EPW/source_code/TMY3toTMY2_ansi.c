@@ -10,7 +10,7 @@
 
    Usage: 
    
-   Compile:	  gcc -o Tmy3toTMY2_ansi TMY3toTMY2_ansi.c
+   Compile:	  gcc -o TMY3toTMY2_ansi TMY3toTMY2_ansi.c
    
 \**************************************************************************
 					Modifications
