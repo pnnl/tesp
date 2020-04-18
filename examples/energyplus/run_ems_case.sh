@@ -6,7 +6,8 @@ declare -r ENDDATE=$3
 declare -r TARGET=$4
 declare -r STEPS=$5
 declare -r METRICS=eplus_${TARGET}_metrics.json
-declare -r EPWFILE=$TESP_SUPPORT/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw
+#declare -r EPWFILE=$TESP_SUPPORT/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw
+declare -r EPWFILE=$TESP_SUPPORT/energyplus/2A_USA_TX_HOUSTON.epw
 
 echo $BUILDING, $TARGET, $STARTDATE, $ENDDATE
 
