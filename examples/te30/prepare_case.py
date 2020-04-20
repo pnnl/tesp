@@ -8,6 +8,6 @@ tesp.glm_dict ('TE_Challenge',te30=True)
 tesp.prep_substation ('TE_Challenge')
 
 base_idf = os.getenv('TESP_INSTALL') + '/share/support/energyplus/SchoolBase.idf'
-ems_idf = os.getenv('TESP_INSTALL') + '/share/support/energyplus/ems/emsSchoolBase.idf'
+ems_idf = os.getenv('TESP_INSTALL') + '/share/support/energyplus/ems/emsSchoolDualController.idf'
 tesp.merge_idf (base_idf, ems_idf, '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', 12)
 
