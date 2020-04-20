@@ -22,7 +22,6 @@ Public Functions:
 
 Todo:
     * Verify the level zero mobile home thermal integrity properties; these were copied from the MATLAB feeder generator
-    * Populate commercial building loads
 
 """
 import sys;

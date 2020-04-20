@@ -449,7 +449,7 @@ def ProcessGLM (fileroot):
           subs.append ({"key": "sub1/" + meterName + "/" + prop, "type":"double", "info":{"object":meterName, "property":prop}})
     msg = {}
     msg["name"] = "gld1"
-    msg["period"] = 1.0
+    msg["period"] = dt # 1.0 # TODO verify what should be done here to enforce minimum time step
     msg["publications"] = pubs
     msg["subscriptions"] = subs
     op = open (fileroot + '_HELICS_gld_msg.json', 'w', encoding='utf-8')
