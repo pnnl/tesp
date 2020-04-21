@@ -11,4 +11,6 @@ rm Winter*.idf
 rm Summer*.idf
 rm ems*.idf
 rm Merged.idf
+rm *.epw
+rm *.tmy2
 

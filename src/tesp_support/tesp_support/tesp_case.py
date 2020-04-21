@@ -50,7 +50,7 @@ def write_tesp_case (config, cfgfile, freshdir = True):
     This function will launch and wait for 6 subprocesses to assist in the 
     case configuration. All must execute successfully:
 
-        * Tmy3toTMY2_ansi, which converts the user-selected TMY3 file to TMY2
+        * TMY3toTMY2_ansi, which converts the user-selected TMY3 file to TMY2
         * tesp.convert_tmy2_to_epw, which converts the TMY2 file to EPW for EnergyPlus
         * tesp.TMY3toCSV, which converts the TMY3 file to CSV for the weather agent
         * tesp.populate_feeder, which populates the user-selected taxonomy feeder with houses and DER
