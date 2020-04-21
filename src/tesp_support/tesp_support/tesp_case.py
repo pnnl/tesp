@@ -146,7 +146,7 @@ def write_tesp_case (config, cfgfile, freshdir = True):
     EpMetricsKey = EpBuilding # os.path.splitext (EpFile)[0]
     EpAgentStop = str (seconds) + 's'
     EpStep = int (60 / EpStepsPerHour) # minutes
-    EpAgentStep = int (3600 / EpStepsPerHour) # seconds
+    EpAgentStep = str(int (60 / EpStepsPerHour)) + 'm'
     EpMetricsFile = 'eplus_' + casename + '_metrics.json'
     GldFile = casename + '.glm'
     GldMetricsFile = casename + '_metrics.json'
@@ -218,7 +218,7 @@ def write_tesp_case (config, cfgfile, freshdir = True):
         op.close()
 
         epjyamlstr = """name: eplus_agent
-time_delta: """ + str(EpAgentStep) + """s
+time_delta: """ + str(EpAgentStep) + """
 broker: tcp://localhost:5570
 values:
     kwhr_price:
@@ -281,6 +281,25 @@ values:
 """
         op = open (casedir + '/eplus_agent.yaml', 'w')
         print (epjyamlstr, file=op)
+        op.close()
+
+        epaSubs = []
+        epaSubs.append ({"name": "kwhr_price","key": "sub1/clear_price","type": "double"})
+        epaPubs = []
+        epaPubs.append ({"global":False, "key":"power_A", "type":"double", "unit":"W"})
+        epaPubs.append ({"global":False, "key":"power_B", "type":"double", "unit":"W"})
+        epaPubs.append ({"global":False, "key":"power_C", "type":"double", "unit":"W"})
+        epaPubs.append ({"global":False, "key":"bill_mode", "type":"string"})
+        epaPubs.append ({"global":False, "key":"price", "type":"double", "unit":"$/kwh"})
+        epaPubs.append ({"global":False, "key":"monthly_fee", "type":"double", "unit":"$"})
+        epaConfig = {}
+        epaConfig["name"] = "eplus_agent"
+        epaConfig["log_level"] = 4
+        epaConfig["period"] = 60 * EpStep
+        epaConfig["subscriptions"] = epaSubs
+        epaConfig["publications"] = epaPubs
+        op = open (casedir + '/helics_eplus_agent.json', 'w', encoding='utf-8')
+        json.dump (epaConfig, op, ensure_ascii=False, indent=2)
         op.close()
 
     ###################################
@@ -494,13 +513,16 @@ values:
     shfile = casedir + '/runh.sh'
     op = open (shfile, 'w')
     if bUseEplus:
-        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> broker.log &)', file=op)
-        print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w ' 
-               + EpWeather + ' -d output -r Merged.idf &> eplus.log &)', file=op)
-        print ('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
-               EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_agent.log &)', file=op)
+      print ('# FNCS federation is energyplus with agent', file=op)
+      print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 2 &> fncs_broker.log &)', file=op)
+      print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w ' 
+             + EpWeather + ' -d output -r Merged.idf &> fncs_eplus.log &)', file=op)
+      print ('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
+             EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, 'helics_eplus_agent.json &> dual_eplus_agent.log &)', file=op)
+      print ('# HELICS federation is GridLAB-D, PYPOWER, substation and weather; the E+ agent was already started as part of the FNCS federation', file=op)
+      print ('(exec helics_broker -f 5 --loglevel=4 --name=mainbroker &> helics_broker.log &)', file=op)
     else:
-        print ('(exec helics_broker -f 4 --loglevel=4 --name=mainbroker &> helics_broker.log &)', file=op)
+      print ('(exec helics_broker -f 4 --loglevel=4 --name=mainbroker &> helics_broker.log &)', file=op)
     print ('(exec gridlabd -D USE_HELICS -D METRICS_FILE='+ GldMetricsFile + ' ' + GldFile + ' &> helics_gld1.log &)', file=op)
     print ('(exec ' + aucline + ' &> helics_sub1.log &)', file=op)
     print ('(exec ' + ppline + ' &> helics_pypower.log &)', file=op)
