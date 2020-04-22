@@ -46,7 +46,9 @@ from .case_merge import merge_glm_dict
 from .case_merge import merge_agent_dict
 from .case_merge import merge_substation_yaml
 from .case_merge import merge_fncs_config
-
+from .case_merge import merge_gld_msg
+from .case_merge import merge_substation_msg
+ 
 from .fncsPYPOWER import load_json_case
 from .fncsPYPOWER import summarize_opf
 

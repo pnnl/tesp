@@ -573,8 +573,9 @@ def prep_substation (gldfileroot, jsonfile = ''):
         initial_price = float (config['AgentPrep']['InitialPriceMean'])
         std_dev = float (config['AgentPrep']['InitialPriceStdDev'])
 
-        Eplus_Bus = name_prefix + config['EplusConfiguration']['EnergyPlusBus']
+        Eplus_Bus = config['EplusConfiguration']['EnergyPlusBus']
         if len (Eplus_Bus) > 0:
+          Eplus_Bus = name_prefix + Eplus_Bus
           Eplus_Load = name_prefix + 'Eplus_load'
           Eplus_Meter = name_prefix + 'Eplus_meter'
         agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])

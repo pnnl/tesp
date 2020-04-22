@@ -15,4 +15,6 @@ tesp.merge_glm_dict (case, feeders, xfmva)
 tesp.merge_agent_dict (case, feeders, xfmva)
 tesp.merge_substation_yaml (case, feeders)
 tesp.merge_fncs_config (case, feeders)
+tesp.merge_gld_msg (case, feeders)
+tesp.merge_substation_msg (case, feeders)
 

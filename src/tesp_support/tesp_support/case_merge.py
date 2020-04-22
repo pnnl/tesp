@@ -8,6 +8,8 @@ Public Functions:
     :merge_agent_dict: combines the substation agent configuration files
     :merge_substation_yaml: combines the substation agent FNCS publish/subscribe files
     :merge_fncs_config: combines GridLAB-D FNCS publish/subscribe files
+    :merge_gld_msg: combines GridLAB-D HELICS publish/subscribe configurations
+    :merge_substation_msg: combines the substation agent HELICS publish/subscribe configurations
 """
 import sys
 import json
@@ -35,6 +37,7 @@ def merge_glm(target, sources, xfmva):
     with open (workdir + fdr + '.glm') as ip:
       inPreamble = True
       inSubstation = False
+      inHELICS = False
       thisHeadNode = ''
       for line in ip:
         canWrite = True
@@ -44,9 +47,12 @@ def merge_glm(target, sources, xfmva):
             line = '  filename Current_Dump_' + target + '.csv;'
         if '#ifdef USE_FNCS' in line:
             inSubstation = True
+        if 'object helics_msg' in line:
+            inHELICS = True
         if inSubstation == True: 
           if '  configure' in line:
-            line = '  configure ' + target + '_FNCS_Config.txt;'
+            if inHELICS == False:
+              line = '  configure ' + target + '_FNCS_Config.txt;'
           elif '  power_rating' in line:
             line = '  power_rating {:.2f};'.format (xfmva * 1e3)
           elif '  base_power' in line:
@@ -56,6 +62,10 @@ def merge_glm(target, sources, xfmva):
             thisHeadNode = toks[1][:-1]
             if len(firstHeadNode) < 1:
               firstHeadNode = thisHeadNode
+        if inHELICS == True:
+          if 'configure' in line:
+            line = '  configure ' + target + '_HELICS_gld_msg.json;'
+            inHELICS = False
         if (inSubstation == True) and ('object node' in line):
           inSubstation = False
           if finishedFirstSubstation == True:
@@ -79,6 +89,59 @@ def merge_glm(target, sources, xfmva):
               inPreamble = False
     inFirstFile = False 
   op.close()
+
+def key_present (val, ary):
+  tok = val['key']
+  for msg in ary:
+    if tok == msg['key']:
+      return True
+  return False
+
+def merge_gld_msg (target, sources):
+  print ('combining', sources, 'HELICS GridLAB-D json files into', target)
+  workdir = './' + target + '/'
+  dict = {"name":"gld1", "period":1, "subscriptions":[], "publications":[]}
+  subs = []
+  pubs = []
+  for fdr in sources:
+    lp = open (workdir + fdr + '_HELICS_gld_msg.json').read()
+    cfg = json.loads(lp)
+    dict["name"] = cfg["name"]
+    dict["period"] = cfg["period"]
+    for pub in cfg["publications"]:
+      if not key_present (pub, pubs):
+        pubs.append (pub)
+    for sub in cfg["subscriptions"]:
+      if not key_present (sub, subs):
+        subs.append (sub)
+  dict["publications"] = pubs
+  dict["subscriptions"] = subs
+  dp = open (workdir + target + '_HELICS_gld_msg.json', 'w')
+  json.dump (dict, dp, ensure_ascii=False, indent=2)
+  dp.close()
+
+def merge_substation_msg (target, sources):
+  print ('combining', sources, 'HELICS Substation json files into', target)
+  workdir = './' + target + '/'
+  dict = {"name":"gld1", "period":1, "subscriptions":[], "publications":[]}
+  subs = []
+  pubs = []
+  for fdr in sources:
+    lp = open (workdir + fdr + '_HELICS_substation.json').read()
+    cfg = json.loads(lp)
+    dict["name"] = cfg["name"]
+    dict["period"] = cfg["period"]
+    for pub in cfg["publications"]:
+      if not key_present (pub, pubs):
+        pubs.append (pub)
+    for sub in cfg["subscriptions"]:
+      if not key_present (sub, subs):
+        subs.append (sub)
+  dict["publications"] = pubs
+  dict["subscriptions"] = subs
+  dp = open (workdir + target + '_HELICS_substation.json', 'w')
+  json.dump (dict, dp, ensure_ascii=False, indent=2)
+  dp.close()
 
 def merge_glm_dict(target, sources, xfmva):
   """Combines GridLAB-D metadata files into target/target.json. The source files must already exist.
