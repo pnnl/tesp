@@ -92,7 +92,7 @@ def ProcessGLM (fileroot, weatherName):
 	aucSimName = 'substation' + fileroot
 	ip = open (glmname).read()
 	gd = json.loads(ip)
-	gldSimName = gd['FNCS']
+	gldSimName = gd['FedName']
 
 	print (fileroot, dirname, basename, glmname, gldSimName, aucSimName, weatherName)
 

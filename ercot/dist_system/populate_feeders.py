@@ -1,5 +1,8 @@
 import json;
 import tesp_support.feederGenerator as fg;
+import os;
+
+tesp_share = os.path.expandvars ('$TESP_INSTALL/share/')
 
 backbone_config = {'backbone_feeders': {
                       'sim_R5-12.47-1': {'vll':13800.0, 'vln':7970.0, 'avg_house':6500.0, 'avg_comm':20000.0},
@@ -20,7 +23,7 @@ case_config = {'SimulationConfig':{
                   'CaseName':'Bus1',
                   'StartTime':'2013-07-01 00:00:00',
                   'EndTime':'2013-07-04 00:00:00',
-                  'SourceDirectory':'../../support',
+                  'SourceDirectory':tesp_share + 'support',
                   'WorkingDirectory':'../case8'},
                'FeederGenerator':{
                    'MetricsInterval':300,
@@ -41,12 +44,18 @@ case_config = {'SimulationConfig':{
                    'Tier3Energy':0,
                    'Tier1Price':0.117013,
                    'Tier2Price':0.122513,
-                   'Tier3Price':0,
-                   'EnergyPlusBus':'',
-                   'EnergyPlusServiceV': 480, # 208 or 480
-                   'EnergyPlusXfmrKva':250},
+                   'Tier3Price':0},
+               'EplusConfiguration': {
+                 'BuildingChoice': 'SchoolDualController',
+                 'EMSFile': 'ems/emsSchoolDualController',
+                 'EnergyPlusBus': '',
+                 'EnergyPlusServiceV': '480',
+                 'EnergyPlusXfmrKva': '150'
+               },
                'BackboneFiles':{'TaxonomyChoice':'sim_R5-12.47-1'},
-               'WeatherPrep':{'DataSource':'TX-Houston_Bush_Intercontinental.tmy3'},
+               'WeatherPrep':{'DataSource':'TX-Houston_Bush_Intercontinental.tmy3',
+                              'Altitude':30,
+                              'TZmeridian':-6},
                'PYPOWERConfiguration':{
                    'TransformerBase':12,
                    'TransmissionVoltage':345}

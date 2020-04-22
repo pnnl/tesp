@@ -1,5 +1,5 @@
 {
-  "ames": true,
+  "ames": false,
   "solver": "cbc",
   "priceSensLoad": true,
   "windPower": true,
@@ -1016,7 +1016,7 @@
       "wind"
     ]
   ],
-  "FNCS": [
+  "DSO": [
     [
       1,
       "SUBSTATION1",

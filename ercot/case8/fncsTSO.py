@@ -81,7 +81,7 @@ def make_dictionary(ppc, rootname):
     gen = ppc['gen']
     genCost = ppc['gencost']
     genFuel = ppc['genfuel']
-    fncsBus = ppc['FNCS']
+    fncsBus = ppc['DSO']
     units = ppc['UnitsOut']
     branches = ppc['BranchesOut']
 
@@ -175,7 +175,7 @@ def parse_mva(arg):
 
 def print_gld_load(ppc, gld_load, msg, ts):
     bus = ppc['bus']
-    fncsBus = ppc['FNCS']
+    fncsBus = ppc['DSO']
     print(msg, 'at', ts)
     print('bus, genidx, pbus, qbus, pcrv, qcrv, pgld, qgld, unresp, resp_max, c2, c1, deg')
     for row in fncsBus:
@@ -1144,7 +1144,7 @@ def tso_loop():
     genCost = ppc['gencost']
     genFuel = ppc['genfuel']
     zones = ppc['zones']
-    fncsBus = ppc['FNCS']
+    fncsBus = ppc['DSO']
     numGen = gen.shape[0]
 
     # set configurations case name from .json file
@@ -1661,7 +1661,7 @@ def tso_loop():
         line += '{: .2f}'.format(Pload) + ',' + '{: .2f}'.format(Pgen) + ','
         line += '{: .2f}'.format(Ploss) + ',' + '{: .2f}'.format(Pswing)
         for idx in range(rBus.shape[0]):
-            line += ',' + '{: .2f}'.format(rBus[0, idx])
+            line += ',' + '{: .2f}'.format(rBus[idx, 7]) # bus per-unit voltages
         print(line, sep=', ', file=vp, flush=True)
 
         # update the metrics
