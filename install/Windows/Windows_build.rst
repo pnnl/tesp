@@ -1,9 +1,11 @@
-Building on Windows
--------------------
+Building on Windows (DEPRECATED)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This procedure builds all components from scratch. If you've already
-built GridLAB-D on your machine, please take note of the specific
-GitHub branch requirements for TESP:
+This procedure builds all components from scratch. It was last used in
+December 2019.
+
+If you've already built GridLAB-D on your machine, please take note of 
+the specific GitHub branch requirements for TESP:
 
 - feature/1173 for GridLAB-D
 - develop for FNCS
@@ -16,7 +18,7 @@ window. However, some further adjustments are necessary as described below.
 When you finish the build, try :ref:`RunExamples`.
 
 Install Python Packages and Java
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Download and install the 64-bit Miniconda installer, for Python 3.7 or later, from
 https://conda.io/miniconda.html. Install to c:\Miniconda3, for easier use with MSYS2.
@@ -37,7 +39,7 @@ Download and install the Java Development Kit (11.0.5 suggested) from Oracle.
 - c:\Java\jdk-11.0.5\bin should be added to your path
 
 Set Up the Build Environment and Code Repositories
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These instructions are based on https://github.com/gridlab-d/gridlab-d/blob/develop/BuildingGridlabdOnWindowsWithMsys2.docx
 For TESP, we're going to build with FNCS and HELICS, but not MATLAB or MySQL.
@@ -117,7 +119,7 @@ The next time you open MSYS2, verify the preceeding as follows:
  python3 --version
 
 Build FNCS and HELICS Link with GridLAB-D
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ZeroMQ has already been installed with pacman to use with both FNCS and HELICS. 
 
@@ -200,7 +202,7 @@ if you update the gcc compiler or ZeroMQ library.s
 - libzmq.dll
 
 Build EnergyPlus
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 Install the archived version 8.3 from https://github.com/NREL/EnergyPlus/releases/tag/v8.3.0  
 We need this for some critical support files that aren't part of the FNCS-EnergyPlus build
@@ -227,7 +229,7 @@ copy the following build products from /usr/local to /usr/local/bin:
 - energyplusapi.dll
 
 Build eplus_agent
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 From the MSYS2 terminal
 
@@ -240,7 +242,7 @@ From the MSYS2 terminal
  make install
 
 Build ns3 with HELICS
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 ::
 

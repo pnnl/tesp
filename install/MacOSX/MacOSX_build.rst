@@ -1,10 +1,12 @@
 .. _BuildingOnMacOSX:
 
-Building on Mac OS X
---------------------
+Building on Mac OS X (DEPRECATED)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This procedure builds all components from scratch. If you've already
-built GridLAB-D on your machine, please take note of the specific
+This procedure builds all components from scratch. It was last used in
+December 2019.
+
+If you've already built GridLAB-D on your machine, please take note of the specific
 GitHub branch requirements for TESP:
 
 - feature/1173 for GridLAB-D
@@ -24,7 +26,7 @@ have not been tested successfully.
 When you finish the build, try :ref:`RunExamples`.
 
 Build GridLAB-D
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 Follow these directions:
 
@@ -33,7 +35,7 @@ Follow these directions:
  http://gridlab-d.shoutwiki.com/wiki/Mac_OSX/Setup
 
 Install Python Packages, Java, updated GCC
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -47,7 +49,7 @@ Install Python Packages, Java, updated GCC
  # also need Java, Cmake, autoconf, libtool
 
 Checkout PNNL repositories from github
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -61,7 +63,7 @@ Checkout PNNL repositories from github
  git clone -b master https://github.com/GMLC-TDC/HELICS-src
 
 FNCS with Prerequisites (installed to /usr/local)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
 
@@ -84,7 +86,7 @@ Your Java version may have removed *javah*.  If that's the case, use *javac -h* 
  # copy jar and jni library to  tesp/examples/loadshed/java
 
 HELICS (installed to /usr/local, build with gcc9)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To build HELICS:
 
@@ -115,7 +117,7 @@ Add this to .bash_profile
  export PYTHONPATH=/usr/local/python:$PYTHONPATH
 
 GridLAB-D with Prerequisites (installed to /usr/local)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you encounter build errors with GridLAB-D, please try
 adding *-std=c++14* to *CXXFLAGS*.
@@ -135,7 +137,7 @@ adding *-std=c++14* to *CXXFLAGS*.
  gridlabd --validate 
 
 ns-3 with HELICS
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 ::
 
@@ -148,7 +150,7 @@ ns-3 with HELICS
  ./waf build
 
 EnergyPlus with Prerequisites (installed to /usr/local)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -176,7 +178,7 @@ EnergyPlus with Prerequisites (installed to /usr/local)
  /usr/local/EnergyPlus-8-3-0$ sudo ln -s PostProcess/ReadVarsESO ReadVarsESO
 
 Build eplus_agent
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 ::
 

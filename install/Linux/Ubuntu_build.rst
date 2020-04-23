@@ -59,7 +59,9 @@ Preparation - Build Tools and Java
  # for GridLAB-D
  sudo apt-get -y install libxerces-c-dev
  sudo apt-get -y install libsuitesparse-dev
- # end users need only libklu1, which is licensed LGPL
+ # end users replace libsuitesparse-dev with libklu1, which is licensed LGPL
+ # for AMES market simulator
+ sudo apt-get -y install coinor-cbc
  # if not using miniconda (avoid Python 3.7 on Ubuntu for now)
  sudo apt-get -y install python3-pip
  sudo apt-get -y install python3-tk
@@ -67,15 +69,20 @@ Preparation - Build Tools and Java
 Preparation - Python 3 and Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First, download and execute a Linux install script for Miniconda (Python*3.7*+) 
-from https://docs.conda.io/en/latest/miniconda.html  The script should not be
+If you didn't previously install Python 3 using apt, which is the recommended method
+and version for TESP, please download and execute a Linux install script for Miniconda 
+(Python*3.7*+) from https://docs.conda.io/en/latest/miniconda.html  The script should not be
 run as root, otherwise, you won't have permission to install Python packages.
-After the script configures Conda and you re-open the Ubuntu terminal as instructed:
+After the script configures Conda please re-open the Ubuntu terminal as instructed.
+
+With Python 3 available, install and test the TESP packages:
 
 ::
 
  pip3 install tesp_support --upgrade
  opf 
+
+In order to install psst:
 
 Checkout PNNL repositories from github
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -314,6 +321,22 @@ before you try :ref:`RunExamples`.
 
 In case you have both Python 2 and Python 3 installed, the TESP example
 scripts and post-processing programs only invoke *python3*.
+
+Building Documentation
+~~~~~~~~~~~~~~~~~~~~~~
+
+In order to build the documentation for ReadTheDocs:
+
+ pip3 install recommonmark
+ pip3 install sphinx-jsonschema
+ pip3 install sphinx_rtd_theme
+ cd ~/src/tesp/doc
+ make html
+
+Changes can be previewed in ~/src/tesp/doc/_build/html/index.rst before
+pushing them to GitHub. There is a trigger on ReadTheDocs that will
+automatically rebuild public-facing documentation after the source
+files on GitHub change.
 
 DEPRECATED: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
