@@ -3,6 +3,7 @@ from __future__ import division
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 import logging
 
@@ -61,7 +62,7 @@ def plot_angles(obj, results, hour, ax=None, colorbar=True, angle_limits=5, **kw
         fig, ax = plt.subplots(1, 1, figsize=(16, 10))
 
     case, network = _return_case_network(obj)
-    a = results.angles.loc[hour] * 360 / 2 / pd.np.pi
+    a = results.angles.loc[hour] * 360 / 2 / np.pi
     y_values = a.astype(object).to_dict()
     network.create_profile_graph(y_values)
 
@@ -116,7 +117,7 @@ def _generate_edges(results, case, hour, minimum_line_width=1, maximum_line_widt
     for k, v in line_loading.items():
         branch = case.branch.loc[k]
         f, t, limit = (branch['F_BUS'], branch['T_BUS'], branch['RATE_A'])
-        if v == pd.np.inf:
+        if v == np.inf:
             edge_color.append(0)
         else:
             edge_color.append(v)

@@ -2,6 +2,7 @@ import logging
 import click
 
 import pandas as pd
+import numpy as np
 
 from .model import (create_model, initialize_buses,
                 initialize_time_periods, initialize_model, Suffix
@@ -142,7 +143,8 @@ def build_model(case,
     start_up_shut_down_ramp_limits(model, start_up_ramp_limits=generator_df['STARTUP_RAMP'].to_dict(), shut_down_ramp_limits=generator_df['SHUTDOWN_RAMP'].to_dict(),
                                    max_power_available=generator_df['PMAX'].to_dict())
 
-    minimum_up_minimum_down_time(model, minimum_up_time=generator_df['MINIMUM_UP_TIME'].to_dict(), minimum_down_time=generator_df['MINIMUM_DOWN_TIME'].to_dict())
+    minimum_up_minimum_down_time(model, minimum_up_time=generator_df['MINIMUM_UP_TIME'].astype(int).to_dict(), 
+                                 minimum_down_time=generator_df['MINIMUM_DOWN_TIME'].astype(int).to_dict())
 
     forced_outage(model)
 
@@ -201,10 +203,10 @@ def build_model(case,
                 small_increment = 1
             else:
                 small_increment = 0
-            points[i] = pd.np.linspace(g['PMIN'], g['PMAX'] + small_increment, num=g['NS']+1)
+            points[i] = np.linspace(g['PMIN'], g['PMAX'] + small_increment, num=int(g['NS'])+1)
             values[i] = g['COST_0'] + g['COST_1'] * points[i]
         if g['NCOST'] == 3:
-            points[i] = pd.np.linspace(g['PMIN'], g['PMAX'], num=g['NS']+1)
+            points[i] = np.linspace(g['PMIN'], g['PMAX'], num=int(g['NS'])+1)
             values[i] = g['COST_0'] + g['COST_1'] * points[i] + g['COST_2'] * points[i] ** 2
 
     #click.echo("printing points: " + str(points))
@@ -226,7 +228,7 @@ def build_model(case,
 
     # setup start up and shut down costs for generators
 
-    cold_start_hours = case.gencost['COLD_START_HOURS'].to_dict()
+    cold_start_hours = case.gencost['COLD_START_HOURS'].astype(int).to_dict()
     #click.echo("In build_model - printing cold_start_hours:" + str(cold_start_hours))
     hot_start_costs = case.gencost['STARTUP_HOT'].to_dict()
     #click.echo("In build_model - printing hot_start_costs:" + str(hot_start_costs))
@@ -286,7 +288,7 @@ def build_model(case,
                     #TODO need to check whether append() function is suitable for multiple loads at the same bus
                     psl_at_buses[psl_record['atBus']].append(name)
 
-                psl_points[name,hour] = pd.np.linspace(psl_record['Pmin'], psl_record['Pmax'], num=segments)
+                psl_points[name,hour] = np.linspace(psl_record['Pmin'], psl_record['Pmax'], num=int(segments))
                 psl_values[name,hour] = psl_record['d'] + psl_record['e'] * psl_points[name,hour] + psl_record['f'] * psl_points[name,hour] ** 2
                 pmin_values[name,hour] = psl_record['Pmin']
                 pmax_values[name,hour] = psl_record['Pmax']

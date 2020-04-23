@@ -65,9 +65,9 @@ def _form_generator_reserve_zones(m,rz):
 
 
 def _reserve_up_requirement_rule(m, t):
-    return m.ReserveUpSystemPercent * sum(value(m.Demand[b,t]) for b in m.Buses)
+    return m.ReserveUpSystemPercent * max (0, sum(value(m.Demand[b,t]) for b in m.Buses))
 def _reserve_down_requirement_rule(m, t):
-    return m.ReserveDownSystemPercent * sum(value(m.Demand[b,t]) for b in m.Buses)
+    return m.ReserveDownSystemPercent * max (0, sum(value(m.Demand[b,t]) for b in m.Buses))
 
 def initialize_global_reserves(model, ReserveDownSystemPercent=None, ReserveUpSystemPercent=None, reserve_up_requirement=_reserve_up_requirement_rule, reserve_down_requirement=_reserve_down_requirement_rule):
 

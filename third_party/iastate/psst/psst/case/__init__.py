@@ -4,6 +4,7 @@ import click
 
 from builtins import super
 import pandas as pd
+import numpy as np
 
 from .descriptors import (Name, Version, BaseMVA, BusName, Bus, Branch, BranchName,
                         Gen, GenName, GenCost, Load, Period, _Attributes)
@@ -151,7 +152,7 @@ class PSSTCase(object):
         mpc.gen_status = pd.DataFrame([mpc.gen['GEN_STATUS'] for i in mpc.load.index])
         mpc.gen_status.index = mpc.load.index
         if reset_generator_status:
-            mpc.gen_status.loc[:, :] = pd.np.nan
+            mpc.gen_status.loc[:, :] = np.nan
 
         #click.echo(" mpc.gencost['NCOST']: "+ str(mpc.gencost))
         #click.echo("End _read_matpower: ")

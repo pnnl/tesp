@@ -35,7 +35,7 @@ interval = [86400, 86400]
 stat_type = ['SY_MEAN', 'SY_STDEV']
 #value = [0.02078, 0.01] # 0.00361]
 capacity_reference_object = 'substation_transformer'
-max_capacity_reference_bid_quantity = 5000
+max_capacity_reference_bid_quantity = 12000 #5000
 air_temperature = 78.0 # initial house air temperature
 
 ###################################################
