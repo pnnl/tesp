@@ -2505,6 +2505,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         if metrics_interval > 0:
             print ('object metrics_collector_writer {', file=op)
             print ('  interval', str(metrics_interval) + ';', file=op)
+            print ('  interim 43200;', file=op)  # TODO - make this a configuration parameter
             if forERCOT == True:
                 print ('  // filename ${METRICS_FILE};', file=op)
                 print ('  filename ' + outname + '_metrics.json;', file=op)
