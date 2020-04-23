@@ -327,6 +327,8 @@ Building Documentation
 
 In order to build the documentation for ReadTheDocs:
 
+::
+
  pip3 install recommonmark
  pip3 install sphinx-jsonschema
  pip3 install sphinx_rtd_theme

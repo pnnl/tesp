@@ -1,7 +1,7 @@
 Deprecated Build Procedures
 ---------------------------
 
-These procedures are not longer used at PNNL, but they may still
+These procedures are no longer used at PNNL, but they may still
 be informative for others.
 
 .. include:: ../install/Windows/Windows_build.rst

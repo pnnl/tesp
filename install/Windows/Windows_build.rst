@@ -174,6 +174,8 @@ To build HELICS 2.0 with Python and Java bindings:
 
 Test that HELICS and FNCS start:
 
+::
+
  helics_player --version
  helics_recorder --version
  fncs_broker --version # look for the program to start, then exit with error

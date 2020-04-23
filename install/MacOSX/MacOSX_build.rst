@@ -103,6 +103,8 @@ To build HELICS:
 
 To test HELICS:
 
+::
+
  helics_player --version
  helics_recorder --version
  ipython
