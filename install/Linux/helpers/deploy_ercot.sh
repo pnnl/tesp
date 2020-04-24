@@ -3,9 +3,6 @@ rm -rf /opt/tesp/share/ercot
 mkdir /opt/tesp/share/ercot
 cp ../../../ercot/*.* /opt/tesp/share/ercot
 
-mkdir /opt/tesp/share/ercot/buildings
-cp ../../../ercot/buildings/*.* /opt/tesp/share/ercot/buildings
-
 mkdir /opt/tesp/share/ercot/case8
 cp ../../../ercot/case8/*.* /opt/tesp/share/ercot/case8
 mkdir /opt/tesp/share/ercot/case8/dsostub

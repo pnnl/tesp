@@ -8,6 +8,8 @@ cp ../../../examples/comm/*.* /opt/tesp/share/examples/comm
 
 mkdir /opt/tesp/share/examples/energyplus
 cp ../../../examples/energyplus/*.* /opt/tesp/share/examples/energyplus
+mkdir /opt/tesp/share/examples/energyplus/forSchoolBase
+cp ../../../examples/energyplus/forSchoolBase/*.* /opt/tesp/share/examples/energyplus/forSchoolBase
 
 mkdir /opt/tesp/share/examples/ieee8500
 cp ../../../examples/ieee8500/*.* /opt/tesp/share/examples/ieee8500
