@@ -279,7 +279,7 @@ Build EnergyPlus Weather File Utility
 ::
 
  cd ~/src/tesp/support/weather/TMY2EPW/source_code
- sudu make
+ sudo make
 
 Build ns3 with HELICS
 ~~~~~~~~~~~~~~~~~~~~~
@@ -339,6 +339,33 @@ Changes can be previewed in ~/src/tesp/doc/_build/html/index.rst before
 pushing them to GitHub. There is a trigger on ReadTheDocs that will
 automatically rebuild public-facing documentation after the source
 files on GitHub change.
+
+Deployment
+~~~~~~~~~~
+
+The general procedure will be:
+
+#. Build TESP, installing to the default /opt/tesp
+#. Deploy the shared files to /opt/tesp/share
+#. Make a sample user working directory, and auto-test the examples
+#. Build and upload a package based on the contents of /opt/tesp
+
+Under ~/src/tesp/install/helpers, the following scripts may be helpful:
+
+#. provision.sh; runs sudo apt-get for all packages needed for the build
+#. gitclone.sh; clones all repositories need for the build
+#. clean_outputs.sh; removes temporary output from the example directories
+#. deploy.sh; copies redistributable files to /opt/tesp, invoking:
+
+   #. deploy_ercot.sh; copies the ERCOT test system files to /opt/tesp
+
+   #. deploy_examples.sh; copies the example files to /opt/tesp
+
+   #. deploy_support.sh; copies the taxonomy feeder, reference building, sample weather, helper scripts and other support files to /opt/tesp
+
+#. environment.sh; sets TESP_INSTALL and other environment variables
+#. tesp_ld.conf; copy to /etc/ld.so.conf.d so Ubuntu fill find the shared libraries TESP installed
+#. make_tesp_user_dir.sh; creates a working directory under the users home, and makes a copy of the shared examples and ERCOT test system.
 
 DEPRECATED: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

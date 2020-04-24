@@ -16,3 +16,8 @@ sudo apt-get -y install libczmq-dev
 sudo apt-get install -y libxerces-c-dev
 sudo apt-get install -y libklu1
 sudo apt-get install -y python3-pip
+# for AMES market simulator
+sudo apt-get -y install coinor-cbc
+# for TESP GUI and plotting
+sudo apt-get -y install python3-tk
+
