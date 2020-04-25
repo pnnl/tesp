@@ -9,13 +9,20 @@ but the installing user will need administrative privileges to run *sudo* comman
 The specific procedures may differ for other flavors of Linux, or if other versions
 of Python and/or Java have been installed.
 
-From a terminal/command window (IN PROGRESS):
+The installer invokes these commands to install TESP prerequisites (IN PROGRESS):
 
 ::
 
- sudo add-apt-repository ppa:temcdrm/tesp-core
- sudo apt-get update
- sudo apt-get -y install tesp-core
+ sudo apt-get -y install libjsoncpp
+ sudo apt-get -y install libxerces-c
+ sudo apt-get -y install libzmq5
+ sudo apt-get -y install libczmq5
+ sudo apt-get -y install libklu1
+ sudo apt-get -y install coinor-cbc
+ sudo apt-get -y install openjdk-11-jre-headless
+ sudo apt-get -y install python3-tk
+ sudo apt-get -y install python3-pip
+ sudo apt-get -y install libjsoncpp
  pip3 install tesp_support --upgrade
  pip3 install psst --upgrade
 
