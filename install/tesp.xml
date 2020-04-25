@@ -8,9 +8,17 @@
     <componentList>
         <component>
             <name>default</name>
-            <description>Main</description>
-            <canBeEdited>1</canBeEdited>
-            <detailedDescription>Platform-dependent components; plus examples.</detailedDescription>
+            <description>TESP + System Updgrades</description>
+            <canBeEdited>0</canBeEdited>
+            <detailedDescription>TESP software and examples. Installs or upgrades these system packages:
+* libjsoncpp-dev, libxerces-c-dev
+* libzmq5, libczmq-dev
+* libklu1, coinor-cbc
+* openjdk-11-jre-headless
+* python3-tk, python3-pip
+# Python3; matplotlib, networkx, scipy, numpy, pandas, psst
+</detailedDescription>
+            <requiredSize>900000</requiredSize>
             <selected>1</selected>
             <show>1</show>
             <folderList>
@@ -96,12 +104,12 @@
         <runProgram>
             <explanation>Installing JSON library to system location.</explanation>
             <program>apt-get</program>
-            <programArguments>-y install libjsoncpp</programArguments>
+            <programArguments>-y install libjsoncpp-dev</programArguments>
         </runProgram>
         <runProgram>
             <explanation>Installing Xerces C library to system location.</explanation>
             <program>apt-get</program>
-            <programArguments>-y install libxerces-c</programArguments>
+            <programArguments>-y install libxerces-c-dev</programArguments>
         </runProgram>
         <runProgram>
             <explanation>Installing zmq5 to system location.</explanation>
@@ -111,7 +119,7 @@
         <runProgram>
             <explanation>Installing czmq5 to system location.</explanation>
             <program>apt-get</program>
-            <programArguments>-y install libczmq5</programArguments>
+            <programArguments>-y install libczmq-dev</programArguments>
         </runProgram>
         <runProgram>
             <explanation>Installing KLU solver to system location.</explanation>
