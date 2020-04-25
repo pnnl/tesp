@@ -1,0 +1,180 @@
+<project>
+    <shortName>tesp</shortName>
+    <fullName>TESP</fullName>
+    <version>0.6.0</version>
+    <readmeFile>/home/tom/src/tesp/README.md</readmeFile>
+    <licenseFile>/home/tom/src/tesp/LICENSE</licenseFile>
+    <splashImage>/home/tom/src/tesp/install/Transactive.png</splashImage>
+    <componentList>
+        <component>
+            <name>default</name>
+            <description>Main</description>
+            <canBeEdited>1</canBeEdited>
+            <detailedDescription>Platform-dependent components; plus examples.</detailedDescription>
+            <selected>0</selected>
+            <show>1</show>
+            <folderList>
+                <folder>
+                    <description>Uninstaller</description>
+                    <destination>${tespdir}</destination>
+                    <name>programfiles</name>
+                    <platforms>all</platforms>
+                    <shortcutList>
+                        <shortcut>
+                            <comment>Uninstall</comment>
+                            <exec>${tespdir}/${uninstallerName}</exec>
+                            <icon></icon>
+                            <name>Uninstall TESP</name>
+                            <path>${tespdir}</path>
+                            <platforms>all</platforms>
+                            <runAsAdmin>0</runAsAdmin>
+                            <runInTerminal>0</runInTerminal>
+                            <windowsExec></windowsExec>
+                            <windowsExecArgs></windowsExecArgs>
+                            <windowsIcon></windowsIcon>
+                            <windowsPath></windowsPath>
+                        </shortcut>
+                    </shortcutList>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${tespdir}</destination>
+                    <name>execlinux</name>
+                    <platforms>linux-x64</platforms>
+                    <distributionFileList>
+                        <distributionDirectory>
+                            <origin>/opt/tesp</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+            <postInstallationActionList>
+                <addEnvironmentVariable>
+                    <explanation>Setting TESP_INSTALL directory.</explanation>
+                    <name>TESP_INSTALL</name>
+                    <scope>user</scope>
+                    <value>${tespdir}</value>
+                </addEnvironmentVariable>
+                <addEnvironmentVariable>
+                    <explanation>Setting JAVAPATH for HELICS</explanation>
+                    <name>JAVAPATH</name>
+                    <scope>user</scope>
+                    <value>${tespdir}/java</value>
+                </addEnvironmentVariable>
+                <addEnvironmentVariable>
+                    <explanation>Setting PYTHONPATH for HELICS</explanation>
+                    <name>PYTHONPATH</name>
+                    <scope>user</scope>
+                    <value>${tespdir}/python</value>
+                </addEnvironmentVariable>
+                <addEnvironmentVariable>
+                    <explanation>Setting GLPATH for GridLAB-D</explanation>
+                    <name>GLPATH</name>
+                    <scope>user</scope>
+                    <value>${tespdir}/lib/gridlabd;${tespddir}/share/gridlabd</value>
+                </addEnvironmentVariable>
+                <addEnvironmentVariable>
+                    <explanation>Setting CXXFLAGS for GridLAB-D</explanation>
+                    <name>CXXFLAGS</name>
+                    <scope>user</scope>
+                    <value>"-I${tespdir}/share/gridlabd"</value>
+                </addEnvironmentVariable>
+                <addDirectoryToPath>
+                    <explanation>Adding TESP to PATH</explanation>
+                    <insertAt>end</insertAt>
+                    <path>${tespdir}/bin;${tespdir};${tespdir}/PreProcess;${tespdir}/PostProcess</path>
+                    <scope>user</scope>
+                </addDirectoryToPath>
+                <runProgram>
+                    <program>ldconfig</program>
+                    <programArguments></programArguments>
+                </runProgram>
+            </postInstallationActionList>
+        </component>
+    </componentList>
+    <readyToInstallActionList>
+        <runProgram>
+            <explanation>Installing JSON library to system location.</explanation>
+            <program>apt-get install -y libjsoncpp</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Xerces library to system location.</explanation>
+            <program>apt-get install -y libxerces-c</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing zmq5 to system location.</explanation>
+            <program>apt-get install -y libzmq5</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing czmq5 to system location.</explanation>
+            <program>apt-get install -y libczmq5</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing KLU solver to system location.</explanation>
+            <program>apt-get install -y libklu1</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing CBC solver to system location.</explanation>
+            <program>apt-get install -y coinor-cbc</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing openjdk-11 to system location.</explanation>
+            <program>apt-get install -y openjdk-11-jre-headless</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python tk package to system location.</explanation>
+            <program>apt-get install -y python3-tk</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python pip3 package to system location.</explanation>
+            <program>apt-get install -y python3-pip</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python tesp_support package.</explanation>
+            <program>pip3 install tesp_support --upgrade</program>
+            <programArguments></programArguments>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python psst package.</explanation>
+            <program>pip3 install psst --upgrade</program>
+            <programArguments></programArguments>
+        </runProgram>
+    </readyToInstallActionList>
+    <postInstallationActionList>
+        <launchBrowser>
+            <url>http://tesp.readthedocs.io/en/latest/</url>
+        </launchBrowser>
+    </postInstallationActionList>
+    <allowComponentSelection>1</allowComponentSelection>
+    <enableRollback>1</enableRollback>
+    <enableTimestamp>1</enableTimestamp>
+    <outputDirectory>/home/tom/src/tesp/install</outputDirectory>
+    <requireInstallationByRootUser>1</requireInstallationByRootUser>
+    <startMenuGroupName>TESP</startMenuGroupName>
+    <uninstallerDirectory>${tespdir}</uninstallerDirectory>
+    <vendor>Pacific Northwest National Laboratory</vendor>
+    <parameterList>
+        <directoryParameter>
+            <name>tespdir</name>
+            <title>TESP_INSTALL</title>
+            <description>Installation directory</description>
+            <explanation></explanation>
+            <value></value>
+            <default>/opt/tesp</default>
+            <allowEmptyValue>0</allowEmptyValue>
+            <mustBeWritable>0</mustBeWritable>
+            <mustExist>0</mustExist>
+            <width>30</width>
+        </directoryParameter>
+    </parameterList>
+</project>
+
