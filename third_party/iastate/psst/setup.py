@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -26,17 +26,13 @@ test_requirements = [
 
 setup(
     name='psst',
-    version='0.1.4',
+    version='0.1.5',
     description="Power System Simulation Toolbox",
     long_description=readme,
     author="Dheepak Krishnamurthy",
     author_email='kdheepak89@gmail.com',
     url='https://github.com/power-system-simulation-toolbox/psst',
-    packages=[
-        'psst',
-    ],
-    package_dir={'psst':
-                 'psst'},
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
             'psst=psst.cli:cli'
@@ -48,13 +44,10 @@ setup(
     zip_safe=False,
     keywords='psst',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
