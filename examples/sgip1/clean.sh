@@ -2,10 +2,13 @@ rm *.out
 rm *.csv
 rm *.log
 rm *metrics.json
+rm *substation.json
+rm *gld_msg.json
 rm *dict.json
 rm *FNCS_Config.txt
 rm *Weather_Config.json
 rm SGIP1*.yaml
 rm *.xml
+rm weather.dat
 rm output/*
 rmdir output

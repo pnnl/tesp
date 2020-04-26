@@ -7,7 +7,7 @@
 ./run_seasonal_cases.sh "OutPatient"
 ./run_seasonal_cases.sh "PrimarySchool"
 ./run_seasonal_cases.sh "QuickServiceRestaurant"
-./run_seasonal_cases.sh "SchoolBase"
+#./run_seasonal_cases.sh "SchoolBase"
 ./run_seasonal_cases.sh "SecondarySchool"
 ./run_seasonal_cases.sh "SmallHotel"
 ./run_seasonal_cases.sh "SmallOffice"

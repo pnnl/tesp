@@ -10,9 +10,12 @@ backbone_config = {'backbone_feeders': {
                       'sim_R5-12.47-4': {'vll':12470.0, 'vln':7200.0, 'avg_house':6000.0, 'avg_comm':30000.0},
                       'sim_R5-12.47-5': {'vll':12470.0, 'vln':7200.0, 'avg_house':4500.0, 'avg_comm':25000.0}},
                    'outpath': '../case8/',
-                   'glmpath': '../../third_party/pitt/',
-                   'supportpath': '../../support/schedules/',  # wrt outpath
-                   'weatherpath': '../../support/weather/'}    # wrt outpath
+                   'glmpath': tesp_share + 'support/feeders/',
+                   'supportpath': tesp_share + 'support/schedules/',
+                   'weatherpath': tesp_share + 'support/weather/'}
+#                   'glmpath': '../../third_party/pitt/',
+#                   'supportpath': '../../support/schedules/',  # wrt outpath
+#                   'weatherpath': '../../support/weather/'}    # wrt outpath
 
 #inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 #inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];

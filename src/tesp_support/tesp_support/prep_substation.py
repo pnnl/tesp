@@ -56,9 +56,10 @@ period = 300
 
 name_prefix = ''
 
+# by default there will be an E+ connection, unless nulled in the JSON config file
 Eplus_Bus = 'Eplus_load'
-Eplus_Meter = ''
-Eplus_Load = ''
+Eplus_Meter = 'Eplus_meter'
+Eplus_Load = 'Eplus_load'
 
 agent_participation = 1.0
 
@@ -511,7 +512,8 @@ def prep_substation (gldfileroot, jsonfile = ''):
 
     Args:
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
-        jsonfile (str): fully qualified path to an optional JSON configuration file
+        jsonfile (str): fully qualified path to an optional JSON configuration file 
+                        (if not provided, an E+ connection to Eplus_load will be created)
     """
     global dt, period, Eplus_Bus, Eplus_Load, Eplus_Meter, agent_participation, max_capacity_reference_bid_quantity
     global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
@@ -578,6 +580,9 @@ def prep_substation (gldfileroot, jsonfile = ''):
           Eplus_Bus = name_prefix + Eplus_Bus
           Eplus_Load = name_prefix + 'Eplus_load'
           Eplus_Meter = name_prefix + 'Eplus_meter'
+        else:
+          Eplus_Load = ''
+          Eplus_Meter = ''
         agent_participation = 0.01 * float(config['FeederGenerator']['ElectricCoolingParticipation'])
 
         latitude = float (config['WeatherPrep']['Latitude'])
