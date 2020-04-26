@@ -57,10 +57,13 @@ def RunTestCase(fname):
   fp.close()
   if pFNCSbroker is not None:
     pFNCSbroker.wait()
+    print ('FFFFFFFFncs Broker Exit in', os.getcwd())
   if pHELICSbroker is not None:
     pHELICSbroker.wait()
+    print ('HHHHHHelics Broker Exit in', os.getcwd())
   for p in potherList:
     p.wait()
+  print ('XXXXXXXXXXXXXXXXXX Exit in', os.getcwd())
 
 if __name__ == '__main__':
   basePath = os.getcwd()
@@ -85,8 +88,6 @@ if __name__ == '__main__':
   RunTestCase ('run.sh')
   RunTestCase ('runh.sh')
   os.chdir (basePath)
-
-#  quit()
 
   # PYPOWER example
   print('start PYPOWER examples: ')
@@ -120,19 +121,21 @@ if __name__ == '__main__':
   RunTestCase ('runh0.sh')
   os.chdir (basePath)
 
-  # SGIP1a and SGIP1b examples (c, d, e and ex also available)
+#  quit()
+
+  # SGIP1 examples (a, b, c, d, e and ex also available)
   print('start examples sgip1: ')
   os.chdir ('./examples/sgip1')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
   p1 = subprocess.Popen (pycall + ' prepare_cases.py', shell=True)
   p1.wait()
-  RunTestCase ('runSGIP1a.sh')
+#  RunTestCase ('runSGIP1a.sh')
   RunTestCase ('runSGIP1b.sh')
-  RunTestCase ('runSGIP1c.sh')
-  RunTestCase ('runSGIP1d.sh')
-  RunTestCase ('runSGIP1e.sh')
-  RunTestCase ('runSGIP1ex.sh')
+#  RunTestCase ('runSGIP1c.sh')
+#  RunTestCase ('runSGIP1d.sh')
+#  RunTestCase ('runSGIP1e.sh')
+#  RunTestCase ('runSGIP1ex.sh')
   os.chdir (basePath)
 
   # generated Nocomm_Base example
@@ -197,12 +200,12 @@ if __name__ == '__main__':
   p1.wait()
   RunTestCase ('run30.sh')
   RunTestCase ('runti30.sh')
-  RunTestCase ('run8500.sh')
-  RunTestCase ('run8500base.sh')
-  RunTestCase ('run8500tou.sh')
-  RunTestCase ('run8500volt.sh')
-  RunTestCase ('run8500vvar.sh')
-  RunTestCase ('run8500vwatt.sh')
+#  RunTestCase ('run8500.sh')
+#  RunTestCase ('run8500base.sh')
+#  RunTestCase ('run8500tou.sh')
+#  RunTestCase ('run8500volt.sh')
+#  RunTestCase ('run8500vvar.sh')
+#  RunTestCase ('run8500vwatt.sh')
   os.chdir (basePath)
 
   # ERCOT Case8 example

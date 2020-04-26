@@ -28,6 +28,7 @@ The installer invokes these commands to install TESP prerequisites:
  sudo apt-get -y install libklu1
  sudo apt-get -y install coinor-cbc
  sudo apt-get -y install openjdk-11-jre-headless
+ sudo apt-get -y install openjdk-11-jdk-headless
  sudo apt-get -y install python3-tk
  sudo apt-get -y install python3-pip
  pip3 install tesp_support --upgrade
@@ -38,8 +39,9 @@ This process will install HELICS, FNCS, and several co-simulation federates unde
 
 To get started after basic installation:
 
-1. (UPDATE NEEDED) Try the video tutorial at https://github.com/pnnl/tesp/releases
-2. (UPDATE NEEDED) Try :ref:`RunExamples` 
+1. log out and log back in, to ensure PATH changes take effect
+2. (UPDATE NEEDED) Try the video tutorial at https://github.com/pnnl/tesp/releases
+3. (UPDATE NEEDED) Try :ref:`RunExamples` 
 
 You may also use the `Docker Version`_. This option is useful for distributed processing, and for 
 isolating TESP from your other software, including other versions of GridLAB-D. However, 
