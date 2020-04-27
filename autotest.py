@@ -57,13 +57,13 @@ def RunTestCase(fname):
   fp.close()
   if pFNCSbroker is not None:
     pFNCSbroker.wait()
-    print ('FFFFFFFFncs Broker Exit in', os.getcwd())
+    print ('====   Fncs Broker Exit in', os.getcwd())
   if pHELICSbroker is not None:
     pHELICSbroker.wait()
-    print ('HHHHHHelics Broker Exit in', os.getcwd())
+    print ('==== Helics Broker Exit in', os.getcwd())
   for p in potherList:
     p.wait()
-  print ('XXXXXXXXXXXXXXXXXX Exit in', os.getcwd())
+  print   ('================== Exit in', os.getcwd())
 
 if __name__ == '__main__':
   basePath = os.getcwd()
