@@ -340,15 +340,16 @@ pushing them to GitHub. There is a trigger on ReadTheDocs that will
 automatically rebuild public-facing documentation after the source
 files on GitHub change.
 
-Deployment
-~~~~~~~~~~
+Deployment - Ubuntu Installer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The general procedure will be:
 
 #. Build TESP, installing to the default /opt/tesp
-#. Deploy the shared files to /opt/tesp/share
+#. Clear the outputs from any earlier testing of the examples in your local repository
+#. Deploy the shared files, which include examples, to /opt/tesp/share
 #. Make a sample user working directory, and auto-test the examples
-#. Build and upload a package based on the contents of /opt/tesp
+#. Build and upload a Linux script installer using VMWare InstallBuilder. This is primarly based on the contents of /opt/tesp
 
 Under ~/src/tesp/install/helpers, the following scripts may be helpful:
 
@@ -366,6 +367,41 @@ Under ~/src/tesp/install/helpers, the following scripts may be helpful:
 #. environment.sh; sets TESP_INSTALL and other environment variables
 #. tesp_ld.conf; copy to /etc/ld.so.conf.d so Ubuntu fill find the shared libraries TESP installed
 #. make_tesp_user_dir.sh; creates a working directory under the users home, and makes a copy of the shared examples and ERCOT test system.
+
+Deployment - Docker Container
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Windows and Mac OS X platforms are supported now through the Docker container *tesp_core*. 
+As pre-requisites for building this container:
+
+#. Install Docker on the build machine, following https://docs.docker.com/engine/install/ubuntu/
+#. Build and test the Ubuntu installer as described in the previous subsection. By default, InstallBuilder puts the installer into *~/src/tesp/install/tesp_core*, which is the right place for a Docker build.
+
+This Docker build process layers two images. The first image contains the required system and Python packages
+for TESP, on top of Ubuntu 18.04, producing *tesp_foundation*
+
+::
+
+ cd ~/src/tesp/install/tesp_foundation
+ sudo docker build -t="temcderm/tesp_foundation:v1" .
+
+This process takes a while to complete. The second image starts from *tesp_foundation* and layers on the TESP components.
+Primarily, it runs the Linux installer script inside the Docker container. It will check for current versions of the
+packages just built into *tesp_foundation*, but these checks usually return quickly. The advantage of a two-step
+image building process is that most new TESP versions can start from the existing *tesp_foundation*. The only exception
+would be if some new TESP component introduces a new dependency.
+
+::
+
+ cd ~/src/tesp/install/tesp_core
+ sudo docker build -t="temcderm/tesp_core:v1" .
+
+When complete, the layered image can be pushed up to Docker Hub.
+
+::
+
+ cd ~/src/tesp/install/tesp_core
+ sudo docker push temcderm/tesp_core:v1
 
 DEPRECATED: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

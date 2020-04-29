@@ -268,7 +268,7 @@
     <allowComponentSelection>1</allowComponentSelection>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
-    <outputDirectory>.</outputDirectory>
+    <outputDirectory>./tesp_core</outputDirectory>
     <requireInstallationByRootUser>1</requireInstallationByRootUser>
     <saveRelativePaths>1</saveRelativePaths>
     <startMenuGroupName>TESP</startMenuGroupName>
