@@ -1,4 +1,4 @@
-#	Copyright (C) 2017-2018 Battelle Memorial Institute
+#	Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: process_pypower.py
 import json;
 #import sys;
@@ -171,8 +171,8 @@ def process_pypower(nameroot):
     # display a plot 
     fig, ax = plt.subplots(2,2, sharex = 'col')
     tmin = 0.0
-    tmax = 48.0
-    xticks = [0,6,12,18,24,30,36,42,48]
+    tmax = 72.0
+    xticks = [0,6,12,18,24,30,36,42,48,54,60,66,72]
     for i in range(2):
         for j in range(2):
             ax[i,j].grid (linestyle = '-')

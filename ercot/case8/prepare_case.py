@@ -3,6 +3,7 @@ import tesp_support.api as tesp
 import utilities
 import json
 from datetime import datetime
+import os
 
 # for reduced-order feeder models
 ercotFlag = True 
@@ -49,7 +50,7 @@ days = int(seconds / 86400)
 minutes = int(seconds / 60)
 hours = int(seconds / 3600)
 for i in range(len(weather_agents)):
-    tmy3file = '../../support/weather/' + weather_agents[i]['tmy3']
+    tmy3file = os.getenv('TESP_INSTALL') + '/share/support/weather/' + weather_agents[i]['tmy3']
     weatherName = weather_agents[i]['weatherName']
     csvfile = weatherName + '.dat'
     print (weatherName, tmy3file, csvfile)

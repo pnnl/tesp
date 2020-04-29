@@ -1173,7 +1173,7 @@ def tso_loop():
     baseV = int(bus[0, 9])          # base_V in ercot_8.json bus row 0-7, column 9, should be the same for all buses
 
     # ppc arrays(bus type 1=load, 2 = gen(PV) and 3 = swing)
-    # bus: bus id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin
+    # bus: bus id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin, 0?, 0?
     # zones: zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent
     # branch: from bus, to bus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax
     # gen: bus id, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
