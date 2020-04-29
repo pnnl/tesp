@@ -110,7 +110,7 @@ def find_buses(data):
             return l.split(DIRECTIVE)[1].strip(';').split()
 
 
-def read_model(model_data):
+def read_model(model_data, base_file=None):
 
     #click.echo("In psst utils.py read_model method")
     with open(model_data) as f:
@@ -118,7 +118,10 @@ def read_model(model_data):
         #click.echo("printing data:" + data)
 
     from .case import PSSTCase
-    c = PSSTCase(os.path.join(current_directory, '../cases/case.m'))
+    if base_file:
+        c = PSSTCase(base_file)
+    else:
+        c = PSSTCase(os.path.join(current_directory, '../cases/case.m'))
     #click.echo("printing file path: " + os.path.join(current_directory, '../cases/case.m'))
     #click.echo("printing c: " + str(c))
 

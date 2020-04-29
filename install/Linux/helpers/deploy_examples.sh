@@ -1,4 +1,6 @@
 # update contents of /opt/tesp/share/examples
+# loadshed Makefile is handled explicitly. Otherwise, we get cp warnings
+#   about not using the -r option.  We don't want recursive cp here.
 rm -rf /opt/tesp/share/examples
 mkdir /opt/tesp/share/examples
 cp ../../../examples/*.* /opt/tesp/share/examples
@@ -20,6 +22,7 @@ cp ../../../examples/ieee8500/PNNLteam/*.* /opt/tesp/share/examples/ieee8500/PNN
 
 mkdir /opt/tesp/share/examples/loadshed
 cp ../../../examples/loadshed/*.* /opt/tesp/share/examples/loadshed
+cp ../../../examples/loadshed/Makefile /opt/tesp/share/examples/loadshed
 
 mkdir /opt/tesp/share/examples/players
 cp ../../../examples/players/*.* /opt/tesp/share/examples/players

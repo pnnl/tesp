@@ -46,7 +46,7 @@
     "UnitOutStart": "2013-07-02 07:00:00",
     "UnitOut": "2",
     "CSVLoadFile": "NonGLDLoad.txt",
-    "GLDScale": "200",
+    "GLDScale": "20",
     "GLDBus": "7",
     "TransformerBase": "12.0",
     "TransmissionVoltage": "230.0",

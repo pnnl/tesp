@@ -67,6 +67,7 @@ def RunTestCase(fname):
 
 if __name__ == '__main__':
   basePath = os.getcwd()
+  bTryHELICS = False  # note: the loadshed and weatherAgent examples finish reliably in HELICS
 
   # loadshed examples
   print('start loadshed examples: ')
@@ -95,7 +96,8 @@ if __name__ == '__main__':
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
   RunTestCase ('runpp.sh')
-  RunTestCase ('runhpp.sh')
+  if bTryHELICS:
+    RunTestCase ('runhpp.sh')
   os.chdir (basePath)
 
   # EnergyPlus example
@@ -105,7 +107,8 @@ if __name__ == '__main__':
   p1.wait()
   RunTestCase ('run.sh')
   RunTestCase ('run2.sh')
-  RunTestCase ('runh.sh')
+  if bTryHELICS:
+    RunTestCase ('runh.sh')
   os.chdir (basePath)
 
   # TE30 example
@@ -117,8 +120,9 @@ if __name__ == '__main__':
   p1.wait()
   RunTestCase ('run.sh')
   RunTestCase ('run0.sh')
-  RunTestCase ('runh.sh')
-  RunTestCase ('runh0.sh')
+  if bTryHELICS:
+    RunTestCase ('runh.sh')
+    RunTestCase ('runh0.sh')
   os.chdir (basePath)
 
 #  quit()
@@ -147,23 +151,22 @@ if __name__ == '__main__':
   st = os.stat ('run.sh')
   os.chmod ('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
   RunTestCase ('run.sh')
-  st = os.stat ('runh.sh')
-  os.chmod ('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-  RunTestCase ('runh.sh')
+  if bTryHELICS:
+    st = os.stat ('runh.sh')
+    os.chmod ('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    RunTestCase ('runh.sh')
   os.chdir (basePath)
 
   # generated Eplus_Restaurant example
-  print('start example generating Eplus_Restaurant: ')
-  os.chdir ('./examples/comm')
-  p1 = subprocess.Popen (pycall + ' make_comm_base.py', shell=True)
-  p1.wait()
-  os.chdir ('Eplus_Restaurant')
+  print('start example of Eplus_Restaurant, generated with Nocomm_Base: ')
+  os.chdir ('./examples/comm/Eplus_Restaurant')
   st = os.stat ('run.sh')
   os.chmod ('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
   RunTestCase ('run.sh')
-  st = os.stat ('runh.sh')
-  os.chmod ('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-  RunTestCase ('runh.sh')
+  if bTryHELICS:
+    st = os.stat ('runh.sh')
+    os.chmod ('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    RunTestCase ('runh.sh')
   os.chdir (basePath)
 
   # generated ombinedCase example
@@ -177,9 +180,10 @@ if __name__ == '__main__':
   st = os.stat ('runcombined.sh')
   os.chmod ('runcombined.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
   RunTestCase ('runcombined.sh')
-  st = os.stat ('runcombinedh.sh')
-  os.chmod ('runcombinedh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-  RunTestCase ('runcombinedh.sh')
+  if bTryHELICS:
+    st = os.stat ('runcombinedh.sh')
+    os.chmod ('runcombinedh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    RunTestCase ('runcombinedh.sh')
   os.chdir (basePath)
 
   # ieee8500 base example
@@ -219,6 +223,4 @@ if __name__ == '__main__':
   RunTestCase ('run.sh')
   RunTestCase ('run_market.sh')
   os.chdir (basePath)
-
-
 

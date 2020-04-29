@@ -8,10 +8,12 @@ import math;
 from copy import deepcopy;
 import psst.cli as pst;
 import pandas as pd;
+import os;
 
 casename = 'ercot_8'
-ames_DAM_case_file = "./../DAMReferenceModel.dat"
-ames_RTM_case_file = "./../RTMReferenceModel.dat"
+ames_DAM_case_file = './../DAMReferenceModel.dat'
+ames_RTM_case_file = './../RTMReferenceModel.dat'
+ames_base_case_file = os.path.expandvars('$TESP_INSTALL/share/support/pypower/ames_base_case.m')
 
 load_shape = [0.6704,
               0.6303,
@@ -374,7 +376,7 @@ def dist_slack(mpc, prev_load):
 def tso_loop():
 
     def scucDAM(data, output, solver):
-        c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
+        c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"), ames_base_case_file)
         if day > -1:
             model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData)
             model.solve(solver=solver)
@@ -492,7 +494,7 @@ def tso_loop():
         return uc_df, dispatch, DA_LMPs
 
     def scedRTM(data, uc_df, output, solver):
-        c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
+        c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"), ames_base_case_file)
         c.gen_status = uc_df.astype(int)
 
         model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData)
