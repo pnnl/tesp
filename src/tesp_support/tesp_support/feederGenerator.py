@@ -565,7 +565,8 @@ def Find1PhaseXfmrKva (kva):
     for row in single_phase:
         if row[0] >= kva:
             return row[0]
-    return 0.0
+    n500 = int ((kva + 250.0) / 500.0)
+    return 500.0 * n500
 
 def Find3PhaseXfmrKva (kva):
     """Select a standard 3-phase transformer size, with some margin
@@ -583,7 +584,8 @@ def Find3PhaseXfmrKva (kva):
     for row in three_phase:
         if row[0] >= kva:
             return row[0]
-    return 0.0
+    n10 = int ((kva + 5000.0) / 10000.0)
+    return 500.0 * n10
 
 def Find1PhaseXfmr (kva):
     """Select a standard 1-phase transformer size, with data
@@ -599,7 +601,7 @@ def Find1PhaseXfmr (kva):
     for row in single_phase:
         if row[0] >= kva:
             return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
-    return 0,0,0,0,0
+    return Find1PhaseXfmrKva(kva),0.01,0.06,0.005,0.01
 
 def Find3PhaseXfmr (kva):
     """Select a standard 3-phase transformer size, with data
@@ -616,7 +618,7 @@ def Find3PhaseXfmr (kva):
     for row in three_phase:
         if row[0] >= kva:
             return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
-    return 0,0,0,0,0
+    return Find3PhaseXfmrKva(kva),0.01,0.08,0.005,0.01
 
 # Root Name, VLL, VLN, Avg House, Avg Commercial
 taxchoice = [['R1-12.47-1',12470.0, 7200.0, 4000.0, 20000.0],
