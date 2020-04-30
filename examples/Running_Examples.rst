@@ -1,5 +1,50 @@
 .. _RunExamples:
 
+Using Docker and the autotest.py script
+---------------------------------------
+
+After installing Docker on your platform, invoke the following from inside 
+a Terminal or Command Prompt, replacing *c:temp* with an appropriate working
+directory on your host file system:
+
+::
+
+ docker pull temcderm/tesp_core:v1
+ docker run --name tesp -it --mount type=bind,source=c:temp,destination=/data temcderm/tesp_core:v1
+
+After executing the second of these commands, you will be at a Linux-like command
+prompt inside your Docker container. Simulations must be run inside the Docker container, with results
+saved on a volume shared between the host file system and the container file system. To set up your
+work space and try a quick sample run:
+
+::
+
+ cd /data
+ make_tesp_user_dir.sh tesp
+ cd tesp/examples/loadshed
+ ./run.sh
+
+This launches process that should all finish within a second or two, leaving some
+output files \*metrics.json. If you installed the Python 3 package tesp_support on the host
+system, you can plot from the host system.
+
+To run all of the examples, which may take several hours, invoke the following within
+your Docker container:
+
+::
+
+ cd /data/tesp
+ python3 autotest.py
+
+When you are finished with a Docker work session:
+
+::
+
+ quit
+ docker stop tesp
+
+And then close the Terminal or Command Prompt you were using to run the Docker container.
+
 Running Examples
 ----------------
 
