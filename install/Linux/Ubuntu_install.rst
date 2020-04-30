@@ -40,8 +40,8 @@ This process will install HELICS, FNCS, and several co-simulation federates unde
 To get started after basic installation:
 
 1. log out and log back in, to ensure PATH changes take effect
-2. (UPDATE NEEDED) Try the video tutorial at https://github.com/pnnl/tesp/releases
-3. (UPDATE NEEDED) Try :ref:`RunExamples` 
+2. Try the YouTube tutorials at https://www.youtube.com/channel/UCMKOTNGldZ3OdDzHRJ_myeg
+3. Try :ref:`RunExamples` 
 
 You may also use the `Docker Version`_. This option is useful for distributed processing, and for 
 isolating TESP from your other software, including other versions of GridLAB-D. However, 
