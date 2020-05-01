@@ -190,25 +190,37 @@ if __name__ == '__main__':
     b1 = dist * float(ln[8]) * npar / 100.0
     rated = npar * float(ln[10])  # this is MW, not amps
     ppcase['branch'].append ([bus1, bus2, r1, x1, b1, rated, rated, rated, 0.0, 0.0, 1, -360.0, 360.0])
+  idx = 1
   for ln in dunits:
-    idx = int(ln[0])
+#    idx = int(ln[0])
     n1 = int(ln[1])
     Sg = float(ln[2])
+    if ln[9] == 'wind':
+      nunits = 1
+    else:
+      nunits = int ((Sg + 2000.0) / 2000.0)
+    Sg /= nunits
     Pg = Sg * dispatch
-    Pmin = float(ln[3])
+    Pmin = float(ln[3]) / nunits
+    Pmin = 0.05 * Sg
+    Pmin = 0.0
     if Pg < Pmin:
       Pg = Pmin
     if n1 == swing_bus:
-      print ('setting Pg from', Pg, 'to 0 at swing bus', swing_bus)
+#      print ('Setting Pg from {:.2f} to 0 at swing bus {:d}'.format (Pg, swing_bus))
       Pg = 0.0
-    Qmin = float(ln[4])
-    Qmax = float(ln[5])
+    Qmin = float(ln[4]) / nunits
+    Qmax = float(ln[5]) / nunits
     c2 = float(ln[6])
     c1 = float(ln[7])
     c0 = float(ln[8])
-    ppcase['gen'].append ([n1, Pg, 0.0, Qmax, Qmin, 1.0, Sg, 1, Sg, Pmin, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    ppcase['gencost'].append ([2, 0, 0, 3, c2, c1, c0])
-    ppcase['genfuel'].append ([ln[9]])
+    print ('{:3d} {:2d} {:8.2f} {:8.2f} {:8.2f} {:8.2f} {:8.2f} {:8.5f} {:8.2f} {:8.2f} {:d} {:s}'.format (idx, n1,
+            Sg, Pg, Pmin, Qmin, Qmax, c2, c1, c0, nunits, ln[9]))
+    idx += 1
+    for i in range(nunits):
+      ppcase['gen'].append ([n1, Pg, 0.0, Qmax, Qmin, 1.0, Sg, 1, Sg, Pmin, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+      ppcase['gencost'].append ([2, 0, 0, 3, c2, c1, c0])
+      ppcase['genfuel'].append ([ln[9]])
 
   ppcase['swing_bus'] = swing_bus
   ppcase['metadata'] = meta

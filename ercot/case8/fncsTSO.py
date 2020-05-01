@@ -1139,6 +1139,8 @@ def tso_loop():
     ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
     ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
+    if ppc['solver'] == 'cbc':
+      ppc['gencost'][:,4] = 0.0 # can't use quadratic costs with CBC solver
     # these have been aliased from case name .json file
     bus = ppc['bus']
     branch = ppc['branch']

@@ -191,7 +191,7 @@ if wind_period > 0:
     print ('warning: wind power fluctuation requested, but there are no wind plants in this case')
   else:
     tnext_wind = 0
-
+print (wind_plants)
 # initialize for OPF and time stepping
 ts = 0
 tnext_opf = 0
@@ -201,6 +201,7 @@ print ('seconds,OPFconverged,TotalLoad,TotalGen,SwingGen,LMP1,LMP8,gas1,coal1,nu
 while ts <= tmax:
   # fluctuate the wind plants
   if ts >= tnext_wind:
+    wind_MW = 0.0
     for key, row in wind_plants.items():
       # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, p]
       wind_bus = row[0]
@@ -229,11 +230,13 @@ while ts <= tmax:
       row[7] = alag
       row[8] = ylag
       row[9] = p
+      wind_MW += p
       # reset the unit capacity; this will 'stick' for the next wind_period
       ppc['gen'][int(key), 8] = p
       if ppc['gen'][int(key), 1] > p:
         ppc['gen'][int(key), 1] = p
     tnext_wind += wind_period
+    print ('{:6d} # {:d} wind plants produce {:.2f} MW'.format (ts, len(wind_plants), wind_MW))
 
   # always update the unresponsive load
 #  loads['h'].append (float(ts) / 3600.0)
