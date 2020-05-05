@@ -37,6 +37,13 @@ The installer invokes these commands to install TESP prerequisites:
 This process will install HELICS, FNCS, and several co-simulation federates under
 /opt/tesp. The TESP_INSTALL environment variable should be set to /opt/tesp
 
+If you have already installed GridLAB-D, EnergyPlus, ns-3 or another simulator before TESP,
+it may be necessary to manually adjust your PATH and GLPATH environment variables when
+running TESP.  The TESP versions of these simulators are built with HELICS and FNCS interfaces,
+which are not normally included in other versions of the simulators. In GridLAB-D, you may
+get an error message about "module connection" not being found. With other simulators, you
+might see the FNCS or HELICS broker hang, waiting for a federate that's unable to connect.
+
 To get started after basic installation:
 
 1. log out and log back in, to ensure PATH changes take effect

@@ -107,11 +107,16 @@ As noted above, we suggest *mkdir usrc* instead of *mkdir ~/src* on WSL.
 Choosing and Configuring the Install Directories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-These instructions assume you have administrative permissions on /usr/local, and only
-need to maintain one version of the build products.  If that's not the case, you
-can define an environment variable, e.g., *$TESP_INSTALL*, and use that in place of
-/usr/local for installation directories. The following examples are for Ubuntu; 
-other flavors of Linux may differ.
+You must define the environment variable *$TESP_INSTALL*, which will receive
+the TESP build products, examples and common data files. */opt/tesp* is suggested.
+
+It's possible, but not recommended, to set *$TESP_INSTALL* as /usr/local. There are a few reasons not to:
+
+1. It would result in shared TESP data files and examples being copied to /usr/local/share
+2. It complicates building the Linux installer and Docker images
+3. The simulators install properly to /usr/local by default, but you still have to explicity set $TESP_INSTALL for the example scripts to run properly.
+
+The following examples are for Ubuntu; other flavors of Linux may differ.
 
 For Ubuntu in a *virtual machine*, first edit or replace the */etc/environment* file.
 This is not a script file, and it doesn't support the $variable replacement syntax. If using
@@ -126,27 +131,16 @@ $TESP_INSTALL, it has to be spelled out on each line, e.g.:
  PYTHONPATH="/opt/tesp/python"
  JAVAPATH="/opt/tesp/java"
 
-If not using $TESP_INSTALL explicitly, it defaults to /usr/local
-
-::
-
- # add the following four lines
- GLPATH="/usr/local/lib/gridlabd:/usr/local/share/gridlabd"
- CXXFLAGS="-I/usr/local/share/gridlabd"
- PYTHONPATH="/usr/local/python"
- JAVAPATH="/usr/local/java"
-
 For Ubuntu in *WSL*, all changes are made to *~/.profile*.
 
 ::
 
- # optionally, export TESP_INSTALL="somePath"
- # then use $TESP_INSTALL instead of /usr/local in the following exports
- export GLPATH="/usr/local/lib/gridlabd:/usr/local/share/gridlabd"
- export CXXFLAGS="-I/usr/local/share/gridlabd"
- # set up Python and Java to run with HELICS
- export PYTHONPATH="/usr/local/python:$PYTHONPATH"
- export JAVAPATH="/usr/local/java:$JAVAPATH"
+ export TESP_INSTALL="/opt/tesp"
+ export PATH="$PATH:$TESP_INSTALL:$TESP_INSTALL/bin:$TESP_INSTALL/PreProcess:$TESP_INSTALL/PostProcess"
+ export GLPATH="$TESP_INSTALL/lib/gridlabd:$TESP_INSTALL/share/gridlabd"
+ export CXXFLAGS="-I$TESP_INSTALL/share/gridlabd"
+ export PYTHONPATH="$TESP_INSTALL/python:$PYTHONPATH"
+ export JAVAPATH="$TESP_INSTALL/java:$JAVAPATH"
 
 Afterward, close and reopen the Ubuntu terminal for these changes to take effect.
 
