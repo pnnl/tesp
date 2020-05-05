@@ -175,9 +175,9 @@ To build the Java interface for version 10 or later, which has *javah* replaced 
 
  cd java
  make
- make install
+ sudo make install
 
-The *make install* step may not work on WSL. A manual example is *cp fncs.jar ../../tesp/examples/loadshed/java*
+The *make install* step may not work on WSL. A manual example is *cp fncs.jar $TESP_INSTALL/java*
 
 These instructions install HELICS to /usr/local. Use the graphical version of CMake 
 for configuring a build with $TESP_INSTALL.
@@ -301,7 +301,8 @@ Then, we can build ns-3, install that into the same location as other parts of T
  cd ~/src/ns-3-dev
  git clone -b feature/13b https://github.com/GMLC-TDC/helics-ns3 contrib/helics
  # --with-helics may not be left blank, so use either $TESP_INSTALL or /usr/local
- ./waf configure --build-profile=optimized --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --disable-werror --enable-examples --enable-tests
+ # --build-profile=optimized can be used, but it disables ns3 logging
+ ./waf configure --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --disable-werror --enable-examples --enable-tests
  ./waf build 
  sudo ./waf install
  ./test.py
