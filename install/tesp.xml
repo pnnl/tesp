@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.6.1</version>
+    <version>0.6.3</version>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../LICENSE</licenseFile>
     <splashImage>Transactive.png</splashImage>
@@ -268,7 +268,7 @@
     <allowComponentSelection>1</allowComponentSelection>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
-    <outputDirectory>./tesp_core</outputDirectory>
+    <outputDirectory>tesp_core</outputDirectory>
     <requireInstallationByRootUser>1</requireInstallationByRootUser>
     <saveRelativePaths>1</saveRelativePaths>
     <startMenuGroupName>TESP</startMenuGroupName>

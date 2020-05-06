@@ -378,7 +378,7 @@ for TESP, on top of Ubuntu 18.04, producing *tesp_foundation*
 ::
 
  cd ~/src/tesp/install/tesp_foundation
- sudo docker build -t="temcderm/tesp_foundation:v1" .
+ sudo docker build -t="temcderm/tesp_foundation:0.6.3" .
 
 This process takes a while to complete. The second image starts from *tesp_foundation* and layers on the TESP components.
 Primarily, it runs the Linux installer script inside the Docker container. It will check for current versions of the
@@ -389,14 +389,14 @@ would be if some new TESP component introduces a new dependency.
 ::
 
  cd ~/src/tesp/install/tesp_core
- sudo docker build -t="temcderm/tesp_core:v1" .
+ sudo docker build -t="temcderm/tesp_core:0.6.3" .
 
 When complete, the layered image can be pushed up to Docker Hub.
 
 ::
 
  cd ~/src/tesp/install/tesp_core
- sudo docker push temcderm/tesp_core:v1
+ sudo docker push temcderm/tesp_core:0.6.3
 
 DEPRECATED: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
