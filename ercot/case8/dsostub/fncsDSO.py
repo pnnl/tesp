@@ -56,8 +56,8 @@ period = int(ppc['Period'])
 dt = int(ppc['dt'])
 dt = 60
 
-# FNCS: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew
-fncs_bus = ppc['FNCS']
+# DSO: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew
+fncs_bus = ppc['DSO']
 gld_bus = {} # key on bus number
 for i in range (8):
   busnum = i+1

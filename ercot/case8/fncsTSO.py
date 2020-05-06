@@ -1,14 +1,14 @@
-import numpy as np;
-import scipy.interpolate as ip;
-import pypower.api as pp;
-import tesp_support.api as tesp;
-import tesp_support.fncs as fncs;
-import json;
-import math;
-from copy import deepcopy;
-import psst.cli as pst;
-import pandas as pd;
-import os;
+import numpy as np
+import scipy.interpolate as ip
+import pypower.api as pp
+import tesp_support.api as tesp
+import tesp_support.fncs as fncs
+import json
+import math
+from copy import deepcopy
+import psst.cli as pst
+import pandas as pd
+import sys, os
 
 casename = 'ercot_8'
 ames_DAM_case_file = './../DAMReferenceModel.dat'
@@ -373,10 +373,11 @@ def dist_slack(mpc, prev_load):
   # updating the generators gen_update
   return gen_update
 
+
 def tso_loop():
 
     def scucDAM(data, output, solver):
-        c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"), ames_base_case_file)
+        c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         if day > -1:
             model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData)
             model.solve(solver=solver)
@@ -411,7 +412,7 @@ def tso_loop():
                 if lmp is None:
                     lmp = 0
                 DA_LMPs[bn - 1][h] = abs(round(lmp, 2))  # publishing $/p.u.h
-                DA_LMPs_pub[bn - 1][h] = abs(round(lmp / baseS, 2))  # publishing $/MWh
+                DA_LMPs_pub[bn - 1][h] = abs(round(lmp / baseS, 4))  # publishing $/MWh
 
         for i in range(fncsBus.shape[0]):
             lmps = {'bus' + str(i + 1): [DA_LMPs_pub[i]]}
@@ -476,11 +477,15 @@ def tso_loop():
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
-
+                    # print(str(ld) + " cleared quantity for hour " + str(t) + " --> " + str(instance.PSLoadDemand[ld, t].value), flush=True)
             for i in range(fncsBus.shape[0]):
                 gld_scale = float(fncsBus[i, 2])
                 lse = 'LSE' + str(i + 1)
-                row = lseDispatch[lse]
+                try:
+                    row = lseDispatch[lse]
+                except:
+                    # print("LSE "+str(i+1) + " is not price sensitive, so returning zero for it", flush=True)
+                    row = np.zeros(24).tolist() # hard-coded to be 24
                 for z in range(len(row)):
                    row[z] = row[z] / gld_scale * baseS
                 fncs.publish('cleared_q_da_' + str(i + 1), json.dumps(row))
@@ -494,7 +499,7 @@ def tso_loop():
         return uc_df, dispatch, DA_LMPs
 
     def scedRTM(data, uc_df, output, solver):
-        c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"), ames_base_case_file)
+        c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         c.gen_status = uc_df.astype(int)
 
         model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData)
@@ -520,8 +525,8 @@ def tso_loop():
                 bn = int(b[3:])
                 if lmp is None:
                     lmp = 0
-                RT_LMPs[bn - 1][h] = abs(round(lmp, 2))  # publishing $/p.u.h
-                RT_LMPs_pub[bn - 1][h] = abs(round(lmp / baseS, 2))  # publishing $/MWh
+                RT_LMPs[bn - 1][h] = abs(round(lmp * 12, 2))  # publishing $/p.u.h
+                RT_LMPs_pub[bn - 1][h] = abs(round(lmp * 12 / baseS, 4))  # publishing $/MWh
             if h == TAU:
                 break
 
@@ -600,7 +605,12 @@ def tso_loop():
             for i in range(fncsBus.shape[0]):
                 gld_scale = float(fncsBus[i, 2])
                 lse = 'LSE' + str(i + 1)
-                row = lseDispatch[lse]
+                try:
+                    row = lseDispatch[lse]
+                except:
+                    # print("LSE "+str(i+1) + " is not price sensitive, so returning zero for it", flush=True)
+                    row = np.zeros(TAU).tolist()
+
                 for z in range(len(row)):
                     row[z] = row[z] / gld_scale * baseS
                     bus[i, 2] += row[z]
@@ -608,6 +618,7 @@ def tso_loop():
                 fncs.publish('cleared_q_rt_' + str(i + 1), json.dumps(row))
         else:
             for i in range(fncsBus.shape[0]):
+                busnum = i + 1
                 gld_scale = float(fncsBus[i, 2])
                 if curve:
                     ld = gld_load[busnum]['pcrv'] + (gld_load[busnum]['p'] * gld_scale)
@@ -627,11 +638,11 @@ def tso_loop():
         mm = mn
         hh = hour
         uc = uc_df1
-        for j in range(5):
+        for jj in range(TAU):
             rr = {}
-            for i in range(numGen):
-                if "wind" not in genFuel[i][0]:
-                    name = "GenCo" + str(i + 1)
+            for ii in range(numGen):
+                if "wind" not in genFuel[ii][0]:
+                    name = "GenCo" + str(ii + 1)
                     rr[name] = uc.at[hh, name]
             data.append(rr)
             mm += RTOPDur
@@ -646,11 +657,11 @@ def tso_loop():
 
     def write_default_schedule():
         data = []
-        for j in range(24):
+        for jj in range(24):
             rr = {}
-            for i in range(numGen):
-                if "wind" not in genFuel[i][0]:
-                    name = "GenCo" + str(i + 1)
+            for ii in range(numGen):
+                if "wind" not in genFuel[ii][0]:
+                    name = "GenCo" + str(ii + 1)
                     rr[name] = 1
             data.append(rr)
         df = pd.DataFrame(data)
@@ -726,9 +737,9 @@ def tso_loop():
             print(writeLine, ';', file=fp)
         print('', file=fp)
 
-        print('param BalPenPos := 1000 ;', file=fp)
+        print('param BalPenPos := ' + str(priceCap) + " ;", file=fp)
         print('', file=fp)
-        print('param BalPenNeg := 1000 ;', file=fp)
+        print('param BalPenNeg := ' + str(priceCap) + " ;", file=fp)
         print('', file=fp)
 
         if (dayahead):
@@ -737,7 +748,7 @@ def tso_loop():
             print('param NumTimePeriods := ' + str(hours_in_a_day) + ' ;', file=fp)
             print('', file=fp)
         else:
-            print('param TimePeriodLength := 1 ;', file=fp)
+            print('param TimePeriodLength := ' + str(period/secs_in_a_hr) + ' ;', file=fp)
             print('', file=fp)
             print('param NumTimePeriods := ' + str(TAU) + ' ;', file=fp)
             print('', file=fp)
@@ -760,16 +771,20 @@ def tso_loop():
                     if len(da_dispatch) == 0:
                         powerT0 = Pmax * 0.5
                     else:
-                        powerT0 = da_dispatch[name][0] / baseS     # from this time forward
-                    # unitOnT0State
-                    unitOnT0 = gen_ames[str(i)][0]  # counter in hours set in day ahead
+                        try:
+                            powerT0 = da_dispatch[name][0] / baseS     # dispatch from before (yesterday)
+                        except:
+                            powerT0 = Pmax * 0.5                       # when no dispatch from before (yesterday)
                 else:
                     if len(rt_dispatch) == 0:
                         powerT0 = Pmax * 0.5
                     else:
-                        powerT0 = rt_dispatch[name][0] / baseS     # from this time forward
-                    # unitOnT0State
-                    unitOnT0 = gen_ames[str(i)][0]  # counter in hours set in day ahead
+                        try:
+                            powerT0 = rt_dispatch[name][0] / baseS     # from this time forward
+                        except:
+                            powerT0 = Pmax * 0.5  # when no dispatch from before (yesterday)
+                # unitOnT0State
+                unitOnT0 = gen_ames[str(i)][0]  # counter in hours set in day ahead
                 #put ramp up and down to turn on generators
                 if Pmin < Pmax:
                     writeLine = name + '{: .6f}'.format(powerT0) + ' ' + str(unitOnT0) + '{: .6f}'.format(Pmin) + \
@@ -841,7 +856,7 @@ def tso_loop():
                             if row[0] == busnum:
                                 ndg += float(row[9][j+24])
                         net = ((respMaxMW[i][j] + unRespMW[i][j]) * gld_scale) - ndg
-                        writeLine = 'Bus' + str(busnum) + ' ' + str(j + 1) + ' {:.4f}'.format(net / baseS)
+                        writeLine = 'Bus' + str(busnum) + ' ' + str(j + 1) + ' {:.5f}'.format(net / baseS)
                         print(writeLine, file=fp)
                 else:                                             # real time
                     ndg = 0
@@ -850,7 +865,7 @@ def tso_loop():
                             ndg += gen[row[10], 1]
                     net = ((gld_load[busnum]['resp_max'] + gld_load[busnum]['unresp']) * gld_scale) - ndg
                     for j in range(TAU):
-                        writeLine = 'Bus' + str(busnum) + ' ' + str(j + 1) + ' {:.4f}'.format(net / baseS)
+                        writeLine = 'Bus' + str(busnum) + ' ' + str(j + 1) + ' {:.5f}'.format(net / baseS)
                         print(writeLine, file=fp)
                 print('', file=fp)
             print(';', file=fp)
@@ -870,19 +885,23 @@ def tso_loop():
                     gld_scale = float(fncsBus[i][2])
                     if (dayahead):                                # 12am to 12am
                         for j in range(hours_in_a_day):
-                            writeLine = 'LSE' + str(busnum) + ' ' + str(busnum) + ' Bus' + str(busnum) + ' ' + str(j + 1) + \
-                                        ' 0.0' + ' {: .2f}'.format(respC1[i][j] * baseS / gld_scale) + \
-                                        ' {: .2f}'.format(respC2[i][j] * (baseS * baseS) / (gld_scale * gld_scale)) + \
-                                        ' 0.0' + ' {: .2f}'.format(((respMaxMW[i][j] * gld_scale) / baseS))
-                            print(writeLine, file=fp)
+                            if respMaxMW[i][j] > 1e-6:
+                                writeLine = 'LSE' + str(busnum) + ' ' + str(busnum) + ' Bus' + str(busnum) + ' ' + str(j + 1) + \
+                                            ' 0.0' + \
+                                            ' {: .5f}'.format((respC1[i][j] * baseS) / gld_scale) + \
+                                            ' {: .5f}'.format((respC2[i][j] * baseS * baseS) / (gld_scale * gld_scale)) + \
+                                            ' 0.0' + ' {: .5f}'.format((respMaxMW[i][j] * gld_scale) / baseS)
+                                print(writeLine, file=fp)
                         print('', file=fp)
                     else:                                         # real time
                         for j in range(TAU):
-                            writeLine = 'LSE' + str(busnum) + ' ' + str(busnum) + ' Bus' + str(busnum) + ' ' + str(j + 1) + \
-                                        ' 0.0' + ' {: .2f}'.format(gld_load[busnum]['c1'] * baseS / gld_scale) + \
-                                        ' {: .2f}'.format(gld_load[busnum]['c2'] * (baseS * baseS) / (gld_scale * gld_scale)) + \
-                                        ' 0.0' + ' {: .2f}'.format((gld_load[busnum]['resp_max'] * gld_scale) / baseS)
-                            print(writeLine, file=fp)
+                            if gld_load[busnum]['resp_max'] > 1e-6:
+                                writeLine = 'LSE' + str(busnum) + ' ' + str(busnum) + ' Bus' + str(busnum) + ' ' + str(j + 1) + \
+                                            ' 0.0' + \
+                                            ' {: .5f}'.format((gld_load[busnum]['c1'] * baseS) / gld_scale) + \
+                                            ' {: .5f}'.format((gld_load[busnum]['c2'] * baseS * baseS) / (gld_scale * gld_scale)) + \
+                                            ' 0.0' + ' {: .5f}'.format((gld_load[busnum]['resp_max'] * gld_scale) / baseS)
+                                print(writeLine, file=fp)
                         print('', file=fp)
                 print(';', file=fp)
                 print('', file=fp)
@@ -1127,6 +1146,9 @@ def tso_loop():
                 bus[busnum - 1, 2] += unresp  # because the of the curve_scale
 
     # Initialize the program
+    hours_in_a_day = 24
+    secs_in_a_hr = 3600
+
     x = np.array(range(25))
     y = np.array(load_shape)
     l = len(x)
@@ -1140,7 +1162,7 @@ def tso_loop():
     ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
     if ppc['solver'] == 'cbc':
-      ppc['gencost'][:,4] = 0.0 # can't use quadratic costs with CBC solver
+      ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
     # these have been aliased from case name .json file
     bus = ppc['bus']
     branch = ppc['branch']
@@ -1158,7 +1180,7 @@ def tso_loop():
 
     wind_period = 0
     if ppc['windPower']:
-        wind_period = 3600
+        wind_period = secs_in_a_hr
 
     StartTime = ppc['StartTime']
     tmax = int(ppc['Tmax'])
@@ -1170,6 +1192,7 @@ def tso_loop():
 
     ames = ppc['ames']
     solver = ppc['solver']
+    priceCap = 2 * ppc['priceCap']
     reserveDown = ppc['reserveDown']
     reserveUp = ppc['reserveUp']
     zonalReserves = ppc['zonalReserves']
@@ -1177,7 +1200,7 @@ def tso_loop():
     baseV = int(bus[0, 9])          # base_V in ercot_8.json bus row 0-7, column 9, should be the same for all buses
 
     # ppc arrays(bus type 1=load, 2 = gen(PV) and 3 = swing)
-    # bus: bus id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin, 0?, 0?
+    # bus: bus id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin, LAM P, LAM Q
     # zones: zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent
     # branch: from bus, to bus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax
     # gen: bus id, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
@@ -1216,19 +1239,19 @@ def tso_loop():
             tnext_wind = 0
             ngen = []
             ngenCost = []
-            ngenType = []
+            ngenFuel = []
             for i in range(numGen):
                 if "wind" in genFuel[i][0] and wind_period != 0:
                     ngen.append(gen[i])
                     ngenCost.append(genCost[i])
-                    ngenType.append(genFuel[i])
+                    ngenFuel.append(genFuel[i])
                 else:
                     ngen.append(gen[i])
                     ngenCost.append(genCost[i])
-                    ngenType.append(genFuel[i])
+                    ngenFuel.append(genFuel[i])
             ppc['gen'] = np.array(ngen)
             ppc['gencost'] = np.array(ngenCost)
-            ppc['genfuel'] = np.array(ngenType)
+            ppc['genfuel'] = np.array(ngenFuel)
             gen = ppc['gen']
             genCost = ppc['gencost']
             genFuel = ppc['genfuel']
@@ -1250,7 +1273,6 @@ def tso_loop():
     RTOPDur = period // 60  # in minutes
     RTDeltaT = 1            # in minutes
     TAU = RTOPDur // RTDeltaT
-    hours_in_a_day = 24
     NS = 4  # number of segments
     da_bid = False
     gen_ames = {}
@@ -1263,14 +1285,15 @@ def tso_loop():
     gld_load = {}  # key on bus number
 
     # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
-    for row in gen:
-        row[9] = 0.1 * row[8]
+    if not ames:
+        for row in gen:
+            row[9] = 0.1 * row[8]
 
     # TODO: more efficient to concatenate outside a loop
     for i in range(fncsBus.shape[0]):
         busnum = i + 1
         genidx = ppc['gen'].shape[0]
-        # I suppose a generator for all sum generator a bus?
+        # I suppose a generator for a summing generators on a bus?
         ppc['gen'] = np.concatenate(
             (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
         ppc['gencost'] = np.concatenate(
@@ -1372,6 +1395,10 @@ def tso_loop():
                 busnum = int(topic[14:])
                 gld_load[busnum]['c1'] = float(val)
             #      print ('RESPONSIVE_C1_', busnum, 'at', ts, '=', val, flush=True)
+            elif 'RESPONSIVE_C0_' in topic:
+                busnum = int(topic[14:])
+                gld_load[busnum]['c0'] = float(val)
+            #      print ('RESPONSIVE_C1_', busnum, 'at', ts, '=', val, flush=True)
             elif 'RESPONSIVE_DEG_' in topic:
                 busnum = int(topic[15:])
                 gld_load[busnum]['deg'] = int(val)
@@ -1397,7 +1424,7 @@ def tso_loop():
                 respC1[busnum] = day_ahead_bid['resp_c1']
                 respC0[busnum] = 0.0  # day_ahead_bid['resp_c0']
                 resp_deg[busnum] = day_ahead_bid['resp_deg']
-    #            print('Day Ahead Bid for Bus', busnum, 'at', ts, '=', day_ahead_bid, flush=True)
+                # print('Day Ahead Bid for Bus', busnum, 'at', ts, '=', day_ahead_bid, flush=True)
 
         #  print(ts, 'FNCS inputs', gld_load, flush=True)
         # fluctuate the wind plants
@@ -1470,8 +1497,8 @@ def tso_loop():
 
         # run SCED/SCUC in AMES/PSST to establish the next day's unit commitment and dispatch
         if ts >= tnext_ames and ames:
-#            print('bus_b4_opf = ', bus[:, 2].sum())
-#            print('gen_b4_opf = ', gen[:, 1].sum())
+            # print('bus_b4_opf = ', bus[:, 2].sum())
+            # print('gen_b4_opf = ', gen[:, 1].sum())
             if mn % 60 == 0:
                 hour = hour + 1
                 mn = 0
@@ -1480,15 +1507,15 @@ def tso_loop():
                     day = day + 1
 
             # un-comment file_time for multiple AMES files
-            #file_time = str(day) + '_' + str(hour) + '_' + str(mn) + '_'
+            # file_time = str(day) + '_' + str(hour) + '_' + str(mn) + '_'
             print_time = str(day) + '_' + str(hour) + '_' + str(mn) + '_'
 
             # update cost coefficients, set dispatchable load, put unresp+curve load on bus
             update_cost_and_load()
 
-            # Day ahead
+            # Run the day ahead
             if hour == 12 and mn == 0:
-                # Run the day ahead
+
                 ames_DAM_case_file = "./" + file_time + "dam.dat"
                 write_psst_file(ames_DAM_case_file, True)
                 da_schedule, da_dispatch, da_lmps = scucDAM(ames_DAM_case_file, file_time + "GenCoSchedule.dat", solver)
@@ -1498,17 +1525,19 @@ def tso_loop():
 
             # Real time and update the dispatch schedules in ppc
             if day > 1:
-                # Change the DA Schedule and the dispatch
+                # Change the DA Schedule and the dispatchable generators
                 if day > lastDay:
-                    prev_da_schedule = deepcopy(da_schedule)
+                    schedule = deepcopy(da_schedule)
                     lastDay = day
+
                 if mn == 0:
+                    # uptime and downtime in hour for each generator
+                    # and are counted using commitment schedule for the day
                     for i in range(numGen):
                         if "wind" not in genFuel[i][0]:
                             name = "GenCo" + str(i + 1)
-                            # are the schedule from 12 on from the day ahead calculation
-                            gen[i, 7] = prev_da_schedule.at[hour, name]
-                            if int(gen[i, 7]) == 1:
+                            gen[i, 7] = int(schedule.at[hour, name])
+                            if gen[i, 7] == 1:
                                 if gen_ames[str(i)][0] > 0:
                                     gen_ames[str(i)][0] += 1
                                 else:
@@ -1522,7 +1551,7 @@ def tso_loop():
                 # Run the real time and publish the LMP
                 ames_RTM_case_file = "./" + file_time + "rtm.dat"
                 write_psst_file(ames_RTM_case_file, False)
-                rtm_schedule = write_rtm_schedule(prev_da_schedule, da_schedule)
+                rtm_schedule = write_rtm_schedule(schedule, da_schedule)
                 rt_dispatch, rt_lmps = scedRTM(ames_RTM_case_file, rtm_schedule, file_time + "RTMResults.dat", solver)
                 print("RT LMPs: \n", print_time, rt_lmps, flush=True)
                 print("RT Gen dispatches: \n", rt_dispatch, flush=True)
@@ -1538,12 +1567,11 @@ def tso_loop():
                     print("We are screwed!!")
                     pass
 
-            #      TODO: fix swing bus
             # write OPF metrics
             Pswing = 0
-            for idx in range(numGen):
-                if gen[idx, 0] == swing_bus:
-                    Pswing += gen[idx, 1]
+            for i in range(numGen):
+                if gen[i, 0] == swing_bus:
+                    Pswing += gen[i, 1]
 
             sum_w = 0
             for key, row in wind_plants.items():
@@ -1553,23 +1581,23 @@ def tso_loop():
             line += '{: .2f}'.format(bus[:, 2].sum()) + ','
             line += '{: .2f}'.format(gen[:, 1].sum()) + ','
             line += '{: .2f}'.format(Pswing) + ','
-            for idx in range(bus.shape[0]):
-                line += '{: .2f}'.format(bus[idx, 13]) + ','
-            for idx in range(numGen):
-                if numGen > idx:
-                    line += '{: .2f}'.format(gen[idx, 1]) + ','
+            for i in range(bus.shape[0]):
+                line += '{: .2f}'.format(bus[i, 13]) + ','
+            for i in range(numGen):
+                if numGen > i:
+                    line += '{: .2f}'.format(gen[i, 1]) + ','
             line += '{: .2f}'.format(sum_w)
             print(line, sep=', ', file=op, flush=True)
 
             mn = mn + RTOPDur  # period // 60
             tnext_ames += period
-#            print('bus_after_opf = ', bus[:, 2].sum())
-#            print('gen_after_opf = ', gen[:, 1].sum())
+            # print  ('bus_after_opf = ', bus[:, 2].sum())
+            # print  ('gen_after_opf = ', gen[:, 1].sum())
 
         # run OPF to establish the prices and economic dispatch - currently period = 300s
         if ts >= tnext_opf and not ames:
-#            print('bus_b4_opf = ', bus[:, 2].sum())
-#            print('gen_b4_opf = ', gen[:, 1].sum())
+            # print  ('bus_b4_opf = ', bus[:, 2].sum())
+            # print  ('gen_b4_opf = ', gen[:, 1].sum())
 
             # update cost coefficients, set dispatchable load, put unresp+curve load on bus
             update_cost_and_load()
@@ -1608,8 +1636,8 @@ def tso_loop():
             ppc['gen'][:, 1] = opf_gen[:, 1]  # set the economic dispatch
             bus = ppc['bus']  # needed to be re-aliased because of [:, ] operator
             gen = ppc['gen']  # needed to be re-aliased because of [:, ] operator
-#            print('bus_after_opf = ', bus[:, 2].sum())
-#            print('gen_after_opf = ', gen[:, 1].sum())
+            # print  ('bus_after_opf = ', bus[:, 2].sum())
+            # print  ('gen_after_opf = ', gen[:, 1].sum())
 
 
         # add the actual scaled GridLAB-D loads to the baseline curve loads, turn off dispatchable loads
@@ -1621,23 +1649,24 @@ def tso_loop():
             if curve:
                 bus[busnum - 1, 2] += gld_load[busnum]['p'] * gld_scale   # add the other half to load
                 bus[busnum - 1, 3] += gld_load[busnum]['q'] * gld_scale
-            genidx = gld_load[busnum]['genidx']
-            gen[genidx, 1] = 0  # p
-            gen[genidx, 2] = 0  # q
-            gen[genidx, 9] = 0  # pmin
+            idx = gld_load[busnum]['genidx']
+            gen[idx, 1] = 0  # p
+            gen[idx, 2] = 0  # q
+            gen[idx, 9] = 0  # pmin
 
         #  print_gld_load(ppc, gld_load, 'RPF', ts)
-#        print('bus_b4_dist_slack = ', bus[:, 2].sum())
-#        print('gen_b4_dist_slack = ', gen[:, 1].sum())
+        # print('bus_b4_dist_slack = ', bus[:, 2].sum())
+        # print('gen_b4_dist_slack = ', gen[:, 1].sum())
 
         # update generation with consideration for distributed slack bus
-#        ppc['gen'][:, 1] = dist_slack(ppc, Pload)
+        # ppc['gen'][:, 1] = dist_slack(ppc, Pload)
 
         # add the actual scaled GridLAB-D loads to the baseline curve loads, turn off dispatchable loads
-#        print('bus_b4_pf = ', ppc['bus'][:, 2].sum())
-#        print('gen_b4_pf = ', ppc['gen'][:, 1].sum())
+        # print('bus_b4_pf = ', ppc['bus'][:, 2].sum())
+        # print('gen_b4_pf = ', ppc['gen'][:, 1].sum())
 
         rpf = pp.runpf(ppc, ppopt_regular)
+        # TODO: add a check if does not converge, switch to DC
         if not rpf[0]['success']:
             conv_accum = False
             print('rpf did not converge at', ts)
@@ -1650,8 +1679,8 @@ def tso_loop():
         #               success=rpf[0]['success'])
         rBus = rpf[0]['bus']
         rGen = rpf[0]['gen']
-#        print('bus_after_pf = ', rBus[:, 2].sum())
-#        print('gen_after_pf = ', rGen[:, 1].sum())
+        # print('bus_after_pf = ', rBus[:, 2].sum())
+        # print('gen_after_pf = ', rGen[:, 1].sum())
 
         Pload = rBus[:, 2].sum()
         Pgen = rGen[:, 1].sum()
@@ -1665,71 +1694,73 @@ def tso_loop():
         line += '{: .2f}'.format(Pload) + ',' + '{: .2f}'.format(Pgen) + ','
         line += '{: .2f}'.format(Ploss) + ',' + '{: .2f}'.format(Pswing)
         for idx in range(rBus.shape[0]):
-            line += ',' + '{: .2f}'.format(rBus[idx, 7]) # bus per-unit voltages
+            line += ',' + '{: .2f}'.format(rBus[idx, 7])  # bus per-unit voltages
         print(line, sep=', ', file=vp, flush=True)
 
         # update the metrics
         n_accum += 1
         loss_accum += Ploss
         for i in range(fncsBus.shape[0]):
-            busnum = int(fncsBus[i, 0])
-            busidx = busnum - 1
+            busnum = fncsBus[i, 0]
+            busidx = int(fncsBus[i, 0]) - 1
             row = rBus[busidx].tolist()
             # publish the bus VLN and LMP [$/kwh] for GridLAB-D
             bus_vln = 1000.0 * row[7] * row[9] / math.sqrt(3.0)
-            fncs.publish('three_phase_voltage_Bus' + str(busnum), bus_vln)
+            fncs.publish('three_phase_voltage_Bus' + busnum, bus_vln)
             if ames:
                 lmp = float(bus[busidx, 13]) * 0.001
             else:
                 lmp = float(opf_bus[busidx, 13]) * 0.001
-            fncs.publish('LMP_Bus' + str(busnum), lmp)  # publishing $/kwh
+            fncs.publish('LMP_Bus' + busnum, lmp)  # publishing $/kwh
             # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
             PD = row[2]  # + resp # TODO, if more than one FNCS bus, track scaled_resp separately
             Vpu = row[7]
-            bus_accum[str(busnum)][0] += row[13] * 0.001
-            bus_accum[str(busnum)][1] += row[14] * 0.001
-            bus_accum[str(busnum)][2] += PD
-            bus_accum[str(busnum)][3] += row[3]
-            bus_accum[str(busnum)][4] += row[8]
-            bus_accum[str(busnum)][5] += Vpu
-            if Vpu > bus_accum[str(busnum)][6]:
-                bus_accum[str(busnum)][6] = Vpu
-            if Vpu < bus_accum[str(busnum)][7]:
-                bus_accum[str(busnum)][7] = Vpu
+            bus_accum[busnum][0] += row[13] * 0.001
+            bus_accum[busnum][1] += row[14] * 0.001
+            bus_accum[busnum][2] += PD
+            bus_accum[busnum][3] += row[3]
+            bus_accum[busnum][4] += row[8]
+            bus_accum[busnum][5] += Vpu
+            if Vpu > bus_accum[busnum][6]:
+                bus_accum[busnum][6] = Vpu
+            if Vpu < bus_accum[busnum][7]:
+                bus_accum[busnum][7] = Vpu
+
         for i in range(rGen.shape[0]):
+            idx = str(i + 1)
             row = rGen[i].tolist()
             busidx = int(row[0] - 1)
             # Pgen, Qgen, LMP_P (includes the responsive load as dispatched by OPF)
-            gen_accum[str(i + 1)][0] += row[1]
-            gen_accum[str(i + 1)][1] += row[2]
+            gen_accum[idx][0] += row[1]
+            gen_accum[idx][1] += row[2]
             if ames:
-                gen_accum[str(i + 1)][2] += float(bus[busidx, 13]) * 0.001
+                gen_accum[idx][2] += float(bus[busidx, 13]) * 0.001
             else:
-                gen_accum[str(i + 1)][2] += float(opf_bus[busidx, 13]) * 0.001
+                gen_accum[idx][2] += float(opf_bus[busidx, 13]) * 0.001
 
         # write the metrics
         if ts >= tnext_metrics:
-            sys_metrics[str(ts)] = {casename: [loss_accum / n_accum, conv_accum]}
+            m_ts = str(ts)
+            sys_metrics[m_ts] = {casename: [loss_accum / n_accum, conv_accum]}
 
-            bus_metrics[str(ts)] = {}
+            bus_metrics[m_ts] = {}
             for i in range(fncsBus.shape[0]):
-                busnum = int(fncsBus[i, 0])
-                busidx = busnum - 1
-                row = rBus[busidx].tolist()
-                met = bus_accum[str(busnum)]
-                bus_metrics[str(ts)][str(busnum)] = [met[0] / n_accum, met[1] / n_accum,
-                                                     met[2] / n_accum, met[3] / n_accum,
-                                                     met[4] / n_accum, met[5] / n_accum,
-                                                     met[6], met[7],
-                                                     met[8], met[9],
-                                                     met[10], met[11]]
-                bus_accum[str(busnum)] = [0, 0, 0, 0, 0, 0, 0, 99999.0, 0, 0, 0, 0]
+                busnum = fncsBus[i, 0]
+                met = bus_accum[busnum]
+                bus_metrics[m_ts][busnum] = [met[0] / n_accum, met[1] / n_accum,
+                                             met[2] / n_accum, met[3] / n_accum,
+                                             met[4] / n_accum, met[5] / n_accum,
+                                             met[6], met[7],
+                                             met[8], met[9],
+                                             met[10], met[11]]
+                bus_accum[busnum] = [0, 0, 0, 0, 0, 0, 0, 99999.0, 0, 0, 0, 0]
 
-            gen_metrics[str(ts)] = {}
+            gen_metrics[m_ts] = {}
             for i in range(rGen.shape[0]):
-                met = gen_accum[str(i + 1)]
-                gen_metrics[str(ts)][str(i + 1)] = [met[0] / n_accum, met[1] / n_accum, met[2] / n_accum]
-                gen_accum[str(i + 1)] = [0, 0, 0]
+                idx = str(i + 1)
+                met = gen_accum[idx]
+                gen_metrics[m_ts][idx] = [met[0] / n_accum, met[1] / n_accum, met[2] / n_accum]
+                gen_accum[idx] = [0, 0, 0]
 
             tnext_metrics += period
             n_accum = 0
