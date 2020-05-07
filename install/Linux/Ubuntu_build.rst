@@ -373,12 +373,12 @@ As pre-requisites for building this container:
 #. Build and test the Ubuntu installer as described in the previous subsection. By default, InstallBuilder puts the installer into *~/src/tesp/install/tesp_core*, which is the right place for a Docker build.
 
 This Docker build process layers two images. The first image contains the required system and Python packages
-for TESP, on top of Ubuntu 18.04, producing *tesp_foundation*
+for TESP, on top of Ubuntu 18.04, producing *tesp_foundation*. (In what follows, substitute your own DockerHub user name for *temcderm*)
 
 ::
 
  cd ~/src/tesp/install/tesp_foundation
- sudo docker build -t="temcderm/tesp_foundation:0.6.3" .
+ sudo docker build -t="temcderm/tesp_foundation:1.0.0" .
 
 This process takes a while to complete. The second image starts from *tesp_foundation* and layers on the TESP components.
 Primarily, it runs the Linux installer script inside the Docker container. It will check for current versions of the
@@ -389,14 +389,14 @@ would be if some new TESP component introduces a new dependency.
 ::
 
  cd ~/src/tesp/install/tesp_core
- sudo docker build -t="temcderm/tesp_core:0.6.3" .
+ sudo docker build -t="temcderm/tesp_core:1.0.0" .
 
 When complete, the layered image can be pushed up to Docker Hub.
 
 ::
 
  cd ~/src/tesp/install/tesp_core
- sudo docker push temcderm/tesp_core:0.6.3
+ sudo docker push temcderm/tesp_core:1.0.0
 
 DEPRECATED: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

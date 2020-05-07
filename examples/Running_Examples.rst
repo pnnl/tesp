@@ -4,13 +4,14 @@ Using Docker and the autotest.py script
 ---------------------------------------
 
 After installing Docker on your platform, invoke the following from inside 
-a Terminal or Command Prompt, replacing *c:temp* with an appropriate working
-directory on your host file system:
+a Terminal or Command Prompt, replacing your own user name for *tom*:
 
 ::
 
- docker pull temcderm/tesp_core:v1
- docker run --name tesp -it --mount type=bind,source=c:temp,destination=/data temcderm/tesp_core:v1
+ docker pull temcderm/tesp_core
+ cd c:\Users\tom
+ md tesp
+ docker run --name tesp -it --mount type=bind,source=c:\Users\tom\tesp,destination=/data temcderm/tesp_core
 
 After executing the second of these commands, you will be at a Linux-like command
 prompt inside your Docker container. Simulations must be run inside the Docker container, with results
@@ -20,8 +21,8 @@ work space and try a quick sample run:
 ::
 
  cd /data
- make_tesp_user_dir.sh tesp
- cd tesp/examples/loadshed
+ tesp_to_current_dir.sh
+ cd examples/loadshed
  ./run.sh
 
 This launches process that should all finish within a second or two, leaving some
@@ -33,7 +34,7 @@ your Docker container:
 
 ::
 
- cd /data/tesp
+ cd /data
  python3 autotest.py
 
 When you are finished with a Docker work session:

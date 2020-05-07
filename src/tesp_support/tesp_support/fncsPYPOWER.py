@@ -64,7 +64,7 @@ def load_json_case(fname):
   Returns:
     dict: the loaded PYPOWER case structure
   """
-  lp = open (fname).read()
+  lp = open (fname, encoding='utf-8').read()
   ppc = json.loads(lp)
   ppc['bus'] = np.array (ppc['bus'])
   ppc['gen'] = np.array (ppc['gen'])
