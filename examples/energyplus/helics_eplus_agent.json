@@ -1,0 +1,48 @@
+{
+  "name" : "eplus_agent",
+  "period" : 300.0,
+  "loglevel" : 4,
+  "publications" : [ 
+    {
+      "global" : false,
+      "key" : "power_A",
+      "type" : "double",
+      "unit" : "W"
+    },
+    {
+      "global" : false,
+      "key" : "power_B",
+      "type" : "double",
+      "unit" : "W"
+    },
+    {
+      "global" : false,
+      "key" : "power_C",
+      "type" : "double",
+      "unit" : "W"
+    },
+    {
+      "global" : false,
+      "key" : "bill_mode",
+      "type" : "string"
+    },
+    {
+      "global" : false,
+      "key" : "price",
+      "type" : "double",
+      "unit" : "$/kwh"
+    },
+    {
+      "global" : false,
+      "key" : "monthly_fee",
+      "type" : "double",
+      "unit" : "$"
+    }
+  ],
+  "subscriptions" : [
+    {
+      "key" : "player/clear_price", 
+      "type" : "double"
+    }
+  ]
+}
