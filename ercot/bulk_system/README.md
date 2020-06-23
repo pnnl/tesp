@@ -1,7 +1,11 @@
 8-Bus and 200-Bus ERCOT Bulk System Models
 ------------------------------------------
 
-Copyright (c) 2018, Battelle Memorial Institute
+Copyright (c) 2018-2020, Battelle Memorial Institute
+
+This directory contains the baseline bulk generation and transmission model for 8-bus and 200-bus
+versions of the ERCOT Test System. Changes should be tested here before use in the complete
+ERCOT Test System, which is located in a sibling directory ../case8.
 
 Directory of input and script files:
 
@@ -27,29 +31,39 @@ Directory of input and script files:
 - *process_pypower.py*; plots the metrics from loopERCOT solution
 - *run_ercot.py*; spot-check the regular or optimal power flow solution at peak load for either the 8-bus or 200-bus model
 - *test_wind.py*; runs a yearly wind plant simulation; edit this file to change the plant size
+- *update_gen8.py*; copies the generators (including costs and fuel types) from local ercot_8.json to ../case8/ercot_new_8.json, preserving other sections of that file
 - *wind_plants.py*; runs a two-day output simulation of wind plants in the 8-bus model
 
 To regenerate the 8-Bus Model:
 
     a. Edit Buses8.csv, Lines8.csv and Units8.csv. No transformers are included.
-    b. Run 'python make_case8.py'
+    b. Edit make_case8.py to change the generating unit disaggregation
+    c. Run 'python3 make_case8.py'
 
 To regenerate the 200-Bus Model:
 
     a. Edit RetainedBuses.csv, RetainedLines.csv, RetainedTransformers.csv and Units.csv.
-	b. Run 'python make_case.py'
+    b. Run 'python3 make_case.py'
 
 To run the 8-bus Model:
 
-	a. edit run_ercot.py to make sure it runs ercot_8.json
-    b. Run 'python run_ercot.py' to spot check the PF and OPF solutions at peak load.
-    c. Run 'python loopERCOT.py' to run a time-stepping check with varying load.
-    d. Run 'python process_pypower.py' to plot the results of loopERCOT.py
+    a. edit run_ercot.py to make sure it runs ercot_8.json
+    b. Run 'python3 run_ercot.py' to spot check the PF and OPF solutions at peak load.
+    c. Run 'python3 loopERCOT.py' to run a time-stepping check with varying load.
+    d. Run 'python3 process_pypower.py' to plot the results of loopERCOT.py
 
 To run the 200-bus Model:
 
-	a. edit run_ercot.py to make sure it runs ercot_200.json
-	b. Run 'python run_ercot.py' to spot check the PF and OPF solutions at peak load.
+    a. edit run_ercot.py to make sure it runs ercot_200.json
+    b. Run 'python3 run_ercot.py' to spot check the PF and OPF solutions at peak load.
+
+To use an updated 8-bus Model in the complete ERCOT Test System:
+
+    a. Regenerate the 8-Bus Model as described above, with changes to the network and/or generating unit disaggregation
+    b. Run the 8-Bus Model as described above, to make sure it behaves as expected without GridLAB-D and transactive agents
+    c. If only the unit disaggregation changed, run 'python3 update_gen8.py' to update just the generators in '../case8/ercot_new_8.json'.
+    d. If any other network attributes changed, run 'cp ercot_8.json ../case8/ercot_new_8.json'
+    e. Compare and reconcile changes between ercot_8.json and ercot_new_8.json in ../case8
 
 loopERCOT.py and process_pypower.py have not been tested yet with the 200-bus model.
 

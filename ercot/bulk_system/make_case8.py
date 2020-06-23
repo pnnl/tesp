@@ -191,14 +191,22 @@ if __name__ == '__main__':
     rated = npar * float(ln[10])  # this is MW, not amps
     ppcase['branch'].append ([bus1, bus2, r1, x1, b1, rated, rated, rated, 0.0, 0.0, 1, -360.0, 360.0])
   idx = 1
-  for ln in dunits:
+  print ('Units')
+  total_units = 0
+  print ('Idx B#       Sg       Pg     Pmin     Qmin     Qmax       c2       c1       c0  N Fuel')
+  for ln in dunits: ### disaggregation
 #    idx = int(ln[0])
     n1 = int(ln[1])
     Sg = float(ln[2])
     if ln[9] == 'wind':
       nunits = 1
+    elif ln[9] == 'gas':
+      nunits = int ((Sg + 500.0) / 500.0)
+    elif ln[9] == 'coal':
+      nunits = int ((Sg + 1000.0) / 1000.0)
     else:
       nunits = int ((Sg + 2000.0) / 2000.0)
+    total_units += nunits
     Sg /= nunits
     Pg = Sg * dispatch
     Pmin = float(ln[3]) / nunits
@@ -211,16 +219,32 @@ if __name__ == '__main__':
       Pg = 0.0
     Qmin = float(ln[4]) / nunits
     Qmax = float(ln[5]) / nunits
+    # these are typical cost coefficients [$,MW] for typical unit of this fuel type
     c2 = float(ln[6])
     c1 = float(ln[7])
     c0 = float(ln[8])
-    print ('{:3d} {:2d} {:8.2f} {:8.2f} {:8.2f} {:8.2f} {:8.2f} {:8.5f} {:8.2f} {:8.2f} {:d} {:s}'.format (idx, n1,
+
+    print ('{:3d} {:2d} {:8.2f} {:8.2f} {:8.2f} {:8.2f} {:8.2f} {:8.5f} {:8.2f} {:8.2f} {:2d} {:s}'.format (idx, n1,
             Sg, Pg, Pmin, Qmin, Qmax, c2, c1, c0, nunits, ln[9]))
     idx += 1
+    #  for disaggregated units, we want to space the values +/- 10% around the mean
+    if nunits > 1:
+      step_c2 = 0.2 * c2 / (nunits - 1)
+      step_c1 = 0.2 * c1 / (nunits - 1)
+      step_c0 = 0.2 * c0 / (nunits - 1)
+      c2 *= 0.9
+      c1 *= 0.9
+      c0 *= 0.9
     for i in range(nunits):
+#      print ('  c2={:8.5f} c1={:8.2f} c0={:8.2f}'.format (c2, c1, c0))
       ppcase['gen'].append ([n1, Pg, 0.0, Qmax, Qmin, 1.0, Sg, 1, Sg, Pmin, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
       ppcase['gencost'].append ([2, 0, 0, 3, c2, c1, c0])
       ppcase['genfuel'].append ([ln[9]])
+      if nunits > 1:
+        c2 += step_c2
+        c1 += step_c1
+        c0 += step_c0
+  print ('{:d} total units'.format(total_units))
 
   ppcase['swing_bus'] = swing_bus
   ppcase['metadata'] = meta
