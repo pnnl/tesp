@@ -1,5 +1,7 @@
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support/energyplus
 
+energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outSchoolBase -r SchoolBase.idf
+
 energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outFullServiceRestaurant -r $TESP_SUPPORT/FullServiceRestaurant.idf
 energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outHospital -r $TESP_SUPPORT/Hospital.idf
 energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outLargeHotel -r $TESP_SUPPORT/LargeHotel.idf

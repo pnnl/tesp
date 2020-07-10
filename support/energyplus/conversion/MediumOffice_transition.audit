@@ -1,0 +1,100 @@
+
+Conversion 8.3 => 8.4
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
+
+Conversion 8.4 => 8.5
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
+
+Conversion 8.5 => 8.6
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
+
+Conversion 8.6 => 8.7
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Core_bottom VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Core_mid VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Core_top VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_bot_ZN_1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_bot_ZN_2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_bot_ZN_3 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_bot_ZN_4 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_mid_ZN_1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_mid_ZN_2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_mid_ZN_3 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_mid_ZN_4 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_top_ZN_1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_top_ZN_2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_top_ZN_3 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Perimeter_top_ZN_4 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+
+Conversion 8.7 => 8.8
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
+
+Conversion 8.8 => 8.9
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
+
+Conversion 8.9 => 9.0
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
+
+Conversion 9.0 => 9.1
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
+
+Conversion 9.1 => 9.2
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
+
+Conversion 9.2 => 9.3
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\MediumOffice.idf
