@@ -194,8 +194,8 @@ def process_eplus(nameroot, title=None, pngfile=None):
     ax[1,1].set_title ('Building Electrical Demand')
     ax[1,1].legend(loc='best')
 
-#    ax[2,1].plot(hrs, data[:,COOLING_STATE_IDX], color='blue', label='Cooling')
-#    ax[2,1].plot(hrs, data[:,HEATING_STATE_IDX], color='red', label='Heating')
+#    ax[2,1].plot(hrs, data[:,COOLING_DELTA_IDX], color='blue', label='Cooling')
+#    ax[2,1].plot(hrs, data[:,HEATING_DELTA_IDX], color='red', label='Heating')
 #    ax[2,1].set_ylabel(HEATING_STATE_UNITS)
     ax[2,1].plot(hrs, 0.001 * data[:,COOLING_POWER_IDX], color='blue', label='Cooling')
     ax[2,1].plot(hrs, 0.001 * data[:,HEATING_POWER_IDX], color='red', label='Heating')

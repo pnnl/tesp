@@ -24,6 +24,7 @@ LDADD += $(FNCS_LIBS)
 LDADD += $(CZMQ_LIBS)
 LDADD += $(ZMQ_LIBS)
 
-bin_PROGRAMS = eplus_agent
+bin_PROGRAMS = eplus_agent eplus_agent_helics
 eplus_agent_SOURCES = eplus_agent.cpp jsoncpp.cpp
+eplus_agent_helics_SOURCES = eplus_agent_helics.cpp jsoncpp.cpp
 

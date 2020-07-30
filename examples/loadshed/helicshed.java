@@ -3,7 +3,7 @@ import com.java.helics.*;
 
 public class helicshed {
     public static void main(String[] args) {
-	System.loadLibrary ("JNIhelics");
+	System.loadLibrary ("helicsJava");
 	System.out.println ("HELICS Version: " + helics.helicsGetVersion());
 	SWIGTYPE_p_void fi = helics.helicsCreateFederateInfo();
 	helics.helicsFederateInfoSetCoreTypeFromString (fi, "zmq");

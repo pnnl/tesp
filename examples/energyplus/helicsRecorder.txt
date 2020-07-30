@@ -5,3 +5,7 @@ eplus_agent/monthly_fee
 eplus_agent/power_A
 eplus_agent/power_B
 eplus_agent/power_C
+eplus_agent/cooling_setpoint_delta
+eplus_agent/heating_setpoint_delta
+energyPlus/EMS Cooling Controlled Load
+energyPlus/EMS Heating Controlled Load
