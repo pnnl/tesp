@@ -519,7 +519,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
   Output:Variable,WHOLE BUILDING,Facility Total Electric Demand Power,timestep;
   Output:Variable,WHOLE BUILDING,Facility Total HVAC Electric Demand Power,timestep;
   Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
-  Output:Variable,*,Site Outdoor Air Drybulb Temperature,timestep; """, file=op)
+  Output:Variable,Environment,Site Outdoor Air Drybulb Temperature,timestep; """, file=op)
 
   op.close()
 

@@ -185,6 +185,7 @@ for configuring a build with $TESP_INSTALL.
        -DJAVA_AWT_INCLUDE_PATH=NotNeeded -DHELICS_DISABLE_BOOST=ON \
        -DCMAKE_INSTALL_PREFIX=$TESP_INSTALL -DCMAKE_BUILD_TYPE=Release ..
  # leave off -DCMAKE_INSTALL_PREFIX if using the default /usr/local
+ git submodule update --init
  make -j4
  sudo make install
 
@@ -283,10 +284,10 @@ binding generator that it uses, and then manually patch one of the ns-3 build fi
 
 ::
  
- pip3 install pybindgen
+ pip3 install pybindgen --upgrade
  pip3 show pybindgen
  # edit line 17 of ~/src/ns-3-dev/bindings/python/wscript to specify the correct matching version, for example:
- REQUIRED_PYBINDGEN_VERSION = '0.20.1'
+ REQUIRED_PYBINDGEN_VERSION = '0.21.0'
 
 Then, we can build ns-3, install that into the same location as other parts of TESP, and test it:
 
@@ -296,6 +297,7 @@ Then, we can build ns-3, install that into the same location as other parts of T
  git clone -b feature/13b https://github.com/GMLC-TDC/helics-ns3 contrib/helics
  # --with-helics may not be left blank, so use either $TESP_INSTALL or /usr/local
  # --build-profile=optimized can be used, but it disables ns3 logging
+ ./waf distclean
  ./waf configure --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --disable-werror --enable-examples --enable-tests
  ./waf build 
  sudo ./waf install
@@ -324,9 +326,9 @@ In order to build the documentation for ReadTheDocs:
 
 ::
 
- pip3 install recommonmark
- pip3 install sphinx-jsonschema
- pip3 install sphinx_rtd_theme
+ pip3 install recommonmark --upgrade
+ pip3 install sphinx-jsonschema --upgrade
+ pip3 install sphinx_rtd_theme --upgrade
  cd ~/src/tesp/doc
  make html
 

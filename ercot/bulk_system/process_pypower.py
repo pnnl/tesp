@@ -5,6 +5,7 @@ import json;
 import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
+from matplotlib.lines import Line2D;
 
 def bus_color(key):
     if key == '1':
@@ -189,6 +190,11 @@ def process_pypower(nameroot):
     for i in range(data_g.shape[0]):
         ax[1,0].plot(hrs, data_g[i,:,PGEN_IDX], color=unit_color (dict, gen_keys[i]), 
                      linewidth=unit_width (dict,gen_keys[i]))
+    fuel_lines = [Line2D([0], [0], color='g', lw=4),
+                  Line2D([0], [0], color='r', lw=4),
+                  Line2D([0], [0], color='k', lw=4),
+                  Line2D([0], [0], color='b', lw=4)]
+    ax[1,0].legend(fuel_lines, ['Wind', 'Nuclear', 'Coal', 'Gas'])
 
     ax[0,1].set_title ('Bus Voltages')
     ax[0,1].set_ylabel(VMAG_UNITS)

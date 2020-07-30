@@ -132,7 +132,7 @@
     -6.00,                   !- Time Zone {hr}
     190;                     !- Elevation {m}
 
- ! CHICAGO_IL_USA Annual Heating 99.6%, MaxDB=-20.6°C
+ ! CHICAGO_IL_USA Annual Heating 99.6%, MaxDB=-20.6Â°C
 
   SizingPeriod:DesignDay,
     CHICAGO Ann Htg 99.6% Condns DB,  !- Name
@@ -162,7 +162,7 @@
     ,                        !- ASHRAE Clear Sky Optical Depth for Diffuse Irradiance (taud) {dimensionless}
     0.00;                    !- Sky Clearness
 
- ! CHICAGO_IL_USA Annual Cooling (WB=>MDB) .4%, MDB=31.2°C WB=25.5°C
+ ! CHICAGO_IL_USA Annual Cooling (WB=>MDB) .4%, MDB=31.2Â°C WB=25.5Â°C
 
   SizingPeriod:DesignDay,
     CHICAGO Ann Clg .4% Condns WB=>MDB,  !- Name
@@ -12865,11 +12865,11 @@
     Set H_CUR = H_CUR + CORNER_CLASS_1_POD_1_ZN_1_FLR_1_T * CORNER_CLASS_1_POD_1_ZN_1_FLR_1_V,  !- <none>
     Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORNER_CLASS_1_POD_1_ZN_1_FLR_1_V,  !- <none>
     ENDIF,                   !- <none>
-    IF (CORNER_CLASS_1_POD_2_ZN_1_FLR_1_H == 0 && Cooling_Coil_5 <> 0),  !- <none>
+    IF (CORNER_CLASS_1_POD_2_ZN_1_FLR_1_H == 0 && Cooling_Coil_6 <> 0),  !- <none>
     Set C_DES = C_DES + C2 * CORNER_CLASS_1_POD_2_ZN_1_FLR_1_V,  !- <none>
     Set C_CUR = C_CUR + CORNER_CLASS_1_POD_2_ZN_1_FLR_1_T * CORNER_CLASS_1_POD_2_ZN_1_FLR_1_V,  !- <none>
     Set TOTAL_COOL_V = TOTAL_COOL_V + CORNER_CLASS_1_POD_2_ZN_1_FLR_1_V,  !- <none>
-    ELSEIF (CORNER_CLASS_1_POD_2_ZN_1_FLR_1_H == 0 && Cooling_Coil_5 ==0),  !- <none>
+    ELSEIF (CORNER_CLASS_1_POD_2_ZN_1_FLR_1_H == 0 && Cooling_Coil_6 ==0),  !- <none>
     Set C_DES = C_DES,       !- <none>
     Set C_CUR = C_CUR,       !- <none>
     ELSE,                    !- <none>
@@ -13118,6 +13118,7 @@
     Set TOTAL_HEAT_V = TOTAL_HEAT_V + OFFICES_ZN_1_FLR_1_V,  !- <none>
     ENDIF,                   !- <none>
     Set Total_V = 27484,     !- <none>
+    Set T_CUR = 0,           !- <none>
     Set T_CUR = T_CUR + BATH_ZN_1_FLR_1_T * BATH_ZN_1_FLR_1_V,  !- <none>
     Set T_CUR = T_CUR + CAFETERIA_ZN_1_FLR_1_T * CAFETERIA_ZN_1_FLR_1_V,  !- <none>
     Set T_CUR = T_CUR + COMPUTER_CLASS_ZN_1_FLR_1_T * COMPUTER_CLASS_ZN_1_FLR_1_V,  !- <none>
@@ -13144,6 +13145,7 @@
     Set T_CUR = T_CUR + MULT_CLASS_2_POD_3_ZN_1_FLR_1_T * MULT_CLASS_2_POD_3_ZN_1_FLR_1_V,  !- <none>
     Set T_CUR = T_CUR + OFFICES_ZN_1_FLR_1_T * OFFICES_ZN_1_FLR_1_V,  !- <none>
     Set T_CUR = T_CUR/Total_V*9.0/5.0+32.0,  !- <none>
+    Set T_Cooling = 0,       !- <none>
     Set T_Cooling = T_Cooling + C1 * BATH_ZN_1_FLR_1_V,  !- <none>
     Set T_Cooling = T_Cooling + C1 * CORRIDOR_POD_1_ZN_1_FLR_1_V,  !- <none>
     Set T_Cooling = T_Cooling + C1 * CORRIDOR_POD_2_ZN_1_FLR_1_V,  !- <none>
@@ -13170,6 +13172,7 @@
     Set T_Cooling = T_Cooling + C2 * MULT_CLASS_2_POD_3_ZN_1_FLR_1_V,  !- <none>
     Set T_Cooling = T_Cooling + C2 * OFFICES_ZN_1_FLR_1_V,  !- <none>
     Set T_Cooling = T_Cooling/Total_V*9.0/5.0+32.0,  !- <none>
+    Set T_Heating = 0,       !- <none>
     Set T_Heating = T_Heating + H1 * BATH_ZN_1_FLR_1_V,  !- <none>
     Set T_Heating = T_Heating + H1 * CORRIDOR_POD_1_ZN_1_FLR_1_V,  !- <none>
     Set T_Heating = T_Heating + H1 * CORRIDOR_POD_2_ZN_1_FLR_1_V,  !- <none>
