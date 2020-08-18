@@ -15,6 +15,7 @@ the original TMY3 and again using the weather agent reading a data file. When th
 verifies that both methods give essentially the same result.
 
 The WeatherConfig.json sets the following parameters:
+
 	- *"name": string, has to be "weather",
 	- *"StartTime": string, start of the simulation, for example "2000-01-01 00:00:00",
 	- *"time_stop": string, length of the simulation, unit can be "d, day, days, h, hour, hours, m, min, minute, minutes, s, sec, second, seconds", for example "70m",
@@ -34,6 +35,7 @@ The WeatherConfig.json sets the following parameters:
 			- *"Lower_e_bound": pu of the maximum error at the first hour, for example: 0.5  
 
 The following topics are published by the agent:
+
 	- *weather/temperature
 	- *weather/humidity
 	- *weather/solar_direct
