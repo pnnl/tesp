@@ -6,45 +6,67 @@ Using Docker and the autotest.py script
 After installing Docker on your platform, invoke the following from inside 
 a Terminal or Command Prompt, replacing your own user name for *tom*:
 
+First time, on Windows:
+
 ::
 
- docker pull temcderm/tesp_core
+ docker pull temcderm/tesp_core:v1
  cd c:\Users\tom
  md tesp
- docker run --name tesp -it --mount type=bind,source=c:\Users\tom\tesp,destination=/data temcderm/tesp_core
+ docker run --name tesp -it --mount type=bind,source=c:\Users\tom\tesp,destination=/data temcderm/tesp_core:v1
 
-After executing the second of these commands, you will be at a Linux-like command
+First time, on Mac OS X:
+
+::
+
+ docker pull temcderm/tesp_core:v1
+ cd /Users/tom
+ mkdir tesp
+ docker run --name tesp -it --mount type=bind,source=/Users/tom/tesp,destination=/data temcderm/tesp_core:v1
+
+After executing the last of these commands, you will be at a Linux-like command
 prompt inside your Docker container. Simulations must be run inside the Docker container, with results
 saved on a volume shared between the host file system and the container file system. To set up your
-work space and try a quick sample run:
+work space and try a quick example run:
 
 ::
 
  cd /data
- tesp_to_current_dir.sh
- cd examples/loadshed
+ # tesp_to_current_dir.sh
+ make_tesp_user_dir.sh work
+ cd work/examples/loadshed
  ./run.sh
 
 This launches process that should all finish within a second or two, leaving some
 output files \*metrics.json. If you installed the Python 3 package tesp_support on the host
-system, you can plot from the host system.
+system, you can plot from the host system. Results would be found under either 
+C:\Users\tom\tesp\work for Windows or /Users/tom/tesp/work for Mac OS X.
 
 To run all of the examples, which may take several hours, invoke the following within
 your Docker container:
 
 ::
 
- cd /data
+ cd /data/work
  python3 autotest.py
 
 When you are finished with a Docker work session:
 
 ::
 
- quit
+ exit
  docker stop tesp
 
 And then close the Terminal or Command Prompt you were using to run the Docker container.
+
+To start subsequent sessions of TESP on either Windows or Mac OS X:
+
+::
+
+  docker start tesp
+  docker exec -it tesp /bin/bash
+  cd data/work
+
 
 Running Examples
 ----------------
