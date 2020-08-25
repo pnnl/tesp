@@ -40,7 +40,7 @@ work space and try a quick example run:
 This launches process that should all finish within a second or two, leaving some
 output files \*metrics.json. If you installed the Python 3 package tesp_support on the host
 system, you can plot from the host system. Results would be found under either 
-C:\Users\tom\tesp\work for Windows or /Users/tom/tesp/work for Mac OS X.
+*C:\\Users\\tom\\tesp\\work* for Windows or */Users/tom/tesp/work* for Mac OS X.
 
 To run all of the examples, which may take several hours, invoke the following within
 your Docker container:
