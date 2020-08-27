@@ -131,6 +131,8 @@ $TESP_INSTALL, it has to be spelled out on each line, e.g.:
  PYTHONPATH="/opt/tesp/python"
  JAVAPATH="/opt/tesp/java"
 
+Log out and log back in to Ubuntu for these */etc/environment* changes to take effect.
+
 For Ubuntu in *WSL*, all changes are made to *~/.profile*.
 
 ::
@@ -173,8 +175,7 @@ To build the Java interface for version 10 or later, which has *javah* replaced 
 
 The *make install* step may not work on WSL. A manual example is *cp fncs.jar $TESP_INSTALL/java*
 
-These instructions install HELICS to /usr/local. Use the graphical version of CMake 
-for configuring a build with $TESP_INSTALL.
+To build HELICS with Java and Python bindings:
 
 ::
 
