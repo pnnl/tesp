@@ -18,7 +18,7 @@ else:
   pycall = 'python3'
 
 def valid_var (name):
-  return name.replace (' ', '_').replace ('-', '_')
+  return name.replace (' ', '_').replace ('-', '_').replace ('.', '_').replace ('(', '_').replace (')', '_')
 
 def schedule_sensor(name, op):
   print ('  EnergyManagementSystem:Sensor,', file=op)
