@@ -523,7 +523,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
 
   op.close()
 
-def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf'):
+def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf', write_summary=False):
   """Creates the EMS for an EnergyPlus building model
 
   Args:
@@ -534,7 +534,8 @@ def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf'):
 
   print ('*** make_ems from', sourcedir, 'to', target)
   zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs = summarize_idf (sourcedir + '/eplusout.eio', baseidf)
-#  print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
+  if write_summary:
+    print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
   return write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
 
 def merge_idf (base, ems, StartTime, EndTime, target, StepsPerHour):
