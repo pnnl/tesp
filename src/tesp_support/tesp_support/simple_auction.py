@@ -156,6 +156,9 @@ class simple_auction:
         if price > 0.0:
             self.curve_buyer.add_to_curve (price, quantity, is_on)
 
+    def add_unresponsive_load (self, quantity):
+        self.unresp += quantity
+
     def aggregate_bids (self):
         """Aggregates the unresponsive load and responsive load bids for submission to the bulk system market
         """
