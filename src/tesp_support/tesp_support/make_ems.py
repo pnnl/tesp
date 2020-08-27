@@ -234,7 +234,7 @@ def summarize_idf (fname, baseidf):
     nzones, volume, ncontrols, nsetpoints, nschedused, nhcoils, nccoils, nhvacs))
   return zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs
 
-def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs):
+def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs, bHELICS):
   op = open(target, 'w')
   print ("""! ***EMS PROGRAM***""", file=op)
   nschedused = 0
@@ -490,10 +490,15 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
       zone_sensible_cooling_sensor (zname, op)
     global_variable (valid_var (zname) + '_V', op)
 
+  if bHELICS:
+    CosimInterface = 'HELICS'
+  else:
+    CosimInterface = 'FNCS'
+
   print ("""! ***EXTERNAL INTERFACE***
-  ExternalInterface,
-    FNCS;             !- Name of External Interface
-  ExternalInterface:Variable,
+  ExternalInterface,""", file=op)
+  print ("""    {:s}; !- Name of External Interface""".format (CosimInterface), file=op)
+  print ("""  ExternalInterface:Variable,
     COOL_SETP_DELTA,  !- Name
     0;                !- Initial Value
   ExternalInterface:Variable,
@@ -523,7 +528,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
 
   op.close()
 
-def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf', write_summary=False):
+def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf', write_summary=False, bHELICS=False):
   """Creates the EMS for an EnergyPlus building model
 
   Args:
@@ -532,11 +537,11 @@ def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf', w
     sourcedir (str): directory of the output from EnergyPlus baseline simulation, default ./output
   """
 
-  print ('*** make_ems from', sourcedir, 'to', target)
+  print ('*** make_ems from', sourcedir, 'to', target, 'HELICS', bHELICS)
   zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs = summarize_idf (sourcedir + '/eplusout.eio', baseidf)
   if write_summary:
     print_idf_summary (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
-  return write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
+  return write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs, bHELICS)
 
 def merge_idf (base, ems, StartTime, EndTime, target, StepsPerHour):
   """Assembles a base EnergyPlus building model with EMS and simulation period
