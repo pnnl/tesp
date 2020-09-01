@@ -13,4 +13,4 @@ rm ems*.idf
 rm Merged.idf
 rm *.epw
 rm *.tmy2
-
+rm *.bnd

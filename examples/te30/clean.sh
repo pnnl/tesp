@@ -15,3 +15,5 @@ rm *.dat
 rm output/*
 rmdir output
 rm *.idf
+rm evchargerdet
+rm *.bnd

@@ -2,5 +2,6 @@
 *.log
 *.pcap
 *.o
+*.bnd
 *metrics.json
 __pycache__/

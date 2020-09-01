@@ -12767,6 +12767,7 @@
     Demand_Reporter,         !- Name
     EndOfZoneTimestepAfterZoneReporting,  !- EnergyPlus Model Calling Point
     Report_Demand,           !- Program Name 1
+    Report_Occupants,
     Calculate_Temperatures;  !- Program Name 2
 
   EnergyManagementSystem:Program,
@@ -12803,6 +12804,33 @@
     Set MULT_CLASS_2_POD_2_ZN_1_FLR_1_V = 1908.00,  !- <none>
     Set MULT_CLASS_2_POD_3_ZN_1_FLR_1_V = 1260.00,  !- <none>
     Set OFFICES_ZN_1_FLR_1_V = 1764.00;  !- <none>
+
+  EnergyManagementSystem:Program,
+    Report_Occupants,
+    Set Total_Occupants = 0.0,
+    Set Total_Occupants = Total_Occupants + BATH_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CAFETERIA_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + COMPUTER_CLASS_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORNER_CLASS_1_POD_1_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORNER_CLASS_1_POD_2_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORNER_CLASS_1_POD_3_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORNER_CLASS_2_POD_1_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORNER_CLASS_2_POD_2_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORNER_CLASS_2_POD_3_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_POD_1_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_POD_2_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_POD_3_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + GYM_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + KITCHEN_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + LIBRARY_MEDIA_CENTER_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + MAIN_CORRIDOR_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + MULT_CLASS_1_POD_1_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + MULT_CLASS_1_POD_2_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + MULT_CLASS_1_POD_3_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + MULT_CLASS_2_POD_1_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + MULT_CLASS_2_POD_2_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + MULT_CLASS_2_POD_3_ZN_1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + OFFICES_ZN_1_FLR_1_O;
 
 ! This section is added to calculate the current zones air averaged temperature based on air volumes March 3 2007
 ! This section is added to calculate the current zones air averaged cooling temperature setpoint based on air volumes March 3 2007
@@ -13250,6 +13278,107 @@
     Set Cooling_Deadband = 0.0,  !- <none>
     Set Heating_Deadband = 0.0;  !- <none>
 
+  EnergyManagementSystem:OutputVariable,
+    Occupant Count,  !- Name
+    Total_Occupants,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+
+  EnergyManagementSystem:Sensor,
+    BATH_ZN_1_FLR_1_O,  !- Name
+    BATH_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CAFETERIA_ZN_1_FLR_1_O,  !- Name
+    CAFETERIA_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    COMPUTER_CLASS_ZN_1_FLR_1_O,  !- Name
+    COMPUTER_CLASS_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORNER_CLASS_1_POD_1_ZN_1_FLR_1_O,  !- Name
+    CORNER_CLASS_1_POD_1_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORNER_CLASS_1_POD_2_ZN_1_FLR_1_O,  !- Name
+    CORNER_CLASS_1_POD_2_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORNER_CLASS_1_POD_3_ZN_1_FLR_1_O,  !- Name
+    CORNER_CLASS_1_POD_3_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORNER_CLASS_2_POD_1_ZN_1_FLR_1_O,  !- Name
+    CORNER_CLASS_2_POD_1_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORNER_CLASS_2_POD_2_ZN_1_FLR_1_O,  !- Name
+    CORNER_CLASS_2_POD_2_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORNER_CLASS_2_POD_3_ZN_1_FLR_1_O,  !- Name
+    CORNER_CLASS_2_POD_3_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_POD_1_ZN_1_FLR_1_O,  !- Name
+    CORRIDOR_POD_1_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_POD_2_ZN_1_FLR_1_O,  !- Name
+    CORRIDOR_POD_2_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_POD_3_ZN_1_FLR_1_O,  !- Name
+    CORRIDOR_POD_3_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    GYM_ZN_1_FLR_1_O,  !- Name
+    GYM_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    KITCHEN_ZN_1_FLR_1_O,  !- Name
+    KITCHEN_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    LIBRARY_MEDIA_CENTER_ZN_1_FLR_1_O,  !- Name
+    LIBRARY_MEDIA_CENTER_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    MAIN_CORRIDOR_ZN_1_FLR_1_O,  !- Name
+    MAIN_CORRIDOR_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    MULT_CLASS_1_POD_1_ZN_1_FLR_1_O,  !- Name
+    MULT_CLASS_1_POD_1_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    MULT_CLASS_1_POD_2_ZN_1_FLR_1_O,  !- Name
+    MULT_CLASS_1_POD_2_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    MULT_CLASS_1_POD_3_ZN_1_FLR_1_O,  !- Name
+    MULT_CLASS_1_POD_3_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    MULT_CLASS_2_POD_1_ZN_1_FLR_1_O,  !- Name
+    MULT_CLASS_2_POD_1_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    MULT_CLASS_2_POD_2_ZN_1_FLR_1_O,  !- Name
+    MULT_CLASS_2_POD_2_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    MULT_CLASS_2_POD_3_ZN_1_FLR_1_O,  !- Name
+    MULT_CLASS_2_POD_3_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OFFICES_ZN_1_FLR_1_O,  !- Name
+    OFFICES_ZN_1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+
   EnergyManagementSystem:Sensor,
     H1_NOM,                  !- Name
     H1_NOM,                  !- Output:Variable or Output:Meter Index Key Name
@@ -13293,6 +13422,9 @@
     CLGSETP_SCH,             !- Actuated Component Unique Name
     Schedule:Compact,        !- Actuated Component Type
     Schedule Value;          !- Actuated Component Control Type
+
+  EnergyManagementSystem:GlobalVariable,
+    Total_Occupants;
 
   EnergyManagementSystem:GlobalVariable,
     Flexible_Cooling_Demand; !- Erl Variable 1 Name
@@ -13851,6 +13983,6 @@
 
   Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
 
-  Output:Variable,*,People Occupant Count,timestep;
+  Output:Variable,EMS,Occupant Count,timestep;
 
 !  Output:Variable,*,Zone Predicted Sensible Load to Setpoint Heat Transfer Rate,hourly; !- HVAC Average [W]

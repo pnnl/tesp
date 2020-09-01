@@ -9,6 +9,7 @@ config.h.in
 configure
 depcomp
 eplus_agent
+eplus_agent_helics
 install-sh
 missing
 stamp-h1

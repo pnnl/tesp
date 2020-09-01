@@ -1,4 +1,5 @@
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
+#declare -r TESP_SUPPORT=/home/tom/src/tesp/support
 # echo "$TESP_SUPPORT"
 
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 4 &> broker.log &)
