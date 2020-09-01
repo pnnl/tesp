@@ -5,9 +5,9 @@ This procedure builds all components from scratch. If you've already
 built GridLAB-D on your machine, please take note of the specific
 GitHub branch requirements for TESP:
 
-- feature/1173 for GridLAB-D
+- feature/1173c for GridLAB-D
 - develop for FNCS
-- fncs-v8.3.0 for EnergyPlus
+- fncs_9.3.0 for EnergyPlus
 - master for HELICS 2.0
 
 You may also need to upgrade the gcc and g++ compilers. This build 
@@ -84,6 +84,10 @@ With Python 3 available, install and test the TESP packages:
 
 In order to install psst:
 
+::
+
+ pip3 install psst --upgrade
+
 Checkout PNNL repositories from github
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -98,10 +102,11 @@ As noted above, we suggest *mkdir usrc* instead of *mkdir ~/src* on WSL.
  git config --global credential.helper store
  git clone -b develop https://github.com/FNCS/fncs.git
  git clone -b master https://github.com/GMLC-TDC/HELICS-src
- git clone -b feature/1173 https://github.com/gridlab-d/gridlab-d.git
- git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
+ git clone -b feature/1173c https://github.com/gridlab-d/gridlab-d.git
+ git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b develop https://github.com/pnnl/tesp.git
  git clone https://gitlab.com/nsnam/ns-3-dev.git
+ git clone https://github.com/ames-market/psst.git
  svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
 
 Choosing and Configuring the Install Directories
@@ -241,7 +246,7 @@ To link with both FNCS and HELICS, and run the autotest suite:
 EnergyPlus
 ~~~~~~~~~~
 
-These following instructions install EnergyPlus with FNCS linkage and key portions of the retail v8.3 installation.
+These following instructions install EnergyPlus with FNCS linkage and key portions of the retail v9.3 installation.
 
 ::
 
