@@ -4,8 +4,10 @@ mkdir /opt/tesp/share/support
 
 mkdir /opt/tesp/share/support/energyplus
 cp ../../../support/energyplus/*.* /opt/tesp/share/support/energyplus
-mkdir /opt/tesp/share/support/energyplus/ems
-cp ../../../support/energyplus/ems/*.* /opt/tesp/share/support/energyplus/ems
+mkdir /opt/tesp/share/support/energyplus/emsFNCS
+cp ../../../support/energyplus/emsFNCS/*.* /opt/tesp/share/support/energyplus/emsFNCS
+mkdir /opt/tesp/share/support/energyplus/emsHELICS
+cp ../../../support/energyplus/emsHELICS/*.* /opt/tesp/share/support/energyplus/emsHELICS
 
 mkdir /opt/tesp/share/support/feeders
 cp ../../../support/feeders/*.* /opt/tesp/share/support/feeders

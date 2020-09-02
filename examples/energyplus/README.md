@@ -1,9 +1,9 @@
 # EnergyPlus Example
 
 This example simply verifies that EnergyPlus will run a building model,
-and communicate over FNCS with an agent and message tracer. To run and plot it:
+and communicate over HELICS with an agent and message tracer. To run and plot it:
 
-1. ./run.sh
+1. ./runh.sh
 2. python3 plots.py
 
 In addition, traced FNCS messages will be written to tracer.out
@@ -18,7 +18,8 @@ In addition, traced FNCS messages will be written to tracer.out
 - *plots.py*; makes 1 page of plots for a case; eg 'python plots.py'
 - *prices.txt*; sample price changes, published over FNCS to the building's transactive agent
 - *README.md*; this file
-- *run.sh*; Linux/Mac script for the case
+- *run.sh*; Linux/Mac script for the case using FNCS (deprecated)
+- *runh.sh*; Linux/Mac script for the case using HELICS
 - *tracer.yaml*; FNCS configuration for the message tracing utility
 
 Copyright (c) 2017-2020, Battelle Memorial Institute
