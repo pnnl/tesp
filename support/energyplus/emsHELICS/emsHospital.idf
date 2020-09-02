@@ -1,0 +1,2389 @@
+! ***EMS PROGRAM***
+  Schedule:Compact,
+    C1_NOM,       !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: Weekdays,           !- Field 2
+    Until: 05:00,25.0,       !- Field 3
+    Until: 18:00,22.2,       !- Field 5
+    Until: 24:00,25.0,       !- Field 7
+    For: SummerDesignDay,    !- Field 9
+    Until: 05:00,25.0,       !- Field 10
+    Until: 18:00,22.2,       !- Field 12
+    Until: 24:00,25.0,       !- Field 14
+    For: WinterDesignDay,    !- Field 16
+    Until: 07:00,25.0,       !- Field 17
+    Until: 15:00,22.2,       !- Field 19
+    Until: 24:00,25.0,       !- Field 21
+    For: Saturdays,          !- Field 23
+    Until: 07:00,25.0,       !- Field 24
+    Until: 15:00,22.2,       !- Field 26
+    Until: 24:00,25.0,       !- Field 28
+    For: AllOtherDays,       !- Field 30
+    Until: 24:00,25.0;       !- Field 31
+
+  Schedule:Compact,
+    H1_NOM,       !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: Weekdays,           !- Field 2
+    Until: 05:00,18.3,       !- Field 3
+    Until: 18:00,21.1,       !- Field 5
+    Until: 24:00,18.3,       !- Field 7
+    For: SummerDesignDay,    !- Field 9
+    Until: 05:00,18.3,       !- Field 10
+    Until: 18:00,21.1,       !- Field 12
+    Until: 24:00,18.3,       !- Field 14
+    For: WinterDesignDay,    !- Field 16
+    Until: 07:00,18.3,       !- Field 17
+    Until: 15:00,21.1,       !- Field 19
+    Until: 24:00,18.3,       !- Field 21
+    For: Saturdays,          !- Field 23
+    Until: 07:00,18.3,       !- Field 24
+    Until: 15:00,21.1,       !- Field 26
+    Until: 24:00,18.3,       !- Field 28
+    For: AllOtherDays,       !- Field 30
+    Until: 24:00,18.3;       !- Field 31
+
+  Schedule:Compact,
+    C3_NOM,     !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: Weekdays,           !- Field 2
+    Until: 05:00,30,         !- Field 3
+    Until: 18:00,26,         !- Field 5
+    Until: 24:00,30,         !- Field 7
+    For: SummerDesignDay,    !- Field 9
+    Until: 05:00,30,         !- Field 10
+    Until: 18:00,26,         !- Field 12
+    Until: 24:00,30,         !- Field 14
+    For: WinterDesignDay,    !- Field 16
+    Until: 07:00,30,         !- Field 17
+    Until: 15:00,26,         !- Field 19
+    Until: 24:00,30,         !- Field 21
+    For: Saturdays,          !- Field 23
+    Until: 07:00,30,         !- Field 24
+    Until: 15:00,26,         !- Field 26
+    Until: 24:00,30,         !- Field 28
+    For: AllOtherDays,       !- Field 30
+    Until: 24:00,30;         !- Field 31
+
+  Schedule:Compact,
+    H3_NOM,     !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: Weekdays,           !- Field 2
+    Until: 05:00,15.6,       !- Field 3
+    Until: 18:00,19,         !- Field 5
+    Until: 24:00,15.6,       !- Field 7
+    For: SummerDesignDay,    !- Field 9
+    Until: 05:00,15.6,       !- Field 10
+    Until: 18:00,19,         !- Field 12
+    Until: 24:00,15.6,       !- Field 14
+    For: WinterDesignDay,    !- Field 16
+    Until: 07:00,15.6,       !- Field 17
+    Until: 15:00,19,         !- Field 19
+    Until: 24:00,15.6,       !- Field 21
+    For: Saturdays,          !- Field 23
+    Until: 07:00,15.6,       !- Field 24
+    Until: 15:00,19,         !- Field 26
+    Until: 24:00,15.6,       !- Field 28
+    For: AllOtherDays,       !- Field 30
+    Until: 24:00,15.6;       !- Field 31
+
+  Schedule:Compact,
+    C2_NOM,    !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: AllDays,            !- Field 2
+    Until: 24:00,22.2;       !- Field 3
+
+  Schedule:Compact,
+    H2_NOM,    !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: ALLDays,            !- Field 2
+    Until: 24:00,21.1;       !- Field 3
+
+  Schedule:Compact,
+    C4_NOM,          !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: AllDays,            !- Field 2
+    Until: 06:00,22.2,       !- Field 3
+    Until: 17:00,18.3,       !- Field 5
+    Until: 24:00,22.2;       !- Field 7
+
+  Schedule:Compact,
+    H4_NOM,          !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: AllDays,            !- Field 2
+    Until: 24:00,18.3;       !- Field 3
+
+
+  EnergyManagementSystem:ProgramCallingManager,
+    Volume_Initializer,   !- Name
+    BeginNewEnvironment,  !- Calling Point
+    Initialize_Volumes;   !- Program Name
+  EnergyManagementSystem:ProgramCallingManager,
+    Setpoint_Controller,          !- Name
+    BeginTimestepBeforePredictor, !- Calling Point
+    Set_Setpoints;                !- Program Name
+  EnergyManagementSystem:ProgramCallingManager,
+    Demand_Reporter,                      !- Name
+    EndOfZoneTimestepAfterZoneReporting,  !- Calling Point
+    Report_Demand,
+    Report_Occupants,
+    Calculate_Temperatures;               !- Program Name
+  EnergyManagementSystem:Program,
+    Set_Setpoints,      !- Name
+    Set C1 = C1_NOM + COOL_SETP_DELTA*5.0/9.0,
+    Set H1 = H1_NOM + HEAT_SETP_DELTA*5.0/9.0,
+    Set C3 = C3_NOM + COOL_SETP_DELTA*5.0/9.0,
+    Set H3 = H3_NOM + HEAT_SETP_DELTA*5.0/9.0,
+    Set C2 = C2_NOM + COOL_SETP_DELTA*5.0/9.0,
+    Set H2 = H2_NOM + HEAT_SETP_DELTA*5.0/9.0,
+    Set C4 = C4_NOM + COOL_SETP_DELTA*5.0/9.0,
+    Set H4 = H4_NOM + HEAT_SETP_DELTA*5.0/9.0;
+
+  EnergyManagementSystem:Program,
+    Initialize_Volumes,
+    Set BASEMENT_V = 9120.27,
+    Set CORRIDOR_FLR_1_V = 2428.80,
+    Set CORRIDOR_FLR_2_V = 2428.80,
+    Set CORRIDOR_FLR_5_V = 2141.31,
+    Set CORRIDOR_NW_FLR_3_V = 2418.88,
+    Set CORRIDOR_NW_FLR_4_V = 2418.88,
+    Set CORRIDOR_SE_FLR_3_V = 2418.88,
+    Set CORRIDOR_SE_FLR_4_V = 2418.88,
+    Set DINING_FLR_5_V = 2974.04,
+    Set ER_EXAM1_MULT4_FLR_1_V = 118.96,
+    Set ER_EXAM3_MULT4_FLR_1_V = 118.96,
+    Set ER_NURSESTN_LOBBY_FLR_1_V = 5273.96,
+    Set ER_TRAUMA1_FLR_1_V = 118.96,
+    Set ER_TRAUMA2_FLR_1_V = 118.96,
+    Set ER_TRIAGE_MULT4_FLR_1_V = 118.96,
+    Set ICU_FLR_2_V = 2637.66,
+    Set ICU_NURSESTN_LOBBY_FLR_2_V = 2854.50,
+    Set IC_PATROOM1_MULT5_FLR_2_V = 89.22,
+    Set IC_PATROOM2_FLR_2_V = 118.96,
+    Set IC_PATROOM3_MULT6_FLR_2_V = 89.22,
+    Set KITCHEN_FLR_5_V = 3965.38,
+    Set LAB_FLR_3_V = 1130.13,
+    Set LAB_FLR_4_V = 1130.13,
+    Set LOBBY_RECORDS_FLR_1_V = 6294.93,
+    Set NURSESTN_LOBBY_FLR_3_V = 3866.25,
+    Set NURSESTN_LOBBY_FLR_4_V = 3866.25,
+    Set NURSESTN_LOBBY_FLR_5_V = 4441.23,
+    Set OR1_FLR_2_V = 237.92,
+    Set OR2_MULT5_FLR_2_V = 237.92,
+    Set OR3_FLR_2_V = 237.92,
+    Set OR4_FLR_2_V = 951.69,
+    Set OR_NURSESTN_LOBBY_FLR_2_V = 4322.26,
+    Set OFFICE1_FLR_5_V = 297.48,
+    Set OFFICE1_MULT4_FLR_1_V = 59.48,
+    Set OFFICE2_MULT5_FLR_5_V = 297.35,
+    Set OFFICE3_FLR_5_V = 297.40,
+    Set OFFICE4_MULT6_FLR_5_V = 59.48,
+    Set PATROOM1_MULT10_FLR_3_V = 89.22,
+    Set PATROOM1_MULT10_FLR_4_V = 89.22,
+    Set PATROOM2_FLR_3_V = 148.70,
+    Set PATROOM2_FLR_4_V = 148.70,
+    Set PATROOM3_MULT10_FLR_3_V = 86.25,
+    Set PATROOM3_MULT10_FLR_4_V = 86.25,
+    Set PATROOM4_FLR_3_V = 148.70,
+    Set PATROOM4_FLR_4_V = 148.70,
+    Set PATROOM5_MULT10_FLR_3_V = 89.22,
+    Set PATROOM5_MULT10_FLR_4_V = 89.22,
+    Set PATROOM6_FLR_3_V = 118.96,
+    Set PATROOM6_FLR_4_V = 118.96,
+    Set PATROOM7_MULT10_FLR_3_V = 86.25,
+    Set PATROOM7_MULT10_FLR_4_V = 86.25,
+    Set PATROOM8_FLR_3_V = 118.96,
+    Set PATROOM8_FLR_4_V = 118.96,
+    Set PHYSTHERAPY_FLR_3_V = 2081.82,
+    Set RADIOLOGY_FLR_4_V = 2081.82;
+  
+  EnergyManagementSystem:Program,
+    Calculate_Temperatures,
+    Set TOTAL_COOL_V = 0.0,
+    Set TOTAL_HEAT_V = 0.0,
+    Set C_SET = 0.0,
+    Set H_SET = 0.0,
+    Set C_CUR = 0.0,
+    Set H_CUR = 0.0,
+    Set Total_V = 78056.42,
+    Set Controlled_V = 78056.42,
+    IF (BASEMENT_H > 0),
+      Set H_SET = H_SET + H1 * BASEMENT_V,
+      Set H_CUR = H_CUR + BASEMENT_T * BASEMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + BASEMENT_V,
+    ENDIF,
+    IF (BASEMENT_C > 0),
+      Set C_SET = C_SET + C1 * BASEMENT_V,
+      Set C_CUR = C_CUR + BASEMENT_T * BASEMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + BASEMENT_V,
+    ENDIF,
+    IF (CORRIDOR_FLR_1_H > 0),
+      Set H_SET = H_SET + H1 * CORRIDOR_FLR_1_V,
+      Set H_CUR = H_CUR + CORRIDOR_FLR_1_T * CORRIDOR_FLR_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORRIDOR_FLR_1_V,
+    ENDIF,
+    IF (CORRIDOR_FLR_1_C > 0),
+      Set C_SET = C_SET + C1 * CORRIDOR_FLR_1_V,
+      Set C_CUR = C_CUR + CORRIDOR_FLR_1_T * CORRIDOR_FLR_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + CORRIDOR_FLR_1_V,
+    ENDIF,
+    IF (CORRIDOR_FLR_2_H > 0),
+      Set H_SET = H_SET + H1 * CORRIDOR_FLR_2_V,
+      Set H_CUR = H_CUR + CORRIDOR_FLR_2_T * CORRIDOR_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORRIDOR_FLR_2_V,
+    ENDIF,
+    IF (CORRIDOR_FLR_2_C > 0),
+      Set C_SET = C_SET + C1 * CORRIDOR_FLR_2_V,
+      Set C_CUR = C_CUR + CORRIDOR_FLR_2_T * CORRIDOR_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + CORRIDOR_FLR_2_V,
+    ENDIF,
+    IF (CORRIDOR_FLR_5_H > 0),
+      Set H_SET = H_SET + H1 * CORRIDOR_FLR_5_V,
+      Set H_CUR = H_CUR + CORRIDOR_FLR_5_T * CORRIDOR_FLR_5_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORRIDOR_FLR_5_V,
+    ENDIF,
+    IF (CORRIDOR_FLR_5_C > 0),
+      Set C_SET = C_SET + C1 * CORRIDOR_FLR_5_V,
+      Set C_CUR = C_CUR + CORRIDOR_FLR_5_T * CORRIDOR_FLR_5_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + CORRIDOR_FLR_5_V,
+    ENDIF,
+    IF (CORRIDOR_NW_FLR_3_H > 0),
+      Set H_SET = H_SET + H1 * CORRIDOR_NW_FLR_3_V,
+      Set H_CUR = H_CUR + CORRIDOR_NW_FLR_3_T * CORRIDOR_NW_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORRIDOR_NW_FLR_3_V,
+    ENDIF,
+    IF (CORRIDOR_NW_FLR_3_C > 0),
+      Set C_SET = C_SET + C1 * CORRIDOR_NW_FLR_3_V,
+      Set C_CUR = C_CUR + CORRIDOR_NW_FLR_3_T * CORRIDOR_NW_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + CORRIDOR_NW_FLR_3_V,
+    ENDIF,
+    IF (CORRIDOR_NW_FLR_4_H > 0),
+      Set H_SET = H_SET + H1 * CORRIDOR_NW_FLR_4_V,
+      Set H_CUR = H_CUR + CORRIDOR_NW_FLR_4_T * CORRIDOR_NW_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORRIDOR_NW_FLR_4_V,
+    ENDIF,
+    IF (CORRIDOR_NW_FLR_4_C > 0),
+      Set C_SET = C_SET + C1 * CORRIDOR_NW_FLR_4_V,
+      Set C_CUR = C_CUR + CORRIDOR_NW_FLR_4_T * CORRIDOR_NW_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + CORRIDOR_NW_FLR_4_V,
+    ENDIF,
+    IF (CORRIDOR_SE_FLR_3_H > 0),
+      Set H_SET = H_SET + H1 * CORRIDOR_SE_FLR_3_V,
+      Set H_CUR = H_CUR + CORRIDOR_SE_FLR_3_T * CORRIDOR_SE_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORRIDOR_SE_FLR_3_V,
+    ENDIF,
+    IF (CORRIDOR_SE_FLR_3_C > 0),
+      Set C_SET = C_SET + C1 * CORRIDOR_SE_FLR_3_V,
+      Set C_CUR = C_CUR + CORRIDOR_SE_FLR_3_T * CORRIDOR_SE_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + CORRIDOR_SE_FLR_3_V,
+    ENDIF,
+    IF (CORRIDOR_SE_FLR_4_H > 0),
+      Set H_SET = H_SET + H1 * CORRIDOR_SE_FLR_4_V,
+      Set H_CUR = H_CUR + CORRIDOR_SE_FLR_4_T * CORRIDOR_SE_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORRIDOR_SE_FLR_4_V,
+    ENDIF,
+    IF (CORRIDOR_SE_FLR_4_C > 0),
+      Set C_SET = C_SET + C1 * CORRIDOR_SE_FLR_4_V,
+      Set C_CUR = C_CUR + CORRIDOR_SE_FLR_4_T * CORRIDOR_SE_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + CORRIDOR_SE_FLR_4_V,
+    ENDIF,
+    IF (DINING_FLR_5_H > 0),
+      Set H_SET = H_SET + H1 * DINING_FLR_5_V,
+      Set H_CUR = H_CUR + DINING_FLR_5_T * DINING_FLR_5_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + DINING_FLR_5_V,
+    ENDIF,
+    IF (DINING_FLR_5_C > 0),
+      Set C_SET = C_SET + C1 * DINING_FLR_5_V,
+      Set C_CUR = C_CUR + DINING_FLR_5_T * DINING_FLR_5_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + DINING_FLR_5_V,
+    ENDIF,
+    IF (ER_EXAM1_MULT4_FLR_1_H > 0),
+      Set H_SET = H_SET + H2 * ER_EXAM1_MULT4_FLR_1_V,
+      Set H_CUR = H_CUR + ER_EXAM1_MULT4_FLR_1_T * ER_EXAM1_MULT4_FLR_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + ER_EXAM1_MULT4_FLR_1_V,
+    ENDIF,
+    IF (ER_EXAM1_MULT4_FLR_1_C > 0),
+      Set C_SET = C_SET + C2 * ER_EXAM1_MULT4_FLR_1_V,
+      Set C_CUR = C_CUR + ER_EXAM1_MULT4_FLR_1_T * ER_EXAM1_MULT4_FLR_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + ER_EXAM1_MULT4_FLR_1_V,
+    ENDIF,
+    IF (ER_EXAM3_MULT4_FLR_1_H > 0),
+      Set H_SET = H_SET + H2 * ER_EXAM3_MULT4_FLR_1_V,
+      Set H_CUR = H_CUR + ER_EXAM3_MULT4_FLR_1_T * ER_EXAM3_MULT4_FLR_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + ER_EXAM3_MULT4_FLR_1_V,
+    ENDIF,
+    IF (ER_EXAM3_MULT4_FLR_1_C > 0),
+      Set C_SET = C_SET + C2 * ER_EXAM3_MULT4_FLR_1_V,
+      Set C_CUR = C_CUR + ER_EXAM3_MULT4_FLR_1_T * ER_EXAM3_MULT4_FLR_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + ER_EXAM3_MULT4_FLR_1_V,
+    ENDIF,
+    IF (ER_NURSESTN_LOBBY_FLR_1_H > 0),
+      Set H_SET = H_SET + H1 * ER_NURSESTN_LOBBY_FLR_1_V,
+      Set H_CUR = H_CUR + ER_NURSESTN_LOBBY_FLR_1_T * ER_NURSESTN_LOBBY_FLR_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + ER_NURSESTN_LOBBY_FLR_1_V,
+    ENDIF,
+    IF (ER_NURSESTN_LOBBY_FLR_1_C > 0),
+      Set C_SET = C_SET + C1 * ER_NURSESTN_LOBBY_FLR_1_V,
+      Set C_CUR = C_CUR + ER_NURSESTN_LOBBY_FLR_1_T * ER_NURSESTN_LOBBY_FLR_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + ER_NURSESTN_LOBBY_FLR_1_V,
+    ENDIF,
+    IF (ER_TRAUMA1_FLR_1_H > 0),
+      Set H_SET = H_SET + H2 * ER_TRAUMA1_FLR_1_V,
+      Set H_CUR = H_CUR + ER_TRAUMA1_FLR_1_T * ER_TRAUMA1_FLR_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + ER_TRAUMA1_FLR_1_V,
+    ENDIF,
+    IF (ER_TRAUMA1_FLR_1_C > 0),
+      Set C_SET = C_SET + C2 * ER_TRAUMA1_FLR_1_V,
+      Set C_CUR = C_CUR + ER_TRAUMA1_FLR_1_T * ER_TRAUMA1_FLR_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + ER_TRAUMA1_FLR_1_V,
+    ENDIF,
+    IF (ER_TRAUMA2_FLR_1_H > 0),
+      Set H_SET = H_SET + H2 * ER_TRAUMA2_FLR_1_V,
+      Set H_CUR = H_CUR + ER_TRAUMA2_FLR_1_T * ER_TRAUMA2_FLR_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + ER_TRAUMA2_FLR_1_V,
+    ENDIF,
+    IF (ER_TRAUMA2_FLR_1_C > 0),
+      Set C_SET = C_SET + C2 * ER_TRAUMA2_FLR_1_V,
+      Set C_CUR = C_CUR + ER_TRAUMA2_FLR_1_T * ER_TRAUMA2_FLR_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + ER_TRAUMA2_FLR_1_V,
+    ENDIF,
+    IF (ER_TRIAGE_MULT4_FLR_1_H > 0),
+      Set H_SET = H_SET + H2 * ER_TRIAGE_MULT4_FLR_1_V,
+      Set H_CUR = H_CUR + ER_TRIAGE_MULT4_FLR_1_T * ER_TRIAGE_MULT4_FLR_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + ER_TRIAGE_MULT4_FLR_1_V,
+    ENDIF,
+    IF (ER_TRIAGE_MULT4_FLR_1_C > 0),
+      Set C_SET = C_SET + C2 * ER_TRIAGE_MULT4_FLR_1_V,
+      Set C_CUR = C_CUR + ER_TRIAGE_MULT4_FLR_1_T * ER_TRIAGE_MULT4_FLR_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + ER_TRIAGE_MULT4_FLR_1_V,
+    ENDIF,
+    IF (ICU_FLR_2_H > 0),
+      Set H_SET = H_SET + H2 * ICU_FLR_2_V,
+      Set H_CUR = H_CUR + ICU_FLR_2_T * ICU_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + ICU_FLR_2_V,
+    ENDIF,
+    IF (ICU_FLR_2_C > 0),
+      Set C_SET = C_SET + C2 * ICU_FLR_2_V,
+      Set C_CUR = C_CUR + ICU_FLR_2_T * ICU_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + ICU_FLR_2_V,
+    ENDIF,
+    IF (ICU_NURSESTN_LOBBY_FLR_2_H > 0),
+      Set H_SET = H_SET + H1 * ICU_NURSESTN_LOBBY_FLR_2_V,
+      Set H_CUR = H_CUR + ICU_NURSESTN_LOBBY_FLR_2_T * ICU_NURSESTN_LOBBY_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + ICU_NURSESTN_LOBBY_FLR_2_V,
+    ENDIF,
+    IF (ICU_NURSESTN_LOBBY_FLR_2_C > 0),
+      Set C_SET = C_SET + C1 * ICU_NURSESTN_LOBBY_FLR_2_V,
+      Set C_CUR = C_CUR + ICU_NURSESTN_LOBBY_FLR_2_T * ICU_NURSESTN_LOBBY_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + ICU_NURSESTN_LOBBY_FLR_2_V,
+    ENDIF,
+    IF (IC_PATROOM1_MULT5_FLR_2_H > 0),
+      Set H_SET = H_SET + H2 * IC_PATROOM1_MULT5_FLR_2_V,
+      Set H_CUR = H_CUR + IC_PATROOM1_MULT5_FLR_2_T * IC_PATROOM1_MULT5_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + IC_PATROOM1_MULT5_FLR_2_V,
+    ENDIF,
+    IF (IC_PATROOM1_MULT5_FLR_2_C > 0),
+      Set C_SET = C_SET + C2 * IC_PATROOM1_MULT5_FLR_2_V,
+      Set C_CUR = C_CUR + IC_PATROOM1_MULT5_FLR_2_T * IC_PATROOM1_MULT5_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + IC_PATROOM1_MULT5_FLR_2_V,
+    ENDIF,
+    IF (IC_PATROOM2_FLR_2_H > 0),
+      Set H_SET = H_SET + H2 * IC_PATROOM2_FLR_2_V,
+      Set H_CUR = H_CUR + IC_PATROOM2_FLR_2_T * IC_PATROOM2_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + IC_PATROOM2_FLR_2_V,
+    ENDIF,
+    IF (IC_PATROOM2_FLR_2_C > 0),
+      Set C_SET = C_SET + C2 * IC_PATROOM2_FLR_2_V,
+      Set C_CUR = C_CUR + IC_PATROOM2_FLR_2_T * IC_PATROOM2_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + IC_PATROOM2_FLR_2_V,
+    ENDIF,
+    IF (IC_PATROOM3_MULT6_FLR_2_H > 0),
+      Set H_SET = H_SET + H2 * IC_PATROOM3_MULT6_FLR_2_V,
+      Set H_CUR = H_CUR + IC_PATROOM3_MULT6_FLR_2_T * IC_PATROOM3_MULT6_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + IC_PATROOM3_MULT6_FLR_2_V,
+    ENDIF,
+    IF (IC_PATROOM3_MULT6_FLR_2_C > 0),
+      Set C_SET = C_SET + C2 * IC_PATROOM3_MULT6_FLR_2_V,
+      Set C_CUR = C_CUR + IC_PATROOM3_MULT6_FLR_2_T * IC_PATROOM3_MULT6_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + IC_PATROOM3_MULT6_FLR_2_V,
+    ENDIF,
+    IF (KITCHEN_FLR_5_H > 0),
+      Set H_SET = H_SET + H3 * KITCHEN_FLR_5_V,
+      Set H_CUR = H_CUR + KITCHEN_FLR_5_T * KITCHEN_FLR_5_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + KITCHEN_FLR_5_V,
+    ENDIF,
+    IF (KITCHEN_FLR_5_C > 0),
+      Set C_SET = C_SET + C3 * KITCHEN_FLR_5_V,
+      Set C_CUR = C_CUR + KITCHEN_FLR_5_T * KITCHEN_FLR_5_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + KITCHEN_FLR_5_V,
+    ENDIF,
+    IF (LAB_FLR_3_H > 0),
+      Set H_SET = H_SET + H1 * LAB_FLR_3_V,
+      Set H_CUR = H_CUR + LAB_FLR_3_T * LAB_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + LAB_FLR_3_V,
+    ENDIF,
+    IF (LAB_FLR_3_C > 0),
+      Set C_SET = C_SET + C1 * LAB_FLR_3_V,
+      Set C_CUR = C_CUR + LAB_FLR_3_T * LAB_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + LAB_FLR_3_V,
+    ENDIF,
+    IF (LAB_FLR_4_H > 0),
+      Set H_SET = H_SET + H1 * LAB_FLR_4_V,
+      Set H_CUR = H_CUR + LAB_FLR_4_T * LAB_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + LAB_FLR_4_V,
+    ENDIF,
+    IF (LAB_FLR_4_C > 0),
+      Set C_SET = C_SET + C1 * LAB_FLR_4_V,
+      Set C_CUR = C_CUR + LAB_FLR_4_T * LAB_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + LAB_FLR_4_V,
+    ENDIF,
+    IF (LOBBY_RECORDS_FLR_1_H > 0),
+      Set H_SET = H_SET + H1 * LOBBY_RECORDS_FLR_1_V,
+      Set H_CUR = H_CUR + LOBBY_RECORDS_FLR_1_T * LOBBY_RECORDS_FLR_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + LOBBY_RECORDS_FLR_1_V,
+    ENDIF,
+    IF (LOBBY_RECORDS_FLR_1_C > 0),
+      Set C_SET = C_SET + C1 * LOBBY_RECORDS_FLR_1_V,
+      Set C_CUR = C_CUR + LOBBY_RECORDS_FLR_1_T * LOBBY_RECORDS_FLR_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + LOBBY_RECORDS_FLR_1_V,
+    ENDIF,
+    IF (NURSESTN_LOBBY_FLR_3_H > 0),
+      Set H_SET = H_SET + H1 * NURSESTN_LOBBY_FLR_3_V,
+      Set H_CUR = H_CUR + NURSESTN_LOBBY_FLR_3_T * NURSESTN_LOBBY_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + NURSESTN_LOBBY_FLR_3_V,
+    ENDIF,
+    IF (NURSESTN_LOBBY_FLR_3_C > 0),
+      Set C_SET = C_SET + C1 * NURSESTN_LOBBY_FLR_3_V,
+      Set C_CUR = C_CUR + NURSESTN_LOBBY_FLR_3_T * NURSESTN_LOBBY_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + NURSESTN_LOBBY_FLR_3_V,
+    ENDIF,
+    IF (NURSESTN_LOBBY_FLR_4_H > 0),
+      Set H_SET = H_SET + H1 * NURSESTN_LOBBY_FLR_4_V,
+      Set H_CUR = H_CUR + NURSESTN_LOBBY_FLR_4_T * NURSESTN_LOBBY_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + NURSESTN_LOBBY_FLR_4_V,
+    ENDIF,
+    IF (NURSESTN_LOBBY_FLR_4_C > 0),
+      Set C_SET = C_SET + C1 * NURSESTN_LOBBY_FLR_4_V,
+      Set C_CUR = C_CUR + NURSESTN_LOBBY_FLR_4_T * NURSESTN_LOBBY_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + NURSESTN_LOBBY_FLR_4_V,
+    ENDIF,
+    IF (NURSESTN_LOBBY_FLR_5_H > 0),
+      Set H_SET = H_SET + H1 * NURSESTN_LOBBY_FLR_5_V,
+      Set H_CUR = H_CUR + NURSESTN_LOBBY_FLR_5_T * NURSESTN_LOBBY_FLR_5_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + NURSESTN_LOBBY_FLR_5_V,
+    ENDIF,
+    IF (NURSESTN_LOBBY_FLR_5_C > 0),
+      Set C_SET = C_SET + C1 * NURSESTN_LOBBY_FLR_5_V,
+      Set C_CUR = C_CUR + NURSESTN_LOBBY_FLR_5_T * NURSESTN_LOBBY_FLR_5_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + NURSESTN_LOBBY_FLR_5_V,
+    ENDIF,
+    IF (OR1_FLR_2_H > 0),
+      Set H_SET = H_SET + H4 * OR1_FLR_2_V,
+      Set H_CUR = H_CUR + OR1_FLR_2_T * OR1_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OR1_FLR_2_V,
+    ENDIF,
+    IF (OR1_FLR_2_C > 0),
+      Set C_SET = C_SET + C4 * OR1_FLR_2_V,
+      Set C_CUR = C_CUR + OR1_FLR_2_T * OR1_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OR1_FLR_2_V,
+    ENDIF,
+    IF (OR2_MULT5_FLR_2_H > 0),
+      Set H_SET = H_SET + H4 * OR2_MULT5_FLR_2_V,
+      Set H_CUR = H_CUR + OR2_MULT5_FLR_2_T * OR2_MULT5_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OR2_MULT5_FLR_2_V,
+    ENDIF,
+    IF (OR2_MULT5_FLR_2_C > 0),
+      Set C_SET = C_SET + C4 * OR2_MULT5_FLR_2_V,
+      Set C_CUR = C_CUR + OR2_MULT5_FLR_2_T * OR2_MULT5_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OR2_MULT5_FLR_2_V,
+    ENDIF,
+    IF (OR3_FLR_2_H > 0),
+      Set H_SET = H_SET + H4 * OR3_FLR_2_V,
+      Set H_CUR = H_CUR + OR3_FLR_2_T * OR3_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OR3_FLR_2_V,
+    ENDIF,
+    IF (OR3_FLR_2_C > 0),
+      Set C_SET = C_SET + C4 * OR3_FLR_2_V,
+      Set C_CUR = C_CUR + OR3_FLR_2_T * OR3_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OR3_FLR_2_V,
+    ENDIF,
+    IF (OR4_FLR_2_H > 0),
+      Set H_SET = H_SET + H4 * OR4_FLR_2_V,
+      Set H_CUR = H_CUR + OR4_FLR_2_T * OR4_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OR4_FLR_2_V,
+    ENDIF,
+    IF (OR4_FLR_2_C > 0),
+      Set C_SET = C_SET + C4 * OR4_FLR_2_V,
+      Set C_CUR = C_CUR + OR4_FLR_2_T * OR4_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OR4_FLR_2_V,
+    ENDIF,
+    IF (OR_NURSESTN_LOBBY_FLR_2_H > 0),
+      Set H_SET = H_SET + H1 * OR_NURSESTN_LOBBY_FLR_2_V,
+      Set H_CUR = H_CUR + OR_NURSESTN_LOBBY_FLR_2_T * OR_NURSESTN_LOBBY_FLR_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OR_NURSESTN_LOBBY_FLR_2_V,
+    ENDIF,
+    IF (OR_NURSESTN_LOBBY_FLR_2_C > 0),
+      Set C_SET = C_SET + C1 * OR_NURSESTN_LOBBY_FLR_2_V,
+      Set C_CUR = C_CUR + OR_NURSESTN_LOBBY_FLR_2_T * OR_NURSESTN_LOBBY_FLR_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OR_NURSESTN_LOBBY_FLR_2_V,
+    ENDIF,
+    IF (OFFICE1_FLR_5_H > 0),
+      Set H_SET = H_SET + H1 * OFFICE1_FLR_5_V,
+      Set H_CUR = H_CUR + OFFICE1_FLR_5_T * OFFICE1_FLR_5_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OFFICE1_FLR_5_V,
+    ENDIF,
+    IF (OFFICE1_FLR_5_C > 0),
+      Set C_SET = C_SET + C1 * OFFICE1_FLR_5_V,
+      Set C_CUR = C_CUR + OFFICE1_FLR_5_T * OFFICE1_FLR_5_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OFFICE1_FLR_5_V,
+    ENDIF,
+    IF (OFFICE1_MULT4_FLR_1_H > 0),
+      Set H_SET = H_SET + H1 * OFFICE1_MULT4_FLR_1_V,
+      Set H_CUR = H_CUR + OFFICE1_MULT4_FLR_1_T * OFFICE1_MULT4_FLR_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OFFICE1_MULT4_FLR_1_V,
+    ENDIF,
+    IF (OFFICE1_MULT4_FLR_1_C > 0),
+      Set C_SET = C_SET + C1 * OFFICE1_MULT4_FLR_1_V,
+      Set C_CUR = C_CUR + OFFICE1_MULT4_FLR_1_T * OFFICE1_MULT4_FLR_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OFFICE1_MULT4_FLR_1_V,
+    ENDIF,
+    IF (OFFICE2_MULT5_FLR_5_H > 0),
+      Set H_SET = H_SET + H1 * OFFICE2_MULT5_FLR_5_V,
+      Set H_CUR = H_CUR + OFFICE2_MULT5_FLR_5_T * OFFICE2_MULT5_FLR_5_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OFFICE2_MULT5_FLR_5_V,
+    ENDIF,
+    IF (OFFICE2_MULT5_FLR_5_C > 0),
+      Set C_SET = C_SET + C1 * OFFICE2_MULT5_FLR_5_V,
+      Set C_CUR = C_CUR + OFFICE2_MULT5_FLR_5_T * OFFICE2_MULT5_FLR_5_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OFFICE2_MULT5_FLR_5_V,
+    ENDIF,
+    IF (OFFICE3_FLR_5_H > 0),
+      Set H_SET = H_SET + H1 * OFFICE3_FLR_5_V,
+      Set H_CUR = H_CUR + OFFICE3_FLR_5_T * OFFICE3_FLR_5_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OFFICE3_FLR_5_V,
+    ENDIF,
+    IF (OFFICE3_FLR_5_C > 0),
+      Set C_SET = C_SET + C1 * OFFICE3_FLR_5_V,
+      Set C_CUR = C_CUR + OFFICE3_FLR_5_T * OFFICE3_FLR_5_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OFFICE3_FLR_5_V,
+    ENDIF,
+    IF (OFFICE4_MULT6_FLR_5_H > 0),
+      Set H_SET = H_SET + H1 * OFFICE4_MULT6_FLR_5_V,
+      Set H_CUR = H_CUR + OFFICE4_MULT6_FLR_5_T * OFFICE4_MULT6_FLR_5_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OFFICE4_MULT6_FLR_5_V,
+    ENDIF,
+    IF (OFFICE4_MULT6_FLR_5_C > 0),
+      Set C_SET = C_SET + C1 * OFFICE4_MULT6_FLR_5_V,
+      Set C_CUR = C_CUR + OFFICE4_MULT6_FLR_5_T * OFFICE4_MULT6_FLR_5_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OFFICE4_MULT6_FLR_5_V,
+    ENDIF,
+    IF (PATROOM1_MULT10_FLR_3_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM1_MULT10_FLR_3_V,
+      Set H_CUR = H_CUR + PATROOM1_MULT10_FLR_3_T * PATROOM1_MULT10_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM1_MULT10_FLR_3_V,
+    ENDIF,
+    IF (PATROOM1_MULT10_FLR_3_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM1_MULT10_FLR_3_V,
+      Set C_CUR = C_CUR + PATROOM1_MULT10_FLR_3_T * PATROOM1_MULT10_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM1_MULT10_FLR_3_V,
+    ENDIF,
+    IF (PATROOM1_MULT10_FLR_4_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM1_MULT10_FLR_4_V,
+      Set H_CUR = H_CUR + PATROOM1_MULT10_FLR_4_T * PATROOM1_MULT10_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM1_MULT10_FLR_4_V,
+    ENDIF,
+    IF (PATROOM1_MULT10_FLR_4_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM1_MULT10_FLR_4_V,
+      Set C_CUR = C_CUR + PATROOM1_MULT10_FLR_4_T * PATROOM1_MULT10_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM1_MULT10_FLR_4_V,
+    ENDIF,
+    IF (PATROOM2_FLR_3_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM2_FLR_3_V,
+      Set H_CUR = H_CUR + PATROOM2_FLR_3_T * PATROOM2_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM2_FLR_3_V,
+    ENDIF,
+    IF (PATROOM2_FLR_3_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM2_FLR_3_V,
+      Set C_CUR = C_CUR + PATROOM2_FLR_3_T * PATROOM2_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM2_FLR_3_V,
+    ENDIF,
+    IF (PATROOM2_FLR_4_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM2_FLR_4_V,
+      Set H_CUR = H_CUR + PATROOM2_FLR_4_T * PATROOM2_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM2_FLR_4_V,
+    ENDIF,
+    IF (PATROOM2_FLR_4_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM2_FLR_4_V,
+      Set C_CUR = C_CUR + PATROOM2_FLR_4_T * PATROOM2_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM2_FLR_4_V,
+    ENDIF,
+    IF (PATROOM3_MULT10_FLR_3_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM3_MULT10_FLR_3_V,
+      Set H_CUR = H_CUR + PATROOM3_MULT10_FLR_3_T * PATROOM3_MULT10_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM3_MULT10_FLR_3_V,
+    ENDIF,
+    IF (PATROOM3_MULT10_FLR_3_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM3_MULT10_FLR_3_V,
+      Set C_CUR = C_CUR + PATROOM3_MULT10_FLR_3_T * PATROOM3_MULT10_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM3_MULT10_FLR_3_V,
+    ENDIF,
+    IF (PATROOM3_MULT10_FLR_4_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM3_MULT10_FLR_4_V,
+      Set H_CUR = H_CUR + PATROOM3_MULT10_FLR_4_T * PATROOM3_MULT10_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM3_MULT10_FLR_4_V,
+    ENDIF,
+    IF (PATROOM3_MULT10_FLR_4_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM3_MULT10_FLR_4_V,
+      Set C_CUR = C_CUR + PATROOM3_MULT10_FLR_4_T * PATROOM3_MULT10_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM3_MULT10_FLR_4_V,
+    ENDIF,
+    IF (PATROOM4_FLR_3_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM4_FLR_3_V,
+      Set H_CUR = H_CUR + PATROOM4_FLR_3_T * PATROOM4_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM4_FLR_3_V,
+    ENDIF,
+    IF (PATROOM4_FLR_3_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM4_FLR_3_V,
+      Set C_CUR = C_CUR + PATROOM4_FLR_3_T * PATROOM4_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM4_FLR_3_V,
+    ENDIF,
+    IF (PATROOM4_FLR_4_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM4_FLR_4_V,
+      Set H_CUR = H_CUR + PATROOM4_FLR_4_T * PATROOM4_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM4_FLR_4_V,
+    ENDIF,
+    IF (PATROOM4_FLR_4_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM4_FLR_4_V,
+      Set C_CUR = C_CUR + PATROOM4_FLR_4_T * PATROOM4_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM4_FLR_4_V,
+    ENDIF,
+    IF (PATROOM5_MULT10_FLR_3_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM5_MULT10_FLR_3_V,
+      Set H_CUR = H_CUR + PATROOM5_MULT10_FLR_3_T * PATROOM5_MULT10_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM5_MULT10_FLR_3_V,
+    ENDIF,
+    IF (PATROOM5_MULT10_FLR_3_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM5_MULT10_FLR_3_V,
+      Set C_CUR = C_CUR + PATROOM5_MULT10_FLR_3_T * PATROOM5_MULT10_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM5_MULT10_FLR_3_V,
+    ENDIF,
+    IF (PATROOM5_MULT10_FLR_4_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM5_MULT10_FLR_4_V,
+      Set H_CUR = H_CUR + PATROOM5_MULT10_FLR_4_T * PATROOM5_MULT10_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM5_MULT10_FLR_4_V,
+    ENDIF,
+    IF (PATROOM5_MULT10_FLR_4_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM5_MULT10_FLR_4_V,
+      Set C_CUR = C_CUR + PATROOM5_MULT10_FLR_4_T * PATROOM5_MULT10_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM5_MULT10_FLR_4_V,
+    ENDIF,
+    IF (PATROOM6_FLR_3_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM6_FLR_3_V,
+      Set H_CUR = H_CUR + PATROOM6_FLR_3_T * PATROOM6_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM6_FLR_3_V,
+    ENDIF,
+    IF (PATROOM6_FLR_3_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM6_FLR_3_V,
+      Set C_CUR = C_CUR + PATROOM6_FLR_3_T * PATROOM6_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM6_FLR_3_V,
+    ENDIF,
+    IF (PATROOM6_FLR_4_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM6_FLR_4_V,
+      Set H_CUR = H_CUR + PATROOM6_FLR_4_T * PATROOM6_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM6_FLR_4_V,
+    ENDIF,
+    IF (PATROOM6_FLR_4_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM6_FLR_4_V,
+      Set C_CUR = C_CUR + PATROOM6_FLR_4_T * PATROOM6_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM6_FLR_4_V,
+    ENDIF,
+    IF (PATROOM7_MULT10_FLR_3_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM7_MULT10_FLR_3_V,
+      Set H_CUR = H_CUR + PATROOM7_MULT10_FLR_3_T * PATROOM7_MULT10_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM7_MULT10_FLR_3_V,
+    ENDIF,
+    IF (PATROOM7_MULT10_FLR_3_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM7_MULT10_FLR_3_V,
+      Set C_CUR = C_CUR + PATROOM7_MULT10_FLR_3_T * PATROOM7_MULT10_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM7_MULT10_FLR_3_V,
+    ENDIF,
+    IF (PATROOM7_MULT10_FLR_4_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM7_MULT10_FLR_4_V,
+      Set H_CUR = H_CUR + PATROOM7_MULT10_FLR_4_T * PATROOM7_MULT10_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM7_MULT10_FLR_4_V,
+    ENDIF,
+    IF (PATROOM7_MULT10_FLR_4_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM7_MULT10_FLR_4_V,
+      Set C_CUR = C_CUR + PATROOM7_MULT10_FLR_4_T * PATROOM7_MULT10_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM7_MULT10_FLR_4_V,
+    ENDIF,
+    IF (PATROOM8_FLR_3_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM8_FLR_3_V,
+      Set H_CUR = H_CUR + PATROOM8_FLR_3_T * PATROOM8_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM8_FLR_3_V,
+    ENDIF,
+    IF (PATROOM8_FLR_3_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM8_FLR_3_V,
+      Set C_CUR = C_CUR + PATROOM8_FLR_3_T * PATROOM8_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM8_FLR_3_V,
+    ENDIF,
+    IF (PATROOM8_FLR_4_H > 0),
+      Set H_SET = H_SET + H2 * PATROOM8_FLR_4_V,
+      Set H_CUR = H_CUR + PATROOM8_FLR_4_T * PATROOM8_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PATROOM8_FLR_4_V,
+    ENDIF,
+    IF (PATROOM8_FLR_4_C > 0),
+      Set C_SET = C_SET + C2 * PATROOM8_FLR_4_V,
+      Set C_CUR = C_CUR + PATROOM8_FLR_4_T * PATROOM8_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PATROOM8_FLR_4_V,
+    ENDIF,
+    IF (PHYSTHERAPY_FLR_3_H > 0),
+      Set H_SET = H_SET + H1 * PHYSTHERAPY_FLR_3_V,
+      Set H_CUR = H_CUR + PHYSTHERAPY_FLR_3_T * PHYSTHERAPY_FLR_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PHYSTHERAPY_FLR_3_V,
+    ENDIF,
+    IF (PHYSTHERAPY_FLR_3_C > 0),
+      Set C_SET = C_SET + C1 * PHYSTHERAPY_FLR_3_V,
+      Set C_CUR = C_CUR + PHYSTHERAPY_FLR_3_T * PHYSTHERAPY_FLR_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PHYSTHERAPY_FLR_3_V,
+    ENDIF,
+    IF (RADIOLOGY_FLR_4_H > 0),
+      Set H_SET = H_SET + H1 * RADIOLOGY_FLR_4_V,
+      Set H_CUR = H_CUR + RADIOLOGY_FLR_4_T * RADIOLOGY_FLR_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + RADIOLOGY_FLR_4_V,
+    ENDIF,
+    IF (RADIOLOGY_FLR_4_C > 0),
+      Set C_SET = C_SET + C1 * RADIOLOGY_FLR_4_V,
+      Set C_CUR = C_CUR + RADIOLOGY_FLR_4_T * RADIOLOGY_FLR_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + RADIOLOGY_FLR_4_V,
+    ENDIF,
+! Average temperature over controlled zone air volumes
+    Set T_CUR = 0,
+    Set T_CUR = T_CUR + BASEMENT_T * BASEMENT_V,
+    Set T_CUR = T_CUR + CORRIDOR_FLR_1_T * CORRIDOR_FLR_1_V,
+    Set T_CUR = T_CUR + CORRIDOR_FLR_2_T * CORRIDOR_FLR_2_V,
+    Set T_CUR = T_CUR + CORRIDOR_FLR_5_T * CORRIDOR_FLR_5_V,
+    Set T_CUR = T_CUR + CORRIDOR_NW_FLR_3_T * CORRIDOR_NW_FLR_3_V,
+    Set T_CUR = T_CUR + CORRIDOR_NW_FLR_4_T * CORRIDOR_NW_FLR_4_V,
+    Set T_CUR = T_CUR + CORRIDOR_SE_FLR_3_T * CORRIDOR_SE_FLR_3_V,
+    Set T_CUR = T_CUR + CORRIDOR_SE_FLR_4_T * CORRIDOR_SE_FLR_4_V,
+    Set T_CUR = T_CUR + DINING_FLR_5_T * DINING_FLR_5_V,
+    Set T_CUR = T_CUR + ER_EXAM1_MULT4_FLR_1_T * ER_EXAM1_MULT4_FLR_1_V,
+    Set T_CUR = T_CUR + ER_EXAM3_MULT4_FLR_1_T * ER_EXAM3_MULT4_FLR_1_V,
+    Set T_CUR = T_CUR + ER_NURSESTN_LOBBY_FLR_1_T * ER_NURSESTN_LOBBY_FLR_1_V,
+    Set T_CUR = T_CUR + ER_TRAUMA1_FLR_1_T * ER_TRAUMA1_FLR_1_V,
+    Set T_CUR = T_CUR + ER_TRAUMA2_FLR_1_T * ER_TRAUMA2_FLR_1_V,
+    Set T_CUR = T_CUR + ER_TRIAGE_MULT4_FLR_1_T * ER_TRIAGE_MULT4_FLR_1_V,
+    Set T_CUR = T_CUR + ICU_FLR_2_T * ICU_FLR_2_V,
+    Set T_CUR = T_CUR + ICU_NURSESTN_LOBBY_FLR_2_T * ICU_NURSESTN_LOBBY_FLR_2_V,
+    Set T_CUR = T_CUR + IC_PATROOM1_MULT5_FLR_2_T * IC_PATROOM1_MULT5_FLR_2_V,
+    Set T_CUR = T_CUR + IC_PATROOM2_FLR_2_T * IC_PATROOM2_FLR_2_V,
+    Set T_CUR = T_CUR + IC_PATROOM3_MULT6_FLR_2_T * IC_PATROOM3_MULT6_FLR_2_V,
+    Set T_CUR = T_CUR + KITCHEN_FLR_5_T * KITCHEN_FLR_5_V,
+    Set T_CUR = T_CUR + LAB_FLR_3_T * LAB_FLR_3_V,
+    Set T_CUR = T_CUR + LAB_FLR_4_T * LAB_FLR_4_V,
+    Set T_CUR = T_CUR + LOBBY_RECORDS_FLR_1_T * LOBBY_RECORDS_FLR_1_V,
+    Set T_CUR = T_CUR + NURSESTN_LOBBY_FLR_3_T * NURSESTN_LOBBY_FLR_3_V,
+    Set T_CUR = T_CUR + NURSESTN_LOBBY_FLR_4_T * NURSESTN_LOBBY_FLR_4_V,
+    Set T_CUR = T_CUR + NURSESTN_LOBBY_FLR_5_T * NURSESTN_LOBBY_FLR_5_V,
+    Set T_CUR = T_CUR + OR1_FLR_2_T * OR1_FLR_2_V,
+    Set T_CUR = T_CUR + OR2_MULT5_FLR_2_T * OR2_MULT5_FLR_2_V,
+    Set T_CUR = T_CUR + OR3_FLR_2_T * OR3_FLR_2_V,
+    Set T_CUR = T_CUR + OR4_FLR_2_T * OR4_FLR_2_V,
+    Set T_CUR = T_CUR + OR_NURSESTN_LOBBY_FLR_2_T * OR_NURSESTN_LOBBY_FLR_2_V,
+    Set T_CUR = T_CUR + OFFICE1_FLR_5_T * OFFICE1_FLR_5_V,
+    Set T_CUR = T_CUR + OFFICE1_MULT4_FLR_1_T * OFFICE1_MULT4_FLR_1_V,
+    Set T_CUR = T_CUR + OFFICE2_MULT5_FLR_5_T * OFFICE2_MULT5_FLR_5_V,
+    Set T_CUR = T_CUR + OFFICE3_FLR_5_T * OFFICE3_FLR_5_V,
+    Set T_CUR = T_CUR + OFFICE4_MULT6_FLR_5_T * OFFICE4_MULT6_FLR_5_V,
+    Set T_CUR = T_CUR + PATROOM1_MULT10_FLR_3_T * PATROOM1_MULT10_FLR_3_V,
+    Set T_CUR = T_CUR + PATROOM1_MULT10_FLR_4_T * PATROOM1_MULT10_FLR_4_V,
+    Set T_CUR = T_CUR + PATROOM2_FLR_3_T * PATROOM2_FLR_3_V,
+    Set T_CUR = T_CUR + PATROOM2_FLR_4_T * PATROOM2_FLR_4_V,
+    Set T_CUR = T_CUR + PATROOM3_MULT10_FLR_3_T * PATROOM3_MULT10_FLR_3_V,
+    Set T_CUR = T_CUR + PATROOM3_MULT10_FLR_4_T * PATROOM3_MULT10_FLR_4_V,
+    Set T_CUR = T_CUR + PATROOM4_FLR_3_T * PATROOM4_FLR_3_V,
+    Set T_CUR = T_CUR + PATROOM4_FLR_4_T * PATROOM4_FLR_4_V,
+    Set T_CUR = T_CUR + PATROOM5_MULT10_FLR_3_T * PATROOM5_MULT10_FLR_3_V,
+    Set T_CUR = T_CUR + PATROOM5_MULT10_FLR_4_T * PATROOM5_MULT10_FLR_4_V,
+    Set T_CUR = T_CUR + PATROOM6_FLR_3_T * PATROOM6_FLR_3_V,
+    Set T_CUR = T_CUR + PATROOM6_FLR_4_T * PATROOM6_FLR_4_V,
+    Set T_CUR = T_CUR + PATROOM7_MULT10_FLR_3_T * PATROOM7_MULT10_FLR_3_V,
+    Set T_CUR = T_CUR + PATROOM7_MULT10_FLR_4_T * PATROOM7_MULT10_FLR_4_V,
+    Set T_CUR = T_CUR + PATROOM8_FLR_3_T * PATROOM8_FLR_3_V,
+    Set T_CUR = T_CUR + PATROOM8_FLR_4_T * PATROOM8_FLR_4_V,
+    Set T_CUR = T_CUR + PHYSTHERAPY_FLR_3_T * PHYSTHERAPY_FLR_3_V,
+    Set T_CUR = T_CUR + RADIOLOGY_FLR_4_T * RADIOLOGY_FLR_4_V,
+    Set T_CUR = T_CUR/Controlled_V*9.0/5.0+32.0,
+! Average cooling schedule and setpoint over controlled zone air volumes
+    Set Schedule_Cooling_Temperature = 0.0,
+    Set T_Cooling = 0,
+    Set T_Cooling = T_Cooling + C1 * BASEMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * BASEMENT_V,
+    Set T_Cooling = T_Cooling + C1 * CORRIDOR_FLR_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * CORRIDOR_FLR_1_V,
+    Set T_Cooling = T_Cooling + C1 * CORRIDOR_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * CORRIDOR_FLR_2_V,
+    Set T_Cooling = T_Cooling + C1 * CORRIDOR_FLR_5_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * CORRIDOR_FLR_5_V,
+    Set T_Cooling = T_Cooling + C1 * CORRIDOR_NW_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * CORRIDOR_NW_FLR_3_V,
+    Set T_Cooling = T_Cooling + C1 * CORRIDOR_NW_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * CORRIDOR_NW_FLR_4_V,
+    Set T_Cooling = T_Cooling + C1 * CORRIDOR_SE_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * CORRIDOR_SE_FLR_3_V,
+    Set T_Cooling = T_Cooling + C1 * CORRIDOR_SE_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * CORRIDOR_SE_FLR_4_V,
+    Set T_Cooling = T_Cooling + C1 * DINING_FLR_5_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * DINING_FLR_5_V,
+    Set T_Cooling = T_Cooling + C2 * ER_EXAM1_MULT4_FLR_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * ER_EXAM1_MULT4_FLR_1_V,
+    Set T_Cooling = T_Cooling + C2 * ER_EXAM3_MULT4_FLR_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * ER_EXAM3_MULT4_FLR_1_V,
+    Set T_Cooling = T_Cooling + C1 * ER_NURSESTN_LOBBY_FLR_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * ER_NURSESTN_LOBBY_FLR_1_V,
+    Set T_Cooling = T_Cooling + C2 * ER_TRAUMA1_FLR_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * ER_TRAUMA1_FLR_1_V,
+    Set T_Cooling = T_Cooling + C2 * ER_TRAUMA2_FLR_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * ER_TRAUMA2_FLR_1_V,
+    Set T_Cooling = T_Cooling + C2 * ER_TRIAGE_MULT4_FLR_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * ER_TRIAGE_MULT4_FLR_1_V,
+    Set T_Cooling = T_Cooling + C2 * ICU_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * ICU_FLR_2_V,
+    Set T_Cooling = T_Cooling + C1 * ICU_NURSESTN_LOBBY_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * ICU_NURSESTN_LOBBY_FLR_2_V,
+    Set T_Cooling = T_Cooling + C2 * IC_PATROOM1_MULT5_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * IC_PATROOM1_MULT5_FLR_2_V,
+    Set T_Cooling = T_Cooling + C2 * IC_PATROOM2_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * IC_PATROOM2_FLR_2_V,
+    Set T_Cooling = T_Cooling + C2 * IC_PATROOM3_MULT6_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * IC_PATROOM3_MULT6_FLR_2_V,
+    Set T_Cooling = T_Cooling + C3 * KITCHEN_FLR_5_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C3_NOM * KITCHEN_FLR_5_V,
+    Set T_Cooling = T_Cooling + C1 * LAB_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * LAB_FLR_3_V,
+    Set T_Cooling = T_Cooling + C1 * LAB_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * LAB_FLR_4_V,
+    Set T_Cooling = T_Cooling + C1 * LOBBY_RECORDS_FLR_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * LOBBY_RECORDS_FLR_1_V,
+    Set T_Cooling = T_Cooling + C1 * NURSESTN_LOBBY_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * NURSESTN_LOBBY_FLR_3_V,
+    Set T_Cooling = T_Cooling + C1 * NURSESTN_LOBBY_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * NURSESTN_LOBBY_FLR_4_V,
+    Set T_Cooling = T_Cooling + C1 * NURSESTN_LOBBY_FLR_5_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * NURSESTN_LOBBY_FLR_5_V,
+    Set T_Cooling = T_Cooling + C4 * OR1_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C4_NOM * OR1_FLR_2_V,
+    Set T_Cooling = T_Cooling + C4 * OR2_MULT5_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C4_NOM * OR2_MULT5_FLR_2_V,
+    Set T_Cooling = T_Cooling + C4 * OR3_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C4_NOM * OR3_FLR_2_V,
+    Set T_Cooling = T_Cooling + C4 * OR4_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C4_NOM * OR4_FLR_2_V,
+    Set T_Cooling = T_Cooling + C1 * OR_NURSESTN_LOBBY_FLR_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * OR_NURSESTN_LOBBY_FLR_2_V,
+    Set T_Cooling = T_Cooling + C1 * OFFICE1_FLR_5_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * OFFICE1_FLR_5_V,
+    Set T_Cooling = T_Cooling + C1 * OFFICE1_MULT4_FLR_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * OFFICE1_MULT4_FLR_1_V,
+    Set T_Cooling = T_Cooling + C1 * OFFICE2_MULT5_FLR_5_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * OFFICE2_MULT5_FLR_5_V,
+    Set T_Cooling = T_Cooling + C1 * OFFICE3_FLR_5_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * OFFICE3_FLR_5_V,
+    Set T_Cooling = T_Cooling + C1 * OFFICE4_MULT6_FLR_5_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * OFFICE4_MULT6_FLR_5_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM1_MULT10_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM1_MULT10_FLR_3_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM1_MULT10_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM1_MULT10_FLR_4_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM2_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM2_FLR_3_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM2_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM2_FLR_4_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM3_MULT10_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM3_MULT10_FLR_3_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM3_MULT10_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM3_MULT10_FLR_4_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM4_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM4_FLR_3_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM4_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM4_FLR_4_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM5_MULT10_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM5_MULT10_FLR_3_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM5_MULT10_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM5_MULT10_FLR_4_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM6_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM6_FLR_3_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM6_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM6_FLR_4_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM7_MULT10_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM7_MULT10_FLR_3_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM7_MULT10_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM7_MULT10_FLR_4_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM8_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM8_FLR_3_V,
+    Set T_Cooling = T_Cooling + C2 * PATROOM8_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * PATROOM8_FLR_4_V,
+    Set T_Cooling = T_Cooling + C1 * PHYSTHERAPY_FLR_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * PHYSTHERAPY_FLR_3_V,
+    Set T_Cooling = T_Cooling + C1 * RADIOLOGY_FLR_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * RADIOLOGY_FLR_4_V,
+    Set T_Cooling = T_Cooling/Controlled_V*9.0/5.0+32.0,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature/Controlled_V*9.0/5.0+32.0,
+! Average heating schedule and setpoint over controlled zone air volumes
+    Set Schedule_Heating_Temperature = 0.0,
+    Set T_Heating = 0,
+    Set T_Heating = T_Heating + H1 * BASEMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * BASEMENT_V,
+    Set T_Heating = T_Heating + H1 * CORRIDOR_FLR_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * CORRIDOR_FLR_1_V,
+    Set T_Heating = T_Heating + H1 * CORRIDOR_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * CORRIDOR_FLR_2_V,
+    Set T_Heating = T_Heating + H1 * CORRIDOR_FLR_5_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * CORRIDOR_FLR_5_V,
+    Set T_Heating = T_Heating + H1 * CORRIDOR_NW_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * CORRIDOR_NW_FLR_3_V,
+    Set T_Heating = T_Heating + H1 * CORRIDOR_NW_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * CORRIDOR_NW_FLR_4_V,
+    Set T_Heating = T_Heating + H1 * CORRIDOR_SE_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * CORRIDOR_SE_FLR_3_V,
+    Set T_Heating = T_Heating + H1 * CORRIDOR_SE_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * CORRIDOR_SE_FLR_4_V,
+    Set T_Heating = T_Heating + H1 * DINING_FLR_5_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * DINING_FLR_5_V,
+    Set T_Heating = T_Heating + H2 * ER_EXAM1_MULT4_FLR_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * ER_EXAM1_MULT4_FLR_1_V,
+    Set T_Heating = T_Heating + H2 * ER_EXAM3_MULT4_FLR_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * ER_EXAM3_MULT4_FLR_1_V,
+    Set T_Heating = T_Heating + H1 * ER_NURSESTN_LOBBY_FLR_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * ER_NURSESTN_LOBBY_FLR_1_V,
+    Set T_Heating = T_Heating + H2 * ER_TRAUMA1_FLR_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * ER_TRAUMA1_FLR_1_V,
+    Set T_Heating = T_Heating + H2 * ER_TRAUMA2_FLR_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * ER_TRAUMA2_FLR_1_V,
+    Set T_Heating = T_Heating + H2 * ER_TRIAGE_MULT4_FLR_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * ER_TRIAGE_MULT4_FLR_1_V,
+    Set T_Heating = T_Heating + H2 * ICU_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * ICU_FLR_2_V,
+    Set T_Heating = T_Heating + H1 * ICU_NURSESTN_LOBBY_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * ICU_NURSESTN_LOBBY_FLR_2_V,
+    Set T_Heating = T_Heating + H2 * IC_PATROOM1_MULT5_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * IC_PATROOM1_MULT5_FLR_2_V,
+    Set T_Heating = T_Heating + H2 * IC_PATROOM2_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * IC_PATROOM2_FLR_2_V,
+    Set T_Heating = T_Heating + H2 * IC_PATROOM3_MULT6_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * IC_PATROOM3_MULT6_FLR_2_V,
+    Set T_Heating = T_Heating + H3 * KITCHEN_FLR_5_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H3_NOM * KITCHEN_FLR_5_V,
+    Set T_Heating = T_Heating + H1 * LAB_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * LAB_FLR_3_V,
+    Set T_Heating = T_Heating + H1 * LAB_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * LAB_FLR_4_V,
+    Set T_Heating = T_Heating + H1 * LOBBY_RECORDS_FLR_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * LOBBY_RECORDS_FLR_1_V,
+    Set T_Heating = T_Heating + H1 * NURSESTN_LOBBY_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * NURSESTN_LOBBY_FLR_3_V,
+    Set T_Heating = T_Heating + H1 * NURSESTN_LOBBY_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * NURSESTN_LOBBY_FLR_4_V,
+    Set T_Heating = T_Heating + H1 * NURSESTN_LOBBY_FLR_5_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * NURSESTN_LOBBY_FLR_5_V,
+    Set T_Heating = T_Heating + H4 * OR1_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H4_NOM * OR1_FLR_2_V,
+    Set T_Heating = T_Heating + H4 * OR2_MULT5_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H4_NOM * OR2_MULT5_FLR_2_V,
+    Set T_Heating = T_Heating + H4 * OR3_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H4_NOM * OR3_FLR_2_V,
+    Set T_Heating = T_Heating + H4 * OR4_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H4_NOM * OR4_FLR_2_V,
+    Set T_Heating = T_Heating + H1 * OR_NURSESTN_LOBBY_FLR_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * OR_NURSESTN_LOBBY_FLR_2_V,
+    Set T_Heating = T_Heating + H1 * OFFICE1_FLR_5_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * OFFICE1_FLR_5_V,
+    Set T_Heating = T_Heating + H1 * OFFICE1_MULT4_FLR_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * OFFICE1_MULT4_FLR_1_V,
+    Set T_Heating = T_Heating + H1 * OFFICE2_MULT5_FLR_5_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * OFFICE2_MULT5_FLR_5_V,
+    Set T_Heating = T_Heating + H1 * OFFICE3_FLR_5_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * OFFICE3_FLR_5_V,
+    Set T_Heating = T_Heating + H1 * OFFICE4_MULT6_FLR_5_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * OFFICE4_MULT6_FLR_5_V,
+    Set T_Heating = T_Heating + H2 * PATROOM1_MULT10_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM1_MULT10_FLR_3_V,
+    Set T_Heating = T_Heating + H2 * PATROOM1_MULT10_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM1_MULT10_FLR_4_V,
+    Set T_Heating = T_Heating + H2 * PATROOM2_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM2_FLR_3_V,
+    Set T_Heating = T_Heating + H2 * PATROOM2_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM2_FLR_4_V,
+    Set T_Heating = T_Heating + H2 * PATROOM3_MULT10_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM3_MULT10_FLR_3_V,
+    Set T_Heating = T_Heating + H2 * PATROOM3_MULT10_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM3_MULT10_FLR_4_V,
+    Set T_Heating = T_Heating + H2 * PATROOM4_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM4_FLR_3_V,
+    Set T_Heating = T_Heating + H2 * PATROOM4_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM4_FLR_4_V,
+    Set T_Heating = T_Heating + H2 * PATROOM5_MULT10_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM5_MULT10_FLR_3_V,
+    Set T_Heating = T_Heating + H2 * PATROOM5_MULT10_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM5_MULT10_FLR_4_V,
+    Set T_Heating = T_Heating + H2 * PATROOM6_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM6_FLR_3_V,
+    Set T_Heating = T_Heating + H2 * PATROOM6_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM6_FLR_4_V,
+    Set T_Heating = T_Heating + H2 * PATROOM7_MULT10_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM7_MULT10_FLR_3_V,
+    Set T_Heating = T_Heating + H2 * PATROOM7_MULT10_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM7_MULT10_FLR_4_V,
+    Set T_Heating = T_Heating + H2 * PATROOM8_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM8_FLR_3_V,
+    Set T_Heating = T_Heating + H2 * PATROOM8_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * PATROOM8_FLR_4_V,
+    Set T_Heating = T_Heating + H1 * PHYSTHERAPY_FLR_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * PHYSTHERAPY_FLR_3_V,
+    Set T_Heating = T_Heating + H1 * RADIOLOGY_FLR_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * RADIOLOGY_FLR_4_V,
+    Set T_Heating = T_Heating/Controlled_V*9.0/5.0+32.0,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature/Controlled_V*9.0/5.0+32.0,
+
+    Set Setpoint_Cooling_Temperature = T_Cooling,
+    Set Current_Cooling_Temperature = T_CUR,
+    Set Setpoint_Heating_Temperature = T_Heating,
+    Set Current_Heating_Temperature = T_CUR;
+
+  
+  EnergyManagementSystem:Program,
+    Report_Demand,      !- Name
+    Set Cooling_Power_State = 0.0,
+    Set Heating_Power_State = 0.0,
+    Set Flexible_Cooling_Demand = 0.0,
+    Set Flexible_Heating_Demand = 0.0,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand/(60*60*ZoneTimeStep),
+    IF Flexible_Cooling_Demand > 1.0,
+      Set Cooling_Power_State = 1.0,
+    ENDIF,
+    Set Flexible_Heating_Demand = Flexible_Heating_Demand/(60*60*ZoneTimeStep),
+    IF Flexible_Heating_Demand > 1.0,
+      Set Heating_Power_State = 1.0,
+    ENDIF;
+  
+  EnergyManagementSystem:Program,
+    Report_Occupants,
+    Set Total_Occupants = 0.0,
+    Set Total_Occupants = Total_Occupants + BASEMENT_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_FLR_5_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_NW_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_NW_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_SE_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + CORRIDOR_SE_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + DINING_FLR_5_O,
+    Set Total_Occupants = Total_Occupants + ER_EXAM1_MULT4_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + ER_EXAM3_MULT4_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + ER_NURSESTN_LOBBY_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + ER_TRAUMA1_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + ER_TRAUMA2_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + ER_TRIAGE_MULT4_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + ICU_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + ICU_NURSESTN_LOBBY_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + IC_PATROOM1_MULT5_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + IC_PATROOM2_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + IC_PATROOM3_MULT6_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + KITCHEN_FLR_5_O,
+    Set Total_Occupants = Total_Occupants + LAB_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + LAB_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + LOBBY_RECORDS_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + NURSESTN_LOBBY_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + NURSESTN_LOBBY_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + NURSESTN_LOBBY_FLR_5_O,
+    Set Total_Occupants = Total_Occupants + OR1_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + OR2_MULT5_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + OR3_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + OR4_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + OR_NURSESTN_LOBBY_FLR_2_O,
+    Set Total_Occupants = Total_Occupants + OFFICE1_FLR_5_O,
+    Set Total_Occupants = Total_Occupants + OFFICE1_MULT4_FLR_1_O,
+    Set Total_Occupants = Total_Occupants + OFFICE2_MULT5_FLR_5_O,
+    Set Total_Occupants = Total_Occupants + OFFICE3_FLR_5_O,
+    Set Total_Occupants = Total_Occupants + OFFICE4_MULT6_FLR_5_O,
+    Set Total_Occupants = Total_Occupants + PATROOM1_MULT10_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + PATROOM1_MULT10_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + PATROOM2_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + PATROOM2_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + PATROOM3_MULT10_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + PATROOM3_MULT10_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + PATROOM4_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + PATROOM4_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + PATROOM5_MULT10_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + PATROOM5_MULT10_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + PATROOM6_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + PATROOM6_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + PATROOM7_MULT10_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + PATROOM7_MULT10_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + PATROOM8_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + PATROOM8_FLR_4_O,
+    Set Total_Occupants = Total_Occupants + PHYSTHERAPY_FLR_3_O,
+    Set Total_Occupants = Total_Occupants + RADIOLOGY_FLR_4_O;
+  EnergyManagementSystem:Sensor,
+    C1_NOM,  !- Name
+    C1_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    C1,  !- Name
+    ADMIN_CLGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    H1_NOM,  !- Name
+    H1_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    H1,  !- Name
+    ADMIN_HTGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    C3_NOM,  !- Name
+    C3_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    C3,  !- Name
+    KITCHEN_CLGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    H3_NOM,  !- Name
+    H3_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    H3,  !- Name
+    KITCHEN_HTGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    C2_NOM,  !- Name
+    C2_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    C2,  !- Name
+    CRITICAL_CLGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    H2_NOM,  !- Name
+    H2_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    H2,  !- Name
+    CRITICAL_HTGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    C4_NOM,  !- Name
+    C4_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    C4,  !- Name
+    OR_CLGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    H4_NOM,  !- Name
+    H4_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    H4,  !- Name
+    OR_HTGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:GlobalVariable,
+    Flexible_Cooling_Demand;
+  EnergyManagementSystem:GlobalVariable,
+    Flexible_Heating_Demand;
+  EnergyManagementSystem:GlobalVariable,
+    Setpoint_Cooling_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Setpoint_Heating_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Schedule_Cooling_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Schedule_Heating_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Current_Cooling_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Current_Heating_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Cooling_Power_State;
+  EnergyManagementSystem:GlobalVariable,
+    Heating_Power_State;
+  EnergyManagementSystem:GlobalVariable,
+    H_SET;
+  EnergyManagementSystem:GlobalVariable,
+    C_SET;
+  EnergyManagementSystem:GlobalVariable,
+    H_CUR;
+  EnergyManagementSystem:GlobalVariable,
+    C_CUR;
+  EnergyManagementSystem:GlobalVariable,
+    TOTAL_HEAT_V;
+  EnergyManagementSystem:GlobalVariable,
+    TOTAL_COOL_V;
+  EnergyManagementSystem:GlobalVariable,
+    T_CUR;
+  EnergyManagementSystem:GlobalVariable,
+    Total_Occupants;
+  EnergyManagementSystem:OutputVariable,
+    Cooling Controlled Load,  !- Name
+    Flexible_Cooling_Demand,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Controlled Load,  !- Name
+    Flexible_Heating_Demand,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Schedule Temperature,  !- Name
+    Schedule_Cooling_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Schedule Temperature,  !- Name
+    Schedule_Heating_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Setpoint Temperature,  !- Name
+    Setpoint_Cooling_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Setpoint Temperature,  !- Name
+    Setpoint_Heating_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Current Temperature,  !- Name
+    Current_Cooling_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Current Temperature,  !- Name
+    Current_Heating_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Power State,  !- Name
+    Cooling_Power_State,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Power State,  !- Name
+    Heating_Power_State,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Setpoint,  !- Name
+    H_SET,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Setpoint,  !- Name
+    C_SET,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Current,  !- Name
+    H_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Current,  !- Name
+    C_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Volume,  !- Name
+    TOTAL_HEAT_V,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Volume,  !- Name
+    TOTAL_COOL_V,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Indoor Air Temperature,  !- Name
+    T_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Occupant Count,  !- Name
+    Total_Occupants,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:Sensor,
+    BASEMENT_O,  !- Name
+    BASEMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    BASEMENT_T,  !- Name
+    BASEMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    BASEMENT_H,  !- Name
+    BASEMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    BASEMENT_C,  !- Name
+    BASEMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    BASEMENT_V;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_1_O,  !- Name
+    CORRIDOR_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_1_T,  !- Name
+    CORRIDOR_FLR_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_1_H,  !- Name
+    CORRIDOR_FLR_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_1_C,  !- Name
+    CORRIDOR_FLR_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    CORRIDOR_FLR_1_V;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_2_O,  !- Name
+    CORRIDOR_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_2_T,  !- Name
+    CORRIDOR_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_2_H,  !- Name
+    CORRIDOR_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_2_C,  !- Name
+    CORRIDOR_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    CORRIDOR_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_5_O,  !- Name
+    CORRIDOR_FLR_5,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_5_T,  !- Name
+    CORRIDOR_FLR_5,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_5_H,  !- Name
+    CORRIDOR_FLR_5,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_FLR_5_C,  !- Name
+    CORRIDOR_FLR_5,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    CORRIDOR_FLR_5_V;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_NW_FLR_3_O,  !- Name
+    CORRIDOR_NW_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_NW_FLR_3_T,  !- Name
+    CORRIDOR_NW_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_NW_FLR_3_H,  !- Name
+    CORRIDOR_NW_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_NW_FLR_3_C,  !- Name
+    CORRIDOR_NW_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    CORRIDOR_NW_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_NW_FLR_4_O,  !- Name
+    CORRIDOR_NW_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_NW_FLR_4_T,  !- Name
+    CORRIDOR_NW_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_NW_FLR_4_H,  !- Name
+    CORRIDOR_NW_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_NW_FLR_4_C,  !- Name
+    CORRIDOR_NW_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    CORRIDOR_NW_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_SE_FLR_3_O,  !- Name
+    CORRIDOR_SE_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_SE_FLR_3_T,  !- Name
+    CORRIDOR_SE_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_SE_FLR_3_H,  !- Name
+    CORRIDOR_SE_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_SE_FLR_3_C,  !- Name
+    CORRIDOR_SE_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    CORRIDOR_SE_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_SE_FLR_4_O,  !- Name
+    CORRIDOR_SE_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_SE_FLR_4_T,  !- Name
+    CORRIDOR_SE_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_SE_FLR_4_H,  !- Name
+    CORRIDOR_SE_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    CORRIDOR_SE_FLR_4_C,  !- Name
+    CORRIDOR_SE_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    CORRIDOR_SE_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    DINING_FLR_5_O,  !- Name
+    DINING_FLR_5,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    DINING_FLR_5_T,  !- Name
+    DINING_FLR_5,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    DINING_FLR_5_H,  !- Name
+    DINING_FLR_5,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    DINING_FLR_5_C,  !- Name
+    DINING_FLR_5,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    DINING_FLR_5_V;
+  EnergyManagementSystem:Sensor,
+    ER_EXAM1_MULT4_FLR_1_O,  !- Name
+    ER_EXAM1_MULT4_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    ER_EXAM1_MULT4_FLR_1_T,  !- Name
+    ER_EXAM1_MULT4_FLR_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    ER_EXAM1_MULT4_FLR_1_H,  !- Name
+    ER_EXAM1_MULT4_FLR_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    ER_EXAM1_MULT4_FLR_1_C,  !- Name
+    ER_EXAM1_MULT4_FLR_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    ER_EXAM1_MULT4_FLR_1_V;
+  EnergyManagementSystem:Sensor,
+    ER_EXAM3_MULT4_FLR_1_O,  !- Name
+    ER_EXAM3_MULT4_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    ER_EXAM3_MULT4_FLR_1_T,  !- Name
+    ER_EXAM3_MULT4_FLR_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    ER_EXAM3_MULT4_FLR_1_H,  !- Name
+    ER_EXAM3_MULT4_FLR_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    ER_EXAM3_MULT4_FLR_1_C,  !- Name
+    ER_EXAM3_MULT4_FLR_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    ER_EXAM3_MULT4_FLR_1_V;
+  EnergyManagementSystem:Sensor,
+    ER_NURSESTN_LOBBY_FLR_1_O,  !- Name
+    ER_NURSESTN_LOBBY_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    ER_NURSESTN_LOBBY_FLR_1_T,  !- Name
+    ER_NURSESTN_LOBBY_FLR_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    ER_NURSESTN_LOBBY_FLR_1_H,  !- Name
+    ER_NURSESTN_LOBBY_FLR_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    ER_NURSESTN_LOBBY_FLR_1_C,  !- Name
+    ER_NURSESTN_LOBBY_FLR_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    ER_NURSESTN_LOBBY_FLR_1_V;
+  EnergyManagementSystem:Sensor,
+    ER_TRAUMA1_FLR_1_O,  !- Name
+    ER_TRAUMA1_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    ER_TRAUMA1_FLR_1_T,  !- Name
+    ER_TRAUMA1_FLR_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    ER_TRAUMA1_FLR_1_H,  !- Name
+    ER_TRAUMA1_FLR_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    ER_TRAUMA1_FLR_1_C,  !- Name
+    ER_TRAUMA1_FLR_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    ER_TRAUMA1_FLR_1_V;
+  EnergyManagementSystem:Sensor,
+    ER_TRAUMA2_FLR_1_O,  !- Name
+    ER_TRAUMA2_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    ER_TRAUMA2_FLR_1_T,  !- Name
+    ER_TRAUMA2_FLR_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    ER_TRAUMA2_FLR_1_H,  !- Name
+    ER_TRAUMA2_FLR_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    ER_TRAUMA2_FLR_1_C,  !- Name
+    ER_TRAUMA2_FLR_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    ER_TRAUMA2_FLR_1_V;
+  EnergyManagementSystem:Sensor,
+    ER_TRIAGE_MULT4_FLR_1_O,  !- Name
+    ER_TRIAGE_MULT4_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    ER_TRIAGE_MULT4_FLR_1_T,  !- Name
+    ER_TRIAGE_MULT4_FLR_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    ER_TRIAGE_MULT4_FLR_1_H,  !- Name
+    ER_TRIAGE_MULT4_FLR_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    ER_TRIAGE_MULT4_FLR_1_C,  !- Name
+    ER_TRIAGE_MULT4_FLR_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    ER_TRIAGE_MULT4_FLR_1_V;
+  EnergyManagementSystem:Sensor,
+    ICU_FLR_2_O,  !- Name
+    ICU_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    ICU_FLR_2_T,  !- Name
+    ICU_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    ICU_FLR_2_H,  !- Name
+    ICU_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    ICU_FLR_2_C,  !- Name
+    ICU_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    ICU_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    ICU_NURSESTN_LOBBY_FLR_2_O,  !- Name
+    ICU_NURSESTN_LOBBY_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    ICU_NURSESTN_LOBBY_FLR_2_T,  !- Name
+    ICU_NURSESTN_LOBBY_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    ICU_NURSESTN_LOBBY_FLR_2_H,  !- Name
+    ICU_NURSESTN_LOBBY_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    ICU_NURSESTN_LOBBY_FLR_2_C,  !- Name
+    ICU_NURSESTN_LOBBY_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    ICU_NURSESTN_LOBBY_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM1_MULT5_FLR_2_O,  !- Name
+    IC_PATROOM1_MULT5_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM1_MULT5_FLR_2_T,  !- Name
+    IC_PATROOM1_MULT5_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM1_MULT5_FLR_2_H,  !- Name
+    IC_PATROOM1_MULT5_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM1_MULT5_FLR_2_C,  !- Name
+    IC_PATROOM1_MULT5_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    IC_PATROOM1_MULT5_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM2_FLR_2_O,  !- Name
+    IC_PATROOM2_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM2_FLR_2_T,  !- Name
+    IC_PATROOM2_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM2_FLR_2_H,  !- Name
+    IC_PATROOM2_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM2_FLR_2_C,  !- Name
+    IC_PATROOM2_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    IC_PATROOM2_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM3_MULT6_FLR_2_O,  !- Name
+    IC_PATROOM3_MULT6_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM3_MULT6_FLR_2_T,  !- Name
+    IC_PATROOM3_MULT6_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM3_MULT6_FLR_2_H,  !- Name
+    IC_PATROOM3_MULT6_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    IC_PATROOM3_MULT6_FLR_2_C,  !- Name
+    IC_PATROOM3_MULT6_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    IC_PATROOM3_MULT6_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    KITCHEN_FLR_5_O,  !- Name
+    KITCHEN_FLR_5,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    KITCHEN_FLR_5_T,  !- Name
+    KITCHEN_FLR_5,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    KITCHEN_FLR_5_H,  !- Name
+    KITCHEN_FLR_5,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    KITCHEN_FLR_5_C,  !- Name
+    KITCHEN_FLR_5,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    KITCHEN_FLR_5_V;
+  EnergyManagementSystem:Sensor,
+    LAB_FLR_3_O,  !- Name
+    LAB_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    LAB_FLR_3_T,  !- Name
+    LAB_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    LAB_FLR_3_H,  !- Name
+    LAB_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    LAB_FLR_3_C,  !- Name
+    LAB_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    LAB_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    LAB_FLR_4_O,  !- Name
+    LAB_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    LAB_FLR_4_T,  !- Name
+    LAB_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    LAB_FLR_4_H,  !- Name
+    LAB_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    LAB_FLR_4_C,  !- Name
+    LAB_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    LAB_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    LOBBY_RECORDS_FLR_1_O,  !- Name
+    LOBBY_RECORDS_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    LOBBY_RECORDS_FLR_1_T,  !- Name
+    LOBBY_RECORDS_FLR_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    LOBBY_RECORDS_FLR_1_H,  !- Name
+    LOBBY_RECORDS_FLR_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    LOBBY_RECORDS_FLR_1_C,  !- Name
+    LOBBY_RECORDS_FLR_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    LOBBY_RECORDS_FLR_1_V;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_3_O,  !- Name
+    NURSESTN_LOBBY_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_3_T,  !- Name
+    NURSESTN_LOBBY_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_3_H,  !- Name
+    NURSESTN_LOBBY_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_3_C,  !- Name
+    NURSESTN_LOBBY_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    NURSESTN_LOBBY_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_4_O,  !- Name
+    NURSESTN_LOBBY_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_4_T,  !- Name
+    NURSESTN_LOBBY_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_4_H,  !- Name
+    NURSESTN_LOBBY_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_4_C,  !- Name
+    NURSESTN_LOBBY_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    NURSESTN_LOBBY_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_5_O,  !- Name
+    NURSESTN_LOBBY_FLR_5,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_5_T,  !- Name
+    NURSESTN_LOBBY_FLR_5,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_5_H,  !- Name
+    NURSESTN_LOBBY_FLR_5,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    NURSESTN_LOBBY_FLR_5_C,  !- Name
+    NURSESTN_LOBBY_FLR_5,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    NURSESTN_LOBBY_FLR_5_V;
+  EnergyManagementSystem:Sensor,
+    OR1_FLR_2_O,  !- Name
+    OR1_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OR1_FLR_2_T,  !- Name
+    OR1_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OR1_FLR_2_H,  !- Name
+    OR1_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OR1_FLR_2_C,  !- Name
+    OR1_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OR1_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    OR2_MULT5_FLR_2_O,  !- Name
+    OR2_MULT5_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OR2_MULT5_FLR_2_T,  !- Name
+    OR2_MULT5_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OR2_MULT5_FLR_2_H,  !- Name
+    OR2_MULT5_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OR2_MULT5_FLR_2_C,  !- Name
+    OR2_MULT5_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OR2_MULT5_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    OR3_FLR_2_O,  !- Name
+    OR3_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OR3_FLR_2_T,  !- Name
+    OR3_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OR3_FLR_2_H,  !- Name
+    OR3_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OR3_FLR_2_C,  !- Name
+    OR3_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OR3_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    OR4_FLR_2_O,  !- Name
+    OR4_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OR4_FLR_2_T,  !- Name
+    OR4_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OR4_FLR_2_H,  !- Name
+    OR4_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OR4_FLR_2_C,  !- Name
+    OR4_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OR4_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    OR_NURSESTN_LOBBY_FLR_2_O,  !- Name
+    OR_NURSESTN_LOBBY_FLR_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OR_NURSESTN_LOBBY_FLR_2_T,  !- Name
+    OR_NURSESTN_LOBBY_FLR_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OR_NURSESTN_LOBBY_FLR_2_H,  !- Name
+    OR_NURSESTN_LOBBY_FLR_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OR_NURSESTN_LOBBY_FLR_2_C,  !- Name
+    OR_NURSESTN_LOBBY_FLR_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OR_NURSESTN_LOBBY_FLR_2_V;
+  EnergyManagementSystem:Sensor,
+    OFFICE1_FLR_5_O,  !- Name
+    OFFICE1_FLR_5,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OFFICE1_FLR_5_T,  !- Name
+    OFFICE1_FLR_5,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OFFICE1_FLR_5_H,  !- Name
+    OFFICE1_FLR_5,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OFFICE1_FLR_5_C,  !- Name
+    OFFICE1_FLR_5,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OFFICE1_FLR_5_V;
+  EnergyManagementSystem:Sensor,
+    OFFICE1_MULT4_FLR_1_O,  !- Name
+    OFFICE1_MULT4_FLR_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OFFICE1_MULT4_FLR_1_T,  !- Name
+    OFFICE1_MULT4_FLR_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OFFICE1_MULT4_FLR_1_H,  !- Name
+    OFFICE1_MULT4_FLR_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OFFICE1_MULT4_FLR_1_C,  !- Name
+    OFFICE1_MULT4_FLR_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OFFICE1_MULT4_FLR_1_V;
+  EnergyManagementSystem:Sensor,
+    OFFICE2_MULT5_FLR_5_O,  !- Name
+    OFFICE2_MULT5_FLR_5,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OFFICE2_MULT5_FLR_5_T,  !- Name
+    OFFICE2_MULT5_FLR_5,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OFFICE2_MULT5_FLR_5_H,  !- Name
+    OFFICE2_MULT5_FLR_5,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OFFICE2_MULT5_FLR_5_C,  !- Name
+    OFFICE2_MULT5_FLR_5,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OFFICE2_MULT5_FLR_5_V;
+  EnergyManagementSystem:Sensor,
+    OFFICE3_FLR_5_O,  !- Name
+    OFFICE3_FLR_5,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OFFICE3_FLR_5_T,  !- Name
+    OFFICE3_FLR_5,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OFFICE3_FLR_5_H,  !- Name
+    OFFICE3_FLR_5,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OFFICE3_FLR_5_C,  !- Name
+    OFFICE3_FLR_5,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OFFICE3_FLR_5_V;
+  EnergyManagementSystem:Sensor,
+    OFFICE4_MULT6_FLR_5_O,  !- Name
+    OFFICE4_MULT6_FLR_5,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OFFICE4_MULT6_FLR_5_T,  !- Name
+    OFFICE4_MULT6_FLR_5,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OFFICE4_MULT6_FLR_5_H,  !- Name
+    OFFICE4_MULT6_FLR_5,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OFFICE4_MULT6_FLR_5_C,  !- Name
+    OFFICE4_MULT6_FLR_5,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OFFICE4_MULT6_FLR_5_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM1_MULT10_FLR_3_O,  !- Name
+    PATROOM1_MULT10_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM1_MULT10_FLR_3_T,  !- Name
+    PATROOM1_MULT10_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM1_MULT10_FLR_3_H,  !- Name
+    PATROOM1_MULT10_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM1_MULT10_FLR_3_C,  !- Name
+    PATROOM1_MULT10_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM1_MULT10_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM1_MULT10_FLR_4_O,  !- Name
+    PATROOM1_MULT10_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM1_MULT10_FLR_4_T,  !- Name
+    PATROOM1_MULT10_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM1_MULT10_FLR_4_H,  !- Name
+    PATROOM1_MULT10_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM1_MULT10_FLR_4_C,  !- Name
+    PATROOM1_MULT10_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM1_MULT10_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM2_FLR_3_O,  !- Name
+    PATROOM2_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM2_FLR_3_T,  !- Name
+    PATROOM2_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM2_FLR_3_H,  !- Name
+    PATROOM2_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM2_FLR_3_C,  !- Name
+    PATROOM2_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM2_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM2_FLR_4_O,  !- Name
+    PATROOM2_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM2_FLR_4_T,  !- Name
+    PATROOM2_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM2_FLR_4_H,  !- Name
+    PATROOM2_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM2_FLR_4_C,  !- Name
+    PATROOM2_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM2_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM3_MULT10_FLR_3_O,  !- Name
+    PATROOM3_MULT10_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM3_MULT10_FLR_3_T,  !- Name
+    PATROOM3_MULT10_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM3_MULT10_FLR_3_H,  !- Name
+    PATROOM3_MULT10_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM3_MULT10_FLR_3_C,  !- Name
+    PATROOM3_MULT10_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM3_MULT10_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM3_MULT10_FLR_4_O,  !- Name
+    PATROOM3_MULT10_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM3_MULT10_FLR_4_T,  !- Name
+    PATROOM3_MULT10_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM3_MULT10_FLR_4_H,  !- Name
+    PATROOM3_MULT10_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM3_MULT10_FLR_4_C,  !- Name
+    PATROOM3_MULT10_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM3_MULT10_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM4_FLR_3_O,  !- Name
+    PATROOM4_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM4_FLR_3_T,  !- Name
+    PATROOM4_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM4_FLR_3_H,  !- Name
+    PATROOM4_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM4_FLR_3_C,  !- Name
+    PATROOM4_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM4_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM4_FLR_4_O,  !- Name
+    PATROOM4_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM4_FLR_4_T,  !- Name
+    PATROOM4_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM4_FLR_4_H,  !- Name
+    PATROOM4_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM4_FLR_4_C,  !- Name
+    PATROOM4_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM4_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM5_MULT10_FLR_3_O,  !- Name
+    PATROOM5_MULT10_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM5_MULT10_FLR_3_T,  !- Name
+    PATROOM5_MULT10_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM5_MULT10_FLR_3_H,  !- Name
+    PATROOM5_MULT10_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM5_MULT10_FLR_3_C,  !- Name
+    PATROOM5_MULT10_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM5_MULT10_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM5_MULT10_FLR_4_O,  !- Name
+    PATROOM5_MULT10_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM5_MULT10_FLR_4_T,  !- Name
+    PATROOM5_MULT10_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM5_MULT10_FLR_4_H,  !- Name
+    PATROOM5_MULT10_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM5_MULT10_FLR_4_C,  !- Name
+    PATROOM5_MULT10_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM5_MULT10_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM6_FLR_3_O,  !- Name
+    PATROOM6_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM6_FLR_3_T,  !- Name
+    PATROOM6_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM6_FLR_3_H,  !- Name
+    PATROOM6_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM6_FLR_3_C,  !- Name
+    PATROOM6_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM6_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM6_FLR_4_O,  !- Name
+    PATROOM6_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM6_FLR_4_T,  !- Name
+    PATROOM6_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM6_FLR_4_H,  !- Name
+    PATROOM6_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM6_FLR_4_C,  !- Name
+    PATROOM6_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM6_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM7_MULT10_FLR_3_O,  !- Name
+    PATROOM7_MULT10_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM7_MULT10_FLR_3_T,  !- Name
+    PATROOM7_MULT10_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM7_MULT10_FLR_3_H,  !- Name
+    PATROOM7_MULT10_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM7_MULT10_FLR_3_C,  !- Name
+    PATROOM7_MULT10_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM7_MULT10_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM7_MULT10_FLR_4_O,  !- Name
+    PATROOM7_MULT10_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM7_MULT10_FLR_4_T,  !- Name
+    PATROOM7_MULT10_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM7_MULT10_FLR_4_H,  !- Name
+    PATROOM7_MULT10_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM7_MULT10_FLR_4_C,  !- Name
+    PATROOM7_MULT10_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM7_MULT10_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM8_FLR_3_O,  !- Name
+    PATROOM8_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM8_FLR_3_T,  !- Name
+    PATROOM8_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM8_FLR_3_H,  !- Name
+    PATROOM8_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM8_FLR_3_C,  !- Name
+    PATROOM8_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM8_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    PATROOM8_FLR_4_O,  !- Name
+    PATROOM8_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PATROOM8_FLR_4_T,  !- Name
+    PATROOM8_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PATROOM8_FLR_4_H,  !- Name
+    PATROOM8_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PATROOM8_FLR_4_C,  !- Name
+    PATROOM8_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PATROOM8_FLR_4_V;
+  EnergyManagementSystem:Sensor,
+    PHYSTHERAPY_FLR_3_O,  !- Name
+    PHYSTHERAPY_FLR_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PHYSTHERAPY_FLR_3_T,  !- Name
+    PHYSTHERAPY_FLR_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PHYSTHERAPY_FLR_3_H,  !- Name
+    PHYSTHERAPY_FLR_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PHYSTHERAPY_FLR_3_C,  !- Name
+    PHYSTHERAPY_FLR_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PHYSTHERAPY_FLR_3_V;
+  EnergyManagementSystem:Sensor,
+    RADIOLOGY_FLR_4_O,  !- Name
+    RADIOLOGY_FLR_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    RADIOLOGY_FLR_4_T,  !- Name
+    RADIOLOGY_FLR_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    RADIOLOGY_FLR_4_H,  !- Name
+    RADIOLOGY_FLR_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    RADIOLOGY_FLR_4_C,  !- Name
+    RADIOLOGY_FLR_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    RADIOLOGY_FLR_4_V;
+! ***EXTERNAL INTERFACE***
+  ExternalInterface,
+    HELICS; !- Name of External Interface
+  ExternalInterface:Variable,
+    COOL_SETP_DELTA,  !- Name
+    0;                !- Initial Value
+  ExternalInterface:Variable,
+    HEAT_SETP_DELTA,  !- Name
+    0;                !- Initial Value
+! ***GENERAL REPORTING***
+  Output:VariableDictionary,IDF,Unsorted;
+! ***REPORT METERS/VARIABLES***
+  Output:Variable,EMS,Cooling Controlled Load,timestep;
+  Output:Variable,EMS,Heating Controlled Load,timestep;
+  Output:Variable,EMS,Cooling Schedule Temperature,timestep;
+  Output:Variable,EMS,Heating Schedule Temperature,timestep;
+  Output:Variable,EMS,Cooling Setpoint Temperature,timestep;
+  Output:Variable,EMS,Heating Setpoint Temperature,timestep;
+  Output:Variable,EMS,Cooling Current Temperature,timestep;
+  Output:Variable,EMS,Heating Current Temperature,timestep;
+  Output:Variable,EMS,Cooling Power State,timestep;
+  Output:Variable,EMS,Heating Power State,timestep;
+  Output:Variable,EMS,Cooling Volume,timestep;
+  Output:Variable,EMS,Heating Volume,timestep;
+  Output:Variable,EMS,Occupant Count,timestep;
+  Output:Variable,EMS,Indoor Air Temperature,timestep;
+  Output:Variable,WHOLE BUILDING,Facility Total Electric Demand Power,timestep;
+  Output:Variable,WHOLE BUILDING,Facility Total HVAC Electric Demand Power,timestep;
+  Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
+  Output:Variable,Environment,Site Outdoor Air Drybulb Temperature,timestep; 

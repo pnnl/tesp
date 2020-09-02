@@ -1,0 +1,517 @@
+! ***EMS PROGRAM***
+  Schedule:Compact,
+    C1_NOM,             !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: Weekdays SummerDesignDay, !- Field 2
+    Until: 06:00,26.7,       !- Field 3
+    Until: 22:00,24.0,       !- Field 5
+    Until: 24:00,26.7,       !- Field 7
+    For: Saturday,           !- Field 9
+    Until: 06:00,26.7,       !- Field 10
+    Until: 18:00,24.0,       !- Field 12
+    Until: 24:00,26.7,       !- Field 14
+    For: AllOtherDays,       !- Field 16
+    Until: 24:00,26.7;       !- Field 17
+
+  Schedule:Compact,
+    H1_NOM,             !- Name
+    Temperature,             !- Schedule Type Limits Name
+    Through: 12/31,          !- Field 1
+    For: Weekdays,           !- Field 2
+    Until: 06:00,15.6,       !- Field 3
+    Until: 22:00,21.0,       !- Field 5
+    Until: 24:00,15.6,       !- Field 7
+    For: Saturday,           !- Field 9
+    Until: 06:00,15.6,       !- Field 10
+    Until: 18:00,21.0,       !- Field 12
+    Until: 24:00,15.6,       !- Field 14
+    For: WinterDesignDay,    !- Field 16
+    Until: 24:00,21.0,       !- Field 17
+    For: AllOtherDays,       !- Field 19
+    Until: 24:00,15.6;       !- Field 20
+
+
+  EnergyManagementSystem:ProgramCallingManager,
+    Volume_Initializer,   !- Name
+    BeginNewEnvironment,  !- Calling Point
+    Initialize_Volumes;   !- Program Name
+  EnergyManagementSystem:ProgramCallingManager,
+    Setpoint_Controller,          !- Name
+    BeginTimestepBeforePredictor, !- Calling Point
+    Set_Setpoints;                !- Program Name
+  EnergyManagementSystem:ProgramCallingManager,
+    Demand_Reporter,                      !- Name
+    EndOfZoneTimestepAfterZoneReporting,  !- Calling Point
+    Report_Demand,
+    Report_Occupants,
+    Calculate_Temperatures;               !- Program Name
+  EnergyManagementSystem:Program,
+    Set_Setpoints,      !- Name
+    Set C1 = C1_NOM + COOL_SETP_DELTA*5.0/9.0,
+    Set H1 = H1_NOM + HEAT_SETP_DELTA*5.0/9.0;
+
+  EnergyManagementSystem:Program,
+    Initialize_Volumes,
+    Set ATTIC_V = 720.19,
+    Set CORE_ZN_V = 456.46,
+    Set PERIMETER_ZN_1_V = 346.02,
+    Set PERIMETER_ZN_2_V = 205.27,
+    Set PERIMETER_ZN_3_V = 346.02,
+    Set PERIMETER_ZN_4_V = 205.27;
+  
+  EnergyManagementSystem:Program,
+    Calculate_Temperatures,
+    Set TOTAL_COOL_V = 0.0,
+    Set TOTAL_HEAT_V = 0.0,
+    Set C_SET = 0.0,
+    Set H_SET = 0.0,
+    Set C_CUR = 0.0,
+    Set H_CUR = 0.0,
+    Set Total_V = 2279.23,
+    Set Controlled_V = 1559.04,
+    IF (CORE_ZN_H > 0),
+      Set H_SET = H_SET + H1 * CORE_ZN_V,
+      Set H_CUR = H_CUR + CORE_ZN_T * CORE_ZN_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + CORE_ZN_V,
+    ENDIF,
+    IF (CORE_ZN_C > 0),
+      Set C_SET = C_SET + C1 * CORE_ZN_V,
+      Set C_CUR = C_CUR + CORE_ZN_T * CORE_ZN_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + CORE_ZN_V,
+    ENDIF,
+    IF (PERIMETER_ZN_1_H > 0),
+      Set H_SET = H_SET + H1 * PERIMETER_ZN_1_V,
+      Set H_CUR = H_CUR + PERIMETER_ZN_1_T * PERIMETER_ZN_1_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PERIMETER_ZN_1_V,
+    ENDIF,
+    IF (PERIMETER_ZN_1_C > 0),
+      Set C_SET = C_SET + C1 * PERIMETER_ZN_1_V,
+      Set C_CUR = C_CUR + PERIMETER_ZN_1_T * PERIMETER_ZN_1_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PERIMETER_ZN_1_V,
+    ENDIF,
+    IF (PERIMETER_ZN_2_H > 0),
+      Set H_SET = H_SET + H1 * PERIMETER_ZN_2_V,
+      Set H_CUR = H_CUR + PERIMETER_ZN_2_T * PERIMETER_ZN_2_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PERIMETER_ZN_2_V,
+    ENDIF,
+    IF (PERIMETER_ZN_2_C > 0),
+      Set C_SET = C_SET + C1 * PERIMETER_ZN_2_V,
+      Set C_CUR = C_CUR + PERIMETER_ZN_2_T * PERIMETER_ZN_2_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PERIMETER_ZN_2_V,
+    ENDIF,
+    IF (PERIMETER_ZN_3_H > 0),
+      Set H_SET = H_SET + H1 * PERIMETER_ZN_3_V,
+      Set H_CUR = H_CUR + PERIMETER_ZN_3_T * PERIMETER_ZN_3_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PERIMETER_ZN_3_V,
+    ENDIF,
+    IF (PERIMETER_ZN_3_C > 0),
+      Set C_SET = C_SET + C1 * PERIMETER_ZN_3_V,
+      Set C_CUR = C_CUR + PERIMETER_ZN_3_T * PERIMETER_ZN_3_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PERIMETER_ZN_3_V,
+    ENDIF,
+    IF (PERIMETER_ZN_4_H > 0),
+      Set H_SET = H_SET + H1 * PERIMETER_ZN_4_V,
+      Set H_CUR = H_CUR + PERIMETER_ZN_4_T * PERIMETER_ZN_4_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + PERIMETER_ZN_4_V,
+    ENDIF,
+    IF (PERIMETER_ZN_4_C > 0),
+      Set C_SET = C_SET + C1 * PERIMETER_ZN_4_V,
+      Set C_CUR = C_CUR + PERIMETER_ZN_4_T * PERIMETER_ZN_4_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + PERIMETER_ZN_4_V,
+    ENDIF,
+! Average temperature over controlled zone air volumes
+    Set T_CUR = 0,
+    Set T_CUR = T_CUR + CORE_ZN_T * CORE_ZN_V,
+    Set T_CUR = T_CUR + PERIMETER_ZN_1_T * PERIMETER_ZN_1_V,
+    Set T_CUR = T_CUR + PERIMETER_ZN_2_T * PERIMETER_ZN_2_V,
+    Set T_CUR = T_CUR + PERIMETER_ZN_3_T * PERIMETER_ZN_3_V,
+    Set T_CUR = T_CUR + PERIMETER_ZN_4_T * PERIMETER_ZN_4_V,
+    Set T_CUR = T_CUR/Controlled_V*9.0/5.0+32.0,
+! Average cooling schedule and setpoint over controlled zone air volumes
+    Set Schedule_Cooling_Temperature = 0.0,
+    Set T_Cooling = 0,
+    Set T_Cooling = T_Cooling + C1 * CORE_ZN_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * CORE_ZN_V,
+    Set T_Cooling = T_Cooling + C1 * PERIMETER_ZN_1_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * PERIMETER_ZN_1_V,
+    Set T_Cooling = T_Cooling + C1 * PERIMETER_ZN_2_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * PERIMETER_ZN_2_V,
+    Set T_Cooling = T_Cooling + C1 * PERIMETER_ZN_3_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * PERIMETER_ZN_3_V,
+    Set T_Cooling = T_Cooling + C1 * PERIMETER_ZN_4_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * PERIMETER_ZN_4_V,
+    Set T_Cooling = T_Cooling/Controlled_V*9.0/5.0+32.0,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature/Controlled_V*9.0/5.0+32.0,
+! Average heating schedule and setpoint over controlled zone air volumes
+    Set Schedule_Heating_Temperature = 0.0,
+    Set T_Heating = 0,
+    Set T_Heating = T_Heating + H1 * CORE_ZN_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * CORE_ZN_V,
+    Set T_Heating = T_Heating + H1 * PERIMETER_ZN_1_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * PERIMETER_ZN_1_V,
+    Set T_Heating = T_Heating + H1 * PERIMETER_ZN_2_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * PERIMETER_ZN_2_V,
+    Set T_Heating = T_Heating + H1 * PERIMETER_ZN_3_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * PERIMETER_ZN_3_V,
+    Set T_Heating = T_Heating + H1 * PERIMETER_ZN_4_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * PERIMETER_ZN_4_V,
+    Set T_Heating = T_Heating/Controlled_V*9.0/5.0+32.0,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature/Controlled_V*9.0/5.0+32.0,
+
+    Set Setpoint_Cooling_Temperature = T_Cooling,
+    Set Current_Cooling_Temperature = T_CUR,
+    Set Setpoint_Heating_Temperature = T_Heating,
+    Set Current_Heating_Temperature = T_CUR;
+
+  
+  EnergyManagementSystem:Program,
+    Report_Demand,      !- Name
+    Set Cooling_Power_State = 0.0,
+    Set Heating_Power_State = 0.0,
+    Set Flexible_Cooling_Demand = 0.0,
+    Set Flexible_Heating_Demand = 0.0,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_1,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_2,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_3,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_4,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_5,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand/(60*60*ZoneTimeStep),
+    IF Flexible_Cooling_Demand > 1.0,
+      Set Cooling_Power_State = 1.0,
+    ENDIF,
+    Set Flexible_Heating_Demand = Flexible_Heating_Demand/(60*60*ZoneTimeStep),
+    IF Flexible_Heating_Demand > 1.0,
+      Set Heating_Power_State = 1.0,
+    ENDIF;
+  
+  EnergyManagementSystem:Program,
+    Report_Occupants,
+    Set Total_Occupants = 0.0,
+    Set Total_Occupants = Total_Occupants + CORE_ZN_O,
+    Set Total_Occupants = Total_Occupants + PERIMETER_ZN_1_O,
+    Set Total_Occupants = Total_Occupants + PERIMETER_ZN_2_O,
+    Set Total_Occupants = Total_Occupants + PERIMETER_ZN_3_O,
+    Set Total_Occupants = Total_Occupants + PERIMETER_ZN_4_O;
+  EnergyManagementSystem:Sensor,
+    C1_NOM,  !- Name
+    C1_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    C1,  !- Name
+    CLGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    H1_NOM,  !- Name
+    H1_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    H1,  !- Name
+    HTGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:GlobalVariable,
+    Flexible_Cooling_Demand;
+  EnergyManagementSystem:GlobalVariable,
+    Flexible_Heating_Demand;
+  EnergyManagementSystem:GlobalVariable,
+    Setpoint_Cooling_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Setpoint_Heating_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Schedule_Cooling_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Schedule_Heating_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Current_Cooling_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Current_Heating_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Cooling_Power_State;
+  EnergyManagementSystem:GlobalVariable,
+    Heating_Power_State;
+  EnergyManagementSystem:GlobalVariable,
+    H_SET;
+  EnergyManagementSystem:GlobalVariable,
+    C_SET;
+  EnergyManagementSystem:GlobalVariable,
+    H_CUR;
+  EnergyManagementSystem:GlobalVariable,
+    C_CUR;
+  EnergyManagementSystem:GlobalVariable,
+    TOTAL_HEAT_V;
+  EnergyManagementSystem:GlobalVariable,
+    TOTAL_COOL_V;
+  EnergyManagementSystem:GlobalVariable,
+    T_CUR;
+  EnergyManagementSystem:GlobalVariable,
+    Total_Occupants;
+  EnergyManagementSystem:OutputVariable,
+    Cooling Controlled Load,  !- Name
+    Flexible_Cooling_Demand,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Controlled Load,  !- Name
+    Flexible_Heating_Demand,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Schedule Temperature,  !- Name
+    Schedule_Cooling_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Schedule Temperature,  !- Name
+    Schedule_Heating_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Setpoint Temperature,  !- Name
+    Setpoint_Cooling_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Setpoint Temperature,  !- Name
+    Setpoint_Heating_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Current Temperature,  !- Name
+    Current_Cooling_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Current Temperature,  !- Name
+    Current_Heating_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Power State,  !- Name
+    Cooling_Power_State,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Power State,  !- Name
+    Heating_Power_State,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Setpoint,  !- Name
+    H_SET,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Setpoint,  !- Name
+    C_SET,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Current,  !- Name
+    H_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Current,  !- Name
+    C_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Volume,  !- Name
+    TOTAL_HEAT_V,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Volume,  !- Name
+    TOTAL_COOL_V,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Indoor Air Temperature,  !- Name
+    T_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Occupant Count,  !- Name
+    Total_Occupants,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_1,  !- Name
+    PSZ-AC:1_COOLC DXCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_2,  !- Name
+    PSZ-AC:2_COOLC DXCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_3,  !- Name
+    PSZ-AC:3_COOLC DXCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_4,  !- Name
+    PSZ-AC:4_COOLC DXCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_5,  !- Name
+    PSZ-AC:5_COOLC DXCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:GlobalVariable,
+    ATTIC_V;
+  EnergyManagementSystem:Sensor,
+    CORE_ZN_O,  !- Name
+    CORE_ZN,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    CORE_ZN_T,  !- Name
+    CORE_ZN,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    CORE_ZN_H,  !- Name
+    CORE_ZN,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    CORE_ZN_C,  !- Name
+    CORE_ZN,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    CORE_ZN_V;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_1_O,  !- Name
+    PERIMETER_ZN_1,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_1_T,  !- Name
+    PERIMETER_ZN_1,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_1_H,  !- Name
+    PERIMETER_ZN_1,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_1_C,  !- Name
+    PERIMETER_ZN_1,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PERIMETER_ZN_1_V;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_2_O,  !- Name
+    PERIMETER_ZN_2,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_2_T,  !- Name
+    PERIMETER_ZN_2,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_2_H,  !- Name
+    PERIMETER_ZN_2,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_2_C,  !- Name
+    PERIMETER_ZN_2,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PERIMETER_ZN_2_V;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_3_O,  !- Name
+    PERIMETER_ZN_3,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_3_T,  !- Name
+    PERIMETER_ZN_3,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_3_H,  !- Name
+    PERIMETER_ZN_3,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_3_C,  !- Name
+    PERIMETER_ZN_3,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PERIMETER_ZN_3_V;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_4_O,  !- Name
+    PERIMETER_ZN_4,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_4_T,  !- Name
+    PERIMETER_ZN_4,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_4_H,  !- Name
+    PERIMETER_ZN_4,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    PERIMETER_ZN_4_C,  !- Name
+    PERIMETER_ZN_4,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    PERIMETER_ZN_4_V;
+! ***EXTERNAL INTERFACE***
+  ExternalInterface,
+    HELICS; !- Name of External Interface
+  ExternalInterface:Variable,
+    COOL_SETP_DELTA,  !- Name
+    0;                !- Initial Value
+  ExternalInterface:Variable,
+    HEAT_SETP_DELTA,  !- Name
+    0;                !- Initial Value
+! ***GENERAL REPORTING***
+  Output:VariableDictionary,IDF,Unsorted;
+! ***REPORT METERS/VARIABLES***
+  Output:Variable,EMS,Cooling Controlled Load,timestep;
+  Output:Variable,EMS,Heating Controlled Load,timestep;
+  Output:Variable,EMS,Cooling Schedule Temperature,timestep;
+  Output:Variable,EMS,Heating Schedule Temperature,timestep;
+  Output:Variable,EMS,Cooling Setpoint Temperature,timestep;
+  Output:Variable,EMS,Heating Setpoint Temperature,timestep;
+  Output:Variable,EMS,Cooling Current Temperature,timestep;
+  Output:Variable,EMS,Heating Current Temperature,timestep;
+  Output:Variable,EMS,Cooling Power State,timestep;
+  Output:Variable,EMS,Heating Power State,timestep;
+  Output:Variable,EMS,Cooling Volume,timestep;
+  Output:Variable,EMS,Heating Volume,timestep;
+  Output:Variable,EMS,Occupant Count,timestep;
+  Output:Variable,EMS,Indoor Air Temperature,timestep;
+  Output:Variable,WHOLE BUILDING,Facility Total Electric Demand Power,timestep;
+  Output:Variable,WHOLE BUILDING,Facility Total HVAC Electric Demand Power,timestep;
+  Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
+  Output:Variable,Environment,Site Outdoor Air Drybulb Temperature,timestep; 

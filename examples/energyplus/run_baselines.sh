@@ -1,4 +1,5 @@
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support/energyplus
+#declare -r TESP_SUPPORT=../../support/energyplus
 
 energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outSchoolBase -r SchoolBase.idf
 
