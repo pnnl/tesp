@@ -168,18 +168,19 @@ def process_gld(nameroot, dictname = ''):
     elif key == 'waterheater_load_avg':
       HSE_WH_AVG_IDX = val['index']
       HSE_WH_AVG_UNITS = val['units']
-  data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
-  print ('\nConstructed', data_h.shape, 'NumPy array for Houses')
-  j = 0
-  for key in hse_keys:
-    i = 0
-    for t in times:
-      ary = lst_h[str(t)][hse_keys[j]]
-      data_h[j, i,:] = ary
-      i = i + 1
-    j = j + 1
+  if len(hse_keys) > 0:
+    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
+    print ('\nConstructed', data_h.shape, 'NumPy array for Houses')
+    j = 0
+    for key in hse_keys:
+      i = 0
+      for t in times:
+        ary = lst_h[str(t)][hse_keys[j]]
+        data_h[j, i,:] = ary
+        i = i + 1
+      j = j + 1
 
-  print ('average all house temperatures Noon-8 pm first day:',
+    print ('average all house temperatures Noon-8 pm first day:',
          '{:.3f}'.format (data_h[:,144:240,HSE_AIR_AVG_IDX].mean()))
 
   # Billing Meters 
@@ -343,17 +344,19 @@ def process_gld(nameroot, dictname = ''):
   # display a plot
   fig, ax = plt.subplots(2, 5, sharex = 'col')
 
-  total1 = (data_h[:,:,HSE_TOTAL_AVG_IDX]).squeeze()
-  total2 = total1.sum(axis=0)
-  hvac1 = (data_h[:,:,HSE_HVAC_AVG_IDX]).squeeze()
-  hvac2 = hvac1.sum(axis=0)
-  wh1 = (data_h[:,:,HSE_WH_AVG_IDX]).squeeze()
-  wh2 = wh1.sum(axis=0)
+  if len(hse_keys) > 0:
+    total1 = (data_h[:,:,HSE_TOTAL_AVG_IDX]).squeeze()
+    total2 = total1.sum(axis=0)
+    hvac1 = (data_h[:,:,HSE_HVAC_AVG_IDX]).squeeze()
+    hvac2 = hvac1.sum(axis=0)
+    wh1 = (data_h[:,:,HSE_WH_AVG_IDX]).squeeze()
+    wh2 = wh1.sum(axis=0)
   ax[0,0].plot(hrs, 0.001 * data_s[0,:,SUB_POWER_IDX], color='blue', label='Total')
   ax[0,0].plot(hrs, 0.001 * data_s[0,:,SUB_LOSSES_IDX], color='red', label='Losses')
-  ax[0,0].plot(hrs, total2, color='green', label='Houses')
-  ax[0,0].plot(hrs, hvac2, color='magenta', label='HVAC')
-  ax[0,0].plot(hrs, wh2, color='orange', label='WH')
+  if len(hse_keys) > 0:
+    ax[0,0].plot(hrs, total2, color='green', label='Houses')
+    ax[0,0].plot(hrs, hvac2, color='magenta', label='HVAC')
+    ax[0,0].plot(hrs, wh2, color='orange', label='WH')
   ax[0,0].set_ylabel('kW')
   ax[0,0].set_title ('Substation Real Power at ' + sub_key)
   ax[0,0].legend(loc='best')
@@ -370,18 +373,21 @@ def process_gld(nameroot, dictname = ''):
   #ax[0,1].set_ylabel('perunit')
   #ax[0,1].set_title ('Voltage Unbalance at ' + mtr_keys[0])
 
-  avg1 = (data_h[:,:,HSE_AIR_AVG_IDX]).squeeze()
-  avg2 = avg1.mean(axis=0)
-  min1 = (data_h[:,:,HSE_AIR_MIN_IDX]).squeeze()
-  min2 = min1.min(axis=0)
-  max1 = (data_h[:,:,HSE_AIR_MAX_IDX]).squeeze()
-  max2 = max1.max(axis=0)
-  ax[0,1].plot(hrs, max2, color='blue', label='Max')
-  ax[0,1].plot(hrs, min2, color='red', label='Min')
-  ax[0,1].plot(hrs, avg2, color='green', label='Avg')
-  ax[0,1].set_ylabel('degF')
-  ax[0,1].set_title ('Temperature over All Houses')
-  ax[0,1].legend(loc='best')
+  if len(hse_keys) > 0:
+    avg1 = (data_h[:,:,HSE_AIR_AVG_IDX]).squeeze()
+    avg2 = avg1.mean(axis=0)
+    min1 = (data_h[:,:,HSE_AIR_MIN_IDX]).squeeze()
+    min2 = min1.min(axis=0)
+    max1 = (data_h[:,:,HSE_AIR_MAX_IDX]).squeeze()
+    max2 = max1.max(axis=0)
+    ax[0,1].plot(hrs, max2, color='blue', label='Max')
+    ax[0,1].plot(hrs, min2, color='red', label='Min')
+    ax[0,1].plot(hrs, avg2, color='green', label='Avg')
+    ax[0,1].set_ylabel('degF')
+    ax[0,1].set_title ('Temperature over All Houses')
+    ax[0,1].legend(loc='best')
+  else:
+    ax[0,1].set_title ('No Houses')
 
   if nBillingMeters > 0:
     vavg = (data_m[:,:,MTR_VOLT_AVG_IDX]).squeeze().mean(axis=0)
@@ -397,15 +403,18 @@ def process_gld(nameroot, dictname = ''):
   else:
     ax[1,0].set_title ('No Billing Meter Voltages')
 
-  ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_AVG_IDX], color='blue', label='Mean')
-  ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MIN_IDX], color='red', label='Min')
-  ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MAX_IDX], color='green', label='Max')
-  ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_DEVC_IDX], color='magenta', label='DevC')
-  ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_DEVH_IDX], color='orange', label='DevH')
-  ax[1,1].set_xlabel('Hours')
-  ax[1,1].set_ylabel(HSE_AIR_AVG_UNITS)
-  ax[1,1].set_title ('House Air at ' + hse_keys[0])
-  ax[1,1].legend(loc='best')
+  if len(hse_keys) > 0:
+    ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_AVG_IDX], color='blue', label='Mean')
+    ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MIN_IDX], color='red', label='Min')
+    ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_MAX_IDX], color='green', label='Max')
+    ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_DEVC_IDX], color='magenta', label='DevC')
+    ax[1,1].plot(hrs, data_h[0,:,HSE_AIR_DEVH_IDX], color='orange', label='DevH')
+    ax[1,1].set_xlabel('Hours')
+    ax[1,1].set_ylabel(HSE_AIR_AVG_UNITS)
+    ax[1,1].set_title ('House Air at ' + hse_keys[0])
+    ax[1,1].legend(loc='best')
+  else:
+    ax[1,1].set_title ('No Houses')
 
   ax[0,2].plot(hrs, solar_kw, color='blue', label='Solar')
   ax[0,2].plot(hrs, battery_kw, color='red', label='Battery')
