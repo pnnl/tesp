@@ -27,7 +27,7 @@
   },
   "EplusConfiguration": {
     "BuildingChoice": "SchoolDualController",
-    "EMSFile": "ems/emsSchoolDualController",
+    "EMSFile": "emsFNCS/emsSchoolDualController",
     "StepsPerHour": "12",
     "EnergyPlusBus": "",
     "EnergyPlusServiceV": "480",
