@@ -1,6 +1,8 @@
 #!/bin/bash
 
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
+#declare -r TESP_SUPPORT=/home/tom/src/tesp/support
+
 declare -r SCHED_PATH=$TESP_SUPPORT/schedules
 declare -r EPLUS_PATH=$TESP_SUPPORT/energyplus
 
