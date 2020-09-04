@@ -1,5 +1,5 @@
 #time	  topic		          type     value
-     0  distribution_load complex  2.0e4+2000j
+    -1  distribution_load complex  2.0e4+2000j
   3600  distribution_load complex  8.0e4+4000j
  68400  distribution_load complex 12.0e4+8000j
 126000  distribution_load complex  6.0e4+3000j
