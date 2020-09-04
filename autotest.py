@@ -31,8 +31,6 @@ if __name__ == '__main__':
   RunTestCase ('runhjava.sh')
   os.chdir (basePath)
 
-  quit()
-
   # weatherAgent example
   print('start examples weatherAgent: ')
   os.chdir ('./examples/weatherAgent')
@@ -77,6 +75,8 @@ if __name__ == '__main__':
     RunTestCase ('runh.sh')
     RunTestCase ('runh0.sh')
   os.chdir (basePath)
+
+  quit()
 
   # generated Nocomm_Base example
   print('start example generating Nocomm_Base: ')

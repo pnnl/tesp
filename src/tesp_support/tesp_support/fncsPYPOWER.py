@@ -303,24 +303,32 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
     # start by getting the latest inputs from GridLAB-D and the auction
     new_bid = False
     load_scale = float (dsoBus[0][2])
-    if hFed is not None: # HELICS inputs, need to be sticky because they were zeroed out just above
-      if sub_unresp is not None:
+    # some notes on helicsInput timing
+    #  1) initial values are garbage until the other federate actually publishes
+    #  2) helicsInputIsValid checks the subscription pipeline for validity, but not the value
+    #  3) helicsInputIsUpdated resets to False immediately after you read the value, will become True if value changes later
+    #  4) helicsInputLastUpdateTime is > 0 only after the other federate published its first value
+    if hFed is not None: # HELICS inputs
+      if (sub_unresp is not None) and helics.helicsInputIsUpdated(sub_unresp):
         unresp = helics.helicsInputGetDouble(sub_unresp) * load_scale
         dsoBus[0][3] = unresp # to poke unresponsive estimate into the bus load slot
-      if sub_c2 is not None:
+      if (sub_c2 is not None) and helics.helicsInputIsUpdated(sub_c2):
         resp_c2 = helics.helicsInputGetDouble(sub_c2) / load_scale
-      if sub_c1 is not None:
+      if (sub_c1 is not None) and helics.helicsInputIsUpdated(sub_c1):
         resp_c1 = helics.helicsInputGetDouble(sub_c1)
-      if sub_deg is not None:
+      if (sub_deg is not None) and helics.helicsInputIsUpdated(sub_deg):
         resp_deg = helics.helicsInputGetInteger(sub_deg)
-      if sub_max is not None:
+      if (sub_max is not None) and helics.helicsInputIsUpdated(sub_max):
+#        print (ts,'resp_max updated before', helics.helicsInputIsUpdated(sub_max))
         resp_max = helics.helicsInputGetComplex(sub_max)[0] * load_scale
-        if helics.helicsInputIsUpdated(sub_max): #TODO: verify this fires; resp_max updates but new_bid always False to CSV
-          new_bid = True
-      if sub_load is not None:
+#        print (ts,'resp_max updated after', helics.helicsInputIsUpdated(sub_max))
+        new_bid = True
+      if (sub_load is not None) and helics.helicsInputIsUpdated(sub_load):
         gld_load = helics.helicsInputGetComplex(sub_load)
         feeder_load = gld_load[0] * load_scale / 1.0e6
 #      print ('HELICS inputs at', ts, feeder_load, load_scale, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid)
+#      print ('HELICS resp_max', ts, resp_max, helics.helicsInputIsValid(sub_max), 
+#        helics.helicsInputIsUpdated(sub_max), helics.helicsInputLastUpdateTime(sub_max))
     else:  # inputs coming from FNCS
       events = fncs.get_events()
       for topic in events:
