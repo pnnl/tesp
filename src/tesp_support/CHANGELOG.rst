@@ -24,6 +24,14 @@ Version 0.1.9 (2018-12-13)
 * Tutorial video
 * DSO+T study files
 
+Version 0.9.2 (2020-09-11)
+--------------------------
+
+* Support for HELICS and EnergyPlus 9.3
+* Bundled with ns-3 (HELICS) and opendsscmd (FNCS)
+* Execution on Linux or Docker
+* Postprocessing on Linux, Windows or Mac OS X
+
 
 
 

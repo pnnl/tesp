@@ -1,8 +1,14 @@
 {
-  "name": "rcd",
-	"log_level": 7,
-  "period": 1.0,
-  "timedelta": 1.0,
+	"log_level": 4,
+	"period" : 1.0,
   "stop": 21600.0,
-  "restrictive_time_policy": true
+  "marker": 900.0,
+  "verbose": 1,
+  "subscriptions" : [
+    {
+      "key" : "loadshed/sw_status", 
+      "type" : "double",
+      "required" : true
+    }
+  ]
 }
