@@ -24,7 +24,6 @@ if __name__ == '__main__':
 
   # generated Nocomm_Base example
   print('start example generating Nocomm_Base: ')
-  os.chdir ('./examples/comm')
   p1 = subprocess.Popen (pycall + ' make_comm_base.py', shell=True)
   p1.wait()
   os.chdir ('Nocomm_Base')
@@ -39,7 +38,7 @@ if __name__ == '__main__':
 
   # generated Eplus_Restaurant example
   print('start example of Eplus_Restaurant, generated with Nocomm_Base: ')
-  os.chdir ('./examples/comm/Eplus_Restaurant')
+  os.chdir ('Eplus_Restaurant')
   st = os.stat ('run.sh')
   os.chmod ('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
   RunTestCase ('run.sh', 'Eplus Restaurant FNCS')
@@ -51,7 +50,6 @@ if __name__ == '__main__':
 
   # generated CombinedCase example
   print('start example generating CombinedCase: ')
-  os.chdir ('./examples/comm')
   p1 = subprocess.Popen (pycall + ' combine_feeders.py', shell=True)
   p1.wait()
   shutil.copy ('runcombined.sh', 'CombinedCase')

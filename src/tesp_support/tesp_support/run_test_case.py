@@ -48,7 +48,7 @@ Waits for the FNCS or HELICS broker process to finish before function returns.
 def RunTestCase(fname, casename=None):
   global reports, bReporting
 
-  tStart = time.clock()
+  tStart = time.time()
 
   local_vars = []
   fp = open (fname, 'r')
@@ -87,7 +87,7 @@ def RunTestCase(fname, casename=None):
     p.wait()
   print   ('================== Exit in', os.getcwd())
 
-  tEnd = time.clock()
+  tEnd = time.time()
   if bReporting:
     tElapsed = tEnd - tStart
     if casename is None:
