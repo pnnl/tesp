@@ -7,11 +7,29 @@ import subprocess
 import os
 import stat
 import shutil
+import time
 
 if sys.platform == 'win32':
     pycall = 'python'
 else:
     pycall = 'python3'
+
+reports = None
+bReporting = False
+
+def GetTestCaseReports():
+  global reports
+
+  lines = ''
+  for row in reports:
+    lines += '{:30s} {:12.6f}\n'.format (row['case'], row['elapsed'])
+  return lines
+
+def InitializeTestCaseReports ():
+  global reports, bReporting
+
+  bReporting = True
+  reports = []
 
 def ProcessLine(line, local_vars):
 #  print ('@@@@ input line to execute:', line)
@@ -27,7 +45,11 @@ def ProcessLine(line, local_vars):
 Waits for the FNCS or HELICS broker process to finish before function returns.
 
 """
-def RunTestCase(fname):
+def RunTestCase(fname, casename=None):
+  global reports, bReporting
+
+  tStart = time.clock()
+
   local_vars = []
   fp = open (fname, 'r')
   potherList=[]
@@ -64,4 +86,12 @@ def RunTestCase(fname):
   for p in potherList:
     p.wait()
   print   ('================== Exit in', os.getcwd())
+
+  tEnd = time.clock()
+  if bReporting:
+    tElapsed = tEnd - tStart
+    if casename is None:
+      casename = fname
+    reports.append ({'case':casename, 'elapsed': tElapsed})
+
 

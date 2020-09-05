@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.6.3</version>
+    <version>0.9.2</version>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../LICENSE</licenseFile>
     <splashImage>Transactive.png</splashImage>
@@ -51,16 +51,31 @@
                     <platforms>linux-x64</platforms>
                     <distributionFileList>
                         <distributionFile>
+                            <origin>../../../../../opt/tesp/Bugreprt.txt</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/ConvertInputFormat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/ConvertInputFormat-9.3.0</origin>
+                        </distributionFile>
+                        <distributionFile>
                             <origin>../../../../../opt/tesp/Energy+.idd</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>../../../../../opt/tesp/energyplus</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>../../../../../opt/tesp/energyplus-8.3.0</origin>
+                            <origin>../../../../../opt/tesp/energyplus.1</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>../../../../../opt/tesp/energyplus.1</origin>
+                            <origin>../../../../../opt/tesp/energyplus-9.3.0</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/Energy+.schema.epJSON</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/EPMacro</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>../../../../../opt/tesp/ExpandObjects</origin>
@@ -69,13 +84,16 @@
                             <origin>../../../../../opt/tesp/libenergyplusapi.so</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>../../../../../opt/tesp/libenergyplusapi.so.8.3.0</origin>
+                            <origin>../../../../../opt/tesp/libenergyplusapi.so.9.3.0</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>../../../../../opt/tesp/LICENSE</origin>
                         </distributionFile>
                         <distributionFile>
-                            <origin>../../../../../opt/tesp/license.txt</origin>
+                            <origin>../../../../../opt/tesp/LICENSE.txt</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/readme.html</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>../../../../../opt/tesp/runenergyplus</origin>
@@ -120,6 +138,9 @@
                             <origin>../../../../../opt/tesp/PreProcess</origin>
                         </distributionDirectory>
                         <distributionDirectory>
+                            <origin>../../../../../opt/tesp/pyenergyplus</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
                             <origin>../../../../../opt/tesp/python</origin>
                         </distributionDirectory>
                         <distributionDirectory>
@@ -127,6 +148,9 @@
                         </distributionDirectory>
                         <distributionDirectory>
                             <origin>../../../../../opt/tesp/WeatherData</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/workflows</origin>
                         </distributionDirectory>
                     </distributionFileList>
                 </folder>

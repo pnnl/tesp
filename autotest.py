@@ -8,6 +8,8 @@ import os
 import stat
 import shutil
 from tesp_support.run_test_case import RunTestCase
+from tesp_support.run_test_case import InitializeTestCaseReports
+from tesp_support.run_test_case import GetTestCaseReports
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -15,6 +17,8 @@ else:
     pycall = 'python3'
 
 if __name__ == '__main__':
+  InitializeTestCaseReports()
+
   basePath = os.getcwd()
   bTryHELICS = True  # note: the loadshed and weatherAgent examples finish reliably in HELICS
 
@@ -23,12 +27,12 @@ if __name__ == '__main__':
   os.chdir ('./examples/loadshed')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
-  RunTestCase ('run.sh')
-  RunTestCase ('runjava.sh')
+  RunTestCase ('run.sh', 'Loadshed FNCS Python')
+  RunTestCase ('runjava.sh', 'Loadshed FNCS Java')
   # hpy requires 'make' and then 'sudo make install' if loadshedCommNetwork program has been updated
-  RunTestCase ('runhpy.sh')
-  RunTestCase ('runhpy0.sh')
-  RunTestCase ('runhjava.sh')
+  RunTestCase ('runhpy.sh', 'Loadshed HELICS ns-3')
+  RunTestCase ('runhpy0.sh', 'Loadshed HELICS Python')
+  RunTestCase ('runhjava.sh', 'Loadshed HELICS Java')
   os.chdir (basePath)
 
   # weatherAgent example
@@ -36,8 +40,8 @@ if __name__ == '__main__':
   os.chdir ('./examples/weatherAgent')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
-  RunTestCase ('run.sh')
-  RunTestCase ('runh.sh')
+  RunTestCase ('run.sh', 'Weather Agent FNCS')
+  RunTestCase ('runh.sh', 'Weather Agent HELICS')
   os.chdir (basePath)
 
   # PYPOWER example
@@ -45,9 +49,9 @@ if __name__ == '__main__':
   os.chdir ('./examples/pypower')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
-  RunTestCase ('runpp.sh')
+  RunTestCase ('runpp.sh', 'PYPOWER FNCS')
   if bTryHELICS:
-    RunTestCase ('runhpp.sh')
+    RunTestCase ('runhpp.sh', 'PYPOWER HELICS')
   os.chdir (basePath)
 
   # EnergyPlus example
@@ -55,11 +59,11 @@ if __name__ == '__main__':
   os.chdir ('./examples/energyplus')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
-  RunTestCase ('run.sh')
-  RunTestCase ('run2.sh')
+  RunTestCase ('run.sh', 'EnergyPlus FNCS IDF')
+  RunTestCase ('run2.sh', 'EnergyPlus FNCS EMS')
   if bTryHELICS:
-    RunTestCase ('runh.sh')
-#    RunTestCase ('batch_ems_case.sh')
+    RunTestCase ('runh.sh', 'EnergyPlus HELICS EMS')
+    RunTestCase ('batch_ems_case.sh', 'EnergyPlus Batch EMS')
   os.chdir (basePath)
 
   # TE30 example
@@ -69,14 +73,15 @@ if __name__ == '__main__':
   p1.wait()
   p1 = subprocess.Popen (pycall + ' prepare_case.py', shell=True)
   p1.wait()
-  RunTestCase ('run.sh')
-  RunTestCase ('run0.sh')
+  RunTestCase ('run.sh', 'TE30 FNCS Market')
+  RunTestCase ('run0.sh', 'TE30 FNCS No Market')
   if bTryHELICS:
-    RunTestCase ('runh.sh')
-    RunTestCase ('runh0.sh')
+    RunTestCase ('runh.sh', 'TE30 HELICS Market')
+    RunTestCase ('runh0.sh', 'TE30 HELICS No Market')
   os.chdir (basePath)
 
-  quit()
+#  print (GetTestCaseReports())
+#  quit()
 
   # generated Nocomm_Base example
   print('start example generating Nocomm_Base: ')
@@ -86,11 +91,11 @@ if __name__ == '__main__':
   os.chdir ('Nocomm_Base')
   st = os.stat ('run.sh')
   os.chmod ('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-  RunTestCase ('run.sh')
+  RunTestCase ('run.sh', 'Nocomm Base FNCS')
   if bTryHELICS:
     st = os.stat ('runh.sh')
     os.chmod ('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    RunTestCase ('runh.sh')
+    RunTestCase ('runh.sh', 'Nocomm Base HELICS')
   os.chdir (basePath)
 
   # generated Eplus_Restaurant example
@@ -98,11 +103,11 @@ if __name__ == '__main__':
   os.chdir ('./examples/comm/Eplus_Restaurant')
   st = os.stat ('run.sh')
   os.chmod ('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-  RunTestCase ('run.sh')
+  RunTestCase ('run.sh', 'Eplus Restaurant FNCS')
   if bTryHELICS:
     st = os.stat ('runh.sh')
     os.chmod ('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    RunTestCase ('runh.sh')
+    RunTestCase ('runh.sh', 'Eplus Restaurant HELICS')
   os.chdir (basePath)
 
   # generated CombinedCase example
@@ -115,11 +120,11 @@ if __name__ == '__main__':
   os.chdir ('CombinedCase')
   st = os.stat ('runcombined.sh')
   os.chmod ('runcombined.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-  RunTestCase ('runcombined.sh')
+  RunTestCase ('runcombined.sh', '4 Feeders FNCS')
   if bTryHELICS:
     st = os.stat ('runcombinedh.sh')
     os.chmod ('runcombinedh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    RunTestCase ('runcombinedh.sh')
+    RunTestCase ('runcombinedh.sh', '4 Feeders HELICS')
   os.chdir (basePath)
 
   # SGIP1 examples (these take a few hours to run the set)
@@ -129,12 +134,12 @@ if __name__ == '__main__':
   p1.wait()
   p1 = subprocess.Popen (pycall + ' prepare_cases.py', shell=True)
   p1.wait()
-  RunTestCase ('runSGIP1a.sh')
-  RunTestCase ('runSGIP1b.sh')
-  RunTestCase ('runSGIP1c.sh')
-  RunTestCase ('runSGIP1d.sh')
-  RunTestCase ('runSGIP1e.sh')
-  RunTestCase ('runSGIP1ex.sh')
+  RunTestCase ('runSGIP1a.sh', 'SGIP1a (FNCS)')
+  RunTestCase ('runSGIP1b.sh', 'SGIP1b (FNCS)')
+  RunTestCase ('runSGIP1c.sh', 'SGIP1c (FNCS)')
+  RunTestCase ('runSGIP1d.sh', 'SGIP1d (FNCS)')
+  RunTestCase ('runSGIP1e.sh', 'SGIP1e (FNCS)')
+  RunTestCase ('runSGIP1ex.sh', 'SGIP1ex (FNCS)')
   os.chdir (basePath)
 
   # ieee8500 base example
@@ -153,14 +158,14 @@ if __name__ == '__main__':
   p1.wait()
   p1 = subprocess.Popen (pycall + ' prepare_cases.py', shell=True)
   p1.wait()
-  RunTestCase ('run30.sh')
-  RunTestCase ('runti30.sh')
-  RunTestCase ('run8500.sh')
-  RunTestCase ('run8500base.sh')
-  RunTestCase ('run8500tou.sh')
-  RunTestCase ('run8500volt.sh')
-  RunTestCase ('run8500vvar.sh')
-  RunTestCase ('run8500vwatt.sh')
+  RunTestCase ('run30.sh', 'PNNL Team 30')
+  RunTestCase ('runti30.sh', 'PNNL Team ti30')
+  RunTestCase ('run8500.sh', 'PNNL Team 8500')
+  RunTestCase ('run8500base.sh', 'PNNL Team 8500 Base')
+  RunTestCase ('run8500tou.sh', 'PNNL Team 8500 TOU')
+  RunTestCase ('run8500volt.sh', 'PNNL Team 8500 Volt')
+  RunTestCase ('run8500vvar.sh', 'PNNL Team 8500 VoltVar')
+  RunTestCase ('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt')
   os.chdir (basePath)
 
   # ERCOT Case8 example
@@ -171,7 +176,9 @@ if __name__ == '__main__':
   os.chdir ('../case8')
   p1 = subprocess.Popen (pycall + ' prepare_case.py', shell=True)
   p1.wait()
-  RunTestCase ('run.sh')
-  RunTestCase ('run_market.sh')
+  RunTestCase ('run.sh', 'ERCOT 8-bus No Market')
+  RunTestCase ('run_market.sh', 'ERCOT 8-bus Market')
   os.chdir (basePath)
+
+  print (GetTestCaseReports())
 

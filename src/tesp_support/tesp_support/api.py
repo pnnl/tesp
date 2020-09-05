@@ -56,6 +56,8 @@ from .make_ems import make_ems
 from .make_ems import merge_idf
 
 from .run_test_case import RunTestCase
+from .run_test_case import GetTestCaseReports
+from .run_test_case import InitializeCaseReports
 
 #from .process_agents import process_agents
 #from .process_eplus import process_eplus

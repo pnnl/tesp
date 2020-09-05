@@ -8,6 +8,8 @@ import os
 import stat
 import shutil
 from tesp_support.run_test_case import RunTestCase
+from tesp_support.run_test_case import InitializeTestCaseReports
+from tesp_support.run_test_case import GetTestCaseReports
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -15,8 +17,10 @@ else:
     pycall = 'python3'
 
 if __name__ == '__main__':
+  InitializeTestCaseReports()
+
   basePath = os.getcwd()
-  bTryHELICS = True  # note: the loadshed and weatherAgent examples finish reliably in HELICS
+  bTryHELICS = True
 
   # generated Nocomm_Base example
   print('start example generating Nocomm_Base: ')
@@ -26,11 +30,11 @@ if __name__ == '__main__':
   os.chdir ('Nocomm_Base')
   st = os.stat ('run.sh')
   os.chmod ('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-  RunTestCase ('run.sh')
+  RunTestCase ('run.sh', 'Nocomm Base FNCS')
   if bTryHELICS:
     st = os.stat ('runh.sh')
     os.chmod ('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    RunTestCase ('runh.sh')
+    RunTestCase ('runh.sh', 'Nocomm Base HELICS')
   os.chdir (basePath)
 
   # generated Eplus_Restaurant example
@@ -38,11 +42,11 @@ if __name__ == '__main__':
   os.chdir ('./examples/comm/Eplus_Restaurant')
   st = os.stat ('run.sh')
   os.chmod ('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-  RunTestCase ('run.sh')
+  RunTestCase ('run.sh', 'Eplus Restaurant FNCS')
   if bTryHELICS:
     st = os.stat ('runh.sh')
     os.chmod ('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    RunTestCase ('runh.sh')
+    RunTestCase ('runh.sh', 'Eplus Restaurant HELICS')
   os.chdir (basePath)
 
   # generated CombinedCase example
@@ -55,10 +59,11 @@ if __name__ == '__main__':
   os.chdir ('CombinedCase')
   st = os.stat ('runcombined.sh')
   os.chmod ('runcombined.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-  RunTestCase ('runcombined.sh')
+  RunTestCase ('runcombined.sh', '4 Feeders FNCS')
   if bTryHELICS:
     st = os.stat ('runcombinedh.sh')
     os.chmod ('runcombinedh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    RunTestCase ('runcombinedh.sh')
+    RunTestCase ('runcombinedh.sh', '4 Feeders HELICS')
   os.chdir (basePath)
 
+  print (GetTestCaseReports())
