@@ -34,7 +34,7 @@
     "EnergyPlusServiceV": "208",
     "EnergyPlusBus": "Feeder_head",
     "StepsPerHour": "12",
-    "EMSFile": "emsFNCS/emsFullServiceRestaurant",
+    "EMSFile": "emsHELICS/emsFullServiceRestaurant",
     "BuildingChoice": "FullServiceRestaurant"
   },
   "PYPOWERConfiguration": {

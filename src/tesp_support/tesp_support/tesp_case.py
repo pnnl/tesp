@@ -159,6 +159,7 @@ def write_tesp_case (config, cfgfile, freshdir = True):
     eplusfile = eplusdir + EpBuilding + '.idf'
     emsfile = eplusdir + EpEMS + '.idf'
     eplusout = casedir + '/Merged.idf'
+    eplusoutFNCS = casedir + '/MergedFNCS.idf'
     ppfile = ppdir + config['BackboneFiles']['PYPOWERFile']
     ppcsv = ppdir + config['PYPOWERConfiguration']['CSVLoadFile']
 
@@ -191,6 +192,9 @@ def write_tesp_case (config, cfgfile, freshdir = True):
     if len(EpBus) > 0:
         bUseEplus = True
         idf.merge_idf (eplusfile, emsfile, StartTime, EndTime, eplusout, EpStepsPerHour)
+        if 'emsHELICS' in emsfile: # legacy support of FNCS for the built-in EMS library
+          emsfileFNCS = emsfile.replace ('emsHELICS', 'emsFNCS')
+          idf.merge_idf (eplusfile, emsfileFNCS, StartTime, EndTime, eplusoutFNCS, EpStepsPerHour)
 
         # process TMY3 ==> TMY2 ==> EPW
         cmdline = 'TMY3toTMY2_ansi ' + weatherfile + ' > ' + casedir + '/' + rootweather + '.tmy2'
@@ -283,8 +287,66 @@ values:
         print (epjyamlstr, file=op)
         op.close()
 
+        epSubs = []
+        epSubs.append ({"key": "eplus_agent/cooling_setpoint_delta","type": "double","required":True})
+        epSubs.append ({"key": "eplus_agent/heating_setpoint_delta","type": "double","required":True})
+        epPubs = []
+        epPubs.append ({"global":False, "key":"EMS Cooling Controlled Load", "type":"double", "unit":"kWh"})
+        epPubs.append ({"global":False, "key":"EMS Heating Controlled Load", "type":"double", "unit":"kWh"})
+        epPubs.append ({"global":False, "key":"EMS Cooling Schedule Temperature", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS Heating Schedule Temperature", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS Cooling Setpoint Temperature", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS Heating Setpoint Temperature", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS Cooling Current Temperature", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS Heating Current Temperature", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS Cooling Power State", "type":"string"})
+        epPubs.append ({"global":False, "key":"EMS Heating Power State", "type":"string"})
+        epPubs.append ({"global":False, "key":"EMS Cooling Volume", "type":"double", "unit":"stere"})
+        epPubs.append ({"global":False, "key":"EMS Heating Volume", "type":"double", "unit":"stere"})
+        epPubs.append ({"global":False, "key":"EMS Occupant Count", "type":"int", "unit":"count"})
+        epPubs.append ({"global":False, "key":"EMS Indoor Air Temperature", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"WHOLE BUILDING Facility Total Electric Demand Power", "type":"double", "unit":"W"})
+        epPubs.append ({"global":False, "key":"WHOLE BUILDING Facility Total HVAC Electric Demand Power", "type":"double", "unit":"W"})
+        epPubs.append ({"global":False, "key":"FACILITY Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time", "type":"double", "unit":"hour"})
+        epPubs.append ({"global":False, "key":"Environment Site Outdoor Air Drybulb Temperature", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS HEATING SETPOINT", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS HEATING CURRENT", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS COOLING SETPOINT", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"EMS COOLING CURRENT", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"H2_NOM SCHEDULE_VALUE", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"H1_NOM SCHEDULE_VALUE", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"C2_NOM SCHEDULE_VALUE", "type":"double", "unit":"degC"})
+        epPubs.append ({"global":False, "key":"C1_NOM SCHEDULE_VALUE", "type":"double", "unit":"degC"})
+        epConfig = {}
+        epConfig["name"] = "energyPlus"
+        epConfig["period"] = 60 * EpStep
+        epConfig["loglevel"] = 4
+        epConfig["publications"] = epPubs
+        epConfig["subscriptions"] = epSubs
+        op = open (casedir + '/eplus.json', 'w', encoding='utf-8')
+        json.dump (epConfig, op, ensure_ascii=False, indent=2)
+        op.close()
+
         epaSubs = []
-        epaSubs.append ({"name": "kwhr_price","key": "sub1/clear_price","type": "double"})
+        epaSubs.append ({"key": "sub1/clear_price","type": "double","required":True,"info":"kwhr_price"})
+        epaSubs.append ({"key": "energyPlus/EMS Heating Controlled Load","type": "double","required":True,"info":"heating_controlled_load"})
+        epaSubs.append ({"key": "energyPlus/EMS Cooling Controlled Load","type": "double","required":True,"info":"cooling_controlled_load"})
+        epaSubs.append ({"key": "energyPlus/EMS Cooling Schedule Temperature","type": "double","required":True,"info":"cooling_schedule_temperature"})
+        epaSubs.append ({"key": "energyPlus/EMS Heating Schedule Temperature","type": "double","required":True,"info":"heating_schedule_temperature"})
+        epaSubs.append ({"key": "energyPlus/EMS Cooling Setpoint Temperature","type": "double","required":True,"info":"cooling_setpoint_temperature"})
+        epaSubs.append ({"key": "energyPlus/EMS Heating Setpoint Temperature","type": "double","required":True,"info":"heating_setpoint_temperature"})
+        epaSubs.append ({"key": "energyPlus/EMS Cooling Current Temperature","type": "double","required":True,"info":"cooling_current_temperature"})
+        epaSubs.append ({"key": "energyPlus/EMS Heating Current Temperature","type": "double","required":True,"info":"heating_current_temperature"})
+        epaSubs.append ({"key": "energyPlus/EMS Cooling Power State","type": "string","required":True,"info":"cooling_power_state"})
+        epaSubs.append ({"key": "energyPlus/EMS Heating Power State","type": "string","required":True,"info":"heating_power_state"})
+        epaSubs.append ({"key": "energyPlus/EMS Cooling Volume","type": "double","required":True,"info":"cooling_volume"})
+        epaSubs.append ({"key": "energyPlus/EMS Heating Volume","type": "double","required":True,"info":"heating_volume"})
+        epaSubs.append ({"key": "energyPlus/EMS Occupant Count","type": "int","required":True,"info":"occupants_total"})
+        epaSubs.append ({"key": "energyPlus/EMS Indoor Air Temperature","type": "double","required":True,"info":"indoor_air"})
+        epaSubs.append ({"key": "energyPlus/WHOLE BUILDING Facility Total Electric Demand Power","type": "double","required":True,"info":"electric_demand_power"})
+        epaSubs.append ({"key": "energyPlus/WHOLE BUILDING Facility Total HVAC Electric Demand Power","type": "double","required":True,"info":"hvac_demand_power"})
+        epaSubs.append ({"key": "energyPlus/FACILITY Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time","type": "double","required":True,"info":"ashrae_uncomfortable_hours"})
+        epaSubs.append ({"key": "energyPlus/Environment Site Outdoor Air Drybulb Temperature","type": "double","required":True,"info":"outdoor_air"})
         epaPubs = []
         epaPubs.append ({"global":False, "key":"power_A", "type":"double", "unit":"W"})
         epaPubs.append ({"global":False, "key":"power_B", "type":"double", "unit":"W"})
@@ -292,13 +354,17 @@ values:
         epaPubs.append ({"global":False, "key":"bill_mode", "type":"string"})
         epaPubs.append ({"global":False, "key":"price", "type":"double", "unit":"$/kwh"})
         epaPubs.append ({"global":False, "key":"monthly_fee", "type":"double", "unit":"$"})
+        epaPubs.append ({"global":False, "key":"cooling_setpoint_delta", "type":"double", "unit":"degC"})
+        epaPubs.append ({"global":False, "key":"heating_setpoint_delta", "type":"double", "unit":"degC"})
         epaConfig = {}
         epaConfig["name"] = "eplus_agent"
-        epaConfig["log_level"] = 4
         epaConfig["period"] = 60 * EpStep
+        epaConfig["loglevel"] = 4
+        epaConfig["time_delta"] = 1
+        epaConfig["uninterruptible"] = False
         epaConfig["subscriptions"] = epaSubs
         epaConfig["publications"] = epaPubs
-        op = open (casedir + '/helics_eplus_agent.json', 'w', encoding='utf-8')
+        op = open (casedir + '/eplus_agent.json', 'w', encoding='utf-8')
         json.dump (epaConfig, op, ensure_ascii=False, indent=2)
         op.close()
 
@@ -483,18 +549,18 @@ values:
     shfile = casedir + '/run.sh'
     op = open (shfile, 'w')
     if bUseEplus:
-        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> broker.log &)', file=op)
+        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> fncs_broker.log &)', file=op)
         print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w ' 
-               + EpWeather + ' -d output -r Merged.idf &> eplus.log &)', file=op)
+               + EpWeather + ' -d output -r MergedFNCS.idf &> fncs_eplus.log &)', file=op)
         print ('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
-               EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> eplus_agent.log &)', file=op)
+               EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> fncs_eplus_agent.log &)', file=op)
     else:
-        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> broker.log &)', file=op)
+        print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> fncs_broker.log &)', file=op)
     print ('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE='
-           + GldMetricsFile + ' ' + GldFile + ' &> gld1.log &)', file=op)
-    print ('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> sub1.log &)', file=op)
-    print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + ppline + ' &> pypower.log &)', file=op)
-    print ('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + weatherline + ' &> weather.log &)', file=op)
+           + GldMetricsFile + ' ' + GldFile + ' &> fncs_gld1.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline + ' &> fncs_sub1.log &)', file=op)
+    print ('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + ppline + ' &> fncs_pypower.log &)', file=op)
+    print ('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + weatherline + ' &> fncs_weather.log &)', file=op)
     op.close()
     st = os.stat (shfile)
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
@@ -513,20 +579,23 @@ values:
     shfile = casedir + '/runh.sh'
     op = open (shfile, 'w')
     if bUseEplus:
-      print ('# FNCS federation is energyplus with agent', file=op)
-      print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 2 &> fncs_broker.log &)', file=op)
-      print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w ' 
-             + EpWeather + ' -d output -r Merged.idf &> fncs_eplus.log &)', file=op)
-      print ('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
-             EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, 'helics_eplus_agent.json &> dual_eplus_agent.log &)', file=op)
-      print ('# HELICS federation is GridLAB-D, PYPOWER, substation and weather; the E+ agent was already started as part of the FNCS federation', file=op)
-      print ('(exec helics_broker -f 5 --loglevel=4 --name=mainbroker &> helics_broker.log &)', file=op)
+#      print ('# FNCS federation is energyplus with agent', file=op)
+#      print ('#(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 2 &> fncs_broker.log &)', file=op)
+#      print ('#(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w ' 
+#             + EpWeather + ' -d output -r MergedFNCS.idf &> fncs_eplus.log &)', file=op)
+#      print ('#(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
+#             EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, 'helics_eplus_agent.json &> dual_eplus_agent.log &)', file=op)
+#      print ('# HELICS federation is GridLAB-D, PYPOWER, substation, weather, E+ and E+ agent', file=op)
+      print ('(exec helics_broker -f 6 --loglevel=4 --name=mainbroker &> broker.log &)', file=op)
+      print ('(export HELICS_CONFIG_FILE=eplus.json && exec energyplus -w ' + EpWeather + ' -d output -r Merged.idf &> eplus.log &)', file=op)
+      print ('(exec eplus_agent_helics', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo,
+             'eplus_agent.json &> eplus_agent.log &)', file=op)
     else:
-      print ('(exec helics_broker -f 4 --loglevel=4 --name=mainbroker &> helics_broker.log &)', file=op)
-    print ('(exec gridlabd -D USE_HELICS -D METRICS_FILE='+ GldMetricsFile + ' ' + GldFile + ' &> helics_gld1.log &)', file=op)
-    print ('(exec ' + aucline + ' &> helics_sub1.log &)', file=op)
-    print ('(exec ' + ppline + ' &> helics_pypower.log &)', file=op)
-    print ('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec ' + weatherline + ' &> helics_weather.log &)', file=op)
+      print ('(exec helics_broker -f 4 --loglevel=4 --name=mainbroker &> broker.log &)', file=op)
+    print ('(exec gridlabd -D USE_HELICS -D METRICS_FILE='+ GldMetricsFile + ' ' + GldFile + ' &> gld1.log &)', file=op)
+    print ('(exec ' + aucline + ' &> sub1.log &)', file=op)
+    print ('(exec ' + ppline + ' &> pypower.log &)', file=op)
+    print ('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec ' + weatherline + ' &> weather.log &)', file=op)
     op.close()
     st = os.stat (shfile)
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
@@ -548,7 +617,7 @@ values:
         cmds['commands'].append({'args':['fncs_broker', '6'], 
                            'env':[['FNCS_BROKER', 'tcp://*:5570'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'broker.log'})
-        cmds['commands'].append({'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', 'Merged.idf'], 
+        cmds['commands'].append({'args':['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', 'MergedFNCS.idf'], 
                            'env':[['FNCS_CONFIG_FILE', 'eplus.yaml'],['FNCS_FATAL', 'YES'],['FNCS_LOG_STDOUT', 'yes']], 
                            'log':'eplus.log'})
         cmds['commands'].append({'args':['eplus_agent', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo], 
