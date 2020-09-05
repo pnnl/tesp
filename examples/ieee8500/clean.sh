@@ -3,3 +3,4 @@ rm *.log
 rm *.xml
 rm *.json
 rm bill.csv
+rm evchargerdet
