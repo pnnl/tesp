@@ -208,3 +208,19 @@ class hvac:
         """
         self.mtr_v = helpers.parse_fncs_magnitude (str)
 
+    def set_hvac_load_from_helics (self, val):
+        if val > 0.0:
+            self.hvac_kw = val
+
+    def set_hvac_state_from_helics (self, val):
+        if str == 'OFF':
+            self.hvac_on = False
+        else:
+            self.hvac_on = True
+
+    def set_air_temp_from_helics (self, val):
+        self.air_temp = val
+
+    def set_voltage_from_helics (self, val):
+        self.mtr_v = abs (val)
+

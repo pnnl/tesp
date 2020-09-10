@@ -30,13 +30,14 @@ def idf_int(val):
 
 def stop_helics_federate (fed):
   print ('finalizing HELICS', flush=True)
-  status = helics.helicsFederateFinalize(fed)
-  state = helics.helicsFederateGetState(fed)
-  assert state == 3
-  while helics.helicsBrokerIsConnected(None):
-    time.sleep(1)
-  helics.helicsFederateFree(fed)
-  helics.helicsCloseLibrary()
+  helics.helicsFederateDestroy(fed)
+# status = helics.helicsFederateFinalize(fed)
+# state = helics.helicsFederateGetState(fed)
+# assert state == 3
+# while helics.helicsBrokerIsConnected(None):
+#   time.sleep(1)
+# helics.helicsFederateFree(fed)
+# helics.helicsCloseLibrary()
 
 def zoneMeterName(ldname):
   """ Enforces the meter naming convention for commercial zones

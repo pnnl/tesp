@@ -14,13 +14,14 @@ def create_federate(deltat=1.0, fedinitstring='--federates=1'):
     return fed
 
 def destroy_federate(fed, broker=None):
-    status = h.helicsFederateFinalize(fed)
-    state = h.helicsFederateGetState(fed)
-    assert state == 3
-    while (h.helicsBrokerIsConnected(broker)):
-        time.sleep(1)
-    h.helicsFederateFree(fed)
-    h.helicsCloseLibrary()
+    h.helicsFederateDestroy(fed)
+#   status = h.helicsFederateFinalize(fed)
+#   state = h.helicsFederateGetState(fed)
+#   assert state == 3
+#   while (h.helicsBrokerIsConnected(broker)):
+#       time.sleep(1)
+#   h.helicsFederateFree(fed)
+#   h.helicsCloseLibrary()
 
 def show_helics_query (fed, qstr):
   hq = h.helicsCreateQuery ('mainbroker', qstr)
@@ -63,10 +64,10 @@ def main():
         if int(currTime) == t:
           if val == 1:
             logger.info('Switching ' + end_name + ' to CLOSED at second ' + str(t))
-            h.helicsEndpointSendMessageRaw(swStatusEp, '', 'CLOSED')
+            h.helicsEndpointSendMessageRaw(swStatusEp, '', 'CLOSED'.encode())
           elif val == 0:
             logger.info('Switching ' + end_name + ' to OPEN at second ' + str(t))
-            h.helicsEndpointSendMessageRaw(swStatusEp, '', 'OPEN')
+            h.helicsEndpointSendMessageRaw(swStatusEp, '', 'OPEN'.encode())
           else:
             logger.info('!!!!!!! Signals should only be 0 or 1 !!!!!!!')
     """

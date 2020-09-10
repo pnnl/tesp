@@ -1,6 +1,5 @@
 {
   "name": "pypower",
-  "log_level": 4,
   "period": 3600.0,
   "publications":[
     {

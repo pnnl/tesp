@@ -153,18 +153,11 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
     aucObj.set_lmp (LMP)
     refload = 0.001 * helics.helicsInputGetDouble (subFeeder)  # supposed to be kW?
     aucObj.set_refload (refload)
-#    print ('  REFLOAD', refload, 'LMP', LMP, flush=True)
     for key, obj in hvacObjs.items():
-      obj.air_temp = helics.helicsInputGetDouble (subTemp[obj])
-      val = helics.helicsInputGetComplex (subVolt[obj])
-      obj.mtr_v = math.sqrt (val[0] * val[0] + val[1] * val[1])
-      obj.hvac_load = helics.helicsInputGetDouble (subHVAC[obj])
-      val = helics.helicsInputGetString (subState[obj])
-      if val == 'OFF':
-        obj.hvac_on = False
-      else:
-        obj.hvac_on = True
-#    print ('  HVAC INPUTS', flush=True)
+      obj.set_air_temp_from_helics (helics.helicsInputGetDouble (subTemp[obj]))
+      obj.set_voltage_from_helics (helics.helicsInputGetComplex (subVolt[obj]))
+      obj.set_hvac_load_from_helics (helics.helicsInputGetDouble (subHVAC[obj]))
+      obj.set_hvac_state_from_helics (helics.helicsInputGetString (subState[obj]))
 
     # set the time-of-day schedule
     for key, obj in hvacObjs.items():

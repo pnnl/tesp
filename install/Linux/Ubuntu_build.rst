@@ -33,7 +33,7 @@ changes to the TESP build:
 - from the *cdwr* prompt, use *mkdir usrc* instead of *mkdir ~/src* before checking out repositories from GitHub. This makes it easier to keep track of separate source trees for Windows and Linux, if you are building from both on the same machine.
 - the first step of *sudo apt-get install git* is not necessary
 - when building the Java 10 binding for FNCS, you have to manually copy the fncs.jar and libFNCSjni.so to the correct place. The paths are different because of how WSL integrates the Windows and Linux file systems
-- for HELICS bindings, add PYTHONPATH and JAVAPATH to *~/.profile* instead of *~/.bashrc*
+- for HELICS bindings, add JAVAPATH to *~/.profile* instead of *~/.bashrc*
 
 Preparation - Build Tools and Java
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -133,7 +133,7 @@ $TESP_INSTALL, it has to be spelled out on each line, e.g.:
  PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tesp/bin:/opt/tesp:/opt/tesp/PreProcess:/opt/tesp/PostProcess"
  GLPATH="/opt/tesp/lib/gridlabd:/opt/tesp/share/gridlabd"
  CXXFLAGS="-I/opt/tesp/share/gridlabd"
- PYTHONPATH="/opt/tesp/python"
+ # PYTHONPATH="/opt/tesp/python"
  JAVAPATH="/opt/tesp/java"
 
 Log out and log back in to Ubuntu for these */etc/environment* changes to take effect.
@@ -146,7 +146,7 @@ For Ubuntu in *WSL*, all changes are made to *~/.profile*.
  export PATH="$PATH:$TESP_INSTALL:$TESP_INSTALL/bin:$TESP_INSTALL/PreProcess:$TESP_INSTALL/PostProcess"
  export GLPATH="$TESP_INSTALL/lib/gridlabd:$TESP_INSTALL/share/gridlabd"
  export CXXFLAGS="-I$TESP_INSTALL/share/gridlabd"
- export PYTHONPATH="$TESP_INSTALL/python:$PYTHONPATH"
+ # export PYTHONPATH="$TESP_INSTALL/python:$PYTHONPATH"
  export JAVAPATH="$TESP_INSTALL/java:$JAVAPATH"
 
 Afterward, close and reopen the Ubuntu terminal for these changes to take effect.
@@ -180,20 +180,30 @@ To build the Java interface for version 10 or later, which has *javah* replaced 
 
 The *make install* step may not work on WSL. A manual example is *cp fncs.jar $TESP_INSTALL/java*
 
-To build HELICS with Java and Python bindings:
+To build HELICS with Java bindings:
 
 ::
 
  cd ~/src/HELICS-src
  mkdir build
  cd build
- cmake -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON \
+ cmake -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON \
        -DJAVA_AWT_INCLUDE_PATH=NotNeeded -DHELICS_DISABLE_BOOST=ON \
        -DCMAKE_INSTALL_PREFIX=$TESP_INSTALL -DCMAKE_BUILD_TYPE=Release ..
  # leave off -DCMAKE_INSTALL_PREFIX if using the default /usr/local
  git submodule update --init
  make -j4
  sudo make install
+
+To install the HELICS Python 3 bindings:
+
+::
+
+ cd ~/src
+ git clone https://github.com/GMLC-TDC/pyhelics
+ cd pyhelics
+ python3 setup.py download
+ pip3 install -e .
 
 Test that HELICS and FNCS start:
 

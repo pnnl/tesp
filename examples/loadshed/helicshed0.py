@@ -14,22 +14,16 @@ def create_federate(deltat=1.0, fedinitstring="--federates=1"):
     h.helicsFederateInfoSetCoreName(fedinfo, "PythonLoadshedFederate")
     h.helicsFederateInfoSetCoreTypeFromString(fedinfo, "zmq")
     h.helicsFederateInfoSetCoreInitString(fedinfo, fedinitstring)
-    h.helicsFederateInfoSetTimeProperty(fedinfo, h.helics_property_time_delta, deltat)
+    h.helicsFederateInfoSetTimeProperty(fedinfo, h.HELICS_PROPERTY_TIME_DELTA, deltat)
     fed = h.helicsCreateCombinationFederate("PythonLoadshedFederate", fedinfo)
     return fed
 
 def destroy_federate(fed, broker=None):
-    status = h.helicsFederateFinalize(fed)
-    state = h.helicsFederateGetState(fed)
-    assert state == 3
-    while (h.helicsBrokerIsConnected(broker)):
-        time.sleep(1)
-    h.helicsFederateFree(fed)
-    h.helicsCloseLibrary()
+    h.helicsFederateDestroy(fed)
 
 def main():
     fed = create_federate()
-    pubid = h.helicsFederateRegisterGlobalPublication(fed, "loadshed/sw_status", h.helics_data_type_string, "")
+    pubid = h.helicsFederateRegisterGlobalPublication(fed, "loadshed/sw_status", h.HELICS_DATA_TYPE_STRING, "")
 #    subid = h.helicsFederateRegisterSubscription(fed, "gridlabdSimulator1/totalLoad", "")
     h.helicsFederateEnterExecutingMode(fed)
     

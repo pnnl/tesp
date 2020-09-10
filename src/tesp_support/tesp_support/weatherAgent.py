@@ -17,13 +17,7 @@ except:
     pass
 
 def stop_helics_federate (fed):
-  status = helics.helicsFederateFinalize(fed)
-  state = helics.helicsFederateGetState(fed)
-  assert state == 3
-  while helics.helicsBrokerIsConnected(None):
-    time.sleep(1)
-  helics.helicsFederateFree(fed)
-  helics.helicsCloseLibrary()
+    helics.helicsFederateDestroy(fed)
 
 def startWeatherAgent(file):
     """the weather agent publishes weather data as configured by the json file
@@ -130,13 +124,13 @@ def startWeatherAgent(file):
       helics.helicsFederateInfoSetCoreName(fedInfo, fedName)
       helics.helicsFederateInfoSetCoreTypeFromString(fedInfo, 'zmq')
       helics.helicsFederateInfoSetCoreInitString(fedInfo, '--federates=1')
-      helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.helics_property_time_delta, timeDeltaInSeconds)
+      helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.HELICS_PROPERTY_TIME_DELTA, timeDeltaInSeconds)
       hFed = helics.helicsCreateValueFederate(fedName, fedInfo)
       for col in weatherData.columns:
         pubName = fedName + '/' + col
-        hPubs[col] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
+        hPubs[col] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.HELICS_DATA_TYPE_STRING, "")
         pubName = pubName + '/forecast'
-        hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
+        hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.HELICS_DATA_TYPE_STRING, "")
       helics.helicsFederateEnterExecutingMode(hFed)
       print('HELICS initialized to publish', hPubs, flush=True)
     else:

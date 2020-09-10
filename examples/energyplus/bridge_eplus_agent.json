@@ -1,7 +1,6 @@
 {
   "name" : "eplus_agent",
   "period" : 300.0,
-  "loglevel" : 4,
   "publications" : [ 
     {
       "global" : false,

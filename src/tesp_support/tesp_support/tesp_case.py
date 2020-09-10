@@ -320,7 +320,6 @@ values:
         epConfig = {}
         epConfig["name"] = "energyPlus"
         epConfig["period"] = 60 * EpStep
-        epConfig["loglevel"] = 4
         epConfig["publications"] = epPubs
         epConfig["subscriptions"] = epSubs
         op = open (casedir + '/eplus.json', 'w', encoding='utf-8')
@@ -359,7 +358,6 @@ values:
         epaConfig = {}
         epaConfig["name"] = "eplus_agent"
         epaConfig["period"] = 60 * EpStep
-        epaConfig["loglevel"] = 4
         epaConfig["time_delta"] = 1
         epaConfig["uninterruptible"] = False
         epaConfig["subscriptions"] = epaSubs
@@ -472,7 +470,6 @@ values:
         ppPubs.append ({"global":False, "key":"LMP_B7", "type":"double"})
         ppConfig = {}
         ppConfig["name"] = "pypower"
-        ppConfig["log_level"] = 4
         ppConfig["period"] = int (config['PYPOWERConfiguration']['PFStep'])
         ppConfig["subscriptions"] = ppSubs
         ppConfig["publications"] = ppPubs
