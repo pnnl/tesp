@@ -386,11 +386,11 @@ def tso_loop():
             uc = "./" + file_time + "uc.dat"
             with open(uc, 'w') as outfile:
                 results = {}
-                for g in instance.Generators.value:
+                for g in instance.Generators.data():
                     for t in instance.TimePeriods:
                         results[(g, t)] = instance.UnitOn[g, t]
 
-                for g in sorted(instance.Generators.value):
+                for g in sorted(instance.Generators.data()):
                     outfile.write("%s\n" % str(g).ljust(8))
                     for t in sorted(instance.TimePeriods):
                         outfile.write("% 1d \n" % (int(results[(g, t)].value + 0.5)))
@@ -438,7 +438,7 @@ def tso_loop():
 
         dispatch = {}
         try:
-            for g in sorted(instance.Generators.value):
+            for g in sorted(instance.Generators.data()):
                 dispatch[g] = []
                 for t in sorted(instance.TimePeriods):
                     dispatch[g].append(instance.PowerGenerated[g, t].value * baseS)
@@ -473,7 +473,7 @@ def tso_loop():
 
         lseDispatch = {}
         if (len(priceSenLoadData) is not 0):
-            for ld in sorted(instance.PriceSensitiveLoads.value):
+            for ld in sorted(instance.PriceSensitiveLoads.data()):
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
@@ -586,7 +586,7 @@ def tso_loop():
 
         dispatch = {}
         try:
-            for g in sorted(instance.Generators.value):
+            for g in sorted(instance.Generators.data()):
                 dispatch[g] = []
                 for t in sorted(instance.TimePeriods):
                     dispatch[g].append(instance.PowerGenerated[g, t].value * baseS)
@@ -597,7 +597,7 @@ def tso_loop():
 
         lseDispatch = {}
         if (len(priceSenLoadData) is not 0):
-            for ld in sorted(instance.PriceSensitiveLoads.value):
+            for ld in sorted(instance.PriceSensitiveLoads.data()):
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
@@ -1564,7 +1564,7 @@ def tso_loop():
                         if "wind" not in genFuel[i][0]:
                             gen[i, 1] = rt_dispatch[name][0]
                 except:
-                    print("We are screwed!!")
+                    print('Exception: unable to obtain and dispatch from LMPs')
                     pass
 
             # write OPF metrics

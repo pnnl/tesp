@@ -1,7 +1,5 @@
-#   Copyright (C) 2017-2018 Battelle Memorial Institute
-# file: process_pypower.py
+#   Copyright (C) 2017-2020 Battelle Memorial Institute
 import json;
-#import sys;
 import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
@@ -231,12 +229,13 @@ def process_pypower(nameroot):
         j = j + 1
 
     # display a plot 
-    fig, ax = plt.subplots(2, 5, sharex = 'col')
+    ncols = 3
+    fig, ax = plt.subplots(2, ncols, figsize=(15,9), sharex = 'col')
     tmin = 0.0
     tmax = 72.0  #48.0
     xticks = [0,6,12,18,24,30,36,42,48,54,60,66,72]
     for i in range(2):
-        for j in range(5):
+        for j in range(ncols):
             ax[i,j].grid (linestyle = '-')
             ax[i,j].set_xlim(tmin,tmax)
             ax[i,j].set_xticks(xticks)
@@ -252,51 +251,49 @@ def process_pypower(nameroot):
         ax[1,0].plot(hrs, data_g[i,:,PGEN_IDX], color=unit_color (dict, gen_keys[i]), 
                      linewidth=unit_width (dict,gen_keys[i]))
 
-    ax[0,1].set_title ('Bus Voltages')
-    ax[0,1].set_ylabel(VMAG_UNITS)
+    ax[0,1].set_title ('Bus Unresp Load')
+    ax[0,1].set_ylabel(UNRESP_UNITS)
     for i in range(data_b.shape[0]):
-        ax[0,1].plot(hrs, data_b[i,:,VMAG_IDX], color=bus_color(bus_keys[i]))
+        ax[0,1].plot(hrs, data_b[i,:,UNRESP_IDX], color=bus_color(bus_keys[i]))
 
-    ax[1,1].set_title ('Locational Marginal Prices')
-    ax[1,1].set_ylabel(LMP_P_UNITS)
+    ax[1,1].set_title ('Bus Max Resp Load')
+    ax[1,1].set_ylabel(RESP_MAX_UNITS)
     for i in range(data_b.shape[0]):
-        ax[1,1].plot(hrs, data_b[i,:,LMP_P_IDX], color=bus_color(bus_keys[i]))
+        ax[1,1].plot(hrs, data_b[i,:,RESP_MAX_IDX], color=bus_color(bus_keys[i]))
 
-    ax[0,2].set_title ('Bus Unresp Load')
-    ax[0,2].set_ylabel(UNRESP_UNITS)
-    for i in range(data_b.shape[0]):
-        ax[0,2].plot(hrs, data_b[i,:,UNRESP_IDX], color=bus_color(bus_keys[i]))
-
-    ax[1,2].set_title ('Bus Max Resp Load')
-    ax[1,2].set_ylabel(RESP_MAX_UNITS)
-    for i in range(data_b.shape[0]):
-        ax[1,2].plot(hrs, data_b[i,:,RESP_MAX_IDX], color=bus_color(bus_keys[i]))
-
-    ax[0,3].set_title ('Bus Bid C1')
-    ax[0,3].set_ylabel(C1_UNITS)
-    for i in range(data_b.shape[0]):
-        ax[0,3].plot(hrs, data_b[i,:,C1_IDX], color=bus_color(bus_keys[i]))
-
-    ax[1,3].set_title ('Bus Bid C2')
-    ax[1,3].set_ylabel(C2_UNITS)
-    for i in range(data_b.shape[0]):
-        ax[1,3].plot(hrs, data_b[i,:,C2_IDX], color=bus_color(bus_keys[i]))
-
-    ax[0,4].set_title ('DSO LMP')
-    ax[0,4].set_ylabel(LMP_UNITS)
+    ax[0,2].set_title ('DSO LMP')
+    ax[0,2].set_ylabel(LMP_UNITS)
     for i in range(data_d.shape[0]):
-        ax[0,4].plot(dhrs, data_d[i,:,LMP_IDX], color=bus_color(bus_keys[i]))
+        ax[0,2].plot(dhrs, data_d[i,:,LMP_IDX], label=bus_keys[i], color=bus_color(bus_keys[i]))
+    ax[0,2].legend(loc='best')
 
-    ax[1,4].set_title ('DSO Pcleared')
-    ax[1,4].set_ylabel(PCLEARED_UNITS)
+    ax[1,2].set_title ('DSO Pcleared')
+    ax[1,2].set_ylabel(PCLEARED_UNITS)
     for i in range(data_d.shape[0]):
-        ax[1,4].plot(dhrs, data_d[i,:,PCLEARED_IDX], color=bus_color(bus_keys[i]))
+        ax[1,2].plot(dhrs, data_d[i,:,PCLEARED_IDX], color=bus_color(bus_keys[i]))
 
-    ax[1,0].set_xlabel('Hours')
-    ax[1,1].set_xlabel('Hours')
-    ax[1,2].set_xlabel('Hours')
-    ax[1,3].set_xlabel('Hours')
-    ax[1,4].set_xlabel('Hours')
+#   ax[0,3].set_title ('Bus Voltages')
+#   ax[0,3].set_ylabel(VMAG_UNITS)
+#   for i in range(data_b.shape[0]):
+#       ax[0,3].plot(hrs, data_b[i,:,VMAG_IDX], color=bus_color(bus_keys[i]))
+#
+#   ax[1,3].set_title ('Locational Marginal Prices')
+#   ax[1,3].set_ylabel(LMP_P_UNITS)
+#   for i in range(data_b.shape[0]):
+#       ax[1,3].plot(hrs, data_b[i,:,LMP_P_IDX], color=bus_color(bus_keys[i]))
+
+#   ax[0,4].set_title ('Bus Bid C1')
+#   ax[0,4].set_ylabel(C1_UNITS)
+#   for i in range(data_b.shape[0]):
+#       ax[0,4].plot(hrs, data_b[i,:,C1_IDX], color=bus_color(bus_keys[i]))
+#
+#   ax[1,4].set_title ('Bus Bid C2')
+#   ax[1,4].set_ylabel(C2_UNITS)
+#   for i in range(data_b.shape[0]):
+#       ax[1,4].plot(hrs, data_b[i,:,C2_IDX], color=bus_color(bus_keys[i]))
+
+    for i in range(ncols):
+      ax[1,i].set_xlabel('Hours')
 
     plt.show()
 

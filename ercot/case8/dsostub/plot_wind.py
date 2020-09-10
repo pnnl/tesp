@@ -1,7 +1,5 @@
-#   Copyright (C) 2017-2018 Battelle Memorial Institute
-# file: process_pypower.py
+#   Copyright (C) 2017-2020 Battelle Memorial Institute
 import json;
-#import sys;
 import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
@@ -108,10 +106,10 @@ def process_pypower(nameroot):
         j = j + 1
 
     # display a plot 
-    fig, ax = plt.subplots(1, 1, sharex = 'col')
+    fig, ax = plt.subplots(1, 1, figsize=(15,9), sharex = 'col')
     tmin = 0.0
-    tmax = 48.0
-    xticks = [0,6,12,18,24,30,36,42,48]
+    tmax = 72.0  #48.0
+    xticks = [0,6,12,18,24,30,36,42,48,54,60,66,72]
     ax.grid (linestyle = '-')
     ax.set_xlim(tmin,tmax)
     ax.set_xticks(xticks)
@@ -124,7 +122,8 @@ def process_pypower(nameroot):
         bus = dict['generators'][gen_keys[i]]['bus']
         print (genfuel, bus)
         if genfuel == 'wind':
-            ax.plot(hrs, data_g[i,:,PGEN_IDX], color=bus_color (str(bus)))
+            ax.plot(hrs, data_g[i,:,PGEN_IDX], label=str(bus), color=bus_color (str(bus)))
+    ax.legend(loc='best')
 
     plt.show()
 
