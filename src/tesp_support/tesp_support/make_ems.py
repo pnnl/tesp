@@ -235,6 +235,15 @@ def summarize_idf (fname, baseidf):
   return zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs
 
 def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs, bHELICS):
+  if bHELICS:
+    CosimInterface = 'HELICS'
+    COOL_SETP_DELTA = 'cooling_setpoint_delta'
+    HEAT_SETP_DELTA = 'heating_setpoint_delta'
+  else:
+    CosimInterface = 'FNCS'
+    COOL_SETP_DELTA = 'COOL_SETP_DELTA'
+    HEAT_SETP_DELTA = 'HEAT_SETP_DELTA'
+
   op = open(target, 'w')
   print ("""! ***EMS PROGRAM***""", file=op)
   nschedused = 0
@@ -267,10 +276,10 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
   for key, row in schedules.items():
     if row['Used']:
       alias = row['Alias']
-      setp = 'COOL_SETP_DELTA'
+      setp = COOL_SETP_DELTA
       term = ';'
       if 'H' in alias[0]:
-        setp = 'HEAT_SETP_DELTA'
+        setp = HEAT_SETP_DELTA
       if idx < nschedused:
         term = ','
       print ('    Set {:s} = {:s}_NOM + {:s}*5.0/9.0{:s}'.format (alias, alias, setp, term), file=op)
@@ -490,19 +499,14 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
       zone_sensible_cooling_sensor (zname, op)
     global_variable (valid_var (zname) + '_V', op)
 
-  if bHELICS:
-    CosimInterface = 'HELICS'
-  else:
-    CosimInterface = 'FNCS'
-
   print ("""! ***EXTERNAL INTERFACE***
-  ExternalInterface,""", file=op)
-  print ("""    {:s}; !- Name of External Interface""".format (CosimInterface), file=op)
-  print ("""  ExternalInterface:Variable,
-    COOL_SETP_DELTA,  !- Name
+  ExternalInterface,
+  {COSIM}; !- Name of External Interface
+  ExternalInterface:Variable,
+    {COOL},  !- Name
     0;                !- Initial Value
   ExternalInterface:Variable,
-    HEAT_SETP_DELTA,  !- Name
+    {HEAT},  !- Name
     0;                !- Initial Value
 ! ***GENERAL REPORTING***
   Output:VariableDictionary,IDF,Unsorted;
@@ -524,7 +528,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
   Output:Variable,WHOLE BUILDING,Facility Total Electric Demand Power,timestep;
   Output:Variable,WHOLE BUILDING,Facility Total HVAC Electric Demand Power,timestep;
   Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
-  Output:Variable,Environment,Site Outdoor Air Drybulb Temperature,timestep; """, file=op)
+  Output:Variable,Environment,Site Outdoor Air Drybulb Temperature,timestep; """.format (COSIM=CosimInterface, COOL=COOL_SETP_DELTA, HEAT=HEAT_SETP_DELTA), file=op)
 
   op.close()
 

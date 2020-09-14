@@ -155,6 +155,14 @@ def process_eplus(nameroot, title=None, pngfile=None):
     print ('Average outdoor air   = {:9.2f}'.format (data[:,OUTDOOR_AIR_IDX].mean()), OUTDOOR_AIR_UNITS)
     print ('Average indoor air    = {:9.2f}'.format (data[:,INDOOR_AIR_IDX].mean()), INDOOR_AIR_UNITS)
 
+    # limit out-of-range initial values
+    np.clip (data[:,COOLING_TEMPERATURE_IDX],0,100,data[:,COOLING_TEMPERATURE_IDX])
+    np.clip (data[:,COOLING_SETPOINT_IDX],0,100,data[:,COOLING_SETPOINT_IDX])
+    np.clip (data[:,COOLING_SCHEDULE_IDX],0,100,data[:,COOLING_SCHEDULE_IDX])
+    np.clip (data[:,HEATING_TEMPERATURE_IDX],0,100,data[:,HEATING_TEMPERATURE_IDX])
+    np.clip (data[:,HEATING_SETPOINT_IDX],0,100,data[:,HEATING_SETPOINT_IDX])
+    np.clip (data[:,HEATING_SCHEDULE_IDX],0,100,data[:,HEATING_SCHEDULE_IDX])
+
     # display a plot
     width = 12.0
     height = 8.0
