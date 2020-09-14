@@ -170,8 +170,8 @@
     Set IC_PATROOM2_FLR_2_V = 118.96,
     Set IC_PATROOM3_MULT6_FLR_2_V = 89.22,
     Set KITCHEN_FLR_5_V = 3965.38,
-    Set LAB_FLR_3_V = 1129.43,
-    Set LAB_FLR_4_V = 1129.43,
+    Set LAB_FLR_3_V = 1130.13,
+    Set LAB_FLR_4_V = 1130.13,
     Set LOBBY_RECORDS_FLR_1_V = 6294.93,
     Set NURSESTN_LOBBY_FLR_3_V = 3866.25,
     Set NURSESTN_LOBBY_FLR_4_V = 3866.25,
@@ -213,8 +213,8 @@
     Set H_SET = 0.0,
     Set C_CUR = 0.0,
     Set H_CUR = 0.0,
-    Set Total_V = 78055.02,
-    Set Controlled_V = 78055.02,
+    Set Total_V = 78056.42,
+    Set Controlled_V = 78056.42,
     IF (BASEMENT_H > 0),
       Set H_SET = H_SET + H1 * BASEMENT_V,
       Set H_CUR = H_CUR + BASEMENT_T * BASEMENT_V,
@@ -2359,7 +2359,7 @@
     RADIOLOGY_FLR_4_V;
 ! ***EXTERNAL INTERFACE***
   ExternalInterface,
-    FNCS;             !- Name of External Interface
+    FNCS; !- Name of External Interface
   ExternalInterface:Variable,
     COOL_SETP_DELTA,  !- Name
     0;                !- Initial Value

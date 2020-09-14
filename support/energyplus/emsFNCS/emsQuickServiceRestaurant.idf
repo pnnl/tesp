@@ -403,7 +403,7 @@
     ATTIC_V;
 ! ***EXTERNAL INTERFACE***
   ExternalInterface,
-    FNCS;             !- Name of External Interface
+    FNCS; !- Name of External Interface
   ExternalInterface:Variable,
     COOL_SETP_DELTA,  !- Name
     0;                !- Initial Value

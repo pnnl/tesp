@@ -501,7 +501,7 @@ def write_new_ems (target, zones, zonecontrols, thermostats, schedules, hcoils, 
 
   print ("""! ***EXTERNAL INTERFACE***
   ExternalInterface,
-  {COSIM}; !- Name of External Interface
+    {COSIM}; !- Name of External Interface
   ExternalInterface:Variable,
     {COOL},  !- Name
     0;                !- Initial Value

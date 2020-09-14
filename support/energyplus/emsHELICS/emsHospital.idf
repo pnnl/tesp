@@ -138,14 +138,14 @@
     Calculate_Temperatures;               !- Program Name
   EnergyManagementSystem:Program,
     Set_Setpoints,      !- Name
-    Set C1 = C1_NOM + COOL_SETP_DELTA*5.0/9.0,
-    Set H1 = H1_NOM + HEAT_SETP_DELTA*5.0/9.0,
-    Set C3 = C3_NOM + COOL_SETP_DELTA*5.0/9.0,
-    Set H3 = H3_NOM + HEAT_SETP_DELTA*5.0/9.0,
-    Set C2 = C2_NOM + COOL_SETP_DELTA*5.0/9.0,
-    Set H2 = H2_NOM + HEAT_SETP_DELTA*5.0/9.0,
-    Set C4 = C4_NOM + COOL_SETP_DELTA*5.0/9.0,
-    Set H4 = H4_NOM + HEAT_SETP_DELTA*5.0/9.0;
+    Set C1 = C1_NOM + cooling_setpoint_delta*5.0/9.0,
+    Set H1 = H1_NOM + heating_setpoint_delta*5.0/9.0,
+    Set C3 = C3_NOM + cooling_setpoint_delta*5.0/9.0,
+    Set H3 = H3_NOM + heating_setpoint_delta*5.0/9.0,
+    Set C2 = C2_NOM + cooling_setpoint_delta*5.0/9.0,
+    Set H2 = H2_NOM + heating_setpoint_delta*5.0/9.0,
+    Set C4 = C4_NOM + cooling_setpoint_delta*5.0/9.0,
+    Set H4 = H4_NOM + heating_setpoint_delta*5.0/9.0;
 
   EnergyManagementSystem:Program,
     Initialize_Volumes,
@@ -2361,10 +2361,10 @@
   ExternalInterface,
     HELICS; !- Name of External Interface
   ExternalInterface:Variable,
-    COOL_SETP_DELTA,  !- Name
+    cooling_setpoint_delta,  !- Name
     0;                !- Initial Value
   ExternalInterface:Variable,
-    HEAT_SETP_DELTA,  !- Name
+    heating_setpoint_delta,  !- Name
     0;                !- Initial Value
 ! ***GENERAL REPORTING***
   Output:VariableDictionary,IDF,Unsorted;

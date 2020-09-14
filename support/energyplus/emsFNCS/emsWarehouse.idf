@@ -77,8 +77,8 @@
 
   EnergyManagementSystem:Program,
     Initialize_Volumes,
-    Set BULKSTORAGE_V = 31313.90,
-    Set FINESTORAGE_V = 11554.44,
+    Set BULKSTORAGE_V = 27350.11,
+    Set FINESTORAGE_V = 10880.60,
     Set OFFICE_V = 1010.76;
   
   EnergyManagementSystem:Program,
@@ -89,8 +89,8 @@
     Set H_SET = 0.0,
     Set C_CUR = 0.0,
     Set H_CUR = 0.0,
-    Set Total_V = 43879.10,
-    Set Controlled_V = 43879.10,
+    Set Total_V = 39241.47,
+    Set Controlled_V = 39241.47,
     IF (BULKSTORAGE_H > 0),
       Set H_SET = H_SET + H1 * BULKSTORAGE_V,
       Set H_CUR = H_CUR + BULKSTORAGE_T * BULKSTORAGE_V,
@@ -440,7 +440,7 @@
     OFFICE_V;
 ! ***EXTERNAL INTERFACE***
   ExternalInterface,
-    FNCS;             !- Name of External Interface
+    FNCS; !- Name of External Interface
   ExternalInterface:Variable,
     COOL_SETP_DELTA,  !- Name
     0;                !- Initial Value
