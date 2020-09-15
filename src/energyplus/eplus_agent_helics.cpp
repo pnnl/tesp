@@ -400,10 +400,13 @@ int main(int argc, char **argv)
         value = value * 1.8 + 32.0;
       }
       //cout << " sub: " << thissub.getTarget() << ":" << thissub.getKey() << ":" << thissub.getType() << ":" << thissub.getUnits() << ":" << thissub.getInfo() << " with value: " << value << " at HELICS time: " << time_granted << endl;
-//      if((it->first).find("heating_setpoint_temperature") == 0){
-//        std::cout << "metrics[it->first]: " << it->first <<std::endl;
+      if((it->first).find("heating_setpoint_temperature") == 0){
+        std::cout << it->first << ": " << value <<std::endl;
 //        canPrint = true;
-//      }
+      }
+      if((it->first).find("cooling_setpoint_temperature") == 0){
+        std::cout << it->first << ": " << value <<std::endl;
+      }
       update_metric(metrics[it->first], value);
     }
   }
