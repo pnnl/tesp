@@ -1,7 +1,7 @@
 {
-  "ames": true,
+  "ames": false,
   "solver": "cbc",
-  "priceSensLoad": true,
+  "priceSensLoad": false,
   "windPower": true,
   "noScale": false,
   "curve": true,

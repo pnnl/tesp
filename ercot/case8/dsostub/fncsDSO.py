@@ -123,14 +123,17 @@ while ts <= tmax:
         else:
           resp_max = 0.0
           unresp = Phour
-        da_bid['unresp_mw'].append(unresp / gld_scale)
-        da_bid['resp_max_mw'].append(resp_max / gld_scale)
+        da_bid['unresp_mw'].append(round(unresp / gld_scale, 3))
+        da_bid['resp_max_mw'].append(round(resp_max / gld_scale, 3))
         da_bid['resp_c2'].append(c2)
         da_bid['resp_c1'].append(c1)
         da_bid['resp_deg'].append(deg)
 
       pubtopic = 'substationBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from a substation auction
-      print ('Day-Ahead bid for', pubtopic, 'at', ts, '=', da_bid, flush=True)
+      print ('Day-Ahead bid for {:s} at {:d}, c2={:f}, c1={:f}, deg={:d}'.format (pubtopic, ts, da_bid['resp_c2'][0],
+                                                                                  da_bid['resp_c1'][0], da_bid['resp_deg'][0]))
+      print ('  Max Resp MW',da_bid['unresp_mw'])
+      print ('  Unresp   MW',da_bid['resp_max_mw'], flush=True)
       fncs.publish (pubtopic + '/da_bid', json.dumps(da_bid))
     tnext_da += da_period
 

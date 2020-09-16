@@ -1,14 +1,14 @@
 DSO+T Stub Simulation Files
 ---------------------------
 
-Copyright (c) 2019, Battelle Memorial Institute
+Copyright (c) 2019-2020, Battelle Memorial Institute
 
 This directory contains a test harness based on the ERCOT 8-bus case, with
 one DSO emulator in place of the GridLAB-D and substation federates at each bus.
 It provides a sandbox for integrating AMES with PYPOWER in a new TSO agent.
-Currently, it invokes *fncsTSO.py* in the parent directory as the TSO agent, which
-currently only uses PYPOWER. The case definition in *ercot_8.json* has been copied
-from the parent directory, with a local edit to run DC OPF but AC PF.
+It invokes *fncsTSO.py* in the parent directory as the TSO agent, which uses PYPOWER
+and optionally, PSST. The case definition in *ercot_8.json* has been copied
+from the parent directory to run with local edits.
 
 The DSO emulator is in a local *fncsDSO.py* file. It will bid a load equal to the
 TSO non-responsive curve load, effectively doubling it. With a market, the DSO

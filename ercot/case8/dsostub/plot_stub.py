@@ -262,7 +262,7 @@ def process_pypower(nameroot):
         ax[1,1].plot(hrs, data_b[i,:,RESP_MAX_IDX], color=bus_color(bus_keys[i]))
 
     ax[0,2].set_title ('DSO LMP')
-    ax[0,2].set_ylabel(LMP_UNITS)
+    ax[0,2].set_ylabel ('USD / MWh') # (LMP_UNITS)
     for i in range(data_d.shape[0]):
         ax[0,2].plot(dhrs, data_d[i,:,LMP_IDX], label=bus_keys[i], color=bus_color(bus_keys[i]))
     ax[0,2].legend(loc='best')
