@@ -7,6 +7,9 @@ This directory contains the baseline bulk generation and transmission model for 
 versions of the ERCOT Test System. Changes should be tested here before use in the complete
 ERCOT Test System, which is located in a sibling directory ../case8.
 
+Stochastic wind generation is based on Chen et. al., "ARIMA-Based Time Series Model of Stochastic
+Wind Power Generation," IEEE TPWRS, May 2010, https://doi.org/10.1109/TPWRS.2009.2033277
+
 Directory of input and script files:
 
 - *200NodesData.json*; clustered load, generation and bus coordinates
