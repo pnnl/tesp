@@ -1,5 +1,4 @@
-8-Bus and 200-Bus ERCOT Bulk System Models
-------------------------------------------
+# 8-Bus and 200-Bus ERCOT Bulk System Models
 
 Copyright (c) 2018-2020, Battelle Memorial Institute
 
@@ -70,3 +69,23 @@ To use an updated 8-bus Model in the complete ERCOT Test System:
 
 loopERCOT.py and process_pypower.py have not been tested yet with the 200-bus model.
 
+## Generating Maps
+
+The map data in *Texas_SHP* subdirectory comes from https://www.depts.ttu.edu/geospatial/center/TexasGISData.html 
+and https://gis-txdot.opendata.arcgis.com/datasets/6aeee12f605d4b0b9fc74b31d2ea4ea5_0
+
+Maps are generated from shapefiles with matplotlib and cartopy. To install the supporting software:
+
+    sudo apt-get install proj-bin
+    sudo apt-get install libproj-dev
+    sudo apt-get install libgeos-dev
+    pip3 install shapely cartopy --no-binary shapely --no-binary cartopy
+
+Test that cartopy works with:
+
+    python3 test_cartopy.py
+
+To plot the 8-bus and 200-bus test systems:
+
+    python3 ercot8_map.py
+    python3 ercot_map.py

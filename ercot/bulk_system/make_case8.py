@@ -270,15 +270,17 @@ if __name__ == '__main__':
     lst345.append ((n1, n2))
     w345.append (2.0 * npar)
 
-  nx.draw_networkx_nodes (graph, xy, nodelist=list(n345), node_color='k', node_size=80, alpha=0.3)
-  nx.draw_networkx_edges (graph, xy, edgelist=lst345, edge_color='r', width=w345, alpha=0.8)
-  nx.draw_networkx_labels (graph, xy, lblbus345, font_size=12, font_color='b')
+  fig, ax = plt.subplots()
+  
+  nx.draw_networkx_nodes (graph, xy, nodelist=list(n345), node_color='k', node_size=80, alpha=0.3, ax=ax)
+  nx.draw_networkx_edges (graph, xy, edgelist=lst345, edge_color='r', width=w345, alpha=0.8, ax=ax)
+  nx.draw_networkx_labels (graph, xy, lblbus345, font_size=12, font_color='b', ax=ax)
 
   plt.title ('Graph of Retained EHV Lines')
   plt.xlabel ('Longitude [deg]')
   plt.ylabel ('Latitude [deg N]')
-  # TODO: not sure why the lat-long coordinates no longer appear on the axes
   plt.grid(linestyle='dotted')
+  ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
   plt.show()
 
 

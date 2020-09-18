@@ -9,29 +9,37 @@ import sys
 
 featureScale = '50m'  # 10, 50 0r 110
 urbanColor = 'seagreen'
-shapePath = 'z:/Documents/ShapeFiles/'
+shapePath = './Texas_SHP/'
 
-rdr1 = shpreader.Reader(shapePath + 'Texas_County_Boundaries/Texas_County_Boundaries.shp')
-counties = list(rdr1.geometries())
-COUNTIES = cfeature.ShapelyFeature(counties, ccrs.PlateCarree())
+rdr1 = shpreader.Reader (shapePath + 'Tx_Census_CntyGeneralCoast_TTU.shp')
+COUNTIES = cfeature.ShapelyFeature (list(rdr1.geometries()), ccrs.PlateCarree())
+rdr2 = shpreader.Reader (shapePath + 'Tx_Census_StateGeneralCoast_TTU.shp')
+STATE = cfeature.ShapelyFeature (list(rdr2.geometries()), ccrs.PlateCarree())
+rdr3 = shpreader.Reader (shapePath + 'Tx_Interstates_General_NE.shp')
+ROADS = cfeature.ShapelyFeature (list(rdr3.geometries()), ccrs.PlateCarree())
+rdr4 = shpreader.Reader (shapePath + 'Tx_PopPlaces_TIGER.shp')
+PEOPLE = cfeature.ShapelyFeature (list(rdr4.geometries()), ccrs.PlateCarree())
+rdr5 = shpreader.Reader (shapePath + 'Tx_Rivers_General_NE.shp')
+RIVERS = cfeature.ShapelyFeature (list(rdr5.geometries()), ccrs.PlateCarree())
+rdr6 = shpreader.Reader (shapePath + 'Tx_WindTurbines_USGS.shp')
+WIND = cfeature.ShapelyFeature (list(rdr6.geometries()), ccrs.PlateCarree())
 
-rdr2 = shpreader.Reader(shapePath + 'urbanap010g.shp/urbanap010g.shp')
-urban = list(rdr2.geometries())
-COUNTIES = cfeature.ShapelyFeature(counties, ccrs.PlateCarree())
-URBAN = cfeature.ShapelyFeature(urban, ccrs.PlateCarree())
+fig, ax = plt.subplots (figsize=(8, 8))
 
-plt.figure(figsize=(10, 10))
-
-ax = plt.axes(projection=ccrs.PlateCarree())
-ax.add_feature(cfeature.LAND.with_scale(featureScale))
+ax.add_feature(cfeature.LAND.with_scale(featureScale), facecolor='beige') # landColor)
+ax.add_feature(cfeature.OCEAN.with_scale(featureScale), facecolor='aqua')
 #ax.add_feature(cfeature.BORDERS.with_scale(featureScale))
 ax.add_feature(cfeature.STATES.with_scale(featureScale))
 ax.add_feature(cfeature.OCEAN.with_scale(featureScale))
 ax.add_feature(cfeature.RIVERS.with_scale(featureScale), zorder=2)
 ax.add_feature(cfeature.LAKES.with_scale(featureScale), zorder=2)
-ax.add_feature(URBAN, facecolor=urbanColor, edgecolor=urbanColor)
+#ax.add_feature(URBAN, facecolor=urbanColor, edgecolor=urbanColor)
 ax.add_feature(COUNTIES, facecolor='none', edgecolor='gray')
 ax.coastlines(featureScale)
+#ax.add_feature(ROADS)
+#ax.add_feature(STATE)
+#ax.add_feature(PEOPLE)
+#ax.add_feature(WIND, zorder=2)
 
 ax.set_extent([-107.0, -93.0, 25.0, 37.0])
 
@@ -65,13 +73,15 @@ xy = {}
 for b in dbuses:
 	xy[b[0]] = [b[1], b[2]]
 
-gnodes345 = nx.draw_networkx_nodes (graph, xy, nodelist=list(n345), node_color='k', node_size=60) # , alpha=0.3)
-glines345 = nx.draw_networkx_edges (graph, xy, edgelist=lst345, edge_color='r', width=w345) # , alpha=0.8)
+gnodes345 = nx.draw_networkx_nodes (graph, xy, nodelist=list(n345), node_color='k', node_size=60, ax=ax) # , alpha=0.3)
+glines345 = nx.draw_networkx_edges (graph, xy, edgelist=lst345, edge_color='r', width=w345, ax=ax) # , alpha=0.8)
 
 gnodes345.set_zorder(20)
 glines345.set_zorder(18)
 
+ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+
 # Save the plot by calling plt.savefig() BEFORE plt.show()
-plt.savefig('Ercot8.png')
+# plt.savefig('Ercot8.png')
 
 plt.show()
