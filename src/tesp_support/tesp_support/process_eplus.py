@@ -93,12 +93,13 @@ def plot_eplus (dict, title=None, pngfile=None):
   else:
     plt.show()
 
-def read_eplus_metrics (nameroot):
+def read_eplus_metrics (nameroot, quiet=False):
   # read the JSON file
   try:
     lp = open ('eplus_' + nameroot + '_metrics.json').read()
     lst = json.loads(lp)
-    print ('Metrics data starting', lst['StartTime'])
+    if not quiet:
+      print ('Metrics data starting', lst['StartTime'])
   except:
     print ('eplus metrics file could not be read')
     return
@@ -108,7 +109,8 @@ def read_eplus_metrics (nameroot):
   meta = lst.pop('Metadata')
   times = list(map(int,list(lst.keys())))
   times.sort()
-  print ('There are', len (times), 'sample times at', times[1] - times[0], 'seconds')
+  if not quiet:
+    print ('There are', len (times), 'sample times at', times[1] - times[0], 'seconds')
 
   # parse the metadata for things of specific interest
   idx_e = {}
@@ -180,13 +182,15 @@ def read_eplus_metrics (nameroot):
   # make sure we found the metric indices of interest
   building = list(lst['3600'].keys())[0]
   ary = lst['3600'][building]
-  print ('There are', len(ary), 'metrics for', building)
-  print ('1st hour price =', ary[idx_e['PRICE_IDX']], idx_e['PRICE_UNITS'])
+  if not quiet:
+    print ('There are', len(ary), 'metrics for', building)
+    print ('1st hour price =', ary[idx_e['PRICE_IDX']], idx_e['PRICE_UNITS'])
 
   # create a NumPy array of all metrics for the first building, 8760*39 doubles
   # we also want a NumPy array of times in hours
   data = np.empty(shape=(len(times),len(ary)), dtype=np.float)
-  print ('Constructed', data.shape, 'NumPy array')
+  if not quiet:
+    print ('Constructed', data.shape, 'NumPy array')
   i = 0
   for t in times:
     ary = lst[str(t)][building]
@@ -197,28 +201,29 @@ def read_eplus_metrics (nameroot):
   hrs /= denom
 
   # display some averages
-  print ('Average price  = {:.5f}'.format (data[:,idx_e['PRICE_IDX']].mean()), idx_e['PRICE_UNITS'])
-  print ('Average demand = {:.2f}'.format (data[:,idx_e['ELECTRIC_DEMAND_IDX']].mean()), idx_e['ELECTRIC_DEMAND_UNITS'])
-  print ('Average HVAC   = {:.2f}'.format (data[:,idx_e['HVAC_DEMAND_IDX']].mean()), idx_e['HVAC_DEMAND_UNITS'])
-  print ('Average uncomf = {:.5f}'.format (data[:,idx_e['ASHRAE_HOURS_IDX']].mean()), idx_e['ASHRAE_HOURS_UNITS'])
-  print ('Average people = {:.2f}'.format (data[:,idx_e['OCCUPANTS_IDX']].mean()), idx_e['OCCUPANTS_UNITS'])
+  if not quiet:
+    print ('Average price  = {:.5f}'.format (data[:,idx_e['PRICE_IDX']].mean()), idx_e['PRICE_UNITS'])
+    print ('Average demand = {:.2f}'.format (data[:,idx_e['ELECTRIC_DEMAND_IDX']].mean()), idx_e['ELECTRIC_DEMAND_UNITS'])
+    print ('Average HVAC   = {:.2f}'.format (data[:,idx_e['HVAC_DEMAND_IDX']].mean()), idx_e['HVAC_DEMAND_UNITS'])
+    print ('Average uncomf = {:.5f}'.format (data[:,idx_e['ASHRAE_HOURS_IDX']].mean()), idx_e['ASHRAE_HOURS_UNITS'])
+    print ('Average people = {:.2f}'.format (data[:,idx_e['OCCUPANTS_IDX']].mean()), idx_e['OCCUPANTS_UNITS'])
 
-  print ('Average cooling power = {:9.2f}'.format (data[:,idx_e['COOLING_POWER_IDX']].mean()), idx_e['COOLING_POWER_UNITS'])
-  print ('Average cooling temp  = {:9.2f}'.format (data[:,idx_e['COOLING_TEMPERATURE_IDX']].mean()), idx_e['COOLING_TEMPERATURE_UNITS'])
-  print ('Average cooling sched = {:9.2f}'.format (data[:,idx_e['COOLING_SCHEDULE_IDX']].mean()), idx_e['COOLING_SCHEDULE_UNITS'])
-  print ('Average cooling delta = {:9.2f}'.format (data[:,idx_e['COOLING_DELTA_IDX']].mean()), idx_e['COOLING_DELTA_UNITS'])
-  print ('Average cooling setpt = {:9.2f}'.format (data[:,idx_e['COOLING_SETPOINT_IDX']].mean()), idx_e['COOLING_SETPOINT_UNITS'])
-  print ('Average cooling vol   = {:9.2f}'.format (data[:,idx_e['COOLING_VOLUME_IDX']].mean()), idx_e['COOLING_VOLUME_UNITS'])
+    print ('Average cooling power = {:9.2f}'.format (data[:,idx_e['COOLING_POWER_IDX']].mean()), idx_e['COOLING_POWER_UNITS'])
+    print ('Average cooling temp  = {:9.2f}'.format (data[:,idx_e['COOLING_TEMPERATURE_IDX']].mean()), idx_e['COOLING_TEMPERATURE_UNITS'])
+    print ('Average cooling sched = {:9.2f}'.format (data[:,idx_e['COOLING_SCHEDULE_IDX']].mean()), idx_e['COOLING_SCHEDULE_UNITS'])
+    print ('Average cooling delta = {:9.2f}'.format (data[:,idx_e['COOLING_DELTA_IDX']].mean()), idx_e['COOLING_DELTA_UNITS'])
+    print ('Average cooling setpt = {:9.2f}'.format (data[:,idx_e['COOLING_SETPOINT_IDX']].mean()), idx_e['COOLING_SETPOINT_UNITS'])
+    print ('Average cooling vol   = {:9.2f}'.format (data[:,idx_e['COOLING_VOLUME_IDX']].mean()), idx_e['COOLING_VOLUME_UNITS'])
 
-  print ('Average heating power = {:9.2f}'.format (data[:,idx_e['HEATING_POWER_IDX']].mean()), idx_e['HEATING_POWER_UNITS'])
-  print ('Average heating temp  = {:9.2f}'.format (data[:,idx_e['HEATING_TEMPERATURE_IDX']].mean()), idx_e['HEATING_TEMPERATURE_UNITS'])
-  print ('Average heating sched = {:9.2f}'.format (data[:,idx_e['HEATING_SCHEDULE_IDX']].mean()), idx_e['HEATING_SCHEDULE_UNITS'])
-  print ('Average heating delta = {:9.2f}'.format (data[:,idx_e['HEATING_DELTA_IDX']].mean()), idx_e['HEATING_DELTA_UNITS'])
-  print ('Average heating setpt = {:9.2f}'.format (data[:,idx_e['HEATING_SETPOINT_IDX']].mean()), idx_e['HEATING_SETPOINT_UNITS'])
-  print ('Average heating vol   = {:9.2f}'.format (data[:,idx_e['HEATING_VOLUME_IDX']].mean()), idx_e['HEATING_VOLUME_UNITS'])
+    print ('Average heating power = {:9.2f}'.format (data[:,idx_e['HEATING_POWER_IDX']].mean()), idx_e['HEATING_POWER_UNITS'])
+    print ('Average heating temp  = {:9.2f}'.format (data[:,idx_e['HEATING_TEMPERATURE_IDX']].mean()), idx_e['HEATING_TEMPERATURE_UNITS'])
+    print ('Average heating sched = {:9.2f}'.format (data[:,idx_e['HEATING_SCHEDULE_IDX']].mean()), idx_e['HEATING_SCHEDULE_UNITS'])
+    print ('Average heating delta = {:9.2f}'.format (data[:,idx_e['HEATING_DELTA_IDX']].mean()), idx_e['HEATING_DELTA_UNITS'])
+    print ('Average heating setpt = {:9.2f}'.format (data[:,idx_e['HEATING_SETPOINT_IDX']].mean()), idx_e['HEATING_SETPOINT_UNITS'])
+    print ('Average heating vol   = {:9.2f}'.format (data[:,idx_e['HEATING_VOLUME_IDX']].mean()), idx_e['HEATING_VOLUME_UNITS'])
 
-  print ('Average outdoor air   = {:9.2f}'.format (data[:,idx_e['OUTDOOR_AIR_IDX']].mean()), idx_e['OUTDOOR_AIR_UNITS'])
-  print ('Average indoor air    = {:9.2f}'.format (data[:,idx_e['INDOOR_AIR_IDX']].mean()), idx_e['INDOOR_AIR_UNITS'])
+    print ('Average outdoor air   = {:9.2f}'.format (data[:,idx_e['OUTDOOR_AIR_IDX']].mean()), idx_e['OUTDOOR_AIR_UNITS'])
+    print ('Average indoor air    = {:9.2f}'.format (data[:,idx_e['INDOOR_AIR_IDX']].mean()), idx_e['INDOOR_AIR_UNITS'])
 
   # limit out-of-range initial values
   np.clip (data[:,idx_e['COOLING_TEMPERATURE_IDX']],0,100,data[:,idx_e['COOLING_TEMPERATURE_IDX']])
