@@ -15,22 +15,27 @@ try:
 except:
   pass
 
-def process_houses(nameroot, dictname = ''):
-  """ Plots the temperature and HVAC power for every house
+def plot_houses (dict):
+  hrs = dict['hrs']
+  data_h = dict['data_h']
+  idx_h = dict['idx_h']
+  keys_h = dict['keys_h']
 
-  This function reads *substation_nameroot_metrics.json* and
-  *house_nameroot_metrics.json* for the data;
-  it reads *nameroot_glm_dict.json* for the metadata.
-  These must all exist in the current working directory.  
-  Makes one graph with 2 subplots:
-  
-  1. Average air temperature at every house
-  2. Average HVAC power at every house  
+  # display a plot
+  fig, ax = plt.subplots(2, 1, sharex = 'col')
+  i = 0
+  for key in keys_h:
+    ax[0].plot(hrs, data_h[i,:,idx_h['HSE_AIR_AVG_IDX']], color='blue')
+    ax[1].plot(hrs, data_h[i,:,idx_h['HSE_HVAC_AVG_IDX']], color='red')
+    i = i + 1
+  ax[0].set_ylabel('Degrees')
+  ax[1].set_ylabel('kW')
+  ax[1].set_xlabel('Hours')
+  ax[0].set_title ('HVAC at all Houses')
 
-  Args:
-    nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
-    dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
-  """
+  plt.show()
+
+def read_house_metrics (nameroot, dictname = ''):
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
       lp = open (dictname).read()
@@ -58,36 +63,38 @@ def process_houses(nameroot, dictname = ''):
   hrs /= denom
 
 #  print("\nHouse Metadata for", len(lst_h[time_key]), "objects")
+  data_h = None
+  idx_h = {}
   for key, val in meta_h.items():
   # print (key, val['index'], val['units'])
     if key == 'air_temperature_avg':
-      AIR_AVG_IDX = val['index']
+      idx_h['HSE_AIR_AVG_IDX'] = val['index']
     elif key == 'air_temperature_min':
-      AIR_MIN_IDX = val['index']
+      idx_h['HSE_AIR_MIN_IDX'] = val['index']
     elif key == 'air_temperature_max':
-      AIR_MAX_IDX = val['index']
+      idx_h['HSE_AIR_MAX_IDX'] = val['index']
     elif key == 'hvac_load_avg':
-      HVAC_AVG_IDX = val['index']
+      idx_h['HSE_HVAC_AVG_IDX'] = val['index']
     elif key == 'hvac_load_min':
-      HVAC_MIN_IDX = val['index']
+      idx_h['HSE_HVAC_MIN_IDX'] = val['index']
     elif key == 'hvac_load_max':
-      HVAC_MAX_IDX = val['index']
+      idx_h['HSE_HVAC_MAX_IDX'] = val['index']
     elif key == 'waterheater_load_avg':
-      WH_AVG_IDX = val['index']
+      idx_h['HSE_WH_AVG_IDX'] = val['index']
     elif key == 'waterheater_load_min':
-      WH_MIN_IDX = val['index']
+      idx_h['HSE_WH_MIN_IDX'] = val['index']
     elif key == 'waterheater_load_max':
-      WH_MAX_IDX = val['index']
+      idx_h['HSE_WH_MAX_IDX'] = val['index']
     elif key == 'total_load_avg':
-      TOTAL_AVG_IDX = val['index']
+      idx_h['HSE_TOTAL_AVG_IDX'] = val['index']
     elif key == 'total_load_min':
-      TOTAL_MIN_IDX = val['index']
+      idx_h['HSE_TOTAL_MIN_IDX'] = val['index']
     elif key == 'total_load_max':
-      TOTAL_MAX_IDX = val['index']
+      idx_h['HSE_TOTAL_MAX_IDX'] = val['index']
     elif key == 'air_temperature_deviation_cooling':
-      DEV_COOL_IDX = val['index']
+      idx_h['HSE_DEV_COOL_IDX'] = val['index']
     elif key == 'air_temperature_deviation_heating':
-      DEV_HEAT_IDX = val['index']
+      idx_h['HSE_DEV_HEAT_IDX'] = val['index']
 
   time_key = str(times[0])
   data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
@@ -101,18 +108,30 @@ def process_houses(nameroot, dictname = ''):
       i = i + 1
     j = j + 1
 
-  # display a plot
-  fig, ax = plt.subplots(2, 1, sharex = 'col')
-  i = 0
-  for key in hse_keys:
-    ax[0].plot(hrs, data_h[i,:,AIR_AVG_IDX], color="blue")
-    ax[1].plot(hrs, data_h[i,:,HVAC_AVG_IDX], color="red")
-    i = i + 1
-  ax[0].set_ylabel("Degrees")
-  ax[1].set_ylabel("kW")
-  ax[1].set_xlabel("Hours")
-  ax[0].set_title ("HVAC at all Houses")
+  dict = {}
+  dict['hrs'] = hrs
+  dict['data_h'] = data_h
+  dict['keys_h'] = hse_keys
+  dict['idx_h'] = idx_h
 
-  plt.show()
+  return dict
 
+def process_houses(nameroot, dictname = ''):
+  """ Plots the temperature and HVAC power for every house
+
+  This function reads *substation_nameroot_metrics.json* and
+  *house_nameroot_metrics.json* for the data;
+  it reads *nameroot_glm_dict.json* for the metadata.
+  These must all exist in the current working directory.  
+  Makes one graph with 2 subplots:
+  
+  1. Average air temperature at every house
+  2. Average HVAC power at every house  
+
+  Args:
+    nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
+    dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+  """
+  dict = read_house_metrics (nameroot, dictname)
+  plot_houses (dict)
 

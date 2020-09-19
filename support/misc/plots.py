@@ -10,12 +10,21 @@ import tesp_support.process_eplus as ep
 
 rootname = sys.argv[1]
 
-pp.process_pypower (rootname)
-gp.process_gld (rootname)
-hp.process_houses (rootname)
-vp.process_voltages (rootname)
-ap.process_agents (rootname)
+if os.path.exists ('bus_' + rootname + '_metrics.json'):
+  pmetrics = pp.read_pypower_metrics (rootname)
+  pp.plot_pypower (pmetrics)
+
+if os.path.exists ('substation_' + rootname + '_metrics.json'):
+  gmetrics = gp.read_gld_metrics (rootname)
+  gp.plot_gld (gmetrics)
+  hp.plot_houses (gmetrics)
+  vp.plot_voltages (gmetrics)
+
+if os.path.exists ('auction_' + rootname + '_metrics.json'):
+  ametrics = ap.read_agent_metrics (rootname)
+  ap.plot_agents (ametrics)
 
 if os.path.exists ('eplus_' + rootname + '_metrics.json'):
-  ep.process_eplus (rootname)
+  emetrics = ep.read_eplus_metrics (rootname)
+  ep.plot_eplus (emetrics)
 

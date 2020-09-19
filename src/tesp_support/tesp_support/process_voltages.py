@@ -15,22 +15,7 @@ try:
 except:
   pass
 
-def process_voltages(nameroot, dictname = ''):
-  """ Plots the min and max line-neutral voltages for every billing meter
-
-  This function reads *substation_nameroot_metrics.json* and 
-  *billing_meter_nameroot_metrics.json* for the voltage data, and 
-  *nameroot_glm_dict.json* for the meter names.  
-  These must all exist in the current working directory.
-  One graph is generated with 2 subplots:
-  
-  1. The Min line-to-neutral voltage at each billing meter  
-  2. The Max line-to-neutral voltage at each billing meter  
-
-  Args:
-    nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
-    dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
-  """
+def read_voltage_metrics(nameroot, dictname = ''):
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
       lp = open (dictname).read()
@@ -57,26 +42,28 @@ def process_voltages(nameroot, dictname = ''):
   hrs /= denom
 
   #print("\nBilling Meter Metadata for", len(lst_m['3600']), "objects")
+  data_m = None
+  idx_m = {}
   for key, val in meta_m.items():
   # print (key, val['index'], val['units'])
     if key == 'voltage_max':
-      MTR_VOLT_MAX_IDX = val['index']
-      MTR_VOLT_MAX_UNITS = val['units']
+      idx_m['MTR_VOLT_MAX_IDX'] = val['index']
+      idx_m['MTR_VOLT_MAX_UNITS'] = val['units']
     elif key == 'voltage_min':
-      MTR_VOLT_MIN_IDX = val['index']
-      MTR_VOLT_MIN_UNITS = val['units']
+      idx_m['MTR_VOLT_MIN_IDX'] = val['index']
+      idx_m['MTR_VOLT_MIN_UNITS'] = val['units']
     elif key == 'voltage_avg':
-      MTR_VOLT_AVG_IDX = val['index']
-      MTR_VOLT_AVG_UNITS = val['units']
+      idx_m['MTR_VOLT_AVG_IDX'] = val['index']
+      idx_m['MTR_VOLT_AVG_UNITS'] = val['units']
     elif key == 'voltage12_max':
-      MTR_VOLT12_MAX_IDX = val['index']
-      MTR_VOLT12_MAX_UNITS = val['units']
+      idx_m['MTR_VOLT12_MAX_IDX'] = val['index']
+      idx_m['MTR_VOLT12_MAX_UNITS'] = val['units']
     elif key == 'voltage12_min':
-      MTR_VOLT12_MIN_IDX = val['index']
-      MTR_VOLT12_MIN_UNITS = val['units']
+      idx_m['MTR_VOLT12_MIN_IDX'] = val['index']
+      idx_m['MTR_VOLT12_MIN_UNITS'] = val['units']
     elif key == 'voltage_unbalance_max':
-      MTR_VOLTUNB_MAX_IDX = val['index']
-      MTR_VOLTUNB_MAX_UNITS = val['units']
+      idx_m['MTR_VOLTUNB_MAX_IDX'] = val['index']
+      idx_m['MTR_VOLTUNB_MAX_UNITS'] = val['units']
 
   time_key = str(times[0])
   data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
@@ -95,19 +82,31 @@ def process_voltages(nameroot, dictname = ''):
   for key in mtr_keys:
     vln = dict['billingmeters'][key]['vln'] / 100.0
     vll = dict['billingmeters'][key]['vll'] / 100.0
-    data_m[j,:,MTR_VOLT_MIN_IDX] /= vln
-    data_m[j,:,MTR_VOLT_MAX_IDX] /= vln
-    data_m[j,:,MTR_VOLT_AVG_IDX] /= vln
-    data_m[j,:,MTR_VOLT12_MIN_IDX] /= vll
-    data_m[j,:,MTR_VOLT12_MAX_IDX] /= vll
+    data_m[j,:,idx_m['MTR_VOLT_MIN_IDX']] /= vln
+    data_m[j,:,idx_m['MTR_VOLT_MAX_IDX']] /= vln
+    data_m[j,:,idx_m['MTR_VOLT_AVG_IDX']] /= vln
+    data_m[j,:,idx_m['MTR_VOLT12_MIN_IDX']] /= vll
+    data_m[j,:,idx_m['MTR_VOLT12_MAX_IDX']] /= vll
     j = j + 1
 
+  dict = {}
+  dict['hrs'] = hrs
+  dict['data_m'] = data_m
+  dict['keys_m'] = mtr_keys
+  dict['idx_m'] = idx_m
+  return dict
+
+def plot_voltages (dict):
+  hrs = dict['hrs']
+  data_m = dict['data_m']
+  keys_m = dict['keys_m']
+  idx_m = dict['idx_m']
   # display a plot
   fig, ax = plt.subplots(2, 1, sharex = 'col')
   i = 0
-  for key in mtr_keys:
-    ax[0].plot(hrs, data_m[i,:,MTR_VOLT_MIN_IDX], color="blue")
-    ax[1].plot(hrs, data_m[i,:,MTR_VOLT_MAX_IDX], color="red")
+  for key in keys_m:
+    ax[0].plot(hrs, data_m[i,:,idx_m['MTR_VOLT_MIN_IDX']], color="blue")
+    ax[1].plot(hrs, data_m[i,:,idx_m['MTR_VOLT_MAX_IDX']], color="red")
     i = i + 1
   ax[0].set_ylabel("Min Voltage [%]")
   ax[1].set_ylabel("Max Voltage [%]")
@@ -116,4 +115,22 @@ def process_voltages(nameroot, dictname = ''):
 
   plt.show()
 
+def process_voltages(nameroot, dictname = ''):
+  """ Plots the min and max line-neutral voltages for every billing meter
+
+  This function reads *substation_nameroot_metrics.json* and 
+  *billing_meter_nameroot_metrics.json* for the voltage data, and 
+  *nameroot_glm_dict.json* for the meter names.  
+  These must all exist in the current working directory.
+  One graph is generated with 2 subplots:
+  
+  1. The Min line-to-neutral voltage at each billing meter  
+  2. The Max line-to-neutral voltage at each billing meter  
+
+  Args:
+    nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
+    dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+  """
+  dict = read_voltage_metrics (nameroot, dictname)
+  plot_voltages (dict)
 
