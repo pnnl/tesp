@@ -1,3 +1,5 @@
+cp ~/src/tesp/support/energyplus/emsHELICS/*.idf .
+
 ./run_seasonal_cases.sh "FullServiceRestaurant"
 ./run_seasonal_cases.sh "Hospital"
 ./run_seasonal_cases.sh "LargeHotel"
