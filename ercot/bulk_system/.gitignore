@@ -3,6 +3,8 @@ Lines.csv
 ercot_8.csv
 *metrics.json
 *dict.json
-*.png
 *.pdf
-
+Texas_SHP/*.dbf
+Texas_SHP/*.shp
+Texas_SHP/*.shx
+Texas_SHP/compressed

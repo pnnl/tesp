@@ -4,3 +4,7 @@ rm *.log
 rm ercot_8.csv
 rm *.pdf
 rm *.png
+rm Texas_SHP/*.dbf
+rm Texas_SHP/*.shp
+rm Texas_SHP/*.shx
+

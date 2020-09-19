@@ -89,3 +89,14 @@ To plot the 8-bus and 200-bus test systems:
 
     python3 ercot8_map.py
     python3 ercot_map.py
+
+
+
+### 8-Bus Test System
+
+![8-Bus Test System](Ercot8.png)
+
+### 200-Bus Test System
+
+![8-Bus Test System](Ercot8.png)
+
