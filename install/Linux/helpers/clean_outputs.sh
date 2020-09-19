@@ -23,4 +23,8 @@ rm -rf Eplus_Restaurant
 cd ../../ercot/case8
 ./clean.sh
 rm *.glm
+cd ../bulk_system
+./clean.sh
+cd ../dist_system
+./clean.sh
 cd $CWD

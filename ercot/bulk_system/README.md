@@ -98,5 +98,5 @@ To plot the 8-bus and 200-bus test systems:
 
 ### 200-Bus Test System
 
-![8-Bus Test System](Ercot8.png)
+![200-Bus Test System](Ercot200.png)
 
