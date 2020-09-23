@@ -133,7 +133,6 @@ $TESP_INSTALL, it has to be spelled out on each line, e.g.:
  PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tesp/bin:/opt/tesp:/opt/tesp/PreProcess:/opt/tesp/PostProcess"
  GLPATH="/opt/tesp/lib/gridlabd:/opt/tesp/share/gridlabd"
  CXXFLAGS="-I/opt/tesp/share/gridlabd"
- # PYTHONPATH="/opt/tesp/python"
  JAVAPATH="/opt/tesp/java"
 
 Log out and log back in to Ubuntu for these */etc/environment* changes to take effect.
@@ -146,7 +145,6 @@ For Ubuntu in *WSL*, all changes are made to *~/.profile*.
  export PATH="$PATH:$TESP_INSTALL:$TESP_INSTALL/bin:$TESP_INSTALL/PreProcess:$TESP_INSTALL/PostProcess"
  export GLPATH="$TESP_INSTALL/lib/gridlabd:$TESP_INSTALL/share/gridlabd"
  export CXXFLAGS="-I$TESP_INSTALL/share/gridlabd"
- # export PYTHONPATH="$TESP_INSTALL/python:$PYTHONPATH"
  export JAVAPATH="$TESP_INSTALL/java:$JAVAPATH"
 
 Afterward, close and reopen the Ubuntu terminal for these changes to take effect.
@@ -185,6 +183,7 @@ To build HELICS with Java bindings:
 ::
 
  cd ~/src/HELICS-src
+ git checkout "v2.5.2"
  mkdir build
  cd build
  cmake -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON \
@@ -312,7 +311,8 @@ Then, we can build ns-3, install that into the same location as other parts of T
  cd ~/src/ns-3-dev
  git clone -b feature/13b https://github.com/GMLC-TDC/helics-ns3 contrib/helics
  # --with-helics may not be left blank, so use either $TESP_INSTALL or /usr/local
- # --build-profile=optimized can be used, but it disables ns3 logging
+ # --build-profile=optimized was used for TESP release, but it disables ns3 logging
+ # ./waf configure --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --build-profile=optimized --disable-werror --enable-examples --enable-tests
  ./waf distclean
  ./waf configure --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --disable-werror --enable-examples --enable-tests
  ./waf build 
@@ -361,6 +361,7 @@ The general procedure will be:
 #. Build TESP, installing to the default /opt/tesp
 #. Clear the outputs from any earlier testing of the examples in your local repository
 #. Deploy the shared files, which include examples, to /opt/tesp/share
+#. Build opendsscmd to /opt/tesp/bin and liblinenoise.so to /opt/tesp/lib. (One source is the GridAPPS-D project repository under ~/src/CIMHub/distrib. Two copy commands are included in deploy.sh)
 #. Make a sample user working directory, and auto-test the examples
 #. Build and upload a Linux script installer using VMWare InstallBuilder. This is primarly based on the contents of /opt/tesp
 
