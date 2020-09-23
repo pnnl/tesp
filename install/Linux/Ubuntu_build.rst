@@ -130,6 +130,7 @@ $TESP_INSTALL, it has to be spelled out on each line, e.g.:
 ::
 
  TESP_INSTALL="/opt/tesp"
+ PYHELICS_INSTALL="/opt/tesp"
  PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/tesp/bin:/opt/tesp:/opt/tesp/PreProcess:/opt/tesp/PostProcess"
  GLPATH="/opt/tesp/lib/gridlabd:/opt/tesp/share/gridlabd"
  CXXFLAGS="-I/opt/tesp/share/gridlabd"
