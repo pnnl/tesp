@@ -28,17 +28,18 @@ def unit_width(dict, key):
         return 2.0
     return 1.0
 
-def unit_color(dict, key):
+def unit_color_label (dict, key):
     genfuel = dict['generators'][key]['genfuel']
+    clr = 'y'
     if genfuel == 'wind':
-        return 'g'
-    if genfuel == 'nuclear':
-        return 'r'
-    if genfuel == 'coal':
-        return 'k'
-    if genfuel == 'gas':
-        return 'b'
-    return 'y'
+        clr = 'g'
+    elif genfuel == 'nuclear':
+        clr = 'r'
+    elif genfuel == 'coal':
+        clr = 'k'
+    elif genfuel == 'gas':
+        clr = 'b'
+    return clr, genfuel
 
 def process_pypower(nameroot):
     # first, read and print a dictionary of relevant PYPOWER objects
@@ -51,15 +52,19 @@ def process_pypower(nameroot):
     bus_keys.sort()
     print ('\n\nFile', nameroot, 'has baseMVA', baseMVA)
     print('\nGenerator Dictionary:')
-    print('Unit Bus Type Fuel Pmin Pmax Costs[Start Stop C2 C1 C0]')
+    print('Unit Bus Type   Fuel         Pmin     Pmax StartCst  StopCst       C2       C1       C0')
     for key in gen_keys:
         row = dict['generators'][key]
-        print (key, row['bus'], row['bustype'], row['genfuel'], row['Pmin'], row['Pmax'], '[', row['StartupCost'], row['ShutdownCost'], row['c2'], row['c1'], row['c0'], ']')
+        print ('{:2d}   {:2d}  {:6s} {:8s} {:8.2f} {:8.2f} {:8.4f} {:8.4f} {:8.4f} {:8.4f} {:8.4f}'.format (int(key), 
+                int(row['bus']), row['bustype'], row['genfuel'], float(row['Pmin']), float(row['Pmax']), 
+                float(row['StartupCost']), float(row['ShutdownCost']), float(row['c2']), 
+                float(row['c1']), float(row['c0'])))
     print('\nFNCS Bus Dictionary:')
-    print('Bus Pnom Qnom ampFactor [GridLAB-D Substations]')
+    print('Bus    Pnom     Qnom    Scale  Substation')
     for key in bus_keys:
         row = dict['fncsBuses'][key]
-        print (key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])  #TODO curveScale, curveSkew
+        print ('{:2d} {:8.2f} {:8.2f} {:8.2f}  {:s}'.format (int(key), float(row['Pnom']), 
+          float(row['Qnom']), float(row['ampFactor']), row['GLDsubstations'][0]))  #TODO curveScale, curveSkew
 
     # read the bus metrics file
     lp_b = open ('bus_' + nameroot + '_metrics.json').read()
@@ -77,9 +82,7 @@ def process_pypower(nameroot):
     hrs /= denom
 
     # parse the metadata for things of specific interest
-    print ('\nBus Metadata [Variable Index Units] for', len(lst_b[str(times[0])]), 'objects')
     for key, val in meta_b.items():
-        print (key, val['index'], val['units'])
         if key == 'LMP_P':
             LMP_P_IDX = val['index']
             LMP_P_UNITS = val['units']
@@ -120,7 +123,7 @@ def process_pypower(nameroot):
     # create a NumPy array of all bus metrics, display summary information
     data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
     print ('\nConstructed', data_b.shape, 'NumPy array for Buses')
-    print ('LMPavg,LMPmax,LMP1avg,LMP1std,Vmin,Vmax,Unresp_avg,RespMax_avg','C1_avg','C2_avg')
+    print ('#    LMPavg   LMPmax  LMP1avg  LMP1std     Vmin     Vmax   Unresp  RespMax       C1       C2')
     last1 = int (3600 * 24 / (times[1] - times[0]))
     j = 0
     for key in bus_keys:
@@ -129,17 +132,17 @@ def process_pypower(nameroot):
             ary = lst_b[str(t)][bus_keys[j]]
             data_b[j, i,:] = ary
             i = i + 1
-        print (key,
-               '{:.4f}'.format (data_b[j,:,LMP_P_IDX].mean()),
-               '{:.4f}'.format (data_b[j,:,LMP_P_IDX].max()),
-               '{:.4f}'.format (data_b[j,0:last1,LMP_P_IDX].mean()), 
-               '{:.4f}'.format (data_b[j,0:last1,LMP_P_IDX].std()),
-               '{:.4f}'.format (data_b[j,:,VMIN_IDX].min()),
-               '{:.4f}'.format (data_b[j,:,VMAX_IDX].max()),
-               '{:.4f}'.format (data_b[j,0:last1,UNRESP_IDX].mean()), 
-               '{:.4f}'.format (data_b[j,0:last1,RESP_MAX_IDX].mean()), 
-               '{:.4f}'.format (data_b[j,0:last1,C1_IDX].mean()), 
-               '{:.4f}'.format (data_b[j,0:last1,C2_IDX].mean())) 
+        print ('{:2d}'.format(int(key)),
+               '{:8.4f}'.format (data_b[j,:,LMP_P_IDX].mean()),
+               '{:8.4f}'.format (data_b[j,:,LMP_P_IDX].max()),
+               '{:8.4f}'.format (data_b[j,0:last1,LMP_P_IDX].mean()), 
+               '{:8.4f}'.format (data_b[j,0:last1,LMP_P_IDX].std()),
+               '{:8.4f}'.format (data_b[j,:,VMIN_IDX].min()),
+               '{:8.4f}'.format (data_b[j,:,VMAX_IDX].max()),
+               '{:8.2f}'.format (data_b[j,0:last1,UNRESP_IDX].mean()), 
+               '{:8.2f}'.format (data_b[j,0:last1,RESP_MAX_IDX].mean()), 
+               '{:8.4f}'.format (data_b[j,0:last1,C1_IDX].mean()), 
+               '{:8.4f}'.format (data_b[j,0:last1,C2_IDX].mean())) 
         j = j + 1
 
     # read the generator metrics file
@@ -149,9 +152,7 @@ def process_pypower(nameroot):
     # make a sorted list of the times, and NumPy array of times in hours
     lst_g.pop('StartTime')
     meta_g = lst_g.pop('Metadata')
-    print ('\nGenerator Metadata [Variable Index Units] for', len(lst_g[str(times[0])]), 'objects')
     for key, val in meta_g.items():
-        print (key, val['index'], val['units'])
         if key == 'Pgen':
             PGEN_IDX = val['index']
             PGEN_UNITS = val['units']
@@ -165,7 +166,7 @@ def process_pypower(nameroot):
     # create a NumPy array of all generator metrics
     data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
     print ('\nConstructed', data_g.shape, 'NumPy array for Generators')
-    print ('Unit,Bus,Type,Fuel,CF,COV')
+    print ('Unit Bus Type   Fuel          CF     COV')
     j = 0
     for key in gen_keys:
         i = 0
@@ -183,9 +184,8 @@ def process_pypower(nameroot):
         else:
             COV = 0.0
 
-        print (key, row['bus'], row['bustype'], row['genfuel'],
-               '{:.4f}'.format (CF),
-               '{:.4f}'.format (COV))
+        print ('{:4d} {:3d} {:6s} {:8s}'.format (int(key), int(row['bus']), row['bustype'], row['genfuel']),
+               '{:7.4f}'.format (CF), '{:7.4f}'.format (COV))
         j = j + 1
 
     # read the dso stub metrics, which uses the same bus keys but different hrs
@@ -201,9 +201,9 @@ def process_pypower(nameroot):
     denom = 3600.0
     dhrs /= denom
 
-    print ('\nDSO Bus Metadata [Variable Index Units] for', len(lst_d[str(dtimes[0])]), 'objects')
+#    print ('\nDSO Bus Metadata [Variable Index Units] for', len(lst_d[str(dtimes[0])]), 'objects')
     for key, val in meta_d.items():
-        print (key, val['index'], val['units'])
+#        print (key, val['index'], val['units'])
         if key == 'Pdso':
             PDSO_IDX = val['index']
             PDSO_UNITS = val['units']
@@ -245,11 +245,18 @@ def process_pypower(nameroot):
     for i in range(data_b.shape[0]):
         ax[0,0].plot(hrs, data_b[i,:,PD_IDX], color=bus_color(bus_keys[i]))
 
+    labels_used = []
     ax[1,0].set_title ('Generator Outputs')
     ax[1,0].set_ylabel(PGEN_UNITS)
     for i in range(data_g.shape[0]):
-        ax[1,0].plot(hrs, data_g[i,:,PGEN_IDX], color=unit_color (dict, gen_keys[i]), 
-                     linewidth=unit_width (dict,gen_keys[i]))
+        clr, lbl = unit_color_label (dict, gen_keys[i])
+        if lbl not in labels_used:
+            labels_used.append(lbl)
+        else:
+            lbl = None
+        ax[1,0].plot(hrs, data_g[i,:,PGEN_IDX], color=clr, label=lbl,
+                     linewidth=unit_width (dict, gen_keys[i]))
+    ax[1,0].legend(loc='best')
 
     ax[0,1].set_title ('Bus Unresp Load')
     ax[0,1].set_ylabel(UNRESP_UNITS)
