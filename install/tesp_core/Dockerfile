@@ -1,7 +1,7 @@
-FROM temcderm/tesp_foundation
+FROM temcderm/tesp_foundation:1.0.0
 LABEL maintainer="Thomas.McDermott@pnnl.gov"
 
-ADD tesp-0.6.3-linux-x64-installer.run /tmp/installer.run
+ADD tesp-0.9.3-linux-x64-installer.run /tmp/installer.run
 RUN /tmp/installer.run --mode unattended
 RUN rm /tmp/installer.run
 
