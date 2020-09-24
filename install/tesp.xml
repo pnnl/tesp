@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.9.2</version>
+    <version>0.9.3</version>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../LICENSE</licenseFile>
     <splashImage>Transactive.png</splashImage>
@@ -114,12 +114,6 @@
                             <origin>../../../../../opt/tesp/DataSets</origin>
                         </distributionDirectory>
                         <distributionDirectory>
-                            <origin>../../../../../opt/tesp/Documentation</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../../../../../opt/tesp/ExampleFiles</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
                             <origin>../../../../../opt/tesp/include</origin>
                         </distributionDirectory>
                         <distributionDirectory>
@@ -139,9 +133,6 @@
                         </distributionDirectory>
                         <distributionDirectory>
                             <origin>../../../../../opt/tesp/pyenergyplus</origin>
-                        </distributionDirectory>
-                        <distributionDirectory>
-                            <origin>../../../../../opt/tesp/python</origin>
                         </distributionDirectory>
                         <distributionDirectory>
                             <origin>../../../../../opt/tesp/share</origin>
