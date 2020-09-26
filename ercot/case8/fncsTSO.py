@@ -66,6 +66,12 @@ def make_wind_plants(ppc):
             plants[str(i)] = [busnum, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, unRespMW, genIdx]
     return plants
 
+def shutoff_wind_plants (ppc):
+  gen = ppc['gen']
+  genFuel = ppc['genfuel']
+  for i in range(gen.shape[0]):
+    if "wind" in genFuel[i][0]:
+      gen[i][7] = 0
 
 # this differs from tesp_support because of additions to FNCS, and Pnom==>Pmin for generators
 def make_dictionary(ppc, rootname):
@@ -1256,6 +1262,9 @@ def tso_loop():
             genCost = ppc['gencost']
             genFuel = ppc['genfuel']
             numGen = gen.shape[0]
+    else:
+        print ('disabling all the wind plants')
+        shutoff_wind_plants (ppc)
 
 
     # initialize for day-ahead, OPF and time stepping
@@ -1626,7 +1635,7 @@ def tso_loop():
             for idx in range(opf_gen.shape[0]):
                 if numGen > idx:
                     line += ',' + '{: .2f}'.format(opf_gen[idx, 1])
-            line += '{: .2f}'.format(sum_w)
+            line += ',{: .2f}'.format(sum_w)
             print(line, sep=', ', file=op, flush=True)
 
             tnext_opf += period
