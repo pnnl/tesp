@@ -41,6 +41,32 @@ load_shape = [0.6704,
               0.7695,
               0.6704]  # wrap to the next day
 
+def print_matrix (lbl, A, fmt='{:8.4f}'):
+    if A is None:
+        print (lbl, 'is Empty!', flush=True)
+    elif hasattr(A, '__iter__'):
+        nrows = len(A)
+        if (nrows > 1) and hasattr(A[0], '__iter__'):  # 2D array
+            ncols = len(A[0])
+            print ('{:s} is {:d}x{:d}'.format (lbl, nrows, ncols))
+            print ('\n'.join([' '.join([fmt.format(item) for item in row]) for row in A]), flush=True)
+        else:                          # 1D array, printed flat
+            print ('{:s} has {:d} elements'.format (lbl, nrows))
+            print (' '.join(fmt.format(item) for item in A), flush=True)
+    else:                              # single value
+        print (lbl, '=', fmt.format(A), flush=True)
+        
+def print_keyed_matrix (lbl, D, fmt='{:8.4f}'):
+    if D is None:
+        print (lbl, 'is Empty!', flush=True)
+        return
+    nrows = len(D)
+    ncols = 0
+    for key, row in D.items():
+        if ncols == 0:
+            ncols = len(row)
+            print ('{:s} is {:d}x{:d}'.format (lbl, nrows, ncols))
+        print ('{:8s}'.format(key), ' '.join(fmt.format(item) for item in row), flush=True)
 
 # from 'ARIMA-Based Time Series Model of Stochastic Wind Power Generation'
 # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, p]
@@ -424,8 +450,8 @@ def tso_loop():
             lmps = {'bus' + str(i + 1): [DA_LMPs_pub[i]]}
             fncs.publish('LMP_DA_Bus_' + str(i + 1), json.dumps(lmps))
 
-        print("DA line power")
-        print(model.results.line_power, flush=True)
+#        print("DA line power")
+#        print(model.results.line_power, flush=True)
 
         # with open(output, 'w') as outfile:  #dispatch
         #   results = {}
@@ -540,8 +566,8 @@ def tso_loop():
             lmps = {'bus' + str(i + 1): [RT_LMPs_pub[i]]}
             fncs.publish('LMP_RT_Bus_' + str(i + 1), json.dumps(lmps))  # publishing $/kwh
 
-        print("RT line power")
-        print(model.results.line_power, flush=True)
+        #print("RT line power")
+        #print(model.results.line_power, flush=True)
 
         # with open(output.strip("'"), 'w') as f:
         #   f.write("LMP\n")
@@ -1528,9 +1554,10 @@ def tso_loop():
                 ames_DAM_case_file = "./" + file_time + "dam.dat"
                 write_psst_file(ames_DAM_case_file, True)
                 da_schedule, da_dispatch, da_lmps = scucDAM(ames_DAM_case_file, file_time + "GenCoSchedule.dat", solver)
-                print("DA LMPs: \n", print_time, da_lmps, flush=True)
-                print("DA Gen dispatches: \n", da_dispatch, flush=True)
-                print("DA Unit Schedule: \n", da_schedule, flush=True)
+                print ('$$$$ DAM finished [day_hour_min_', print_time, flush=True)
+                print_matrix ('DAM LMPs', da_lmps)
+                print_keyed_matrix ('DAM Dispatches', da_dispatch, fmt='{:8.2f}')
+                print_keyed_matrix ('DAM Schedule', da_schedule, fmt='{:8s}')
 
             # Real time and update the dispatch schedules in ppc
             if day > 1:
@@ -1562,9 +1589,9 @@ def tso_loop():
                 write_psst_file(ames_RTM_case_file, False)
                 rtm_schedule = write_rtm_schedule(schedule, da_schedule)
                 rt_dispatch, rt_lmps = scedRTM(ames_RTM_case_file, rtm_schedule, file_time + "RTMResults.dat", solver)
-                print("RT LMPs: \n", print_time, rt_lmps, flush=True)
-                print("RT Gen dispatches: \n", rt_dispatch, flush=True)
-
+                print ('#### RTM finished [day_hour_min_', print_time, flush=True)
+                print_matrix ('RTM LMPs', rt_lmps)
+                print_keyed_matrix ('RTM Dispatches', rt_dispatch, fmt='{:8.2f}')
                 try:
                     for i in range(bus.shape[0]):
                         bus[i, 13] = rt_lmps[i][0]
@@ -1573,7 +1600,7 @@ def tso_loop():
                         if "wind" not in genFuel[i][0]:
                             gen[i, 1] = rt_dispatch[name][0]
                 except:
-                    print('Exception: unable to obtain and dispatch from LMPs')
+                    print('  #### Exception: unable to obtain and dispatch from LMPs')
                     pass
 
             # write OPF metrics

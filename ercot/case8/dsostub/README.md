@@ -60,4 +60,5 @@ To run and plot the 8-bus simulations:
  - "./runstub.sh" to launch the simulations
  - "tail ercot_8_opf.csv" to monitor progress from a terminal window; they should complete within a few minutes
  - "python plot_stub.py &" plots the bulk system with DSO emulator results
+ - "python plot_wind.py &" plots the wind generator outputs
 
