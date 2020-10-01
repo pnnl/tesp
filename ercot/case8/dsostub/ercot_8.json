@@ -1,7 +1,7 @@
 {
   "ames": false,
   "most": true,
-  "solver": "glpk",
+  "solver": "GLPK",
   "priceSensLoad": true,
   "windPower": false,
   "noScale": false,

@@ -5,8 +5,10 @@ import tesp_support.api as tesp
 import tesp_support.fncs as fncs
 import json
 import math
+import subprocess
 from copy import deepcopy
-import sys, os
+import sys
+import os
 
 casename = 'ercot_8'
 
@@ -200,7 +202,6 @@ def parse_mva(arg):
     q /= 1000000.0
   return p, q
 
-
 def print_gld_load(ppc, gld_load, msg, ts):
   bus = ppc['bus']
   fncsBus = ppc['DSO']
@@ -234,49 +235,60 @@ def print_gld_load(ppc, gld_load, msg, ts):
         '{: .8f}'.format(c1),
         '{: .1f}'.format(deg))
 
+def print_bus_lmps (lbl, bus):
+  print ('Bus LMPS', lbl)
+  for i in range(bus.shape[0]):
+    print (i, bus[i, 13])
+
 def tso_loop():
 
-  def write_rtm_schedule(uc_df1, uc_df2):
-    data = []
-    mm = mn
-    hh = hour
-    uc = uc_df1
-    for jj in range(TAU):
-      rr = {}
-      for ii in range(numGen):
-        if "wind" not in genFuel[ii][0]:
-          name = "GenCo" + str(ii + 1)
-          rr[name] = uc.at[hh, name]
-      data.append(rr)
-      mm += RTOPDur
-      if mm % 60 == 0:
-        hh = hh + 1
-        mm = 0
-        if hh == 24:
-          hh = 0
-          uc = uc_df2
-    df = pd.DataFrame(data)
-    return df
+  def read_matpower_array (fp):
+    A = []
+    while True:
+      ln = fp.readline()
+      if '];' in ln:
+        break
+      ln = ln.lstrip().rstrip(';\n')
+      A.append (ln.split())
+    return A
 
-  def write_default_schedule():
-    data = []
-    for jj in range(24):
-      rr = {}
-      for ii in range(numGen):
-        if "wind" not in genFuel[ii][0]:
-          name = "GenCo" + str(ii + 1)
-          rr[name] = 1
-      data.append(rr)
-    df = pd.DataFrame(data)
-    return df
+  def solve_most_case (fname):
+    rGen = None
+    rBus = None
+    rBranch = None
+    rGenCost = None
+    cmdline = 'octave {:s}'.format(fname)
+    proc = subprocess.Popen (cmdline, shell=True)
+    proc.wait()
+    fp = open ('solved.txt', 'r')
+    while True:
+      ln = fp.readline()
+      if not ln:
+        break
+      elif 'mpc.gen =' in ln:
+        rGen = read_matpower_array (fp)
+      elif 'mpc.branch =' in ln:
+        rBranch = read_matpower_array (fp)
+      elif 'mpc.bus =' in ln:
+        rBus = read_matpower_array (fp)
+      elif 'mpc.gencost =' in ln:
+        rGenCost = read_matpower_array (fp)
+    fp.close()
+    print ('Solved Base Case DC OPF in Matpower')
+    print ('  rBus is {:d}x{:d}'.format (len(rBus), len(rBus[0])))
+    print ('  rBranch is {:d}x{:d}'.format (len(rBranch), len(rBranch[0])))
+    print ('  rGen is {:d}x{:d}'.format (len(rGen), len(rGen[0])))
+    print ('  rGenCost is {:d}x{:d}'.format (len(rGenCost), len(rGenCost[0])))
+    return rBus, rBranch, rGen, rGenCost
 
   def write_array_rows (A, fp):
     print (';\n'.join([' '.join([' {:s}'.format(str(item)) for item in row]) for row in A]), file=fp)
     
-  def write_most_file(fname, dayahead):
-    fp = open(fname, 'w')
-    print ('%% From PNNL TESP, fncsTSO2.py, case', casename, file=fp)
-    fp.close()
+  def write_most_file(fname):
+    print ('want to write', fname)
+#    fp = open(fname, 'w')
+#    print ('%% From PNNL TESP, fncsTSO2.py, case', casename, file=fp)
+#    fp.close()
 
   def write_most_base_case(fname):
     fp = open(fname, 'w')
@@ -354,7 +366,7 @@ def tso_loop():
   ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
   ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
-  if ppc['solver'] == 'cbc':
+  if ppc['solver'] == 'GLPK': # 'cbc':
     ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
   # these have been aliased from case name .json file
   bus = ppc['bus']
@@ -537,7 +549,12 @@ def tso_loop():
 
   if most:
     write_most_base_case('basecase.m')
-  quit()
+    print_bus_lmps ('before solving base case', bus)
+    rBus, rBranch, rGen, rGenCost = solve_most_case('solvebasecase.m')
+    for i in range(bus.shape[0]):  # starting LMP values
+      bus[i, 13] = float (rBus[i][13])
+    print_bus_lmps ('after solving base case', bus)
+#  quit()
   fncs.initialize()
 
   # Set column header for output files
@@ -573,30 +590,21 @@ def tso_loop():
       if 'UNRESPONSIVE_MW_' in topic:
         busnum = int(topic[16:])
         gld_load[busnum]['unresp'] = float(val)
-      #    print ('UNRESPONSIVE_MW_', busnum, 'at', ts, '=', val, flush=True)
       elif 'RESPONSIVE_MAX_MW_' in topic:
         busnum = int(topic[18:])
         gld_load[busnum]['resp_max'] = float(val)
-      #    print ('RESPONSIVE_MAX_MW_', busnum, 'at', ts, '=', val, flush=True)
       elif 'RESPONSIVE_C2_' in topic:
         busnum = int(topic[14:])
         gld_load[busnum]['c2'] = float(val)
-      #    print ('RESPONSIVE_C2_', busnum, 'at', ts, '=', val, flush=True)
       elif 'RESPONSIVE_C1_' in topic:
         busnum = int(topic[14:])
         gld_load[busnum]['c1'] = float(val)
-      #    print ('RESPONSIVE_C1_', busnum, 'at', ts, '=', val, flush=True)
       elif 'RESPONSIVE_C0_' in topic:
         busnum = int(topic[14:])
         gld_load[busnum]['c0'] = float(val)
-      #    print ('RESPONSIVE_C1_', busnum, 'at', ts, '=', val, flush=True)
       elif 'RESPONSIVE_DEG_' in topic:
         busnum = int(topic[15:])
         gld_load[busnum]['deg'] = int(val)
-      #    print ('RESPONSIVE_DEG_', busnum, 'at', ts, '=', val, flush=True)
-      #  elif 'wind_power' in topic:
-      #    busnum = int(topic[15:])
-      #    gld_load[busnum]['windpower'] = int(val)
     # getting the latest inputs from GridlabD
       elif 'SUBSTATION' in topic:  # gld
         busnum = int(topic[10:])
@@ -617,7 +625,6 @@ def tso_loop():
         resp_deg[busnum] = day_ahead_bid['resp_deg']
         # print('Day Ahead Bid for Bus', busnum, 'at', ts, '=', day_ahead_bid, flush=True)
 
-    #  print(ts, 'FNCS inputs', gld_load, flush=True)
     # fluctuate the wind plants
     if ts >= tnext_wind:
       wind_hour += 1
@@ -686,10 +693,8 @@ def tso_loop():
         gld_load[busnum]['pcrv'] = gld_load[busnum]['p'] * gld_scale
         gld_load[busnum]['qcrv'] = gld_load[busnum]['q'] * gld_scale
 
-    # run SCED/SCUC in AMES/PSST to establish the next day's unit commitment and dispatch
+    # run multi-period optimization in MOST to establish the next day's unit commitment and dispatch schedule
     if ts >= tnext_dam and most:
-      # print('bus_b4_opf = ', bus[:, 2].sum())
-      # print('gen_b4_opf = ', gen[:, 1].sum())
       if mn % 60 == 0:
         hour = hour + 1
         mn = 0
@@ -697,90 +702,93 @@ def tso_loop():
           hour = 0
           day = day + 1
 
+      file_time = 'd{:d}_h{:d}_m{:d}'.format (day, hour, mn)
       # update cost coefficients, set dispatchable load, put unresp+curve load on bus
+      print_bus_lmps ('before DAM update_cost_and_load', bus)
       update_cost_and_load()
+      print_bus_lmps ('after DAM update_cost_and_load', bus)
 
       # Run the day ahead
       if hour == 12 and mn == 0:
 
         most_DAM_case_file = "./" + file_time + "dam.dat"
-        write_most_file(most_DAM_case_file, True)
+        write_most_file (most_DAM_case_file)
 #        da_schedule, da_dispatch, da_lmps = scucDAM(ames_DAM_case_file, file_time + "GenCoSchedule.dat", solver)
-        print ('$$$$ DAM finished [day_hour_min_', print_time, flush=True)
-        print_matrix ('DAM LMPs', da_lmps)
-        print_keyed_matrix ('DAM Dispatches', da_dispatch, fmt='{:8.2f}')
-        print_keyed_matrix ('DAM Schedule', da_schedule, fmt='{:8s}')
-
-      # Real time and update the dispatch schedules in ppc
-      if day > 1:
-        # Change the DA Schedule and the dispatchable generators
-        if day > lastDay:
-          schedule = deepcopy(da_schedule)
-          lastDay = day
-
-        if mn == 0:
-          # uptime and downtime in hour for each generator
-          # and are counted using commitment schedule for the day
-          for i in range(numGen):
-            if "wind" not in genFuel[i][0]:
-              name = "GenCo" + str(i + 1)
-              gen[i, 7] = int(schedule.at[hour, name])
-              if gen[i, 7] == 1:
-                if gen_ames[str(i)][0] > 0:
-                  gen_ames[str(i)][0] += 1
-                else:
-                  gen_ames[str(i)][0] = 1
-              else:
-                if gen_ames[str(i)][0] < 0:
-                  gen_ames[str(i)][0] -= 1
-                else:
-                  gen_ames[str(i)][0] = -1
-
-        # Run the real time and publish the LMP
-        ames_RTM_case_file = "./" + file_time + "rtm.dat"
-        write_psst_file(ames_RTM_case_file, False)
-        rtm_schedule = write_rtm_schedule(schedule, da_schedule)
-        rt_dispatch, rt_lmps = scedRTM(ames_RTM_case_file, rtm_schedule, file_time + "RTMResults.dat", solver)
-        print ('#### RTM finished [day_hour_min_', print_time, flush=True)
-        print_matrix ('RTM LMPs', rt_lmps)
-        print_keyed_matrix ('RTM Dispatches', rt_dispatch, fmt='{:8.2f}')
-        try:
-          for i in range(bus.shape[0]):
-            bus[i, 13] = rt_lmps[i][0]
-          for i in range(numGen):
-            name = "GenCo" + str(i + 1)
-            if "wind" not in genFuel[i][0]:
-              gen[i, 1] = rt_dispatch[name][0]
-        except:
-          print('  #### Exception: unable to obtain and dispatch from LMPs')
-          pass
-
-      # write OPF metrics
-      Pswing = 0
-      for i in range(numGen):
-        if gen[i, 0] == swing_bus:
-          Pswing += gen[i, 1]
-
-      sum_w = 0
-      for key, row in wind_plants.items():
-        sum_w += gen[row[10], 1]
-
-      line = str(ts) + ', ' + "True" + ','
-      line += '{: .2f}'.format(bus[:, 2].sum()) + ','
-      line += '{: .2f}'.format(gen[:, 1].sum()) + ','
-      line += '{: .2f}'.format(Pswing) + ','
-      for i in range(bus.shape[0]):
-        line += '{: .2f}'.format(bus[i, 13]) + ','
-      for i in range(numGen):
-        if numGen > i:
-          line += '{: .2f}'.format(gen[i, 1]) + ','
-      line += '{: .2f}'.format(sum_w)
-      print(line, sep=', ', file=op, flush=True)
-
-      mn = mn + RTOPDur  # period // 60
-      tnext_ames += period
-      # print  ('bus_after_opf = ', bus[:, 2].sum())
-      # print  ('gen_after_opf = ', gen[:, 1].sum())
+#        print ('$$$$ DAM finished [day_hour_min_', print_time, flush=True)
+#        print_matrix ('DAM LMPs', da_lmps)
+#        print_keyed_matrix ('DAM Dispatches', da_dispatch, fmt='{:8.2f}')
+#        print_keyed_matrix ('DAM Schedule', da_schedule, fmt='{:8s}')
+#
+#     # Real time and update the dispatch schedules in ppc
+#     if day > 1:
+#       # Change the DA Schedule and the dispatchable generators
+#       if day > lastDay:
+#         schedule = deepcopy(da_schedule)
+#         lastDay = day
+#
+#       if mn == 0:
+#         # uptime and downtime in hour for each generator
+#         # and are counted using commitment schedule for the day
+#         for i in range(numGen):
+#           if "wind" not in genFuel[i][0]:
+#             name = "GenCo" + str(i + 1)
+#             gen[i, 7] = int(schedule.at[hour, name])
+#             if gen[i, 7] == 1:
+#               if gen_ames[str(i)][0] > 0:
+#                 gen_ames[str(i)][0] += 1
+#               else:
+#                 gen_ames[str(i)][0] = 1
+#             else:
+#               if gen_ames[str(i)][0] < 0:
+#                 gen_ames[str(i)][0] -= 1
+#               else:
+#                 gen_ames[str(i)][0] = -1
+#
+#       # Run the real time and publish the LMP
+#       ames_RTM_case_file = "./" + file_time + "rtm.dat"
+#       write_psst_file(ames_RTM_case_file, False)
+#       rtm_schedule = write_rtm_schedule(schedule, da_schedule)
+#       rt_dispatch, rt_lmps = scedRTM(ames_RTM_case_file, rtm_schedule, file_time + "RTMResults.dat", solver)
+#       print ('#### RTM finished [day_hour_min_', print_time, flush=True)
+#       print_matrix ('RTM LMPs', rt_lmps)
+#       print_keyed_matrix ('RTM Dispatches', rt_dispatch, fmt='{:8.2f}')
+#       try:
+#         for i in range(bus.shape[0]):
+#           bus[i, 13] = rt_lmps[i][0]
+#         for i in range(numGen):
+#           name = "GenCo" + str(i + 1)
+#           if "wind" not in genFuel[i][0]:
+#             gen[i, 1] = rt_dispatch[name][0]
+#       except:
+#         print('  #### Exception: unable to obtain and dispatch from LMPs')
+#         pass
+#
+#     # write OPF metrics
+#     Pswing = 0
+#     for i in range(numGen):
+#       if gen[i, 0] == swing_bus:
+#         Pswing += gen[i, 1]
+#
+#     sum_w = 0
+#     for key, row in wind_plants.items():
+#       sum_w += gen[row[10], 1]
+#
+#     line = str(ts) + ', ' + "True" + ','
+#     line += '{: .2f}'.format(bus[:, 2].sum()) + ','
+#     line += '{: .2f}'.format(gen[:, 1].sum()) + ','
+#     line += '{: .2f}'.format(Pswing) + ','
+#     for i in range(bus.shape[0]):
+#       line += '{: .2f}'.format(bus[i, 13]) + ','
+#     for i in range(numGen):
+#       if numGen > i:
+#         line += '{: .2f}'.format(gen[i, 1]) + ','
+#     line += '{: .2f}'.format(sum_w)
+#     print(line, sep=', ', file=op, flush=True)
+#
+#     mn = mn + RTOPDur  # period // 60
+#     tnext_ames += period
+#     # print  ('bus_after_opf = ', bus[:, 2].sum())
+#     # print  ('gen_after_opf = ', gen[:, 1].sum())
 
     # run OPF to establish the prices and economic dispatch - currently period = 300s
     if ts >= tnext_opf:
@@ -788,14 +796,19 @@ def tso_loop():
       # print  ('gen_b4_opf = ', gen[:, 1].sum())
 
       # update cost coefficients, set dispatchable load, put unresp+curve load on bus
+      print_bus_lmps ('before OPF update_cost_and_load', bus)
       update_cost_and_load()
+      print_bus_lmps ('after OPF update_cost_and_load', bus)
 
       #  print_gld_load(ppc, gld_load, 'OPF', ts)
+      print_bus_lmps ('before runopf', bus)
       ropf = pp.runopf(ppc, ppopt_market)
+      print_bus_lmps ('after runopf', bus)
       if ropf['success'] == False:
         conv_accum = False
       opf_bus = deepcopy(ropf['bus'])
       opf_gen = deepcopy(ropf['gen'])
+      print_bus_lmps ('from OPF deepcopy', opf_bus)
       Pswing = 0
       for idx in range(opf_gen.shape[0]):
         if opf_gen[idx, 0] == swing_bus:
@@ -821,12 +834,11 @@ def tso_loop():
 
       # always run the regular power flow for voltages and performance metrics
       ppc['bus'][:, 13] = opf_bus[:, 13]  # set the lmp
+      print_bus_lmps ('after setting the slice', bus)
       ppc['gen'][:, 1] = opf_gen[:, 1]  # set the economic dispatch
       bus = ppc['bus']  # needed to be re-aliased because of [:, ] operator
       gen = ppc['gen']  # needed to be re-aliased because of [:, ] operator
-      # print  ('bus_after_opf = ', bus[:, 2].sum())
-      # print  ('gen_after_opf = ', gen[:, 1].sum())
-
+      print_bus_lmps ('after re-aliasing the slice', bus)
 
     # add the actual scaled GridLAB-D loads to the baseline curve loads, turn off dispatchable loads
     for row in fncsBus:
@@ -843,6 +855,7 @@ def tso_loop():
       gen[idx, 9] = 0  # pmin
 
     rpf = pp.runpf(ppc, ppopt_regular)
+    print_bus_lmps ('after runpf', bus)
     # TODO: add a check if does not converge, switch to DC
     if not rpf[0]['success']:
       conv_accum = False
@@ -875,7 +888,7 @@ def tso_loop():
       # publish the bus VLN and LMP [$/kwh] for GridLAB-D
       bus_vln = 1000.0 * row[7] * row[9] / math.sqrt(3.0)
       fncs.publish('three_phase_voltage_Bus' + busnum, bus_vln)
-      if ames:
+      if most:
         lmp = float(bus[busidx, 13]) * 0.001
       else:
         lmp = float(opf_bus[busidx, 13]) * 0.001
@@ -901,7 +914,7 @@ def tso_loop():
       # Pgen, Qgen, LMP_P (includes the responsive load as dispatched by OPF)
       gen_accum[idx][0] += row[1]
       gen_accum[idx][1] += row[2]
-      if ames:
+      if most:
         gen_accum[idx][2] += float(bus[busidx, 13]) * 0.001
       else:
         gen_accum[idx][2] += float(opf_bus[busidx, 13]) * 0.001
@@ -954,7 +967,6 @@ def tso_loop():
   vp.close()
   print('finalizing FNCS', flush=True)
   fncs.finalize()
-
 
 if __name__ == "__main__":
   tso_loop()
