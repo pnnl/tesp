@@ -9,6 +9,7 @@ import subprocess
 from copy import deepcopy
 import sys
 import os
+from datetime import timedelta
 
 casename = 'ercot_8'
 
@@ -139,10 +140,11 @@ def make_dictionary(ppc, rootname):
   for i in range(fncsBus.shape[0]):
     busnum = int(fncsBus[i, 0])
     busidx = busnum - 1
-    fncsBuses[str(busnum)] = {'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
+    fncsBuses[str(busnum)] = {'Pnom': float(fncsBus[i, 3]), 'Qnom': float(fncsBus[i, 4]), # 'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
                   'area': int(bus[busidx, 6]), 'zone': int(bus[busidx, 10]),
                   'ampFactor': float(fncsBus[i, 2]), 'GLDsubstations': [fncsBus[i, 1]],
-                  'curveScale': float(fncsBus[i, 5]), 'curveSkew': int(fncsBus[i, 6])}
+                  'curveScale': float(fncsBus[i, 5]), 'curveSkew': int(fncsBus[i, 6]),
+                  'Pinit': float(fncsBus[i,7]), 'Qinit': float(fncsBus[i,8])}
 
   for i in range(units.shape[0]):
     unitsout.append({'unit': int(units[i, 0]), 'tout': int(units[i, 1]), 'tin': int(units[i, 2])})
@@ -206,7 +208,7 @@ def print_gld_load(ppc, gld_load, msg, ts):
   bus = ppc['bus']
   fncsBus = ppc['DSO']
   print(msg, 'at', ts)
-  print('bus, genidx, pbus, qbus, pcrv, qcrv, pgld, qgld, unresp, resp_max, c2, c1, deg')
+  print(' bus  gen     pbus     qbus     pcrv     qcrv     pgld     qgld   unresp resp_max       c2       c1 deg')
   for row in fncsBus:
     busnum = int(row[0])
     gld_scale = float(row[2])
@@ -218,27 +220,28 @@ def print_gld_load(ppc, gld_load, msg, ts):
     qgld = gld_load[busnum]['q'] * gld_scale
     resp_max = gld_load[busnum]['resp_max'] * gld_scale
     unresp = gld_load[busnum]['unresp'] * gld_scale
-    c2 = gld_load[busnum]['c2'] / gld_scale
+    c2 = gld_load[busnum]['c2']
     c1 = gld_load[busnum]['c1']
     deg = gld_load[busnum]['deg']
     genidx = gld_load[busnum]['genidx']
-    print(busnum, genidx,
-        '{: .2f}'.format(pbus),
-        '{: .2f}'.format(qbus),
-        '{: .2f}'.format(pcrv),
-        '{: .2f}'.format(qcrv),
-        '{: .2f}'.format(pgld),
-        '{: .2f}'.format(qgld),
-        '{: .2f}'.format(unresp),
-        '{: .2f}'.format(resp_max),
-        '{: .8f}'.format(c2),
-        '{: .8f}'.format(c1),
-        '{: .1f}'.format(deg))
+    print('{:4d}'.format(busnum), 
+        '{:4d}'.format(genidx),
+        '{:8.2f}'.format(pbus),
+        '{:8.2f}'.format(qbus),
+        '{:8.2f}'.format(pcrv),
+        '{:8.2f}'.format(qcrv),
+        '{:8.2f}'.format(pgld),
+        '{:8.2f}'.format(qgld),
+        '{:8.2f}'.format(unresp),
+        '{:8.2f}'.format(resp_max),
+        '{:8.5f}'.format(c2),
+        '{:8.5f}'.format(c1),
+        '{:3.1f}'.format(deg))
 
 def print_bus_lmps (lbl, bus):
   print ('Bus LMPS', lbl)
   for i in range(bus.shape[0]):
-    print (i, bus[i, 13])
+    print ('{:2d} {:9.5f}'.format (i, bus[i, 13]))
 
 def tso_loop():
 
@@ -316,39 +319,53 @@ def tso_loop():
     fp.close()
 
   # update cost coefficients, set dispatchable load, put unresp+curve load on bus
-  def update_cost_and_load():
+  def update_cost_and_load (for_optimization):
     for row in fncsBus:
       busnum = int(row[0])
-      gld_scale = float(row[2])
-      resp_max = gld_load[busnum]['resp_max'] * gld_scale
-      unresp = gld_load[busnum]['unresp'] * gld_scale
-      c2 = gld_load[busnum]['c2'] / gld_scale * gld_scale
-      c1 = gld_load[busnum]['c1'] / gld_scale
-      deg = gld_load[busnum]['deg']
-      # track the latest bid in the metrics
-      bus_accum[str(busnum)][8] = unresp
-      bus_accum[str(busnum)][9] = resp_max
-      bus_accum[str(busnum)][10] = c1
-      bus_accum[str(busnum)][11] = c2
       genidx = gld_load[busnum]['genidx']
-      gen[genidx, 9] = -resp_max
-      if deg == 2:
-        genCost[genidx, 3] = 3
-        genCost[genidx, 4] = -c2
-        genCost[genidx, 5] = c1
-      elif deg == 1:
-        genCost[genidx, 3] = 2
-        genCost[genidx, 4] = c1
-        genCost[genidx, 5] = 0.0
-      else:
-        genCost[genidx, 3] = 1
-        genCost[genidx, 4] = 999.0
-        genCost[genidx, 5] = 0.0
-      genCost[genidx, 6] = 0.0
-      bus[busnum - 1, 2] = gld_load[busnum]['pcrv']
-      bus[busnum - 1, 3] = gld_load[busnum]['qcrv']
-      if curve:
-        bus[busnum - 1, 2] += unresp  # because the of the curve_scale
+      gld_scale = float(row[2])
+
+      if (for_optimization): # set up dispatchable loads for OPF or scheduling
+        resp_max = gld_load[busnum]['resp_max'] * gld_scale
+        unresp = gld_load[busnum]['unresp'] * gld_scale
+        c2 = gld_load[busnum]['c2']
+        c1 = gld_load[busnum]['c1']
+        deg = gld_load[busnum]['deg']
+        # track the latest bid in the metrics
+        bus_accum[str(busnum)][8] = unresp
+        bus_accum[str(busnum)][9] = resp_max
+        bus_accum[str(busnum)][10] = c1
+        bus_accum[str(busnum)][11] = c2
+        gen[genidx, 9] = -resp_max
+        if deg == 2:
+          genCost[genidx, 3] = 3
+          genCost[genidx, 4] = 0.0
+          genCost[genidx, 5] = c1
+        elif deg == 1:
+          genCost[genidx, 3] = 2
+          genCost[genidx, 4] = c1
+          genCost[genidx, 5] = 0.0
+        else:
+          genCost[genidx, 3] = 1
+          genCost[genidx, 4] = 999.0
+          genCost[genidx, 5] = 0.0
+        genCost[genidx, 6] = 0.0
+      else: # turn off the dispatchable loads for regular power flow
+        gen[genidx, 1] = 0  # p
+        gen[genidx, 2] = 0  # q
+        gen[genidx, 9] = 0  # pmin
+
+      # setting the bus loads for OPF/MOST, or the regular power flow
+      bus[busnum - 1, 2] = 0.0
+      bus[busnum - 1, 3] = 0.0
+      if curve:             # the baseline (curve) load component doesn't depend on GridLAB-D at all
+        bus[busnum - 1, 2] += gld_load[busnum]['pcrv']
+        bus[busnum - 1, 3] += gld_load[busnum]['qcrv']
+      if for_optimization:  # only add the unresponsive load; resp_max is left dispatchable
+        bus[busnum - 1, 2] += unresp
+      else:                 # for a regular power flow, use all of the actual GridLAB-D load
+        bus[busnum - 1, 2] += gld_load[busnum]['p'] * gld_scale
+        bus[busnum - 1, 3] += gld_load[busnum]['q'] * gld_scale
 
   # Initialize the program
   hours_in_a_day = 24
@@ -368,6 +385,7 @@ def tso_loop():
 
   if ppc['solver'] == 'GLPK': # 'cbc':
     ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
+    ppc['gencost'][:, 6] = 0.0  # can't use quadratic costs with CBC solver
   # these have been aliased from case name .json file
   bus = ppc['bus']
   branch = ppc['branch']
@@ -469,16 +487,7 @@ def tso_loop():
   ts = 0
   Pload = 0
   tnext_opf = 0
-  tnext_dam = 0
   wind_hour = -1
-  mn = 0
-  hour = -1
-  day = 1
-  lastDay = 1
-  file_time = ''
-  MaxDay = tmax // 86400  # days in simulation
-  RTOPDur = period // 60  # in minutes
-  RTDeltaT = 1      # in minutes
   da_bid = False
   da_schedule = {}
   da_lmps = {}
@@ -507,7 +516,7 @@ def tso_loop():
     gld_scale = float(fncsBus[i, 2])
     gld_load[busnum] = {'pcrv': 0, 'qcrv': 0,
               'p': float(fncsBus[i, 7]) / gld_scale, 'q': float(fncsBus[i, 8]) / gld_scale,
-              'unresp': 0, 'resp_max': 0, 'c2': 0, 'c1': 0, 'deg': 0, 'genidx': genidx}
+              'unresp': 0.5 * float(fncsBus[i, 7]) / gld_scale, 'resp_max': 0, 'c2': 0, 'c1': 0, 'deg': 0, 'genidx': genidx}
     if noScale:
       fncsBus[i, 2] = 1   # gld_scale
 
@@ -515,13 +524,6 @@ def tso_loop():
   gen = ppc['gen']
   genCost = ppc['gencost']
   genFuel = ppc['genfuel']
-
-  # print('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
-  # print(fncsBus)
-
-  # print(gld_load)
-  # print(gen)
-  # print(genCost)
 
   # interval for metrics recording
   tnext_metrics = 0
@@ -549,16 +551,15 @@ def tso_loop():
 
   if most:
     write_most_base_case('basecase.m')
-    print_bus_lmps ('before solving base case', bus)
     rBus, rBranch, rGen, rGenCost = solve_most_case('solvebasecase.m')
     for i in range(bus.shape[0]):  # starting LMP values
       bus[i, 13] = float (rBus[i][13])
-    print_bus_lmps ('after solving base case', bus)
+#    print_bus_lmps ('after solving base case', bus)
 #  quit()
   fncs.initialize()
 
   # Set column header for output files
-  line = "seconds, OPFconverged, TotalLoad, TotalGen, SwingGen"
+  line = "seconds, OPFconverged, TotalLoad, TotalGen, SwingGen, RespCleared"
   line2 = "seconds, PFConverged, TotalLoad, TotalGen, TotalLoss, SwingGen"
   for i in range(fncsBus.shape[0]):
     line += ", " + "LMP" + str(i+1)
@@ -582,6 +583,12 @@ def tso_loop():
 
   # MAIN LOOP starts here
   while ts <= tmax:
+    # we have to know the day, minute and hour in order to time the market clearings
+    ds = timedelta (seconds=ts)
+    days = ds.days
+    minutes, seconds = divmod(ds.seconds,60)
+    hours, minutes = divmod(minutes,60)
+
     # start by getting the latest inputs from GridLAB-D and the auction
     events = fncs.get_events()
     for topic in events:
@@ -675,7 +682,7 @@ def tso_loop():
         gen[row[10], 1] = row[9][wind_hour]
       tnext_wind += wind_period
 
-    # always baseline the loads from the curves
+    # shape the baseline loads if using the curve
     for row in fncsBus:
       busnum = int(row[0])
       if curve:
@@ -688,140 +695,51 @@ def tso_loop():
         val = ip.splev([h / 24.0], tck_load)
         gld_load[busnum]['pcrv'] = Pnom * curve_scale * float(val[1])
         gld_load[busnum]['qcrv'] = Qnom * curve_scale * float(val[1])
-      else:
-        gld_scale = float(row[2])
-        gld_load[busnum]['pcrv'] = gld_load[busnum]['p'] * gld_scale
-        gld_load[busnum]['qcrv'] = gld_load[busnum]['q'] * gld_scale
 
     # run multi-period optimization in MOST to establish the next day's unit commitment and dispatch schedule
-    if ts >= tnext_dam and most:
-      if mn % 60 == 0:
-        hour = hour + 1
-        mn = 0
-        if hour == 24:
-          hour = 0
-          day = day + 1
+    if (most == True) and (hours == 12) and (minutes == 0) and (seconds == 0):    # Run the day ahead market (DAM) at noon every day
+      file_time = 'd{:d}_h{:d}_m{:d}_'.format (days, hours, minutes)
+      most_DAM_case_file = './' + file_time + 'dam.dat'
+      update_cost_and_load (True)
+      write_most_file (most_DAM_case_file)
 
-      file_time = 'd{:d}_h{:d}_m{:d}'.format (day, hour, mn)
-      # update cost coefficients, set dispatchable load, put unresp+curve load on bus
-      print_bus_lmps ('before DAM update_cost_and_load', bus)
-      update_cost_and_load()
-      print_bus_lmps ('after DAM update_cost_and_load', bus)
-
-      # Run the day ahead
-      if hour == 12 and mn == 0:
-
-        most_DAM_case_file = "./" + file_time + "dam.dat"
-        write_most_file (most_DAM_case_file)
-#        da_schedule, da_dispatch, da_lmps = scucDAM(ames_DAM_case_file, file_time + "GenCoSchedule.dat", solver)
-#        print ('$$$$ DAM finished [day_hour_min_', print_time, flush=True)
-#        print_matrix ('DAM LMPs', da_lmps)
-#        print_keyed_matrix ('DAM Dispatches', da_dispatch, fmt='{:8.2f}')
-#        print_keyed_matrix ('DAM Schedule', da_schedule, fmt='{:8s}')
-#
-#     # Real time and update the dispatch schedules in ppc
-#     if day > 1:
-#       # Change the DA Schedule and the dispatchable generators
-#       if day > lastDay:
-#         schedule = deepcopy(da_schedule)
-#         lastDay = day
-#
-#       if mn == 0:
-#         # uptime and downtime in hour for each generator
-#         # and are counted using commitment schedule for the day
-#         for i in range(numGen):
-#           if "wind" not in genFuel[i][0]:
-#             name = "GenCo" + str(i + 1)
-#             gen[i, 7] = int(schedule.at[hour, name])
-#             if gen[i, 7] == 1:
-#               if gen_ames[str(i)][0] > 0:
-#                 gen_ames[str(i)][0] += 1
-#               else:
-#                 gen_ames[str(i)][0] = 1
-#             else:
-#               if gen_ames[str(i)][0] < 0:
-#                 gen_ames[str(i)][0] -= 1
-#               else:
-#                 gen_ames[str(i)][0] = -1
-#
-#       # Run the real time and publish the LMP
-#       ames_RTM_case_file = "./" + file_time + "rtm.dat"
-#       write_psst_file(ames_RTM_case_file, False)
-#       rtm_schedule = write_rtm_schedule(schedule, da_schedule)
-#       rt_dispatch, rt_lmps = scedRTM(ames_RTM_case_file, rtm_schedule, file_time + "RTMResults.dat", solver)
-#       print ('#### RTM finished [day_hour_min_', print_time, flush=True)
-#       print_matrix ('RTM LMPs', rt_lmps)
-#       print_keyed_matrix ('RTM Dispatches', rt_dispatch, fmt='{:8.2f}')
-#       try:
-#         for i in range(bus.shape[0]):
-#           bus[i, 13] = rt_lmps[i][0]
-#         for i in range(numGen):
-#           name = "GenCo" + str(i + 1)
-#           if "wind" not in genFuel[i][0]:
-#             gen[i, 1] = rt_dispatch[name][0]
-#       except:
-#         print('  #### Exception: unable to obtain and dispatch from LMPs')
-#         pass
-#
-#     # write OPF metrics
-#     Pswing = 0
-#     for i in range(numGen):
-#       if gen[i, 0] == swing_bus:
-#         Pswing += gen[i, 1]
-#
-#     sum_w = 0
-#     for key, row in wind_plants.items():
-#       sum_w += gen[row[10], 1]
-#
-#     line = str(ts) + ', ' + "True" + ','
-#     line += '{: .2f}'.format(bus[:, 2].sum()) + ','
-#     line += '{: .2f}'.format(gen[:, 1].sum()) + ','
-#     line += '{: .2f}'.format(Pswing) + ','
-#     for i in range(bus.shape[0]):
-#       line += '{: .2f}'.format(bus[i, 13]) + ','
-#     for i in range(numGen):
-#       if numGen > i:
-#         line += '{: .2f}'.format(gen[i, 1]) + ','
-#     line += '{: .2f}'.format(sum_w)
-#     print(line, sep=', ', file=op, flush=True)
-#
-#     mn = mn + RTOPDur  # period // 60
-#     tnext_ames += period
-#     # print  ('bus_after_opf = ', bus[:, 2].sum())
-#     # print  ('gen_after_opf = ', gen[:, 1].sum())
-
-    # run OPF to establish the prices and economic dispatch - currently period = 300s
     if ts >= tnext_opf:
-      # print  ('bus_b4_opf = ', bus[:, 2].sum())
-      # print  ('gen_b4_opf = ', gen[:, 1].sum())
+      update_cost_and_load (True)
 
-      # update cost coefficients, set dispatchable load, put unresp+curve load on bus
-      print_bus_lmps ('before OPF update_cost_and_load', bus)
-      update_cost_and_load()
-      print_bus_lmps ('after OPF update_cost_and_load', bus)
-
-      #  print_gld_load(ppc, gld_load, 'OPF', ts)
-      print_bus_lmps ('before runopf', bus)
+#      write_most_base_case('rtmcase.m')
+#      rBus, rBranch, rGen, rGenCost = solve_most_case('solvertmcase.m')
+      ppc['bus'] = bus
+      ppc['gen'] = gen
+      ppc['gencost'] = genCost
       ropf = pp.runopf(ppc, ppopt_market)
-      print_bus_lmps ('after runopf', bus)
       if ropf['success'] == False:
         conv_accum = False
       opf_bus = deepcopy(ropf['bus'])
       opf_gen = deepcopy(ropf['gen'])
-      print_bus_lmps ('from OPF deepcopy', opf_bus)
+      print_gld_load (ppc, gld_load, 'GLD Load after OPF', ts)
+#      print_bus_lmps ('### from OPF at {:d}'.format(ts), opf_bus)
+      tesp.summarize_opf (ropf)
+      Pcleared = 0
+      Pproduced = 0
       Pswing = 0
       for idx in range(opf_gen.shape[0]):
+        punit = opf_gen[idx,1]
         if opf_gen[idx, 0] == swing_bus:
-          Pswing += opf_gen[idx, 1]
+          Pswing += punit
+        if punit > 0.0:
+          Pproduced += punit
+        elif punit < 0.0:
+          Pcleared -= punit
 
       sum_w = 0
       for key, row in wind_plants.items():
         sum_w += gen[row[10], 1]
 
-      line = str(ts) + ',' + "True" + ','
+      line = str(ts) + ',' + str(ropf['success']) + ','
       line += '{: .2f}'.format(opf_bus[:, 2].sum()) + ','
-      line += '{: .2f}'.format(opf_gen[:, 1].sum()) + ','
-      line += '{: .2f}'.format(Pswing)
+      line += '{: .2f}'.format(Pproduced) + ','
+      line += '{: .2f}'.format(Pswing) + ','
+      line += '{: .2f}'.format(Pcleared)
       for idx in range(opf_bus.shape[0]):
         line += ',' + '{: .4f}'.format(opf_bus[idx, 13])
       for idx in range(opf_gen.shape[0]):
@@ -832,36 +750,26 @@ def tso_loop():
 
       tnext_opf += period
 
-      # always run the regular power flow for voltages and performance metrics
-      ppc['bus'][:, 13] = opf_bus[:, 13]  # set the lmp
-      print_bus_lmps ('after setting the slice', bus)
-      ppc['gen'][:, 1] = opf_gen[:, 1]  # set the economic dispatch
-      bus = ppc['bus']  # needed to be re-aliased because of [:, ] operator
-      gen = ppc['gen']  # needed to be re-aliased because of [:, ] operator
-      print_bus_lmps ('after re-aliasing the slice', bus)
+    # always run the regular power flow for voltages and performance metrics
+    ppc['bus'][:, 13] = opf_bus[:, 13]  # set the lmp
+    ppc['gen'][:, 1] = opf_gen[:, 1]  # set the economic dispatch
+    bus = ppc['bus']  # needed to be re-aliased because of [:, ] operator
+    gen = ppc['gen']  # needed to be re-aliased because of [:, ] operator
 
-    # add the actual scaled GridLAB-D loads to the baseline curve loads, turn off dispatchable loads
-    for row in fncsBus:
-      busnum = int(row[0])
-      gld_scale = float(row[2])
-      bus[busnum - 1, 2] = gld_load[busnum]['pcrv']
-      bus[busnum - 1, 3] = gld_load[busnum]['qcrv']
-      if curve:
-        bus[busnum - 1, 2] += gld_load[busnum]['p'] * gld_scale   # add the other half to load
-        bus[busnum - 1, 3] += gld_load[busnum]['q'] * gld_scale
-      idx = gld_load[busnum]['genidx']
-      gen[idx, 1] = 0  # p
-      gen[idx, 2] = 0  # q
-      gen[idx, 9] = 0  # pmin
-
+    update_cost_and_load (False)
+    ppc['bus'] = bus
+    ppc['gen'] = gen
+    ppc['gencost'] = genCost
     rpf = pp.runpf(ppc, ppopt_regular)
-    print_bus_lmps ('after runpf', bus)
     # TODO: add a check if does not converge, switch to DC
     if not rpf[0]['success']:
       conv_accum = False
       print('rpf did not converge at', ts)
     rBus = rpf[0]['bus']
     rGen = rpf[0]['gen']
+#    print_gld_load (ppc, gld_load, 'GLD Load after PF', ts)
+#    print_bus_lmps (' $$ from RPF at {:d}'.format(ts), rBus)
+#    tesp.summarize_opf (rpf[0])
 
     Pload = rBus[:, 2].sum()
     Pgen = rGen[:, 1].sum()
@@ -871,7 +779,7 @@ def tso_loop():
       if rGen[idx, 0] == swing_bus:
         Pswing += rGen[idx, 1]
 
-    line = str(ts) + ', ' + "True" + ','
+    line = str(ts) + ', ' + str(rpf[0]['success']) + ','
     line += '{: .2f}'.format(Pload) + ',' + '{: .2f}'.format(Pgen) + ','
     line += '{: .2f}'.format(Ploss) + ',' + '{: .2f}'.format(Pswing)
     for idx in range(rBus.shape[0]):
@@ -968,5 +876,5 @@ def tso_loop():
   print('finalizing FNCS', flush=True)
   fncs.finalize()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   tso_loop()

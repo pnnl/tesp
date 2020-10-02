@@ -7,7 +7,7 @@ This directory contains a test harness based on the ERCOT 8-bus case, with
 one DSO emulator in place of the GridLAB-D and substation federates at each bus.
 It provides a sandbox for integrating AMES with PYPOWER in a new TSO agent.
 It invokes *fncsTSO.py* in the parent directory as the TSO agent, which uses PYPOWER
-and optionally, PSST. The case definition in *ercot_8.json* has been copied
+and optionally, MOST. The case definition in *ercot_8.json* has been copied
 from the parent directory to run with local edits.
 
 The DSO emulator is in a local *fncsDSO.py* file. It will bid a load equal to the

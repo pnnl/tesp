@@ -42,17 +42,18 @@ def summarize_opf(res):
   Pgen = gen[:,1].sum()
   PctLoss = 100.0 * (Pgen - Pload) / Pgen
 
-  print('success =', res['success'], 'in', res['et'], 'seconds')
-  print('Total Gen =', Pgen, ' Load =', Pload, ' Loss =', PctLoss, '%')
+  print('success =', res['success'], 'in', '{:.3f}'.format(res['et']), 'seconds')
+  print('Total Gen = {:.2f}'.format(Pgen), ' Load = {:.2f}'.format(Pload), ' Loss = {:.3f}'.format(PctLoss), '%')
 
-  print('bus #, Pd, Qd, Vm, LMP_P, LMP_Q, MU_VMAX, MU_VMIN')
+  print('bus #       Pd       Qd       Vm     Vang    LMP_P    LMP_Q  MU_VMAX  MU_VMIN')
   for row in bus:
-    print(int(row[0]),row[2],row[3],row[7],row[13],row[14],row[15],row[16])
+    print('{:4d}  {:8.2f} {:8.2f} {:8.4f} {:8.4f} {:8.5f} {:8.5f} {:8.5f} {:8.5f}'.format(int(row[0]),
+          float(row[2]),float(row[3]),float(row[7]),float(row[8]),float(row[13]),float(row[14]),float(row[15]),float(row[16])))
 
-  print('gen #, bus, Pg, Qg, MU_PMAX, MU_PMIN, MU_PMAX, MU_PMIN')
+  print('gen # bus       Pg       Qg   MU_PMAX   MU_PMIN   MU_QMAX   MU_QMIN')
   idx = 1
   for row in gen:
-    print(idx,int(row[0]),row[1],row[2],row[21],row[22],row[23],row[24])
+    print('{:4d} {:4d} {:8.2f} {:8.2f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}'.format(idx,int(row[0]),float(row[1]),float(row[2]),float(row[21]),float(row[22]),float(row[23]),float(row[24])))
     ++idx
 
 def load_json_case(fname):

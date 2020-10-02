@@ -11,6 +11,7 @@ Example:
 Public Functions:
     :substation_loop: Supervises FNCS messages and time steps for a GridLAB-D substation with one double-auction market and many HVAC controllers.  
     :pypower_loop: Supervises the FNCS messages, time steps, optimal power flow and power flow for PYPOWER.  
+    :summarize_opf: Print the OPF solution from PYPOWER (debugging).  
     :precool_loop: Supervises FNCS messages and time steps for a GridLAB-D substation with many price-taking and pre-cooling HVAC controllers.  
     :prep_substation: Writes agent metadata and FNCS subscriptions used in substation_loop.  
     :prep_precool: Writes agent metadata and FNCS subscriptions used in precool_loop.  
@@ -29,6 +30,7 @@ from __future__ import absolute_import
 
 from .feederGenerator import populate_feeder
 from .fncsPYPOWER import pypower_loop 
+from .fncsPYPOWER import summarize_opf 
 from .glm_dict import glm_dict
 from .precool import precool_loop
 from .prep_precool import prep_precool
