@@ -1,0 +1,13 @@
+clear;
+define_constants;
+mpc = loadcase ('rtmcase.m');
+mpopt = mpoption ('verbose',0,'out.all',1,'opf.dc.solver','GLPK');
+xgd = loadxgendata(dam_ucdata, mpc);
+nt = 24;
+profiles = getprofiles('dam_loads.m');
+%profiles = [];
+mdi = loadmd(mpc, nt, xgd, [], [], profiles);
+mdo = most(mdi, mpopt);
+EPg = mdo.results.ExpectedDispatch;
+Elam = mdo.results.GenPrices;
+most_summary(mdo);
