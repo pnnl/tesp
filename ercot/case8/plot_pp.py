@@ -1,4 +1,4 @@
-#	Copyright (C) 2017-2018 Battelle Memorial Institute
+#	Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: process_pypower.py
 import json;
 #import sys;
@@ -49,7 +49,7 @@ def process_pypower(nameroot, nhours):
     baseMVA = dict['baseMVA']
     gen_keys = list(dict['generators'].keys())
     gen_keys.sort()
-    bus_keys = list(dict['fncsBuses'].keys())
+    bus_keys = list(dict['dsoBuses'].keys())
     bus_keys.sort()
     print ('\n\nFile', nameroot, 'has baseMVA', baseMVA)
     print('\nGenerator Dictionary:')
@@ -60,7 +60,7 @@ def process_pypower(nameroot, nhours):
     print('\nFNCS Bus Dictionary:')
     print('Bus Pnom Qnom ampFactor [GridLAB-D Substations]')
     for key in bus_keys:
-        row = dict['fncsBuses'][key]
+        row = dict['dsoBuses'][key]
         print (key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])  #TODO curveScale, curveSkew
 
     # read the bus metrics file

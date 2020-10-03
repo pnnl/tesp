@@ -48,7 +48,7 @@ def process_pypower(nameroot):
     baseMVA = dict['baseMVA']
     gen_keys = list(dict['generators'].keys())
     gen_keys.sort()
-    bus_keys = list(dict['fncsBuses'].keys())
+    bus_keys = list(dict['dsoBuses'].keys())
     bus_keys.sort()
     print ('\n\nFile', nameroot, 'has baseMVA', baseMVA)
     print('\nGenerator Dictionary:')
@@ -62,7 +62,7 @@ def process_pypower(nameroot):
     print('\nFNCS Bus Dictionary:')
     print('Bus    Pnom     Qnom    Scale  Substation')
     for key in bus_keys:
-        row = dict['fncsBuses'][key]
+        row = dict['dsoBuses'][key]
         print ('{:2d} {:8.2f} {:8.2f} {:8.2f}  {:s}'.format (int(key), float(row['Pnom']), 
           float(row['Qnom']), float(row['ampFactor']), row['GLDsubstations'][0]))  #TODO curveScale, curveSkew
 

@@ -1,3 +1,4 @@
+#   Copyright (C) 2017-2020 Battelle Memorial Institute
 import numpy as np
 import scipy.interpolate as ip
 import pypower.api as pp
@@ -154,7 +155,7 @@ def make_dictionary(ppc, rootname):
         branchesout.append({'branch': int(branches[i, 0]), 'tout': int(branches[i, 1]), 'tin': int(branches[i, 2])})
 
     dp = open(rootname + '_m_dict.json', 'w')
-    ppdict = {'baseMVA': ppc['baseMVA'], 'fncsBuses': fncsBuses, 'generators': generators, 'UnitsOut': unitsout,
+    ppdict = {'baseMVA': ppc['baseMVA'], 'dsoBuses': fncsBuses, 'generators': generators, 'UnitsOut': unitsout,
               'BranchesOut': branchesout}
     print(json.dumps(ppdict), file=dp, flush=True)
     dp.close()

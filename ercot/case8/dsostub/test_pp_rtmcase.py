@@ -16,3 +16,12 @@ for row in ropf['gen']:
     Presp -= Pg
 
 print ('Gen={:.2f}, FixedLoad={:.2f}, RespLoad={:.2f}'.format (Pgen, Pload, Presp))
+
+print ('Bus     LMP  RespMax  Cleared')
+for row in ropf['gen']:
+  Pmin = row[9]
+  if Pmin < 0.0:
+    Pg = row[1]
+    busidx = int(row[0])
+    lmp = ropf['bus'][busidx-1][13]
+    print ('{:2d} {:8.3f} {:8.3f} {:8.3f}'.format (busidx, lmp, -Pmin, -Pg))

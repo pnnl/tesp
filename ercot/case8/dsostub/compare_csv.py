@@ -1,3 +1,4 @@
+#   Copyright (C) 2020 Battelle Memorial Institute
 import csv;
 import sys;
 import numpy as np;

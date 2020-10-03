@@ -1,3 +1,4 @@
+#   Copyright (C) 2017-2020 Battelle Memorial Institute
 import numpy as np
 import scipy.interpolate as ip
 import pypower.api as pp
@@ -105,7 +106,7 @@ def make_dictionary(ppc, rootname):
     ppc (dict): PYPOWER case file structure
     rootname (str): to write rootname_m_dict.json
   """
-  fncsBuses = {}
+  dsoBuses = {}
   generators = {}
   unitsout = []
   branchesout = []
@@ -113,7 +114,7 @@ def make_dictionary(ppc, rootname):
   gen = ppc['gen']
   genCost = ppc['gencost']
   genFuel = ppc['genfuel']
-  fncsBus = ppc['DSO']
+  dsoBus = ppc['DSO']
   units = ppc['UnitsOut']
   branches = ppc['BranchesOut']
 
@@ -137,14 +138,14 @@ def make_dictionary(ppc, rootname):
                   'StartupCost': float(genCost[i, 1]), 'ShutdownCost': float(genCost[i, 2]), 'c2': c2,
                   'c1': c1, 'c0': c0}
 
-  for i in range(fncsBus.shape[0]):
-    busnum = int(fncsBus[i, 0])
+  for i in range(dsoBus.shape[0]):
+    busnum = int(dsoBus[i, 0])
     busidx = busnum - 1
-    fncsBuses[str(busnum)] = {'Pnom': float(fncsBus[i, 3]), 'Qnom': float(fncsBus[i, 4]), # 'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
+    dsoBuses[str(busnum)] = {'Pnom': float(dsoBus[i, 3]), 'Qnom': float(dsoBus[i, 4]), # 'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
                   'area': int(bus[busidx, 6]), 'zone': int(bus[busidx, 10]),
-                  'ampFactor': float(fncsBus[i, 2]), 'GLDsubstations': [fncsBus[i, 1]],
-                  'curveScale': float(fncsBus[i, 5]), 'curveSkew': int(fncsBus[i, 6]),
-                  'Pinit': float(fncsBus[i,7]), 'Qinit': float(fncsBus[i,8])}
+                  'ampFactor': float(dsoBus[i, 2]), 'GLDsubstations': [dsoBus[i, 1]],
+                  'curveScale': float(dsoBus[i, 5]), 'curveSkew': int(dsoBus[i, 6]),
+                  'Pinit': float(dsoBus[i,7]), 'Qinit': float(dsoBus[i,8])}
 
   for i in range(units.shape[0]):
     unitsout.append({'unit': int(units[i, 0]), 'tout': int(units[i, 1]), 'tin': int(units[i, 2])})
@@ -153,7 +154,7 @@ def make_dictionary(ppc, rootname):
     branchesout.append({'branch': int(branches[i, 0]), 'tout': int(branches[i, 1]), 'tin': int(branches[i, 2])})
 
   dp = open(rootname + '_m_dict.json', 'w')
-  ppdict = {'baseMVA': ppc['baseMVA'], 'fncsBuses': fncsBuses, 'generators': generators, 'UnitsOut': unitsout,
+  ppdict = {'baseMVA': ppc['baseMVA'], 'dsoBuses': dsoBuses, 'generators': generators, 'UnitsOut': unitsout,
         'BranchesOut': branchesout}
   print(json.dumps(ppdict), file=dp, flush=True)
   dp.close()
@@ -204,12 +205,13 @@ def parse_mva(arg):
     q /= 1000000.0
   return p, q
 
-def print_gld_load(ppc, gld_load, msg, ts):
+def print_gld_load(ppc, msg, ts):
   bus = ppc['bus']
-  fncsBus = ppc['DSO']
+  dsoBus = ppc['DSO']
+  gld_load = ppc['gld_load']
   print(msg, 'at', ts)
   print(' bus  gen     pbus     qbus     pcrv     qcrv     pgld     qgld   unresp resp_max       c2       c1 deg')
-  for row in fncsBus:
+  for row in dsoBus:
     busnum = int(row[0])
     gld_scale = float(row[2])
     pbus = bus[busnum - 1, 2]
@@ -243,130 +245,135 @@ def print_bus_lmps (lbl, bus):
   for i in range(bus.shape[0]):
     print ('{:2d} {:9.5f}'.format (i, bus[i, 13]))
 
-def tso_loop():
+def read_matpower_array (fp):
+  A = []
+  while True:
+    ln = fp.readline()
+    if '];' in ln:
+      break
+    ln = ln.lstrip().rstrip(';\n')
+    A.append (ln.split())
+  return A
 
-  def read_matpower_array (fp):
-    A = []
-    while True:
-      ln = fp.readline()
-      if '];' in ln:
-        break
-      ln = ln.lstrip().rstrip(';\n')
-      A.append (ln.split())
-    return A
+def solve_most_case (fname):
+  rGen = None
+  rBus = None
+  rBranch = None
+  rGenCost = None
+  cmdline = 'octave {:s}'.format(fname)
+  proc = subprocess.Popen (cmdline, shell=True)
+  proc.wait()
+  fp = open ('solved.txt', 'r')
+  while True:
+    ln = fp.readline()
+    if not ln:
+      break
+    elif 'mpc.gen =' in ln:
+      rGen = read_matpower_array (fp)
+    elif 'mpc.branch =' in ln:
+      rBranch = read_matpower_array (fp)
+    elif 'mpc.bus =' in ln:
+      rBus = read_matpower_array (fp)
+    elif 'mpc.gencost =' in ln:
+      rGenCost = read_matpower_array (fp)
+  fp.close()
+  print ('Solved Base Case DC OPF in Matpower')
+  print ('  rBus is {:d}x{:d}'.format (len(rBus), len(rBus[0])))
+  print ('  rBranch is {:d}x{:d}'.format (len(rBranch), len(rBranch[0])))
+  print ('  rGen is {:d}x{:d}'.format (len(rGen), len(rGen[0])))
+  print ('  rGenCost is {:d}x{:d}'.format (len(rGenCost), len(rGenCost[0])))
+  return rBus, rBranch, rGen, rGenCost
 
-  def solve_most_case (fname):
-    rGen = None
-    rBus = None
-    rBranch = None
-    rGenCost = None
-    cmdline = 'octave {:s}'.format(fname)
-    proc = subprocess.Popen (cmdline, shell=True)
-    proc.wait()
-    fp = open ('solved.txt', 'r')
-    while True:
-      ln = fp.readline()
-      if not ln:
-        break
-      elif 'mpc.gen =' in ln:
-        rGen = read_matpower_array (fp)
-      elif 'mpc.branch =' in ln:
-        rBranch = read_matpower_array (fp)
-      elif 'mpc.bus =' in ln:
-        rBus = read_matpower_array (fp)
-      elif 'mpc.gencost =' in ln:
-        rGenCost = read_matpower_array (fp)
-    fp.close()
-    print ('Solved Base Case DC OPF in Matpower')
-    print ('  rBus is {:d}x{:d}'.format (len(rBus), len(rBus[0])))
-    print ('  rBranch is {:d}x{:d}'.format (len(rBranch), len(rBranch[0])))
-    print ('  rGen is {:d}x{:d}'.format (len(rGen), len(rGen[0])))
-    print ('  rGenCost is {:d}x{:d}'.format (len(rGenCost), len(rGenCost[0])))
-    return rBus, rBranch, rGen, rGenCost
+def write_array_rows (A, fp):
+  print (';\n'.join([' '.join([' {:s}'.format(str(item)) for item in row]) for row in A]), file=fp)
 
-  def write_array_rows (A, fp):
-    print (';\n'.join([' '.join([' {:s}'.format(str(item)) for item in row]) for row in A]), file=fp)
-    
-  def write_most_file(fname):
-    print ('want to write', fname)
+def write_most_file (ppc, fname):
+  print ('want to write', fname)
 #    fp = open(fname, 'w')
 #    print ('%% From PNNL TESP, fncsTSO2.py, case', casename, file=fp)
 #    fp.close()
 
-  def write_most_base_case(fname):
-    fp = open(fname, 'w')
-    print ('function mpc = basecase', file=fp)
-    print ('%% MATPOWER base case from PNNL TESP, fncsTSO2.py, model name', casename, file=fp)
-    print ("""mpc.version = '2';""", file=fp)
-    print ("""mpc.baseMVA = 100;""", file=fp)
-    print ("""%% bus_i  type  Pd  Qd  Gs  Bs  area  Vm  Va  baseKV  zone  Vmax  Vmin""", file=fp)
-    print ("""mpc.bus = [""", file=fp)
-    write_array_rows (bus, fp)
-    print ("""];""", file=fp)
-    print ("""%% bus  Pg  Qg  Qmax  Qmin  Vg  mBase status  Pmax  Pmin  Pc1 Pc2 Qc1min  Qc1max  Qc2min  Qc2max  ramp_agc  ramp_10 ramp_30 ramp_q  apf""", file=fp)
-    print ("""mpc.gen = [""", file=fp)
-    write_array_rows (gen, fp)
-    print ("""];""", file=fp)
-    print ("""%% bus  tbus  r x b rateA rateB rateC ratio angle status  angmin  angmax""", file=fp)
-    print ("""mpc.branch = [""", file=fp)
-    write_array_rows (branch, fp)
-    print ("""];""", file=fp)
-    print ("""%% either 1 startup shutdown n x1 y1  ... xn  yn""", file=fp)
-    print ("""%%   or 2 startup shutdown n c(n-1) ... c0""", file=fp)
-    print ("""mpc.gencost = [""", file=fp)
-    write_array_rows (genCost, fp)
-    print ("""];""", file=fp)
-    fp.close()
+def write_most_base_case (ppc, fname):
+  fp = open(fname, 'w')
+  print ('function mpc = basecase', file=fp)
+  print ('%% MATPOWER base case from PNNL TESP, fncsTSO2.py, model name', casename, file=fp)
+  print ("""mpc.version = '2';""", file=fp)
+  print ("""mpc.baseMVA = 100;""", file=fp)
+  print ("""%% bus_i  type  Pd  Qd  Gs  Bs  area  Vm  Va  baseKV  zone  Vmax  Vmin""", file=fp)
+  print ("""mpc.bus = [""", file=fp)
+  write_array_rows (ppc['bus'], fp)
+  print ("""];""", file=fp)
+  print ("""%% bus  Pg  Qg  Qmax  Qmin  Vg  mBase status  Pmax  Pmin  Pc1 Pc2 Qc1min  Qc1max  Qc2min  Qc2max  ramp_agc  ramp_10 ramp_30 ramp_q  apf""", file=fp)
+  print ("""mpc.gen = [""", file=fp)
+  write_array_rows (ppc['gen'], fp)
+  print ("""];""", file=fp)
+  print ("""%% bus  tbus  r x b rateA rateB rateC ratio angle status  angmin  angmax""", file=fp)
+  print ("""mpc.branch = [""", file=fp)
+  write_array_rows (ppc['branch'], fp)
+  print ("""];""", file=fp)
+  print ("""%% either 1 startup shutdown n x1 y1  ... xn  yn""", file=fp)
+  print ("""%%   or 2 startup shutdown n c(n-1) ... c0""", file=fp)
+  print ("""mpc.gencost = [""", file=fp)
+  write_array_rows (ppc['gencost'], fp)
+  print ("""];""", file=fp)
+  fp.close()
 
-  # update cost coefficients, set dispatchable load, put unresp+curve load on bus
-  def update_cost_and_load (for_optimization):
-    for row in fncsBus:
-      busnum = int(row[0])
-      genidx = gld_load[busnum]['genidx']
-      gld_scale = float(row[2])
+# update cost coefficients, set dispatchable load, put unresp+curve load on bus
+def update_cost_and_load (ppc, for_optimization):
+  bus = ppc['bus']
+  gen = ppc['gen']
+  gld_load = ppc['gld_load']
+  genCost = ppc['gencost']
+  bus_accum = ppc['bus_accum']
+  curve = ppc['curve']
+  for row in ppc['DSO']:
+    busnum = int(row[0])
+    genidx = gld_load[busnum]['genidx']
+    gld_scale = float(row[2])
 
-      if (for_optimization): # set up dispatchable loads for OPF or scheduling
-        resp_max = gld_load[busnum]['resp_max'] * gld_scale
-        unresp = gld_load[busnum]['unresp'] * gld_scale
-        c2 = gld_load[busnum]['c2']
-        c1 = gld_load[busnum]['c1']
-        deg = gld_load[busnum]['deg']
-        # track the latest bid in the metrics
-        bus_accum[str(busnum)][8] = unresp
-        bus_accum[str(busnum)][9] = resp_max
-        bus_accum[str(busnum)][10] = c1
-        bus_accum[str(busnum)][11] = c2
-        gen[genidx, 9] = -resp_max
-        if deg == 2:
-          genCost[genidx, 3] = 3
-          genCost[genidx, 4] = 0.0
-          genCost[genidx, 5] = c1
-        elif deg == 1:
-          genCost[genidx, 3] = 2
-          genCost[genidx, 4] = c1
-          genCost[genidx, 5] = 0.0
-        else:
-          genCost[genidx, 3] = 1
-          genCost[genidx, 4] = 999.0
-          genCost[genidx, 5] = 0.0
-        genCost[genidx, 6] = 0.0
-      else: # turn off the dispatchable loads for regular power flow
-        gen[genidx, 1] = 0  # p
-        gen[genidx, 2] = 0  # q
-        gen[genidx, 9] = 0  # pmin
+    if (for_optimization): # set up dispatchable loads for OPF or scheduling
+      resp_max = gld_load[busnum]['resp_max'] * gld_scale
+      unresp = gld_load[busnum]['unresp'] * gld_scale
+      c2 = gld_load[busnum]['c2']
+      c1 = gld_load[busnum]['c1']
+      deg = gld_load[busnum]['deg']
+      # track the latest bid in the metrics
+      bus_accum[str(busnum)][8] = unresp
+      bus_accum[str(busnum)][9] = resp_max
+      bus_accum[str(busnum)][10] = c1
+      bus_accum[str(busnum)][11] = c2
+      gen[genidx, 9] = -resp_max
+      if deg == 2:
+        genCost[genidx, 3] = 3
+        genCost[genidx, 4] = 0.0
+        genCost[genidx, 5] = c1
+      elif deg == 1:
+        genCost[genidx, 3] = 2
+        genCost[genidx, 4] = c1
+        genCost[genidx, 5] = 0.0
+      else:
+        genCost[genidx, 3] = 1
+        genCost[genidx, 4] = 999.0
+        genCost[genidx, 5] = 0.0
+      genCost[genidx, 6] = 0.0
+    else: # turn off the dispatchable loads for regular power flow
+      gen[genidx, 1] = 0  # p
+      gen[genidx, 2] = 0  # q
+      gen[genidx, 9] = 0  # pmin
 
-      # setting the bus loads for OPF/MOST, or the regular power flow
-      bus[busnum - 1, 2] = 0.0
-      bus[busnum - 1, 3] = 0.0
-      if curve:             # the baseline (curve) load component doesn't depend on GridLAB-D at all
-        bus[busnum - 1, 2] += gld_load[busnum]['pcrv']
-        bus[busnum - 1, 3] += gld_load[busnum]['qcrv']
-      if for_optimization:  # only add the unresponsive load; resp_max is left dispatchable
-        bus[busnum - 1, 2] += unresp
-      else:                 # for a regular power flow, use all of the actual GridLAB-D load
-        bus[busnum - 1, 2] += gld_load[busnum]['p'] * gld_scale
-        bus[busnum - 1, 3] += gld_load[busnum]['q'] * gld_scale
+    # setting the bus loads for OPF/MOST, or the regular power flow
+    bus[busnum - 1, 2] = 0.0
+    bus[busnum - 1, 3] = 0.0
+    if curve:             # the baseline (curve) load component doesn't depend on GridLAB-D at all
+      bus[busnum - 1, 2] += gld_load[busnum]['pcrv']
+      bus[busnum - 1, 3] += gld_load[busnum]['qcrv']
+    if for_optimization:  # only add the unresponsive load; resp_max is left dispatchable
+      bus[busnum - 1, 2] += unresp
+    else:                 # for a regular power flow, use all of the actual GridLAB-D load
+      bus[busnum - 1, 2] += gld_load[busnum]['p'] * gld_scale
+      bus[busnum - 1, 3] += gld_load[busnum]['q'] * gld_scale
 
+def tso_loop():
   # Initialize the program
   hours_in_a_day = 24
   secs_in_a_hr = 3600
@@ -386,15 +393,8 @@ def tso_loop():
   if ppc['solver'] == 'GLPK': # 'cbc':
     ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
     ppc['gencost'][:, 6] = 0.0  # can't use quadratic costs with CBC solver
-  # these have been aliased from case name .json file
-  bus = ppc['bus']
-  branch = ppc['branch']
-  gen = ppc['gen']
-  genCost = ppc['gencost']
-  genFuel = ppc['genfuel']
-  zones = ppc['zones']
-  fncsBus = ppc['DSO']
-  numGen = gen.shape[0]
+
+  numGen = ppc['gen'].shape[0]
 
   # set configurations case name from .json file
   priceSensLoad = 0
@@ -420,17 +420,7 @@ def tso_loop():
   reserveUp = ppc['reserveUp']
   zonalReserves = ppc['zonalReserves']
   baseS = int(ppc['baseMVA'])   # base_S in ercot_8.json baseMVA
-  baseV = int(bus[0, 9])      # base_V in ercot_8.json bus row 0-7, column 9, should be the same for all buses
-
-  # ppc arrays(bus type 1=load, 2 = gen(PV) and 3 = swing)
-  # bus: bus id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin, LAM P, LAM Q
-  # zones: zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent
-  # branch: from bus, to bus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax
-  # gen: bus id, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
-  # gencost: 2, startup, shutdown, 3, c2, c1, c0
-  # FNCS: bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit
-  # UnitsOut: idx, time out[s], time back in[s]
-  # BranchesOut: idx, time out[s], time back in[s]
+  baseV = int(ppc['bus'][0, 9])      # base_V in ercot_8.json bus row 0-7, column 9, should be the same for all buses
 
   # initialize for metrics collection
   bus_mp = open('bus_' + casename + '_metrics.json', 'w')
@@ -459,6 +449,9 @@ def tso_loop():
     if len(wind_plants) < 1:
       print('warning: wind power fluctuation requested, but there are no wind plants in this case')
     else:
+      gen = ppc['gen']
+      genCost = ppc['gencost']
+      genFuel = ppc['genfuel']
       tnext_wind = 0
       ngen = []
       ngenCost = []
@@ -475,10 +468,7 @@ def tso_loop():
       ppc['gen'] = np.array(ngen)
       ppc['gencost'] = np.array(ngenCost)
       ppc['genfuel'] = np.array(ngenFuel)
-      gen = ppc['gen']
-      genCost = ppc['gencost']
-      genFuel = ppc['genfuel']
-      numGen = gen.shape[0]
+      numGen = ppc['gen'].shape[0]
   else:
     print ('disabling all the wind plants')
     shutoff_wind_plants (ppc)
@@ -488,22 +478,12 @@ def tso_loop():
   Pload = 0
   tnext_opf = 0
   wind_hour = -1
-  da_bid = False
-  da_schedule = {}
-  da_lmps = {}
-  da_dispatch = {}
-  rt_lmps = {}
-  rt_dispatch = {}
   # listening to GridLAB-D and its auction objects
   gld_load = {}  # key on bus number
 
-  # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
-#  if not ames:
-#    for row in gen:
-#      row[9] = 0.1 * row[8]
-
   # TODO: more efficient to concatenate outside a loop
-  for i in range(fncsBus.shape[0]):
+  dsoBus = ppc['DSO']
+  for i in range(dsoBus.shape[0]):
     busnum = i + 1
     genidx = ppc['gen'].shape[0]
     # I suppose a generator for a summing generators on a bus?
@@ -513,17 +493,12 @@ def tso_loop():
       (ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
     ppc['genfuel'] = np.concatenate(
       (ppc['genfuel'], np.array([['']])))
-    gld_scale = float(fncsBus[i, 2])
+    gld_scale = float(dsoBus[i, 2])
     gld_load[busnum] = {'pcrv': 0, 'qcrv': 0,
-              'p': float(fncsBus[i, 7]) / gld_scale, 'q': float(fncsBus[i, 8]) / gld_scale,
-              'unresp': 0.5 * float(fncsBus[i, 7]) / gld_scale, 'resp_max': 0, 'c2': 0, 'c1': 0, 'deg': 0, 'genidx': genidx}
+              'p': float(dsoBus[i, 7]) / gld_scale, 'q': float(dsoBus[i, 8]) / gld_scale,
+              'unresp': 0.5 * float(dsoBus[i, 7]) / gld_scale, 'resp_max': 0, 'c2': 0, 'c1': 0, 'deg': 0, 'genidx': genidx}
     if noScale:
-      fncsBus[i, 2] = 1   # gld_scale
-
-  # needed to be re-aliased after np.concatenate
-  gen = ppc['gen']
-  genCost = ppc['gencost']
-  genFuel = ppc['genfuel']
+      dsoBus[i, 2] = 1   # gld_scale
 
   # interval for metrics recording
   tnext_metrics = 0
@@ -534,14 +509,18 @@ def tso_loop():
   bus_accum = {}
   gen_accum = {}
 
-  for i in range(fncsBus.shape[0]):
-    busnum = int(fncsBus[i, 0])
+  for row in ppc['DSO']:
+    busnum = int(row[0])
     bus_accum[str(busnum)] = [0, 0, 0, 0, 0, 0, 0, 99999.0, 0, 0, 0, 0]
 
-  for i in range(gen.shape[0]):
+  for i in range(ppc['gen'].shape[0]):
     gen_accum[str(i + 1)] = [0, 0, 0]
 
-  total_bus_num = fncsBus.shape[0]
+  ppc['bus_accum'] = bus_accum
+  ppc['gen_accum'] = gen_accum
+  ppc['gld_load'] = gld_load
+
+  total_bus_num = ppc['DSO'].shape[0]
   unRespMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
   respMaxMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
   respC2 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
@@ -550,27 +529,27 @@ def tso_loop():
   resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
 
   if most:
-    write_most_base_case('basecase.m')
+    write_most_base_case(ppc, 'basecase.m')
     rBus, rBranch, rGen, rGenCost = solve_most_case('solvebasecase.m')
+    bus = ppc['bus']
     for i in range(bus.shape[0]):  # starting LMP values
       bus[i, 13] = float (rBus[i][13])
-#    print_bus_lmps ('after solving base case', bus)
-#  quit()
-  fncs.initialize()
 
   # Set column header for output files
   line = "seconds, OPFconverged, TotalLoad, TotalGen, SwingGen, RespCleared"
   line2 = "seconds, PFConverged, TotalLoad, TotalGen, TotalLoss, SwingGen"
-  for i in range(fncsBus.shape[0]):
+  for i in range(ppc['DSO'].shape[0]):
     line += ", " + "LMP" + str(i+1)
     line2 += ", " + "v" + str(i + 1)
   w = 0;  n = 0;  c = 0;  g = 0
+  genFuel = ppc['genfuel']
   for i in range(numGen):
-    if "wind" in genFuel[i][0]:
+    fuel =genFuel[i][0]
+    if "wind" in fuel:
       w += 1;  line += ", wind" + str(w)
-    elif "nuclear" in genFuel[i][0]:
+    elif "nuclear" in fuel:
       n += 1;  line += ", nuc" + str(n)
-    elif "coal" in genFuel[i][0]:
+    elif "coal" in fuel:
       c += 1;  line += ", coal" + str(c)
     else:
       g += 1;  line += ", gas" + str(g)
@@ -582,12 +561,19 @@ def tso_loop():
   print(line2, sep=', ', file=vp, flush=True)
 
   # MAIN LOOP starts here
+  fncs.initialize()
+
   while ts <= tmax:
     # we have to know the day, minute and hour in order to time the market clearings
     ds = timedelta (seconds=ts)
     days = ds.days
     minutes, seconds = divmod(ds.seconds,60)
     hours, minutes = divmod(minutes,60)
+
+    # temporary references into ppc
+    gen = ppc['gen']
+    gld_load = ppc['gld_load']
+    dsoBus = ppc['DSO']
 
     # start by getting the latest inputs from GridLAB-D and the auction
     events = fncs.get_events()
@@ -683,7 +669,7 @@ def tso_loop():
       tnext_wind += wind_period
 
     # shape the baseline loads if using the curve
-    for row in fncsBus:
+    for row in dsoBus:
       busnum = int(row[0])
       if curve:
         Pnom = float(row[3])
@@ -700,23 +686,20 @@ def tso_loop():
     if (most == True) and (hours == 12) and (minutes == 0) and (seconds == 0):    # Run the day ahead market (DAM) at noon every day
       file_time = 'd{:d}_h{:d}_m{:d}_'.format (days, hours, minutes)
       most_DAM_case_file = './' + file_time + 'dam.dat'
-      update_cost_and_load (True)
-      write_most_file (most_DAM_case_file)
+      update_cost_and_load (ppc, True)
+      write_most_file (ppc, most_DAM_case_file)
 
     if ts >= tnext_opf:
-      update_cost_and_load (True)
+      update_cost_and_load (ppc, True)
 
-#      write_most_base_case('rtmcase.m')
+#      write_most_base_case(ppc, 'rtmcase.m')
 #      rBus, rBranch, rGen, rGenCost = solve_most_case('solvertmcase.m')
-      ppc['bus'] = bus
-      ppc['gen'] = gen
-      ppc['gencost'] = genCost
       ropf = pp.runopf(ppc, ppopt_market)
       if ropf['success'] == False:
         conv_accum = False
       opf_bus = deepcopy(ropf['bus'])
       opf_gen = deepcopy(ropf['gen'])
-      print_gld_load (ppc, gld_load, 'GLD Load after OPF', ts)
+      print_gld_load (ppc, 'GLD Load after OPF', ts)
 #      print_bus_lmps ('### from OPF at {:d}'.format(ts), opf_bus)
       tesp.summarize_opf (ropf)
       Pcleared = 0
@@ -751,15 +734,10 @@ def tso_loop():
       tnext_opf += period
 
     # always run the regular power flow for voltages and performance metrics
-    ppc['bus'][:, 13] = opf_bus[:, 13]  # set the lmp
-    ppc['gen'][:, 1] = opf_gen[:, 1]  # set the economic dispatch
-    bus = ppc['bus']  # needed to be re-aliased because of [:, ] operator
-    gen = ppc['gen']  # needed to be re-aliased because of [:, ] operator
+    ppc['bus'][:, 13] = opf_bus[:, 13]  # set the lmp; INVALIDATES PREVIOUS ASSIGNMENT
+    ppc['gen'][:, 1] = opf_gen[:, 1]    # set the economic dispatch; INVALIDATES PREVIOUS ASSIGNMENT
 
-    update_cost_and_load (False)
-    ppc['bus'] = bus
-    ppc['gen'] = gen
-    ppc['gencost'] = genCost
+    update_cost_and_load (ppc, False)
     rpf = pp.runpf(ppc, ppopt_regular)
     # TODO: add a check if does not converge, switch to DC
     if not rpf[0]['success']:
@@ -787,20 +765,31 @@ def tso_loop():
     print(line, sep=', ', file=vp, flush=True)
 
     # update the metrics
+    dsoBus = ppc['DSO']
+    bus_accum = ppc['bus_accum']
+    gen_accum = ppc['gen_accum']
+    bus = ppc['bus']
+    gen = ppc['gen']
+    gld_load = ppc['gld_load']
     n_accum += 1
     loss_accum += Ploss
-    for i in range(fncsBus.shape[0]):
-      busnum = fncsBus[i, 0]
-      busidx = int(fncsBus[i, 0]) - 1
+    for i in range(dsoBus.shape[0]):
+      busnum = dsoBus[i, 0]
+      busidx = int(busnum) - 1
+      genidx = gld_load[busidx+1]['genidx']
       row = rBus[busidx].tolist()
       # publish the bus VLN and LMP [$/kwh] for GridLAB-D
       bus_vln = 1000.0 * row[7] * row[9] / math.sqrt(3.0)
       fncs.publish('three_phase_voltage_Bus' + busnum, bus_vln)
       if most:
         lmp = float(bus[busidx, 13]) * 0.001
+        clr = -1.0 * float(opf_gen [genidx, 1])
       else:
         lmp = float(opf_bus[busidx, 13]) * 0.001
+        clr = -1.0 * float(opf_gen [genidx, 1])
       fncs.publish('LMP_Bus' + busnum, lmp)  # publishing $/kwh
+      fncs.publish('CLR_Bus' + busnum, clr)  # publishing cleared responsive load
+      print ('FNCS Published CLR_Bus' + busnum, clr)
       # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
       PD = row[2]  # + resp # TODO, if more than one FNCS bus, track scaled_resp separately
       Vpu = row[7]
@@ -833,8 +822,8 @@ def tso_loop():
       sys_metrics[m_ts] = {casename: [loss_accum / n_accum, conv_accum]}
 
       bus_metrics[m_ts] = {}
-      for i in range(fncsBus.shape[0]):
-        busnum = fncsBus[i, 0]
+      for i in range(dsoBus.shape[0]):
+        busnum = dsoBus[i, 0]
         met = bus_accum[busnum]
         bus_metrics[m_ts][busnum] = [met[0] / n_accum, met[1] / n_accum,
                        met[2] / n_accum, met[3] / n_accum,
