@@ -2,6 +2,8 @@ rm *metrics.json
 rm *.log
 rm *_opf.csv
 rm *_pf.csv
+rm *_dso.csv
 rm *dict.json
 rm *.dat
 rm *.txt
+rm *.out

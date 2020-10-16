@@ -15,5 +15,4 @@ mdi = loadmd(mpc, nt, xgd, [], [], profiles);
 
 mdo = most(mdi, mpopt);
 ms = most_summary(mdo);
-EPg = mdo.results.ExpectedDispatch;
-Elam = mdo.results.GenPrices;
+save('-text', 'msout.txt', 'ms')
