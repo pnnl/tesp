@@ -2,3 +2,6 @@
 *.log
 *.csv
 *.dat
+dam.json
+*.txt
+test*.m

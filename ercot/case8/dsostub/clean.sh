@@ -6,4 +6,5 @@ rm *_dso.csv
 rm *dict.json
 rm *.dat
 rm *.txt
-rm *.out
+rm dam.json
+rm test_dam*.m

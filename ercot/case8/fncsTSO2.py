@@ -287,11 +287,127 @@ def solve_most_case (fname):
 def write_array_rows (A, fp):
   print (';\n'.join([' '.join([' {:s}'.format(str(item)) for item in row]) for row in A]), file=fp)
 
-def write_most_file (ppc, fname):
-  print ('want to write', fname)
-#    fp = open(fname, 'w')
-#    print ('%% From PNNL TESP, fncsTSO2.py, case', casename, file=fp)
-#    fp.close()
+def write_most_table_indices (fp):
+  print ("""  [PQ, PV, REF, NONE, BUS_I, BUS_TYPE, PD, QD, GS, BS, BUS_AREA, VM, ...
+     VA, BASE_KV, ZONE, VMAX, VMIN, LAM_P, LAM_Q, MU_VMAX, MU_VMIN] = idx_bus;
+  [CT_LABEL, CT_PROB, CT_TABLE, CT_TBUS, CT_TGEN, CT_TBRCH, CT_TAREABUS, ...
+    CT_TAREAGEN, CT_TAREABRCH, CT_ROW, CT_COL, CT_CHGTYPE, CT_REP, ...
+    CT_REL, CT_ADD, CT_NEWVAL, CT_TLOAD, CT_TAREALOAD, CT_LOAD_ALL_PQ, ...
+    CT_LOAD_FIX_PQ, CT_LOAD_DIS_PQ, CT_LOAD_ALL_P, CT_LOAD_FIX_P, ...
+    CT_LOAD_DIS_P, CT_TGENCOST, CT_TAREAGENCOST, CT_MODCOST_F, ...
+    CT_MODCOST_X] = idx_ct;""", file=fp)
+
+def write_most_dam_files (ppc, bids, froot):
+  fp = open (froot + 'solve.m', 'w')
+  print ("""define_constants;""", file=fp)
+  print ("""mpopt = mpoption('verbose', 0, 'out.all', 0);""", file=fp);
+  print ("""mpc = loadcase ('{:s}case.m');""".format (froot), file=fp);
+  print ("""xgd = loadxgendata('{:s}xgd.m', mpc);""".format (froot), file=fp);
+  print ("""profiles = getprofiles('{:s}resp.m');""".format (froot), file=fp);
+  print ("""profiles = getprofiles('{:s}unresp.m', profiles);""".format (froot), file=fp);
+  print ("""nt = size(profiles(1).values, 1);""", file=fp);
+  print ("""mdi = loadmd(mpc, nt, xgd, [], [], profiles);""", file=fp);
+  print ("""mdo = most(mdi, mpopt);""", file=fp);
+  print ("""ms = most_summary(mdo);""", file=fp);
+  print ("""save('-text', 'msout.txt', 'ms');""", file=fp);
+  fp.close()
+
+  fp = open (froot + 'case.m', 'w')
+  print ('function mpc = {:s}case'.format (froot), file=fp)
+  print ('%% MATPOWER/MOST base case from PNNL TESP, fncsTSO2.py, model name', casename, file=fp)
+  print ("""mpc.version = '2';""", file=fp)
+  print ("""mpc.baseMVA = 100;""", file=fp)
+  print ("""%% bus_i  type  Pd  Qd  Gs  Bs  area  Vm  Va  baseKV  zone  Vmax  Vmin""", file=fp)
+  print ("""mpc.bus = [""", file=fp)
+  write_array_rows (ppc['bus'], fp)
+  print ("""];""", file=fp)
+  print ("""%% bus  Pg  Qg  Qmax  Qmin  Vg  mBase status  Pmax  Pmin  Pc1 Pc2 Qc1min  Qc1max  Qc2min  Qc2max  ramp_agc  ramp_10 ramp_30 ramp_q  apf""", file=fp)
+  print ("""mpc.gen = [""", file=fp)
+  write_array_rows (ppc['gen'], fp)
+  print ("""];""", file=fp)
+  print ("""%% bus  tbus  r x b rateA rateB rateC ratio angle status  angmin  angmax""", file=fp)
+  print ("""mpc.branch = [""", file=fp)
+  write_array_rows (ppc['branch'], fp)
+  print ("""];""", file=fp)
+  print ("""%% either 1 startup shutdown n x1 y1  ... xn  yn""", file=fp)
+  print ("""%%   or 2 startup shutdown n c(n-1) ... c0""", file=fp)
+  print ("""mpc.gencost = [""", file=fp)
+  write_array_rows (ppc['gencost'], fp)
+  print ("""];""", file=fp)
+  fp.close()
+
+  fp = open (froot + 'xgd.m', 'w')
+  print ("""function [xgd_table] = {:s}xgd (mpc)
+  xgd_table.colnames = {{
+      'CommitKey', ...
+  }};
+  xgd_table.data = [
+  % generators""".format (froot), file=fp)
+  for i in range(len(ppc['genfuel'])):
+    fuel = ppc['genfuel'][i][0]
+    if (len (fuel) > 0) and (fuel != 'wind'):
+      if ppc['gen'][i][7] > 0.0:
+        print ('    1;', file=fp)
+      else:
+        print ('   -1;', file=fp)
+  print ('  % wind plants', file=fp)
+  for i in range(len(ppc['genfuel'])):
+    if ppc['genfuel'][i][0] == 'wind':
+      if ppc['gen'][i][7] > 0.0:
+        print ('    2;', file=fp)
+      else:
+        print ('   -1;', file=fp)
+  print ('  % responsive loads', file=fp)
+  for i in range(len(ppc['bus'])):
+    print ('    2;', file=fp)
+  print ('];', file=fp)
+  print ('endfunction', file=fp)
+  fp.close()
+
+  # write the load information
+  rowlist = []
+  for row in ppc['DSO']:
+    rowlist.append (int(row[0]))
+
+  fp = open (froot + 'unresp.m', 'w')
+  print ("""function loadprofile = {:s}unresp""".format (froot), file=fp)
+  write_most_table_indices (fp)
+  print ("""  loadprofile = struct( ...
+    'type', 'mpcData', ...
+    'table', CT_TBUS, ...
+    'rows', {:s}, ...
+    'col', PD, ...
+    'chgtype', CT_REP, ...
+    'values', [] );""".format (str(rowlist)), file=fp)
+  for row in ppc['DSO']:
+    busnum = row[0]
+    key = row[1]
+    gld_scale = float(row[2]) * 3.0 # adds the "curve" load
+    vals = str([round(gld_scale * v, 2) for v in bids[key]['unresp_mw']])
+    mvals = vals.replace (',', ';')
+    print ("""  loadprofile.values(:, 1, {:s}) = {:s};""".format (busnum, mvals), file=fp)
+  print ("""endfunction""", file=fp)
+  fp.close ()
+
+  fp = open (froot + 'resp.m', 'w')
+  print ("""function loadprofile = {:s}resp""".format (froot), file=fp)
+  write_most_table_indices (fp)
+  print ("""  loadprofile = struct( ...
+    'type', 'mpcData', ...
+    'table', CT_TLOAD, ...
+    'rows', {:s}, ...
+    'col', CT_LOAD_DIS_P, ...
+    'chgtype', CT_REP, ...
+    'values', [] );""".format (str(rowlist)), file=fp)
+  for row in ppc['DSO']:
+    busnum = row[0]
+    key = row[1]
+    gld_scale = float(row[2])
+    vals = str([round(gld_scale * v, 2) for v in bids[key]['resp_max_mw']])
+    mvals = vals.replace (',', ';')
+    print ("""  loadprofile.values(:, 1, {:s}) = {:s};""".format (busnum, mvals), file=fp)
+  print ("""endfunction""", file=fp)
+  fp.close ()
 
 def write_most_base_case (ppc, fname):
   fp = open(fname, 'w')
@@ -373,7 +489,7 @@ def update_cost_and_load (ppc, for_optimization):
       bus[busnum - 1, 2] += gld_load[busnum]['p'] * gld_scale
       bus[busnum - 1, 3] += gld_load[busnum]['q'] * gld_scale
 
-def tso_loop():
+def tso_loop (bTestDAM=False, test_bids=None):
   # Initialize the program
   hours_in_a_day = 24
   secs_in_a_hr = 3600
@@ -488,7 +604,7 @@ def tso_loop():
     genidx = ppc['gen'].shape[0]
     # I suppose a generator for a summing generators on a bus?
     ppc['gen'] = np.concatenate(
-      (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
+      (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 20000, 20000, 0, 0]])))
     ppc['gencost'] = np.concatenate(
       (ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
     ppc['genfuel'] = np.concatenate(
@@ -527,6 +643,10 @@ def tso_loop():
   respC1 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
   respC0 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
   resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+
+  if bTestDAM:
+    write_most_dam_files (ppc, test_bids, 'test_dam')
+    return
 
   if most:
     write_most_base_case(ppc, 'basecase.m')
@@ -685,9 +805,9 @@ def tso_loop():
     # run multi-period optimization in MOST to establish the next day's unit commitment and dispatch schedule
     if (most == True) and (hours == 12) and (minutes == 0) and (seconds == 0):    # Run the day ahead market (DAM) at noon every day
       file_time = 'd{:d}_h{:d}_m{:d}_'.format (days, hours, minutes)
-      most_DAM_case_file = './' + file_time + 'dam.dat'
+      most_DAM_case_file = './' + file_time + 'dam'
       update_cost_and_load (ppc, True)
-      write_most_file (ppc, most_DAM_case_file)
+      write_most_dam_files (ppc, most_DAM_case_file)
 
     if ts >= tnext_opf:
       update_cost_and_load (ppc, True)
@@ -866,4 +986,10 @@ def tso_loop():
   fncs.finalize()
 
 if __name__ == '__main__':
+  if len(sys.argv) > 1:
+    fp = open (sys.argv[1], 'r')
+    da_bids = json.load (fp)
+    fp.close()
+    tso_loop (True, da_bids)
+    quit()
   tso_loop()

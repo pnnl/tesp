@@ -4,6 +4,7 @@ import scipy.interpolate as ip;
 import tesp_support.api as tesp;
 import tesp_support.fncs as fncs;
 import json;
+import sys;
 
 # day-ahead market runs at noon every day
 da_period = 86400
@@ -57,9 +58,6 @@ period = int(ppc['Period'])
 dt = int(ppc['dt'])
 dt = 60
 
-op = open(casename + '_dso.csv', 'w')
-print ('ts,LMP1,LMP2,LMP3,LMP4,LMP5,LMP6,LMP7,LMP8,CLR1,CLR2,CLR3,CLR4,CLR5,CLR6,CLR7,CLR8,BID1,BID2,BID3,BID4,BID5,BID6,BID7,BID8,SET1,SET2,SET3,SET4,SET5,SET6,SET7,SET8', file=op)
-
 # DSO: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew
 dso_bus = ppc['DSO']
 gld_bus = {} # key on bus number
@@ -67,7 +65,53 @@ for i in range (8):
   busnum = i+1
   gld_bus[busnum] = {'pcrv':0,'qcrv':0,'lmp':0,'clr':0,'v':0,'p':0,'q':0,'unresp':0,'resp_max':0,'resp':0,'c2':bid_c2,'c1':bid_c1,'deg':bid_deg}
 
+def make_da_bid (row, bWantMarket):
+  da_bid = {'unresp_mw':[], 'resp_max_mw':[], 'resp_c2':[], 'resp_c1':[], 'resp_deg':[]}
+  busnum = int (row[0])
+  gld_scale = float (row[2]) # divide published P, Q values by gld_scale, because fncsTSO.py multiplies by gld_scale
+  Pnom = float (row[3])
+  curve_scale = float (row[5])
+  curve_skew = int (row[6])
+  if bWantMarket:
+    c2 = 0.0 # gld_bus[busnum]['c2']
+    c1 = gld_bus[busnum]['c1']
+    deg = 1 # gld_bus[busnum]['deg']
+  else:
+    c2 = 0
+    c1 = 0
+    deg = 0
+  for i in range(24):
+    sec = (3600 * i + curve_skew) % 86400
+    h = float (sec) / 3600.0
+    val = ip.splev ([h / 24.0], tck_load)
+    Phour = Pnom * curve_scale * float(val[1])
+    if bWantMarket:
+      resp_max = Phour * 0.5
+      unresp = Phour * 0.5
+    else:
+      resp_max = 0.0
+      unresp = Phour
+    da_bid['unresp_mw'].append(round(unresp / gld_scale, 3))
+    da_bid['resp_max_mw'].append(round(resp_max / gld_scale, 3))
+    da_bid['resp_c2'].append(c2)
+    da_bid['resp_c1'].append(c1)
+    da_bid['resp_deg'].append(deg)
+  return da_bid
+
+if len (sys.argv) > 1:
+  print ('write DAM bid to', sys.argv[1])
+  da_bids = {}
+  for row in dso_bus:
+    da_bids[row[1]] = make_da_bid (row, bWantMarket)
+  fp = open (sys.argv[1], 'w')
+  json.dump (da_bids, fp, indent=2)
+  fp.close()
+  quit()
+
 # initialize for time stepping and metrics
+op = open(casename + '_dso.csv', 'w')
+print ('ts,LMP1,LMP2,LMP3,LMP4,LMP5,LMP6,LMP7,LMP8,CLR1,CLR2,CLR3,CLR4,CLR5,CLR6,CLR7,CLR8,BID1,BID2,BID3,BID4,BID5,BID6,BID7,BID8,SET1,SET2,SET3,SET4,SET5,SET6,SET7,SET8', file=op)
+
 ts = 0
 fncs.initialize()
 dso_mp = open ('dso_' + casename + '_metrics.json', 'w')
@@ -104,38 +148,40 @@ while ts <= tmax:
   # however, we will add some noise to the day-ahead bid
   if ts >= tnext_da:
     for row in dso_bus:
-      da_bid = {'unresp_mw':[], 'resp_max_mw':[], 'resp_c2':[], 'resp_c1':[], 'resp_deg':[]}
-      busnum = int (row[0])
-      pubtopic = row[1] # this is what fncsTSO.py receives it as
-      gld_scale = float (row[2]) # divide published P, Q values by gld_scale, because fncsTSO.py multiplies by gld_scale
-      Pnom = float (row[3])
-      curve_scale = float (row[5])
-      curve_skew = int (row[6])
-      if bWantMarket:
-        c2 = gld_bus[busnum]['c2']
-        c1 = gld_bus[busnum]['c1']
-        deg = gld_bus[busnum]['deg']
-      else:
-        c2 = 0
-        c1 = 0
-        deg = 0
-      for i in range(24):
-        sec = (3600 * i + curve_skew) % 86400
-        h = float (sec) / 3600.0
-        val = ip.splev ([h / 24.0], tck_load)
-        Phour = Pnom * curve_scale * float(val[1])
-        if bWantMarket:
-          resp_max = Phour * 0.5
-          unresp = Phour * 0.5
-        else:
-          resp_max = 0.0
-          unresp = Phour
-        da_bid['unresp_mw'].append(round(unresp / gld_scale, 3))
-        da_bid['resp_max_mw'].append(round(resp_max / gld_scale, 3))
-        da_bid['resp_c2'].append(c2)
-        da_bid['resp_c1'].append(c1)
-        da_bid['resp_deg'].append(deg)
+      da_bid = make_da_bid (row, bWantMarket)
+#      da_bid = {'unresp_mw':[], 'resp_max_mw':[], 'resp_c2':[], 'resp_c1':[], 'resp_deg':[]}
+#      busnum = int (row[0])
+#      pubtopic = row[1] # this is what fncsTSO.py receives it as
+#      gld_scale = float (row[2]) # divide published P, Q values by gld_scale, because fncsTSO.py multiplies by gld_scale
+#      Pnom = float (row[3])
+#      curve_scale = float (row[5])
+#      curve_skew = int (row[6])
+#      if bWantMarket:
+#        c2 = gld_bus[busnum]['c2']
+#        c1 = gld_bus[busnum]['c1']
+#        deg = gld_bus[busnum]['deg']
+#      else:
+#        c2 = 0
+#        c1 = 0
+#        deg = 0
+#      for i in range(24):
+#       sec = (3600 * i + curve_skew) % 86400
+#       h = float (sec) / 3600.0
+#       val = ip.splev ([h / 24.0], tck_load)
+#       Phour = Pnom * curve_scale * float(val[1])
+#       if bWantMarket:
+#         resp_max = Phour * 0.5
+#         unresp = Phour * 0.5
+#       else:
+#         resp_max = 0.0
+#         unresp = Phour
+#       da_bid['unresp_mw'].append(round(unresp / gld_scale, 3))
+#       da_bid['resp_max_mw'].append(round(resp_max / gld_scale, 3))
+#       da_bid['resp_c2'].append(c2)
+#       da_bid['resp_c1'].append(c1)
+#       da_bid['resp_deg'].append(deg)
 
+      busnum = int (row[0])
       pubtopic = 'substationBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from a substation auction
       print ('Day-Ahead bid for {:s} at {:d}, c2={:f}, c1={:f}, deg={:d}'.format (pubtopic, ts, da_bid['resp_c2'][0],
                                                                                   da_bid['resp_c1'][0], da_bid['resp_deg'][0]))
@@ -144,7 +190,7 @@ while ts <= tmax:
       fncs.publish (pubtopic + '/da_bid', json.dumps(da_bid))
     tnext_da += da_period
 
-  # update the bid, and publish simulated load as unresponsive + cleared_responsive
+  # update the RTM bid, and publish simulated load as unresponsive + cleared_responsive
   for row in dso_bus:
     busnum = int (row[0])
     pubtopic = row[1] # this is what fncsTSO.py receives it as
