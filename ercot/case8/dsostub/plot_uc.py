@@ -20,7 +20,7 @@ def next_val (fp, var, bInteger = True):
         val = int(fp.readline().strip())
       else:
         val = float(fp.readline().strip())
-  print (var, '=', val)
+#  print (var, '=', val)
   return val
 
 def next_matrix (fp, var):
@@ -39,7 +39,7 @@ def next_matrix (fp, var):
       rows = int(toks[2])
       toks = fp.readline().strip().split()
       cols = int(toks[2])
-      print ('{:s} [{:d}x{:d}]'.format (var, rows, cols))
+#      print ('{:s} [{:d}x{:d}]'.format (var, rows, cols))
       mat = np.empty ((rows, cols))
       for i in range(rows):
         mat[i] = np.fromstring (fp.readline().strip(), sep=' ')
@@ -69,10 +69,18 @@ np.set_printoptions(precision=3)
 h = np.linspace (1.0, 24.0, num=nt) - 0.5
 #print (lamP)
 
-Psteam = np.sum(Pg[0:12,:], axis=0)
-Pwind = np.sum(Pg[13:17,:], axis=0)
+Psteam = np.sum(Pg[0:13,:], axis=0)
+Pwind = np.sum(Pg[14:18,:], axis=0)
 Presp = np.abs(np.sum(Pg[18:,:], axis=0))
 Pfixed = np.sum(Pd, axis=0)
+AvgSteam = np.mean(Psteam)
+AvgWind = np.mean(Pwind)
+AvgFixed = np.mean(Pfixed)
+AvgResp = np.mean(Presp)
+AvgErr = AvgSteam + AvgWind - AvgFixed - AvgResp
+print ('Average Psteam={:.2f}, Pwind={:.2f}, Pfixed={:.2f}, Presp={:.2f}, Perr={:.2f}'.format (AvgSteam, 
+      AvgWind, AvgFixed, AvgResp, AvgErr))
+#quit()
 
 cset = ['red', 'blue', 'green', 'magenta', 'cyan', 'orange', 'lime', 'silver',
         'yellow', 'pink', 'tan', 'peru', 'darkgray']
@@ -124,6 +132,7 @@ ax[1,2].legend()
 ax[0,3].set_title ('System Generation')
 ax[0,3].plot(h, 0.001 * Psteam, label='Steam', color='red')
 ax[0,3].plot(h, 0.001 * Pwind, label='Wind', color='blue')
+ax[0,3].plot(h, 0.001 * (Pfixed + Presp), label='Loads', color='green')
 ax[0,3].set_ylabel ('GW')
 ax[0,3].legend()
 
