@@ -106,6 +106,10 @@ def read_eplus_metrics (nameroot, quiet=False):
 
   # make a sorted list of the times
   lst.pop('StartTime')
+  load_scale = 1.0
+  if 'LoadScale' in lst:
+    load_scale = lst.pop('LoadScale')
+    print ('LoadScale is', load_scale)
   meta = lst.pop('Metadata')
   times = list(map(int,list(lst.keys())))
   times.sort()
