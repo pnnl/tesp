@@ -67,6 +67,16 @@ To set up and run CombinedCase:
 - *runcombined.sh*; example hand-edited script file to run CombinedCase on Mac/Linux
 - *show_config.py*; script that shows the case configuration GUI; use to open, edit and save Nocomm_Base.json
 
+Layout of the full-order feeder models used in this example.
+
+![](GC_Feeder.png)
+
+![](R1-12.47-3.png)
+
+![](R3-12.47-2.png)
+
+![](R5-12.47-5.png)
+
 Copyright (c) 2017-2020, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE

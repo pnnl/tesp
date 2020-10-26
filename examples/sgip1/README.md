@@ -45,6 +45,11 @@ results from different cases on the same axes.
 - *SGIP1d.glm*; GridLAB-D file for case D, with market, added PV
 - *SGIP1e.glm*; GridLAB-D file for case E, with market, added PV
 
+Layout of the full-order feeder models used in this example.
+
+![](R1-12.47-1.png)
+
+
 Copyright (c) 2017-2020, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE
