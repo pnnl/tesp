@@ -56,16 +56,25 @@ To set up and run CombinedCase:
 
 ### File Directory
 
+- *autotest.py*;
 - *combine_feeders.py*; script that combines three taxonomy feeders into a self-contained TESP case in the CombinedCase subdirectory (creates and/or overwrites the subdirectory as needed)
+- *Comm_GC_towers.json*;
+- *CommDef.json*;
+- *Eplus_Restaurant.json*;
 - *Feeder1.json*; feeder configuration to use R3-12.47-2 in CombinedCase
 - *Feeder2.json*; feeder configuration to use GC-12.47-1 in CombinedCase (this is a commercial feeder with three 2.5-MVA load connection points for large buildings in EnergyPlus/Modelica, or industrial loads defined in player files)
 - *Feeder3.json*; feeder configuration to use R1-12.47-3 in CombinedCase
 - *Feeder4.json*; feeder configuration to use R1-12.47-3, with batteries and PV in VOLT_VAR mode, in CombinedCase
-- *Nocomm_Base.json*; case configuration for the R5-12.47-5 feeder with no large building and no communications network
+- *GC_Feeder.png*;
 - *make_comm_base.py*; script that reads Nocomm_Base.json and creates a self-contained TESP case in the Nocomm_Base subdirectory (creates and/or overwrites the subdirectory as needed)
 - *make_comm_eplus.py*; script that reads CommDef.json and creates a self-contained TESP case, with GridLAB-D and three EnergyPlus federates, in the Comm_Eplus subdirectory (creates and/or overwrites the subdirectory as needed)
+- *new_GC-12.47-1.json*;
 - *Nocomm_Base.json*; case configuration for the R5-12.47-5 feeder with no large building and no communications network
-- *runcombined.sh*; example hand-edited script file to run CombinedCase on Mac/Linux
+- *R1-12.47-3.png*;
+- *R3-12.47-2.png*;
+- *R5-12.47-5.png*;
+- *runcombined.sh*; example hand-edited script file to run CombinedCase with FNCS
+- *runcombinedh.sh*; example hand-edited script file to run CombinedCase with HELICS
 - *show_config.py*; script that shows the case configuration GUI; use to open, edit and save Nocomm_Base.json
 - *tabulate_responses.py*; script that measures daytime kW vs. delta-Temperature setting on three EnergyPlus buildings
 
