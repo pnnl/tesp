@@ -63,9 +63,11 @@ To set up and run CombinedCase:
 - *Feeder4.json*; feeder configuration to use R1-12.47-3, with batteries and PV in VOLT_VAR mode, in CombinedCase
 - *Nocomm_Base.json*; case configuration for the R5-12.47-5 feeder with no large building and no communications network
 - *make_comm_base.py*; script that reads Nocomm_Base.json and creates a self-contained TESP case in the Nocomm_Base subdirectory (creates and/or overwrites the subdirectory as needed)
+- *make_comm_eplus.py*; script that reads CommDef.json and creates a self-contained TESP case, with GridLAB-D and three EnergyPlus federates, in the Comm_Eplus subdirectory (creates and/or overwrites the subdirectory as needed)
 - *Nocomm_Base.json*; case configuration for the R5-12.47-5 feeder with no large building and no communications network
 - *runcombined.sh*; example hand-edited script file to run CombinedCase on Mac/Linux
 - *show_config.py*; script that shows the case configuration GUI; use to open, edit and save Nocomm_Base.json
+- *tabulate_responses.py*; script that measures daytime kW vs. delta-Temperature setting on three EnergyPlus buildings
 
 Layout of the full-order feeder models used in this example.
 
