@@ -27,7 +27,12 @@ import time
 
 import numpy as np;
 import matplotlib;
-matplotlib.use('TkAgg');
+
+try:
+  matplotlib.use('TkAgg')
+except:
+  pass
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk;
 from matplotlib.figure import Figure;
 from matplotlib.lines import Line2D
