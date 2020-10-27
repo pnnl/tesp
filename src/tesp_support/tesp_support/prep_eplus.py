@@ -1,4 +1,4 @@
-import tesp_support.api as tesp
+#import tesp_support.api as tesp
 import sys
 import json
 import os
@@ -336,9 +336,10 @@ def prepare_run_script (caseConfig, fedNodes):
   st = os.stat (fname)
   os.chmod (fname, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-if __name__ == '__main__':
-  print ('usage: python3 prepare_case.py casedef.json')
+#if __name__ == '__main__':
+#  print ('usage: python3 prepare_case.py casedef.json')
 
+def make_gld_eplus_case ():
   fname = 'casedef.json'
   if len(sys.argv) > 1:
       fname = sys.argv[1]
