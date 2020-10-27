@@ -3,7 +3,7 @@ import sys
 import os
 import tesp_support.process_gld as gp
 import numpy as np
-import glob
+import json
 try:
   import matplotlib as mpl;
   import matplotlib.pyplot as plt;
@@ -26,18 +26,12 @@ idx_i = dict['idx_i']
 solar_kw = dict['solar_kw']
 battery_kw = dict['battery_kw']
 
-#print (idx_s)
-#print (idx_m)
-#print (idx_i)
-#print (hrs.shape, data_s.shape, data_m.shape, data_i.shape)
-#print (keys_s)
-#print (keys_m)
-#print (keys_i)
 bldg_mtrs = {}
-for idf in glob.glob ('*.idf'):
-  mtr = idf.split ('_')[1].split('.')[0].lower()
-  idx = keys_m.index(mtr)
-  bldg_mtrs[mtr.upper()] = idx
+fp = open('BuildingDefinitions.json', 'r').read()
+bldg_defs = json.loads(fp)
+for key, row in bldg_defs.items():
+  mtr = row['Meter']
+  bldg_mtrs[mtr.upper()] = {'idx':keys_m.index(mtr), 'name':row['Name']}
 print ('Building meters are', bldg_mtrs)
 
 prop_cycle = plt.rcParams['axes.prop_cycle']
@@ -60,16 +54,20 @@ ax[1,0].legend(loc='best')
 
 ax[0,1].set_title ('Real Power at Building Meters')
 i = 0
-for key, idx in bldg_mtrs.items():
-  ax[0,1].plot(hrs, 0.001 * data_m[idx,:,idx_m['MTR_REAL_POWER_AVG_IDX']], color=colors[i], label=key)
+for key, row in bldg_mtrs.items():
+  idx = row['idx']
+  lbl = row['name']
+  ax[0,1].plot(hrs, 0.001 * data_m[idx,:,idx_m['MTR_REAL_POWER_AVG_IDX']], color=colors[i], label=lbl)
   i = i + 1
 ax[0,1].set_ylabel('kW')
 ax[0,1].legend(loc='best')
 
 ax[1,1].set_title ('Voltage Range at Building Meters')
 i = 0
-for key, idx in bldg_mtrs.items():
-  ax[1,1].plot(hrs, data_m[idx,:,idx_m['MTR_VOLT_MIN_IDX']], color=colors[i], label=key)
+for key, row in bldg_mtrs.items():
+  idx = row['idx']
+  lbl = row['name']
+  ax[1,1].plot(hrs, data_m[idx,:,idx_m['MTR_VOLT_MIN_IDX']], color=colors[i], label=lbl)
   ax[1,1].plot(hrs, data_m[idx,:,idx_m['MTR_VOLT_MAX_IDX']], color=colors[i])
   i = i + 1
 ax[1,1].set_ylabel('Voltage [%]')
@@ -77,8 +75,10 @@ ax[1,1].legend(loc='best')
 
 ax[0,2].set_title ('Building Meter Bills')
 i = 0
-for key, idx in bldg_mtrs.items():
-  ax[0,2].plot(hrs, data_m[idx,:,idx_m['MTR_BILL_IDX']], color=colors[i], label=key)
+for key, row in bldg_mtrs.items():
+  idx = row['idx']
+  lbl = row['name']
+  ax[0,2].plot(hrs, data_m[idx,:,idx_m['MTR_BILL_IDX']], color=colors[i], label=lbl)
   i = i + 1
 ax[0,2].set_ylabel(idx_m['MTR_BILL_UNITS'])
 ax[0,2].legend(loc='best')

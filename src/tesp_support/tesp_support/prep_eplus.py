@@ -70,10 +70,10 @@ def configure_eplus (caseConfig, template_dir):
                'HelicsConfigFile': 'ag_{:s}_{:s}.json'.format (caseName, fedRoot),
                'StopSeconds' : seconds,
                'MetricsPeriod': caseConfig['MetricsPeriod'],
-               'BasePrice' : 0.10,
-               'RampSlope' : 25.0,
-               'MaxDeltaHeat' : 4.0,
-               'MaxDeltaCool': 4.0}
+               'BasePrice' : caseConfig['BasePrice'],
+               'RampSlope' : caseConfig['BiddingRamp'],
+               'MaxDeltaHeat' : caseConfig['MaxDeltaT'],
+               'MaxDeltaCool': caseConfig['MaxDeltaT']}
       json.dump (aDict, op, ensure_ascii=False, indent=2)
       op.close()
 
@@ -83,17 +83,13 @@ def configure_eplus (caseConfig, template_dir):
   return fedMeters, fedLoads, fedLoadNames
 
 
-substationLines = """  object metrics_collector {
-    interval ${METRICS_INTERVAL};
-  };"""
-
 billingMeterLines = """  bill_mode UNIFORM;
-  price 0.11420;
-  monthly_fee 25.00;
+  price {base_price};
+  monthly_fee {monthly_fee};
   bill_day 1;
-  object metrics_collector {
-    interval ${METRICS_INTERVAL};
-  };"""
+  object metrics_collector {{
+    interval ${{METRICS_INTERVAL}};
+  }};"""
 
 gldLines = """#set relax_naming_rules=1
 #set profiler=1
@@ -125,7 +121,7 @@ object climate {{
   interpolate QUADRATIC;
 }};
 
-#define VSOURCE=66395.28
+#define VSOURCE={vsource:.2f}
 #include "{root}_net.glm";
 //#include "solar_pv.glm";
 #ifdef USE_HELICS
@@ -145,6 +141,40 @@ object recorder {{
   interval 60;
   file weather.csv;
 }}"""
+
+substationTemplate = """//////////////////////////////////////////
+object transformer_configuration {{
+  name substation_xfmr_config;
+  connect_type WYE_WYE;
+  install_type PADMOUNT;
+  primary_voltage {primary_voltage};
+  secondary_voltage {secondary_voltage};
+  power_rating {transformer_kva};
+  resistance 0.01;
+  reactance 0.08;
+  shunt_resistance 250.00;
+  shunt_reactance 100.00;
+}}
+object transformer {{
+  name substation_transformer;
+  from sourcebus;
+  to {swing_node};
+  phases ABCN;
+  configuration substation_xfmr_config;
+}}
+object substation {{
+  name sourcebus;
+  bustype SWING;
+  nominal_voltage {nominal_voltage};
+  positive_sequence_voltage ${{VSOURCE}};
+  base_power {substation_watts};
+  power_convergence_value 100.0;
+  phases ABCN;
+  object metrics_collector {{
+    interval ${{METRICS_INTERVAL}};
+  }};
+}}
+//////////////////////////////////////////////////////"""
 
 def writeGlmClass (theseLines, thisClass, op):
   print ('object', thisClass, '{', file=op)
@@ -181,24 +211,27 @@ def prepare_glm_file (caseConfig):
   thisName = ''
   theseLines = []
   nomkW = 0.0
-  nomV = 7200.0
+  nomV = caseConfig['PrimaryVoltageLN']
+  bStartWriting = False
 
   ip = open (iname, 'r')
   op = open (oname, 'w')
   for line in ip:
+    if ('object' in line) and ('configuration' in line):
+      bStartWriting = True
+    if not bStartWriting:
+      continue
     ln = line.rstrip()
     lst = ln.strip().split()
     if len(lst) > 0:
       if lst[0] == '}':
-        if thisClass == 'substation':
-          theseLines.append (substationLines)
         theseLines.append (ln)
         writeGlmClass (theseLines, thisClass, op)
         thisClass = ''
         theseLines = []
         xfscale = 1.0
       else:
-        if 'constant_power' in ln:
+        if 'constant_power' in ln: # scale the load values
           scaledLoad = xfscale * scale * complex(lst[1].strip(';'))
           nomkW += 0.001 * scaledLoad.real
           if scaledLoad.imag < 0.0:
@@ -213,14 +246,23 @@ def prepare_glm_file (caseConfig):
             iLoad = scaledLoad / nomV
             theseLines.append ('  {:s} {:.2f}{:.2f}j;'.format (lst[0].replace ('power', 'current'), 
                                                               iLoad.real, -iLoad.imag)) # conjugate
-        else:
-          # check for a load name to replace...
-          if (thisClass == 'load' and lst[0] == 'name'):
+        elif 'SWING' not in ln: # the swing node will be in a source substation instead
+          if (thisClass == 'load' and lst[0] == 'name'): # check for a load name to replace
             thisName = lst[1].lstrip('"').rstrip('";')
             if thisName in newLoadNames:
               xfscale = xfmrLoadScales[thisName]
               print ('$$$ rename {:s} to {:s}'.format (thisName, newLoadNames[thisName]))
               ln = '  name {:s};'.format (newLoadNames[thisName])
+          if (thisClass == 'node') and lst[0] == 'name':  # find the swing node; write a substation for it
+            thisName = lst[1].lstrip('"').rstrip('";')
+            if thisName == caseConfig['SwingNode']:
+              print (substationTemplate.format (primary_voltage=caseConfig['TransformerKVHi'] * 1000.0,
+                                                secondary_voltage=caseConfig['TransformerKVLo'] * 1000.0,
+                                                transformer_kva=caseConfig['TransformerMVA'] * 1000.0,
+                                                nominal_voltage=caseConfig['SourceNominalVLN'],
+                                                substation_watts=caseConfig['TransformerMVA'] * 1000000.0,
+                                                swing_node=caseConfig['SwingNode']), file=op)
+
           theseLines.append (ln)
     if len(lst) > 1:
       if lst[0] == 'nominal_voltage':
@@ -232,7 +274,8 @@ def prepare_glm_file (caseConfig):
         if thisName in meters:
           meters.append (lst[1])
           thisClass = 'meter'
-          theseLines.append (billingMeterLines)
+          theseLines.append (billingMeterLines.format (base_price=caseConfig['BasePrice'],
+                                                       monthly_fee=caseConfig['MonthlyFee']))
 
   if len(theseLines) > 0:
     writeGlmClass (theseLines, thisClass, op)
@@ -246,9 +289,28 @@ def prepare_glm_file (caseConfig):
                           sdate=caseConfig['StartDate'], 
                           edate=caseConfig['EndDate'],
                           metrics_interval=caseConfig['MetricsPeriod'],
-                          gld_step=caseConfig['GldStep']), file=gp)
+                          gld_step=caseConfig['GldStep'],
+                          vsource=caseConfig['SourceNominalVLN'] * caseConfig['SourceNominalVpu']), file=gp)
   gp.close()
   print ('{:.3f} kW total load'.format (nomkW))
+
+# dictionary of buildings with GridLAB-D meters
+def prepare_bldg_dict (caseConfig):
+  oname = '{:s}/BuildingDefinitions.json'.format (caseConfig['CaseDir'])
+  print ('dictionary for buildings to', oname)
+
+  dict = {}
+  for row in caseConfig['Buildings']:
+    dict[row['ID']] = {'Name': row['Name'],
+                       'Meter': row['Meter'],
+                       'Vnom': row['Vnom'],
+                       'XfKVA': row['XfKVA'],
+                       'EpScale': row['EpScale'],
+                       'Pbase': row['Pbase']}
+
+  op = open (oname, 'w')
+  json.dump (dict, op, ensure_ascii=False, indent=2)
+  op.close()
 
 # dictionary of building meters and inverters
 def prepare_glm_dict (caseConfig):
@@ -269,9 +331,9 @@ def prepare_glm_dict (caseConfig):
     vln = float('{:.3f}'.format(vll/math.sqrt(3.0)))
     meters[mtr_id] = {'feeder_id':feeder_id,'phases':'ABC','vll':vll,'vln':vln,'children':[mtr_load]}
 
-  feeders[feeder_id] = {'house_count':0,'inverter_count':0,'base_feeder':'TBD'}
-  dict = {'bulkpower_bus':'TBD','FedName':'gld1','transformer_MVA':32.0,'feeders':feeders, 
-    'billingmeters':meters,'houses':{},'inverters':inverters,'capacitors':{},'regulators':{}}
+  feeders[feeder_id] = {'house_count':0,'inverter_count':0,'base_feeder':caseConfig['BaseFeederName']}
+  dict = {'bulkpower_bus':caseConfig['BulkBusName'],'FedName':'gld1','transformer_MVA':caseConfig['TransformerMVA'],
+    'feeders':feeders,'billingmeters':meters,'houses':{},'inverters':inverters,'capacitors':{},'regulators':{}}
 
   op = open (oname, 'w')
   json.dump (dict, op, ensure_ascii=False, indent=2)
@@ -345,17 +407,20 @@ def prepare_run_script (caseConfig, fedMeters):
   st = os.stat (fname)
   os.chmod (fname, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-def make_gld_eplus_case (fname = 'casedef.json', template_dir = './templates/', support_dir = '../../support/misc/'):
+def make_gld_eplus_case (fname):
   fp = open(fname, 'r').read()
   caseConfig = json.loads(fp)
   caseDir = caseConfig['CaseDir']
   if os.path.exists(caseDir):
     shutil.rmtree(caseDir)
   os.makedirs(caseDir)
+  template_dir = caseConfig['TemplateDir']
+  support_dir = caseConfig['SupportDir']
   print ('read', len(caseConfig['Buildings']), 'buildings from', fname, 'writing to', caseDir)
 
   prepare_glm_file (caseConfig)
   prepare_glm_dict (caseConfig)
+  prepare_bldg_dict (caseConfig)
   fedMeters, fedLoads, fedLoadNames = configure_eplus (caseConfig, template_dir)
   prepare_glm_helics (caseConfig, fedMeters, fedLoadNames)
   prepare_run_script (caseConfig, fedMeters)

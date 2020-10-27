@@ -20,6 +20,8 @@ cd ../../comm
 rm -rf CombinedCase
 rm -rf Nocomm_Base
 rm -rf Eplus_Restaurant
+rm -rf SummerTest
+rm -rf Comm_GC
 cd ../../ercot/case8
 ./clean.sh
 rm *.glm
