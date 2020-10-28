@@ -284,6 +284,16 @@ def solve_most_case (fname):
   print ('  rGenCost is {:d}x{:d}'.format (len(rGenCost), len(rGenCost[0])))
   return rBus, rBranch, rGen, rGenCost
 
+def get_plant_min_up_down_hours (fuel, gencosts):
+  if fuel == 'nuclear':
+    return 24, 24
+  if fuel == 'coal':
+    return 12, 12
+  if fuel == 'gas':
+    if gencosts[4] < 57.0:
+      return 6, 6
+  return 1, 1
+
 def write_array_rows (A, fp):
   print (';\n'.join([' '.join([' {:s}'.format(str(item)) for item in row]) for row in A]), file=fp)
 
@@ -300,11 +310,16 @@ def write_most_table_indices (fp):
 def write_most_dam_files (ppc, bids, froot):
   fp = open (froot + 'solve.m', 'w')
   print ("""define_constants;""", file=fp)
-  print ("""mpopt = mpoption('verbose', 0, 'out.all', 0);""", file=fp);
+  print ("""mpopt = mpoption('verbose', 3, 'out.all', 1, 'most.dc_model', 0, 'most.solver', 'GLPK');""", file=fp);
+  print ("""mpopt = mpoption(mpopt, 'most.uc.run', 1);""", file=fp);
+  print ("""mpopt = mpoption(mpopt, 'glpk.opts.msglev', 3);""", file=fp);
+  print ("""mpopt = mpoption(mpopt, 'glpk.opts.mipgap', 0);""", file=fp);
+  print ("""mpopt = mpoption(mpopt, 'glpk.opts.tolint', 1e-10);""", file=fp);
+  print ("""mpopt = mpoption(mpopt, 'glpk.opts.tolobj', 1e-10);""", file=fp);
   print ("""mpc = loadcase ('{:s}case.m');""".format (froot), file=fp);
   print ("""xgd = loadxgendata('{:s}xgd.m', mpc);""".format (froot), file=fp);
-  print ("""profiles = getprofiles('{:s}resp.m');""".format (froot), file=fp);
-  print ("""profiles = getprofiles('{:s}unresp.m', profiles);""".format (froot), file=fp);
+  print ("""profiles = getprofiles('{:s}unresp.m');""".format (froot), file=fp);
+  print ("""profiles = getprofiles('{:s}resp.m', profiles);""".format (froot), file=fp);
   print ("""nt = size(profiles(1).values, 1);""", file=fp);
   print ("""mdi = loadmd(mpc, nt, xgd, [], [], profiles);""", file=fp);
   print ("""mdo = most(mdi, mpopt);""", file=fp);
@@ -340,28 +355,31 @@ def write_most_dam_files (ppc, bids, froot):
   print ("""function [xgd_table] = {:s}xgd (mpc)
   xgd_table.colnames = {{
       'CommitKey', ...
+      'MinUp', ...
+      'MinDown', ...
   }};
   xgd_table.data = [
   % generators""".format (froot), file=fp)
   for i in range(len(ppc['genfuel'])):
     fuel = ppc['genfuel'][i][0]
     if (len (fuel) > 0) and (fuel != 'wind'):
+      minup, mindown = get_plant_min_up_down_hours (fuel, ppc['gencost'][i])
       if ppc['gen'][i][7] > 0.0:
-        print ('    1;', file=fp)
+        print ('    1 {:2d} {:2d};'.format (minup, mindown), file=fp)
       else:
-        print ('   -1;', file=fp)
+        print ('   -1 {:2d} {:2d};'.format (minup, mindown), file=fp)
   print ('  % wind plants', file=fp)
   for i in range(len(ppc['genfuel'])):
     if ppc['genfuel'][i][0] == 'wind':
       if ppc['gen'][i][7] > 0.0:
-        print ('    2;', file=fp)
+        print ('    2  1  1;', file=fp)
       else:
-        print ('   -1;', file=fp)
+        print ('   -1  1  1;', file=fp)
   print ('  % responsive loads', file=fp)
   for i in range(len(ppc['bus'])):
-    print ('    2;', file=fp)
+    print ('    2  1  1;', file=fp)
   print ('];', file=fp)
-  print ('endfunction', file=fp)
+  print ('end', file=fp)
   fp.close()
 
   # write the load information
@@ -370,9 +388,9 @@ def write_most_dam_files (ppc, bids, froot):
     rowlist.append (int(row[0]))
 
   fp = open (froot + 'unresp.m', 'w')
-  print ("""function loadprofile = {:s}unresp""".format (froot), file=fp)
+  print ("""function unresp = {:s}unresp""".format (froot), file=fp)
   write_most_table_indices (fp)
-  print ("""  loadprofile = struct( ...
+  print ("""  unresp = struct( ...
     'type', 'mpcData', ...
     'table', CT_TBUS, ...
     'rows', {:s}, ...
@@ -385,14 +403,14 @@ def write_most_dam_files (ppc, bids, froot):
     gld_scale = float(row[2]) * 3.0 # adds the "curve" load
     vals = str([round(gld_scale * v, 2) for v in bids[key]['unresp_mw']])
     mvals = vals.replace (',', ';')
-    print ("""  loadprofile.values(:, 1, {:s}) = {:s};""".format (busnum, mvals), file=fp)
-  print ("""endfunction""", file=fp)
+    print ("""  unresp.values(:, 1, {:s}) = {:s};""".format (busnum, mvals), file=fp)
+  print ("""end""", file=fp)
   fp.close ()
 
   fp = open (froot + 'resp.m', 'w')
-  print ("""function loadprofile = {:s}resp""".format (froot), file=fp)
+  print ("""function resp = {:s}resp""".format (froot), file=fp)
   write_most_table_indices (fp)
-  print ("""  loadprofile = struct( ...
+  print ("""  resp = struct( ...
     'type', 'mpcData', ...
     'table', CT_TLOAD, ...
     'rows', {:s}, ...
@@ -405,8 +423,10 @@ def write_most_dam_files (ppc, bids, froot):
     gld_scale = float(row[2])
     vals = str([round(gld_scale * v, 2) for v in bids[key]['resp_max_mw']])
     mvals = vals.replace (',', ';')
-    print ("""  loadprofile.values(:, 1, {:s}) = {:s};""".format (busnum, mvals), file=fp)
-  print ("""endfunction""", file=fp)
+    print ("""  resp.values(:, 1, {:s}) = {:s};""".format (busnum, mvals), file=fp)
+  print ("""  unresp = {:s}unresp;""".format (froot), file=fp)
+  print ("""  resp.values = resp.values + unresp.values;""", file=fp)
+  print ("""end""", file=fp)
   fp.close ()
 
 def write_most_base_case (ppc, fname):
@@ -506,11 +526,16 @@ def tso_loop (bTestDAM=False, test_bids=None):
   ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
   ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
-  if ppc['solver'] == 'GLPK': # 'cbc':
-    ppc['gencost'][:, 4] = 0.0  # can't use quadratic costs with CBC solver
-    ppc['gencost'][:, 6] = 0.0  # can't use quadratic costs with CBC solver
+  if ppc['solver'] == 'GLPK': # can't use quadratic costs with GLPK solver
+    ppc['gencost'][:, 3] = 2.0  
+    ppc['gencost'][:, 4] = ppc['gencost'][:, 5]  
+    ppc['gencost'][:, 5] = ppc['gencost'][:, 6]  
+    ppc['gencost'][:, 6] = 0.0
 
   numGen = ppc['gen'].shape[0]
+
+  for col in range (16, 20): # no physical constraint on ramping
+    ppc['gen'][:, col] = np.inf
 
   # set configurations case name from .json file
   priceSensLoad = 0
@@ -604,9 +629,9 @@ def tso_loop (bTestDAM=False, test_bids=None):
     genidx = ppc['gen'].shape[0]
     # I suppose a generator for a summing generators on a bus?
     ppc['gen'] = np.concatenate(
-      (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 20000, 20000, 0, 0]])))
+      (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, np.inf, np.inf, np.inf, np.inf, 0]])))
     ppc['gencost'] = np.concatenate(
-      (ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
+      (ppc['gencost'], np.array([[2, 0, 0, 2, 30.0, 0.0, 0.0]])))
     ppc['genfuel'] = np.concatenate(
       (ppc['genfuel'], np.array([['']])))
     gld_scale = float(dsoBus[i, 2])
@@ -645,7 +670,7 @@ def tso_loop (bTestDAM=False, test_bids=None):
   resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
 
   if bTestDAM:
-    write_most_dam_files (ppc, test_bids, 'test_dam')
+    write_most_dam_files (ppc, test_bids, 'dam')
     return
 
   if most:
