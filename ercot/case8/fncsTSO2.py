@@ -255,12 +255,12 @@ def read_matpower_array (fp):
     A.append (ln.split())
   return A
 
-def solve_most_rtm_case (fname):
+def solve_most_rtm_case (fprog, fname):
   rGen = None
   rBus = None
   rBranch = None
   rGenCost = None
-  cmdline = 'octave {:s}'.format(fname)
+  cmdline = '{:s} {:s}'.format(fprog, fname)
   proc = subprocess.Popen (cmdline, shell=True)
   proc.wait()
   fp = open ('solved.txt', 'r')
@@ -284,12 +284,13 @@ def solve_most_rtm_case (fname):
   print ('  rGenCost is {:d}x{:d}'.format (len(rGenCost), len(rGenCost[0])))
   return rBus, rBranch, rGen, rGenCost
 
-def solve_most_dam_case (froot):
-  cmdline = 'octave {:s}solve.m'.format(froot)
+def solve_most_dam_case (fprog, froot):
+  cmdline = '{:s} {:s}solve.m'.format(fprog, froot)
   proc = subprocess.Popen (cmdline, shell=True)
   proc.wait()
   f, nb, ng, nl, ns, nt, nj_max, Pg, Pd, Pf, u, lamP = tesp.read_most_solution ('msout.txt')
-  print ('f={:.2f} nb={:d} ng={:d} nl={:d} ns={:d} nt={:d} nj_max={:d}'.format (f, nb, ng, nl, ns, nt, nj_max))
+#  print ('f={:.2f} nb={:d} ng={:d} nl={:d} ns={:d} nt={:d} nj_max={:d}'.format (f, nb, ng, nl, ns, nt, nj_max))
+  return f, Pg, Pd, Pf, u, lamP
 
 # minup, mindown
 def get_plant_min_up_down_hours (fuel, gencosts, gen):
@@ -343,9 +344,9 @@ def write_most_dam_files (ppc, bids, wind_plants, froot):
   fp = open (froot + 'solve.m', 'w')
   print ("""clear;""", file=fp)
   print ("""define_constants;""", file=fp)
-  print ("""mpopt = mpoption('verbose', 0, 'out.all', 0, 'most.dc_model', 1, 'most.solver', 'GLPK');""", file=fp);
+  print ("""mpopt = mpoption('verbose', 0, 'out.all', 0, 'most.dc_model', 1, 'most.solver', '{:s}');""".format (ppc['solver']), file=fp);
   print ("""mpopt = mpoption(mpopt, 'most.uc.run', 1);""", file=fp);
-  print ("""mpopt = mpoption(mpopt, 'glpk.opts.msglev', 3);""", file=fp);
+  print ("""mpopt = mpoption(mpopt, 'glpk.opts.msglev', 3);""", file=fp); # TODO: options for other solvers?
   print ("""mpopt = mpoption(mpopt, 'glpk.opts.mipgap', 0);""", file=fp);
   print ("""mpopt = mpoption(mpopt, 'glpk.opts.tolint', 1e-10);""", file=fp);
   print ("""mpopt = mpoption(mpopt, 'glpk.opts.tolobj', 1e-10);""", file=fp);
@@ -596,9 +597,14 @@ def update_cost_and_load (ppc, for_optimization):
     if (for_optimization): # set up dispatchable loads for OPF or scheduling
       resp_max = gld_load[busnum]['resp_max'] * gld_scale
       unresp = gld_load[busnum]['unresp'] * gld_scale
-      c2 = gld_load[busnum]['c2']
-      c1 = gld_load[busnum]['c1']
-      deg = gld_load[busnum]['deg']
+      if ppc['solver'] == 'GLPK':
+        c2 = 0.0
+        c1 = gld_load[busnum]['c1']
+        deg = 1
+      else:
+        c2 = gld_load[busnum]['c2']
+        c1 = gld_load[busnum]['c1']
+        deg = gld_load[busnum]['deg']
       # track the latest bid in the metrics
       bus_accum[str(busnum)][8] = unresp
       bus_accum[str(busnum)][9] = resp_max
@@ -761,9 +767,10 @@ def tso_loop (bTestDAM=False, test_bids=None):
     ppc['genfuel'] = np.concatenate(
       (ppc['genfuel'], np.array([['']])))
     gld_scale = float(dsoBus[i, 2])
+    initial_load = 0.5 * float(dsoBus[i, 7]) / gld_scale
     gld_load[busnum] = {'pcrv': 0, 'qcrv': 0,
               'p': float(dsoBus[i, 7]) / gld_scale, 'q': float(dsoBus[i, 8]) / gld_scale,
-              'unresp': 0.5 * float(dsoBus[i, 7]) / gld_scale, 'resp_max': 0, 'c2': 0, 'c1': 0, 'deg': 0, 'genidx': genidx}
+              'unresp': initial_load, 'resp_max': initial_load, 'c2': 0, 'c1': 10.0, 'deg': 1, 'genidx': genidx}
     if noScale:
       dsoBus[i, 2] = 1   # gld_scale
 
@@ -788,44 +795,47 @@ def tso_loop (bTestDAM=False, test_bids=None):
   ppc['gld_load'] = gld_load
 
   total_bus_num = ppc['DSO'].shape[0]
-  unRespMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-  respMaxMW = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-  respC2 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-  respC1 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-  respC0 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-  resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
+  day_ahead_bid = {}  # keyed on bus number 1..nbus
+  for row in ppc['DSO']:
+    busnum = row[0]
+    key = row[1]
+    day_ahead_bid [key] = {'unresp_mw':np.zeros([hours_in_a_day], dtype=float),
+                           'resp_max_mw':np.zeros([hours_in_a_day], dtype=float),
+                           'resp_c2':np.zeros([hours_in_a_day], dtype=float),
+                           'resp_c1':np.zeros([hours_in_a_day], dtype=float),
+                           'resp_deg':np.zeros([hours_in_a_day], dtype=float)}
 
   if bTestDAM:
     write_most_dam_files (ppc, test_bids, wind_plants, 'dam')
-    solve_most_dam_case ('dam')
+    f, Pg, Pd, Pf, u, lamP = solve_most_dam_case (ppc['MostCommand'], 'dam')
     return
 
   if most:
     write_most_base_case(ppc, 'basecase.m')
-    rBus, rBranch, rGen, rGenCost = solve_most_rtm_case('solvebasecase.m')
+    rBus, rBranch, rGen, rGenCost = solve_most_rtm_case(ppc['MostCommand'], 'solvebasecase.m')
     bus = ppc['bus']
     for i in range(bus.shape[0]):  # starting LMP values
       bus[i, 13] = float (rBus[i][13])
 
   # Set column header for output files
-  line = "seconds, OPFconverged, TotalLoad, TotalGen, SwingGen, RespCleared"
-  line2 = "seconds, PFConverged, TotalLoad, TotalGen, TotalLoss, SwingGen"
+  line = 'seconds, OPFconverged, TotalLoad, TotalGen, SwingGen, RespCleared'
+  line2 = 'seconds, PFConverged, TotalLoad, TotalGen, TotalLoss, SwingGen'
   for i in range(ppc['DSO'].shape[0]):
-    line += ", " + "LMP" + str(i+1)
-    line2 += ", " + "v" + str(i + 1)
+    line += ', ' + 'LMP' + str(i+1)
+    line2 += ', ' + 'v' + str(i + 1)
   w = 0;  n = 0;  c = 0;  g = 0
   genFuel = ppc['genfuel']
   for i in range(numGen):
     fuel =genFuel[i][0]
-    if "wind" in fuel:
-      w += 1;  line += ", wind" + str(w)
-    elif "nuclear" in fuel:
-      n += 1;  line += ", nuc" + str(n)
-    elif "coal" in fuel:
-      c += 1;  line += ", coal" + str(c)
+    if 'wind' in fuel:
+      w += 1;  line += ', wind' + str(w)
+    elif 'nuclear' in fuel:
+      n += 1;  line += ', nuc' + str(n)
+    elif 'coal' in fuel:
+      c += 1;  line += ', coal' + str(c)
     else:
-      g += 1;  line += ", gas" + str(g)
-  line += ", TotalWindGen"
+      g += 1;  line += ', gas' + str(g)
+  line += ', TotalWindGen'
 
   op = open(casename + '_opf.csv', 'w')
   vp = open(casename + '_pf.csv', 'w')
@@ -878,17 +888,12 @@ def tso_loop (bTestDAM=False, test_bids=None):
         gld_load[busnum]['q'] = float(q)   # MW
     # getting the latest inputs from DSO day Ahead
       elif 'DA_BID_' in topic:
-        da_bid = True
-        busnum = int(topic[7:]) - 1
-        day_ahead_bid = json.loads(val)
-        # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[hours_in_a_day]
-        unRespMW[busnum] = day_ahead_bid['unresp_mw']   # fix load
-        respMaxMW[busnum] = day_ahead_bid['resp_max_mw']  # slmax
-        respC2[busnum] = day_ahead_bid['resp_c2']
-        respC1[busnum] = day_ahead_bid['resp_c1']
-        respC0[busnum] = 0.0  # day_ahead_bid['resp_c0']
-        resp_deg[busnum] = day_ahead_bid['resp_deg']
-        # print('Day Ahead Bid for Bus', busnum, 'at', ts, '=', day_ahead_bid, flush=True)
+        new_da_bid = True
+        substation = 'SUBSTATION' + topic[7:]
+        bus_da_bid = json.loads(val)
+        # each array[hours_in_a_day]
+        for arrayName in ['unresp_mw', 'resp_max_mw', 'resp_c2', 'resp_c1', 'resp_deg']:
+          day_ahead_bid[substation][arrayName] = bus_da_bid[arrayName]
 
     # fluctuate the wind plants
     if ts >= tnext_wind:
@@ -957,15 +962,23 @@ def tso_loop (bTestDAM=False, test_bids=None):
     # run multi-period optimization in MOST to establish the next day's unit commitment and dispatch schedule
     if (most == True) and (hours == 12) and (minutes == 0) and (seconds == 0):    # Run the day ahead market (DAM) at noon every day
       file_time = 'd{:d}_h{:d}_m{:d}_'.format (days, hours, minutes)
-      most_DAM_case_file = './' + file_time + 'dam'
+      most_DAM_case_file = file_time + 'dam'
       update_cost_and_load (ppc, True)
-      write_most_dam_files (ppc, wind_plants, most_DAM_case_file)
+      print ('Running MOST DAM at day {:d}'.format (days))
+      print (day_ahead_bid)
+      write_most_dam_files (ppc, day_ahead_bid, wind_plants, most_DAM_case_file)
+      f, Pg, Pd, Pf, u, lamP = solve_most_dam_case (ppc['MostCommand'], most_DAM_case_file)
+      print ('Objective = ', f, 'u, Pg, Pd and lamP follow')
+      print (u)
+      print (Pg)
+      print (Pd)
+      print (lamP)
 
     if ts >= tnext_opf:
       update_cost_and_load (ppc, True)
 
 #      write_most_base_case(ppc, 'rtmcase.m')
-#      rBus, rBranch, rGen, rGenCost = solve_most_rtm_case('solvertmcase.m')
+#      rBus, rBranch, rGen, rGenCost = solve_most_rtm_case(ppc['MostCommand'], 'solvertmcase.m')
       ropf = pp.runopf(ppc, ppopt_market)
       if ropf['success'] == False:
         conv_accum = False
@@ -1061,7 +1074,7 @@ def tso_loop (bTestDAM=False, test_bids=None):
         clr = -1.0 * float(opf_gen [genidx, 1])
       fncs.publish('LMP_Bus' + busnum, lmp)  # publishing $/kwh
       fncs.publish('CLR_Bus' + busnum, clr)  # publishing cleared responsive load
-      print ('FNCS Published CLR_Bus' + busnum, clr)
+      # print ('FNCS Published CLR_Bus' + busnum, clr)
       # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
       PD = row[2]  # + resp # TODO, if more than one FNCS bus, track scaled_resp separately
       Vpu = row[7]

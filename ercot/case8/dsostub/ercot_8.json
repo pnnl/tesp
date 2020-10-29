@@ -1,6 +1,7 @@
 {
   "ames": false,
   "most": true,
+  "MostCommand": "octave",
   "solver": "GLPK",
   "priceSensLoad": true,
   "windPower": true,
@@ -15,7 +16,7 @@
   "baseMVA": 100.0,
   "StartTime": "2013-07-01 00:00:00",
   "EndTime": "2013-07-04 00:00:00",
-  "Tmax": 259200,
+  "Tmax": 172800,
   "Period": 300,
   "dt": 15,
   "pf_dc": 1,
@@ -1113,7 +1114,7 @@
   "swing_bus": 1,
   "metadata": {
     "ames": "true == ames running, false == pypower running opf",
-    "solver": "The name for the solver for ames",
+    "solver": "The name for the solver for ames/most",
     "priceSensLoad": "true == Substation load is flexible, false == only inflexible load",
     "windPower": "true == wind power, false == no wind power",
     "noScale": "if true, the raw GridLAB-D load from FNCS will not be scaled",

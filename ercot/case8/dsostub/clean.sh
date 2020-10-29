@@ -7,5 +7,5 @@ rm *dict.json
 rm *.dat
 rm *.txt
 rm dam.json
-rm dam*.m
+rm d*.m
 rm test_dam*.m
