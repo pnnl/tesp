@@ -284,7 +284,8 @@ def solve_most_case (fname):
   print ('  rGenCost is {:d}x{:d}'.format (len(rGenCost), len(rGenCost[0])))
   return rBus, rBranch, rGen, rGenCost
 
-def get_plant_min_up_down_hours (fuel, gencosts):
+# minup, mindown
+def get_plant_min_up_down_hours (fuel, gencosts, gen):
   if fuel == 'nuclear':
     return 24, 24
   if fuel == 'coal':
@@ -293,6 +294,23 @@ def get_plant_min_up_down_hours (fuel, gencosts):
     if gencosts[4] < 57.0:
       return 6, 6
   return 1, 1
+
+# paPrice, naPrice, pdPrice, ndPrice, plfPrice, nlfPrice
+def get_plant_prices (fuel, gencosts, gen):
+  return 0.0001, 0.0001, 0.0001, 0.0001, 0.1, 0.1
+
+def get_plant_reserve (fuel, gencosts, gen):
+  if len(fuel) < 1:
+    return 10000.0
+  return abs (gen[8])
+
+def get_plant_commit_key (fuel, gencosts, gen):
+  if len (fuel) > 0:
+    if fuel == 'wind':
+      return -1
+    else:
+      return 1
+  return 2
 
 def write_array_rows (A, fp):
   print (';\n'.join([' '.join([' {:s}'.format(str(item)) for item in row]) for row in A]), file=fp)
@@ -309,8 +327,9 @@ def write_most_table_indices (fp):
 
 def write_most_dam_files (ppc, bids, froot):
   fp = open (froot + 'solve.m', 'w')
+  print ("""clear;""", file=fp)
   print ("""define_constants;""", file=fp)
-  print ("""mpopt = mpoption('verbose', 3, 'out.all', 1, 'most.dc_model', 0, 'most.solver', 'GLPK');""", file=fp);
+  print ("""mpopt = mpoption('verbose', 0, 'out.all', 0, 'most.dc_model', 1, 'most.solver', 'GLPK');""", file=fp);
   print ("""mpopt = mpoption(mpopt, 'most.uc.run', 1);""", file=fp);
   print ("""mpopt = mpoption(mpopt, 'glpk.opts.msglev', 3);""", file=fp);
   print ("""mpopt = mpoption(mpopt, 'glpk.opts.mipgap', 0);""", file=fp);
@@ -357,27 +376,26 @@ def write_most_dam_files (ppc, bids, froot):
       'CommitKey', ...
       'MinUp', ...
       'MinDown', ...
+      'PositiveActiveReservePrice', ...
+      'PositiveActiveReserveQuantity', ...
+      'NegativeActiveReservePrice', ...
+      'NegativeActiveReserveQuantity', ...
+      'PositiveActiveDeltaPrice', ...
+      'NegativeActiveDeltaPrice', ...
+      'PositiveLoadFollowReservePrice', ...
+      'PositiveLoadFollowReserveQuantity', ...
+      'NegativeLoadFollowReservePrice', ...
+      'NegativeLoadFollowReserveQuantity', ...
   }};
-  xgd_table.data = [
-  % generators""".format (froot), file=fp)
+  xgd_table.data = [""".format (froot), file=fp)
   for i in range(len(ppc['genfuel'])):
     fuel = ppc['genfuel'][i][0]
-    if (len (fuel) > 0) and (fuel != 'wind'):
-      minup, mindown = get_plant_min_up_down_hours (fuel, ppc['gencost'][i])
-      if ppc['gen'][i][7] > 0.0:
-        print ('    1 {:2d} {:2d};'.format (minup, mindown), file=fp)
-      else:
-        print ('   -1 {:2d} {:2d};'.format (minup, mindown), file=fp)
-  print ('  % wind plants', file=fp)
-  for i in range(len(ppc['genfuel'])):
-    if ppc['genfuel'][i][0] == 'wind':
-      if ppc['gen'][i][7] > 0.0:
-        print ('    2  1  1;', file=fp)
-      else:
-        print ('   -1  1  1;', file=fp)
-  print ('  % responsive loads', file=fp)
-  for i in range(len(ppc['bus'])):
-    print ('    2  1  1;', file=fp)
+    commit = get_plant_commit_key (fuel, ppc['gencost'][i], ppc['gen'][i])
+    reserve = get_plant_reserve (fuel, ppc['gencost'][i], ppc['gen'][i])
+    minup, mindown = get_plant_min_up_down_hours (fuel, ppc['gencost'][i], ppc['gen'][i])
+    paPrice, naPrice, pdPrice, ndPrice, plfPrice, nlfPrice = get_plant_prices (fuel, ppc['gencost'][i], ppc['gen'][i])
+    print (' {:2d} {:2d} {:2d} {:f} {:.2f} {:f} {:.2f} {:f} {:f} {:f} {:.2f} {:f} {:.2f};'.format (commit, minup, mindown,
+      paPrice, reserve, naPrice, reserve, pdPrice, ndPrice, plfPrice, reserve, nlfPrice, reserve), file=fp)
   print ('];', file=fp)
   print ('end', file=fp)
   fp.close()
