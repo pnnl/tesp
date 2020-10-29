@@ -70,7 +70,7 @@ h = np.linspace (1.0, 24.0, num=nt) - 0.5
 #print (lamP)
 
 Psteam = np.sum(Pg[0:13,:], axis=0)
-Pwind = np.sum(Pg[14:18,:], axis=0)
+Pwind = np.sum(Pg[13:18,:], axis=0)
 Presp = np.abs(np.sum(Pg[18:,:], axis=0))
 Pfixed = np.sum(Pd, axis=0)
 AvgSteam = np.mean(Psteam)
@@ -96,7 +96,7 @@ for i in range(2):
 
 ax[0,0].set_title ('Unit Commitment Status')
 for i in range(13):
-  ax[0,0].plot(h, 0.5 * u[i,:] + i + 1.0, label='Gen{:d}'.format (i+1), color = cset[i])
+  ax[0,0].plot(h, 0.25 * u[i,:] + i + 1.0, label='Gen{:d}'.format (i+1), color = cset[i])
 ax[0,0].set_ylim (0, 14)
 ax[0,0].set_yticks ([0,2,4,6,8,10,12,14])
 ax[0,0].set_ylabel ('Unit #')

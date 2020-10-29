@@ -3,7 +3,7 @@
   "most": true,
   "solver": "GLPK",
   "priceSensLoad": true,
-  "windPower": false,
+  "windPower": true,
   "noScale": false,
   "curve": true,
   "reserveDown": 0.15,

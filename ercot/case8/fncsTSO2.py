@@ -304,10 +304,13 @@ def get_plant_reserve (fuel, gencosts, gen):
     return 10000.0
   return abs (gen[8])
 
-def get_plant_commit_key (fuel, gencosts, gen):
+def get_plant_commit_key (fuel, gencosts, gen, usewind):
   if len (fuel) > 0:
     if fuel == 'wind':
-      return -1
+      if usewind:
+        return 1
+      else:
+        return -1
     else:
       return 1
   return 2
@@ -323,9 +326,13 @@ def write_most_table_indices (fp):
     CT_REL, CT_ADD, CT_NEWVAL, CT_TLOAD, CT_TAREALOAD, CT_LOAD_ALL_PQ, ...
     CT_LOAD_FIX_PQ, CT_LOAD_DIS_PQ, CT_LOAD_ALL_P, CT_LOAD_FIX_P, ...
     CT_LOAD_DIS_P, CT_TGENCOST, CT_TAREAGENCOST, CT_MODCOST_F, ...
-    CT_MODCOST_X] = idx_ct;""", file=fp)
+    CT_MODCOST_X] = idx_ct;
+  [GEN_BUS, PG, QG, QMAX, QMIN, VG, MBASE, GEN_STATUS, PMAX, PMIN, ...
+    MU_PMAX, MU_PMIN, MU_QMAX, MU_QMIN, PC1, PC2, QC1MIN, QC1MAX, ...
+    QC2MIN, QC2MAX, RAMP_AGC, RAMP_10, RAMP_30, RAMP_Q, APF] = idx_gen;
+  [PW_LINEAR, POLYNOMIAL, MODEL, STARTUP, SHUTDOWN, NCOST, COST] = idx_cost;""", file=fp)
 
-def write_most_dam_files (ppc, bids, froot):
+def write_most_dam_files (ppc, bids, wind_plants, froot):
   fp = open (froot + 'solve.m', 'w')
   print ("""clear;""", file=fp)
   print ("""define_constants;""", file=fp)
@@ -339,11 +346,15 @@ def write_most_dam_files (ppc, bids, froot):
   print ("""xgd = loadxgendata('{:s}xgd.m', mpc);""".format (froot), file=fp);
   print ("""profiles = getprofiles('{:s}unresp.m');""".format (froot), file=fp);
   print ("""profiles = getprofiles('{:s}resp.m', profiles);""".format (froot), file=fp);
+  if len(wind_plants) > 0:
+    print ("""profiles = getprofiles('{:s}wind.m', profiles);""".format (froot), file=fp);
+  print ("""profiles = getprofiles('{:s}bids.m', profiles);""".format (froot), file=fp);
   print ("""nt = size(profiles(1).values, 1);""", file=fp);
   print ("""mdi = loadmd(mpc, nt, xgd, [], [], profiles);""", file=fp);
   print ("""mdo = most(mdi, mpopt);""", file=fp);
   print ("""ms = most_summary(mdo);""", file=fp);
   print ("""save('-text', 'msout.txt', 'ms');""", file=fp);
+  print ("""mdo.results.SolveTime + mdo.results.SetupTime""", file=fp);
   fp.close()
 
   fp = open (froot + 'case.m', 'w')
@@ -388,9 +399,18 @@ def write_most_dam_files (ppc, bids, froot):
       'NegativeLoadFollowReserveQuantity', ...
   }};
   xgd_table.data = [""".format (froot), file=fp)
+  ngen = 0
+  nwind = 0
+  usewind = False
+  if len(wind_plants) > 0:
+    usewind = True
   for i in range(len(ppc['genfuel'])):
     fuel = ppc['genfuel'][i][0]
-    commit = get_plant_commit_key (fuel, ppc['gencost'][i], ppc['gen'][i])
+    if fuel == 'wind':
+      nwind += 1
+    elif len(fuel) > 0:
+      ngen += 1
+    commit = get_plant_commit_key (fuel, ppc['gencost'][i], ppc['gen'][i], usewind)
     reserve = get_plant_reserve (fuel, ppc['gencost'][i], ppc['gen'][i])
     minup, mindown = get_plant_min_up_down_hours (fuel, ppc['gencost'][i], ppc['gen'][i])
     paPrice, naPrice, pdPrice, ndPrice, plfPrice, nlfPrice = get_plant_prices (fuel, ppc['gencost'][i], ppc['gen'][i])
@@ -400,7 +420,7 @@ def write_most_dam_files (ppc, bids, froot):
   print ('end', file=fp)
   fp.close()
 
-  # write the load information
+  # write the load profile information
   rowlist = []
   for row in ppc['DSO']:
     rowlist.append (int(row[0]))
@@ -444,6 +464,87 @@ def write_most_dam_files (ppc, bids, froot):
     print ("""  resp.values(:, 1, {:s}) = {:s};""".format (busnum, mvals), file=fp)
   print ("""  unresp = {:s}unresp;""".format (froot), file=fp)
   print ("""  resp.values = resp.values + unresp.values;""", file=fp)
+  print ("""end""", file=fp)
+  fp.close ()
+
+  # write the load cost information
+  rowlist = []
+  for row in ppc['DSO']:
+    rowlist.append (nwind + ngen + int(row[0]))
+
+  fp = open (froot + 'bids.m', 'w')
+  print ("""function bids = {:s}bids""".format (froot), file=fp)
+  write_most_table_indices (fp)
+  print ("""  bids = struct( ...
+    'type', 'mpcData', ...
+    'table', CT_TGENCOST, ...
+    'rows', {:s}, ...
+    'col', COST, ...
+    'chgtype', CT_REP, ...
+    'values', [] );""".format (str(rowlist)), file=fp)
+  for row in ppc['DSO']:
+    busnum = int(row[0])
+    key = row[1]
+    vals = str([round(v, 3) for v in bids[key]['resp_c1']])
+    mvals = vals.replace (',', ';')
+    print ("""  bids.values(:, 1, {:d}) = {:s};""".format (busnum, mvals), file=fp)
+  print ("""end""", file=fp)
+  fp.close ()
+
+  # write the wind plant information
+  rowlist = []
+  wind_vals = {}
+  for i in range(len(ppc['genfuel'])):
+    fuel = ppc['genfuel'][i][0]
+    if fuel == 'wind':
+      rowlist.append (i+1)
+      wind_vals[i+1] = []
+
+  if len(wind_plants) < 1:
+    return
+
+  for j in range (24):
+    for key, row in wind_plants.items():
+      Theta0 = row[2]
+      Theta1 = row[3]
+      StdDev = row[4]
+      Psi1 = row[5]
+      Ylim = row[6]
+      alag = row[7]
+      ylag = row[8]
+      if j > 0:
+        a = np.random.normal(0.0, StdDev)
+        y = Theta0 + a - Theta1 * alag + Psi1 * ylag
+        alag = a
+      else:
+        y = ylag
+      if y > Ylim:
+        y = Ylim
+      elif y < 0.0:
+        y = 0.0
+      p = y * y
+      if j > 0:
+        ylag = y
+      row[7] = alag
+      row[8] = ylag
+      #set the max and min
+      wind_vals[int(key)+1].append (p)
+
+  fp = open (froot + 'wind.m', 'w')
+  print ("""function wind = {:s}wind""".format (froot), file=fp)
+  write_most_table_indices (fp)
+  print ("""  wind = struct( ...
+    'type', 'mpcData', ...
+    'table', CT_TGEN, ...
+    'rows', {:s}, ...
+    'col', PMAX, ...
+    'chgtype', CT_REP, ...
+    'values', [] );""".format (str(rowlist)), file=fp)
+  for key, wvals in wind_vals.items():
+    rownum = key - ngen
+    vals = str([round(v, 2) for v in wvals])
+    mvals = vals.replace (',', ';')
+    print ("""  wind.values(:, 1, {:d}) = {:s};""".format (rownum, mvals), file=fp)
   print ("""end""", file=fp)
   fp.close ()
 
@@ -688,7 +789,7 @@ def tso_loop (bTestDAM=False, test_bids=None):
   resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
 
   if bTestDAM:
-    write_most_dam_files (ppc, test_bids, 'dam')
+    write_most_dam_files (ppc, test_bids, wind_plants, 'dam')
     return
 
   if most:
@@ -850,7 +951,7 @@ def tso_loop (bTestDAM=False, test_bids=None):
       file_time = 'd{:d}_h{:d}_m{:d}_'.format (days, hours, minutes)
       most_DAM_case_file = './' + file_time + 'dam'
       update_cost_and_load (ppc, True)
-      write_most_dam_files (ppc, most_DAM_case_file)
+      write_most_dam_files (ppc, wind_plants, most_DAM_case_file)
 
     if ts >= tnext_opf:
       update_cost_and_load (ppc, True)

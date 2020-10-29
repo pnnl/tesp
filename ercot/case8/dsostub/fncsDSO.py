@@ -4,6 +4,7 @@ import scipy.interpolate as ip;
 import tesp_support.api as tesp;
 import tesp_support.fncs as fncs;
 import json;
+import random;
 import sys;
 
 # day-ahead market runs at noon every day
@@ -94,7 +95,10 @@ def make_da_bid (row, bWantMarket):
     da_bid['unresp_mw'].append(round(unresp / gld_scale, 3))
     da_bid['resp_max_mw'].append(round(resp_max / gld_scale, 3))
     da_bid['resp_c2'].append(c2)
-    da_bid['resp_c1'].append(c1)
+    cbid = c1 + random.random()
+    if h >= 9.0 and h <= 19.0:
+      cbid *= 1.8
+    da_bid['resp_c1'].append(round (cbid, 3))
     da_bid['resp_deg'].append(deg)
   return da_bid
 
