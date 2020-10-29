@@ -255,7 +255,7 @@ def read_matpower_array (fp):
     A.append (ln.split())
   return A
 
-def solve_most_case (fname):
+def solve_most_rtm_case (fname):
   rGen = None
   rBus = None
   rBranch = None
@@ -283,6 +283,13 @@ def solve_most_case (fname):
   print ('  rGen is {:d}x{:d}'.format (len(rGen), len(rGen[0])))
   print ('  rGenCost is {:d}x{:d}'.format (len(rGenCost), len(rGenCost[0])))
   return rBus, rBranch, rGen, rGenCost
+
+def solve_most_dam_case (froot):
+  cmdline = 'octave {:s}solve.m'.format(froot)
+  proc = subprocess.Popen (cmdline, shell=True)
+  proc.wait()
+  f, nb, ng, nl, ns, nt, nj_max, Pg, Pd, Pf, u, lamP = tesp.read_most_solution ('msout.txt')
+  print ('f={:.2f} nb={:d} ng={:d} nl={:d} ns={:d} nt={:d} nj_max={:d}'.format (f, nb, ng, nl, ns, nt, nj_max))
 
 # minup, mindown
 def get_plant_min_up_down_hours (fuel, gencosts, gen):
@@ -790,11 +797,12 @@ def tso_loop (bTestDAM=False, test_bids=None):
 
   if bTestDAM:
     write_most_dam_files (ppc, test_bids, wind_plants, 'dam')
+    solve_most_dam_case ('dam')
     return
 
   if most:
     write_most_base_case(ppc, 'basecase.m')
-    rBus, rBranch, rGen, rGenCost = solve_most_case('solvebasecase.m')
+    rBus, rBranch, rGen, rGenCost = solve_most_rtm_case('solvebasecase.m')
     bus = ppc['bus']
     for i in range(bus.shape[0]):  # starting LMP values
       bus[i, 13] = float (rBus[i][13])
@@ -957,7 +965,7 @@ def tso_loop (bTestDAM=False, test_bids=None):
       update_cost_and_load (ppc, True)
 
 #      write_most_base_case(ppc, 'rtmcase.m')
-#      rBus, rBranch, rGen, rGenCost = solve_most_case('solvertmcase.m')
+#      rBus, rBranch, rGen, rGenCost = solve_most_rtm_case('solvertmcase.m')
       ropf = pp.runopf(ppc, ppopt_market)
       if ropf['success'] == False:
         conv_accum = False
