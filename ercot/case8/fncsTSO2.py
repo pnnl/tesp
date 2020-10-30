@@ -340,7 +340,7 @@ def write_most_table_indices (fp):
     QC2MIN, QC2MAX, RAMP_AGC, RAMP_10, RAMP_30, RAMP_Q, APF] = idx_gen;
   [PW_LINEAR, POLYNOMIAL, MODEL, STARTUP, SHUTDOWN, NCOST, COST] = idx_cost;""", file=fp)
 
-def write_most_dam_files (ppc, bids, wind_plants, froot):
+def write_most_dam_files (ppc, bids, wind_plants, unit_state, froot):
   fp = open (froot + 'solve.m', 'w')
   print ("""clear;""", file=fp)
   print ("""define_constants;""", file=fp)
@@ -393,6 +393,7 @@ def write_most_dam_files (ppc, bids, wind_plants, froot):
   print ("""function [xgd_table] = {:s}xgd (mpc)
   xgd_table.colnames = {{
       'CommitKey', ...
+      'InitialState',...
       'MinUp', ...
       'MinDown', ...
       'PositiveActiveReservePrice', ...
@@ -422,8 +423,8 @@ def write_most_dam_files (ppc, bids, wind_plants, froot):
     reserve = get_plant_reserve (fuel, ppc['gencost'][i], ppc['gen'][i])
     minup, mindown = get_plant_min_up_down_hours (fuel, ppc['gencost'][i], ppc['gen'][i])
     paPrice, naPrice, pdPrice, ndPrice, plfPrice, nlfPrice = get_plant_prices (fuel, ppc['gencost'][i], ppc['gen'][i])
-    print (' {:2d} {:2d} {:2d} {:f} {:.2f} {:f} {:.2f} {:f} {:f} {:f} {:.2f} {:f} {:.2f};'.format (commit, minup, mindown,
-      paPrice, reserve, naPrice, reserve, pdPrice, ndPrice, plfPrice, reserve, nlfPrice, reserve), file=fp)
+    print (' {:2d} {:4d} {:2d} {:2d} {:f} {:.2f} {:f} {:.2f} {:f} {:f} {:f} {:.2f} {:f} {:.2f};'.format (commit, int(unit_state[i]), 
+      minup, mindown, paPrice, reserve, naPrice, reserve, pdPrice, ndPrice, plfPrice, reserve, nlfPrice, reserve), file=fp)
   print ('];', file=fp)
   print ('end', file=fp)
   fp.close()
@@ -774,6 +775,17 @@ def tso_loop (bTestDAM=False, test_bids=None):
     if noScale:
       dsoBus[i, 2] = 1   # gld_scale
 
+  # set up the MOST UC/ED structures
+  numResp = ppc['gen'].shape[0] - numGen
+  unit_state = np.ones (numGen + numResp) * 24.0 # assuming all units will "run" through the first day
+  unit_schedule = np.ones ([numGen + numResp, hours_in_a_day])
+  unit_dispatch = np.zeros ([numGen + numResp, hours_in_a_day])
+  bDAMValid = False  # don't apply zero dispatch to the units on first day
+  print ('numGen = {:d}, numResp = {:d}'.format (numGen, numResp))
+  print ('starting unit_state', unit_state)
+  print ('starting unit_schedule', unit_schedule)
+  print ('starting unit_dispatch', unit_dispatch)
+
   # interval for metrics recording
   tnext_metrics = 0
 
@@ -806,8 +818,13 @@ def tso_loop (bTestDAM=False, test_bids=None):
                            'resp_deg':np.zeros([hours_in_a_day], dtype=float)}
 
   if bTestDAM:
-    write_most_dam_files (ppc, test_bids, wind_plants, 'dam')
+    write_most_dam_files (ppc, test_bids, wind_plants, unit_state, 'dam')
     f, Pg, Pd, Pf, u, lamP = solve_most_dam_case (ppc['MostCommand'], 'dam')
+    print ('Objective = ', f, 'u, Pg, Pd and lamP follow')
+    print (u)
+    print (Pg)
+    print (Pd)
+    print (lamP)
     return
 
   if most:
@@ -966,13 +983,35 @@ def tso_loop (bTestDAM=False, test_bids=None):
       update_cost_and_load (ppc, True)
       print ('Running MOST DAM at day {:d}'.format (days))
       print (day_ahead_bid)
-      write_most_dam_files (ppc, day_ahead_bid, wind_plants, most_DAM_case_file)
+      write_most_dam_files (ppc, day_ahead_bid, wind_plants, unit_state, most_DAM_case_file)
       f, Pg, Pd, Pf, u, lamP = solve_most_dam_case (ppc['MostCommand'], most_DAM_case_file)
-      print ('Objective = ', f, 'u, Pg, Pd and lamP follow')
-      print (u)
-      print (Pg)
-      print (Pd)
-      print (lamP)
+      print ('#### Objective = ', f)
+      unit_schedule = u
+      unit_dispatch = Pg
+      print ('new unit_schedule', unit_schedule)
+      print ('new unit_dispatch', unit_dispatch)
+      for i in range (unit_state.shape[0]):
+        hours_run = np.sum(unit_schedule[i])
+        if (hours_run > 23.5) and (unit_state[i] > 0.0):
+          unit_state[i] += 24.0
+        elif (hours_run < 0.5) and (unit_state[i] < 0.0):
+          unit_state[i] -= 24.0
+        else: # the unit turned ON or OFF sometime during the day
+          if unit_schedule[i][23] > 0.5:  # will end the day ON, how many hours will it have been ON?
+            unit_state[i] = 1.0
+            for j in range(22,-1,-1):
+              if unit_schedule[i][j] > 0.0:
+                unit_state[i] += 1.0
+              else:
+                break
+          else: # will end the day OFF, how many hours will it have been OFF?
+            unit_state[i] = -1.0
+            for j in range(22,-1,-1):
+              if unit_schedule[i][j] < 0.5:
+                unit_state[i] -= 1.0
+              else:
+                break
+      print ('next unit_state', unit_state)
 
     if ts >= tnext_opf:
       update_cost_and_load (ppc, True)
@@ -984,9 +1023,9 @@ def tso_loop (bTestDAM=False, test_bids=None):
         conv_accum = False
       opf_bus = deepcopy(ropf['bus'])
       opf_gen = deepcopy(ropf['gen'])
-      print_gld_load (ppc, 'GLD Load after OPF', ts)
+#      print_gld_load (ppc, 'GLD Load after OPF', ts)
 #      print_bus_lmps ('### from OPF at {:d}'.format(ts), opf_bus)
-      tesp.summarize_opf (ropf)
+#      tesp.summarize_opf (ropf)
       Pcleared = 0
       Pproduced = 0
       Pswing = 0
