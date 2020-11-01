@@ -14,9 +14,10 @@ tnext_da = da_offset
 
 casename = 'ercot_8'
 bWantMarket = True
-bid_c2 = -2.0
+bid_c2 = 0.0 # -2.0
 bid_c1 = 18.0
-bid_deg = 2
+bid_c1_daylight_factor = 1.8
+bid_deg = 1 # 2
 
 load_shape = [0.6704,
               0.6303,
@@ -62,9 +63,11 @@ dt = 60
 # DSO: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew
 dso_bus = ppc['DSO']
 gld_bus = {} # key on bus number
+last_bid_c1 = {}
 for i in range (8):
   busnum = i+1
   gld_bus[busnum] = {'pcrv':0,'qcrv':0,'lmp':0,'clr':0,'v':0,'p':0,'q':0,'unresp':0,'resp_max':0,'resp':0,'c2':bid_c2,'c1':bid_c1,'deg':bid_deg}
+  last_bid_c1[busnum] = bid_c1
 
 def make_da_bid (row, bWantMarket):
   da_bid = {'unresp_mw':[], 'resp_max_mw':[], 'resp_c2':[], 'resp_c1':[], 'resp_deg':[]}
@@ -97,7 +100,7 @@ def make_da_bid (row, bWantMarket):
     da_bid['resp_c2'].append(c2)
     cbid = c1 + random.random()
     if h >= 9.0 and h <= 19.0:
-      cbid *= 1.8
+      cbid *= bid_c1_daylight_factor
     da_bid['resp_c1'].append(round (cbid, 3))
     da_bid['resp_deg'].append(deg)
   return da_bid
@@ -153,37 +156,6 @@ while ts <= tmax:
   if ts >= tnext_da:
     for row in dso_bus:
       da_bid = make_da_bid (row, bWantMarket)
-#      da_bid = {'unresp_mw':[], 'resp_max_mw':[], 'resp_c2':[], 'resp_c1':[], 'resp_deg':[]}
-#      busnum = int (row[0])
-#      pubtopic = row[1] # this is what fncsTSO.py receives it as
-#      gld_scale = float (row[2]) # divide published P, Q values by gld_scale, because fncsTSO.py multiplies by gld_scale
-#      Pnom = float (row[3])
-#      curve_scale = float (row[5])
-#      curve_skew = int (row[6])
-#      if bWantMarket:
-#        c2 = gld_bus[busnum]['c2']
-#        c1 = gld_bus[busnum]['c1']
-#        deg = gld_bus[busnum]['deg']
-#      else:
-#        c2 = 0
-#        c1 = 0
-#        deg = 0
-#      for i in range(24):
-#       sec = (3600 * i + curve_skew) % 86400
-#       h = float (sec) / 3600.0
-#       val = ip.splev ([h / 24.0], tck_load)
-#       Phour = Pnom * curve_scale * float(val[1])
-#       if bWantMarket:
-#         resp_max = Phour * 0.5
-#         unresp = Phour * 0.5
-#       else:
-#         resp_max = 0.0
-#         unresp = Phour
-#       da_bid['unresp_mw'].append(round(unresp / gld_scale, 3))
-#       da_bid['resp_max_mw'].append(round(resp_max / gld_scale, 3))
-#       da_bid['resp_c2'].append(c2)
-#       da_bid['resp_c1'].append(c1)
-#       da_bid['resp_deg'].append(deg)
 
       busnum = int (row[0])
       pubtopic = 'substationBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from a substation auction
@@ -218,18 +190,21 @@ while ts <= tmax:
       unresp = gld_bus[busnum]['pcrv'] * 0.5
       c2 = gld_bus[busnum]['c2']
       c1 = gld_bus[busnum]['c1']
+      last_bid_c1[busnum] = c1 + random.random()
+      if h >= 9.0 and h <= 19.0:
+        last_bid_c1[busnum] *= bid_c1_daylight_factor
       deg = gld_bus[busnum]['deg']
     else:
       resp_max = 0.0
       unresp = gld_bus[busnum]['pcrv']
       c2 = 0
-      c1 = 0
+      last_bid_c1[busnum] = 0
       deg = 0
     pubtopic = 'substationBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from a substation auction
     fncs.publish (pubtopic + '/unresponsive_mw', unresp / gld_scale)
     fncs.publish (pubtopic + '/responsive_max_mw', resp_max / gld_scale)
     fncs.publish (pubtopic + '/responsive_c2', c2)
-    fncs.publish (pubtopic + '/responsive_c1', c1)
+    fncs.publish (pubtopic + '/responsive_c1', last_bid_c1[busnum])
     fncs.publish (pubtopic + '/responsive_deg', deg)
 
     # the actual load is the unresponsive load, plus a cleared portion of the responsive load
@@ -239,7 +214,7 @@ while ts <= tmax:
     if bWantMarket:
       p_cleared = gld_bus[busnum]['clr']
       F = lmp * p_cleared
-      dso_lmp = c1 + 2.0 * c2 * p_cleared / gld_scale
+      dso_lmp = last_bid_c1[busnum] + 2.0 * c2 * p_cleared / gld_scale
     p = unresp + p_cleared
     q = p * qf
     print ('Clearing at {:d}s Bus{:d}: lmp={:.2f} dso_lmp={:.2f} resp_max={:.2f} cleared={:.2f}'.format (ts, busnum,

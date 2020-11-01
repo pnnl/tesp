@@ -778,8 +778,10 @@ def tso_loop (bTestDAM=False, test_bids=None):
   # set up the MOST UC/ED structures
   numResp = ppc['gen'].shape[0] - numGen
   unit_state = np.ones (numGen + numResp) * 24.0 # assuming all units will "run" through the first day
-  unit_schedule = np.ones ([numGen + numResp, hours_in_a_day])
-  unit_dispatch = np.zeros ([numGen + numResp, hours_in_a_day])
+  unit_schedule = np.ones ([numGen + numResp, hours_in_a_day])  # set status (gen[7]) to this if bDAMValid
+  unit_dispatch = np.zeros ([numGen + numResp, hours_in_a_day]) # set Pg (gen[1]) to this if bDAMValid and unit_schedule > 0
+  next_unit_schedule = None
+  next_unit_dispatch = None
   bDAMValid = False  # don't apply zero dispatch to the units on first day
   print ('numGen = {:d}, numResp = {:d}'.format (numGen, numResp))
   print ('starting unit_state', unit_state)
@@ -865,9 +867,13 @@ def tso_loop (bTestDAM=False, test_bids=None):
   while ts <= tmax:
     # we have to know the day, minute and hour in order to time the market clearings
     ds = timedelta (seconds=ts)
-    days = ds.days
-    minutes, seconds = divmod(ds.seconds,60)
-    hours, minutes = divmod(minutes,60)
+    days = int (ds.days)
+    quotient, remainder = divmod(ds.seconds,60)
+    minutes = int(quotient)
+    seconds = int(remainder)
+    quotient, remainder = divmod(minutes,60)
+    hours = int(quotient)
+    minutes = int(remainder)
 
     # temporary references into ppc
     gen = ppc['gen']
@@ -976,6 +982,20 @@ def tso_loop (bTestDAM=False, test_bids=None):
         gld_load[busnum]['pcrv'] = Pnom * curve_scale * float(val[1])
         gld_load[busnum]['qcrv'] = Qnom * curve_scale * float(val[1])
 
+    if (most == True) and (bDAMValid == True):
+      if (minutes == 0) and (seconds == 0):
+        if (hours == 0):
+          print ('#### At midnight: ts = {:d}, to rotate UC/ED'.format (ts))
+          unit_schedule = deepcopy (next_unit_schedule)
+          unit_dispatch = deepcopy (next_unit_dispatch)
+          print ('now unit_schedule =', unit_schedule)
+          print ('now unit_dispatch =', unit_dispatch)
+        if (days > 0): # we have DAM valid in the middle of first day, but don't use until day 1
+          print ('  #### Top of the hour {:d}: ts = {:d}, to implement UC/ED'.format (hours, ts))
+          ppc['gen'][:,1] = unit_dispatch[:, hours]
+          ppc['gen'][:,7] = unit_schedule[:, hours]
+          print (ppc['gen'])
+
     # run multi-period optimization in MOST to establish the next day's unit commitment and dispatch schedule
     if (most == True) and (hours == 12) and (minutes == 0) and (seconds == 0):    # Run the day ahead market (DAM) at noon every day
       file_time = 'd{:d}_h{:d}_m{:d}_'.format (days, hours, minutes)
@@ -985,11 +1005,12 @@ def tso_loop (bTestDAM=False, test_bids=None):
       print (day_ahead_bid)
       write_most_dam_files (ppc, day_ahead_bid, wind_plants, unit_state, most_DAM_case_file)
       f, Pg, Pd, Pf, u, lamP = solve_most_dam_case (ppc['MostCommand'], most_DAM_case_file)
-      print ('#### Objective = ', f)
-      unit_schedule = u
-      unit_dispatch = Pg
-      print ('new unit_schedule', unit_schedule)
-      print ('new unit_dispatch', unit_dispatch)
+      bDAMValid = True
+      print ('#### Objective = {:.2f}'.format (f))
+      next_unit_schedule = u
+      next_unit_dispatch = Pg
+      print ('next_unit_schedule', next_unit_schedule)
+      print ('next_unit_dispatch', next_unit_dispatch)
       for i in range (unit_state.shape[0]):
         hours_run = np.sum(unit_schedule[i])
         if (hours_run > 23.5) and (unit_state[i] > 0.0):
@@ -1011,7 +1032,7 @@ def tso_loop (bTestDAM=False, test_bids=None):
                 unit_state[i] -= 1.0
               else:
                 break
-      print ('next unit_state', unit_state)
+      print ('unit_state for next day DAM', unit_state)
 
     if ts >= tnext_opf:
       update_cost_and_load (ppc, True)
