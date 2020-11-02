@@ -500,7 +500,10 @@ def write_most_dam_files (ppc, bids, wind_plants, unit_state, froot):
   print ("""end""", file=fp)
   fp.close ()
 
-  # write the wind plant information
+  # write the wind plant information if applicable
+  if len(wind_plants) < 1:
+    return
+
   rowlist = []
   wind_vals = {}
   for i in range(len(ppc['genfuel'])):
@@ -509,34 +512,10 @@ def write_most_dam_files (ppc, bids, wind_plants, unit_state, froot):
       rowlist.append (i+1)
       wind_vals[i+1] = []
 
-  if len(wind_plants) < 1:
-    return
-
+  # copy the next-day stochastic data into a perfect DAM forecast
   for j in range (24):
     for key, row in wind_plants.items():
-      Theta0 = row[2]
-      Theta1 = row[3]
-      StdDev = row[4]
-      Psi1 = row[5]
-      Ylim = row[6]
-      alag = row[7]
-      ylag = row[8]
-      if j > 0:
-        a = np.random.normal(0.0, StdDev)
-        y = Theta0 + a - Theta1 * alag + Psi1 * ylag
-        alag = a
-      else:
-        y = ylag
-      if y > Ylim:
-        y = Ylim
-      elif y < 0.0:
-        y = 0.0
-      p = y * y
-      if j > 0:
-        ylag = y
-      row[7] = alag
-      row[8] = ylag
-      #set the max and min
+      p = row[9][j+24]
       wind_vals[int(key)+1].append (p)
 
   fp = open (froot + 'wind.m', 'w')
@@ -884,7 +863,7 @@ def tso_loop (bTestDAM=False, test_bids=None):
     events = fncs.get_events()
     for topic in events:
       val = fncs.get_value(topic)
-    # getting the latest inputs from DSO Real Time
+    # getting the latest inputs from DSO Real Time bid
       if 'UNRESPONSIVE_MW_' in topic:
         busnum = int(topic[16:])
         gld_load[busnum]['unresp'] = float(val)
@@ -903,13 +882,13 @@ def tso_loop (bTestDAM=False, test_bids=None):
       elif 'RESPONSIVE_DEG_' in topic:
         busnum = int(topic[15:])
         gld_load[busnum]['deg'] = int(val)
-    # getting the latest inputs from GridlabD
+    # getting the latest inputs from GridlabD or DSO stub
       elif 'SUBSTATION' in topic:  # gld
         busnum = int(topic[10:])
         p, q = parse_mva(val)
         gld_load[busnum]['p'] = float(p)   # MW
         gld_load[busnum]['q'] = float(q)   # MW
-    # getting the latest inputs from DSO day Ahead
+    # getting the latest inputs from DSO day Ahead bid
       elif 'DA_BID_' in topic:
         new_da_bid = True
         substation = 'SUBSTATION' + topic[7:]
@@ -966,7 +945,11 @@ def tso_loop (bTestDAM=False, test_bids=None):
       for key, row in wind_plants.items():
         # reset the unit capacity; this will 'stick' for the next wind_period
         gen[row[10], 1] = row[9][wind_hour]
+        gen[row[10], 8] = row[9][wind_hour]
       tnext_wind += wind_period
+      print ('========================== Fluctuating Wind at', ts)
+      for key, row in wind_plants.items():
+        print (key, row[9])
 
     # shape the baseline loads if using the curve
     for row in dsoBus:
@@ -992,8 +975,12 @@ def tso_loop (bTestDAM=False, test_bids=None):
           print ('now unit_dispatch =', unit_dispatch)
         if (days > 0): # we have DAM valid in the middle of first day, but don't use until day 1
           print ('  #### Top of the hour {:d}: ts = {:d}, to implement UC/ED'.format (hours, ts))
-          ppc['gen'][:,1] = unit_dispatch[:, hours]
           ppc['gen'][:,7] = unit_schedule[:, hours]
+          for i in range(numGen):
+            fuel = genFuel[i][0]
+            print ('   setting {:d} ({:s}) from {:.2f} to {:.2f}'.format (i, fuel, ppc['gen'][i,1], unit_dispatch[i,hours]))
+            if 'wind' not in fuel:
+              ppc['gen'][i,1] = unit_dispatch[i,hours]
           print (ppc['gen'])
 
     # run multi-period optimization in MOST to establish the next day's unit commitment and dispatch schedule

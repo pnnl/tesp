@@ -4,43 +4,6 @@ import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
 
-def bus_color(key):
-  if key == '1':
-    return 'b'
-  if key == '2':
-    return 'g'
-  if key == '3':
-    return 'r'
-  if key == '4':
-    return 'c'
-  if key == '5':
-    return 'm'
-  if key == '6':
-    return 'y'
-  if key == '7':
-    return 'k'
-  if key == '8':
-    return 'cadetblue'
-  return 'k'
-
-def unit_width(dict, key):
-  if dict['generators'][key]['bustype'] == 'swing':
-    return 2.0
-  return 1.0
-
-def unit_color_label (dict, key):
-  genfuel = dict['generators'][key]['genfuel']
-  clr = 'y'
-  if genfuel == 'wind':
-    clr = 'g'
-  elif genfuel == 'nuclear':
-    clr = 'r'
-  elif genfuel == 'coal':
-    clr = 'k'
-  elif genfuel == 'gas':
-    clr = 'b'
-  return clr, genfuel
-
 def process_pypower(nameroot):
   # first, read and print a dictionary of relevant PYPOWER objects
   lp = open (nameroot + '_m_dict.json').read()
@@ -228,9 +191,15 @@ def process_pypower(nameroot):
       i = i + 1
     j = j + 1
 
+  Psteam = np.sum(data_g[0:13,:,PGEN_IDX], axis=0)
+  Pwind = np.sum(data_g[13:18,:,PGEN_IDX], axis=0)
+  Presp = np.sum(data_d[0:7,:,PCLEARED_IDX], axis=0)
+  Punresp = 3.0 * np.sum(data_b[0:7,:,UNRESP_IDX], axis=0)
+  Ptotal = Psteam + Pwind
+#  Pload = Presp + Punresp
+
   # display a plot 
-  ncols = 4
-  fig, ax = plt.subplots(2, ncols, figsize=(15,9), sharex = 'col')
+  fig, ax = plt.subplots(1, 1, figsize=(15,9), sharex = 'col')
   tmin = 0.0
   tmax = hrs[len(hrs)-1]
   if tmax < 25.0:
@@ -242,84 +211,20 @@ def process_pypower(nameroot):
   else:
     tmax = 72.0
     xticks = [0,6,12,18,24,30,36,42,48,54,60,66,72]
-  for i in range(2):
-    for j in range(ncols):
-      ax[i,j].grid (linestyle = '-')
-      ax[i,j].set_xlim(tmin,tmax)
-      ax[i,j].set_xticks(xticks)
+  ax.grid (linestyle = '-')
+  ax.set_xlim(tmin,tmax)
+  ax.set_xticks(xticks)
+  ax.set_xlabel('Hours')
 
-  ax[0,0].set_title ('Total Bus Loads')
-  ax[0,0].set_ylabel(PD_UNITS)
-  for i in range(data_b.shape[0]):
-    ax[0,0].plot(hrs, data_b[i,:,PD_IDX], color=bus_color(bus_keys[i]))
-
-  labels_used = []
-  ax[1,0].set_title ('Generator Outputs')
-  ax[1,0].set_ylabel(PGEN_UNITS)
-  for i in range(data_g.shape[0]):
-    clr, lbl = unit_color_label (dict, gen_keys[i])
-    if lbl not in labels_used:
-      labels_used.append(lbl)
-    else:
-      lbl = None
-    ax[1,0].plot(hrs, data_g[i,:,PGEN_IDX], color=clr, label=lbl,
-           linewidth=unit_width (dict, gen_keys[i]))
-  ax[1,0].legend(loc='best')
-
-  ax[0,1].set_title ('Bus Unresp Load')
-  ax[0,1].set_ylabel(UNRESP_UNITS)
-  for i in range(data_b.shape[0]):
-    ax[0,1].plot(hrs, data_b[i,:,UNRESP_IDX], color=bus_color(bus_keys[i]))
-
-  ax[1,1].set_title ('Bus Max Resp Load')
-  ax[1,1].set_ylabel(RESP_MAX_UNITS)
-  for i in range(data_b.shape[0]):
-    ax[1,1].plot(hrs, data_b[i,:,RESP_MAX_IDX], color=bus_color(bus_keys[i]))
-
-  ax[0,2].set_title ('DSO LMP')
-  ax[0,2].set_ylabel ('USD / MWh') # (LMP_UNITS)
-  for i in range(data_d.shape[0]):
-    ax[0,2].plot(dhrs, data_d[i,:,LMP_IDX], label=bus_keys[i], color=bus_color(bus_keys[i]))
-  ax[0,2].legend(loc='best')
-
-  ax[1,2].set_title ('DSO Pcleared')
-  ax[1,2].set_ylabel(PCLEARED_UNITS)
-  for i in range(data_d.shape[0]):
-    ax[1,2].plot(dhrs, data_d[i,:,PCLEARED_IDX], color=bus_color(bus_keys[i]))
-
-#   ax[0,3].set_title ('Bus Voltages')
-#   ax[0,3].set_ylabel(VMAG_UNITS)
-#   for i in range(data_b.shape[0]):
-#     ax[0,3].plot(hrs, data_b[i,:,VMAG_IDX], color=bus_color(bus_keys[i]))
-#
-#   ax[1,3].set_title ('Locational Marginal Prices')
-#   ax[1,3].set_ylabel(LMP_P_UNITS)
-#   for i in range(data_b.shape[0]):
-#     ax[1,3].plot(hrs, data_b[i,:,LMP_P_IDX], color=bus_color(bus_keys[i]))
-
-  ax[0,3].set_title ('Bus Bid C1')
-  ax[0,3].set_ylabel(C1_UNITS)
-  for i in range(data_b.shape[0]):
-    ax[0,3].plot(hrs, data_b[i,:,C1_IDX], color=bus_color(bus_keys[i]))
-
-  usched = np.zeros (len(hrs))
-  ax[1,3].set_title ('Unit Status')
-  ax[1,3].set_ylabel('Unit #')
-  ax[1,3].set_ylim (0.0, 20.0)
-  ax[1,3].set_yticks ([0,4,8,12,16,20])
-  off_val = -1.0
-  for i in range(data_g.shape[0]):
-    on_val = i + 1.0
-    clr, lbl = unit_color_label (dict, gen_keys[i])
-    for j in range(len(hrs)):
-      if data_g[i,j,PGEN_IDX] < 0.001:
-        usched[j] = off_val
-      else:
-        usched[j] = on_val
-    ax[1,3].plot(hrs, usched, marker='+', linestyle='None', color=clr)
-
-  for i in range(ncols):
-    ax[1,i].set_xlabel('Hours')
+  ax.set_title ('Total System Power')
+  ax.set_ylabel(PGEN_UNITS)
+  ax.plot(hrs, Psteam, label='Steam', color='red')
+  ax.plot(hrs, Pwind, label='Wind', color='green')
+  ax.plot(dhrs, Presp, label='Responsive Load', color='blue')
+  ax.plot(hrs, Punresp, label='Unresponsive Load', color='magenta')
+  ax.plot(hrs, Ptotal, label='Total Generation', color='black')
+#  ax.plot(hrs, Pload, label='Total Load', color='orange')
+  ax.legend(loc='best')
 
   plt.show()
 

@@ -38,11 +38,19 @@ for i in range(2):
         ax[i,j].set_xticks(xticks)
 
 ax[0,0].set_title ('Unit Commitment Status')
-for i in range(13):
-  ax[0,0].plot(h, 0.25 * u[i,:] + i + 1.0, label='Gen{:d}'.format (i+1), color = cset[i])
+usched = np.zeros (len(h))
 ax[0,0].set_ylim (0, 14)
 ax[0,0].set_yticks ([0,2,4,6,8,10,12,14])
 ax[0,0].set_ylabel ('Unit #')
+off_val = -1.0
+for i in range(13):
+  on_val = i + 1.0
+  for j in range(len(h)):
+    if u[i,j] < 0.001:
+      usched[j] = off_val
+    else:
+      usched[j] = on_val
+  ax[0,0].plot(h, usched, marker='+', linestyle='None', color=cset[i])
 
 ax[0,1].set_title ('Bus LMP')
 for i in range(nb):

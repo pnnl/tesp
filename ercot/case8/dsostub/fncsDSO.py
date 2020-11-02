@@ -92,13 +92,14 @@ def make_da_bid (row, bWantMarket):
     if bWantMarket:
       resp_max = Phour * 0.5
       unresp = Phour * 0.5
+      cbid = c1 + random.random()
     else:
       resp_max = 0.0
       unresp = Phour
+      cbid = 0.0
     da_bid['unresp_mw'].append(round(unresp / gld_scale, 3))
     da_bid['resp_max_mw'].append(round(resp_max / gld_scale, 3))
     da_bid['resp_c2'].append(c2)
-    cbid = c1 + random.random()
     if h >= 9.0 and h <= 19.0:
       cbid *= bid_c1_daylight_factor
     da_bid['resp_c1'].append(round (cbid, 3))
@@ -135,9 +136,11 @@ while ts <= tmax:
     val = fncs.get_value(topic)
     if 'LMP_RT_Bus_' in topic:
       busnum = int (topic[11:])
+# following is for fncsTSO.py, the AMES/PSST version
 #      gld_bus[busnum]['lmpRT'][] = float(val)
     elif 'LMP_DA_Bus_' in topic:
       busnum = int(topic[11:])
+# following is for fncsTSO.py, the AMES/PSST version
 #      gld_bus[busnum]['lmpDA'][] = float(val)
     elif 'LMP' in topic:
       busnum = int(topic[3:])
@@ -173,9 +176,9 @@ while ts <= tmax:
     gld_scale = float (row[2]) # divide published P, Q values by gld_scale, because fncsTSO.py multiplies by gld_scale
     Pnom = float (row[3])
     Qnom = float (row[4])
-    qf = 0.0
+    qpratio = 0.0
     if Pnom > 0:
-      qf = Qnom / Pnom
+      qpratio = Qnom / Pnom
     curve_scale = float (row[5])
     curve_skew = int (row[6])
     sec = (ts + curve_skew) % 86400
@@ -210,15 +213,16 @@ while ts <= tmax:
     # the actual load is the unresponsive load, plus a cleared portion of the responsive load
     lmp = 1000.0 * gld_bus[busnum]['lmp']
     p_cleared = 0
-    dso_lmp = lmp
+#    dso_lmp = lmp
     if bWantMarket:
       p_cleared = gld_bus[busnum]['clr']
-      F = lmp * p_cleared
-      dso_lmp = last_bid_c1[busnum] + 2.0 * c2 * p_cleared / gld_scale
+      # we can't use c2 with GLPK, so the back-calculation of p_cleared from lmp cannot be used
+#      F = lmp * p_cleared
+#      dso_lmp = last_bid_c1[busnum] + 2.0 * c2 * p_cleared / gld_scale
     p = unresp + p_cleared
-    q = p * qf
-    print ('Clearing at {:d}s Bus{:d}: lmp={:.2f} dso_lmp={:.2f} resp_max={:.2f} cleared={:.2f}'.format (ts, busnum,
-            lmp, dso_lmp, resp_max, p_cleared))
+    q = p * qpratio
+    print ('Clearing at {:d}s Bus{:d}: bid={:.2f} lmp={:.2f} resp_max={:.2f} cleared={:.2f}'.format (ts, busnum,
+            last_bid_c1[busnum], lmp, resp_max, p_cleared))
     gld_bus[busnum]['p'] = p
     gld_bus[busnum]['q'] = q
     gld_bus[busnum]['resp'] = p_cleared
@@ -227,7 +231,7 @@ while ts <= tmax:
     pubtopic = 'gridlabdBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from GridLAB-D
     fncs.publish (pubtopic + '/distribution_load', distload)
 
-    # update the metrics
+    # update the metrics (resp_max and last_bid_c1 are in the TSO bus metrics)
     dso_metrics[str(ts)][str(busnum)] = [p, q, lmp, p_cleared]
 
   # update the CSV output
