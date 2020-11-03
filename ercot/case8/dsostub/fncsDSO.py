@@ -14,6 +14,7 @@ tnext_da = da_offset
 
 casename = 'ercot_8'
 bWantMarket = True
+bRandomize = False
 bid_c2 = 0.0 # -2.0
 bid_c1 = 18.0
 bid_c1_daylight_factor = 1.8
@@ -92,7 +93,9 @@ def make_da_bid (row, bWantMarket):
     if bWantMarket:
       resp_max = Phour * 0.5
       unresp = Phour * 0.5
-      cbid = c1 + random.random()
+      cbid = c1
+      if bRandomize:
+        cbid += random.random()
     else:
       resp_max = 0.0
       unresp = Phour
@@ -193,7 +196,9 @@ while ts <= tmax:
       unresp = gld_bus[busnum]['pcrv'] * 0.5
       c2 = gld_bus[busnum]['c2']
       c1 = gld_bus[busnum]['c1']
-      last_bid_c1[busnum] = c1 + random.random()
+      last_bid_c1[busnum] = c1
+      if bRandomize:
+        last_bid_c1[busnum] += random.random()
       if h >= 9.0 and h <= 19.0:
         last_bid_c1[busnum] *= bid_c1_daylight_factor
       deg = gld_bus[busnum]['deg']

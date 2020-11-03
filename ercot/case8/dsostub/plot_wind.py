@@ -108,8 +108,16 @@ def process_pypower(nameroot):
     # display a plot 
     fig, ax = plt.subplots(1, 1, figsize=(15,9), sharex = 'col')
     tmin = 0.0
-    tmax = 72.0  #48.0
-    xticks = [0,6,12,18,24,30,36,42,48,54,60,66,72]
+    tmax = hrs[len(hrs)-1]
+    if tmax < 25.0:
+      tmax = 24.0 
+      xticks = [0,6,12,18,24]
+    elif tmax < 49.0:
+      tmax = 48.0
+      xticks = [0,6,12,18,24,30,36,42,48]
+    else:
+      tmax = 72.0
+      xticks = [0,6,12,18,24,30,36,42,48,54,60,66,72]
     ax.grid (linestyle = '-')
     ax.set_xlim(tmin,tmax)
     ax.set_xticks(xticks)

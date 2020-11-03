@@ -750,7 +750,7 @@ def tso_loop (bTestDAM=False, test_bids=None):
     initial_load = 0.5 * float(dsoBus[i, 7]) / gld_scale
     gld_load[busnum] = {'pcrv': 0, 'qcrv': 0,
               'p': float(dsoBus[i, 7]) / gld_scale, 'q': float(dsoBus[i, 8]) / gld_scale,
-              'unresp': initial_load, 'resp_max': initial_load, 'c2': 0, 'c1': 10.0, 'deg': 1, 'genidx': genidx}
+              'unresp': initial_load, 'resp_max': initial_load, 'c2': 0, 'c1': 18.0, 'deg': 1, 'genidx': genidx}
     if noScale:
       dsoBus[i, 2] = 1   # gld_scale
 

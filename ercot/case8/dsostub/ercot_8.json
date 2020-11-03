@@ -4,7 +4,7 @@
   "MostCommand": "octave",
   "solver": "GLPK",
   "priceSensLoad": true,
-  "windPower": true,
+  "windPower": false,
   "noScale": false,
   "curve": true,
   "reserveDown": 0.15,
