@@ -5,10 +5,29 @@
 #include <iostream>
 #include <vector>
 #include <set>
-//#include <iomanip>
-//#include <json/json.h>
+#include <json/json.h>
 
 using namespace ::std;
+
+Building::Building (Json::Value::const_iterator itr) {
+  Json::Value bldg = *itr;
+  name = itr.key().asString();
+  k = bldg["k"].asDouble();
+  kWScale = bldg["kWScale"].asDouble();
+  Json::Value jT = bldg["dT"];
+  Json::Value jP = bldg["dP"];
+  n = jP.size();
+  dP = new double [n];
+  dT = new double [n];
+  bid_p = new double[n];
+  bid_q = new double[n];
+  for (int i = 0; i < n; i++) {
+    dP[i] = jP[i].asDouble();
+    dT[i] = jT[i].asDouble();
+    bid_p[i] = k * dT[i];
+    bid_q[i] = kWScale * dP[i];
+  }
+}
 
 double Building::load_at_price (double p) {
   if (p <= bid_p[0]) return bid_q[0];
@@ -101,7 +120,14 @@ void Consensus::add_building_loads (Building *pBldg) {
   }
 }
 
-Consensus::Consensus () {
+Consensus::Consensus (vector<Building *> vBuildings) {
+  for (int i = 0; i < vBuildings.size(); i++) {
+    collect_building_prices (vBuildings[i]);
+  }
+  initialize_building_loads();
+  for (int i = 0; i < vBuildings.size(); i++) {
+    add_building_loads (vBuildings[i]);
+  }
 }
 
 void Consensus::display () {

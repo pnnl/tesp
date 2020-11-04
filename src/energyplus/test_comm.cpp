@@ -23,9 +23,6 @@ int main(int argc, char **argv)
     usage ();
   }
 
-  vector<Building *> vBuildings;
-  Consensus market;
-
   Json::Value root;
   ifstream ifs;
   ifs.open (argv[1]);
@@ -36,37 +33,19 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
   cout << "configuring from " << argv[1] << endl;
+
+  vector<Building *> vBuildings;
   if (root.size() > 0) {
     for (Json::Value::const_iterator itr = root.begin(); itr != root.end(); itr++) {
-      Json::Value bldg = *itr;
-      double k = bldg["k"].asDouble();
-      double kWScale = bldg["kWScale"].asDouble();
-      Json::Value jT = bldg["dT"];
-      Json::Value jP = bldg["dP"];
-      int asize = jP.size();
-      double *dP = new double [asize];
-      double *dT = new double [asize];
-      for (int i = 0; i < asize; i++) {
-        dP[i] = jP[i].asDouble();
-        dT[i] = jT[i].asDouble();
-      }
-      Building *pBldg = new Building (itr.key().asString(), k, kWScale, dP, dT, asize);
-      vBuildings.push_back(pBldg);
+      vBuildings.push_back(new Building(itr));
     }
   } else {
     cerr << "Invalid building definitions in " << argv[1] << endl;
     exit(EXIT_FAILURE);
   }
 
-  for (int i = 0; i < vBuildings.size(); i++) {
-    vBuildings[i]->display();
-    market.collect_building_prices (vBuildings[i]);
-  }
-  market.initialize_building_loads();
-  for (int i = 0; i < vBuildings.size(); i++) {
-    market.add_building_loads (vBuildings[i]);
-  }
-  market.display();
+  Consensus market (vBuildings);
+//  market.display();
 
   // testing output loop for comparison to test_comm.py plot
   cout << fixed << showpoint << setprecision(2);

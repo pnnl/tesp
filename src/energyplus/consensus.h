@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <json/json.h>
 
 class Building {
 public:
@@ -21,6 +22,7 @@ public:
   double load_at_price (double p);
   double degF_at_load (double q);
   Building (std::string a_name, double a_k, double a_kWScale, double *a_dP, double *a_dT, int a_size);
+  Building (Json::Value::const_iterator itr);
   ~Building ();
   void display ();
 };
@@ -35,7 +37,7 @@ public:
   void collect_building_prices (Building *pBldg);
   void initialize_building_loads ();
   void add_building_loads (Building *pBldg);
-  Consensus ();
+  Consensus (std::vector<Building *> vBuildings);
   void display ();
 };
 #endif
