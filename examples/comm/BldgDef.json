@@ -1,7 +1,7 @@
 {
   "Office": {
-    "kWScale": 2.1,
-    "k": 25.0,
+    "LoadScale": 2.1,
+    "RampSlope": 25.0,
     "dT": [
       0.0,
       0.99,
@@ -18,8 +18,8 @@
     ]
   },
   "Apartments": {
-    "kWScale": 50.0,
-    "k": 20.0,
+    "LoadScale": 50.0,
+    "RampSlope": 20.0,
     "dT": [
       0.0,
       0.99,
@@ -36,8 +36,8 @@
     ]
   },
   "Shopping": {
-    "kWScale": 31.25,
-    "k": 30.0,
+    "LoadScale": 31.25,
+    "RampSlope": 30.0,
     "dT": [
       0.0,
       0.99,

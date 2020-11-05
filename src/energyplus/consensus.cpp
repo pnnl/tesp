@@ -9,24 +9,35 @@
 
 using namespace ::std;
 
-Building::Building (Json::Value::const_iterator itr) {
-  Json::Value bldg = *itr;
-  name = itr.key().asString();
-  k = bldg["k"].asDouble();
-  kWScale = bldg["kWScale"].asDouble();
-  Json::Value jT = bldg["dT"];
-  Json::Value jP = bldg["dP"];
-  n = jP.size();
+void Building::fill_arrays_from_json (Json::Value &jdP, Json::Value &jdT) {
+  n = jdP.size();
   dP = new double [n];
   dT = new double [n];
   bid_p = new double[n];
   bid_q = new double[n];
   for (int i = 0; i < n; i++) {
-    dP[i] = jP[i].asDouble();
-    dT[i] = jT[i].asDouble();
+    dP[i] = jdP[i].asDouble();
+    dT[i] = jdT[i].asDouble();
     bid_p[i] = k * dT[i];
     bid_q[i] = kWScale * dP[i];
   }
+}
+
+Building::Building (Json::Value::const_iterator itr) {
+  Json::Value bldg = *itr;
+  name = itr.key().asString();
+  k = bldg["RampSlope"].asDouble();
+  kWScale = bldg["LoadScale"].asDouble();
+  Json::Value jdP = bldg["dP"];
+  Json::Value jdT = bldg["dT"];
+  fill_arrays_from_json (jdP, jdT);
+}
+
+Building::Building (std::string a_name, double a_k, double a_kWScale, Json::Value &jdP, Json::Value &jdT) {
+  name = a_name;
+  k = a_k;
+  kWScale = a_kWScale;
+  fill_arrays_from_json (jdP, jdT);
 }
 
 double Building::load_at_price (double p) {
@@ -76,8 +87,8 @@ Building::~Building() {
 
 void Building::display () {
   cout << "Building " << name << endl;
-  cout << "  k = " << k << endl;
-  cout << "  kWScale = " << kWScale << endl;
+  cout << "  RampSlope = " << k << endl;
+  cout << "  LoadScale = " << kWScale << endl;
   cout << "  idx    dP[i]    dT[i]  bidP[i]  bidQ[i]" << endl;
   for (int i = 0; i < n; i++) {
     cout << "  " << i << " " << dP[i] << "  " << dT[i] << "  " << bid_p[i] << "  " << bid_q[i] << endl;
@@ -128,6 +139,12 @@ Consensus::Consensus (vector<Building *> vBuildings) {
   for (int i = 0; i < vBuildings.size(); i++) {
     add_building_loads (vBuildings[i]);
   }
+}
+
+Consensus::Consensus (Building *pBldg) {
+  collect_building_prices (pBldg);
+  initialize_building_loads ();
+  add_building_loads (pBldg);
 }
 
 void Consensus::display () {

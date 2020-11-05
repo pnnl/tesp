@@ -9,6 +9,8 @@
 #include <json/json.h>
 
 class Building {
+private:
+  void fill_arrays_from_json (Json::Value &jdP, Json::Value &jdT);
 public:
   std::string name;
   double k;
@@ -22,6 +24,7 @@ public:
   double load_at_price (double p);
   double degF_at_load (double q);
   Building (std::string a_name, double a_k, double a_kWScale, double *a_dP, double *a_dT, int a_size);
+  Building (std::string a_name, double a_k, double a_kWScale, Json::Value &jdP, Json::Value &jdT);
   Building (Json::Value::const_iterator itr);
   ~Building ();
   void display ();
@@ -38,6 +41,7 @@ public:
   void initialize_building_loads ();
   void add_building_loads (Building *pBldg);
   Consensus (std::vector<Building *> vBuildings);
+  Consensus (Building *pBldg);
   void display ();
 };
 #endif

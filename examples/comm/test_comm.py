@@ -4,13 +4,13 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt;
 
-#bldgs = {'Office':{'kWScale':2.1, 'k':25.0,
+#bldgs = {'Office':{'LoadScale':2.1, 'RampSlope':25.0,
 #            'dT':[0.0, 0.99, 1.99, 2.99, 4.99],
 #            'dP':[0.0,-17.21,-26.64,-30.94,-35.31]},
-#     'Apartments':{'kWScale':50.0, 'k':20.0,
+#     'Apartments':{'LoadScale':50.0, 'RampSlope':20.0,
 #            'dT':[0.0, 0.99, 1.99, 2.99, 4.99],
 #            'dP':[0.0,-5.45,-10.63,-14.69,-20.45]},
-#     'Shopping':{'kWScale':31.25, 'k':30.0,
+#     'Shopping':{'LoadScale':31.25, 'RampSlope':30.0,
 #            'dT':[0.0, 0.99, 1.99, 2.99, 4.99],
 #            'dP':[0.0,-4.31,-8.61,-12.91,-20.98]}}
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
   print ('Building Bid Curves:')
   for key, row in bldgs.items():
-    bid = load_bid (row['dT'], row['dP'], row['k'], row['kWScale'])
+    bid = load_bid (row['dT'], row['dP'], row['RampSlope'], row['LoadScale'])
     bids[key] = bid
     print ('  {:20s} quantity = '.format (key), bid['q'])
     print ('  {:20s}  price = '.format (' '), bid['p'])
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         total[i] += qval
         bldg_plot[key]['qcleared'][i] = qval
         bldg = bldgs[key]
-        dTemp = np.interp (qval, -bldg['dP']*bldg['kWScale'], bldg['dT'])
+        dTemp = np.interp (qval, -bldg['dP']*bldg['LoadScale'], bldg['dT'])
         bldg_plot[key]['dTemp'][i] = dTemp
 
     fig, ax = plt.subplots(1, 3, figsize=(18,8))
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     for key, row in bids.items():
       qval = abs (np.interp (pclear, row['p'], row['q']))
       bldg = bldgs[key]
-      dTemp = np.interp (qval, -bldg['dP']*bldg['kWScale'], bldg['dT'])
+      dTemp = np.interp (qval, -bldg['dP']*bldg['LoadScale'], bldg['dT'])
       qtotal += qval
       print ('  {:20s} {:8.2f} {:7.2f}'.format (key, qval, dTemp))
 

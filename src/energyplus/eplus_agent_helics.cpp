@@ -12,6 +12,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "consensus.h"
 
 /* 3rd party headers */
 #include "czmq.h"
@@ -94,8 +95,8 @@ void output_metrics (metrics_t metrics, Json::Value& root, Json::Value& ary, int
   root[key1] = bldg;
 }
 
-std::unordered_map<std::string, helics::Publication> mpubs;
-std::unordered_map<std::string, helics::Input> msubs;
+unordered_map<string, helics::Publication> mpubs;
+unordered_map<string, helics::Input> msubs;
 
 int main(int argc, char **argv)
 {
@@ -123,21 +124,25 @@ int main(int argc, char **argv)
   metrics_t metrics;
   double *pVals;
   double newval;
-  helics::Publication hPubA, hPubB, hPubC, hPubPrice, hPubMode, hPubFee, hCoolDelta, hHeatDelta;
-  helics::Input hSubPrice;
+  helics::Publication hPubA, hPubB, hPubC, hPubPrice, hPubMode, hPubFee, hCoolDelta, hHeatDelta, hCurve;
+
+  // for the consensus mechanism
+  Building *pBldg = nullptr;
+  Consensus *pMarket = nullptr;
+  bool bPublishBidCurve = false;
 
   if (argc == 2) {
     Json::Value root;
-    std::ifstream ifs;
+    ifstream ifs;
     ifs.open (argv[1]);
     Json::CharReaderBuilder builder;
     JSONCPP_STRING errs;
     if (!parseFromStream(builder, ifs, &root, &errs)) {
-      std::cout << errs << std::endl;
+      cout << errs << endl;
       return EXIT_FAILURE;
     }
-    std::cout << "configuring from " << argv[1] << std::endl;
-    std::cout << root << std::endl;
+    cout << "configuring from " << argv[1] << endl;
+    cout << root << endl;
 
     StartTime = root["StartTime"].asString();
     MetricsFileName = root["MetricsFileName"].asString();
@@ -150,6 +155,13 @@ int main(int argc, char **argv)
     max_delta_hi = root["MaxDeltaCool"].asDouble();
     max_delta_lo = root["MaxDeltaHeat"].asDouble();
     load_scale = root["LoadScale"].asDouble();
+    if (root.isMember ("dT") && root.isMember ("dP")) {
+      pBldg = new Building (BuildingID, degF_per_price, load_scale, root["dP"], root["dT"]);
+      pBldg->display();
+      pMarket = new Consensus (pBldg);
+      pMarket->display();
+      bPublishBidCurve = true;
+    }
   } else if (argc < 3) {
     cerr << "Not enough parameters." << endl;
     usage ();
@@ -179,7 +191,8 @@ int main(int argc, char **argv)
 
   // create the required HELICS federate, publications and subscriptions
   bool bPubA = false, bPubB = false, bPubC = false, bPubFee = false, bPubPrice = false, bPubMode = false, bPubCool = false, bPubHeat = false;
-  bool bSubPrice = false;
+  bool bPubCurve = true;
+  if (pBldg) bPubCurve = false; // meaning that we must be able to publish our bid curve
   cout << "creating a ValueFederate from '" << HelicsConfigFile << "'" << endl;
   pHelicsFederate = new helics::ValueFederate(HelicsConfigFile);
   int pub_count = pHelicsFederate->getPublicationCount();
@@ -215,26 +228,30 @@ int main(int argc, char **argv)
       } else if (pub.getKey().find("heating_setpoint_delta") != string::npos) {
         bPubHeat = true;
         hHeatDelta = pub;
+      } else if (pub.getKey().find("bid_curve") != string::npos) {
+        bPubCurve = true;
+        hCurve = pub;
       }
     }
   } // pub_count
   for (int i = 0; i < sub_count; i++) {
     helics::Input sub = pHelicsFederate->getInput(i);
     if (sub.isValid() ) {
-      std::string thisInfo = std::string(sub.getInfo());
+      string thisInfo = string(sub.getInfo());
+      cout << "Subscribing to " << thisInfo << endl;
       msubs[thisInfo] = sub;
     }
   }
-  if (!bPubA || !bPubB || !bPubC || !bPubFee || !bPubPrice || !bPubMode || !bPubCool || !bPubHeat) {
+  if (!bPubA || !bPubB || !bPubC || !bPubFee || !bPubPrice || !bPubMode || !bPubCool || !bPubHeat || !bPubCurve) {
     if (!bPubA) cout << "missing publication for power_A" << endl;
     if (!bPubB) cout << "missing publication for power_B" << endl;
     if (!bPubC) cout << "missing publication for power_C" << endl;
     if (!bPubPrice) cout << "missing publication for (meter) price" << endl;
     if (!bPubFee) cout << "missing publication for (meter) monthly_fee" << endl;
     if (!bPubMode) cout << "missing publication for (meter) bill_mode" << endl;
-    if (!bPubFee) cout << "missing publication for cooling_setpoint_delta" << endl;
-    if (!bPubCool) cout << "missing publication for heating_setpoint_delta" << endl;
-    if (!bPubHeat) cout << "missing subscription for (market) clear_price" << endl;
+    if (!bPubCool) cout << "missing publication for cooling_setpoint_delta" << endl;
+    if (!bPubHeat) cout << "missing publication for heating_setpoint_delta" << endl;
+    if (!bPubCurve) cout << "missing publication for consensus bid curve" << endl;
     exit(EXIT_FAILURE);
   }
 
@@ -244,6 +261,7 @@ int main(int argc, char **argv)
   double totalWatts = 0.0;
   double phaseWatts = 0.0;
   double delta;
+  double offer_mw = 0.0;
 
   cout << "stops at " << time_stop << " and aggregates at " << time_agg << " in sim time" << endl;
   time_multiplier = 1;
@@ -309,24 +327,37 @@ int main(int argc, char **argv)
     for (auto it = msubs.begin(); it != msubs.end(); ++it ) {
       auto thissub = it->second;
       if (thissub.isUpdated()) {
-        auto value = thissub.getValue<double>();
-        if ((it->first).find("kwhr_price") == 0) {
-          price = value;
-          cout << "new price " << price << " at HELICS time " << time_granted << endl;
+        if((it->first).find("bid_curve") == 0) {
+          vector<double> vec = thissub.getValue<vector<double>>();
+          // HELICS_EXPORT int helicsInputGetVectorSize(helics_input ipt)
+          // HELICS_EXPORT void 	helicsInputGetVector (helics_input ipt, double data[], int maxlen, int *actualSize, helics_error *err)
+          cout << "&&& " << it->first << ":" << vec.size() << endl;
+          for (int i = 0; i < vec.size(); i++) {
+            cout << "  " << vec[i] << endl;
+          }
+        } else if ((it->first).find("offer_mw") == 0) {
+          offer_mw = thissub.getValue<double>();
+          cout << "&&& new supply reduction offer " << offer_mw << " at HELICS time " << time_granted << endl;
+        } else { // metrics from E+ to aggregate
+          auto value = thissub.getValue<double>();
+          if ((it->first).find("kwhr_price") == 0) {
+            price = value;
+            cout << "new price " << price << " at HELICS time " << time_granted << endl;
+          }
+          if ((it->first).find("electric_demand_power") == 0) {
+            totalWatts = value;
+          }
+          if ((it->first).find("outdoor_air") == 0) { // indoor air published from E+ in degF
+            value = value * 1.8 + 32.0;
+          }
+          if((it->first).find("heating_setpoint_temperature") == 0){
+            cout << it->first << ": " << value << endl;
+          }
+          if((it->first).find("cooling_setpoint_temperature") == 0){
+            cout << it->first << ": " << value << endl;
+          }
+          update_metric(metrics[it->first], value);
         }
-        if ((it->first).find("electric_demand_power") == 0) {
-          totalWatts = value;
-        }
-        if ((it->first).find("outdoor_air") == 0) { // indoor air published from E+ in degF
-          value = value * 1.8 + 32.0;
-        }
-        if((it->first).find("heating_setpoint_temperature") == 0){
-          std::cout << it->first << ": " << value <<std::endl;
-        }
-        if((it->first).find("cooling_setpoint_temperature") == 0){
-          std::cout << it->first << ": " << value <<std::endl;
-        }
-        update_metric(metrics[it->first], value);
       }
     }
     // this is price response
@@ -353,6 +384,19 @@ int main(int argc, char **argv)
     hPubMode.publish("HOURLY");
     hCoolDelta.publish(delta);
     hHeatDelta.publish(-delta);
+    if (bPublishBidCurve) {
+      vector<double> vBidCurve;
+      for (int i = 0; i < pBldg->n; i++) {
+        vBidCurve.push_back (pBldg->bid_p[i]);
+        vBidCurve.push_back (pBldg->bid_q[i]);
+      }
+      cout << "publishing the bid curve" << endl;
+      for (int i = 0; i < vBidCurve.size(); i++) {
+        cout << "  " << vBidCurve[i] << endl;
+      }
+      hCurve.publish (vBidCurve);
+      bPublishBidCurve = false;
+    }
     nextTime = currentTime + deltaTime;
     time_granted = pHelicsFederate->requestTime(nextTime);
   } while (time_granted < time_stop);
@@ -371,6 +415,9 @@ int main(int argc, char **argv)
   for (auto it = msubs.begin(); it != msubs.end(); ++it ){
     delete [] metrics[it->first];
   }
+
+  if (pBldg) delete pBldg;
+  if (pMarket) delete pMarket;
 
   if (pHelicsFederate) {
     pHelicsFederate->finalize();
