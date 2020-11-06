@@ -1,0 +1,21 @@
+{
+  "name": "commshed",
+  "coreType": "zmq",
+  "loglevel": 4,
+  "period" : 5,
+  "publications": [
+    {
+      "global": false,
+      "key": "offer",
+      "type": "double",
+      "unit": "kW"
+    }
+  ],
+  "subscriptions" : [
+    {
+      "key" : "gld1/distribution_load",
+      "type" : "complex",
+      "required" : false
+    }
+  ]
+}

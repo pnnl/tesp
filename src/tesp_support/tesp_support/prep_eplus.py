@@ -56,6 +56,12 @@ def configure_eplus (caseConfig, template_dir):
       aDict['name'] = agName
       for sub in aDict['subscriptions']:
         sub['key'] = sub['key'].replace ('energyPlus', epName)
+      for otherBldg in caseConfig['Buildings']:
+        if bldg['ID'] != otherBldg['ID']:
+          key = 'agent{:d}_{:s}/bid_curve'.format (otherBldg['ID'], otherBldg['Name'])
+          topic = 'bid_curve_{:d}'.format (otherBldg['ID'])
+          curveSub = {'key':key, 'type':'vector', 'required':True, 'info':topic}
+          aDict['subscriptions'].append (curveSub)
       oname = '{:s}/ag_{:s}_{:s}.json'.format (caseDir, caseName, fedRoot)
       op = open (oname, 'w')
       json.dump (aDict, op, ensure_ascii=False, indent=2)
@@ -68,12 +74,16 @@ def configure_eplus (caseConfig, template_dir):
                'BuildingID': fedRoot,
                'MetricsFileName': 'eplus_{:s}_metrics.json'.format (fedRoot),
                'HelicsConfigFile': 'ag_{:s}_{:s}.json'.format (caseName, fedRoot),
-               'StopSeconds' : seconds,
+               'StopSeconds': seconds,
                'MetricsPeriod': caseConfig['MetricsPeriod'],
-               'BasePrice' : caseConfig['BasePrice'],
-               'RampSlope' : caseConfig['BiddingRamp'],
-               'MaxDeltaHeat' : caseConfig['MaxDeltaT'],
-               'MaxDeltaCool': caseConfig['MaxDeltaT']}
+               'BasePrice': caseConfig['BasePrice'],
+               'RampSlope': bldg['RampSlope'],
+               'MaxDeltaHeat': bldg['MaxDeltaHeat'],
+               'MaxDeltaCool': bldg['MaxDeltaCool'],
+               'UsePriceRamp': caseConfig['UsePriceRamp'],
+               'UseConsensus': caseConfig['UseConsensus'],
+               'dT': bldg['dT'],
+               'dP': bldg['dP']}
       json.dump (aDict, op, ensure_ascii=False, indent=2)
       op.close()
 
@@ -372,6 +382,7 @@ recTemplate = """(exec helics_recorder --input=helicsRecorder.json --timedelta 1
 gldTemplate = """(exec gridlabd -D USE_HELICS {root}.glm &> gridlabd.log &)"""
 epTemplate = """(export HELICS_CONFIG_FILE={epcfg} && exec energyplus -w epWeather.epw -d {outdir} -r {idfname} &> {eplog} &)"""
 agjTemplate = """(exec eplus_agent_helics {agjcfg} &> {aglog} &)"""
+shedTemplate = """(exec python3 commshed.py {tmax} {period} {thresh} {kw_cap} &> commshed.log &)"""
 
 def prepare_run_script (caseConfig, fedMeters):
   StartDate = caseConfig['StartDate']
@@ -382,7 +393,7 @@ def prepare_run_script (caseConfig, fedMeters):
   seconds = int ((dt2 - dt1).total_seconds())
   days = seconds / 86400
   WeatherYear = dt1.year
-  nFeds = 2 * len(fedMeters) + 3  # 2 for each E+ building, plus GridLAB-D, recorder and player
+  nFeds = 2 * len(fedMeters) + 4  # 2 for each E+ building, plus GridLAB-D, commshed.py, recorder and player
   period = caseConfig['MetricsPeriod']
   caseName = caseConfig['CaseName']
   print ('run', nFeds, 'federates for', days, 'days or', seconds, 'seconds in weather year', WeatherYear)
@@ -393,6 +404,10 @@ def prepare_run_script (caseConfig, fedMeters):
   print (recTemplate.format (nSec=seconds, period=period), file=fp)
   print (plyTemplate.format (nSec=seconds), file=fp)
   print (gldTemplate.format (root=caseName), file=fp)
+  print (shedTemplate.format (tmax=seconds, 
+                              period=int(3600/caseConfig['EpStepsPerHour']), 
+                              thresh=caseConfig['ConsensusThreshKW'], 
+                              kw_cap=caseConfig['ConsensusCapKW']), file=fp)
   for bldg in fedMeters:
     idfname = bldg + '.idf'
     outdir = 'out' + bldg
@@ -426,10 +441,16 @@ def make_gld_eplus_case (fname):
   prepare_run_script (caseConfig, fedMeters)
 
   shutil.copy (support_dir + 'clean.sh', caseDir)
+  fp = open ('{:s}/clean.sh'.format(caseDir), 'a')
+  for bldg in caseConfig['Buildings']:
+    print ('rm -rf out{:d}_{:s}'.format(bldg['ID'], bldg['Name']), file=fp)
+  fp.close()
   shutil.copy (support_dir + 'kill23404.sh', caseDir)
+  shutil.copy (template_dir + 'commshed.py', caseDir)
   shutil.copy (template_dir + 'gplots.py', caseDir)
   shutil.copy (template_dir + 'eplots.py', caseDir)
   shutil.copy (template_dir + 'prices.txt', caseDir)
+  shutil.copy (template_dir + 'commshedConfig.json', caseDir)
   shutil.copy (template_dir + 'helicsRecorder.json', caseDir)
   shutil.copy (caseConfig['TMYFile'], '{:s}/{:s}'.format (caseDir, 'gldWeather.tmy3'))
   # process TMY3 ==> TMY2 ==> EPW

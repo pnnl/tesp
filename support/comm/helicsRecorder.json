@@ -1,6 +1,11 @@
 {
   "subscriptions" : [
     {
+      "key" : "commshed/offer", 
+      "type" : "double",
+      "required" : true
+    },
+    {
       "key" : "player/clear_price", 
       "type" : "double",
       "required" : true

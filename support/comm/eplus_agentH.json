@@ -1,9 +1,14 @@
 {
   "name" : "eplus_agent",
-  "period" : 300.0,
+  "period" : 5.0,
   "time_delta" : 1,
   "uninterruptible" : false,
   "publications" : [ 
+    {
+      "global": false,
+      "key": "bid_curve",
+      "type": "vector"
+    },
     {
       "global" : false,
       "key" : "power_A",
@@ -53,6 +58,12 @@
     }
   ],
   "subscriptions" : [
+    {
+      "key" : "commshed/offer", 
+      "type" : "double",
+      "required" : true,
+      "info": "offer_kw"
+    },
     {
       "key" : "player/clear_price", 
       "type" : "double",
