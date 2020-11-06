@@ -15,7 +15,7 @@
   "PrimaryVoltageLN":7200.0,
   "BaseFeederName":"GC",
   "BulkBusName":"Taxonomy",
-  "TransformerMVA":8.0,
+  "TransformerMVA":12.0,
   "TransformerKVHi":115.0,
   "TransformerKVLo":12.47,
   "SourceNominalVLN":66295.38,

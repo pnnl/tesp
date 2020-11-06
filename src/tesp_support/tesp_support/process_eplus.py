@@ -19,11 +19,17 @@ def plot_eplus (dict, title=None, pngfile=None):
   hrs = dict['hrs']
   data = dict['data_e']
   idx_e = dict['idx_e']
+  ncols = 3
+  bConsensus = False
+
+  if ('OFFER_KW_IDX' in idx_e) and ('OFFER_CLEARED_KW_IDX' in idx_e) and ('OFFER_CLEARED_DEGF_IDX' in idx_e) and ('OFFER_CLEARED_PRICE_IDX' in idx_e):
+    bConsensus = True
+    ncols += 1
 
   # display a plot
   width = 12.0
   height = 8.0
-  fig, ax = plt.subplots(3,3, sharex = 'col', figsize=(width,height), constrained_layout=True)
+  fig, ax = plt.subplots(3,ncols, sharex = 'col', figsize=(width,height), constrained_layout=True)
   if title is not None:
     fig.suptitle (title)
 
@@ -84,9 +90,23 @@ def plot_eplus (dict, title=None, pngfile=None):
   ax[2,2].set_title ('Sensible Zone Volumes')
   ax[2,2].legend(loc='best')
 
-  ax[2,0].set_xlabel('Hours')
-  ax[2,1].set_xlabel('Hours')
-  ax[2,2].set_xlabel('Hours')
+  if bConsensus:
+    ax[0,3].set_title ('Consensus Price')
+    ax[0,3].plot(hrs, data[:,idx_e['OFFER_CLEARED_PRICE_IDX']])
+    ax[0,3].set_ylabel(idx_e['OFFER_CLEARED_PRICE_UNITS'])
+
+    ax[1,3].set_title ('Consensus Loads')
+    ax[1,3].plot(hrs, data[:,idx_e['OFFER_KW_IDX']], color='red', label='Supply Offer')
+    ax[1,3].plot(hrs, np.abs(data[:,idx_e['OFFER_CLEARED_KW_IDX']]), color='blue', label='Local Cleared')
+    ax[1,3].set_ylabel(idx_e['OFFER_KW_UNITS'])
+    ax[1,3].legend(loc='best')
+
+    ax[2,3].set_title ('Consensus Thermostat')
+    ax[2,3].plot(hrs, data[:,idx_e['OFFER_CLEARED_DEGF_IDX']])
+    ax[2,3].set_ylabel(idx_e['OFFER_CLEARED_DEGF_UNITS'])
+
+  for i in range(ncols):
+    ax[2,i].set_xlabel('Hours')
 
   if pngfile is not None:
     plt.savefig(pngfile)
@@ -182,6 +202,18 @@ def read_eplus_metrics (nameroot, quiet=False):
     elif key == 'cooling_volume_avg':
       idx_e['COOLING_VOLUME_IDX'] = val['index']
       idx_e['COOLING_VOLUME_UNITS'] = val['units']
+    elif key == 'offer_kw_avg':
+      idx_e['OFFER_KW_IDX'] = val['index']
+      idx_e['OFFER_KW_UNITS'] = val['units']
+    elif key == 'offer_cleared_price_avg':
+      idx_e['OFFER_CLEARED_PRICE_IDX'] = val['index']
+      idx_e['OFFER_CLEARED_PRICE_UNITS'] = val['units']
+    elif key == 'offer_cleared_kw_avg':
+      idx_e['OFFER_CLEARED_KW_IDX'] = val['index']
+      idx_e['OFFER_CLEARED_KW_UNITS'] = val['units']
+    elif key == 'offer_cleared_degF_avg':
+      idx_e['OFFER_CLEARED_DEGF_IDX'] = val['index']
+      idx_e['OFFER_CLEARED_DEGF_UNITS'] = val['units']
 
   # make sure we found the metric indices of interest
   building = list(lst['3600'].keys())[0]
@@ -228,6 +260,17 @@ def read_eplus_metrics (nameroot, quiet=False):
 
     print ('Average outdoor air   = {:9.2f}'.format (data[:,idx_e['OUTDOOR_AIR_IDX']].mean()), idx_e['OUTDOOR_AIR_UNITS'])
     print ('Average indoor air    = {:9.2f}'.format (data[:,idx_e['INDOOR_AIR_IDX']].mean()), idx_e['INDOOR_AIR_UNITS'])
+
+    if ('OFFER_KW_IDX' in idx_e) and ('OFFER_CLEARED_KW_IDX' in idx_e) and ('OFFER_CLEARED_DEGF_IDX' in idx_e) and ('OFFER_CLEARED_PRICE_IDX' in idx_e):
+      print ('Consensus Market     Mean       Max')
+      print ('   Offer kW     {:9.2f} {:9.2f}'.format (data[:,idx_e['OFFER_KW_IDX']].mean(), 
+                                                       np.amax(data[:,idx_e['OFFER_KW_IDX']])))
+      print ('   Local kW     {:9.2f} {:9.2f}'.format (abs(data[:,idx_e['OFFER_CLEARED_KW_IDX']].mean()), 
+                                                       np.amax(np.abs(data[:,idx_e['OFFER_CLEARED_KW_IDX']]))))
+      print ('   Local dDegF  {:9.2f} {:9.2f}'.format (data[:,idx_e['OFFER_CLEARED_DEGF_IDX']].mean(), 
+                                                       np.amax(data[:,idx_e['OFFER_CLEARED_DEGF_IDX']])))
+      print ('   Clear Price  {:9.2f} {:9.2f}'.format (data[:,idx_e['OFFER_CLEARED_PRICE_IDX']].mean(), 
+                                                       np.amax(data[:,idx_e['OFFER_CLEARED_PRICE_IDX']])))
 
   # limit out-of-range initial values
   np.clip (data[:,idx_e['COOLING_TEMPERATURE_IDX']],0,100,data[:,idx_e['COOLING_TEMPERATURE_IDX']])

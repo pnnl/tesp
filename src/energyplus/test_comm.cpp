@@ -37,15 +37,33 @@ int main(int argc, char **argv)
   vector<Building *> vBuildings;
   if (root.size() > 0) {
     for (Json::Value::const_iterator itr = root.begin(); itr != root.end(); itr++) {
-      vBuildings.push_back(new Building(itr));
+      Building *pBldg = new Building (itr);
+      pBldg->display();
+      vBuildings.push_back(pBldg);
     }
   } else {
     cerr << "Invalid building definitions in " << argv[1] << endl;
     exit(EXIT_FAILURE);
   }
 
-  Consensus market (vBuildings);
-//  market.display();
+//  cout << "Constructing from all 3 Buildings:" << endl;
+//  Consensus market (vBuildings);
+
+  cout << "Constructing from one building, then add the rest:" << endl;
+  Consensus market (vBuildings[0]);
+  for (int i = 1; i < vBuildings.size(); i++) {
+    vector<double> vpq;
+    vpq.clear();
+    for (int j = 0; j < vBuildings[i]->n; j++) {
+      vpq.push_back (vBuildings[i]->bid_p[j]);
+      vpq.push_back (vBuildings[i]->bid_q[j]);
+    }
+    market.add_remote_building (vBuildings[i]->name, vpq);
+//    market.add_remote_building (vBuildings[i]->name, vpq);
+//    market.add_remote_building (vBuildings[i]->name, vpq);
+  }
+
+  market.display();
 
   // testing output loop for comparison to test_comm.py plot
   cout << fixed << showpoint << setprecision(2);

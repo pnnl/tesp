@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -98,6 +99,12 @@ void output_metrics (metrics_t metrics, Json::Value& root, Json::Value& ary, int
 unordered_map<string, helics::Publication> mpubs;
 unordered_map<string, helics::Input> msubs;
 
+bool aggregate_this_subscription (string key)
+{
+  if (key.find("bid_curve") != string::npos) return false;
+  return true;
+}
+
 int main(int argc, char **argv)
 {
   // configuration variables to define on command line or in a JSON file
@@ -111,6 +118,8 @@ int main(int argc, char **argv)
   double degF_per_price = 25.0;
   double max_delta_hi = 4.0;
   double max_delta_lo = 4.0;
+  bool bUsePriceRamp = true;
+  bool bUseConsensus = false;
 
   helics_time time_granted = 0;
   helics_time time_written = 0;
@@ -155,6 +164,8 @@ int main(int argc, char **argv)
     max_delta_hi = root["MaxDeltaCool"].asDouble();
     max_delta_lo = root["MaxDeltaHeat"].asDouble();
     load_scale = root["LoadScale"].asDouble();
+    bUsePriceRamp = root["UsePriceRamp"].asBool();
+    bUseConsensus = root["UseConsensus"].asBool();
     if (root.isMember ("dT") && root.isMember ("dP")) {
       pBldg = new Building (BuildingID, degF_per_price, load_scale, root["dP"], root["dT"]);
       pBldg->display();
@@ -260,27 +271,39 @@ int main(int argc, char **argv)
   double heating_delta = 0.0;
   double totalWatts = 0.0;
   double phaseWatts = 0.0;
-  double delta;
-  double offer_mw = 0.0;
+  double delta = 0.0, delta_price = 0.0, delta_offer = 0.0;
+  double last_offer_kw = 0.0, offer_kw = 0.0;
 
   cout << "stops at " << time_stop << " and aggregates at " << time_agg << " in sim time" << endl;
   time_multiplier = 1;
   cout << "multiplier from EnergyPlus to HELICS time is " << time_multiplier << endl;
 
   // build the list of metrics to accumulate; zone occupants now accumulated within EnergyPlus EMS
-  for (auto it = msubs.begin(); it != msubs.end(); ++it ){
+  for (auto it = msubs.begin(); it != msubs.end(); ++it) {
+    if (!aggregate_this_subscription (it->first)) continue;
     pVals = new double[METRICS_NBR];
     reset_metric (pVals);
     metrics[it->first] = pVals;
     cout << "aggregating " << it->first << endl;
   }
-  // add the thermostat deltas, which are generated within this agent
+  // add the thermostat deltas and consensus market parameters, which are generated within this agent
   pVals = new double[METRICS_NBR];
   reset_metric (pVals);
   metrics["cooling_setpoint_delta"] = pVals;
   pVals = new double[METRICS_NBR];
   reset_metric (pVals);
   metrics["heating_setpoint_delta"] = pVals;
+  if (bUseConsensus) {
+    pVals = new double[METRICS_NBR];
+    reset_metric (pVals);
+    metrics["offer_cleared_price"] = pVals;
+    pVals = new double[METRICS_NBR];
+    reset_metric (pVals);
+    metrics["offer_cleared_kw"] = pVals;
+    pVals = new double[METRICS_NBR];
+    reset_metric (pVals);
+    metrics["offer_cleared_degF"] = pVals;
+  }
 
   // write the simulation start time and metadata
   root.clear();
@@ -290,6 +313,10 @@ int main(int argc, char **argv)
   string units;
   for (metrics_t::iterator it = metrics.begin(); it != metrics.end(); ++it) {
     units = "";
+    if ((it->first).find("offer_kw") != string::npos) units = "kW";
+    if ((it->first).find("offer_cleared_price") != string::npos) units = "$/mwh";
+    if ((it->first).find("offer_cleared_kw") != string::npos) units = "kW";
+    if ((it->first).find("offer_cleared_degF") != string::npos) units = "degF";
     if ((it->first).find("temperature") != string::npos) units = "degF";
     if ((it->first).find("setpoint") != string::npos) units = "degF";
     if ((it->first).find("outdoor_air") != string::npos) units = "degF";
@@ -327,17 +354,37 @@ int main(int argc, char **argv)
     for (auto it = msubs.begin(); it != msubs.end(); ++it ) {
       auto thissub = it->second;
       if (thissub.isUpdated()) {
-        if((it->first).find("bid_curve") == 0) {
+        if((it->first).find("bid_curve") == 0) {  // no metrics aggregation here
           vector<double> vec = thissub.getValue<vector<double>>();
-          // HELICS_EXPORT int helicsInputGetVectorSize(helics_input ipt)
-          // HELICS_EXPORT void 	helicsInputGetVector (helics_input ipt, double data[], int maxlen, int *actualSize, helics_error *err)
+          cout << fixed << showpoint << setprecision(2);
           cout << "&&& " << it->first << ":" << vec.size() << endl;
           for (int i = 0; i < vec.size(); i++) {
-            cout << "  " << vec[i] << endl;
+            cout << setw(10) << vec[i];
           }
-        } else if ((it->first).find("offer_mw") == 0) {
-          offer_mw = thissub.getValue<double>();
-          cout << "&&& new supply reduction offer " << offer_mw << " at HELICS time " << time_granted << endl;
+          cout << endl;
+          string key = it->first;
+          pMarket->add_remote_building (key, vec);
+          pMarket->display();
+        } else if ((it->first).find("offer_kw") == 0) { // also aggregate the consensus parameters
+          offer_kw = thissub.getValue<double>();
+          if (offer_kw != last_offer_kw) {
+            if (bUseConsensus) {
+              last_offer_kw = offer_kw;
+              double cleared_price = pMarket->clear_offer (offer_kw);
+              double cleared_load = pBldg->load_at_price (cleared_price);
+              delta_offer = pBldg->degF_at_load (cleared_load);
+              cout << fixed << showpoint << setprecision(2);
+              cout << "&&& new supply reduction offer " << offer_kw << " kW at HELICS time " << time_granted << endl;
+              cout << "    clearing price, load, degF change are " << setw(10) << cleared_price;
+              cout << setw(10) << cleared_load << setw(10) << delta_offer << endl;
+              update_metric (metrics["offer_kw"], offer_kw);
+              update_metric (metrics["offer_cleared_kw"], cleared_load);
+              update_metric (metrics["offer_cleared_price"], cleared_price);
+              update_metric (metrics["offer_cleared_degF"], delta_offer);
+            } else {
+              cout << "!!! ignoring offer_kw" << endl;
+            }
+          }
         } else { // metrics from E+ to aggregate
           auto value = thissub.getValue<double>();
           if ((it->first).find("kwhr_price") == 0) {
@@ -350,23 +397,29 @@ int main(int argc, char **argv)
           if ((it->first).find("outdoor_air") == 0) { // indoor air published from E+ in degF
             value = value * 1.8 + 32.0;
           }
-          if((it->first).find("heating_setpoint_temperature") == 0){
-            cout << it->first << ": " << value << endl;
+          if((it->first).find("heating_setpoint_temperature") == 0) {
+//            cout << it->first << ": " << value << endl;
           }
-          if((it->first).find("cooling_setpoint_temperature") == 0){
-            cout << it->first << ": " << value << endl;
+          if((it->first).find("cooling_setpoint_temperature") == 0) {
+//            cout << it->first << ": " << value << endl;
           }
-          update_metric(metrics[it->first], value);
+          if (aggregate_this_subscription (it->first)) update_metric(metrics[it->first], value);
         }
       }
     }
-    // this is price response
-    delta = degF_per_price * (price - base_price);
+    // incorporate the basic ramp and consensus price responses
+    if (bUsePriceRamp) {
+      delta_price = degF_per_price * (price - base_price);
+    }
+    delta = delta_price + delta_offer;
     if (delta < -max_delta_lo) {
       delta = -max_delta_lo;
     } else if (delta > max_delta_hi) {
       delta = max_delta_hi;
     }
+    cout << fixed << showpoint << setprecision(2);
+    cout << "## delta, delta_price, delta_offer = " << setw(10) << delta;
+    cout << setw(10) << delta_price << setw(10) << delta_offer << endl;
     update_metric(metrics["cooling_setpoint_delta"], delta);
     update_metric(metrics["heating_setpoint_delta"], -delta);
 
@@ -390,10 +443,12 @@ int main(int argc, char **argv)
         vBidCurve.push_back (pBldg->bid_p[i]);
         vBidCurve.push_back (pBldg->bid_q[i]);
       }
-      cout << "publishing the bid curve" << endl;
+      cout << "publishing the bid curve: " << endl;
+      cout << fixed << showpoint << setprecision(2);
       for (int i = 0; i < vBidCurve.size(); i++) {
-        cout << "  " << vBidCurve[i] << endl;
+        cout << setw(10) << vBidCurve[i];
       }
+      cout << endl;
       hCurve.publish (vBidCurve);
       bPublishBidCurve = false;
     }
