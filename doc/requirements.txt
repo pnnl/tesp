@@ -3,4 +3,5 @@ sphinx-autobuild
 sphinx-rtd-theme
 sphinx-jsonschema
 recommonmark
+sphinxcontrib-bibtex
 src/tesp_support/
