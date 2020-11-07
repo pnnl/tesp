@@ -35,12 +35,12 @@ SGIP Use Cases
 --------------
 
 TESP will initially respond to four of the Smart Grid Interoperability
-Panel (SGIP) use cases [`15 <#_ENREF_15>`__] and an additional use case
+Panel (SGIP) use cases :cite:`15` and an additional use case
 to illustrate the growth model.
 
 *SGIP-1 and SGIP-6*. “The grid is severely strained in capacity and
 requires additional load shedding/shifting or storage resources”
-[`15 <#_ENREF_15>`__]. The details confirm that this use case addresses
+:cite:`15`. The details confirm that this use case addresses
 only generation capacity constraints of the type that might be needed
 after existing demand-response resources become exhausted.
 
@@ -74,7 +74,7 @@ changes in the numbers of customers curtailed, the durations of the
 emergency curtailment, and unserved load.
 
 *SGIP-2*. “DER are engaged based on economics and location to balance
-wind resources” [`15 <#_ENREF_15>`__]. The scenario narrative states
+wind resources” :cite:`15`. The scenario narrative states
 that ramping, not balancing or fast regulation, should be the target
 grid service for this use case.
 
@@ -92,7 +92,7 @@ In the base case, supply is scheduled every hour or half-hour. The
 system must always allow a margin—ramping reserves―both up and down
 should these ramping services be needed. The system counteracts rapid
 changes in wind, both up and down, by controlling hydropower generation
-and spinning reserves [`15 <#_ENREF_15>`__]. The cost of doing this is
+and spinning reserves :cite:`15`. The cost of doing this is
 often modest, given that hydropower generation might not even be the
 marginal resource. But the costs might understate the fact that more
 expensive resources might be used to provide this margin, and provision
@@ -123,7 +123,7 @@ Primary impacts will address ramping reserves and their costs under the
 alternative scenarios.
 
 *SGIP-3*. “High-penetration of rooftop solar PV causes swings in voltage
-on distribution grid” [`15 <#_ENREF_15>`__]. Solar generation capacity
+on distribution grid” :cite:`15`. Solar generation capacity
 is stated to be up to 120% of load. Reversals of power flow can occur.
 Solar power intermittency creates corresponding voltage power quality
 issues. We choose to focus on the voltage management challenge, given
@@ -151,14 +151,14 @@ violations, power quality events, and operations of voltage controls
 (e.g., tap changes) on the feeder.
 
 *SGIP-6*. “A sudden transmission system constraint results in emergency
-load reductions” [`15 <#_ENREF_15>`__]. A distribution system network
+load reductions” :cite:`15`. A distribution system network
 operator with a system having 150 MW peak winter load is given
 15-minutes advance notice by his transmission supplier to curtail 40 MW.
 The curtailment is to last 2 hours. The distribution system network
 operator has no generation resources of his own to use. Business as
 usual mitigation is to conduct rolling blackouts. Alternatives exist if
 some or all of the emergency curtailment can be satisfied by DER
-[`15 <#_ENREF_15>`__]. Alternatively, the event might be naturally
+:cite:`15`. Alternatively, the event might be naturally
 exercised by emulating contingency and maintenance outages. These events
 would then be stochastic in their occurrences.
 
@@ -214,7 +214,7 @@ other.
 
 :numref:`fig_taxonomy` shows the topology of a 12.47-kV feeder based on the western
 region of PNNL’s taxonomy of typical distribution feeders
-[`16 <#_ENREF_16>`__]. We use a MATLAB feeder generator script that
+:cite:`16`. We use a MATLAB feeder generator script that
 produces these models from a typical feeder, including random placement
 of houses and load appliances of different sizes appropriate to the
 region. The model generator can also produce small commercial buildings,
@@ -301,10 +301,9 @@ inconvenient for users to manage different versions of the required MATLAB
 runtime.  This is true even for users who might already have a full 
 version of MATLAB.  Furthermore, we would need to modify MATPOWER source 
 code in order to detect non-convergence and summarize transmission system 
-losses.  This led us to replace MATPOWER with PYPOWER [`17 
-<#_ENREF_17>`__] for the public releases of TESP.  During 2019, TESP will 
-be able to use AMES for day-ahead markets and unit commitment [`18 
-<#_ENREF_18>`__].  
+losses.  This led us to replace MATPOWER with PYPOWER :cite:`17` for 
+the public releases of TESP.  During 2019, TESP will be able to use 
+AMES for day-ahead markets and unit commitment :cite:`18`.  
 
 The second lesson relates to EnergyPlus modeling, which is a completely
 different domain than power system modeling. We were able to get help

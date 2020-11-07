@@ -17,8 +17,8 @@ Transactive Energy Simulation Platform (TESP)
    Code_Reference
    SGIP1_Example
    Next_Version
-   Bibliography
    DSOT_Study
+   zBibliography
    LICENSE
 
 Indices and tables

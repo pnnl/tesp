@@ -303,7 +303,7 @@ defined.
 	GridLAB-D dictionary
 
 The Range A and Range B metrics in :numref:`fig_met_mtr` refer to ANSI C84.1
-[`11 <#_ENREF_11>`__]. For service voltages less than 600 V, Range A is
+:cite:`11`. For service voltages less than 600 V, Range A is
 +/- 5% of nominal voltage for normal operation. Range B is -8.33% to
 +5.83% of nominal voltage for limited-extent operation. Voltage
 unbalance is defined as the maximum deviation from average voltage,
@@ -319,7 +319,7 @@ be used to calculate reliability indices in post-processing, with
 flexible weighting and aggregation options by customer, owner, circuit,
 etc. These include the System Average Interruption Frequency Index
 (SAIFI) and System Average Interruption Duration Index (SAIDI)
-[`12 <#_ENREF_12>`__, `13 <#_ENREF_13>`__]. This voltage-based approach
+:cite:`12,13`. This voltage-based approach
 to reliability indices works whether the outage resulted from a
 distribution, transmission, or bulk generation event. The voltage-based
 metrics also support Momentary Average Interruption Frequency Index
@@ -409,7 +409,7 @@ power published to GridLAB-D, including HVAC and variable loads from
 lights, refrigeration, office equipment, etc. The *kwhr\_price* will
 correspond to the market clearing price from :numref:`fig_met_agent`. Finally, the
 *ashrae\_uncomfortable\_hours* is based on a simple standardized model,
-aggregated for all zones [`14 <#_ENREF_14>`__].
+aggregated for all zones :cite:`14`.
 
 .. figure:: ./media/EplusMetrics.png
 	:name: fig_met_eplus
@@ -504,7 +504,7 @@ program will be:
       agent is modeling some type of dynamic process, you may also
       adapt *delta\_t* to the observed rates of change.
 
-   f. Loop back to 5a, unless *time\_granted* ≥ *stop\_time*.
+   f. Loop back to 5a, unless *time\_granted* >= *stop\_time*.
 
 6. Write your JSON metrics file; Python has built-in support for this.
 

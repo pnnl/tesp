@@ -35,10 +35,10 @@ Goals
 -----
 
 Preliminary functional requirements were based on the valuation approach
-developed last year [`1 <#_ENREF_1>`__], supplemented by additional
+developed last year :cite:`1`, supplemented by additional
 study of use cases and drivers to be published in a companion report. We
 also considered the possibility of new transactive pilot projects, as
-suggested by NIST’s TE Challenge [`2 <#_ENREF_2>`__]. This led to
+suggested by NIST’s TE Challenge :cite:`2`. This led to
 adoption of the following objectives:
 
 1. Integration of separate Transactive Energy Agents (TEAgents) that
@@ -58,16 +58,16 @@ Design Overview
 ---------------
 
 :numref:`fig_federates` shows the simulation modules federated in Rev 1 of TESP.  
-GridLAB-D covers the electric power distribution system [`3 
-<#_ENREF_3>`__], MATPOWER or PYPOWER covers the bulk electric power system 
-[`4 <#_ENREF_4>`__] [`17 <#_ENREF_17>`__], and EnergyPlus covers large 
-commercial buildings [`5 <#_ENREF_5>`__].  These three simulators have 
+GridLAB-D covers the electric power distribution system :cite:`3`, 
+MATPOWER or PYPOWER covers the bulk electric power system 
+:cite:`4,17`, and EnergyPlus covers large 
+commercial buildings :cite:`5`.  These three simulators have 
 been previously federated at PNNL, but only pairwise (i.e.  GridLAB-D with 
 MATPOWER, and GridLAB-D with EnergyPlus).  The use of all three together 
 in a transactive simulation is new this year.  The integrating Framework 
 for Network Co-simulation (FNCS) manages the time step synchronization and 
-message exchange among all of the federated simulation modules [`6 
-<#_ENREF_6>`__].  In this way, TESP builds mostly on proven components, 
+message exchange among all of the federated simulation modules :cite:`6`.  
+In this way, TESP builds mostly on proven components, 
 which helps mitigate risk in software development.  Some of these 
 components may be upgraded or replaced in future versions, as described 
 later.  However, the overall platform design in :numref:`fig_federates` still applies.  
@@ -97,7 +97,7 @@ customizing TESP.
 
 Initially, the TEAgents include a double-auction market mechanism, one
 per substation, and a dual-ramp thermostat controller, one per house
-[`7 <#_ENREF_7>`__]. These were previously hard-coded in GridLAB-D, and
+:cite:`7`. These were previously hard-coded in GridLAB-D, and
 those implementations remain in GridLAB-D, but the separate Python
 versions allow others to study and modify just the transactive code
 without having to rebuild all of GridLAB-D. Much of the future work
@@ -113,7 +113,7 @@ TESP adopts a time-stepping simulation that separates the operational
 model, of a system with fixed infrastructure running for hours or days,
 from the growth model, of a system with infrastructure that evolves over
 months or years. :numref:`fig_growth_op` shows these two models in a Unified Modeling
-Language (UML) activity diagram [`8 <#_ENREF_8>`__]. After
+Language (UML) activity diagram :cite:`8`. After
 configuration, the simulation begins with a system in the initial
 year-zero state, i.e. with no growth included. The operational model
 then begins to run with federated co-simulators in the form of
@@ -156,7 +156,7 @@ Early versions of the growth model will only include:
    list of fixed sizes.
 
 3. Residential rooftop solar adoption models for existing houses
-   [`9 <#_ENREF_9>`__, `10 <#_ENREF_10>`__], or a simpler one based
+   :cite:`9,10`, or a simpler one based
    on total energy use and floor area of the house.
 
 4. Changing size of an existing substation or service transformer.
