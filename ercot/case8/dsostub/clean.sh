@@ -10,3 +10,4 @@ rm dam.json
 rm d*.m
 rm test_dam*.m
 rm basecase.m
+rm rtmcase_*.m

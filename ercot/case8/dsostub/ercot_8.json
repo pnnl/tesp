@@ -16,11 +16,12 @@
   "baseMVA": 100.0,
   "StartTime": "2013-07-01 00:00:00",
   "EndTime": "2013-07-04 00:00:00",
-  "Tmax": 259200,
+  "Tmax": 86400,
   "Period": 300,
   "dt": 15,
   "pf_dc": 1,
   "opf_dc": 1,
+  "lmp_cap": 100.0,
   "bus": [
     [
       1,
@@ -1130,8 +1131,9 @@
     "Tmax": "The duration for the simulation in seconds",
     "Period": "Time interval for the simulation in seconds for opf/ames",
     "dt": "The delta time for the simulation in seconds for pf",
-    "pf_dc": "",
-    "opf_dc": "",
+    "pf_dc": "indicate whether to use the DC power flow, instead of AC",
+    "opf_dc": "indicate whether to use the DC optimal power flow, instead of AC",
+    "lmp_cap": "highest allowed LMP, to be used when the OPF does not converge",
     "swing_bus": "",
     "zones": "An array for each zone [zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]",
     "bus": [

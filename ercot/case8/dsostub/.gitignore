@@ -7,3 +7,4 @@ dam.json
 test*.m
 d*.m
 basecase.m
+rtmcase_*.m

@@ -16,8 +16,10 @@ casename = 'ercot_8'
 bWantMarket = True
 bRandomize = False
 bid_c2 = 0.0 # -2.0
-bid_c1 = 18.0
+bid_c1 = 20.0
 bid_c1_daylight_factor = 1.8
+daylight_start = 9.0
+daylight_end = 19.0
 bid_deg = 1 # 2
 
 load_shape = [0.6704,
@@ -70,6 +72,17 @@ for i in range (8):
   gld_bus[busnum] = {'pcrv':0,'qcrv':0,'lmp':0,'clr':0,'v':0,'p':0,'q':0,'unresp':0,'resp_max':0,'resp':0,'c2':bid_c2,'c1':bid_c1,'deg':bid_deg}
   last_bid_c1[busnum] = bid_c1
 
+#def hour_block_bid (h, h1, h2, p1, p2, q1, q2): # p is price (c1), q is quantity (P)
+#  # conservative values
+#  p = max (p1, p2)
+#  q = max (q1, q2)
+#  # average values
+#  s = (h - h1) / (h2 - h1)
+#  p = p1 + s * (p2 - p1)
+#  q = q1 + s * (q2 - q1)
+#  return p, q
+
+# bid the average price and quantity from the beginning and end of each hour
 def make_da_bid (row, bWantMarket):
   da_bid = {'unresp_mw':[], 'resp_max_mw':[], 'resp_c2':[], 'resp_c1':[], 'resp_deg':[]}
   busnum = int (row[0])
@@ -90,22 +103,44 @@ def make_da_bid (row, bWantMarket):
     h = float (sec) / 3600.0
     val = ip.splev ([h / 24.0], tck_load)
     Phour = Pnom * curve_scale * float(val[1])
+#    h1 = float (sec) / 3600.0
+#    h2 = h1 + 1.0
+#    val1 = ip.splev ([h1 / 24.0], tck_load)
+#    val2 = ip.splev ([h2 / 24.0], tck_load)
+#    Phour1 = Pnom * curve_scale * float(val1[1])
+#    Phour2 = Pnom * curve_scale * float(val2[1])
+#    c1hour1 = c1
+#    c1hour2 = c1hour1
+#    if bRandomize and bWantMarket:
+#      c1hour1 += random.random()
+#      c1hour2 += random.random()
+#    if h1 >= daylight_start and h1 <= daylight_end:
+#      c1hour1 *= bid_c1_daylight_factor
+#    if h2 >= daylight_start and h2 <= daylight_end:
+#      c1hour2 *= bid_c1_daylight_factor
+#    Cblock, Pblock = hour_block_bid (h, h1, h2, c1hour1, c1hour2, Phour1, Phour2)
     if bWantMarket:
       resp_max = Phour * 0.5
       unresp = Phour * 0.5
       cbid = c1
       if bRandomize:
         cbid += random.random()
+#      resp_max = Pblock * 0.5
+#      unresp = Pblock * 0.5
+#      c1bid = Cblock
     else:
       resp_max = 0.0
       unresp = Phour
       cbid = 0.0
+#      unresp = 2.0 * Pblock
+#      c1bid = 0.0
     da_bid['unresp_mw'].append(round(unresp / gld_scale, 3))
     da_bid['resp_max_mw'].append(round(resp_max / gld_scale, 3))
     da_bid['resp_c2'].append(c2)
-    if h >= 9.0 and h <= 19.0:
+    if h >= daylight_start and h <= daylight_end:
       cbid *= bid_c1_daylight_factor
     da_bid['resp_c1'].append(round (cbid, 3))
+#    da_bid['resp_c1'].append(round (c1bid, 3))
     da_bid['resp_deg'].append(deg)
   return da_bid
 
@@ -165,10 +200,12 @@ while ts <= tmax:
 
       busnum = int (row[0])
       pubtopic = 'substationBus' + str(busnum)  # this is what the tso8stub.yaml expects to receive from a substation auction
-      print ('Day-Ahead bid for {:s} at {:d}, c2={:f}, c1={:f}, deg={:d}'.format (pubtopic, ts, da_bid['resp_c2'][0],
-                                                                                  da_bid['resp_c1'][0], da_bid['resp_deg'][0]))
-      print ('  Max Resp MW',da_bid['unresp_mw'])
-      print ('  Unresp   MW',da_bid['resp_max_mw'], flush=True)
+      print ('Day-Ahead bid for {:s} at {:d}, c2={:f}, deg={:d}'.format (pubtopic, ts, 
+                                                                         da_bid['resp_c2'][0],
+                                                                         da_bid['resp_deg'][0]))
+      print ('  Bid Resp C1',da_bid['resp_c1'])
+      print ('  Max Resp MW',da_bid['resp_max_mw'])
+      print ('  Unresp   MW',da_bid['unresp_mw'], flush=True)
       fncs.publish (pubtopic + '/da_bid', json.dumps(da_bid))
     tnext_da += da_period
 
@@ -199,7 +236,7 @@ while ts <= tmax:
       last_bid_c1[busnum] = c1
       if bRandomize:
         last_bid_c1[busnum] += random.random()
-      if h >= 9.0 and h <= 19.0:
+      if h >= daylight_start and h <= daylight_end:
         last_bid_c1[busnum] *= bid_c1_daylight_factor
       deg = gld_bus[busnum]['deg']
     else:
@@ -214,6 +251,7 @@ while ts <= tmax:
     fncs.publish (pubtopic + '/responsive_c2', c2)
     fncs.publish (pubtopic + '/responsive_c1', last_bid_c1[busnum])
     fncs.publish (pubtopic + '/responsive_deg', deg)
+#    print ('rtm bid [bus, ts, sec, h, c1]', busnum, ts, sec, h, last_bid_c1[busnum])
 
     # the actual load is the unresponsive load, plus a cleared portion of the responsive load
     lmp = 1000.0 * gld_bus[busnum]['lmp']
@@ -226,8 +264,8 @@ while ts <= tmax:
 #      dso_lmp = last_bid_c1[busnum] + 2.0 * c2 * p_cleared / gld_scale
     p = unresp + p_cleared
     q = p * qpratio
-    print ('Clearing at {:d}s Bus{:d}: bid={:.2f} lmp={:.2f} resp_max={:.2f} cleared={:.2f}'.format (ts, busnum,
-            last_bid_c1[busnum], lmp, resp_max, p_cleared))
+#    print ('Clearing at {:d}s Bus{:d}: bid={:.2f} lmp={:.2f} resp_max={:.2f} cleared={:.2f}'.format (ts, busnum,
+#            last_bid_c1[busnum], lmp, resp_max, p_cleared))
     gld_bus[busnum]['p'] = p
     gld_bus[busnum]['q'] = q
     gld_bus[busnum]['resp'] = p_cleared

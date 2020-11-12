@@ -26,7 +26,7 @@ print ('Average Psteam={:.2f}, Pwind={:.2f}, Pfixed={:.2f}, Presp={:.2f}, Perr={
 #quit()
 
 cset = ['red', 'blue', 'green', 'magenta', 'cyan', 'orange', 'lime', 'silver',
-        'yellow', 'pink', 'tan', 'peru', 'darkgray']
+        'gold', 'pink', 'tan', 'peru', 'darkgray']
 fig, ax = plt.subplots(2, 4, sharex = 'col')
 tmin = 0.0
 tmax = 24.0
