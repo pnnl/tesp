@@ -569,6 +569,9 @@ def update_cost_and_load (ppc, for_optimization):
   genCost = ppc['gencost']
   bus_accum = ppc['bus_accum']
   curve = ppc['curve']
+  if (for_optimization):
+    for i in range(bus.shape[0]):  # erase the old LMP values
+      bus[i, 13] = 0.0
   for row in ppc['DSO']:
     busnum = int(row[0])
     genidx = gld_load[busnum]['genidx']
@@ -1024,7 +1027,7 @@ def tso_loop (bTestDAM=False, test_bids=None):
     if ts >= tnext_opf:
       update_cost_and_load (ppc, True)
 
-      if (ts == 64800) or (ts == 75600):
+      if  (ts == 21600) or (ts == 64800) or (ts == 75600):
         write_most_base_case(ppc, 'rtmcase_{:d}.m'.format(ts))
 #      rBus, rBranch, rGen, rGenCost = solve_most_rtm_case(ppc['MostCommand'], 'solvertmcase.m')
       ropf = pp.runopf(ppc, ppopt_market)

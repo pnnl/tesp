@@ -72,15 +72,16 @@ for i in range (8):
   gld_bus[busnum] = {'pcrv':0,'qcrv':0,'lmp':0,'clr':0,'v':0,'p':0,'q':0,'unresp':0,'resp_max':0,'resp':0,'c2':bid_c2,'c1':bid_c1,'deg':bid_deg}
   last_bid_c1[busnum] = bid_c1
 
-#def hour_block_bid (h, h1, h2, p1, p2, q1, q2): # p is price (c1), q is quantity (P)
-#  # conservative values
-#  p = max (p1, p2)
-#  q = max (q1, q2)
-#  # average values
+def hour_block_bid (h, h1, h2, p1, p2, q1, q2): # p is price (c1), q is quantity (P)
+  # conservative values
+  p = max (p1, p2)
+  q = max (q1, q2)
+  # average values
 #  s = (h - h1) / (h2 - h1)
 #  p = p1 + s * (p2 - p1)
 #  q = q1 + s * (q2 - q1)
-#  return p, q
+#  print ('hour_block_bid {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format (h, h1, h2, s, p1, p2, p, q1, q2, q))
+  return p, q
 
 # bid the average price and quantity from the beginning and end of each hour
 def make_da_bid (row, bWantMarket):
@@ -100,47 +101,46 @@ def make_da_bid (row, bWantMarket):
     deg = 0
   for i in range(24):
     sec = (3600 * i + curve_skew) % 86400
-    h = float (sec) / 3600.0
-    val = ip.splev ([h / 24.0], tck_load)
-    Phour = Pnom * curve_scale * float(val[1])
-#    h1 = float (sec) / 3600.0
-#    h2 = h1 + 1.0
-#    val1 = ip.splev ([h1 / 24.0], tck_load)
-#    val2 = ip.splev ([h2 / 24.0], tck_load)
-#    Phour1 = Pnom * curve_scale * float(val1[1])
-#    Phour2 = Pnom * curve_scale * float(val2[1])
-#    c1hour1 = c1
-#    c1hour2 = c1hour1
-#    if bRandomize and bWantMarket:
-#      c1hour1 += random.random()
-#      c1hour2 += random.random()
-#    if h1 >= daylight_start and h1 <= daylight_end:
-#      c1hour1 *= bid_c1_daylight_factor
-#    if h2 >= daylight_start and h2 <= daylight_end:
-#      c1hour2 *= bid_c1_daylight_factor
-#    Cblock, Pblock = hour_block_bid (h, h1, h2, c1hour1, c1hour2, Phour1, Phour2)
+#    h = float (sec) / 3600.0
+#    val = ip.splev ([h / 24.0], tck_load)
+#    Phour = Pnom * curve_scale * float(val[1])
+    h1 = float (sec) / 3600.0
+    h2 = h1 + 1.0
+    val1 = ip.splev ([h1 / 24.0], tck_load)
+    val2 = ip.splev ([h2 / 24.0], tck_load)
+    Phour1 = Pnom * curve_scale * float(val1[1])
+    Phour2 = Pnom * curve_scale * float(val2[1])
+    c1hour1 = c1
+    c1hour2 = c1hour1
+    if bRandomize and bWantMarket:
+      c1hour1 += random.random()
+      c1hour2 += random.random()
+    if h1 >= daylight_start and h1 <= daylight_end:
+      c1hour1 *= bid_c1_daylight_factor
+    if h2 >= daylight_start and h2 <= daylight_end:
+      c1hour2 *= bid_c1_daylight_factor
+    Cblock, Pblock = hour_block_bid (int(h2), h1, h2, c1hour1, c1hour2, Phour1, Phour2)
     if bWantMarket:
-      resp_max = Phour * 0.5
-      unresp = Phour * 0.5
-      cbid = c1
-      if bRandomize:
-        cbid += random.random()
-#      resp_max = Pblock * 0.5
-#      unresp = Pblock * 0.5
-#      c1bid = Cblock
+#      resp_max = Phour * 0.5
+#      unresp = Phour * 0.5
+#      cbid = c1
+#      if bRandomize:
+#        cbid += random.random()
+      resp_max = Pblock * 0.5
+      unresp = Pblock * 0.5
+      c1bid = Cblock
     else:
       resp_max = 0.0
-      unresp = Phour
-      cbid = 0.0
-#      unresp = 2.0 * Pblock
-#      c1bid = 0.0
+#      unresp = Phour
+      unresp = 2.0 * Pblock
+      c1bid = 0.0
     da_bid['unresp_mw'].append(round(unresp / gld_scale, 3))
     da_bid['resp_max_mw'].append(round(resp_max / gld_scale, 3))
     da_bid['resp_c2'].append(c2)
-    if h >= daylight_start and h <= daylight_end:
-      cbid *= bid_c1_daylight_factor
-    da_bid['resp_c1'].append(round (cbid, 3))
-#    da_bid['resp_c1'].append(round (c1bid, 3))
+#    if h >= daylight_start and h <= daylight_end:
+#      cbid *= bid_c1_daylight_factor
+#    da_bid['resp_c1'].append(round (cbid, 3))
+    da_bid['resp_c1'].append(round (c1bid, 3))
     da_bid['resp_deg'].append(deg)
   return da_bid
 
