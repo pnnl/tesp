@@ -823,20 +823,21 @@ def tso_loop (bTestDAM=False, test_bids=None):
   line2 = 'seconds, PFConverged, TotalLoad, TotalGen, TotalLoss, SwingGen'
   for i in range(ppc['DSO'].shape[0]):
     line += ', ' + 'LMP' + str(i+1)
-    line2 += ', ' + 'v' + str(i + 1)
+    line2 += ', ' + 'v' + str(i+1)
   w = 0;  n = 0;  c = 0;  g = 0
   genFuel = ppc['genfuel']
   for i in range(numGen):
     fuel =genFuel[i][0]
     if 'wind' in fuel:
-      w += 1;  line += ', wind' + str(w)
+      w += 1;  line += ', wind' + str(w);  line2 += ', wind' + str(w)
     elif 'nuclear' in fuel:
-      n += 1;  line += ', nuc' + str(n)
+      n += 1;  line += ', nuc' + str(n);  line2 += ', nuc' + str(n)
     elif 'coal' in fuel:
-      c += 1;  line += ', coal' + str(c)
+      c += 1;  line += ', coal' + str(c);  line2 += ', coal' + str(c)
     else:
-      g += 1;  line += ', gas' + str(g)
+      g += 1;  line += ', gas' + str(g);  line2 += ', gas' + str(g)
   line += ', TotalWindGen'
+  line2 += ', TotalWindGen'
 
   op = open(casename + '_opf.csv', 'w')
   vp = open(casename + '_pf.csv', 'w')
@@ -952,7 +953,9 @@ def tso_loop (bTestDAM=False, test_bids=None):
       tnext_wind += wind_period
       print ('========================== Fluctuating Wind at', ts)
       for key, row in wind_plants.items():
-        print (key, row[9])
+        csvStr = ','.join('{:2f}'.format(item) for item in row[9])
+        print ('{:s}{:s}'.format (key, csvStr))
+#        print (key, row[9])
 
     # shape the baseline loads if using the curve
     for row in dsoBus:
@@ -1099,6 +1102,12 @@ def tso_loop (bTestDAM=False, test_bids=None):
     line += '{: .2f}'.format(Ploss) + ',' + '{: .2f}'.format(Pswing)
     for idx in range(rBus.shape[0]):
       line += ',' + '{: .2f}'.format(rBus[idx, 7])  # bus per-unit voltages
+    for idx in range(numGen):
+      line += ',' + '{: .2f}'.format(rGen[idx, 1])
+    sum_w = 0
+    for key, row in wind_plants.items():
+      sum_w += rGen[row[10], 1]
+    line += ',{: .2f}'.format(sum_w)
     print(line, sep=', ', file=vp, flush=True)
 
     # update the metrics
