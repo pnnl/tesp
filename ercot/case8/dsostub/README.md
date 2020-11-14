@@ -64,17 +64,17 @@ To run and plot the 8-bus simulations:
 
 
 Three-day Simulation with MATPOWER/MOST
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------
 
 The DSO Stub simulation now includes a day-ahead unit commitment feature, which requires Matpower 7.1 and Octave 5.2:
 
- - get the latest Matpower from https://matpower.org/ (v7.1 has an important feature for this example)
- - get Octave 5.2.0 (or later) from the Ubuntu Software center in your VM (note that on Ubuntu 18.04 LTS, apt-get installs Octave 4.4, which is not sufficient.)
+ - get the latest Matpower from https://matpower.org/ (Note: v7.1 has an important feature for this example)
+ - get Octave 5.2.0 (or later) from the Ubuntu Software center in your VM (Note: on Ubuntu 18.04 LTS, "apt-get" installs Octave 4.4, which is not sufficient.)
 
-The DSO Stub example may also run with MATLAB, if you change "MostCommand" in ercot_8.json from "octave" to a command that will invoke MATLAB from the command line on your computer. Please note:
+The DSO Stub example may also run with MATLAB, if you change "MostCommand" in "ercot_8.json" from "octave" to a command that will invoke MATLAB from the command line on your computer. Please note:
 
- - Octave comes with a mixed integer linear programming solver called GLPK, which is adequate to run the DSO Stub example. MATLAB doesn't come with such a solver, unless you also have the Optimization Toolbox
- - This example has not been tested with MATLAB
+ - Octave comes with a mixed integer linear programming solver called GLPK, which is adequate to run the DSO Stub example. MATLAB doesn't come with such a solver, unless you also have the Optimization Toolbox.
+ - This example has not actually been tested with MATLAB
 
 ### Summary of 3-Day Simulation with Wind
 
