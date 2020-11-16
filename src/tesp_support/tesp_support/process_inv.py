@@ -509,7 +509,7 @@ def process_inv(nameroot, dictname = ''):
     #ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MAX_IDX], color="green", label="Max")
     ax[1,1].set_xlabel("Hours")
     ax[1,1].set_ylabel(TEMPDEV_AVG_UNITS)
-    ax[1,1].set_title ("Average Temperature Deviations", size=MEDIUM_SIZE)
+    ax[1,1].set_title ("Average Deviation from Base Setpoint", size=MEDIUM_SIZE)
     #ax[1,1].legend(loc='best')
     ax[1,1].set_xlim(tmin,tmax)
     ax[1,1].set_xticks(xticks)

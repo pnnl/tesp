@@ -12,5 +12,4 @@ rm record.txt
 rm *.class
 rm *.pcap
 rm *.pid
-rm evchargerdet
 rm loadshedCommNetwork.o

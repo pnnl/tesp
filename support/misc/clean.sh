@@ -4,6 +4,5 @@ rm *.xml
 rm *metrics.json
 rm output/*
 rmdir output
-rm evchargerdet
 rm *.bnd
 rm out.txt

@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.9.3</version>
+    <version>0.9.4</version>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../LICENSE</licenseFile>
     <splashImage>Transactive.png</splashImage>
@@ -15,7 +15,7 @@
 * libzmq5, libczmq-dev
 * libklu1, coinor-cbc
 * openjdk-11-jre-headless,jdk-headless
-* python3-tk, python3-pip
+* python3-tk, python3-pip, helics
 # Python3; matplotlib, networkx, scipy, numpy, pandas, psst
 </detailedDescription>
             <requiredSize>900000</requiredSize>
@@ -273,6 +273,12 @@
             <program>pip3</program>
             <programArguments>install psst --upgrade</programArguments>
             <progressText>Installing python psst package</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python HELICS package.</explanation>
+            <program>pip3</program>
+            <programArguments>install helics==2.5.2</programArguments>
+            <progressText>Installing python helics package</progressText>
         </runProgram>
     </readyToInstallActionList>
     <postInstallationActionList>

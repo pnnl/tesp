@@ -13,4 +13,3 @@ rm weather*.json
 rm *.zpl
 rm *.h5
 rm *.dat
-rm evchargerdet

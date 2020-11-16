@@ -127,12 +127,12 @@ def read_gld_metrics (nameroot, dictname = ''):
     elif key == 'air_temperature_avg':
       idx_h['HSE_AIR_AVG_IDX'] = val['index']
       idx_h['HSE_AIR_AVG_UNITS'] = val['units']
-    elif key == 'air_temperature_deviation_cooling':
-      idx_h['HSE_AIR_DEVC_IDX'] = val['index']
-      idx_h['HSE_AIR_DEVC_UNITS'] = val['units']
-    elif key == 'air_temperature_deviation_heating':
-      idx_h['HSE_AIR_DEVH_IDX'] = val['index']
-      idx_h['HSE_AIR_DEVH_UNITS'] = val['units']
+    elif key == 'air_temperature_setpoint_cooling':
+      idx_h['HSE_AIR_SETC_IDX'] = val['index']
+      idx_h['HSE_AIR_SETC_UNITS'] = val['units']
+    elif key == 'air_temperature_setpoint_heating':
+      idx_h['HSE_AIR_SETH_IDX'] = val['index']
+      idx_h['HSE_AIR_SETH_UNITS'] = val['units']
     elif key == 'total_load_avg':
       idx_h['HSE_TOTAL_AVG_IDX'] = val['index']
       idx_h['HSE_TOTAL_AVG_UNITS'] = val['units']
@@ -456,8 +456,8 @@ def plot_gld (dict):
     ax[1,1].plot(hrs, data_h[0,:,idx_h['HSE_AIR_AVG_IDX']], color='blue', label='Mean')
     ax[1,1].plot(hrs, data_h[0,:,idx_h['HSE_AIR_MIN_IDX']], color='red', label='Min')
     ax[1,1].plot(hrs, data_h[0,:,idx_h['HSE_AIR_MAX_IDX']], color='green', label='Max')
-    ax[1,1].plot(hrs, data_h[0,:,idx_h['HSE_AIR_DEVC_IDX']], color='magenta', label='DevC')
-    ax[1,1].plot(hrs, data_h[0,:,idx_h['HSE_AIR_DEVH_IDX']], color='orange', label='DevH')
+    ax[1,1].plot(hrs, data_h[0,:,idx_h['HSE_AIR_SETC_IDX']], color='magenta', label='SetC')
+    ax[1,1].plot(hrs, data_h[0,:,idx_h['HSE_AIR_SETH_IDX']], color='orange', label='SetH')
     ax[1,1].set_xlabel('Hours')
     ax[1,1].set_ylabel(idx_h['HSE_AIR_AVG_UNITS'])
     ax[1,1].set_title ('House Air at ' + keys_h[0])

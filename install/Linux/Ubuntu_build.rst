@@ -199,11 +199,7 @@ To install the HELICS Python 3 bindings:
 
 ::
 
- cd ~/src
- git clone https://github.com/GMLC-TDC/pyhelics
- cd pyhelics
- python3 setup.py download
- pip3 install -e .
+ pip3 install helics==2.5.2
 
 Test that HELICS and FNCS start:
 

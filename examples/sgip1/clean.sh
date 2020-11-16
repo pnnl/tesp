@@ -13,4 +13,3 @@ rm weather.dat
 rm output/*
 rmdir output
 rm *.bnd
-rm evchargerdet

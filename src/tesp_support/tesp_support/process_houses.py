@@ -91,10 +91,10 @@ def read_house_metrics (nameroot, dictname = ''):
       idx_h['HSE_TOTAL_MIN_IDX'] = val['index']
     elif key == 'total_load_max':
       idx_h['HSE_TOTAL_MAX_IDX'] = val['index']
-    elif key == 'air_temperature_deviation_cooling':
-      idx_h['HSE_DEV_COOL_IDX'] = val['index']
-    elif key == 'air_temperature_deviation_heating':
-      idx_h['HSE_DEV_HEAT_IDX'] = val['index']
+    elif key == 'air_temperature_setpoint_cooling':
+      idx_h['HSE_SET_COOL_IDX'] = val['index']
+    elif key == 'air_temperature_setpoint_heating':
+      idx_h['HSE_SET_HEAT_IDX'] = val['index']
 
   time_key = str(times[0])
   data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
