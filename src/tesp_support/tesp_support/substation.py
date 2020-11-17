@@ -155,7 +155,8 @@ def helics_substation_loop (configfile, metrics_root, hour_stop, flag, helicsCon
     aucObj.set_refload (refload)
     for key, obj in hvacObjs.items():
       obj.set_air_temp_from_helics (helics.helicsInputGetDouble (subTemp[obj]))
-      obj.set_voltage_from_helics (helics.helicsInputGetComplex (subVolt[obj]))
+      cval = helics.helicsInputGetComplex(subVolt[obj])  # TODO: pyhelics needs to return complex instead of tuple
+      obj.set_voltage_from_helics (complex (cval[0], cval[1]))
       obj.set_hvac_load_from_helics (helics.helicsInputGetDouble (subHVAC[obj]))
       obj.set_hvac_state_from_helics (helics.helicsInputGetString (subState[obj]))
 

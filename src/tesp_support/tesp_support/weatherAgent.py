@@ -124,13 +124,13 @@ def startWeatherAgent(file):
       helics.helicsFederateInfoSetCoreName(fedInfo, fedName)
       helics.helicsFederateInfoSetCoreTypeFromString(fedInfo, 'zmq')
       helics.helicsFederateInfoSetCoreInitString(fedInfo, '--federates=1')
-      helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.HELICS_PROPERTY_TIME_DELTA, timeDeltaInSeconds)
+      helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.helics_property_time_delta, timeDeltaInSeconds)
       hFed = helics.helicsCreateValueFederate(fedName, fedInfo)
       for col in weatherData.columns:
         pubName = fedName + '/' + col
-        hPubs[col] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.HELICS_DATA_TYPE_STRING, "")
+        hPubs[col] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
         pubName = pubName + '/forecast'
-        hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.HELICS_DATA_TYPE_STRING, "")
+        hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
       helics.helicsFederateEnterExecutingMode(hFed)
       print('HELICS initialized to publish', hPubs, flush=True)
     else:
