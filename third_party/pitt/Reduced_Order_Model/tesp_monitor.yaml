@@ -1,0 +1,36 @@
+name: tesp_monitor
+time_delta: 300s
+broker: tcp://localhost:5570
+aggregate_sub: true
+values:
+  vpos7:
+    topic: pypower/three_phase_voltage_B7
+    default: 0
+    type: double
+    list: false
+  LMP7:
+    topic: pypower/LMP_B7
+    default: 0
+    type: double
+    list: false
+  clear_price:
+    topic: substation/clear_price
+    default: 0
+    type: double
+    list: false
+  distribution_load:
+    topic: gridlabdSimulator1/distribution_load
+    default: 0
+    type: complex
+    list: false
+  power_A:
+    topic: eplus_json/power_A
+    default: 0
+    type: double
+    list: false
+  electric_demand_power:
+    topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
+    default: 0
+    type: double
+    list: false
+

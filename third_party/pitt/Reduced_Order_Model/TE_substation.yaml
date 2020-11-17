@@ -1,0 +1,26 @@
+name: substation
+time_delta: 15s
+broker: tcp://localhost:5570
+aggregate_sub: true
+aggregate_pub: true
+values:
+  LMP:
+    topic: pypower/LMP_B7
+    default: 0.1
+    type: double
+    list: false
+  refload:
+    topic: gridlabdSimulator1/distribution_load
+    default: 0
+    type: complex
+    list: false
+  res_load#Load:
+    topic: gridlabdSimulator1/res_load/load
+    default: 0
+    type: complex
+    list: false
+  unres_load#Load:
+    topic: gridlabdSimulator1/unres_load/load
+    default: 0
+    type: complex
+    list: false

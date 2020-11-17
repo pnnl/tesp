@@ -1,0 +1,199 @@
+clock{
+     timezone EST+5EDT;
+  timestamp '2018-05-28 00:00:00';
+  stoptime '2018-06-03 00:00:00';
+}
+#set profiler=1
+module tape;
+module powerflow {
+  solver_method FBS;
+  NR_iteration_limit 100;
+};
+module climate;
+module generators;
+module connection;
+module residential {
+  implicit_enduses NONE;
+};
+#include "appliance_schedules.glm";
+#include "water_and_setpoint_schedule_v5.glm";
+#include "commercial_schedules.glm";
+#set minimum_timestep=15;
+#set relax_naming_rules=1;
+#set warn=0;
+object metrics_collector_writer {
+  interval 300;
+  filename ${METRICS_FILE};
+  // filename TE_metrics.json;
+};
+object climate {
+  name "RegionalWeather";
+  tmyfile "FL-Miami_Intl_Ap.tmy3";
+  interpolate QUADRATIC;
+};
+#ifdef WANT_VI_DUMP
+object voltdump {
+  filename Voltage_Dump_TE.csv;
+  mode polar;
+}
+object currdump {
+  filename Current_Dump_TE.csv;
+  mode polar;
+}
+#endif
+
+object transformer_configuration {
+  name RA_LOAD_XFM;
+  power_rating 6000.00;
+  powerA_rating 2000;
+  powerB_rating 2000;
+  powerC_rating 2000;
+  install_type POLETOP;
+  connect_type WYE_WYE;
+  primary_voltage 12470.0;
+  secondary_voltage 480.0;
+  resistance 0.00850;
+  reactance 0.05690;
+  shunt_resistance 232.56;
+  shunt_reactance 60.61;
+}
+
+object transformer_configuration {
+  name substation_xfmr_config;
+  connect_type WYE_WYE;
+  install_type PADMOUNT;
+  primary_voltage 230000.00;
+  secondary_voltage 12470.00;
+  power_rating 12000.00;
+  resistance 0.01;
+  reactance 0.08;
+  shunt_resistance 250.00;
+  shunt_reactance 100.00;
+}
+object transformer {
+  name substation_transformer;
+  from network_node;
+  to Feeder_head;
+  phases ABCN;
+  configuration substation_xfmr_config;
+}
+object substation {
+  name network_node;
+  groupid TE_Base;
+  bustype SWING;
+  nominal_voltage 132790.56;
+  positive_sequence_voltage 132790.56;
+  base_power 12000000.00;
+  power_convergence_value 100.0;
+  phases ABCN;
+  object metrics_collector {
+    interval 300;
+  };
+}
+#ifdef USE_FNCS
+object fncs_msg {
+  name gridlabdSimulator1;
+  parent network_node;
+  configure TE_FNCS_Config.txt;
+  option "transport:hostname localhost, port 5570";
+  aggregate_subscriptions true;
+  aggregate_publications true;
+}
+#endif
+object node {
+  name Feeder_head;
+  phases ABCN;
+  nominal_voltage 7200.0;
+}
+
+object load {
+  name res_load;
+  phases ABCN;
+  nominal_voltage 277.1281;
+  voltage_A 277.13+0.0j;
+  voltage_B -138.56-240.00j;
+  voltage_C -138.56+240.00j;
+  constant_power_A 12;
+  constant_power_B 12;
+  constant_power_C 12;
+}
+
+object load {
+  name unres_load;
+  phases ABCN;
+  nominal_voltage 277.1281;
+  voltage_A 277.13+0.0j;
+  voltage_B -138.56-240.00j;
+  voltage_C -138.56+240.00j;
+  constant_power_A 840000;
+  constant_power_B 840000;
+  constant_power_C 840000;
+}
+
+object transformer {
+  	phases ABCN;
+  	name transformer_res_load;
+  	from Feeder_head;
+  	to res_load;
+  	configuration RA_LOAD_XFM;
+}
+object transformer {
+  	phases ABCN;
+  	name transformer_unres_load;
+  	from Feeder_head;
+  	to unres_load;
+  	configuration RA_LOAD_XFM;
+}
+
+////////// EnergyPlus large-building load ///////////////
+object transformer_configuration {
+  name Eplus_transformer_configuration;
+  connect_type WYE_WYE;
+  install_type PADMOUNT;
+  power_rating 150;
+  primary_voltage 12470.0;
+  secondary_voltage 480.0;
+  resistance 0.01300;
+  reactance 0.03250;
+  shunt_resistance 185.19;
+  shunt_reactance 36.36;
+}
+object transformer {
+  name Eplus_transformer;
+  phases ABCN;
+  from Feeder_head;
+  to Eplus_meter;
+  configuration Eplus_transformer_configuration;
+}
+object meter {
+  name Eplus_meter;
+  phases ABCN;
+  meter_power_consumption 1+15j;
+  nominal_voltage 277.1281;
+  voltage_A 277.13+0.0j;
+  voltage_B -138.56-240.00j;
+  voltage_C -138.56+240.00j;
+  bill_mode TIERED;
+  price 0.1020;
+  monthly_fee 13.00;
+  bill_day 1;
+  first_tier_energy 500.0;
+  first_tier_price 0.117013;
+  second_tier_energy 1000.0;
+  second_tier_price 0.122513;
+  object metrics_collector {
+    interval 300;
+  };
+}
+object load {
+  name Eplus_load;
+  parent Eplus_meter;
+  phases ABCN;
+  nominal_voltage 277.1281;
+  voltage_A 277.13+0.0j;
+  voltage_B -138.56-240.00j;
+  voltage_C -138.56+240.00j;
+  constant_power_A 50000.0;
+  constant_power_B 50000.0;
+  constant_power_C 50000.0;
+}

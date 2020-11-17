@@ -1,0 +1,14 @@
+publish "commit:network_node.distribution_load -> distribution_load; 1000";
+subscribe "precommit:network_node.positive_sequence_voltage <- pypower/three_phase_voltage_B7";
+subscribe "precommit:Eplus_load.constant_power_A <- eplus_json/power_A";
+subscribe "precommit:Eplus_load.constant_power_B <- eplus_json/power_B";
+subscribe "precommit:Eplus_load.constant_power_C <- eplus_json/power_C";
+subscribe "precommit:Eplus_meter.bill_mode <- eplus_json/bill_mode";
+subscribe "precommit:Eplus_meter.price <- eplus_json/price";
+subscribe "precommit:Eplus_meter.monthly_fee <- eplus_json/monthly_fee";
+subscribe "precommit:res_load.constant_power_A <- substation/RA/res_load";
+subscribe "precommit:res_load.constant_power_B <- substation/RA/res_load";
+subscribe "precommit:res_load.constant_power_C <- substation/RA/res_load";
+subscribe "precommit:unres_load.constant_power_A <- substation/RA/unres_load";
+subscribe "precommit:unres_load.constant_power_B <- substation/RA/unres_load";
+subscribe "precommit:unres_load.constant_power_C <- substation/RA/unres_load";
