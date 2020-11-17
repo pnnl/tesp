@@ -11,7 +11,7 @@ Installation requires three (or four) steps:
 1. Install Python 3.6, either from http://www.python.org 
    or https://conda.io/miniconda.html  
 2. From a terminal/command window, install TESP Python 
-   package support with "**pip install tesp_support --upgrade**" 
+   package support with "**pip install tesp_support==0.3.2**" 
    for you as a user. This automatically installs required 
    packages like numpy, scipy, networkx, matplotlib and PYPOWER.
 3. Install the TESP data and (optionally) executable files by 
