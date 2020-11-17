@@ -1,13 +1,15 @@
 .. _BuildingOnMacOSX:
 
-Building on Mac OS X
---------------------
+Building on Mac OS X (DEPRECATED)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This procedure builds all components from scratch. If you've already
-built GridLAB-D on your machine, please take note of the specific
+This procedure builds all components from scratch. It was last used in
+December 2019.
+
+If you've already built GridLAB-D on your machine, please take note of the specific
 GitHub branch requirements for TESP:
 
-- feature/1146 for GridLAB-D
+- feature/1173 for GridLAB-D
 - develop for FNCS
 - fncs-v8.3.0 for EnergyPlus
 
@@ -24,7 +26,7 @@ have not been tested successfully.
 When you finish the build, try :ref:`RunExamples`.
 
 Build GridLAB-D
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 Follow these directions:
 
@@ -33,22 +35,21 @@ Follow these directions:
  http://gridlab-d.shoutwiki.com/wiki/Mac_OSX/Setup
 
 Install Python Packages, Java, updated GCC
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
- brew install python3
- pip install pandas
+ # install Python 3.7+ from Conda
  # tesp_support, including verification of PYPOWER dependency
  pip install tesp_support
  opf
 
- brew install gcc
+ brew install gcc-9
 
  # also need Java, Cmake, autoconf, libtool
 
 Checkout PNNL repositories from github
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -56,98 +57,53 @@ Checkout PNNL repositories from github
  cd ~/src
  git config --global (specify user.name, user.email, color.ui)
  git clone -b develop https://github.com/FNCS/fncs.git
- git clone -b feature/1146 https://github.com/gridlab-d/gridlab-d.git
+ git clone -b feature/1173 https://github.com/gridlab-d/gridlab-d.git
  git clone -b fncs-v8.3.0 https://github.com/FNCS/EnergyPlus.git
  git clone -b develop https://github.com/pnnl/tesp.git
- git clone -b develop https://github.com/GMLC-TDC/HELICS-src
+ git clone -b master https://github.com/GMLC-TDC/HELICS-src
 
 FNCS with Prerequisites (installed to /usr/local)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Your Java version may have removed *javah*.  If that's the case, use *javac -h* instead.
 
 ::
 
- cd ~/src
- wget --no-check-certificate http://download.zeromq.org/zeromq-4.1.3.tar.gz
- tar -xzf zeromq-4.1.3.tar.gz
- cd zeromq-4.1.3
- ./configure --without-libsodium 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7'
- make
- sudo make install
-
- cd ..
- wget --no-check-certificate http://download.zeromq.org/czmq-3.0.2.tar.gz
- tar -xzf czmq-3.0.2.tar.gz
- cd czmq-3.0.2
- ./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CPPFLAGS=-Wno-format-truncation'
- make
- sudo make install
+ brew install zeromq
+ brew install czmq
 
  cd ../fncs
- autoreconf -if
- ./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -mmacosx-version-min=10.12' 'CFLAGS=-w -mmacosx-version-min=10.12'
+ autoreconf -isf
+ ./configure --with-zmq=/usr/local --with-czmq=/usr/local 'CPP=gcc-9 -E' 'CXXPP=g++-9 -E' 'CC=gcc-9' 'CXX=g++-9' 'CXXFLAGS=-w -O2 -mmacosx-version-min=10.12' 'CFLAGS=-w -O2 -mmacosx-version-min=10.12'
  make
  sudo make install
 
  cd java
  mkdir build
  cd build
- cmake -DCMAKE_C_COMPILER="gcc-7" -DCMAKE_CXX_COMPILER="g++-7" ..
+ cmake -DCMAKE_C_COMPILER="gcc-9" -DCMAKE_CXX_COMPILER="g++-9" ..
  make
  # copy jar and jni library to  tesp/examples/loadshed/java
 
-Boost and HELICS (installed to /usr/local, build with gcc7)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Based on https://github.com/GMLC-TDC/HELICS-src/issues/641#issuecomment-470663933
-
-Build zmq 4.1.6 and czmq 4.2.0
-
-::
-
- cd ~/src
- tar -xzf boost_1_64_0.tar.gz
- cd boost_1_64_0
- ./bootstrap.sh --with-libraries=program_options,filesystem,system,test
-
-Modify project_config.jam as directed at https://solarianprogrammer.com/2018/08/07/compiling-boost-gcc-clang-macos/
-
-For example, using gcc 7.3 instead of 8.1, part of the file should look like this:
-
-::
-
- # if ! darwin in [ feature.values <toolset> ]
- # {
- #     using darwin ; 
- # }
-
- # project : default-build <toolset>darwin ;
- using gcc : 7.3 : /usr/local/bin/g++-7 ;
-
-Then issue the following commands to build and test:
-
-::
-
- sudo ./b2 cxxflags=-std=c++14 install
- g++-7 -std=c++14 test.cpp -o test -lboost_system -lboost_filesystem
- ./test
+HELICS (installed to /usr/local, build with gcc9)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To build HELICS:
 
 ::
 
- brew install swig
  cd ~/src/HELICS-src
  rm -r build
  mkdir build
  cd build
- cmake -DCMAKE_INSTALL_PREFIX="/usr/local" -DBOOST_ROOT="/usr/local" -DBUILD_PYTHON_INTERFACE=ON -DUSE_BOOST_STATIC_LIBS=ON -DCMAKE_C_COMPILER=/usr/local/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-7 ../
+ cmake -DCMAKE_INSTALL_PREFIX="/usr/local" -DBUILD_PYTHON_INTERFACE=ON -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON -DJAVA_AWT_INCLUDE_PATH=NotNeeded -DHELICS_DISABLE_BOOST=ON -DCMAKE_C_COMPILER=/usr/local/bin/gcc-9 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-9 ../
  make clean
  make -j 4
  sudo make install
 
 To test HELICS:
+
+::
 
  helics_player --version
  helics_recorder --version
@@ -163,25 +119,19 @@ Add this to .bash_profile
  export PYTHONPATH=/usr/local/python:$PYTHONPATH
 
 GridLAB-D with Prerequisites (installed to /usr/local)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you encounter build errors with GridLAB-D, please try
 adding *-std=c++14* to *CXXFLAGS*.
 
 ::
 
+ brew install xerces-c
+
  cd ~/src/gridlab-d
  autoreconf -isf
 
- cd third_party
- tar -xvzf xerces-c-3.2.0.tar.gz
- cd xerces-c-3.2.0
- ./configure 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w' 'CFLAGS=-w'
- make
- sudo make install
- cd ../..
-
- ./configure --with-fncs=/usr/local --with-helics=/usr/local --enable-silent-rules 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -std=c++14' 'CFLAGS=-w' LDFLAGS='-g -w'
+ ./configure --with-fncs=/usr/local --with-helics=/usr/local --enable-silent-rules 'CPP=gcc-9 -E' 'CXXPP=g++-9 -E' 'CC=gcc-9' 'CXX=g++-9' 'CXXFLAGS=-O2 -w -std=c++14' 'CFLAGS=-O2 -w' LDFLAGS='-w'
 
  sudo make
  sudo make install
@@ -189,27 +139,27 @@ adding *-std=c++14* to *CXXFLAGS*.
  gridlabd --validate 
 
 ns-3 with HELICS
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 ::
 
+ # consider -g flags on CXX, C and LD if debugging
  cd ~/src
  git clone https://gitlab.com/nsnam/ns-3-dev.git
  cd ns-3-dev
  git clone https://github.com/GMLC-TDC/helics-ns3 contrib/helics
- ./waf configure --with-helics=/usr/local --disable-werror --enable-examples --enable-tests 'CPP=gcc-7 -E' 'CXXPP=g++-7 -E' 'CC=gcc-7' 'CXX=g++-7' 'CXXFLAGS=-w -std=c++14' 'CFLAGS=-w' LDFLAGS='-g -w'
+ ./waf configure --with-helics=/usr/local --disable-werror --enable-examples --enable-tests 'CPP=gcc-9 -E' 'CXXPP=g++-9 -E' 'CC=gcc-9' 'CXX=g++-9' 'CXXFLAGS=-w -std=c++14' 'CFLAGS=-w' LDFLAGS='-w'
  ./waf build
 
 EnergyPlus with Prerequisites (installed to /usr/local)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
- sudo apt-get install libjsoncpp-dev
  cd ~/src/EnergyPlus
  mkdir build
  cd build
- cmake -DCMAKE_C_COMPILER="gcc-7" -DCMAKE_CXX_COMPILER="g++-7" ..
+ cmake -DCMAKE_C_COMPILER="gcc-9" -DCMAKE_CXX_COMPILER="g++-9" ..
  make
 
  # Before installing, we need components of the public version, including but not limited 
@@ -229,8 +179,8 @@ EnergyPlus with Prerequisites (installed to /usr/local)
  # if ReadVarsESO not found at the end of a simulation, try this
  /usr/local/EnergyPlus-8-3-0$ sudo ln -s PostProcess/ReadVarsESO ReadVarsESO
 
-Build eplus_json
-~~~~~~~~~~~~~~~~
+Build eplus_agent
+^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -239,9 +189,9 @@ Build eplus_json
  autoheader
  aclocal
  automake --add-missing
+ # edit configure.ac to use g++-9 on Mac
  autoconf
- # edit configure.ac to use g++-7 on Mac
- ./configure
+ ./configure --prefix=/usr/local --with-zmq=/usr/local --with-czmq=/usr/local
  make
  sudo make install
 

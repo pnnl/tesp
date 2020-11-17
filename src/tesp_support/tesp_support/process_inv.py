@@ -9,6 +9,7 @@ Public Functions:
 import json;
 import sys;
 import numpy as np;
+import os.path;
 try:
   import matplotlib as mpl;
   import matplotlib.pyplot as plt;
@@ -24,14 +25,15 @@ def process_inv(nameroot, dictname = ''):
   *regulator_nameroot_metrics.json*,
   *house_nameroot_metrics.json* and
   *inverter_nameroot_metrics.json* for the data;
-  it reads *nameroot_glm_dict.json* for the metadata.  
+  it reads *nameroot_glm_dict.json* for the metadata.
+  If possible, it reads *precool_nameroot_metrics.json* for temperature deviation.  
   These must all exist in the current working directory.  
   One graph is generated with 10 subplots:
   
   1. Average P and Q over all inverters
   2. Min, Max and Average line-neutral voltage over all billing meters
   3. Average air temperature over all houses
-  4. Average temperature deviations from the setpoing over all houses
+  4. Average temperature deviations from the setpoint over all houses
   5. Total of ANSI C84 A and B range violation counts, summing over all billing meters
   6. Total of ANSI C84 A and B range violation durations, summing over all billing meters
   7. Substation total power, losses, house power, house HVAC power and house waterheater power
@@ -261,37 +263,36 @@ def process_inv(nameroot, dictname = ''):
     j = j + 1
 
   # Precooling: won't necessarily have the same times?
-  lp_p = open ("precool_" + nameroot + "_metrics.json").read()
-  lst_p = json.loads(lp_p)
-  lst_p.pop('StartTime')
-  meta_p = lst_p.pop('Metadata')
-  times_p = list(map(int,list(lst_p.keys())))
-  times_p.sort()
-  print ("There are", len (times_p), "agent sample times at", times_p[1] - times_p[0], "second intervals")
-  hrs_p = np.array(times_p, dtype=np.float)
-  denom = 3600.0
-  hrs_p /= denom
-  time_p_key = str(times_p[0])
-  print("\nPrecooler Metadata for", len(lst_p[time_p_key]), "objects")
-  for key, val in meta_p.items():
-    print (key, val['index'], val['units'])
-    if key == 'temperature_deviation_avg':
-      TEMPDEV_AVG_IDX = val['index']
-      TEMPDEV_AVG_UNITS = val['units']
-    elif key == 'temperature_deviation_min':
-      TEMPDEV_MIN_IDX = val['index']
-      TEMPDEV_MIN_UNITS = val['units']
-    elif key == 'temperature_deviation_max':
-      TEMPDEV_MAX_IDX = val['index']
-      TEMPDEV_MAX_UNITS = val['units']
-
-  data_p = np.empty(shape=(1, len(times_p), len(lst_p[time_p_key])), dtype=np.float)
-  print ("\nConstructed", data_p.shape, "NumPy array for Agents")
-  i = 0
-  for t in times_p:
-    ary = lst_p[str(t)]
-    data_p[0, i,:] = ary
-    i = i + 1
+  fname_p = 'precool_' + nameroot + '_metrics.json'
+  have_precool = False
+  if os.path.exists(fname_p):
+    have_precool = True
+    lp_p = open (fname_p).read()
+    lst_p = json.loads(lp_p)
+    lst_p.pop('StartTime')
+    meta_p = lst_p.pop('Metadata')
+    times_p = list(map(int,list(lst_p.keys())))
+    times_p.sort()
+    print ("There are", len (times_p), "agent sample times at", times_p[1] - times_p[0], "second intervals")
+    hrs_p = np.array(times_p, dtype=np.float)
+    denom = 3600.0
+    hrs_p /= denom
+    time_p_key = str(times_p[0])
+    for key, val in meta_p.items():
+      if key == 'temperature_deviation_avg':
+        TEMPDEV_AVG_IDX = val['index']
+        TEMPDEV_AVG_UNITS = val['units']
+      elif key == 'temperature_deviation_min':
+        TEMPDEV_MIN_IDX = val['index']
+        TEMPDEV_MIN_UNITS = val['units']
+      elif key == 'temperature_deviation_max':
+        TEMPDEV_MAX_IDX = val['index']
+        TEMPDEV_MAX_UNITS = val['units']
+    data_p = np.empty(shape=(1, len(times_p), len(lst_p[time_p_key])), dtype=np.float)
+    print ("\nConstructed", data_p.shape, "NumPy array for Agents")
+    for i, t in enumerate (times_p):
+      ary = lst_p[str(t)]
+      data_p[0, i,:] = ary
 
   have_caps = False
   have_regs = False
@@ -301,7 +302,7 @@ def process_inv(nameroot, dictname = ''):
     have_caps = True
     lst_c.pop('StartTime')
     meta_c = lst_c.pop('Metadata')
-    print("\nCapacitor Metadata for", len(lst_c[time_key]), "objects")
+#    print("\nCapacitor Metadata for", len(lst_c[time_key]), "objects")
     for key, val in meta_c.items():
       if key == 'operation_count':
         CAP_COUNT_IDX = val['index']
@@ -322,7 +323,7 @@ def process_inv(nameroot, dictname = ''):
     have_regs = True
     lst_r.pop('StartTime')
     meta_r = lst_r.pop('Metadata')
-    print("\nRegulator Metadata for", len(lst_r[time_key]), "objects")
+#    print("\nRegulator Metadata for", len(lst_r[time_key]), "objects")
     for key, val in meta_r.items():
       if key == 'operation_count':
         REG_COUNT_IDX = val['index']
@@ -351,15 +352,18 @@ def process_inv(nameroot, dictname = ''):
     j = j + 1
 
   hour1 = 4.0
+  ihour1 = 0
+  ihour1_p = 0
   for i in range(0, len(hrs)):
     if hrs[i] > hour1:
       ihour1 = i
       break
 
-  for i in range(0, len(hrs_p)):
-    if hrs_p[i] > hour1:
-      ihour1_p = i
-      break
+  if have_precool:
+    for i in range(0, len(hrs_p)):
+      if hrs_p[i] > hour1:
+        ihour1_p = i
+        break
 
   # display some averages
   print ("Maximum feeder power =", '{:.2f}'.format(0.001*data_s[0,:,SUB_POWER_IDX].max()), 'kW')
@@ -392,19 +396,25 @@ def process_inv(nameroot, dictname = ''):
     else:
       price = 0.11
     kwh = 0.001 * data_m[:,i,ENERGY_IDX].sum()
-    print ('adding', kwh, 'at', price)
+#    print ('adding', kwh, 'at', price)
     final_bill[i] = final_bill[i-1] + price * kwh
 
-  print ("Initial meter bill =", '{:.2f}'.format(data_m[:,-1,MTR_BILL_IDX].sum() - 19770.0))
+  monthly_fee = 10.0  # the fixed charge from TEPCO used in NIST TE Challenge; not te30
+  total_monthly = monthly_fee * len(mtr_keys)
+  print ('Total Fixed Montly={:.2f}'.format (total_monthly))
+
+  print ("Initial meter bill =", '{:.2f}'.format(data_m[:,-1,MTR_BILL_IDX].sum() - total_monthly))
   print ("Final meter bill =", '{:.2f}'.format(final_bill[-1]))
-  print ("Average Temperature Deviation =", '{:.2f}'.format(data_p[:,:,TEMPDEV_AVG_IDX].mean()))
+  if have_precool:
+    print ("Average Temperature Deviation =", '{:.2f}'.format(data_p[:,:,TEMPDEV_AVG_IDX].mean()))
 
   print ('Summarizing from', hour1, 'hours to begin at indices', ihour1, ihour1_p)
   print ("Interval A Range Hi Duration =", '{:.2f}'.format(data_m[:,ihour1:-1,MTR_AHI_DURATION_IDX].sum() / 3600.0))
   print ("Interval A Range Lo Duration =", '{:.2f}'.format(data_m[:,ihour1:-1,MTR_ALO_DURATION_IDX].sum() / 3600.0))
   print ("Interval B Range Hi Duration =", '{:.2f}'.format(data_m[:,ihour1:-1,MTR_BHI_DURATION_IDX].sum() / 3600.0))
   print ("Interval B Range Lo Duration =", '{:.2f}'.format(data_m[:,ihour1:-1,MTR_BLO_DURATION_IDX].sum() / 3600.0)) 
-  print ("Interval Average Temperature Deviation =", '{:.2f}'.format(data_p[:,ihour1_p:-1,TEMPDEV_AVG_IDX].mean()))
+  if have_precool:
+    print ("Interval Average Temperature Deviation =", '{:.2f}'.format(data_p[:,ihour1_p:-1,TEMPDEV_AVG_IDX].mean()))
   if have_caps:
     print ("Interval Cap Switchings =", '{:.2f}'.format(data_c[:,-1,CAP_COUNT_IDX].sum() - data_c[:,ihour1,CAP_COUNT_IDX].sum()))
   if have_regs:
@@ -426,10 +436,17 @@ def process_inv(nameroot, dictname = ''):
   qavg2 = 0.001 * qavg1.mean(axis=0)
   tavg1 = (data_h[:,:,HSE_AIR_AVG_IDX]).squeeze()
   tavg2 = tavg1.mean(axis=0)
-  vscale = 100.0 / 120.0
-  vavg = vscale * (data_m[:,:,MTR_VOLT_AVG_IDX]).squeeze().mean(axis=0)
-  vmin = vscale * (data_m[:,:,MTR_VOLT_MIN_IDX]).squeeze().min(axis=0)
-  vmax = vscale * (data_m[:,:,MTR_VOLT_MAX_IDX]).squeeze().max(axis=0)
+
+  vavg = np.zeros(shape=(len(times)), dtype=np.float)
+  vmin = np.full(shape=(len(times)), fill_value=1000.0, dtype=np.float)
+  vmax = np.zeros(shape=(len(times)), dtype=np.float)
+  for i, mtr in enumerate(mtr_keys):
+    vbase = dict['billingmeters'][mtr]['vln']
+    vscale = 100.0 / vbase
+    vavg += vscale * data_m[i,:,MTR_VOLT_AVG_IDX]
+    vmin = np.minimum (vmin, vscale * data_m[i,:,MTR_VOLT_MIN_IDX])
+    vmax = np.maximum (vmax, vscale * data_m[i,:,MTR_VOLT_MAX_IDX])
+  vavg /= float (len(mtr_keys))
 
   # display a plot
 
@@ -486,15 +503,19 @@ def process_inv(nameroot, dictname = ''):
   ax[0,1].set_xlim(tmin,tmax)
   ax[0,1].set_xticks(xticks)
 
-  ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_AVG_IDX], color="blue", label="Mean")
-  #ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MIN_IDX], color="red", label="Min")
-  #ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MAX_IDX], color="green", label="Max")
-  ax[1,1].set_xlabel("Hours")
-  ax[1,1].set_ylabel(TEMPDEV_AVG_UNITS)
-  ax[1,1].set_title ("Average Temperature Deviations", size=MEDIUM_SIZE)
-  #ax[1,1].legend(loc='best')
-  ax[1,1].set_xlim(tmin,tmax)
-  ax[1,1].set_xticks(xticks)
+  if have_precool:
+    ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_AVG_IDX], color="blue", label="Mean")
+    #ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MIN_IDX], color="red", label="Min")
+    #ax[1,1].plot(hrs_p, data_p[0,:,TEMPDEV_MAX_IDX], color="green", label="Max")
+    ax[1,1].set_xlabel("Hours")
+    ax[1,1].set_ylabel(TEMPDEV_AVG_UNITS)
+    ax[1,1].set_title ("Average Deviation from Base Setpoint", size=MEDIUM_SIZE)
+    #ax[1,1].legend(loc='best')
+    ax[1,1].set_xlim(tmin,tmax)
+    ax[1,1].set_xticks(xticks)
+  else:
+    ax[1,1].set_title ('No Thermostat Agents')
+
 
   ax[0,2].plot(hrs, (data_m[:,:,MTR_AHI_COUNT_IDX]).squeeze().sum(axis=0), color="blue", label="Range A Hi")
   ax[0,2].plot(hrs, (data_m[:,:,MTR_BHI_COUNT_IDX]).squeeze().sum(axis=0), color="cyan", label="Range B Hi")
@@ -532,7 +553,7 @@ def process_inv(nameroot, dictname = ''):
   ax[0,3].set_xticks(xticks)
 
   #ax[1,3].plot(hrs, data_m[0,:,MTR_BILL_IDX], color="blue")
-  ax[1,3].plot(hrs, (data_m[:,:,MTR_BILL_IDX]).squeeze().sum(axis=0) - 19770.0, color='blue', label='Tariff')
+  ax[1,3].plot(hrs, (data_m[:,:,MTR_BILL_IDX]).squeeze().sum(axis=0) - total_monthly, color='blue', label='Tariff')
   ax[1,3].plot(hrs, final_bill, color='red', label='Dynamic')
   ax[1,3].set_xlabel("Hours")
   ax[1,3].set_ylabel(MTR_BILL_UNITS)

@@ -14,8 +14,8 @@ casefiles = [['SGIP1a','red'],
 						 ['SGIP1ex','orange']]
 
 def MakePlotData(root):
-#	fdir = './'
-	fdir = './SGIP1new/' + root + '/'
+	fdir = './'
+#	fdir = './SGIP1new/' + root + '/'
 	lp = open (fdir + root + '_glm_dict.json')
 	dict = json.loads(lp.read())
 	lp.close()

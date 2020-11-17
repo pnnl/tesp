@@ -1,4 +1,4 @@
-#	Copyright (C) 2017-2018 Battelle Memorial Institute
+#	Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: process_pypower.py
 import json;
 #import sys;
@@ -42,14 +42,14 @@ def unit_color(dict, key):
         return 'b'
     return 'y'
 
-def process_pypower(nameroot):
+def process_pypower(nameroot, nhours):
     # first, read and print a dictionary of relevant PYPOWER objects
     lp = open (nameroot + '_m_dict.json').read()
     dict = json.loads(lp)
     baseMVA = dict['baseMVA']
     gen_keys = list(dict['generators'].keys())
     gen_keys.sort()
-    bus_keys = list(dict['fncsBuses'].keys())
+    bus_keys = list(dict['dsoBuses'].keys())
     bus_keys.sort()
     print ('\n\nFile', nameroot, 'has baseMVA', baseMVA)
     print('\nGenerator Dictionary:')
@@ -60,7 +60,7 @@ def process_pypower(nameroot):
     print('\nFNCS Bus Dictionary:')
     print('Bus Pnom Qnom ampFactor [GridLAB-D Substations]')
     for key in bus_keys:
-        row = dict['fncsBuses'][key]
+        row = dict['dsoBuses'][key]
         print (key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])  #TODO curveScale, curveSkew
 
     # read the bus metrics file
@@ -123,7 +123,7 @@ def process_pypower(nameroot):
     data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
     print ('\nConstructed', data_b.shape, 'NumPy array for Buses')
     print ('LMPavg,LMPmax,LMP1avg,LMP1std,Vmin,Vmax,Unresp_avg,RespMax_avg','C1_avg','C2_avg')
-    last1 = int (3600 * 24 / (times[1] - times[0]))
+    last1 = int (3600 * nhours / (times[1] - times[0]))
     j = 0
     for key in bus_keys:
         i = 0
@@ -187,8 +187,18 @@ def process_pypower(nameroot):
     # display a plot 
     fig, ax = plt.subplots(2, 4, sharex = 'col')
     tmin = 0.0
-    tmax = 24 # 48.0
-    xticks = [0,6,12,18,24] # ,30,36,42,48]
+    tmax = nhours
+    xticks = []
+    if nhours > 48:
+        tstep = 24
+    elif nhours > 24:
+        tstep = 12
+    elif nhours > 12:
+        tstep = 6
+    else:
+        tstep = 2
+    for tick in range(0,nhours+1,tstep):
+        xticks.append(tick)
     for i in range(2):
         for j in range(4):
             ax[i,j].grid (linestyle = '-')
@@ -244,4 +254,4 @@ def process_pypower(nameroot):
     plt.show()
 
 if __name__ == '__main__':
-    process_pypower ('ercot_8')
+    process_pypower ('ercot_8', 72)

@@ -1,0 +1,15 @@
+{
+	"name" : "gridlabdSimulator1",
+	"period" : 1.0,
+	"log_level": 2,
+	"endpoints" : [
+		{
+			"name" : "sw_status", 
+			"global" : false,
+			"info" : {
+				"object" : "event_loadshed",
+				"property" : "switch_state"
+			}
+		}
+	]
+}

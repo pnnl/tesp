@@ -1,13 +1,23 @@
 clock {
 	timezone EST+5EDT;
 	starttime '2000-01-01 0:00:00';
+#ifdef WANT_HELICS_NS3
 	stoptime '2000-01-01 5:59:00';
+//	stoptime '2000-01-01 0:15:00';
+#else
+	stoptime '2000-01-01 5:59:00';
+#endif
 }
+
+#ifdef WANT_HELICS_NS3
+#define METRICS_INTERVAL=60
+#else
+#define METRICS_INTERVAL=60
+#endif
 
 #set relax_naming_rules=1
 #set profiler=1
 #set minimum_timestep=1
-//#set verbose=1
 
 module powerflow {
 	solver_method NR;
@@ -17,9 +27,16 @@ module powerflow {
 module connection;
 module tape;
 
+#ifdef OLD_ISLANDING
+module reliability {
+	maximum_event_length 18000;
+	report_event_log true;
+}
+#endif
+
 // this has to be the first object defined, so it's the last one committed
 object metrics_collector_writer {
-	interval 60;
+	interval ${METRICS_INTERVAL};
 	filename loadshed_metrics.json;
 }
 
@@ -27,16 +44,32 @@ object metrics_collector_writer {
 object fncs_msg {
   name gridlabdSimulator1;
   publish "commit:n650.distribution_load -> distribution_load; 1000";
+#ifdef OLD_ISLANDING
+  subscribe "precommit:event_loadshed.switch_state <- loadshed/sw_status";
+#else
   subscribe "precommit:sw_loadshed.phase_A_state <- loadshed/sw_status";
+#endif
   option "transport:hostname localhost, port 5570";
   parent n650;
 }
 #endif
 
-#ifdef WANT_HELICS
+#ifdef WANT_HELICS_NO_NS3
 object helics_msg {
   name gridlabdSimulator1;
+//  configure helics_gld_msg0.json;
+  configure helics_gld_msg_no_pub.json;
+}
+#endif
+
+#ifdef WANT_HELICS_NS3
+object helics_msg {
+//  name gridlabdSimulator1;
+#ifdef OLD_ISLANDING
+  configure helics_gld_msg_old_island.json;
+#else
   configure helics_gld_msg.json;
+#endif
 }
 #endif
 
@@ -46,12 +79,48 @@ object switch {
 	name sw_loadshed;
 	from l671;
 	to l692;
+  status CLOSED;
 }
+
+#ifdef OLD_ISLANDING
+object fault_check {
+	name test_fault;
+	check_mode ONCHANGE;
+	strictly_radial false;
+	grid_association true;
+	output_filename testout.txt;
+	eventgen_object event_loadshed;
+}
+object eventgen {
+	name event_loadshed;
+	parent testmetrics;
+	max_outage_length 18000;
+	max_simultaneous_faults 1;
+	fault_type "SW-ABC";
+	controlled_switch "sw_loadshed";
+	switch_state 1;
+	manual_outages "sw_loadshed,2030-01-01 2:00:00,2030-01-01 4:00:00";  // need this, should lie beyond Tmax
+}
+object power_metrics {
+	name pwrmetrics;
+}
+object metrics {
+	name testmetrics;
+	report_file metrics.txt;						     
+	module_metrics_object pwrmetrics;				 
+	metrics_of_interest "SAIFI,SAIDI,MAIFI"; 
+	customer_group "class=meter";  // TODO: more likely to have triplex_meter in TESP			 
+	metric_interval 1 h; 							       
+	report_interval 1 h;								     
+}
+// end of reliability module prerequisites, beginning of shed load voltage measurements
+#else
 object fault_check {
 	name test_fault;
 	check_mode SWITCHING;
 	reliability_mode TRUE;
 }
+#endif
 
 object meter {
 	name m675;
@@ -59,7 +128,7 @@ object meter {
 	bill_mode UNIFORM;
   nominal_voltage 2401.7771;
 	object metrics_collector {
-		interval 60;
+		interval ${METRICS_INTERVAL};
 	};
 }
 object meter {
@@ -68,14 +137,14 @@ object meter {
 	bill_mode UNIFORM;
   nominal_voltage 2401.7771;
 	object metrics_collector {
-		interval 60;
+		interval ${METRICS_INTERVAL};
 	};
 }
 
 object recorder {
 	parent n650;
 	property distribution_load;
-	interval 900.0;
+	interval ${METRICS_INTERVAL};
 	file substation_load.csv;
 }
 
@@ -404,7 +473,7 @@ object substation { // must be a substation for MATPOWER/PYPOWER and TESP metric
   base_power 12MVA;
   power_convergence_value 100VA;
 	object metrics_collector {
-		interval 60;
+		interval ${METRICS_INTERVAL};
 	};
 } 
  
@@ -604,4 +673,7 @@ object regulator {
 	 from n650;
 	 to n630;
 	 configuration regconfig6506321;
+   object metrics_collector {
+     interval ${METRICS_INTERVAL};
+   };
 }

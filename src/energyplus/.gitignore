@@ -8,7 +8,9 @@ config.h
 config.h.in
 configure
 depcomp
-eplus_json
+eplus_agent
+eplus_agent_helics
+test_comm
 install-sh
 missing
 stamp-h1

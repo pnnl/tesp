@@ -1,6 +1,6 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: fncsPYPOWER.py
-""" PYPOWER solutions under control of FNCS for te30 and sgip1 examples
+""" PYPOWER solutions under control of FNCS or HELICS for te30 and sgip1 examples
 
 Public Functions:
     :pypower_loop: Initializes and runs the simulation.  
@@ -13,12 +13,17 @@ try:
   import tesp_support.fncs as fncs
 except:
   pass
+try:
+  import helics
+except:
+  pass
 import numpy as np
 import pypower.api as pp
 from math import sqrt
 import math
 import re
 from copy import deepcopy
+import tesp_support.helpers as helpers
 #import cProfile
 #import pstats
 if sys.platform != 'win32':
@@ -37,17 +42,18 @@ def summarize_opf(res):
   Pgen = gen[:,1].sum()
   PctLoss = 100.0 * (Pgen - Pload) / Pgen
 
-  print('success =', res['success'], 'in', res['et'], 'seconds')
-  print('Total Gen =', Pgen, ' Load =', Pload, ' Loss =', PctLoss, '%')
+  print('success =', res['success'], 'in', '{:.3f}'.format(res['et']), 'seconds')
+  print('Total Gen = {:.2f}'.format(Pgen), ' Load = {:.2f}'.format(Pload), ' Loss = {:.3f}'.format(PctLoss), '%')
 
-  print('bus #, Pd, Qd, Vm, LMP_P, LMP_Q, MU_VMAX, MU_VMIN')
+  print('bus #       Pd       Qd       Vm     Vang    LMP_P    LMP_Q  MU_VMAX  MU_VMIN')
   for row in bus:
-    print(int(row[0]),row[2],row[3],row[7],row[13],row[14],row[15],row[16])
+    print('{:4d}  {:8.2f} {:8.2f} {:8.4f} {:8.4f} {:8.5f} {:8.5f} {:8.5f} {:8.5f}'.format(int(row[0]),
+          float(row[2]),float(row[3]),float(row[7]),float(row[8]),float(row[13]),float(row[14]),float(row[15]),float(row[16])))
 
-  print('gen #, bus, Pg, Qg, MU_PMAX, MU_PMIN, MU_PMAX, MU_PMIN')
+  print('gen # bus       Pg       Qg   MU_PMAX   MU_PMIN   MU_QMAX   MU_QMIN')
   idx = 1
   for row in gen:
-    print(idx,int(row[0]),row[1],row[2],row[21],row[22],row[23],row[24])
+    print('{:4d} {:4d} {:8.2f} {:8.2f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}'.format(idx,int(row[0]),float(row[1]),float(row[2]),float(row[21]),float(row[22]),float(row[23]),float(row[24])))
     ++idx
 
 def load_json_case(fname):
@@ -59,14 +65,14 @@ def load_json_case(fname):
   Returns:
     dict: the loaded PYPOWER case structure
   """
-  lp = open (fname).read()
+  lp = open (fname, encoding='utf-8').read()
   ppc = json.loads(lp)
   ppc['bus'] = np.array (ppc['bus'])
   ppc['gen'] = np.array (ppc['gen'])
   ppc['branch'] = np.array (ppc['branch'])
   ppc['areas'] = np.array (ppc['areas'])
   ppc['gencost'] = np.array (ppc['gencost'])
-  ppc['FNCS'] = np.array (ppc['FNCS'])
+  ppc['DSO'] = np.array (ppc['DSO'])
   ppc['UnitsOut'] = np.array (ppc['UnitsOut'])
   ppc['BranchesOut'] = np.array (ppc['BranchesOut'])
   return ppc
@@ -78,14 +84,14 @@ def make_dictionary(ppc, rootname):
     ppc (dict): PYPOWER case file structure
     rootname (str): to write rootname_m_dict.json
   """
-  fncsBuses = {}
+  dsoBuses = {}
   generators = {}
   unitsout = []
   branchesout = []
   bus = ppc['bus']
   gen = ppc['gen']
   cost = ppc['gencost']
-  fncsBus = ppc['FNCS']
+  dsoBus = ppc['DSO']
   units = ppc['UnitsOut']
   branches = ppc['BranchesOut']
 
@@ -103,11 +109,11 @@ def make_dictionary(ppc, rootname):
     generators[str(i+1)] = {'bus':int(busnum),'bustype':bustypename,'Pnom':float(gen[i,1]),'Pmax':float(gen[i,8]),'genfuel':'tbd','gentype':'tbd',
       'StartupCost':float(cost[i,1]),'ShutdownCost':float(cost[i,2]), 'c2':float(cost[i,4]), 'c1':float(cost[i,5]), 'c0':float(cost[i,6])}
 
-  for i in range (fncsBus.shape[0]):
-    busnum = int(fncsBus[i,0])
+  for i in range (dsoBus.shape[0]):
+    busnum = int(dsoBus[i,0])
     busidx = busnum - 1
-    fncsBuses[str(busnum)] = {'Pnom':float(bus[busidx,2]),'Qnom':float(bus[busidx,3]),'area':int(bus[busidx,6]),'zone':int(bus[busidx,10]),
-      'ampFactor':float(fncsBus[i,2]),'GLDsubstations':[fncsBus[i,1]]}
+    dsoBuses[str(busnum)] = {'Pnom':float(bus[busidx,2]),'Qnom':float(bus[busidx,3]),'area':int(bus[busidx,6]),'zone':int(bus[busidx,10]),
+      'ampFactor':float(dsoBus[i,2]),'GLDsubstations':[dsoBus[i,1]]}
 
   for i in range (units.shape[0]):
     unitsout.append ({'unit':int(units[i,0]),'tout':int(units[i,1]),'tin':int(units[i,2])})
@@ -116,8 +122,8 @@ def make_dictionary(ppc, rootname):
     branchesout.append ({'branch':int(branches[i,0]),'tout':int(branches[i,1]),'tin':int(branches[i,2])})
 
   dp = open (rootname + "_m_dict.json", "w")
-  ppdict = {'baseMVA':ppc['baseMVA'],'fncsBuses':fncsBuses,'generators':generators,'UnitsOut':unitsout,'BranchesOut':branchesout}
-  print (json.dumps(ppdict), file=dp, flush=True)
+  ppdict = {'baseMVA':ppc['baseMVA'],'dsoBuses':dsoBuses,'generators':generators,'UnitsOut':unitsout,'BranchesOut':branchesout}
+  json.dump (ppdict, dp, ensure_ascii=False, indent=2)
   dp.close()
 
 def parse_mva(arg):
@@ -167,8 +173,8 @@ def parse_mva(arg):
 
   return p, q
 
-def pypower_loop (casefile, rootname):
-  """ Public function to start PYPOWER solutions under control of FNCS
+def pypower_loop (casefile, rootname, helicsConfig=None):
+  """ Public function to start PYPOWER solutions under control of FNCS or HELICS
 
   The time step, maximum time, and other data must be set up in a JSON file.
   This function will run the case under FNCS, manage the FNCS message traffic,
@@ -184,12 +190,6 @@ def pypower_loop (casefile, rootname):
     casefile (str): the configuring JSON file name, without extension
     rootname (str): the root filename for metrics output, without extension
   """
-#  if len(sys.argv) == 3:
-#    rootname = sys.argv[1]
-#    casefile = sys.argv[2]
-#  else:
-#    print ('usage: python fncsPYPOWER.py metrics_rootname casedata.json')
-#    sys.exit()
 
   ppc = load_json_case (casefile)
   StartTime = ppc['StartTime']
@@ -211,8 +211,12 @@ def pypower_loop (casefile, rootname):
   sys_metrics = {'Metadata':sys_meta,'StartTime':StartTime}
 
   gencost = ppc['gencost']
-  fncsBus = ppc['FNCS']
+  dsoBus = ppc['DSO']
   gen = ppc['gen']
+  pf_dc = ppc['pf_dc']
+  PswingSwitch = 180.0 # if Gen 2 gets close to the max, change swing bus
+  if pf_dc > 0:
+    PswingSwitch = 191.0
   ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'])
   ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'])
   loads = np.loadtxt(ppc['CSVFile'], delimiter=',')
@@ -233,52 +237,123 @@ def pypower_loop (casefile, rootname):
   n_accum = 0
   bus_accum = {}
   gen_accum = {}
-  for i in range (fncsBus.shape[0]):
-    busnum = int(fncsBus[i,0])
+  for i in range (dsoBus.shape[0]):
+    busnum = int(dsoBus[i,0])
     bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0]
   for i in range (gen.shape[0]):
     gen_accum[str(i+1)] = [0,0,0]
 
   op = open (rootname + '.csv', 'w')
   print ('t[s],Converged,Pload,P7 (csv),Unresp (opf),P7 (rpf),Resp (opf),GLD Pub,BID?,P7 Min,V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp,Deg,c2,c1', file=op, flush=True)
-  fncs.initialize()
+
+  hFed = None
+  pub_lmp = None
+  pub_volts = None
+  sub_load = None
+  sub_unresp = None
+  sub_max = None
+  sub_c2 = None
+  sub_c1 = None
+  sub_deg = None
+  if helicsConfig is not None:
+    hFed = helics.helicsCreateValueFederateFromConfig(helicsConfig)
+    fedName = helics.helicsFederateGetName(hFed)
+    pubCount = helics.helicsFederateGetPublicationCount(hFed)
+    subCount = helics.helicsFederateGetInputCount(hFed)
+    for i in range(pubCount):
+      pub = helics.helicsFederateGetPublicationByIndex(hFed, i)
+      key = helics.helicsPublicationGetKey (pub)
+      print ('HELICS publication key', i, key)
+      if 'LMP_' in key:
+        pub_lmp = pub
+      elif 'three_phase_voltage_' in key:
+        pub_volts = pub
+    for i in range(subCount):
+      sub = helics.helicsFederateGetInputByIndex(hFed, i)
+      key = helics.helicsInputGetKey(sub)
+      target = helics.helicsSubscriptionGetKey(sub)
+      print ('HELICS subscription key', i, key, 'target', target)
+      upper_target = target.upper() # FNCS-compatible matching
+      if 'RESPONSIVE_C2' in upper_target:
+        sub_c2 = sub
+      if 'RESPONSIVE_C1' in upper_target:
+        sub_c1 = sub
+      if 'RESPONSIVE_DEG' in upper_target:
+        sub_deg = sub
+      if 'RESPONSIVE_MAX_MW' in upper_target:
+        sub_max = sub
+      if 'UNRESPONSIVE_MW' in upper_target:
+        sub_unresp = sub
+      if 'distribution_load' in target:
+        sub_load = sub
+    helics.helicsFederateEnterExecutingMode(hFed)
+  else:
+    fncs.initialize()
 
   # transactive load components
   csv_load = 0     # from the file
   unresp = 0       # unresponsive load estimate from the auction agent
   resp = 0         # will be the responsive load as dispatched by OPF
-  resp_deg = 0     # RESPONSIVE_DEG from FNCS
-  resp_c1 = 0      # RESPONSIVE_C1 from FNCS
-  resp_c2 = 0      # RESPONSIVE_C2 from FNCS
-  resp_max = 0     # RESPONSIVE_MAX_MW from FNCS
+  resp_deg = 0     # RESPONSIVE_DEG from DSO
+  resp_c1 = 0      # RESPONSIVE_C1 from DSO
+  resp_c2 = 0      # RESPONSIVE_C2 from DSO
+  resp_max = 0     # RESPONSIVE_MAX_MW from DSO
   feeder_load = 0  # amplified feeder MW
 
   while ts <= tmax:
     # start by getting the latest inputs from GridLAB-D and the auction
-    events = fncs.get_events()
     new_bid = False
-    load_scale = float (fncsBus[0][2])
-    for topic in events:
-      value = fncs.get_value(topic)
-      if topic == 'UNRESPONSIVE_MW':
-        unresp = load_scale * float(value)
-        fncsBus[0][3] = unresp # to poke unresponsive estimate into the bus load slot
+    load_scale = float (dsoBus[0][2])
+    # some notes on helicsInput timing
+    #  1) initial values are garbage until the other federate actually publishes
+    #  2) helicsInputIsValid checks the subscription pipeline for validity, but not the value
+    #  3) helicsInputIsUpdated resets to False immediately after you read the value, will become True if value changes later
+    #  4) helicsInputLastUpdateTime is > 0 only after the other federate published its first value
+    if hFed is not None: # HELICS inputs
+      if (sub_unresp is not None) and helics.helicsInputIsUpdated(sub_unresp):
+        unresp = helics.helicsInputGetDouble(sub_unresp) * load_scale
+        dsoBus[0][3] = unresp # to poke unresponsive estimate into the bus load slot
+      if (sub_c2 is not None) and helics.helicsInputIsUpdated(sub_c2):
+        resp_c2 = helics.helicsInputGetDouble(sub_c2) / load_scale
+      if (sub_c1 is not None) and helics.helicsInputIsUpdated(sub_c1):
+        resp_c1 = helics.helicsInputGetDouble(sub_c1)
+      if (sub_deg is not None) and helics.helicsInputIsUpdated(sub_deg):
+        resp_deg = helics.helicsInputGetInteger(sub_deg)
+      if (sub_max is not None) and helics.helicsInputIsUpdated(sub_max):
+#        print (ts,'resp_max updated before', helics.helicsInputIsUpdated(sub_max))
+        resp_max = helics.helicsInputGetComplex(sub_max)[0] * load_scale  # TODO: pyhelics needs to return complex instead of tuple
+#        print (ts,'resp_max updated after', helics.helicsInputIsUpdated(sub_max))
         new_bid = True
-      elif topic == 'RESPONSIVE_MAX_MW':
-        resp_max = load_scale * float(value)
-        new_bid = True
-      elif topic == 'RESPONSIVE_C2':
-        resp_c2 = float(value) / load_scale
-        new_bid = True
-      elif topic == 'RESPONSIVE_C1':
-        resp_c1 = float(value)
-        new_bid = True
-      elif topic == 'RESPONSIVE_DEG':
-        resp_deg = int(value)
-        new_bid = True
-      else:
-        gld_load = parse_mva (value) # actual value, may not match unresp + resp load
-        feeder_load = float(gld_load[0]) * load_scale
+      if (sub_load is not None) and helics.helicsInputIsUpdated(sub_load):
+        cval = helics.helicsInputGetComplex(sub_load)  # TODO: pyhelics needs to return complex instead of tuple
+        gld_load = complex(cval[0], cval[1])
+        feeder_load = gld_load.real * load_scale / 1.0e6
+#      print ('HELICS inputs at', ts, feeder_load, load_scale, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid)
+#      print ('HELICS resp_max', ts, resp_max, helics.helicsInputIsValid(sub_max), 
+#        helics.helicsInputIsUpdated(sub_max), helics.helicsInputLastUpdateTime(sub_max))
+    else:  # inputs coming from FNCS
+      events = fncs.get_events()
+      for topic in events:
+        value = fncs.get_value(topic)
+        if topic == 'UNRESPONSIVE_MW':
+          unresp = load_scale * float(value)
+          dsoBus[0][3] = unresp # to poke unresponsive estimate into the bus load slot
+          new_bid = True
+        elif topic == 'RESPONSIVE_MAX_MW':
+          resp_max = load_scale * float(value)
+          new_bid = True
+        elif topic == 'RESPONSIVE_C2':
+          resp_c2 = float(value) / load_scale
+          new_bid = True
+        elif topic == 'RESPONSIVE_C1':
+          resp_c1 = float(value)
+          new_bid = True
+        elif topic == 'RESPONSIVE_DEG':
+          resp_deg = int(value)
+          new_bid = True
+        else:
+          gld_load = parse_mva (value) # actual value, may not match unresp + resp load
+          feeder_load = float(gld_load[0]) * load_scale
     if new_bid == True:
       dummy = 2
 #      print('**Bid', ts, unresp, resp_max, resp_deg, resp_c2, resp_c1)
@@ -319,11 +394,11 @@ def pypower_loop (casefile, rootname):
     gencost[4][6] = 0.0
 
     if ts >= tnext_opf:  # expecting to solve opf one dt before the market clearing period ends, so GridLAB-D has time to use it
-      # for OPF, the FNCS bus load is CSV + Unresponsive estimate, with Responsive separately dispatchable
+      # for OPF, the DSO bus load is CSV + Unresponsive estimate, with Responsive separately dispatchable
       bus = ppc['bus']
       gen = ppc['gen']
       bus[6,2] = csv_load
-      for row in ppc['FNCS']:
+      for row in ppc['DSO']:
         unresp = float(row[3])
         newidx = int(row[0]) - 1
         if unresp >= feeder_load:
@@ -338,20 +413,23 @@ def pypower_loop (casefile, rootname):
       opf_gen = deepcopy (res['gen'])
       lmp = opf_bus[6,13]
       resp = -1.0 * opf_gen[4,1]
-      fncs.publish('LMP_B7', 0.001 * lmp) # publishing $/kwh
+      if pub_lmp is not None:
+        helics.helicsPublicationPublishDouble(pub_lmp, 0.001 * lmp)
+      else:
+        fncs.publish('LMP_B7', 0.001 * lmp) # publishing $/kwh
 #     print ('  OPF', ts, csv_load, '{:.3f}'.format(unresp), '{:.3f}'.format(resp),
 #            '{:.3f}'.format(feeder_load), '{:.3f}'.format(opf_bus[6,2]),
 #            '{:.3f}'.format(opf_gen[0,1]), '{:.3f}'.format(opf_gen[1,1]), '{:.3f}'.format(opf_gen[2,1]),
 #            '{:.3f}'.format(opf_gen[3,1]), '{:.3f}'.format(opf_gen[4,1]), '{:.3f}'.format(lmp))
       # if unit 2 (the normal swing bus) is dispatched at max, change the swing bus to 9
-      if opf_gen[1,1] >= 191.0:
+      if opf_gen[1,1] >= PswingSwitch:
         ppc['bus'][1,1] = 2
         ppc['bus'][8,1] = 3
-        print ('  SWING Bus 9')
+        print ('  Switching to SWING Bus 9 (Gen 4) at {:d} and {:.2f} MW'.format (ts, opf_gen[1,1]))
       else:
         ppc['bus'][1,1] = 3
         ppc['bus'][8,1] = 1
-        print ('  SWING Bus 2')
+        print ('  Keeping SWING Bus 2 (Gen 2) at {:d} and {:.2f} MW'.format (ts, opf_gen[1,1]))
       tnext_opf += period
     
     # always update the electrical quantities with a regular power flow
@@ -379,12 +457,12 @@ def pypower_loop (casefile, rootname):
     # update the metrics
     n_accum += 1
     loss_accum += Ploss
-    for i in range (fncsBus.shape[0]):
-      busnum = int(fncsBus[i,0])
+    for i in range (dsoBus.shape[0]):
+      busnum = int(dsoBus[i,0])
       busidx = busnum - 1
       row = bus[busidx].tolist()
       # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
-      PD = row[2] + resp # the ERCOT version shows how to track scaled_resp separately for each FNCS bus
+      PD = row[2] + resp # the ERCOT version shows how to track scaled_resp separately for each DSO bus
       Vpu = row[7]
       bus_accum[str(busnum)][0] += row[13]*0.001
       bus_accum[str(busnum)][1] += row[14]*0.001
@@ -409,8 +487,8 @@ def pypower_loop (casefile, rootname):
       sys_metrics[str(ts)] = {rootname:[loss_accum / n_accum,conv_accum]}
 
       bus_metrics[str(ts)] = {}
-      for i in range (fncsBus.shape[0]):
-        busnum = int(fncsBus[i,0])
+      for i in range (dsoBus.shape[0]):
+        busnum = int(dsoBus[i,0])
         busidx = busnum - 1
         row = bus[busidx].tolist()
         met = bus_accum[str(busnum)]
@@ -430,7 +508,10 @@ def pypower_loop (casefile, rootname):
       conv_accum = True
 
     volts = 1000.0 * bus[6,7] * bus[6,9] / sqrt(3.0)  # VLN for GridLAB-D
-    fncs.publish('three_phase_voltage_B7', volts)
+    if pub_volts is not None:
+      helics.helicsPublicationPublishDouble(pub_volts, volts)
+    else:
+      fncs.publish('three_phase_voltage_B7', volts)
 
     # CSV file output
     print (ts, res['success'], 
@@ -459,7 +540,11 @@ def pypower_loop (casefile, rootname):
     if ts >= tmax:
       print ('breaking out at',ts,flush=True)
       break
-    ts = fncs.time_request(min(ts + dt, tmax))
+    tRequest = min(ts + dt, tmax)
+    if hFed is not None:
+      ts = int (helics.helicsFederateRequestTime(hFed, tRequest))
+    else:
+      ts = fncs.time_request(tRequest)
 
   # ===================================
   print ('writing metrics', flush=True)
@@ -471,8 +556,11 @@ def pypower_loop (casefile, rootname):
   gen_mp.close()
   sys_mp.close()
   op.close()
-  print ('finalizing FNCS', flush=True)
-  fncs.finalize()
+  if hFed is not None:
+    helpers.stop_helics_federate (hFed)
+  else:
+    print ('finalizing DSO', flush=True)
+    fncs.finalize()
 
   if sys.platform != 'win32':
     usage = resource.getrusage(resource.RUSAGE_SELF)

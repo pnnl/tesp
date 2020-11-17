@@ -25,7 +25,7 @@
     },
     {
       "args": [
-        "EnergyPlus",
+        "energyplus",
         "-w",
         "../../support/energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw",
         "-d",
@@ -51,7 +51,7 @@
     },
     {
       "args": [
-        "eplus_json",
+        "eplus_agent",
         "172800s",
         "300s",
         "SchoolDualController",
@@ -72,10 +72,10 @@
         ],
         [
           "FNCS_CONFIG_FILE",
-          "eplus_json.yaml"
+          "eplus_agent.yaml"
         ]
       ],
-      "log": "eplus_json.log"
+      "log": "eplus_agent.log"
     },
     {
       "args": [

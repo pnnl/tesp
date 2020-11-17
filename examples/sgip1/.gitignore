@@ -8,6 +8,7 @@ output/
 launch*.sh
 *.xml
 *.inc
+weather.dat
 SGIP*substation.yaml
 SGIP1new/
 

@@ -1,20 +1,30 @@
 # usage 'python plots metrics_root'
 import sys
+import os
+import tesp_support.process_pypower as pp
+import tesp_support.process_agents as ap
+import tesp_support.process_gld as gp
+import tesp_support.process_houses as hp
+import tesp_support.process_eplus as ep
+import tesp_support.process_inv as ip
+import tesp_support.process_voltages as vp
+
 rootname = sys.argv[1]
 
-import tesp_support.process_pypower as pp
-pp.process_pypower (rootname)
+pmetrics = pp.read_pypower_metrics (rootname)
+pp.plot_pypower (pmetrics)
 
-import tesp_support.process_agents as ap
-ap.process_agents (rootname, 'TE_Challenge_agent_dict.json')
+if os.path.exists ('auction_' + rootname + '_metrics.json'):
+  ametrics = ap.read_agent_metrics (rootname, 'TE_Challenge_agent_dict.json')
+  ap.plot_agents (ametrics)
 
-import tesp_support.process_gld as gp
-gp.process_gld (rootname, 'TE_Challenge_glm_dict.json')
+gmetrics = gp.read_gld_metrics (rootname, 'TE_Challenge_glm_dict.json')
+gp.plot_gld (gmetrics)
+hp.plot_houses (gmetrics)
+vp.plot_voltages (gmetrics)
 
-import tesp_support.process_houses as hp
-hp.process_houses (rootname, 'TE_Challenge_glm_dict.json')
+emetrics = ep.read_eplus_metrics (rootname)
+ep.plot_eplus (emetrics)
 
-import tesp_support.process_eplus as ep
-ep.process_eplus (rootname)
-
+#ip.process_inv (rootname, 'TE_Challenge_glm_dict.json')
 

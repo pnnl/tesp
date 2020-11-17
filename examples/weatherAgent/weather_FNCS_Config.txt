@@ -1,0 +1,6 @@
+subscribe "precommit:exampleWeather.temperature <- weather/temperature; 44.06";
+subscribe "precommit:exampleWeather.humidity <- weather/humidity; 0.60";
+subscribe "precommit:exampleWeather.solar_direct <- weather/solar_direct; 0.0";
+subscribe "precommit:exampleWeather.solar_diffuse <- weather/solar_diffuse; 0.0";
+subscribe "precommit:exampleWeather.pressure <- weather/pressure; 1002.0";
+subscribe "precommit:exampleWeather.wind_speed <- weather/wind_speed; 10.2921";

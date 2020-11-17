@@ -3,20 +3,20 @@ time_delta: 15s
 broker: tcp://localhost:5570
 values:
     SUBSTATION7:
-        topic: gridlabdSimulator1/distribution_load
+        topic: gld1/distribution_load
         default: 0
     UNRESPONSIVE_MW:
-        topic: substation/unresponsive_mw
+        topic: sub1/unresponsive_mw
         default: 0
     RESPONSIVE_MAX_MW:
-        topic: substation/responsive_max_mw
+        topic: sub1/responsive_max_mw
         default: 0
     RESPONSIVE_C2:
-        topic: substation/responsive_c2
+        topic: sub1/responsive_c2
         default: 0
     RESPONSIVE_C1:
-        topic: substation/responsive_c1
+        topic: sub1/responsive_c1
         default: 0
     RESPONSIVE_DEG:
-        topic: substation/responsive_deg
+        topic: sub1/responsive_deg
         default: 0

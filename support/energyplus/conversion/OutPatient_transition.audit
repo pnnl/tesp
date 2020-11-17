@@ -1,0 +1,242 @@
+
+Conversion 8.3 => 8.4
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf
+
+Conversion 8.4 => 8.5
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf
+
+Conversion 8.5 => 8.6
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf
+
+Conversion 8.6 => 8.7
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Anesthesia VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Bio Haz VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Cafe VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Clean VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Clean Work VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Dictation VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Dressing Room VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Humid VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 IT Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 IT Room VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Lobby Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Lobby VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Locker Room Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Locker Room VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Lounge VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 MRI Control Room VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 MRI Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 MRI Room VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Med Gas VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Nourishment VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Nurse Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Nurse Station VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Office VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Operating Room 1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Operating Room 2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Operating Room 3 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 PACU VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Pre-Op Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Pre-Op Room 1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Pre-Op Room 2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Procedure Room VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Reception Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Reception VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Recovery Room VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Scheduling VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Scrub VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Soil Hold VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Soil VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Soil Work VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Step Down VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Sterile Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Sterile Storage VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Sub-Sterile VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Utility Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 1 Vestibule VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Conference VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Dictation VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam 1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam 2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam 3 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam 4 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam 5 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam 6 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam 7 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam 8 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam 9 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam Hall 1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam Hall 2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam Hall 3 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam Hall 4 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam Hall 5 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Exam Hall 6 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Lounge VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Nurse Station 1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Nurse Station 2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Office Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Office VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Reception Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Reception VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Scheduling 1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Scheduling 2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Work Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 Work VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 2 X-Ray VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Dressing Room VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Elevator Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Humid VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Locker VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Lounge VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Mechanical Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Office Hall VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Office VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Physical Therapy 1 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Physical Therapy 2 VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Treatment VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+   ** Warning ** Object=AirTerminal:SingleDuct:VAV:Reheat, name=Floor 3 Work VAV Box Component, entered with less than minimum number of fields.
+   **   ~~~   ** Attempting fill to minimum.
+
+Conversion 8.7 => 8.8
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf
+
+Conversion 8.8 => 8.9
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf
+
+Conversion 8.9 => 9.0
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf
+
+Conversion 9.0 => 9.1
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf
+
+Conversion 9.1 => 9.2
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf
+
+Conversion 9.2 => 9.3
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\OutPatient.idf

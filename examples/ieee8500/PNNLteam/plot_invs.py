@@ -1,13 +1,19 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
+# Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: plot_invs.py; custom for the IEEE 8500-node circuit
 import json;
 import sys;
 import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
+import os.path
+
+rootname = sys.argv[1]
+dictname = rootname + '_glm_dict.json'
+if not os.path.exists(dictname):
+  dictname = 'inv8500_glm_dict.json'
 
 # first, read and print a dictionary of all the monitored GridLAB-D objects
-lp = open (sys.argv[1] + "_glm_dict.json").read()
+lp = open (dictname).read()
 dict = json.loads(lp)
 inv_keys = list(dict['inverters'].keys())
 inv_keys.sort()
@@ -18,7 +24,7 @@ bulkBus = dict['bulkpower_bus']
 
 # parse the substation metrics file first; there should just be one entity per time sample
 # each metrics file should have matching time points
-lp_i = open ("inverter_" + sys.argv[1] + "_metrics.json").read()
+lp_i = open ("inverter_" + rootname + "_metrics.json").read()
 lst_i = json.loads(lp_i)
 print ("\nMetrics data starting", lst_i['StartTime'])
 
@@ -34,9 +40,9 @@ hrs /= denom
 time_key = str(times[0])
 
 # parse the metadata for things of specific interest
-print("\nInverter Metadata for", len(lst_i[time_key]), "objects")
+#print("\nInverter Metadata for", len(lst_i[time_key]), "objects")
 for key, val in meta_i.items():
-  print (key, val['index'], val['units'])
+  #print (key, val['index'], val['units'])
   if key == 'real_power_avg':
     INV_P_AVG_IDX = val['index']
     INV_P_AVG_UNITS = val['units']
@@ -46,7 +52,7 @@ for key, val in meta_i.items():
 
 # create a NumPy array of all metrics
 data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
-#print ("\nConstructed", data_s.shape, "NumPy array for Substations")
+print ("\nConstructed", data_i.shape, "NumPy array for Inverters")
 j = 0
 for key in inv_keys:
   i = 0
@@ -57,68 +63,75 @@ for key in inv_keys:
   j = j + 1
 
 # Billing Meters 
-lp_m = open ("billing_meter_" + sys.argv[1] + "_metrics.json").read()
+lp_m = open ("billing_meter_" + rootname + "_metrics.json").read()
 lst_m = json.loads(lp_m)
 lst_m.pop('StartTime')
 meta_m = lst_m.pop('Metadata')
-print("\nBilling Meter Metadata for", len(lst_m[time_key]), "objects")
+#print("\nBilling Meter Metadata for", len(lst_m[time_key]), "objects")
 for key, val in meta_m.items():
-	print (key, val['index'], val['units'])
-	if key == 'voltage_max':
-		MTR_VOLT_MAX_IDX = val['index']
-		MTR_VOLT_MAX_UNITS = val['units']
-	elif key == 'voltage_min':
-		MTR_VOLT_MIN_IDX = val['index']
-		MTR_VOLT_MIN_UNITS = val['units']
-	elif key == 'voltage_avg':
-		MTR_VOLT_AVG_IDX = val['index']
-		MTR_VOLT_AVG_UNITS = val['units']
+  #print (key, val['index'], val['units'])
+  if key == 'voltage_max':
+    MTR_VOLT_MAX_IDX = val['index']
+    MTR_VOLT_MAX_UNITS = val['units']
+  elif key == 'voltage_min':
+    MTR_VOLT_MIN_IDX = val['index']
+    MTR_VOLT_MIN_UNITS = val['units']
+  elif key == 'voltage_avg':
+    MTR_VOLT_AVG_IDX = val['index']
+    MTR_VOLT_AVG_UNITS = val['units']
 
 data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+print ("\nConstructed", data_m.shape, "NumPy array for Meters")
+# find the inverter meter with highest voltage
+keymax = ''
 vmax = 0.0
 jmax = 0
 imax = 0
-keymax = ''
-j = 0
-for key in mtr_keys:
-	i = 0
-	for t in times:
-		val = lst_m[str(t)][mtr_keys[j]][MTR_VOLT_AVG_IDX]
-		data_m[j, i] = val
-		if val > vmax:
-			vmax = val
-			keymax = key
-			jmax = j
-			imax = i
-		i = i + 1
-	j = j + 1
+# construct meter array
+for j, key in enumerate(mtr_keys):
+  hasInverter = False
+  if 'children' in dict['billingmeters'][key]:
+    for s in dict['billingmeters'][key]['children']:
+      if s in dict['inverters']:
+        hasInverter = True
+  for i, t in enumerate (times):
+    val = lst_m[str(t)][mtr_keys[j]][MTR_VOLT_AVG_IDX]
+    data_m[j, i] = val
+    if hasInverter and val > vmax:
+      vmax = val
+      keymax = key
+      jmax = j
+      imax = i
+
+print ('max average inverter voltage {:.3f} at meter {:s} [{:d}] at {:.3f} hrs'.format (vmax, keymax, jmax, hrs[imax]))
+
+# find the inverter meter with most counts over 105%
+mtridx = jmax
+countmax = 0
+vthresh = 1.05
+for i, key in enumerate(mtr_keys):
+  hasInverter = False
+  if 'children' in dict['billingmeters'][key]:
+    for s in dict['billingmeters'][key]['children']:
+      if s in dict['inverters']:
+        hasInverter = True
+        vbase = dict['billingmeters'][key]['vln']
+        val = (data_m[i,:]/vbase > vthresh).sum()
+        if val > countmax:
+          countmax = val
+          keymax = key
+          mtridx = i
+if countmax > 0:
+  print ('Found inverter meter with {:d} points above {:.3f} pu at {:s} [{:d}]'.format (countmax, vthresh, keymax, mtridx))
 
 invmax = ''
 invidx = 0
-i = 0
-print ('max voltage', vmax, 'at meter', keymax, jmax, 'time', hrs[imax])
-
-# look for the meter with most counts over 126
-i = 0
-mtridx = jmax
-countmax = 0
-for key in mtr_keys:
-	val = (data_m[i,:] > 126.0).sum()
-	if val > countmax:
-		countmax = val
-		keymax = key
-		mtridx = i
-	i = i + 1
-print ('meter with', countmax, 'points above 126 is', keymax, mtridx)
-
-i = 0
-for key in inv_keys:
-	if dict['inverters'][key]['billingmeter_id'] == keymax:
-		if dict['inverters'][key]['resource'] == 'solar':
-			invmax = key
-			invidx = i
-	i = i + 1
-print ('inverter is', invmax, invidx)
+for i, key in enumerate (inv_keys):
+  if dict['inverters'][key]['billingmeter_id'] == keymax:
+    if dict['inverters'][key]['resource'] == 'solar':
+      invmax = key
+      invidx = i
+print ('Inverter to plot is {:s} [{:d}]'.format (invmax, invidx))
 
 # display a plot
 fig, ax = plt.subplots(2, 1, sharex = 'col')

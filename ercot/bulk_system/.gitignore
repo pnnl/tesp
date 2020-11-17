@@ -3,4 +3,9 @@ Lines.csv
 ercot_8.csv
 *metrics.json
 *dict.json
-
+coastlines.pdf
+coastlines.png
+Texas_SHP/*.dbf
+Texas_SHP/*.shp
+Texas_SHP/*.shx
+Texas_SHP/compressed

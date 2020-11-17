@@ -1,5 +1,4 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
-# file: process_houses.py; focus on HVAC
+#	Copyright (C) 2017-2020 Battelle Memorial Institute
 import json;
 import sys;
 import numpy as np;
@@ -15,7 +14,6 @@ casefiles = [['SGIP1a','red'],
 
 def MakePlotData(root):
 	fdir = './'
-#	fdir = './SGIP1new/' + root + '/'
 	lp = open (fdir + root + '_m_dict.json')
 	dict = json.loads(lp.read())
 	lp.close()
@@ -28,7 +26,7 @@ def MakePlotData(root):
 	lst_g.pop('StartTime')
 	meta_g = lst_g.pop('Metadata')
 
-	bus_keys = list(dict['fncsBuses'].keys())
+	bus_keys = list(dict['dsoBuses'].keys())
 	bus_keys.sort()
 	lp_b = open (fdir + 'bus_' + root + '_metrics.json')
 	lst_b = json.loads(lp_b.read())

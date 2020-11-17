@@ -1,0 +1,10 @@
+FROM ubuntu:18.04
+LABEL maintainer="Thomas.McDermott@pnnl.gov"
+RUN apt-get update;apt-get dist-upgrade -y
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get install -y --no-install-recommends apt-utils
+RUN apt-get install -y libjsoncpp-dev libxerces-c-dev libzmq5-dev libczmq-dev libklu1 coinor-cbc \
+ openjdk-11-jre-headless  openjdk-11-jdk-headless python3-pip python3-tk
+RUN pip3 install tesp_support --upgrade
+RUN pip3 install psst --upgrade
+

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: tesp_config.py
 """Presents a GUI to configure and package TESP cases
 
@@ -10,6 +10,7 @@ References:
 """
 import sys
 import json
+import csv
 import tkinter as tk
 import tkinter.ttk as ttk
 import numpy as np
@@ -51,6 +52,25 @@ taxonomyChoices = ['TE_Base',
                    'R5-35.00-1'
                    ];
 
+buildingChoices = ['FullServiceRestaurant',
+                   'Hospital',
+                   'LargeHotel',
+                   'LargeOffice',
+                   'MediumOffice',
+                   'MidriseApartment',
+                   'OutPatient',
+                   'PrimarySchool',
+                   'QuickServiceRestaurant',
+                   'SchoolDualController',
+                   'SecondarySchool',
+                   'SmallHotel',
+                   'SmallOffice',
+                   'StandaloneRetail',
+                   'StripMall',
+                   'SuperMarket',
+                   'Warehouse'
+                   ]
+
 inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 
@@ -76,28 +96,30 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
           ['GridLAB-D Time Step',15,'s','FeederGenerator','MinimumStep'],
           ['Metrics Time Step',300,'s','FeederGenerator','MetricsInterval'],
           ['Power Flow Time Step',15,'s','PYPOWERConfiguration','PFStep'],
-          ['Energy+ Time Step',5,'m','EplusConfiguration','TimeStep'],
           ['Agent Time Step',15,'s','AgentPrep','TimeStepGldAgents'],
           ['GridLAB-D Taxonomy Choice','TE_Base','','BackboneFiles','TaxonomyChoice','taxonomyChoices'],
-          ['Energy+ Base File','SchoolDualController.idf','','BackboneFiles','EnergyPlusFile'],
+          ['Feeder Name Prefix','Fdr1_','Prepend to Taxonomy Names','BackboneFiles','NamePrefix'],
           ['PYPOWER Base File','ppbasefile.py','','BackboneFiles','PYPOWERFile'],
           ['Weather Type','TMY3','','WeatherPrep','WeatherChoice','weatherChoices'],
           ['Weather Source','WA-Yakima_Air_Terminal.tmy3','File or URL','WeatherPrep','DataSource'],
-#         ['Airport Code','YKM','','WeatherPrep','AirportCode'],
-#         ['Weather Year','2001','','WeatherPrep','Year'],
-          ['Support Directory','~/src/tesp/support','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
+          ['Latitude (N > 0)',32.133,'deg','WeatherPrep','Latitude'],
+          ['Longitude (E > 0)',-110.95,'deg','WeatherPrep','Longitude'],
+          ['Altitude (not used yet)', 777.0,'m','WeatherPrep','Altitude'],
+          ['TZmeridian (E > 0)',-105.00,'deg','WeatherPrep','TZmeridian'],
+          ['Support Directory','$TESP_INSTALL/share/support','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
           ['Working Directory','./','','SimulationConfig','WorkingDirectory'],
           ['Case Name','Test','','SimulationConfig','CaseName']
           ];
+varsTMSupportDirIndex = 16
+
 varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCoolingPercentage'],
           ['Electric Cooling Participation',50,'%','FeederGenerator','ElectricCoolingParticipation'],
+          ['Water Heater Penetration',75,'%','FeederGenerator','WaterHeaterPercentage'],
+          ['Water Heater Participation',25,'%','FeederGenerator','WaterHeaterParticipation'],
           ['Solar Penetration',0,'%','FeederGenerator','SolarPercentage'],
           ['Storage Penetration',0,'%','FeederGenerator','StoragePercentage'],
           ['Solar Inverter Mode','CONSTANT_PF','','FeederGenerator','SolarInverterMode','inverterModesPV'],
           ['Storage Inverter Mode','CONSTANT_PF','','FeederGenerator','StorageInverterMode','inverterModesBattery'],
-          ['Eplus Bus','Feeder_head','','FeederGenerator','EnergyPlusBus'],
-          ['Eplus Service Voltage',480,'V','FeederGenerator','EnergyPlusServiceV','eplusVoltageChoices'],
-          ['Eplus Transformer Size',150,'kVA','FeederGenerator','EnergyPlusXfmrKva'],
           ['Billing Mode','TIERED','','FeederGenerator','BillingMode','billingModes'],
           ['Monthly Fee',13,'$','FeederGenerator','MonthlyFee'],
           ['Price',0.102013,'$/kwh','FeederGenerator','Price'],
@@ -122,7 +144,13 @@ varsPP = [['OPF Type','DC','for dispatch and price','PYPOWERConfiguration','ACOP
           ['Branch Outage Start','','GLD Date/Time','PYPOWERConfiguration','BranchOutStart'],
           ['Branch Outage End','','GLD Date/Time','PYPOWERConfiguration','BranchOutEnd']
           ];
-varsEP = [['Reference Price',0.02,'$','EplusConfiguration','ReferencePrice'],
+varsEP = [['Energy+ Base File','SchoolDualController','','EplusConfiguration','BuildingChoice','buildingChoices'],
+          ['Energy+ EMS File', 'ems/emsSchoolDualController', '','EplusConfiguration','EMSFile'],
+          ['Time Steps per Hour',12,'','EplusConfiguration','StepsPerHour'],
+          ['Eplus Bus','Feeder_head','','EplusConfiguration','EnergyPlusBus'],
+          ['Eplus Service Voltage',480,'V','EplusConfiguration','EnergyPlusServiceV','eplusVoltageChoices'],
+          ['Eplus Transformer Size',150,'kVA','EplusConfiguration','EnergyPlusXfmrKva'],
+          ['Reference Price',0.02,'$','EplusConfiguration','ReferencePrice'],
           ['Ramp',25,'degF/$','EplusConfiguration','Slope'],
           ['Delta Limit Hi',4,'degF','EplusConfiguration','OffsetLimitHi'],
           ['Delta Limit Lo',4,'degF','EplusConfiguration','OffsetLimitLo']
@@ -174,7 +202,7 @@ class TespConfigGUI:
 
   Attributes:
     nb (Notebook): the top-level GUI with tabbed pages
-    f1 (Frame): the page for time step setup, along with files and file paths
+    f1 (Frame): the page for date/time setup, along with T&D files, weather files and file paths
     f2 (Frame): the page for feeder generator setup
     f3 (Frame): the page for PYPOWER setup
     f4 (Frame): the page for EnergyPlus setup
@@ -194,12 +222,25 @@ class TespConfigGUI:
     self.f6 = self.AttachFrame ('varsTS', varsTS)
     self.f7 = ttk.Frame (self.nb, name='varsMC')
 
+    self.bldg_ems = self.f4.children['eplusconfiguration#emsfile']
+    self.bldg_cb = self.f4.children['eplusconfiguration#buildingchoice']
+    self.path_ent = self.f1.children['simulationconfig#sourcedirectory']
+    self.tmy3_ent = self.f1.children['weatherprep#datasource']
+    self.tz_ent = self.f1.children['weatherprep#tzmeridian']
+    self.lat_ent = self.f1.children['weatherprep#latitude']
+    self.long_ent = self.f1.children['weatherprep#longitude']
+    self.alt_ent = self.f1.children['weatherprep#altitude']
+
+    self.bldg_cb.bind("<<ComboboxSelected>>", self.UpdateEMS)
+
     #ttk.Style().configure('TButton', background='blue')
     ttk.Style().configure('TButton', foreground='blue')
-    btn = ttk.Button(self.f1, text='Save Config...', command=self.SaveConfig)
+    btn = ttk.Button(self.f1, text='Lat/Long/Alt/TZ from TMY3', command=self.ReadLatLong)
     btn.grid(row=len(varsTM) + 2, column=1, sticky=tk.NSEW)
-    btn = ttk.Button(self.f1, text='Open Config...', command=self.OpenConfig)
+    btn = ttk.Button(self.f1, text='Save Config...', command=self.SaveConfig)
     btn.grid(row=len(varsTM) + 3, column=1, sticky=tk.NSEW)
+    btn = ttk.Button(self.f1, text='Open Config...', command=self.OpenConfig)
+    btn.grid(row=len(varsTM) + 4, column=1, sticky=tk.NSEW)
 
     lab = ttk.Label(self.f7, text='Columns', relief=tk.RIDGE)
     lab.grid(row=0, column=0, sticky=tk.NSEW)
@@ -251,16 +292,20 @@ class TespConfigGUI:
     for i in range(len(vars)):
       lab = ttk.Label(f, text=vars[i][0], relief=tk.RIDGE)
       lab.grid(row=i+1, column=0, sticky=tk.NSEW)
+      varName = (vars[i][3] + '#' + vars[i][4]).lower()
       if len(vars[i]) > 5:
-        cb = ttk.Combobox(f, values=globals()[vars[i][5]], name=vars[i][5])
+        cb = ttk.Combobox(f, values=globals()[vars[i][5]], name=varName)
         cb.set(vars[i][1])
         cb.grid(row=i+1, column=1, sticky=tk.NSEW)
       else:
-        ent = ttk.Entry(f)
+        ent = ttk.Entry(f, name=varName)
         ent.insert(0, vars[i][1])
         ent.grid(row=i+1, column=1, sticky=tk.NSEW)
       lab = ttk.Label(f, text=vars[i][2], relief=tk.RIDGE)
       lab.grid(row=i+1, column=2, sticky=tk.NSEW)
+    f.columnconfigure (0, weight=1)
+    f.columnconfigure (1, weight=2)
+    f.columnconfigure (2, weight=1)
     return f
 
   def ReloadFrame(self, f, vars):
@@ -436,6 +481,39 @@ class TespConfigGUI:
         attribute = vars[row-1][4]
         config[section][attribute] = val
 
+  def UpdateEMS (self, event):
+    emsFile = 'ems/ems' + self.bldg_cb.get()
+    self.update_entry (self.bldg_ems, emsFile)
+
+  def update_entry (self, ctl, val):
+    ctl.delete (0, tk.END)
+    ctl.insert (0, val)
+
+  def ReadLatLong(self):
+    """Updates the Latitude and Longitude from TMY3 file
+    """
+    weatherpath = self.path_ent.get()
+    weatherfile = self.tmy3_ent.get()
+    fname = os.path.expandvars (os.path.expanduser (weatherpath + '/weather/'+ weatherfile))
+    if os.path.isfile(fname):
+      fd = open (fname, 'r')
+      rd = csv.reader (fd, delimiter=',', skipinitialspace=True)
+      row = next(rd)
+      tmy3source = row[0]
+      tmy3station = row[1]
+      tmy3state = row[2]
+      tmy3tzoffset = float(row[3])
+      tmy3latitude = float(row[4])
+      tmy3longitude = float(row[5])
+      tmy3altitude = float(row[6])
+      self.update_entry (self.tz_ent, tmy3tzoffset)
+      self.update_entry (self.lat_ent, tmy3latitude)
+      self.update_entry (self.long_ent, tmy3longitude)
+      self.update_entry (self.alt_ent, tmy3altitude)
+      fd.close()
+    else:
+      print (fname, 'not found')
+
   def SaveConfig(self):
     """Updates the local case configuration from the GUI, queries user for a file name, and then saves case configuration to that file
     """
@@ -482,7 +560,7 @@ class TespConfigGUI:
         if col == 3 and use3:
           val = float(w.get())
           config['MonteCarloCase']['Samples3'][row-5] = val
-    support_path = config['SimulationConfig']['SourceDirectory']
+    support_path = os.path.expandvars (os.path.expanduser (config['SimulationConfig']['SourceDirectory']))
     if not os.path.exists (support_path):
       if not messagebox.askyesno ('Continue to Save?', 'TESP Support Directory: ' + support_path + ' not found.'):
         return
@@ -491,7 +569,7 @@ class TespConfigGUI:
                                          defaultextension = 'json')
     if len(fname) > 0:
       op = open (fname, 'w')
-      print (json.dumps(config), file=op)
+      json.dump (config, op, ensure_ascii=False, indent=2)
       op.close()
 
   def JsonToSection(self, jsn, vars):
@@ -583,9 +661,9 @@ def show_tesp_config ():
     if len(tespdir) > 0:
   #   config['SimulationConfig']['SourceDirectory'] = tespdir
       if sys.platform == 'win32':
-        varsTM[13][1] = tespdir + '\support'
+        varsTM[varsTMSupportDirIndex][1] = tespdir + '\support'
       else:
-        varsTM[13][1] = tespdir + '/support'
+        varsTM[varsTMSupportDirIndex][1] = tespdir + '/support'
   my_gui = TespConfigGUI (root)
   while True:
     try:

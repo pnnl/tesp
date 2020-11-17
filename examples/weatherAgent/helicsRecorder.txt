@@ -1,0 +1,13 @@
+weather/temperature
+weather/pressure
+weather/humidity
+weather/wind_speed
+weather/solar_direct
+weather/solar_diffuse
+weather/temperature/forecast
+weather/pressure/forecast
+weather/humidity/forecast
+weather/wind_speed/forecast
+weather/solar_direct/forecast
+weather/solar_diffuse/forecast
+

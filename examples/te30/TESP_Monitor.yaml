@@ -14,17 +14,17 @@ values:
     type: double
     list: false
   clear_price:
-    topic: substation/clear_price
+    topic: sub1/clear_price
     default: 0
     type: double
     list: false
   distribution_load:
-    topic: gridlabdSimulator1/distribution_load
+    topic: gld1/distribution_load
     default: 0
     type: complex
     list: false
   power_A:
-    topic: eplus_json/power_A
+    topic: eplus_agent/power_A
     default: 0
     type: double
     list: false

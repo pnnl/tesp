@@ -1,10 +1,17 @@
 // Weather information
-//object recorder {
-//	parent "RegionalWeather";
-//	property temperature,humidity,solar_flux;
-//	interval 60;
-//	file weather.csv;
-//}
+object recorder {
+	parent "localWeather";
+	property temperature,humidity,solar_flux;
+	interval 60;
+	file weather.csv;
+}
+// Energyplus load
+object recorder {
+	parent Eplus_meter;
+	property measured_real_power,measured_reactive_power,measured_voltage_AB;
+	interval 60;
+	file eplus_load.csv;
+}
 
 // Net load at substation
 //object recorder {
@@ -12,14 +19,6 @@
 //	property distribution_load,positive_sequence_voltage;
 //	interval 3;
 //	file substation_load.csv;
-//}
-
-// Energyplus load
-//object recorder {
-//	parent Eplus_meter;
-//	property measured_real_power,measured_reactive_power,measured_voltage_AB;
-//	interval 60;
-//	file eplus_load.csv;
 //}
 
 // house debugging

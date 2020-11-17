@@ -1,0 +1,19 @@
+name: lobuilding
+time_delta: 60s
+broker: tcp://localhost:5570
+values:
+    temperature:
+        topic: weather/temperature
+        default: 0
+    wind_speed:
+        topic: weather/wind_speed
+        default: 0
+    voltageAB:
+        topic: gridlabd/measured_voltage_AB
+        default: 0
+    voltageBC:
+        topic: gridlabd/measured_voltage_BC
+        default: 0
+    voltageCA:
+        topic: gridlabd/measured_voltage_CA
+        default: 0

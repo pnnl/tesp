@@ -1,0 +1,1441 @@
+! ***EMS PROGRAM***
+  Schedule:Compact,
+    C1_NOM,    !- Name
+    Temperature,             !- Schedule Type Limits Name
+    THROUGH: 12/31,          !- Field 1
+    FOR:AllDays,             !- Field 2
+    UNTIL: 24:00,40;         !- Field 3
+
+  Schedule:Compact,
+    H1_NOM,    !- Name
+    Temperature,             !- Schedule Type Limits Name
+    THROUGH: 12/31,          !- Field 1
+    FOR:AllDays,             !- Field 2
+    UNTIL: 24:00,15.6;       !- Field 3
+
+  Schedule:Compact,
+    C2_NOM,         !- Name
+    Temperature,             !- Schedule Type Limits Name
+    THROUGH: 12/31,          !- Field 1
+    FOR:AllDays,             !- Field 2
+    UNTIL: 24:00,23.9;       !- Field 3
+
+  Schedule:Compact,
+    H2_NOM,         !- Name
+    Temperature,             !- Schedule Type Limits Name
+    THROUGH: 12/31,          !- Field 1
+    FOR:AllDays,             !- Field 2
+    UNTIL: 24:00,21.1;       !- Field 3
+
+  Schedule:Compact,
+    H3_NOM,         !- Name
+    Temperature,             !- Schedule Type Limits Name
+    THROUGH: 12/31,          !- Field 1
+    FOR:Weekdays WinterDesignDay, !- Field 2
+    UNTIL: 7:00,15.6,        !- Field 3
+    UNTIL: 8:00,18.3,        !- Field 5
+    UNTIL:17:00,21.1,        !- Field 7
+    UNTIL: 18:00,18.3,       !- Field 9
+    UNTIL: 24:00,15.6,       !- Field 11
+    FOR: AllOtherDays,       !- Field 13
+    UNTIL: 24:00,15.6;       !- Field 14
+
+  Schedule:Compact,
+    C3_NOM,         !- Name
+    Temperature,             !- Schedule Type Limits Name
+    THROUGH: 12/31,          !- Field 1
+    FOR:Weekdays SummerDesignDay, !- Field 2
+    UNTIL: 7:00,29.4,        !- Field 3
+    UNTIL: 8:00,26.7,        !- Field 5
+    UNTIL:17:00,23.9,        !- Field 7
+    UNTIL: 18:00,26.7,       !- Field 9
+    UNTIL: 24:00,29.4,       !- Field 11
+    FOR: AllOtherDays,       !- Field 13
+    UNTIL: 24:00,29.4;       !- Field 14
+
+
+  EnergyManagementSystem:ProgramCallingManager,
+    Volume_Initializer,   !- Name
+    BeginNewEnvironment,  !- Calling Point
+    Initialize_Volumes;   !- Program Name
+  EnergyManagementSystem:ProgramCallingManager,
+    Setpoint_Controller,          !- Name
+    BeginTimestepBeforePredictor, !- Calling Point
+    Set_Setpoints;                !- Program Name
+  EnergyManagementSystem:ProgramCallingManager,
+    Demand_Reporter,                      !- Name
+    EndOfZoneTimestepAfterZoneReporting,  !- Calling Point
+    Report_Demand,
+    Report_Occupants,
+    Calculate_Temperatures;               !- Program Name
+  EnergyManagementSystem:Program,
+    Set_Setpoints,      !- Name
+    Set C1 = C1_NOM + COOL_SETP_DELTA*5.0/9.0,
+    Set H1 = H1_NOM + HEAT_SETP_DELTA*5.0/9.0,
+    Set C2 = C2_NOM + COOL_SETP_DELTA*5.0/9.0,
+    Set H2 = H2_NOM + HEAT_SETP_DELTA*5.0/9.0,
+    Set H3 = H3_NOM + HEAT_SETP_DELTA*5.0/9.0,
+    Set C3 = C3_NOM + COOL_SETP_DELTA*5.0/9.0;
+
+  EnergyManagementSystem:Program,
+    Initialize_Volumes,
+    Set G_SW_APARTMENT_V = 268.96,
+    Set G_NW_APARTMENT_V = 268.96,
+    Set OFFICE_V = 268.96,
+    Set G_NE_APARTMENT_V = 268.96,
+    Set G_N1_APARTMENT_V = 268.96,
+    Set G_N2_APARTMENT_V = 268.96,
+    Set G_S1_APARTMENT_V = 268.96,
+    Set G_S2_APARTMENT_V = 268.96,
+    Set M_SW_APARTMENT_V = 268.96,
+    Set M_NW_APARTMENT_V = 268.96,
+    Set M_SE_APARTMENT_V = 268.96,
+    Set M_NE_APARTMENT_V = 268.96,
+    Set M_N1_APARTMENT_V = 268.96,
+    Set M_N2_APARTMENT_V = 268.96,
+    Set M_S1_APARTMENT_V = 268.96,
+    Set M_S2_APARTMENT_V = 268.96,
+    Set T_SW_APARTMENT_V = 268.96,
+    Set T_NW_APARTMENT_V = 268.96,
+    Set T_SE_APARTMENT_V = 268.96,
+    Set T_NE_APARTMENT_V = 268.96,
+    Set T_N1_APARTMENT_V = 268.96,
+    Set T_N2_APARTMENT_V = 268.96,
+    Set T_S1_APARTMENT_V = 268.96,
+    Set T_S2_APARTMENT_V = 268.96,
+    Set T_CORRIDOR_V = 236.69,
+    Set G_CORRIDOR_V = 236.69,
+    Set M_CORRIDOR_V = 236.69;
+  
+  EnergyManagementSystem:Program,
+    Calculate_Temperatures,
+    Set TOTAL_COOL_V = 0.0,
+    Set TOTAL_HEAT_V = 0.0,
+    Set C_SET = 0.0,
+    Set H_SET = 0.0,
+    Set C_CUR = 0.0,
+    Set H_CUR = 0.0,
+    Set Total_V = 7165.11,
+    Set Controlled_V = 7165.11,
+    IF (G_SW_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * G_SW_APARTMENT_V,
+      Set H_CUR = H_CUR + G_SW_APARTMENT_T * G_SW_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + G_SW_APARTMENT_V,
+    ENDIF,
+    IF (G_SW_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * G_SW_APARTMENT_V,
+      Set C_CUR = C_CUR + G_SW_APARTMENT_T * G_SW_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + G_SW_APARTMENT_V,
+    ENDIF,
+    IF (G_NW_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * G_NW_APARTMENT_V,
+      Set H_CUR = H_CUR + G_NW_APARTMENT_T * G_NW_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + G_NW_APARTMENT_V,
+    ENDIF,
+    IF (G_NW_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * G_NW_APARTMENT_V,
+      Set C_CUR = C_CUR + G_NW_APARTMENT_T * G_NW_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + G_NW_APARTMENT_V,
+    ENDIF,
+    IF (OFFICE_H > 0),
+      Set H_SET = H_SET + H3 * OFFICE_V,
+      Set H_CUR = H_CUR + OFFICE_T * OFFICE_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + OFFICE_V,
+    ENDIF,
+    IF (OFFICE_C > 0),
+      Set C_SET = C_SET + C3 * OFFICE_V,
+      Set C_CUR = C_CUR + OFFICE_T * OFFICE_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + OFFICE_V,
+    ENDIF,
+    IF (G_NE_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * G_NE_APARTMENT_V,
+      Set H_CUR = H_CUR + G_NE_APARTMENT_T * G_NE_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + G_NE_APARTMENT_V,
+    ENDIF,
+    IF (G_NE_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * G_NE_APARTMENT_V,
+      Set C_CUR = C_CUR + G_NE_APARTMENT_T * G_NE_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + G_NE_APARTMENT_V,
+    ENDIF,
+    IF (G_N1_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * G_N1_APARTMENT_V,
+      Set H_CUR = H_CUR + G_N1_APARTMENT_T * G_N1_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + G_N1_APARTMENT_V,
+    ENDIF,
+    IF (G_N1_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * G_N1_APARTMENT_V,
+      Set C_CUR = C_CUR + G_N1_APARTMENT_T * G_N1_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + G_N1_APARTMENT_V,
+    ENDIF,
+    IF (G_N2_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * G_N2_APARTMENT_V,
+      Set H_CUR = H_CUR + G_N2_APARTMENT_T * G_N2_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + G_N2_APARTMENT_V,
+    ENDIF,
+    IF (G_N2_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * G_N2_APARTMENT_V,
+      Set C_CUR = C_CUR + G_N2_APARTMENT_T * G_N2_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + G_N2_APARTMENT_V,
+    ENDIF,
+    IF (G_S1_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * G_S1_APARTMENT_V,
+      Set H_CUR = H_CUR + G_S1_APARTMENT_T * G_S1_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + G_S1_APARTMENT_V,
+    ENDIF,
+    IF (G_S1_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * G_S1_APARTMENT_V,
+      Set C_CUR = C_CUR + G_S1_APARTMENT_T * G_S1_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + G_S1_APARTMENT_V,
+    ENDIF,
+    IF (G_S2_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * G_S2_APARTMENT_V,
+      Set H_CUR = H_CUR + G_S2_APARTMENT_T * G_S2_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + G_S2_APARTMENT_V,
+    ENDIF,
+    IF (G_S2_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * G_S2_APARTMENT_V,
+      Set C_CUR = C_CUR + G_S2_APARTMENT_T * G_S2_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + G_S2_APARTMENT_V,
+    ENDIF,
+    IF (M_SW_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * M_SW_APARTMENT_V,
+      Set H_CUR = H_CUR + M_SW_APARTMENT_T * M_SW_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + M_SW_APARTMENT_V,
+    ENDIF,
+    IF (M_SW_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * M_SW_APARTMENT_V,
+      Set C_CUR = C_CUR + M_SW_APARTMENT_T * M_SW_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + M_SW_APARTMENT_V,
+    ENDIF,
+    IF (M_NW_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * M_NW_APARTMENT_V,
+      Set H_CUR = H_CUR + M_NW_APARTMENT_T * M_NW_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + M_NW_APARTMENT_V,
+    ENDIF,
+    IF (M_NW_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * M_NW_APARTMENT_V,
+      Set C_CUR = C_CUR + M_NW_APARTMENT_T * M_NW_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + M_NW_APARTMENT_V,
+    ENDIF,
+    IF (M_SE_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * M_SE_APARTMENT_V,
+      Set H_CUR = H_CUR + M_SE_APARTMENT_T * M_SE_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + M_SE_APARTMENT_V,
+    ENDIF,
+    IF (M_SE_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * M_SE_APARTMENT_V,
+      Set C_CUR = C_CUR + M_SE_APARTMENT_T * M_SE_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + M_SE_APARTMENT_V,
+    ENDIF,
+    IF (M_NE_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * M_NE_APARTMENT_V,
+      Set H_CUR = H_CUR + M_NE_APARTMENT_T * M_NE_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + M_NE_APARTMENT_V,
+    ENDIF,
+    IF (M_NE_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * M_NE_APARTMENT_V,
+      Set C_CUR = C_CUR + M_NE_APARTMENT_T * M_NE_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + M_NE_APARTMENT_V,
+    ENDIF,
+    IF (M_N1_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * M_N1_APARTMENT_V,
+      Set H_CUR = H_CUR + M_N1_APARTMENT_T * M_N1_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + M_N1_APARTMENT_V,
+    ENDIF,
+    IF (M_N1_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * M_N1_APARTMENT_V,
+      Set C_CUR = C_CUR + M_N1_APARTMENT_T * M_N1_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + M_N1_APARTMENT_V,
+    ENDIF,
+    IF (M_N2_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * M_N2_APARTMENT_V,
+      Set H_CUR = H_CUR + M_N2_APARTMENT_T * M_N2_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + M_N2_APARTMENT_V,
+    ENDIF,
+    IF (M_N2_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * M_N2_APARTMENT_V,
+      Set C_CUR = C_CUR + M_N2_APARTMENT_T * M_N2_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + M_N2_APARTMENT_V,
+    ENDIF,
+    IF (M_S1_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * M_S1_APARTMENT_V,
+      Set H_CUR = H_CUR + M_S1_APARTMENT_T * M_S1_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + M_S1_APARTMENT_V,
+    ENDIF,
+    IF (M_S1_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * M_S1_APARTMENT_V,
+      Set C_CUR = C_CUR + M_S1_APARTMENT_T * M_S1_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + M_S1_APARTMENT_V,
+    ENDIF,
+    IF (M_S2_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * M_S2_APARTMENT_V,
+      Set H_CUR = H_CUR + M_S2_APARTMENT_T * M_S2_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + M_S2_APARTMENT_V,
+    ENDIF,
+    IF (M_S2_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * M_S2_APARTMENT_V,
+      Set C_CUR = C_CUR + M_S2_APARTMENT_T * M_S2_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + M_S2_APARTMENT_V,
+    ENDIF,
+    IF (T_SW_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * T_SW_APARTMENT_V,
+      Set H_CUR = H_CUR + T_SW_APARTMENT_T * T_SW_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + T_SW_APARTMENT_V,
+    ENDIF,
+    IF (T_SW_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * T_SW_APARTMENT_V,
+      Set C_CUR = C_CUR + T_SW_APARTMENT_T * T_SW_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + T_SW_APARTMENT_V,
+    ENDIF,
+    IF (T_NW_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * T_NW_APARTMENT_V,
+      Set H_CUR = H_CUR + T_NW_APARTMENT_T * T_NW_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + T_NW_APARTMENT_V,
+    ENDIF,
+    IF (T_NW_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * T_NW_APARTMENT_V,
+      Set C_CUR = C_CUR + T_NW_APARTMENT_T * T_NW_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + T_NW_APARTMENT_V,
+    ENDIF,
+    IF (T_SE_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * T_SE_APARTMENT_V,
+      Set H_CUR = H_CUR + T_SE_APARTMENT_T * T_SE_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + T_SE_APARTMENT_V,
+    ENDIF,
+    IF (T_SE_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * T_SE_APARTMENT_V,
+      Set C_CUR = C_CUR + T_SE_APARTMENT_T * T_SE_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + T_SE_APARTMENT_V,
+    ENDIF,
+    IF (T_NE_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * T_NE_APARTMENT_V,
+      Set H_CUR = H_CUR + T_NE_APARTMENT_T * T_NE_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + T_NE_APARTMENT_V,
+    ENDIF,
+    IF (T_NE_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * T_NE_APARTMENT_V,
+      Set C_CUR = C_CUR + T_NE_APARTMENT_T * T_NE_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + T_NE_APARTMENT_V,
+    ENDIF,
+    IF (T_N1_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * T_N1_APARTMENT_V,
+      Set H_CUR = H_CUR + T_N1_APARTMENT_T * T_N1_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + T_N1_APARTMENT_V,
+    ENDIF,
+    IF (T_N1_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * T_N1_APARTMENT_V,
+      Set C_CUR = C_CUR + T_N1_APARTMENT_T * T_N1_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + T_N1_APARTMENT_V,
+    ENDIF,
+    IF (T_N2_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * T_N2_APARTMENT_V,
+      Set H_CUR = H_CUR + T_N2_APARTMENT_T * T_N2_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + T_N2_APARTMENT_V,
+    ENDIF,
+    IF (T_N2_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * T_N2_APARTMENT_V,
+      Set C_CUR = C_CUR + T_N2_APARTMENT_T * T_N2_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + T_N2_APARTMENT_V,
+    ENDIF,
+    IF (T_S1_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * T_S1_APARTMENT_V,
+      Set H_CUR = H_CUR + T_S1_APARTMENT_T * T_S1_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + T_S1_APARTMENT_V,
+    ENDIF,
+    IF (T_S1_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * T_S1_APARTMENT_V,
+      Set C_CUR = C_CUR + T_S1_APARTMENT_T * T_S1_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + T_S1_APARTMENT_V,
+    ENDIF,
+    IF (T_S2_APARTMENT_H > 0),
+      Set H_SET = H_SET + H2 * T_S2_APARTMENT_V,
+      Set H_CUR = H_CUR + T_S2_APARTMENT_T * T_S2_APARTMENT_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + T_S2_APARTMENT_V,
+    ENDIF,
+    IF (T_S2_APARTMENT_C > 0),
+      Set C_SET = C_SET + C2 * T_S2_APARTMENT_V,
+      Set C_CUR = C_CUR + T_S2_APARTMENT_T * T_S2_APARTMENT_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + T_S2_APARTMENT_V,
+    ENDIF,
+    IF (T_CORRIDOR_H > 0),
+      Set H_SET = H_SET + H1 * T_CORRIDOR_V,
+      Set H_CUR = H_CUR + T_CORRIDOR_T * T_CORRIDOR_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + T_CORRIDOR_V,
+    ENDIF,
+    IF (T_CORRIDOR_C > 0),
+      Set C_SET = C_SET + C1 * T_CORRIDOR_V,
+      Set C_CUR = C_CUR + T_CORRIDOR_T * T_CORRIDOR_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + T_CORRIDOR_V,
+    ENDIF,
+    IF (G_CORRIDOR_H > 0),
+      Set H_SET = H_SET + H1 * G_CORRIDOR_V,
+      Set H_CUR = H_CUR + G_CORRIDOR_T * G_CORRIDOR_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + G_CORRIDOR_V,
+    ENDIF,
+    IF (G_CORRIDOR_C > 0),
+      Set C_SET = C_SET + C1 * G_CORRIDOR_V,
+      Set C_CUR = C_CUR + G_CORRIDOR_T * G_CORRIDOR_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + G_CORRIDOR_V,
+    ENDIF,
+    IF (M_CORRIDOR_H > 0),
+      Set H_SET = H_SET + H1 * M_CORRIDOR_V,
+      Set H_CUR = H_CUR + M_CORRIDOR_T * M_CORRIDOR_V,
+      Set TOTAL_HEAT_V = TOTAL_HEAT_V + M_CORRIDOR_V,
+    ENDIF,
+    IF (M_CORRIDOR_C > 0),
+      Set C_SET = C_SET + C1 * M_CORRIDOR_V,
+      Set C_CUR = C_CUR + M_CORRIDOR_T * M_CORRIDOR_V,
+      Set TOTAL_COOL_V = TOTAL_COOL_V + M_CORRIDOR_V,
+    ENDIF,
+! Average temperature over controlled zone air volumes
+    Set T_CUR = 0,
+    Set T_CUR = T_CUR + G_SW_APARTMENT_T * G_SW_APARTMENT_V,
+    Set T_CUR = T_CUR + G_NW_APARTMENT_T * G_NW_APARTMENT_V,
+    Set T_CUR = T_CUR + OFFICE_T * OFFICE_V,
+    Set T_CUR = T_CUR + G_NE_APARTMENT_T * G_NE_APARTMENT_V,
+    Set T_CUR = T_CUR + G_N1_APARTMENT_T * G_N1_APARTMENT_V,
+    Set T_CUR = T_CUR + G_N2_APARTMENT_T * G_N2_APARTMENT_V,
+    Set T_CUR = T_CUR + G_S1_APARTMENT_T * G_S1_APARTMENT_V,
+    Set T_CUR = T_CUR + G_S2_APARTMENT_T * G_S2_APARTMENT_V,
+    Set T_CUR = T_CUR + M_SW_APARTMENT_T * M_SW_APARTMENT_V,
+    Set T_CUR = T_CUR + M_NW_APARTMENT_T * M_NW_APARTMENT_V,
+    Set T_CUR = T_CUR + M_SE_APARTMENT_T * M_SE_APARTMENT_V,
+    Set T_CUR = T_CUR + M_NE_APARTMENT_T * M_NE_APARTMENT_V,
+    Set T_CUR = T_CUR + M_N1_APARTMENT_T * M_N1_APARTMENT_V,
+    Set T_CUR = T_CUR + M_N2_APARTMENT_T * M_N2_APARTMENT_V,
+    Set T_CUR = T_CUR + M_S1_APARTMENT_T * M_S1_APARTMENT_V,
+    Set T_CUR = T_CUR + M_S2_APARTMENT_T * M_S2_APARTMENT_V,
+    Set T_CUR = T_CUR + T_SW_APARTMENT_T * T_SW_APARTMENT_V,
+    Set T_CUR = T_CUR + T_NW_APARTMENT_T * T_NW_APARTMENT_V,
+    Set T_CUR = T_CUR + T_SE_APARTMENT_T * T_SE_APARTMENT_V,
+    Set T_CUR = T_CUR + T_NE_APARTMENT_T * T_NE_APARTMENT_V,
+    Set T_CUR = T_CUR + T_N1_APARTMENT_T * T_N1_APARTMENT_V,
+    Set T_CUR = T_CUR + T_N2_APARTMENT_T * T_N2_APARTMENT_V,
+    Set T_CUR = T_CUR + T_S1_APARTMENT_T * T_S1_APARTMENT_V,
+    Set T_CUR = T_CUR + T_S2_APARTMENT_T * T_S2_APARTMENT_V,
+    Set T_CUR = T_CUR + T_CORRIDOR_T * T_CORRIDOR_V,
+    Set T_CUR = T_CUR + G_CORRIDOR_T * G_CORRIDOR_V,
+    Set T_CUR = T_CUR + M_CORRIDOR_T * M_CORRIDOR_V,
+    Set T_CUR = T_CUR/Controlled_V*9.0/5.0+32.0,
+! Average cooling schedule and setpoint over controlled zone air volumes
+    Set Schedule_Cooling_Temperature = 0.0,
+    Set T_Cooling = 0,
+    Set T_Cooling = T_Cooling + C2 * G_SW_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * G_SW_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * G_NW_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * G_NW_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C3 * OFFICE_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C3_NOM * OFFICE_V,
+    Set T_Cooling = T_Cooling + C2 * G_NE_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * G_NE_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * G_N1_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * G_N1_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * G_N2_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * G_N2_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * G_S1_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * G_S1_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * G_S2_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * G_S2_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * M_SW_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * M_SW_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * M_NW_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * M_NW_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * M_SE_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * M_SE_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * M_NE_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * M_NE_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * M_N1_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * M_N1_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * M_N2_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * M_N2_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * M_S1_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * M_S1_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * M_S2_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * M_S2_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * T_SW_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * T_SW_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * T_NW_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * T_NW_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * T_SE_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * T_SE_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * T_NE_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * T_NE_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * T_N1_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * T_N1_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * T_N2_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * T_N2_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * T_S1_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * T_S1_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C2 * T_S2_APARTMENT_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C2_NOM * T_S2_APARTMENT_V,
+    Set T_Cooling = T_Cooling + C1 * T_CORRIDOR_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * T_CORRIDOR_V,
+    Set T_Cooling = T_Cooling + C1 * G_CORRIDOR_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * G_CORRIDOR_V,
+    Set T_Cooling = T_Cooling + C1 * M_CORRIDOR_V,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature + C1_NOM * M_CORRIDOR_V,
+    Set T_Cooling = T_Cooling/Controlled_V*9.0/5.0+32.0,
+    Set Schedule_Cooling_Temperature = Schedule_Cooling_Temperature/Controlled_V*9.0/5.0+32.0,
+! Average heating schedule and setpoint over controlled zone air volumes
+    Set Schedule_Heating_Temperature = 0.0,
+    Set T_Heating = 0,
+    Set T_Heating = T_Heating + H2 * G_SW_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * G_SW_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * G_NW_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * G_NW_APARTMENT_V,
+    Set T_Heating = T_Heating + H3 * OFFICE_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H3_NOM * OFFICE_V,
+    Set T_Heating = T_Heating + H2 * G_NE_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * G_NE_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * G_N1_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * G_N1_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * G_N2_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * G_N2_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * G_S1_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * G_S1_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * G_S2_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * G_S2_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * M_SW_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * M_SW_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * M_NW_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * M_NW_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * M_SE_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * M_SE_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * M_NE_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * M_NE_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * M_N1_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * M_N1_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * M_N2_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * M_N2_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * M_S1_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * M_S1_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * M_S2_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * M_S2_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * T_SW_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * T_SW_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * T_NW_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * T_NW_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * T_SE_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * T_SE_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * T_NE_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * T_NE_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * T_N1_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * T_N1_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * T_N2_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * T_N2_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * T_S1_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * T_S1_APARTMENT_V,
+    Set T_Heating = T_Heating + H2 * T_S2_APARTMENT_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H2_NOM * T_S2_APARTMENT_V,
+    Set T_Heating = T_Heating + H1 * T_CORRIDOR_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * T_CORRIDOR_V,
+    Set T_Heating = T_Heating + H1 * G_CORRIDOR_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * G_CORRIDOR_V,
+    Set T_Heating = T_Heating + H1 * M_CORRIDOR_V,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature + H1_NOM * M_CORRIDOR_V,
+    Set T_Heating = T_Heating/Controlled_V*9.0/5.0+32.0,
+    Set Schedule_Heating_Temperature = Schedule_Heating_Temperature/Controlled_V*9.0/5.0+32.0,
+
+    Set Setpoint_Cooling_Temperature = T_Cooling,
+    Set Current_Cooling_Temperature = T_CUR,
+    Set Setpoint_Heating_Temperature = T_Heating,
+    Set Current_Heating_Temperature = T_CUR;
+
+  
+  EnergyManagementSystem:Program,
+    Report_Demand,      !- Name
+    Set Cooling_Power_State = 0.0,
+    Set Heating_Power_State = 0.0,
+    Set Flexible_Cooling_Demand = 0.0,
+    Set Flexible_Heating_Demand = 0.0,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_1,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_2,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_3,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_4,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_5,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_6,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_7,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_8,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_9,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_10,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_11,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_12,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_13,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_14,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_15,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_16,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_17,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_18,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_19,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_20,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_21,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_22,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_23,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand + Cooling_Coil_24,
+    Set Flexible_Cooling_Demand = Flexible_Cooling_Demand/(60*60*ZoneTimeStep),
+    IF Flexible_Cooling_Demand > 1.0,
+      Set Cooling_Power_State = 1.0,
+    ENDIF,
+    Set Flexible_Heating_Demand = Flexible_Heating_Demand + Heating_Coil_1,
+    Set Flexible_Heating_Demand = Flexible_Heating_Demand + Heating_Coil_2,
+    Set Flexible_Heating_Demand = Flexible_Heating_Demand + Heating_Coil_3,
+    Set Flexible_Heating_Demand = Flexible_Heating_Demand/(60*60*ZoneTimeStep),
+    IF Flexible_Heating_Demand > 1.0,
+      Set Heating_Power_State = 1.0,
+    ENDIF;
+  
+  EnergyManagementSystem:Program,
+    Report_Occupants,
+    Set Total_Occupants = 0.0,
+    Set Total_Occupants = Total_Occupants + G_SW_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + G_NW_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + OFFICE_O,
+    Set Total_Occupants = Total_Occupants + G_NE_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + G_N1_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + G_N2_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + G_S1_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + G_S2_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + M_SW_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + M_NW_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + M_SE_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + M_NE_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + M_N1_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + M_N2_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + M_S1_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + M_S2_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + T_SW_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + T_NW_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + T_SE_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + T_NE_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + T_N1_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + T_N2_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + T_S1_APARTMENT_O,
+    Set Total_Occupants = Total_Occupants + T_S2_APARTMENT_O;
+  EnergyManagementSystem:Sensor,
+    C1_NOM,  !- Name
+    C1_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    C1,  !- Name
+    UNITHEATER_CLGSP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    H1_NOM,  !- Name
+    H1_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    H1,  !- Name
+    UNITHEATER_HTGSP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    C2_NOM,  !- Name
+    C2_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    C2,  !- Name
+    APT_CLGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    H2_NOM,  !- Name
+    H2_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    H2,  !- Name
+    APT_HTGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    H3_NOM,  !- Name
+    H3_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    H3,  !- Name
+    OFF_HTGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:Sensor,
+    C3_NOM,  !- Name
+    C3_NOM,  !- Output:Variable or Output:Meter Index Key Name
+    Schedule Value;    !- Output:Variable or Output:Meter Name
+  EnergyManagementSystem:Actuator,
+    C3,  !- Name
+    OFF_CLGSETP_SCH,  !- Actuated Component Unique Name
+    Schedule:Compact, !- Actuated Component Type
+    Schedule Value;   !- Actuated Component Control Type
+  EnergyManagementSystem:GlobalVariable,
+    Flexible_Cooling_Demand;
+  EnergyManagementSystem:GlobalVariable,
+    Flexible_Heating_Demand;
+  EnergyManagementSystem:GlobalVariable,
+    Setpoint_Cooling_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Setpoint_Heating_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Schedule_Cooling_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Schedule_Heating_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Current_Cooling_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Current_Heating_Temperature;
+  EnergyManagementSystem:GlobalVariable,
+    Cooling_Power_State;
+  EnergyManagementSystem:GlobalVariable,
+    Heating_Power_State;
+  EnergyManagementSystem:GlobalVariable,
+    H_SET;
+  EnergyManagementSystem:GlobalVariable,
+    C_SET;
+  EnergyManagementSystem:GlobalVariable,
+    H_CUR;
+  EnergyManagementSystem:GlobalVariable,
+    C_CUR;
+  EnergyManagementSystem:GlobalVariable,
+    TOTAL_HEAT_V;
+  EnergyManagementSystem:GlobalVariable,
+    TOTAL_COOL_V;
+  EnergyManagementSystem:GlobalVariable,
+    T_CUR;
+  EnergyManagementSystem:GlobalVariable,
+    Total_Occupants;
+  EnergyManagementSystem:OutputVariable,
+    Cooling Controlled Load,  !- Name
+    Flexible_Cooling_Demand,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Controlled Load,  !- Name
+    Flexible_Heating_Demand,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Schedule Temperature,  !- Name
+    Schedule_Cooling_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Schedule Temperature,  !- Name
+    Schedule_Heating_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Setpoint Temperature,  !- Name
+    Setpoint_Cooling_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Setpoint Temperature,  !- Name
+    Setpoint_Heating_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Current Temperature,  !- Name
+    Current_Cooling_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Current Temperature,  !- Name
+    Current_Heating_Temperature,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Power State,  !- Name
+    Cooling_Power_State,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Power State,  !- Name
+    Heating_Power_State,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Setpoint,  !- Name
+    H_SET,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Setpoint,  !- Name
+    C_SET,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Current,  !- Name
+    H_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Current,  !- Name
+    C_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Heating Volume,  !- Name
+    TOTAL_HEAT_V,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Cooling Volume,  !- Name
+    TOTAL_COOL_V,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Indoor Air Temperature,  !- Name
+    T_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:OutputVariable,
+    Occupant Count,  !- Name
+    Total_Occupants,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_1,  !- Name
+    SPLITSYSTEMAC:01_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_2,  !- Name
+    SPLITSYSTEMAC:02_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_3,  !- Name
+    SPLITSYSTEMAC:03_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_4,  !- Name
+    SPLITSYSTEMAC:04_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_5,  !- Name
+    SPLITSYSTEMAC:05_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_6,  !- Name
+    SPLITSYSTEMAC:06_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_7,  !- Name
+    SPLITSYSTEMAC:07_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_8,  !- Name
+    SPLITSYSTEMAC:08_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_9,  !- Name
+    SPLITSYSTEMAC:09_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_10,  !- Name
+    SPLITSYSTEMAC:10_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_11,  !- Name
+    SPLITSYSTEMAC:11_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_12,  !- Name
+    SPLITSYSTEMAC:12_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_13,  !- Name
+    SPLITSYSTEMAC:13_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_14,  !- Name
+    SPLITSYSTEMAC:14_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_15,  !- Name
+    SPLITSYSTEMAC:15_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_16,  !- Name
+    SPLITSYSTEMAC:16_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_17,  !- Name
+    SPLITSYSTEMAC:17_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_18,  !- Name
+    SPLITSYSTEMAC:18_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_19,  !- Name
+    SPLITSYSTEMAC:19_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_20,  !- Name
+    SPLITSYSTEMAC:20_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_21,  !- Name
+    SPLITSYSTEMAC:21_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_22,  !- Name
+    SPLITSYSTEMAC:22_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_23,  !- Name
+    SPLITSYSTEMAC:23_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Cooling_Coil_24,  !- Name
+    SPLITSYSTEMAC:24_UNITARY_PACKAGE_COOLCOIL,  !- Coil
+    Cooling Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Heating_Coil_1,  !- Name
+    G CORRIDOR UNIT HEATER COIL,  !- Coil
+    Heating Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Heating_Coil_2,  !- Name
+    M CORRIDOR UNIT HEATER COIL,  !- Coil
+    Heating Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    Heating_Coil_3,  !- Name
+    T CORRIDOR UNIT HEATER COIL,  !- Coil
+    Heating Coil Electric Energy;
+  EnergyManagementSystem:Sensor,
+    G_SW_APARTMENT_O,  !- Name
+    G SW APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    G_SW_APARTMENT_T,  !- Name
+    G SW APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    G_SW_APARTMENT_H,  !- Name
+    G SW APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    G_SW_APARTMENT_C,  !- Name
+    G SW APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    G_SW_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    G_NW_APARTMENT_O,  !- Name
+    G NW APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    G_NW_APARTMENT_T,  !- Name
+    G NW APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    G_NW_APARTMENT_H,  !- Name
+    G NW APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    G_NW_APARTMENT_C,  !- Name
+    G NW APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    G_NW_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    OFFICE_O,  !- Name
+    OFFICE,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    OFFICE_T,  !- Name
+    OFFICE,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    OFFICE_H,  !- Name
+    OFFICE,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    OFFICE_C,  !- Name
+    OFFICE,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    OFFICE_V;
+  EnergyManagementSystem:Sensor,
+    G_NE_APARTMENT_O,  !- Name
+    G NE APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    G_NE_APARTMENT_T,  !- Name
+    G NE APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    G_NE_APARTMENT_H,  !- Name
+    G NE APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    G_NE_APARTMENT_C,  !- Name
+    G NE APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    G_NE_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    G_N1_APARTMENT_O,  !- Name
+    G N1 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    G_N1_APARTMENT_T,  !- Name
+    G N1 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    G_N1_APARTMENT_H,  !- Name
+    G N1 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    G_N1_APARTMENT_C,  !- Name
+    G N1 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    G_N1_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    G_N2_APARTMENT_O,  !- Name
+    G N2 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    G_N2_APARTMENT_T,  !- Name
+    G N2 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    G_N2_APARTMENT_H,  !- Name
+    G N2 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    G_N2_APARTMENT_C,  !- Name
+    G N2 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    G_N2_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    G_S1_APARTMENT_O,  !- Name
+    G S1 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    G_S1_APARTMENT_T,  !- Name
+    G S1 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    G_S1_APARTMENT_H,  !- Name
+    G S1 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    G_S1_APARTMENT_C,  !- Name
+    G S1 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    G_S1_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    G_S2_APARTMENT_O,  !- Name
+    G S2 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    G_S2_APARTMENT_T,  !- Name
+    G S2 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    G_S2_APARTMENT_H,  !- Name
+    G S2 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    G_S2_APARTMENT_C,  !- Name
+    G S2 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    G_S2_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    M_SW_APARTMENT_O,  !- Name
+    M SW APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    M_SW_APARTMENT_T,  !- Name
+    M SW APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    M_SW_APARTMENT_H,  !- Name
+    M SW APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    M_SW_APARTMENT_C,  !- Name
+    M SW APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    M_SW_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    M_NW_APARTMENT_O,  !- Name
+    M NW APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    M_NW_APARTMENT_T,  !- Name
+    M NW APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    M_NW_APARTMENT_H,  !- Name
+    M NW APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    M_NW_APARTMENT_C,  !- Name
+    M NW APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    M_NW_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    M_SE_APARTMENT_O,  !- Name
+    M SE APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    M_SE_APARTMENT_T,  !- Name
+    M SE APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    M_SE_APARTMENT_H,  !- Name
+    M SE APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    M_SE_APARTMENT_C,  !- Name
+    M SE APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    M_SE_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    M_NE_APARTMENT_O,  !- Name
+    M NE APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    M_NE_APARTMENT_T,  !- Name
+    M NE APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    M_NE_APARTMENT_H,  !- Name
+    M NE APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    M_NE_APARTMENT_C,  !- Name
+    M NE APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    M_NE_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    M_N1_APARTMENT_O,  !- Name
+    M N1 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    M_N1_APARTMENT_T,  !- Name
+    M N1 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    M_N1_APARTMENT_H,  !- Name
+    M N1 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    M_N1_APARTMENT_C,  !- Name
+    M N1 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    M_N1_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    M_N2_APARTMENT_O,  !- Name
+    M N2 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    M_N2_APARTMENT_T,  !- Name
+    M N2 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    M_N2_APARTMENT_H,  !- Name
+    M N2 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    M_N2_APARTMENT_C,  !- Name
+    M N2 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    M_N2_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    M_S1_APARTMENT_O,  !- Name
+    M S1 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    M_S1_APARTMENT_T,  !- Name
+    M S1 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    M_S1_APARTMENT_H,  !- Name
+    M S1 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    M_S1_APARTMENT_C,  !- Name
+    M S1 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    M_S1_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    M_S2_APARTMENT_O,  !- Name
+    M S2 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    M_S2_APARTMENT_T,  !- Name
+    M S2 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    M_S2_APARTMENT_H,  !- Name
+    M S2 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    M_S2_APARTMENT_C,  !- Name
+    M S2 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    M_S2_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    T_SW_APARTMENT_O,  !- Name
+    T SW APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    T_SW_APARTMENT_T,  !- Name
+    T SW APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    T_SW_APARTMENT_H,  !- Name
+    T SW APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    T_SW_APARTMENT_C,  !- Name
+    T SW APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    T_SW_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    T_NW_APARTMENT_O,  !- Name
+    T NW APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    T_NW_APARTMENT_T,  !- Name
+    T NW APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    T_NW_APARTMENT_H,  !- Name
+    T NW APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    T_NW_APARTMENT_C,  !- Name
+    T NW APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    T_NW_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    T_SE_APARTMENT_O,  !- Name
+    T SE APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    T_SE_APARTMENT_T,  !- Name
+    T SE APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    T_SE_APARTMENT_H,  !- Name
+    T SE APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    T_SE_APARTMENT_C,  !- Name
+    T SE APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    T_SE_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    T_NE_APARTMENT_O,  !- Name
+    T NE APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    T_NE_APARTMENT_T,  !- Name
+    T NE APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    T_NE_APARTMENT_H,  !- Name
+    T NE APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    T_NE_APARTMENT_C,  !- Name
+    T NE APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    T_NE_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    T_N1_APARTMENT_O,  !- Name
+    T N1 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    T_N1_APARTMENT_T,  !- Name
+    T N1 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    T_N1_APARTMENT_H,  !- Name
+    T N1 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    T_N1_APARTMENT_C,  !- Name
+    T N1 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    T_N1_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    T_N2_APARTMENT_O,  !- Name
+    T N2 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    T_N2_APARTMENT_T,  !- Name
+    T N2 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    T_N2_APARTMENT_H,  !- Name
+    T N2 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    T_N2_APARTMENT_C,  !- Name
+    T N2 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    T_N2_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    T_S1_APARTMENT_O,  !- Name
+    T S1 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    T_S1_APARTMENT_T,  !- Name
+    T S1 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    T_S1_APARTMENT_H,  !- Name
+    T S1 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    T_S1_APARTMENT_C,  !- Name
+    T S1 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    T_S1_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    T_S2_APARTMENT_O,  !- Name
+    T S2 APARTMENT,    !- Zone
+    Zone People Occupant Count;
+  EnergyManagementSystem:Sensor,
+    T_S2_APARTMENT_T,  !- Name
+    T S2 APARTMENT,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    T_S2_APARTMENT_H,  !- Name
+    T S2 APARTMENT,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    T_S2_APARTMENT_C,  !- Name
+    T S2 APARTMENT,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    T_S2_APARTMENT_V;
+  EnergyManagementSystem:Sensor,
+    T_CORRIDOR_T,  !- Name
+    T CORRIDOR,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    T_CORRIDOR_H,  !- Name
+    T CORRIDOR,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    T_CORRIDOR_C,  !- Name
+    T CORRIDOR,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    T_CORRIDOR_V;
+  EnergyManagementSystem:Sensor,
+    G_CORRIDOR_T,  !- Name
+    G CORRIDOR,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    G_CORRIDOR_H,  !- Name
+    G CORRIDOR,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    G_CORRIDOR_C,  !- Name
+    G CORRIDOR,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    G_CORRIDOR_V;
+  EnergyManagementSystem:Sensor,
+    M_CORRIDOR_T,  !- Name
+    M CORRIDOR,    !- Zone
+    Zone Mean Air Temperature;
+  EnergyManagementSystem:Sensor,
+    M_CORRIDOR_H,  !- Name
+    M CORRIDOR,    !- Zone
+    Zone Air System Sensible Heating Energy;
+  EnergyManagementSystem:Sensor,
+    M_CORRIDOR_C,  !- Name
+    M CORRIDOR,    !- Zone
+    Zone Air System Sensible Cooling Energy;
+  EnergyManagementSystem:GlobalVariable,
+    M_CORRIDOR_V;
+! ***EXTERNAL INTERFACE***
+  ExternalInterface,
+    FNCS; !- Name of External Interface
+  ExternalInterface:Variable,
+    COOL_SETP_DELTA,  !- Name
+    0;                !- Initial Value
+  ExternalInterface:Variable,
+    HEAT_SETP_DELTA,  !- Name
+    0;                !- Initial Value
+! ***GENERAL REPORTING***
+  Output:VariableDictionary,IDF,Unsorted;
+! ***REPORT METERS/VARIABLES***
+  Output:Variable,EMS,Cooling Controlled Load,timestep;
+  Output:Variable,EMS,Heating Controlled Load,timestep;
+  Output:Variable,EMS,Cooling Schedule Temperature,timestep;
+  Output:Variable,EMS,Heating Schedule Temperature,timestep;
+  Output:Variable,EMS,Cooling Setpoint Temperature,timestep;
+  Output:Variable,EMS,Heating Setpoint Temperature,timestep;
+  Output:Variable,EMS,Cooling Current Temperature,timestep;
+  Output:Variable,EMS,Heating Current Temperature,timestep;
+  Output:Variable,EMS,Cooling Power State,timestep;
+  Output:Variable,EMS,Heating Power State,timestep;
+  Output:Variable,EMS,Cooling Volume,timestep;
+  Output:Variable,EMS,Heating Volume,timestep;
+  Output:Variable,EMS,Occupant Count,timestep;
+  Output:Variable,EMS,Indoor Air Temperature,timestep;
+  Output:Variable,WHOLE BUILDING,Facility Total Electric Demand Power,timestep;
+  Output:Variable,WHOLE BUILDING,Facility Total HVAC Electric Demand Power,timestep;
+  Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
+  Output:Variable,Environment,Site Outdoor Air Drybulb Temperature,timestep; 

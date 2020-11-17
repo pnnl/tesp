@@ -1,22 +1,12 @@
 {
 	"name" : "gridlabdSimulator1",
 	"period" : 1.0,
-	"publications" : [ 
+	"log_level": 4,
+	"endpoints" : [
 		{
+			"name" : "sw_status", 
 			"global" : false,
-			"key" : "totalLoad",
-			"type" : "complex",
-			"unit" : "MVA",
-			"info" : {
-				"object" : "n650",
-				"property" : "distribution_load"
-			}
-		}
-	],
-	"subscriptions" : [
-		{
-			"key" : "loadshed/sw_status", 
-			"type" : "string",
+      "type" : "string",
 			"info" : {
 				"object" : "sw_loadshed",
 				"property" : "phase_A_state"

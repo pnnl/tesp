@@ -5,3 +5,4 @@ __pycache__/
 *.json
 process_pypower.py
 fncs*.py
+out.txt

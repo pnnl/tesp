@@ -9,4 +9,6 @@ del ercot_8.csv
 del *_FNCS_Config.txt
 del *glm_dict.json
 del *agent_dict.json
-
+del weather*.json
+del weather*.dat
+del *.zpl

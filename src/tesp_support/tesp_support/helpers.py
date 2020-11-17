@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: helpers.py
 """ Utility functions for use within tesp_support, including new agents.
 """
@@ -9,6 +9,63 @@ import re
 import sys
 from copy import deepcopy
 from enum import IntEnum
+try:
+  import helics
+except:
+  pass
+
+def idf_int(val):
+  """Helper function to format integers for the EnergyPlus IDF input data file
+
+  Args:
+    val (int): the integer to format
+
+  Returns:
+     str: the integer in string format, padded with a comma and zero or one blanks, in order to fill three spaces
+  """
+  sval = str(val)
+  if len(sval) < 2:
+    return sval + ', '
+  return sval + ','
+
+def stop_helics_federate (fed):
+  print ('finalizing HELICS', flush=True)
+  helics.helicsFederateDestroy(fed)
+# status = helics.helicsFederateFinalize(fed)
+# state = helics.helicsFederateGetState(fed)
+# assert state == 3
+# while helics.helicsBrokerIsConnected(None):
+#   time.sleep(1)
+# helics.helicsFederateFree(fed)
+# helics.helicsCloseLibrary()
+
+def zoneMeterName(ldname):
+  """ Enforces the meter naming convention for commercial zones
+
+  Commercial zones must be children of load objects. This routine
+  replaces "_load_" with "_meter".
+
+  Args:
+      objname (str): the GridLAB-D name of a load, ends with _load_##
+
+  Returns:
+    str: The GridLAB-D name of upstream meter
+  """
+  return ldname.replace ('_load_', '_meter_')
+
+# GridLAB-D name should not begin with a number, or contain '-' for FNCS
+def gld_strict_name(val):
+    """Sanitizes a name for GridLAB-D publication to FNCS
+
+    Args:
+        val (str): the input name
+
+    Returns:
+        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
+    """
+    if val[0].isdigit():
+        val = 'gld_' + val
+    return val.replace ('-', '_')
 
 class ClearingType (IntEnum):
     """ Describes the market clearing type

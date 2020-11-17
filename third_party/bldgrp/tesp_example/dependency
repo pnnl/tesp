@@ -1,0 +1,103 @@
+Jmodelica User Guide with Installation instruction:
+
+	https://jmodelica.org/downloads/UsersGuide-2.4.pdf
+
+Installation on Windows is easy, just download and install:
+	
+	https://jmodelica.org/downloads/JModelica.org-2.4.exe
+
+On Ubuntu (my version is 18.04, but Lucy has 16.04, it works for both)
+
+dependencies:
+
+	python2
+	jModelica
+	Ipopt
+	Assimulo
+	joblib
+	pandas
+	sklearn
+
+environment variable:
+	
+	JAVA_HOME
+	JMODELICA_HOME
+	IPOPT_HOME
+	SUNDIALS_HOME
+	PYTHONPATH
+	LD_LIBRARY_PATH
+	SEPARATE_PROCESS_JVM
+
+
+Install Java:
+Sudo apt-get -y install default-jdk
+Sudo apt-get -y install jcc
+ 
+Install pre-compiled packages:
+sudo apt-get -y install g++ &&
+sudo apt-get -y install subversion &&
+sudo apt-get -y install gfortran &&
+sudo apt-get -y install ipython &&
+sudo apt-get -y install cmake &&
+sudo apt-get -y install swig &&
+sudo apt-get -y install ant &&
+sudo apt-get -y install python-dev &&
+sudo apt-get -y install python-numpy &&
+sudo apt-get -y install python-scipy &&
+sudo apt-get -y install python-matplotlib &&
+sudo apt-get -y install cython &&
+sudo apt-get -y install python-lxml &&
+sudo apt-get -y install python-nose &&
+sudo apt-get -y install python-jpype &&
+sudo apt-get -y install zlib1g-dev &&
+sudo apt-get -y install libboost-dev &&
+sudo apt-get install libblas-dev liblapack-dev &&
+sudo apt-get install jcc
+ 
+ 
+Download and install and compile Ipopt 3.10.2:
+Download Ipopt here:  https://projects.coin‐or.org/Ipopt
+Install:
+cd Ipopt-3.10.2/ThirdParty/Mumps
+./get.Mumps
+cd ../Metis
+./get.Metis
+cd ../../
+mkdir build
+cd build
+../configure --prefix=/home/<user_name>/<ipopt_installation_location>
+make install
+ 
+Download, install jModelica
+Download from svn checkout:
+cd <jModelica_location>
+svn co https://svn.jmodelica.org/trunk jModelica
+cd jModelica
+mkdir build
+cd build
+../configure --prefix=/home/<user_name>/<jmodelica_install_location> --with-ipopt=/home/<user_name>/<ipopt_install_location>
+make install
+make casadi_interface
+
+
+If get error:
+
+	 "svn: E205011: Failure occurred processing one or more	externals 
+
+do:
+
+	svn co https://svn.jmodelica.org/assimulo/trunk JModelica/external/Assimulo
+
+then, configure and make install as usual.
+
+
+pip install sklearn, joblib, pandas
+
+run . set_env.sh in the example to set the environment variables
+
+
+
+
+
+
+

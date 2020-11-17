@@ -33,8 +33,8 @@ plotvars = [[0, 't[s]', 'seconds'],
 						[18, 'gencost0', '$']]
 
 def MakePlotData(root, idx):
-#	fpath = root + '.csv'
-	fpath = './SGIP1new/' + root + '/' + root + '.csv'
+	fpath = root + '.csv'
+#	fpath = './SGIP1new/' + root + '/' + root + '.csv'
 	d1 = np.loadtxt(fpath, skiprows=1, delimiter=',',
 									usecols=[0,2,3,4,5,6,7,9,10,11,12,13,14,15,16,17,18,19,20])
 	hrs = d1[:,0] / 3600.0

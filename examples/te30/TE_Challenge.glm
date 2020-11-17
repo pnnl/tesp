@@ -13,7 +13,7 @@ clock {
 
 module climate;
 module market;
-module connection; // FNCS
+module connection; // FNCS and HELICS
 module powerflow {
 	solver_method FBS;
 	NR_iteration_limit 100;
@@ -25,8 +25,8 @@ module tape;
 module generators;
 
 // only the heating setpoint schedule is used here
-#include "../../support/schedules/water_and_setpoint_schedule_v3.glm"
-#include "../../support/schedules/appliance_schedules.glm"
+#include "${SCHED_PATH}/water_and_setpoint_schedule_v3.glm"
+#include "${SCHED_PATH}/appliance_schedules.glm"
 #include "outputs_te.glm"
 
 // summer
@@ -40,9 +40,12 @@ object metrics_collector_writer {
 };
 
 object climate {
-     name "RegionalWeather";
-     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
-     interpolate QUADRATIC;
+  name localWeather;
+//     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
+  interpolate QUADRATIC;
+	latitude 32.133;
+	longitude -111.95;
+  tz_meridian -105.0;
 };
 
 class player {
@@ -142,13 +145,18 @@ object substation {
 
 #ifdef USE_FNCS
 object fncs_msg {
-     name gridlabdSimulator1;
+     name gld1;
      parent network_node;
      configure TE_Challenge_FNCS_Config.txt;
-//     configure TE_Eplusonly.txt;
      option "transport:hostname localhost, port 5570";
      aggregate_subscriptions true;
      aggregate_publications true;
+}
+#endif
+
+#ifdef USE_HELICS
+object helics_msg {
+  configure TE_Challenge_HELICS_gld_msg.json;
 }
 #endif
 
@@ -4390,7 +4398,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4424,7 +4432,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4458,7 +4466,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4492,7 +4500,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4526,7 +4534,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4560,7 +4568,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4594,7 +4602,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4628,7 +4636,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4662,7 +4670,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4696,7 +4704,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4730,7 +4738,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4764,7 +4772,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4798,7 +4806,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4832,7 +4840,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4866,7 +4874,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4900,7 +4908,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4934,7 +4942,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -4968,7 +4976,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5002,7 +5010,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5036,7 +5044,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5070,7 +5078,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5104,7 +5112,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5138,7 +5146,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5172,7 +5180,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5206,7 +5214,7 @@ object triplex_meter {
 		phases BS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5240,7 +5248,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5274,7 +5282,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5308,7 +5316,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5342,7 +5350,7 @@ object triplex_meter {
 		phases AS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5376,7 +5384,7 @@ object triplex_meter {
 		phases CS;
 		inverter_type FOUR_QUADRANT;
 		power_factor 1;
-		use_multipoint_efficiency TRUE;
+		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
 		maximum_dc_power 6500; 
 		four_quadrant_control_mode CONSTANT_PF;
@@ -5426,7 +5434,7 @@ object meter {
   name Eplus_meter;
   groupid Commercial_Meter;
   meter_power_consumption 1+15j;
-  nominal_voltage 480.000000;
+  nominal_voltage 277.00;
   bill_mode UNIFORM;
   price 0.11420;
   monthly_fee 25.00;
@@ -5440,7 +5448,7 @@ object load {
   name Eplus_load;
   parent Eplus_meter;
   phases ABCN;
-  nominal_voltage 480.000000;
+  nominal_voltage 277.00;
   constant_power_A 25 kVA;
   constant_power_B 25 kVA;
   constant_power_C 25 kVA;

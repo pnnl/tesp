@@ -76,7 +76,7 @@ def make_dictionary(ppc, rootname):
   bus = ppc['bus']
   gen = ppc['gen']
   cost = ppc['gencost']
-  fncsBus = ppc['FNCS']
+  fncsBus = ppc['DSO']
   units = ppc['UnitsOut']
   branches = ppc['BranchesOut']
 
@@ -130,7 +130,7 @@ t = np.linspace(0,1,l-2,endpoint=True)
 t = np.append([0,0,0],t)
 t = np.append(t,[1,1,1])
 tck_load=[t,[x,y],3]
-u3=np.linspace(0,1,num=86400/300 + 1,endpoint=True)
+u3=np.linspace(0,1,num=int(86400/300) + 1,endpoint=True)
 newpts = ip.splev (u3, tck_load)
 
 ppc = tesp.load_json_case (casename + '.json')
@@ -164,7 +164,7 @@ conv_accum = True
 n_accum = 0
 bus_accum = {}
 gen_accum = {}
-fncsBus = ppc['FNCS']
+fncsBus = ppc['DSO']
 gen = ppc['gen']
 for i in range (fncsBus.shape[0]):
   busnum = int(fncsBus[i,0])
@@ -180,7 +180,7 @@ for i in range (gen.shape[0]):
 # UnitsOut: idx, time out[s], time back in[s]
 # BranchesOut: idx, time out[s], time back in[s]
 # FNCS: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew
-fncs_bus = ppc['FNCS']
+fncs_bus = ppc['DSO']
 loads = {'h':[],'1':[],'2':[],'3':[],'4':[],'5':[],'6':[],'7':[],'8':[]}
 
 # initialize for variable wind
@@ -191,7 +191,7 @@ if wind_period > 0:
     print ('warning: wind power fluctuation requested, but there are no wind plants in this case')
   else:
     tnext_wind = 0
-
+print (wind_plants)
 # initialize for OPF and time stepping
 ts = 0
 tnext_opf = 0
@@ -201,6 +201,7 @@ print ('seconds,OPFconverged,TotalLoad,TotalGen,SwingGen,LMP1,LMP8,gas1,coal1,nu
 while ts <= tmax:
   # fluctuate the wind plants
   if ts >= tnext_wind:
+    wind_MW = 0.0
     for key, row in wind_plants.items():
       # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, p]
       wind_bus = row[0]
@@ -229,11 +230,13 @@ while ts <= tmax:
       row[7] = alag
       row[8] = ylag
       row[9] = p
+      wind_MW += p
       # reset the unit capacity; this will 'stick' for the next wind_period
       ppc['gen'][int(key), 8] = p
       if ppc['gen'][int(key), 1] > p:
         ppc['gen'][int(key), 1] = p
     tnext_wind += wind_period
+    print ('{:6d} # {:d} wind plants produce {:.2f} MW'.format (ts, len(wind_plants), wind_MW))
 
   # always update the unresponsive load
 #  loads['h'].append (float(ts) / 3600.0)
@@ -308,7 +311,7 @@ while ts <= tmax:
 #               success=rpf[0]['success'])
   bus = rpf[0]['bus']
   gen = rpf[0]['gen']
-  fncsBus = ppc['FNCS']
+  fncsBus = ppc['DSO']
   Pload = bus[:,2].sum()
   Pgen = gen[:,1].sum()
   Ploss = Pgen - Pload

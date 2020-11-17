@@ -128,6 +128,10 @@ class hvac:
         Returns:
             [float, float, Boolean]: bid price in $/kwh, bid quantity in kW and current HVAC on state, or None if not bidding 
         """
+
+        #print (' = formulating bid for {:s} kw={:.2f} on={:d} T={:.2f} Base={:.2f} mu={:.5f} ramp={:.3f} std={:.5f} Trange={:.2f} mode={:s}'.format (self.name, 
+        #  self.hvac_kw, self.hvac_on, self.air_temp, self.basepoint, self.mean, self.ramp, self.std_dev, self.Trange, self.control_mode))
+
         if self.control_mode == 'CN_NONE':
             return None
 
@@ -167,7 +171,7 @@ class hvac:
             return True
         return False
 
-    def set_hvac_load (self,str):
+    def set_hvac_load_from_fncs_str (self,str):
         """ Sets the hvac_load attribute, if greater than zero
 
         Args:
@@ -177,7 +181,7 @@ class hvac:
         if val > 0.0:
             self.hvac_kw = val
 
-    def set_hvac_state (self,str):
+    def set_hvac_state_from_fncs_str (self,str):
         """ Sets the hvac_on attribute
 
         Args:
@@ -188,7 +192,7 @@ class hvac:
         else:
             self.hvac_on = True
 
-    def set_air_temp (self,str):
+    def set_air_temp_from_fncs_str (self,str):
         """ Sets the air_temp attribute
 
         Args:
@@ -196,11 +200,27 @@ class hvac:
         """
         self.air_temp = helpers.parse_fncs_number (str)
 
-    def set_voltage (self,str):
+    def set_voltage_from_fncs_str (self,str):
         """ Sets the mtr_v attribute
 
         Args:
             str (str): FNCS message with meter line-neutral voltage
         """
         self.mtr_v = helpers.parse_fncs_magnitude (str)
+
+    def set_hvac_load_from_helics (self, val):
+        if val > 0.0:
+            self.hvac_kw = val
+
+    def set_hvac_state_from_helics (self, val):
+        if str == 'OFF':
+            self.hvac_on = False
+        else:
+            self.hvac_on = True
+
+    def set_air_temp_from_helics (self, val):
+        self.air_temp = val
+
+    def set_voltage_from_helics (self, val):
+        self.mtr_v = abs (val)
 

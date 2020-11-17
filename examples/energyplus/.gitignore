@@ -1,6 +1,13 @@
 *.log
 *.out
-output/
+out.txt
+out*/
 *.json
 *.audit
-
+Merged.idf
+ems*.idf
+Summer*.idf
+Winter*.idf
+*.png
+Test.epw
+Test.tmy2

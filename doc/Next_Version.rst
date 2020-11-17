@@ -17,7 +17,7 @@ should be for others to write their own (better) TEAgents.
 1. VOLTTRON is a standard for building automation and management
    systems, and it has been used to implement build-level transactive
    mechanisms for electricity, air and chilled water in co-simulation
-   with EnergyPlus [`5 <#_ENREF_5>`__]. A TEAgent based on VOLTTRON
+   with EnergyPlus :cite:`5`. A TEAgent based on VOLTTRON
    could manage the building-level transactive system, and also
    participate in the feeder-level or substation-level electricity
    markets on behalf of the building loads and resources. The work
@@ -28,13 +28,13 @@ should be for others to write their own (better) TEAgents.
 
 2. PowerMatcher is a transactive mechanism implemented by the
    Netherlands Organisation for Applied Scientific Research (TNO)
-   [`19 <#_ENREF_19>`__]. The existing code is in Java, with a custom
+   :cite:`19`. The existing code is in Java, with a custom
    API and message schema. TNO would have to undertake the work of
    interfacing PowerMatcher to the TESP, with technical support from
    PNNL.
 
 3. TeMix is another transactive mechanism that has been implemented by a
-   California-based company [`20 <#_ENREF_20>`__], and selected for some
+   California-based company :cite:`20`, and selected for some
    pilot projects. TeMix would have to undertake the work of interfacing
    its product to the TESP, with technical support from PNNL.
 
@@ -91,7 +91,7 @@ These are also important for usability and widespread adoption of TESP.
    graphical user interface.
 
 2. TE Challenge Message Schemas – NIST has defined several classes and
-   message schemas for the TE Challenge project [`2 <#_ENREF_2>`__].
+   message schemas for the TE Challenge project :cite:`2`.
    Many of these tie directly to GridLAB-D, so they are already
    supported via FNCS. We will continue to review all of them to ensure
    that TESP remains compatible with TE Challenge to the extent
@@ -115,7 +115,7 @@ These are also important for usability and widespread adoption of TESP.
    across operating systems, and allows for user customization, just as
    with the Python-based TEAgents.
 
-5. IEEE 1516 [`21-23 <#_ENREF_21>`__] is a comprehensive family of
+5. IEEE 1516 :cite:`21,22,23` is a comprehensive family of
    standards for co-simulation, sometimes referred to as High-Level
    Architecture (HLA). As part of Grid Modernization Lab Consortium
    (GMLC) project 1.4.15, “Development of Integrated Transmission,

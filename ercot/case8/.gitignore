@@ -8,6 +8,13 @@ ercot_8_pf.csv
 ercot_8_opf.csv
 Bus*.glm
 tesp_monitor_ercot.json
-no_fncs/
+weather*.json
+weather*.dat
+ames*.dat
+dam.dat
+rtm.dat
+uc.dat
+*.zpl
+evchargerdet
 no_market/
 market/

@@ -2,4 +2,12 @@ rm *metrics.json
 rm *.log
 rm *_opf.csv
 rm *_pf.csv
+rm *_dso.csv
 rm *dict.json
+rm *.dat
+rm *.txt
+rm dam.json
+rm d*.m
+rm test_dam*.m
+rm basecase.m
+rm rtmcase_*.m

@@ -1,10 +1,11 @@
-#	Copyright (C) 2017-2018 Battelle Memorial Institute
+#	Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: process_pypower.py
 import json;
 #import sys;
 import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
+from matplotlib.lines import Line2D;
 
 def bus_color(key):
     if key == '1':
@@ -171,8 +172,8 @@ def process_pypower(nameroot):
     # display a plot 
     fig, ax = plt.subplots(2,2, sharex = 'col')
     tmin = 0.0
-    tmax = 48.0
-    xticks = [0,6,12,18,24,30,36,42,48]
+    tmax = 72.0
+    xticks = [0,6,12,18,24,30,36,42,48,54,60,66,72]
     for i in range(2):
         for j in range(2):
             ax[i,j].grid (linestyle = '-')
@@ -189,6 +190,11 @@ def process_pypower(nameroot):
     for i in range(data_g.shape[0]):
         ax[1,0].plot(hrs, data_g[i,:,PGEN_IDX], color=unit_color (dict, gen_keys[i]), 
                      linewidth=unit_width (dict,gen_keys[i]))
+    fuel_lines = [Line2D([0], [0], color='g', lw=4),
+                  Line2D([0], [0], color='r', lw=4),
+                  Line2D([0], [0], color='k', lw=4),
+                  Line2D([0], [0], color='b', lw=4)]
+    ax[1,0].legend(fuel_lines, ['Wind', 'Nuclear', 'Coal', 'Gas'])
 
     ax[0,1].set_title ('Bus Voltages')
     ax[0,1].set_ylabel(VMAG_UNITS)

@@ -24,9 +24,9 @@ DSO+T. In order to keep up with changes will working on the DSO+T study:
 1.  Check for new binary releases on a weekly basis from 
 https://github.com/pnnl/tesp/releases You may also receive email notice of 
 significant new releases.  New features in GridLAB-D and the 
-large-building simulator will be distributed this way.  
+large-building simulator will be distributed this way.
 
-2. Use "git pull" and "pip install tesp_support --upgrade" on a daily basis.  Most of the updates are distributed this way.  
+2. Use "git pull" and "pip install tesp_support --upgrade" on a daily basis.  Most of the updates are distributed this way.
 
 The sub-directory structure is:
 

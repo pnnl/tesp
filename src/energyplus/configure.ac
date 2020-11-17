@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([TESP EnergyPlus Metrics], [1.0.0], [thomas.mcdermott@pnnl.gov])
+AC_INIT([TESP EnergyPlus Agent], [1.0.0], [thomas.mcdermott@pnnl.gov])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -12,8 +12,8 @@ AC_LANG([C++])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
 # Checks for programs.
-# AC_PROG_CXX([g++-7])
-# AC_PROG_CC([gcc-7])
+# AC_PROG_CXX([g++-9])
+# AC_PROG_CC([gcc-9])
 AC_PROG_CXX()
 AC_PROG_CC()
 

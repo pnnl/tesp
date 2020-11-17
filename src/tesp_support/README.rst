@@ -55,6 +55,7 @@ Links to Dependencies
 * MATPOWER_
 * NetworkX_
 * NumPy_
+* Pandas_
 * pip_
 * PYPOWER_
 * Python_
@@ -75,6 +76,7 @@ License & Copyright
 .. _Docker: https://www.docker.com
 .. _Python: http://www.python.org
 .. _pip: https://pip.pypa.io
+.. _Pandas: https://pandas.pydata.org
 .. _NumPy: http://www.numpy.org
 .. _SciPy: http://www.scipy.org
 .. _Matplotlib: https://matplotlib.org

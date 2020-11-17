@@ -199,13 +199,15 @@ if __name__ == '__main__':
 		else:
 			lblbus138[b[0]] = str(b[0]) + ':' + str(int(b[5]))
 
-	nx.draw_networkx_nodes (graph, xy, nodelist=list(n345), node_color='k', node_size=80, alpha=0.3)
-	nx.draw_networkx_nodes (graph, xy, nodelist=list(n138), node_color='b', node_size=20, alpha=0.3)
-	nx.draw_networkx_edges (graph, xy, edgelist=lst345, edge_color='r', width=w345, alpha=0.8)
-#   nx.draw_networkx_edges (graph, xy, edgelist=lst345, edge_color='r', width=1, alpha=0.3)
-	nx.draw_networkx_edges (graph, xy, edgelist=lst138, edge_color='b', width=w138, alpha=0.8)
-	nx.draw_networkx_labels (graph, xy, lblbus345, font_size=12, font_color='g')
-	nx.draw_networkx_labels (graph, xy, lblbus138, font_size=12, font_color='g')
+	fig, ax = plt.subplots()
+  
+	nx.draw_networkx_nodes (graph, xy, nodelist=list(n345), node_color='k', node_size=80, alpha=0.3, ax=ax)
+	nx.draw_networkx_nodes (graph, xy, nodelist=list(n138), node_color='b', node_size=20, alpha=0.3, ax=ax)
+	nx.draw_networkx_edges (graph, xy, edgelist=lst345, edge_color='r', width=w345, alpha=0.8, ax=ax)
+#   nx.draw_networkx_edges (graph, xy, edgelist=lst345, edge_color='r', width=1, alpha=0.3, ax=ax)
+	nx.draw_networkx_edges (graph, xy, edgelist=lst138, edge_color='b', width=w138, alpha=0.8, ax=ax)
+	nx.draw_networkx_labels (graph, xy, lblbus345, font_size=12, font_color='g', ax=ax)
+	nx.draw_networkx_labels (graph, xy, lblbus138, font_size=12, font_color='g', ax=ax)
 #   nx.draw_networkx_edge_labels (graph, xy, edge_labels=lbl345, label_pos=0.5, font_color='m', font_size=6)
 #   nx.draw_networkx_edge_labels (graph, xy, edge_labels=lbl138, label_pos=0.5, font_color='k', font_size=6)
 
@@ -213,6 +215,8 @@ if __name__ == '__main__':
 	plt.xlabel ('Longitude [deg]')
 	plt.ylabel ('Latitude [deg N]')
 	plt.grid(linestyle='dotted')
+	ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+
 	plt.show()
 
 

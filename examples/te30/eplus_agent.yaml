@@ -1,0 +1,61 @@
+name: eplus_agent
+time_delta: 5m
+broker: tcp://localhost:5570
+values:
+    kwhr_price:
+        topic: sub1/clear_price
+        default: 0.02
+    indoor_air:
+        topic: eplus/EMS INDOOR AIR TEMPERATURE
+        default: 0
+    outdoor_air:
+        topic: eplus/ENVIRONMENT SITE OUTDOOR AIR DRYBULB TEMPERATURE
+        default: 0
+    cooling_volume:
+        topic: eplus/EMS COOLING VOLUME
+        default: 0
+    heating_volume:
+        topic: eplus/EMS HEATING VOLUME
+        default: 0
+    cooling_controlled_load:
+        topic: eplus/EMS COOLING CONTROLLED LOAD
+        default: 0
+    cooling_schedule_temperature:
+        topic: eplus/EMS COOLING SCHEDULE TEMPERATURE
+        default: 0
+    cooling_setpoint_temperature:
+        topic: eplus/EMS COOLING SETPOINT TEMPERATURE
+        default: 0
+    cooling_current_temperature:
+        topic: eplus/EMS COOLING CURRENT TEMPERATURE
+        default: 0
+    cooling_power_state:
+        topic: eplus/EMS COOLING POWER STATE
+        default: 0
+    heating_controlled_load:
+        topic: eplus/EMS HEATING CONTROLLED LOAD
+        default: 0
+    heating_schedule_temperature:
+        topic: eplus/EMS HEATING SCHEDULE TEMPERATURE
+        default: 0
+    heating_setpoint_temperature:
+        topic: eplus/EMS HEATING SETPOINT TEMPERATURE
+        default: 0
+    heating_current_temperature:
+        topic: eplus/EMS HEATING CURRENT TEMPERATURE
+        default: 0
+    heating_power_state:
+        topic: eplus/EMS HEATING POWER STATE
+        default: 0
+    electric_demand_power:
+        topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
+        default: 0
+    hvac_demand_power:
+        topic: eplus/WHOLE BUILDING FACILITY TOTAL HVAC ELECTRIC DEMAND POWER
+        default: 0
+    ashrae_uncomfortable_hours:
+        topic: eplus/FACILITY FACILITY THERMAL COMFORT ASHRAE 55 SIMPLE MODEL SUMMER OR WINTER CLOTHES NOT COMFORTABLE TIME
+        default: 0
+    occupants_total:
+        topic: eplus/EMS OCCUPANT COUNT
+        default: 0

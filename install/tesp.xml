@@ -1,0 +1,313 @@
+<project>
+    <shortName>tesp</shortName>
+    <fullName>TESP</fullName>
+    <version>0.9.4</version>
+    <readmeFile>../README.md</readmeFile>
+    <licenseFile>../LICENSE</licenseFile>
+    <splashImage>Transactive.png</splashImage>
+    <componentList>
+        <component>
+            <name>default</name>
+            <description>TESP + System Updgrades</description>
+            <canBeEdited>0</canBeEdited>
+            <detailedDescription>TESP software and examples. Installs or upgrades these system packages:
+* libjsoncpp-dev, libxerces-c-dev
+* libzmq5, libczmq-dev
+* libklu1, coinor-cbc
+* openjdk-11-jre-headless,jdk-headless
+* python3-tk, python3-pip, helics
+# Python3; matplotlib, networkx, scipy, numpy, pandas, psst
+</detailedDescription>
+            <requiredSize>900000</requiredSize>
+            <selected>1</selected>
+            <show>1</show>
+            <folderList>
+                <folder>
+                    <description>Uninstaller</description>
+                    <destination>${tespdir}</destination>
+                    <name>programfiles</name>
+                    <platforms>all</platforms>
+                    <shortcutList>
+                        <shortcut>
+                            <comment>Uninstall</comment>
+                            <exec>${tespdir}/${uninstallerName}</exec>
+                            <icon></icon>
+                            <name>Uninstall TESP</name>
+                            <path>${tespdir}</path>
+                            <platforms>all</platforms>
+                            <runAsAdmin>1</runAsAdmin>
+                            <runInTerminal>0</runInTerminal>
+                            <windowsExec></windowsExec>
+                            <windowsExecArgs></windowsExecArgs>
+                            <windowsIcon></windowsIcon>
+                            <windowsPath></windowsPath>
+                        </shortcut>
+                    </shortcutList>
+                </folder>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${tespdir}</destination>
+                    <name>execlinux</name>
+                    <platforms>linux-x64</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/Bugreprt.txt</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/ConvertInputFormat</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/ConvertInputFormat-9.3.0</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/Energy+.idd</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/energyplus</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/energyplus.1</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/energyplus-9.3.0</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/Energy+.schema.epJSON</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/EPMacro</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/ExpandObjects</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/libenergyplusapi.so</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/libenergyplusapi.so.9.3.0</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/LICENSE</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/LICENSE.txt</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/readme.html</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/runenergyplus</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/runepmacro</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/runreadvars</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>../../../../../opt/tesp/SetupOutputVariables.csv</origin>
+                        </distributionFile>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/bin</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/DataSets</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/include</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/java</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/lib</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/MacroDataSets</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/PostProcess</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/PreProcess</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/pyenergyplus</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/share</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/WeatherData</origin>
+                        </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../../../../../opt/tesp/workflows</origin>
+                        </distributionDirectory>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>ldconfig</description>
+                    <destination>/etc/ld.so.conf.d</destination>
+                    <name>ldconfig</name>
+                    <platforms>linux-x64</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>Linux/helpers/tesp_ld.conf</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+            <postInstallationActionList>
+                <addEnvironmentVariable>
+                    <explanation>Setting TESP_INSTALL directory.</explanation>
+                    <name>TESP_INSTALL</name>
+                    <scope>user</scope>
+                    <value>${tespdir}</value>
+                </addEnvironmentVariable>
+                <addEnvironmentVariable>
+                    <explanation>Setting JAVAPATH for HELICS</explanation>
+                    <name>JAVAPATH</name>
+                    <scope>user</scope>
+                    <value>${tespdir}/java</value>
+                </addEnvironmentVariable>
+                <addEnvironmentVariable>
+                    <explanation>Setting PYTHONPATH for HELICS</explanation>
+                    <name>PYTHONPATH</name>
+                    <scope>user</scope>
+                    <value>${tespdir}/python</value>
+                </addEnvironmentVariable>
+                <addEnvironmentVariable>
+                    <explanation>Setting GLPATH for GridLAB-D</explanation>
+                    <name>GLPATH</name>
+                    <scope>user</scope>
+                    <value>${tespdir}/lib/gridlabd:${tespdir}/share/gridlabd</value>
+                </addEnvironmentVariable>
+                <addEnvironmentVariable>
+                    <explanation>Setting CXXFLAGS for GridLAB-D</explanation>
+                    <name>CXXFLAGS</name>
+                    <scope>user</scope>
+                    <value>-I${tespdir}/share/gridlabd</value>
+                </addEnvironmentVariable>
+                <addDirectoryToPath>
+                    <explanation>Adding TESP to PATH</explanation>
+                    <insertAt>end</insertAt>
+                    <path>${tespdir}/bin:${tespdir}:${tespdir}/PreProcess:${tespdir}/PostProcess</path>
+                    <scope>user</scope>
+                </addDirectoryToPath>
+                <runProgram>
+                    <program>ldconfig</program>
+                    <programArguments></programArguments>
+                </runProgram>
+            </postInstallationActionList>
+        </component>
+    </componentList>
+    <readyToInstallActionList>
+        <runProgram>
+            <explanation>Installing JSON library to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install libjsoncpp-dev</programArguments>
+            <progressText>Installing libjsoncpp-dev</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Xerces C library to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install libxerces-c-dev</programArguments>
+            <progressText>Installing libxerces-c-dev</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing zmq5 to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install libzmq5</programArguments>
+            <progressText>Installing libzmq5</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing czmq to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install libczmq-dev</programArguments>
+            <progressText>Installing libczmq-dev</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing KLU solver to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install libklu1</programArguments>
+            <progressText>Installing libklu1</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing CBC solver to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install coinor-cbc</programArguments>
+            <progressText>Installing coinor-cbc</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing openjdk-11 to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install openjdk-11-jre-headless</programArguments>
+            <progressText>Installing openjdk-11-jre-headless</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing openjdk-11-jdk to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install openjdk-11-jdk-headless</programArguments>
+            <progressText>Installing openjdk-11-jdk-headless</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python tk package to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install python3-tk</programArguments>
+            <progressText>Installing python3-tk</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python pip3 package to system location.</explanation>
+            <program>apt-get</program>
+            <programArguments>-y install python3-pip</programArguments>
+            <progressText>Installing python3-pip</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python tesp_support package.</explanation>
+            <program>pip3</program>
+            <programArguments>install tesp_support --upgrade</programArguments>
+            <progressText>Installing python tesp_support package</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python psst package.</explanation>
+            <program>pip3</program>
+            <programArguments>install psst --upgrade</programArguments>
+            <progressText>Installing python psst package</progressText>
+        </runProgram>
+        <runProgram>
+            <explanation>Installing Python HELICS package.</explanation>
+            <program>pip3</program>
+            <programArguments>install helics==2.5.2</programArguments>
+            <progressText>Installing python helics package</progressText>
+        </runProgram>
+    </readyToInstallActionList>
+    <postInstallationActionList>
+        <launchBrowser>
+            <url>http://tesp.readthedocs.io/en/latest/</url>
+        </launchBrowser>
+    </postInstallationActionList>
+    <allowComponentSelection>1</allowComponentSelection>
+    <enableRollback>1</enableRollback>
+    <enableTimestamp>1</enableTimestamp>
+    <outputDirectory>tesp_core</outputDirectory>
+    <requireInstallationByRootUser>1</requireInstallationByRootUser>
+    <saveRelativePaths>1</saveRelativePaths>
+    <startMenuGroupName>TESP</startMenuGroupName>
+    <uninstallerDirectory>${tespdir}</uninstallerDirectory>
+    <vendor>Pacific Northwest National Laboratory</vendor>
+    <parameterList>
+        <directoryParameter>
+            <name>tespdir</name>
+            <title>TESP_INSTALL</title>
+            <description>Installation directory</description>
+            <explanation></explanation>
+            <value></value>
+            <default>/opt/tesp</default>
+            <allowEmptyValue>0</allowEmptyValue>
+            <mustBeWritable>0</mustBeWritable>
+            <mustExist>0</mustExist>
+            <width>30</width>
+        </directoryParameter>
+    </parameterList>
+</project>
+

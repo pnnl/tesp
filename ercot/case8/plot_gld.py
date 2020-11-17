@@ -171,9 +171,21 @@ for key in mtr_keys:
 		i = i + 1
 	j = j + 1
 
+# normalize each meter voltage
+j = 0
+for key in mtr_keys:
+	vln = dict['billingmeters'][key]['vln']
+	vll = dict['billingmeters'][key]['vll']
+	data_m[j,:,MTR_VOLT_MIN_IDX] /= vln
+	data_m[j,:,MTR_VOLT_MAX_IDX] /= vln
+	data_m[j,:,MTR_VOLT_AVG_IDX] /= vln
+	data_m[j,:,MTR_VOLT12_MIN_IDX] /= vll
+	data_m[j,:,MTR_VOLT12_MAX_IDX] /= vll
+	j = j + 1
+
 print ('Total meter bill =', '{:.2f}'.format(data_m[:,-1,MTR_BILL_IDX].sum()))
-print ('Min house voltage = ', '{:.2f}'.format(data_m[:,:,MTR_VOLT_MIN_IDX].min()))
-print ('Min house voltage = ', '{:.2f}'.format(data_m[:,:,MTR_VOLT_MAX_IDX].max()))
+print ('Min house voltage = ', '{:.2f} pu'.format(data_m[:,:,MTR_VOLT_MIN_IDX].min()))
+print ('Min house voltage = ', '{:.2f} pu'.format(data_m[:,:,MTR_VOLT_MAX_IDX].max()))
 print ('Min feeder power =', '{:.2f}'.format(1.0e-6 * data_s[0,:,SUB_POWER_IDX].min()), 'MW')
 print ('Max feeder power =', '{:.2f}'.format(1.0e-6 * data_s[0,:,SUB_POWER_IDX].max()), 'MW')
 
@@ -220,7 +232,7 @@ ax[1,0].plot(hrs, vmax, color='blue', label='Max')
 ax[1,0].plot(hrs, vmin, color='red', label='Min')
 ax[1,0].plot(hrs, vavg, color='green', label='Avg')
 ax[1,0].set_xlabel('Hours')
-ax[1,0].set_ylabel(MTR_VOLT_MAX_UNITS)
+ax[1,0].set_ylabel('pu')
 ax[1,0].set_title ('Voltage over all Meters')
 ax[1,0].legend(loc='best')
 

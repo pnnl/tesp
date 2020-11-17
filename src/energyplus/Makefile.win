@@ -19,24 +19,24 @@ LIBS += -lfncs
 LIBS += -lczmq
 LIBS += -lzmq
 
-all: eplus_json.exe
+all: eplus_agent.exe
 
-eplus_json.o: eplus_json.cpp
+eplus_agent.o: eplus_agent.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS) $(CPPFLAGS)
 
 jsoncpp.o: jsoncpp.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS) $(CPPFLAGS)
 
-eplus_json.exe: eplus_json.o jsoncpp.o
+eplus_agent.exe: eplus_agent.o jsoncpp.o
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f *~
 	rm -f *.o
 	rm -f *.mod
-	rm -f eplus_json.exe
+	rm -f eplus_agent.exe
 	rm -f *.chk
 	rm -f *.out
 
 install:
-	cp eplus_json.exe $(INSTALL_PATH)/bin
+	cp eplus_agent.exe $(INSTALL_PATH)/bin

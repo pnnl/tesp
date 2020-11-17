@@ -1,0 +1,19 @@
+{
+  "subscriptions" : [
+    {
+      "key" : "commshed/offer", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "player/clear_price", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "gld1/distribution_load",
+      "type" : "complex",
+      "required" : false
+    }
+  ]
+}
