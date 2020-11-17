@@ -13468,6 +13468,31 @@
   EnergyManagementSystem:GlobalVariable,
     C_CUR;                   !- Erl Variable 1 Name
 
+  EnergyManagementSystem:GlobalVariable,
+    T_CUR;
+
+  EnergyManagementSystem:GlobalVariable,
+    TOTAL_HEAT_V;
+
+  EnergyManagementSystem:GlobalVariable,
+    TOTAL_COOL_V;
+
+  EnergyManagementSystem:OutputVariable,
+    Heating Volume,  !- Name
+    TOTAL_HEAT_V,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+
+  EnergyManagementSystem:OutputVariable,
+    Cooling Volume,  !- Name
+    TOTAL_COOL_V,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
+
   EnergyManagementSystem:OutputVariable,
     Cooling Controlled Load, !- Name
     Flexible_Cooling_Demand, !- EMS Variable Name
@@ -13485,7 +13510,7 @@
     ;                        !- Units
 
   EnergyManagementSystem:OutputVariable,
-    Cooling Desired Temperature,  !- Name
+    Cooling Schedule Temperature,  !- Name
     Desired_Cooling_Temperature,  !- EMS Variable Name
     Averaged,                !- Type of Data in Variable
     ZoneTimeStep,            !- Update Frequency
@@ -13493,7 +13518,7 @@
     ;                        !- Units
 
   EnergyManagementSystem:OutputVariable,
-    Heating Desired Temperature,  !- Name
+    Heating Schedule Temperature,  !- Name
     Desired_Heating_Temperature,  !- EMS Variable Name
     Averaged,                !- Type of Data in Variable
     ZoneTimeStep,            !- Update Frequency
@@ -13517,7 +13542,7 @@
     ;                        !- Units
 
   EnergyManagementSystem:OutputVariable,
-    Cooling Current Temperature,  !- Name
+    Cooling Setpoint Temperature,  !- Name
     Current_Cooling_Temperature,  !- EMS Variable Name
     Averaged,                !- Type of Data in Variable
     ZoneTimeStep,            !- Update Frequency
@@ -13525,7 +13550,7 @@
     ;                        !- Units
 
   EnergyManagementSystem:OutputVariable,
-    Heating Current Temperature,  !- Name
+    Heating Setpoint Temperature,  !- Name
     Current_Heating_Temperature,  !- EMS Variable Name
     Averaged,                !- Type of Data in Variable
     ZoneTimeStep,            !- Update Frequency
@@ -13565,20 +13590,28 @@
     ;                        !- Units
 
   EnergyManagementSystem:OutputVariable,
-    Heating Current,         !- Name
-    H_CUR,                   !- EMS Variable Name
+    Heating Current Temperature,         !- Name
+    T_CUR,                   !- EMS Variable Name
     Averaged,                !- Type of Data in Variable
     ZoneTimeStep,            !- Update Frequency
     ,                        !- EMS Program or Subroutine Name
     ;                        !- Units
 
   EnergyManagementSystem:OutputVariable,
-    Cooling Current,         !- Name
-    C_CUR,                   !- EMS Variable Name
+    Cooling Current Temperature,         !- Name
+    T_CUR,                   !- EMS Variable Name
     Averaged,                !- Type of Data in Variable
     ZoneTimeStep,            !- Update Frequency
     ,                        !- EMS Program or Subroutine Name
     ;                        !- Units
+
+  EnergyManagementSystem:OutputVariable,
+    Indoor Air Temperature,  !- Name
+    T_CUR,  !- EMS Variable Name
+    Averaged,     !- Type of Data in Variable
+    ZoneTimeStep, !- Update Frequency
+    ,             !- EMS Program or Subroutine Name
+    ;             !- Units
 
   EnergyManagementSystem:Sensor,
     Cooling_Coil_1,          !- Name
@@ -13960,29 +13993,21 @@
 ! ***REPORT METERS/VARIABLES***
 
   Output:Variable,EMS,Cooling Controlled Load,timestep;
-
   Output:Variable,EMS,Heating Controlled Load,timestep;
-
-  Output:Variable,EMS,Cooling Desired Temperature,timestep;
-
-  Output:Variable,EMS,Heating Desired Temperature,timestep;
-
-  Output:Variable,EMS,Cooling Thermostat Deadband,timestep;
-
-  Output:Variable,EMS,Heating Thermostat Deadband,timestep;
-
+  Output:Variable,EMS,Cooling Schedule Temperature,timestep;
+  Output:Variable,EMS,Heating Schedule Temperature,timestep;
+  Output:Variable,EMS,Cooling Setpoint Temperature,timestep;
+  Output:Variable,EMS,Heating Setpoint Temperature,timestep;
   Output:Variable,EMS,Cooling Current Temperature,timestep;
-
   Output:Variable,EMS,Heating Current Temperature,timestep;
-
   Output:Variable,EMS,Cooling Power State,timestep;
-
   Output:Variable,EMS,Heating Power State,timestep;
-
   Output:Variable,WHOLE BUILDING,Facility Total Electric Demand Power,timestep;
-
+  Output:Variable,WHOLE BUILDING,Facility Total HVAC Electric Demand Power,timestep;
   Output:Variable,FACILITY,Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,timestep;
-
   Output:Variable,EMS,Occupant Count,timestep;
-
+  Output:Variable,EMS,Indoor Air Temperature,timestep;
+  Output:Variable,Environment,Site Outdoor Air Drybulb Temperature,timestep;
+!  Output:Variable,EMS,Cooling Thermostat Deadband,timestep;
+!  Output:Variable,EMS,Heating Thermostat Deadband,timestep;
 !  Output:Variable,*,Zone Predicted Sensible Load to Setpoint Heat Transfer Rate,hourly; !- HVAC Average [W]

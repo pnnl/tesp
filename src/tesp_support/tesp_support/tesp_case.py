@@ -548,7 +548,7 @@ values:
     if bUseEplus:
         print ('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> fncs_broker.log &)', file=op)
         print ('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w ' 
-               + EpWeather + ' -d output -r MergedFNCS.idf &> fncs_eplus.log &)', file=op)
+               + EpWeather + ' -d output MergedFNCS.idf &> fncs_eplus.log &)', file=op)
         print ('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
                EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, '&> fncs_eplus_agent.log &)', file=op)
     else:
@@ -579,12 +579,12 @@ values:
 #      print ('# FNCS federation is energyplus with agent', file=op)
 #      print ('#(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 2 &> fncs_broker.log &)', file=op)
 #      print ('#(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w ' 
-#             + EpWeather + ' -d output -r MergedFNCS.idf &> fncs_eplus.log &)', file=op)
+#             + EpWeather + ' -d output MergedFNCS.idf &> fncs_eplus.log &)', file=op)
 #      print ('#(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep, 
 #             EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, 'helics_eplus_agent.json &> dual_eplus_agent.log &)', file=op)
 #      print ('# HELICS federation is GridLAB-D, PYPOWER, substation, weather, E+ and E+ agent', file=op)
       print ('(exec helics_broker -f 6 --loglevel=4 --name=mainbroker &> broker.log &)', file=op)
-      print ('(export HELICS_CONFIG_FILE=eplus.json && exec energyplus -w ' + EpWeather + ' -d output -r Merged.idf &> eplus.log &)', file=op)
+      print ('(export HELICS_CONFIG_FILE=eplus.json && exec energyplus -w ' + EpWeather + ' -d output Merged.idf &> eplus.log &)', file=op)
       print ('(exec eplus_agent_helics', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo,
              'eplus_agent.json &> eplus_agent.log &)', file=op)
     else:

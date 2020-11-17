@@ -10,7 +10,7 @@ TMY3toTMY2_ansi $TESP_SUPPORT/weather/TX-Houston_Bush_Intercontinental.tmy3 > Te
 python3 -c "import tesp_support.api as tesp;tesp.convert_tmy2_to_epw('Test')"
 
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 4 &> broker.log &)
-(export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w Test.epw -d output -r Merged.idf &> eplus.log &)
+(export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w Test.epw -d output Merged.idf &> eplus.log &)
 (export FNCS_LOG_STDOUT=yes && exec fncs_player 2d prices.txt &> player.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus_agent.yaml && exec eplus_agent 2d 5m SchoolDualController eplus_eplus_metrics.json  0.10 25 4 4 &> eplus_agent.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=tracer.yaml && exec fncs_tracer 2d tracer.out &> tracer.log &)

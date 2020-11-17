@@ -5,7 +5,7 @@ python3 -c "import tesp_support.api as tesp;tesp.merge_idf('SchoolBase.idf','./f
 
 # FNCS federation is energyplus with agent, and a recorder
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 3 &> fncs_broker.log &)
-(export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w $TESP_SUPPORT/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw -d output -r Merged.idf &> eplus.log &)
+(export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w $TESP_SUPPORT/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw -d output Merged.idf &> eplus.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus_agent.yaml && exec eplus_agent 2d 5m SchoolDualController eplus_eplus_metrics.json  0.10 50 6 6 bridge_eplus_agent.json &> eplus_agent.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=tracer.yaml && exec fncs_tracer 2d tracer.out &> fncs_tracer.log &)
 
