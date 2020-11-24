@@ -1,6 +1,6 @@
 # Transactive Energy Simulation Platform (TESP)
 
-Copyright (c) 2017-2019, Battelle Memorial Institute
+Copyright (c) 2017-2020, Battelle Memorial Institute
 
 Documentation: http://tesp.readthedocs.io
 
@@ -30,3 +30,4 @@ Change log:
 - v0.1.2  Patch for tape shield / concentric neutral 
           cables with separate neutral conductor.
 - v0.3.0  Refactored agent classes for DSO+T study
+- v0.9.5  HELICS, MATPOWER/MOST, ERCOT and E+ 9.3 examples

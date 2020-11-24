@@ -1,6 +1,6 @@
 {
   "CaseName":"Comm_GC",
-  "CaseDir":"./Test",
+  "CaseDir":"./Eplus_Comm",
   "EPWFile":"",
   "TMYFile":"/opt/tesp/share/support/weather/TX-Houston_Bush_Intercontinental.tmy3",
   "BaseGLMFile":"/opt/tesp/share/support/feeders/GC-12.47-1.glm",
