@@ -18,7 +18,7 @@
 * python3-tk, python3-pip, helics
 # Python3; matplotlib, networkx, scipy, numpy, pandas, psst
 </detailedDescription>
-            <requiredSize>900000</requiredSize>
+            <requiredSize>1300000</requiredSize>
             <selected>1</selected>
             <show>1</show>
             <folderList>
@@ -157,42 +157,6 @@
                     </distributionFileList>
                 </folder>
             </folderList>
-            <postInstallationActionList>
-                <addEnvironmentVariable>
-                    <explanation>Setting TESP_INSTALL directory.</explanation>
-                    <name>TESP_INSTALL</name>
-                    <scope>system</scope>
-                    <value>${tespdir}</value>
-                </addEnvironmentVariable>
-                <addEnvironmentVariable>
-                    <explanation>Setting JAVAPATH for HELICS</explanation>
-                    <name>JAVAPATH</name>
-                    <scope>system</scope>
-                    <value>${tespdir}/java</value>
-                </addEnvironmentVariable>
-                <addEnvironmentVariable>
-                    <explanation>Setting GLPATH for GridLAB-D</explanation>
-                    <name>GLPATH</name>
-                    <scope>system</scope>
-                    <value>${tespdir}/lib/gridlabd:${tespdir}/share/gridlabd</value>
-                </addEnvironmentVariable>
-                <addEnvironmentVariable>
-                    <explanation>Setting CXXFLAGS for GridLAB-D</explanation>
-                    <name>CXXFLAGS</name>
-                    <scope>system</scope>
-                    <value>-I${tespdir}/share/gridlabd</value>
-                </addEnvironmentVariable>
-                <addDirectoryToPath>
-                    <explanation>Adding TESP to PATH</explanation>
-                    <insertAt>end</insertAt>
-                    <path>${tespdir}/bin:${tespdir}:${tespdir}/PreProcess:${tespdir}/PostProcess</path>
-                    <scope>system</scope>
-                </addDirectoryToPath>
-                <runProgram>
-                    <program>ldconfig</program>
-                    <programArguments></programArguments>
-                </runProgram>
-            </postInstallationActionList>
         </component>
     </componentList>
     <readyToInstallActionList>
@@ -276,6 +240,39 @@
         </runProgram>
     </readyToInstallActionList>
     <postInstallationActionList>
+        <addEnvironmentVariable>
+            <explanation>Setting TESP_INSTALL directory.</explanation>
+            <name>TESP_INSTALL</name>
+            <scope>system</scope>
+            <value>${tespdir}</value>
+        </addEnvironmentVariable>
+        <addEnvironmentVariable>
+            <explanation>Setting JAVAPATH for HELICS</explanation>
+            <name>JAVAPATH</name>
+            <scope>system</scope>
+            <value>${tespdir}/java</value>
+        </addEnvironmentVariable>
+        <addEnvironmentVariable>
+            <explanation>Setting GLPATH for GridLAB-D</explanation>
+            <name>GLPATH</name>
+            <scope>system</scope>
+            <value>${tespdir}/lib/gridlabd:${tespdir}/share/gridlabd</value>
+        </addEnvironmentVariable>
+        <addEnvironmentVariable>
+            <explanation>Setting CXXFLAGS for GridLAB-D</explanation>
+            <name>CXXFLAGS</name>
+            <scope>system</scope>
+            <value>-I${tespdir}/share/gridlabd</value>
+        </addEnvironmentVariable>
+        <addDirectoryToPath>
+            <explanation>Adding TESP to PATH</explanation>
+            <insertAt>end</insertAt>
+            <path>${tespdir}/bin:${tespdir}:${tespdir}/PreProcess:${tespdir}/PostProcess</path>
+        </addDirectoryToPath>
+        <runProgram>
+            <program>ldconfig</program>
+            <programArguments></programArguments>
+        </runProgram>
         <launchBrowser>
             <url>http://tesp.readthedocs.io/en/latest/</url>
         </launchBrowser>
