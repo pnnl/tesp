@@ -1,8 +1,8 @@
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support/energyplus
-declare -r EPLUS_OUTDIR=$HOME/tesp_working/examples/energyplus
-
 #declare -r TESP_SUPPORT=../../support/energyplus
-#declare -r EPLUS_OUTDIR=.
+
+declare -r EPLUS_OUTDIR=.
+#declare -r EPLUS_OUTDIR=$HOME/tesp_working/examples/energyplus
 
 declare -r FOR_HELICS=True
 

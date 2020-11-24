@@ -1,4 +1,7 @@
-cp ~/src/tesp/support/energyplus/emsHELICS/*.idf .
+declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
+#declare -r TESP_SUPPORT=../../support
+
+cp $TESP_SUPPORT/energyplus/emsHELICS/*.idf .
 
 ./run_seasonal_cases.sh "FullServiceRestaurant"
 ./run_seasonal_cases.sh "Hospital"
