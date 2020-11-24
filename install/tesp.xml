@@ -161,38 +161,32 @@
                 <addEnvironmentVariable>
                     <explanation>Setting TESP_INSTALL directory.</explanation>
                     <name>TESP_INSTALL</name>
-                    <scope>user</scope>
+                    <scope>system</scope>
                     <value>${tespdir}</value>
                 </addEnvironmentVariable>
                 <addEnvironmentVariable>
                     <explanation>Setting JAVAPATH for HELICS</explanation>
                     <name>JAVAPATH</name>
-                    <scope>user</scope>
+                    <scope>system</scope>
                     <value>${tespdir}/java</value>
-                </addEnvironmentVariable>
-                <addEnvironmentVariable>
-                    <explanation>Setting PYTHONPATH for HELICS</explanation>
-                    <name>PYTHONPATH</name>
-                    <scope>user</scope>
-                    <value>${tespdir}/python</value>
                 </addEnvironmentVariable>
                 <addEnvironmentVariable>
                     <explanation>Setting GLPATH for GridLAB-D</explanation>
                     <name>GLPATH</name>
-                    <scope>user</scope>
+                    <scope>system</scope>
                     <value>${tespdir}/lib/gridlabd:${tespdir}/share/gridlabd</value>
                 </addEnvironmentVariable>
                 <addEnvironmentVariable>
                     <explanation>Setting CXXFLAGS for GridLAB-D</explanation>
                     <name>CXXFLAGS</name>
-                    <scope>user</scope>
+                    <scope>system</scope>
                     <value>-I${tespdir}/share/gridlabd</value>
                 </addEnvironmentVariable>
                 <addDirectoryToPath>
                     <explanation>Adding TESP to PATH</explanation>
                     <insertAt>end</insertAt>
                     <path>${tespdir}/bin:${tespdir}:${tespdir}/PreProcess:${tespdir}/PostProcess</path>
-                    <scope>user</scope>
+                    <scope>system</scope>
                 </addDirectoryToPath>
                 <runProgram>
                     <program>ldconfig</program>
