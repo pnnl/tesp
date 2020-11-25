@@ -156,6 +156,17 @@
                         </distributionFile>
                     </distributionFileList>
                 </folder>
+                <folder>
+                    <description>Environment</description>
+                    <destination>/etc/profile.d</destination>
+                    <name>envpath</name>
+                    <platforms>linux-x64</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>Linux/helpers/tesp_envar.sh</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
             </folderList>
         </component>
     </componentList>
@@ -223,13 +234,13 @@
         <runProgram>
             <explanation>Installing Python tesp_support package.</explanation>
             <program>pip3</program>
-            <programArguments>install tesp_support --no-cache-dir --upgrade</programArguments>
+            <programArguments>install tesp_support --upgrade</programArguments>
             <progressText>Installing python tesp_support package</progressText>
         </runProgram>
         <runProgram>
             <explanation>Installing Python psst package.</explanation>
             <program>pip3</program>
-            <programArguments>install psst --no-cache-dir --upgrade</programArguments>
+            <programArguments>install psst --upgrade</programArguments>
             <progressText>Installing python psst package</progressText>
         </runProgram>
         <runProgram>
@@ -240,66 +251,6 @@
         </runProgram>
     </readyToInstallActionList>
     <postInstallationActionList>
-        <addEnvironmentVariable>
-            <breakpoint>1</breakpoint>
-            <explanation>Setting TESP_INSTALL directory.</explanation>
-            <name>TESP_INSTALL</name>
-            <progressText>Setting TESP_INSTALL directory</progressText>
-            <scope>system</scope>
-            <value>${tespdir}</value>
-        </addEnvironmentVariable>
-        <addEnvironmentVariable>
-            <breakpoint>1</breakpoint>
-            <explanation>Setting JAVAPATH for HELICS</explanation>
-            <name>JAVAPATH</name>
-            <progressText>Setting JAVAPATH for HELICS</progressText>
-            <scope>system</scope>
-            <value>${tespdir}/java</value>
-        </addEnvironmentVariable>
-        <addEnvironmentVariable>
-            <breakpoint>1</breakpoint>
-            <explanation>Setting GLPATH for GridLAB-D</explanation>
-            <name>GLPATH</name>
-            <progressText>Setting GLPATH for GridLAB-D</progressText>
-            <scope>system</scope>
-            <value>${tespdir}/lib/gridlabd:${tespdir}/share/gridlabd</value>
-        </addEnvironmentVariable>
-        <addEnvironmentVariable>
-            <breakpoint>1</breakpoint>
-            <explanation>Setting CXXFLAGS for GridLAB-D</explanation>
-            <name>CXXFLAGS</name>
-            <progressText>Setting CXXFLAGS for GridLAB-D</progressText>
-            <scope>system</scope>
-            <value>-I${tespdir}/share/gridlabd</value>
-        </addEnvironmentVariable>
-        <addDirectoryToPath>
-            <breakpoint>1</breakpoint>
-            <explanation>Adding TESP bin to PATH</explanation>
-            <insertAt>end</insertAt>
-            <path>${tespdir}/bin</path>
-            <progressText>Adding TESP bin to PATH</progressText>
-        </addDirectoryToPath>
-        <addDirectoryToPath>
-            <breakpoint>1</breakpoint>
-            <explanation>Adding TESP to PATH</explanation>
-            <insertAt>end</insertAt>
-            <path>${tespdir}</path>
-            <progressText>Adding TESP to PATH</progressText>
-        </addDirectoryToPath>
-        <addDirectoryToPath>
-            <breakpoint>1</breakpoint>
-            <explanation>Adding TESP PreProcess to PATH</explanation>
-            <insertAt>end</insertAt>
-            <path>${tespdir}/PreProcess</path>
-            <progressText>Adding TESP PreProcess to PATH</progressText>
-        </addDirectoryToPath>
-        <addDirectoryToPath>
-            <breakpoint>1</breakpoint>
-            <explanation>Adding TESP PostProcess to PATH</explanation>
-            <insertAt>end</insertAt>
-            <path>${tespdir}/PostProcess</path>
-            <progressText>Adding TESP PostProcess to PATH</progressText>
-        </addDirectoryToPath>
         <runProgram>
             <breakpoint>1</breakpoint>
             <program>ldconfig</program>
