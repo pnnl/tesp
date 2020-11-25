@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.9.5</version>
+    <version>1.0.0</version>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../LICENSE</licenseFile>
     <splashImage>Transactive.png</splashImage>
@@ -241,35 +241,67 @@
     </readyToInstallActionList>
     <postInstallationActionList>
         <addEnvironmentVariable>
+            <breakpoint>1</breakpoint>
             <explanation>Setting TESP_INSTALL directory.</explanation>
             <name>TESP_INSTALL</name>
+            <progressText>Setting TESP_INSTALL directory</progressText>
             <scope>system</scope>
             <value>${tespdir}</value>
         </addEnvironmentVariable>
         <addEnvironmentVariable>
+            <breakpoint>1</breakpoint>
             <explanation>Setting JAVAPATH for HELICS</explanation>
             <name>JAVAPATH</name>
+            <progressText>Setting JAVAPATH for HELICS</progressText>
             <scope>system</scope>
             <value>${tespdir}/java</value>
         </addEnvironmentVariable>
         <addEnvironmentVariable>
+            <breakpoint>1</breakpoint>
             <explanation>Setting GLPATH for GridLAB-D</explanation>
             <name>GLPATH</name>
+            <progressText>Setting GLPATH for GridLAB-D</progressText>
             <scope>system</scope>
             <value>${tespdir}/lib/gridlabd:${tespdir}/share/gridlabd</value>
         </addEnvironmentVariable>
         <addEnvironmentVariable>
+            <breakpoint>1</breakpoint>
             <explanation>Setting CXXFLAGS for GridLAB-D</explanation>
             <name>CXXFLAGS</name>
+            <progressText>Setting CXXFLAGS for GridLAB-D</progressText>
             <scope>system</scope>
             <value>-I${tespdir}/share/gridlabd</value>
         </addEnvironmentVariable>
         <addDirectoryToPath>
+            <breakpoint>1</breakpoint>
+            <explanation>Adding TESP bin to PATH</explanation>
+            <insertAt>end</insertAt>
+            <path>${tespdir}/bin</path>
+            <progressText>Adding TESP bin to PATH</progressText>
+        </addDirectoryToPath>
+        <addDirectoryToPath>
+            <breakpoint>1</breakpoint>
             <explanation>Adding TESP to PATH</explanation>
             <insertAt>end</insertAt>
-            <path>${tespdir}/bin:${tespdir}:${tespdir}/PreProcess:${tespdir}/PostProcess</path>
+            <path>${tespdir}</path>
+            <progressText>Adding TESP to PATH</progressText>
+        </addDirectoryToPath>
+        <addDirectoryToPath>
+            <breakpoint>1</breakpoint>
+            <explanation>Adding TESP PreProcess to PATH</explanation>
+            <insertAt>end</insertAt>
+            <path>${tespdir}/PreProcess</path>
+            <progressText>Adding TESP PreProcess to PATH</progressText>
+        </addDirectoryToPath>
+        <addDirectoryToPath>
+            <breakpoint>1</breakpoint>
+            <explanation>Adding TESP PostProcess to PATH</explanation>
+            <insertAt>end</insertAt>
+            <path>${tespdir}/PostProcess</path>
+            <progressText>Adding TESP PostProcess to PATH</progressText>
         </addDirectoryToPath>
         <runProgram>
+            <breakpoint>1</breakpoint>
             <program>ldconfig</program>
             <programArguments></programArguments>
         </runProgram>
@@ -278,6 +310,7 @@
         </launchBrowser>
     </postInstallationActionList>
     <allowComponentSelection>1</allowComponentSelection>
+    <enableDebugger>1</enableDebugger>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
     <outputDirectory>tesp_core</outputDirectory>
