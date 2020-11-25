@@ -63,13 +63,13 @@ if __name__ == '__main__':
   p1.wait()
   RunTestCase ('run.sh', 'EnergyPlus FNCS IDF')
   RunTestCase ('run2.sh', 'EnergyPlus FNCS EMS')
-  p1 = subprocess.Popen ('./run_baselines.sh', shell=True)
-  p1.wait()
-  p1 = subprocess.Popen ('./make_all_ems.sh', shell=True)
-  p1.wait()
+#  p1 = subprocess.Popen ('./run_baselines.sh', shell=True)
+#  p1.wait()
+#  p1 = subprocess.Popen ('./make_all_ems.sh', shell=True)
+#  p1.wait()
   if bTryHELICS:
     RunTestCase ('runh.sh', 'EnergyPlus HELICS EMS')
-    RunTestCase ('batch_ems_case.sh', 'EnergyPlus Batch EMS')
+#    RunTestCase ('batch_ems_case.sh', 'EnergyPlus Batch EMS')
   os.chdir (basePath)
 
   # TE30 example

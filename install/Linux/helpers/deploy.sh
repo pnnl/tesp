@@ -1,5 +1,6 @@
 cp ../../../LICENSE /opt/tesp
 cp ../../../autotest.py /opt/tesp/share
+cp ../../../autotest_long.py /opt/tesp/share
 cp environment /opt/tesp/share
 cp tesp_ld.conf /opt/tesp/share
 cp provision.sh /opt/tesp/share

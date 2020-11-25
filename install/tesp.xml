@@ -223,13 +223,13 @@
         <runProgram>
             <explanation>Installing Python tesp_support package.</explanation>
             <program>pip3</program>
-            <programArguments>install tesp_support --upgrade</programArguments>
+            <programArguments>install tesp_support --no-cache-dir --upgrade</programArguments>
             <progressText>Installing python tesp_support package</progressText>
         </runProgram>
         <runProgram>
             <explanation>Installing Python psst package.</explanation>
             <program>pip3</program>
-            <programArguments>install psst --upgrade</programArguments>
+            <programArguments>install psst --no-cache-dir --upgrade</programArguments>
             <progressText>Installing python psst package</progressText>
         </runProgram>
         <runProgram>
