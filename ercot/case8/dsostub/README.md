@@ -68,8 +68,10 @@ Three-day Simulation with MATPOWER/MOST
 
 The DSO Stub simulation now includes a day-ahead unit commitment feature, which requires Matpower 7.1 and Octave 5.2:
 
+ - get Octave 5.2.0 (or later) from the Ubuntu Software center in your VM (Note: on Ubuntu 18.04 LTS, "apt-get" installs Octave 4.4, which is not sufficient. On Ubuntu 20.04 LTS, "apt-get" may be used to install Octave 5.2.)
  - get the latest Matpower from https://matpower.org/ (Note: v7.1 has an important feature for this example)
- - get Octave 5.2.0 (or later) from the Ubuntu Software center in your VM (Note: on Ubuntu 18.04 LTS, "apt-get" installs Octave 4.4, which is not sufficient.)
+ - from within Octave, install Matpower as described in their documentation. TESP requires **Option 3** to save the path. We also recommend that you run the Matpower and MOST tests when  installing Matpower.
+ - from a Terminal, run "octave test_octave_cli.m" to make sure TESP can run Matpower/MOST
 
 The DSO Stub example may also run with MATLAB, if you change "MostCommand" in "ercot_8.json" from "octave" to a command that will invoke MATLAB from the command line on your computer. Please note:
 

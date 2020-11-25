@@ -1,0 +1,144 @@
+{
+  "time_stop": 259200,
+  "yaml_delta": 300,
+  "commands": [
+    {
+      "args": [
+        "fncs_broker",
+        "6"
+      ],
+      "env": [
+        [
+          "FNCS_BROKER",
+          "tcp://*:5570"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
+        [
+          "FNCS_LOG_STDOUT",
+          "yes"
+        ]
+      ],
+      "log": "broker.log"
+    },
+    {
+      "args": [
+        "EnergyPlus",
+        "-w",
+        "FL-Miami_Intl_Ap.epw",
+        "-d",
+        "output",
+        "-r",
+        "SchoolDualController.idf"
+      ],
+      "env": [
+        [
+          "FNCS_CONFIG_FILE",
+          "eplus.yaml"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
+        [
+          "FNCS_LOG_STDOUT",
+          "yes"
+        ]
+      ],
+      "log": "eplus.log"
+    },
+    {
+      "args": [
+        "eplus_json",
+        "432000s",
+        "300s",
+        "SchoolDualController",
+        "eplus_TE_metrics.json",
+        "0.02",
+        "25",
+        "4",
+        "4"
+      ],
+      "env": [
+        [
+          "FNCS_CONFIG_FILE",
+          "eplus_json.yaml"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
+        [
+          "FNCS_LOG_STDOUT",
+          "yes"
+        ]
+      ],
+      "log": "eplus_json.log"
+    },
+    {
+      "args": [
+        "gridlabd",
+        "-D",
+        "USE_FNCS",
+        "-D",
+        "METRICS_FILE=TE_metrics.json",
+        "TE.glm"
+      ],
+      "env": [
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
+        [
+          "FNCS_LOG_STDOUT",
+          "yes"
+        ]
+      ],
+      "log": "gridlabd.log"
+    },
+    {
+      "args": [
+        "python",
+        "launch_auction.py"
+      ],
+      "env": [
+        [
+          "FNCS_CONFIG_FILE",
+          "TE_substation.yaml"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
+        [
+          "FNCS_LOG_STDOUT",
+          "yes"
+        ]
+      ],
+      "log": "substation.log"
+    },
+    {
+      "args": [
+        "python",
+        "launch_pp.py"
+      ],
+      "env": [
+        [
+          "FNCS_CONFIG_FILE",
+          "pypower.yaml"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
+        [
+          "FNCS_LOG_STDOUT",
+          "yes"
+        ]
+      ],
+      "log": "pypower.log"
+    }
+  ]
+}

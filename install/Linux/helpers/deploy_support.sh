@@ -2,6 +2,9 @@
 rm -rf /opt/tesp/share/support
 mkdir /opt/tesp/share/support
 
+mkdir /opt/tesp/share/support/comm
+cp ../../../support/comm/*.* /opt/tesp/share/support/comm
+
 mkdir /opt/tesp/share/support/energyplus
 cp ../../../support/energyplus/*.* /opt/tesp/share/support/energyplus
 mkdir /opt/tesp/share/support/energyplus/emsFNCS

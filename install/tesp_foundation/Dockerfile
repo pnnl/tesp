@@ -7,4 +7,5 @@ RUN apt-get install -y libjsoncpp-dev libxerces-c-dev libzmq5-dev libczmq-dev li
  openjdk-11-jre-headless  openjdk-11-jdk-headless python3-pip python3-tk
 RUN pip3 install tesp_support --upgrade
 RUN pip3 install psst --upgrade
+RUN pip3 install helics==2.5.2
 

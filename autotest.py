@@ -1,6 +1,7 @@
 # Copyright (C) 2017-2020 Battelle Memorial Institute
 # file: autotest.py
-"""Runs the set of TESP test cases
+"""Runs the set of TESP test cases, excluding the longer FNCS cases
+MATPOWER/MOST example must be run after manual installation of Octave and MATPOWER
 """
 import sys
 import subprocess
@@ -20,7 +21,7 @@ if __name__ == '__main__':
   InitializeTestCaseReports()
 
   basePath = os.getcwd()
-  bTryHELICS = True  # note: the loadshed and weatherAgent examples finish reliably in HELICS
+  bTryHELICS = True
 
   # loadshed examples
   print('start loadshed examples: ')
@@ -29,10 +30,10 @@ if __name__ == '__main__':
   p1.wait()
   RunTestCase ('run.sh', 'Loadshed FNCS Python')
   RunTestCase ('runjava.sh', 'Loadshed FNCS Java')
-  # hpy requires 'make' and then 'sudo make install' if loadshedCommNetwork program has been updated
-  RunTestCase ('runhpy.sh', 'Loadshed HELICS ns-3')
-  RunTestCase ('runhpy0.sh', 'Loadshed HELICS Python')
-  RunTestCase ('runhjava.sh', 'Loadshed HELICS Java')
+  if bTryHELICS:
+    RunTestCase ('runhpy.sh', 'Loadshed HELICS ns-3')
+    RunTestCase ('runhpy0.sh', 'Loadshed HELICS Python')
+    RunTestCase ('runhjava.sh', 'Loadshed HELICS Java')
   os.chdir (basePath)
 
   # weatherAgent example
@@ -41,7 +42,8 @@ if __name__ == '__main__':
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
   RunTestCase ('run.sh', 'Weather Agent FNCS')
-  RunTestCase ('runh.sh', 'Weather Agent HELICS')
+  if bTryHELICS:
+    RunTestCase ('runh.sh', 'Weather Agent HELICS')
   os.chdir (basePath)
 
   # PYPOWER example
@@ -54,16 +56,20 @@ if __name__ == '__main__':
     RunTestCase ('runhpp.sh', 'PYPOWER HELICS')
   os.chdir (basePath)
 
-  # EnergyPlus example
-  print('start EnergyPlus examples (excluding the reference building batch runs): ')
+  # EnergyPlus examples
+  print('start EnergyPlus examples: ')
   os.chdir ('./examples/energyplus')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
   RunTestCase ('run.sh', 'EnergyPlus FNCS IDF')
   RunTestCase ('run2.sh', 'EnergyPlus FNCS EMS')
+#  p1 = subprocess.Popen ('./run_baselines.sh', shell=True)
+#  p1.wait()
+#  p1 = subprocess.Popen ('./make_all_ems.sh', shell=True)
+#  p1.wait()
   if bTryHELICS:
     RunTestCase ('runh.sh', 'EnergyPlus HELICS EMS')
-    RunTestCase ('batch_ems_case.sh', 'EnergyPlus Batch EMS')
+#    RunTestCase ('batch_ems_case.sh', 'EnergyPlus Batch EMS')
   os.chdir (basePath)
 
   # TE30 example
@@ -79,9 +85,6 @@ if __name__ == '__main__':
     RunTestCase ('runh.sh', 'TE30 HELICS Market')
     RunTestCase ('runh0.sh', 'TE30 HELICS No Market')
   os.chdir (basePath)
-
-#  print (GetTestCaseReports())
-#  quit()
 
   # generated Nocomm_Base example
   print('start example generating Nocomm_Base: ')
@@ -127,57 +130,15 @@ if __name__ == '__main__':
     RunTestCase ('runcombinedh.sh', '4 Feeders HELICS')
   os.chdir (basePath)
 
-  # SGIP1 examples (these take a few hours to run the set)
-  print('start examples sgip1: ')
-  os.chdir ('./examples/sgip1')
-  p1 = subprocess.Popen ('./clean.sh', shell=True)
+  # generated Eplus_Comm example with three buildings (HELICS only)
+  print('start example generating Eplus_Comm: ')
+  os.chdir ('./examples/comm')
+  p1 = subprocess.Popen (pycall + ' make_comm_eplus.py', shell=True)
   p1.wait()
-  p1 = subprocess.Popen (pycall + ' prepare_cases.py', shell=True)
-  p1.wait()
-  RunTestCase ('runSGIP1a.sh', 'SGIP1a (FNCS)')
-  RunTestCase ('runSGIP1b.sh', 'SGIP1b (FNCS)')
-  RunTestCase ('runSGIP1c.sh', 'SGIP1c (FNCS)')
-  RunTestCase ('runSGIP1d.sh', 'SGIP1d (FNCS)')
-  RunTestCase ('runSGIP1e.sh', 'SGIP1e (FNCS)')
-  RunTestCase ('runSGIP1ex.sh', 'SGIP1ex (FNCS)')
-  os.chdir (basePath)
-
-  # ieee8500 base example
-  print('start examples ieee8500: ')
-  os.chdir ('./examples/ieee8500')
-  p1 = subprocess.Popen ('./clean.sh', shell=True)
-  p1.wait()
-  p1 = subprocess.Popen ('gridlabd IEEE_8500.glm', shell=True)
-  p1.wait()
-  os.chdir (basePath)
-
-  # ieee8500 precool examples (these take a few hours to run the set)
-  print('start examples ieee8500 PNNLteam: ')
-  os.chdir ('./examples/ieee8500/PNNLteam')
-  p1 = subprocess.Popen ('./clean.sh', shell=True)
-  p1.wait()
-  p1 = subprocess.Popen (pycall + ' prepare_cases.py', shell=True)
-  p1.wait()
-  RunTestCase ('run30.sh', 'PNNL Team 30')
-  RunTestCase ('runti30.sh', 'PNNL Team ti30')
-  RunTestCase ('run8500.sh', 'PNNL Team 8500')
-  RunTestCase ('run8500base.sh', 'PNNL Team 8500 Base')
-  RunTestCase ('run8500tou.sh', 'PNNL Team 8500 TOU')
-  RunTestCase ('run8500volt.sh', 'PNNL Team 8500 Volt')
-  RunTestCase ('run8500vvar.sh', 'PNNL Team 8500 VoltVar')
-  RunTestCase ('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt')
-  os.chdir (basePath)
-
-  # ERCOT Case8 example
-  print('start examples ERCOT Case8: ')
-  os.chdir ('./ercot/dist_system')
-  p1 = subprocess.Popen (pycall + ' populate_feeders.py', shell=True)
-  p1.wait()
-  os.chdir ('../case8')
-  p1 = subprocess.Popen (pycall + ' prepare_case.py', shell=True)
-  p1.wait()
-  RunTestCase ('run.sh', 'ERCOT 8-bus No Market')
-  RunTestCase ('run_market.sh', 'ERCOT 8-bus Market')
+  os.chdir ('Eplus_Comm')
+  st = os.stat ('run.sh')
+  os.chmod ('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+  RunTestCase ('run.sh', 'Eplus Comm HELICS')
   os.chdir (basePath)
 
   print (GetTestCaseReports())

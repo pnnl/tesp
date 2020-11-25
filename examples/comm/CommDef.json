@@ -1,9 +1,9 @@
 {
   "CaseName":"Comm_GC",
-  "CaseDir":"./Test",
+  "CaseDir":"./Eplus_Comm",
   "EPWFile":"",
-  "TMYFile":"../../support/weather/TX-Houston_Bush_Intercontinental.tmy3",
-  "BaseGLMFile":"../../support/feeders/GC-12.47-1.glm",
+  "TMYFile":"/opt/tesp/share/support/weather/TX-Houston_Bush_Intercontinental.tmy3",
+  "BaseGLMFile":"/opt/tesp/share/support/feeders/GC-12.47-1.glm",
   "EpStepsPerHour":12,
   "StartDate":"2013-08-01 00:00:00",
   "EndDate":"2013-08-02 00:00:00",
@@ -26,8 +26,8 @@
   "UseConsensus" : true,
   "MonthlyFee":25.0,
   "BasePrice":0.10,
-  "TemplateDir":"../../support/comm/",
-  "SupportDir":"../../support/misc/",
+  "TemplateDir":"/opt/tesp/share/support/comm/",
+  "SupportDir":"/opt/tesp/share/support/misc/",
   "Buildings":[
   {"ID":1, "Name":"Office",  "IDF":"/opt/tesp/share/support/energyplus/LargeOffice.idf", 
                              "EMS":"/opt/tesp/share/support/energyplus/emsHELICS/emsLargeOffice.idf", 

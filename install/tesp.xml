@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>0.9.4</version>
+    <version>1.0.0</version>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../LICENSE</licenseFile>
     <splashImage>Transactive.png</splashImage>
@@ -18,7 +18,7 @@
 * python3-tk, python3-pip, helics
 # Python3; matplotlib, networkx, scipy, numpy, pandas, psst
 </detailedDescription>
-            <requiredSize>900000</requiredSize>
+            <requiredSize>1300000</requiredSize>
             <selected>1</selected>
             <show>1</show>
             <folderList>
@@ -156,49 +156,18 @@
                         </distributionFile>
                     </distributionFileList>
                 </folder>
+                <folder>
+                    <description>Environment</description>
+                    <destination>/etc/profile.d</destination>
+                    <name>envpath</name>
+                    <platforms>linux-x64</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>Linux/helpers/tesp_envar.sh</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
             </folderList>
-            <postInstallationActionList>
-                <addEnvironmentVariable>
-                    <explanation>Setting TESP_INSTALL directory.</explanation>
-                    <name>TESP_INSTALL</name>
-                    <scope>user</scope>
-                    <value>${tespdir}</value>
-                </addEnvironmentVariable>
-                <addEnvironmentVariable>
-                    <explanation>Setting JAVAPATH for HELICS</explanation>
-                    <name>JAVAPATH</name>
-                    <scope>user</scope>
-                    <value>${tespdir}/java</value>
-                </addEnvironmentVariable>
-                <addEnvironmentVariable>
-                    <explanation>Setting PYTHONPATH for HELICS</explanation>
-                    <name>PYTHONPATH</name>
-                    <scope>user</scope>
-                    <value>${tespdir}/python</value>
-                </addEnvironmentVariable>
-                <addEnvironmentVariable>
-                    <explanation>Setting GLPATH for GridLAB-D</explanation>
-                    <name>GLPATH</name>
-                    <scope>user</scope>
-                    <value>${tespdir}/lib/gridlabd:${tespdir}/share/gridlabd</value>
-                </addEnvironmentVariable>
-                <addEnvironmentVariable>
-                    <explanation>Setting CXXFLAGS for GridLAB-D</explanation>
-                    <name>CXXFLAGS</name>
-                    <scope>user</scope>
-                    <value>-I${tespdir}/share/gridlabd</value>
-                </addEnvironmentVariable>
-                <addDirectoryToPath>
-                    <explanation>Adding TESP to PATH</explanation>
-                    <insertAt>end</insertAt>
-                    <path>${tespdir}/bin:${tespdir}:${tespdir}/PreProcess:${tespdir}/PostProcess</path>
-                    <scope>user</scope>
-                </addDirectoryToPath>
-                <runProgram>
-                    <program>ldconfig</program>
-                    <programArguments></programArguments>
-                </runProgram>
-            </postInstallationActionList>
         </component>
     </componentList>
     <readyToInstallActionList>
@@ -282,11 +251,17 @@
         </runProgram>
     </readyToInstallActionList>
     <postInstallationActionList>
+        <runProgram>
+            <breakpoint>1</breakpoint>
+            <program>ldconfig</program>
+            <programArguments></programArguments>
+        </runProgram>
         <launchBrowser>
             <url>http://tesp.readthedocs.io/en/latest/</url>
         </launchBrowser>
     </postInstallationActionList>
     <allowComponentSelection>1</allowComponentSelection>
+    <enableDebugger>1</enableDebugger>
     <enableRollback>1</enableRollback>
     <enableTimestamp>1</enableTimestamp>
     <outputDirectory>tesp_core</outputDirectory>
