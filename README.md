@@ -46,18 +46,25 @@ the co-simulation frameworks or the large simulation federates.
 
 After installing TESP, you can test it as follows:
 
-1. Set up a working directory and manually run the quick loadshed examples:
+1. First, log out and log back in. From a terminal, invoke _which gridlabd_ 
+   to make sure the paths have been set up.
+2. Second, if you've had PSST installed before, invoke _pip3 show psst_ 
+   to make sure the version number is at least 0.1.9.  If not, use 
+   _pip3 install psst --upgrade_ to make sure PSST has been upgraded.
+   (The installer sometimes fails to upgrade PSST, and the reason
+   is under investigation.)
+3. Set up a working directory and manually run the quick loadshed examples:
    https://tesp.readthedocs.io/en/latest/Running_Examples_Link.html#prerequisite-make-a-local-copy-of-the-examples
    This verifies that FNCS, HELICS and GridLAB-D are all working
    with Python and Java.
-2. Run a longer automated test suite by invoking
+4. Run a longer automated test suite by invoking
    *python3 autotest.py* from your working directory. This tests
    nearly all of the federates in different combinations, but it
    may take a few hours to complete.
-3. The SGIP, NIST and ERCOT cases take many hours to run. They
+5. The SGIP, NIST and ERCOT cases take many hours to run. They
    are in a separate automated test suite *python3 autotest_long.py*
    run from your working directory.
-4. For MATPOWER/MOST, see the readme file at https://github.com/pnnl/tesp/tree/develop/ercot/case8/dsostub.
+6. For MATPOWER/MOST, see the readme file at https://github.com/pnnl/tesp/tree/develop/ercot/case8/dsostub.
 
 Change log:
 
@@ -65,3 +72,4 @@ Change log:
           cables with separate neutral conductor.
 - v0.3.0  Refactored agent classes for DSO+T study
 - v0.9.5  HELICS, MATPOWER/MOST, ERCOT and E+ 9.3 examples
+- v1.0.0  Tested on Ubuntu 18.04 LTS and 20.04 LTS
