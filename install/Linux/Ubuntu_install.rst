@@ -13,9 +13,9 @@ In addition, you may need several GB of disk space to run simulations.
 
 2. Open a Terminal and navigate to the Downloads directory
 
-3. *chmod +x ./tesp-0.6.0-linux-x64-installer.run*
+3. *chmod +x ./tesp-1.0.0-linux-x64-installer.run*
 
-4. *sudo ./tesp-0.6.0-linux-x64-installer.run*
+4. *sudo ./tesp-1.0.0-linux-x64-installer.run*
 
 The installer invokes these commands to install TESP prerequisites:
 

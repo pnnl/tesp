@@ -10,19 +10,19 @@ First time, on Windows:
 
 ::
 
- docker pull temcderm/tesp_core:v1
+ docker pull temcderm/tesp_core:1.0.1
  cd c:\Users\tom
  md tesp
- docker run --name tesp -it --mount type=bind,source=c:\Users\tom\tesp,destination=/data temcderm/tesp_core:v1
+ docker run --name tesp -it --mount type=bind,source=c:\Users\tom\tesp,destination=/data temcderm/tesp_core:1.0.1
 
 First time, on Mac OS X:
 
 ::
 
- docker pull temcderm/tesp_core:v1
+ docker pull temcderm/tesp_core:1.0.1
  cd /Users/tom
  mkdir tesp
- docker run --name tesp -it --mount type=bind,source=/Users/tom/tesp,destination=/data temcderm/tesp_core:v1
+ docker run --name tesp -it --mount type=bind,source=/Users/tom/tesp,destination=/data temcderm/tesp_core:1.0.1
 
 After executing the last of these commands, you will be at a Linux-like command
 prompt inside your Docker container. Simulations must be run inside the Docker container, with results
