@@ -342,6 +342,7 @@ In order to build the documentation for ReadTheDocs:
  pip3 install recommonmark --upgrade
  pip3 install sphinx-jsonschema --upgrade
  pip3 install sphinx_rtd_theme --upgrade
+ pip3 install sphinxcontrib-bibtex --upgrade
  cd ~/src/tesp/doc
  make html
 

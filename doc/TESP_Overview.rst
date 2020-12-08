@@ -57,15 +57,16 @@ ultimately extends the simulation time horizon up to 20 years.
 Design Overview
 ---------------
 
-:numref:`fig_federates` shows the simulation modules federated in Rev 1 of TESP.  
-GridLAB-D covers the electric power distribution system :cite:`3`, 
-MATPOWER or PYPOWER covers the bulk electric power system 
-:cite:`4,17`, and EnergyPlus covers large 
-commercial buildings :cite:`5`.  These three simulators have 
-been previously federated at PNNL, but only pairwise (i.e.  GridLAB-D with 
-MATPOWER, and GridLAB-D with EnergyPlus).  The use of all three together 
-in a transactive simulation is new this year.  The integrating Framework 
-for Network Co-simulation (FNCS) manages the time step synchronization and 
+:numref:`fig_federates` shows the simulation modules federated in TESP.  
+GridLAB-D covers the electric power distribution system :cite:`3` and residential
+buildings. 
+PYPOWER, MATPOWER/MOST or AMES covers the Transmission System Operator (TSO). 
+:cite:`4,17`. OpenDSS is an alternative distribution power flow program.
+EnergyPlus covers large commercial buildings :cite:`5`. ns-3 is a communication
+system simulator that can also host software agents. The integrating Message
+Bus, using either the Hierarchical Engine for Large-scale Infrastructure Co-Simulation 
+(HELICS) or Framework 
+for Network Co-simulation (FNCS), manages the time step synchronization and 
 message exchange among all of the federated simulation modules :cite:`6`.  
 In this way, TESP builds mostly on proven components, 
 which helps mitigate risk in software development.  Some of these 
@@ -75,9 +76,21 @@ later.  However, the overall platform design in :numref:`fig_federates` still ap
 .. figure:: ./media/Federates.png
 	:name: fig_federates
 
-	TESP Rev 1 components federated through FNCS.
+	TESP Rev 1 components federated through FNCS and/or HELICS.
 
-Many of the new components in :numref:`fig_federates` were implemented in the Python 
+The user interacts with TESP by configuring simulation cases (magenta) and 
+then running them.  Simulation federates or Agents write intermediate outputs
+and metadata (green), which the user plots, post-processes and analyzes to
+reach conclusions. In order to implement new functionality, the user would
+write new TESP Developer Agents (orange), starting from one of the examples provided.
+
+(Some of of the simulators and agents in :numref:`fig_federates` have to be configured
+by hand. OpenDSS writes output in its native, non-TESP format, and EnergyPlus writes
+output only through the Buildings agent; these are indicated with dashed green lines.
+The ns-3 simulator doesn't write output; it's presently used in just one example, for
+which the GridLAB-D outputs are adequate.)
+
+Most of the new Agents in :numref:`fig_federates` were implemented in the Python 
 programming language, which was chosen because: 
 
 1. Python is now commonly used in colleges to teach new programmers
@@ -88,8 +101,8 @@ programming language, which was chosen because:
 3. Python bindings to FNCS already existed
 
 Custom code for TESP can also be implemented in other languages like C++
-and Java, and in fact, the “wrappers” or “agents” for MATPOWER and
-EnergyPlus have been implemented as separate C++ programs. Our
+and Java. To demonstrate, the Buildings agent was implemented in C++ and
+one version of the simple Load Shed agent was written in Java. Our
 experience has been that developers with experience in C++ or Java can
 easily work in Python, while the converse is not always true. These
 factors led to the choice of Python as a default language for
