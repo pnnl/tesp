@@ -1,3 +1,4 @@
+declare -r JAVAPATH=$TESP_INSTALL/java
 javac -classpath ".:$JAVAPATH/fncs.jar" loadshed.java
 (export FNCS_TRACE=yes && export FNCS_LOG_STDOUT=yes && exec fncs_broker 3 &> broker.log &)
 (export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec gridlabd -D WANT_FNCS=1 loadshed.glm &> gridlabd.log &)
