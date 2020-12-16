@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>1. Code documentation &mdash; TESP-PCS 1.0.2 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom_style.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="TESP - prototypical communication system development" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> TESP-PCS
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Code documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TESP-PCS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">1. </span>Code documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/code_docs.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="code-documentation">
+<h1><span class="section-number">1. </span>Code documentation<a class="headerlink" href="#code-documentation" title="Permalink to this headline">¶</a></h1>
+<p><span class="bolditalic">dot2json.py</span></p>
+<span class="target" id="module-dot2json"></span><p>.dot to networkx graph to .json</p>
+<span class="target" id="module-0"></span><dl class="field-list simple">
+<dt class="field-odd">synopsis</dt>
+<dd class="field-odd"><p>This module load a DOT file (network graph) into a networkx graph to save it into a JSON structure</p>
+</dd>
+<dt class="field-even">platform</dt>
+<dd class="field-even"><p>Unix</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt id="dot2json.main">
+<code class="sig-prename descclassname">dot2json.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dotFile</span></em>, <em class="sig-param"><span class="n">jsonFile</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dot2json.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a .dot file representing the GridLAB-D taxonomy feeder graph and saves it as a JSON structure in a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dotFile</strong> (<em>str</em>) – Path to dotFile input file.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>jsonFile</strong> – Path to output JSON file.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><span class="bolditalic">tesp_glm_processing.py</span></p>
+<span class="target" id="module-tesp_glm_processing"></span><p><strong>Important!!!</strong></p>
+<p>This script needs to be run in tesp_support source repository, as the function called have the paths hard-coded in. Therefore, before running it, move the file to /src/tesp_support/tesp_support/, create a folder named Dummy in there, and then run the scripts. The ouput files will be saved into the Dummy folder, from where they can be moved to the /tesp-pcs/files/ fodler for the next step.</p>
+<p>Process taxonomy feeder</p>
+<span class="target" id="module-1"></span><dl class="field-list simple">
+<dt class="field-odd">synopsis</dt>
+<dd class="field-odd"><p>Populate a taxonomy feeder, and then extract a dictionary in JSON format. Using two of the tesp_support functionalities, this script will populate a taxonomy feeder (ProcessTaxonomyFeeder function in feederGenerator), and then extracts to a JSON file some of the nodes in the populated feeder file.</p>
+</dd>
+<dt class="field-even">platform</dt>
+<dd class="field-even"><p>Unix</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt id="tesp_glm_processing.main">
+<code class="sig-prename descclassname">tesp_glm_processing.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">taxonomyRoot</span></em><span class="sig-paren">)</span><a class="headerlink" href="#tesp_glm_processing.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes a taxonomy feeder, populates it with end-use consumers, and then describes it in a JSON format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>taxonomyRoot</strong> (<em>str</em>) – The name of the taxonomy feeder considered. The taxonomy feeder files are loaded from the tesp-support repository in the folder /support/feeders/</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>In a dummy output folder, the populated GridLAB-D model is saved under &lt;taxonomyRoot&gt;_processed.glm, and then &lt;taxonomyRoot&gt;_processed_glm_dict.json is created at the same location.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><span class="bolditalic">analyzeModels.py</span></p>
+<span class="target" id="module-analyzeModels"></span><p>DOT and GLM model analysis.</p>
+<span class="target" id="module-2"></span><dl class="field-list simple">
+<dt class="field-odd">synopsis</dt>
+<dd class="field-odd"><p>Analyze the DOT and GLM models, based on their JSON structures in order to place the GLM nodes at he locations supplied by the DOT file. In the end, a networkx JSON file is saved to describe the fedder nodes and their links, that is used later to populate an ns-3 model.</p>
+</dd>
+<dt class="field-even">platform</dt>
+<dd class="field-even"><p>Unix</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt id="analyzeModels.analyzeDOT">
+<code class="sig-prename descclassname">analyzeModels.</code><code class="sig-name descname">analyzeDOT</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dotModel</span></em><span class="sig-paren">)</span><a class="headerlink" href="#analyzeModels.analyzeDOT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a DOT model in its jSON structure, and returns the list of the triplex nodes and triplex meters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dotModel</strong> (<em>JSON structure</em>) – The JSON coverted DOT model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>tnNodes, tmNodes</strong> – Lists of triplex nodes and triplex meters.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="analyzeModels.analyzeGLMdict">
+<code class="sig-prename descclassname">analyzeModels.</code><code class="sig-name descname">analyzeGLMdict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">glmModel</span></em><span class="sig-paren">)</span><a class="headerlink" href="#analyzeModels.analyzeGLMdict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a GLM model in its JSON structure, and returns the list of the billing meters and their numbers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>glmModel</strong> (<em>JSON structure</em>) – The JSON dict of the GLM model.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>glmTnNodes, glmTnNodesNum</strong> – Lists of billing meters and their unique numbers.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="analyzeModels.main">
+<code class="sig-prename descclassname">analyzeModels.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#analyzeModels.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>This main function analyzes the DOT and GLM, and connects them to create the JSON needed for the ns-3 model</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="TESP - prototypical communication system development" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, PNNL
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
