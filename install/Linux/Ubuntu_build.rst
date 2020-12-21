@@ -35,6 +35,9 @@ changes to the TESP build:
 - when building the Java 10 binding for FNCS, you have to manually copy the fncs.jar and libFNCSjni.so to the correct place. The paths are different because of how WSL integrates the Windows and Linux file systems
 - for HELICS bindings, add JAVAPATH to *~/.profile* instead of *~/.bashrc*
 
+TESP and its component simulators do not perform as well under WSL1 as they do
+inside a VM. Performance testing has not been done with WSL2.
+
 Preparation - Build Tools and Java
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -184,7 +187,6 @@ To build HELICS with Java bindings:
 ::
 
  cd ~/src/HELICS-src
- git checkout "v2.5.2"
  mkdir build
  cd build
  cmake -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON \
@@ -195,12 +197,6 @@ To build HELICS with Java bindings:
  make -j4
  sudo make install
 
-To install the HELICS Python 3 bindings:
-
-::
-
- pip3 install helics==2.5.2
-
 Test that HELICS and FNCS start:
 
 ::
@@ -209,6 +205,13 @@ Test that HELICS and FNCS start:
  helics_player --version
  helics_recorder --version
  fncs_broker --version # look for the program to start, then exit with error
+
+Install HELICS Python 3 bindings for a version that exactly matches the local build:
+
+::
+
+ pip3 install helics==2.6.1
+ # where 2.6.1 came from helics_player --version
 
 Then test HELICS from Python 3:
 
@@ -293,6 +296,7 @@ Build ns3 with HELICS
 
 First, in order to build ns-3 with Python bindings, we need to install the Python
 binding generator that it uses, and then manually patch one of the ns-3 build files.
+This has to be done after each `git pull` of ns-3 sources.
 
 ::
  
@@ -306,7 +310,13 @@ Then, we can build ns-3, install that into the same location as other parts of T
 ::
 
  cd ~/src/ns-3-dev
+ # first build: use the following command for HELICS interface to ns3:
  git clone -b feature/13b https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+ # subsequent builds: use the following 3 commands to update HELICS interface code:
+ # cd contrib/helics
+ # git pull
+ # cd ../..
+ # then configure, build and test ns3 with the HELICS interface
  # --with-helics may not be left blank, so use either $TESP_INSTALL or /usr/local
  # --build-profile=optimized was used for TESP release, but it disables ns3 logging
  # ./waf configure --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --build-profile=optimized --disable-werror --enable-examples --enable-tests
@@ -342,7 +352,8 @@ In order to build the documentation for ReadTheDocs:
  pip3 install recommonmark --upgrade
  pip3 install sphinx-jsonschema --upgrade
  pip3 install sphinx_rtd_theme --upgrade
- pip3 install sphinxcontrib-bibtex --upgrade
+ # sphinxcontrib-bibtex 2.0.0 has introduced an incompatibility
+ pip3 install sphinxcontrib-bibtex==1.0.0
  cd ~/src/tesp/doc
  make html
 
