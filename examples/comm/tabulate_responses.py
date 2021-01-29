@@ -116,7 +116,8 @@ def configure_case (bldg_id, tcap, base_price = 0.10, ramp = 25.0):
          'BasePrice' : base_price,
          'RampSlope' : ramp,
          'MaxDeltaHeat' : tcap,
-         'MaxDeltaCool': tcap}
+         'MaxDeltaCool': tcap,
+         'UsePriceRamp': True}
   json.dump (aDict, op, ensure_ascii=False, indent=2)
   op.close()
   return bldg
@@ -177,3 +178,41 @@ if __name__ == '__main__':
       key = '{:.2f}'.format (tcap)
       print ('{:25s} {:4.2f} {:8.2f}'.format (bldg, tcap, results[bldg][key]))
 
+"""
+Results obtained 1/29/2021
+
+LoadScale is 1.0
+LargeOffice_0.01                   5.729167
+LargeOffice_1.00                   6.332680
+LargeOffice_2.00                   6.501234
+LargeOffice_3.00                   6.659761
+LargeOffice_5.00                   7.108884
+MidriseApartment_0.01             10.286237
+MidriseApartment_1.00              8.758575
+MidriseApartment_2.00              9.184352
+MidriseApartment_3.00              8.618092
+MidriseApartment_5.00              8.366942
+StandaloneRetail_0.01              3.958328
+StandaloneRetail_1.00              4.789432
+StandaloneRetail_2.00              3.922260
+StandaloneRetail_3.00              4.432790
+StandaloneRetail_5.00              4.730973
+
+Building                  Tcap   Avg kW
+LargeOffice               0.01  1716.39
+LargeOffice               1.00  1699.07
+LargeOffice               2.00  1689.57
+LargeOffice               3.00  1685.25
+LargeOffice               5.00  1680.87
+MidriseApartment          0.01    54.08
+MidriseApartment          1.00    48.59
+MidriseApartment          2.00    43.38
+MidriseApartment          3.00    39.27
+MidriseApartment          5.00    33.48
+StandaloneRetail          0.01   135.49
+StandaloneRetail          1.00   131.15
+StandaloneRetail          2.00   126.82
+StandaloneRetail          3.00   122.48
+StandaloneRetail          5.00   114.35
+
+"""
