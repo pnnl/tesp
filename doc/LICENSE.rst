@@ -2,7 +2,7 @@
 TESP License
 ============
 
-Version 1.0, April 2017
+Version 1.0, Sept 2020
 https://github.com/pnnl/tesp
 
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
