@@ -67,7 +67,7 @@ system simulator that can also host software agents. The integrating Message
 Bus, using either the Hierarchical Engine for Large-scale Infrastructure Co-Simulation 
 (HELICS) or Framework 
 for Network Co-simulation (FNCS), manages the time step synchronization and 
-message exchange among all of the federated simulation modules :cite:`6`.  
+message exchange among all of the federated simulation modules :cite:`Ciraci:2014ud`.  
 In this way, TESP builds mostly on proven components, 
 which helps mitigate risk in software development.  Some of these 
 components may be upgraded or replaced in future versions, as described 
