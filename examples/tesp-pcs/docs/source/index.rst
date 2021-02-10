@@ -10,6 +10,7 @@ TESP - prototypical communication system development
    :caption: Contents:
    :numbered:
 
+   pcs_docs
    code_docs
 
 .. highlight:: python

@@ -476,7 +476,7 @@ def parse_kva_old(arg):
             break
 
     vals = [tok[:kpos],tok[kpos:]]
-#    print(arg,vals)
+    # print(arg,vals)
 
     vals = [float(v) for v in vals]
 
@@ -808,7 +808,7 @@ def write_link_class (model, h, t, seg_loads, op, want_metrics=False):
   """
   if t in model:
     for o in model[t]:
-#            print('object ' + t + ':' + o + ' {', file=op)
+      # print('object ' + t + ':' + o + ' {', file=op)
       print('object ' + t + ' {', file=op)
       print('  name ' + o + ';', file=op)
       if o in seg_loads:
@@ -866,9 +866,9 @@ def buildingTypeLabel (rgn, bldg, ti):
     """
     return rgnName[rgn-1] + ': ' + bldgTypeName[bldg] + ': TI Level ' + str (ti+1)
 
-house_nodes = {} # keyed on node, [nhouse, region, lg_v_sm, phs, bldg, ti, parent (for ERCOT only)]
-small_nodes = {} # keyed on node, [kva, phs, load_class]
-comm_loads = {}  # keyed on load name, [parent, comm_type, nzones, kva, nphs, phases, vln, loadnum]
+# house_nodes = {} # keyed on node, [nhouse, region, lg_v_sm, phs, bldg, ti, parent (for ERCOT only)]
+# small_nodes = {} # keyed on node, [kva, phs, load_class]
+# comm_loads = {}  # keyed on load name, [parent, comm_type, nzones, kva, nphs, phases, vln, loadnum]
 
 solar_count = 0
 solar_kw = 0
@@ -891,7 +891,7 @@ def connect_ercot_houses (model, h, op, vln, vsec):
         vsec (float): the secondary line-to-neutral voltage
     """
     for key in house_nodes:
-#        bus = key[:-2]
+        # bus = key[:-2]
         bus = house_nodes[key][6]
         phs = house_nodes[key][3]
         nh = house_nodes[key][0]
@@ -904,7 +904,7 @@ def connect_ercot_houses (model, h, op, vln, vsec):
             npar = int (0.06 * nh + 0.5)
         else:
             npar = 1
-#        print (key, bus, phs, nh, xfkva, npar)
+        # print (key, bus, phs, nh, xfkva, npar)
         # write the service transformer==>TN==>TPX==>TM for all houses
         kvat = npar * xfkva
         row = Find1PhaseXfmr (xfkva)
@@ -2035,7 +2035,7 @@ def write_substation (op, name, phs, vnom, vll):
         if forERCOT == True:
             print ('  name gridlabd' + fncs_case + ';', file=op)
         else:
-#            print ('  name gridlabd' + fncs_case + ';', file=op)  # for full-order DSOT
+            # print ('  name gridlabd' + fncs_case + ';', file=op)  # for full-order DSOT
             print ('  name gld1;', file=op)
         print ('  parent network_node;', file=op)
         print ('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
@@ -2106,9 +2106,9 @@ def write_voltage_class (model, h, t, op, vprim, vll, secmtrnode):
     """
     if t in model:
         for o in model[t]:
-#            if 'load_class' in model[t][o]:
-#                if model[t][o]['load_class'] == 'C':
-#                    continue
+            # if 'load_class' in model[t][o]:
+            #     if model[t][o]['load_class'] == 'C':
+            #         continue
             name = o # model[t][o]['name']
             phs = model[t][o]['phases']
             vnom = vprim
@@ -2358,10 +2358,14 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         avghouse (float): the average house load in kVA
         avgcommercial (float): the average commercial load in kVA, not used
     """
-    global solar_count, solar_kw, battery_count, base_feeder_name
+    global solar_count, solar_kw, battery_count, base_feeder_name, house_nodes, small_nodes, comm_loads
     solar_count = 0
     solar_kw = 0
     battery_count = 0
+
+    house_nodes = {} # keyed on node, [nhouse, region, lg_v_sm, phs, bldg, ti, parent (for ERCOT only)]
+    small_nodes = {} # keyed on node, [kva, phs, load_class]
+    comm_loads = {}  # keyed on load name, [parent, comm_type, nzones, kva, nphs, phases, vln, loadnum]
 
     base_feeder_name = rootname
     fname = glmpath + rootname + '.glm'
@@ -2418,7 +2422,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
                     print ('  stoptime \'' + endtime + '\';', file=op)
                 else:
                     print (line, file=op)
-
+        
         # apply the nameing prefix if necessary
         if len(name_prefix) > 0:
           for t in model:
@@ -2430,7 +2434,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
                 if tok in elem:
                   elem[tok] = name_prefix + elem[tok]
 
-#        log_model (model, h)
+        # log_model (model, h)
 
         # construct a graph of the model, starting with known links
         G = nx.Graph()
@@ -2491,7 +2495,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         print ('  swing node', swing_node, 'with', len(list(sub_graphs)), 'subgraphs and', 
                '{:.2f}'.format(total_kva), 'total kva')
 
-# preparatory items for TESP
+        #  preparatory items for TESP
         print ('module climate;', file=op)
         print ('module generators;', file=op)
         print ('module connection;', file=op)
@@ -2525,8 +2529,8 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         print ('  // altitude', str(altitude) + ';', file=op)
         print ('  tz_meridian', str(tz_meridian) + ';', file=op)
         print ('};', file=op)
-#        print ('// taxonomy_base_feeder', rootname, file=op)
-#        print ('// region_name', rgnName[rgn-1], file=op)
+        # print ('// taxonomy_base_feeder', rootname, file=op)
+        # print ('// region_name', rgnName[rgn-1], file=op)
         if solar_percentage > 0.0:
             print ('// default IEEE 1547-2018 settings for Category B', file=op)
             print ('#define INV_VBASE=240.0', file=op)
@@ -2545,7 +2549,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
             print ('#define INV_VW_V2=1.10', file=op)
             print ('#define INV_VW_P1=1.0', file=op)
             print ('#define INV_VW_P2=0.0', file=op)
-# write the optional volt_dump and curr_dump for validation
+        # write the optional volt_dump and curr_dump for validation
         print ('#ifdef WANT_VI_DUMP', file=op)
         print ('object voltdump {', file=op)
         print ('  filename Voltage_Dump_' + outname + '.csv;', file=op)
@@ -2559,9 +2563,9 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         print ('// solar inverter mode on this feeder', file=op)
         print ('#define ' + name_prefix + 'INVERTER_MODE=' + solar_inv_mode, file=op)
 
-# NEW STRATEGY - loop through transformer instances and assign a standard size based on the downstream load
-#              - change the referenced transformer_configuration attributes
-#              - write the standard transformer_configuration instances we actually need
+        # NEW STRATEGY - loop through transformer instances and assign a standard size based on the downstream load
+        #              - change the referenced transformer_configuration attributes
+        #              - write the standard transformer_configuration instances we actually  need
         xfused = {} # ID, phases, total kva, vnom (LN), vsec, poletop/padmount
         secnode = {} # Node, st, phases, vnom                                                                  
         t = 'transformer'
@@ -2638,9 +2642,9 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
                 else:
                     amps = 1000.0 * seg_kva / vln
                 model[t][o]['current_limit'] = str (FindFuseLimit (amps))
-
+        
         write_local_triplex_configurations (op)
-
+        
         write_config_class (model, h, 'regulator_configuration', op)
         write_config_class (model, h, 'overhead_line_conductor', op)
         write_config_class (model, h, 'line_spacing', op)
@@ -2745,7 +2749,6 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         print ('cooling bins unused', cooling_bins)
         print ('heating bins unused', heating_bins)
         print (solar_count, 'pv totaling', '{:.1f}'.format(solar_kw), 'kw with', battery_count, 'batteries')
-
         op.close()
 
 def populate_feeder (configfile = None, config = None, taxconfig = None):
@@ -2785,7 +2788,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
       name_prefix = config['BackboneFiles']['NamePrefix']
     if 'WorkingDirectory' in config['SimulationConfig']:
       outpath = config['SimulationConfig']['WorkingDirectory'] + '/'  # for full-order DSOT
-#      outpath = './' + config['SimulationConfig']['CaseName'] + '/'
+      # outpath = './' + config['SimulationConfig']['CaseName'] + '/'
     else:
       outpath = './' + config['SimulationConfig']['CaseName'] + '/'
     starttime = config['SimulationConfig']['StartTime']
@@ -2856,7 +2859,7 @@ def populate_feeder (configfile = None, config = None, taxconfig = None):
             if c[0] == rootname:
                 fncs_case = config['SimulationConfig']['CaseName']
                 ProcessTaxonomyFeeder (fncs_case, c[0], c[1], c[2], c[3], c[4])
-#                quit()
+                # quit()
 
 def populate_all_feeders ():
     """Wrapper function that batch processes all taxonomy feeders in the casefiles table (see source file)

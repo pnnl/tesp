@@ -16,6 +16,7 @@ import networkx as nx
 import json
 import numpy as np
 import re
+import os
 
 def analyzeDOT(dotModel):
   """
@@ -147,15 +148,25 @@ def analyzeGLMdict(glmModel):
 
   return glmTnNodes, glmTnNodesNum
 
-def main():
+
+def main(feederName):
   """
   This main function analyzes the DOT and GLM, and connects them to create the JSON needed for the ns-3 model
+
+  Parameters
+  ----------
+  feederName : string
+    The name of the prototypical taxonomy feeder to be analyzed.
+
+  Returns
+  -------
+  **********
+
   """
   G = nx.Graph()
-  feederName = 'R1-12.47-1'
   feederRename = feederName.replace('-','_').replace('.', '_')
-  dotJSONfile = '../files/{0}_dot.json'.format(feederName)
-  json_fp = open('./{0}'.format(dotJSONfile), 'r')
+  dotJSONfile = os.path.abspath('../files/{0}_dot.json'.format(feederName))
+  json_fp = open(os.path.abspath('./{0}'.format(dotJSONfile)), 'r')
   dotModel = json.load(json_fp)
   json_fp.close()
   dotLinks = dotModel['links']
@@ -170,8 +181,8 @@ def main():
                   'y': float(node['pos'].split(',')[1])
                 }
   
-  glmJSONfile = '../files/{0}_processed_glm_dict.json'.format(feederName)
-  json_fp = open('./{0}'.format(glmJSONfile), 'r')
+  glmJSONfile = os.path.abspath('../files/{0}_processed_glm_dict.json'.format(feederName))
+  json_fp = open(os.path.abspath('./{0}'.format(glmJSONfile)), 'r')
   glmModel = json.load(json_fp)
   json_fp.close()
   # the billing meters connected to each triplex node
@@ -310,7 +321,7 @@ def main():
                          'length': 0
                        })
   jsonGraphNS3 = nx.readwrite.json_graph.node_link_data(G)
-  jsonFp = open('../files/{0}_ns3.json'.format(feederName), 'w')
+  jsonFp = open(os.path.abspath('../files/{0}_ns3.json'.format(feederName)), 'w')
   json.dump(jsonGraphNS3, jsonFp)
   jsonFp.close()
 
@@ -333,4 +344,10 @@ def main():
   # print('{0} position:\n\t({1:.2f}, {2:.2f}) printer points\n\t({3:.2f}, {4:.2f}) ft'.format(tnChild, xtnChildPos, ytnChildPos, xtnChildPos / 72 * 200, ytnChildPos / 72 * 200))
 
 if __name__ == '__main__':
-  main()
+  taxRoot = ['R1-12.47-1', 'R1-12.47-2', 'R1-12.47-3', 'R1-12.47-4', 'R1-25.00-1', 'R2-12.47-1',
+             'R2-12.47-2', 'R2-12.47-3', 'R2-25.00-1', 'R2-35.00-1', 'R3-12.47-1', 'R3-12.47-2',
+             'R3-12.47-3', 'R4-12.47-1', 'R4-12.47-2', 'R4-25.00-1', 'R5-12.47-1', 'R5-12.47-2',
+             'R5-12.47-3', 'R5-12.47-4', 'R5-12.47-5', 'R5-25.00-1', 'R5-35.00-1', 'GC-12.47-1']
+  for feeder in taxRoot:
+    print('\nAnalyzing feeder -->> {0}'.format(feeder))
+    main(feeder)

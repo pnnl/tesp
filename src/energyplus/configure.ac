@@ -18,26 +18,26 @@ AC_PROG_CXX()
 AC_PROG_CC()
 
 # Checks for libraries.
-FNCS_CHECK_PACKAGE([zmq], [zmq.h], [zmq], [zmq_ctx_new])
-fncs_save_CPPFLAGS="$CPPFLAGS"
-fncs_save_LDFLAGS="$LDFLAGS"
-fncs_save_LIBS="$LIBS"
+#FNCS_CHECK_PACKAGE([zmq], [zmq.h], [zmq], [zmq_ctx_new])
+#fncs_save_CPPFLAGS="$CPPFLAGS"
+#fncs_save_LDFLAGS="$LDFLAGS"
+#fncs_save_LIBS="$LIBS"
 CPPFLAGS="$CPPFLAGS $ZMQ_CPPFLAGS"
 LDFLAGS="$LDFLAGS $ZMQ_LDFLAGS"
 LIBS="$LIBS $ZMQ_LIBS"
-FNCS_CHECK_PACKAGE([czmq], [czmq.h], [czmq], [zctx_new])
+#FNCS_CHECK_PACKAGE([czmq], [czmq.h], [czmq], [zctx_new])
 CPPFLAGS="$CPPFLAGS $CZMQ_CPPFLAGS"
 LDFLAGS="$LDFLAGS $CZMQ_LDFLAGS"
 LIBS="$LIBS $CZMQ_LIBS"
-FNCS_CHECK_PACKAGE([fncs], [fncs.hpp], [fncs], [fncs_get_simulator_count])
-CPPFLAGS="$fncs_save_CPPFLAGS"
-LDFLAGS="$fncs_save_LDFLAGS"
-LIBS="$fncs_save_LIBS"
+#FNCS_CHECK_PACKAGE([fncs], [fncs.hpp], [fncs], [fncs_get_simulator_count])
+#CPPFLAGS="$fncs_save_CPPFLAGS"
+#LDFLAGS="$fncs_save_LDFLAGS"
+#LIBS="$fncs_save_LIBS"
 
 # Checks for header files.
-FNCS_CHECK_HEADERS([cstdint])
-FNCS_CHECK_HEADERS([stdint.h])
-FNCS_CHECK_HEADERS([sys/time.h])
+#FNCS_CHECK_HEADERS([cstdint])
+#FNCS_CHECK_HEADERS([stdint.h])
+#FNCS_CHECK_HEADERS([sys/time.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT8_T
@@ -67,10 +67,10 @@ AC_CHECK_SIZEOF([unsigned int])
 AC_CHECK_SIZEOF([unsigned long])
 AC_CHECK_SIZEOF([unsigned long long])
 AC_CHECK_SIZEOF([void*])
-FNCS_CXX_NULLPTR
+#FNCS_CXX_NULLPTR
 
 # Checks for library functions.
-FNCS_CHECK_FUNCS([gettimeofday stod])
+#FNCS_CHECK_FUNCS([gettimeofday stod])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
