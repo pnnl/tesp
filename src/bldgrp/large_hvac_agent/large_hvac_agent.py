@@ -701,59 +701,59 @@ class LargeHVACAgent (object):
     def get_approximations(self, scenario, plot_approximation):
         # for scenario 2, we load, for 1 we just use the saved coefficients
         if scenario == 2:
-            self.coefficient_Twetbulb = pd.read_pickle(os.path.join("./coefficients", 'coefficient_Twetbulb'))
+            self.coefficient_Twetbulb = pd.read_pickle(os.path.join("coefficients", 'coefficient_Twetbulb'))
             self.coefficients_MassFlow_Bottom_Core_VAV = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Bottom_Core_VAV'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Bottom_Core_VAV'))
             self.coefficients_MassFlow_Bottom_Zone1 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Bottom_Zone1'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Bottom_Zone1'))
             self.coefficients_MassFlow_Bottom_Zone2 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Bottom_Zone2'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Bottom_Zone2'))
             self.coefficients_MassFlow_Bottom_Zone3 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Bottom_Zone3'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Bottom_Zone3'))
             self.coefficients_MassFlow_Bottom_Zone4 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Bottom_Zone4'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Bottom_Zone4'))
             self.coefficients_MassFlow_Mid_Core_VAV = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Mid_Core_VAV'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Mid_Core_VAV'))
             self.coefficients_MassFlow_Mid_Zone1 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Mid_Zone1'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Mid_Zone1'))
             self.coefficients_MassFlow_Mid_Zone2 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Mid_Zone2'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Mid_Zone2'))
             self.coefficients_MassFlow_Mid_Zone3 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Mid_Zone3'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Mid_Zone3'))
             self.coefficients_MassFlow_Mid_Zone4 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Mid_Zone4'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Mid_Zone4'))
             self.coefficients_MassFlow_Top_Core_VAV = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Top_Core_VAV'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Top_Core_VAV'))
             self.coefficients_MassFlow_Top_Zone1 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Top_Zone1'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Top_Zone1'))
             self.coefficients_MassFlow_Top_Zone2 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Top_Zone2'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Top_Zone2'))
             self.coefficients_MassFlow_Top_Zone3 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Top_Zone3'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Top_Zone3'))
             self.coefficients_MassFlow_Top_Zone4 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_MassFlow_Top_Zone4'))
+                os.path.join("coefficients", 'coefficients_MassFlow_Top_Zone4'))
             self.coefficients_VAV_Power_Bottom_Floor = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_VAV_Power_Bottom_Floor'))
-            self.coefficients_VAV_Power_Top = pd.read_pickle(os.path.join("./coefficients", 'coefficients_VAV_Power_Top'))
-            self.coefficients_VAV_Power_Mid = pd.read_pickle(os.path.join("./coefficients", 'coefficients_VAV_Power_Mid'))
+                os.path.join("coefficients", 'coefficients_VAV_Power_Bottom_Floor'))
+            self.coefficients_VAV_Power_Top = pd.read_pickle(os.path.join("coefficients", 'coefficients_VAV_Power_Top'))
+            self.coefficients_VAV_Power_Mid = pd.read_pickle(os.path.join("coefficients", 'coefficients_VAV_Power_Mid'))
             self.coefficients_CAV_Power_Basement = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_CAV_Power_Basement'))
+                os.path.join("coefficients", 'coefficients_CAV_Power_Basement'))
             self.coefficients_Evaporator_Load_Chiller1 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_Evaporator_Load_Chiller1'))
+                os.path.join("coefficients", 'coefficients_Evaporator_Load_Chiller1'))
             self.coefficients_Evaporator_Load_Chiller2 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_Evaporator_Load_Chiller2'))
+                os.path.join("coefficients", 'coefficients_Evaporator_Load_Chiller2'))
             self.coefficients_Condenser_Leaving_Temperature_Chiller1 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_Condenser_Leaving_Temperature_Chiller1'))
+                os.path.join("coefficients", 'coefficients_Condenser_Leaving_Temperature_Chiller1'))
             self.coefficients_Condenser_Leaving_Temperature_Chiller2 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_Condenser_Leaving_Temperature_Chiller2'))
+                os.path.join("coefficients", 'coefficients_Condenser_Leaving_Temperature_Chiller2'))
             self.coefficients_Fan_Power_CoolTower1 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_Fan_Power_CoolTower1'))
+                os.path.join("coefficients", 'coefficients_Fan_Power_CoolTower1'))
             self.coefficients_Fan_Power_CoolTower1 = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_Fan_Power_CoolTower1'))
+                os.path.join("coefficients", 'coefficients_Fan_Power_CoolTower1'))
             self.coefficients_Pump_Power_Primary = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_Pump_Power_Primary'))
+                os.path.join("coefficients", 'coefficients_Pump_Power_Primary'))
             self.coefficients_Pump_Power_Secondary = pd.read_pickle(
-                os.path.join("./coefficients", 'coefficients_Pump_Power_Secondary'))
+                os.path.join("coefficients", 'coefficients_Pump_Power_Secondary'))
         # ================= TwetBulb =================================================
         data = process_data.process_bicubic_Twetbulb(
             self.sim_data_Temperature_WetBulb,
@@ -1321,7 +1321,7 @@ if __name__ == "__main__":
 #    if scenario == 1: # training
 #        eplus_file_name = ".\data\OfficeLarge_Denver_85-basecase.csv"
 #    elif scenario == 2: # testing
-    eplus_file_name = ".\data\OfficeLarge_Denver_85-basecase_24to22and26.csv"
+    eplus_file_name = "data/OfficeLarge_Denver_85-basecase_24to22and26.csv"
 #    else:
 #        print("===wrong scenario chosen===")
 

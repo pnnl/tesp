@@ -34,7 +34,7 @@ if __name__ == '__main__':
 # idx,bus,mvabase,pmin,qmin,qmax,c2,c1,c0
 	dunits = np.genfromtxt('Units.csv', dtype=[int, int, float, float, float, float, float, float, float], skip_header=1, delimiter=',')
 # hvbus,mvaxf,rpu,xpu,tap
-	dxfmrs = np.genfromtxt('RetainedTransformers.csv', dtype=[int, float, float, float,float], skip_header=1, delimiter=',')
+	dxfmrs = np.genfromtxt('RetainedTransformers.csv', dtype=[int, float, float, float, float], skip_header=1, delimiter=',')
 
 	lbl345 = {}
 	lbl138 = {}

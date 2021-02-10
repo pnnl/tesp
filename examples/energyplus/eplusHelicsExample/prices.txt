@@ -1,8 +1,0 @@
-#time	topic		value
-0		clear_price 0.1
-300000000000	clear_price 0.1
-32400000000000	clear_price	0.3
-68400000000000	clear_price	0.1
-118800000000000	clear_price	0.3
-154800000000000	clear_price	0.1
-172800000000000	clear_price	0.1

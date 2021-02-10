@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
   # ieee8500 precool example
   print('start examples ieee8500 PNNLteam: ')
-  os.chdir ('./PNNLteam')
+  os.chdir ('PNNLteam')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
   p1 = subprocess.Popen (pycall + ' prepare_cases.py', shell=True)

@@ -60,32 +60,32 @@ class arl:
         self.max_num = 1500
         
         self.inputs = np.zeros((self.house_number,self.day,self.step,self.input_num))
-        self.inputs[:,:,:,1] = np.tile(np.load('input\\inputs.npy',allow_pickle=True).item().get('temp'),(self.house_number,1,1))
-        self.inputs[:,:,:,2] = np.load('input\\inputs.npy',allow_pickle=True).item().get('schedule')[:self.house_number]
-        self.inputs[:,:,:,3] = np.tile(np.load('input\\inputs.npy',allow_pickle=True).item().get('limit').reshape(self.max_num,1,1),(1,self.day,self.step))[:self.house_number]
-        self.inputs[:,:,:,4] = np.tile(np.load('input\\inputs.npy',allow_pickle=True).item().get('ramp').reshape(self.max_num,1,1),(1,self.day,self.step))[:self.house_number]
-        self.inputs[:,:,:,5] = np.tile(np.load('input\\inputs.npy',allow_pickle=True).item().get('Hm').reshape(self.max_num,1,1),(1,self.day,self.step))[:self.house_number]     
-        self.inputs[:,:,:,6] = np.tile(np.load('input\\inputs.npy',allow_pickle=True).item().get('Ca').reshape(self.max_num,1,1),(1,self.day,self.step))[:self.house_number]
-        self.inputs[:,:,:,7] = np.tile(np.load('input\\inputs.npy',allow_pickle=True).item().get('Cm').reshape(self.max_num,1,1),(1,self.day,self.step))[:self.house_number]
-        self.inputs[:,:,:,8] = np.tile(np.load('input\\inputs.npy',allow_pickle=True).item().get('Ua').reshape(self.max_num,1,1),(1,self.day,self.step))[:self.house_number]
+        self.inputs[:,:,:,1] = np.tile(np.load('input/inputs.npy', allow_pickle=True).item().get('temp'), (self.house_number, 1, 1))
+        self.inputs[:,:,:,2] = np.load('input/inputs.npy', allow_pickle=True).item().get('schedule')[:self.house_number]
+        self.inputs[:,:,:,3] = np.tile(np.load('input/inputs.npy', allow_pickle=True).item().get('limit').reshape(self.max_num, 1, 1), (1, self.day, self.step))[:self.house_number]
+        self.inputs[:,:,:,4] = np.tile(np.load('input/inputs.npy', allow_pickle=True).item().get('ramp').reshape(self.max_num, 1, 1), (1, self.day, self.step))[:self.house_number]
+        self.inputs[:,:,:,5] = np.tile(np.load('input/inputs.npy', allow_pickle=True).item().get('Hm').reshape(self.max_num, 1, 1), (1, self.day, self.step))[:self.house_number]
+        self.inputs[:,:,:,6] = np.tile(np.load('input/inputs.npy', allow_pickle=True).item().get('Ca').reshape(self.max_num, 1, 1), (1, self.day, self.step))[:self.house_number]
+        self.inputs[:,:,:,7] = np.tile(np.load('input/inputs.npy', allow_pickle=True).item().get('Cm').reshape(self.max_num, 1, 1), (1, self.day, self.step))[:self.house_number]
+        self.inputs[:,:,:,8] = np.tile(np.load('input/inputs.npy', allow_pickle=True).item().get('Ua').reshape(self.max_num, 1, 1), (1, self.day, self.step))[:self.house_number]
         self.inputs[:,:,:,9] = np.full((self.house_number,self.day,self.step), self.house_number)
-        self.inputs[:,:,:,10] = np.load('input\\inputs.npy',allow_pickle=True).item().get('p')[:self.house_number]
-        self.inputs[:,:,:,11] = np.load('input\\inputs.npy',allow_pickle=True).item().get('h')[:self.house_number]
-        self.inputs[:,:,:,12] = np.tile(np.load('input\\inputs.npy',allow_pickle=True).item().get('sqft').reshape(self.max_num,1,1),(1,self.day,self.step))[:self.house_number]
+        self.inputs[:,:,:,10] = np.load('input/inputs.npy', allow_pickle=True).item().get('p')[:self.house_number]
+        self.inputs[:,:,:,11] = np.load('input/inputs.npy', allow_pickle=True).item().get('h')[:self.house_number]
+        self.inputs[:,:,:,12] = np.tile(np.load('input/inputs.npy', allow_pickle=True).item().get('sqft').reshape(self.max_num, 1, 1), (1, self.day, self.step))[:self.house_number]
         
-        self.unresponsive_load = (np.load('input\\aul.npy',allow_pickle=True).item().get(str(hn)))*(self.house_number/hn)   
-        self.rnn_q=np.load('input\\rnn_q.npy',allow_pickle=True).item().get(str(hn))
+        self.unresponsive_load = (np.load('input/aul.npy', allow_pickle=True).item().get(str(hn))) * (self.house_number / hn)
+        self.rnn_q=np.load('input/rnn_q.npy', allow_pickle=True).item().get(str(hn))
         self.agg_un_tesp=self.unresponsive_load.reshape(self.day,self.step)
         self.unres_load_list = self.unresponsive_load     
         
-        self.Y_bid_max = np.load('input\\minmax.npy',allow_pickle=True).item().get('outp_max')
-        self.Y_bid_min = np.load('input\\minmax.npy',allow_pickle=True).item().get('outp_min')
-        self.X_response_max = np.load('input\\minmax.npy',allow_pickle=True).item().get('inl_max')
-        self.X_response_min = np.load('input\\minmax.npy',allow_pickle=True).item().get('inl_min')
-        self.Y_response_max = np.load('input\\minmax.npy',allow_pickle=True).item().get('outl_max')
-        self.Y_response_min = np.load('input\\minmax.npy',allow_pickle=True).item().get('outl_min')
-        self.input_max = np.load('input\\input_max.npy')
-        self.input_min = np.load('input\\input_min.npy')
+        self.Y_bid_max = np.load('input/minmax.npy', allow_pickle=True).item().get('outp_max')
+        self.Y_bid_min = np.load('input/minmax.npy', allow_pickle=True).item().get('outp_min')
+        self.X_response_max = np.load('input/minmax.npy', allow_pickle=True).item().get('inl_max')
+        self.X_response_min = np.load('input/minmax.npy', allow_pickle=True).item().get('inl_min')
+        self.Y_response_max = np.load('input/minmax.npy', allow_pickle=True).item().get('outl_max')
+        self.Y_response_min = np.load('input/minmax.npy', allow_pickle=True).item().get('outl_min')
+        self.input_max = np.load('input/input_max.npy')
+        self.input_min = np.load('input/input_min.npy')
            
         self.inputs_norm = process_data_norm(self.inputs,self.input_max,self.input_min)
         

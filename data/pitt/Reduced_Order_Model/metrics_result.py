@@ -19,8 +19,8 @@ def plot_arl_full(num):
     time_ra=np.load('metrics\\time_ra'+str(housenum)+'.npy')
     print(time_ra)
     
-    price_tesp=np.load('input\\fullmodel_price.npy',allow_pickle=True).item().get(str(hn))
-    hvac_sum_tesp=np.load('input\\fullmodel_hvacload.npy',allow_pickle=True).item().get(str(hn))
+    price_tesp=np.load('input/fullmodel_price.npy', allow_pickle=True).item().get(str(hn))
+    hvac_sum_tesp=np.load('input/fullmodel_hvacload.npy', allow_pickle=True).item().get(str(hn))
     
     price_ra=np.load('metrics\\price_ra'+str(housenum)+'.npy',allow_pickle=True)
     load_ra=np.load('metrics\\hvacload'+str(housenum)+'.npy',allow_pickle=True)
