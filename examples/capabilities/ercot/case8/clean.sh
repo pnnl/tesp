@@ -1,0 +1,15 @@
+rm *.xml
+rm *auction.yaml
+rm *substation.yaml
+rm *metrics.json
+rm *.log
+rm *_opf.csv
+rm *_pf.csv
+rm ercot_8.csv
+rm *_FNCS_Config.txt
+rm *_ercot.json
+rm *_dict.json
+rm weather*.json
+rm *.zpl
+rm *.h5
+rm *.dat

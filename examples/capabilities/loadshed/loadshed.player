@@ -1,0 +1,7 @@
+#time	topic		value
+0	sw_status	1
+1800000000000	sw_status	0
+5400000000000	sw_status	1
+16200000000000	sw_status	0
+19800000000000	sw_status	1
+21600000000000   sw_status       1

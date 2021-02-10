@@ -1,0 +1,13 @@
+{
+	"name" : "gld1",
+	"period" : 1.0,
+	"subscriptions" : [
+		{"key" : "weather/temperature",   "type" : "double", "info" : {"object" : "exampleWeather", "property" : "temperature"}},
+		{"key" : "weather/humidity",      "type" : "double", "info" : {"object" : "exampleWeather", "property" : "humidity"}},
+		{"key" : "weather/solar_direct",  "type" : "double", "info" : {"object" : "exampleWeather", "property" : "solar_direct"}},
+		{"key" : "weather/solar_diffuse", "type" : "double", "info" : {"object" : "exampleWeather", "property" : "solar_diffuse"}},
+		{"key" : "weather/pressure",      "type" : "double", "info" : {"object" : "exampleWeather", "property" : "pressure"}},
+		{"key" : "weather/wind_speed",    "type" : "double", "info" : {"object" : "exampleWeather", "property" : "wind_speed"}}
+	]
+}
+

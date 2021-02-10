@@ -1,0 +1,175 @@
+name: dsostub
+time_delta: 15s
+broker: tcp://localhost:5570
+aggregate_sub: true
+aggregate_pub: true
+values:
+  LMP_DA_Bus_1:
+    topic: pypower/LMP_DA_Bus_1
+    default: 0
+  LMP_DA_Bus_2:
+    topic: pypower/LMP_DA_Bus_2
+    default: 0
+  LMP_DA_Bus_3:
+    topic: pypower/LMP_DA_Bus_3
+    default: 0
+  LMP_DA_Bus_4:
+    topic: pypower/LMP_DA_Bus_4
+    default: 0
+  LMP_DA_Bus_5:
+    topic: pypower/LMP_DA_Bus_5
+    default: 0
+  LMP_DA_Bus_6:
+    topic: pypower/LMP_DA_Bus_6
+    default: 0
+  LMP_DA_Bus_7:
+    topic: pypower/LMP_DA_Bus_7
+    default: 0
+  LMP_DA_Bus_8:
+    topic: pypower/LMP_DA_Bus_8
+    default: 0
+  LMP_RT_Bus_1:
+    topic: pypower/LMP_RT_Bus_1
+    default: 0
+  LMP_RT_Bus_2:
+    topic: pypower/LMP_RT_Bus_2
+    default: 0
+  LMP_RT_Bus_3:
+    topic: pypower/LMP_RT_Bus_3
+    default: 0
+  LMP_RT_Bus_4:
+    topic: pypower/LMP_RT_Bus_4
+    default: 0
+  LMP_RT_Bus_5:
+    topic: pypower/LMP_RT_Bus_5
+    default: 0
+  LMP_RT_Bus_6:
+    topic: pypower/LMP_RT_Bus_6
+    default: 0
+  LMP_RT_Bus_7:
+    topic: pypower/LMP_RT_Bus_7
+    default: 0
+  LMP_RT_Bus_8:
+    topic: pypower/LMP_RT_Bus_8
+    default: 0
+  CLR1:
+    topic: pypower/CLR_Bus1
+    default: 0.0
+    type: double
+    list: false
+  CLR2:
+    topic: pypower/CLR_Bus2
+    default: 0.0
+    type: double
+    list: false
+  CLR3:
+    topic: pypower/CLR_Bus3
+    default: 0.0
+    type: double
+    list: false
+  CLR4:
+    topic: pypower/CLR_Bus4
+    default: 0.0
+    type: double
+    list: false
+  CLR5:
+    topic: pypower/CLR_Bus5
+    default: 0.0
+    type: double
+    list: false
+  CLR6:
+    topic: pypower/CLR_Bus6
+    default: 0.0
+    type: double
+    list: false
+  CLR7:
+    topic: pypower/CLR_Bus7
+    default: 0.0
+    type: double
+    list: false
+  CLR8:
+    topic: pypower/CLR_Bus8
+    default: 0.0
+    type: double
+    list: false
+  LMP1:
+    topic: pypower/LMP_Bus1
+    default: 0.1
+    type: double
+    list: false
+  V1:
+    topic: pypower/three_phase_voltage_Bus1
+    default: 1.0
+    type: double
+    list: false
+  LMP2:
+    topic: pypower/LMP_Bus2
+    default: 0.1
+    type: double
+    list: false
+  V2:
+    topic: pypower/three_phase_voltage_Bus2
+    default: 1.0
+    type: double
+    list: false
+  LMP3:
+    topic: pypower/LMP_Bus3
+    default: 0.1
+    type: double
+    list: false
+  V3:
+    topic: pypower/three_phase_voltage_Bus3
+    default: 1.0
+    type: double
+    list: false
+  LMP4:
+    topic: pypower/LMP_Bus4
+    default: 0.1
+    type: double
+    list: false
+  V4:
+    topic: pypower/three_phase_voltage_Bus4
+    default: 1.0
+    type: double
+    list: false
+  LMP5:
+    topic: pypower/LMP_Bus5
+    default: 0.1
+    type: double
+    list: false
+  V5:
+    topic: pypower/three_phase_voltage_Bus5
+    default: 1.0
+    type: double
+    list: false
+  LMP6:
+    topic: pypower/LMP_Bus6
+    default: 0.1
+    type: double
+    list: false
+  V6:
+    topic: pypower/three_phase_voltage_Bus6
+    default: 1.0
+    type: double
+    list: false
+  LMP7:
+    topic: pypower/LMP_Bus7
+    default: 0.1
+    type: double
+    list: false
+  V7:
+    topic: pypower/three_phase_voltage_Bus7
+    default: 1.0
+    type: double
+    list: false
+  LMP8:
+    topic: pypower/LMP_Bus8
+    default: 0.1
+    type: double
+    list: false
+  V8:
+    topic: pypower/three_phase_voltage_Bus8
+    default: 1.0
+    type: double
+    list: false
+

@@ -1,0 +1,14 @@
+*.json
+*FNCS_Config.txt
+__pycache__/
+input/
+output/
+*.csv
+*.out
+launch*.sh
+*.xml
+*.inc
+weather.dat
+SGIP*substation.yaml
+SGIP1new/
+

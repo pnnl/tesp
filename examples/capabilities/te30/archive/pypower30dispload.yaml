@@ -1,0 +1,24 @@
+name: pypower
+time_delta: 5s
+broker: tcp://localhost:5570
+values:
+    SUBSTATION7:
+        topic: gridlabdSimulator1/distribution_load
+        default: 0
+    UNRESPONSIVE_PRICE:
+        topic: auction_Market_1/unresponsive_price
+        default: 0
+    UNRESPONSIVE_KW:
+        topic: auction_Market_1/unresponsive_kw
+        default: 0
+    RESPONSIVE_MAX_KW:
+        topic: auction_Market_1/responsive_max_kw
+        default: 0
+    RESPONSIVE_M:
+        topic: auction_Market_1/responsive_m
+        default: 0
+    RESPONSIVE_B:
+        topic: auction_Market_1/responsive_b
+        default: 0
+
+

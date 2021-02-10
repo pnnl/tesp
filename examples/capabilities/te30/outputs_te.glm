@@ -1,0 +1,50 @@
+// Weather information
+object recorder {
+	parent "localWeather";
+	property temperature,humidity,solar_flux;
+	interval 60;
+	file weather.csv;
+}
+// Energyplus load
+object recorder {
+	parent Eplus_meter;
+	property measured_real_power,measured_reactive_power,measured_voltage_AB;
+	interval 60;
+	file eplus_load.csv;
+}
+
+// Net load at substation
+//object recorder {
+//	parent network_node;
+//	property distribution_load,positive_sequence_voltage;
+//	interval 3;
+//	file substation_load.csv;
+//}
+
+// house debugging
+//object recorder {
+//	parent F1_house_A5;
+//	property cooling_setpoint,heating_setpoint,air_temperature,outdoor_temperature,cooling_demand,heating_demand,hvac_load,last_cooling_load,power_state,system_mode;
+//	interval 15;
+//	file F1_house_A5.csv;
+//}
+//object multi_recorder {
+//  file hvac_loads.csv;
+//  interval 3;
+//  property network_node:distribution_load.real, F1_house_A5:hvac_load, F1_house_A8:hvac_load, F1_house_A9:hvac_load, F1_house_A11:hvac_load, F1_house_A12:hvac_load, F1_house_A13:hvac_load, F1_house_A15:hvac_load, F1_house_A16:hvac_load, F1_house_A25:hvac_load, F1_house_A26:hvac_load, F1_house_A28:hvac_load, F1_house_B0:hvac_load, F1_house_B3:hvac_load, F1_house_B4:hvac_load, F1_house_B6:hvac_load, F1_house_B7:hvac_load, F1_house_B19:hvac_load, F1_house_B20:hvac_load, F1_house_B22:hvac_load, F1_house_B23:hvac_load, F1_house_B24:hvac_load, F1_house_C1:hvac_load, F1_house_C2:hvac_load, F1_house_C10:hvac_load, F1_house_C14:hvac_load, F1_house_C17:hvac_load, F1_house_C18:hvac_load, F1_house_C21:hvac_load, F1_house_C27:hvac_load, F1_house_C29:hvac_load;
+//}
+
+// bill debugging
+//object recorder {
+//	parent Eplus_meter;
+//	property bill_mode,monthly_fee,price,monthly_bill,monthly_energy,measured_real_power;
+//	interval 60.000000;
+//	file Eplus_bill.csv;
+//}
+//object recorder {
+//	parent F1_tpm_rt_C2;
+//	property bill_mode,monthly_fee,price,monthly_bill,monthly_energy,measured_real_power;
+//	interval 60.000000;
+//	file C2_bill.csv;
+//}
+
