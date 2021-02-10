@@ -139,16 +139,32 @@
 @Misc{11, Note={ANSI, "ANSI C84.1-2016; American National Standard for Electric
 Power Systems and Equipment—Voltage Ratings (60 Hz)," ed, 2016.}}
 
-@Misc{12, Note={IEEE, "IEEE Guide for Electric Power Distribution Reliability
-Indices," IEEE Std 1366-2012 (Revision of IEEE Std 1366-2003), pp.
-1-43, 2012.}}
 
-@Misc{13, Note={IEEE, "IEEE Guide for Collecting, Categorizing, and Utilizing
-Information Related to Electric Power DistributionInterruption Events,"
-IEEE Std 1782-2014, pp. 1-98, 2014.}}
+@article{12,
+	abstract = {Distribution reliability indices and factors that affect their calculations are defined in this guide. The indices are intended to apply to distribution systems, substations, circuits, and defined regions.},
+	author = {IEEE},
+	doi = {10.1109/IEEESTD.2012.6209381},
+	journal = {IEEE Std 1366-2012 (Revision of IEEE Std 1366-2003)},
+	keywords = {IEEE standards;power distribution reliability;substations;electric power distribution reliability indices;IEEE guide;substations;circuits;defined regions;IEEE Std 1366-2012;IEEE Std 1366-2003 revision;IEEE standards;Indexes;Power system reliability;Power distribution;Reliability;circuits;distribution reliability indices;distribution systems;electric power;IEEE 1366;reliability indices},
+	month = {May},
+	pages = {1-43},
+	title = {IEEE Guide for Electric Power Distribution Reliability Indices},
+	year = {2012}}
 
-@Misc{14, Note={ASHRAE, "ANSI/ASHRAE standard 55-2010 : thermal environmental
-conditions for human occupancy," 2010.}}
+
+@article{IEEE:2014aa,
+	abstract = {Reliability of electric power systems remains an important societal issue. While transmission disturbances draw national attention and scrutiny, service interruptions at the distribution level are the primary concern of the end-use customer and their regulatory and governmental representatives. Much effort has been expended in developing methods to uniformly and consistently quantify the reliability of distribution service based on electric system performance. However, the results of a nationwide survey of recorded information used for calculating distribution reliability indices performed in 1998 by the Working Group on System Design (now Distribution Reliability) indicate that significant inconsistencies exist in the data, categorization of that data, and in the collection processes used within the industry. This guide discusses the collection, categorization, and use of information related to electric power distribution interruption events and will be used in the development of industry guidelines. This guide presents a minimal set of data and a consistent categorization structure that, when used in combination with IEEE Std 1366(TM), will promote consistency in how the industry collects data for the purpose of benchmarking distribution system performance.},
+	author = {IEEE},
+	doi = {10.1109/IEEESTD.2014.6878409},
+	journal = {IEEE Std 1782-2014},
+	keywords = {IEEE standards;power distribution faults;power distribution reliability;power system management;electric power systems reliability;transmission disturbances;service interruptions;distribution level;end-use customer;distribution service reliability;electric system performance;distribution reliability indices;AD 1998;Working Group on System Design;electric power distribution interruption events;industry guidelines;IEEE Std 1366;IEEE Std 1782-2014;IEEE standards;Benchmarking;Power distribution;Power restoration;Power outages;Power reliability;Sampling methods;benchmarking;data collection;IEEE 1782(TM);outage management systems;power distribution reliability;reliability management;sampling methods},
+	month = {Aug},
+	pages = {1-98},
+	title = {IEEE Guide for Collecting, Categorizing, and Utilizing Information Related to Electric Power Distribution Interruption Events},
+	year = {2014}}
+
+@Misc{14, Note={ASHRAE, "ANSI/ASHRAE standard 55-2010 : Thermal Environmental
+Conditions for Human Occupancy," 2010.}}
 
 
 @Misc{15, Note={D. G. Holmberg, D. Hardin, R. Melton, R. Cunningham, and S.
@@ -185,21 +201,46 @@ https://pypi.python.org/pypi/PYPOWER}}
 	year = {2009}}
 
 @Misc{19, Note={J. K. Kok, C. J. Warmer, and I. G. Kamphuis, "PowerMatcher:
-multiagent control in the electricity infrastructure," presented at the
+Multiagent Control in the Electricity Infrastructure," presented at the
 Proceedings of the Fourth International joint conference on Autonomous
 agents and multiagent systems, The Netherlands, 2005.}}
 
 @Misc{20, Note={TeMix Inc. (2017). TeMix. Available: http://www.temix.net}}
 
-@Misc{21, Note={IEEE, "IEEE Standard for Modeling and Simulation (M&S) High Level
-Architecture (HLA)-- Federate Interface Specification," IEEE Std
-1516.1-2010 (Revision of IEEE Std 1516.1-2000), pp. 1-378, 2010.}}
 
-@Misc{22, Note={IEEE, "IEEE Standard for Modeling and Simulation (M&S) High Level
-Architecture (HLA)-- Framework and Rules," IEEE Std 1516-2010 (Revision
-of IEEE Std 1516-2000), pp. 1-38, 2010.}}
+@article{IEEE:2010aa,
+	abstract = {The High Level Architecture (HLA) has been developed to provide a common architecture for distributed modeling and simulation. The HLA defines an integrated approach that provides a common framework for the interconnection of interacting simulations. This document, the second in a family of three related HLA documents, defines the standard services of and interfaces to the HLA runtime infrastructure (RTI). These services are used by the interacting simulations to achieve a coordinated exchange of information when they participate in a distributed federation. The standards contained in this architecture are interrelated and need to be considered as a product set, when changes are made. They each have value independently.},
+	author = {IEEE},
+	doi = {10.1109/IEEESTD.2010.5954120},
+	journal = {IEEE Std 1516.1-2010 (Revision of IEEE Std 1516.1-2000)},
+	keywords = {IEEE standards;Metasearch;Computer architecture;Software architecture;User interfaces;Modeling;Simulatin;Object oriented modeling;architecture;class attribute;data distribution management;federate;federation;federation execution;federation object model;HLA;instance attribute;instance attribute ownership;interaction class;object class;runtime infrastructure;simulation object model;time-constrained;time-regulating},
+	month = {Aug},
+	pages = {1-378},
+	title = {IEEE Standard for Modeling and Simulation (M\&S) High Level Architecture (HLA)-- Federate Interface Specification - Redline},
+	year = {2010}}
 
-@Misc{23, Note={IEEE, "IEEE Standard for Modeling and Simulation (M&S) High Level
-Architecture (HLA)-- Object Model Template (OMT) Specification," IEEE
-Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000), pp. 1-110, 2010.}}
+
+
+@article{IEEE:2010ab,
+	abstract = {This standard, describing the framework and rules of the High Level Architecture (HLA), is the capstone document for a family of related HLA standards. It defines the HLA, its components, and the rules that outline the responsibilities of HLA federates and federations to ensure a consistent implementation. Simulations are abstractions of the real world, and no one simulation can solve all of the functional needs for the modeling and simulation community. It is anticipated that technology advances will allow for new and different modeling and simulation (M&amp;S) implementations within the framework of the HLA. The standards contained in this architecture are interrelated and need to be considred as a product set, as a change in one is likely to have an impact on the others. As such, the HLA is an integrated approach that has been developed to provide a common architecture for simulation.},
+	author = {IEEE},
+	doi = {10.1109/IEEESTD.2010.5553440},
+	journal = {IEEE Std 1516-2010 (Revision of IEEE Std 1516-2000)},
+	keywords = {computer architecture;distributed databases;general purpose computers;IEEE standards;virtual machines;high level architecture;HLA standards;simulation object model;capstone document;IEEE standards;IEEE standards;Modeling;Simulation;Computer architecture;Metasearch;architecture;class attribute;federate;federation;federation execution;federation object model;framework;High Level Architecture;instance attribute;interaction class;joined federate;object class;object model template;rules;runtime infrastructure;simulation object model},
+	month = {Aug},
+	pages = {1-38},
+	title = {IEEE Standard for Modeling and Simulation (M\&S) High Level Architecture (HLA)-- Framework and Rules},
+	year = {2010}}
+
+
+@article{IEEE:2010ac,
+	abstract = {High Level Architecture (HLA)-Object Model Template (OMT) specification defines the format and syntax (but not content) of HLA object models. Simulations are abstractions of the real world, and no one simulation can solve all of the functional needs for the modeling and simulation community. It is anticipated that advances in technology will allow for new and different modeling and simulation (M&amp;S) implementations within the framework of the HLA. The standards contained in this architecture are interrelated and need to be considered as a product set, as a change in one is likely to have an impact on the others. As such, the HLA is an integrated approach that has been developed to provide a common architecture for simulation. Keywords: architecture, class attribute, data distribution management, federate, federation, federation execution, federation object model, framework, High Level Architecture, instance attribute, instance attribute ownership, interaction class, joined federate, object class, object model template, rules, runtime infrastructure, simulation object model, time-constrained, time-regulating.},
+	author = {IEEE},
+	doi = {10.1109/IEEESTD.2010.5557731},
+	journal = {IEEE Std 1516.2-2010 (Revision of IEEE Std 1516.2-2000)},
+	keywords = {formal specification;software architecture;IEEE standard;high level architecture;OMT specification;object model template specification;HLA object models;HLA modeling-and-simulation implementation;IEEE standards;Computational modeling;Distributed databases;Computer architecture;Metasearch;Data models;architecture;class attribute;data distribution management;federate;federation;federation execution;federation object model;framework;High Level Architecture;instance attribute;instance attribute ownership;interaction class;joined federate;object class;object model template;rules;runtime infrastructure;simulation object model;time-constrained;time-regulating},
+	month = {Aug},
+	pages = {1-110},
+	title = {IEEE Standard for Modeling and Simulation (M\&S) High Level Architecture (HLA)-- Object Model Template (OMT) Specification},
+	year = {2010}}
 
