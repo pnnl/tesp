@@ -1,0 +1,11 @@
+*.out
+*.csv
+*.txt
+*.log
+*.xml
+*.pcap
+*.o
+*.class
+*.pid
+loadshedCommNetwork
+__pycache__/
