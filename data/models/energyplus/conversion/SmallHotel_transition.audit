@@ -1,0 +1,118 @@
+
+Conversion 8.3 => 8.4
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+
+Conversion 8.4 => 8.5
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+
+Conversion 8.5 => 8.6
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+
+Conversion 8.6 => 8.7
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+
+Conversion 8.7 => 8.8
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+
+Conversion 8.8 => 8.9
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+
+Conversion 8.9 => 9.0
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+   ** Warning ** IP: IDF line~24599 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24605 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24611 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24617 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24623 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24629 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24635 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24641 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24647 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24653 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24659 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24665 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+
+Conversion 9.0 => 9.1
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+   ** Warning ** IP: IDF line~24498 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24504 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24510 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24516 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24522 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24528 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24534 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24540 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24546 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24552 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24558 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24564 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+
+Conversion 9.1 => 9.2
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+   ** Warning ** IP: IDF line~24624 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24630 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24636 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24642 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24648 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24654 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24660 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24666 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24672 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24678 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24684 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24690 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+
+Conversion 9.2 => 9.3
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\SmallHotel.idf
+   ** Warning ** IP: IDF line~24624 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24630 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24636 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24642 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24648 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24654 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24660 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24666 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24672 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24678 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24684 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~24690 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat

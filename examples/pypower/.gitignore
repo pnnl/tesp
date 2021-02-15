@@ -1,8 +1,0 @@
-*.out
-*.csv
-*.log
-__pycache__/
-*.json
-process_pypower.py
-fncs*.py
-out.txt

@@ -1,0 +1,86 @@
+
+Conversion 8.3 => 8.4
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+
+Conversion 8.4 => 8.5
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+
+Conversion 8.5 => 8.6
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+
+Conversion 8.6 => 8.7
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+
+Conversion 8.7 => 8.8
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+
+Conversion 8.8 => 8.9
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+
+Conversion 8.9 => 9.0
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+   ** Warning ** IP: IDF line~2924 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2930 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2936 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2942 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+
+Conversion 9.0 => 9.1
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+   ** Warning ** IP: IDF line~2923 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2929 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2935 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2941 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+
+Conversion 9.1 => 9.2
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+   ** Warning ** IP: IDF line~2933 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2939 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2945 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2951 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+
+Conversion 9.2 => 9.3
+ Starting new Transition.audit
+ Will create new full IDFs
+ Will create new IDF lines with units where applicable
+ Will create new IDF lines leaving blank incoming fields as blank (no default fill)
+ Processing IDF -- C:\Users\mcde601\src\Buildings\tesp\StandaloneRetail.idf
+   ** Warning ** IP: IDF line~2933 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2939 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2945 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat
+   ** Warning ** IP: IDF line~2951 Obsolete object=AirTerminal:SingleDuct:Uncontrolled, encountered.  Should be replaced with new object=AirTerminal:SingleDuct:ConstantVolume:NoReheat

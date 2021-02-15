@@ -1,5 +1,0 @@
-#loadshed/sw_status
-source loadshed/sw_status
-#source gridlabdSimulator1/sw_status
-#capture loadshed
-#capture gridlabdSimulator1
