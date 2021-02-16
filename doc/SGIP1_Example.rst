@@ -39,7 +39,7 @@ Key Performance Metrics Definitions
 
 Social Welfare:
 
-..math::
+.. math::
 
  SW = \sum_{i=1}^{N_L}U_i(p_i^L) - \sum_{j=1}^{N_G}C_j(p_j^G)
 
