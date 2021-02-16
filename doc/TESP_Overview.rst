@@ -48,32 +48,29 @@ The Transactive Energy Simulation Platform (TESP) has been developed by Pacific 
 TESP Software Stack Overview
 ============================
 
-:numref:`fig_federates` shows the simulation modules federated in TESP.  
+:numref:`fig_federates` shows ta typical co-simulation software stack when using TESP for TE analysis.  
 GridLAB-D covers the electric power distribution system :cite:`3` and residential
-buildings. 
-PYPOWER, MATPOWER/MOST or AMES covers the Transmission System Operator (TSO). 
-:cite:`4,17`. OpenDSS is an alternative distribution power flow program.
-EnergyPlus covers large commercial buildings :cite:`5`. ns-3 is a communication
-system simulator that can also host software agents. The integrating Message
-Bus, using either the Hierarchical Engine for Large-scale Infrastructure Co-Simulation 
+buildings (OpenDSS is a similar alternative). 
+PYPOWER, MATPOWER/MOST or AMES covers the bulk power system and the transmission system operator (TSO). 
+:cite:`4,17`. 
+EnergyPlus covers large commercial buildings :cite:`5` and ns-3 is a communication
+system simulator that can also host software agents. The integrating message
+bus, using either the Hierarchical Engine for Large-scale Infrastructure Co-Simulation 
 (HELICS) or Framework 
 for Network Co-simulation (FNCS), manages the time step synchronization and 
 message exchange among all of the federated simulation modules :cite:`Ciraci:2014ud`.  
 In this way, TESP builds mostly on proven components, 
-which helps mitigate risk in software development.  Some of these 
-components may be upgraded or replaced in future versions, as described 
-later.  However, the overall platform design in :numref:`fig_federates` still applies.  
+which helps mitigate risk in software development. 
 
 .. figure:: ./media/Federates.png
 	:name: fig_federates
 
 	TESP Rev 1 components federated through FNCS and/or HELICS.
 
-The user interacts with TESP by configuring simulation cases (magenta) and 
-then running them.  Simulation federates or Agents write intermediate outputs
+Assuming this software stack satisfies the needs of the particular analysis, the user interacts with TESP by configuring simulation cases (magenta) and 
+then running them.  Simulation federates or Agents, write intermediate outputs
 and metadata (green), which the user plots, post-processes and analyzes to
-reach conclusions. In order to implement new functionality, the user would
-write new TESP Developer Agents (orange), starting from one of the examples provided.
+reach conclusions. 
 
 (Some of of the simulators and agents in :numref:`fig_federates` have to be configured
 by hand. OpenDSS writes output in its native, non-TESP format, and EnergyPlus writes
@@ -81,34 +78,11 @@ output only through the Buildings agent; these are indicated with dashed green l
 The ns-3 simulator doesn't write output; it's presently used in just one example, for
 which the GridLAB-D outputs are adequate.)
 
-Most of the new Agents in :numref:`fig_federates` were implemented in the Python 
-programming language, which was chosen because: 
-
-1. Python is now commonly used in colleges to teach new programmers
-
-2. Python has many available add-on packages for numerics, graphics and
-   data handling
-
-3. Python bindings to FNCS already existed
-
-Custom code for TESP can also be implemented in other languages like C++
+Most of the Agents in :numref:`fig_federates` were implemented in the Python 
+programming language, though custom code for TESP can also be implemented in other languages like C++
 and Java. To demonstrate, the Buildings agent was implemented in C++ and
-one version of the simple Load Shed agent was written in Java. Our
-experience has been that developers with experience in C++ or Java can
-easily work in Python, while the converse is not always true. These
-factors led to the choice of Python as a default language for
-customizing TESP.
+one version of one of the examples distributed with TESP (Load Shed) has an agent was written in Java. 
 
-Initially, the TEAgents include a double-auction market mechanism, one
-per substation, and a dual-ramp thermostat controller, one per house
-:cite:`7`. These were previously hard-coded in GridLAB-D, and
-those implementations remain in GridLAB-D, but the separate Python
-versions allow others to study and modify just the transactive code
-without having to rebuild all of GridLAB-D. Much of the future work
-envisioned for TESP would focus on significantly expanding the numbers
-and capabilities of TEAgents. Regarding the other new work highlighted
-in :numref:`fig_federates`, section 1.3 (next) describes the Growth Model and section
-1.5 describes the Valuation scripts.
 
 
 Overview of Transactive Energy Analysis Process
