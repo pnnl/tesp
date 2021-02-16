@@ -6,7 +6,7 @@
 What Is Transactive Energy?
 =====================================
 
-Let's start from the beginning: what is transactive energy? Though there are many definitions the one we'll use here comes from the GridWise Architecture Council :cite:`GridwiseArchitectureCouncil:2019aa`::
+Let's start from the beginning: what is transactive energy? Though there are many definitions the one we'll use here comes from the GridWise Architecture Council:cite:`GridwiseArchitectureCouncil:2019aa`
     
     A system of economic and control mechanisms that allows the dynamic balance of supply and demand across the entire electrical infrastructure using value as a key operational parameter.
 
