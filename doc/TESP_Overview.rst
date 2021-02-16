@@ -25,7 +25,8 @@ Transactive Energy Simulation Platform (TESP)
 
 .. sidebar:: Transactive Systems Program
 
-  |logo|
+  .. figure:: ./media/Transactive.png
+	:name: logo
 
 Traditionally, analysis of power systems has been split cleanly between the bulk power system (*e.g.* long-distance transmission lines connecting large generation to large load centers like cities) and the distribution system (*e.g.* neighborhoods). This separation has been motivated by different needs. The bulk power system is often concerned with finding the most economical means of dispatching generators to meet the expected load or trying to determine the most economical expansion of the power system. Distribution system planners have been concerned with appropriately sizing the power lines the run through a neighborhood or what measures need to be made to ensure good voltage management.
 
