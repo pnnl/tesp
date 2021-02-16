@@ -37,11 +37,61 @@ Transactive Mechanism Flowchart (Sequence Diagram)
 Key Performance Metrics Definitions
 ...................................
 
-Social Welfare:
+Some (but not all) of the key performance metrics used in this analysis are as follows. The entire metric list can be found in :cite:`Hammerstrom:2017ta`
+
+.. Social Welfare:
+
+    .. math::
+
+    SW = \sum_{i=1}^{N_L}U_i(p_i^L) - \sum_{j=1}^{N_G}C_j(p_j^G)
+ 
+     where 
+    :math: `U_i()` are the utility functions of the individual loads
+    :math: `C_j()` are the utility functions of the individual generators 
+    :math: `p_i^L` is the power consumption of the individual loads
+    :math: `p_j^G` is the power generation of the individual generators
+    :math: `N_L` is the total number of loads
+    :math: `N_G` is the total number of generators
+    
+Electrical energy per day
+    
+.. math::
+    
+    EE_{day} = \sum_{t=0}^t_{day} P_{sub}
+    
+where
+    :math: `t` is simulation time
+    :math: `t_{day}` is the last simulated time for each day
+    :math: `P_{sub}` is the real power for the feeder as measured at the substation
+    
+Electrical energy per day per customer:
+ 
+.. math::
+ 
+    EE_{day * cust} = EE_{day} / N_c
+
+where
+    :math: `N_c` is the number of customers
+    
+Electrical energy fee per day:
 
 .. math::
 
- SW = \sum_{i=1}^{N_L}U_i(p_i^L) - \sum_{j=1}^{N_G}C_j(p_j^G)
+    EF_{day} =  \sum_{t=0}^t_{day} LMP_{sub}
+    
+where
+    :math: `t` is simulation time
+    :math: `t_{day}` is the last simulated time for each day
+    :math: `LMP_{sub}` is the real power for the feeder as measured at the substation
+    
+Electrical energy per day per customer:
+ 
+.. math::
+ 
+    EF_{day * cust} = EF_{day} / N_c
+
+where
+    :math: `N_c` is the number of customers
 
 
 SGIP 1 Model Overview
