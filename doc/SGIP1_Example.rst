@@ -57,7 +57,7 @@ Electrical energy per day
     
 .. math::
     
-    EE = \sum_{t=0}^{t_{day}} P_{sub}
+    EE_{day} = \sum_{t=0}^{t_{day}} P_{sub}
     
 where
 
@@ -73,16 +73,17 @@ Electrical energy per day per customer:
  
 .. math::
  
-    EE_{day * cust} = EE_{day} / N_c
+    EE_{cust \cdot day} = EE_{day} / N_c
 
 where
+
     :math:`N_c` is the number of customers
     
 Electrical energy fee per day:
 
 .. math::
 
-    EF_{day} =  \sum_{t=0}^t_{day} LMP_{sub}
+    EF_{day} =  \sum_{t=0}^{t_{day}} LMP_{sub}
     
 where
 
@@ -96,9 +97,10 @@ Electrical energy per day per customer:
  
 .. math::
  
-    EF_{day * cust} = EF_{day} / N_c
+    EF_{cust \cdot day} = EF_{day} / N_c
 
 where
+
     :math:`N_c` is the number of customers
 
 
