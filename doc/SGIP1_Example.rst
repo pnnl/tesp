@@ -1,175 +1,47 @@
-SGIP and TE30 Examples
+SGIP Analysis Example
 ======================
 
-TE30 Example
-------------
+Problem Description and Analysis Goals
+--------------------------------------
 
-:numref:`fig_te30` shows a reduced-order demonstration model that
-incorporates all three federated co-simulators; GridLAB-D simulating 30
-houses, EnergyPlus simulating one large building, and PYPOWER or
-MATPOWER simulating the bulk system. This model can simulate two days of
-real time in several minutes of computer time, which is an advantage for
-demonstrations and early testing of new code. There aren’t enough market
-participants or diverse loads to produce realistic results at scale.
-Even so, this model is the recommended starting point for TESP.
+The Smart Grid Interoperability Panel (SGIP), as a part of its work, defined a number of scenarios for use in understanding ways in which transactive energy can be applicable. The first of these (hereafter referred to as "SGIP1") is a classic use case for transactive energy :cite:`15`:
 
-.. figure:: ./media/TE30system.png
-	:name: fig_te30
+   The weather has been hot for an extended period, and it has now reached an afternoon extreme temperature peak. Electricity, bulk-generation resources have all been tapped and first-tier DER resources have already been called. The grid operator still has back-up DER resources, including curtailing large customers on interruptible contracts. The goal is to use TE designs to incentivize more DER to participate in lowering the demand on the grid.
 
-	Demonstration model with 30 houses and a school
+To flesh out this example the following additions and/or assumptions were made:
 
-The three-phase unresponsive load comes from a GridLAB-D player file on
-each phase, connected to the feeder primary. The EnergyPlus load
-connects through a three-phase padmount transformer, while the houses
-connect through single-phase transformers, ten per phase. Except for
-transformers, all of the line impedances in this model are negligible.
-One of the house loads has been shown in more detail. It includes a
-responsive electric cooling load, lights, and several non-responsive
-appliances. In addition, each house has a solar panel connected through
-an inverter to the same meter, which might or might not implement net
-metering. Storage, vehicle chargers and other appliances (e.g. electric
-water heater) could be added. For now, each house is assumed to have gas
-heat and gas water heater.
+     - The scenario will take place in Tucson Arizona where hot weather events that stress the grid are common.
+     - The scenario will span two days with similar weather but the second day will include a bulk power system generator outage that will drive real-time prices high enough to incentivize participation by transactively enabled DERs.
+     - Only HVACs will be used to respond to transactive signals
+     - Roughly 50% of the HVACs on one particular feeder will participate in the transactive system. All other feeders will be modeled by a loadshape that is not price-responsive. **TODO: Determine how much of the total system load is price-responsive.**
+     
 
-SGIP Use Cases
---------------
+The goal of this analysis are as follows:
 
-TESP will initially respond to four of the Smart Grid Interoperability
-Panel (SGIP) use cases :cite:`15` and an additional use case
-to illustrate the growth model.
+    - Evaluate the effectiveness of using transactively enabled DERs for reducing peak load.
+    - Evaluate the value exchange for residential customers in terms of comfort lost and monetary compensation.
+    - Demonstrate the capabilities of TESP to perform transactive system co-simulations.
 
-*SGIP-1 and SGIP-6*. “The grid is severely strained in capacity and
-requires additional load shedding/shifting or storage resources”
-:cite:`15`. The details confirm that this use case addresses
-only generation capacity constraints of the type that might be needed
-after existing demand-response resources become exhausted.
 
-This use case clearly takes place on a day that available resources are
-inadequate in a warm location like California or Arizona. In the
-base-case scenario, the system anticipates the event that morning or
-even earlier. Contracted demand-response resources—predominantly
-distributed generator sets―are scheduled to actuate during the day at
-the predicted time of the peak load. While helpful, the demand response
-proves inadequate. Therefore, each distribution utility must also
-conduct emergency curtailment, meaning that entire distribution circuits
-must be intentionally de-energized to reduce system demand. Each utility
-is allocated a fraction of the total shortfall to correct.
+Valuation Model
+---------------
 
-In the test scenario, nearly everything remains the same, except a
-double-auction transactive market is coordinating battery energy storage
-and residential space conditioning and electric water heaters. These
-controllable assets are presumed to not be contracted by and to not
-participate in conventional demand-response. As the last available
-resources become dispatched, the costly final resources elevate the
-transactive price signal, thus causing transactive assets to respond.
-The demand-response resources are dispatched as for the base case,
-presuming they were scheduled that morning without consideration of the
-transactive system’s response. As the peak demand nears, the need for
-emergency curtailment might be reduced or fully avoided by the actions
-of the transactive system.
+Value Flow Diagram
+..................
 
-The principal valuation metrics for this use case address the costs and
-inconvenience of the emergency curtailment. Interesting impacts include
-changes in the numbers of customers curtailed, the durations of the
-emergency curtailment, and unserved load.
 
-*SGIP-2*. “DER are engaged based on economics and location to balance
-wind resources” :cite:`15`. The scenario narrative states
-that ramping, not balancing or fast regulation, should be the target
-grid service for this use case.
+Transactive Mechanism Flowchart (Sequence Diagram)
+..................................................
 
-This use case requires that bulk wind resources are a substantial
-fraction (40%) of the region’s bulk resource mix. Wind resources are
-highly correlated across the region. If the wind resource disappears
-rapidly, then other resources must be rapidly dispatched to replace the
-wind energy. This challenge is exacerbated if it occurs while other
-demand is increasing. If, however, wind resource materializes rapidly,
-other resources must ramp down, and this challenge is amplified if it
-occurs while other demand is decreasing. The ideal test day includes
-both the rapid ramping up and down of wind resource.
 
-In the base case, supply is scheduled every hour or half-hour. The
-system must always allow a margin—ramping reserves―both up and down
-should these ramping services be needed. The system counteracts rapid
-changes in wind, both up and down, by controlling hydropower generation
-and spinning reserves :cite:`15`. The cost of doing this is
-often modest, given that hydropower generation might not even be the
-marginal resource. But the costs might understate the fact that more
-expensive resources might be used to provide this margin, and provision
-of ramping might impact hydropower generation maintenance costs. The
-cost of reserving resources is incurred regardless whether the system is
-ramping up or down. These reserves, as well as the costs of providing
-them, are addressed centrally by the system. The provision of ramping
-services is not isolated in that the quality of response might excite
-balancing and regulation services to become engaged.
+Key Performance Metrics Definitions
+...................................
 
-In the test case, a transactive system is in operation, but the system
-otherwise operates the same.
+Social Welfare:
 
-We do not expect the double-auction transactive system to be
-particularly helpful for this use case. The dispatch algorithm generates
-the equivalent of a locational marginal price, which is responsive to
-the locational cost of marginal resource, efficiency, and transport
-constraints. While there will be some benefit caused by the transactive
-period being shorter than the scheduling interval, the transactive
-system here will respond to the marginal cost, which does not reflect
-ramping service costs. So, as wind ramps up and down, there will be a
-corresponding helpful reduction and increase in the transactive price
-signal. However, the transactive signal is not designed to align with
-the scheduling intervals and the corresponding needs for ramping
-services that result within each scheduling interval.
+..math::
+ SW = \sum_{i=1}^{N_L}U_i(p_i^L) - \sum_{j=1}^{N_G}C_j(p_j^G)
 
-Primary impacts will address ramping reserves and their costs under the
-alternative scenarios.
-
-*SGIP-3*. “High-penetration of rooftop solar PV causes swings in voltage
-on distribution grid” :cite:`15`. Solar generation capacity
-is stated to be up to 120% of load. Reversals of power flow can occur.
-Solar power intermittency creates corresponding voltage power quality
-issues. We choose to focus on the voltage management challenge, given
-that flow reversal is not itself a problem if it makes sense for system
-economics.
-
-In the base case, this condition might today be disallowed at the
-planning stage because of the challenges that reversed power flow might
-induce in protection schemes. Presuming such high penetration and
-reversed flows are allowed, the distribution feeder must use its
-existing resources—capacitors, reactors, regulating transformers—to keep
-voltage in its acceptable range. Solar power inverters mostly correct to
-unity power factor today. Voltage tends to increase, if uncorrected, at
-times that solar power is injected into the distribution system. It is
-likely that this feeder will encounter voltage violations and flicker
-because of the high penetration and intermittency of the PV generation.
-
-In the test case, the double-auction transactive system is operating on
-the high-solar-penetration feeder. Voltage management is not directly
-targeted by transactive mechanisms today, but the behaviors of the
-mechanisms can affect voltage management.
-
-The primary impacts will be changes in the occurrences of voltage range
-violations, power quality events, and operations of voltage controls
-(e.g., tap changes) on the feeder.
-
-*SGIP-6*. “A sudden transmission system constraint results in emergency
-load reductions” :cite:`15`. A distribution system network
-operator with a system having 150 MW peak winter load is given
-15-minutes advance notice by his transmission supplier to curtail 40 MW.
-The curtailment is to last 2 hours. The distribution system network
-operator has no generation resources of his own to use. Business as
-usual mitigation is to conduct rolling blackouts. Alternatives exist if
-some or all of the emergency curtailment can be satisfied by DER
-:cite:`15`. Alternatively, the event might be naturally
-exercised by emulating contingency and maintenance outages. These events
-would then be stochastic in their occurrences.
-
-SGIP-6 is very similar to SGIP-1, but it is caused by a system
-constraint rather than inadequate supply resources. It can be emulated
-by reducing the capacity of transmission or distribution that supply the
-test feeders. Refer to our discussion of SGIP-1 for the remedial
-actions, including conventional demand response, emergency curtailment,
-and double-auction transactive system that will be used in the base case
-and test scenarios. The valuation metrics and impacts are expected to be
-the same.
 
 SGIP 1 Model Overview
 ---------------------
