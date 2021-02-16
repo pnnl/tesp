@@ -6,7 +6,7 @@
 What Is Transactive Energy?
 =====================================
 
-Let's start from the beginning: what is transactive energy? Though there are many definitions the one we'll use here comes from the GridWise Architecture Council :cite:`GridwiseArchitectureCouncil:2019aa`
+Let's start from the beginning: what is transactive energy? Though there are many definitions the one we'll use here comes from the GridWise Architecture Council :cite:`Gridwise-Architecture-Council:2019aa`
     
     A system of economic and control mechanisms that allows the dynamic balance of supply and demand across the entire electrical infrastructure using value as a key operational parameter.
 
@@ -36,6 +36,7 @@ Given these more complex analysis requirements, a more complex simulation techni
 Co-simulation allows the analysis of more complex and larger scale power system problems than would be possible otherwise but comes with the cost of complexity. The individual simulation tools used in the co-simulation need to integrated into the co-simulation platform so they can send and receive messages with other tools. Each tool needs to be configured to not only use the appropriate models but also to send and receive the correct messages. The data coming out of all the simulation tools needs to be synthesized and analyzed to form conclusions.
 
 The Transactive Energy Simulation Platform (TESP) has been developed by Pacific Northwest National Laboratory (PNNL) under funding and direction by the United States Department of Energy to minimize the barriers of transactive energy analysis (the complexities of co-simulation being chief among them) to allow for more efficient and effective analysis of potential transactive energy schemes. Specifically, TESP aims to provide:
+
     - Appropriate simulation tools to model common transactive scenarios
     - Integrated simulation tools into a co-simulation platform
     - Generic models and other input datasets that may be needed for transactive analysis.
