@@ -57,13 +57,18 @@ Electrical energy per day
     
 .. math::
     
-    EE = \sum_{t=0}^t_{day} P_{sub}
+    EE = \sum_{t=0}^{t_{day}} P_{sub}
     
 where
+
     :math:`t` is simulation time
+    
     :math:`t_{day}` is the last simulated time for each day
+    
     :math:`P_{sub}` is the real power for the feeder as measured at the substation
     
+    
+
 Electrical energy per day per customer:
  
 .. math::
@@ -80,8 +85,11 @@ Electrical energy fee per day:
     EF_{day} =  \sum_{t=0}^t_{day} LMP_{sub}
     
 where
+
     :math:`t` is simulation time
+    
     :math:`t_{day}` is the last simulated time for each day
+    
     :math:`LMP_{sub}` is the real power for the feeder as measured at the substation
     
 Electrical energy per day per customer:
