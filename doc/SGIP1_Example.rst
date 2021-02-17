@@ -54,6 +54,7 @@ Some (but not all) of the key performance metrics used in this analysis are as f
     :math: `N_G` is the total number of generators
     
 Electrical energy per day
+,,,,,,,,,,,,,,,,,,,,,,,,
     
 .. math::
     
@@ -70,6 +71,7 @@ where
     
 
 Electrical energy per day per customer:
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
  
 .. math::
  
@@ -79,7 +81,10 @@ where
 
     :math:`N_c` is the number of customers
     
+    
+    
 Electrical energy fee per day:
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 .. math::
 
@@ -93,7 +98,10 @@ where
     
     :math:`LMP_{sub}` is the real power for the feeder as measured at the substation
     
+    
+    
 Electrical energy per day per customer:
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
  
 .. math::
  
@@ -104,8 +112,19 @@ where
     :math:`N_c` is the number of customers
 
 
-SGIP 1 Model Overview
+
+Analysis Design Model
 ---------------------
+
+Description of the planned analysis process showing how all the various analysis steps lead towards the computation of the key performance metrics. 
+
+Also include definitions of the validation metrics and shows the analysis process that will lead to their calculation.
+
+The level of detail is somewhat subjective and up to those leading the analysis. There must be sufficient detail to avoid the biggest surprises when planning the execution of the analysis but a highly detailed plan is likely to be more effort than it is worth.
+
+
+Simulated System Model
+----------------------
 
 :numref:`fig_sgip1` shows the types of assets and stakeholders considered for the
 use cases in this version. The active market participants include a
@@ -128,7 +147,7 @@ yet been implemented.
 	SGIP-1 system configuration with partial PV and storage adoption
 
 The Circuit Model
------------------
+.................
 
 :numref:`fig_pp_sgip1` shows the bulk system model in PYPOWER. It is a small system
 with three generating units and three load buses that comes with
@@ -178,8 +197,9 @@ passive response.
 
 	Elementary School Model
 
+
 The Growth Model
-----------------
+................
 
 This version of the growth model has been implemented for yearly
 increases in PV adoption, storage adoption, new (greenfield) houses, and
@@ -213,35 +233,23 @@ operate autonomously in load-following mode.
   | Year 3        | 1594         | 755                    | 1151               | 464              | 253                   |
   +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
 
-Insights and Lessons Learned
-----------------------------
+Simulation Architecture Model
+-----------------------------
 
-A public demonstration and rollout of TESP was included in a workshop on
-April 27, 2017, in Northern Virginia. That workshop marked the end of
-TESP’s first six-month release cycle. The main accomplishment, under our
-simulation task, is that all of the essential TESP components are
-working over the FNCS framework and on multiple operating systems. This
-has established the foundation for adding many more features and use
-case simulations over the next couple of release cycles, as described in
-Section 3. Many of these developments will be incremental, while others
-are more forward-looking.
+Provides details into the design of the software to execute the analysis, leading to the ability to calculate the key performance and validation metrics. 
 
-Two significant lessons have been learned in this release cycle, meaning 
-those two things need to be done differently going forward.  The first 
-lesson relates to MATPOWER.  It has been difficult to deploy compiled 
-versions of MATPOWER on all three operating systems, and it will be 
-inconvenient for users to manage different versions of the required MATLAB 
-runtime.  This is true even for users who might already have a full 
-version of MATLAB.  Furthermore, we would need to modify MATPOWER source 
-code in order to detect non-convergence and summarize transmission system 
-losses.  This led us to replace MATPOWER with PYPOWER :cite:`17` for 
-the public releases of TESP.  During 2019, TESP will be able to use 
-AMES for day-ahead markets and unit commitment :cite:`18`.  
 
-The second lesson relates to EnergyPlus modeling, which is a completely
-different domain than power system modeling. We were able to get help
-from other PNNL staff to make small corrections in the EnergyPlus model
-depicted in :numref:`fig_school`, but it’s clear we will need more building model
-experts on the team going forward. This will be especially true as we
-integrate VOLTTRON-based agents into TESP.
+Analysis Results - Model Validation
+-----------------------------------
+
+Using the metrics and data presentations previously defined, demonstrate that the behavior of the model is reasonable.
+
+Analysis Results - Key Performance Metrics
+------------------------------------------
+
+Summary metrics results, likely in tabular form. May copy results from publications
+
+Related Publications
+--------------------
+
 
