@@ -1,0 +1,25 @@
+{
+  "bulkpower_bus": "TBD",
+  "FedName": "gld1",
+  "transformer_MVA": 12.0,
+  "feeders": {
+    "network_node": {
+      "house_count": 0,
+      "inverter_count": 0,
+      "base_feeder": "GC-12.47-1"
+    }
+  },
+  "billingmeters": {},
+  "houses": {},
+  "inverters": {},
+  "capacitors": {
+    "GC_12_47_1_cap_1": {
+      "feeder_id": "network_node"
+    }
+  },
+  "regulators": {
+    "GC_12_47_1_reg_1": {
+      "feeder_id": "network_node"
+    }
+  }
+}

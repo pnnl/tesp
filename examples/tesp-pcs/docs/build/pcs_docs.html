@@ -1,0 +1,274 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>1. Prototypical Communication System (PCS) &mdash; TESP-PCS 1.0.2 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom_style.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="2. Code documentation" href="code_docs.html" />
+    <link rel="prev" title="TESP - prototypical communication system development" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> TESP-PCS
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Prototypical Communication System (PCS)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#gridlab-d-prototypical-taxonomy-feeder-graph-vs-gridlab-d-populated-feeder">1.1. GridLAB-D Prototypical Taxonomy Feeder Graph VS GridLAB-D Populated Feeder</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code_docs.html">2. Code documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TESP-PCS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">1. </span>Prototypical Communication System (PCS)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/pcs_docs.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="prototypical-communication-system-pcs">
+<h1><span class="section-number">1. </span>Prototypical Communication System (PCS)<a class="headerlink" href="#prototypical-communication-system-pcs" title="Permalink to this headline">¶</a></h1>
+<p>To build an ns-3 PCS, the ns-3 code requires a configuration file in JSON format to provide the node names and locations together with the links between. The JSON configuration files follows the current format and structure provided by the <code class="docutils literal notranslate"><span class="pre">networkx</span> <span class="pre">Version</span> <span class="pre">2.5</span></code> Python module, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">object</span> <span class="p">{</span><span class="mi">5</span><span class="p">}</span>
+  <span class="n">directed</span> <span class="p">:</span> <span class="n">false</span>
+  <span class="n">multigraph</span> <span class="p">:</span> <span class="n">false</span>
+  <span class="n">graph</span> <span class="p">{</span><span class="mi">0</span><span class="p">}</span>
+  <span class="n">nodes</span> <span class="p">[</span><span class="mi">7089</span><span class="p">]</span>
+    <span class="mi">0</span> <span class="p">{</span><span class="mi">3</span><span class="p">}</span>
+      <span class="nb">id</span> <span class="p">:</span> <span class="n">R1_12_47_1_tn_1</span>
+      <span class="n">nclass</span> <span class="p">:</span> <span class="n">node</span>
+      <span class="n">ndata</span> <span class="p">{</span><span class="mi">2</span><span class="p">}</span>
+        <span class="n">x</span> <span class="p">:</span> <span class="mf">1258.9</span>
+        <span class="n">y</span> <span class="p">:</span> <span class="mf">3153.5</span>
+    <span class="p">[</span><span class="o">..........</span><span class="p">]</span>
+  <span class="n">links</span> <span class="p">[</span><span class="mi">6491</span><span class="p">]</span>
+    <span class="mi">0</span> <span class="p">{</span><span class="mi">4</span><span class="p">}</span>
+      <span class="n">ename</span> <span class="p">:</span> <span class="n">line_tn_1_mtr_1</span>
+      <span class="n">source</span> <span class="p">:</span> <span class="n">R1_12_47_1_tn_1</span>
+      <span class="n">target</span> <span class="p">:</span> <span class="n">R1_12_47_1_tn_1_mtr_1</span>
+      <span class="n">edata</span> <span class="p">{</span><span class="mi">3</span><span class="p">}</span>
+        <span class="kn">from</span> <span class="p">:</span> <span class="n">R1_12_47_1_tn_1</span>
+        <span class="n">to</span> <span class="p">:</span> <span class="n">R1_12_47_1_tn_1_mtr_1</span>
+        <span class="n">length</span> <span class="p">:</span> <span class="mi">0</span>
+    <span class="p">[</span><span class="o">...........</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This configuration file is to describe the location of and links between all the houses and DERs in a populated feeder derived from a prototypical taxonomy feeder. The edge nodes are to be placed based on the node locations extracted from the prototypical feeder visualization/graphs in <code class="docutils literal notranslate"><span class="pre">.dot</span></code> format at <a class="reference external" href="http://emac.berkeley.edu/gridlabd/taxonomy_graphs/">GridLAB-D Taxonomy Feeder Graphs</a>.</p>
+<div class="section" id="gridlab-d-prototypical-taxonomy-feeder-graph-vs-gridlab-d-populated-feeder">
+<h2><span class="section-number">1.1. </span>GridLAB-D Prototypical Taxonomy Feeder Graph VS GridLAB-D Populated Feeder<a class="headerlink" href="#gridlab-d-prototypical-taxonomy-feeder-graph-vs-gridlab-d-populated-feeder" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">.dot</span></code> graph of the GridLAB-D Prototypical Taxonomy Feeder (element 4 in <a class="reference internal" href="#dot2feeder"><span class="std std-numref">Fig. 1.1</span></a>) places the nodes at certain positions, which have to be translated into location coordinates for the populated feeder houses and DERs in element 2 in <a class="reference internal" href="#dot2feeder"><span class="std std-numref">Fig. 1.1</span></a>. Element 2 in <a class="reference internal" href="#dot2feeder"><span class="std std-numref">Fig. 1.1</span></a> has been obtained by populating the feeder using the <code class="docutils literal notranslate"><span class="pre">populateFeeder</span></code> function provided by <code class="docutils literal notranslate"><span class="pre">tesp_support</span></code> module to get a fully populated <code class="docutils literal notranslate"><span class="pre">GLM</span></code> model, after which certain objects are extracted in a JSON dictionary (element 3 in <a class="reference internal" href="#dot2feeder"><span class="std std-numref">Fig. 1.1</span></a>).</p>
+<div class="figure align-center" id="id1">
+<span id="dot2feeder"></span><a class="reference internal image-reference" href="_images/dot2feeder.png"><img alt="_images/dot2feeder.png" src="_images/dot2feeder.png" style="width: 591.6px; height: 296.09999999999997px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 1.1 </span><span class="caption-text">From graph to populated feeder dictionary</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>After converting the <code class="docutils literal notranslate"><span class="pre">.dot</span></code> graph into a JSON structure (element 5 in <a class="reference internal" href="#dot2feeder"><span class="std std-numref">Fig. 1.1</span></a>), the connection between the feeder population and their geographical placements (elements 3 and 5 in <a class="reference internal" href="#dot2feeder"><span class="std std-numref">Fig. 1.1</span></a>) is done according to <a class="reference internal" href="#dotvsfeeder"><span class="std std-numref">Fig. 1.2</span></a>.</p>
+<div class="figure align-center" id="id2">
+<span id="dotvsfeeder"></span><a class="reference internal image-reference" href="_images/dotVSpopulatedFeeder.png"><img alt="_images/dotVSpopulatedFeeder.png" src="_images/dotVSpopulatedFeeder.png" style="width: 603.0px; height: 330.0px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 1.2 </span><span class="caption-text">Edge nodes connection to taxonomy feeder</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">R1-25.00-1</span></code> feeder, and later others, throws errors as one of the node had name ‘762’ rather than the correct ‘node762’, which lead to one id being empty in the <code class="docutils literal notranslate"><span class="pre">analyzeDOT</span></code> function</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>FIXED !!!!! (I think)</p>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">R3-12.47-2</span></code> and <code class="docutils literal notranslate"><span class="pre">GC-12.47-1</span></code> feeders turn out to have no triplex nodes or meters, that is <code class="docutils literal notranslate"><span class="pre">tn</span></code> or <code class="docutils literal notranslate"><span class="pre">tm</span></code> IDs, which threw error because <code class="docutils literal notranslate"><span class="pre">analyzeDOT</span></code> cannot return <code class="docutils literal notranslate"><span class="pre">tnNodes</span></code> and <code class="docutils literal notranslate"><span class="pre">tmNodes</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Not fixed. Is it worth it?????</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="code_docs.html" class="btn btn-neutral float-right" title="2. Code documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="TESP - prototypical communication system development" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, PNNL
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

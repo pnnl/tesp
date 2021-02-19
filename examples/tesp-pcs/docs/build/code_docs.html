@@ -210,66 +210,6 @@
 </dd></dl>
 
 <p><span class="bolditalic">analyzeModels.py</span></p>
-<span class="target" id="module-analyzeModels"></span><p>DOT and GLM model analysis.</p>
-<span class="target" id="module-2"></span><dl class="field-list simple">
-<dt class="field-odd">synopsis</dt>
-<dd class="field-odd"><p>Analyze the DOT and GLM models, based on their JSON structures in order to place the GLM nodes at he locations supplied by the DOT file. In the end, a networkx JSON file is saved to describe the fedder nodes and their links, that is used later to populate an ns-3 model.</p>
-</dd>
-<dt class="field-even">platform</dt>
-<dd class="field-even"><p>Unix</p>
-</dd>
-</dl>
-<dl class="py function">
-<dt id="analyzeModels.analyzeDOT">
-<code class="sig-prename descclassname">analyzeModels.</code><code class="sig-name descname">analyzeDOT</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dotModel</span></em><span class="sig-paren">)</span><a class="headerlink" href="#analyzeModels.analyzeDOT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads a DOT model in its jSON structure, and returns the list of the triplex nodes and triplex meters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dotModel</strong> (<em>JSON structure</em>) – The JSON coverted DOT model.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>tnNodes, tmNodes</strong> – Lists of triplex nodes and triplex meters.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="analyzeModels.analyzeGLMdict">
-<code class="sig-prename descclassname">analyzeModels.</code><code class="sig-name descname">analyzeGLMdict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">glmModel</span></em><span class="sig-paren">)</span><a class="headerlink" href="#analyzeModels.analyzeGLMdict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads a GLM model in its JSON structure, and returns the list of the billing meters and their numbers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>glmModel</strong> (<em>JSON structure</em>) – The JSON dict of the GLM model.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>glmTnNodes, glmTnNodesNum</strong> – Lists of billing meters and their unique numbers.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="analyzeModels.main">
-<code class="sig-prename descclassname">analyzeModels.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feederName</span></em><span class="sig-paren">)</span><a class="headerlink" href="#analyzeModels.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>This main function analyzes the DOT and GLM, and connects them to create the JSON needed for the ns-3 model</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>feederName</strong> (<em>string</em>) – The name of the prototypical taxonomy feeder to be analyzed.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>**********</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 

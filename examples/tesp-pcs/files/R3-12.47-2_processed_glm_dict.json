@@ -1,0 +1,2094 @@
+{
+  "bulkpower_bus": "TBD",
+  "FedName": "gld1",
+  "transformer_MVA": 12.0,
+  "feeders": {
+    "network_node": {
+      "house_count": 117,
+      "inverter_count": 0,
+      "base_feeder": "R3-12.47-2"
+    }
+  },
+  "billingmeters": {
+    "R3_12_47_2_meter_1": {
+      "feeder_id": "network_node",
+      "phases": "BN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_2": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_3": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_5": {
+      "feeder_id": "network_node",
+      "phases": "BN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_6": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_7": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_8": {
+      "feeder_id": "network_node",
+      "phases": "BN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_9": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_9_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_10": {
+      "feeder_id": "network_node",
+      "phases": "ABN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_10_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_11": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_12": {
+      "feeder_id": "network_node",
+      "phases": "ABN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_12_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_13": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_14": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_14_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_15": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_15_zone_1",
+        "R3_12_47_2_load_15_zone_2"
+      ]
+    },
+    "R3_12_47_2_meter_16": {
+      "feeder_id": "network_node",
+      "phases": "BN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_17": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_17_zone_1",
+        "R3_12_47_2_load_17_zone_2"
+      ]
+    },
+    "R3_12_47_2_meter_18": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_18_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_19": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_19_zone_1",
+        "R3_12_47_2_load_19_zone_2"
+      ]
+    },
+    "R3_12_47_2_meter_20": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_20_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_21": {
+      "feeder_id": "network_node",
+      "phases": "BN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_22": {
+      "feeder_id": "network_node",
+      "phases": "CN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_24": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_24_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_25": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_25_zone_1",
+        "R3_12_47_2_load_25_zone_2"
+      ]
+    },
+    "R3_12_47_2_meter_26": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_27": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_27_zone_1",
+        "R3_12_47_2_load_27_zone_2",
+        "R3_12_47_2_load_27_zone_3",
+        "R3_12_47_2_load_27_zone_4"
+      ]
+    },
+    "R3_12_47_2_meter_28": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_28_bldg_1_floor_1_zone_1",
+        "R3_12_47_2_load_28_bldg_1_floor_1_zone_2",
+        "R3_12_47_2_load_28_bldg_1_floor_1_zone_3",
+        "R3_12_47_2_load_28_bldg_1_floor_1_zone_4",
+        "R3_12_47_2_load_28_bldg_1_floor_1_zone_5",
+        "R3_12_47_2_load_28_bldg_1_floor_2_zone_1",
+        "R3_12_47_2_load_28_bldg_1_floor_2_zone_2",
+        "R3_12_47_2_load_28_bldg_1_floor_2_zone_3",
+        "R3_12_47_2_load_28_bldg_1_floor_2_zone_4",
+        "R3_12_47_2_load_28_bldg_1_floor_2_zone_5",
+        "R3_12_47_2_load_28_bldg_1_floor_3_zone_1",
+        "R3_12_47_2_load_28_bldg_1_floor_3_zone_2",
+        "R3_12_47_2_load_28_bldg_1_floor_3_zone_3",
+        "R3_12_47_2_load_28_bldg_1_floor_3_zone_4",
+        "R3_12_47_2_load_28_bldg_1_floor_3_zone_5"
+      ]
+    },
+    "R3_12_47_2_meter_30": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_31": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_31_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_32": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_32_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_33": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_34": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_34_zone_1",
+        "R3_12_47_2_load_34_zone_2"
+      ]
+    },
+    "R3_12_47_2_meter_35": {
+      "feeder_id": "network_node",
+      "phases": "CN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_36": {
+      "feeder_id": "network_node",
+      "phases": "CN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_37": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_37_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_38": {
+      "feeder_id": "network_node",
+      "phases": "BN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_39": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_39_zone_1",
+        "R3_12_47_2_load_39_zone_2"
+      ]
+    },
+    "R3_12_47_2_meter_40": {
+      "feeder_id": "network_node",
+      "phases": "BN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_41": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_41_zone_1",
+        "R3_12_47_2_load_41_zone_2"
+      ]
+    },
+    "R3_12_47_2_meter_42": {
+      "feeder_id": "network_node",
+      "phases": "BN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_43": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_43_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_44": {
+      "feeder_id": "network_node",
+      "phases": "BN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_47": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_47_zone_1",
+        "R3_12_47_2_load_47_zone_2",
+        "R3_12_47_2_load_47_zone_3",
+        "R3_12_47_2_load_47_zone_4"
+      ]
+    },
+    "R3_12_47_2_meter_48": {
+      "feeder_id": "network_node",
+      "phases": "AN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_49": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": []
+    },
+    "R3_12_47_2_meter_50": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_50_zone_1",
+        "R3_12_47_2_load_50_zone_2"
+      ]
+    },
+    "R3_12_47_2_meter_51": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_51_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_52": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_52_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_53": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_53_zone_1",
+        "R3_12_47_2_load_53_zone_2"
+      ]
+    },
+    "R3_12_47_2_meter_54": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_54_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_55": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_55_bldg_1_zone_1",
+        "R3_12_47_2_load_55_bldg_1_zone_2",
+        "R3_12_47_2_load_55_bldg_1_zone_3",
+        "R3_12_47_2_load_55_bldg_1_zone_4",
+        "R3_12_47_2_load_55_bldg_1_zone_5",
+        "R3_12_47_2_load_55_bldg_1_zone_6"
+      ]
+    },
+    "R3_12_47_2_meter_56": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_56_bldg_1_zone_1",
+        "R3_12_47_2_load_56_bldg_1_zone_2",
+        "R3_12_47_2_load_56_bldg_1_zone_3",
+        "R3_12_47_2_load_56_bldg_1_zone_4",
+        "R3_12_47_2_load_56_bldg_1_zone_5",
+        "R3_12_47_2_load_56_bldg_1_zone_6"
+      ]
+    },
+    "R3_12_47_2_meter_57": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_57_bldg_1_floor_1_zone_1",
+        "R3_12_47_2_load_57_bldg_1_floor_1_zone_2",
+        "R3_12_47_2_load_57_bldg_1_floor_1_zone_3",
+        "R3_12_47_2_load_57_bldg_1_floor_1_zone_4",
+        "R3_12_47_2_load_57_bldg_1_floor_1_zone_5",
+        "R3_12_47_2_load_57_bldg_1_floor_2_zone_1",
+        "R3_12_47_2_load_57_bldg_1_floor_2_zone_2",
+        "R3_12_47_2_load_57_bldg_1_floor_2_zone_3",
+        "R3_12_47_2_load_57_bldg_1_floor_2_zone_4",
+        "R3_12_47_2_load_57_bldg_1_floor_2_zone_5",
+        "R3_12_47_2_load_57_bldg_1_floor_3_zone_1",
+        "R3_12_47_2_load_57_bldg_1_floor_3_zone_2",
+        "R3_12_47_2_load_57_bldg_1_floor_3_zone_3",
+        "R3_12_47_2_load_57_bldg_1_floor_3_zone_4",
+        "R3_12_47_2_load_57_bldg_1_floor_3_zone_5"
+      ]
+    },
+    "R3_12_47_2_meter_58": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_58_bldg_1_floor_1_zone_1",
+        "R3_12_47_2_load_58_bldg_1_floor_1_zone_2",
+        "R3_12_47_2_load_58_bldg_1_floor_1_zone_3",
+        "R3_12_47_2_load_58_bldg_1_floor_1_zone_4",
+        "R3_12_47_2_load_58_bldg_1_floor_1_zone_5",
+        "R3_12_47_2_load_58_bldg_1_floor_2_zone_1",
+        "R3_12_47_2_load_58_bldg_1_floor_2_zone_2",
+        "R3_12_47_2_load_58_bldg_1_floor_2_zone_3",
+        "R3_12_47_2_load_58_bldg_1_floor_2_zone_4",
+        "R3_12_47_2_load_58_bldg_1_floor_2_zone_5",
+        "R3_12_47_2_load_58_bldg_1_floor_3_zone_1",
+        "R3_12_47_2_load_58_bldg_1_floor_3_zone_2",
+        "R3_12_47_2_load_58_bldg_1_floor_3_zone_3",
+        "R3_12_47_2_load_58_bldg_1_floor_3_zone_4",
+        "R3_12_47_2_load_58_bldg_1_floor_3_zone_5"
+      ]
+    },
+    "R3_12_47_2_meter_59": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_59_zone_1"
+      ]
+    },
+    "R3_12_47_2_meter_60": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_60_bldg_1_zone_1",
+        "R3_12_47_2_load_60_bldg_1_zone_2",
+        "R3_12_47_2_load_60_bldg_1_zone_3",
+        "R3_12_47_2_load_60_bldg_1_zone_4",
+        "R3_12_47_2_load_60_bldg_1_zone_5",
+        "R3_12_47_2_load_60_bldg_1_zone_6",
+        "R3_12_47_2_load_60_bldg_2_zone_1",
+        "R3_12_47_2_load_60_bldg_2_zone_2",
+        "R3_12_47_2_load_60_bldg_2_zone_3",
+        "R3_12_47_2_load_60_bldg_2_zone_4",
+        "R3_12_47_2_load_60_bldg_2_zone_5",
+        "R3_12_47_2_load_60_bldg_2_zone_6"
+      ]
+    },
+    "R3_12_47_2_meter_61": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 479.778073696579,
+      "vln": 277.0,
+      "children": [
+        "R3_12_47_2_load_61_bldg_1_zone_1",
+        "R3_12_47_2_load_61_bldg_1_zone_2",
+        "R3_12_47_2_load_61_bldg_1_zone_3",
+        "R3_12_47_2_load_61_bldg_1_zone_4",
+        "R3_12_47_2_load_61_bldg_1_zone_5",
+        "R3_12_47_2_load_61_bldg_1_zone_6"
+      ]
+    },
+    "R3_12_47_2_meter_62": {
+      "feeder_id": "network_node",
+      "phases": "ABCN",
+      "vll": 207.84609690826525,
+      "vln": 120.0,
+      "children": [
+        "R3_12_47_2_load_62_zone_1"
+      ]
+    }
+  },
+  "houses": {
+    "R3_12_47_2_load_9_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_9",
+      "sqft": 2053.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_8",
+      "parent": "R3_12_47_2_load_9"
+    },
+    "R3_12_47_2_load_10_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_10",
+      "sqft": 3104.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_9",
+      "parent": "R3_12_47_2_load_10"
+    },
+    "R3_12_47_2_load_12_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_12",
+      "sqft": 2444.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_11",
+      "parent": "R3_12_47_2_load_12"
+    },
+    "R3_12_47_2_load_14_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_14",
+      "sqft": 3002.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_13",
+      "parent": "R3_12_47_2_load_14"
+    },
+    "R3_12_47_2_load_15_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_15",
+      "sqft": 2754.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_14",
+      "parent": "R3_12_47_2_load_15"
+    },
+    "R3_12_47_2_load_15_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_15",
+      "sqft": 1953.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_14",
+      "parent": "R3_12_47_2_load_15"
+    },
+    "R3_12_47_2_load_17_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_17",
+      "sqft": 2626.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_16",
+      "parent": "R3_12_47_2_load_17"
+    },
+    "R3_12_47_2_load_17_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_17",
+      "sqft": 2813.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_16",
+      "parent": "R3_12_47_2_load_17"
+    },
+    "R3_12_47_2_load_18_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_18",
+      "sqft": 1782.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_17",
+      "parent": "R3_12_47_2_load_18"
+    },
+    "R3_12_47_2_load_19_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_19",
+      "sqft": 3044.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_18",
+      "parent": "R3_12_47_2_load_19"
+    },
+    "R3_12_47_2_load_19_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_19",
+      "sqft": 2677.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_18",
+      "parent": "R3_12_47_2_load_19"
+    },
+    "R3_12_47_2_load_20_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_20",
+      "sqft": 2793.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_19",
+      "parent": "R3_12_47_2_load_20"
+    },
+    "R3_12_47_2_load_24_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_24",
+      "sqft": 2401.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_22",
+      "parent": "R3_12_47_2_load_24"
+    },
+    "R3_12_47_2_load_25_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_25",
+      "sqft": 2377.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_23",
+      "parent": "R3_12_47_2_load_25"
+    },
+    "R3_12_47_2_load_25_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_25",
+      "sqft": 2873.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_23",
+      "parent": "R3_12_47_2_load_25"
+    },
+    "R3_12_47_2_load_27_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_27",
+      "sqft": 3083.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_25",
+      "parent": "R3_12_47_2_load_27"
+    },
+    "R3_12_47_2_load_27_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_27",
+      "sqft": 1455.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_25",
+      "parent": "R3_12_47_2_load_27"
+    },
+    "R3_12_47_2_load_27_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_27",
+      "sqft": 3026.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_25",
+      "parent": "R3_12_47_2_load_27"
+    },
+    "R3_12_47_2_load_27_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_27",
+      "sqft": 1447.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_25",
+      "parent": "R3_12_47_2_load_27"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_1_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 1389.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_1_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 851.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_1_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 1389.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_1_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 851.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_1_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 3236.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_2_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 1389.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_2_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 851.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_2_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 1389.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_2_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 851.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_2_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 3236.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_3_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 1389.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_3_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 851.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_3_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 1389.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_3_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 851.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_28_bldg_1_floor_3_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_28",
+      "sqft": 3236.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_26",
+      "parent": "R3_12_47_2_load_28"
+    },
+    "R3_12_47_2_load_31_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_31",
+      "sqft": 2535.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_28",
+      "parent": "R3_12_47_2_load_31"
+    },
+    "R3_12_47_2_load_32_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_32",
+      "sqft": 2162.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_29",
+      "parent": "R3_12_47_2_load_32"
+    },
+    "R3_12_47_2_load_34_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_34",
+      "sqft": 2488.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_31",
+      "parent": "R3_12_47_2_load_34"
+    },
+    "R3_12_47_2_load_34_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_34",
+      "sqft": 2408.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_31",
+      "parent": "R3_12_47_2_load_34"
+    },
+    "R3_12_47_2_load_37_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_37",
+      "sqft": 2504.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_34",
+      "parent": "R3_12_47_2_load_37"
+    },
+    "R3_12_47_2_load_39_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_39",
+      "sqft": 2912.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_36",
+      "parent": "R3_12_47_2_load_39"
+    },
+    "R3_12_47_2_load_39_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_39",
+      "sqft": 2643.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_36",
+      "parent": "R3_12_47_2_load_39"
+    },
+    "R3_12_47_2_load_41_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_41",
+      "sqft": 1993.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_38",
+      "parent": "R3_12_47_2_load_41"
+    },
+    "R3_12_47_2_load_41_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_41",
+      "sqft": 2994.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_38",
+      "parent": "R3_12_47_2_load_41"
+    },
+    "R3_12_47_2_load_43_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_43",
+      "sqft": 1985.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_40",
+      "parent": "R3_12_47_2_load_43"
+    },
+    "R3_12_47_2_load_47_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_47",
+      "sqft": 1898.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_42",
+      "parent": "R3_12_47_2_load_47"
+    },
+    "R3_12_47_2_load_47_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_47",
+      "sqft": 1458.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_42",
+      "parent": "R3_12_47_2_load_47"
+    },
+    "R3_12_47_2_load_47_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_47",
+      "sqft": 2466.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_42",
+      "parent": "R3_12_47_2_load_47"
+    },
+    "R3_12_47_2_load_47_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_47",
+      "sqft": 982.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_42",
+      "parent": "R3_12_47_2_load_47"
+    },
+    "R3_12_47_2_load_50_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_50",
+      "sqft": 2301.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_45",
+      "parent": "R3_12_47_2_load_50"
+    },
+    "R3_12_47_2_load_50_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_50",
+      "sqft": 2462.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_45",
+      "parent": "R3_12_47_2_load_50"
+    },
+    "R3_12_47_2_load_51_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_51",
+      "sqft": 2785.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_46",
+      "parent": "R3_12_47_2_load_51"
+    },
+    "R3_12_47_2_load_52_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_52",
+      "sqft": 2274.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_47",
+      "parent": "R3_12_47_2_load_52"
+    },
+    "R3_12_47_2_load_53_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_53",
+      "sqft": 3096.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_48",
+      "parent": "R3_12_47_2_load_53"
+    },
+    "R3_12_47_2_load_53_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_53",
+      "sqft": 2174.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_48",
+      "parent": "R3_12_47_2_load_53"
+    },
+    "R3_12_47_2_load_54_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_54",
+      "sqft": 1752.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_49",
+      "parent": "R3_12_47_2_load_54"
+    },
+    "R3_12_47_2_load_55_bldg_1_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_55",
+      "sqft": 3844.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_50",
+      "parent": "R3_12_47_2_load_55"
+    },
+    "R3_12_47_2_load_55_bldg_1_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_55",
+      "sqft": 3844.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_50",
+      "parent": "R3_12_47_2_load_55"
+    },
+    "R3_12_47_2_load_55_bldg_1_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_55",
+      "sqft": 3844.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_50",
+      "parent": "R3_12_47_2_load_55"
+    },
+    "R3_12_47_2_load_55_bldg_1_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_55",
+      "sqft": 3844.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_50",
+      "parent": "R3_12_47_2_load_55"
+    },
+    "R3_12_47_2_load_55_bldg_1_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_55",
+      "sqft": 3844.0,
+      "stories": 1,
+      "doors": 24,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_50",
+      "parent": "R3_12_47_2_load_55"
+    },
+    "R3_12_47_2_load_55_bldg_1_zone_6": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_55",
+      "sqft": 3844.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_50",
+      "parent": "R3_12_47_2_load_55"
+    },
+    "R3_12_47_2_load_56_bldg_1_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_56",
+      "sqft": 3591.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_51",
+      "parent": "R3_12_47_2_load_56"
+    },
+    "R3_12_47_2_load_56_bldg_1_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_56",
+      "sqft": 3591.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_51",
+      "parent": "R3_12_47_2_load_56"
+    },
+    "R3_12_47_2_load_56_bldg_1_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_56",
+      "sqft": 3591.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_51",
+      "parent": "R3_12_47_2_load_56"
+    },
+    "R3_12_47_2_load_56_bldg_1_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_56",
+      "sqft": 3591.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_51",
+      "parent": "R3_12_47_2_load_56"
+    },
+    "R3_12_47_2_load_56_bldg_1_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_56",
+      "sqft": 3591.0,
+      "stories": 1,
+      "doors": 24,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_51",
+      "parent": "R3_12_47_2_load_56"
+    },
+    "R3_12_47_2_load_56_bldg_1_zone_6": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_56",
+      "sqft": 3591.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_51",
+      "parent": "R3_12_47_2_load_56"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_1_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 1355.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_1_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 828.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_1_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 1355.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_1_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 828.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_1_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 3031.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_2_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 1355.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_2_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 828.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_2_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 1355.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_2_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 828.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_2_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 3031.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_3_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 1355.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_3_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 828.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_3_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 1355.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_3_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 828.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_57_bldg_1_floor_3_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_57",
+      "sqft": 3031.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_52",
+      "parent": "R3_12_47_2_load_57"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_1_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 1404.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_1_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 861.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_1_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 1404.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_1_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 861.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_1_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 3336.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_2_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 1404.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_2_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 861.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_2_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 1404.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_2_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 861.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_2_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 3336.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_3_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 1404.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_3_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 861.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_3_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 1404.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_3_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 861.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_58_bldg_1_floor_3_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_58",
+      "sqft": 3336.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "OFFICE_53",
+      "parent": "R3_12_47_2_load_58"
+    },
+    "R3_12_47_2_load_59_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_59",
+      "sqft": 1802.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_54",
+      "parent": "R3_12_47_2_load_59"
+    },
+    "R3_12_47_2_load_60_bldg_1_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 3084.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_1_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 3084.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_1_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 3084.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_1_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 3084.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_1_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 3084.0,
+      "stories": 1,
+      "doors": 24,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_1_zone_6": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 3084.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_2_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 4374.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_2_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 4374.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_2_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 4374.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_2_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 4374.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_2_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 4374.0,
+      "stories": 1,
+      "doors": 24,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_60_bldg_2_zone_6": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_60",
+      "sqft": 4374.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_55",
+      "parent": "R3_12_47_2_load_60"
+    },
+    "R3_12_47_2_load_61_bldg_1_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_61",
+      "sqft": 3813.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_56",
+      "parent": "R3_12_47_2_load_61"
+    },
+    "R3_12_47_2_load_61_bldg_1_zone_2": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_61",
+      "sqft": 3813.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_56",
+      "parent": "R3_12_47_2_load_61"
+    },
+    "R3_12_47_2_load_61_bldg_1_zone_3": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_61",
+      "sqft": 3813.0,
+      "stories": 1,
+      "doors": 0,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_56",
+      "parent": "R3_12_47_2_load_61"
+    },
+    "R3_12_47_2_load_61_bldg_1_zone_4": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_61",
+      "sqft": 3813.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_56",
+      "parent": "R3_12_47_2_load_61"
+    },
+    "R3_12_47_2_load_61_bldg_1_zone_5": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_61",
+      "sqft": 3813.0,
+      "stories": 1,
+      "doors": 24,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_56",
+      "parent": "R3_12_47_2_load_61"
+    },
+    "R3_12_47_2_load_61_bldg_1_zone_6": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_61",
+      "sqft": 3813.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "BIGBOX_56",
+      "parent": "R3_12_47_2_load_61"
+    },
+    "R3_12_47_2_load_62_zone_1": {
+      "feeder_id": "network_node",
+      "billingmeter_id": "R3_12_47_2_meter_62",
+      "sqft": 2683.0,
+      "stories": 1,
+      "doors": 1,
+      "thermal_integrity": "UNKNOWN",
+      "cooling": "ELECTRIC",
+      "heating": "GAS",
+      "wh_gallons": 0,
+      "house_class": "STRIPMALL_57",
+      "parent": "R3_12_47_2_load_62"
+    }
+  },
+  "inverters": {},
+  "capacitors": {},
+  "regulators": {
+    "R3_12_47_2_reg_1": {
+      "feeder_id": "network_node"
+    }
+  }
+}
