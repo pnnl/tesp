@@ -26,8 +26,8 @@
     "Tier3Price": "0"
   },
   "EplusConfiguration": {
-    "BuildingChoice": "SchoolDualController",
-    "EMSFile": "emsHELICS/emsSchoolDualController",
+    "BuildingChoice": "PrimarySchool",
+    "EMSFile": "emsHELICS/emsPrimarySchool",
     "StepsPerHour": "12",
     "EnergyPlusBus": "",
     "EnergyPlusServiceV": "480",

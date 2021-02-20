@@ -96,7 +96,7 @@ def read_voltage_metrics(nameroot, dictname = ''):
   dict['idx_m'] = idx_m
   return dict
 
-def plot_voltages (dict):
+def plot_voltages (dict, save_file, save_only):
   hrs = dict['hrs']
   data_m = dict['data_m']
   keys_m = dict['keys_m']
@@ -113,9 +113,12 @@ def plot_voltages (dict):
   ax[1].set_xlabel("Hours")
   ax[0].set_title ("Voltage at all Meters")
 
-  plt.show()
+  if save_file is not None:
+    plt.savefig(save_file)
+  if not save_only:
+    plt.show()
 
-def process_voltages(nameroot, dictname = ''):
+def process_voltages(nameroot, dictname = '', save_file=None, save_only=True):
   """ Plots the min and max line-neutral voltages for every billing meter
 
   This function reads *substation_nameroot_metrics.json* and 
@@ -130,7 +133,9 @@ def process_voltages(nameroot, dictname = ''):
   Args:
     nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
     dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+    save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
+    save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   """
   dict = read_voltage_metrics (nameroot, dictname)
-  plot_voltages (dict)
+  plot_voltages (dict, save_file, save_only)
 

@@ -15,7 +15,7 @@ try:
 except:
   pass
 
-def plot_agents (dict):
+def plot_agents (dict, save_file, save_only):
   hrs = dict['hrs']
   data_a = dict['data_a']
   data_c = dict['data_c']
@@ -51,7 +51,10 @@ def plot_agents (dict):
   ax[1,1].set_title ('Total Controller Bids')
   ax[1,1].set_xlabel('Hours')
 
-  plt.show()
+  if save_file is not None:
+    plt.savefig(save_file)
+  if not save_only:
+    plt.show()
 
 def read_agent_metrics(nameroot, dictname = '', print_dictionary=False):
   # first, read and print a dictionary of relevant agents
@@ -184,7 +187,7 @@ def read_agent_metrics(nameroot, dictname = '', print_dictionary=False):
   dict['high_bid_idx'] = cidx
   return dict
 
-def process_agents(nameroot, dictname = '', print_dictionary=False):
+def process_agents(nameroot, dictname = '', print_dictionary=False, save_file=None, save_only=False):
   """ Plots cleared price, plus bids from the first HVAC controller
 
   This function reads *auction_nameroot_metrics.json* and  
@@ -199,6 +202,8 @@ def process_agents(nameroot, dictname = '', print_dictionary=False):
   Args:
       nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
       dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+      save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
+      save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   """
   dict = read_agent_metrics (nameroot, dictname, print_dictionary)
-  plot_agents (dict)
+  plot_agents (dict, save_file, save_only)

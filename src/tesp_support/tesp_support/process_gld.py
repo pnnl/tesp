@@ -364,7 +364,7 @@ def read_gld_metrics (nameroot, dictname = ''):
   dict['subname'] = sub_key
   return dict
 
-def plot_gld (dict):
+def plot_gld (dict, save_file, save_only):
   # the feederGenerator now inserts metrics_collector objects on capacitors and regulators
   bCollectedRegCapMetrics = True 
 
@@ -524,9 +524,12 @@ def plot_gld (dict):
     ax[0,4].set_title ('No Voltage Monitoring')
     ax[1,4].set_title ('No Voltage Monitoring')
 
-  plt.show()
+  if save_file is not None:
+    plt.savefig(save_file)
+  if not save_only:
+    plt.show()
 
-def process_gld(nameroot, dictname = ''):
+def process_gld(nameroot, dictname = '', save_file=None, save_only=False):
   ''' Plots a summary/sample of power, air temperature and voltage
 
   This function reads *substation_nameroot_metrics.json*,  
@@ -544,8 +547,10 @@ def process_gld(nameroot, dictname = ''):
   Args:
     nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
     dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+    save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
+    save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   '''
 
   dict = read_gld_metrics (nameroot, dictname)
-  plot_gld (dict)
+  plot_gld (dict, save_file, save_only)
 
