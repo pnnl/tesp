@@ -12,9 +12,9 @@ Transactive Energy Simulation Platform (TESP)
 
    TESP_Overview
    Installing_Building_TESP
+   Demonstrations_and_Examples
    Design_Reference
    Code_Reference
-   SGIP1_Example
    Next_Version
    DSOT_Study
    zBibliography
