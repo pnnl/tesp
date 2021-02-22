@@ -2,7 +2,7 @@
    :format: html latex
 ..
 
--------------------------------------------
+
 Introduction to Transactive Energy and TESP
 *******************************************
 
