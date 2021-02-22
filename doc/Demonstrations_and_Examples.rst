@@ -20,3 +20,4 @@ TESP Example Analysis
     :maxdepth: 2
     
     SGIP1_Example
+    DSOT_Study.rst
