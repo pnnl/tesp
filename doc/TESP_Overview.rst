@@ -2,8 +2,9 @@
    :format: html latex
 ..
 
-TESP Overview
-+++++++++++++
+-------------------------------------------
+Introduction to Transactive Energy and TESP
+*******************************************
 
 
 What Is Transactive Energy?
