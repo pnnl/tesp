@@ -1,5 +1,5 @@
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
 Installing and Building TESP
 ===========================
