@@ -4,11 +4,17 @@ References
 .. toctree::
     :maxdepth: 1
     
-    Design_References
-    Code_Reference
-    zBibliography
-    LICENSE
+    ./references/Design_References
+    ./references/Code_Reference
+    ./references/zBibliography
+    ./references/LICENSE
 
 
 Archives
 ********
+.. toctree::
+    :maxdepth: 1
+    
+    ./archive/Ubuntu_build.rst
+    ./archive/MacOSX_build.rst
+    ./archive/Windows_build.rst

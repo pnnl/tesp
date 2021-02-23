@@ -19,5 +19,5 @@ TESP Example Analysis
 .. toctree::
     :maxdepth: 2
     
-    SGIP1_Example
-    DSOT_Study.rst
+    ./examples/SGIP1_Example
+    ./examples/DSOT_Study
