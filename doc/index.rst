@@ -14,10 +14,7 @@ Transactive Energy Simulation Platform (TESP)
    Installing_Building_TESP
    Demonstrations_and_Examples
    Developing_Customizing_TESP
-   Reference_Archives
-   DSOT_Study
-   zBibliography
-   LICENSE
+   Reference_Archive
 
 Indices and tables
 ==================
