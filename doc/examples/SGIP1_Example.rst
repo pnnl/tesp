@@ -141,7 +141,7 @@ separate TEAgents have not been implemented yet. Likewise, the planned
 new TEAgent that implements load shedding from the substation has not
 yet been implemented.
 
-.. figure:: ./media/SGIP1system.png
+.. figure:: ../media/SGIP1system.png
 	:name: fig_sgip1
 
 	SGIP-1 system configuration with partial PV and storage adoption
@@ -159,7 +159,7 @@ scaled up to represent multiple feeders. In this way, prices, loads and
 resources on transmission and distribution systems can impact each
 other.
 
-.. figure:: ./media/PYPOWERsystem.png
+.. figure:: ../media/PYPOWERsystem.png
 	:name: fig_pp_sgip1
 
 	Bulk System Model with Maximum Generator Real Power Output Capacities
@@ -187,12 +187,12 @@ agent program collected metrics from the building model, and adjusted
 the thermostat setpoints based on real-time price, which is a form of
 passive response.
 
-.. figure:: ./media/FeederR1_1.png
+.. figure:: ../media/FeederR1_1.png
 	:name: fig_taxonomy
 
 	Distribution Feeder Model (http://emac.berkeley.edu/gridlabd/taxonomy\_graphs/)
 
-.. figure:: ./media/School.png
+.. figure:: ../media/School.png
 	:name: fig_school
 
 	Elementary School Model
