@@ -1,0 +1,17 @@
+te30 - 30 houses, 1 school, 4 generators over FNCS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+ cd ~/tesp/examples/te30
+ python3 prepare_case.py
+ # without market
+ # a simulation takes about 10 minutes, use "cat TE*.csv" to show progress 
+ # on the console up to 172800 seconds
+ ./run0.sh
+ python3 plots.py TE_Challenge0
+ # with market
+ ./run.sh    # runs with the market
+ python3 plots.py TE_Challenge
+
+For more details, see `TE30 Example Readme`_
