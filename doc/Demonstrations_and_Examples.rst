@@ -1,5 +1,5 @@
 TESP Demonstrations and Examples
-********************************
+================================
 
 To help users of TESP to better understand how the software platform has been created and integrated, a number of sample projects are included in the distribution of TESP and are divided into two categories: capability demonstrations and analysis examples. 
 
