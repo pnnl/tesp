@@ -7,12 +7,12 @@ Messages between Simulators and Agents
 TESP simulators exchange the sets of messages shown in
 :numref:`fig_msg_classes` and :numref:`fig_msg_eplus`.
 
-.. figure:: ./media/MessageClasses.png
+.. figure:: ../media/MessageClasses.png
 	:name: fig_msg_classes
 
 	Message Schemas for GridLAB-D, PYPOWER and residential agents
 
-.. figure:: ./media/EplusMessageClasses.png
+.. figure:: ../media/EplusMessageClasses.png
 	:name: fig_msg_eplus
 
 	Message Schemas for EnergyPlus and large-building agents
@@ -31,12 +31,12 @@ publishes a distribution load value at the substation following each
 significantly different power flow solution; PYPOWER subscribes to that
 value for its next optimal power flow solution.
 
-.. figure:: ./media/MessageFlows.png
+.. figure:: ../media/MessageFlows.png
 	:name: fig_msg_flows
 
 	Message Flows for Simulators and Transactive Agents
 
-.. figure:: ./media/MonitorFlows.png
+.. figure:: ../media/MonitorFlows.png
 	:name: fig_msg_soln
 
 	Message Flows for Solution Monitoring
@@ -103,7 +103,7 @@ the DSO+T study, and this process will require four main tasks:
 
 4 - Design and implement the agent code as a Python class within tesp_support. The SubstationAgent will instantiate this agent class at runtime, and call the class as needed in a time step.
 
-.. figure:: ./media/TESPComposition.png
+.. figure:: ../media/TESPComposition.png
 	:name: fig_composition
 
 	Composition of Federates in a Running TESP Simulation
@@ -136,7 +136,7 @@ Some typical default time steps are:
   
 3 - 300 seconds, for spot-market clearing, PYPOWER's optimal power flow (OPF), EnergyPlus (not shown in :numref:`fig_sequence`) and the metrics aggregation.
 
-.. figure:: ./media/ClearingSequence.png
+.. figure:: ../media/ClearingSequence.png
 	:name: fig_sequence
 
 	FNCS Message Hops around Market Clearing Time
@@ -160,7 +160,7 @@ considerable disk space and processing time over the handling of
 multiple CSV files. Python, and other languages, have library functions
 optimized to quickly load JSON files.
 
-.. figure:: ./media/IntermediateMetrics.png
+.. figure:: ../media/IntermediateMetrics.png
 	:name: fig_int_metrics
 
 	Partitioning the valuation metrics between simulation and post-processing
@@ -186,7 +186,7 @@ and lines in the model; this substation-level class has just one
 instance not shown in :numref:`fig_gld_collector`. An hourly metrics output interval is
 shown, but this is adjustable.
 
-.. figure:: ./media/GLD_Collector.png
+.. figure:: ../media/GLD_Collector.png
 	:name: fig_gld_collector
 
 	New metrics collection classes for GridLAB-D
@@ -215,7 +215,7 @@ on the generator id, and a dictionary (map) of FNCSBuses keyed on the
 bus id. In PYPOWER, all id values are integers, but the other
 simulators use string ids.
 
-.. figure:: ./media/PYPOWERMetrics.png
+.. figure:: ../media/PYPOWERMetrics.png
 	:name: fig_met_pp
 
 	PYPOWER dictionary with generator and FNCS bus metrics
@@ -297,7 +297,7 @@ post-processing to explore different tariff designs. It’s also possible
 to re-calculate the billing determinants from metrics that have been
 defined.
 
-.. figure:: ./media/GLDDictionary.png
+.. figure:: ../media/GLDDictionary.png
 	:name: fig_dict_gld
 
 	GridLAB-D dictionary
@@ -325,22 +325,22 @@ distribution, transmission, or bulk generation event. The voltage-based
 metrics also support Momentary Average Interruption Frequency Index
 (MAIFI) for shorter duration outages.
 
-.. figure:: ./media/SubstationMetrics.png
+.. figure:: ../media/SubstationMetrics.png
 	:name: fig_met_sub
 
 	GridLAB-D substation metrics
 
-.. figure:: ./media/CapacitorMetrics.png
+.. figure:: ../media/CapacitorMetrics.png
 	:name: fig_met_cap
 
 	GridLAB-D capacitor switching metrics
 
-.. figure:: ./media/RegulatorMetrics.png
+.. figure:: ../media/RegulatorMetrics.png
 	:name: fig_met_reg
 
 	GridLAB-D regulator tap changing metrics
 
-.. figure:: ./media/BillingMeterMetrics.png
+.. figure:: ../media/BillingMeterMetrics.png
 	:name: fig_met_mtr
 
 	GridLAB-D billing meter metrics
@@ -358,12 +358,12 @@ outputs, which always net the connected houses and inverters. In Version
 1, the inverters will be net metered, or have their own meter, but they
 don’t have transactive agents yet.
 
-.. figure:: ./media/HouseMetrics.png
+.. figure:: ../media/HouseMetrics.png
 	:name: fig_met_house
 
 	GridLAB-D house metrics
 
-.. figure:: ./media/InverterMetrics.png
+.. figure:: ../media/InverterMetrics.png
 	:name: fig_met_inv
 
 	GridLAB-D inverter metrics
@@ -388,7 +388,7 @@ price and type are recorded for each market clearing interval’s id. That
 clearing price applies throughout the feeder, so it can be used for
 supplemental revenue calculations until more agents are developed.
 
-.. figure:: ./media/AgentMetrics.png
+.. figure:: ../media/AgentMetrics.png
 	:name: fig_met_agent
 
 	TEAgent dictionary and metrics
@@ -411,7 +411,7 @@ correspond to the market clearing price from :numref:`fig_met_agent`. Finally, t
 *ashrae\_uncomfortable\_hours* is based on a simple standardized model,
 aggregated for all zones :cite:`14`.
 
-.. figure:: ./media/EplusMetrics.png
+.. figure:: ../media/EplusMetrics.png
 	:name: fig_met_eplus
 
 	EnergyPlus dictionary and metrics
@@ -525,7 +525,7 @@ customization, code re-use, etc.
 tesp_support Package Design
 ---------------------------
 
-.. figure:: ./media/tesp_support.png
+.. figure:: ../media/tesp_support.png
 	:name: fig_tesp_support
 
 	Classes in the tesp_support package.
