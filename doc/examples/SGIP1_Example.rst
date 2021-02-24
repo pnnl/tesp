@@ -266,6 +266,7 @@ The functionalities shown in :numref:`fig_sgip1` are implemented in simulation t
 Figure :numref:`fig_clearing_sequence` is a sequence diagram showing the order of events and communication of information between the software entities. 
 
 Due to limitations in the load modeling provided by Energy+, some expected interactions are not included in this system model. Specifically:
+
     - The loads modeled internally in Energy+ are not responsive to voltage and thus the interaction between it and GridLAB-D is only one way: Energy+ just provides a real power load; GridLAB-D does not assume a power factor and the the Energy Plus Agent (which is providing the value via FNCS) does not assume one either.
     - The Energy Plus agent is only price responsive and does not provide a bid for real-time energy. **TODO: why?**
 
