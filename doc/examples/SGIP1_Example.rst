@@ -145,19 +145,13 @@ yet been implemented.
 	:name: fig_sgip1
 
 	SGIP-1 system configuration with partial PV and storage adoption
+	
 
 The Circuit Model
 .................
 
-:numref:`fig_pp_sgip1` shows the bulk system model in PYPOWER. It is a small system
-with three generating units and three load buses that comes with
-PYPOWER, to which we added a high-cost peaking unit to assure
-convergence of the optimal power flow in all cases. In SGIP-1
-simulations, generating unit 2 was taken offline on the second day to
-simulate a contingency. The GridLAB-D model was connected to Bus 7, and
-scaled up to represent multiple feeders. In this way, prices, loads and
-resources on transmission and distribution systems can impact each
-other.
+:numref:`fig_pp_sgip1` shows the bulk system model in PYPOWER. It is a small system with three generating units and three load buses that comes with
+PYPOWER, to which we added a high-cost peaking unit to assure convergence of the optimal power flow in all cases. In SGIP-1 simulations, generating unit 2 was taken offline on the second day to simulate a contingency. The GridLAB-D model was connected to Bus 7, and scaled up to represent multiple feeders. In this way, prices, loads and resources on transmission and distribution systems can impact each other.
 
 .. figure:: ../media/PYPOWERsystem.png
 	:name: fig_pp_sgip1
