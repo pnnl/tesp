@@ -367,6 +367,70 @@ don’t have transactive agents yet.
 	:name: fig_met_inv
 
 	GridLAB-D inverter metrics
+	
+Sample of resulting JSON::
+
+    {
+    "Metadata": {
+        "reactive_power_avg": {
+            "index": 5,
+            "units": "VAR"
+        },
+        "reactive_power_max": {
+            "index": 4,
+            "units": "VAR"
+        },
+        "reactive_power_min": {
+            "index": 3,
+            "units": "VAR"
+        },
+        "real_power_avg": {
+            "index": 2,
+            "units": "W"
+        },
+        "real_power_max": {
+            "index": 1,
+            "units": "W"
+        },
+        "real_power_min": {
+            "index": 0,
+            "units": "W"
+        }
+    },
+    "StartTime": "2013-07-01 00:00:00 PDT",
+    "10200": {
+        "battery_inverter_house10_R1_12_47_1_tm_157": [
+            -0.0,
+            -0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        "battery_inverter_house10_R1_12_47_1_tm_273": [
+            -0.0,
+            -0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        ...
+        }
+    "10500": {
+        "battery_inverter_house10_R1_12_47_1_tm_157": [
+            -0.0,
+            -0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        ],
+        ...
+        }
+    }
+    	
+	
 
 :numref:`fig_met_agent` shows the transactive agent dictionary and metrics file
 structures. Currently, these include one double-auction market per
