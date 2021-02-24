@@ -259,7 +259,7 @@ The functionalities shown in :numref:`fig_sgip1` are implemented in simulation t
         - Using the bid information from the generation natively represented in the bulk power system model and the price-responsive load bids provided by the Substation Agent, find the real-time energy price for each node the bulk power system (the LMP) by solving the optimal power flow problem to find the least-cost dispatch for generation and flexible load. Communicate the appropriate LMP to the Substation Agent.
 
 
-.. figure:: ../media/ClearingSequence.png
+.. figure:: ../media/ClearingSequence2.png
 	:name: fig_clearing_sequence
 
 	Sequence of operations to clear market operations
