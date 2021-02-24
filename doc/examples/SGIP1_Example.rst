@@ -222,21 +222,61 @@ operate autonomously in load-following mode.
   +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
   | **Case**      | **Houses**   | **HVAC Controllers**   | **Waterheaters**   | **PV Systems**   | **Storage Systems**   |
   +===============+==============+========================+====================+==================+=======================+
-  | No TE         | 1594         | 1                      | 1151               | 0                | 0                     |
+  | (a) No TE         | 1594         | 1                      | 1151               | 0                 | 0                     |
   +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
-  | Year 0        | 1594         | 755                    | 1151               | 0                | 0                     |
+  | (b) Year 0        | 1594         | 755                    | 1151               | 0                 | 0                     |
   +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
-  | Year 1        | 1594         | 755                    | 1151               | 159              | 82                    |
+  | (c) Year 1        | 1594         | 755                    | 1151               | 159              | 82                    |
+   +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
+  | (d) Year 2        | 1594         | 755                    | 1151               | 311               | 170                   |
   +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
-  | Year 2        | 1594         | 755                    | 1151               | 311              | 170                   |
-  +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
-  | Year 3        | 1594         | 755                    | 1151               | 464              | 253                   |
+  | (e) Year 3        | 1594         | 755                    | 1151               | 464               | 253                   |
   +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
 
 Simulation Architecture Model
 -----------------------------
 
-Provides details into the design of the software to execute the analysis, leading to the ability to calculate the key performance and validation metrics. 
+**TODO: Provides details into the design of the software to execute the analysis, leading to the ability to calculate the key performance and validation metrics.**
+
+Simulated Functionalities
+.........................
+
+The functionalities shown in :numref:`fig_sgip1` are implemented in simulation through a collection of software entities. Some of these entities perform dual roles (such as PYPOWER), solving equations that define the physical state of the system (in this case by solving the powerflow problem) and in also performing market operations to define prices (in this case by solving the optimal power flow problem).
+
+    -  **GridLAB-D**
+        - Simulates the physics of the electrical distribution system by solving the power flow of the specified distribution feeder model. To accomplish this it must provide the total distribution feeder load to PYPOWER (bulk power system simulator) and receives from it the substation input voltage.
+        - Simulates the thermodynamics and HVAC thermostat control for all residential buildings in the specified distribution feeder model. Provides thermodynamic state information to the Substation Agent to allow formation of real-time energy bids.
+    - **Substation Agent**
+        - Contains all the transactive agents for the residential customers. Using the current state of the individual customers' residences (*e.g.* indoor air temperature) These agents form real-time energy bids for their respective customers and adjust HVAC thermostat setpoints based on the cleared price.
+        - Aggregates all individual HVAC agents' real-time energy bids to form a single bid to present to the wholesale real-time energy market.
+    - **EnergyPlus**
+        - Simulates the thermodynamics of a multi-zone structure (an elementary school in this case)
+        - Simulates the integrated controller of said structure
+        - Communicates electrical load of said structure to GridLAB-D for its use in solving the powerflow of the distribution feeder model.
+    - **PYPOWER**
+        - After collecting the load information from GridLAB-D (and scaling it up to a value representative of an entire node in the transmission model) solves the bulk power system power flow to define the nodal voltages, communicating the appropriate value to GridLAB-D.
+        - Using the bid information from the generation natively represented in the bulk power system model and the price-responsive load bids provided by the Substation Agent, find the real-time energy price for each node the bulk power system (the LMP) by solving the optimal power flow problem to find the least-cost dispatch for generation and flexible load. Communicate the appropriate LMP to the Substation Agent.
+
+
+.. figure:: ../media/ClearingSequence.png
+	:name: fig_clearing_sequence
+
+	Sequence of operations to clear market operations
+	
+Figure :numref:`fig_clearing_sequence` is a sequence diagram showing the order of events and communication of information between the software entities. 
+
+Due to limitations in the load modeling provided by Energy+, some expected interactions are not included in this system model. Specifically:
+    - The loads modeled internally in Energy+ are not responsive to voltage and thus the interaction between it and GridLAB-D is only one way: Energy+ just provides a real power load; GridLAB-D does not assume a power factor and the the Energy Plus Agent (which is providing the value via FNCS) does not assume one either.
+    - The Energy Plus agent is only price responsive and does not provide a bid for real-time energy. **TODO: why?**
+
+
+
+Data Collection
+...............
+**TODO: Is this important? Just link the in the UML class diagrams and highlight the particularly important parts? Generally discuss how metrics collection works in TESP? That should probably be saved for general discussion of the API**
+ 
+
+
 
 
 Analysis Results - Model Validation
