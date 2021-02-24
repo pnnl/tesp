@@ -40,7 +40,7 @@ TESP Example Analysis
 ---------------------
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
 
     
     ./examples/SGIP1_Example
