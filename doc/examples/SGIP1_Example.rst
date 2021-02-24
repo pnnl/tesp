@@ -277,7 +277,27 @@ Data Collection
 **TODO: Is this important? Just link the in the UML class diagrams and highlight the particularly important parts? Generally discuss how metrics collection works in TESP? That should probably be saved for general discussion of the API**
  
 
+Running the Example
+-------------------
 
+As shown in :numref:`tbl_sgip1`, the SGIP1 example is actually a set of five separate co-simulation runs. Performing each run takes somewhere around two hours (depending on the hardware) though they are entirely independent and thus can be run in parallel if sufficient computation resources are available. To avoid slowdowns due to swapping, it is recommended that each run be allocated 16Gb of memory.
+
+To launch one of these runs, only a few simple commands are needed::
+
+    cd ~/tesp/examples/sgip1
+    python3 prepare_cases.py # Prepares all SGIP1 cases
+    # run and plot one of the cases
+    ./runSGIP1b.sh
+    
+    
+``./runSGIP1b.sh`` will return a command prompt with the co-simulation running in the background. To check how far along the co-simulation monitoring one of the output files is the most straight-forward way::
+
+    cat SGIP1b.csv
+    
+The first entry in every line of the file is the number of seconds in the co-simulation that have been completed thus far. The co-simulation is finished at 172800 seconds. After that is complete, a set of summary plots can be created with the following command::
+
+    python3 plots.py SGIP1b
+    
 
 
 Analysis Results - Model Validation
