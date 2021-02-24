@@ -20,6 +20,7 @@ The goal of this analysis are as follows:
 
     - Evaluate the effectiveness of using transactively enabled DERs for reducing peak load.
     - Evaluate the value exchange for residential customers in terms of comfort lost and monetary compensation.
+    - Evaluate the impacts of increasing rooftop solar PV penetration and energy storage on the transactive system performance.
     - Demonstrate the capabilities of TESP to perform transactive system co-simulations.
 
 
