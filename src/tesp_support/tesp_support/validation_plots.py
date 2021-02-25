@@ -128,7 +128,7 @@ def load_data():
 
     logger.info('Loading processed metrics data')
     data = {}
-    cases = ['b', 'c', 'd', 'e']
+    cases = ['a', 'b']
     for case in cases:
         data[case] = {}
 
@@ -389,7 +389,8 @@ def plot_avg_indoor_air_temperature(data):
     :return:
     '''
     if 'a' in data.keys() and 'b' in data.keys():
-        if 'gld' in data['a'].keys() and 'gld' in data['b'].keys():
+        if 'gld' in data['a'].keys() and 'gld' in data['b'].keys() and \
+                'pypower' in data['a'].keys():
             if data['a']['gld']['found_data'] and \
                 data['b']['gld']['found_data']:
 
@@ -403,26 +404,41 @@ def plot_avg_indoor_air_temperature(data):
                 b_keys_h = data['b']['gld']['keys_h']
                 b_idx_h = data['b']['gld']['idx_h']
 
+                bp_hrs = data['b']['pypower']['hrs']
+                bp_data_b = data['b']['pypower']['data_b']
+                bp_idx_b = data['b']['pypower']['idx_b']
+
                 a_avg = (a_data_h[:,:,a_idx_h['HSE_AIR_AVG_IDX']]).squeeze()
                 a_avg2 = a_avg.mean(axis=0)
                 b_avg = (b_data_h[:,:,b_idx_h['HSE_AIR_AVG_IDX']]).squeeze()
                 b_avg2 = b_avg.mean(axis=0)
 
-                plt.plot(a_hrs, a_avg2, color='blue', label='Case (a) - '
+                fig, ax = plt.subplots()
+                ax2 = ax.twinx()
+                ln1 = ax.plot(a_hrs, a_avg2, color='blue', label='Case (a) - '
                                                            'Non-Transactive')
-                plt.plot(b_hrs, b_avg2, color='red', label='Case (b) - Transactive')
-                plt.ylabel(a_idx_h['HSE_AIR_AVG_UNITS'])
+                ln2 = ax.plot(b_hrs, b_avg2, color='red', label='Case (b) - '
+                                                         'Transactive')
+                ln3 = ax2.plot(bp_hrs, bp_data_b[0, :, bp_idx_b['LMP_P_IDX']],
+                        color='red', label='Case (b) - Transactive Price',
+                               linestyle='dashed')
+                ax.set_ylabel(a_idx_h['HSE_AIR_AVG_UNITS'])
+                ax2.set_ylabel(bp_idx_b['LMP_P_UNITS'])
+                lns = ln1 + ln2 + ln3
+                labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Residential Indoor Temperatures')
-                plt.legend(loc='upper left')
+                ax.legend(lns, labels, loc='upper left')
                 plt.show()
                 logger.info('\tCompleted plot_avg_indoor_air_temperature.')
             else:
-                logger.error('\tMissing GridLAB-D data; unable to complete '
-                             'plot_avg_indoor_air_temperature.')
+                logger.error('\tMissing GridLAB-D or PYPOWER data; unable to '
+                             'complete plot_avg_indoor_air_temperature.')
                 if (data['a']['gld']['found_data']) == False:
-                    logger.error('\t\tMissing data for Case (a)')
+                    logger.error('\t\tMissing GridLAB-D data for Case (a)')
                 if (data['b']['gld']['found_data']) == False:
-                    logger.error('\t\tMissing data for Case (b)')
+                    logger.error('\t\tMissing GridLAB-D data for Case (b)')
+                if (data['b']['pypower']['found_data']) == False:
+                    logger.error('\t\tMissing PYPOWER data for Case (b)')
         else:
             if 'gld' not in data['a'].keys():
                 logger.error('\tNo GridLAB-D data loaded for Case (a); '
@@ -430,6 +446,10 @@ def plot_avg_indoor_air_temperature(data):
                              'plot_avg_indoor_air_temperature.')
             if 'gld' not in data['b'].keys():
                 logger.error('\tNo GridLAB-D data loaded for Case (b); '
+                             'unable to complete '
+                             'plot_avg_indoor_air_temperature.')
+            if 'pypower' not in data['b'].keys():
+                logger.error('\tNo PYPOWER data loaded for Case (b); '
                              'unable to complete '
                              'plot_avg_indoor_air_temperature.')
     else:
