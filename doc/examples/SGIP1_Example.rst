@@ -299,7 +299,53 @@ The first entry in every line of the file is the number of seconds in the co-sim
 Analysis Results - Model Validation
 -----------------------------------
 
-Using the metrics and data presentations previously defined, demonstrate that the behavior of the model is reasonable.
+.. figure:: ../media/validation_generator_outputs.png
+	:name: fig_validation_generator_outputs
+	
+	Generator outputs of bulk power system, showing the loss of Unit 3 on the second day.
+	
+.. figure:: ../media/validation_transactive_bus_prices.png
+	:name: fig_validation_transactive_bus_prices
+	
+	Wholesale market prices (LMPs) for base and transactive cases, showing lower prices during the peak of the day as transactively participating loads respond.	
+	
+.. figure:: ../media/validation_transactive_bus_loads2.png
+	:name: fig_validation_transactive_bus_loads4
+	
+	Total load for transactive feeder in base and transactive case. Should show peak-shaving, valley-filling, and snapback as prices come down off their peak.
+	
+.. figure:: ../media/validation_transactive_bus_loads4.png
+	:name: fig_validation_transactive_bus_loads2
+	
+	Total load for transactive feeder in for four transactive cases with increasing levels of rooftop solar PV and energy storage penetration.
+
+.. figure:: ../media/validation_residential_indoor_temperature.png
+	:name: fig_validation_residential_indoor_temperature
+	
+	Average residential indoor air temperature for all houses in both base and transactive case. The effect of the transactive controller for the HVACS drives lower relatively lower temperatures during low price periods and relatively higher prices during higher periods.
+	
+.. figure:: ../media/validation_solar_output.png
+	:name: fig_validation_solar_output_output
+	
+	Total residential rooftop solar output on the transactive feeder across the four cases within increasing penetration. The rooftop solar is not price responsive. As expected, increasing PV penetration showing increased PV production.
+	
+.. figure:: ../media/validation_ES_output.png
+	:name: fig_validation_ES_output_output
+	
+	Total residential energy storage output on the transactive feeder across the four cases within increasing penetration. **TODO: What is the control algorithm for the ES? Is is price responsive or part of the bidding?**. As expected, increasing energy storage penetration shows higher magnitude charging and discharging activity.
+	
+.. figure:: ../media/validation_commercial_building_indoor_temperature.png
+	:name: fig_validation_commercial_building_indoor_temperature
+	
+	Commercial building (as modeled in Energy+) indoor air temperature for the base and transactive case. Results should be similar to the residential indoor air temperature with lower temperatures during low-price periods and higher temperatures during high-price periods. **TODO: why isn't the indoor temperature moving with price?**
+	
+.. figure:: ../media/validation_commercial_building_prices.png
+	:name: fig_validation_commercial_building_prices
+	
+	Commercial building (as modeled in Energy+) prices from the wholesale market as managed by the Energy+ agent. **TODO: Why are the prices flat?**
+	
+	
+
 
 Analysis Results - Key Performance Metrics
 ------------------------------------------
