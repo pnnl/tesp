@@ -627,7 +627,8 @@ def plot_energy_plus_indoor_temperature(data):
     :return:
     '''
     if 'a' in data.keys() and 'b' in data.keys():
-        if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys():
+        if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys() and \
+                'pypower' in data['b'].keys():
             if data['a']['eplus']['found_data'] and \
                 data['b']['eplus']['found_data']:
 
@@ -637,16 +638,27 @@ def plot_energy_plus_indoor_temperature(data):
                 b_hrs = data['b']['eplus']['hrs']
                 b_data = data['b']['eplus']['data_e']
                 b_idx = data['b']['eplus']['idx_e']
+                bp_hrs = data['b']['pypower']['hrs']
+                bp_data_b = data['b']['pypower']['data_b']
+                bp_idx_b = data['b']['pypower']['idx_b']
 
-                plt.plot(a_hrs, a_data[:,a_idx['COOLING_TEMPERATURE_IDX']],
-                         color='blue',
-                         label='Case (a) - Non-transactive')
-                plt.plot(b_hrs, b_data[:,b_idx['COOLING_TEMPERATURE_IDX']],
-                         color='red',
-                         label='Case (b) - Transactive')
-                plt.ylabel(a_idx['COOLING_TEMPERATURE_UNITS'])
+                fig, ax = plt.subplots()
+                ax2 = ax.twinx()
+                ln1 = ax.plot(a_hrs, a_data[:,a_idx[
+                                                  'COOLING_TEMPERATURE_IDX']],
+                         color='blue', label='Case (a) - Non-transactive')
+                ln2 = ax.plot(b_hrs, b_data[:,b_idx[
+                                                  'COOLING_TEMPERATURE_IDX']],
+                         color='red', label='Case (b) - Transactive')
+                ln3 = ax2.plot(bp_hrs, bp_data_b[0, :, bp_idx_b['LMP_P_IDX']],
+                        color='red', label='Case (b) - Transactive Price',
+                               linestyle='dashed')
+                ax.set_ylabel(a_idx['COOLING_TEMPERATURE_UNITS'])
+                ax2.set_ylabel(bp_idx_b['LMP_P_UNITS'])
+                lns = ln1 + ln2 + ln3
+                labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Commercial Building Indoor Temperature')
-                plt.legend(loc='lower left')
+                ax.legend(lns, labels, loc='upper left')
                 plt.show()
                 logger.info('\tCompleted plot_energy_plus_indoor_temperature.')
             else:
@@ -663,6 +675,10 @@ def plot_energy_plus_indoor_temperature(data):
                              'plot_energy_plus_indoor_temperature.')
             if 'eplus' not in data['b'].keys():
                 logger.error('\tNo Energy+ data loaded for Case (b); unable '
+                             'to complete '
+                             'plot_energy_plus_indoor_temperature.')
+            if 'pypower' not in data['b'].keys():
+                logger.error('\tNo PYPOWER data loaded for Case (b); unable '
                              'to complete '
                              'plot_energy_plus_indoor_temperature.')
     else:
