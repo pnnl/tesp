@@ -170,7 +170,7 @@ def plot_gen_comparison(data):
                 plt.plot(hrs, a_data_g[4, :, a_idx_g['PGEN_IDX']], color='gray', label='unit 5')
                 plt.ylabel(a_idx_g['PGEN_UNITS'])
                 plt.title('Comparison of Generator Output')
-                plt.legend(loc='upper right')
+                plt.legend(loc='center left')
                 plt.show()
                 logger.info('\tCompleted plot_gen_comparison.')
             else:
@@ -658,7 +658,7 @@ def plot_energy_plus_indoor_temperature(data):
                 lns = ln1 + ln2 + ln3
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Commercial Building Indoor Temperature')
-                ax.legend(lns, labels, loc='upper left')
+                ax.legend(lns, labels, loc='center left')
                 plt.show()
                 logger.info('\tCompleted plot_energy_plus_indoor_temperature.')
             else:
