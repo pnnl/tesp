@@ -128,7 +128,7 @@ def load_data():
 
     logger.info('Loading processed metrics data')
     data = {}
-    cases = ['a', 'b']
+    cases = ['a', 'b', 'c', 'd', 'e']
     for case in cases:
         data[case] = {}
 
@@ -567,14 +567,14 @@ def plot_ES_output(data):
                 e_hrs = data['e']['gld']['hrs']
                 e_battery_kw = data['e']['gld']['battery_kw']
 
-                plt.plot(b_hrs, b_battery_kw, color='red', label='Case (b) - 0 PV '
-                                                              'systems')
-                plt.plot(c_hrs, c_battery_kw, color='green', label='Case (c) - 159 PV '
-                                                                'systems')
-                plt.plot(d_hrs, d_battery_kw, color='magenta', label='Case (d) - 311 '
-                                                                    'PV systems')
-                plt.plot(e_hrs, e_battery_kw, color='gray', label='Case (e) - 464 PV '
-                                                                'systems')
+                plt.plot(b_hrs, b_battery_kw, color='red', label='Case (b) - 0 ES '
+                                                        'systems')
+                plt.plot(c_hrs, c_battery_kw, color='green', label='Case (c) - 82 ES '
+                                                        'systems')
+                plt.plot(d_hrs, d_battery_kw, color='magenta', label='Case ('
+                                                        'd) - 170 ES systems')
+                plt.plot(e_hrs, e_battery_kw, color='gray', label='Case (e) '
+                                                        '- 253 ES systems')
                 plt.ylabel('kW')
                 plt.title('Comparison of Total Residential ES Output')
                 plt.legend(loc='lower right')
