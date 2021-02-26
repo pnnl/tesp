@@ -127,20 +127,15 @@ The level of detail is somewhat subjective and up to those leading the analysis.
 Simulated System Model
 ----------------------
 
-:numref:`fig_sgip1` shows the types of assets and stakeholders considered for the
-use cases in this version. The active market participants include a
-double-auction market at the substation level, the bulk transmission and
-generation system, a large commercial building with one-way responsive HVAC
-thermostat, and single-family residences that have a two-way responsive HVAC
-thermostat. Transactive message flows and key attributes are indicated
-in **orange**.
+:numref:`fig_sgip1` shows the types of assets and stakeholders considered for the use cases in this version. The active market participants include a double-auction market at the substation level, the bulk transmission and generation system, a large commercial building with one-way (price-responsive only) HVAC thermostat, and single-family residences that have a two-way (fully transactive) HVAC thermostat. Transactive message flows and key attributes are indicated in **orange**.
 
-In addition, the model includes PV and storage resources at some of the
-houses, and waterheaters at many houses. These resources can be
-transactive, but are not in this version because the corresponding
-separate TEAgents have not been implemented yet. Likewise, the planned
-new TEAgent that implements load shedding from the substation has not
-yet been implemented.
+In addition, the model includes residential rooftop solar PV and electrical energy storage resources at some of the houses, and waterheaters at many houses. These resources can be transactive, but are not in this version. The rooftop solar PV has a nameplate efficiency of 20% and inverters with 100% efficiency. inverters are set to operate at a constant power factor of 1.0. The rated power of the rooftop solar PV installations varies from house to house and ranges from roughly 2.7 kW to 4.5 kW.
+
+The energy storage devices also have inverters with 100% efficiency and operate in an autonomous load-following mode that performs peak-shaving and valley-filling based on the total load of the customer's house to which it is attached. All energy storage devices are identical with a capacity of 13.5 kWh and a rated power of 5 kW (both charging and discharging). The batteries are modeled as lithium-ion batteries with a round-trip efficiency of 86%.
+
+**TODO: Add table showing total capacity of solar PV and ESS for all cases? The growth model table has similar information. Add to it or replace count information with rating information? **
+
+**TODO: Add link to growth model table.**
 
 .. figure:: ../media/SGIP1system.png
 	:name: fig_sgip1
@@ -228,6 +223,8 @@ operate autonomously in load-following mode.
   | (e) Year 3    | 1594         | 755                    | 1151               | 464              | 253                   |
   +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
   
+  
+
 
 Simulation Architecture Model
 -----------------------------
@@ -242,6 +239,8 @@ The functionalities shown in :numref:`fig_sgip1` are implemented in simulation t
     -  **GridLAB-D**
         - Simulates the physics of the electrical distribution system by solving the power flow of the specified distribution feeder model. To accomplish this it must provide the total distribution feeder load to PYPOWER (bulk power system simulator) and receives from it the substation input voltage.
         - Simulates the thermodynamics and HVAC thermostat control for all residential buildings in the specified distribution feeder model. Provides thermodynamic state information to the Substation Agent to allow formation of real-time energy bids.
+        - Simulates the production of the solar PV panels and their local controller (for the cases that include such devices).
+        Simulates the physics of the energy storage devices and the behavior of their local controllers.
     - **Substation Agent**
         - Contains all the transactive agents for the residential customers. Using the current state of the individual customers' residences (*e.g.* indoor air temperature) These agents form real-time energy bids for their respective customers and adjust HVAC thermostat setpoints based on the cleared price.
         - Aggregates all individual HVAC agents' real-time energy bids to form a single bid to present to the wholesale real-time energy market.
@@ -332,7 +331,7 @@ Analysis Results - Model Validation
 .. figure:: ../media/validation_ES_output.png
 	:name: fig_validation_ES_output_output
 	
-	Total residential energy storage output on the transactive feeder across the four cases within increasing penetration. **TODO: What is the control algorithm for the ES? Is is price responsive or part of the bidding?**. As expected, increasing energy storage penetration shows higher magnitude charging and discharging activity.
+	Total residential energy storage output on the transactive feeder across the four cases within increasing penetration. The energy storage controller engages in peak-shaving and valley-filling based on the billing meter for the residential customer.
 	
 .. figure:: ../media/validation_commercial_building_indoor_temperature.png
 	:name: fig_validation_commercial_building_indoor_temperature
