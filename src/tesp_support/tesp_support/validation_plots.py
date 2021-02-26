@@ -137,8 +137,8 @@ def load_data():
         data = load_pypower_data(data, case)
 
     # Load GLD data
-    for case in cases:
-        data = load_gld_data(data, case)
+    # for case in cases:
+    #    data = load_gld_data(data, case)
 
     # Load Energy+ data
     for case in cases:
@@ -208,9 +208,9 @@ def plot_transactive_bus_LMP(data):
                 b_idx_b = data['b']['pypower']['idx_b']
 
                 plt.plot(a_hrs, a_data_b[0, :, a_idx_b['LMP_P_IDX']], color='blue',
-                         label='Case (a) - Non-transactive')
+                         label='Case (a) - Non-transactive', linewidth=1)
                 plt.plot(b_hrs, b_data_b[0, :, b_idx_b['LMP_P_IDX']], color='red',
-                         label='Case (b) - Transactive')
+                         label='Case (b) - Transactive', linewidth=1)
                 plt.ylabel(a_idx_b['LMP_P_UNITS'])
                 plt.title('Comparison of Marginal Price at Bus 7')
                 plt.legend(loc='best')
@@ -260,13 +260,22 @@ def plot_transactive_feeder_load(data):
                 b_hrs = data['b']['pypower']['hrs']
                 b_data_b = data['b']['pypower']['data_b']
                 b_idx_b = data['b']['pypower']['idx_b']
-                plt.plot(a_hrs, a_data_b[0, :, a_idx_b['PD_IDX']], color='blue',
-                         label='Case (a) - Non-transactive')
-                plt.plot(b_hrs, b_data_b[0, :, b_idx_b['PD_IDX']], color='red',
-                         label='Case (b) - Transactive')
-                plt.ylabel(a_idx_b['PD_UNITS'])
+                fig, ax = plt.subplots()
+                ax2 = ax.twinx()
+                ln1 = ax.plot(b_hrs, b_data_b[0, :, b_idx_b['PD_IDX']],
+                              color='red', label='Case (b) - Transactive')
+                ln2 = ax.plot(a_hrs, a_data_b[0, :, a_idx_b['PD_IDX']],
+                              color='blue', label='Case (a) - Non-transactive')
+                ln3 = ax2.plot(b_hrs, b_data_b[0, :, b_idx_b['LMP_P_IDX']],
+                               color='red',
+                               label='Case (b) - Transactive Price',
+                               linestyle='dashed', linewidth=1)
+                ax.set_ylabel(a_idx_b['PD_UNITS'])
+                ax2.set_ylabel(b_idx_b['LMP_P_UNITS'])
+                lns = ln1 + ln2 + ln3
+                labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Total Load at Bus 7')
-                plt.legend(loc='best')
+                ax.legend(lns, labels, loc='lower left')
                 plt.show()
                 logger.info('\tCompleted plot_transactive_feeder_load.')
             else:
@@ -421,7 +430,7 @@ def plot_avg_indoor_air_temperature(data):
                                                          'Transactive')
                 ln3 = ax2.plot(bp_hrs, bp_data_b[0, :, bp_idx_b['LMP_P_IDX']],
                         color='red', label='Case (b) - Transactive Price',
-                               linestyle='dashed')
+                               linestyle='dashed', linewidth=1)
                 ax.set_ylabel(a_idx_h['HSE_AIR_AVG_UNITS'])
                 ax2.set_ylabel(bp_idx_b['LMP_P_UNITS'])
                 lns = ln1 + ln2 + ln3
@@ -644,15 +653,15 @@ def plot_energy_plus_indoor_temperature(data):
 
                 fig, ax = plt.subplots()
                 ax2 = ax.twinx()
-                ln1 = ax.plot(a_hrs, a_data[:,a_idx[
-                                                  'COOLING_TEMPERATURE_IDX']],
-                         color='blue', label='Case (a) - Non-transactive')
                 ln2 = ax.plot(b_hrs, b_data[:,b_idx[
                                                   'COOLING_TEMPERATURE_IDX']],
                          color='red', label='Case (b) - Transactive')
+                ln1 = ax.plot(a_hrs, a_data[:,a_idx[
+                                                  'COOLING_TEMPERATURE_IDX']],
+                         color='blue', label='Case (a) - Non-transactive')
                 ln3 = ax2.plot(bp_hrs, bp_data_b[0, :, bp_idx_b['LMP_P_IDX']],
                         color='red', label='Case (b) - Transactive Price',
-                               linestyle='dashed')
+                               linestyle='dashed', linewidth=1)
                 ax.set_ylabel(a_idx['COOLING_TEMPERATURE_UNITS'])
                 ax2.set_ylabel(bp_idx_b['LMP_P_UNITS'])
                 lns = ln1 + ln2 + ln3
