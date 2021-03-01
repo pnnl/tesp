@@ -64,7 +64,9 @@ Electrical energy per day
 where
 
     :math:`t` is simulation time
+    
     :math:`t_{day}` is the last simulated time for each day
+    
     :math:`P_{sub}` is the real power for the feeder as measured at the substation
     
     
