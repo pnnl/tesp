@@ -38,7 +38,7 @@ Transactive Mechanism Flowchart (Sequence Diagram)
 Key Performance Metrics Definitions
 ...................................
 
-Some (but not all) of the key performance metrics used in this analysis are as follows. The entire metric list can be found in :cite:`Hammerstrom:2017ta`
+Some (but not all) of the key performance metrics used in this analysis are as follows. A list of the final metrics collected can be found in tabular form in Appendix C of :cite:`Hammerstrom:2017ta`.
 
 .. Social Welfare:
 
@@ -64,9 +64,7 @@ Electrical energy per day
 where
 
     :math:`t` is simulation time
-    
     :math:`t_{day}` is the last simulated time for each day
-    
     :math:`P_{sub}` is the real power for the feeder as measured at the substation
     
     
