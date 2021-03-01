@@ -124,7 +124,7 @@ htmlhelp_basename = 'TESPdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
-
+imgmath_use_preview = True
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
