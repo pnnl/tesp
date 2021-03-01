@@ -137,8 +137,8 @@ def load_data():
         data = load_pypower_data(data, case)
 
     # Load GLD data
-    # for case in cases:
-    #    data = load_gld_data(data, case)
+    for case in cases:
+        data = load_gld_data(data, case)
 
     # Load Energy+ data
     for case in cases:
@@ -169,6 +169,7 @@ def plot_gen_comparison(data):
                 plt.plot(hrs, a_data_g[3, :, a_idx_g['PGEN_IDX']], color='magenta', label='unit 4')
                 plt.plot(hrs, a_data_g[4, :, a_idx_g['PGEN_IDX']], color='gray', label='unit 5')
                 plt.ylabel(a_idx_g['PGEN_UNITS'])
+                plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Generator Output')
                 plt.legend(loc='center left')
                 plt.show()
@@ -212,6 +213,7 @@ def plot_transactive_bus_LMP(data):
                 plt.plot(b_hrs, b_data_b[0, :, b_idx_b['LMP_P_IDX']], color='red',
                          label='Case (b) - Transactive', linewidth=1)
                 plt.ylabel(a_idx_b['LMP_P_UNITS'])
+                plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Marginal Price at Bus 7')
                 plt.legend(loc='best')
                 plt.show()
@@ -272,6 +274,7 @@ def plot_transactive_feeder_load(data):
                                linestyle='dashed', linewidth=1)
                 ax.set_ylabel(a_idx_b['PD_UNITS'])
                 ax2.set_ylabel(b_idx_b['LMP_P_UNITS'])
+                ax.set_xlabel('Simulated time (hrs)')
                 lns = ln1 + ln2 + ln3
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Total Load at Bus 7')
@@ -343,6 +346,7 @@ def plot_transactive_feeder_load_solar(data):
                 plt.plot(e_hrs, e_data_b[0, :, e_idx_b['PD_IDX']], color='gray',
                          label='Case (e) - 464/253 PV/ES systems')
                 plt.ylabel(b_idx_b['PD_UNITS'])
+                plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Load at Bus 7')
                 plt.legend(loc='lower left')
                 plt.show()
@@ -433,6 +437,7 @@ def plot_avg_indoor_air_temperature(data):
                                linestyle='dashed', linewidth=1)
                 ax.set_ylabel(a_idx_h['HSE_AIR_AVG_UNITS'])
                 ax2.set_ylabel(bp_idx_b['LMP_P_UNITS'])
+                ax.set_xlabel('Simulated time (hrs)')
                 lns = ln1 + ln2 + ln3
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Residential Indoor Temperatures')
@@ -506,6 +511,7 @@ def plot_solar_output(data):
                 plt.plot(e_hrs, e_solar_kw, color='gray', label='Case (e) - 464 PV '
                                                                 'systems')
                 plt.ylabel('kW')
+                plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Residential PV Output')
                 plt.legend(loc='lower left')
                 plt.show()
@@ -585,6 +591,7 @@ def plot_ES_output(data):
                 plt.plot(e_hrs, e_battery_kw, color='gray', label='Case (e) '
                                                         '- 253 ES systems')
                 plt.ylabel('kW')
+                plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Residential ES Output')
                 plt.legend(loc='lower right')
                 plt.show()
@@ -664,6 +671,7 @@ def plot_energy_plus_indoor_temperature(data):
                                linestyle='dashed', linewidth=1)
                 ax.set_ylabel(a_idx['COOLING_TEMPERATURE_UNITS'])
                 ax2.set_ylabel(bp_idx_b['LMP_P_UNITS'])
+                ax.set_xlabel('Simulated time (hrs)')
                 lns = ln1 + ln2 + ln3
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Commercial Building Indoor Temperature')
@@ -723,6 +731,7 @@ def plot_energy_plus_prices(data):
                 plt.plot(a_hrs, b_data[:,b_idx['PRICE_IDX']], color='red',
                          label='Case (b) - Transactive')
                 plt.ylabel(a_idx['PRICE_UNITS'])
+                plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Commercial Building Real-Time Energy Price')
                 plt.legend(loc='best')
                 plt.show()
