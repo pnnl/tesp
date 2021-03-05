@@ -128,7 +128,7 @@ def load_data():
 
     logger.info('Loading processed metrics data')
     data = {}
-    cases = ['a', 'b', 'c', 'd', 'e']
+    cases = ['a', 'b']
     for case in cases:
         data[case] = {}
 

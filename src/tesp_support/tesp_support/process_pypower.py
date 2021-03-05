@@ -8,6 +8,7 @@ Public Functions:
 """
 import json;
 #import sys;
+import os
 import numpy as np;
 try:
   import matplotlib as mpl;
@@ -66,16 +67,20 @@ def plot_pypower (dict):
 
   plt.show()
 
-def read_pypower_metrics (nameroot):
+def read_pypower_metrics (path, nameroot):
+  m_dict_path = os.path.join(path, f'{nameroot}_m_dict.json')
+  b_dict_path = os.path.join(path, f'bus_{nameroot}_metrics.json')
+  g_dict_path = os.path.join(path, f'gen_{nameroot}_metrics.json')
+
   # first, read and print a dictionary of relevant PYPOWER objects
-  lp = open (nameroot + '_m_dict.json').read()
+  lp = open (m_dict_path).read()
   dict = json.loads(lp)
   baseMVA = dict['baseMVA']
   gen_keys = list(dict['generators'].keys())
   gen_keys.sort()
   bus_keys = list(dict['dsoBuses'].keys())
   bus_keys.sort()
-  print ('\n\nFile', nameroot, 'has baseMVA', baseMVA)
+  print ('\n\nFile', m_dict_path, 'has baseMVA', baseMVA)
   print('\nGenerator Dictionary:')
   print('Unit Bus Type Pnom Pmax Costs[Start Stop C2 C1 C0]')
   for key in gen_keys:
@@ -88,7 +93,7 @@ def read_pypower_metrics (nameroot):
     print (key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])
 
   # read the bus metrics file
-  lp_b = open ('bus_' + nameroot + '_metrics.json').read()
+  lp_b = open (b_dict_path).read()
   lst_b = json.loads(lp_b)
   print ('\nBus Metrics data starting', lst_b['StartTime'])
 
@@ -157,7 +162,7 @@ def read_pypower_metrics (nameroot):
   print ('Minimum bus voltage = {:.4f} {:s}'.format (data_b[0,:,idx_b['VMIN_IDX']].min(), idx_b['VMIN_UNITS']))
 
   # read the generator metrics file
-  lp_g = open ('gen_' + nameroot + '_metrics.json').read()
+  lp_g = open (g_dict_path ).read()
   lst_g = json.loads(lp_g)
   print ('\nGenerator Metrics data starting', lst_g['StartTime'])
   # make a sorted list of the times, and NumPy array of times in hours
@@ -199,7 +204,7 @@ def read_pypower_metrics (nameroot):
   dict['idx_g'] = idx_g
   return dict
 
-def process_pypower(nameroot):
+def process_pypower(path, nameroot):
   """ Plots bus and generator quantities for the 9-bus system used in te30 or sgip1 examples
 
   This function reads *bus_nameroot_metrics.json* and 
@@ -221,5 +226,6 @@ def process_pypower(nameroot):
       nameroot (str): file name of the TESP case, not necessarily the same as the PYPOWER case, without the JSON extension
   """
 
-  dict = read_pypower_metrics (nameroot)
+  path = os.getcwd()
+  dict = read_pypower_metrics (path, nameroot)
   plot_pypower (dict)

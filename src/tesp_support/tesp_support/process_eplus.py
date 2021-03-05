@@ -8,6 +8,7 @@ Public Functions:
 """
 import json;
 import sys;
+import os
 import numpy as np;
 try:
   import matplotlib as mpl;
@@ -113,10 +114,12 @@ def plot_eplus (dict, title=None, pngfile=None):
   else:
     plt.show()
 
-def read_eplus_metrics (nameroot, quiet=False):
+def read_eplus_metrics (path, nameroot, quiet=False):
+  eplus_dict_path = os.path.join(path, f'eplus_{nameroot}_metrics.json')
+
   # read the JSON file
   try:
-    lp = open ('eplus_' + nameroot + '_metrics.json').read()
+    lp = open (eplus_dict_path).read()
     lst = json.loads(lp)
     if not quiet:
       print ('Metrics data starting', lst['StartTime'])
@@ -299,7 +302,8 @@ def process_eplus (nameroot, title=None, pngfile=None):
   Args:
       nameroot (str): name of the TESP case, not necessarily the same as the EnergyPlus case, without the extension
   """
-  dict = read_eplus_metrics (nameroot)
+  path = os.getcwd()
+  dict = read_eplus_metrics (path, nameroot)
   plot_eplus (dict, title, pngfile)
 
 

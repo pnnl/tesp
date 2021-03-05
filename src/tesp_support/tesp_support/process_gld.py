@@ -8,6 +8,7 @@ Public Functions:
 '''
 import json;
 import sys;
+import os
 import numpy as np;
 try:
   import matplotlib as mpl;
@@ -15,15 +16,23 @@ try:
 except:
   pass
 
-def read_gld_metrics (nameroot, dictname = ''):
+def read_gld_metrics (path, nameroot, dictname = ''):
+  glm_dict_path = os.path.join(path, f'{nameroot}_glm_dict.json' )
+  sub_dict_path = os.path.join(path, f'substation_{nameroot}_metrics.json')
+  house_dict_path = os.path.join(path, f'house_{nameroot}_metrics.json')
+  bm_dict_path = os.path.join(path, f'billing_meter_{nameroot}_metrics.json')
+  inverter_dict_path = os.path.join(path, f'inverter_{nameroot}_metrics.json')
+  cap_dict_path = os.path.join(path, f'capacitor_{nameroot}_metrics.json')
+  reg_dict_path = os.path.join(path, f'regulator_{nameroot}_metrics.json')
+
   # the feederGenerator now inserts metrics_collector objects on capacitors and regulators
-  bCollectedRegCapMetrics = True 
+  bCollectedRegCapMetrics = True
 
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
       lp = open (dictname).read()
   else:
-      lp = open (nameroot + '_glm_dict.json').read()
+      lp = open (glm_dict_path).read()
   dict = json.loads(lp)
   fdr_keys = list(dict['feeders'].keys())
   fdr_keys.sort()
@@ -42,7 +51,7 @@ def read_gld_metrics (nameroot, dictname = ''):
 
   # parse the substation metrics file first; there should just be one entity per time sample
   # each metrics file should have matching time points
-  lp_s = open ('substation_' + nameroot + '_metrics.json').read()
+  lp_s = open (sub_dict_path).read()
   lst_s = json.loads(lp_s)
   print ('\nMetrics data starting', lst_s['StartTime'])
 
@@ -60,7 +69,8 @@ def read_gld_metrics (nameroot, dictname = ''):
 
   # find the actual substation name (not a feeder name) as GridLAB-D wrote it to the metrics file
   sub_key = list(lst_s[time_key].keys())[0]
-  print ('\n\nFile', nameroot, 'has substation', sub_key, 'at bulk system bus', bulkBus, 'with', xfMVA, 'MVA transformer')
+  print ('\n\nFile', sub_dict_path, 'has substation', sub_key, 'at bulk system bus',
+         bulkBus, 'with', xfMVA, 'MVA transformer')
   print('\nFeeder Dictionary:')
   for key in fdr_keys:
     row = dict['feeders'][key]
@@ -100,12 +110,13 @@ def read_gld_metrics (nameroot, dictname = ''):
          '{:.3f}'.format (data_s[0,:,idx_s['SUB_LOSSES_IDX']].mean()), idx_s['SUB_LOSSES_UNITS'])
 
   # read the other JSON files; their times (hrs) should be the same
-  lp_h = open ('house_' + nameroot + '_metrics.json').read()
+  lp_h = open (house_dict_path).read()
   lst_h = json.loads(lp_h)
-  lp_m = open ('billing_meter_' + nameroot + '_metrics.json').read()
+  lp_m = open (bm_dict_path ).read()
   lst_m = json.loads(lp_m)
-  lp_i = open ('inverter_' + nameroot + '_metrics.json').read()
+  lp_i = open (inverter_dict_path).read()
   lst_i = json.loads(lp_i)
+
 
   # houses
   idx_h = {}
@@ -287,9 +298,9 @@ def read_gld_metrics (nameroot, dictname = ''):
       j = j + 1
 
   # capacitors and regulators
-  lp_c = open ('capacitor_' + nameroot + '_metrics.json').read()
+  lp_c = open (cap_dict_path).read()
   lst_c = json.loads(lp_c)
-  lp_r = open ('regulator_' + nameroot + '_metrics.json').read()
+  lp_r = open (reg_dict_path).read()
   lst_r = json.loads(lp_r)
 
   idx_c = {}
@@ -545,7 +556,7 @@ def process_gld(nameroot, dictname = ''):
     nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
     dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
   '''
-
-  dict = read_gld_metrics (nameroot, dictname)
+  path = os.getcwd()
+  dict = read_gld_metrics (path, nameroot, dictname)
   plot_gld (dict)
 
