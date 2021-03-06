@@ -2748,6 +2748,16 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         op.close()
 
+def write_node_houses (fp, node, region, xfkva, loadkw, phs, house_avg_kw):
+  global house_nodes
+  house_nodes = {}
+  nhouse = int ((loadkw / house_avg_kw) + 0.5)
+  if nhouse > 0:
+    lg_v_sm = loadkw / house_avg_kw - nhouse # >0 if we rounded down the number of houses
+  bldg, ti = selectResidentialBuilding (rgnThermalPct[region-1], np.random.uniform (0, 1)) # TODO - these will all be identical!
+  house_nodes[node] = [nhouse, region, lg_v_sm, phs, bldg, ti]
+  write_houses (node, fp, 120.0)
+
 def populate_feeder (configfile = None, config = None, taxconfig = None):
     """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
 

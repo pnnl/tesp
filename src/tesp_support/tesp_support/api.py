@@ -29,6 +29,7 @@ Public Functions:
 from __future__ import absolute_import
 
 from .feederGenerator import populate_feeder
+from .feederGenerator import write_node_houses
 from .fncsPYPOWER import pypower_loop 
 from .fncsPYPOWER import summarize_opf 
 from .glm_dict import glm_dict
