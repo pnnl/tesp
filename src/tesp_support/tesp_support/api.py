@@ -9,21 +9,21 @@ Example:
         tesp.pypower_loop('te30_pp.json','TE_Challenge')
 
 Public Functions:
-    :substation_loop: Supervises FNCS messages and time steps for a GridLAB-D substation with one double-auction market and many HVAC controllers.  
-    :pypower_loop: Supervises the FNCS messages, time steps, optimal power flow and power flow for PYPOWER.  
-    :summarize_opf: Print the OPF solution from PYPOWER (debugging).  
-    :precool_loop: Supervises FNCS messages and time steps for a GridLAB-D substation with many price-taking and pre-cooling HVAC controllers.  
-    :prep_substation: Writes agent metadata and FNCS subscriptions used in substation_loop.  
-    :prep_precool: Writes agent metadata and FNCS subscriptions used in precool_loop.  
-    :glm_dict: Writes the JSON metadata from a GridLAB-D file.
-    :populate_feeder: Replaces the ZIP loads with houses in a GridLAB-D file.
-    :make_tesp_case: Makes a subdirectory with all files needed to run a TESP simulation, as directed by a JSON file.
-    :make_monte_carlo_cases: Makes a subdirectory with all files needed to run a Monte Carlo TESP simulation, as directed by a JSON file.
     :convert_tmy2_to_epw: Command line utility that converts TMY2 weather files to the EPW format for EnergyPlus.
-    :weathercsv: Converts TMY3 weather data to CSV format.
-    :startWeatherAgent: Publishes FNCS messages and forecasts from a weather CSV file.
+    :glm_dict: Writes the JSON metadata from a GridLAB-D file.
     :make_ems: Creates the energy management system (EMS) for FNCS/HELICS to interface with EnergyPlus.
-
+    :make_monte_carlo_cases: Makes a subdirectory with all files needed to run a Monte Carlo TESP simulation, as directed by a JSON file.
+    :make_tesp_case: Makes a subdirectory with all files needed to run a TESP simulation, as directed by a JSON file.
+    :populate_feeder: Replaces the ZIP loads with houses in a GridLAB-D file.
+    :precool_loop: Supervises FNCS messages and time steps for a GridLAB-D substation with many price-taking and pre-cooling HVAC controllers.  
+    :prep_precool: Writes agent metadata and FNCS subscriptions used in precool_loop.  
+    :prep_substation: Writes agent metadata and FNCS subscriptions used in substation_loop.  
+    :pypower_loop: Supervises the FNCS messages, time steps, optimal power flow and power flow for PYPOWER.  
+    :startWeatherAgent: Publishes FNCS messages and forecasts from a weather CSV file.
+    :substation_loop: Supervises FNCS messages and time steps for a GridLAB-D substation with one double-auction market and many HVAC controllers.  
+    :summarize_opf: Print the OPF solution from PYPOWER (debugging).  
+    :weathercsv: Converts TMY3 weather data to CSV format.
+    :write_node_houses: Write a transformer, service drop, meters and houses connected to a node, replacing load.
 """
 
 from __future__ import absolute_import
