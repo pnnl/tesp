@@ -32,6 +32,13 @@ Version 0.9.2 (2020-09-11)
 * Execution on Linux or Docker
 * Postprocessing on Linux, Windows or Mac OS X
 
+Version 0.9.5 (2021-03-09)
+--------------------------
+
+* Standalone housing generator
+* Plot functions can save files
+* Case-generated SGIP1 example
+* Fixed the FNCS SGIP1 example
 
 
 
