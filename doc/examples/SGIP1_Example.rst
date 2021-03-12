@@ -40,19 +40,19 @@ Key Performance Metrics Definitions
 
 Some (but not all) of the key performance metrics used in this analysis are as follows. A list of the final metrics collected can be found in tabular form in Appendix C of :cite:`Hammerstrom:2017ta`.
 
-.. Social Welfare:
+Social Welfare:
 
     .. math::
 
     SW = \sum_{i=1}^{N_L}U_i(p_i^L) - \sum_{j=1}^{N_G}C_j(p_j^G)
  
      where 
-    :math: `U_i()` are the utility functions of the individual loads
-    :math: `C_j()` are the utility functions of the individual generators 
-    :math: `p_i^L` is the power consumption of the individual loads
-    :math: `p_j^G` is the power generation of the individual generators
-    :math: `N_L` is the total number of loads
-    :math: `N_G` is the total number of generators
+    * :math:`U_i()` are the utility functions of the individual loads
+    * :math:`C_j()` are the utility functions of the individual generators 
+    * :math:`p_i^L` is the power consumption of the individual loads
+    * :math:`p_j^G` is the power generation of the individual generators
+    * :math:`N_L` is the total number of loads
+    * :math:`N_G` is the total number of generators
     
 Electrical energy per day
 ,,,,,,,,,,,,,,,,,,,,,,,,
