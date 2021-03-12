@@ -30,7 +30,7 @@ ppt = pprint.PrettyPrinter(indent=4, )
 
 
 
-def load_pypower_data(data, case):
+def load_pypower_data(data, case, data_path):
     '''
     Loads data collected from PYPOWER into data dictionary
 
@@ -40,7 +40,7 @@ def load_pypower_data(data, case):
         data: data dict with PYPOWER data added
     '''
     try:
-        dict = pp.read_pypower_metrics(f'SGIP1{case}')
+        dict = pp.read_pypower_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load PYPOWER data for Case {case}.')
@@ -59,7 +59,7 @@ def load_pypower_data(data, case):
         logger.info(f'\tLoaded PYPOWER data for Case {case}.')
     return data
 
-def load_gld_data(data, case):
+def load_gld_data(data, case, data_path):
     '''
     Loads data collected from GridLAB-D into data dictionary. Not all
     GridLAB-D data is loaded into the dictionary, only that which is needed.
@@ -71,7 +71,7 @@ def load_gld_data(data, case):
     '''
 
     try:
-        dict = gp.read_gld_metrics(f'SGIP1{case}')
+        dict = gp.read_gld_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load GridLAB-D data for Case {case}.')
@@ -90,7 +90,7 @@ def load_gld_data(data, case):
     return data
 
 
-def load_energy_plus_data(data, case):
+def load_energy_plus_data(data, case, data_path):
     '''
     Loads data collected from Energy+ into data dictionary.
 
@@ -101,7 +101,7 @@ def load_energy_plus_data(data, case):
     '''
 
     try:
-        dict = ep.read_eplus_metrics(f'SGIP1{case}')
+        dict = ep.read_eplus_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load Energy+ data for Case {case}.')
@@ -118,7 +118,7 @@ def load_energy_plus_data(data, case):
 
 
 
-def load_data():
+def load_data(data_path):
     '''
      Loads data from a variety of sources to allow cross-case comparison
 
@@ -128,21 +128,23 @@ def load_data():
 
     logger.info('Loading processed metrics data')
     data = {}
-    cases = ['a', 'b']
+    cases = ['a', 'b', 'c', 'd', 'e']
     for case in cases:
         data[case] = {}
 
+
     # Load PYPOWER data
     for case in cases:
-        data = load_pypower_data(data, case)
+        data = load_pypower_data(data, case, data_path)
 
     # Load GLD data
     for case in cases:
-        data = load_gld_data(data, case)
+        data = load_gld_data(data, case, data_path)
 
     # Load Energy+ data
     for case in cases:
-        data = load_energy_plus_data(data, case)
+        data = load_energy_plus_data(data, case, data_path)
+
 
     return data
 
@@ -156,6 +158,8 @@ def plot_gen_comparison(data):
     :param data: Data dictionary with necessary data for creating plot
     :return:
     '''
+
+
     if 'a' in data.keys():
         if 'pypower' in data['a'].keys():
             if data['a']['pypower']['found_data']:
@@ -181,7 +185,7 @@ def plot_gen_comparison(data):
             logger.error('\tNo PYPOWER data loaded for Case (a); unable to '
                          'create plot_gen_comparison.')
     else:
-        logger.error('\tNo data loaded for Case (a); unable toe create '
+        logger.error('\tNo data loaded for Case (a); unable to create '
                      'plot_gen_comparison.')
 
 
@@ -841,8 +845,8 @@ def create_validation_plots(data):
 
 
 
-def _auto_run():
-    data = load_data()
+def _auto_run(args):
+    data = load_data(args.data_path)
     create_validation_plots(data)
 
 if __name__ == '__main__':
@@ -858,5 +862,12 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         handlers=[fileHandle, streamHandle])
 
-    _auto_run()
+    parser = argparse.ArgumentParser(description='data path.')
+    parser.add_argument('-p',
+                        '--data_path',
+                        nargs='?',
+                        default='/Users/hard312/testbeds/TESP_SGIP1_plots'
+                                '/simulation data/sgip1 case 3')
+    args = parser.parse_args()
+    _auto_run(args)
 
