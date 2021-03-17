@@ -1959,8 +1959,6 @@ def write_houses(basenode, op, vnom):
                 write_solar_inv_settings (op)
                 print ('    object solar {', file=op)
                 print ('      name', solname + ';', file=op)
-                print ('      generator_mode SUPPLY_DRIVEN;', file=op)
-                print ('      generator_status ONLINE;', file=op)
                 print ('      panel_type SINGLE_CRYSTAL_SILICON;', file=op)
                 print ('      efficiency','{:.2f}'.format(array_efficiency) + ';', file=op)
                 print ('      area','{:.2f}'.format(panel_area) + ';', file=op)
@@ -2001,15 +1999,12 @@ def write_houses(basenode, op, vnom):
                 print ('    power_factor 1.0;', file=op)
                 print ('    object battery { // Tesla Powerwall 2', file=op)
                 print ('      name', batname + ';', file=op)
-                print ('      generator_status ONLINE;', file=op)
                 print ('      use_internal_battery_model true;', file=op)
-                print ('      generator_mode CONSTANT_PQ;', file=op)
                 print ('      battery_type LI_ION;', file=op)
                 print ('      nominal_voltage 480;', file=op)
                 print ('      battery_capacity 13500;', file=op)
                 print ('      round_trip_efficiency 0.86;', file=op)
                 print ('      state_of_charge 0.50;', file=op)
-                print ('      generator_mode SUPPLY_DRIVEN;', file=op)
                 print ('    };', file=op)
                 if metrics_interval > 0:
                     print ('    object metrics_collector {', file=op)
@@ -2749,8 +2744,11 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         op.close()
 
 def write_node_houses (fp, node, region, xfkva, loadkw, phs, house_avg_kw):
-  global house_nodes
+  global house_nodes, storage_percentage, solar_percentage, electric_cooling_percentage
   house_nodes = {}
+  storage_percentage = 0.0
+  solar_percentage = 0.0
+  electric_cooling_percentage = 0.5
   nhouse = int ((loadkw / house_avg_kw) + 0.5)
   if nhouse > 0:
     lg_v_sm = loadkw / house_avg_kw - nhouse # >0 if we rounded down the number of houses
