@@ -1647,7 +1647,7 @@ def write_commercial_loads(rgn, key, op):
     print ('};', file=op)
 
 
-def write_houses(basenode, op, vnom):
+def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteService=True, bTriplex=True, setpoint_offset=1.0):
     """Put houses, along with solar panels and batteries, onto a node
 
     Args:
@@ -1658,6 +1658,12 @@ def write_houses(basenode, op, vnom):
     global solar_count
     global solar_kw
     global battery_count
+
+    meter_class = 'triplex_meter'
+    node_class = 'triplex_node'
+    if bTriplex == False:
+        meter_class = 'meter'
+        node_class = 'node'
 
     nhouse = int(house_nodes[basenode][0])
     rgn = int(house_nodes[basenode][1])
@@ -1678,16 +1684,18 @@ def write_houses(basenode, op, vnom):
         phs = phs + 'S'
         tpxname = helpers.gld_strict_name (basenode + '_tpx')
         mtrname = helpers.gld_strict_name (basenode + '_mtr')
-    else:
-        print ('object triplex_node {', file=op)
+    elif bWriteService == True:
+        print ('object {:s} {{'.format (node_class), file=op)
         print ('  name', basenode + ';', file=op)
         print ('  phases', phs + ';', file=op)
         print ('  nominal_voltage ' + str(vnom) + ';', file=op)
-        print ('  voltage_1 ' + vstart + ';', file=op)
+        print ('  voltage_1 ' + vstart + ';', file=op)  # TODO: different attributes for regular node
         print ('  voltage_2 ' + vstart + ';', file=op)
         print ('}', file=op)
+    else:
+        mtrname = helpers.gld_strict_name (basenode + '_mtr')
     for i in range(nhouse):
-        if forERCOT == False:
+        if (forERCOT == False) and (bWriteService == True):
             tpxname = helpers.gld_strict_name (basenode + '_tpx_' + str(i+1))
             mtrname = helpers.gld_strict_name (basenode + '_mtr_' + str(i+1))
             print ('object triplex_line {', file=op)
@@ -1723,7 +1731,7 @@ def write_houses(basenode, op, vnom):
           hse_m_name = mtrname
         else:
           hse_m_name = helpers.gld_strict_name (basenode + '_mhse_' + str(i+1))
-          print ('object triplex_meter {', file=op)
+          print ('object {:s} {{'.format (meter_class), file=op)
           print ('  name', hse_m_name + ';', file=op)
           print ('  parent', mtrname + ';', file=op)
           print ('  phases', phs + ';', file=op)
@@ -1836,16 +1844,22 @@ def write_houses(basenode, op, vnom):
         # [Bin Prob, NightTimeAvgDiff, HighBinSetting, LowBinSetting]
         cooling_bin, heating_bin = selectSetpointBins (bldg, np.random.uniform (0,1))
         # randomly choose setpoints within bins, and then widen the separation to account for deadband
-        cooling_set = cooling_bin[3] + np.random.uniform(0,1) * (cooling_bin[2] - cooling_bin[3]) + 1
-        heating_set = heating_bin[3] + np.random.uniform(0,1) * (heating_bin[2] - heating_bin[3]) - 1
+        cooling_set = cooling_bin[3] + np.random.uniform(0,1) * (cooling_bin[2] - cooling_bin[3]) + setpoint_offset
+        heating_set = heating_bin[3] + np.random.uniform(0,1) * (heating_bin[2] - heating_bin[3]) - setpoint_offset
         cooling_diff = 2.0 * cooling_bin[1] * np.random.uniform(0,1)
         heating_diff = 2.0 * heating_bin[1] * np.random.uniform(0,1)
-        cooling_str = 'cooling' + '{:.0f}'.format(cooling_sch) + '*' + '{:.2f}'.format(cooling_diff) + '+' + '{:.2f}'.format(cooling_set)
-        heating_str = 'heating' + '{:.0f}'.format(heating_sch) + '*' + '{:.2f}'.format(heating_diff) + '+' + '{:.2f}'.format(heating_set)
+        cooling_scale = np.random.uniform(0.95, 1.05)
+        heating_scale = np.random.uniform(0.95, 1.05)
+        cooling_str = 'cooling{:.0f}*{:.4f}+{:.2f}'.format(cooling_sch, cooling_scale, cooling_diff)
+        heating_str = 'heating{:.0f}*{:.4f}+{:.2f}'.format(heating_sch, heating_scale, heating_diff)
         # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
         # we need more separation to assure no overlaps during transactive simulations
-        print ('  cooling_setpoint 80.0; // ', cooling_str + ';', file=op)
-        print ('  heating_setpoint 60.0; // ', heating_str + ';', file=op)
+        if bIgnoreThermostatSchedule == True:
+          print ('  cooling_setpoint 80.0; // ', cooling_str + ';', file=op)
+          print ('  heating_setpoint 60.0; // ', heating_str + ';', file=op)
+        else:
+          print ('  cooling_setpoint {:s};'.format (cooling_str), file=op)
+          print ('  heating_setpoint {:s};'.format (heating_str), file=op)
 
         # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
         print ('  object ZIPload { // responsive', file=op)
@@ -2743,18 +2757,69 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         op.close()
 
-def write_node_houses (fp, node, region, xfkva, loadkw, phs, house_avg_kw):
-  global house_nodes, storage_percentage, solar_percentage, electric_cooling_percentage
+def write_node_houses (fp, node, region, xfkva, xfkvll, phs, 
+                       nh=None, loadkw=None, house_avg_kw=None, split_secondary=True, secondary_ft=None, write_configs=True,
+                       storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5):
+  """Writes GridLAB-D houses to a primary load point. One aggregate service transformer is included, plus
+  an optional aggregate secondary service drop. Each house has a separate meter or triplex_meter, each with a
+  common parent, either a node or triplex_node on either the transformer secondary, or the end of the service
+  drop. The houses may be written per phase, i.e., unbalanced load, or as a balanced three-phase load. The
+  houses should be #included into a master GridLAB-D file.
+
+  Args:
+      fp (file): Previously opened text file for writing; the caller closes it.
+      node (str): the GridLAB-D primary node name
+      region (int): the taxonomy region for housing population, 1..6
+      xfkva (float): the total transformer size to serve expected load; make this big enough to avoid overloads
+      xfkvll (float): line-to-line voltage [kV] on the primary. The secondary voltage will either be 120/240 for split_sec True, or 208 otherwise
+      phs (str): concatenation of 'A', 'B', and/or 'C'; houses are distributed among these phases
+      nh (int): directly specify the number of houses; an alternative to loadkw and house_avg_kw
+      loadkw (float): total load kW that the houses will represent; with house_avg_kw, an alternative to nh
+      house_avg_kw (float): average house load in kW; with loadkw, an alternative to nh
+      split_secondary (boolean): True for single-phase secondary, False for balanced three-phase secondary
+      secondary_ft (float): if not None, the length of adequately sized secondary circuit from transformer to the meters
+      write_configs (boolean): write the supporting transformer and line configurations. Can be False if we know the configurations are already defined.
+      electric_cooling_fraction (float): fraction of houses to have air conditioners
+      solar_fraction (float): fraction of houses to have rooftop solar panels
+      storage_fraction (float): fraction of houses with solar panels that also have residential storage systems
+  """
+  global house_nodes, storage_percentage, solar_percentage, electric_cooling_percentage, metrics_interval
   house_nodes = {}
-  storage_percentage = 0.0
-  solar_percentage = 0.0
-  electric_cooling_percentage = 0.5
-  nhouse = int ((loadkw / house_avg_kw) + 0.5)
-  if nhouse > 0:
-    lg_v_sm = loadkw / house_avg_kw - nhouse # >0 if we rounded down the number of houses
+  storage_percentage = storage_fraction
+  solar_percentage = solar_fraction
+  electric_cooling_percentage = electric_cooling_fraction
+  lg_v_sm = 0.0
+  vnom = 120.0
+  metrics_interval = 0
+  if nh is not None:
+    nhouse = nh
+  else:
+    nhouse = int ((loadkw / house_avg_kw) + 0.5)
+    if nhouse > 0:
+      lg_v_sm = loadkw / house_avg_kw - nhouse # >0 if we rounded down the number of houses
   bldg, ti = selectResidentialBuilding (rgnThermalPct[region-1], np.random.uniform (0, 1)) # TODO - these will all be identical!
-  house_nodes[node] = [nhouse, region, lg_v_sm, phs, bldg, ti]
-  write_houses (node, fp, 120.0)
+  if nhouse > 0:
+    # write the transformer and one meter
+    xfkey = 'XF3_{:d}'.format (int(xfkva))
+    if write_configs:
+      write_xfmr_config (xfkey, phs, kvat=xfkva, vnom=None, vsec=208.0, install_type='PADMOUNT', vprimll=1000.0*xfkvll, vprimln=None, op=fp)
+    print ('object transformer {', file=fp)
+    print ('  name {:s}_xfmr;'.format(node), file=fp)
+    print ('  phases {:s};'.format(phs), file=fp)
+    print ('  from {:s};'.format(node), file=fp)
+    print ('  to {:s}_mtr;'.format(node), file=fp)
+    print ('  configuration {:s};'.format(xfkey), file=fp)
+    print ('}', file=fp)
+    print ('object meter {', file=fp)
+    print ('  name {:s}_mtr;'.format (node), file=fp)
+    print ('  phases {:s};'.format (phs), file=fp)
+    print ('  nominal_voltage {:.2f};'.format (vnom), file=fp)
+    print ('}', file=fp)
+    # write all the houses on that meter
+    house_nodes[node] = [nhouse, region, lg_v_sm, phs, bldg, ti]
+    write_houses (node, fp, vnom, bIgnoreThermostatSchedule=False, bWriteService=False, bTriplex=False, setpoint_offset=1.0)
+  else:
+    print ('// Zero houses at {:s} phases {:s}'.format (node, phs), file=fp)
 
 def populate_feeder (configfile = None, config = None, taxconfig = None):
     """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
