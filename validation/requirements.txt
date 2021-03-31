@@ -1,0 +1,12 @@
+networkx
+holoviews
+hvplot
+pandas
+numpy
+xlrd
+datashader
+xarray
+openpyxl
+pyproj
+joblib
+tables
