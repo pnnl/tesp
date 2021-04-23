@@ -1,6 +1,6 @@
 # Transactive Energy Simulation Platform (TESP)
 
-Copyright (c) 2017-2020, Battelle Memorial Institute
+Copyright (c) 2017-2021, Battelle Memorial Institute
 
 Documentation: http://tesp.readthedocs.io
 
@@ -28,7 +28,7 @@ native Windows and Mac OS X builds.
 
 There are three options to install:
 
-1. For Linux, download and run the installer from  
+1. For Linux, download and run the installer from
    https://github.com/pnnl/tesp/releases. This takes
    1.3 GB, plus working space for output and your own cases.
 2. For Windows, Mac OS X or Linux, use the Docker images
@@ -73,3 +73,4 @@ Change log:
 - v0.3.0  Refactored agent classes for DSO+T study
 - v0.9.5  HELICS, MATPOWER/MOST, ERCOT and E+ 9.3 examples
 - v1.0.0  Tested on Ubuntu 18.04 LTS and 20.04 LTS
+- v1.0.1  Updates to consensus mechanism, HELICS 2.6.1
