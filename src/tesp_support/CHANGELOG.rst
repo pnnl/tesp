@@ -40,6 +40,16 @@ Version 0.9.5 (2021-03-09)
 * Case-generated SGIP1 example
 * Fixed the FNCS SGIP1 example
 
+Version 1.0.1 (2021-04-23)
+--------------------------
+
+* Updates to consensus mechanism
+* Balanced three-phase houses for housing generator
+* Remove deprecated solar and battery attributes
+* Update to HELICS 2.6.1
+
+
+
 
 
 
