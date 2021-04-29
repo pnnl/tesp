@@ -249,7 +249,8 @@ void selectNodeTypes(vector<string>& nodetypes)
                         cin >> selectcheck;
                         if(selectcheck == "n" || selectcheck == "N")
                         {
-                                nodetypes.erase(nodetypes.end());
+                                //nodetypes.erase(nodetypes.end());
+                                nodetypes.erase(nodetypes.begin() + (i-1));
                         }
                 }
         }
@@ -466,8 +467,8 @@ void readMicroGridConfig(std::string fpath, Json::Value& configobj)
 
 
    //cout << ns3ConfigObject << endl;
-   cout << "Number of nodes = " << ns3ConfigObject["nodes"].size() << endl;
-   cout << "Number of links = " << ns3ConfigObject["links"].size() << endl;
+   //cout << "Number of nodes = " << ns3ConfigObject["nodes"].size() << endl;
+   //cout << "Number of links = " << ns3ConfigObject["links"].size() << endl;
    NodeContainer p2pNodesCon;
    Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
 
