@@ -18,6 +18,18 @@ import numpy as np
 import re
 import os
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+#from matplotlib.ticker import MultipleLocator
+from matplotlib.ticker import FixedLocator
+#from matplotlib.ticker import PercentFormatter
+import seaborn as sns
+
+current_palette = sns.xkcd_palette(sns.xkcd_rgb)  # color_palette('pastel')
+sns.set_palette(current_palette)
+# sns.palplot(current_palette)
+colorSpec = ['xkcd:royal blue', 'xkcd:green', 'xkcd:orange',
+             'xkcd:red', 'xkcd:magenta', 'xkcd:violet', 'xkcd:teal', 'xkcd:yellow']
+lineStyles = ['solid', 'dashed', 'dashdot', 'dotted', (0, (3, 1, 1, 1, 1, 1)), (0, (3, 5, 1, 5, 1, 5)), 'dashed', (0, (3, 5, 1, 5, 1, 5))]
 
 def analyzeDOT(dotModel):
   """
@@ -37,7 +49,12 @@ def analyzeDOT(dotModel):
   shapes = np.unique(np.array([node['shape'] for node in dotModel['nodes']]))
   print('======================== DOT ==================================')
   print('The unique shapes of the nodes are: {0}'.format(shapes))
-
+  tnNodes = []
+  tmNodes = []
+  capNodes = []
+  loadNodes = []
+  meterNodes = []
+  nodeNodes = []
   pattern1 = '[a-zA-Z]+'
   pattern2 = '[0-9]+'
   types = [re.findall(pattern1, node['id']) for node in dotModel['nodes']]
@@ -98,7 +115,7 @@ def analyzeDOT(dotModel):
   print('\t\t------------------------')
   print('\t\ttotal: {0}'.format(total))
   print('\tlinks: {0}'.format(len(dotModel['links'])))
-  return tnNodes, tmNodes
+  return tnNodes, tmNodes, capNodes, loadNodes, meterNodes, nodeNodes
 
 def analyzeGLMdict(glmModel):
   """
@@ -215,9 +232,9 @@ def printerPoints2Feet(prtPtVal):
   Returns
   -------
   ftVal : float
-    Value in real world feet
+    Value in real world feet (rounded to 2 decimals)
   """
-  ftVal = 200 * prtPtVal / 72
+  ftVal = round(200 * prtPtVal / 72, 2)
 
   return ftVal
 
@@ -246,8 +263,103 @@ def createJSONforNS3model(feederName, deltaFt):
   dotModel = json.load(json_fp)
   json_fp.close()
   dotLinks = dotModel['links']
-  [dotTns, dotTms] = analyzeDOT(dotModel)
+  [dotTns, dotTms, dotCaps, dotLoads, dotMeters, dotNodes] = analyzeDOT(dotModel)
+  dotNode2dotNodeLinks = [link for link in dotLinks if link['source'] in [x['id'] for x in dotNodes] and link['target'] in [x['id'] for x in dotNodes]]
   nodesLevel1 = [x for x in dotTns for y in dotLinks if x['id'] == y['source']]
+  for node in dotNodes:
+    nodeN = int(re.findall('[0-9]+', node['id'])[0])
+    G.add_node('{0}_node_{1}'.format(feederRename, nodeN))
+    G.nodes()['{0}_node_{1}'.format(feederRename, nodeN)]['nclass'] = 'node'
+    G.nodes()['{0}_node_{1}'.format(feederRename, nodeN)]['ndata'] = {
+                  'x': printerPoints2Feet(float(node['pos'].split(',')[0])),
+                  'y': printerPoints2Feet(float(node['pos'].split(',')[1]))
+                }
+    if (feederName == 'R1-12.47-1' and nodeN == 617) or \
+       (feederName == 'R1-12.47-2' and nodeN == 338) or \
+       (feederName == 'R1-12.47-3' and nodeN == 53) or \
+       (feederName == 'R1-25.00-1' and nodeN == 324) or \
+       (feederName == 'R2-12.47-1' and nodeN == 488) or \
+       (feederName == 'R2-12.47-2' and nodeN == 253) or \
+       (feederName == 'R2-12.47-3' and nodeN == 832) or \
+       (feederName == 'R2-25.00-1' and nodeN == 324) or \
+       (feederName == 'R2-35.00-1' and nodeN == 1039) or \
+       (feederName == 'R3-12.47-1' and nodeN == 634) or \
+       (feederName == 'R3-12.47-2' and nodeN == 267) or \
+       (feederName == 'R3-12.47-3' and nodeN == 2001) or \
+       (feederName == 'R4-12.47-1' and nodeN == 572) or \
+       (feederName == 'R4-12.47-2' and nodeN == 273) or \
+       (feederName == 'R4-25.00-1' and nodeN == 231) or \
+       (feederName == 'R5-12.47-1' and nodeN == 266) or \
+       (feederName == 'R5-12.47-2' and nodeN == 317) or \
+       (feederName == 'R5-12.47-3' and nodeN == 1469) or \
+       (feederName == 'R5-12.47-4' and nodeN == 675) or \
+       (feederName == 'R5-12.47-5' and nodeN == 1100) or \
+       (feederName == 'R5-25.00-1' and nodeN == 953) or \
+       (feederName == 'R5-35.00-1' and nodeN == 339) or \
+       (feederName == 'GC-12.47-1' and nodeN == 28):
+
+      G.add_node('{0}_substation'.format(feederRename))
+      G.nodes()['{0}_substation'.format(feederRename)]['nclass'] = 'substation'
+      G.nodes()['{0}_substation'.format(feederRename)]['ndata'] = {
+                  'x': printerPoints2Feet(float(node['pos'].split(',')[0])) + rng.uniform(low = -deltaFt*5, high = deltaFt*5, size = 1)[0],
+                  'y': printerPoints2Feet(float(node['pos'].split(',')[1])) + rng.uniform(low = -deltaFt*5, high = deltaFt*5, size = 1)[0]
+                }
+      G.add_edge('{0}_substation'.format(feederRename), '{0}_node_{1}'.format(feederRename, nodeN),
+                 ename = 'line_substation_node_{0}'.format(nodeN),
+                 edata = {
+                   'from': '{0}_substation'.format(feederRename),
+                   'to': '{0}_node_{1}'.format(feederRename, nodeN),
+                   'length': 0
+                })
+
+  for link in dotNode2dotNodeLinks:
+    sourceN = int(re.findall('[0-9]+', link['source'])[0])
+    targetN = int(re.findall('[0-9]+', link['target'])[0])
+    source = '{0}_node_{1}'.format(feederRename, sourceN)
+    target = '{0}_node_{1}'.format(feederRename, targetN)
+    print('{0} -- {1}'.format(source, target))
+    G.add_edge(source, target, ename = 'line_node_{0}_node_{1}'.format(sourceN, targetN),
+      edata = {
+        'from': source,
+        'to': target,
+        'length': 0
+      })
+  
+  # If there is a meter connecting 2 nodes, we skip the meter and connect the nodes directly. This seems to be particularly the case for the node connected to the substation node.
+  for meter in dotMeters:
+    skipMeter = False
+    sources = [link['source'] for link in dotLinks if link['target'] == meter['id']]
+    targets = [link['target'] for link in dotLinks if link['source'] == meter['id']]
+    checkSources = ['node' in source for source in sources]
+    checkTargets = ['node' in target for target in targets]
+    if len(sources) == 1 and len(targets) == 1:
+      if checkSources[0] and checkTargets[0]:
+        sourceNode = sources[0]
+        targetNode = targets[0]
+        skipMeter = True
+    elif len(sources) == 0 and len(targets) == 2:
+      if all(checkTargets):
+        sourceNode = targets[0]
+        targetNode = targets[1]
+        skipMeter = True
+    elif len(sources) == 2 and len(targets) == 0:
+      if all(checkSources):
+        sourceNode = sources[0]
+        targetNode = sources[1]
+        skipeMeter = True
+    if skipMeter:
+      print('Skipping meter {0} to connect directly {1} and {2}.'.format(meter['id'], sourceNode, targetNode))
+      sourceN = int(re.findall('[0-9]+', sourceNode)[0])
+      targetN = int(re.findall('[0-9]+', targetNode)[0])
+      source = '{0}_node_{1}'.format(feederRename, sourceN)
+      target = '{0}_node_{1}'.format(feederRename, targetN)
+      print('{0} -- {1}'.format(source, target))
+      G.add_edge(source, target, ename = 'line_node_{0}_node_{1}'.format(sourceN, targetN),
+        edata = {
+          'from': source,
+          'to': target,
+          'length': 0
+        })
   for node in nodesLevel1:
     nodeN = int(re.findall('[0-9]+', node['id'])[0])
     G.add_node('{0}_tn_{1}'.format(feederRename, nodeN))
@@ -256,6 +368,16 @@ def createJSONforNS3model(feederName, deltaFt):
                   'x': printerPoints2Feet(float(node['pos'].split(',')[0])),
                   'y': printerPoints2Feet(float(node['pos'].split(',')[1]))
                 }
+    sourceN = int(re.findall('[0-9]+', [link['source'] for link in dotLinks if link['target'] == node['id']][0])[0])
+    source = '{0}_node_{1}'.format(feederRename, sourceN)
+    G.add_edge('{0}_node_{1}'.format(feederRename, sourceN), '{0}_tn_{1}'.format(feederRename, nodeN),
+      ename = 'line_node_{0}_tn_{1}'.format(sourceN, nodeN),
+      edata = {
+        'from': '{0}_node_{1}'.format(feederRename, sourceN),
+        'to': '{0}_tn_{1}'.format(feederRename, nodeN),
+        'length': 0
+      })
+    print('{0} <<-->> {1}'.format('{0}_node_{1}'.format(feederRename, sourceN), '{0}_tn_{1}'.format(feederRename, nodeN)))
   
   glmJSONfile = os.path.abspath('../files/{0}_processed_glm_dict.json'.format(feederName))
   json_fp = open(glmJSONfile, 'r')
@@ -294,10 +416,10 @@ def createJSONforNS3model(feederName, deltaFt):
           G.nodes()[child]['nclass'] = 'house'
           if glmModel['houses'][child]['parent'].split('_')[6] == 'mhse':
             G.add_node(glmModel['houses'][child]['parent'])
-            G.nodes()[glmModel['houses'][child]['parent']]['nclass'] = 'house meter'
+            G.nodes()[glmModel['houses'][child]['parent']]['nclass'] = 'house_meter'
             G.nodes()[glmModel['houses'][child]['parent']]['ndata'] = {
-              'x': G.nodes()[child]['ndata']['x'],
-              'y': G.nodes()[child]['ndata']['y']
+              'x': G.nodes()[child]['ndata']['x'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0],
+              'y': G.nodes()[child]['ndata']['y'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0]
             }
             # Edge/link from BILLING METER to HOUSE METER
             G.add_edge(currBillMtr, glmModel['houses'][child]['parent'],
@@ -321,10 +443,10 @@ def createJSONforNS3model(feederName, deltaFt):
           if child.split('_')[6] == 'ibat':
             parentName = '{0}_tn_{1}_mbat_{2}'.format(feederRename, mtrN, child.split('_')[-1])
             G.add_node(parentName)
-            G.nodes()[parentName]['nclass'] = 'battery meter'
+            G.nodes()[parentName]['nclass'] = 'battery_meter'
             G.nodes()[parentName]['ndata'] = {
-              'x': G.nodes()[child]['ndata']['x'],
-              'y': G.nodes()[child]['ndata']['y']
+              'x': G.nodes()[child]['ndata']['x'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0],
+              'y': G.nodes()[child]['ndata']['y'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0]
             }
             # Edge/link from BILLING METER to BATTERY METER
             G.add_edge(currBillMtr, parentName,
@@ -346,8 +468,8 @@ def createJSONforNS3model(feederName, deltaFt):
             G.add_node(gchildName)
             G.nodes()[gchildName]['nclass'] = 'battery'
             G.nodes()[gchildName]['ndata'] = {
-              'x': G.nodes()[child]['ndata']['x'],
-              'y': G.nodes()[child]['ndata']['y']
+              'x': G.nodes()[child]['ndata']['x'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0],
+              'y': G.nodes()[child]['ndata']['y'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0]
             }
             # Edge/link from BATTERY INVERTER to BATTERY
             G.add_edge(child, gchildName,
@@ -360,10 +482,10 @@ def createJSONforNS3model(feederName, deltaFt):
           elif child.split('_')[6] == 'isol':
             parentName = '{0}_tn_{1}_msol_{2}'.format(feederRename, mtrN, child.split('_')[-1])
             G.add_node(parentName)
-            G.nodes()[parentName]['nclass'] = 'solar meter'
+            G.nodes()[parentName]['nclass'] = 'solar_meter'
             G.nodes()[parentName]['ndata'] = {
-              'x': G.nodes()[child]['ndata']['x'],
-              'y': G.nodes()[child]['ndata']['y']
+              'x': G.nodes()[child]['ndata']['x'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0],
+              'y': G.nodes()[child]['ndata']['y'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0]
             }
             # Edge/link from BILLING METER to SOLAR METER
             G.add_edge(currBillMtr, parentName,
@@ -385,8 +507,8 @@ def createJSONforNS3model(feederName, deltaFt):
             G.add_node(gchildName)
             G.nodes()[gchildName]['nclass'] = 'solar'
             G.nodes()[gchildName]['ndata'] = {
-              'x': G.nodes()[child]['ndata']['x'],
-              'y': G.nodes()[child]['ndata']['y']
+              'x': G.nodes()[child]['ndata']['x'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0],
+              'y': G.nodes()[child]['ndata']['y'] + rng.uniform(low = -deltaFt/16, high = deltaFt/16, size = 1)[0]
             }
             # Edge/link from SOLAR INVERTER to SOLAR PV
             G.add_edge(child, gchildName,
@@ -396,16 +518,39 @@ def createJSONforNS3model(feederName, deltaFt):
                          'to': gchildName,
                          'length': 0
                        })
+
   jsonGraphNS3 = nx.readwrite.json_graph.node_link_data(G)
-  jsonFp = open(os.path.abspath('../files/{0}_ns3.json'.format(feederName)), 'w')
+  jsonFp = open(os.path.abspath('../files/ns3/{0}_ns3.json'.format(feederName)), 'w')
   json.dump(jsonGraphNS3, jsonFp)
   jsonFp.close()
   # for key, value in nx.get_node_attributes(G, 'ndata').items():
   #   print(key)
   #   print(value)
-  # pos = {key: (value['x'], value['y']) for key, value in nx.get_node_attributes(G, 'ndata').items()}
+  pos = {key: (value['x'], value['y']) for key, value in nx.get_node_attributes(G, 'ndata').items()}
   # print(pos)
-  # nx.draw(G, pos, with_labels = True, node_size = 120)
+  figWidth = 16
+  figHeight = 8
+  nCol = 1
+  nRow = 1
+  hFig = plt.figure(constrained_layout=True, figsize=(figWidth, figHeight))
+  gs = GridSpec(nRow, nCol, figure=hFig)
+  hAxis = hFig.add_subplot(gs[0, 0])
+  colorMap = {'substation': colorSpec[7],
+              'node': colorSpec[0],
+              'house': colorSpec[1],
+              'house_meter': colorSpec[2],
+              'billing_meter': colorSpec[3],
+              'inverter': colorSpec[4],
+              'solar': colorSpec[5],
+              'battery': colorSpec[6],
+              'battery_meter': colorSpec[2],
+              'solar_meter': colorSpec[2]
+             }
+  # print(plt.get_cmap('viridis'))
+  
+  colorValues = [colorMap.get(G.nodes()[node]['nclass'], colorSpec[4]) for node in G.nodes()]
+  nx.draw(G, pos, node_color = colorValues, with_labels = False, node_size = 100, width = 3)  # cmap=plt.get_cmap('viridis')
+  plt.savefig('../files/ns3/{0}_ns3.pdf'.format(feederName), format='pdf')
   # plt.show()
 
   # nodeNum = 150
@@ -430,12 +575,12 @@ if __name__ == '__main__':
 
   # taxRoot = ['R3-12.47-2']
   # taxRoot = ['GC-12.47-1']
+  # taxRoot = ['R1-12.47-1']
   taxRoot = ['R1-12.47-1', 'R1-12.47-2', 'R1-12.47-3', 'R1-12.47-4', 'R1-25.00-1',
              'R2-12.47-1', 'R2-12.47-2', 'R2-12.47-3', 'R2-25.00-1', 'R2-35.00-1',
              'R3-12.47-1', 'R3-12.47-3',
              'R4-12.47-1', 'R4-12.47-2', 'R4-25.00-1',
              'R5-12.47-1', 'R5-12.47-2', 'R5-12.47-3', 'R5-12.47-4', 'R5-12.47-5', 'R5-25.00-1', 'R5-35.00-1']
-  # taxRoot = ['R1-12.47-1']
   deltaFt = 100
   for feeder in taxRoot:
     print('\nAnalyzing feeder -->> {0}'.format(feeder))
