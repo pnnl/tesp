@@ -1,0 +1,382 @@
+#define VSOURCE=66395.3
+#set minimum_timestep=15
+#set relax_naming_rules=1
+#set profiler=1
+
+clock {
+	timezone PST+8PDT;
+	starttime '2013-07-01 00:00:00';
+	stoptime '2013-07-03 00:00:00';
+};
+module powerflow {
+  solver_method NR;
+  line_capacitance TRUE;
+};
+module residential {
+	implicit_enduses NONE;
+}
+module tape;
+module reliability {
+  report_event_log false;
+};
+module climate;
+
+object metrics_collector_writer {
+     interval 300;
+     filename ${METRICS_FILE}; // TE_Challenge_metrics.json
+};
+
+object climate {
+  name localWeather;
+  tmyfile "${TMY_PATH}/WA-Yakima_Air_Terminal.tmy3";
+  interpolate QUADRATIC;
+};
+
+#include "${SCHED_PATH}/water_and_setpoint_schedule_v3.glm"
+#include "${SCHED_PATH}/appliance_schedules.glm"
+
+object line_configuration {
+  name lcon_ugcable_ABC;
+  z11 0.0800022+0.733353j;
+  c11 0.0000;
+  z12 0.0600016-0.0666685j;
+  c12 0.0000;
+  z13 0.0600016-0.0666685j;
+  c13 0.0000;
+  z21 0.0600016-0.0666685j;
+  c21 0.0000;
+  z22 0.0800022+0.733353j;
+  c22 0.0000;
+  z23 0.0600016-0.0666685j;
+  c23 0.0000;
+  z31 0.0600016-0.0666685j;
+  c31 0.0000;
+  z32 0.0600016-0.0666685j;
+  c32 0.0000;
+  z33 0.0800022+0.733353j;
+  c33 0.0000;
+}
+object transformer_configuration {
+  name xcon_sub;
+  connect_type DELTA_GWYE;
+  primary_voltage 66395.281;
+  secondary_voltage 7621.024;
+  power_rating 90000.000;
+  resistance 0.010000;
+  reactance 0.100000;
+}
+
+object substation {
+  name source;
+  bustype SWING;
+  phases ABCN;
+  nominal_voltage 66395.28;
+  base_power 12MVA;
+  power_convergence_value 100VA;
+  positive_sequence_voltage ${VSOURCE};
+  object metrics_collector {
+    interval 300;
+  };
+}
+object transformer {
+  name xf_sub;
+  from source;
+  to mvbus;
+  phases ABC;
+  configuration xcon_sub;
+  continuous_rating_A 497.02;
+  continuous_rating_B 497.02;
+  continuous_rating_C 497.02;
+  emergency_rating_A 677.76;
+  emergency_rating_B 677.76;
+  emergency_rating_C 677.76;
+  // vector group Dy1;
+}
+object node {
+  name mvbus;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+
+// feeder F1, six sections
+object node {
+  name F1B1;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F1B2;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F1B3;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F1B4;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F1B5;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F1B6;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object overhead_line {
+  name F1_Section1;
+  from mvbus;
+  to F1B1;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F1_Section2;
+  from F1B1;
+  to F1B2;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F1_Section3;
+  from F1B2;
+  to F1B3;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F1_Section4;
+  from F1B3;
+  to F1B4;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F1_Section5;
+  from F1B4;
+  to F1B5;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F1_Section6;
+  from F1B5;
+  to F1B6;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+
+// feeder F7, eight sections
+object node {
+  name F7B1;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F7B2;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F7B3;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F7B4;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F7B5;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F7B6;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F7B7;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object node {
+  name F7B8;
+  phases ABCN;
+  nominal_voltage 7621.02;
+}
+object overhead_line {
+  name F7_Section1;
+  from mvbus;
+  to F7B1;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F7_Section2;
+  from F7B1;
+  to F7B2;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F7_Section3;
+  from F7B2;
+  to F7B3;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F7_Section4;
+  from F7B3;
+  to F7B4;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F7_Section5;
+  from F7B4;
+  to F7B5;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F7_Section6;
+  from F7B5;
+  to F7B6;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F7_Section7;
+  from F7B6;
+  to F7B7;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+object overhead_line {
+  name F7_Section8;
+  from F7B7;
+  to F7B8;
+  phases ABC;
+  length 500.00;
+  continuous_rating_A 400.00;
+  continuous_rating_B 400.00;
+  continuous_rating_C 400.00;
+  emergency_rating_A 600.00;
+  emergency_rating_B 600.00;
+  emergency_rating_C 600.00;
+  configuration lcon_ugcable_ABC;
+}
+
+#include "houses.glm"
+
+#ifdef WANT_VI_DUMP
+object voltdump {
+  filename houses_volt.csv;
+  mode POLAR;
+};
+object currdump {
+  filename houses_curr.csv;
+  mode POLAR;
+};
+#endif

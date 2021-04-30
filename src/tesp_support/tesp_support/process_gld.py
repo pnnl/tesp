@@ -336,7 +336,8 @@ def read_gld_metrics (nameroot, dictname = ''):
       j = j + 1
     print ('Total tap changes =', data_r[:,-1,idx_r['REG_COUNT_IDX']].sum())
 
-  print ('Total meter bill =', 
+  if data_m is not None:
+    print ('Total meter bill =', 
          '{:.3f}'.format (data_m[:,-1,idx_m['MTR_BILL_IDX']].sum()))
 
   dict = {}
@@ -364,7 +365,7 @@ def read_gld_metrics (nameroot, dictname = ''):
   dict['subname'] = sub_key
   return dict
 
-def plot_gld (dict, save_file, save_only):
+def plot_gld (dict, save_file=None, save_only=False):
   # the feederGenerator now inserts metrics_collector objects on capacitors and regulators
   bCollectedRegCapMetrics = True 
 
