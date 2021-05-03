@@ -15,7 +15,7 @@ try:
 except:
   pass
 
-def plot_agents (dict, save_file, save_only):
+def plot_agents (dict, save_file=None, save_only=False):
   hrs = dict['hrs']
   data_a = dict['data_a']
   data_c = dict['data_c']

@@ -96,7 +96,7 @@ def read_voltage_metrics(nameroot, dictname = ''):
   dict['idx_m'] = idx_m
   return dict
 
-def plot_voltages (dict, save_file, save_only):
+def plot_voltages (dict, save_file=None, save_only=False):
   hrs = dict['hrs']
   data_m = dict['data_m']
   keys_m = dict['keys_m']
@@ -105,13 +105,13 @@ def plot_voltages (dict, save_file, save_only):
   fig, ax = plt.subplots(2, 1, sharex = 'col')
   i = 0
   for key in keys_m:
-    ax[0].plot(hrs, data_m[i,:,idx_m['MTR_VOLT_MIN_IDX']], color="blue")
-    ax[1].plot(hrs, data_m[i,:,idx_m['MTR_VOLT_MAX_IDX']], color="red")
+    ax[0].plot(hrs, data_m[i,:,idx_m['MTR_VOLT_MIN_IDX']], color='blue')
+    ax[1].plot(hrs, data_m[i,:,idx_m['MTR_VOLT_MAX_IDX']], color='red')
     i = i + 1
-  ax[0].set_ylabel("Min Voltage [%]")
-  ax[1].set_ylabel("Max Voltage [%]")
-  ax[1].set_xlabel("Hours")
-  ax[0].set_title ("Voltage at all Meters")
+  ax[0].set_ylabel('Min Voltage [%]')
+  ax[1].set_ylabel('Max Voltage [%]')
+  ax[1].set_xlabel('Hours')
+  ax[0].set_title ('Voltage at {:d} Meters'.format(len(keys_m)))
 
   if save_file is not None:
     plt.savefig(save_file)

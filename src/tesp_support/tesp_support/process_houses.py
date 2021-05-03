@@ -15,7 +15,7 @@ try:
 except:
   pass
 
-def plot_houses (dict, save_file, save_only):
+def plot_houses (dict, save_file=None, save_only=False):
   hrs = dict['hrs']
   data_h = dict['data_h']
   idx_h = dict['idx_h']
@@ -31,7 +31,7 @@ def plot_houses (dict, save_file, save_only):
   ax[0].set_ylabel('Degrees')
   ax[1].set_ylabel('kW')
   ax[1].set_xlabel('Hours')
-  ax[0].set_title ('HVAC at all Houses')
+  ax[0].set_title ('HVAC at {:d} Houses'.format(len(keys_h)))
 
   if save_file is not None:
     plt.savefig(save_file)

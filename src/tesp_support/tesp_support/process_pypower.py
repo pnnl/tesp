@@ -15,7 +15,7 @@ try:
 except:
     pass
 
-def plot_pypower (dict, save_file, save_only):
+def plot_pypower (dict, save_file=None, save_only=False):
   hrs = dict['hrs']
   data_b = dict['data_b']
   data_g = dict['data_g']

@@ -2759,7 +2759,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
 def write_node_houses (fp, node, region, xfkva, xfkvll, phs, 
                        nh=None, loadkw=None, house_avg_kw=None, split_secondary=True, secondary_ft=None, write_configs=True,
-                       storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5):
+                       storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5, node_metrics_interval=None):
   """Writes GridLAB-D houses to a primary load point. One aggregate service transformer is included, plus
   an optional aggregate secondary service drop. Each house has a separate meter or triplex_meter, each with a
   common parent, either a node or triplex_node on either the transformer secondary, or the end of the service
@@ -2782,6 +2782,7 @@ def write_node_houses (fp, node, region, xfkva, xfkvll, phs,
       electric_cooling_fraction (float): fraction of houses to have air conditioners
       solar_fraction (float): fraction of houses to have rooftop solar panels
       storage_fraction (float): fraction of houses with solar panels that also have residential storage systems
+      node_metrics_interval (int): if not None, the metrics collection interval in seconds for houses, meters, solar and storage at this node
   """
   global house_nodes, storage_percentage, solar_percentage, electric_cooling_percentage, metrics_interval
   house_nodes = {}
@@ -2790,7 +2791,10 @@ def write_node_houses (fp, node, region, xfkva, xfkvll, phs,
   electric_cooling_percentage = electric_cooling_fraction
   lg_v_sm = 0.0
   vnom = 120.0
-  metrics_interval = 0
+  if node_metrics_interval is not None:
+    metrics_interval = node_metrics_interval
+  else:
+    metrics_interval = 0
   if nh is not None:
     nhouse = nh
   else:
@@ -2814,6 +2818,11 @@ def write_node_houses (fp, node, region, xfkva, xfkvll, phs,
     print ('  name {:s}_mtr;'.format (node), file=fp)
     print ('  phases {:s};'.format (phs), file=fp)
     print ('  nominal_voltage {:.2f};'.format (vnom), file=fp)
+    write_tariff (fp)
+    if metrics_interval > 0:
+      print ('  object metrics_collector {', file=fp)
+      print ('    interval', str(metrics_interval) + ';', file=fp)
+      print ('  };', file=fp)
     print ('}', file=fp)
     # write all the houses on that meter
     house_nodes[node] = [nhouse, region, lg_v_sm, phs, bldg, ti]
