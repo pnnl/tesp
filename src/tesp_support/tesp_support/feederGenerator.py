@@ -1957,7 +1957,8 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
                 inv_power = inv_undersizing * (panel_area/10.7642) * rated_insolation * array_efficiency
                 solar_count += 1
                 solar_kw += 0.001 * inv_power
-                print ('object triplex_meter {', file=op)
+                print ('object {:s} {{'.format (meter_class), file=op)
+#                print ('object triplex_meter {', file=op)
                 print ('  name', sol_m_name + ';', file=op)
                 print ('  parent', mtrname + ';', file=op)
                 print ('  phases', phs + ';', file=op)
@@ -1986,7 +1987,8 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
         if bConsiderStorage:
             if np.random.uniform (0, 1) <= storage_percentage:
                 battery_count += 1
-                print ('object triplex_meter {', file=op)
+                print ('object {:s} {{'.format (meter_class), file=op)
+#                print ('object triplex_meter {', file=op)
                 print ('  name', bat_m_name + ';', file=op)
                 print ('  parent', mtrname + ';', file=op)
                 print ('  phases', phs + ';', file=op)
@@ -2757,35 +2759,146 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
 
         op.close()
 
-def write_node_houses (fp, node, region, xfkva, xfkvll, phs, 
-                       nh=None, loadkw=None, house_avg_kw=None, split_secondary=True, secondary_ft=None, write_configs=True,
-                       storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5, node_metrics_interval=None):
-  """Writes GridLAB-D houses to a primary load point. One aggregate service transformer is included, plus
-  an optional aggregate secondary service drop. Each house has a separate meter or triplex_meter, each with a
-  common parent, either a node or triplex_node on either the transformer secondary, or the end of the service
-  drop. The houses may be written per phase, i.e., unbalanced load, or as a balanced three-phase load. The
-  houses should be #included into a master GridLAB-D file.
+def write_kersting_triplex (fp, kva):
+  """Writes a triplex_line_configuration based on 1/0 AA example from Kersting's book
+
+  The conductor capacity is 202 amps, so the number of triplex in parallel will be kva/0.12/202
+  """
+  key = 'tpx_cfg_{:d}'.format (int(kva))
+  amps = kva / 0.12
+  npar = math.ceil (amps / 202.0)
+  apar = 202.0 * npar
+  scale = 5280.0 / 100.0 / npar  # for impedance per mile of parallel circuits
+  r11 = 0.0271 * scale
+  x11 = 0.0146 * scale
+  r12 = 0.0087 * scale
+  x12 = 0.0081 * scale
+  print ('object triplex_line_configuration {{ // {:d} 1/0 AA in parallel'.format (int(npar)), file=fp)
+  print ('  name {:s};'.format (key), file=fp)
+  print ('  z11 {:.4f}+{:.4f}j;'.format (r11, x11), file=fp)
+  print ('  z12 {:.4f}+{:.4f}j;'.format (r12, x12), file=fp)
+  print ('  z21 {:.4f}+{:.4f}j;'.format (r12, x12), file=fp)
+  print ('  z22 {:.4f}+{:.4f}j;'.format (r11, x11), file=fp)
+  print ('  rating.summer.continuous {:.1f};'.format (apar), file=fp)
+  print ('  rating.summer.emergency {:.1f};'.format (apar), file=fp)
+  print ('  rating.winter.continuous {:.1f};'.format (apar), file=fp)
+  print ('  rating.winter.emergency {:.1f};'.format (apar), file=fp)
+  print ('}', file=fp)
+
+def write_kersting_quadriplex (fp, kva):
+  """Writes a quadriplex_line_configuration based on 1/0 AA example from Kersting's book
+
+  The conductor capacity is 202 amps, so the number of triplex in parallel will be kva/sqrt(3)/0.208/202
+  """
+  key = 'quad_cfg_{:d}'.format (int(kva))
+  amps = kva / math.sqrt(3.0) / 0.208
+  npar = math.ceil (amps / 202.0)
+  apar = 202.0 * npar
+  scale = 5280.0 / 100.0 / npar  # for impedance per mile of parallel circuits
+  r11 = 0.0268 * scale
+  x11 = 0.0160 * scale
+  r12 = 0.0080 * scale
+  x12 = 0.0103 * scale
+  r13 = 0.0085 * scale
+  x13 = 0.0095 * scale
+  r22 = 0.0258 * scale
+  x22 = 0.0176 * scale
+  print ('object line_configuration {{ // {:d} 1/0 AA in parallel'.format (int(npar)), file=fp)
+  print ('  name {:s};'.format (key), file=fp)
+  print ('  z11 {:.4f}+{:.4f}j;'.format (r11, x11), file=fp)
+  print ('  z12 {:.4f}+{:.4f}j;'.format (r12, x12), file=fp)
+  print ('  z13 {:.4f}+{:.4f}j;'.format (r13, x13), file=fp)
+  print ('  z21 {:.4f}+{:.4f}j;'.format (r12, x12), file=fp)
+  print ('  z22 {:.4f}+{:.4f}j;'.format (r22, x22), file=fp)
+  print ('  z23 {:.4f}+{:.4f}j;'.format (r12, x12), file=fp)
+  print ('  z31 {:.4f}+{:.4f}j;'.format (r13, x13), file=fp)
+  print ('  z32 {:.4f}+{:.4f}j;'.format (r12, x12), file=fp)
+  print ('  z33 {:.4f}+{:.4f}j;'.format (r11, x11), file=fp)
+  print ('  rating.summer.continuous {:.1f};'.format (apar), file=fp)
+  print ('  rating.summer.emergency {:.1f};'.format (apar), file=fp)
+  print ('  rating.winter.continuous {:.1f};'.format (apar), file=fp)
+  print ('  rating.winter.emergency {:.1f};'.format (apar), file=fp)
+  print ('}', file=fp)
+
+def write_node_house_configs (fp, xfkva, xfkvll, xfkvln, phs, want_inverter=False):
+  """Writes transformers, inverter settings for GridLAB-D houses at a primary load point. 
+
+  An aggregated single-phase triplex or three-phase quadriplex line configuration is also
+  written, based on estimating enough parallel 1/0 AA to supply xfkva load.
+  This function should only be called once for each combination of xfkva and phs to use,
+  and it should be called before write_node_houses.
+
+  Args:
+      fp (file): Previously opened text file for writing; the caller closes it.
+      xfkva (float): the total transformer size to serve expected load; make this big enough to avoid overloads
+      xfkvll (float): line-to-line voltage [kV] on the primary. The secondary voltage will be 208 three-phase
+      xfkvln (float): line-to-neutral voltage [kV] on the primary. The secondary voltage will be 120/240 for split secondary
+      phs (str): either 'ABC' for three-phase, or concatenation of 'A', 'B', and/or 'C' with 'S' for single-phase to triplex
+      want_inverter (boolean): True to write the IEEE 1547-2018 smarter inverter function setpoints
+  """
+  if want_inverter:
+    print ('#define INVERTER_MODE=CONSTANT_PF', file=fp)
+    print ('//#define INVERTER_MODE=VOLT_VAR', file=fp)
+    print ('//#define INVERTER_MODE=VOLT_WATT', file=fp)
+    print ('// default IEEE 1547-2018 settings for Category B', file=fp)
+    print ('#define INV_V1=0.92', file=fp)
+    print ('#define INV_V2=0.98', file=fp)
+    print ('#define INV_V3=1.02', file=fp)
+    print ('#define INV_V4=1.08', file=fp)
+    print ('#define INV_Q1=0.44', file=fp)
+    print ('#define INV_Q2=0.00', file=fp)
+    print ('#define INV_Q3=0.00', file=fp)
+    print ('#define INV_Q4=-0.44', file=fp)
+    print ('#define INV_VIN=200.0', file=fp)
+    print ('#define INV_IIN=32.5', file=fp)
+    print ('#define INV_VVLOCKOUT=300.0', file=fp)
+    print ('#define INV_VW_V1=1.05 // 1.05833', file=fp)
+    print ('#define INV_VW_V2=1.10', file=fp)
+    print ('#define INV_VW_P1=1.0', file=fp)
+    print ('#define INV_VW_P2=0.0', file=fp)
+  if 'S' in phs:
+    for secphs in phs.rstrip('S'):
+      xfkey = 'XF{:s}_{:d}'.format (secphs, int(xfkva))
+      write_xfmr_config (xfkey, secphs + 'S', kvat=xfkva, vnom=None, vsec=120.0, install_type='PADMOUNT', vprimll=None, vprimln=1000.0*xfkvln, op=fp)
+    write_kersting_triplex (fp, xfkva)
+  else:
+    xfkey = 'XF3_{:d}'.format (int(xfkva))
+    write_xfmr_config (xfkey, phs, kvat=xfkva, vnom=None, vsec=208.0, install_type='PADMOUNT', vprimll=1000.0*xfkvll, vprimln=None, op=fp)
+    write_kersting_quadriplex (fp, xfkva)
+
+def write_node_houses (fp, node, region, xfkva, phs, nh=None, loadkw=None, house_avg_kw=None, secondary_ft=None, 
+                       storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5, node_metrics_interval=None, random_seed=False):
+  """Writes GridLAB-D houses to a primary load point. 
+
+  One aggregate service transformer is included, plus an optional aggregate secondary service drop. Each house 
+  has a separate meter or triplex_meter, each with a common parent, either a node or triplex_node on either the 
+  transformer secondary, or the end of the service drop. The houses may be written per phase, i.e., unbalanced load, 
+  or as a balanced three-phase load. The houses should be #included into a master GridLAB-D file. Before using this
+  function, call write_node_house_configs once, and only once, for each combination xfkva/phs that will be used.
 
   Args:
       fp (file): Previously opened text file for writing; the caller closes it.
       node (str): the GridLAB-D primary node name
       region (int): the taxonomy region for housing population, 1..6
       xfkva (float): the total transformer size to serve expected load; make this big enough to avoid overloads
-      xfkvll (float): line-to-line voltage [kV] on the primary. The secondary voltage will either be 120/240 for split_sec True, or 208 otherwise
-      phs (str): concatenation of 'A', 'B', and/or 'C'; houses are distributed among these phases
+      phs (str): 'ABC' for three-phase balanced distribution, 'AS', 'BS', or 'CS' for single-phase triplex
       nh (int): directly specify the number of houses; an alternative to loadkw and house_avg_kw
       loadkw (float): total load kW that the houses will represent; with house_avg_kw, an alternative to nh
       house_avg_kw (float): average house load in kW; with loadkw, an alternative to nh
-      split_secondary (boolean): True for single-phase secondary, False for balanced three-phase secondary
       secondary_ft (float): if not None, the length of adequately sized secondary circuit from transformer to the meters
-      write_configs (boolean): write the supporting transformer and line configurations. Can be False if we know the configurations are already defined.
       electric_cooling_fraction (float): fraction of houses to have air conditioners
       solar_fraction (float): fraction of houses to have rooftop solar panels
       storage_fraction (float): fraction of houses with solar panels that also have residential storage systems
       node_metrics_interval (int): if not None, the metrics collection interval in seconds for houses, meters, solar and storage at this node
+      random_seed (boolean): if True, reseed each function call. Default value False provides repeatability of output.
   """
   global house_nodes, storage_percentage, solar_percentage, electric_cooling_percentage, metrics_interval
   house_nodes = {}
+  if not random_seed:
+    np.random.seed (0)
+  bTriplex = False
+  if 'S' in phs:
+    bTriplex = True
   storage_percentage = storage_fraction
   solar_percentage = solar_fraction
   electric_cooling_percentage = electric_cooling_fraction
@@ -2803,18 +2916,51 @@ def write_node_houses (fp, node, region, xfkva, xfkvll, phs,
       lg_v_sm = loadkw / house_avg_kw - nhouse # >0 if we rounded down the number of houses
   bldg, ti = selectResidentialBuilding (rgnThermalPct[region-1], np.random.uniform (0, 1)) # TODO - these will all be identical!
   if nhouse > 0:
-    # write the transformer and one meter
-    xfkey = 'XF3_{:d}'.format (int(xfkva))
-    if write_configs:
-      write_xfmr_config (xfkey, phs, kvat=xfkva, vnom=None, vsec=208.0, install_type='PADMOUNT', vprimll=1000.0*xfkvll, vprimln=None, op=fp)
+    # write the transformer and one billing meter at the house, with optional secondary circuit
+    if bTriplex:
+      xfkey = 'XF{:s}_{:d}'.format (phs[0], int(xfkva))
+      linekey = 'tpx_cfg_{:d}'.format (int(xfkva))
+      meter_class = 'triplex_meter'
+      line_class = 'triplex_line'
+    else:
+      xfkey = 'XF3_{:d}'.format (int(xfkva))
+      linekey = 'quad_cfg_{:d}'.format (int(xfkva))
+      meter_class = 'meter'
+      line_class = 'overhead_line'
+    if secondary_ft is None:
+      xfmr_meter = '{:s}_mtr'.format (node)  # same as the house meter
+    else:
+      xfmr_meter = '{:s}_xfmtr'.format (node) # needs its own secondary meter
+    if (solar_percentage > 0.0) or (storage_percentage) > 0.0:
+      if bTriplex:
+        print ('// inverter base voltage for volt-var functions, on triplex circuit', file=fp)
+        print ('#define INV_VBASE=240.0', file=fp)
+      else:
+        print ('// inverter base voltage for volt-var functions, on 208-V three-phase circuit', file=fp)
+        print ('#define INV_VBASE=208.0', file=fp)
     print ('object transformer {', file=fp)
     print ('  name {:s}_xfmr;'.format(node), file=fp)
     print ('  phases {:s};'.format(phs), file=fp)
     print ('  from {:s};'.format(node), file=fp)
-    print ('  to {:s}_mtr;'.format(node), file=fp)
+    print ('  to {:s};'.format(xfmr_meter), file=fp)
     print ('  configuration {:s};'.format(xfkey), file=fp)
     print ('}', file=fp)
-    print ('object meter {', file=fp)
+    if secondary_ft is not None:
+      print ('object {:s} {{'.format (meter_class), file=fp)
+      print ('  name {:s};'.format (xfmr_meter), file=fp)
+      print ('  phases {:s};'.format (phs), file=fp)
+      print ('  nominal_voltage {:.2f};'.format (vnom), file=fp)
+      print ('}', file=fp)
+      print ('object {:s} {{'.format (line_class), file=fp)
+      print ('  name {:s}_secondary;'.format (node), file=fp)
+      print ('  phases {:s};'.format (phs), file=fp)
+      print ('  from {:s};'.format(xfmr_meter), file=fp)
+      print ('  to {:s}_mtr;'.format (node), file=fp)
+      print ('  length {:.1f};'.format (secondary_ft), file=fp)
+      print ('  configuration {:s};'.format (linekey), file=fp)
+      print ('}', file=fp)
+
+    print ('object {:s} {{'.format (meter_class), file=fp)
     print ('  name {:s}_mtr;'.format (node), file=fp)
     print ('  phases {:s};'.format (phs), file=fp)
     print ('  nominal_voltage {:.2f};'.format (vnom), file=fp)
@@ -2826,7 +2972,7 @@ def write_node_houses (fp, node, region, xfkva, xfkvll, phs,
     print ('}', file=fp)
     # write all the houses on that meter
     house_nodes[node] = [nhouse, region, lg_v_sm, phs, bldg, ti]
-    write_houses (node, fp, vnom, bIgnoreThermostatSchedule=False, bWriteService=False, bTriplex=False, setpoint_offset=1.0)
+    write_houses (node, fp, vnom, bIgnoreThermostatSchedule=False, bWriteService=False, bTriplex=bTriplex, setpoint_offset=1.0)
   else:
     print ('// Zero houses at {:s} phases {:s}'.format (node, phs), file=fp)
 

@@ -1,8 +1,10 @@
 #!/bin/bash
 
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
-declare -r SCHED_PATH=$TESP_SUPPORT/schedules
+#declare -r SCHED_PATH=$TESP_SUPPORT/schedules
 declare -r TMY_PATH=$TESP_SUPPORT/weather
+
+export SCHED_PATH=$TESP_SUPPORT/schedules
 
 python3 WriteHouses.py
 python3 -c "import tesp_support.api as tesp;tesp.glm_dict('test_houses')"

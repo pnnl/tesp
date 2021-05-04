@@ -24,12 +24,14 @@ Public Functions:
     :summarize_opf: Print the OPF solution from PYPOWER (debugging).  
     :weathercsv: Converts TMY3 weather data to CSV format.
     :write_node_houses: Write a transformer, service drop, meters and houses connected to a node, replacing load.
+    :write_node_house_configs: write the transformer, service drop and inverter configuration attributes for houses at a node.
 """
 
 from __future__ import absolute_import
 
 from .feederGenerator import populate_feeder
 from .feederGenerator import write_node_houses
+from .feederGenerator import write_node_house_configs
 from .fncsPYPOWER import pypower_loop 
 from .fncsPYPOWER import summarize_opf 
 from .glm_dict import glm_dict

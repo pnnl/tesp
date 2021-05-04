@@ -15,6 +15,7 @@ module powerflow {
 module residential {
 	implicit_enduses NONE;
 }
+module generators;
 module tape;
 module reliability {
   report_event_log false;
@@ -61,7 +62,7 @@ object transformer_configuration {
   connect_type DELTA_GWYE;
   primary_voltage 66395.281;
   secondary_voltage 7621.024;
-  power_rating 90000.000;
+  power_rating 12000.000;
   resistance 0.010000;
   reactance 0.100000;
 }
