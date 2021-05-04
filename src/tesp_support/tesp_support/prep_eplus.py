@@ -1,4 +1,4 @@
-# Copyright (C) 2020 Battelle Memorial Institute
+# Copyright (C) 2020-2021 Battelle Memorial Institute
 # file: prep_eplus.py
 
 import sys
@@ -422,7 +422,7 @@ def prepare_run_script (caseConfig, fedMeters):
   st = os.stat (fname)
   os.chmod (fname, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-def make_gld_eplus_case (fname):
+def make_gld_eplus_case (fname, bGlmReady=False):
   fp = open(fname, 'r').read()
   caseConfig = json.loads(fp)
   caseDir = caseConfig['CaseDir']
@@ -432,11 +432,15 @@ def make_gld_eplus_case (fname):
   template_dir = caseConfig['TemplateDir']
   support_dir = caseConfig['SupportDir']
   print ('read', len(caseConfig['Buildings']), 'buildings from', fname, 'writing to', caseDir)
-
-  prepare_glm_file (caseConfig)
+  if bGlmReady:
+    shutil.copy (caseConfig['BaseGLMFile'], '{:s}/{:s}.glm'.format (caseDir, caseConfig['CaseName']))
+  else:
+    prepare_glm_file (caseConfig)
   prepare_glm_dict (caseConfig)
   prepare_bldg_dict (caseConfig)
   fedMeters, fedLoads, fedLoadNames = configure_eplus (caseConfig, template_dir)
+  if bGlmReady:
+    fedLoadNames = fedLoads
   prepare_glm_helics (caseConfig, fedMeters, fedLoadNames)
   prepare_run_script (caseConfig, fedMeters)
 

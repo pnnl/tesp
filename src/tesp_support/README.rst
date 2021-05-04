@@ -71,7 +71,7 @@ Subdirectories
 License & Copyright
 ===================
 
-- Copyright (C) 2017-2019 Battelle Memorial Institute
+- Copyright (C) 2017-2021 Battelle Memorial Institute
 
 .. _Docker: https://www.docker.com
 .. _Python: http://www.python.org

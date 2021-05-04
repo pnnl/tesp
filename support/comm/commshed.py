@@ -14,7 +14,8 @@ def helics_loop (tmax, market_period, thresh_kW, max_offset_kW):
   fedName = helics.helicsFederateGetName (hFed)
   pubCount = helics.helicsFederateGetPublicationCount (hFed)
   subCount = helics.helicsFederateGetInputCount (hFed)
-  period = int (helics.helicsFederateGetTimeProperty(hFed, helics.HELICS_PROPERTY_TIME_PERIOD))
+#  period = int (helics.helicsFederateGetTimeProperty(hFed, helics.HELICS_PROPERTY_TIME_PERIOD))
+  period = int (helics.helicsFederateGetTimeProperty(hFed, helics.helics_property_time_period))
   next_market = -period
 
   print ('Federate {:s} has {:d} pub and {:d} sub, {:d} period, {:d} market_period and {:d} next_market'.format (fedName, 
@@ -45,7 +46,8 @@ def helics_loop (tmax, market_period, thresh_kW, max_offset_kW):
     #  3) helicsInputIsUpdated resets to False immediately after you read the value, will become True if value changes later
     #  4) helicsInputLastUpdateTime is > 0 only after the other federate published its first value
     if (sub_load is not None) and helics.helicsInputIsUpdated (sub_load) and (ts >= next_market):
-      gld_load = helics.helicsInputGetComplex (sub_load)
+      cval = helics.helicsInputGetComplex (sub_load)
+      gld_load = complex(cval[0], cval[1])
       feeder_kW = gld_load.real / 1.0e3
       excess_kW = feeder_kW - thresh_kW
       excess_kW *= 0.25

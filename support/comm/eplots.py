@@ -12,5 +12,5 @@ if len(sys.argv) > 2:
 if len(sys.argv) > 3:
   pngfile = sys.argv[3]
 
-ep.process_eplus (root, title=title, pngfile=pngfile)
+ep.process_eplus (root, title=title, save_file=pngfile)
 

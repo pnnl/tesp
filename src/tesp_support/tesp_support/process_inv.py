@@ -16,7 +16,7 @@ try:
 except:
   pass
 
-def process_inv(nameroot, dictname = ''):
+def process_inv(nameroot, dictname = '', save_file=None, save_only=False):
   """ Plots inverter and volt-var data for the NIST TE Challenge 2 / IEEE 8500 examples
 
   This function reads *substation_nameroot_metrics.json*,  
@@ -44,6 +44,8 @@ def process_inv(nameroot, dictname = ''):
   Args:
     nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
     dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+    save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
+    save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   """
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
@@ -589,6 +591,10 @@ def process_inv(nameroot, dictname = ''):
     ax[1,4].set_xlabel("Hours")
 
   plt.tight_layout(pad=1.0, w_pad=1.0, h_pad=2.0)
-  plt.show()
+  if save_file is not None:
+    plt.savefig(save_file)
+  if not save_only:
+    plt.show()
+
 
 
