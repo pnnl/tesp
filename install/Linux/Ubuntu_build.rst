@@ -178,9 +178,7 @@ To build the Java interface for version 10 or later, which has *javah* replaced 
 
  cd java
  make
- sudo make install
-
-The *make install* step may not work on WSL. A manual example is *cp fncs.jar $TESP_INSTALL/java*
+ sudo -E make install
 
 To build HELICS with Java bindings:
 
@@ -234,7 +232,7 @@ To build the KLU solver:
  cd build
  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$TESP_INSTALL ..
  # replace $TESP_INSTALL with /usr/local if using the default
- sudo cmake --build . --target install
+ sudo -E env "PATH=$PATH" cmake --build . --target install
 
 To link with both FNCS and HELICS, and run the autotest suite:
 
@@ -289,7 +287,7 @@ Build EnergyPlus Weather File Utility
 ::
 
  cd ~/src/tesp/support/weather/TMY2EPW/source_code
- sudo make
+ sudo -E make
 
 Build ns3 with HELICS
 ~~~~~~~~~~~~~~~~~~~~~
