@@ -293,15 +293,15 @@ Build ns3 with HELICS
 ~~~~~~~~~~~~~~~~~~~~~
 
 First, in order to build ns-3 with Python bindings, we need to install the Python
-binding generator that it uses, and then manually patch one of the ns-3 build files.
-This has to be done after each `git pull` of ns-3 sources.
+binding generator that it uses from source, and keep it updated for ns-3. The 
+version from `pip3 install pybindgen` is not kept up to date for ns-3 builds.
 
 ::
  
- pip3 install pybindgen --upgrade
- pip3 show pybindgen
- # edit line 17 of ~/src/ns-3-dev/bindings/python/wscript to specify the correct matching version, for example:
- REQUIRED_PYBINDGEN_VERSION = '0.21.0'
+ cd ~/src 
+ git clone https://github.com/gjcarneiro/pybindgen.git
+ cd pybindgen
+ sudo python3 setup.py install
 
 Then, we can build ns-3, install that into the same location as other parts of TESP, and test it:
 
@@ -316,10 +316,8 @@ Then, we can build ns-3, install that into the same location as other parts of T
  # cd ../..
  # then configure, build and test ns3 with the HELICS interface
  # --with-helics may not be left blank, so use either $TESP_INSTALL or /usr/local
- # --build-profile=optimized was used for TESP release, but it disables ns3 logging
- # ./waf configure --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --build-profile=optimized --disable-werror --enable-examples --enable-tests
  ./waf distclean
- ./waf configure --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --disable-werror --enable-examples --enable-tests
+ ./waf configure --prefix=$TESP_INSTALL --with-helics=$TESP_INSTALL --build-profile=optimized --disable-werror --enable-logs --enable-examples --enable-tests
  ./waf build 
  sudo ./waf install
  ./test.py
@@ -404,7 +402,7 @@ for TESP, on top of Ubuntu 18.04, producing *tesp_foundation*. (In what follows,
 ::
 
  cd ~/src/tesp/install/tesp_foundation
- sudo docker build -t="temcderm/tesp_foundation:1.0.1" .
+ sudo docker build -t="temcderm/tesp_foundation:1.0.2" .
 
 This process takes a while to complete. The second image starts from *tesp_foundation* and layers on the TESP components.
 Primarily, it runs the Linux installer script inside the Docker container. It will check for current versions of the
@@ -415,14 +413,14 @@ would be if some new TESP component introduces a new dependency.
 ::
 
  cd ~/src/tesp/install/tesp_core
- sudo docker build -t="temcderm/tesp_core:1.0.1" .
+ sudo docker build -t="temcderm/tesp_core:1.0.2" .
 
 When complete, the layered image can be pushed up to Docker Hub.
 
 ::
 
  cd ~/src/tesp/install/tesp_core
- sudo docker push temcderm/tesp_core:1.0.1
+ sudo docker push temcderm/tesp_core:1.0.2
 
 DEPRECATED: MATPOWER, MATLAB Runtime (MCR) and wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

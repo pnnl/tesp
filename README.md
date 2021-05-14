@@ -8,7 +8,7 @@ License: https://github.com/pnnl/tesp/blob/master/LICENSE
 
 TESP includes two co-simulation frameworks, FNCS and HELICS,
 along with several federates: GridLAB-D, EnergyPlus v9.3, AMES/PSST,
-OpenDSSCmd, PYPOWER and ns-3 (both debug and optimized builds).
+OpenDSSCmd, PYPOWER and ns-3 (optimized build with logging enabled).
 The Octave 5.2+ deployment of MATPOWER/MOST v7.1 is supported, but must
 be installed separately. TESP comes with several test cases,
 including the NIST TE Challenge 2, the SGIP use case 1, and an
@@ -74,3 +74,4 @@ Change log:
 - v0.9.5  HELICS, MATPOWER/MOST, ERCOT and E+ 9.3 examples
 - v1.0.0  Tested on Ubuntu 18.04 LTS and 20.04 LTS
 - v1.0.1  Updates to consensus mechanism, HELICS 2.6.1
+- v1.0.2  ns-3 has optimized build with logging enabled
