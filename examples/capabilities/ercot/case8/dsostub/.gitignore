@@ -4,7 +4,7 @@
 *.dat
 dam.json
 *.txt
-test_octave_cli.m
+test*.m
 d*.m
 basecase.m
 rtmcase_*.m
