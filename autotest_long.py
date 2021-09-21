@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
   # SGIP1 examples (these take a few hours to run the set)
   print('start examples sgip1: ')
-  os.chdir ('examples/analysis/sgip1')
+  os.chdir ('./examples/sgip1')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
   p1 = subprocess.Popen (pycall + ' prepare_cases.py', shell=True)
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
   # ieee8500 base example
   print('start examples ieee8500: ')
-  os.chdir ('examples/capabilities/ieee8500')
+  os.chdir ('./examples/ieee8500')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
   p1 = subprocess.Popen ('gridlabd IEEE_8500.glm', shell=True)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
   # ieee8500 precool examples (these take a few hours to run the set)
   print('start examples ieee8500 PNNLteam: ')
-  os.chdir ('examples/capabilities/ieee8500/PNNLteam')
+  os.chdir ('./examples/ieee8500/PNNLteam')
   p1 = subprocess.Popen ('./clean.sh', shell=True)
   p1.wait()
   p1 = subprocess.Popen (pycall + ' prepare_cases.py', shell=True)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
   # ERCOT Case8 example
   print('start examples ERCOT Case8: ')
-  os.chdir ('examples/capabilities/ercot/dist_system')
+  os.chdir ('./ercot/dist_system')
   p1 = subprocess.Popen (pycall + ' populate_feeders.py', shell=True)
   p1.wait()
   os.chdir ('../case8')

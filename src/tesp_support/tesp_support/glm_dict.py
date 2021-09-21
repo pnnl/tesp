@@ -16,6 +16,7 @@ Public Functions:
 import json;
 import sys;
 import math;
+import os;
 import tesp_support.helpers as helpers;
 
 def ercotMeterName(objname):
@@ -60,6 +61,13 @@ def ti_enumeration_string(tok):
     return 'UNKNOWN'
   return tok
 
+def append_include_file (lines, fname):
+  if os.path.isfile (fname):
+    fp = open (fname, 'r')
+    for line in fp:
+      lines.append (line)
+    fp.close()
+
 def glm_dict (nameroot, ercot=False, te30=False):
   """ Writes the JSON metadata file from a GLM file
 
@@ -74,26 +82,26 @@ def glm_dict (nameroot, ercot=False, te30=False):
       ercot (boolean): request ERCOT billing meter naming. Defaults to false.
       te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false.
   """
+  # first pass, collect first-level include files
+  collected_lines = []
   ip = open (nameroot + '.glm', 'r')
-  op = open (nameroot + '_glm_dict.json', 'w')
+  for line in ip:
+    if '#include' in line:
+      lst = line.split()
+      if len(lst) > 1:
+        incfile = os.path.expandvars(lst[1].strip('\"'))
+        append_include_file (collected_lines, incfile)
+    else:
+      collected_lines.append (line)
 
-  FedName = 'gld1'
+  ip.close()
+
+  # second pass, look for the substation
   feeder_id = 'feeder'
-  name = ''
-  bulkpowerBus = 'TBD'
   base_feeder = ''
   substationTransformerMVA = 12
-  houses = {}
-  waterheaters = {}
-  billingmeters = {}
-  inverters = {}
-  feeders = {}
-  capacitors = {}
-  regulators = {}
-  loads = {}
-
   inSwing = False
-  for line in ip:
+  for line in collected_lines:
     lst = line.split()
     if len(lst) > 1:
       if lst[1] == 'substation':
@@ -112,7 +120,18 @@ def glm_dict (nameroot, ercot=False, te30=False):
           inSwing = False
           break
 
-  ip.seek(0,0)
+  # third pass, process the other objects
+  FedName = 'gld1'
+  bulkpowerBus = 'TBD'
+  name = ''
+  houses = {}
+  waterheaters = {}
+  billingmeters = {}
+  inverters = {}
+  feeders = {}
+  capacitors = {}
+  regulators = {}
+  loads = {}
   inHouses = False
   inWaterHeaters = False
   inTriplexMeters = False
@@ -125,7 +144,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
   inLoads = False
   inFNCSmsg = False
   inHELICSmsg = False
-  for line in ip:
+  for line in collected_lines:
     lst = line.split()
     if len(lst) > 1: # terminates with a } or };
       if lst[1] == 'helics_msg':
@@ -346,7 +365,6 @@ def glm_dict (nameroot, ercot=False, te30=False):
     'transformer_MVA':substationTransformerMVA,'feeders':feeders, 
     'billingmeters':billingmeters,'houses':houses,'inverters':inverters,
     'capacitors':capacitors,'regulators':regulators}
+  op = open (nameroot + '_glm_dict.json', 'w')
   json.dump (substation, op, ensure_ascii=False, indent=2)
-
-  ip.close()
   op.close()
