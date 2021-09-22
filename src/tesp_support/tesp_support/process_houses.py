@@ -42,9 +42,16 @@ def plot_houses (dict):
 def read_house_metrics (nameroot, dictname = ''):
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
+    try:
       lp = open (dictname).read()
+    except:
+      logger.error(f'Unable to open house metrics file {dictname}')
   else:
-      lp = open (nameroot + "_glm_dict.json").read()
+    house_dict_path = f'{nameroot}"_glm_dict.json"'
+    try:
+      lp = open(house_dict_path).read()
+    except:
+      logger.error(f'Unable to open house metrics file {house_dict_path}')
   dict = json.loads(lp)
   hse_keys = list(dict['houses'].keys())
   hse_keys.sort()

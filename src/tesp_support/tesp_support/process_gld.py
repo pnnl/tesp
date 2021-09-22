@@ -10,11 +10,16 @@ import json;
 import sys;
 import os
 import numpy as np;
+import logging
 try:
   import matplotlib as mpl;
   import matplotlib.pyplot as plt;
 except:
   pass
+
+
+# Setting up logging
+logger = logging.getLogger(__name__)
 
 def read_gld_metrics (path, nameroot, dictname = ''):
   glm_dict_path = os.path.join(path, f'{nameroot}_glm_dict.json' )
@@ -30,9 +35,15 @@ def read_gld_metrics (path, nameroot, dictname = ''):
 
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
-      lp = open (dictname).read()
+    try: 
+      lp = open(dictname).read()
+    except:
+      logger.error(f'Unable to open GridLAB-D metrics file {dictname}')
   else:
-      lp = open (glm_dict_path).read()
+    try:
+      lp = open(glm_dict_path).read()
+    except:
+      logger.error(f'Unable to open GridLAB-D metrics file {glm_dict_path}')
   dict = json.loads(lp)
   fdr_keys = list(dict['feeders'].keys())
   fdr_keys.sort()

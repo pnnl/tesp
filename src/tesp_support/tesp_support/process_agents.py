@@ -60,9 +60,16 @@ def plot_agents (dict):
 def read_agent_metrics(nameroot, dictname = '', print_dictionary=False):
   # first, read and print a dictionary of relevant agents
   if len (dictname) > 0:
-    lp = open (dictname).read()
+    try:
+      lp = open(dictname).read()
+    except:
+      logger.error(f'Unable to open agent metrics file {dictname}')
   else:
-    lp = open (nameroot + '_agent_dict.json').read()
+    agent_dict_path = f'{nameroot}"_glm_dict.json"'
+    try:
+      lp = open(agent_dict_path).read()
+    except:
+      logger.error(f'Unable to open agent metrics file {agent_dict_path}')
   dict = json.loads(lp)
   a_keys = list(dict['markets'].keys())
   a_keys.sort()

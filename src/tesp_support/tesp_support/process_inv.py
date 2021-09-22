@@ -51,9 +51,16 @@ def process_inv(nameroot, dictname = ''):
   """
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
+    try:
       lp = open (dictname).read()
+    except:
+      logger.error(f'Unable to open inverter dictionary {dictname}')
   else:
-      lp = open (nameroot + "_glm_dict.json").read()
+      inv_dict_path = path.join(nameroot, "_glm_dict.json")
+      try:
+        lp = open().read()
+      except:
+        logger.error(f'Unable to open inverter dictionary {dictname}')
   dict = json.loads(lp)
   sub_keys = list(dict['feeders'].keys())
   sub_keys.sort()
@@ -269,7 +276,7 @@ def process_inv(nameroot, dictname = ''):
   # Precooling: won't necessarily have the same times?
   fname_p = 'precool_' + nameroot + '_metrics.json'
   have_precool = False
-  if os.path.exists(fname_p):
+  if path.exists(fname_p):
     have_precool = True
     lp_p = open (fname_p).read()
     lst_p = json.loads(lp_p)

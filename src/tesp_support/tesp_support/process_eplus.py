@@ -126,9 +126,9 @@ def read_eplus_metrics (path, nameroot, quiet=False):
     lp = open (eplus_dict_path).read()
     lst = json.loads(lp)
     if not quiet:
-      print ('Metrics data starting', lst['StartTime'])
+      print('Metrics data starting', lst['StartTime'])
   except:
-    print ('eplus metrics file could not be read')
+    logger.error(f'Unable to open eplus metrics file {eplus_dict_path}')
     return
 
   # make a sorted list of the times
