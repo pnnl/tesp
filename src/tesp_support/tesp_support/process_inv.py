@@ -6,15 +6,19 @@ Public Functions:
     :process_inv: Reads the data and metadata, then makes the plots.  
 
 """
-import json;
-import sys;
-import numpy as np;
-import os.path;
+import json
+import sys
+import numpy as np
+from os import path
+import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
+
+# Setting up logging
+logger = logging.getLogger(__name__)
 
 def process_inv(nameroot, dictname = ''):
   """ Plots inverter and volt-var data for the NIST TE Challenge 2 / IEEE 8500 examples

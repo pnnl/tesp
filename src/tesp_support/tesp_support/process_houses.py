@@ -6,14 +6,18 @@ Public Functions:
     :process_houses: Reads the data and metadata, then makes the plot.  
 
 """
-import json;
-import sys;
-import numpy as np;
+import json
+import sys
+import numpy as np
+import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
+
+# Setting up logging
+logger = logging.getLogger(__name__)
 
 def plot_houses (dict):
   hrs = dict['hrs']

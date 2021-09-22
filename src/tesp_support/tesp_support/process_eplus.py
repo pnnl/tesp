@@ -6,15 +6,19 @@ Public Functions:
         :process_eplus: Reads the data and metadata, then makes the plots.  
 
 """
-import json;
-import sys;
+import json
+import sys
 import os
-import numpy as np;
+import numpy as np
+import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
+
+# Setting up logging
+logger = logging.getLogger(__name__)
 
 def plot_eplus (dict, title=None, pngfile=None):
   hrs = dict['hrs']
