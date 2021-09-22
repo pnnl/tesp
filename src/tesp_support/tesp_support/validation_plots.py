@@ -177,12 +177,18 @@ def plot_gen_comparison(data, save_path):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Generator Output')
                 plt.legend(loc='center left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_gen_comparison.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_generator_outputs.png')
-                    plt.savefig(save_file)
+
+                    fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing PYPOWER data for Case (a); unable to create '
@@ -226,12 +232,17 @@ def plot_transactive_bus_LMP(data, save_path):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Marginal Price at Bus 7')
                 plt.legend(loc='best')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_transactive_bus_LMP.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_transactive_bus_prices.png')
-                    plt.savefig(save_file)
+                    fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing PYPOWER data; unable to complete '
@@ -294,12 +305,17 @@ def plot_transactive_feeder_load(data, save_path):
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Total Load at Bus 7')
                 ax.legend(lns, labels, loc='lower left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_transactive_feeder_load.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_transactive_bus_loads2.png')
-                    plt.savefig(save_file)
+                    fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing PYPOWER data; unable to complete '
@@ -369,12 +385,17 @@ def plot_transactive_feeder_load_solar(data, save_path):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Load at Bus 7')
                 plt.legend(loc='lower left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_transactive_feeder_load_solar.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_solar_output.png')
-                    plt.savefig(save_file)
+                    fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing PYPOWER data; unable to complete '
@@ -467,12 +488,17 @@ def plot_avg_indoor_air_temperature(data, save_path):
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Residential Indoor Temperatures')
                 ax.legend(lns, labels, loc='upper left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_avg_indoor_air_temperature.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_residential_indoor_temperature.png')
-                    plt.savefig(save_file)
+                    fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing GridLAB-D or PYPOWER data; unable to '
@@ -544,12 +570,17 @@ def plot_solar_output(data, save_path):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Residential PV Output')
                 plt.legend(loc='lower left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_solar_output.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_solar_output.png')
-                    plt.savefig(save_file)
+                    fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing GridLAB-D data; unable to complete '
@@ -629,12 +660,17 @@ def plot_ES_output(data, save_path):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Residential ES Output')
                 plt.legend(loc='lower right')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_ES_output.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_ES_output.png')
-                    plt.savefig(save_file)
+                    fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing GridLAB-D data; unable to complete '
@@ -716,12 +752,17 @@ def plot_energy_plus_indoor_temperature(data, save_path):
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Commercial Building Indoor Temperature')
                 ax.legend(lns, labels, loc='center left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_energy_plus_indoor_temperature.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_commercial_building_indoor_temperature.png')
-                    plt.savefig(save_file)
+                    fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing Energy+ data; unable to complete '
@@ -779,12 +820,17 @@ def plot_energy_plus_prices(data, save_path):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Commercial Building Real-Time Energy Price')
                 plt.legend(loc='best')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_energy_plus_prices.')
                 if save_path != '':
                     save_file = path.join(save_path,
                                           'validation_commercial_building_prices.png')
-                    plt.savefig(save_file)
+                    fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing Energy+ data; unable to complete '
