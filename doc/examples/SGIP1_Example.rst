@@ -297,6 +297,8 @@ The first entry in every line of the file is the number of seconds in the co-sim
 
 Analysis Results - Model Validation
 -----------------------------------
+The graphs below were created by running ``validation_plots.py`` to validate the performance of the models in the co-simulation.
+
 
 .. figure:: ../media/validation_generator_outputs.png
 	:name: fig_validation_generator_outputs
@@ -336,12 +338,12 @@ Analysis Results - Model Validation
 .. figure:: ../media/validation_commercial_building_indoor_temperature.png
 	:name: fig_validation_commercial_building_indoor_temperature
 	
-	Commercial building (as modeled in Energy+) indoor air temperature for the base and transactive case. Results should be similar to the residential indoor air temperature with lower temperatures during low-price periods and higher temperatures during high-price periods. **TODO: why isn't the indoor temperature moving with price?**
+	Commercial building (as modeled in Energy+) indoor air temperature for the base and transactive case. Results should be similar to the residential indoor air temperature with lower temperatures during low-price periods and higher temperatures during high-price periods.
 	
 .. figure:: ../media/validation_commercial_building_prices.png
 	:name: fig_validation_commercial_building_prices
 	
-	Commercial building (as modeled in Energy+) prices from the wholesale market as managed by the Energy+ agent. **TODO: Why are the prices flat?**
+	Commercial building (as modeled in Energy+) prices from the wholesale market as managed by the Energy+ agent. 
 	
 	
 
