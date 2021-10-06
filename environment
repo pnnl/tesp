@@ -1,0 +1,44 @@
+# TESP exports
+export WAREDIR=$HOME/grid/software
+export REPODIR=$HOME/grid/repository
+export INSTDIR=$HOME/grid/installed
+export TESPDIR=$REPODIR/tesp
+export GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
+export FNCS_INCLUDE_DIR=$INSTDIR/include
+export FNCS_LIBRARY=$INSTDIR/lib
+#export CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial
+
+# JAVA_HOME
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+
+# PATH
+export PATH=$PATH:$INSTDIR/bin
+export PATH=$PATH:$JAVA_HOME
+export PATH=$PATH:$INSTDIR/engeryplus
+export PATH=$PATH:$INSTDIR/engeryplus/PostProcess
+#export PATH=$PATH:$HOME/.local/bin:
+
+# LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/osboxes/grid/repository/fncs/java/build
+
+# PYTHONPATH
+#export PYTHONPATH=$PYTHONPATH:/usr/.local/lib/python3.6
+#export PYTHONPATH=$PYTHONPATH:/opt/ibm/ILOG/CPLEX_Studio129/cplex/python/3.6/x86-64_linux
+##export PYTHONPATH=$PYTHONPATH:/home/osboxes/grid/repository/ERCOTTestSystem/AMES-V5.0/SCUCresources
+#export PYTHONPATH=$PYTHONPATH:/home/osboxes/grid/repository/ERCOTTestSystem/AMES-V5.0/psst
+##export PYTHONPATH=$PYTHONPATH:/home/osboxes/grid/repository/isu/AMES-V5.0/SCUCresources
+##export PYTHONPATH=$PYTHONPATH:/home/osboxes/grid/repository/isu/AMES-V5.0/psst
+
+# PSST
+#export PSST_SOLVER=/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplexamp
+#export PSST_SOLVER=/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplex
+
+# SOLVER_HOME
+#export SOLVER_HOME=/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux
+#export SOLVER_HOME=$WAREDIR/gurobi-8.1.0/bin
+#export SOLVER_HOME=$WAREDIR/scipoptsuite-6.0.1/build/bin
+#export PATH=$PATH:$SOLVER_HOME
+#export PATH=$PATH:$SOLVER_HOME/bin
+
