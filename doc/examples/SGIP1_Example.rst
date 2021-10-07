@@ -511,19 +511,19 @@ The graphs below were created by running ``validation_plots.py`` to validate the
 	Average residential indoor air temperature for all houses in both base and transactive case. The effect of the transactive controller for the HVACS drives lower relatively lower temperatures during low price periods and relatively higher prices during higher periods.
 	
 	
-.. figure:: ../media/SGIP1validation_commercial_building_indoor_temperature.png
+.. figure:: ../media/SGIP1/validation_commercial_building_indoor_temperature.png
 	:name: fig_validation_commercial_building_indoor_temperature
 	
 	Commercial building (as modeled in Energy+) indoor air temperature for the base and transactive case. Results should be similar to the residential indoor air temperature with lower temperatures during low-price periods and higher temperatures during high-price periods.
 	
 	
-.. figure:: ../media/SGIP1validation_solar_output.png
+.. figure:: ../media/SGIP1/validation_solar_output.png
 	:name: fig_validation_solar_output_output
 	
 	Total residential rooftop solar output on the transactive feeder across the four cases within increasing penetration. The rooftop solar is not price responsive. As expected, increasing PV penetration showing increased PV production.
 	
 	
-.. figure:: ../media/SGIP1validation_ES_output.png
+.. figure:: ../media/SGIP1/validation_ES_output.png
 	:name: fig_validation_ES_output_output
 	
 	Total residential energy storage output on the transactive feeder across the four cases within increasing penetration. The energy storage controller engages in peak-shaving and valley-filling based on the billing meter for the residential customer.
