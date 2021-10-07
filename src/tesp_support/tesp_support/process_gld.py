@@ -139,7 +139,7 @@ def read_gld_metrics (path, nameroot, dictname = ''):
 #    print (key, val['index'], val['units'])
     if key == 'air_temperature_avg':
       idx_h['HSE_AIR_AVG_IDX'] = val['index']
-      idx_h['HSE_AIR_AVG_UNITS'] = val['index']
+      idx_h['HSE_AIR_AVG_UNITS'] = val['units']
     elif key == 'air_temperature_max':
       idx_h['HSE_AIR_MAX_IDX'] = val['index']
       idx_h['HSE_AIR_MAX_UNITS'] = val['units']
