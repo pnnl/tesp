@@ -318,7 +318,7 @@ The energy storage devices also have inverters with 100% efficiency and operate 
 
 **TODO: Add link to growth model table.**
 
-.. figure:: ../media/SGIP1system.png
+.. figure:: ../media/SGIP1/SGIP1system.png
 	:name: fig_sgip1
 
 	SGIP-1 system configuration with partial PV and storage adoption
@@ -330,7 +330,7 @@ The Circuit Model
 :numref:`fig_pp_sgip1` shows the bulk system model in PYPOWER. It is a small system with three generating units and three load buses that comes with
 PYPOWER, to which we added a high-cost peaking unit to assure convergence of the optimal power flow in all cases. In SGIP-1 simulations, generating unit 2 was taken offline on the second day to simulate a contingency. The GridLAB-D model was connected to Bus 7, and scaled up to represent multiple feeders. In this way, prices, loads and resources on transmission and distribution systems can impact each other.
 
-.. figure:: ../media/PYPOWERsystem.png
+.. figure:: ../media/SGIP1/PYPOWERsystem.png
 	:name: fig_pp_sgip1
 
 	Bulk System Model with Maximum Generator Real Power Output Capacities
@@ -358,12 +358,12 @@ agent program collected metrics from the building model, and adjusted
 the thermostat setpoints based on real-time price, which is a form of
 passive response.
 
-.. figure:: ../media/FeederR1_1.png
+.. figure:: ../media/SGIP1/FeederR1_1.png
 	:name: fig_taxonomy
 
 	Distribution Feeder Model (http://emac.berkeley.edu/gridlabd/taxonomy\_graphs/)
 
-.. figure:: ../media/School.png
+.. figure:: ../media/SGIP1/School.png
 	:name: fig_school
 
 	Elementary School Model
@@ -434,7 +434,7 @@ The functionalities shown in :numref:`fig_sgip1` are implemented in simulation t
         - Using the bid information from the generation natively represented in the bulk power system model and the price-responsive load bids provided by the Substation Agent, find the real-time energy price for each node the bulk power system (the LMP) by solving the optimal power flow problem to find the least-cost dispatch for generation and flexible load. Communicate the appropriate LMP to the Substation Agent.
 
 
-.. figure:: ../media/ClearingSequence2.png
+.. figure:: ../media/SGIP1/ClearingSequence2.png
 	:name: fig_clearing_sequence
 
 	Sequence of operations to clear market operations
@@ -481,31 +481,31 @@ Analysis Results - Model Validation
 The graphs below were created by running ``validation_plots.py`` to validate the performance of the models in the co-simulation. Most of these plots involve comparisons across the cases evaluated in this study (see :numref:`tbl_sgip1`).
 
 
-.. figure:: ../media/validation_generator_outputs.png
+.. figure:: ../media/SGIP1/validation_generator_outputs.png
 	:name: fig_validation_generator_outputs
 	
 	Generator outputs of bulk power system, showing the loss of Unit 3 on the second day.
 	
 	
-.. figure:: ../media/validation_transactive_bus_prices.png
+.. figure:: ../media/SGIP1/validation_transactive_bus_prices.png
 	:name: fig_validation_transactive_bus_prices
 	
 	Wholesale market prices (LMPs) for base and transactive cases, showing lower prices during the peak of the day as transactively participating loads respond.	
 	
 	
-.. figure:: ../media/validation_transactive_bus_loads2.png
+.. figure:: ../media/SGIP1/validation_transactive_bus_loads2.png
 	:name: fig_validation_transactive_bus_loads4
 	
 	Total load for transactive feeder in base and transactive case. Should show peak-shaving, valley-filling, and snapback as prices come down off their peak.
 	
 	
-.. figure:: ../media/validation_transactive_bus_loads4.png
+.. figure:: ../media/SGIP1/validation_transactive_bus_loads4.png
 	:name: fig_validation_transactive_bus_loads2
 	
 	Total load for transactive feeder in for four transactive cases with increasing levels of rooftop solar PV and energy storage penetration.
 
 
-.. figure:: ../media/validation_residential_indoor_temperature.png
+.. figure:: ../media/SGIP1/validation_residential_indoor_temperature.png
 	:name: fig_validation_residential_indoor_temperature
 	
 	Average residential indoor air temperature for all houses in both base and transactive case. The effect of the transactive controller for the HVACS drives lower relatively lower temperatures during low price periods and relatively higher prices during higher periods.
