@@ -822,7 +822,7 @@ def plot_energy_plus_prices(data, save_path):
                 plt.legend(loc='best')
                 # TDH 2019-09-22:Add this so the figure can be referenced for
                 # saving later. If you don't do this `plt.savefig()` saves a
-                # blank image. `plt.show()` creates a new blank image that
+                # blank image. `plt.show()` creates a new blank image that.
                 # ends up being the reference for `plt.savefig()`
                 fig1 = plt.gcf()
                 plt.show()

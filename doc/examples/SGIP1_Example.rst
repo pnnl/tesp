@@ -27,12 +27,58 @@ The goal of this analysis are as follows:
 Valuation Model
 ---------------
 
+
+
+Use Case Diagram
+................
+A Use Case Diagram is helpful in providing a broad overview of the activities taking place in the system being modeled. It shows the external actors and the specific use cases in which each participates as well as any sequencing between specific use cases.
+
+.. figure:: ../media/SGIP1/ValueModel-SGIP1UseCase.png
+	:name: fig_value_model_use_case
+
+	Definition of the use cases being modeled in the system under analysis.
+
+
 Value Flow Diagram
 ..................
+Value flows define the exchanges between actors in the system. For transactive systems, these value exchanges are essential in defining and enabling the transactive system to operate effectively. These value exchanges are often used when defining the key valuation metrics used to evaluate the performance of the system. The diagrams below show the key value exchanges modeled in this system.
+
+
+.. figure:: ../media/SGIP1/ValueModel-WholesaleElectricityServiceValue.png
+	:name: fig_value_model_wholesale
+
+	Value exchanges modeled in the wholesale market
+	
+
+.. figure:: ../media/SGIP1/ValueModel-RetailElectricityServiceValue.png
+	:name: fig_value_model_retail
+
+	Value exchanges modeled in the retail market
+	
+.. figure:: ../media/SGIP1/ValueModel-ModifyResourceAndDemandUsingTES.png
+	:name: fig_value_model_transactive
+
+
+
+
+Metrics Identification
+......................
+To guide the development of the analysis, it is important that key metrics are identified in the value model. The diagram below shows the specific metrics identified as sub-elements of the Accounting Table object. Though this diagram does not define the means by which these metrics are calculated, it does define the need for such a defintion, leading to a data requirement from the analysis process.
+
+	Value exchanges modeled during the transactive system operation
+.. figure:: ../media/SGIP1/ValueModelMetrics.png
+	:name: fig_value_model_metrics
+
+	Identification of the specific metrics to be included in the Accounting Table.
 
 
 Transactive Mechanism Flowchart (Sequence Diagram)
 ..................................................
+
+.. figure:: ../media/SGIP1/ClearingSequence2.png
+	:name: fig_value_model_clearing_sequence
+
+	Transactive mechanism sequence diagram showing the data exchange between participants
 
 
 Key Performance Metrics Definitions
@@ -117,12 +163,147 @@ where
 Analysis Design Model
 ---------------------
 
-Description of the planned analysis process showing how all the various analysis steps lead towards the computation of the key performance metrics. 
+The analysis design model is a description of the planned analysis process showing how all the various analysis steps lead towards the computation of the key performance metrics. The data requirements of the valuation and validation metrics drive the definition of the various analysis steps that must take place in order to be able to calculate these metrics.
 
-Also include definitions of the validation metrics and shows the analysis process that will lead to their calculation.
+The level of detail is in this model is somewhat subjective and up to those leading the analysis. There must be sufficient detail to avoid the biggest surprises when planning the execution of the analysis but a highly detailed plan is likely to be more effort than it is worth. The analysis design model supports varying levels of fidelity by allowing any individual activity block to be defined in further detail through the definition of subactivities
 
-The level of detail is somewhat subjective and up to those leading the analysis. There must be sufficient detail to avoid the biggest surprises when planning the execution of the analysis but a highly detailed plan is likely to be more effort than it is worth.
+Top Level
+.........
 
+The top level analysis diagram (shown in :numref:`fig_AD_top_level`) is the least detailed model and shows the analysis process at the coarsest level. On the left-hand side of the diagram is the source data (which includes assumptions) and is the only analysis activity with no inputs. The analysis activity blocks in the middle of the diagram show the creation of various outputs from previously created inputs with the terminal activities being the presentation of the final data in the form of tables, graphs, and charts.
+
+
+.. figure:: ../media/SGIP1/AD_Top_Level.png
+	:name: fig_AD_top_level
+
+	Top level view of the analysis design model
+	
+Source Data
+...........
+
+The green source data block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_data_sources`. Many of these items are more than single values and are more complex data structures themselves. 
+
+.. figure:: ../media/SGIP1/AD_data_sources.png
+	:name: fig_AD_data_sources
+
+	Detailed view of the data sources necessary to the SGIP1 analysis.
+
+
+Develop Transmission and Generation Model
+.........................................
+The "Develop T+G model" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_develop_tg_model`. The diagram shows that both generation and transmission network information is used to create a PYPOWER model.
+
+.. figure:: ../media/SGIP1/AD_develop_tg_model.png
+	:name: fig_AD_develop_tg_model
+
+	Detailed model of the development process of the transmission and generation system model.
+	
+	
+Develop Distribution Model
+..........................
+The "Develop dist. model" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_develop_distribution_model`. The distribution model uses assumptions and information from the Residential Energy Consumer Survey (RECS) to define the properties of the modeled houses as well as the inclusion of rooftop solar PV and the participation in the transactive system. These inputs are used to generate a GridLAB-D model.
+
+.. figure:: ../media/SGIP1/AD_develop_distribution_model.png
+	:name: fig_AD_develop_distribution_model
+	
+	Detailed model of the development process of the distribution system model.
+
+
+
+Develop Commercial Building Model
+.................................
+The "Develop commercial building model" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_develop_commercial_building_model`. The commercial building model is a predefined Energy+ model paired with a particular TMY3 weather file (converted to EPW for use in Energy+).
+
+.. figure:: ../media/SGIP1/AD_develop_commercial_building_model.png
+	:name: fig_AD_develop_commercial_building_model
+	
+	Detailed model of the development process of the commercial building.
+	
+	
+Prepare co-simulation
+.....................
+The "Prepare co-simulation" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_prepare_co-simulation`. The core activity is the "Create co-sim config files" which are used by their respective simulation tools. Additionally, a special metadata file is created from the GridLAB-D model and is used by several of the metrics calculations directly.
+
+.. figure:: ../media/SGIP1/AD_prepare_co-simulation.png
+	:name: fig_AD_prepare_co-simulation
+	
+	Detailed model of the co-simulation configuration file creation.
+	
+
+Co-simulation
+..............
+The "Co-simulation" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_co-simulation`. The GridLAB-D model plays a central role as a significant portion of the modeling effort is centered around enabling loads (specifically HVACs) to participate in the transactive system. In addition to the previously shown information flows between the activities the dynamic data exchange that takes place during the co-simulation run; this is shown by the "<<flow>>" arrows. 
+
+.. figure:: ../media/SGIP1/AD_co-simulation.png
+	:name: fig_AD_prepare_co-simulation
+	
+	Detailed model of the co-simulation process showing the dynamic data exchanges with "<<flow>>" arrows.
+	
+
+Accounting table
+................
+The "Accounting table" presentation block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a series of sub-diagrams shown below. Each line of the accounting table shown in :numref:`fig_value_model_metrics` is represented by a gray "presentation" block, showing the required inputs to produce that metric.
+
+.. figure:: ../media/SGIP1/AT_Average_ASHRAE Discomfort_Hours.png
+	:name: fig_AT_avg_ASHRAE_discomfort_hours
+	
+	Average ASHRAE discomfort hour metric data flow
+	
+	
+.. figure:: ../media/SGIP1/AT_Bulk_Power_System.png
+	:name: fig_AT_bulk_power_system
+	
+	Bulk power system (T+G) metrics data flows
+	
+	
+.. figure:: ../media/SGIP1/AT_DERs.png
+	:name: fig_AT_DERs
+	
+	Distributed energy resources (DERs) metrics data flows
+	
+	
+.. figure:: ../media/SGIP1/AT_Transactive_Feeders.png
+	:name: fig_AT_transactive_feeder
+	
+	Transactive feeder metric data flows
+	
+	
+.. figure:: ../media/SGIP1/AT_T_and_D_Losses.png
+	:name: fig_AT_t_and_d_losses
+	
+	Transmission and distribution network losses metric data flows
+	
+
+Analysis Validation
+...................
+The "Analysis validation" presentation block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a series of sub-diagrams shown below. These are metrics similar to those in the :ref:`Accounting Table` section but they are not necessarily defined by the value exchanges and thus fall outside the value model. These metrics are identified by the analysis designer in cooperation with analysis team as a whole and are used to validate the correct execution of the analysis.
+
+
+.. figure:: ../media/SGIP1/AV_Bulk_Power_System.png
+	:name: fig_AV_bulk_power_system
+	
+	Bulk power system metrics data flows
+	
+
+.. figure:: ../media/SGIP1/AV_Average_Residential Indoor_Air_Temperature.png
+	:name: fig_AV_avg_indoor_air_temp
+	
+	Residential indoor air temperature metric data flows
+
+
+.. figure:: ../media/SGIP1/AV_Commercial_Building.png
+	:name: fig_AV_commercial_building
+	
+	Commercial indoor air temperature metric data flows	
+	
+	
+.. figure:: ../media/SGIP1/AV_Residential_PV_and_ES_Impacts.png
+	:name: fig_AV_pv_es_impacts
+	
+	Residential rooftop solar PV and energy storage metrics data flows
+
+
+	
 
 Simulated System Model
 ----------------------
@@ -297,7 +478,7 @@ The first entry in every line of the file is the number of seconds in the co-sim
 
 Analysis Results - Model Validation
 -----------------------------------
-The graphs below were created by running ``validation_plots.py`` to validate the performance of the models in the co-simulation.
+The graphs below were created by running ``validation_plots.py`` to validate the performance of the models in the co-simulation. Most of these plots involve comparisons across the cases evaluated in this study (see :numref:`tbl_sgip1`).
 
 
 .. figure:: ../media/validation_generator_outputs.png
@@ -305,45 +486,49 @@ The graphs below were created by running ``validation_plots.py`` to validate the
 	
 	Generator outputs of bulk power system, showing the loss of Unit 3 on the second day.
 	
+	
 .. figure:: ../media/validation_transactive_bus_prices.png
 	:name: fig_validation_transactive_bus_prices
 	
 	Wholesale market prices (LMPs) for base and transactive cases, showing lower prices during the peak of the day as transactively participating loads respond.	
+	
 	
 .. figure:: ../media/validation_transactive_bus_loads2.png
 	:name: fig_validation_transactive_bus_loads4
 	
 	Total load for transactive feeder in base and transactive case. Should show peak-shaving, valley-filling, and snapback as prices come down off their peak.
 	
+	
 .. figure:: ../media/validation_transactive_bus_loads4.png
 	:name: fig_validation_transactive_bus_loads2
 	
 	Total load for transactive feeder in for four transactive cases with increasing levels of rooftop solar PV and energy storage penetration.
+
 
 .. figure:: ../media/validation_residential_indoor_temperature.png
 	:name: fig_validation_residential_indoor_temperature
 	
 	Average residential indoor air temperature for all houses in both base and transactive case. The effect of the transactive controller for the HVACS drives lower relatively lower temperatures during low price periods and relatively higher prices during higher periods.
 	
-.. figure:: ../media/validation_solar_output.png
-	:name: fig_validation_solar_output_output
-	
-	Total residential rooftop solar output on the transactive feeder across the four cases within increasing penetration. The rooftop solar is not price responsive. As expected, increasing PV penetration showing increased PV production.
-	
-.. figure:: ../media/validation_ES_output.png
-	:name: fig_validation_ES_output_output
-	
-	Total residential energy storage output on the transactive feeder across the four cases within increasing penetration. The energy storage controller engages in peak-shaving and valley-filling based on the billing meter for the residential customer.
 	
 .. figure:: ../media/validation_commercial_building_indoor_temperature.png
 	:name: fig_validation_commercial_building_indoor_temperature
 	
 	Commercial building (as modeled in Energy+) indoor air temperature for the base and transactive case. Results should be similar to the residential indoor air temperature with lower temperatures during low-price periods and higher temperatures during high-price periods.
 	
-.. figure:: ../media/validation_commercial_building_prices.png
-	:name: fig_validation_commercial_building_prices
 	
-	Commercial building (as modeled in Energy+) prices from the wholesale market as managed by the Energy+ agent. 
+.. figure:: ../media/validation_solar_output.png
+	:name: fig_validation_solar_output_output
+	
+	Total residential rooftop solar output on the transactive feeder across the four cases within increasing penetration. The rooftop solar is not price responsive. As expected, increasing PV penetration showing increased PV production.
+	
+	
+.. figure:: ../media/validation_ES_output.png
+	:name: fig_validation_ES_output_output
+	
+	Total residential energy storage output on the transactive feeder across the four cases within increasing penetration. The energy storage controller engages in peak-shaving and valley-filling based on the billing meter for the residential customer.
+	
+	
 	
 	
 
