@@ -1,11 +1,24 @@
 #!/bin/bash
 
+# Set the the first and second parameter on the command line:
+#   ./tesp.sh  "username" "user@email"
 
-#sudo apt-get -y install openssh-server
-#sudo nano /etc/ssh/sshd_config
-#Once you open the file, find and change the uncomment line: # Port 22 
+
+# If you want to run as shh this has to be installed and configured
+# sudo -get -y install openssh-server
+# sudo nano /etc/ssh/sshd_config
+# Once you open the file, find and change the uncomment line: # Port 22 
+# sudo service ssh start
+# sudo systemctl status ssh
+
+
+#alternatives command line for java or python
+#sudo update-alternatives --config java
+
 
 # build tools
+sudo apt-get update
+sudo apt-get -y upgrade
 sudo apt-get -y install apt-utils
 sudo apt-get -y install git
 sudo apt-get -y install build-essential
@@ -20,8 +33,10 @@ sudo apt-get -y install pkg-config
 sudo apt-get -y install unzip
 
 # Java support
-sudo apt-get -y install openjdk-11-jre-headless
-sudo apt-get -y install openjdk-11-jdk-headless
+#sudo apt-get -y install openjdk-11-jdk-headless 
+#sudo apt-get -y install openjdk-11-jre-headless
+sudo apt-get -y install openjdk-11-jdk
+sudo apt-get -y install openjdk-11-jre
 sudo ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
 
 # for HELICS and FNCS
@@ -37,7 +52,8 @@ sudo apt-get -y install libsuitesparse-dev
 
 # for solvers Ipopt/cbc used by AMES/Agents
 sudo apt-get -y install coinor-cbc
-sudo apt-apt -y install coinor-libipopt-dev
+sudo apt-get -y install coinor-libcbc-dev
+sudo apt-get -y install coinor-libipopt-dev
 sudo apt-get -y install liblapack-dev
 sudo apt-get -y install libmetis-dev
 
@@ -70,16 +86,19 @@ mkdir installed
 mkdir software
 # Download all relevant repositories
 cd repository || exit
+
 # Set your name and email address
-#git config --global user.name "your user name"
-#git config --global user.email "your email"
-#git config --global credential.helper store
+if [[ -z $1 && -z $2 ]]; then
+  git config --global user.name $1
+  git config --global user.email $2
+fi
+git config --global credential.helper store
 
 # FNCS
 #develop for dsot
-git clone -b develop https://github.com/FNCS/fncs.git
+#git clone -b develop https://github.com/FNCS/fncs.git
 #feature/opendss for tesp
-#git clone -b feature/opendss https://github.com/FNCS/fncs.git
+git clone -b feature/opendss https://github.com/FNCS/fncs.git
 
 # HELICS
 git clone -b helics2 https://github.com/GMLC-TDC/HELICS-src
@@ -96,7 +115,7 @@ git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
 # TESP
 git clone -b evolve https://github.com/pnnl/tesp.git
 # need for back port of DSOT
-git clone -b master https://stash.pnnl.gov/scm/tesp/tesp-private.git
+# git clone -b master https://stash.pnnl.gov/scm/tesp/tesp-private.git
 
 # NS3
 git clone https://gitlab.com/nsnam/ns-3-dev.git

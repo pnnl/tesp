@@ -33,8 +33,8 @@ export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 export PATH=$PATH:$INSTDIR/bin
 export PATH=$PATH:$INSTDIR/engeryplus
 export PATH=$PATH:$INSTDIR/engeryplus/PostProcess
-#export PATH=$PATH:$HOME/.local/bin:
 export PATH=$PATH:$JAVA_HOME
+
 #export PATH=$PATH:$SOLVER_HOME
 #export PATH=$PATH:$SOLVER_HOME/bin
 
@@ -99,6 +99,9 @@ cmake -DBUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON \
 git submodule update --init
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 sudo make install
+# Install HELICS Python 3 bindings for a version that exactly matches the local build
+ver=helics_recorder --version
+pip3 install helics==${ver% *}
 
 
 echo #++++++++++++++ KLU solver
