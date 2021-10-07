@@ -6,27 +6,12 @@ clear
 export WAREDIR=$HOME/grid/software
 export REPODIR=$HOME/grid/repository
 export INSTDIR=$HOME/grid/installed
+export TESPDIR=$REPODIR/tesp
 export GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
 export FNCS_INCLUDE_DIR=$INSTDIR/include
 export FNCS_LIBRARY=$INSTDIR/lib
 export CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial
-export TESPDIR=$REPODIR/tesp
-
-#Running exports
-
-#export PYTHONPATH=$PYTHONPATH:/usr/.local/lib/python3.6
-#export PYTHONPATH=$PYTHONPATH:/opt/ibm/ILOG/CPLEX_Studio129/cplex/python/3.6/x86-64_linux
-##export PYTHONPATH=$PYTHONPATH:/home/osboxes/grid/repository/ERCOTTestSystem/AMES-V5.0/SCUCresources
-#export PYTHONPATH=$PYTHONPATH:/home/osboxes/grid/repository/ERCOTTestSystem/AMES-V5.0/psst
-##export PYTHONPATH=$PYTHONPATH:/home/osboxes/grid/repository/isu/AMES-V5.0/SCUCresources
-##export PYTHONPATH=$PYTHONPATH:/home/osboxes/grid/repository/isu/AMES-V5.0/psst
-
-#export PSST_SOLVER=/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplexamp
-#export PSST_SOLVER=/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux/cplex
-
-#export SOLVER_HOME=/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux
-#export SOLVER_HOME=$WAREDIR/gurobi-8.1.0/bin
-#export SOLVER_HOME=$WAREDIR/scipoptsuite-6.0.1/build/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
 
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
@@ -35,12 +20,6 @@ export PATH=$PATH:$INSTDIR/engeryplus
 export PATH=$PATH:$INSTDIR/engeryplus/PostProcess
 export PATH=$PATH:$JAVA_HOME
 
-#export PATH=$PATH:$SOLVER_HOME
-#export PATH=$PATH:$SOLVER_HOME/bin
-
-#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
-#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/osboxes/grid/repository/fncs/java/build
 
 # Install all pip libraries
 pip3 install wheel colorama glm seaborn matplotlib networkx==2.3 numpy pandas pulp pyutilib==5.8.0 pyomo==5.6.8 PYPOWER scikit-learn scipy tables h5py xlrd
@@ -67,8 +46,8 @@ cd build || exit
 # 12 - PATHS $ENV{FNCS_LIBRARY}
 #+FIND_PATH(FNCS_INCLUDE_DIR fncs.hpp PATHS $ENV{FNCS_INCLUDE_DIR})
 #+FIND_LIBRARY(FNCS_LIBRARY fncs PATHS $ENV{FNCS_LIBRARY})
-#sed -i "s:\(FNCS_INCLUDE_DIR fncs.hpp\):\(FNCS_INCLUDE_DIR fncs.hpp PATHS $ENV\{FNCS_INCLUDE_DIR\}\):g"
-#sed -i "s:\(FNCS_LIBRARY fncs\):\(FNCS_LIBRARY fncs PATHS $ENV\{FNCS_LIBRARY\}\):g"
+sed -i "s:\(FNCS_INCLUDE_DIR fncs.hpp\):\(FNCS_INCLUDE_DIR fncs.hpp PATHS $ENV\{FNCS_INCLUDE_DIR\}\):g"
+sed -i "s:\(FNCS_LIBRARY fncs\):\(FNCS_LIBRARY fncs PATHS $ENV\{FNCS_LIBRARY\}\):g"
 
 #replace custom command in cmakelist.txt lines ~26-33
 # generate JNIfncs.h stub
@@ -100,7 +79,7 @@ git submodule update --init
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 sudo make install
 # Install HELICS Python 3 bindings for a version that exactly matches the local build
-ver=helics_recorder --version
+ver=$(helics_recorder --version)
 pip3 install helics==${ver% *}
 
 
@@ -170,7 +149,7 @@ cd "${REPODIR}/ns-3-dev"
 ./waf configure --prefix="${INSTDIR}" --with-helics="${INSTDIR}" --build-profile=optimized --disable-werror --enable-logs --enable-examples --enable-tests
 ./waf build
 sudo ./waf install
-./test.py
+#./test.py
 
 
 #++++++++++++++ Ipopt
