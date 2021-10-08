@@ -78,17 +78,18 @@ sudo apt-get -y install python3-tk
 ##              swig \
 #              uuid-dev \
 
-# Set create directory structure for grid repository and installed software
+echo
+echo "Set create directory structure for TESP"
 cd $HOME
-mkdir grid
+mkdir -p grid
 cd grid || exit
-mkdir repository
-mkdir installed
-mkdir software
+mkdir -p repository
+mkdir -p installed
+mkdir -p software
 # Download all relevant repositories
 cd repository || exit
 
-# Set your name and email address
+echo
 if [[ -z $1 && -z $2 ]]; then
   echo "No user name set for git repositories!"
 else
@@ -98,40 +99,48 @@ else
 fi
 git config --global credential.helper store
 
-# FNCS
+echo
+echo ++++++++++++++ FNCS
 #develop for dsot
 #git clone -b develop https://github.com/FNCS/fncs.git
 #feature/opendss for tesp
 git clone -b feature/opendss https://github.com/FNCS/fncs.git
 
-# HELICS
+echo
+echo ++++++++++++++ HELICS
 git clone -b helics2 https://github.com/GMLC-TDC/HELICS-src
 #git clone -b main https://github.com/GMLC-TDC/HELICS-src
 
-# GRIDLAB
+echo
+echo ++++++++++++++ GRIDLAB
 #develop - dec21 commit number for dsot
 #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
 git clone -b develop https://github.com/gridlab-d/gridlab-d.git
 
-# ENERGYPLUS
+echo
+echo ++++++++++++++ ENERGYPLUS
 git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
 
-# TESP
+echo
+echo ++++++++++++++ TESP
 git clone -b evolve https://github.com/pnnl/tesp.git
 # need for back port of DSOT
 # git clone -b master https://stash.pnnl.gov/scm/tesp/tesp-private.git
 
-# NS3
+echo
+echo ++++++++++++++ NS3
 git clone https://gitlab.com/nsnam/ns-3-dev.git
 cd ns-3-dev || exit
 git clone -b feature/13b https://github.com/GMLC-TDC/helics-ns3 contrib/helics
 cd ..
 git clone https://github.com/gjcarneiro/pybindgen.git
 
-# PSST
+echo
+echo ++++++++++++++ PSST
 git clone https://github.com/ames-market/psst.git
 
-# KLU SOLVER
+echo
+echo ++++++++++++++ KLU SOLVER
 svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
 
 # Install snap Pycharm IDE for python
