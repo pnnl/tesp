@@ -28,7 +28,7 @@ sudo apt-get -y install libjsoncpp-dev
 sudo apt-get -y install gfortran
 sudo apt-get -y install cmake
 sudo apt-get -y install subversion
-sudo apt-get -y install wget
+#sudo apt-get -y install wget
 sudo apt-get -y install pkg-config
 sudo apt-get -y install unzip
 

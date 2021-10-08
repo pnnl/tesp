@@ -18,7 +18,7 @@ pip3 install wheel colorama glm seaborn matplotlib networkx==2.3 numpy pandas pu
 ./energyplus_c.sh
 ./energyplusj_c.sh
 ./ns-3_c.sh
-./ipopt_c.sh
+./ipopt_c.sh clean
 
 # creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
