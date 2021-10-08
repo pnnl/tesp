@@ -18,7 +18,7 @@ if [[ -z ${INSTDIR} ]]; then
 fi
 
 echo
-echo ===== Make coin-or's third party ASL =====
+echo "===== Make coin-or's third party ASL ====="
 ASL_VERSION=2.0
 cd "${WAREDIR}" || exit
 if [[ -z ${INSTDIR} ]]; then
@@ -37,7 +37,7 @@ make -j "$(grep -c "^processor" /proc/cpuinfo)"
 sudo make install
 
 echo
-echo ===== Make coin-or's third party Mumps =====
+echo "===== Make coin-or's third party Mumps ====="
 MUMPS_VERSION=2.1
 cd "${WAREDIR}" || exit
 if [[ -z ${INSTDIR} ]]; then
@@ -56,7 +56,7 @@ make -j "$(grep -c "^processor" /proc/cpuinfo)"
 sudo make install
 
 echo
-echo ===== Make Ipopt =====
+echo "===== Make Ipopt ====="
 cd "${WAREDIR}/Ipopt" || exit
 ./configure --prefix="${INSTDIR}"
 if [[ $1 == "clean" ]]; then

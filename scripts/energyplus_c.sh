@@ -21,5 +21,5 @@ cmake -DCMAKE_INSTALL_PREFIX:PATH="${INSTDIR}/energyplus" -DCMAKE_PREFIX_PATH="$
 if [[ $1 == "clean" ]]; then
   make clean
 fi
-make -j "$(grep -c "^processor" /proc/cpuinfo)"
+make
 sudo make install
