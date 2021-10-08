@@ -13,7 +13,7 @@ To flesh out this example the following additions and/or assumptions were made:
      - The scenario will take place in Tucson Arizona where hot weather events that stress the grid are common.
      - The scenario will span two days with similar weather but the second day will include a bulk power system generator outage that will drive real-time prices high enough to incentivize participation by transactively enabled DERs.
      - Only HVACs will be used to respond to transactive signals
-     - Roughly 50% of the HVACs on one particular feeder will participate in the transactive system. All other feeders will be modeled by a loadshape that is not price-responsive. **TODO: Determine how much of the total system load is price-responsive.**
+     - Roughly 50% of the HVACs on one particular feeder will participate in the transactive system. All other feeders will be modeled by a loadshape that is not price-responsive.
      
 
 The goal of this analysis are as follows:
@@ -244,10 +244,10 @@ Accounting table
 ................
 The "Accounting table" presentation block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a series of sub-diagrams shown below. Each line of the accounting table shown in :numref:`fig_value_model_metrics` is represented by a gray "presentation" block, showing the required inputs to produce that metric.
 
-.. figure:: ../media/SGIP1/AT_Average_ASHRAE Discomfort_Hours.png
+.. figure:: ../media/SGIP1/AT_Average_ASHRAE_Discomfort_Hours.png
 	:name: fig_AT_avg_ASHRAE_discomfort_hours
 	
-	Average ASHRAE discomfort hour metric data flow
+	Average ASHRAE discomfort hours metric data flow
 	
 	
 .. figure:: ../media/SGIP1/AT_Bulk_Power_System.png
@@ -285,7 +285,7 @@ The "Analysis validation" presentation block in the top level diagram (see :numr
 	Bulk power system metrics data flows
 	
 
-.. figure:: ../media/SGIP1/AV_Average_Residential Indoor_Air_Temperature.png
+.. figure:: ../media/SGIP1/AV_Average_Residential_Indoor_Air_Temperature.png
 	:name: fig_AV_avg_indoor_air_temp
 	
 	Residential indoor air temperature metric data flows
@@ -312,11 +312,8 @@ Simulated System Model
 
 In addition, the model includes residential rooftop solar PV and electrical energy storage resources at some of the houses, and waterheaters at many houses. These resources can be transactive, but are not in this version. The rooftop solar PV has a nameplate efficiency of 20% and inverters with 100% efficiency. inverters are set to operate at a constant power factor of 1.0. The rated power of the rooftop solar PV installations varies from house to house and ranges from roughly 2.7 kW to 4.5 kW.
 
-The energy storage devices also have inverters with 100% efficiency and operate in an autonomous load-following mode that performs peak-shaving and valley-filling based on the total load of the customer's house to which it is attached. All energy storage devices are identical with a capacity of 13.5 kWh and a rated power of 5 kW (both charging and discharging). The batteries are modeled as lithium-ion batteries with a round-trip efficiency of 86%.
+The energy storage devices also have inverters with 100% efficiency and operate in an autonomous load-following mode that performs peak-shaving and valley-filling based on the total load of the customer's house to which it is attached. All energy storage devices are identical with a capacity of 13.5 kWh and a rated power of 5 kW (both charging and discharging). The batteries are modeled as lithium-ion batteries with a round-trip efficiency of 86%. Other details can be found in :numref:`tbl_sgip1`.
 
-**TODO: Add table showing total capacity of solar PV and ESS for all cases? The growth model table has similar information. Add to it or replace count information with rating information? **
-
-**TODO: Add link to growth model table.**
 
 .. figure:: ../media/SGIP1/SGIP1system.png
 	:name: fig_sgip1
@@ -444,13 +441,15 @@ Figure :numref:`fig_clearing_sequence` is a sequence diagram showing the order o
 Due to limitations in the load modeling provided by Energy+, some expected interactions are not included in this system model. Specifically:
 
     - The loads modeled internally in Energy+ are not responsive to voltage and thus the interaction between it and GridLAB-D is only one way: Energy+ just provides a real power load; GridLAB-D does not assume a power factor and the the Energy Plus Agent (which is providing the value via FNCS) does not assume one either.
-    - The Energy Plus agent is only price responsive and does not provide a bid for real-time energy. **TODO: why?**
+    - The Energy Plus agent is only price responsive and does not provide a bid for real-time energy.
 
 
 
 Data Collection
 ...............
-**TODO: Is this important? Just link the in the UML class diagrams and highlight the particularly important parts? Generally discuss how metrics collection works in TESP? That should probably be saved for general discussion of the API**
+The data collection for TESP is handled in a largely standardized way. Each simulation tool produces an output dataset with key measurements. This data is typically stored in a JSON file (with an exception or two where the datasets are large and HDF5 is used). The specific data collected is defined in the TESP :ref:`../references/Design_Reference.rst`.
+
+The JSON data files are post-processed by Python scripts (one per simulation tool) to produce Python dictionaries that can then be queried to further post-process the data or used directly to create graphs, charts, tables or other presentations of the data from the analysis. Metadata files describing the models used in the analysis are also used when creating these presentations.
  
 
 Running the Example
@@ -468,7 +467,7 @@ To launch one of these runs, only a few simple commands are needed::
     
 ``./runSGIP1b.sh`` will return a command prompt with the co-simulation running in the background. To check how far along the co-simulation monitoring one of the output files is the most straight-forward way::
 
-    cat SGIP1b.csv
+    tail -f SGIP1b.csv
     
 The first entry in every line of the file is the number of seconds in the co-simulation that have been completed thus far. The co-simulation is finished at 172800 seconds. After that is complete, a set of summary plots can be created with the following command::
 
@@ -478,7 +477,7 @@ The first entry in every line of the file is the number of seconds in the co-sim
 
 Analysis Results - Model Validation
 -----------------------------------
-The graphs below were created by running ``validation_plots.py`` to validate the performance of the models in the co-simulation. Most of these plots involve comparisons across the cases evaluated in this study (see :numref:`tbl_sgip1`).
+The graphs below were created by running ``validation_plots.py`` (**TODO: Update default path to match where the data will be) to validate the performance of the models in the co-simulation. Most of these plots involve comparisons across the cases evaluated in this study (see :numref:`tbl_sgip1`).
 
 
 .. figure:: ../media/SGIP1/validation_generator_outputs.png
