@@ -1,3 +1,5 @@
+.. _design_reference:
+
 Design Reference
 ================
 
