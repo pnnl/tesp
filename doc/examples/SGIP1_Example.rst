@@ -461,10 +461,10 @@ Figure :numref:`fig_SA_top_level` provides the broadest view of the analysis exe
 	
 Inherited Files
 ,,,,,,,,,,,,,,,
-Figure :numref:`fig_SA_inherited_files` provides a simple list of files that are distributed with the analysis and are necessary inputs. The provenance of these files is not defined and thus this specific files should be treated as blessed for the purpose of the SGIP1 analysis. 
+Figure :numref:`fig_SA_inherited_input_files` provides a simple list of files that are distributed with the analysis and are necessary inputs. The provenance of these files is not defined and thus this specific files should be treated as blessed for the purpose of the SGIP1 analysis. 
 
-.. figure:: ../media/SGIP1/SA_inherited_files.png
-	:name: fig_SA_inherited_files
+.. figure:: ../media/SGIP1/SA_inherited_input_files.png
+	:name: fig_SA_inherited_input_files
 
 	List of files distributed with the SGIP1 analysis that are required inputs.
 
