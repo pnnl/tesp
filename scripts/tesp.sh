@@ -1,15 +1,20 @@
 #!/bin/bash
 
+# From termial in the VM, enter the these lines to build
+#   cd
+#	  wget https://raw.githubusercontent.com/pnnl/tesp/evolve/scripts/tesp.sh
+# if vpn is used --no-check-certificate in wget command line
+#	  chmod 755 tesp.sh
 # Set the the first and second parameter on the command line:
-#   ./tesp.sh  "username" "user@email"
+#	  ./tesp.sh username username@email
 
 
 # If you want to run as shh this has to be installed and configured
-# sudo -get -y install openssh-server
-# sudo nano /etc/ssh/sshd_config
+#  sudo -get -y install openssh-server
+#  sudo nano /etc/ssh/sshd_config
 # Once you open the file, find and change the uncomment line: # Port 22 
-# sudo service ssh start
-# sudo systemctl status ssh
+#  sudo service ssh start
+#  sudo systemctl status ssh
 
 
 #alternatives command line for java or python
@@ -19,7 +24,6 @@
 # build tools
 sudo apt-get update
 sudo apt-get -y upgrade
-sudo apt-get -y install apt-utils
 sudo apt-get -y install git
 sudo apt-get -y install build-essential
 sudo apt-get -y install autoconf
@@ -28,15 +32,10 @@ sudo apt-get -y install libjsoncpp-dev
 sudo apt-get -y install gfortran
 sudo apt-get -y install cmake
 sudo apt-get -y install subversion
-#sudo apt-get -y install wget
-sudo apt-get -y install pkg-config
 sudo apt-get -y install unzip
 
 # Java support
-#sudo apt-get -y install openjdk-11-jdk-headless 
-#sudo apt-get -y install openjdk-11-jre-headless
 sudo apt-get -y install openjdk-11-jdk
-sudo apt-get -y install openjdk-11-jre
 sudo ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
 
 # for HELICS and FNCS
@@ -62,21 +61,6 @@ sudo apt-get -y install libmetis-dev
 sudo apt-get -y install python3-pip
 sudo apt-get -y install python3-tk
 
-#              coinor-libcbc-dev \
-#              gosu \
-##              libboost-dev \
-##              libboost-filesystem-dev \
-##              libboost-program-options-dev \
-##              libboost-signals-dev \
-##              libboost-test-dev \
-#              lsof \
-#              make \
-#              python-minimal \
-#              python-pip \
-#              python3 \
-#              python3-dev \
-##              swig \
-#              uuid-dev \
 
 echo
 echo "Set create directory structure for TESP"
@@ -152,9 +136,3 @@ svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_k
 # Compile all relevant executables
 cd tesp/scripts 
 ./tesp_c.sh
-
-
-#wget https://github.com/pnnl/tesp/blob/evolve/tesp.sh
-# in vpn is used
-#wget --no-check-certificate https://github.com/pnnl/tesp/blob/evolve/tesp.sh
-

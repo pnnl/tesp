@@ -7,7 +7,7 @@ fi
 echo
 echo ++++++++++++++  FNCS Java ++++++++++++++
 echo
-cd java || exit
+cd "${REPODIR}/fncs/java" || exit
 if [[ $1 == "clean" ]]; then
   rm -r build
 fi 
@@ -35,11 +35,10 @@ cd build || exit
 #)
 
 cmake ..
-if [[ $1 == "clean" ]]; then
-  make clean
-fi
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
-mkdir -p "${TESPDIR}/examples/capabilities/loadshed/java"
-cp fncs.jar "${TESPDIR}/examples/capabilities/loadshed/java/"
-cp libJNIfncs.so "${TESPDIR}/examples/capabilities/loadshed/java/"
+
+JAVAPATH=$INSTDIR/java
+sudo mkdir -p "$JAVAPATH"
+sudo cp fncs.jar "$JAVAPATH/"
+sudo cp libJNIfncs.so "$JAVAPATH/"
 
