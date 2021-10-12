@@ -85,7 +85,9 @@ git config --global credential.helper store
 
 echo
 echo ++++++++++++++ FNCS
-git clone -b develop https://github.com/FNCS/fncs.git
+git clone -b feature/opendss https://github.com/FNCS/fncs.git
+#For dsot
+#git clone -b develop https://github.com/FNCS/fncs.git
 
 echo
 echo ++++++++++++++ HELICS

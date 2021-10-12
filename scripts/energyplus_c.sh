@@ -16,11 +16,9 @@ fi
 mkdir -p build
 cd build || exit
 cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}/energyplus" -DCMAKE_PREFIX_PATH="${INSTDIR}" -DBUILD_FORTRAN=ON -DBUILD_PACKAGE=ON -DENABLE_INSTALL_REMOTE=OFF ..
-#cmake -DCMAKE_INSTALL_PREFIX:PATH="${INSTDIR}/energyplus" -DCMAKE_PREFIX_PATH="${INSTDIR}" -DBUILD_FORTRAN=ON -DBUILD_PACKAGE=ON -DENABLE_INSTALL_REMOTE=OFF ..
-# todo warning[-Wmissing-include-dirs]
 # leave off -DCMAKE_INSTALL_PREFIX if using the default /usr/local
 if [[ $1 == "clean" ]]; then
   make clean
 fi
-make -j 4
+make
 sudo make install

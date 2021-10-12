@@ -1,7 +1,4 @@
 TESP_SUPPORT=$TESPDIR/data/models
-#declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
-#declare -r TESP_SUPPORT=/home/tom/src/tesp/support
-# echo "$TESP_SUPPORT"
 
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 4 &> broker.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w $TESP_SUPPORT/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw -d outSchoolBase $TESP_SUPPORT/energyplus/SchoolDualController.idf &> eplus.log &)
