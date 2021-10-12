@@ -7,7 +7,7 @@ Public Functions:
 
 """
 import json;
-#import sys;
+import sys;
 import numpy as np;
 try:
   import matplotlib as mpl;
@@ -15,7 +15,7 @@ try:
 except:
     pass
 
-def plot_pypower (dict, save_file=None, save_only=False):
+def plot_pypower (dict, title=None, save_file=None, save_only=False):
   hrs = dict['hrs']
   data_b = dict['data_b']
   data_g = dict['data_g']
@@ -26,6 +26,8 @@ def plot_pypower (dict, save_file=None, save_only=False):
 
   # display a plot - hard-wired assumption of 3 generators from Case 9
   fig, ax = plt.subplots(4,2, sharex = 'col')
+  if title is not None:
+    fig.suptitle (title)
 
   ax[0,0].plot(hrs, data_b[0,:,idx_b['PD_IDX']], color='blue', label='Real')
   ax[0,0].plot(hrs, data_b[0,:,idx_b['QD_IDX']], color='red', label='Reactive')
@@ -202,7 +204,7 @@ def read_pypower_metrics (nameroot):
   dict['idx_g'] = idx_g
   return dict
 
-def process_pypower(nameroot, save_file=None, save_only=True):
+def process_pypower(nameroot, title=None, save_file=None, save_only=True):
   """ Plots bus and generator quantities for the 9-bus system used in te30 or sgip1 examples
 
   This function reads *bus_nameroot_metrics.json* and 
@@ -227,4 +229,4 @@ def process_pypower(nameroot, save_file=None, save_only=True):
   """
 
   dict = read_pypower_metrics (nameroot)
-  plot_pypower (dict, save_file, save_only)
+  plot_pypower (dict, title, save_file, save_only)

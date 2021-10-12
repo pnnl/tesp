@@ -12,14 +12,14 @@ echo
 pip3 install wheel colorama glm seaborn matplotlib networkx numpy pandas pulp pyutilib==5.8.0 pyomo==5.6.8 PYPOWER scikit-learn scipy tables h5py xlrd
 
 
-./fncs_c.sh
-./fncs_java_c.sh
-./helics2_c.sh
-./klu_c.sh
-./gridlabd_c.sh
-./energyplus_c.sh
-./energyplusj_c.sh
-./ns-3_c.sh
+./fncs_c.sh clean
+./fncs_java_c.sh clean
+./helics2_c.sh clean
+./klu_c.sh clean
+./gridlabd_c.sh clean
+./energyplus_c.sh clean
+./energyplusj_c.sh clean
+./ns-3_c.sh clean
 ./ipopt_c.sh clean
 
 # creates the necessary links and cache to the most recent shared libraries found

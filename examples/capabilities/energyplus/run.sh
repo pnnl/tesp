@@ -1,4 +1,5 @@
-declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
+TESP_SUPPORT=$TESPDIR/data/models
+#declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
 #declare -r TESP_SUPPORT=/home/tom/src/tesp/support
 # echo "$TESP_SUPPORT"
 
