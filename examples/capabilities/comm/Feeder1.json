@@ -104,7 +104,7 @@
   "SimulationConfig": {
     "StartTime": "2013-07-01 00:00:00",
     "EndTime": "2013-07-03 00:00:00",
-    "SourceDirectory": "$TESP_INSTALL/share/support",
+    "SourceDirectory": "$TESPDIR/data",
     "WorkingDirectory": "./CombinedCase",
     "CaseName": "Feeder1"
   },

@@ -13,28 +13,28 @@ pip3 install wheel colorama glm seaborn matplotlib networkx numpy pandas pulp py
 
 if [[ $1 == "develop" ]]; then
   #develop tesp api
-  cd "${TESPDIR}/src/tesp_spport" || exit
+  cd "${TESPDIR}/src/tesp_support" || exit
   pip3 install -e .
   #develop psst api
   cd "${REPODIR}/psst" || exit
   pip3 install -e .
 
-  cd "${TESPDIR}/scripts" | exit
 else
   pip3 install tesp_support --upgrade
   pip3 install psst --upgrade
 fi
 opf
 
-./fncs_c.sh clean
-./fncs_java_c.sh clean
-./helics2_c.sh clean
-./klu_c.sh clean
-./gridlabd_c.sh clean
-./energyplus_c.sh clean
-./energyplusj_c.sh clean
-./ns-3_c.sh clean
-./ipopt_c.sh clean
+cd "${TESPDIR}/scripts/build" || exit
+./fncs_b.sh clean
+./fncs_java_b.sh clean
+./helics2_b.sh clean
+./klu_b.sh clean
+./gridlabd_b.sh clean
+./energyplus_b.sh clean
+./energyplusj_b.sh clean
+./ns-3_b.sh clean
+./ipopt_b.sh clean
 
 # creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
