@@ -1,9 +1,7 @@
 #!/bin/bash
 
-declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
-#declare -r TESP_SUPPORT=/home/tom/src/tesp/support
-
-declare -r SCHED_PATH=$TESP_SUPPORT/schedules
+TESP_SUPPORT=$TESPDIR/data/models
+SCHED_PATH=$TESPDIR/data/schedules
 
 (export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 6 &> broker0.log &)
 (export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w $TESP_SUPPORT/energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw -d output -r Merged.idf &> eplus0.log &)

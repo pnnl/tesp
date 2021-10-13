@@ -16,7 +16,7 @@ To run and plot a case with the market, from the Terminal:
 2. ./run.sh 
 3. python3 plots.py TE_Challenge
 
-To run a case from the GUI monitor:
+To run a case from the GUI monitor for market only:
 
 1. python3 prepare_case.py  # unless already done above
 2. ./gui.sh

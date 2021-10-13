@@ -5393,4 +5393,3 @@ object load {
   constant_power_B 25 kVA;
   constant_power_C 25 kVA;
 }
-

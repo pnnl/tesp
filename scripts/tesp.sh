@@ -134,4 +134,4 @@ svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_k
 
 # Compile all relevant executables
 cd tesp/scripts 
-./tesp_c.sh
+./tesp_c.sh develop
