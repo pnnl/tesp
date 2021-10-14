@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # normal command line argument is 'case.json'
 import sys
 import tesp_support.api as tesp
