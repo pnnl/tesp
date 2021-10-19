@@ -16,10 +16,10 @@
           "FNCS_LOG_STDOUT",
           "YES"
         ],
-  			[
-	  			"FNCS_FATAL",
-		  		"YES"
-			  ]
+        [
+          "FNCS_FATAL",
+          "YES"
+        ]
       ],
       "log": "broker.log"
     },
@@ -27,17 +27,17 @@
       "args": [
         "energyplus",
         "-w",
-        "../../../data/models/energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw",
+        "../../../data/energyplus/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw",
         "-d",
         "output",
         "-r",
-        "../../../data/models/energyplus/SchoolDualController.idf"
+        "../../../data/energyplus/SchoolDualController.idf"
       ],
       "env": [
-  			[
-	  			"FNCS_FATAL",
-		  		"YES"
-			  ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
         [
           "FNCS_LOG_STDOUT",
           "YES"
@@ -62,10 +62,10 @@
         "4"
       ],
       "env": [
-  			[
-	  			"FNCS_FATAL",
-		  		"YES"
-			  ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
         [
           "FNCS_LOG_STDOUT",
           "YES"
@@ -89,10 +89,10 @@
         "TE_Challenge.glm"
       ],
       "env": [
-  			[
-	  			"FNCS_LOG_STDOUT",
-		  		"YES"
-			  ],
+        [
+          "FNCS_LOG_STDOUT",
+          "YES"
+        ],
         [
           "FNCS_FATAL",
           "YES"
