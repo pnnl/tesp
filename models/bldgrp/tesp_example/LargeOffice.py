@@ -18,8 +18,8 @@ class LargeOffice (object):
         self.stopTime     = (start_day - 1 + duration) * 86400
         self.stepSize     = 60
 
-        self.envelop      = np.genfromtxt('core/ETP/co_all.csv', delimiter=',')
-        self.etp_init_file = 'core/ETP/init.csv'
+        self.envelop      = np.genfromtxt('./core/ETP/co_all.csv', delimiter=',')
+        self.etp_init_file = './core/ETP/init.csv'
 
 	##TODO: the ThermalStorage and SurfaceConvection needs further investigating
         #self.Q_ES_init_file = './core/_EnergyStorage/Q_ES_init.csv'
@@ -284,7 +284,7 @@ class LargeOffice (object):
         return T
     
     def loadDefaults(self):
-        with open('core/_InternalLoad/EPextraction.json') as json_data:
+        with open('./core/_InternalLoad/EPextraction.json') as json_data:
                 data = json.load(json_data,) 
         self.zoneArea   = data['zoneArea'] # zone area (m2)
         self.zoneHeight = data['zoneHeight'] # zone height (m)
@@ -295,7 +295,7 @@ class LargeOffice (object):
         self.ExWall     = data['ExteriorWallArea'] # exterior wall area (m2)
         self.InfRatePerEW = data['InfilDesignRatePerExtWall'] # infiltration rate per EWall area (m3/s-m2)
 
-        with open('core/_InternalLoad/sch.json') as sch_json:
+        with open('./core/_InternalLoad/sch.json') as sch_json:
                 sch = json.load(sch_json,) 
         self.sch_eqip = sch['BLDG_EQUIP_SCH_ADV']
         self.sch_occ  = sch['BLDG_OCC_SCH']
