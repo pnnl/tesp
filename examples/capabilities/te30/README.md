@@ -4,6 +4,7 @@ This example file comprises 30 houses and a school building on a small
 stiff circuit. It provides a medium-level test case for multiple transactive
 agents, with or without the double-auction market.
 
+Using FNCS
 To run and plot a case without the market, from the Terminal:
 
 1. python3 prepare_case.py
@@ -16,7 +17,21 @@ To run and plot a case with the market, from the Terminal:
 2. ./run.sh 
 3. python3 plots.py TE_Challenge
 
-To run a case from the GUI monitor for market only:
+Using HELICS
+To run and plot a case without the market, from the Terminal:
+
+1. python3 prepare_case.py
+2. ./runh0.sh
+3. python3 plots.py TE_ChallengeH0
+
+To run and plot a case with the market, from the Terminal:
+
+1. python3 prepare_case.py
+2. ./runh.sh 
+3. python3 plots.py TE_ChallengeH
+
+
+To run a FNCS case from the GUI monitor for market only:
 
 1. python3 prepare_case.py  # unless already done above
 2. ./gui.sh

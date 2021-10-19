@@ -22,7 +22,9 @@ cd "${REPODIR}/ns-3-dev"
 if [[ $1 == "clean" ]]; then
   ./waf distclean
 fi  
-./waf configure --prefix="${INSTDIR}" --with-helics="${INSTDIR}" --build-profile=optimized --disable-werror --enable-logs --enable-examples --enable-tests
+./waf configure --prefix="${INSTDIR}" --with-helics="${INSTDIR}" --build-profile=optimized --disable-werror --enable-logs
+# To enable examples or tests add the respective --enable command to the waf configure command line
+# --enable-examples --enable-tests
 ./waf build
 sudo ./waf install
 #./test.py
