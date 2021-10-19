@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import os
 import json
