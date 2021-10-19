@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../../../third_party/'))
+sys.path.insert(0, os.path.abspath('../../../'))
 print(sys.path)
 sys.setrecursionlimit(1500)
 
