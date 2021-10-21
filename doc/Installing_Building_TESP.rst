@@ -64,16 +64,83 @@ Once the installation process has finished there should be a folder names `tesp`
 
 Check directory structure
 .........................
-An easy high-level check to see if TESP installed correctly is to look at the directory structure that was installed and make sure everything ended up in the right place. This can easily be done by running `tree` from inside the top-level `tesp` folder. Your output should look something like this:
+An easy high-level check to see if TESP installed correctly is to look at the directory structure that was installed and make sure everything ended up in the right place. This can easily be done by running `tree -L 3` from inside the top-level `tesp` folder. Your output should look something like this:
 
 
 .. code-block:: none
    :caption: TESP installation abbreviated `tree` output 
-
+    tesp
+    ├── installed
+    │   ├── bin
+    │   │   ├── eplus_agent
+    │   │   ├── eplus_agent_helics
+    │   │   ├── fncs_*
+    │   │   ├── gridlabd
+    │   │   ├── gridlabd.sh
+    │   │   ├── helics_*
+    │   │   ├── ipopt
+    │   │   ├── ipopt_sens
+    │   │   ├── mini_federate
+    │   │   ├── ns3-*
+    │   │   └── test_comm
+    │   ├── energyplus
+    │   │   ├── ...
+    │   ├── include
+    │   │   ├── coin-or
+    │   │   ├── fncs.h
+    │   │   ├── fncs.hpp
+    │   │   ├── gridlabd
+    │   │   ├── helics
+    │   │   └── ns3-dev
+    │   ├── java
+    │   │   ├── fncs.jar
+    │   │   ├── helics-2.8.0.jar
+    │   │   ├── helics.jar -> helics-2.8.0.jar
+    │   │   ├── libhelicsJava.so
+    │   │   └── libJNIfncs.so
+    │   ├── lib
+    │   │   ├── cmake
+    │   │   ├── gridlabd
+    │   │   ├── libcoinasl.*
+    │   │   ├── libcoinmumps.*
+    │   │   ├── libfncs.*
+    │   │   ├── libhelics*
+    │   │   ├── libipoptamplinterface.*
+    │   │   ├── libipopt.*
+    │   │   ├── libns3*
+    │   │   ├── libsipopt.*
+    │   │   └── pkgconfig
+    │   └── share
+    │       ├── doc
+    │       ├── gridlabd
+    │       ├── helics
+    │       ├── java
+    │       └── man
+    ├── repository
+    │   ├── EnergyPlus
+    │   │   ├── ...
+    │   ├── fncs
+    │   │   ├── ...
+    │   ├── gridlab-d
+    │   │   ├── ...
+    │   ├── HELICS-src
+    │   │   ├── ...
+    │   ├── KLU_DLL
+    │   │   ├── ...
+    │   ├── ns-3-dev
+    │   │   ├── ...
+    │   ├── psst
+    │   │   ├── ...
+    │   ├── pybindgen
+    │   │   ├── ...
+    │   └── tesp
+    │       ├── ...
+    └── software
 
 
 Check OS can find TESP software
 ...............................
+TESP includes a small script that attempts to run a trivial command with each of the software packages it installs (typically checking the version). 
 
 
 Run minimal autotests (forthcoming)
@@ -84,6 +151,6 @@ Run all examples (forthcoming)
 ..............................
 
 
-Trouble-shooting Installation
------------------------------
+Trouble-shooting Installation (forthcoming)
+-------------------------------------------
  
