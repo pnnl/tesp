@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # need to have made ems*.idf in the local directory, with bHELICS=True
 # or cp ~/src/tesp/support/energyplus/emsHELICS/*.idf .
 
@@ -25,4 +27,3 @@ pid=$(pidof eplus_agent_helics)
 echo $pid
 tail --pid=$pid -f /dev/null
 #wait < tesp.pid
-

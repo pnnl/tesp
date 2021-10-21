@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #(export FNCS_BROKER="tcp://*:5570" && export FNCS_LOG_LEVEL=DEBUG4 && export FNCS_LOG_STDOUT=yes && export FNCS_TRACE=yes && exec fncs_broker 36 &> broker.log &)
 (export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 34 &> broker.log &)
 #(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS TE_Challenge.glm &> gridlabd.log &)

@@ -1,4 +1,5 @@
 #!/bin/bash
+
 (export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 33 &> broker.log &)
 (export FNCS_FATAL=YES && exec gridlabd TE_Challenge.glm &> gridlabd.log &)
 # launches 31 agents for the market and houses

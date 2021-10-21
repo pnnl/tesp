@@ -1,12 +1,12 @@
 #!/bin/bash
 
-TMY3_PATH=$TESPDIR/data/weather
+TMY_PATH=$TESPDIR/data/weather
 
 # generate the weather text file
 python3 -c "import tesp_support.api as tesp;tesp.weathercsv('${TMY3_PATH}/TX-Dallasfort_Worth_Intl_Ap.tmy3','weather.dat','2000-01-01 00:00:00','2000-01-07 00:00:00',2000)"
 
 # run the TMY3 version
-gridlabd -D TMY3_PATH=$TMY3_PATH weatherTester.glm > gridlabd_tmy3.log
+gridlabd -D TMY3_PATH=$TMY_PATH weatherTester.glm > gridlabd_tmy3.log
 
 # run the text file through HELICS
 (exec helics_broker -f 3 --loglevel=warning --name=mainbroker &> broker_helics.log &)
