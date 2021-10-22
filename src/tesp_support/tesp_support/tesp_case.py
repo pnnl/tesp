@@ -98,7 +98,7 @@ def write_tesp_case (config, cfgfile, freshdir = True):
     feederdir = tespdir + '/feeders/'
     scheduledir = tespdir + '/schedules/'
     weatherdir = tespdir + '/weather/'
-    eplusdir = tespdir + '/models/energyplus/'
+    eplusdir = tespdir + '/energyplus/'
     ppdir = tespdir + '/models/pypower/'
     # miscdir = tespdir + '/scripts/helpers/'
     print ('feeder backbone files from', feederdir)
