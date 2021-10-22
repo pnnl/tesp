@@ -1,3 +1,0 @@
-lsof -i tcp:5570 | awk 'NR!=1 {print $2}' | xargs kill
-lsof -i tcp:23404 | awk 'NR!=1 {print $2}' | xargs kill
-
