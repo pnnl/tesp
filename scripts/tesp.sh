@@ -64,9 +64,9 @@ sudo apt-get -y install python3-tk
 
 echo
 echo "Set create directory structure for TESP"
-cd $HOME
-mkdir -p grid
-cd grid || exit
+cd "${HOME}" || exit
+mkdir -p tesp
+cd tesp || exit
 mkdir -p repository
 mkdir -p installed
 mkdir -p software
@@ -77,8 +77,8 @@ echo
 if [[ -z $1 && -z $2 ]]; then
   echo "No user name set for git repositories!"
 else
-  git config --global user.name $1
-  git config --global user.email $2
+  git config --global user.name "$1"
+  git config --global user.email "$2"
   echo "User name $1 set for git repositories!"
 fi
 git config --global credential.helper store
@@ -133,5 +133,5 @@ svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_k
 # pycharm-community &> ~/charm.log&
 
 # Compile all relevant executables
-cd tesp/scripts 
+cd tesp/scripts || exit
 ./tesp_c.sh develop

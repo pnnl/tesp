@@ -40,3 +40,8 @@ cd "${TESPDIR}/scripts/build" || exit
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
 # and in the trusted directories (/lib and /usr/lib).
 sudo ldconfig
+
+echo
+echo ++++++++++++++  Build and compile TESP is complete!  ++++++++++++++
+echo
+./versions.sh
