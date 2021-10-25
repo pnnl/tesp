@@ -114,7 +114,7 @@ echo
 echo ++++++++++++++ NS3
 git clone https://gitlab.com/nsnam/ns-3-dev.git
 cd ns-3-dev || exit
-git clone -b feature/13b https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
 cd ..
 git clone https://github.com/gjcarneiro/pybindgen.git
 

@@ -1,14 +1,29 @@
 #!/bin/bash
 
-ver=$(fncs_broker)
-if [[ ${ver} == "ERROR: missing command line arg for number of simulators" ]]; then
-  echo FNCS installed
+echo 
+FILE="${INSTALL}/bin/fncs_broker"
+if [[ -f "$FILE" ]]; then
+  echo FNCS broker installed
 else
-  echo FNCS not installed
+  echo FNCS borker not installed
 fi
 
+echo 
 echo Helics $(helics_broker --version)
+
+echo 
 gridlabd --version
+
+echo 
 energyplus --version
-echo NS3 installed, $(ns3-dev-aodv-optimized --version)
+
+echo 
+FILE="${INSTDIR}/bin/ns3-dev-bench-simulator-optimized"
+if [[ -f "$FILE" ]]; then
+  echo NS-3 installed
+else
+  echo NS-3 not installed
+fi
+
+echo 
 ipopt --version
