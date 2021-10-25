@@ -35,7 +35,8 @@ import json
 import pandas as pd
 # import tesp_support.commbldgenerator as tesp_support.commbldgenerator
 import tesp_support
-from tesp_support.helpers_dsot_v1 import random_norm_trunc, gld_strict_name
+from tesp_support.helpers import gld_strict_name
+from tesp_support.helpers_dsot_v1 import random_norm_trunc
 
 forDSOT = False
 
