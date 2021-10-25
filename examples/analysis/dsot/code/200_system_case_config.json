@@ -128,7 +128,7 @@
   "dataPath": "../data",
   "dsoAgentFile": "default_case_config.json",
   "dsoPopulationFile": "200-metadata-lean.json",
-  "WeatherDataSourcePath": "../../data/weather/200-node data/DAT formatted files/",
+  "WeatherDataSourcePath": "../../data/200-node data/DAT formatted files/",
   "hvacSetPoint": "hvac_setpt.json",
   "dsoQuadraticFile": "",
   "dsoCommBldgFile": "DSOT_commercial_metadata.json",
