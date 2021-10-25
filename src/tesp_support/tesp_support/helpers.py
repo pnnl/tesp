@@ -162,7 +162,10 @@ def parse_fncs_number (arg):
     Returns:
         float: the parsed number
     """
-    return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
+    try:
+        return float(arg)
+    except:
+        return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
 
 # strip out extra white space, units (deg, degF, V, MW, MVA, KW, KVA) and ;
 def parse_fncs_magnitude (arg):
