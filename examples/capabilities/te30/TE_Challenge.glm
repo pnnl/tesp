@@ -41,7 +41,7 @@ object metrics_collector_writer {
 
 object climate {
   name localWeather;
-//     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
+//     tmyfile "../../data/weather/AZ-Tucson_International_Ap.tmy3";
   interpolate QUADRATIC;
 	latitude 32.133;
 	longitude -111.95;

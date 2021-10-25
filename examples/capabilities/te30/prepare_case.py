@@ -7,7 +7,7 @@ tesp.glm_dict ('TE_Challenge',te30=True)
 tesp.prep_substation ('TE_Challenge')
 
 # to run the original E+ model with heating/cooling, copy the following file to Merged.idf
-#base_idf = os.getenv('TESP_INSTALL') + '/share/support/energyplus/SchoolDualController.idf'
+#base_idf = os.getenv('TESPDIR') + '/data/energyplus/SchoolDualController.idf'
 
 base_idf = '../energyplus/SchoolBase.idf'
 ems_idf = '../energyplus/forSchoolBase/emsSchoolBase.idf'

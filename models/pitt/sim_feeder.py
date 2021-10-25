@@ -909,7 +909,7 @@ tax       = [['R1-12.47-1',12470.0, 7200.0, 4000.0, 20000.0,'617','7520','120'],
              ['GC-12.47-1',12470.0, 7200.0, 8000.0, 13000.0,'28','7500','120']]#23
 
 def get_base_gld_path (root):
-    return '../../support/feeders/' + root + '.glm' 
+    return '../../data/feeders/' + root + '.glm' 
 
 def _one_test(k):
     fname = get_base_gld_path (tax[k][0])

@@ -77,7 +77,7 @@ if __name__ == '__main__':
                'Bus_7': ['677635_27.37_-97.74_2016', '27.37_-97.74'],
                'Bus_8': ['509223_29.93_-104.02_2016', '29.93_-104.02']}
 
-    os.chdir("../../../support/weather/8-node data/PSM source weather files")
+    os.chdir("../../../data/weather/8-node data/PSM source weather files")
 
     for bus in bus_loc:
 

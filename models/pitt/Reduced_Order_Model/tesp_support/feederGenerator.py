@@ -43,9 +43,9 @@ transmissionXfmrNLLpct = 0.4
 transmissionXfmrImagpct = 1.0
 fncs_case = ''
 
-glmpath = '../../../support/feeders/'
-supportpath = '../../../../support/schedules/' # wrt outpath
-weatherpath = '../../../../support/weather/'
+glmpath = '../../../data/feeders/'
+supportpath = '../../../../data/schedules/' # wrt outpath
+weatherpath = '../../../../data/weather/'
 outpath = './Dummy/'
 
 base_feeder_name = ''
