@@ -69,12 +69,10 @@ The following DSO specific parameters are instantiated
 '''
 
 # ========   INPUT SETTINGS  ========================
-data_path = '../../../examples/dsot_data/'
-case_path = '../../../examples/dsot_v1/'
-case_path = '../../../examples/dsot_v2/'
-case_path = '../../../examples/dsot_v3/'
-#case_path = '../../../ercot/case8/dsostub/'
-#case_path = '../../../ercot/case8/'
+data_path = '../../../examples/analysis/dsot/data/'
+case_path = '../../../examples/analysis/dsot/code/'
+#case_path = '../../../examples/capabilities/ercot/case8/dsostub/'
+#case_path = '../../../examples/capabilities/ercot/case8/'
 
 write_case_config = True  # Set true when wanting to update the QMax values in the system_case_config FNCS array
 find_county = False  # Set True if you need to use API to find county as a function of latitude and longitude

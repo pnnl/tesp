@@ -322,7 +322,7 @@ if __name__ == '__main__':
     base_case = 'D:/DSOT/Base_858c4e40/2016_02'
 
     # meta_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/metadata'
-    meta_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/tesp-private/examples/dsot_data'
+    meta_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/tesp-private/examples/analysis/dsot/data'
 
     path_to_write = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/test_save_files'
     save_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/test_save_files'

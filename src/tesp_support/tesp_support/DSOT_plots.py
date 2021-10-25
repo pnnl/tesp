@@ -2453,7 +2453,7 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file):
 
     da_load_cols = [col for col in da_lmps_df.columns if 'da_q' in col]
     da_lmps_df[' TotalLoad'] = da_lmps_df[da_load_cols].sum(axis=1)
-    # renew_forecast_file = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\\dsot_data\\mod_renew_forecast.csv'
+    # renew_forecast_file = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\\data\\mod_renew_forecast.csv'
     renew_forecast = pd.read_csv(renew_forecast_file, index_col='time')
     renew_forecast['TotalRenewGen'] = renew_forecast.sum(axis=1)
     da_lmps_df = pd.merge(da_lmps_df, renew_forecast[['TotalRenewGen']], left_index=True, right_index=True)
@@ -4581,8 +4581,8 @@ if __name__ == '__main__':
 
     data_path = 'C:\\Users\\reev057\PycharmProjects\DSO+T\Data\Simdata\DER2\\V1.1-1317-gfbf326a2\MR-Batt\lean_8_bt'
     # data_path = 'C:\\Users\\reev057\PycharmProjects\DSO+T\Data\Simdata\DER2'
-    metadata_path = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\\dsot_data'
-    ercot_path = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\dsot_data'
+    metadata_path = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\\data'
+    ercot_path = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\data'
     base_case = 'C:\\Users\\reev057\PycharmProjects\DSO+T\Data\Simdata\DER2\\V1.1-1317-gfbf326a2\MR-Batt\lean_8_bt'
     trans_case = 'C:\\Users\\reev057\PycharmProjects\DSO+T\Data\Simdata\DER2\\V1.1-1317-gfbf326a2\MR-Flex\lean_8_fl'
     config_path = 'C:\\Users\\reev057\PycharmProjects\TESP\src\examples\dsot_v3'

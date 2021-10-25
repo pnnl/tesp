@@ -14,7 +14,7 @@ import datetime
 import numpy as np
 import tesp_support.helpers_dsot_v1 as helpers
 import prep_substation_dsot_v3 as prep
-import tesp_support.glm_dict as gd
+import tesp_support.glm_dict_dsot_v1 as gd
 import tesp_support.commbldgenerator
 import tesp_support.feederGenerator_dsot_v1
 import tesp_support.copperplateFeederGenerator_dsot_v1
@@ -269,7 +269,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         bldPrep['SolarQPlayerFile'] = prefix + dso_key+'/'+dso_key+'_'+sys_config['solarQPlayerFile']
         # (Laurentiu Marinovici 11/18/2019) adding the residential metadata to case_config to be able to
         # eliminate the hardcoded path to the file in feederGenerator file
-        bldPrep['MetaDataPath'] = "../../examples/dsot_data/"
+        bldPrep['MetaDataPath'] = "../../examples/analysis/dsot/data/"
         bldPrep['CommBldgMetaData'] = comm_config
         bldPrep['ResBldgMetaData'] = res_config
         bldPrep['BattMetaData'] = batt_config

@@ -86,7 +86,7 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals):
         data (dict): Sankey data structure for Plotly Sankey diagram plotting
 """
 
-    path = "../../../examples/dsot_data"
+    path = "../../../examples/analysis/dsot/data"
 
     data = tesp_support.DSOT_plots.load_json(path, 'sankey_cost_structure.json')
 
@@ -227,7 +227,7 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
         data (dict): Sankey data structure for Plotly Sankey diagram plotting
 """
 
-    path = "../../../examples/dsot_data"
+    path = "../../../examples/analysis/dsot/data"
 
     data = tesp_support.DSOT_plots.load_json(path, 'sankey_delta_cost_structure.json')
 
@@ -318,7 +318,7 @@ def load_energy_data(results_path, dso_range, update_data, scale, labelvals):
         data (dict): Sankey data structure for Plotly Sankey diagram plotting
 """
 
-    path = "../../../examples/dsot_data"
+    path = "../../../examples/analysis/dsot/data"
 
     data = tesp_support.DSOT_plots.load_json(path, 'sankey_energy_structure.json')
 

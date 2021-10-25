@@ -56,12 +56,10 @@ startupcost = {'wind': 6.87,
                'gas': 8.98}
 
 # ========   INPUT SETTINGS  ========================
-data_path = '../../../examples/dsot_data/'
-# case_path = '../../../examples/dsot_v1/'
-# case_path = '../../../examples/dsot_v2/'
-case_path = '../../../examples/dsot_v3/'
-# case_path = '../../../ercot/case8/dsostub/'
-# case_path = '../../../ercot/case8/'
+data_path = '../../../examples/analysis/dsot/data/'
+case_path = '../../../examples/analysis/dsot/code/'
+# case_path = '../../../examples/capabilities/ercot/case8/dsostub/'
+# case_path = '../../../examples/capabilities/ercot/case8/'
 
 high_renew_wind_scaling = 2.00
 

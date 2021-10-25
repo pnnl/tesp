@@ -6,7 +6,7 @@ import json
 
 # ercot_path = 'C:\\Users\\mayh819\\PycharmProjects\\tesp-private\\tesp-private\\ercot\\case8\\dsostub'
 # ercot_path = 'C:\\Users\\reev057\\PycharmProjects\\DSO+T\\Data\\GnT\\case1Apr'
-data_path = '..\\..\\..\\examples\\dsot_data'
+data_path = '..\\..\\..\\examples\\data'
 
 dso_num = 1
 h1 = 5

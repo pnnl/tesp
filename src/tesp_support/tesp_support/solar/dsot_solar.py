@@ -1920,7 +1920,7 @@ if __name__ == '__main__':
                         default=auto_run_dir)
     script_path = Path(script_path)
     tesp_root = script_path.parents[3]
-    dsot_data_path = os.path.join(tesp_root, 'examples', 'dsot_data')
+    dsot_data_path = os.path.join(tesp_root, 'examples', 'data')
     solar_file = os.path.join(dsot_data_path, 'dsot_solar_metadata.json')
     parser.add_argument('-s',
                         '--solar_metadata',

@@ -628,8 +628,8 @@ if __name__ == "__main__":
 
     # obj.set_sch_year(current_time.year)
     # sch = ['responsive_loads', 'unresponsive_loads']
-    # obj.sch_df_dict[sch[0]] = pd.read_csv('../../../examples/dsot_data/schedule_df/' + sch[0] + '.csv', index_col=0)
-    # obj.sch_df_dict[sch[1]] = pd.read_csv('../../../examples/dsot_data/schedule_df/' + sch[1] + '.csv', index_col=0)
+    # obj.sch_df_dict[sch[0]] = pd.read_csv('../../../examples/analysis/dsot/data/schedule_df/' + sch[0] + '.csv', index_col=0)
+    # obj.sch_df_dict[sch[1]] = pd.read_csv('../../../examples/analysis/dsot/data/schedule_df/' + sch[1] + '.csv', index_col=0)
     # just make sure that index of all df is datetime
     # obj.sch_df_dict[sch[0]].index = pd.to_datetime(obj.sch_df_dict[sch[0]].index)
     # obj.sch_df_dict[sch[1]].index = pd.to_datetime(obj.sch_df_dict[sch[1]].index)
@@ -696,8 +696,8 @@ if __name__ == "__main__":
     # obj = Forecasting()
     # obj.set_sch_year(current_time.year)
     # sch = ['responsive_loads', 'unresponsive_loads']
-    # obj.sch_df_dict[sch[0]] = pd.read_csv('../../../examples/dsot_data/schedule_df/' + sch[0] + '.csv', index_col=0)
-    # obj.sch_df_dict[sch[1]] = pd.read_csv('../../../examples/dsot_data/schedule_df/' + sch[1] + '.csv', index_col=0)
+    # obj.sch_df_dict[sch[0]] = pd.read_csv('../../../examples/analysis/dsot/data/schedule_df/' + sch[0] + '.csv', index_col=0)
+    # obj.sch_df_dict[sch[1]] = pd.read_csv('../../../examples/analysis/dsot/data/schedule_df/' + sch[1] + '.csv', index_col=0)
     # # just make sure that index of all df is datetime
     # obj.sch_df_dict[sch[0]].index = pd.to_datetime(obj.sch_df_dict[sch[0]].index)
     # obj.sch_df_dict[sch[1]].index = pd.to_datetime(obj.sch_df_dict[sch[1]].index)
@@ -732,7 +732,7 @@ if __name__ == "__main__":
     # sch = ['small_1', 'small_2', 'small_3', 'small_4', 'small_5', 'small_6',
     #           'large_1', 'large_2', 'large_3', 'large_4', 'large_5', 'large_6']
     # for s in sch:
-    #     obj.sch_df_dict[s] = pd.read_csv('../../../examples/dsot_data/schedule_df/' + s + '.csv', index_col=0)
+    #     obj.sch_df_dict[s] = pd.read_csv('../../../examples/analysis/dsot/data/schedule_df/' + s + '.csv', index_col=0)
     #     obj.sch_df_dict[s].index = pd.to_datetime(obj.sch_df_dict[s].index)
     # t = ti.time()
     # skew_scalar = {'wh_skew': int(-4456.0),

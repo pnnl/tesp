@@ -13,7 +13,7 @@ cache_output = {}
 #
 
 # # schedule files must be .csv
-# schedule_dir = "../../../examples/dsot_data/schedule_df/"
+# schedule_dir = "../../../examples/analysis/dsot/data/schedule_df/"
 # appliance_sch = ['responsive_loads', 'unresponsive_loads']
 # wh_sch = ['small_1', 'small_2', 'small_3', 'small_4', 'small_5', 'small_6',
 #           'large_1', 'large_2', 'large_3', 'large_4', 'large_5', 'large_6']

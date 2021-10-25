@@ -88,7 +88,7 @@ config_path = dirname(abspath(__file__))
 case_config = tesp_support.DSOT_plots.load_json(config_path, system_case)
 
 # metadata_path = '..\\dso_data'
-metadata_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\examples\\dsot_data'
+metadata_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\examples\\data'
 
 renew_forecast_file = metadata_path + "\\" + case_config['genForecastHr'][5].split('/')[-1]
 dso_metadata_file = case_config['dsoPopulationFile']

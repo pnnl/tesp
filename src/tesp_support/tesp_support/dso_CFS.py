@@ -676,7 +676,7 @@ if __name__ == '__main__':
     # dso_names = ['dso_1', 'dso_2', 'dso_3']
 
     # meta_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/metadata'
-    meta_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/tesp-private/examples/dsot_data'
+    meta_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/tesp-private/examples/analysis/dsot/data'
 
     dso_paths = ['D:\\DSOT\\Base_858c4e40\\2016_02\\DSO_1']
     Substation_paths = ['D:\\DSOT\\Base_858c4e40\\2016_02\\Substation_1']

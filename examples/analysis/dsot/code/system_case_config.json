@@ -13,8 +13,8 @@
   "metricsFullDetail": true,
   "gldDebug": 0,
   "outages": false,
-  "planned": "../../dsot_data/planned_outages.csv",
-  "unplanned": "../../dsot_data/unplanned_outages.csv",
+  "planned": "../../data/planned_outages.csv",
+  "unplanned": "../../data/unplanned_outages.csv",
   "port": 5570,
   "fileFormat": true,
   "splitCase": true,
@@ -44,7 +44,7 @@
     0,
     300,
     "2015-12-29 00:00:00",
-    "../../dsot_data/wind_calibrated.csv"
+    "../../data/wind_calibrated.csv"
   ],
   "keyLoad": "indLoad",
   "ercotkeyLoad": "refLoadMn",
@@ -54,7 +54,7 @@
     0.57,
     300,
     "2015-12-29 00:00:00",
-    "../../dsot_data/2016_ERCOT_5min_Load_Data_Revised.csv"
+    "../../data/2016_ERCOT_5min_Load_Data_Revised.csv"
   ],
   "refLoadHr": [
     "ref",
@@ -62,7 +62,7 @@
     0.57,
     3600,
     "2015-12-29 00:00:00",
-    "../../dsot_data/2016_ERCOT_Hourly_Load_Data_Revised.csv"
+    "../../data/2016_ERCOT_Hourly_Load_Data_Revised.csv"
   ],
   "indLoad": [
     "ind",
@@ -70,13 +70,13 @@
     0.57,
     300,
     "2015-12-29 00:00:00",
-    "../../dsot_data/ind_load_p.csv"
+    "../../data/ind_load_p.csv"
   ],
   "solarDataPath": "../../../../src/tesp_support/tesp_support/solar/auto_run/solar_pv_power_profiles/" ,
   "solarPPlayerFile": "5_minute_dist_power.csv",
   "solarQPlayerFile": "no_file",
   "solarAgentForecastFile": "8-node_dist_hourly_forecast_power.csv",
-  "dataPath": "../dsot_data",
+  "dataPath": "../data",
   "dsoAgentFile": "default_case_config.json",
   "dsoPopulationFile": "8-node-metadata-agent-slim.json",
   "hvacSetPoint": "hvac_setpt.json",

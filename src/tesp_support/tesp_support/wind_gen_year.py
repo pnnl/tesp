@@ -20,9 +20,9 @@ import matplotlib.pyplot as plt
 import copy
 
 resolution = 300 # seconds
-#casename = '../../../examples/dsot_v3/system_case_config_new'
-casename = '../../../examples/dsot_v3/system_case_config'
-output_Path = '../../../examples/dsot_data/'
+#casename = '../../../examples/analysis/dsot/code/system_case_config_new'
+casename = '../../../examples/analysis/dsot/code/system_case_config'
+output_Path = '../../../examples/analysis/dsot/data/'
 
 def make_wind_plants(ppc):
     gen = ppc['gen']
