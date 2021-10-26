@@ -1,9 +1,9 @@
-rm *.out
-rm *.log
-rm *.xml
-rm *.json
-rm *.yaml
-rm *FNCS_Config.txt
-rm broker_trace.txt
-rm *.dat
+rm -f *.out
+rm -f *.log
+rm -f *.xml
+rm -f *.json
+rm -f *.yaml
+rm -f *FNCS_Config.txt
+rm -f broker_trace.txt
+rm -f *.dat
 

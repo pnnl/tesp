@@ -10,9 +10,9 @@ MUMPS_VERSION=2.1
 
 if [[ $1 == "clean" ]]; then
   cd "${WAREDIR}"
-  sudo rm -r Ipopt
-  sudo rm -r ThirdParty-ASL
-  sudo rm -r ThirdParty-Mumps
+  sudo rm -rf Ipopt
+  sudo rm -rf ThirdParty-ASL
+  sudo rm -rf ThirdParty-Mumps
   
   wget https://www.coin-or.org/download/source/Ipopt/Ipopt-${IPOPT_VERSION}.tgz
   tar -xzf Ipopt-${IPOPT_VERSION}.tgz

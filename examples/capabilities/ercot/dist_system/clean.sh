@@ -1,4 +1,4 @@
-rm gridlabd.xml
-rm *node_voltage*.csv
-rm *branch_current*.csv
-rm *metrics.json
+rm -f gridlabd.xml
+rm -f *node_voltage*.csv
+rm -f *branch_current*.csv
+rm -f *metrics.json

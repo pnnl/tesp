@@ -1,6 +1,6 @@
-rm *metrics.json
-rm *.log
-rm *.xml
-rm *.csv
-rm houses.glm
-rm *dict.json
+rm -f *metrics.json
+rm -f *.log
+rm -f *.xml
+rm -f *.csv
+rm -f houses.glm
+rm -f *dict.json

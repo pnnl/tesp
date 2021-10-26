@@ -26,7 +26,7 @@ hostname > $sims/$(hostname).log
           echo "Running" $(basename $dir)
           hostname > $dir/hostname
           yes | cp -rf $dir .
-#          rm -r $sims/$dir
+#          rm -rf $sims/$dir
           sudo chown -R $usr:sim_group ../../*
           cd $(basename $dir)
           ./docker-run.sh

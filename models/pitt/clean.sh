@@ -1,4 +1,4 @@
-rm *voltage*.csv
-rm *current*.csv
-rm *_Dump_*.csv
-rm *.xml
+rm -f *voltage*.csv
+rm -f *current*.csv
+rm -f *_Dump_*.csv
+rm -f *.xml

@@ -1,7 +1,7 @@
-rm *.log
-rm *.csv
-rm *.xml
-rm *metrics.json
-rm output/*
+rm -f *.log
+rm -f *.csv
+rm -f *.xml
+rm -f *metrics.json
+rm -f output/*
 rmdir output
 

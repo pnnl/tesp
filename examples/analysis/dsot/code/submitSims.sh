@@ -12,7 +12,7 @@ do
       echo "Submit simulation" $dir
       rm -rf $sims/$dir
       cp -r $dir $sims
-      rm -r $dir
+      rm -rf $dir
     fi
   fi
 done

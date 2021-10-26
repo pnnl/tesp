@@ -1,13 +1,13 @@
-rm *metrics.json
-rm *.log
-rm *_opf.csv
-rm *_pf.csv
-rm *_dso.csv
-rm *dict.json
-rm *.dat
-rm *.txt
-rm dam.json
-rm d*.m
-rm test_dam*.m
-rm basecase.m
-rm rtmcase_*.m
+rm -f *metrics.json
+rm -f *.log
+rm -f *_opf.csv
+rm -f *_pf.csv
+rm -f *_dso.csv
+rm -f *dict.json
+rm -f *.dat
+rm -f *.txt
+rm -f dam.json
+rm -f d*.m
+rm -f test_dam*.m
+rm -f basecase.m
+rm -f rtmcase_*.m

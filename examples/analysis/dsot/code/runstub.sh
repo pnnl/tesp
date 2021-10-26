@@ -8,13 +8,13 @@ then
   python3 -c "import tesp_support.helpers_dsot_v1 as tesp; tesp.write_management_script('$archive_folder', '$1', '.', 0, 0)"
 
   cd $1
-  rm *metrics.h5
-  rm *metrics.json
-  rm *dict.json
-  rm *.log
-  rm *opf.csv
-  rm *pf.csv
-  rm *.dat
+  rm -f *metrics.h5
+  rm -f *metrics.json
+  rm -f *dict.json
+  rm -f *.log
+  rm -f *opf.csv
+  rm -f *pf.csv
+  rm -f *.dat
 
   cp -f ../8_system_case_config.json generate_case_config.json
   #cp -f ../8_hi_system_case_config.json generate_case_config.json

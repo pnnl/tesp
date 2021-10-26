@@ -8,7 +8,7 @@ cd "${INSTDIR}" || exit
 mkdir -p energyplus
 cd "${REPODIR}/EnergyPlus" || exit
 if [[ $1 == "clean" ]]; then
-  sudo rm -r build
+  sudo rm -rf build
 fi
 mkdir -p build
 cd build || exit

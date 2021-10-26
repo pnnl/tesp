@@ -24,7 +24,7 @@ rm -rf SummerTest
 rm -rf Eplus_Comm
 cd ../../ercot/case8
 ./clean.sh
-rm *.glm
+rm -f *.glm
 cd dsostub
 ./clean.sh
 cd ../../bulk_system

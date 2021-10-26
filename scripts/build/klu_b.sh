@@ -6,7 +6,7 @@ fi
 
 cd "${REPODIR}/KLU_DLL" || exit
 if [[ $1 == "clean" ]]; then
-  sudo rm -r build
+  sudo rm -rf build
 fi
 mkdir -p build
 cd build || exit

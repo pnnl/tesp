@@ -6,7 +6,7 @@ fi
 
 cd "${REPODIR}/fncs/java" || exit
 if [[ $1 == "clean" ]]; then
-  rm -r build
+  rm -rf build
 fi 
 mkdir -p build
 cd build || exit

@@ -1,15 +1,15 @@
-rm *.log
-rm *.csv
-rm *.out
-rm *.xml
-rm *.audit
-rm broker_trace.txt
-rm *metrics.json
-rm metrics.txt
-rm testout.txt
-rm out.txt
-rm record.txt
-rm *.class
-rm *.pcap
-rm *.pid
-rm loadshedCommNetwork.o
+rm -f *.log
+rm -f *.csv
+rm -f *.out
+rm -f *.xml
+rm -f *.audit
+rm -f broker_trace.txt
+rm -f *metrics.json
+rm -f metrics.txt
+rm -f testout.txt
+rm -f out.txt
+rm -f record.txt
+rm -f *.class
+rm -f *.pcap
+rm -f *.pid
+rm -f loadshedCommNetwork.o
