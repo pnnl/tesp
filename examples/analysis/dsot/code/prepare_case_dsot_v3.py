@@ -269,7 +269,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         bldPrep['SolarQPlayerFile'] = prefix + dso_key+'/'+dso_key+'_'+sys_config['solarQPlayerFile']
         # (Laurentiu Marinovici 11/18/2019) adding the residential metadata to case_config to be able to
         # eliminate the hardcoded path to the file in feederGenerator file
-        bldPrep['MetaDataPath'] = "../../examples/analysis/dsot/data/"
+        bldPrep['MetaDataPath'] = "../data/"
         bldPrep['CommBldgMetaData'] = comm_config
         bldPrep['ResBldgMetaData'] = res_config
         bldPrep['BattMetaData'] = batt_config

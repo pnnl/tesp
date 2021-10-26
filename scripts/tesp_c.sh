@@ -40,17 +40,6 @@ else
   unzip tesp_binaries.zip .
 fi
 
-cd "${TESPDIR}/scripts/build" || exit
-./fncs_b.sh clean
-./fncs_java_b.sh clean
-./helics2_b.sh clean
-./klu_b.sh clean
-./gridlabd_b.sh clean
-./energyplus_b.sh clean
-./energyplusj_b.sh clean
-./ns-3_b.sh clean
-./ipopt_b.sh clean
-
 # creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
 # and in the trusted directories (/lib and /usr/lib).

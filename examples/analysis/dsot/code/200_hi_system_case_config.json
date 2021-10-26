@@ -125,7 +125,7 @@
   "solarPPlayerFile": "5_minute_dist_power.csv",
   "solarQPlayerFile": "no_file",
   "solarAgentForecastFile": "200-node_dist_hourly_forecast_power.csv",
-  "supportPath": "../../data",
+  "supportPath": "../../../../data",
   "dataPath": "../data",
   "dsoAgentFile": "default_case_config.json",
   "dsoPopulationFile": "200-hi-metadata-lean.json",
