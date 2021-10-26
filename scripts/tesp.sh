@@ -79,7 +79,7 @@ if [[ -z $1 && -z $2 ]]; then
 else
   git config --global user.name "$1"
   git config --global user.email "$2"
-  echo "User .name=$1 and .email=$2 heve been set for git repositories!"
+  echo "User .name=$1 and .email=$2 have been set for git repositories!"
 fi
 git config --global credential.helper store
 
@@ -113,10 +113,10 @@ git clone -b evolve https://github.com/pnnl/tesp.git
 echo
 echo ++++++++++++++ NS-3
 git clone https://gitlab.com/nsnam/ns-3-dev.git
-cd ns-3-dev || exit
 
 echo
 echo ++++++++++++++ HELICS-NS-3
+cd ns-3-dev || exit
 git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
 
 echo
