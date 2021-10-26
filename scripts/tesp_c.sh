@@ -8,15 +8,18 @@ echo
 echo ++++++++++++++  Compiles all TESP software and libraries  ++++++++++++++
 echo
 # Install all pip libraries
+echo pip Installing Python Libraries
 #pip3 install wheel colorama glm seaborn matplotlib networkx==2.3 numpy pandas pulp pyutilib==5.8.0 pyomo==5.6.8 PYPOWER scikit-learn scipy tables h5py xlrd
-pip3 install wheel colorama glm seaborn matplotlib networkx numpy pandas pulp pyutilib==5.8.0 pyomo==5.6.8 PYPOWER scikit-learn scipy tables h5py xlrd 2> pylib.log
+pip3 install wheel colorama glm seaborn matplotlib networkx numpy pandas pulp pyutilib==5.8.0 pyomo==5.6.8 PYPOWER scikit-learn scipy tables h5py xlrd 2>&1 pylib.log
 
 #develop tesp api
+echo pip Installing TESP API
 cd "${TESPDIR}/src/tesp_support" || exit
-pip3 install -e . 2> tespapi.log
+pip3 install -e . 2>&1 tespapi.log
 #develop psst api
+echo pip Installing PSST
 cd "${REPODIR}/psst" || exit
-pip3 install -e . 2> psst.log
+pip3 install -e . 2>&1 psst.log
 
 #  pip3 install tesp_support --upgrade
 #  pip3 install psst --upgrade
@@ -25,25 +28,26 @@ cd "${TESPDIR}/scripts/build" || exit
 if [[ $1 == "develop" ]]; then
 
   echo Compiling and Installing FNCS
-  ./fncs_b.sh clean 2> fncs.log
+  ./fncs_b.sh clean 2>&1 fncs.log
   echo Compiling and Installing FNCS for Java
-  ./fncs_java_b.sh clean 2> fava_java.log
+  ./fncs_java_b.sh clean 2>&1 fava_java.log
   echo Compiling and Installing HELICS
-  ./helics2_b.sh clean 2> helics2.log
+  ./helics2_b.sh clean 2>&1 helics2.log
   echo Compiling and Installing KLU
-  ./klu_b.sh clean 2> klu.log
+  ./klu_b.sh clean 2>&1 klu.log
   echo Compiling and Installing Gridlabd
-  ./gridlabd_b.sh clean 2> gridlabd.log
+  ./gridlabd_b.sh clean 2>&1 gridlabd.log
   echo Compiling and Installing EnegryPlus
-  ./energyplus_b.sh clean 2> energyplus.log
+  ./energyplus_b.sh clean 2>&1 energyplus.log
   echo Compiling and Installing EnergryPlus for Java
-  ./energyplusj_b.sh clean 2> energyplusj.log
+  ./energyplusj_b.sh clean 2>&1 energyplusj.log
   echo Compiling and Installing NS-3
-  ./ns-3_b.sh clean 2> ns3.log
+  ./ns-3_b.sh clean 2>&1 ns3.log
   echo Compiling and Installing Ipopt with ASL and Mumps
-  ./ipopt_b.sh clean 2> ipopt.log
+  ./ipopt_b.sh clean 2>&1 ipopt.log
 else
 
+  echo Installing TESP binaries
   wget https://mepas.pnnl.gov/FramesV1/Install/tesp_binaries.zip
   cd "${INSTDIR}" exit
   unzip tesp_binaries.zip .
