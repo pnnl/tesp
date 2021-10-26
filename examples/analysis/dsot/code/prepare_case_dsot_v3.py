@@ -14,11 +14,12 @@ import datetime
 import numpy as np
 import tesp_support.helpers_dsot_v1 as helpers
 import prep_substation_dsot_v3 as prep
+import tesp_support.case_merge_dsot_v1 as cm
 import tesp_support.glm_dict_dsot_v1 as gd
 import tesp_support.commbldgenerator
 import tesp_support.feederGenerator_dsot_v1
 import tesp_support.copperplateFeederGenerator_dsot_v1
-import tesp_support.api as tesp
+#import tesp_support.api as tesp
 
 
 # Simulation settings for the this experimental case
@@ -412,19 +413,19 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         # ======================================================================================
         print("\n=== MERGING THE FEEDERS UNDER ONE SUBSTATION =====")
         os.makedirs(caseName + "/" + sub_key)
-        tesp.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
+        cm.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
 
         print("\n=== MERGING THE FNCS CONFIGURATION FILES UNDER THE SUBSTATION FNCS CONFIGURATION =====")
-        tesp.merge_fncs_config(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '_FNCS_Config.txt'), list(dso_val['feeders'].keys()))
+        cm.merge_fncs_config(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '_FNCS_Config.txt'), list(dso_val['feeders'].keys()))
 
         print("\n=== MERGING THE FEEDERS GLM DICTIONARIES =====")
-        tesp.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
+        cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
 
         print("\n=== MERGING THE SUBSTATION AGENT DICTIONARIES =====")
-        tesp.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
+        cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
 
         print("\n=== MERGING THE SUBSTATION YAML =====")
-        tesp.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.yaml'), list(dso_val['feeders'].keys()))
+        cm.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.yaml'), list(dso_val['feeders'].keys()))
 
         # cleaning after feeders had been merged
         foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName)) if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]

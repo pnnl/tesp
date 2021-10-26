@@ -1,11 +1,12 @@
 #!/bin/bash
 
+echo ====== TESP software installed ====== 
 echo 
-FILE="${INSTALL}/bin/fncs_broker"
+FILE="${INSTDIR}/bin/fncs_broker"
 if [[ -f "$FILE" ]]; then
   echo FNCS broker installed
 else
-  echo FNCS borker not installed
+  echo FNCS broker not installed
 fi
 
 echo 
