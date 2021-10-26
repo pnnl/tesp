@@ -1,7 +1,9 @@
 #!/bin/bash
 
-echo ====== TESP software installed ====== 
-echo 
+echo
+echo "++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++"
+echo
+
 FILE="${INSTDIR}/bin/fncs_broker"
 if [[ -f "$FILE" ]]; then
   echo FNCS broker installed
@@ -28,3 +30,7 @@ fi
 
 echo 
 ipopt --version
+
+echo
+echo "++++++++++++++  TESP versions has been installed! That's all folks!  ++++++++++++++"
+echo
