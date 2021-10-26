@@ -4,9 +4,6 @@ if [[ -z ${INSTDIR} ]]; then
   . environment
 fi
 
-echo
-echo ++++++++++++++  EnergyPlus Json  ++++++++++++++
-echo
 cd "${TESPDIR}/src/energyplus" || exit
 # the following steps are also in go.sh
 autoheader

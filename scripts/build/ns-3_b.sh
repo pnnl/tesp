@@ -4,9 +4,6 @@ if [[ -z ${INSTDIR} ]]; then
   . environment
 fi
 
-echo
-echo ++++++++++++++  NS-3  ++++++++++++++
-echo
 cd "${REPODIR}/pybindgen"
 sudo python3 setup.py install
 

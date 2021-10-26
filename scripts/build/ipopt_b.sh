@@ -4,10 +4,6 @@ if [[ -z ${INSTDIR} ]]; then
   . environment
 fi
 
-echo
-echo ++++++++++++++  Ipopt  ++++++++++++++
-echo
-
 IPOPT_VERSION=3.13.2
 ASL_VERSION=2.0
 MUMPS_VERSION=2.1

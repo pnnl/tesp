@@ -4,9 +4,6 @@ if [[ -z ${INSTDIR} ]]; then
   . environment
 fi
 
-echo
-echo ++++++++++++++  FNCS  ++++++++++++++
-echo
 cd "${REPODIR}/fncs" || exit
 autoreconf -isf
 ./configure 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2' --prefix="${INSTDIR}"

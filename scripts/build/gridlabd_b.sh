@@ -4,9 +4,6 @@ if [[ -z ${INSTDIR} ]]; then
   . environment
 fi
 
-echo
-echo ++++++++++++++  GridLAB-D  ++++++++++++++
-echo
 cd "${REPODIR}/gridlab-d" || exit
 autoreconf -isf
 # for ARM/'constance' processer needs libtinfo.a,   edit 'ax_with_curses.m4'  lines 206,219,325,338  add -ltinfo

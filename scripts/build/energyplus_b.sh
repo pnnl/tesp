@@ -4,9 +4,6 @@ if [[ -z ${INSTDIR} ]]; then
   . environment
 fi
 
-echo
-echo ++++++++++++++  EnergyPlus  ++++++++++++++
-echo
 cd "${INSTDIR}" || exit
 mkdir -p energyplus
 cd "${REPODIR}/EnergyPlus" || exit
@@ -21,5 +18,5 @@ cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}/energyplus" -DCMAKE_PREFIX_PATH="${INST
 if [[ $1 == "clean" ]]; then
   make clean
 fi
-make
+make -j4
 sudo make install

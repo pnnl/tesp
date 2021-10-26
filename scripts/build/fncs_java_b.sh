@@ -4,9 +4,6 @@ if [[ -z ${INSTDIR} ]]; then
   . environment
 fi
 
-echo
-echo ++++++++++++++  FNCS Java ++++++++++++++
-echo
 cd "${REPODIR}/fncs/java" || exit
 if [[ $1 == "clean" ]]; then
   rm -r build

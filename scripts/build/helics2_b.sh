@@ -4,9 +4,6 @@ if [[ -z ${INSTDIR} ]]; then
   . environment
 fi
 
-echo
-echo ++++++++++++++  HELICS  ++++++++++++++
-echo
 cd "${REPODIR}/HELICS-src" || exit
 if [[ $1 == "clean" ]]; then
   sudo rm -r build

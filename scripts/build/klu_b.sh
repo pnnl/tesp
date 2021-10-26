@@ -4,9 +4,6 @@ if [[ -z ${INSTDIR} ]]; then
   . environment
 fi
 
-echo
-echo ++++++++++++++  KLU solver  ++++++++++++++
-echo
 cd "${REPODIR}/KLU_DLL" || exit
 if [[ $1 == "clean" ]]; then
   sudo rm -r build
