@@ -43,10 +43,10 @@ if [[ $1 == "develop" ]]; then
   echo Compiling and Installing Gridlabd
   ./gridlabd_b.sh clean > gridlabd.log 2>&1
 
-  echo Compiling and Installing EnegryPlus
+  echo Compiling and Installing EnergyPlus
   ./energyplus_b.sh clean > energyplus.log 2>&1
 
-  echo Compiling and Installing EnergryPlus for Java
+  echo Compiling and Installing EnergyPlus for Java
   ./energyplusj_b.sh clean > energyplusj.log 2>&1
 
   echo Compiling and Installing NS-3
