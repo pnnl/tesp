@@ -6,15 +6,19 @@ Public Functions:
         :process_eplus: Reads the data and metadata, then makes the plots.  
 
 """
-import json;
-import sys;
+import json
+import sys
 import os
-import numpy as np;
+import numpy as np
+import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
+
+# Setting up logging
+logger = logging.getLogger(__name__)
 
 def plot_eplus (dict, title=None, pngfile=None):
   hrs = dict['hrs']
@@ -122,9 +126,9 @@ def read_eplus_metrics (path, nameroot, quiet=False):
     lp = open (eplus_dict_path).read()
     lst = json.loads(lp)
     if not quiet:
-      print ('Metrics data starting', lst['StartTime'])
+      print('Metrics data starting', lst['StartTime'])
   except:
-    print ('eplus metrics file could not be read')
+    logger.error(f'Unable to open eplus metrics file {eplus_dict_path}')
     return
 
   # make a sorted list of the times

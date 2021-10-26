@@ -6,14 +6,18 @@ Public Functions:
     :process_houses: Reads the data and metadata, then makes the plot.  
 
 """
-import json;
-import sys;
-import numpy as np;
+import json
+import sys
+import numpy as np
+import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
+
+# Setting up logging
+logger = logging.getLogger(__name__)
 
 def plot_houses (dict):
   hrs = dict['hrs']
@@ -38,9 +42,16 @@ def plot_houses (dict):
 def read_house_metrics (nameroot, dictname = ''):
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
+    try:
       lp = open (dictname).read()
+    except:
+      logger.error(f'Unable to open house metrics file {dictname}')
   else:
-      lp = open (nameroot + "_glm_dict.json").read()
+    house_dict_path = f'{nameroot}"_glm_dict.json"'
+    try:
+      lp = open(house_dict_path).read()
+    except:
+      logger.error(f'Unable to open house metrics file {house_dict_path}')
   dict = json.loads(lp)
   hse_keys = list(dict['houses'].keys())
   hse_keys.sort()

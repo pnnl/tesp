@@ -1,3 +1,5 @@
+.. _design_reference:
+
 Design Reference
 ================
 
@@ -140,6 +142,9 @@ Some typical default time steps are:
 	:name: fig_sequence
 
 	FNCS Message Hops around Market Clearing Time
+	
+	
+.. _design_reference_metrics:
 
 Output Metrics to Support Evaluation
 ------------------------------------

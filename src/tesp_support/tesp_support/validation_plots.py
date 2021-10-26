@@ -17,6 +17,7 @@ import logging
 import pprint
 import argparse
 import sys
+from os import path
 import tesp_support.process_pypower as pp
 import tesp_support.process_gld as gp
 import tesp_support.process_eplus as ep
@@ -150,7 +151,7 @@ def load_data(data_path):
 
 
 
-def plot_gen_comparison(data):
+def plot_gen_comparison(data, save_path):
     '''
     SGIP1(a) output of individual generators vs time. Expect to see dramatic
     change in dispatch on day 2 as a generator goes out.
@@ -176,8 +177,19 @@ def plot_gen_comparison(data):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Generator Output')
                 plt.legend(loc='center left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_gen_comparison.')
+                if save_path != '':
+                    save_file = path.join(save_path,
+                                          'validation_generator_outputs.png')
+
+                    fig1.savefig(save_file, dpi=200)
+                    logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing PYPOWER data for Case (a); unable to create '
                              'plot_gen_comparison.')
@@ -189,7 +201,7 @@ def plot_gen_comparison(data):
                      'plot_gen_comparison.')
 
 
-def plot_transactive_bus_LMP(data):
+def plot_transactive_bus_LMP(data, save_path):
     '''
     SGIP1(a) and (b) LMP for transactive bus vs time. Expect to see price
     spike on second day as generator goes out; should have lower prices for
@@ -220,8 +232,18 @@ def plot_transactive_bus_LMP(data):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Marginal Price at Bus 7')
                 plt.legend(loc='best')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_transactive_bus_LMP.')
+                if save_path != '':
+                    save_file = path.join(save_path,
+                                          'validation_transactive_bus_prices.png')
+                    fig1.savefig(save_file, dpi=200)
+                    logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing PYPOWER data; unable to complete '
                              'plot_transactive_bus_LMP.')
@@ -245,7 +267,7 @@ def plot_transactive_bus_LMP(data):
                          'plot_transactive_bus_LMP')
 
 
-def plot_transactive_feeder_load(data):
+def plot_transactive_feeder_load(data, save_path):
     '''
     SGIP1(a), and (b) total feeder load vs time. (a) is base and (b) is
     transactive. Expect (b) to show peak-shaving, snapback, and
@@ -283,8 +305,18 @@ def plot_transactive_feeder_load(data):
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Total Load at Bus 7')
                 ax.legend(lns, labels, loc='lower left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_transactive_feeder_load.')
+                if save_path != '':
+                    save_file = path.join(save_path,
+                                          'validation_transactive_bus_loads2.png')
+                    fig1.savefig(save_file, dpi=200)
+                    logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing PYPOWER data; unable to complete '
                              'plot_transactive_feeder_load.')
@@ -307,7 +339,7 @@ def plot_transactive_feeder_load(data):
             logger.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_transactive_feeder_load.')
 
-def plot_transactive_feeder_load_solar(data):
+def plot_transactive_feeder_load_solar(data, save_path):
     '''
     SGIP1a, b, c, d, e transactive total feeder load vs time. (a) is base
     and (b)-(e) are transactive with increasing amounts of solar and energy
@@ -353,8 +385,18 @@ def plot_transactive_feeder_load_solar(data):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Load at Bus 7')
                 plt.legend(loc='lower left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_transactive_feeder_load_solar.')
+                if save_path != '':
+                    save_file = path.join(save_path,
+                                          'validation_solar_output.png')
+                    fig1.savefig(save_file, dpi=200)
+                    logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing PYPOWER data; unable to complete '
                              'plot_transactive_feeder_load_solar')
@@ -395,7 +437,7 @@ def plot_transactive_feeder_load_solar(data):
                          'plot_transactive_feeder_load_solar.')
 
 
-def plot_avg_indoor_air_temperature(data):
+def plot_avg_indoor_air_temperature(data, save_path):
     '''
     SGIP1(a) and (b) all residential customer average indoor temperature
     vs time. SGIP1(a) is base and (b) is transactive. Expect to see
@@ -446,8 +488,18 @@ def plot_avg_indoor_air_temperature(data):
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Residential Indoor Temperatures')
                 ax.legend(lns, labels, loc='upper left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_avg_indoor_air_temperature.')
+                if save_path != '':
+                    save_file = path.join(save_path,
+                                          'validation_residential_indoor_temperature.png')
+                    fig1.savefig(save_file, dpi=200)
+                    logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing GridLAB-D or PYPOWER data; unable to '
                              'complete plot_avg_indoor_air_temperature.')
@@ -479,7 +531,7 @@ def plot_avg_indoor_air_temperature(data):
                          'plot_avg_indoor_air_temperature')
 
 
-def plot_solar_output(data):
+def plot_solar_output(data, save_path):
     '''
     SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
@@ -518,8 +570,18 @@ def plot_solar_output(data):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Residential PV Output')
                 plt.legend(loc='lower left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_solar_output.')
+                if save_path != '':
+                    save_file = path.join(save_path,
+                                          'validation_solar_output.png')
+                    fig1.savefig(save_file, dpi=200)
+                    logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing GridLAB-D data; unable to complete '
                              'plot_solar_output')
@@ -558,7 +620,7 @@ def plot_solar_output(data):
             logger.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_solar_output.')
 
-def plot_ES_output(data):
+def plot_ES_output(data, save_path):
     '''
     SGIP1(a) and (b) Energy+ average indoor cooling temperature vs time.
     Expect to case (b) to show higher temperatures as it is
@@ -598,8 +660,18 @@ def plot_ES_output(data):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Residential ES Output')
                 plt.legend(loc='lower right')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_ES_output.')
+                if save_path != '':
+                    save_file = path.join(save_path,
+                                          'validation_ES_output.png')
+                    fig1.savefig(save_file, dpi=200)
+                    logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing GridLAB-D data; unable to complete '
                              'plot_ES_output')
@@ -638,7 +710,7 @@ def plot_ES_output(data):
             logger.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_ES_output.')
 
-def plot_energy_plus_indoor_temperature(data):
+def plot_energy_plus_indoor_temperature(data, save_path):
     '''
     SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
@@ -680,8 +752,18 @@ def plot_energy_plus_indoor_temperature(data):
                 labels = [l.get_label() for l in lns]
                 plt.title('Comparison of Commercial Building Indoor Temperature')
                 ax.legend(lns, labels, loc='center left')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_energy_plus_indoor_temperature.')
+                if save_path != '':
+                    save_file = path.join(save_path,
+                                          'validation_commercial_building_indoor_temperature.png')
+                    fig1.savefig(save_file, dpi=200)
+                    logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing Energy+ data; unable to complete '
                              'plot_energy_plus_indoor_temperature.')
@@ -710,7 +792,7 @@ def plot_energy_plus_indoor_temperature(data):
             logger.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_energy_plus_indoor_temperature.')
 
-def plot_energy_plus_prices(data):
+def plot_energy_plus_prices(data, save_path):
     '''
     SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
@@ -738,8 +820,18 @@ def plot_energy_plus_prices(data):
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Commercial Building Real-Time Energy Price')
                 plt.legend(loc='best')
+                # TDH 2019-09-22:Add this so the figure can be referenced for
+                # saving later. If you don't do this `plt.savefig()` saves a
+                # blank image. `plt.show()` creates a new blank image that.
+                # ends up being the reference for `plt.savefig()`
+                fig1 = plt.gcf()
                 plt.show()
                 logger.info('\tCompleted plot_energy_plus_prices.')
+                if save_path != '':
+                    save_file = path.join(save_path,
+                                          'validation_commercial_building_prices.png')
+                    fig1.savefig(save_file, dpi=200)
+                    logger.info(f'\tSaved plot at {save_file}.')
             else:
                 logger.error('\tMissing Energy+ data; unable to complete '
                              'plot_energy_plus_prices.')
@@ -762,61 +854,19 @@ def plot_energy_plus_prices(data):
             logger.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_energy_plus_prices.')
 
-########################################################################
-# SGIP1(a) and (b) Energy+ average indoor cooling temperature vs time.
-# Expect to case (b) to show higher temperatures as it is
-# price-responsive.
-########################################################################
-
-# try:
-#     a_dict = ep.read_eplus_metrics('SGIP1a')
-# except:
-#     print('Energy+ data for SGIP1a not found.')
-#
-# hrs = a_dict['hrs']
-#
-# a_data = a_dict['data_e']
-# a_idx = a_dict['idx_e']
-#
-# try:
-#     b_dict = ep.read_eplus_metrics('SGIP1b')
-# except:
-#     print('Energy+ data for SGIP1b not found.')
-#
-# b_data = b_dict['data_e']
-# b_idx = b_dict['idx_e']
-#
-# plt.plot(hrs, a_data[:,a_idx['COOLING_TEMPERATURE_IDX']], color='blue',
-#          label='Case (a) - Non-transactive')
-# plt.plot(hrs, b_data[:,b_idx['COOLING_TEMPERATURE_IDX']], color='red',
-#          label='Case (b) - Transactive')
-# plt.ylabel(a_idx['COOLING_TEMPERATURE_UNITS'])
-# plt.title('Comparison of Commercial Building Indoor Temperature')
-# plt.legend(loc='best')
-# plt.show()
-#
-# plt.plot(hrs, a_data[:,a_idx['PRICE_IDX']], color='blue',
-#          label='Case (a) - Non-transactive')
-# plt.plot(hrs, b_data[:,b_idx['PRICE_IDX']], color='red',
-#          label='Case (b) - Transactive')
-# plt.ylabel(a_idx['PRICE_UNITS'])
-# plt.title('Comparison of Commercial Building Real-Time Energy Price')
-# plt.legend(loc='best')
-# plt.show()
 
 
-
-def create_validation_plots(data):
+def create_validation_plots(data, save_path):
     logger.info('Creating plots')
-    plot_gen_comparison(data)
-    plot_transactive_bus_LMP(data)
-    plot_transactive_feeder_load(data)
-    plot_transactive_feeder_load_solar(data)
-    plot_avg_indoor_air_temperature(data)
-    plot_solar_output(data)
-    plot_ES_output(data)
-    plot_energy_plus_indoor_temperature(data)
-    plot_energy_plus_prices(data)
+    plot_gen_comparison(data, save_path)
+    plot_transactive_bus_LMP(data, save_path)
+    plot_transactive_feeder_load(data, save_path)
+    plot_transactive_feeder_load_solar(data, save_path)
+    plot_avg_indoor_air_temperature(data, save_path)
+    plot_solar_output(data, save_path)
+    plot_ES_output(data, save_path)
+    plot_energy_plus_indoor_temperature(data, save_path)
+    plot_energy_plus_prices(data, save_path)
 
 
 
@@ -847,7 +897,7 @@ def create_validation_plots(data):
 
 def _auto_run(args):
     data = load_data(args.data_path)
-    create_validation_plots(data)
+    create_validation_plots(data, args.save_path)
 
 if __name__ == '__main__':
     # TDH: This slightly complex mess allows lower importance messages
@@ -867,7 +917,13 @@ if __name__ == '__main__':
                         '--data_path',
                         nargs='?',
                         default='/Users/hard312/testbeds/TESP_SGIP1_plots'
-                                '/simulation data/sgip1 case 3')
+                                '/simulation data/sgip1 case 5')
+    # Set save path to '' to prevent plots from being saved.
+    parser.add_argument('-s',
+                        '--save_path',
+                        nargs='?',
+                        default='/Users/hard312/testbeds/TESP_SGIP1_plots'
+                                '/simulation data/sgip1 case 5')
     args = parser.parse_args()
     _auto_run(args)
 

@@ -13,7 +13,7 @@ To flesh out this example the following additions and/or assumptions were made:
      - The scenario will take place in Tucson Arizona where hot weather events that stress the grid are common.
      - The scenario will span two days with similar weather but the second day will include a bulk power system generator outage that will drive real-time prices high enough to incentivize participation by transactively enabled DERs.
      - Only HVACs will be used to respond to transactive signals
-     - Roughly 50% of the HVACs on one particular feeder will participate in the transactive system. All other feeders will be modeled by a loadshape that is not price-responsive. **TODO: Determine how much of the total system load is price-responsive.**
+     - Roughly 50% of the HVACs on one particular feeder will participate in the transactive system. All other feeders will be modeled by a loadshape that is not price-responsive.
      
 
 The goal of this analysis are as follows:
@@ -27,12 +27,58 @@ The goal of this analysis are as follows:
 Valuation Model
 ---------------
 
+
+
+Use Case Diagram
+................
+A Use Case Diagram is helpful in providing a broad overview of the activities taking place in the system being modeled. It shows the external actors and the specific use cases in which each participates as well as any sequencing between specific use cases.
+
+.. figure:: ../media/SGIP1/ValueModel-SGIP1UseCase.png
+	:name: fig_value_model_use_case
+
+	Definition of the use cases being modeled in the system under analysis.
+
+
 Value Flow Diagram
 ..................
+Value flows define the exchanges between actors in the system. For transactive systems, these value exchanges are essential in defining and enabling the transactive system to operate effectively. These value exchanges are often used when defining the key valuation metrics used to evaluate the performance of the system. The diagrams below show the key value exchanges modeled in this system.
+
+
+.. figure:: ../media/SGIP1/ValueModel-WholesaleElectricityServiceValue.png
+	:name: fig_value_model_wholesale
+
+	Value exchanges modeled in the wholesale market
+	
+
+.. figure:: ../media/SGIP1/ValueModel-RetailElectricityServiceValue.png
+	:name: fig_value_model_retail
+
+	Value exchanges modeled in the retail market
+	
+.. figure:: ../media/SGIP1/ValueModel-ModifyResourceAndDemandUsingTES.png
+	:name: fig_value_model_transactive
+
+
+
+
+Metrics Identification
+......................
+To guide the development of the analysis, it is important that key metrics are identified in the value model. The diagram below shows the specific metrics identified as sub-elements of the Accounting Table object. Though this diagram does not define the means by which these metrics are calculated, it does define the need for such a defintion, leading to a data requirement from the analysis process.
+
+	Value exchanges modeled during the transactive system operation
+.. figure:: ../media/SGIP1/ValueModelMetrics.png
+	:name: fig_value_model_metrics
+
+	Identification of the specific metrics to be included in the Accounting Table.
 
 
 Transactive Mechanism Flowchart (Sequence Diagram)
 ..................................................
+
+.. figure:: ../media/SGIP1/ClearingSequence2.png
+	:name: fig_value_model_clearing_sequence
+
+	Transactive mechanism sequence diagram showing the data exchange between participants
 
 
 Key Performance Metrics Definitions
@@ -117,12 +163,147 @@ where
 Analysis Design Model
 ---------------------
 
-Description of the planned analysis process showing how all the various analysis steps lead towards the computation of the key performance metrics. 
+The analysis design model is a description of the planned analysis process showing how all the various analysis steps lead towards the computation of the key performance metrics. The data requirements of the valuation and validation metrics drive the definition of the various analysis steps that must take place in order to be able to calculate these metrics.
 
-Also include definitions of the validation metrics and shows the analysis process that will lead to their calculation.
+The level of detail is in this model is somewhat subjective and up to those leading the analysis. There must be sufficient detail to avoid the biggest surprises when planning the execution of the analysis but a highly detailed plan is likely to be more effort than it is worth. The analysis design model supports varying levels of fidelity by allowing any individual activity block to be defined in further detail through the definition of subactivities
 
-The level of detail is somewhat subjective and up to those leading the analysis. There must be sufficient detail to avoid the biggest surprises when planning the execution of the analysis but a highly detailed plan is likely to be more effort than it is worth.
+Top Level
+.........
 
+The top level analysis diagram (shown in :numref:`fig_AD_top_level`) is the least detailed model and shows the analysis process at the coarsest level. On the left-hand side of the diagram is the source data (which includes assumptions) and is the only analysis activity with no inputs. The analysis activity blocks in the middle of the diagram show the creation of various outputs from previously created inputs with the terminal activities being the presentation of the final data in the form of tables, graphs, and charts.
+
+
+.. figure:: ../media/SGIP1/AD_Top_Level.png
+	:name: fig_AD_top_level
+
+	Top level view of the analysis design model
+	
+Source Data
+...........
+
+The green source data block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_data_sources`. Many of these items are more than single values and are more complex data structures themselves. 
+
+.. figure:: ../media/SGIP1/AD_data_sources.png
+	:name: fig_AD_data_sources
+
+	Detailed view of the data sources necessary to the SGIP1 analysis.
+
+
+Develop Transmission and Generation Model
+.........................................
+The "Develop T+G model" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_develop_tg_model`. The diagram shows that both generation and transmission network information is used to create a PYPOWER model.
+
+.. figure:: ../media/SGIP1/AD_develop_tg_model.png
+	:name: fig_AD_develop_tg_model
+
+	Detailed model of the development process of the transmission and generation system model.
+	
+	
+Develop Distribution Model
+..........................
+The "Develop dist. model" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_develop_distribution_model`. The distribution model uses assumptions and information from the Residential Energy Consumer Survey (RECS) to define the properties of the modeled houses as well as the inclusion of rooftop solar PV and the participation in the transactive system. These inputs are used to generate a GridLAB-D model.
+
+.. figure:: ../media/SGIP1/AD_develop_distribution_model.png
+	:name: fig_AD_develop_distribution_model
+	
+	Detailed model of the development process of the distribution system model.
+
+
+
+Develop Commercial Building Model
+.................................
+The "Develop commercial building model" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_develop_commercial_building_model`. The commercial building model is a predefined Energy+ model paired with a particular TMY3 weather file (converted to EPW for use in Energy+).
+
+.. figure:: ../media/SGIP1/AD_develop_commercial_building_model.png
+	:name: fig_AD_develop_commercial_building_model
+	
+	Detailed model of the development process of the commercial building.
+	
+	
+Prepare co-simulation
+.....................
+The "Prepare co-simulation" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_prepare_co-simulation`. The core activity is the "Create co-sim config files" which are used by their respective simulation tools. Additionally, a special metadata file is created from the GridLAB-D model and is used by several of the metrics calculations directly.
+
+.. figure:: ../media/SGIP1/AD_prepare_co-simulation.png
+	:name: fig_AD_prepare_co-simulation
+	
+	Detailed model of the co-simulation configuration file creation.
+	
+
+Co-simulation
+..............
+The "Co-simulation" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_co-simulation`. The GridLAB-D model plays a central role as a significant portion of the modeling effort is centered around enabling loads (specifically HVACs) to participate in the transactive system. In addition to the previously shown information flows between the activities the dynamic data exchange that takes place during the co-simulation run; this is shown by the "<<flow>>" arrows. 
+
+.. figure:: ../media/SGIP1/AD_co-simulation.png
+	:name: fig_AD_prepare_co-simulation
+	
+	Detailed model of the co-simulation process showing the dynamic data exchanges with "<<flow>>" arrows.
+	
+
+Accounting table
+................
+The "Accounting table" presentation block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a series of sub-diagrams shown below. Each line of the accounting table shown in :numref:`fig_value_model_metrics` is represented by a gray "presentation" block, showing the required inputs to produce that metric.
+
+.. figure:: ../media/SGIP1/AT_Average_ASHRAE_Discomfort_Hours.png
+	:name: fig_AT_avg_ASHRAE_discomfort_hours
+	
+	Average ASHRAE discomfort hours metric data flow
+	
+	
+.. figure:: ../media/SGIP1/AT_Bulk_Power_System.png
+	:name: fig_AT_bulk_power_system
+	
+	Bulk power system (T+G) metrics data flows
+	
+	
+.. figure:: ../media/SGIP1/AT_DERs.png
+	:name: fig_AT_DERs
+	
+	Distributed energy resources (DERs) metrics data flows
+	
+	
+.. figure:: ../media/SGIP1/AT_Transactive_Feeder.png
+	:name: fig_AT_transactive_feeder
+	
+	Transactive feeder metric data flows
+	
+	
+.. figure:: ../media/SGIP1/AT_T_and_D_Losses.png
+	:name: fig_AT_t_and_d_losses
+	
+	Transmission and distribution network losses metric data flows
+	
+
+Analysis Validation
+...................
+The "Analysis validation" presentation block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a series of sub-diagrams shown below. These are metrics similar to those in the :ref:`Accounting Table` section but they are not necessarily defined by the value exchanges and thus fall outside the value model. These metrics are identified by the analysis designer in cooperation with analysis team as a whole and are used to validate the correct execution of the analysis.
+
+
+.. figure:: ../media/SGIP1/AV_Bulk_Power_System.png
+	:name: fig_AV_bulk_power_system
+	
+	Bulk power system metrics data flows
+	
+
+.. figure:: ../media/SGIP1/AV_Average_Residential_Indoor_Air_Temperature.png
+	:name: fig_AV_avg_indoor_air_temp
+	
+	Residential indoor air temperature metric data flows
+
+
+.. figure:: ../media/SGIP1/AV_Commercial_Building.png
+	:name: fig_AV_commercial_building
+	
+	Commercial indoor air temperature metric data flows	
+	
+	
+.. figure:: ../media/SGIP1/AV_Residential_PV_and_ES_Impacts.png
+	:name: fig_AV_pv_es_impacts
+	
+	Residential rooftop solar PV and energy storage metrics data flows
+
+
+	
 
 Simulated System Model
 ----------------------
@@ -131,13 +312,10 @@ Simulated System Model
 
 In addition, the model includes residential rooftop solar PV and electrical energy storage resources at some of the houses, and waterheaters at many houses. These resources can be transactive, but are not in this version. The rooftop solar PV has a nameplate efficiency of 20% and inverters with 100% efficiency. inverters are set to operate at a constant power factor of 1.0. The rated power of the rooftop solar PV installations varies from house to house and ranges from roughly 2.7 kW to 4.5 kW.
 
-The energy storage devices also have inverters with 100% efficiency and operate in an autonomous load-following mode that performs peak-shaving and valley-filling based on the total load of the customer's house to which it is attached. All energy storage devices are identical with a capacity of 13.5 kWh and a rated power of 5 kW (both charging and discharging). The batteries are modeled as lithium-ion batteries with a round-trip efficiency of 86%.
+The energy storage devices also have inverters with 100% efficiency and operate in an autonomous load-following mode that performs peak-shaving and valley-filling based on the total load of the customer's house to which it is attached. All energy storage devices are identical with a capacity of 13.5 kWh and a rated power of 5 kW (both charging and discharging). The batteries are modeled as lithium-ion batteries with a round-trip efficiency of 86%. Other details can be found in :numref:`tbl_sgip1`.
 
-**TODO: Add table showing total capacity of solar PV and ESS for all cases? The growth model table has similar information. Add to it or replace count information with rating information? **
 
-**TODO: Add link to growth model table.**
-
-.. figure:: ../media/SGIP1system.png
+.. figure:: ../media/SGIP1/SGIP1system.png
 	:name: fig_sgip1
 
 	SGIP-1 system configuration with partial PV and storage adoption
@@ -149,7 +327,7 @@ The Circuit Model
 :numref:`fig_pp_sgip1` shows the bulk system model in PYPOWER. It is a small system with three generating units and three load buses that comes with
 PYPOWER, to which we added a high-cost peaking unit to assure convergence of the optimal power flow in all cases. In SGIP-1 simulations, generating unit 2 was taken offline on the second day to simulate a contingency. The GridLAB-D model was connected to Bus 7, and scaled up to represent multiple feeders. In this way, prices, loads and resources on transmission and distribution systems can impact each other.
 
-.. figure:: ../media/PYPOWERsystem.png
+.. figure:: ../media/SGIP1/PYPOWERsystem.png
 	:name: fig_pp_sgip1
 
 	Bulk System Model with Maximum Generator Real Power Output Capacities
@@ -177,12 +355,12 @@ agent program collected metrics from the building model, and adjusted
 the thermostat setpoints based on real-time price, which is a form of
 passive response.
 
-.. figure:: ../media/FeederR1_1.png
+.. figure:: ../media/SGIP1/FeederR1_1.png
 	:name: fig_taxonomy
 
 	Distribution Feeder Model (http://emac.berkeley.edu/gridlabd/taxonomy\_graphs/)
 
-.. figure:: ../media/School.png
+.. figure:: ../media/SGIP1/School.png
 	:name: fig_school
 
 	Elementary School Model
@@ -228,8 +406,8 @@ operate autonomously in load-following mode.
 
 Simulation Architecture Model
 -----------------------------
+The SGIP1 analysis, being a co-simulation, has a multiplicity of executables that are used to set-up the co-simulation, run the co-simulation, and process the data coming out of the co-simulation. The  :ref:`Analysis Design Model` provides hints at which tools are used and how they interact but is not focused on how the tools fit together but rather how they can be used to achieve the necessary analysis objectives. This section fleshes out some of those details so that users are better able to understand the analysis process without having to resort to looking at the scripts, configuration files, and executable source code to understand the execution flow of the analysis.
 
-**TODO: Provides details into the design of the software to execute the analysis, leading to the ability to calculate the key performance and validation metrics.**
 
 Simulated Functionalities
 .........................
@@ -253,7 +431,7 @@ The functionalities shown in :numref:`fig_sgip1` are implemented in simulation t
         - Using the bid information from the generation natively represented in the bulk power system model and the price-responsive load bids provided by the Substation Agent, find the real-time energy price for each node the bulk power system (the LMP) by solving the optimal power flow problem to find the least-cost dispatch for generation and flexible load. Communicate the appropriate LMP to the Substation Agent.
 
 
-.. figure:: ../media/ClearingSequence2.png
+.. figure:: ../media/SGIP1/ClearingSequence2.png
 	:name: fig_clearing_sequence
 
 	Sequence of operations to clear market operations
@@ -263,13 +441,80 @@ Figure :numref:`fig_clearing_sequence` is a sequence diagram showing the order o
 Due to limitations in the load modeling provided by Energy+, some expected interactions are not included in this system model. Specifically:
 
     - The loads modeled internally in Energy+ are not responsive to voltage and thus the interaction between it and GridLAB-D is only one way: Energy+ just provides a real power load; GridLAB-D does not assume a power factor and the the Energy Plus Agent (which is providing the value via FNCS) does not assume one either.
-    - The Energy Plus agent is only price responsive and does not provide a bid for real-time energy. **TODO: why?**
+    - The Energy Plus agent is only price responsive and does not provide a bid for real-time energy.
 
+
+Software Execution
+..................
+As is common in many analysis that utilize co-simulation, the SGIP1 analysis contains a relatively large number of executables, input, and output files. Though there are significant details in the :ref:`Analysis Design Model` showing the software components and some of the key data flows and interactions between them, it does not provide details of how the software is executed and interacts with each other. These details are provided below, focusing on the input and output files created and used by each executable.
+
+
+Software Architecture Overview
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Figure :numref:`fig_SA_top_level` provides the broadest view of the analysis execution. The central element is the "runSGIPn.sh" script which handles the launching of all individual co-simulation elements. To do this successfully, several input and configuration files need to be in place; some of these are distributed with the example and others are generated as a part of preparing for the analysis. Once the co-simulation is complete, two different post-processing scripts can be run to process and present that results.
+
+.. figure:: ../media/SGIP1/SA_top_level.png
+	:name: fig_SA_top_level
+
+	Overview of the software execution path
+	
+	
+Inherited Files
+,,,,,,,,,,,,,,,
+Figure :numref:`fig_SA_inherited_input_files` provides a simple list of files that are distributed with the analysis and are necessary inputs. The provenance of these files is not defined and thus this specific files should be treated as blessed for the purpose of the SGIP1 analysis. 
+
+.. figure:: ../media/SGIP1/SA_inherited_input_files.png
+	:name: fig_SA_inherited_input_files
+
+	List of files distributed with the SGIP1 analysis that are required inputs.
+
+
+prepare_cases.py
+,,,,,,,,,,,,,,,,
+Figure :numref:`fig_SA_prepare_cases` shows the process by which the co-simulation-specific files are generated. The weather agent uses a specially-formatted weather file that is generated by the "weathercsv" method in "TMY3toCSV.py". After this completes the "glm_dict.py" script executes to create the GridLAB-D metadata JSON. Lastly, the "prep_substation.py" script runs to create co-simulation configuration files. "prepare_cases.py" does this for all the cases that the SGIP1 analysis supports.
+
+.. figure:: ../media/SGIP1/SA_prepare_cases.png
+	:name: fig_SA_prepare_cases
+
+	Co-simulation files generated by "prepare_cases.py" in preparation of performing the analysis proper.
+
+
+
+runSGIPn.sh
+,,,,,,,,,,,,
+Figure :numref:`fig_SA_runSGIP1n` shows series of executables launched to run the SGIP1 co-simulation analysis. All of the activity blocks denote a specific executable with all being run in parallel to enable co-simulation. Each executable has its own set of inputs and outputs that are required and generated (respectively). Though most of these inputs are files (as denoted by the file icon), a few are parameters that are hard-coded into this script (*e.g.* the EnergyPlus Agent). Some input files have file dependencies of their own and these are shown as arrows without the "<<flow>>" tag. The outputs generated by each executable generally consist of a log file and any data collected in a metrics file.
+
+.. figure:: ../media/SGIP1/SA_runSGIP1n.png
+	:name: fig_SA_runSGIP1n
+
+	Co-simulation executables launched by "runSGIP1n.sh" and their output metrics files
+	
+	
+validation_plot.py
+,,,,,,,,,,,,,,,,,,
+Figure :numref:`fig_SA_validation_plots` shows the inputs files generated by the co-simulation that are used to generate plots used to validate the correct operation of the co-simulation. TESP provides scripts for post-processing the metrics files produced by the simulation tools and these are used to create Python dictionaries which can be manipulated to produce the validation plots.
+
+.. figure:: ../media/SGIP1/SA_validation_plots.png
+	:name: fig_SA_validation_plots
+
+	Post-processing of the output metrics files to produce plots to validate the correct execution of the co-simulation.
+	
+	
+createAccountingTable.py
+,,,,,,,,,,,,,,,,,,,,,,,,
+Figure :numref:`fig_SA_createAccountingTable` shows the input metrics files to used to calculate the final accounting table output from the metrics identified by the :ref:`Valuation Model`.
+
+.. figure:: ../media/SGIP1/SA_createAccountingTable.png
+	:name: fig_SA_createAccountingTable
+
+	Post-processing of the output metrics files to produce the necessary metrics for the accounting table.
 
 
 Data Collection
 ...............
-**TODO: Is this important? Just link the in the UML class diagrams and highlight the particularly important parts? Generally discuss how metrics collection works in TESP? That should probably be saved for general discussion of the API**
+The data collection for TESP is handled in a largely standardized way. Each simulation tool produces an output dataset with key measurements. This data is typically stored in a JSON file (with an exception or two where the datasets are large and HDF5 is used). The specific data collected is defined in the :ref:`metrics section<design_reference_metrics>` of the TESP  :ref:`design_reference`.
+
+The JSON data files are post-processed by Python scripts (one per simulation tool) to produce Python dictionaries that can then be queried to further post-process the data or used directly to create graphs, charts, tables or other presentations of the data from the analysis. Metadata files describing the models used in the analysis are also used when creating these presentations.
  
 
 Running the Example
@@ -287,7 +532,7 @@ To launch one of these runs, only a few simple commands are needed::
     
 ``./runSGIP1b.sh`` will return a command prompt with the co-simulation running in the background. To check how far along the co-simulation monitoring one of the output files is the most straight-forward way::
 
-    cat SGIP1b.csv
+    tail -f SGIP1b.csv
     
 The first entry in every line of the file is the number of seconds in the co-simulation that have been completed thus far. The co-simulation is finished at 172800 seconds. After that is complete, a set of summary plots can be created with the following command::
 
@@ -297,51 +542,57 @@ The first entry in every line of the file is the number of seconds in the co-sim
 
 Analysis Results - Model Validation
 -----------------------------------
+The graphs below were created by running ``validation_plots.py`` (**TODO: Update default path to match where the data will be) to validate the performance of the models in the co-simulation. Most of these plots involve comparisons across the cases evaluated in this study (see :numref:`tbl_sgip1`).
 
-.. figure:: ../media/validation_generator_outputs.png
+
+.. figure:: ../media/SGIP1/validation_generator_outputs.png
 	:name: fig_validation_generator_outputs
 	
 	Generator outputs of bulk power system, showing the loss of Unit 3 on the second day.
 	
-.. figure:: ../media/validation_transactive_bus_prices.png
+	
+.. figure:: ../media/SGIP1/validation_transactive_bus_prices.png
 	:name: fig_validation_transactive_bus_prices
 	
 	Wholesale market prices (LMPs) for base and transactive cases, showing lower prices during the peak of the day as transactively participating loads respond.	
 	
-.. figure:: ../media/validation_transactive_bus_loads2.png
+	
+.. figure:: ../media/SGIP1/validation_transactive_bus_loads2.png
 	:name: fig_validation_transactive_bus_loads4
 	
 	Total load for transactive feeder in base and transactive case. Should show peak-shaving, valley-filling, and snapback as prices come down off their peak.
 	
-.. figure:: ../media/validation_transactive_bus_loads4.png
+	
+.. figure:: ../media/SGIP1/validation_transactive_bus_loads4.png
 	:name: fig_validation_transactive_bus_loads2
 	
 	Total load for transactive feeder in for four transactive cases with increasing levels of rooftop solar PV and energy storage penetration.
 
-.. figure:: ../media/validation_residential_indoor_temperature.png
+
+.. figure:: ../media/SGIP1/validation_residential_indoor_temperature.png
 	:name: fig_validation_residential_indoor_temperature
 	
 	Average residential indoor air temperature for all houses in both base and transactive case. The effect of the transactive controller for the HVACS drives lower relatively lower temperatures during low price periods and relatively higher prices during higher periods.
 	
-.. figure:: ../media/validation_solar_output.png
+	
+.. figure:: ../media/SGIP1/validation_commercial_building_indoor_temperature.png
+	:name: fig_validation_commercial_building_indoor_temperature
+	
+	Commercial building (as modeled in Energy+) indoor air temperature for the base and transactive case. Results should be similar to the residential indoor air temperature with lower temperatures during low-price periods and higher temperatures during high-price periods.
+	
+	
+.. figure:: ../media/SGIP1/validation_solar_output.png
 	:name: fig_validation_solar_output_output
 	
 	Total residential rooftop solar output on the transactive feeder across the four cases within increasing penetration. The rooftop solar is not price responsive. As expected, increasing PV penetration showing increased PV production.
 	
-.. figure:: ../media/validation_ES_output.png
+	
+.. figure:: ../media/SGIP1/validation_ES_output.png
 	:name: fig_validation_ES_output_output
 	
 	Total residential energy storage output on the transactive feeder across the four cases within increasing penetration. The energy storage controller engages in peak-shaving and valley-filling based on the billing meter for the residential customer.
 	
-.. figure:: ../media/validation_commercial_building_indoor_temperature.png
-	:name: fig_validation_commercial_building_indoor_temperature
 	
-	Commercial building (as modeled in Energy+) indoor air temperature for the base and transactive case. Results should be similar to the residential indoor air temperature with lower temperatures during low-price periods and higher temperatures during high-price periods. **TODO: why isn't the indoor temperature moving with price?**
-	
-.. figure:: ../media/validation_commercial_building_prices.png
-	:name: fig_validation_commercial_building_prices
-	
-	Commercial building (as modeled in Energy+) prices from the wholesale market as managed by the Energy+ agent. **TODO: Why are the prices flat?**
 	
 	
 
