@@ -2,7 +2,7 @@
 # @Date:   2021-04-09T10:37:55-07:00
 # @Email:  allison.m.campbell@pnnl.gov
 # @Last modified by:   camp426
-# @Last modified time: 2021-10-25T17:26:54-07:00
+# @Last modified time: 2021-10-26T10:35:55-07:00
 
 
 
@@ -15,9 +15,6 @@ import pandas as pd
 import process_pypower as pp
 import process_gld as gp
 import process_agents as pa
-# import process_eplus as ep
-# import process_inv as pi
-# import process_houses as ph
 
 # need to also test using
 # import tesp_support.process_pypower as pp
@@ -171,7 +168,7 @@ accounting_table_delta = pd.DataFrame()
 day_one = pd.DataFrame()
 day_two = pd.DataFrame()
 SGIP1_list = ['a','b','c','d','e']
-for i in SGIP1_list:
+for i,j in zip(SGIP1_list,range(len(SGIP1_list))):
     name = 'SGIP1'+i
     dir = base_dir+'/'+name
     print('**********\n\n\n')
@@ -185,25 +182,14 @@ for i in SGIP1_list:
     if i == 'a':
         day_one = accounting_table_raw['SGIP1'+i+' Day 1']
         day_two = accounting_table_raw['SGIP1'+i+' Day 2']
-    elif i == 'b':
-        delta = raw_table.copy()
-        delta['SGIP1b diff SGIP1a Day 1'] = accounting_table_raw['SGIP1b Day 1'] - accounting_table_raw['SGIP1a Day 1']
-        delta['SGIP1b diff SGIP1a Day 2'] = accounting_table_raw['SGIP1b Day 2'] - accounting_table_raw['SGIP1a Day 2']
-        day_one = pd.concat([day_one,delta['SGIP1b diff SGIP1a Day 1']],axis=1)
-        day_two = pd.concat([day_two,delta['SGIP1b diff SGIP1a Day 2']],axis=1)
     else:
         delta = raw_table.copy()
-        delta['SGIP1'+i+' diff SGIP1b Day 1'] = accounting_table_raw['SGIP1'+i+' Day 1'] - accounting_table_raw['SGIP1b Day 1']
-        delta['SGIP1'+i+' diff SGIP1b Day 2'] = accounting_table_raw['SGIP1'+i+' Day 2'] - accounting_table_raw['SGIP1b Day 2']
-        day_one = pd.concat([day_one,delta['SGIP1'+i+' diff SGIP1b Day 1']],axis=1)
-        day_two = pd.concat([day_two,delta['SGIP1'+i+' diff SGIP1b Day 2']],axis=1)
-
-    # accounting_table = pd.concat([accounting_table,raw_table],axis=1)
-
-
-day_one
-day_two
-accounting_table_delta
+        delta['SGIP1'+i+' diff SGIP1'+SGIP1_list[j-1]+' Day 1'] = \
+            accounting_table_raw['SGIP1'+i+' Day 1'] - accounting_table_raw['SGIP1'+SGIP1_list[j-1]+' Day 1']
+        delta['SGIP1'+i+' diff SGIP1'+SGIP1_list[j-1]+' Day 2'] = \
+            accounting_table_raw['SGIP1'+i+' Day 2'] - accounting_table_raw['SGIP1'+SGIP1_list[j-1]+' Day 2']
+        day_one = pd.concat([day_one,delta['SGIP1'+i+' diff SGIP1'+SGIP1_list[j-1]+' Day 1']],axis=1)
+        day_two = pd.concat([day_two,delta['SGIP1'+i+' diff SGIP1'+SGIP1_list[j-1]+' Day 2']],axis=1)
 
 accounting_table_final = pd.concat([accounting_table,accounting_table_delta,day_one,day_two],axis=1)
 
