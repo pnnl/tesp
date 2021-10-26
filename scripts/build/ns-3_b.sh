@@ -15,14 +15,17 @@ cd "${REPODIR}/ns-3-dev"
 # git pull
 # cd ../..
 # then configure, build and test ns3 with the HELICS interface
-# --with-helics may not be left blank, so use either $TESP_INSTALL or /usr/local
+# --with-helics may not be left blank, so use either $INSTDIR or /usr/local
 if [[ $1 == "clean" ]]; then
   ./waf distclean
 fi  
+
 ./waf configure --prefix="${INSTDIR}" --with-helics="${INSTDIR}" --build-profile=optimized \
                 --disable-werror --enable-logs --enable-build-version
 # To enable examples or tests add the respective --enable command to the waf configure command line
 # --enable-examples --enable-tests
+
 ./waf build
+
 sudo ./waf install
 #./test.py
