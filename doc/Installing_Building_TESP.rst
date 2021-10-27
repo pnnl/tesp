@@ -61,10 +61,31 @@ Validate TESP installation
 --------------------------
 Once the installation process has finished there should be a folder names `tesp` where all the TESP software, data, and models have been installed. There are several progressively more comprehensive ways to validate the TESP installation process.
 
+Check OS can find TESP software
+...............................
+TESP includes a small script that attempts to run a trivial command with each of the software packages it installs (typically checking the version). (The script is located at tesp/repository/tesp/scripts/build/versions.sh.) This script runs automatically at the end of the build and install process and produces and output something like this (version numbers will vary):
+
+.. code-block:: text
+
+    ++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++
+
+    FNCS broker installed
+
+    Helics 2.8.0 (2021-09-17)
+
+    GridLAB-D 4.3.0-18923 (Navajo [107009aa:develop]) 64-bit LINUX RELEASE
+
+    EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
+
+    NS-3 installed
+
+    Ipopt 3.13.2 (x86_64-pc-linux-gnu), ASL(20190605)
+
+If you see any messages indicating `command not found` if indicates one of the software packages did not install correctly.
 
 Check directory structure
 .........................
-An easy high-level check to see if TESP installed correctly is to look at the directory structure that was installed and make sure everything ended up in the right place. This can easily be done by running `tree -L 3` from inside the top-level `tesp` folder. Your output should look something like this:
+An easy manual high-level check to see if TESP installed correctly is to look at the directory structure that was installed and make sure everything ended up in the right place. This can easily be done by running `tree -L 3` from inside the top-level `tesp` folder. Your output should look something like this:
 
 
 .. code-block:: text
@@ -136,11 +157,15 @@ An easy high-level check to see if TESP installed correctly is to look at the di
     │   └── tesp
     │       ├── ...
     └── software
+        ├── Ipopt
+        │   ├── ...
+        ├── ThirdParty-ASL
+        │   ├── ...
+        ├── ThirdPart-Mumps
+        │   ├── ...
 
 
-Check OS can find TESP software
-...............................
-TESP includes a small script that attempts to run a trivial command with each of the software packages it installs (typically checking the version). 
+
 
 
 Run minimal autotests (forthcoming)
