@@ -56,7 +56,7 @@ def summarize_opf(res):
     print('{:4d} {:4d} {:8.2f} {:8.2f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}'.format(idx,int(row[0]),float(row[1]),float(row[2]),float(row[21]),float(row[22]),float(row[23]),float(row[24])))
     ++idx
 
-def load_json_case(fname):
+def load_json_case(fname, FNCS=False):
   """ Helper function to load PYPOWER case from a JSON file
 
   Args:
@@ -72,7 +72,10 @@ def load_json_case(fname):
   ppc['branch'] = np.array (ppc['branch'])
   ppc['areas'] = np.array (ppc['areas'])
   ppc['gencost'] = np.array (ppc['gencost'])
-  ppc['DSO'] = np.array (ppc['DSO'])
+  if FNCS == True: 
+    ppc['FNCS'] = np.array (ppc['FNCS'])
+  else:
+    ppc['DSO'] = np.array (ppc['DSO'])
   ppc['UnitsOut'] = np.array (ppc['UnitsOut'])
   ppc['BranchesOut'] = np.array (ppc['BranchesOut'])
   return ppc

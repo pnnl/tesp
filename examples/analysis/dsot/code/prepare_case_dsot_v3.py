@@ -132,7 +132,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     sim['quadratic'] = sys_config['quadratic']
     sim['quadraticFile'] = sys_config['dsoQuadraticFile']
     
-    # =================== fernando 2021/06/25 - remuving 10 AM bid correction to AMES =======
+    # =================== fernando 2021/06/25 - removing 10 AM bid correction to AMES =======
     if casetype['flexLoadCase'] == 1:
         print('Correction of DSO bid for 10 AM AMES bid is performed')
     else:

@@ -1,6 +1,8 @@
 # !/bin/bash
 
+. ../../../../scripts/environment
 
+mkdir -p ../data
 cd "${TESPDIR}/examples/analysis/dsot/code" || exit
 if [[ $1 == "200" ]]; then
   wget https://mepas.pnnl.gov/FramesV1/Install/data200.zip

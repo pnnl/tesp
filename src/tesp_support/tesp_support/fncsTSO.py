@@ -4,13 +4,14 @@ import json
 import logging as log
 import numpy as np
 import pypower.api as pp
-import tesp_support.api as tesp
+# import tesp_support.api as tesp
 import tesp_support.fncs as fncs
 from copy import deepcopy
 import psst.cli as pst
 import pandas as pd
 from datetime import datetime
 from tesp_support.metrics_collector import MetricsStore, MetricsCollector
+from tesp_support.fncsPYPOWER import load_json_case
 
 
 def make_generater_plants(ppc, renewables):
@@ -1392,7 +1393,7 @@ def tso_loop(casename):
             hours_in_a_day = 24
             secs_in_a_hr = 3600
 
-            ppc = tesp.load_json_case(casename + '.json')
+            ppc = load_json_case(casename + '.json', True)
             ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
             ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
