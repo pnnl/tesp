@@ -68,7 +68,7 @@ An easy high-level check to see if TESP installed correctly is to look at the di
 
 
 .. code-block:: text
-   :caption: TESP installation abbreviated `tree` output 
+ 
     tesp
     ├── installed
     │   ├── bin
