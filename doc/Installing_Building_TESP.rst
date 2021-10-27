@@ -64,11 +64,8 @@ Once the installation process has finished there should be a folder names `tesp`
 
 Check directory structure
 .........................
-An easy high-level check to see if TESP installed correctly is to look at the directory structure that was installed and make sure everything ended up in the right place. This can easily be done by running `tree -L 3` from inside the top-level `tesp` folder. Your output should look something like this:
+An easy high-level check to see if TESP installed correctly is to look at the directory structure that was installed and make sure everything ended up in the right place. This can easily be done by running `tree -L 3` from inside the top-level `tesp` folder. Your output should look something like this::
 
-
-.. code-block:: none
-   :caption: TESP installation abbreviated `tree` output 
     tesp
     ├── installed
     │   ├── bin
