@@ -14,17 +14,17 @@ if [[ $1 == "clean" ]]; then
   sudo rm -rf ThirdParty-ASL
   sudo rm -rf ThirdParty-Mumps
   
-  wget https://www.coin-or.org/download/source/Ipopt/Ipopt-${IPOPT_VERSION}.tgz
+  wget --no-check-certificate https://www.coin-or.org/download/source/Ipopt/Ipopt-${IPOPT_VERSION}.tgz
   tar -xzf Ipopt-${IPOPT_VERSION}.tgz
   mv Ipopt-releases-${IPOPT_VERSION} Ipopt
   rm "Ipopt-${IPOPT_VERSION}.tgz"
 
-  wget https://github.com/coin-or-tools/ThirdParty-ASL/archive/stable/${ASL_VERSION}.zip
+  wget --no-check-certificate https://github.com/coin-or-tools/ThirdParty-ASL/archive/stable/${ASL_VERSION}.zip
   unzip ${ASL_VERSION}.zip
   mv ThirdParty-ASL-stable-${ASL_VERSION} ThirdParty-ASL
   rm "${ASL_VERSION}.zip"
 
-  wget https://github.com/coin-or-tools/ThirdParty-Mumps/archive/stable/${MUMPS_VERSION}.zip
+  wget --no-check-certificate https://github.com/coin-or-tools/ThirdParty-Mumps/archive/stable/${MUMPS_VERSION}.zip
   unzip ${MUMPS_VERSION}.zip
   mv ThirdParty-Mumps-stable-${MUMPS_VERSION} ThirdParty-Mumps
   rm "${MUMPS_VERSION}.zip"

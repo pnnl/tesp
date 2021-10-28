@@ -57,7 +57,7 @@ if [[ $1 == "develop" ]]; then
 else
 
   echo "Installing TESP binaries..."
-  wget https://mepas.pnnl.gov/FramesV1/Install/tesp_binaries.zip
+  wget --no-check-certificate https://mepas.pnnl.gov/FramesV1/Install/tesp_binaries.zip
   cd "${INSTDIR}" exit
   unzip tesp_binaries.zip .
 fi
