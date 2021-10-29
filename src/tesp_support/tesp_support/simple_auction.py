@@ -548,6 +548,7 @@ def _auto_run():
     market_config = {
         'unit': 'kW',
         'pricecap': 3.78,
+        'period': 300,
         'clearing_scalar': 0.0,
         'init_price': 0.02078,
         'init_stdev': 0.01,
