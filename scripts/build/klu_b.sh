@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . environment
+  . ~/environment
 fi
 
 cd "${REPODIR}/KLU_DLL" || exit

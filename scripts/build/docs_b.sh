@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . environment
+  . ~/environment
 fi
 
 pip3 install recommonmark sphinx-jsonschema sphinx_rtd_theme --upgrade
