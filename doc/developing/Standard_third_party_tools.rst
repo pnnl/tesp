@@ -11,6 +11,10 @@ GridLAB-D is a power distribution system simulation tool that not only solves th
 -----------------------------------------------
 PYPOWER is a Python re-implementation of `MATPOWER <https://matpower.org>`_ in Python using common Python libraries to perform the mathematical heavy lifting. TESP uses PYPOWER to solve the real-time energy market dispatch (through an optimal power flow) and the transmission system physics (through traditional power flows).
 
+`PSST <https://github.com/ames-market/psst>`_
+-----------------------------------------------
+Power system solver that provides an alternative formulation and implementation for solving day-ahead security-constrained unit commitment (SCUC) and real-time security-constrained economic dispatch (SCED) problems. 
+
 `EnergyPlus <https://energyplus.net>`_
 ---------------------------------------
 EnergyPlus is a building system simulator that is typically used to model large (at least relative to residential buildings), multi-zone commercial buildings. These models include representations of both the physical components/structures of the buildings (*e.g.* walls, windows, roofs) but also heating and cooling equipment as well as their associated controllers. TESP uses EnergyPlus to model commercial structures and associate them with particular points in the GridLAB-D model.
@@ -21,4 +25,22 @@ ns-3 is a discrete-event communication system simulator that TESP uses to model 
 
 `HELICS <https://helics.org>`_
 -------------------------------
-HELICS is a co-simulation platform that is used to integrate all of the above tools along with the custom agents created by the TESP team and distributed with TESP. HELICS allows the passing of physical values or abstract messages between the TESP simulation tools during run-time allowing each simulation tool to affect the others. For example, PYPOWER produces a substation voltage for GridLAB-D and GridLAB-D, using that voltage, produces a load for PYPOWER. 
+HELICS is a co-simulation platform that is used to integrate all of the above tools along with the custom agents created by the TESP team and distributed with TESP. HELICS allows the passing of physical values or abstract messages between the TESP simulation tools during run-time allowing each simulation tool to affect the others. For example, PYPOWER produces a substation voltage for GridLAB-D and GridLAB-D, using that voltage, produces a load for PYPOWER.
+
+`Ipopt <https://coin-or.github.io/Ipopt/>`_
+--------------------------------------------
+Quoting from it's website, '"Ipopt (Interior Point Optimizer, pronounced "Eye-Pea-Opt") is an open source software package for large-scale nonlinear optimization." Ipopt can be used by any other software in TESP that performs optimization problems, most typically in solving multi-period optimization problems such as in solving the day-ahead energy market or devices creating day-ahead bids for participating in said markets. Ipopt is built with Ampl Solver Library (ASL) and and MUMPS support. 
+
+`Python Packages`
+-----------------
+There are many Python packages used but a few of the major ones not already listed deserve mention:
+
+* Matplotlib <https://matplotlib.org>_ - data visualization library used for presenting results out of TESP
+* NumPy <https://numpy.org>_ - data management library used for structuring results data for post-processing
+* pandas <https://pandas.pydata.org>_ - data management library used for structuring results data for post-processing
+* HDF5 <https://www.h5py.org>_ - Database-like data format used for storing results from some simulation tools and used to read in said data for post-processing
+seaborn <https://seaborn.pydata.org>_ - data visualization library used for presenting results out of TESP
+Pyomo <https://www.pyomo.org>_ - optimization modeling language used to formulate some of the multi-period optimizations common in TESP
+Networkx <https://networkx.org>_ - graph modeling package used to analyze some of the relational graphs and/or models of the power and communication network in TESP
+
+
