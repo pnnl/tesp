@@ -4581,8 +4581,8 @@ if __name__ == '__main__':
 
     data_path = 'C:\\Users\\reev057\PycharmProjects\DSO+T\Data\Simdata\DER2\\V1.1-1317-gfbf326a2\MR-Batt\lean_8_bt'
     # data_path = 'C:\\Users\\reev057\PycharmProjects\DSO+T\Data\Simdata\DER2'
-    metadata_path = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\\data'
-    ercot_path = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\data'
+    metadata_path = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\analysis\dsot\data'
+    ercot_path = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\analysis\dsot\data'
     base_case = 'C:\\Users\\reev057\PycharmProjects\DSO+T\Data\Simdata\DER2\\V1.1-1317-gfbf326a2\MR-Batt\lean_8_bt'
     trans_case = 'C:\\Users\\reev057\PycharmProjects\DSO+T\Data\Simdata\DER2\\V1.1-1317-gfbf326a2\MR-Flex\lean_8_fl'
     config_path = 'C:\\Users\\reev057\PycharmProjects\TESP\src\examples\dsot_v3'

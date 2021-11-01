@@ -890,8 +890,8 @@ if __name__ == '__main__':
     base_case = 'C:\\Users\\reev057\PycharmProjects\\DSO+T\\Data\Simdata\DER2\\V1.1-1336-gb74f2d99\lean_8'
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
-    tariff_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\examples\\data'
-    metadata_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\examples\\data'
+    tariff_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\examples\\analysis\\dsot\\data'
+    metadata_path = 'C:\\Users\\reev057\\PycharmProjects\\TESP\\src\\examples\\analysis\\dsot\\data'
 
     # ------  For each DSO determine the scaling factor and update the metadata
     for dso_num in dso_range:

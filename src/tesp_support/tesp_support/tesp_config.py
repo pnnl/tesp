@@ -106,7 +106,7 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
           ['Longitude (E > 0)',-110.95,'deg','WeatherPrep','Longitude'],
           ['Altitude (not used yet)', 777.0,'m','WeatherPrep','Altitude'],
           ['TZmeridian (E > 0)',-105.00,'deg','WeatherPrep','TZmeridian'],
-          ['Support Directory','$TESP_INSTALL/share/support','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
+          ['Support Directory','$TESPDIR/data','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
           ['Working Directory','./','','SimulationConfig','WorkingDirectory'],
           ['Case Name','Test','','SimulationConfig','CaseName']
           ];
