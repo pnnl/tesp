@@ -35,12 +35,12 @@ Quoting from it's website, '"Ipopt (Interior Point Optimizer, pronounced "Eye-Pe
 -----------------
 There are many Python packages used but a few of the major ones not already listed deserve mention:
 
-* Matplotlib <https://matplotlib.org>_ - data visualization library used for presenting results out of TESP
-* NumPy <https://numpy.org>_ - data management library used for structuring results data for post-processing
-* pandas <https://pandas.pydata.org>_ - data management library used for structuring results data for post-processing
-* HDF5 <https://www.h5py.org>_ - Database-like data format used for storing results from some simulation tools and used to read in said data for post-processing
-* seaborn <https://seaborn.pydata.org>_ - data visualization library used for presenting results out of TESP
-* Pyomo <https://www.pyomo.org>_ - optimization modeling language used to formulate some of the multi-period optimizations common in TESP
-* Networkx <https://networkx.org>_ - graph modeling package used to analyze some of the relational graphs and/or models of the power and communication network in TESP
+* `Matplotlib <https://matplotlib.org>`_ - data visualization library used for presenting results out of TESP
+* `NumPy <https://numpy.org>`_ - data management library used for structuring results data for post-processing
+* `pandas <https://pandas.pydata.org>`_ - data management library used for structuring results data for post-processing
+* `HDF5 <https://www.h5py.org>`_ - Database-like data format used for storing results from some simulation tools and used to read in said data for post-processing
+* `seaborn <https://seaborn.pydata.org>`_ - data visualization library used for presenting results out of TESP
+* `Pyomo <https://www.pyomo.org>`_ - optimization modeling language used to formulate some of the multi-period optimizations common in TESP
+* `Networkx <https://networkx.org>`_ - graph modeling package used to analyze some of the relational graphs and/or models of the power and communication network in TESP
 
 
