@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 sims="/mnt/simdata/ready"
 

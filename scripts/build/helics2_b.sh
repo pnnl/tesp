@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . ~/environment
+  . "${HOME}/tespEnv"
 fi
 
 cd "${REPODIR}/HELICS-src" || exit
@@ -23,4 +23,4 @@ sudo make install
 
 # Install HELICS Python 3 bindings for a version that exactly matches the local build
 ver=$(helics_recorder --version)
-pip3 install helics==${ver% *}
+pip3 install helics=="${ver% *}"

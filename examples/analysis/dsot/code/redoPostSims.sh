@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 usr="oste814"
 sims="/mnt/simdata/done"

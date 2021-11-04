@@ -1,13 +1,13 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . ~/environment
+  . "${HOME}/tespEnv"
 fi
 
-cd "${REPODIR}/pybindgen"
+cd "${REPODIR}/pybindgen" || exit
 sudo python3 setup.py install
 
-cd "${REPODIR}/ns-3-dev"
+cd "${REPODIR}/ns-3-dev" || exit
 # first build: use the following command for HELICS interface to ns3:
 # git clone -b feature/13b https://github.com/GMLC-TDC/helics-ns3 contrib/helics
 # subsequent builds: use the following 3 commands to update HELICS interface code:

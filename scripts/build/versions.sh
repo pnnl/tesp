@@ -1,18 +1,22 @@
 #!/bin/bash
 
+if [[ -z ${INSTDIR} ]]; then
+  . "${HOME}/tespEnv"
+fi
+
 echo
 echo "++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++"
 echo
 
 FILE="${INSTDIR}/bin/fncs_broker"
 if [[ -f "$FILE" ]]; then
-  echo FNCS broker installed
+  echo FNCS installed
 else
-  echo FNCS broker not installed
+  echo FNCS not installed
 fi
 
 echo 
-echo Helics $(helics_broker --version)
+echo "Helics, $(helics_broker --version)"
 
 echo 
 gridlabd --version

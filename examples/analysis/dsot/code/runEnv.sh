@@ -1,3 +1,4 @@
+#!/bin/bash
 
 git describe > tesp_version
 docker images -q tesp_private:latest > docker_version

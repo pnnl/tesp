@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 #max minus one dockers can run
 max=3

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . ~/environment
+  . "${HOME}/tespEnv"
 fi
 
 IPOPT_VERSION=3.13.2
@@ -9,7 +9,7 @@ ASL_VERSION=2.0
 MUMPS_VERSION=2.1
 
 if [[ $1 == "clean" ]]; then
-  cd "${WAREDIR}"
+  cd "${WAREDIR}" || exit
   sudo rm -rf Ipopt
   sudo rm -rf ThirdParty-ASL
   sudo rm -rf ThirdParty-Mumps

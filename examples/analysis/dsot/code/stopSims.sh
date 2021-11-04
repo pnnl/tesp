@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 for dir in $1*
 do

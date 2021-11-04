@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . ~/environment
+  . "${HOME}/tespEnv"
 fi
 
 echo
@@ -58,9 +58,12 @@ else
 
   echo "Installing TESP binaries..."
   wget --no-check-certificate https://mepas.pnnl.gov/FramesV1/Install/tesp_binaries.zip
-  cd "${INSTDIR}" exit
+  cd "${INSTDIR}" || exit
   unzip tesp_binaries.zip .
 fi
+
+echo
+echo "Installation logs are found in '${TESPDIR}/scripts/build'"
 
 # creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
