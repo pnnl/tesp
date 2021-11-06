@@ -18,13 +18,14 @@ The function call order for this agent is:
             bid_accepted()
 
 """
-import pyomo.environ as pyo
-import pyomo.opt as opt
+import math
 import numpy as np
 from copy import deepcopy
-import math
+import pyomo.environ as pyo
+import pyomo.opt as opt
 import logging as log
-import tesp_support.helpers_dsot_v1 as helpers
+import tesp_support.helpers as helpers
+import tesp_support.helpers_dsot_v1 as agent_helpers
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
@@ -649,7 +650,7 @@ class WaterHeaterDSOT:
         model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_ine1)
         model.con2 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
 
-        results = helpers.get_run_solver("wh_" + self.name, pyo, model, self.solver)
+        results = agent_helpers.get_run_solver("wh_" + self.name, pyo, model, self.solver)
 
         Quantity = [0 for i in self.TIME]
         SC = [0 for i in self.TIME]

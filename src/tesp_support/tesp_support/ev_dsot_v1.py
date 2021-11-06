@@ -28,8 +28,9 @@ import pyomo.environ as pyo
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
+import tesp_support.helpers as helpers
+import tesp_support.helpers_dsot_v1 as agent_helpers
 import tesp_support.feederGenerator_dsot_v1 as fg
-import tesp_support.helpers_dsot_v1 as helpers
 
 logger = log.getLogger()
 
@@ -457,7 +458,7 @@ class EVDSOT:
 
         # print('home depart hours: ', self.home_depart_hours)
         # print('day_ahead_price_forcast...', self.f_DA)
-        results = helpers.get_run_solver('ev_' + self.name, pyo, model, self.solver)
+        results = agent_helpers.get_run_solver('ev_' + self.name, pyo, model, self.solver)
         # print('*** optimization model ***:')
         # print(model.pprint())
         # print('ev objective function is ', pyo.value(model.obj))

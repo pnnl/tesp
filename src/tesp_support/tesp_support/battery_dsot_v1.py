@@ -27,8 +27,8 @@ from copy import deepcopy
 import logging as log
 import pyomo.environ as pyo
 import pyomo.opt as opt
-import tesp_support.helpers_dsot_v1 as helpers
-
+import tesp_support.helpers as helpers
+import tesp_support.helpers_dsot_v1 as agent_helpers
 
 logger = log.getLogger()
 
@@ -328,7 +328,7 @@ class BatteryDSOT:
         model.con5 = pyo.Constraint(self.TIME,rule=self.con_rule_eq3)
 
         # print('day_ahead_price_forecast...', self.f_DA)
-        results = helpers.get_run_solver("bt_" + self.name, pyo, model, self.solver)
+        results = agent_helpers.get_run_solver("bt_" + self.name, pyo, model, self.solver)
         # print('*** optimization model ***:')
         # print(model.pprint())
         # print('bt objective function is ', pyo.value(model.obj))

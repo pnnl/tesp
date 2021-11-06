@@ -16,7 +16,8 @@ import pytz
 import pyomo.environ as pyo
 import pyomo.opt as opt
 from datetime import datetime, timedelta
-import tesp_support.helpers_dsot_v1 as helpers
+import tesp_support.helpers as helpers
+import tesp_support.helpers_dsot_v1 as agent_helpers
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
@@ -1979,7 +1980,7 @@ class HVACDSOT:  # TODO: update class name
             # Constraints
             model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
             # Solve
-            results = helpers.get_run_solver("hvac_" + self.name, pyo, model, self.solver)
+            results = agent_helpers.get_run_solver("hvac_" + self.name, pyo, model, self.solver)
             Quantity = [0 for _ in self.TIME]
             temp_room = [0 for _ in self.TIME]
             TOL = 0.00001  # Tolerance for checking bid
