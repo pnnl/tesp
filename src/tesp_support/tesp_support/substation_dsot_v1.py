@@ -56,10 +56,10 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     def timing(agent_name, start_stop):
         if profile:
             if start_stop:
-                proc_time0[agent_name] = time.clock()
+                proc_time0[agent_name] = time.perf_counter()
                 wall_time0[agent_name] = time.time()
             else:
-                proc_time[agent_name] += time.clock() - proc_time0[agent_name]
+                proc_time[agent_name] += time.perf_counter() - proc_time0[agent_name]
                 wall_time[agent_name] += time.time() - wall_time0[agent_name]
 
     profile = True

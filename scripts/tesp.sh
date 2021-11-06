@@ -108,7 +108,7 @@ echo
 echo ++++++++++++++ TESP
 git clone -b evolve https://github.com/pnnl/tesp.git
 # need for back port of DSOT
-# git clone -b master https://stash.pnnl.gov/scm/tesp/tesp-private.git
+# git clone -b main https://stash.pnnl.gov/scm/tesp/tesp-private.git
 
 echo
 echo ++++++++++++++ NS-3
@@ -138,7 +138,8 @@ svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_k
 # to Run pycharm
 # pycharm-community &> ~/charm.log&
 
-# Compile all relevant executables
 cd tesp/scripts || exit
+# Copy TESP environment to $HOME for shell scripts
 cp tespEnv "$HOME/"
+# Compile all relevant executables
 ./tesp_c.sh develop

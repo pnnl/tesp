@@ -7,7 +7,6 @@ TODO: update the purpose of this Agent
 """
 import math
 import numpy as np
-import tesp_support.helpers as helpers
 import logging as log
 from scipy import linalg
 import pulp
@@ -17,6 +16,7 @@ import pytz
 import pyomo.environ as pyo
 import pyomo.opt as opt
 from datetime import datetime, timedelta
+import tesp_support.helpers_dsot_v1 as helpers
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)

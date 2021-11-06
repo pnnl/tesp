@@ -15,9 +15,9 @@ import numpy as np
 import tesp_support.helpers_dsot_v1 as helpers
 import tesp_support.case_merge_dsot_v1 as cm
 import tesp_support.glm_dict_dsot_v1 as gd
-import tesp_support.commbldgenerator
-import tesp_support.feederGenerator_dsot_v1
-import tesp_support.copperplateFeederGenerator_dsot_v1
+import tesp_support.commbldgenerator as com_FG
+import tesp_support.feederGenerator_dsot_v1 as res_FG
+import tesp_support.copperplateFeederGenerator_dsot_v1 as cp_FG
 import prep_substation_dsot_v3 as prep
 
 
@@ -122,7 +122,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     if 'Q_bid_forecast_correction' in list(sys_config.keys()):
         sim['Q_bid_forecast_correction'] = sys_config['Q_bid_forecast_correction']
     else:
-        sim['Q_bid_forecast_correction'] = {"default":{"correct": False}}
+        sim['Q_bid_forecast_correction'] = {"default": {"correct": False}}
     sim['agent_debug_mode'] = sys_config['agent_debug_mode']
     sim['metricsFullDetail'] = sys_config['metricsFullDetail']
     sim['simplifiedFeeders'] = sys_config['simplifiedFeeders']
@@ -136,7 +136,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     if casetype['flexLoadCase'] == 1:
         print('Correction of DSO bid for 10 AM AMES bid is performed')
     else:
-        sim['Q_bid_forecast_correction']={'default':sim['Q_bid_forecast_correction']['default']}
+        sim['Q_bid_forecast_correction'] = {'default': sim['Q_bid_forecast_correction']['default']}
         print('NO 10 AM AMES bid correction')
 
     # We need to create the experiment folder. If it already exists, we delete it and then create it
@@ -327,7 +327,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         num_comm_customers = round(num_res_customers * dso_val['RCI customer count mix']['commercial'] /
                              dso_val['RCI customer count mix']['residential'])
         num_comm_bldgs = num_comm_customers / dso_val['comm_customers_per_bldg']
-        comm_bldgs_pop = tesp_support.commbldgenerator.define_comm_bldg(comm_config, dso_val['utility_type'], num_comm_bldgs)
+        comm_bldgs_pop = com_FG.define_comm_bldg(comm_config, dso_val['utility_type'], num_comm_bldgs)
         bldPrep['CommBldgPopulation'] = comm_bldgs_pop
 
         # print(json.dumps(comm_bldgs_pop, sort_keys = True, indent = 2))
@@ -356,7 +356,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             sim['OutputPath'] = caseName + '/' + feed_key
             sim['CaseName'] = feed_key
             case_config['BackboneFiles']['TaxonomyChoice'] = feed_val['name']
-            tesp_support.feederGenerator_dsot_v1.populate_feeder(config=case_config)
+            res_FG.populate_feeder(config=case_config)
 
             # Then we want to create a JSON dictionary with the Feeder information
             gd.glm_dict(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
@@ -390,7 +390,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                 sim['CaseName'] = feed_key
                 case_config['BackboneFiles']['TaxonomyChoice'] = sim['CopperplateFeederName']
                 case_config['BackboneFiles']['CopperplateFeederFile'] = sim['CopperplateFeederFile']
-                tesp_support.copperplateFeederGenerator_dsot_v1.populate_feeder(config=case_config)
+                cp_FG.populate_feeder(config=case_config)
 
                 gd.glm_dict(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
                             ercot=sim['simplifiedFeeders'])
@@ -445,14 +445,14 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
 if __name__ == "__main__":
     if len(sys.argv) > 6:
-        prepare_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]) )
+        prepare_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
     else:
         prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
-        #prepare_case(8, "8_system_case_config", pv=0, bt=1, fl=0, ev=0)
-        #prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
-        #prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
-        #prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
-        #prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
+        # prepare_case(8, "8_system_case_config", pv=0, bt=1, fl=0, ev=0)
+        # prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
+        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)
+        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=1, fl=0, ev=1)
+        # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=1, ev=1)
 
         # prepare_case(200, "200_system_case_config", pv=0, bt=0, fl=0, ev=0)
         # prepare_case(200, "200_system_case_config", pv=0, bt=1, fl=0, ev=0)

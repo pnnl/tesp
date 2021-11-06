@@ -12,29 +12,24 @@ The function call order for this agent is:
     
     Repeats at every hour:
         formulate_bid_da(){return BID}
-        
         set_price_forecast(forecasted_price)
-               
         Repeats at every 5 min:
             set_battery_SOC(fncs_str){updates C_init}
-            
             formulate_bid_rt(){return BID}
-            
             inform_bid(price){update RTprice}
-            
             bid_accepted(){update inv_P_setpoint and GridLAB-D P_out if needed}
-           
 
 """
 import math
 import numpy as np
-import tesp_support.helpers as helpers
-import tesp_support.feederGenerator_dsot_v1 as fg
 from copy import deepcopy
 import logging as log
 import pyomo.environ as pyo
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
+
+import tesp_support.feederGenerator_dsot_v1 as fg
+import tesp_support.helpers_dsot_v1 as helpers
 
 logger = log.getLogger()
 

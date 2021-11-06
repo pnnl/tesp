@@ -20,11 +20,11 @@ The function call order for this agent is:
 """
 import pyomo.environ as pyo
 import pyomo.opt as opt
-from tesp_support import helpers as helpers
 import numpy as np
 from copy import deepcopy
 import math
 import logging as log
+import tesp_support.helpers_dsot_v1 as helpers
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
