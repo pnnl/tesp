@@ -1,18 +1,18 @@
-rm *.log
-rm *.csv
-rm *.out
-rm *.xml
-rm *.audit
-rm broker_trace.txt
-rm *metrics.json
-rm *dict.json
-rm *FNCS_Config.txt
-rm *HELICS_gld_msg.json
-rm *HELICS_substation.json
-rm *Weather_Config.json
-rm *substation.yaml
-rm *.dat
-rm output/*
+rm -f *.log
+rm -f *.csv
+rm -f *.out
+rm -f *.xml
+rm -f *.audit
+rm -f broker_trace.txt
+rm -f *metrics.json
+rm -f *dict.json
+rm -f *FNCS_Config.txt
+rm -f *HELICS_gld_msg.json
+rm -f *HELICS_substation.json
+rm -f *Weather_Config.json
+rm -f *substation.yaml
+rm -f *.dat
+rm -f output/*
 rmdir output
-rm *.idf
-rm *.bnd
+rm -f *.idf
+rm -f *.bnd

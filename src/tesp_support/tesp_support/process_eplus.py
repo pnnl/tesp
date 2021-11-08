@@ -20,7 +20,8 @@ except:
 # Setting up logging
 logger = logging.getLogger(__name__)
 
-def plot_eplus (dict, title=None, pngfile=None):
+
+def plot_eplus (dict, title=None, save_file=None, save_only=False):
   hrs = dict['hrs']
   data = dict['data_e']
   idx_e = dict['idx_e']
@@ -113,9 +114,9 @@ def plot_eplus (dict, title=None, pngfile=None):
   for i in range(ncols):
     ax[2,i].set_xlabel('Hours')
 
-  if pngfile is not None:
-    plt.savefig(pngfile)
-  else:
+  if save_file is not None:
+    plt.savefig(save_file)
+  if not save_only:
     plt.show()
 
 def read_eplus_metrics (path, nameroot, quiet=False):
@@ -292,7 +293,7 @@ def read_eplus_metrics (path, nameroot, quiet=False):
   dict['idx_e'] = idx_e
   return dict
 
-def process_eplus (nameroot, title=None, pngfile=None):
+def process_eplus (nameroot, title=None, save_file=None, save_only=False):
   """ Plots the min and max line-neutral voltages for every billing meter
 
   This function reads *eplus_nameroot_metrics.json* for both metadata and data. 
@@ -305,9 +306,12 @@ def process_eplus (nameroot, title=None, pngfile=None):
 
   Args:
       nameroot (str): name of the TESP case, not necessarily the same as the EnergyPlus case, without the extension
+      title (str): supertitle for the page of plots.
+      save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
+      save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   """
   path = os.getcwd()
   dict = read_eplus_metrics (path, nameroot)
-  plot_eplus (dict, title, pngfile)
+  plot_eplus (dict, title, save_file, save_only)
 
 

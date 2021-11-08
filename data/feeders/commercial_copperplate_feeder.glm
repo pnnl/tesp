@@ -1,0 +1,98 @@
+// $Id: R3-12.47-1.glm 
+// 12.47 kV feeder 
+//********************************************* 
+clock{ 
+     timezone EST+5EDT; 
+     starttime '2000-07-01 0:00:00 EDT'; 
+     stoptime '2000-07-01 1:00:00 EDT'; 
+
+} 
+
+#set suppress_repeat_messages=1
+#set relax_naming_rules=1
+#set profiler=1
+#set iteration_limit=100000
+#set relax_naming_rules=1
+#set double_format=%+.12lg
+#set complex_format=%+.12lg%+.12lg%c
+//********************************************* 
+// modules 
+module tape; 
+module powerflow{ 
+     solver_method FBS; 
+      default_maximum_voltage_error 0.01;
+}; 
+
+//********************************************* 
+
+object node { 
+     name comm_copperplate_head; 
+     bustype SWING; 
+     phases ABCN; 
+     nominal_voltage 7200; 
+} 
+
+object regulator { 
+     name feeder_reg_C; 
+     from comm_copperplate_head; 
+     to feeder_head_meter; 
+     phases ABCN; 
+     configuration feeder_reg_cfg; 
+} 
+
+object regulator_configuration { 
+     name feeder_reg_cfg; 
+     Control OUTPUT_VOLTAGE; 
+     band_center 7500.0; 
+     band_width 120; 
+     connect_type WYE_WYE; 
+     time_delay 30; 
+     raise_taps 16; 
+     lower_taps 16; 
+     regulation 0.10; 
+     tap_pos_A 0; 
+     tap_pos_B 0; 
+     tap_pos_C 0; 
+} 
+
+// Meter at feeder head
+// Attach all commercial loads to this point.
+// Voltage at this point is 7200 V
+// It is assumed that transformers (either three phase or single phase) will be 
+// added for each commercial building along with a corresponding meter.
+object meter { 
+     name feeder_head_meter; 
+     phases ABCN; 
+     nominal_voltage 7200; 
+}
+
+object transformer_configuration {
+  name feeder_XF3_POLETOP_ABCN_30;
+  power_rating 30.00;
+  powerA_rating 10.00;
+  powerB_rating 10.00;
+  powerC_rating 10.00;
+  install_type POLETOP;
+  connect_type WYE_WYE;
+  primary_voltage 7200.0;
+  secondary_voltage 120.0;
+  resistance 0.01900;
+  reactance 0.01770;
+  shunt_resistance 126.58;
+  shunt_reactance 22.57;
+}
+
+object transformer {
+  name feeder_head_transformer;
+// downstream 12.67 kva on CS
+  phases ABCN;
+  from feeder_head_meter;
+  to bldg_meter;
+  configuration feeder_XF3_POLETOP_ABCN_30;
+}
+
+object meter { 
+     name bldg_meter; 
+     phases ABCN; 
+     nominal_voltage 120;  
+}

@@ -1,9 +1,9 @@
-rm *.log
-rm *.csv
-rm *.out
-rm *.xml
-rm *.audit
-rm broker_trace.txt
-rm *metrics.json
-rm *dict.json
-rm out.txt
+rm -f *.log
+rm -f *.csv
+rm -f *.out
+rm -f *.xml
+rm -f *.audit
+rm -f broker_trace.txt
+rm -f *metrics.json
+rm -f *dict.json
+rm -f out.txt

@@ -2,8 +2,11 @@
 import numpy as np
 import scipy.interpolate as ip
 import pypower.api as pp
-import tesp_support.api as tesp
+
+# the order is important in python 3.8 for fncs and api in tesp_support
 import tesp_support.fncs as fncs
+import tesp_support.api as tesp
+
 import json
 import math
 from copy import deepcopy
@@ -14,7 +17,7 @@ import sys, os
 casename = 'ercot_8'
 ames_DAM_case_file = './../DAMReferenceModel.dat'
 ames_RTM_case_file = './../RTMReferenceModel.dat'
-ames_base_case_file = os.path.expandvars('$TESP_INSTALL/share/support/pypower/ames_base_case.m')
+ames_base_case_file = os.path.expandvars('$TESPDIR/models/pypower/ames_base_case.m')
 
 load_shape = [0.6704,
               0.6303,

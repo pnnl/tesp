@@ -1,16 +1,16 @@
-rm *.log
-rm *.csv
-rm *.out
-rm out.txt
-rm *.xml
-rm *.png
-rm *metrics.json
-rm out*/*
+rm -f *.log
+rm -f *.csv
+rm -f *.out
+rm -f out.txt
+rm -f *.xml
+rm -f *.png
+rm -f *metrics.json
+rm -f out*/*
 rmdir out*
-rm Winter*.idf
-rm Summer*.idf
-rm ems*.idf
-rm Merged.idf
-rm *.epw
-rm *.tmy2
-rm *.bnd
+rm -f Winter*.idf
+rm -f Summer*.idf
+rm -f ems*.idf
+rm -f Merged.idf
+rm -f *.epw
+rm -f *.tmy2
+rm -f *.bnd

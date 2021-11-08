@@ -1,8 +1,8 @@
-rm *.out
-rm *.log
-rm *.xml
-rm *.json
-rm bill.csv
+rm -f *.out
+rm -f *.log
+rm -f *.xml
+rm -f *.json
+rm -f bill.csv
 git checkout climate.csv
 git checkout house_*.csv
 git checkout main_regulator.csv

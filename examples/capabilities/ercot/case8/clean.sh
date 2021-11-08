@@ -1,15 +1,15 @@
-rm *.xml
-rm *auction.yaml
-rm *substation.yaml
-rm *metrics.json
-rm *.log
-rm *_opf.csv
-rm *_pf.csv
-rm ercot_8.csv
-rm *_FNCS_Config.txt
-rm *_ercot.json
-rm *_dict.json
-rm weather*.json
-rm *.zpl
-rm *.h5
-rm *.dat
+rm -f *.xml
+rm -f *auction.yaml
+rm -f *substation.yaml
+rm -f *metrics.json
+rm -f *.log
+rm -f *_opf.csv
+rm -f *_pf.csv
+rm -f ercot_8.csv
+rm -f *_FNCS_Config.txt
+rm -f *_ercot.json
+rm -f *_dict.json
+rm -f weather*.json
+rm -f *.zpl
+rm -f *.h5
+rm -f *.dat

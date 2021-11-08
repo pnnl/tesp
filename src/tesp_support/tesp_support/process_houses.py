@@ -19,7 +19,7 @@ except:
 # Setting up logging
 logger = logging.getLogger(__name__)
 
-def plot_houses (dict):
+def plot_houses (dict, save_file=None, save_only=False):
   hrs = dict['hrs']
   data_h = dict['data_h']
   idx_h = dict['idx_h']
@@ -35,9 +35,12 @@ def plot_houses (dict):
   ax[0].set_ylabel('Degrees')
   ax[1].set_ylabel('kW')
   ax[1].set_xlabel('Hours')
-  ax[0].set_title ('HVAC at all Houses')
+  ax[0].set_title ('HVAC at {:d} Houses'.format(len(keys_h)))
 
-  plt.show()
+  if save_file is not None:
+    plt.savefig(save_file)
+  if not save_only:
+    plt.show()
 
 def read_house_metrics (nameroot, dictname = ''):
   # first, read and print a dictionary of all the monitored GridLAB-D objects
@@ -127,7 +130,7 @@ def read_house_metrics (nameroot, dictname = ''):
 
   return dict
 
-def process_houses(nameroot, dictname = ''):
+def process_houses(nameroot, dictname = '', save_file=None, save_only=True):
   """ Plots the temperature and HVAC power for every house
 
   This function reads *substation_nameroot_metrics.json* and
@@ -142,7 +145,9 @@ def process_houses(nameroot, dictname = ''):
   Args:
     nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
     dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+    save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
+    save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   """
   dict = read_house_metrics (nameroot, dictname)
-  plot_houses (dict)
+  plot_houses (dict, save_file, save_only)
 

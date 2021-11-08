@@ -6,21 +6,20 @@ Public Functions:
         :process_pypower: Reads the data and metadata, then makes the plots.  
 
 """
-import json;
-#import sys;
+import json
 import os
-import numpy as np;
+import numpy as np
 import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
     pass
 
 # Setting up logging
 logger = logging.getLogger(__name__)
 
-def plot_pypower (dict):
+def plot_pypower (dict, title=None, save_file=None, save_only=False):
   hrs = dict['hrs']
   data_b = dict['data_b']
   data_g = dict['data_g']
@@ -31,6 +30,8 @@ def plot_pypower (dict):
 
   # display a plot - hard-wired assumption of 3 generators from Case 9
   fig, ax = plt.subplots(4,2, sharex = 'col')
+  if title is not None:
+    fig.suptitle (title)
 
   ax[0,0].plot(hrs, data_b[0,:,idx_b['PD_IDX']], color='blue', label='Real')
   ax[0,0].plot(hrs, data_b[0,:,idx_b['QD_IDX']], color='red', label='Reactive')
@@ -69,7 +70,10 @@ def plot_pypower (dict):
   ax[3,0].set_xlabel('Hours')
   ax[3,1].set_xlabel('Hours')
 
-  plt.show()
+  if save_file is not None:
+    plt.savefig(save_file)
+  if not save_only:
+    plt.show()
 
 def read_pypower_metrics (path, nameroot):
   m_dict_path = os.path.join(path, f'{nameroot}_m_dict.json')
@@ -208,7 +212,7 @@ def read_pypower_metrics (path, nameroot):
   dict['idx_g'] = idx_g
   return dict
 
-def process_pypower(path, nameroot):
+def process_pypower(path, nameroot, title=None, save_file=None, save_only=True):
   """ Plots bus and generator quantities for the 9-bus system used in te30 or sgip1 examples
 
   This function reads *bus_nameroot_metrics.json* and 
@@ -228,8 +232,10 @@ def process_pypower(path, nameroot):
 
   Args:
       nameroot (str): file name of the TESP case, not necessarily the same as the PYPOWER case, without the JSON extension
+      save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
+      save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   """
 
   path = os.getcwd()
   dict = read_pypower_metrics (path, nameroot)
-  plot_pypower (dict)
+  plot_pypower (dict, title, save_file, save_only)

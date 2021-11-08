@@ -8,9 +8,9 @@ from math import sqrt;
 # we want the same pseudo-random variables each time, for repeatability
 np.random.seed (0)
 
-glmpath = '../../../support/feeders/'
-supportpath = '../../../support/schedules/'
-weatherpath = '../../../support/weather/'
+glmpath = '../../../data/feeders/'
+supportpath = '../../../data/schedules/'
+weatherpath = '../../../data/weather/'
 outpath = './'
 
 max208kva = 100.0

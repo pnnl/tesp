@@ -1,0 +1,171 @@
+{
+  "name" : "eplus_agent",
+  "period" : 300.0,
+  "time_delta" : 1,
+  "uninterruptible" : false,
+  "publications" : [ 
+    {
+      "global" : false,
+      "key" : "power_A",
+      "type" : "double",
+      "unit" : "W"
+    },
+    {
+      "global" : false,
+      "key" : "power_B",
+      "type" : "double",
+      "unit" : "W"
+    },
+    {
+      "global" : false,
+      "key" : "power_C",
+      "type" : "double",
+      "unit" : "W"
+    },
+    {
+      "global" : false,
+      "key" : "bill_mode",
+      "type" : "string"
+    },
+    {
+      "global" : false,
+      "key" : "price",
+      "type" : "double",
+      "unit" : "$/kwh"
+    },
+    {
+      "global" : false,
+      "key" : "monthly_fee",
+      "type" : "double",
+      "unit" : "$"
+    },
+    {
+      "global" : false,
+      "key" : "cooling_setpoint_delta",
+      "type" : "double",
+      "unit" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "heating_setpoint_delta",
+      "type" : "double",
+      "unit" : "degC"
+    }
+  ],
+  "subscriptions" : [
+    {
+      "key" : "sub1/clear_price", 
+      "type" : "double",
+      "required" : true,
+      "info" : "kwhr_price"
+    },
+    {
+      "key" : "energyPlus/EMS Heating Controlled Load", 
+      "type" : "double",
+      "required" : true,
+      "info" : "heating_controlled_load"
+    },
+    {
+      "key" : "energyPlus/EMS Cooling Controlled Load",
+      "type" : "double",
+      "required" : true,
+      "info" : "cooling_controlled_load"
+    },
+    {
+      "key" : "energyPlus/EMS Cooling Schedule Temperature",
+      "type" : "double",
+      "required" : true,
+      "info" : "cooling_schedule_temperature"
+    },
+    {
+      "key" : "energyPlus/EMS Heating Schedule Temperature",
+      "type" : "double",
+      "required" : true,
+      "info" : "heating_schedule_temperature"
+    },
+    {
+      "key" : "energyPlus/EMS Cooling Setpoint Temperature",
+      "type" : "double",
+      "required" : true,
+      "info" : "cooling_setpoint_temperature"
+    },
+    {
+      "key" : "energyPlus/EMS Heating Setpoint Temperature",
+      "type" : "double",
+      "required" : true,
+      "info" : "heating_setpoint_temperature"
+    },
+    {
+      "key" : "energyPlus/EMS Cooling Current Temperature",
+      "type" : "double",
+      "required" : true,
+      "info" : "cooling_current_temperature"
+    },
+    {
+      "key" : "energyPlus/EMS Heating Current Temperature",
+      "type" : "double",
+      "required" : true,
+      "info" : "heating_current_temperature"
+    },
+    {
+      "key" : "energyPlus/EMS Cooling Power State",
+      "type" : "string",
+      "required" : true,
+      "info" : "cooling_power_state"
+    },
+    {
+      "key" : "energyPlus/EMS Heating Power State",
+      "type" : "string",
+      "required" : true,
+      "info" : "heating_power_state"
+    },
+    {
+      "key" : "energyPlus/EMS Cooling Volume",
+      "type" : "double",
+      "required" : true,
+      "info" : "cooling_volume"
+    },
+    {
+      "key" : "energyPlus/EMS Heating Volume",
+      "type" : "double",
+      "required" : true,
+      "info" : "heating_volume"
+    },
+    {
+      "key" : "energyPlus/EMS Occupant Count",
+      "type" : "int",
+      "required" : true,
+      "info" : "occupants_total"
+    },
+    {
+      "key" : "energyPlus/EMS Indoor Air Temperature",
+      "type" : "double",
+      "required" : true,
+      "info" : "indoor_air"
+    },
+    {
+      "key" : "energyPlus/WHOLE BUILDING Facility Total Electric Demand Power",
+      "type" : "double",
+      "required" : true,
+      "info" : "electric_demand_power"
+    },
+    {
+      "key" : "energyPlus/WHOLE BUILDING Facility Total HVAC Electric Demand Power",
+      "type" : "double",
+      "required" : true,
+      "info" : "hvac_demand_power"
+    },
+    {
+      "key" : "energyPlus/FACILITY Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time",
+      "type" : "double",
+      "required" : true,
+      "info" : "ashrae_uncomfortable_hours"
+    },
+    {
+      "key" : "energyPlus/Environment Site Outdoor Air Drybulb Temperature",
+      "type" : "double",
+      "required" : true,
+      "info" : "outdoor_air"
+    }
+  ]
+}

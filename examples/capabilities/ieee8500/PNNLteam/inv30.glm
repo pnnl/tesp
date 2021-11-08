@@ -218,23 +218,23 @@ object load {
   nominal_voltage 7200;
   phases ABCN;
   parent F1_transformer_meter;
-	
+
   base_power_A 100000.0;
   base_power_B 100000.0;
   base_power_C 100000.0;
-	 
+
   power_pf_A 0.9;
   power_pf_B 0.9;
   power_pf_C 0.9;
-  
+
   power_fraction_A 1.0;
   power_fraction_B 1.0;
   power_fraction_C 1.0;
-  
+
   current_fraction_A 0.0;
   current_fraction_B 0.0;
   current_fraction_C 0.0;
-  
+
   impedance_fraction_A 0.0;
   impedance_fraction_B 0.0;
   impedance_fraction_C 0.0;
@@ -734,7 +734,7 @@ object triplex_meter {
 	name F1_tpm_flatrate_B7;
 	groupid F1_flatrate_meter;
 	phases SB;
-	nominal_voltage 120;	
+	nominal_voltage 120;
 	bill_mode UNIFORM;
   price ${FIXED_PRICE};
   bill_day 1;
@@ -2208,7 +2208,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B0;
 		phases BS;
@@ -2216,10 +2216,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2240,8 +2240,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B0;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2257,7 +2255,7 @@ object triplex_meter {
 	phases CS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_C1;
 		phases CS;
@@ -2265,10 +2263,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2289,8 +2287,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C1;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2306,7 +2302,7 @@ object triplex_meter {
 	phases CS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_C2;
 		phases CS;
@@ -2314,10 +2310,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2338,8 +2334,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C2;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2355,7 +2349,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B3;
 		phases BS;
@@ -2363,10 +2357,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2387,8 +2381,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B3;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2404,7 +2396,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B4;
 		phases BS;
@@ -2412,10 +2404,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2436,8 +2428,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B4;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2453,7 +2443,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A5;
 		phases AS;
@@ -2461,10 +2451,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2485,8 +2475,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A5;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2502,7 +2490,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B6;
 		phases BS;
@@ -2510,10 +2498,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2534,8 +2522,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B6;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2551,7 +2537,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B7;
 		phases BS;
@@ -2559,10 +2545,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2583,8 +2569,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B7;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2600,7 +2584,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A8;
 		phases AS;
@@ -2608,10 +2592,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2632,8 +2616,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A8;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2649,7 +2631,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A9;
 		phases AS;
@@ -2657,10 +2639,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2681,8 +2663,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A9;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2698,7 +2678,7 @@ object triplex_meter {
 	phases CS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_C10;
 		phases CS;
@@ -2706,10 +2686,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2730,8 +2710,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C10;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2747,7 +2725,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A11;
 		phases AS;
@@ -2755,10 +2733,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2779,8 +2757,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A11;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2796,7 +2772,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A12;
 		phases AS;
@@ -2804,10 +2780,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2828,8 +2804,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A12;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2845,7 +2819,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A13;
 		phases AS;
@@ -2853,10 +2827,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2877,8 +2851,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A13;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2894,7 +2866,7 @@ object triplex_meter {
 	phases CS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_C14;
 		phases CS;
@@ -2902,10 +2874,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2926,8 +2898,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C14;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2943,7 +2913,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A15;
 		phases AS;
@@ -2951,10 +2921,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -2975,8 +2945,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A15;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -2992,7 +2960,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A16;
 		phases AS;
@@ -3000,10 +2968,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3024,8 +2992,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A16;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3041,7 +3007,7 @@ object triplex_meter {
 	phases CS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_C17;
 		phases CS;
@@ -3049,10 +3015,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3073,8 +3039,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C17;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3090,7 +3054,7 @@ object triplex_meter {
 	phases CS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_C18;
 		phases CS;
@@ -3098,10 +3062,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3122,8 +3086,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C18;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3139,7 +3101,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B19;
 		phases BS;
@@ -3147,10 +3109,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3171,8 +3133,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B19;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3188,7 +3148,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B20;
 		phases BS;
@@ -3196,10 +3156,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3220,8 +3180,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B20;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3237,7 +3195,7 @@ object triplex_meter {
 	phases CS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_C21;
 		phases CS;
@@ -3245,10 +3203,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3269,8 +3227,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C21;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3286,7 +3242,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B22;
 		phases BS;
@@ -3294,10 +3250,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3318,8 +3274,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B22;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3335,7 +3289,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B23;
 		phases BS;
@@ -3343,10 +3297,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3367,8 +3321,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B23;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3384,7 +3336,7 @@ object triplex_meter {
 	phases BS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_B24;
 		phases BS;
@@ -3392,10 +3344,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3416,8 +3368,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B24;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3433,7 +3383,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A25;
 		phases AS;
@@ -3441,10 +3391,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3465,8 +3415,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A25;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3482,7 +3430,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A26;
 		phases AS;
@@ -3490,10 +3438,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3514,8 +3462,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A26;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3531,7 +3477,7 @@ object triplex_meter {
 	phases CS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_C27;
 		phases CS;
@@ -3539,10 +3485,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3563,8 +3509,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C27;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3580,7 +3524,7 @@ object triplex_meter {
 	phases AS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_A28;
 		phases AS;
@@ -3588,10 +3532,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3612,8 +3556,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A28;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
@@ -3629,7 +3571,7 @@ object triplex_meter {
 	phases CS;
 	nominal_voltage 120;
 	groupid inverter_meter;
-	
+
 	object inverter {
 		name inv_F1_house_C29;
 		phases CS;
@@ -3637,10 +3579,10 @@ object triplex_meter {
 		power_factor 1;
 		// use_multipoint_efficiency TRUE;
 		inverter_manufacturer XANTREX;
-		maximum_dc_power 6500; 
+		maximum_dc_power 6500;
 		four_quadrant_control_mode ${INVERTER_MODE};
 		generator_status ONLINE;
-		rated_power 6500;	
+		rated_power 6500;
 		inverter_efficiency 0.90;
 		V_base ${INV_VBASE};
 		V1 ${INV_V1};
@@ -3661,8 +3603,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C29;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			rated_power 7500;
 		};
