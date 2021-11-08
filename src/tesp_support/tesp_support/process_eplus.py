@@ -6,14 +6,20 @@ Public Functions:
         :process_eplus: Reads the data and metadata, then makes the plots.  
 
 """
-import json;
-import sys;
-import numpy as np;
+import json
+import sys
+import os
+import numpy as np
+import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
+
+# Setting up logging
+logger = logging.getLogger(__name__)
+
 
 def plot_eplus (dict, title=None, save_file=None, save_only=False):
   hrs = dict['hrs']
@@ -113,15 +119,17 @@ def plot_eplus (dict, title=None, save_file=None, save_only=False):
   if not save_only:
     plt.show()
 
-def read_eplus_metrics (nameroot, quiet=False):
+def read_eplus_metrics (path, nameroot, quiet=False):
+  eplus_dict_path = os.path.join(path, f'eplus_{nameroot}_metrics.json')
+
   # read the JSON file
   try:
-    lp = open ('eplus_' + nameroot + '_metrics.json').read()
+    lp = open (eplus_dict_path).read()
     lst = json.loads(lp)
     if not quiet:
-      print ('Metrics data starting', lst['StartTime'])
+      print('Metrics data starting', lst['StartTime'])
   except:
-    print ('eplus metrics file could not be read')
+    logger.error(f'Unable to open eplus metrics file {eplus_dict_path}')
     return
 
   # make a sorted list of the times
@@ -302,7 +310,8 @@ def process_eplus (nameroot, title=None, save_file=None, save_only=False):
       save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
       save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   """
-  dict = read_eplus_metrics (nameroot)
+  path = os.getcwd()
+  dict = read_eplus_metrics (path, nameroot)
   plot_eplus (dict, title, save_file, save_only)
 
 

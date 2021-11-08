@@ -7,19 +7,15 @@ Transactive Energy Simulation Platform (TESP)
 =============================================
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
    :caption: Contents:
 
    TESP_Overview
-   Using_TESP
-   Building_TESP
-   Design_Reference
-   Code_Reference
-   SGIP1_Example
-   Next_Version
-   DSOT_Study
-   zBibliography
-   LICENSE
+   Installing_Building_TESP
+   Demonstrations_and_Examples
+   Developing_Customizing_TESP
+   References
+   Archive
 
 Indices and tables
 ==================

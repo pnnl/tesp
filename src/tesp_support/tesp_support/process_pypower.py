@@ -6,14 +6,18 @@ Public Functions:
         :process_pypower: Reads the data and metadata, then makes the plots.  
 
 """
-import json;
-import sys;
-import numpy as np;
+import json
+import os
+import numpy as np
+import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
     pass
+
+# Setting up logging
+logger = logging.getLogger(__name__)
 
 def plot_pypower (dict, title=None, save_file=None, save_only=False):
   hrs = dict['hrs']
@@ -71,16 +75,20 @@ def plot_pypower (dict, title=None, save_file=None, save_only=False):
   if not save_only:
     plt.show()
 
-def read_pypower_metrics (nameroot):
+def read_pypower_metrics (path, nameroot):
+  m_dict_path = os.path.join(path, f'{nameroot}_m_dict.json')
+  b_dict_path = os.path.join(path, f'bus_{nameroot}_metrics.json')
+  g_dict_path = os.path.join(path, f'gen_{nameroot}_metrics.json')
+
   # first, read and print a dictionary of relevant PYPOWER objects
-  lp = open (nameroot + '_m_dict.json').read()
+  lp = open (m_dict_path).read()
   dict = json.loads(lp)
   baseMVA = dict['baseMVA']
   gen_keys = list(dict['generators'].keys())
   gen_keys.sort()
   bus_keys = list(dict['dsoBuses'].keys())
   bus_keys.sort()
-  print ('\n\nFile', nameroot, 'has baseMVA', baseMVA)
+  print ('\n\nFile', m_dict_path, 'has baseMVA', baseMVA)
   print('\nGenerator Dictionary:')
   print('Unit Bus Type Pnom Pmax Costs[Start Stop C2 C1 C0]')
   for key in gen_keys:
@@ -93,7 +101,7 @@ def read_pypower_metrics (nameroot):
     print (key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])
 
   # read the bus metrics file
-  lp_b = open ('bus_' + nameroot + '_metrics.json').read()
+  lp_b = open (b_dict_path).read()
   lst_b = json.loads(lp_b)
   print ('\nBus Metrics data starting', lst_b['StartTime'])
 
@@ -162,7 +170,7 @@ def read_pypower_metrics (nameroot):
   print ('Minimum bus voltage = {:.4f} {:s}'.format (data_b[0,:,idx_b['VMIN_IDX']].min(), idx_b['VMIN_UNITS']))
 
   # read the generator metrics file
-  lp_g = open ('gen_' + nameroot + '_metrics.json').read()
+  lp_g = open (g_dict_path ).read()
   lst_g = json.loads(lp_g)
   print ('\nGenerator Metrics data starting', lst_g['StartTime'])
   # make a sorted list of the times, and NumPy array of times in hours
@@ -204,7 +212,7 @@ def read_pypower_metrics (nameroot):
   dict['idx_g'] = idx_g
   return dict
 
-def process_pypower(nameroot, title=None, save_file=None, save_only=True):
+def process_pypower(path, nameroot, title=None, save_file=None, save_only=True):
   """ Plots bus and generator quantities for the 9-bus system used in te30 or sgip1 examples
 
   This function reads *bus_nameroot_metrics.json* and 
@@ -228,5 +236,6 @@ def process_pypower(nameroot, title=None, save_file=None, save_only=True):
       save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   """
 
-  dict = read_pypower_metrics (nameroot)
+  path = os.getcwd()
+  dict = read_pypower_metrics (path, nameroot)
   plot_pypower (dict, title, save_file, save_only)

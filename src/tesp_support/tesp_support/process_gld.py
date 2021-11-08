@@ -6,24 +6,44 @@ Public Functions:
     :process_gld: Reads the data and metadata, then makes the plots.  
 
 '''
-import json;
-import sys;
-import numpy as np;
+import json
+import sys
+import os
+import numpy as np
+import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
 
-def read_gld_metrics (nameroot, dictname = ''):
+
+# Setting up logging
+logger = logging.getLogger(__name__)
+
+def read_gld_metrics (path, nameroot, dictname = ''):
+  glm_dict_path = os.path.join(path, f'{nameroot}_glm_dict.json' )
+  sub_dict_path = os.path.join(path, f'substation_{nameroot}_metrics.json')
+  house_dict_path = os.path.join(path, f'house_{nameroot}_metrics.json')
+  bm_dict_path = os.path.join(path, f'billing_meter_{nameroot}_metrics.json')
+  inverter_dict_path = os.path.join(path, f'inverter_{nameroot}_metrics.json')
+  cap_dict_path = os.path.join(path, f'capacitor_{nameroot}_metrics.json')
+  reg_dict_path = os.path.join(path, f'regulator_{nameroot}_metrics.json')
+
   # the feederGenerator now inserts metrics_collector objects on capacitors and regulators
-  bCollectedRegCapMetrics = True 
+  bCollectedRegCapMetrics = True
 
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
-      lp = open (dictname).read()
+    try:
+      lp = open(dictname).read()
+    except:
+      logger.error(f'Unable to open GridLAB-D metrics file {dictname}')
   else:
-      lp = open (nameroot + '_glm_dict.json').read()
+    try:
+      lp = open(glm_dict_path).read()
+    except:
+      logger.error(f'Unable to open GridLAB-D metrics file {glm_dict_path}')
   dict = json.loads(lp)
   fdr_keys = list(dict['feeders'].keys())
   fdr_keys.sort()
@@ -42,7 +62,7 @@ def read_gld_metrics (nameroot, dictname = ''):
 
   # parse the substation metrics file first; there should just be one entity per time sample
   # each metrics file should have matching time points
-  lp_s = open ('substation_' + nameroot + '_metrics.json').read()
+  lp_s = open (sub_dict_path).read()
   lst_s = json.loads(lp_s)
   print ('\nMetrics data starting', lst_s['StartTime'])
 
@@ -60,7 +80,8 @@ def read_gld_metrics (nameroot, dictname = ''):
 
   # find the actual substation name (not a feeder name) as GridLAB-D wrote it to the metrics file
   sub_key = list(lst_s[time_key].keys())[0]
-  print ('\n\nFile', nameroot, 'has substation', sub_key, 'at bulk system bus', bulkBus, 'with', xfMVA, 'MVA transformer')
+  print ('\n\nFile', sub_dict_path, 'has substation', sub_key, 'at bulk system bus',
+         bulkBus, 'with', xfMVA, 'MVA transformer')
   print('\nFeeder Dictionary:')
   for key in fdr_keys:
     row = dict['feeders'][key]
@@ -100,12 +121,13 @@ def read_gld_metrics (nameroot, dictname = ''):
          '{:.3f}'.format (data_s[0,:,idx_s['SUB_LOSSES_IDX']].mean()), idx_s['SUB_LOSSES_UNITS'])
 
   # read the other JSON files; their times (hrs) should be the same
-  lp_h = open ('house_' + nameroot + '_metrics.json').read()
+  lp_h = open (house_dict_path).read()
   lst_h = json.loads(lp_h)
-  lp_m = open ('billing_meter_' + nameroot + '_metrics.json').read()
+  lp_m = open (bm_dict_path ).read()
   lst_m = json.loads(lp_m)
-  lp_i = open ('inverter_' + nameroot + '_metrics.json').read()
+  lp_i = open (inverter_dict_path).read()
   lst_i = json.loads(lp_i)
+
 
   # houses
   idx_h = {}
@@ -117,7 +139,7 @@ def read_gld_metrics (nameroot, dictname = ''):
 #    print (key, val['index'], val['units'])
     if key == 'air_temperature_avg':
       idx_h['HSE_AIR_AVG_IDX'] = val['index']
-      idx_h['HSE_AIR_AVG_UNITS'] = val['index']
+      idx_h['HSE_AIR_AVG_UNITS'] = val['units']
     elif key == 'air_temperature_max':
       idx_h['HSE_AIR_MAX_IDX'] = val['index']
       idx_h['HSE_AIR_MAX_UNITS'] = val['units']
@@ -293,9 +315,9 @@ def read_gld_metrics (nameroot, dictname = ''):
       j = j + 1
 
   # capacitors and regulators
-  lp_c = open ('capacitor_' + nameroot + '_metrics.json').read()
+  lp_c = open (cap_dict_path).read()
   lst_c = json.loads(lp_c)
-  lp_r = open ('regulator_' + nameroot + '_metrics.json').read()
+  lp_r = open (reg_dict_path).read()
   lst_r = json.loads(lp_r)
 
   idx_c = {}
@@ -343,7 +365,7 @@ def read_gld_metrics (nameroot, dictname = ''):
     print ('Total tap changes =', data_r[:,-1,idx_r['REG_COUNT_IDX']].sum())
 
   if data_m is not None:
-    print ('Total meter bill =', 
+    print ('Total meter bill =',
          '{:.3f}'.format (data_m[:,-1,idx_m['MTR_BILL_IDX']].sum()))
 
   dict = {}
@@ -580,7 +602,7 @@ def process_gld(nameroot, dictname = '', save_file=None, save_only=False):
     save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
     save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   '''
-
-  dict = read_gld_metrics (nameroot, dictname)
+  path = os.getcwd()
+  dict = read_gld_metrics (path, nameroot, dictname)
   plot_gld (dict, save_file, save_only)
 

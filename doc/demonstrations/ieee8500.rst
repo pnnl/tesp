@@ -1,0 +1,29 @@
+
+ieee8500 (runs longer)
+~~~~~~~~~~~~~~~~~~~~~~
+
+To run and plot the GridLAB-D base case, with no transactive agents:
+
+::
+
+ cd ~/tesp/examples/ieee8500
+ python3 glm_dict.py IEEE_8500
+ gridlabd IEEE_8500.glm
+ python3 process_gld.py IEEE_8500
+ python3 process_voltages.py IEEE_8500
+
+To run and plot the PNNL variant with smart inverter functions and
+precooling thermostat agents, use the following steps. There are
+also two faster 30-house examples in this directory, one of them
+with agent-based calculation of the house equivalent thermal parameters.
+
+::
+
+ cd ~/tesp/examples/ieee8500/PNNLteam
+ python3 prepare_cases.py
+ ./run8500.sh
+ python3 plots.py inv8500
+ python3 bill.py inv8500
+ python3 plot_invs.py inv8500
+
+For more details, see `IEEE8500 Example Readme`_

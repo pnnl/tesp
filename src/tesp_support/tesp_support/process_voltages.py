@@ -6,21 +6,32 @@ Public Functions:
     :process_voltages: Reads the data and metadata, then makes the plot.  
 
 """
-import json;
-import sys;
-import numpy as np;
+import json
+import sys
+import numpy as np
+import logging
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
+
+# Setting up logging
+logger = logging.getLogger(__name__)
 
 def read_voltage_metrics(nameroot, dictname = ''):
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
-      lp = open (dictname).read()
+      try:
+        lp = open(dictname).read()
+      except:
+        logger.error(f'Unable to open voltage metric file {dictname}')
   else:
-      lp = open (nameroot + "_glm_dict.json").read()
+      glm_dict_path = f'{nameroot}"_glm_dict.json"'
+      try:
+        lp = open(glm_dict_path).read()
+      except:
+        logger.error(f'Unable to open voltage metrics file {glm_dict_path}')
   dict = json.loads(lp)
   mtr_keys = list(dict['billingmeters'].keys())
   mtr_keys.sort()
