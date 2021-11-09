@@ -21,4 +21,11 @@ export PATH=$PATH:$INSTDIR/energyplus/PreProcess
 export PATH=$PATH:$INSTDIR/energyplus/PostProcess
 export PATH=$PATH:$TESPDIR/scripts/helpers
 
+# PSST environment variables
+export PSST_SOLVER=cbc
+# 'PSST_SOLVER path' -- one of "cbc", "ipopt", "/ibm/cplex/bin/x86-64_linux/cplexamp"
+export PSST_WARNING=ignore
+# 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
+
+# PROXY
 # export HTTPS_PROXY=http://proxy01.pnl.gov:3128

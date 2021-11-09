@@ -19,7 +19,8 @@ pip3 install -e . > "${TESPDIR}/scripts/build/tespapi.log" 2>&1
 
 #develop psst api
 echo "Installing Python PSST..."
-cd "${REPODIR}/psst" || exit
+#cd "${REPODIR}/psst" || exit
+cd "${REPODIR}/AMES-V5.0/psst" || exit
 pip3 install -e . > "${TESPDIR}/scripts/build/psst.log" 2>&1
 
 #  pip3 install tesp_support --upgrade

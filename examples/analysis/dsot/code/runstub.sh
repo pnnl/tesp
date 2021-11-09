@@ -1,13 +1,13 @@
 #!/bin/bash
 
-mkdir $1
+mkdir -p $1
 if [ -d "$1" ]
 then
 
   archive_folder="/mnt/simdata/done"
   python3 -c "import tesp_support.helpers_dsot_v1 as tesp; tesp.write_management_script('$archive_folder', '$1', '.', 0, 0)"
 
-  cd $1
+  cd "$1" || exit
   rm -f *metrics.h5
   rm -f *metrics.json
   rm -f *dict.json
@@ -15,6 +15,7 @@ then
   rm -f *opf.csv
   rm -f *pf.csv
   rm -f *.dat
+  mkdir -p PyomoTempFiles
 
   cp -f ../8_system_case_config.json generate_case_config.json
   #cp -f ../8_hi_system_case_config.json generate_case_config.json

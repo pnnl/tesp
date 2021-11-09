@@ -22,7 +22,7 @@
   "caseStartYear": 2016,
   "caseEndYear": 2016,
   "ames": true,
-  "solver": "cplex",
+  "solver": "cbc",
   "numCore": 12,
   "market": false,
   "priceSensLoad": false,

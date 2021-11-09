@@ -3,16 +3,16 @@ import math
 import json
 import logging as log
 import numpy as np
+import pandas as pd
 import pypower.api as pp
-# import tesp_support.api as tesp
+import psst.cli as pst
 import tesp_support.fncs as fncs
 from copy import deepcopy
-import psst.cli as pst
-import pandas as pd
 from datetime import datetime
-from tesp_support.metrics_collector import MetricsStore, MetricsCollector
-from tesp_support.fncsPYPOWER import load_json_case
-
+from .metrics_collector import MetricsStore, MetricsCollector
+from .fncsPYPOWER import load_json_case
+from .helpers import parse_fncs_mva
+from .helpers import print_mod_load
 
 def make_generater_plants(ppc, renewables):
     gen = ppc['gen']
@@ -86,78 +86,6 @@ def make_dictionary(ppc):
               'BranchesOut': branchesout}
     print(json.dumps(ppdict), file=dp, flush=True)
     dp.close()
-
-
-def parse_mva(arg):
-    """ Helper function to parse P+jQ from a FNCS value
-
-    Args:
-      arg (str): FNCS value in rectangular format
-
-    Returns:
-      float, float: P [MW] and Q [MVAR]
-    """
-    tok = arg.strip('; MWVAKdrij')
-    bLastDigit = False
-    bParsed = False
-    vals = [0.0, 0.0]
-    for i in range(len(tok)):
-        if tok[i] == '+' or tok[i] == '-':
-            if bLastDigit:
-                vals[0] = float(tok[: i])
-                vals[1] = float(tok[i:])
-                bParsed = True
-                break
-        bLastDigit = tok[i].isdigit()
-    if not bParsed:
-        vals[0] = float(tok)
-
-    if 'd' in arg:
-        vals[1] *= (math.pi / 180.0)
-        p = vals[0] * math.cos(vals[1])
-        q = vals[0] * math.sin(vals[1])
-    elif 'r' in arg:
-        p = vals[0] * math.cos(vals[1])
-        q = vals[0] * math.sin(vals[1])
-    else:
-        p = vals[0]
-        q = vals[1]
-
-    if 'KVA' in arg:
-        p /= 1000.0
-        q /= 1000.0
-    elif 'MVA' in arg:
-        p *= 1.0
-        q *= 1.0
-    else:  # VA
-        p /= 1000000.0
-        q /= 1000000.0
-    return p, q
-
-
-def print_gld_load(ppc, gld_load, msg, ts):
-    bus = ppc['bus']
-    fncsBus = ppc['FNCS']
-    print(msg, 'at', ts)
-    print('bus, genidx, pbus, qbus, pcrv, qcrv, pgld, qgld, unresp, resp_max, c2, c1, c0, deg')
-    for row in fncsBus:
-        busnum = int(row[0])
-        gld_scale = float(row[2])
-        load = gld_load[busnum]
-        genidx = str(-load['genidx'])
-        print(busnum, genidx,
-              '{: .2f}'.format(bus[busnum - 1, 2]),
-              '{: .2f}'.format(bus[busnum - 1, 3]),
-              '{: .2f}'.format(load['pcrv']),
-              '{: .2f}'.format(load['qcrv']),
-              '{: .2f}'.format(load['p'] * gld_scale),
-              '{: .2f}'.format(load['q'] * gld_scale),
-              '{: .2f}'.format(load['unresp'] * gld_scale),
-              '{: .2f}'.format(load['resp_max'] * gld_scale),
-              '{: .8f}'.format(load['c2'] / gld_scale),
-              '{: .8f}'.format(load['c1']),
-              '{: .8f}'.format(load['c0']),
-              '{: .1f}'.format(load['deg']))
 
 
 def dist_slack(mpc, prev_load):
@@ -346,6 +274,7 @@ def tso_loop(casename):
     def scucDAM(data):
         if pst.SOLVER is not None:
             solver = pst.SOLVER
+
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         if day > -1:
             model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData, Op='scuc')
@@ -462,7 +391,7 @@ def tso_loop(casename):
         #
 
         lseDispatch = {}
-        if len(priceSenLoadData) is not 0:
+        if len(priceSenLoadData) != 0:
             for ld in sorted(instance.PriceSensitiveLoads.value):
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
@@ -515,6 +444,7 @@ def tso_loop(casename):
     def scedRTM(data, uc_df):
         if pst.SOLVER is not None:
             solver = pst.SOLVER
+
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         c.gen_status = uc_df.astype(int)
 
@@ -613,7 +543,7 @@ def tso_loop(casename):
         #   f.write("END_VOLTAGE_ANGLES\n")
 
         lseDispatch = {}
-        if len(priceSenLoadData) is not 0:
+        if len(priceSenLoadData) != 0:
             for ld in sorted(instance.PriceSensitiveLoads.value):
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
@@ -830,8 +760,8 @@ def tso_loop(casename):
 
                 tot_res_up = tot_dso + (tot_dso * 0.0001)
                 tot_res_down = tot_dso - (tot_dso * 0.0001)
-                #tot_res_up = tot_dso + (tot_dso * reserveUp * RTDur_in_hrs)
-                #tot_res_down = tot_dso - (tot_dso * reserveDown * RTDur_in_hrs)
+                # tot_res_up = tot_dso + (tot_dso * reserveUp * RTDur_in_hrs)
+                # tot_res_down = tot_dso - (tot_dso * reserveDown * RTDur_in_hrs)
                 if tot_gen_down <= tot_res_down and tot_res_up <= tot_gen_up:
                     log.debug('We are great')
                     break
@@ -953,7 +883,7 @@ def tso_loop(casename):
                     log.debug('=====: Pmax:' + '{: .4}'.format(Pmax) + ', Pmin:' + '{: .4}'.format(Pmin))
                     Pmax = Pmin
 
-                #todo fill out gen min up an down in parameters
+                # TODO fill out gen min up an down in parameters
                 minDn = 0
                 minUp = 0
 
@@ -1767,7 +1697,7 @@ def tso_loop(casename):
             genCost[i][1] = 0                  # no startup cost
             genFuel[i][3] = 1                  # turn on generator
         if genFuel[i][0] not in renewables:
-            #gen[i, 1] = gen[i, 8]              # set to maximum real power output (MW)
+            # gen[i, 1] = gen[i, 8]              # set to maximum real power output (MW)
             gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * 0.55)
 
     # copy of originals for outages
@@ -1832,7 +1762,7 @@ def tso_loop(casename):
         # running from load_player - taped bus load
             elif 'GLD_LOAD_' in topic:
                 busnum = int(topic[9:])
-                p, q = parse_mva(val)
+                p, q = parse_fncs_mva(val)
                 gld_load[busnum]['p'] = p     # MW
                 gld_load[busnum]['q'] = q     # MW
                 # log.info("at " + str(ts) + " " + topic + " " + str(val))
@@ -1843,7 +1773,7 @@ def tso_loop(casename):
         # running from load_player - taped ref bus load
             elif 'REF_LOAD_' in topic:
                 busnum = int(topic[9:])
-                p, q = parse_mva(val)
+                p, q = parse_fncs_mva(val)
                 gld_load[busnum]['p_r'] = p  # MW
                 gld_load[busnum]['q_r'] = q  # MW
                 # log.info("at " + str(ts) + " " + topic + " " + str(val))
@@ -1856,7 +1786,7 @@ def tso_loop(casename):
             log.info("at " + str(ts))
             # update cost coefficients, set dispatchable load, put unresp load on bus
             update_cost_and_load()
-            # print_gld_load(ppc, gld_load, 'EVT', ts)
+            # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'EVT', ts)
             log.info('bus_load = ' + str(bus[:, 2].sum()))
             log.info('gen_power = ' + str(gen[:, 1].sum()))
 
@@ -2094,13 +2024,13 @@ def tso_loop(casename):
 
         # update generation with consideration for distributed slack bus
         if opf:
-            # print_gld_load(ppc, gld_load, 'OPF', ts)
+            # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'OPF', ts)
             # log.info('bus_opf = ' + str(bus[:, 2].sum()))
             # log.info('gen_opf = ' + str(gen[:, 1].sum()))
             ppc['gen'] = gen
             ppc['gen'][:, 1] = dist_slack(ppc, Pload)
             gen = ppc['gen']   # needed to be re-aliased because of [:, ] operator
-            # print_gld_load(ppc, gld_load, 'DIST', ts)
+            # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'DIST', ts)
             # log.info('bus_dist = ' + str(bus[:, 2].sum()))
             # log.info('gen_dist = ' + str(gen[:, 1].sum()))
             opf = False
@@ -2119,7 +2049,7 @@ def tso_loop(casename):
         #               success=rpf[0]['success'])
         rBus = rpf[0]['bus']
         rGen = rpf[0]['gen']
-        # print_gld_load(ppc, gld_load, 'PF', ts)
+        # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'PF', ts)
         # log.info('bus_pf = ' + str(rBus[:, 2].sum()))
         # log.info('gen_pf = ' + str(rGen[:, 1].sum()))
 

@@ -1,62 +1,15 @@
-
-import os
-import math
 import json
 import logging as log
-import tesp_support.api as tesp
+import os
+
 import tesp_support.fncs as fncs
-
-
-def parse_mva(arg):
-    """ Helper function to parse P+jQ from a FNCS value
-
-    Args:
-      arg (str): FNCS value in rectangular format
-
-    Returns:
-      float, float: P [MW] and Q [MVAR]
-    """
-    tok = arg.strip('; MWVAKdrij')
-    bLastDigit = False
-    bParsed = False
-    vals = [0.0, 0.0]
-    for i in range(len(tok)):
-        if tok[i] == '+' or tok[i] == '-':
-            if bLastDigit:
-                vals[0] = float(tok[: i])
-                vals[1] = float(tok[i:])
-                bParsed = True
-                break
-        bLastDigit = tok[i].isdigit()
-    if not bParsed:
-        vals[0] = float(tok)
-
-    if 'd' in arg:
-        vals[1] *= (math.pi / 180.0)
-        p = vals[0] * math.cos(vals[1])
-        q = vals[0] * math.sin(vals[1])
-    elif 'r' in arg:
-        p = vals[0] * math.cos(vals[1])
-        q = vals[0] * math.sin(vals[1])
-    else:
-        p = vals[0]
-        q = vals[1]
-
-    if 'KVA' in arg:
-        p /= 1000.0
-        q /= 1000.0
-    elif 'MVA' in arg:
-        p *= 1.0
-        q *= 1.0
-    else:  # VA
-        p /= 1000000.0
-        q /= 1000000.0
-    return p, q
+from tesp_support.fncsPYPOWER import load_json_case
+from tesp_support.helpers import parse_fncs_mva
 
 
 def dso_make_yaml(casename):
     log.info('Reading configuration...')
-    ppc = tesp.load_json_case(casename + '.json')
+    ppc = load_json_case(casename + '.json', True)
     port = str(ppc['port'])
     nd = ppc['FNCS'].shape[0]
 
@@ -81,7 +34,7 @@ def dso_make_yaml(casename):
     print('aggregate_pub: true', file=yp)
     print('values:', file=yp)
     for i in range(nd):
-        bs = str(i+1)
+        bs = str(i + 1)
         print('  SUBSTATION_' + bs + ':', file=yp)
         print('    topic: refplayer/ref_load_' + bs, file=yp)
         print('    default: 0', file=yp)
@@ -111,7 +64,7 @@ def dso_make_yaml(casename):
     print('broker: tcp://localhost:' + port, file=yp)
     print('values:', file=yp)
     for i in range(nd):
-        bs = str(i+1)
+        bs = str(i + 1)
         print('  DA_BID_' + bs + ':', file=yp)
         print('    topic: dsostub/da_bid_' + bs, file=yp)
         print('    default: 0', file=yp)
@@ -152,10 +105,10 @@ def dso_make_yaml(casename):
 def dso_loop(casename):
     ts = 0
     rt_period = 300
-    da_period = 43200     # 86400
-    tnext_rt = -30               # start the real time bid
+    da_period = 43200  # 86400
+    tnext_rt = -30  # start the real time bid
     tnext_da = (10 * 3600) - 15  # start the day ahead bid
-    power_factor = 0.57                  # roughly 30 deg
+    power_factor = 0.57  # roughly 30 deg
 
     logger = log.getLogger()
     # logger.setLevel(log.DEBUG)
@@ -163,7 +116,7 @@ def dso_loop(casename):
     # logger.setLevel(log.WARNING)
 
     log.info('Reading configuration...')
-    ppc = tesp.load_json_case(casename + '.json')
+    ppc = load_json_case(casename + '.json', True)
 
     tmax = int(ppc['Tmax'])
     dt = int(ppc['dt'])
@@ -215,7 +168,7 @@ def dso_loop(casename):
                 # gld_bus[busnum]['v'] = float(val)
             elif 'SUBSTATION_' in topic:  # gridlabd - residential/commercial
                 busnum = int(topic[11:])
-                p, q = parse_mva(val)
+                p, q = parse_fncs_mva(val)
                 # log.info('at ' + str(ts) + " " + topic + " " + val)
                 gld_bus[busnum]['p'] = p  # MW active
                 gld_bus[busnum]['q'] = q  # MW reactive
@@ -225,7 +178,7 @@ def dso_loop(casename):
                 gld_bus[busnum]['p_hist'] = json.loads(val)  # MW active
             elif 'IND_LOAD_' in topic:
                 busnum = int(topic[9:])
-                p, q = parse_mva(val)
+                p, q = parse_fncs_mva(val)
                 # log.info('at ' + str(ts) + " " + topic + " " + val)
                 gld_bus[busnum]['p_i'] = p  # MW
                 gld_bus[busnum]['q_i'] = q  # MW
@@ -251,7 +204,7 @@ def dso_loop(casename):
                         'resp_deg': []
                     }
                     for i in range(24):
-                        p = gld_bus[busnum]['p_hist'][24+i]  # + gld_bus[busnum]['p_i_hist'][24+i]
+                        p = gld_bus[busnum]['p_hist'][24 + i]  # + gld_bus[busnum]['p_i_hist'][24+i]
                         da_bid['unresp_mw'].append(p)
                         da_bid['resp_max_mw'].append(0.0)
                         da_bid['resp_c2'].append(0.0)

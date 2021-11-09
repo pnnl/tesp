@@ -126,7 +126,8 @@ git clone https://github.com/gjcarneiro/pybindgen.git
 
 echo
 echo ++++++++++++++ PSST
-git clone https://github.com/ames-market/psst.git
+# git clone https://github.com/ames-market/psst.git
+git clone https://github.com/ames-market/AMES-V5.0.git
 
 echo
 echo ++++++++++++++ KLU SOLVER
