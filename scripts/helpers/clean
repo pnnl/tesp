@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm *.log
 rm *.csv
 rm *.xml

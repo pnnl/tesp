@@ -1,5 +1,8 @@
+#!/bin/bash
+
 declare -r CWD=$pwd
-cd ../../../examples/loadshed
+
+cd $TESDIR/examples/capabilities/loadshed
 ./clean.sh
 make clean
 cd ../energyplus
@@ -8,14 +11,12 @@ cd ../te30
 ./clean.sh
 cd ../pypower
 ./clean.sh
-cd ../sgip1
-./clean.sh
 cd ../weatherAgent
 ./clean.sh
 cd ../ieee8500
 ./clean.sh
 cd PNNLteam
-./clean.sh
+ ./clean.sh
 cd ../../comm
 rm -rf CombinedCase
 rm -rf Nocomm_Base
@@ -31,4 +32,11 @@ cd ../../bulk_system
 ./clean.sh
 cd ../dist_system
 ./clean.sh
+
+cd ../$TESDIR/examples/analysis/sgip1
+./clean.sh
+cd ../dsot
+./clean.sh
+
+
 cd $CWD
