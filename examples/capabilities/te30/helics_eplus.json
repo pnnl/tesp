@@ -1,0 +1,172 @@
+{
+  "name" : "energyPlus",
+  "period" : 300.0,
+  "publications" : [ 
+    {
+      "global" : false,
+      "key" : "EMS Cooling Controlled Load",
+      "type" : "double",
+      "units" : "kWh"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Heating Controlled Load",
+      "type" : "double",
+      "units" : "kWh"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Cooling Schedule Temperature",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Heating Schedule Temperature",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Cooling Setpoint Temperature",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Heating Setpoint Temperature",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Cooling Current Temperature",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Heating Current Temperature",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Cooling Power State",
+      "type" : "string"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Heating Power State",
+      "type" : "string"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Cooling Volume",
+      "type" : "double",
+      "units" : "stere"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Heating Volume",
+      "type" : "double",
+      "units" : "stere"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Occupant Count",
+      "type" : "int",
+      "units" : "count"
+    },
+    {
+      "global" : false,
+      "key" : "EMS Indoor Air Temperature",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "WHOLE BUILDING Facility Total Electric Demand Power",
+      "type" : "double",
+      "units" : "W"
+    },
+    {
+      "global" : false,
+      "key" : "WHOLE BUILDING Facility Total HVAC Electric Demand Power",
+      "type" : "double",
+      "units" : "W"
+    },
+    {
+      "global" : false,
+      "key" : "FACILITY Facility Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time",
+      "type" : "double",
+      "units" : "hour"
+    },
+    {
+      "global" : false,
+      "key" : "Environment Site Outdoor Air Drybulb Temperature",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS HEATING SETPOINT",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS HEATING CURRENT",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS COOLING SETPOINT",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "EMS COOLING CURRENT",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "H2_NOM SCHEDULE VALUE",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "H1_NOM SCHEDULE VALUE",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "C2_NOM SCHEDULE VALUE",
+      "type" : "double",
+      "units" : "degC"
+    },
+    {
+      "global" : false,
+      "key" : "C1_NOM SCHEDULE VALUE",
+      "type" : "double",
+      "units" : "degC"
+    }
+  ],
+  "subscriptions" : [
+    {
+      "key" : "eplus_agent/cooling_setpoint_delta", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "eplus_agent/heating_setpoint_delta", 
+      "type" : "double",
+      "required" : true
+    }
+  ]
+}

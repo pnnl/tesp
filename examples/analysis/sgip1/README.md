@@ -7,7 +7,7 @@ To run a case:
 
 1. python3 prepare_cases.py
 2. ./runSGIP1a.sh
-3. python3 plots.py SGIP1as
+3. python3 plots.py SGIP1a
 
 These steps are repeatable for SGIP1b, SGIP1c, SGIP1d, SGIP1e, and SGIP1ex.
 After running all six cases, the compare*.py scripts may be used to plot

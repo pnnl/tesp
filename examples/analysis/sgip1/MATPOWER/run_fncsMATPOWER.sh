@@ -1,4 +1,5 @@
 #!/bin/sh
+
 # script for execution of deployed applications
 #
 # Sets up the MATLAB runtime environment for the current $ARCH and executes 
@@ -30,4 +31,3 @@ else
   eval "\"${exe_dir}/fncsMATPOWER.app/Contents/MacOS/fncsMATPOWER\"" $args
 fi
 exit
-

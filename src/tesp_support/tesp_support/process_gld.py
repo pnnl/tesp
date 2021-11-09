@@ -35,7 +35,7 @@ def read_gld_metrics (path, nameroot, dictname = ''):
 
   # first, read and print a dictionary of all the monitored GridLAB-D objects
   if len (dictname) > 0:
-    try: 
+    try:
       lp = open(dictname).read()
     except:
       logger.error(f'Unable to open GridLAB-D metrics file {dictname}')
@@ -165,6 +165,9 @@ def read_gld_metrics (path, nameroot, dictname = ''):
       idx_h['HSE_WH_AVG_IDX'] = val['index']
       idx_h['HSE_WH_AVG_UNITS'] = val['units']
   if len(hse_keys) > 0:
+    # there may be some houses in the dictionary that we don't write metrics for, e.g., write_node_houses with default node_metrics_interval=None
+    hse_keys = [x for x in hse_keys if x in lst_h[time_key]]
+    print (len(hse_keys), 'houses left')
     data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
     print ('\nConstructed', data_h.shape, 'NumPy array for Houses')
     j = 0
@@ -249,6 +252,9 @@ def read_gld_metrics (path, nameroot, dictname = ''):
       idx_m['MTR_REAL_POWER_MIN_IDX'] = val['index']
 
   if nBillingMeters > 0:
+    # there may be some meters in the dictionary that we don't write metrics for, e.g., write_node_houses with default node_metrics_interval=None
+    mtr_keys = [x for x in mtr_keys if x in lst_m[time_key]]
+    print (len(mtr_keys), 'meters left, expecting', nBillingMeters)
     data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
     print ('\nConstructed', data_m.shape, 'NumPy array for Meters')
     j = 0
@@ -358,7 +364,8 @@ def read_gld_metrics (path, nameroot, dictname = ''):
       j = j + 1
     print ('Total tap changes =', data_r[:,-1,idx_r['REG_COUNT_IDX']].sum())
 
-  print ('Total meter bill =', 
+  if data_m is not None:
+    print ('Total meter bill =',
          '{:.3f}'.format (data_m[:,-1,idx_m['MTR_BILL_IDX']].sum()))
 
   dict = {}
@@ -386,7 +393,7 @@ def read_gld_metrics (path, nameroot, dictname = ''):
   dict['subname'] = sub_key
   return dict
 
-def plot_gld (dict):
+def plot_gld (dict, save_file=None, save_only=False):
   # the feederGenerator now inserts metrics_collector objects on capacitors and regulators
   bCollectedRegCapMetrics = True 
 
@@ -455,22 +462,26 @@ def plot_gld (dict):
     ax[0,1].plot(hrs, min2, color='red', label='Min')
     ax[0,1].plot(hrs, avg2, color='green', label='Avg')
     ax[0,1].set_ylabel('degF')
-    ax[0,1].set_title ('Temperature over All Houses')
+    ax[0,1].set_title ('Temperature over {:d} Houses'.format(len(keys_h)))
     ax[0,1].legend(loc='best')
   else:
     ax[0,1].set_title ('No Houses')
 
   if len(keys_m) > 0:
-    vavg = (data_m[:,:,idx_m['MTR_VOLT_AVG_IDX']]).squeeze().mean(axis=0)
-    vmin = (data_m[:,:,idx_m['MTR_VOLT_MIN_IDX']]).squeeze().min(axis=0)
-    vmax = (data_m[:,:,idx_m['MTR_VOLT_MAX_IDX']]).squeeze().max(axis=0)
-    ax[1,0].plot(hrs, vmax, color='blue', label='Max')
-    ax[1,0].plot(hrs, vmin, color='red', label='Min')
-    ax[1,0].plot(hrs, vavg, color='green', label='Avg')
+    if len(keys_m) > 1:
+      vavg = (data_m[:,:,idx_m['MTR_VOLT_AVG_IDX']]).squeeze().mean(axis=0)
+      vmin = (data_m[:,:,idx_m['MTR_VOLT_MIN_IDX']]).squeeze().min(axis=0)
+      vmax = (data_m[:,:,idx_m['MTR_VOLT_MAX_IDX']]).squeeze().max(axis=0)
+      ax[1,0].plot(hrs, vmax, color='blue', label='Max')
+      ax[1,0].plot(hrs, vmin, color='red', label='Min')
+      ax[1,0].plot(hrs, vavg, color='green', label='Avg')
+      ax[1,0].set_title ('Voltage over {:d} Meters'.format(len(keys_m)))
+      ax[1,0].legend(loc='best')
+    else:
+      ax[1,0].plot(hrs, data_m[0,:,idx_m['MTR_VOLT_AVG_IDX']], color='blue')
+      ax[1,0].set_title ('Voltage at ' + keys_m[0])
     ax[1,0].set_xlabel('Hours')
     ax[1,0].set_ylabel('%')
-    ax[1,0].set_title ('Voltage over all Meters')
-    ax[1,0].legend(loc='best')
   else:
     ax[1,0].set_title ('No Billing Meter Voltages')
 
@@ -523,7 +534,7 @@ def plot_gld (dict):
   else:
     ax[1,3].set_title ('No Regulators')
 
-  if len(keys_m) > 0:
+  if len(keys_m) > 1:
     ax[0,4].plot(hrs, (data_m[:,:,idx_m['MTR_AHI_COUNT_IDX']]).squeeze().sum(axis=0), color='blue', label='Range A Hi')
     ax[0,4].plot(hrs, (data_m[:,:,idx_m['MTR_BHI_COUNT_IDX']]).squeeze().sum(axis=0), color='cyan', label='Range B Hi')
     ax[0,4].plot(hrs, (data_m[:,:,idx_m['MTR_ALO_COUNT_IDX']]).squeeze().sum(axis=0), color='green', label='Range A Lo')
@@ -542,13 +553,35 @@ def plot_gld (dict):
     ax[1,4].set_ylabel('Seconds')
     ax[1,4].set_title ('Voltage Violation Durations')
     ax[1,4].legend(loc='best')
+  elif len(keys_m) > 0:
+    ax[0,4].plot(hrs, data_m[0,:,idx_m['MTR_AHI_COUNT_IDX']], color='blue', label='Range A Hi')
+    ax[0,4].plot(hrs, data_m[0,:,idx_m['MTR_BHI_COUNT_IDX']], color='cyan', label='Range B Hi')
+    ax[0,4].plot(hrs, data_m[0,:,idx_m['MTR_ALO_COUNT_IDX']], color='green', label='Range A Lo')
+    ax[0,4].plot(hrs, data_m[0,:,idx_m['MTR_BLO_COUNT_IDX']], color='magenta', label='Range B Lo')
+    ax[0,4].plot(hrs, data_m[0,:,idx_m['MTR_OUT_COUNT_IDX']], color='red', label='No Voltage')
+    ax[0,4].set_ylabel('')
+    ax[0,4].set_title ('Voltage Violation Counts at ' + keys_m[0])
+    ax[0,4].legend(loc='best')
+
+    ax[1,4].plot(hrs, data_m[0,:,idx_m['MTR_AHI_DURATION_IDX']], color='blue', label='Range A Hi')
+    ax[1,4].plot(hrs, data_m[0,:,idx_m['MTR_BHI_DURATION_IDX']], color='cyan', label='Range B Hi')
+    ax[1,4].plot(hrs, data_m[0,:,idx_m['MTR_ALO_DURATION_IDX']], color='green', label='Range A Lo')
+    ax[1,4].plot(hrs, data_m[0,:,idx_m['MTR_BLO_DURATION_IDX']], color='magenta', label='Range B Lo')
+    ax[1,4].plot(hrs, data_m[0,:,idx_m['MTR_OUT_DURATION_IDX']], color='red', label='No Voltage')
+    ax[1,3].set_xlabel('Hours')
+    ax[1,4].set_ylabel('Seconds')
+    ax[1,4].set_title ('Voltage Violation Durations ' + keys_m[0])
+    ax[1,4].legend(loc='best')
   else:
     ax[0,4].set_title ('No Voltage Monitoring')
     ax[1,4].set_title ('No Voltage Monitoring')
 
-  plt.show()
+  if save_file is not None:
+    plt.savefig(save_file)
+  if not save_only:
+    plt.show()
 
-def process_gld(nameroot, dictname = ''):
+def process_gld(nameroot, dictname = '', save_file=None, save_only=False):
   ''' Plots a summary/sample of power, air temperature and voltage
 
   This function reads *substation_nameroot_metrics.json*,  
@@ -566,8 +599,10 @@ def process_gld(nameroot, dictname = ''):
   Args:
     nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
     dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+    save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
+    save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   '''
-  path = os.getcwd()
-  dict = read_gld_metrics (path, nameroot, dictname)
-  plot_gld (dict)
+
+  dict = read_gld_metrics (nameroot, dictname)
+  plot_gld (dict, save_file, save_only)
 

@@ -99,8 +99,8 @@ def write_tesp_case (config, cfgfile, freshdir = True):
     scheduledir = tespdir + '/schedules/'
     weatherdir = tespdir + '/weather/'
     eplusdir = tespdir + '/energyplus/'
-    ppdir = tespdir + '/pypower/'
-    miscdir = tespdir + '/misc/'
+    ppdir = tespdir + '/models/pypower/'
+    # miscdir = tespdir + '/scripts/helpers/'
     print ('feeder backbone files from', feederdir)
     print ('schedule files from', scheduledir)
     print ('weather files from', weatherdir)
@@ -169,12 +169,12 @@ def write_tesp_case (config, cfgfile, freshdir = True):
 #        shutil.copy (miscdir + 'kill5570.bat', casedir)
 #        shutil.copy (miscdir + 'killold.bat', casedir)
 #        shutil.copy (miscdir + 'list5570.bat', casedir)
-        shutil.copy (miscdir + 'clean.sh', casedir)
-        shutil.copy (miscdir + 'kill5570.sh', casedir)
-        shutil.copy (miscdir + 'kill23404.sh', casedir)
-        shutil.copy (miscdir + 'killboth.sh', casedir)
-        shutil.copy (miscdir + 'monitor.py', casedir)
-        shutil.copy (miscdir + 'plots.py', casedir)
+#         shutil.copy (miscdir + 'clean.sh', casedir)
+#         shutil.copy (miscdir + 'kill5570.sh', casedir)
+#         shutil.copy (miscdir + 'kill23404.sh', casedir)
+#         shutil.copy (miscdir + 'killboth.sh', casedir)
+#         shutil.copy (miscdir + 'monitor.py', casedir)
+#        shutil.copy (miscdir + 'plots.py', casedir)
         shutil.copy (scheduledir + 'appliance_schedules.glm', casedir)
         shutil.copy (scheduledir + 'commercial_schedules.glm', casedir)
         shutil.copy (scheduledir + 'water_and_setpoint_schedule_v5.glm', casedir)
@@ -561,10 +561,10 @@ values:
     op.close()
     st = os.stat (shfile)
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    shfile = casedir + '/kill5570.sh'
-    os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    shfile = casedir + '/clean.sh'
-    os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    # shfile = casedir + '/kill5570.sh'
+    # os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    # shfile = casedir + '/clean.sh'
+    # os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     # HELICS shell scripts and chmod for Mac/Linux - need to specify python3
     PypowerConfigFile = 'pypowerConfig.json'

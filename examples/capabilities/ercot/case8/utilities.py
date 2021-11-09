@@ -1,7 +1,9 @@
 import os
 import json
+
 yamlFile = 'Ercot_monitor.yaml'
 jsonFile = 'tesp_monitor_ercot.json'
+
 
 # write header part of the Ercot_monitor.yaml file
 def write_FNCS_config_yaml_file_header():
@@ -13,7 +15,8 @@ def write_FNCS_config_yaml_file_header():
         try:
             os.remove(yamlFile)
         except Exception as ex:
-            print('Removing existing Ercot_monitor.yaml file failed: ' + str(ex) + '\nIt could cause problem in running the ERCOT monitor. Please check the file before run the monitor.')
+            print('Removing existing Ercot_monitor.yaml file failed: ' + str(ex) +
+                  '\nIt could cause problem in running the ERCOT monitor. Please check the file before run the monitor.')
 
     yp = open(yamlFile, 'w')
     print('name:', brokerName, file=yp)
@@ -21,6 +24,7 @@ def write_FNCS_config_yaml_file_header():
     print('broker:', broker, file=yp)
     print('values:', file=yp)
     yp.close()
+
 
 def write_FNCS_config_yaml_file_values(fileroot, controllers):
     # yamlFile = 'Ercot_monitor.yaml'
@@ -54,28 +58,32 @@ def write_FNCS_config_yaml_file_values(fileroot, controllers):
             break
     yp.close()
 
+
 def write_json_for_ercot_monitor(timeStop, timeDelta, numberOfFederates):
-    op = open (jsonFile, 'w')
-    fncsBroker = {'args' : ['fncs_broker', str(numberOfFederates)],
-                  'env' : [['FNCS_BROKER', 'tcp://*:5570'],
-                           ['FNCS_LOG_STDOUT', 'YES'],
-                           ['FNCS_FATAL', 'YES']],
-                  'log' : 'broker.log'}
+    op = open(jsonFile, 'w')
+    fncsBroker = {'args': ['fncs_broker', str(numberOfFederates)],
+                  'env': [['FNCS_BROKER', 'tcp://*:5570'],
+                          ['FNCS_LOG_STDOUT', 'YES'],
+                          ['FNCS_FATAL', 'YES']],
+                  'log': 'broker.log'}
     gridlabds = []
     for i in range(numberOfFederates - 2):
-        gridlabd = {'args' : ['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE = Bus' + str(i + 1) + '_metrics.json', 'Bus' + str(i + 1) + '.glm'],
-                    'env' : [['FNCS_FATAL', 'YES'],
-                           ['FNCS_LOG_STDOUT', 'YES']],
-                    'log' : 'Bus' + str(i + 1) + '.log'}
+        gridlabd = {'args': ['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE = Bus' + str(i + 1) + '_metrics.json',
+                             'Bus' + str(i + 1) + '.glm'],
+                    'env': [['FNCS_FATAL', 'YES'],
+                            ['FNCS_LOG_STDOUT', 'YES']],
+                    'log': 'Bus' + str(i + 1) + '.log'}
         gridlabds.append(gridlabd)
-    python = {'args' : ['python', 'fncsTSO.py'],
-              'env' : [['FNCS_CONFIG_FILE', 'tso8.yaml'],
-                       ['FNCS_FATAL', 'YES'],
-                       ['FNCS_LOG_STDOUT', 'YES']],
-              'log' : 'bulk.log'}
+    python = {'args': ['python', 'fncsTSO.py'],
+              'env': [['FNCS_CONFIG_FILE', 'tso8.yaml'],
+                      ['FNCS_FATAL', 'YES'],
+                      ['FNCS_LOG_STDOUT', 'YES']],
+              'log': 'bulk.log'}
     commands = [fncsBroker] + gridlabds + [python]
-    federates = {'time_stop' : timeStop, 'yaml_delta' : timeDelta, 'commands' : commands}
+    federates = {'time_stop': timeStop, 'yaml_delta': timeDelta, 'commands': commands}
     print(json.dumps(federates), file=op)
+
+
 if __name__ == "__main__":
     write_FNCS_config_yaml_file_header()
     write_FNCS_config_yaml_file_values('abc', dict())

@@ -1,7 +1,8 @@
-declare -r TESP_SUPPORT=$TESP_INSTALL/share/support
-#declare -r TESP_SUPPORT=../../support
+#!/bin/bash
 
-cp $TESP_SUPPORT/energyplus/emsHELICS/*.idf .
+EPLUS_PATH=$TESPDIR/data/energyplus
+
+cp $EPLUS_PATH/emsHELICS/*.idf .
 
 ./run_seasonal_cases.sh "FullServiceRestaurant"
 ./run_seasonal_cases.sh "Hospital"

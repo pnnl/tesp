@@ -1,1 +1,0 @@
-xargs kill <tesp.pid

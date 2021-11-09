@@ -41,7 +41,7 @@ object metrics_collector_writer {
 
 object climate {
   name localWeather;
-//     tmyfile "../../support/weather/AZ-Tucson_International_Ap.tmy3";
+//     tmyfile "../../data/weather/AZ-Tucson_International_Ap.tmy3";
   interpolate QUADRATIC;
 	latitude 32.133;
 	longitude -111.95;
@@ -4408,8 +4408,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B0;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4442,8 +4440,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C1;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4476,8 +4472,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C2;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4510,8 +4504,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B3;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4544,8 +4536,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B4;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4578,8 +4568,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A5;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4612,8 +4600,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B6;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4646,8 +4632,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B7;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4680,8 +4664,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A8;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4714,8 +4696,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A9;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4748,8 +4728,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C10;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4782,8 +4760,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A11;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4816,8 +4792,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A12;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4850,8 +4824,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A13;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4884,8 +4856,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C14;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4918,8 +4888,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A15;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4952,8 +4920,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A16;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -4986,8 +4952,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C17;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5020,8 +4984,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C18;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5054,8 +5016,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B19;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5088,8 +5048,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B20;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5122,8 +5080,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C21;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5156,8 +5112,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B22;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5190,8 +5144,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B23;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5224,8 +5176,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_B24;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5258,8 +5208,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A25;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5292,8 +5240,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A26;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5326,8 +5272,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C27;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5360,8 +5304,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_A28;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5394,8 +5336,6 @@ object triplex_meter {
 
 		object solar {
 			name sol_inv_F1_house_C29;
-			generator_mode SUPPLY_DRIVEN;
-			generator_status ONLINE;
 			panel_type SINGLE_CRYSTAL_SILICON;
 			orientation FIXED_AXIS; 
 			rated_power 7500;
@@ -5453,4 +5393,3 @@ object load {
   constant_power_B 25 kVA;
   constant_power_C 25 kVA;
 }
-

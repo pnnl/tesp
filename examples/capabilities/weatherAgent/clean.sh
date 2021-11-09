@@ -1,7 +1,7 @@
-rm *.log
-rm *.csv
-rm *.out
-rm *.xml
-rm weather.dat
-rm broker_trace.txt
-rm out.txt
+rm -f *.log
+rm -f *.csv
+rm -f *.out
+rm -f *.xml
+rm -f weather.dat
+rm -f broker_trace.txt
+rm -f out.txt
