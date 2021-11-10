@@ -1,7 +1,7 @@
 <project>
     <shortName>tesp</shortName>
     <fullName>TESP</fullName>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
     <readmeFile>../README.md</readmeFile>
     <licenseFile>../LICENSE</licenseFile>
     <splashImage>Transactive.png</splashImage>

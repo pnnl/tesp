@@ -212,7 +212,7 @@ def read_pypower_metrics (path, nameroot):
   dict['idx_g'] = idx_g
   return dict
 
-def process_pypower(path, nameroot, title=None, save_file=None, save_only=True):
+def process_pypower(nameroot, title=None, save_file=None, save_only=True):
   """ Plots bus and generator quantities for the 9-bus system used in te30 or sgip1 examples
 
   This function reads *bus_nameroot_metrics.json* and 
@@ -235,7 +235,6 @@ def process_pypower(path, nameroot, title=None, save_file=None, save_only=True):
       save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
       save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
   """
-
   path = os.getcwd()
-  dict = read_pypower_metrics (path, nameroot)
+  dict = read_pypower_metrics(path, nameroot)
   plot_pypower (dict, title, save_file, save_only)

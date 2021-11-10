@@ -604,5 +604,5 @@ def process_gld(nameroot, dictname = '', save_file=None, save_only=False):
   '''
   path = os.getcwd()
   dict = read_gld_metrics (path, nameroot, dictname)
-  plot_gld (dict, save_file, save_only)
+  plot_gld(dict, save_file, save_only)
 
