@@ -1,11 +1,11 @@
 # Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: bill.py; custom for the IEEE 8500-node circuit
-import json;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
-import os.path;
+import json
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import os.path
 
 rootname = sys.argv[1]
 dictname = rootname + '_glm_dict.json'

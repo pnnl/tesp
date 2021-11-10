@@ -2,56 +2,57 @@
 # file: helpers.py
 """ Utility functions for use within tesp_support, including new agents.
 """
-import numpy as np
-import math
-import warnings
 import re
-import sys
-from copy import deepcopy
+import math
+import numpy as np
 from enum import IntEnum
+
 try:
-  import helics
+    import helics
 except:
-  pass
+    pass
+
 
 def idf_int(val):
-  """Helper function to format integers for the EnergyPlus IDF input data file
+    """Helper function to format integers for the EnergyPlus IDF input data file
 
-  Args:
-    val (int): the integer to format
+    Args:
+      val (int): the integer to format
 
-  Returns:
-     str: the integer in string format, padded with a comma and zero or one blanks, in order to fill three spaces
-  """
-  sval = str(val)
-  if len(sval) < 2:
-    return sval + ', '
-  return sval + ','
+    Returns:
+       str: the integer in string format, padded with a comma and zero or one blanks, in order to fill three spaces
+    """
+    sval = str(val)
+    if len(sval) < 2:
+        return sval + ', '
+    return sval + ','
 
-def stop_helics_federate (fed):
-  print ('finalizing HELICS', flush=True)
-  helics.helicsFederateDestroy(fed)
-# status = helics.helicsFederateFinalize(fed)
-# state = helics.helicsFederateGetState(fed)
-# assert state == 3
-# while helics.helicsBrokerIsConnected(None):
-#   time.sleep(1)
-# helics.helicsFederateFree(fed)
-# helics.helicsCloseLibrary()
+
+def stop_helics_federate(fed):
+    print('finalizing HELICS', flush=True)
+    helics.helicsFederateDestroy(fed)
+    # status = helics.helicsFederateFinalize(fed)
+    # state = helics.helicsFederateGetState(fed)
+    # assert state == 3
+    # while helics.helicsBrokerIsConnected(None):
+    #   time.sleep(1)
+    # helics.helicsFederateFree(fed)
+    # helics.helicsCloseLibrary()
 
 def zoneMeterName(ldname):
-  """ Enforces the meter naming convention for commercial zones
+    """ Enforces the meter naming convention for commercial zones
 
-  Commercial zones must be children of load objects. This routine
-  replaces "_load_" with "_meter".
+    Commercial zones must be children of load objects. This routine
+    replaces "_load_" with "_meter".
 
-  Args:
-      objname (str): the GridLAB-D name of a load, ends with _load_##
+    Args:
+        objname (str): the GridLAB-D name of a load, ends with _load_##
 
-  Returns:
-    str: The GridLAB-D name of upstream meter
-  """
-  return ldname.replace ('_load_', '_meter_')
+    Returns:
+      str: The GridLAB-D name of upstream meter
+    """
+    return ldname.replace('_load_', '_meter_')
+
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
 def gld_strict_name(val):
@@ -65,9 +66,10 @@ def gld_strict_name(val):
     """
     if val[0].isdigit():
         val = 'gld_' + val
-    return val.replace ('-', '_')
+    return val.replace('-', '_')
 
-class ClearingType (IntEnum):
+
+class ClearingType(IntEnum):
     """ Describes the market clearing type
     """
     NULL = 0
@@ -76,6 +78,7 @@ class ClearingType (IntEnum):
     EXACT = 3
     SELLER = 4
     BUYER = 5
+
 
 class curve:
     """ Accumulates a set of price, quantity bids for later aggregation
@@ -90,13 +93,14 @@ class curve:
         total_on (float): the total kW bidding that are currently on
         total_off (float): the total kW bidding that are currently off
     """
+
     def __init__(self):
         self.price = []
         self.quantity = []
         self.count = 0
         self.total = 0.0
         self.total_on = 0.0
-        self.total_off = 0.0  
+        self.total_off = 0.0
 
     def set_curve_order(self, flag):
         """ Set the curve order (by price) to ascending or descending
@@ -148,12 +152,13 @@ class curve:
                     break
 
             # If the price is smaller than that of all the curve sections, insert at the end of the curve
-            if value_insert_flag == 0:                   
+            if value_insert_flag == 0:
                 self.price.append(price)
                 self.quantity.append(quantity)
                 self.count += 1
 
-def parse_fncs_number (arg):
+
+def parse_fncs_number(arg):
     """ Parse floating-point number from a FNCS message; must not have leading sign or exponential notation
 
     Args:
@@ -162,10 +167,34 @@ def parse_fncs_number (arg):
     Returns:
         float: the parsed number
     """
-    return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
+    try:
+        return float(arg)
+    except:
+        return float(''.join(ele for ele in arg if ele.isdigit() or ele == '.'))
+
 
 # strip out extra white space, units (deg, degF, V, MW, MVA, KW, KVA) and ;
-def parse_fncs_magnitude (arg):
+def _parse_fncs_magnitude(arg):
+    """ Parse the magnitude of a possibly complex number from FNCS
+    Args:
+        arg (str): the FNCS string value
+    Returns:
+        float: the parsed number, or 0 if parsing fails
+    """
+    tok = arg.strip('+-; MWVAFKdegrij')
+    vals = re.split(r'[\+-]+', tok)
+    if len(vals) < 2:  # only a real part provided
+        vals.append('0')
+    vals = [float(v) for v in vals]
+
+    if '-' in tok:
+        vals[1] *= -1.0
+    if arg.startswith('-'):
+        vals[0] *= -1.0
+    return vals[0]
+
+
+def parse_fncs_magnitude(arg):
     """ Parse the magnitude of a possibly complex number from FNCS
 
     Args:
@@ -193,17 +222,65 @@ def parse_fncs_magnitude (arg):
                 if nsign == 3:
                     kpos = i
                     break
-            vals = [tok[:kpos],tok[kpos:]]
+            vals = [tok[:kpos], tok[kpos:]]
             vals = [float(v) for v in vals]
             return vals[0]
-        tok = arg.strip('; MWVAFKdegri').replace(" ", "") # rectangular form, including real only
+        tok = arg.strip('; MWVAFKdegri').replace(" ", "")  # rectangular form, including real only
         b = complex(tok)
-        return abs (b) # b.real
+        return abs(b)  # b.real
     except:
-        print ('parse_fncs_magnitude does not understand', arg)
+        print('parse_fncs_magnitude does not understand', arg)
         return 0
 
-def parse_kw(arg):
+
+def parse_fncs_mva(arg):
+    """ Helper function to parse P+jQ from a FNCS value
+
+    Args:
+      arg (str): FNCS value in rectangular format
+
+    Returns:
+      float, float: P [MW] and Q [MVAR]
+    """
+    tok = arg.strip('; MWVAKdrij')
+    bLastDigit = False
+    bParsed = False
+    vals = [0.0, 0.0]
+    for i in range(len(tok)):
+        if tok[i] == '+' or tok[i] == '-':
+            if bLastDigit:
+                vals[0] = float(tok[: i])
+                vals[1] = float(tok[i:])
+                bParsed = True
+                break
+        bLastDigit = tok[i].isdigit()
+    if not bParsed:
+        vals[0] = float(tok)
+
+    if 'd' in arg:
+        vals[1] *= (math.pi / 180.0)
+        p = vals[0] * math.cos(vals[1])
+        q = vals[0] * math.sin(vals[1])
+    elif 'r' in arg:
+        p = vals[0] * math.cos(vals[1])
+        q = vals[0] * math.sin(vals[1])
+    else:
+        p = vals[0]
+        q = vals[1]
+
+    if 'KVA' in arg:
+        p /= 1000.0
+        q /= 1000.0
+    elif 'MVA' in arg:
+        p *= 1.0
+        q *= 1.0
+    else:  # VA
+        p /= 1000000.0
+        q /= 1000000.0
+    return p, q
+
+
+def parse_fncs_kw(arg):
     """ Parse the kilowatt load of a possibly complex number from FNCS
 
     Args:
@@ -229,7 +306,7 @@ def parse_kw(arg):
                 kpos = i
                 break
 
-        vals = [tok[:kpos],tok[kpos:]]
+        vals = [tok[:kpos], tok[kpos:]]
         vals = [float(v) for v in vals]
 
         if 'd' in arg:
@@ -255,10 +332,35 @@ def parse_kw(arg):
 
         return p
     except:
-        print ('parse_kw does not understand', arg)
+        print('parse_kw does not understand', arg)
         return 0
 
-def aggregate_bid (crv):
+
+def print_mod_load(bus, dso, model_load, msg, ts):
+    print(msg, 'at', ts)
+    print('bus, genidx, pbus, qbus, pcrv, qcrv, pgld, qgld, unresp, resp_max, c2, c1, c0, deg')
+    for row in dso:
+        busnum = int(row[0])
+        gld_scale = float(row[2])
+        load = model_load[busnum]
+        genidx = str(-load['genidx'])
+        print('{:4d}'.format(busnum),
+              '{:4d}'.format(genidx),
+              '{:8.2f}'.format(bus[busnum - 1, 2]),
+              '{:8.2f}'.format(bus[busnum - 1, 3]),
+              '{:8.2f}'.format(load['pcrv']),
+              '{:8.2f}'.format(load['qcrv']),
+              '{:8.2f}'.format(load['p'] * gld_scale),
+              '{:8.2f}'.format(load['q'] * gld_scale),
+              '{:8.2f}'.format(load['unresp'] * gld_scale),
+              '{:8.2f}'.format(load['resp_max'] * gld_scale),
+              '{:8.5f}'.format(load['c2'] / gld_scale),
+              '{:8.5f}'.format(load['c1']),
+              '{:8.5f}'.format(load['c0']),
+              '{:3.1f}'.format(load['deg']))
+
+
+def aggregate_bid(crv):
     """aggregates the buyer curve into a quadratic or straight-line fit with zero intercept
 
     Args:
@@ -270,11 +372,11 @@ def aggregate_bid (crv):
     unresp = 0
     idx = 0
     pInd = np.flip(np.argsort(np.array(crv.price)), 0)
-    p = 1000.0 * np.array (crv.price)[pInd]  # $/MW
-    q = 0.001 * np.array (crv.quantity)[pInd] # MWhr
+    p = 1000.0 * np.array(crv.price)[pInd]  # $/MW
+    q = 0.001 * np.array(crv.quantity)[pInd]  # MWhr
     if p.size > 0:
-        idx = np.argwhere (p == p[0])[-1][0]
-        unresp = np.cumsum(q[:idx+1])[-1]
+        idx = np.argwhere(p == p[0])[-1][0]
+        unresp = np.cumsum(q[:idx + 1])[-1]
     c2 = 0
     c1 = 0
     deg = 0
@@ -284,21 +386,20 @@ def aggregate_bid (crv):
         qmax = 0
         deg = 0
     else:
-        qresp = np.cumsum(q[idx+1:])
-        presp = p[idx+1:]
+        qresp = np.cumsum(q[idx + 1:])
+        presp = p[idx + 1:]
         qmax = qresp[-1]
-        cost = np.cumsum(np.multiply(presp, q[idx+1:]))
+        cost = np.cumsum(np.multiply(presp, q[idx + 1:]))
         if n <= 2:
             A = np.vstack([qresp, np.ones(len(qresp))]).T
-            ret = np.linalg.lstsq(A[:, :-1],cost)[0]
+            ret = np.linalg.lstsq(A[:, :-1], cost)[0]
             c1 = ret[0]
             deg = 1
         else:
-            A = np.vstack([qresp**2, qresp, np.ones(len(qresp))]).T
-            ret = np.linalg.lstsq(A[:, :-1],cost,rcond=None)[0]
+            A = np.vstack([qresp ** 2, qresp, np.ones(len(qresp))]).T
+            ret = np.linalg.lstsq(A[:, :-1], cost, rcond=None)[0]
             c2 = ret[0]
             c1 = ret[1]
             deg = 2
     bid = [unresp, qmax, deg, c2, c1]
     return bid
-

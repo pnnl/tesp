@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ./runSGIP1a.sh
 sleep 10800
 #
@@ -14,4 +16,3 @@ sleep 10800
 sleep 10800
 #
 ./runSGIP1ex.sh
-

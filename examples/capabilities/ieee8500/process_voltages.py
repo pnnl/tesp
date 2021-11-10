@@ -51,7 +51,7 @@ meta_s = lst_s.pop('Metadata')
 times = list(map(int,list(lst_s.keys())))
 times.sort()
 print ("There are", len (times), "sample times at", times[1] - times[0], "second intervals")
-hrs = np.array(times, dtype=np.float)
+hrs = np.array(times, dtype=float)
 denom = 3600.0
 hrs /= denom
 
@@ -84,7 +84,7 @@ for key, val in meta_m.items():
 		MTR_VOLTUNB_MAX_IDX = val['index']
 		MTR_VOLTUNB_MAX_UNITS = val['units']
 
-data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float)
+data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=float)
 print ("\nConstructed", data_m.shape, "NumPy array for Meters")
 j = 0
 for key in mtr_keys:

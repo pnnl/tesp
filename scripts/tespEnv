@@ -1,0 +1,31 @@
+
+# TESP exports
+export WAREDIR=$HOME/tesp/software
+export REPODIR=$HOME/tesp/repository
+export INSTDIR=$HOME/tesp/installed
+export TESPDIR=$REPODIR/tesp
+export GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
+export FNCS_INCLUDE_DIR=$INSTDIR/include
+export FNCS_LIBRARY=$INSTDIR/lib
+export CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
+
+# JAVA_HOME
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+
+# PATH
+export PATH=$PATH:$JAVA_HOME
+export PATH=$PATH:$INSTDIR/bin
+export PATH=$PATH:$INSTDIR/energyplus
+export PATH=$PATH:$INSTDIR/energyplus/PreProcess
+export PATH=$PATH:$INSTDIR/energyplus/PostProcess
+export PATH=$PATH:$TESPDIR/scripts/helpers
+
+# PSST environment variables
+export PSST_SOLVER=cbc
+# 'PSST_SOLVER path' -- one of "cbc", "ipopt", "/ibm/cplex/bin/x86-64_linux/cplexamp"
+export PSST_WARNING=ignore
+# 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
+
+# PROXY
+# export HTTPS_PROXY=http://proxy01.pnl.gov:3128

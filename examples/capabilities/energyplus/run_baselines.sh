@@ -1,22 +1,21 @@
-declare -r TESP_SUPPORT=$TESP_INSTALL/share/support/energyplus
-#declare -r TESP_SUPPORT=../../support/energyplus
+#!/bin/bash
 
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outSchoolBase SchoolBase.idf
+$EPLUS_PATH=$TESPDIR/data/energyplus
 
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outFullServiceRestaurant $TESP_SUPPORT/FullServiceRestaurant.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outHospital $TESP_SUPPORT/Hospital.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outLargeHotel $TESP_SUPPORT/LargeHotel.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outLargeOffice $TESP_SUPPORT/LargeOffice.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outMediumOffice $TESP_SUPPORT/MediumOffice.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outMidriseApartment $TESP_SUPPORT/MidriseApartment.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outOutPatient $TESP_SUPPORT/OutPatient.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outPrimarySchool $TESP_SUPPORT/PrimarySchool.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outQuickServiceRestaurant $TESP_SUPPORT/QuickServiceRestaurant.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outSecondarySchool $TESP_SUPPORT/SecondarySchool.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outSmallHotel $TESP_SUPPORT/SmallHotel.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outSmallOffice $TESP_SUPPORT/SmallOffice.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outStandaloneRetail $TESP_SUPPORT/StandaloneRetail.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outStripMall $TESP_SUPPORT/StripMall.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outSuperMarket $TESP_SUPPORT/SuperMarket.idf
-energyplus -w $TESP_SUPPORT/2A_USA_TX_HOUSTON.epw -d outWarehouse $TESP_SUPPORT/Warehouse.idf
-
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outSchoolBase SchoolBase.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outFullServiceRestaurant $EPLUS_PATH/FullServiceRestaurant.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outHospital $EPLUS_PATH/Hospital.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outLargeHotel $EPLUS_PATH/LargeHotel.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outLargeOffice $EPLUS_PATH/LargeOffice.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outMediumOffice $EPLUS_PATH/MediumOffice.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outMidriseApartment $EPLUS_PATH/MidriseApartment.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outOutPatient $EPLUS_PATH/OutPatient.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outPrimarySchool $EPLUS_PATH/PrimarySchool.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outQuickServiceRestaurant $EPLUS_PATH/QuickServiceRestaurant.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outSecondarySchool $EPLUS_PATH/SecondarySchool.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outSmallHotel $EPLUS_PATH/SmallHotel.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outSmallOffice $EPLUS_PATH/SmallOffice.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outStandaloneRetail $EPLUS_PATH/StandaloneRetail.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outStripMall $EPLUS_PATH/StripMall.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outSuperMarket $EPLUS_PATH/SuperMarket.idf
+energyplus -w $EPLUS_PATH/2A_USA_TX_HOUSTON.epw -d outWarehouse $EPLUS_PATH/Warehouse.idf

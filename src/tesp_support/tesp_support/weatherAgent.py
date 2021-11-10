@@ -109,7 +109,7 @@ def startWeatherAgent(file):
     weatherData2 = weatherData2.interpolate(method='quadratic')
 
     # find weather data on the hour for the hourly forecast
-    hourlyWeatherData=weatherData.loc[(weatherData.index.minute == 0) & (weatherData.index.second == 0) & (weatherData.index.microsecond == 0) & (weatherData.index.nanosecond == 0)]
+    hourlyWeatherData = weatherData.resample('60min').mean()
 
     # find all the time point that the data at that time need to be published
     timeNeedToPublishRealtime = [0]

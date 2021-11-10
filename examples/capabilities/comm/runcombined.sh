@@ -1,3 +1,5 @@
+#!/bin/bash
+
 (export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> broker.log &)
 (export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=CombinedCase_metrics.json CombinedCase.glm &> gridlabd.log &)
 (export FNCS_CONFIG_FILE=CombinedCase_substation.yaml && export FNCS_FATAL=YES && exec python3 -c "import tesp_support.api as tesp;tesp.substation_loop('CombinedCase_agent_dict.json','CombinedCase')"  &> substation.log &)

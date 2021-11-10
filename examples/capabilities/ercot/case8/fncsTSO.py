@@ -2,19 +2,24 @@
 import numpy as np
 import scipy.interpolate as ip
 import pypower.api as pp
-import tesp_support.api as tesp
+
+# the order is important in python 3.8 for fncs and api in tesp_support
 import tesp_support.fncs as fncs
+import tesp_support.api as tesp
+
 import json
 import math
 from copy import deepcopy
 import psst.cli as pst
 import pandas as pd
 import sys, os
+from tesp_support.helpers import parse_fncs_mva
+from tesp_support.helpers import print_mod_load
 
 casename = 'ercot_8'
 ames_DAM_case_file = './../DAMReferenceModel.dat'
 ames_RTM_case_file = './../RTMReferenceModel.dat'
-ames_base_case_file = os.path.expandvars('$TESP_INSTALL/share/support/pypower/ames_base_case.m')
+ames_base_case_file = os.path.expandvars('$TESPDIR/models/pypower/ames_base_case.m')
 
 load_shape = [0.6704,
               0.6303,
@@ -159,87 +164,6 @@ def make_dictionary(ppc, rootname):
               'BranchesOut': branchesout}
     print(json.dumps(ppdict), file=dp, flush=True)
     dp.close()
-
-
-def parse_mva(arg):
-    """ Helper function to parse P+jQ from a FNCS value
-
-    Args:
-      arg (str): FNCS value in rectangular format
-
-    Returns:
-      float, float: P [MW] and Q [MVAR]
-    """
-    tok = arg.strip('; MWVAKdrij')
-    bLastDigit = False
-    bParsed = False
-    vals = [0.0, 0.0]
-    for i in range(len(tok)):
-        if tok[i] == '+' or tok[i] == '-':
-            if bLastDigit:
-                vals[0] = float(tok[: i])
-                vals[1] = float(tok[i:])
-                bParsed = True
-                break
-        bLastDigit = tok[i].isdigit()
-    if not bParsed:
-        vals[0] = float(tok)
-
-    if 'd' in arg:
-        vals[1] *= (math.pi / 180.0)
-        p = vals[0] * math.cos(vals[1])
-        q = vals[0] * math.sin(vals[1])
-    elif 'r' in arg:
-        p = vals[0] * math.cos(vals[1])
-        q = vals[0] * math.sin(vals[1])
-    else:
-        p = vals[0]
-        q = vals[1]
-
-    if 'KVA' in arg:
-        p /= 1000.0
-        q /= 1000.0
-    elif 'MVA' in arg:
-        p *= 1.0
-        q *= 1.0
-    else:  # VA
-        p /= 1000000.0
-        q /= 1000000.0
-    return p, q
-
-
-def print_gld_load(ppc, gld_load, msg, ts):
-    bus = ppc['bus']
-    fncsBus = ppc['DSO']
-    print(msg, 'at', ts)
-    print('bus, genidx, pbus, qbus, pcrv, qcrv, pgld, qgld, unresp, resp_max, c2, c1, deg')
-    for row in fncsBus:
-        busnum = int(row[0])
-        gld_scale = float(row[2])
-        pbus = bus[busnum - 1, 2]
-        qbus = bus[busnum - 1, 3]
-        pcrv = gld_load[busnum]['pcrv']
-        qcrv = gld_load[busnum]['qcrv']
-        pgld = gld_load[busnum]['p'] * gld_scale
-        qgld = gld_load[busnum]['q'] * gld_scale
-        resp_max = gld_load[busnum]['resp_max'] * gld_scale
-        unresp = gld_load[busnum]['unresp'] * gld_scale
-        c2 = gld_load[busnum]['c2'] / gld_scale
-        c1 = gld_load[busnum]['c1']
-        deg = gld_load[busnum]['deg']
-        genidx = gld_load[busnum]['genidx']
-        print(busnum, genidx,
-              '{: .2f}'.format(pbus),
-              '{: .2f}'.format(qbus),
-              '{: .2f}'.format(pcrv),
-              '{: .2f}'.format(qcrv),
-              '{: .2f}'.format(pgld),
-              '{: .2f}'.format(qgld),
-              '{: .2f}'.format(unresp),
-              '{: .2f}'.format(resp_max),
-              '{: .8f}'.format(c2),
-              '{: .8f}'.format(c1),
-              '{: .1f}'.format(deg))
 
 
 def dist_slack(mpc, prev_load):
@@ -1445,7 +1369,7 @@ def tso_loop():
         # getting the latest inputs from GridlabD
             elif 'SUBSTATION' in topic:  # gld
                 busnum = int(topic[10:])
-                p, q = parse_mva(val)
+                p, q = parse_fncs_mva(val)
                 gld_load[busnum]['p'] = float(p)   # MW
                 gld_load[busnum]['q'] = float(q)   # MW
         # getting the latest inputs from DSO day Ahead
@@ -1639,7 +1563,7 @@ def tso_loop():
             # update cost coefficients, set dispatchable load, put unresp+curve load on bus
             update_cost_and_load()
 
-            #    print_gld_load(ppc, gld_load, 'OPF', ts)
+            #    print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'OPF', ts)
             ropf = pp.runopf(ppc, ppopt_market)
             if ropf['success'] == False:
                 conv_accum = False
@@ -1691,7 +1615,7 @@ def tso_loop():
             gen[idx, 2] = 0  # q
             gen[idx, 9] = 0  # pmin
 
-        #  print_gld_load(ppc, gld_load, 'RPF', ts)
+        #  print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'RPF', ts)
         # print('bus_b4_dist_slack = ', bus[:, 2].sum())
         # print('gen_b4_dist_slack = ', gen[:, 1].sum())
 

@@ -1,0 +1,99 @@
+{
+  "subscriptions" : [
+    {
+      "key" : "eplus_agent/cooling_setpoint_delta", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "eplus_agent/heating_setpoint_delta", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "eplus_agent/bill_mode", 
+      "type" : "string",
+      "required" : true
+    },
+    {
+      "key" : "eplus_agent/monthly_fee", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "eplus_agent/power_A", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "eplus_agent/power_B", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "eplus_agent/power_C", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "eplus_agent/price", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "player/clear_price", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/EMS Cooling Controlled Load", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/EMS Heating Controlled Load", 
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/EMS HEATING SETPOINT",
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/EMS HEATING CURRENT",
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/EMS COOLING SETPOINT",
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/EMS COOLING CURRENT",
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/H2_NOM SCHEDULE VALUE",
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/H1_NOM SCHEDULE VALUE",
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/C2_NOM SCHEDULE VALUE",
+      "type" : "double",
+      "required" : true
+    },
+    {
+      "key" : "energyPlus/C1_NOM SCHEDULE VALUE",
+      "type" : "double",
+      "required" : true
+    }
+  ]
+}

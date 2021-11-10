@@ -10,6 +10,16 @@ Todo:
     * Handle negative price bids from HVAC agents, currently they are discarded
     * Distribute marginal quantities and fractions; these are not currently applied to HVACs
 
+2021-10-29 TDH: Key assumptions we need to refactor out of this:
+    - This is a retail market working under a wholesale market. We want
+    something more general that can operate at any market level.
+    - Load state is not necessary information to run a market. PNNL TSP has
+    traditionally had the construct of responsive and unresponsive loads and I
+    think the idea is crucial for being able to get good quadratic curve
+    fits on the demand curve (by lopping off the unresponsive portion) but
+    I thin we should refactor this so that these assumptions are not so
+    tightly integrated with the formulation.
+
 """
 import tesp_support.helpers as helpers
 
@@ -28,9 +38,8 @@ class simple_auction:
         name (str): the name of this auction, also the market key from the configuration JSON file
         std_dev (float): the historical standard deviation of the price, in $/kwh, from dict
         mean (float): the historical mean price in $/kwh, from dict
-        period (float): the market clearing period in seconds, from dict
         pricecap (float): the maximum allowed market clearing price, in $/kwh, from dict
-        max_capacity_reference_bid_quantity (float):
+        max_capacity_reference_bid_quantity (float): this market's maximum capacity, likely defined by a physical limitation in the circuit(s) being managed.
         statistic_mode (int): always 1, not used, from dict
         stat_mode (str): always ST_CURR, not used, from dict
         stat_interval (str): always 86400 seconds, for one day, not used, from dict
@@ -38,7 +47,7 @@ class simple_auction:
         stat_value (str): always zero, not used, from dict
         curve_buyer (curve): data structure to accumulate buyer bids
         curve_seller (curve): data structure to accumulate seller bids
-        refload (float): the latest substation load from GridLAB-D
+        refload (float): the latest substation load from GridLAB-D. This is initially assumed to be all unresponsive and using the load state parameter when adding demand bids (which are generally price_responsive) all loads that bid and are on are removed from the assumed unresponsive load value
         lmp (float): the latest locational marginal price from the bulk system market
         unresp (float): unresponsive load, i.e., total substation load less the bidding, running HVACs
         agg_unresp (float): aggregated unresponsive load, i.e., total substation load less the bidding, running HVACs
@@ -112,6 +121,8 @@ class simple_auction:
                 
     def initAuction (self):
         """Sets the clearing_price and lmp to the mean price
+
+        2021-10-29 TDH: TODO - Any reason we can't put this in constructor?
         """
         self.clearing_price = self.lmp = self.mean
 
@@ -188,6 +199,8 @@ class simple_auction:
             tnext_clear (int): next clearing time in FNCS seconds, should be <= time_granted, for the log file only
             time_granted (int): the current time in FNCS seconds, for the log file only
         """
+
+
         if self.max_capacity_reference_bid_quantity > 0:
             self.curve_seller.add_to_curve (self.lmp, self.max_capacity_reference_bid_quantity, True)
         if self.curve_seller.count > 0:
@@ -518,3 +531,122 @@ class simple_auction:
                '{:.4f}'.format(self.supplierSurplus),
                '{:.4f}'.format(self.unrespSupplierSurplus), 
                sep=',', flush=True)
+
+def _auto_run():
+    '''
+    This method implements the basic functionalities offered by
+    simple_auction and demonstrates a typical single-period market operation
+
+    '''
+    # 2021-10-29 TDH: This is a subset of values from the
+    #  "SGIP1b_agent_dict.json" "markets" object. Many of these are only
+    #  used to initialize the simple_auction object but not used by any
+    #  existing object methods. They may be market metadata that other
+    #  entities need from it so I won't delete them. The big ones that are
+    #  used are 'clearing_scalar' and 'max_capacity_reference_bid_quantity'.
+    market_name = 'test_market'
+    market_config = {
+        'unit': 'kW',
+        'pricecap': 3.78,
+        'period': 300,
+        'clearing_scalar': 0.0,
+        'init_price': 0.02078,
+        'init_stdev': 0.01,
+        'statistic_mode': 1,
+        'max_capacity_reference_bid_quantity': 5000,
+        'stat_mode': ['ST_CURR', 'ST_CURR'],
+        'stat_interval': [84600, 84600],
+        'stat_type': ['SY_MEAN', 'SY_STDEV'],
+        'stat_value': [0, 0]
+    }
+
+    # 2021-10-29 TDH: More arbitrary values for testing/demonstration.
+    wholesale_LMP = 3
+    # 2021-10-29 TDH:
+    refload = 1000
+    # 2021-10-29 TDH: Bids take on the form [price, quantity, on_state] with
+    #  units [$/kWh, kW, Boolean]
+    #  I'll see once I fully implement this demonstration but it feels to me
+    #  that the auction object shouldn't need to know the state of the load
+    #  bidding into the auction.
+    #  These are retail demand bids
+    dummy_buyers = [
+        [3, 1, True],
+        [2.98, 1, False],
+        [2.8, 1, True],
+        [2.75, 10, False],
+        [2.5, 5, True],
+        [2.4, 1, False],
+        [2.1, 15, True],
+        [2.0, 5, False],
+        [1.9, 20, True],
+        [1.8, 15, False],
+        [1.75, 25, True],
+        [1.7, 5, False],
+        [1.5, 25, True],
+        [1.4, 30, False],
+        [1.3, 40, True],
+        [1.1, 50, False],
+        [1.0, 30, True],
+        [0.95, 80, False],
+        [0.9, 50, True],
+        [0.70, 100, False],
+        [0.6, 120, True],
+        [0.5, 80, False],
+        [0.4, 90, True],
+        [0.3, 100, False],
+        [0.2, 150, True],
+        [0.1, 300, False]
+    ]
+
+    # 2021-10-29 TDH: For testing/demonstration purposes, we have to create
+    #  dummy sellers so the market can operate. Bids are formatted
+    #       [float price ($/kWh), float quantity (kW)]
+    #  These are retail supply bids.
+    dummy_sellers = [
+        [0.1, 1],
+        [0.3, 5],
+        [0.5, 10],
+        [0.9, 20],
+        [1, 10],
+        [1.2, 20],
+        [1.4, 10],
+        [1.5, 15],
+        [1.9, 20],
+        [2, 90],
+        [2.1, 80],
+        [2.2, 40],
+        [2.5, 110],
+        [2.6, 150],
+        [2.8, 120],
+        [2.9, 200],
+        [3, 250]
+    ]
+
+
+    ######## Demonstration simple double-auction implementation ########
+    aucObj = simple_auction(market_config, market_name)
+    aucObj.initAuction()
+    # Set wholesale LMP passed into this retail market
+    aucObj.set_lmp(wholesale_LMP)
+    # Set current load value corresponding to this value. Used to split
+    # the load in the market into price-responsive and price-unresponsive
+    # which makes the process of curve-fitting to the demand curve more
+    # accurate.
+    aucObj.set_refload(refload)
+    aucObj.clear_bids() # That is erase any leftover bids from last period
+    # As it is used now in TESP, each bid corresponds to a load and they are
+    # added to the auction one at a time.
+    for bid in dummy_buyers:
+        aucObj.collect_bid(bid)
+    # Adding sellers can be omitted. clear_market() adds the
+    # max_capacity_reference_bid_quantity at the self.lmp to the retail
+    # market modeled here.
+    for bid in dummy_sellers:
+        aucObj.supplier_bid(bid)
+    aucObj.aggregate_bids()
+    aucObj.clear_market() #runs market to produce clear price and quantity
+    aucObj.surplusCalculation() # Optional
+
+if __name__ == '__main__':
+   _auto_run()

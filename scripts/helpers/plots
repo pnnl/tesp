@@ -1,0 +1,52 @@
+#!/usr/bin/python3
+
+# usage 'python3 plots.py metrics_root [save_ext] [save_only]'
+import sys
+import os
+import tesp_support.process_pypower as pp
+import tesp_support.process_gld as gp
+import tesp_support.process_houses as hp
+import tesp_support.process_voltages as vp
+import tesp_support.process_agents as ap
+import tesp_support.process_eplus as ep
+
+rootname = sys.argv[1]
+save_ext = None
+save_file = None
+save_only = False
+if len(sys.argv) > 2:
+  save_ext = sys.argv[2]
+  if len(sys.argv) > 3:
+    save_only_str = sys.argv[3]
+    if ('T' in save_only_str) or ('t' in save_only_str) or ('1' in save_only_str):
+      save_only = True
+if os.path.exists ('bus_' + rootname + '_metrics.json'):
+  pmetrics = pp.read_pypower_metrics (rootname)
+  if save_ext is not None:
+    save_file = '{:s}_pp.{:s}'.format (rootname, save_ext)
+  pp.plot_pypower (pmetrics, save_file=save_file, save_only=save_only)
+
+if os.path.exists ('substation_' + rootname + '_metrics.json'):
+  gmetrics = gp.read_gld_metrics (rootname)
+  if save_ext is not None:
+    save_file = '{:s}_gld.{:s}'.format (rootname, save_ext)
+  gp.plot_gld (gmetrics, save_file=save_file, save_only=save_only)
+  if save_ext is not None:
+    save_file = '{:s}_hse.{:s}'.format (rootname, save_ext)
+  hp.plot_houses (gmetrics, save_file=save_file, save_only=save_only)
+  if save_ext is not None:
+    save_file = '{:s}_vlt.{:s}'.format (rootname, save_ext)
+  vp.plot_voltages (gmetrics, save_file=save_file, save_only=save_only)
+
+if os.path.exists ('auction_' + rootname + '_metrics.json'):
+  ametrics = ap.read_agent_metrics (rootname)
+  if save_ext is not None:
+    save_file = '{:s}_ag.{:s}'.format (rootname, save_ext)
+  ap.plot_agents (ametrics, save_file=save_file, save_only=save_only)
+
+if os.path.exists ('eplus_' + rootname + '_metrics.json'):
+  emetrics = ep.read_eplus_metrics (rootname)
+  if save_ext is not None:
+    save_file = '{:s}_ep.{:s}'.format (rootname, save_ext)
+  ep.plot_eplus (emetrics, save_file=save_file, save_only=save_only)
+

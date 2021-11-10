@@ -1,10 +1,10 @@
 # Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: plot_invs.py; custom for the IEEE 8500-node circuit
-import json;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import json
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import os.path
 
 rootname = sys.argv[1]

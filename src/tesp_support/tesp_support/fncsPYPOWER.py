@@ -17,13 +17,15 @@ try:
   import helics
 except:
   pass
+
+import re
 import numpy as np
 import pypower.api as pp
 from math import sqrt
-import math
-import re
 from copy import deepcopy
-import tesp_support.helpers as helpers
+from .helpers import stop_helics_federate
+from .helpers import parse_fncs_mva
+
 #import cProfile
 #import pstats
 if sys.platform != 'win32':
@@ -56,7 +58,7 @@ def summarize_opf(res):
     print('{:4d} {:4d} {:8.2f} {:8.2f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}'.format(idx,int(row[0]),float(row[1]),float(row[2]),float(row[21]),float(row[22]),float(row[23]),float(row[24])))
     ++idx
 
-def load_json_case(fname):
+def load_json_case(fname, FNCS=False):
   """ Helper function to load PYPOWER case from a JSON file
 
   Args:
@@ -72,7 +74,10 @@ def load_json_case(fname):
   ppc['branch'] = np.array (ppc['branch'])
   ppc['areas'] = np.array (ppc['areas'])
   ppc['gencost'] = np.array (ppc['gencost'])
-  ppc['DSO'] = np.array (ppc['DSO'])
+  if FNCS == True: 
+    ppc['FNCS'] = np.array (ppc['FNCS'])
+  else:
+    ppc['DSO'] = np.array (ppc['DSO'])
   ppc['UnitsOut'] = np.array (ppc['UnitsOut'])
   ppc['BranchesOut'] = np.array (ppc['BranchesOut'])
   return ppc
@@ -126,52 +131,6 @@ def make_dictionary(ppc, rootname):
   json.dump (ppdict, dp, ensure_ascii=False, indent=2)
   dp.close()
 
-def parse_mva(arg):
-  """ Helper function to parse P+jQ from a FNCS value
-
-  Args:
-    arg (str): FNCS value in rectangular format
-
-  Returns:
-    float, float: P [MW] and Q [MVAR]
-  """
-  tok = arg.strip('; MWVAKdrij')
-  bLastDigit = False
-  bParsed = False
-  vals = [0.0,0.0]
-  for i in range(len(tok)):
-    if tok[i] == '+' or tok[i] == '-':
-      if bLastDigit:
-        vals[0] = float(tok[:i])
-        vals[1] = float(tok[i:])
-        bParsed = True
-        break
-    bLastDigit = tok[i].isdigit()
-  if not bParsed:
-    vals[0] = float(tok)
-
-  if 'd' in arg:
-    vals[1] *= (math.pi / 180.0)
-    p = vals[0] * math.cos(vals[1])
-    q = vals[0] * math.sin(vals[1])
-  elif 'r' in arg:
-    p = vals[0] * math.cos(vals[1])
-    q = vals[0] * math.sin(vals[1])
-  else:
-    p = vals[0]
-    q = vals[1]
-
-  if 'KVA' in arg:
-    p /= 1000.0
-    q /= 1000.0
-  elif 'MVA' in arg:
-    p *= 1.0
-    q *= 1.0
-  else:  # VA
-    p /= 1000000.0
-    q /= 1000000.0
-
-  return p, q
 
 def pypower_loop (casefile, rootname, helicsConfig=None):
   """ Public function to start PYPOWER solutions under control of FNCS or HELICS
@@ -352,7 +311,7 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
           resp_deg = int(value)
           new_bid = True
         else:
-          gld_load = parse_mva (value) # actual value, may not match unresp + resp load
+          gld_load = parse_fncs_mva(value) # actual value, may not match unresp + resp load
           feeder_load = float(gld_load[0]) * load_scale
     if new_bid == True:
       dummy = 2
@@ -557,7 +516,7 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
   sys_mp.close()
   op.close()
   if hFed is not None:
-    helpers.stop_helics_federate (hFed)
+    stop_helics_federate (hFed)
   else:
     print ('finalizing DSO', flush=True)
     fncs.finalize()

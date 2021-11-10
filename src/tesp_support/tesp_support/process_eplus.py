@@ -20,6 +20,7 @@ except:
 # Setting up logging
 logger = logging.getLogger(__name__)
 
+
 def plot_eplus (dict, title=None, save_file=None, save_only=False):
   hrs = dict['hrs']
   data = dict['data_e']

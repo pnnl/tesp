@@ -152,12 +152,12 @@ if __name__ == '__main__':
     shutil.rmtree(caseDir)
   os.makedirs(caseDir)
 
-  shutil.copy ('../../../support/misc/clean.sh', caseDir)
-  shutil.copy ('../../../support/misc/kill23404.sh', caseDir)
-  shutil.copy ('../../../support/comm/eplots.py', caseDir)
+  shutil.copy ('../../support/misc/clean.sh', caseDir)
+  shutil.copy ('../../support/misc/kill23404.sh', caseDir)
+  shutil.copy ('../../support/comm/eplots.py', caseDir)
   shutil.copy ('{:s}/{:s}'.format (eplusDir, EPWFile), '{:s}/{:s}'.format (caseDir, 'epWeather.epw'))
-  shutil.copy ('../../../support/comm/prices.txt', caseDir)
-  shutil.copy ('../../../support/comm/helicsRecorder.json', caseDir)
+  shutil.copy ('../../support/comm/prices.txt', caseDir)
+  shutil.copy ('../../support/comm/helicsRecorder.json', caseDir)
 
   for bldg in bldgs:
     configure_building (bldg)

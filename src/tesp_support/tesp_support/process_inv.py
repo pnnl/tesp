@@ -606,6 +606,3 @@ def process_inv(nameroot, dictname = '', save_file=None, save_only=False):
     plt.savefig(save_file)
   if not save_only:
     plt.show()
-
-
-

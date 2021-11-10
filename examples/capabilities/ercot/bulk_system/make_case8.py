@@ -105,8 +105,8 @@ if __name__ == '__main__':
 #   bus,zone,lon,lat,load,gen,diff,caps
   dbuses = np.genfromtxt('Buses8.csv', dtype=[int, int, float, float, float, float, float, float], skip_header=1, delimiter=',')
 # idx,bus,mvabase,pmin,qmin,qmax,c2,c1,c0,fuel
-  dunits = np.genfromtxt('Units8.csv', dtype=[('idx', int), ('bus', int), ('mvabase', float), ('pmin', float),
-                                              ('qmin',float), ('qmax',float), ('c2',float), ('c1',float), ('c0',float), ('fuel', 'U16')], skip_header=0, names=True, delimiter=',')
+  dunits = np.genfromtxt('Units8.csv', dtype=[('idx',int), ('bus',int), ('mvabase',float), ('pmin',float), 
+    ('qmin',float), ('qmax',float), ('c2',float), ('c1',float), ('c0',float), ('fuel', 'U16')], skip_header=0, names=True, delimiter=',')
 #  dunits = np.genfromtxt('Units8.csv', dtype=[int, int, float, float, float, float, float, float, float, ('fuel', 'S')], skip_header=0, names=True, delimiter=',')
 #  dunits = np.genfromtxt('Units8.csv', dtype=None, skip_header=1, delimiter=',')
   print (dunits)
