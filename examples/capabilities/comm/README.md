@@ -54,6 +54,10 @@ To set up and run CombinedCase:
 4. chmod +x *.sh
 5. ./runcombined.sh
 
+## Consensus Mechanism Example
+
+![](Eplus_Comm.png)
+
 ### File Directory
 
 - *autotest.py*;
@@ -88,6 +92,6 @@ Layout of the full-order feeder models used in this example.
 
 ![](R5-12.47-5.png)
 
-Copyright (c) 2017-2020, Battelle Memorial Institute
+Copyright (c) 2017-2021, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE

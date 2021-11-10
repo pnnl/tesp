@@ -562,8 +562,10 @@ values:
     st = os.stat (shfile)
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     shfile = casedir + '/kill5570.sh'
+    st = os.stat (shfile)
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     shfile = casedir + '/clean.sh'
+    st = os.stat (shfile)
     os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     # HELICS shell scripts and chmod for Mac/Linux - need to specify python3
