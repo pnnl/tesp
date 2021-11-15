@@ -14,35 +14,33 @@ References:
 
   `Matplotlib Animation <https://matplotlib.org/api/animation_api.html>`_
 """
+import os
 import sys
 import json
+import yaml
+import subprocess
+
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import messagebox
-import subprocess
-import os
-try:
-  import tesp_support.fncs as fncs
-except:
-  pass
-import tesp_support.helpers as helpers
-import time
-
-import numpy as np;
-import matplotlib;
 
 try:
-  matplotlib.use('TkAgg')
+    import tesp_support.fncs as fncs
 except:
-  pass
+    pass
+from .helpers import parse_kw
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk;
-from matplotlib.figure import Figure;
+import matplotlib
+try:
+    matplotlib.use('TkAgg')
+except:
+    pass
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
-import matplotlib.pyplot as plt;
-import yaml
+import matplotlib.pyplot as plt
 
 
 class TespMonitorGUI:
@@ -356,7 +354,7 @@ class TespMonitorGUI:
             #   if topic == 'vpos1':
             #     v1 = float(value.strip('+ degFkW')) / 199185.0
             #   elif topic == 'distribution_load8':
-            #     v3 = helpers.parse_kw (value)
+            #     v3 = parse_kw (value)
             #   elif topic == 'vpos8':
             #     v0 = float (value.strip('+ degFkW')) / 199185.0
             #   # elif topic == 'clear_price':
@@ -491,7 +489,7 @@ class TespMonitorGUI:
         if 'vpos' in topic:
             return float(value.strip('+ degFkW')) / float(plot.voltageBase.get())
         elif 'distribution_load' in topic:
-            return helpers.parse_kw(value)
+            return parse_kw(value)
         elif 'airtemp' in topic:
             return float(value.strip('+ degFkW'))
         elif 'LMP' in topic:

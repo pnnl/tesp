@@ -24,7 +24,7 @@ import pypower.api as pp
 from math import sqrt
 from copy import deepcopy
 from .helpers import stop_helics_federate
-from .helpers import parse_fncs_mva
+from .helpers import parse_mva
 
 #import cProfile
 #import pstats
@@ -311,7 +311,7 @@ def pypower_loop (casefile, rootname, helicsConfig=None):
           resp_deg = int(value)
           new_bid = True
         else:
-          gld_load = parse_fncs_mva(value) # actual value, may not match unresp + resp load
+          gld_load = parse_mva(value) # actual value, may not match unresp + resp load
           feeder_load = float(gld_load[0]) * load_scale
     if new_bid == True:
       dummy = 2

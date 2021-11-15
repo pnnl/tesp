@@ -13,7 +13,7 @@ from copy import deepcopy
 import psst.cli as pst
 import pandas as pd
 import sys, os
-from tesp_support.helpers import parse_fncs_mva
+from tesp_support.helpers import parse_mva
 from tesp_support.helpers import print_mod_load
 
 casename = 'ercot_8'
@@ -1369,7 +1369,7 @@ def tso_loop():
         # getting the latest inputs from GridlabD
             elif 'SUBSTATION' in topic:  # gld
                 busnum = int(topic[10:])
-                p, q = parse_fncs_mva(val)
+                p, q = parse_mva(val)
                 gld_load[busnum]['p'] = float(p)   # MW
                 gld_load[busnum]['q'] = float(q)   # MW
         # getting the latest inputs from DSO day Ahead

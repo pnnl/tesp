@@ -20,16 +20,16 @@ The function call order for this agent is:
             bid_accepted(){update inv_P_setpoint and GridLAB-D P_out if needed}
 
 """
-import math
 import numpy as np
-from copy import deepcopy
 import logging as log
 import pyomo.environ as pyo
-from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
+from math import isnan
+from copy import deepcopy
+from datetime import datetime, timedelta
 
-import tesp_support.helpers as helpers
-import tesp_support.helpers_dsot_v1 as agent_helpers
+from .helpers import parse_number
+from .helpers_dsot_v1 import get_run_solver
 import tesp_support.feederGenerator_dsot_v1 as fg
 
 logger = log.getLogger()
@@ -458,7 +458,7 @@ class EVDSOT:
 
         # print('home depart hours: ', self.home_depart_hours)
         # print('day_ahead_price_forcast...', self.f_DA)
-        results = agent_helpers.get_run_solver('ev_' + self.name, pyo, model, self.solver)
+        results = get_run_solver('ev_' + self.name, pyo, model, self.solver)
         # print('*** optimization model ***:')
         # print(model.pprint())
         # print('ev objective function is ', pyo.value(model.obj))
@@ -592,13 +592,13 @@ class EVDSOT:
             except:
                 temp = 1
 
-        if math.isnan(m) and temp == 0:
+        if isnan(m) and temp == 0:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
             except:
                 temp = 1
 
-        if math.isnan(m):
+        if isnan(m):
             temp = 1
 
         if temp == 0:
@@ -684,7 +684,7 @@ class EVDSOT:
 
         """
         # print('**fncs str** ', fncs_str)
-        val = helpers.parse_fncs_number(fncs_str)
+        val = parse_number(fncs_str)
         # print(val)
         self.Cinit = self.evCapacity / 100 * val
 
@@ -808,13 +808,13 @@ class EVDSOT:
             except:
                 temp = 1
 
-        if math.isnan(m) and temp == 0:
+        if isnan(m) and temp == 0:
             try:
                 m = (BID[2][P] - BID[3][P]) / (BID[2][Q] - BID[3][Q])  # y = m*x + b
             except:
                 temp = 1
 
-        if math.isnan(m):
+        if isnan(m):
             temp = 1
 
         if temp == 0:

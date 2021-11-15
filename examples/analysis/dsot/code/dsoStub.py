@@ -4,7 +4,7 @@ import os
 
 import tesp_support.fncs as fncs
 from tesp_support.fncsPYPOWER import load_json_case
-from tesp_support.helpers import parse_fncs_mva
+from tesp_support.helpers import parse_mva
 
 
 def dso_make_yaml(casename):
@@ -168,7 +168,7 @@ def dso_loop(casename):
                 # gld_bus[busnum]['v'] = float(val)
             elif 'SUBSTATION_' in topic:  # gridlabd - residential/commercial
                 busnum = int(topic[11:])
-                p, q = parse_fncs_mva(val)
+                p, q = parse_mva(val)
                 # log.info('at ' + str(ts) + " " + topic + " " + val)
                 gld_bus[busnum]['p'] = p  # MW active
                 gld_bus[busnum]['q'] = q  # MW reactive
@@ -178,7 +178,7 @@ def dso_loop(casename):
                 gld_bus[busnum]['p_hist'] = json.loads(val)  # MW active
             elif 'IND_LOAD_' in topic:
                 busnum = int(topic[9:])
-                p, q = parse_fncs_mva(val)
+                p, q = parse_mva(val)
                 # log.info('at ' + str(ts) + " " + topic + " " + val)
                 gld_bus[busnum]['p_i'] = p  # MW
                 gld_bus[busnum]['q_i'] = q  # MW

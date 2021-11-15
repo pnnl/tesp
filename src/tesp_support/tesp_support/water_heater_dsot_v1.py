@@ -1053,7 +1053,7 @@ class WaterHeaterDSOT:
             sim_time (str): Current time in the simulation; should be human readable
         """
         try:
-            _tmp = helpers.parse_fncs_number(fncs_str)
+            _tmp = helpers.parse_number(fncs_str)
         except:
             _tmp = self.T_bottom
             print("Error wh lower temp:", fncs_str, self.name)
@@ -1077,7 +1077,7 @@ class WaterHeaterDSOT:
             sim_time (str): Current time in the simulation; should be human readable
         """
         try:
-            _tmp = helpers.parse_fncs_number(fncs_str)
+            _tmp = helpers.parse_number(fncs_str)
         except:
             _tmp = self.T_upper
             print("Error wh upper temp:", fncs_str, self.name)
@@ -1138,7 +1138,7 @@ class WaterHeaterDSOT:
         Args:
             fncs_str (str): FNCS message with wdrate value in gpm
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = helpers.parse_number(fncs_str)
 
         for i in range(len(self.wd_rate_val)):
             if self.wd_rate_val[i][0] == self.hour and self.wd_rate_val[i][1] == self.minute:
@@ -1155,7 +1155,7 @@ class WaterHeaterDSOT:
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = helpers.parse_number(fncs_str)
         if val > 0.0:
             self.Phw = val
         else:
@@ -1193,7 +1193,7 @@ class WaterHeaterDSOT:
             model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human readable
         """
-        self.Tambient = helpers.parse_fncs_number(fncs_str)
+        self.Tambient = helpers.parse_number(fncs_str)
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object
 

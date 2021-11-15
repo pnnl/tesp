@@ -1,16 +1,18 @@
+import os
 import sys
 import json
-import os
-import numpy as np
-import matplotlib.pyplot as plt
 import math
+import numpy as np
 from datetime import datetime
-from os.path import dirname, abspath, join
-from tesp_support.helpers import gld_strict_name
-# import tesp_support.feederGenerator_dsot_v1 as fg  # randomize_commercial_skew
-import tesp_support
+from os.path import dirname, abspath
+
+import matplotlib.pyplot as plt
+
+from .helpers import gld_strict_name
+import tesp_support.feederGenerator_dsot_v1 as res_FG
+
+
 sys.path.insert(0, dirname(abspath(__file__)))
-# from feederGenerator import randomize_commercial_skew
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
@@ -29,7 +31,7 @@ def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
             area = normalize_dict_prob('total_area', bldg_metadata['building_model_specifics'][bldg_type]['total_area'])
             bldg_area_bin = rand_bin_select(area, np.random.uniform(0, 1))
             bldg_area = sub_bin_select(bldg_area_bin, 'total_area', np.random.uniform(0, 1))
-            bldgs['bldg_'+str(i+1)] = [bldg_type, bldg_area]
+            bldgs['bldg_' + str(i + 1)] = [bldg_type, bldg_area]
             i += 1
 
     return bldgs
@@ -80,8 +82,8 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
         #  HVAC oversizing factor
         bldg['os_rand'] = np.random.normal(bldg_metadata['general']['HVAC']['oversizing_factor']['mean'],
                                            bldg_metadata['general']['HVAC']['oversizing_factor']['std_dev'])
-        bldg['os_rand'] = min(bldg_metadata['general']['HVAC']['oversizing_factor']['upper_bound'],
-                              max(bldg['os_rand'], bldg_metadata['general']['HVAC']['oversizing_factor']['lower_bound']))
+        bldg['os_rand'] = min(bldg_metadata['general']['HVAC']['oversizing_factor']['upper_bound'], max(bldg['os_rand'],
+                              bldg_metadata['general']['HVAC']['oversizing_factor']['lower_bound']))
 
         # Set form of the building
         bldg['floor_area'] = bldg_size
@@ -186,13 +188,13 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
             bldg['skew_value'] = 0
         elif bldg_type in ['office', 'warehouse_storage', 'education']:
             bldg['base_schedule'] = 'office'
-            bldg['skew_value'] = tesp_support.feederGenerator_dsot_v1.randomize_commercial_skew()
+            bldg['skew_value'] = res_FG.randomize_commercial_skew()
         elif bldg_type in ['big_box', 'strip_mall', 'food_service', 'food_sales']:
             bldg['base_schedule'] = 'retail'
-            bldg['skew_value'] = tesp_support.feederGenerator_dsot_v1.randomize_commercial_skew()
+            bldg['skew_value'] = res_FG.randomize_commercial_skew()
         elif bldg_type == 'low_occupancy':
             bldg['base_schedule'] = 'lowocc'
-            bldg['skew_value'] = tesp_support.feederGenerator_dsot_v1.randomize_commercial_skew()
+            bldg['skew_value'] = res_FG.randomize_commercial_skew()
 
         # randomize 10# then convert W/sf -> kW
         floor_area = bldg['floor_area']
@@ -215,7 +217,8 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
     return bldg
 
 
-def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percentage, ev_metadata, ev_percentage, solar_percentage, pv_rating_MW, solar_Q_player, caseType, metrics, metrics_interval, mode=None ):
+def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percentage, ev_metadata, ev_percentage,
+                      solar_percentage, pv_rating_MW, solar_Q_player, caseType, metrics, metrics_interval, mode=None):
     """For large buildings, breaks building up into multiple zones.  For all buildings sends definition dictionary to
     function that writes out building definition to GLD file format.
         Args:
@@ -265,7 +268,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
             bldg['init_temp'] = 68. + 4. * np.random.random()
             zone = 'all'
             bldg['zonename'] = gld_strict_name(key + '_' + comm_name + '_zone_' + str(zone))
-            write_one_commercial_zone (bldg, op, metrics, metrics_interval, mode)
+            write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode)
 
         # For buildings between 10k and 30k sq. ft. break into six zones using method for big box store in previous work
         elif bldg_size < 30000:
@@ -362,17 +365,14 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
         if np.random.uniform(0, 1) <= storage_percentage:
             # TODO: Review battery results to see if one battery per 10000 sq ft. is appropriate.
             num_batt = math.floor(bldg_size / 10000) + 1
-            batt_capacity = num_batt * tesp_support.feederGenerator_dsot_v1.get_dist(
-                batt_metadata['capacity(kWh)']['mean'],
-                batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
-            max_charge_rt = tesp_support.feederGenerator_dsot_v1.get_dist(
-                batt_metadata['rated_charging_power(kW)']['mean'],
-                batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
+            batt_capacity = num_batt * res_FG.get_dist(batt_metadata['capacity(kWh)']['mean'],
+                                                       batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
+            max_charge_rt = res_FG.get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
+                                            batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
             max_discharge_rt = max_charge_rt
             inv_eff = batt_metadata['inv_efficiency(per)'] / 100
-            charging_loss = tesp_support.feederGenerator_dsot_v1.get_dist(
-                batt_metadata['rated_charging_loss(per)']['mean'],
-                batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
+            charging_loss = res_FG.get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
+                                            batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
             discharging_loss = charging_loss
             bat_rt_efficiency = charging_loss * discharging_loss
             rated_power = max(max_charge_rt, max_discharge_rt)
@@ -478,11 +478,9 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('  };', file=op)
                 print('}', file=op)
 
-
         if np.random.uniform(0, 1) <= ev_percentage:
             # first lets select an ev model:
-            ev_name = tesp_support.feederGenerator_dsot_v1.selectEVmodel(ev_metadata['sale_probability'],
-                                                                         np.random.uniform(0, 1))
+            ev_name = res_FG.selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
             ev_range = ev_metadata['Range (miles)'][ev_name]
             ev_mileage = ev_metadata['Miles per kWh'][ev_name]
             ev_charge_eff = ev_metadata['charging efficiency']
@@ -495,21 +493,20 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 volt_conf = 'IS220'  # for level 2 charger, 220 V is must
             # now, let's map a random driving schedule with this vehicle ensuring daily miles
             # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
-            drive_sch = tesp_support.feederGenerator_dsot_v1.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
+            drive_sch = res_FG.match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
             # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
 
             # few sanity checks
             if drive_sch['daily_miles'] > ev_range:
                 raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
-            if not tesp_support.feederGenerator_dsot_v1.is_hhmm_valid(
-                    drive_sch['home_arr_time']) or not tesp_support.feederGenerator_dsot_v1.is_hhmm_valid(
-                drive_sch['home_leave_time']) or not tesp_support.feederGenerator_dsot_v1.is_hhmm_valid(
-                drive_sch['work_arr_time']):
+            if not res_FG.is_hhmm_valid(drive_sch['home_arr_time']) or \
+                    not res_FG.is_hhmm_valid(drive_sch['home_leave_time']) or \
+                    not res_FG.is_hhmm_valid(drive_sch['work_arr_time']):
                 raise UserWarning('invalid HHMM format of driving time!')
             if drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or drive_sch[
                 'work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0:
                 raise UserWarning('invalid home or work duration for ev!')
-            if not tesp_support.feederGenerator_dsot_v1.is_drive_time_valid(drive_sch):
+            if not res_FG.is_drive_time_valid(drive_sch):
                 raise UserWarning('home and work arrival time are not consistent with durations!')
 
             basenode = mtr

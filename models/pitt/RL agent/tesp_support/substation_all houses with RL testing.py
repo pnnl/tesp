@@ -196,7 +196,7 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=1667, flag='WithM
             value = fncs.get_value(topic)
             row = topicMap[topic]
             if row[1] == 0:
-                LMP = helpers.parse_fncs_magnitude (value)
+                LMP = helpers.parse_magnitude(value)
                 aucObj.set_lmp (LMP)
             elif row[1] == 1:
                 refload = helpers.parse_kw (value)
@@ -209,7 +209,7 @@ def inner_substation_loop (configfile, metrics_root, hour_stop=1667, flag='WithM
                 row[0].set_hvac_load (value)
                 for key in hvac_keys:
                     if topic == key+'#Load':
-                        hvac_energy_[key] += helpers.parse_fncs_number(value)
+                        hvac_energy_[key] += helpers.parse_number(value)
             elif row[1] == 5:
                 row[0].set_hvac_state (value)
 

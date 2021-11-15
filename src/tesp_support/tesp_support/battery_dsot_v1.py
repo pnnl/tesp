@@ -518,7 +518,7 @@ class BatteryDSOT:
              sim_time (str): Current time in the simulation; should be human readable
              
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = helpers.parse_number(fncs_str)
         self.Cinit = self.batteryCapacity * val
         
         ### Sanity checks #TODO: following sanity check is wrong. should be reomved

@@ -11,8 +11,9 @@ from copy import deepcopy
 from datetime import datetime
 from .metrics_collector import MetricsStore, MetricsCollector
 from .fncsPYPOWER import load_json_case
-from .helpers import parse_fncs_mva
+from .helpers import parse_mva
 from .helpers import print_mod_load
+
 
 def make_generater_plants(ppc, renewables):
     gen = ppc['gen']
@@ -272,9 +273,6 @@ def dist_slack(mpc, prev_load):
 def tso_loop(casename):
 
     def scucDAM(data):
-        if pst.SOLVER is not None:
-            solver = pst.SOLVER
-
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         if day > -1:
             model = pst.build_model(c, ZonalDataComplete=ZonalDataComplete, PriceSenLoadData=priceSenLoadData, Op='scuc')
@@ -442,9 +440,6 @@ def tso_loop(casename):
         return status, uc_df, dispatch, DA_LMPs
 
     def scedRTM(data, uc_df):
-        if pst.SOLVER is not None:
-            solver = pst.SOLVER
-
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         c.gen_status = uc_df.astype(int)
 
@@ -1375,6 +1370,9 @@ def tso_loop(casename):
 
             ames = ppc['ames']
             solver = ppc['solver']
+            if pst.SOLVER is not None:
+                solver = pst.SOLVER
+
             priceCap = 2 * ppc['priceCap']
             used_curtail = ppc['curtail']
             genLowerLimit = ppc['genLowerLimit']
@@ -1762,7 +1760,7 @@ def tso_loop(casename):
         # running from load_player - taped bus load
             elif 'GLD_LOAD_' in topic:
                 busnum = int(topic[9:])
-                p, q = parse_fncs_mva(val)
+                p, q = parse_mva(val)
                 gld_load[busnum]['p'] = p     # MW
                 gld_load[busnum]['q'] = q     # MW
                 # log.info("at " + str(ts) + " " + topic + " " + str(val))
@@ -1773,7 +1771,7 @@ def tso_loop(casename):
         # running from load_player - taped ref bus load
             elif 'REF_LOAD_' in topic:
                 busnum = int(topic[9:])
-                p, q = parse_fncs_mva(val)
+                p, q = parse_mva(val)
                 gld_load[busnum]['p_r'] = p  # MW
                 gld_load[busnum]['q_r'] = q  # MW
                 # log.info("at " + str(ts) + " " + topic + " " + str(val))

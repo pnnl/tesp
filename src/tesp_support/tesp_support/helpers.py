@@ -39,6 +39,7 @@ def stop_helics_federate(fed):
     # helics.helicsFederateFree(fed)
     # helics.helicsCloseLibrary()
 
+
 def zoneMeterName(ldname):
     """ Enforces the meter naming convention for commercial zones
 
@@ -46,7 +47,7 @@ def zoneMeterName(ldname):
     replaces "_load_" with "_meter".
 
     Args:
-        objname (str): the GridLAB-D name of a load, ends with _load_##
+        ldname (str): the GridLAB-D name of a load, ends with _load_##
 
     Returns:
       str: The GridLAB-D name of upstream meter
@@ -62,7 +63,7 @@ def gld_strict_name(val):
         val (str): the input name
 
     Returns:
-        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
+        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld_'
     """
     if val[0].isdigit():
         val = 'gld_' + val
@@ -127,7 +128,7 @@ class curve:
             self.total_on += quantity
         else:
             self.total_off += quantity
-        value_insert_flag = 0
+
         if self.count == 0:
             # Since it is the first time assigning values to the curve, define an empty array for the price and mean
             self.price = []
@@ -158,7 +159,7 @@ class curve:
                 self.count += 1
 
 
-def parse_fncs_number(arg):
+def parse_number(arg):
     """ Parse floating-point number from a FNCS message; must not have leading sign or exponential notation
 
     Args:
@@ -174,7 +175,7 @@ def parse_fncs_number(arg):
 
 
 # strip out extra white space, units (deg, degF, V, MW, MVA, KW, KVA) and ;
-def _parse_fncs_magnitude(arg):
+def parse_magnitude_1(arg):
     """ Parse the magnitude of a possibly complex number from FNCS
     Args:
         arg (str): the FNCS string value
@@ -194,7 +195,24 @@ def _parse_fncs_magnitude(arg):
     return vals[0]
 
 
-def parse_fncs_magnitude(arg):
+def parse_magnitude_2(arg):
+    """Helper function to find the magnitude of a possibly complex number from FNCS
+
+    Args:
+      arg (str): The FNCS value
+    """
+    tok = arg.strip('+-; MWVAFKdegrij')
+    vals = re.split(r'[\+-]+', tok)
+    if len(vals) < 2:  # only a real part provided
+        vals.append('0')
+
+    vals[0] = float(vals[0])
+    if arg.startswith('-'):
+        vals[0] *= -1.0
+    return vals[0]
+
+
+def parse_magnitude(arg):
     """ Parse the magnitude of a possibly complex number from FNCS
 
     Args:
@@ -225,15 +243,15 @@ def parse_fncs_magnitude(arg):
             vals = [tok[:kpos], tok[kpos:]]
             vals = [float(v) for v in vals]
             return vals[0]
-        tok = arg.strip('; MWVAFKdegri').replace(" ", "")  # rectangular form, including real only
+        tok = arg.strip('; MWVACFKdegri').replace(" ", "")  # rectangular form, including real only
         b = complex(tok)
         return abs(b)  # b.real
     except:
-        print('parse_fncs_magnitude does not understand', arg)
+        print('parse_magnitude does not understand', arg)
         return 0
 
 
-def parse_fncs_mva(arg):
+def parse_mva(arg):
     """ Helper function to parse P+jQ from a FNCS value
 
     Args:
@@ -280,7 +298,65 @@ def parse_fncs_mva(arg):
     return p, q
 
 
-def parse_fncs_kw(arg):
+def parse_kva(arg):  # this drops the sign of p and q
+    """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
+
+    Args:
+        arg (str): the GridLAB-D P+jQ value
+
+    Returns:
+        float: the parsed kva value
+    """
+    toks = list(filter(None, re.split('[+j-]', arg)))
+    p = float(toks[0])
+    q = float(toks[1])
+    return 0.001 * math.sqrt(p * p + q * q)
+
+
+def parse_kva_old(arg):
+    tok = arg.strip('; MWVAKdrij')
+    nsign = nexp = ndot = 0
+    for i in range(len(tok)):
+        if (tok[i] == '+') or (tok[i] == '-'):
+            nsign += 1
+        elif (tok[i] == 'e') or (tok[i] == 'E'):
+            nexp += 1
+        elif tok[i] == '.':
+            ndot += 1
+        if nsign == 2 and nexp == 0:
+            kpos = i
+            break
+        if nsign == 3:
+            kpos = i
+            break
+
+    vals = [tok[:kpos], tok[kpos:]]
+    vals = [float(v) for v in vals]
+
+    if 'd' in arg:
+        vals[1] *= (math.pi / 180.0)
+        p = vals[0] * math.cos(vals[1])
+        q = vals[0] * math.sin(vals[1])
+    elif 'r' in arg:
+        p = vals[0] * math.cos(vals[1])
+        q = vals[0] * math.sin(vals[1])
+    else:
+        p = vals[0]
+        q = vals[1]
+
+    if 'KVA' in arg:
+        p *= 1.0
+        q *= 1.0
+    elif 'MVA' in arg:
+        p *= 1000.0
+        q *= 1000.0
+    else:  # VA
+        p /= 1000.0
+        q /= 1000.0
+    return math.sqrt(p * p + q * q)
+
+
+def parse_kw(arg):
     """ Parse the kilowatt load of a possibly complex number from FNCS
 
     Args:
@@ -343,7 +419,7 @@ def print_mod_load(bus, dso, model_load, msg, ts):
         busnum = int(row[0])
         gld_scale = float(row[2])
         load = model_load[busnum]
-        genidx = str(-load['genidx'])
+        genidx = -load['genidx']
         print('{:4d}'.format(busnum),
               '{:4d}'.format(genidx),
               '{:8.2f}'.format(bus[busnum - 1, 2]),
@@ -384,7 +460,6 @@ def aggregate_bid(crv):
 
     if n < 1:
         qmax = 0
-        deg = 0
     else:
         qresp = np.cumsum(q[idx + 1:])
         presp = p[idx + 1:]

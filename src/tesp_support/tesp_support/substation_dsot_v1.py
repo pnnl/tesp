@@ -7,32 +7,34 @@ Public Functions:
 
 """
 import sys
-import logging as log
-import tesp_support.helpers_dsot_v1 as helpers_dsot
-from tesp_support.hvac_dsot_v1 import HVACDSOT
-from tesp_support.water_heater_dsot_v1 import WaterHeaterDSOT
-from tesp_support.ev_dsot_v1 import EVDSOT
-from tesp_support.pv_dsot_v1 import PVDSOT
-from tesp_support.battery_dsot_v1 import BatteryDSOT
-from tesp_support.dso_market_dsot_v1 import DSOMarketDSOT
-from tesp_support.retail_market_dsot_v1 import RetailMarketDSOT
-from tesp_support.forecasting_dsot_v1 import Forecasting
-from tesp_support.metrics_collector import MetricsStore, MetricsCollector
+import time
 import json
-import pandas as pd
+import logging as log
 import numpy as np
 from datetime import datetime, timedelta
 from copy import deepcopy
 from joblib import Parallel, delayed
-import time
+
+from .helpers_dsot_v1 import enable_logging
+from .hvac_dsot_v1 import HVACDSOT
+from .water_heater_dsot_v1 import WaterHeaterDSOT
+from .ev_dsot_v1 import EVDSOT
+from .pv_dsot_v1 import PVDSOT
+from .battery_dsot_v1 import BatteryDSOT
+from .dso_market_dsot_v1 import DSOMarketDSOT
+from .retail_market_dsot_v1 import RetailMarketDSOT
+from .forecasting_dsot_v1 import Forecasting
+from .metrics_collector import MetricsStore, MetricsCollector
 
 try:
     import tesp_support.fncs as fncs
 except ImportError:
     fncs = None
     print('WARNING: unable to load FNCS module.', flush=True)
+
 if sys.platform != 'win32':
     import resource
+
 
 def inner_substation_loop(configfile, metrics_root, with_market):
     """Helper function that initializes and runs the DSOT agents
@@ -46,6 +48,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         metrics_root (str): base name of the case for metrics output
         with_market (bool): flag that determines if we run with markets
     """
+
     def worker(arg):
         timing(arg.__class__.__name__, True)
         worker_results = arg.DA_optimal_quantities()
@@ -106,7 +109,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     # enable logging
     level = config['LogLevel']
-    helpers_dsot.enable_logging(level, 11)
+    enable_logging(level, 11)
 
     log.info('starting substation loop...')
     log.info('config file -> ' + configfile)
@@ -723,7 +726,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 for itopic in range(len(topic_map[topic])):
                     value = fncs.get_value(topic)
                     log.debug(topic + ' -> ' + value)
-                    if any(x in topic for x in ['#Tair','#SOC','#LTTEMP','#UTTEMP']):
+                    if any(x in topic for x in ['#Tair', '#SOC', '#LTTEMP', '#UTTEMP']):
                         # these function has 2 additional inputs for logging
                         topic_map[topic][itopic](value, 11, current_time)
                     else:

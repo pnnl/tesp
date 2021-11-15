@@ -6,8 +6,10 @@ Implements the ramp bidding method, with HVAC power as the
 bid quantity, and thermostat setting changes as the response
 mechanism.
 """
-import math
-import tesp_support.helpers as helpers
+
+from .helpers import parse_magnitude
+from .helpers import parse_number
+
 
 class hvac:
     """This agent manages thermostat setpoint and bidding for a house
@@ -53,7 +55,8 @@ class hvac:
         bid_price (float): the current bid price in $/kwh
         cleared_price (float): the cleared market price in $/kwh
     """
-    def __init__(self,dict,key,aucObj):
+
+    def __init__(self, dict, key, aucObj):
         """Initializes the class
         """
         self.name = key
@@ -83,7 +86,7 @@ class hvac:
         self.std_dev = aucObj.std_dev
         self.mean = aucObj.clearing_price
 
-        self.Trange = abs (2.0 * self.offset_limit)
+        self.Trange = abs(2.0 * self.offset_limit)
 
         self.air_temp = 78.0
         self.hvac_kw = 3.0
@@ -95,7 +98,7 @@ class hvac:
         self.cleared_price = 0.0
         self.bid_price = 0.0
 
-    def inform_bid (self,price):
+    def inform_bid(self, price):
         """ Set the cleared_price attribute
 
         Args:
@@ -103,7 +106,7 @@ class hvac:
         """
         self.cleared_price = price
 
-    def bid_accepted (self):
+    def bid_accepted(self):
         """ Update the thermostat setting if the last bid was accepted
 
         The last bid is always "accepted". If it wasn't high enough,
@@ -122,14 +125,14 @@ class hvac:
             return True
         return False
 
-    def formulate_bid (self):
+    def formulate_bid(self):
         """ Bid to run the air conditioner through the next period
         
         Returns:
             [float, float, Boolean]: bid price in $/kwh, bid quantity in kW and current HVAC on state, or None if not bidding 
         """
 
-        #print (' = formulating bid for {:s} kw={:.2f} on={:d} T={:.2f} Base={:.2f} mu={:.5f} ramp={:.3f} std={:.5f} Trange={:.2f} mode={:s}'.format (self.name, 
+        # print (' = formulating bid for {:s} kw={:.2f} on={:d} T={:.2f} Base={:.2f} mu={:.5f} ramp={:.3f} std={:.5f} Trange={:.2f} mode={:s}'.format (self.name,
         #  self.hvac_kw, self.hvac_on, self.air_temp, self.basepoint, self.mean, self.ramp, self.std_dev, self.Trange, self.control_mode))
 
         if self.control_mode == 'CN_NONE':
@@ -144,7 +147,7 @@ class hvac:
             self.bid_price = p
         return [self.bid_price, self.hvac_kw, self.hvac_on]
 
-    def change_basepoint (self,hod,dow):
+    def change_basepoint(self, hod, dow):
         """ Updates the time-scheduled thermostat setting
 
         Args:
@@ -154,73 +157,72 @@ class hvac:
         Returns:
             Boolean: True if the setting changed, Falso if not
         """
-        if dow > 4: # a weekend
+        if dow > 4:  # a weekend
             val = self.weekend_night_set
-            if hod >= self.weekend_day_start and hod < self.weekend_night_start:
+            if self.weekend_day_start <= hod < self.weekend_night_start:
                 val = self.weekend_day_set
-        else: # a weekday
+        else:  # a weekday
             val = self.night_set
-            if hod >= self.wakeup_start and hod < self.daylight_start:
+            if self.wakeup_start <= hod < self.daylight_start:
                 val = self.wakeup_set
-            elif hod >= self.daylight_start and hod < self.evening_start:
+            elif self.daylight_start <= hod < self.evening_start:
                 val = self.daylight_set
-            elif hod >= self.evening_start and hod < self.night_start:
+            elif self.evening_start <= hod < self.night_start:
                 val = self.evening_set
         if abs(self.basepoint - val) > 0.1:
             self.basepoint = val
             return True
         return False
 
-    def set_hvac_load_from_fncs_str (self,str):
+    def set_hvac_load_from_fncs_str(self, val):
         """ Sets the hvac_load attribute, if greater than zero
 
         Args:
-            str (str): FNCS message with load in kW
+            val (str): FNCS message with load in kW
         """
-        val = helpers.parse_fncs_number (str)
-        if val > 0.0:
-            self.hvac_kw = val
+        kw = parse_number(val)
+        if kw > 0.0:
+            self.hvac_kw = kw
 
-    def set_hvac_state_from_fncs_str (self,str):
+    def set_hvac_state_from_fncs_str(self, val):
         """ Sets the hvac_on attribute
 
         Args:
-            str (str): FNCS message with state, ON or OFF
+            val (str): FNCS message with state, ON or OFF
         """
-        if str == 'OFF':
+        if val == 'OFF':
             self.hvac_on = False
         else:
             self.hvac_on = True
 
-    def set_air_temp_from_fncs_str (self,str):
+    def set_air_temp_from_fncs_str(self, val):
         """ Sets the air_temp attribute
 
         Args:
-            str (str): FNCS message with temperature in degrees Fahrenheit
+            val (str): FNCS message with temperature in degrees Fahrenheit
         """
-        self.air_temp = helpers.parse_fncs_number (str)
+        self.air_temp = parse_number(val)
 
-    def set_voltage_from_fncs_str (self,str):
+    def set_voltage_from_fncs_str(self, val):
         """ Sets the mtr_v attribute
 
         Args:
-            str (str): FNCS message with meter line-neutral voltage
+            val (str): FNCS message with meter line-neutral voltage
         """
-        self.mtr_v = helpers.parse_fncs_magnitude (str)
+        self.mtr_v = parse_magnitude(val)
 
-    def set_hvac_load_from_helics (self, val):
+    def set_hvac_load_from_helics(self, val):
         if val > 0.0:
             self.hvac_kw = val
 
-    def set_hvac_state_from_helics (self, val):
-        if str == 'OFF':
+    def set_hvac_state_from_helics(self, val):
+        if val == 'OFF':
             self.hvac_on = False
         else:
             self.hvac_on = True
 
-    def set_air_temp_from_helics (self, val):
+    def set_air_temp_from_helics(self, val):
         self.air_temp = val
 
-    def set_voltage_from_helics (self, val):
-        self.mtr_v = abs (val)
-
+    def set_voltage_from_helics(self, val):
+        self.mtr_v = abs(val)
