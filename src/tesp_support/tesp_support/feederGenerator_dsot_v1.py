@@ -2956,7 +2956,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         op.close()
 
 
-def o_populate_feeder(configfile=None, config=None, taxconfig=None):
+def populate_feeder(configfile=None, config=None, taxconfig=None):
     """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
 
     Args:
@@ -3150,7 +3150,7 @@ def populate_all_feeders():
         ProcessTaxonomyFeeder(c[0], c[0], c[1], c[2], c[3], c[4])
 
 
-def populate_feeder(configfile=None, config=None, taxconfig=None):
+def new_populate_feeder(configfile=None, config=None, taxconfig=None):
     """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
 
     Args:

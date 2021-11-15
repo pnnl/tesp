@@ -30,22 +30,14 @@ if sys.platform != 'win32':
 from .helpers import parse_magnitude_2
 
 thermalIntegrity = {
-    'VERY_LITTLE': {'Rroof': 11.0, 'Rwall': 4.0, 'Rfloor': 4.0, 'Rdoors': 3.0, 'Rwindows': 1 / 1.27,
-                    'airchange_per_hour': 1.5},
-    'LITTLE': {'Rroof': 19.0, 'Rwall': 11.0, 'Rfloor': 4.0, 'Rdoors': 3.0, 'Rwindows': 1 / 0.81,
-               'airchange_per_hour': 1.5},
-    'BELOW_NORMAL': {'Rroof': 19.0, 'Rwall': 11.0, 'Rfloor': 11.0, 'Rdoors': 3.0, 'Rwindows': 1 / 0.81,
-                     'airchange_per_hour': 1.0},
-    'NORMAL': {'Rroof': 30.0, 'Rwall': 11.0, 'Rfloor': 19.0, 'Rdoors': 3.0, 'Rwindows': 1 / 0.60,
-               'airchange_per_hour': 1.0},
-    'ABOVE_NORMAL': {'Rroof': 30.0, 'Rwall': 19.0, 'Rfloor': 11.0, 'Rdoors': 3.0, 'Rwindows': 1 / 0.60,
-                     'airchange_per_hour': 1.0},
-    'GOOD': {'Rroof': 30.0, 'Rwall': 19.0, 'Rfloor': 22.0, 'Rdoors': 5.0, 'Rwindows': 1 / 0.47,
-             'airchange_per_hour': 0.5},
-    'VERY_GOOD': {'Rroof': 48.0, 'Rwall': 22.0, 'Rfloor': 30.0, 'Rdoors': 11.0, 'Rwindows': 1 / 0.31,
-                  'airchange_per_hour': 0.5},
-    'UNKNOWN': {'Rroof': 30.0, 'Rwall': 19.0, 'Rfloor': 22.0, 'Rdoors': 5.0, 'Rwindows': 1 / 0.47,
-                'airchange_per_hour': 0.5}
+  'VERY_LITTLE': {'Rroof':11.0,'Rwall': 4.0,'Rfloor': 4.0,'Rdoors': 3.0,'Rwindows':1/1.27,'airchange_per_hour':1.5},
+  'LITTLE':      {'Rroof':19.0,'Rwall':11.0,'Rfloor': 4.0,'Rdoors': 3.0,'Rwindows':1/0.81,'airchange_per_hour':1.5},
+  'BELOW_NORMAL':{'Rroof':19.0,'Rwall':11.0,'Rfloor':11.0,'Rdoors': 3.0,'Rwindows':1/0.81,'airchange_per_hour':1.0},
+  'NORMAL':      {'Rroof':30.0,'Rwall':11.0,'Rfloor':19.0,'Rdoors': 3.0,'Rwindows':1/0.60,'airchange_per_hour':1.0},
+  'ABOVE_NORMAL':{'Rroof':30.0,'Rwall':19.0,'Rfloor':11.0,'Rdoors': 3.0,'Rwindows':1/0.60,'airchange_per_hour':1.0},
+  'GOOD':        {'Rroof':30.0,'Rwall':19.0,'Rfloor':22.0,'Rdoors': 5.0,'Rwindows':1/0.47,'airchange_per_hour':0.5},
+  'VERY_GOOD':   {'Rroof':48.0,'Rwall':22.0,'Rfloor':30.0,'Rdoors':11.0,'Rwindows':1/0.31,'airchange_per_hour':0.5},
+  'UNKNOWN'  :   {'Rroof':30.0,'Rwall':19.0,'Rfloor':22.0,'Rdoors': 5.0,'Rwindows':1/0.47,'airchange_per_hour':0.5}
 }
 
 

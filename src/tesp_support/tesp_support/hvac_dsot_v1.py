@@ -39,8 +39,8 @@ class HVACDSOT:  # TODO: update class name
 
     """
 
-    def __init__(self, hvac_dict, house_properties, key, model_diag_level, sim_time,
-                 solver):  # TODO: update inputs for class
+    def __init__(self, hvac_dict, house_properties, key, model_diag_level, sim_time, solver):
+        # TODO: update inputs for class
         """Initializes the class
         """
         # TODO: update attributes of class
@@ -429,8 +429,7 @@ class HVACDSOT:  # TODO: update class name
             pass
         else:
             log.log(model_diag_level, '{} {} -- airchange_per_hour is {}, outside of nominal range of {} to {}.'
-                    .format(self.name, 'init', self.airchange_per_hour, airchange_per_hour_lower,
-                            airchange_per_hour_upper))
+                    .format(self.name, 'init', self.airchange_per_hour, airchange_per_hour_lower, airchange_per_hour_upper))
 
         glazing_layers_lower = 1
         glazing_layers_upper = 3
@@ -1079,8 +1078,8 @@ class HVACDSOT:  # TODO: update class name
                     for ipt in range(len(self.temp_curve) - 1):
                         if self.quantity_curve[ipt] <= self.bid_quantity <= self.quantity_curve[ipt + 1]:
                             if self.quantity_curve[ipt + 1] != self.quantity_curve[ipt]:
-                                a = (self.temp_curve[ipt + 1] - self.temp_curve[ipt]) / (
-                                        self.quantity_curve[ipt + 1] - self.quantity_curve[ipt])
+                                a = (self.temp_curve[ipt + 1] - self.temp_curve[ipt]) / \
+                                    (self.quantity_curve[ipt + 1] - self.quantity_curve[ipt])
                             else:
                                 a = 0
                             b = self.temp_curve[ipt] - a * self.quantity_curve[ipt]
@@ -1097,10 +1096,10 @@ class HVACDSOT:  # TODO: update class name
                 if self.thermostat_mode == "Cooling":
                     if self.cleared_price > self.price_forecast_0:
                         setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * \
-                                       (self.range_high_cool) / (self.price_delta)
+                                       self.range_high_cool / self.price_delta
                     elif self.cleared_price < self.price_forecast_0:
                         setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * \
-                                       (self.range_low_cool) / (self.price_delta)
+                                       self.range_low_cool / self.price_delta
                     else:
                         setpoint_tmp = self.temp_room[0]
                 else:

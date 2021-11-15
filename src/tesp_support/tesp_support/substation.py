@@ -37,9 +37,7 @@ if sys.platform != 'win32':
 
 def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConfig):
     print('starting HELICS substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
-    print(
-        '##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus',
-        flush=True)
+    print ('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus', flush=True)
     bWantMarket = True
     if flag == 'NoMarket':
         bWantMarket = False
@@ -252,9 +250,7 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop=48, flag='WithMarke
         flag (str): WithMarket or NoMarket to use the simple_auction, or not
     """
     print('starting FNCS substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
-    print(
-        '##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus',
-        flush=True)
+    print ('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus', flush=True)
     bWantMarket = True
     if flag == 'NoMarket':
         bWantMarket = False
@@ -462,5 +458,4 @@ def substation_loop(configfile, metrics_root, hour_stop=48, flag='WithMarket', h
 
 
 if __name__ == '__main__':
-    substation_loop('C:\\Users\\wang690\\Desktop\\projects\\TESP\\tesp_1st\\ercot\\case8\\Bus1_agent_dict.json', 'Bus1',
-                    24)
+    substation_loop('C:\\Users\\wang690\\Desktop\\projects\\TESP\\tesp_1st\\ercot\\case8\\Bus1_agent_dict.json','Bus1',24)
