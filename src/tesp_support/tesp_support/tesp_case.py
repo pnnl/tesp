@@ -95,10 +95,10 @@ def write_tesp_case (config, cfgfile, freshdir = True):
         * Write gui.sh, per the te30 examples
     """
     tespdir = os.path.expandvars (os.path.expanduser (config['SimulationConfig']['SourceDirectory']))
-    feederdir = tespdir + '/feeders/'
-    scheduledir = tespdir + '/schedules/'
-    weatherdir = tespdir + '/weather/'
-    eplusdir = tespdir + '/energyplus/'
+    feederdir = tespdir + '/data/feeders/'
+    scheduledir = tespdir + '/data/schedules/'
+    weatherdir = tespdir + '/data/weather/'
+    eplusdir = tespdir + '/data/energyplus/'
     ppdir = tespdir + '/models/pypower/'
     # miscdir = tespdir + '/scripts/helpers/'
     print ('feeder backbone files from', feederdir)

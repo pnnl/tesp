@@ -1936,12 +1936,12 @@ def populate_feeder(config=None):
         np.random.seed(0)
     rootname = config['BackboneFiles']['TaxonomyChoice']
     tespdir = config['SimulationConfig']['SourceDirectory']
-    glmpath = tespdir + '/feeders/'
-    supportpath = ''  # tespdir + '/schedules'
+    glmpath = tespdir + '/data/feeders/'
+    supportpath = ''  # tespdir + '/data/schedules'
 
     if 'supportpath' in config['BackboneFiles']:
         supportpath = config['BackboneFiles']['supportpath']
-    weatherpath = ''  # tespdir + '/weather'
+    weatherpath = ''  # tespdir + '/data/weather'
     if 'weatherpath' in config['BackboneFiles']:
         weatherpath = config['BackboneFiles']['weatherpath']
     outpath = './' + config['SimulationConfig']['CaseName'] + '/'
