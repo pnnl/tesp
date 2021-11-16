@@ -104,7 +104,7 @@
   "SimulationConfig": {
     "CaseName": "Eplus_Restaurant",
     "WorkingDirectory": "./Eplus_Restaurant",
-    "SourceDirectory": "$TESPDIR/data",
+    "SourceDirectory": "$TESPDIR",
     "EndTime": "2013-07-03 00:00:00",
     "StartTime": "2013-07-01 00:00:00"
   },

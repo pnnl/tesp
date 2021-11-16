@@ -1396,6 +1396,7 @@ def write_one_commercial_zone(bldg, op):
         print('  };', file=op)
     print('}', file=op)
 
+
 def write_commercial_loads(rgn, key, op):
     """Put commercial building zones and ZIP loads into the model
 
@@ -3022,9 +3023,9 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
         config = json.loads(lp)
     rootname = config['BackboneFiles']['TaxonomyChoice']
     tespdir = os.path.expandvars(os.path.expanduser(config['SimulationConfig']['SourceDirectory']))
-    glmpath = tespdir + '/feeders/'
-    supportpath = ''  # tespdir + '/schedules'
-    weatherpath = ''  # tespdir + '/weather'
+    glmpath = tespdir + '/data/feeders/'
+    supportpath = ''  # tespdir + '/data/schedules'
+    weatherpath = ''  # tespdir + '/data/weather'
     if 'NamePrefix' in config['BackboneFiles']:
         name_prefix = config['BackboneFiles']['NamePrefix']
     if 'WorkingDirectory' in config['SimulationConfig']:
