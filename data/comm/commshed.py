@@ -1,4 +1,5 @@
-# Copyright (C) 2020 Battelle Memorial Institute
+# Copyright (C) 2020-2021 Battelle Memorial Institute
+# file: commshed.py
 import sys
 import helics
 

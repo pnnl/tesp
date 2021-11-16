@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: test_comm.py
+
 import sys
 import json
 import math

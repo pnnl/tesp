@@ -1,3 +1,7 @@
+#  Copyright (C) 2017-2021 Battelle Memorial Institute 
+#  file: go.sh
+
+
 autoheader
 # mkdir m4
 aclocal

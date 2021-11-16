@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020 Battelle Memorial Institute
+# Copyright (C) 2017-2021 Battelle Memorial Institute
 # file: autotest_long.py
 """Runs the longer set of TESP test cases; 
 SGIP1, NIST TE Challenge 2, ERCOT 8-Bus with PSST

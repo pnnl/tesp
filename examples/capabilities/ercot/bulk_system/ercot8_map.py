@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: ercot_map.py
+
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader

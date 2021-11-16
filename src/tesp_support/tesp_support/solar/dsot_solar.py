@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: dsot_solar.py
+
 """
 Created on Thursday Feb 27 12:14:25 2020
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: fncs.py
+
 import ctypes
 import platform
 

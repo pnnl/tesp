@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: helicsshed.py
+
 import time
 import helics as h
 import logging

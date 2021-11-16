@@ -1,3 +1,7 @@
+// Copyright (C) 2021 Battelle Memorial Institute
+// file: helicstest.java
+
+
 import com.java.helics.helics;
 
 public class helicstest {

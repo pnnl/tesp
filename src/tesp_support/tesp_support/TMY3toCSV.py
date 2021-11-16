@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: TMY3toCSV.py
 """TMY3toCSV
 
 Convert typical meteorological year version 3 (TMY3) data to

@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run.sh
 
 #(exec helics_broker -f 4 --loglevel=7 --name=mainbroker &> broker.log &)
 #(export HELICS_CONFIG_FILE=eplus.json && exec /home/xcosmos/src/energyPlus/EnergyPlus/build/Products/energyplus -w Test.epw -d output -r Mergedh.idf &> eplus.log &)

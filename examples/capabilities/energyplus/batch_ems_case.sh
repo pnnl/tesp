@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: batch_ems_case.sh
 
 EPLUS_PATH=$TESPDIR/data/energyplus
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: deploy.sh
+
 cp ../../../LICENSE /opt/tesp
 cp ../../../autotest.py /opt/tesp/share
 cp ../../../autotest_long.py /opt/tesp/share

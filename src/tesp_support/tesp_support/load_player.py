@@ -1,4 +1,5 @@
-
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: load_player.py
 import numpy as np
 import tesp_support.fncs as fncs
 import datetime

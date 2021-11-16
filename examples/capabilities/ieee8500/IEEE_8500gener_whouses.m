@@ -1,3 +1,6 @@
+% Copyright (C) 2021 Battelle Memorial Institute
+% file: IEEE_8500gener_whouses.m
+
 clear all;
 format long g;
 

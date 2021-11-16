@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: loopERCOT.py
+
 import numpy as np;
 import scipy.interpolate as ip;
 import pypower.api as pp;

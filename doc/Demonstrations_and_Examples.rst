@@ -1,3 +1,7 @@
+..
+    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ file: Demonstrations_and_Examples.rst
+
 TESP Demonstrations and Examples
 ================================
 

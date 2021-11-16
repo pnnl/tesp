@@ -1,3 +1,5 @@
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: autotest.py
 # usage 'python plots metrics_root'
 import sys
 rootname = sys.argv[1]

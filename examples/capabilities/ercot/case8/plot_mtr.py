@@ -1,5 +1,6 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
+#	Copyright (C) 2017-2021 Battelle Memorial Institute
 # file: process_gld.py; custom for the IEEE 8500-node circuit
+
 import json;
 import sys;
 import numpy as np;

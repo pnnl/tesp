@@ -1,3 +1,8 @@
+#	Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: synComGraph.py
+
+
+
 """Given a feeder graph as a JSON, generates a synthetic communication graph
 corresponding to that feeder. Each node in the feeder with an (x,y) coordinate
 has a corresponding node in the communication graph. The edge set of the

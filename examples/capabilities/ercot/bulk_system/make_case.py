@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: make_case.py
+
 import json
 import csv
 import numpy as np

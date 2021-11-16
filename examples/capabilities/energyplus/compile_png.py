@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: compile_png.py
+
 import operator
 import subprocess
 import os

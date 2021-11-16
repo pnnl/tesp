@@ -1,3 +1,6 @@
+% Copyright (C) 2021 Battelle Memorial Institute
+% file: adjust_temperature.m
+
 function [ cloudy_temp ] = adjust_temperature( temp )
 % ramps temperature offset from 0 to -5 between 1430 and 1440
 % then back up to 0 from 1600 to 1630

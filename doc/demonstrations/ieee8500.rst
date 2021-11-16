@@ -1,4 +1,7 @@
-
+..
+    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ file: ieee8500.rst
+    
 ieee8500 (runs longer)
 ~~~~~~~~~~~~~~~~~~~~~~
 

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run.sh
+
 (export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 12 &> broker.log &)
 (export WEATHER_CONFIG=weatherIAH.json && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weatherIAH.dat')"  &> weatherIAH.log &)
 (export WEATHER_CONFIG=weatherSPS.json && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weatherSPS.dat')"  &> weatherSPS.log &)

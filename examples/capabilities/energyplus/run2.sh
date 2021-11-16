@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run2.sh
+
 EPLUS_PATH=$TESPDIR/data/energyplus
 TMY_PATH=$TESPDIR/data/weather
 

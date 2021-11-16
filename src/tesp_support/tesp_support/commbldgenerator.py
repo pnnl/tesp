@@ -1,3 +1,6 @@
+# Copyright (C) 2019-2021 Battelle Memorial Institute
+# file: commbldgenerator.py
+
 import os
 import sys
 import json

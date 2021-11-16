@@ -1,3 +1,6 @@
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: combine_feeders.py
+
 import tesp_support.api as tesp
 
 tesp.make_tesp_case ('Feeder1.json')

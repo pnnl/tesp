@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: WriteHouses.py
+
 import sys
 import tesp_support.feederGenerator as fg;
 

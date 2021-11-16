@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run_seasonal_cases.sh
+
 EPLUS_PATH=$TESPDIR/data/energyplus
 EPWFILE=$EPLUS_PATH/2A_USA_TX_HOUSTON.epw
 

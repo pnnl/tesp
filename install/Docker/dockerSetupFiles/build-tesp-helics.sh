@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: build-tesp-helics.sh
+
 DOCKERFILE="Dockerfile.tesp_helics"
 TESP_REP="laurmarinovici/tesp"
 TESP_TAG=":helics"

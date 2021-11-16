@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: DSO_quadratic_curves.py
 """Class that prepares the quadratic curves for DSO market
 
 """

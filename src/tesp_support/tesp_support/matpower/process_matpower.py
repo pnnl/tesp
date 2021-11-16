@@ -1,4 +1,4 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
+#	Copyright (C) 2017-2021 Battelle Memorial Institute
 # file: process_matpower.py
 import json;
 import sys;

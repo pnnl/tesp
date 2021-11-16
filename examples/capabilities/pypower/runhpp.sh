@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runhpp.sh
+
+
 (exec helics_broker -f 3 --loglevel=warning --name=mainbroker &> broker.log &)
 (exec python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('ppcase.json','ppcase',helicsConfig='pypowerConfig.json')" &> pypower.log &)
 (exec helics_recorder --input=helicsRecorder.txt --stop 172801s &> recorder.log &)

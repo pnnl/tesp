@@ -1,3 +1,6 @@
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: SGIP1_dist_metrics_proc.py
+
 from DistributionMetricsProcessor import DistributionMetricsProcessor
 import os
 import matplotlib 

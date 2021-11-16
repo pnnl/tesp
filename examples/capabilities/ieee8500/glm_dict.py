@@ -1,5 +1,6 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
+#	Copyright (C) 2017-2021 Battelle Memorial Institute
 # file: glm_dict.py
+
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
 import json;
 import sys;

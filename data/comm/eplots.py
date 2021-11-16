@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: eplots.py
+
 import tesp_support.process_eplus as ep
 import sys
 

@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: test_cartopy.py
+
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 

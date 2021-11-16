@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: createAccountingTable.py
+
 # @Author: Allison Campbell <camp426>
 # @Date:   2021-04-09T10:37:55-07:00
 # @Email:  allison.m.campbell@pnnl.gov

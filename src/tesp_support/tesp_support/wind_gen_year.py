@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: wind_gen_year.py
+
 """
 Written by Ankit Singhal and Mitch Pelton
 This scripts use Tom's wind model to generate wind power generation and write in csv files.

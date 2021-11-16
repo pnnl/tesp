@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: dso_helper_functions.py
 """
 @author: yint392
 """

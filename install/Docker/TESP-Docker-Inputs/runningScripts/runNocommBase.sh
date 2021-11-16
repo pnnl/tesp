@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runNocommBase.sh
+
 clear
 scenarioFolder="comm/Nocomm_Base"
 scenarioName="Nocomm_Base"

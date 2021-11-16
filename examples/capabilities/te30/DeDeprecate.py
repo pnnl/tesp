@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: DoDeprecate.py
+
 import sys
 
 if len(sys.argv) < 3:

@@ -1,4 +1,7 @@
-/*  Copyright (C) 2017-2020 Battelle Memorial Institute */
+/*  Copyright (C) 2017-2021 Battelle Memorial Institute 
+*  file: eplus_agent_helics.cpp
+*/
+
 /* autoconf header */
 #include "config.h"
 

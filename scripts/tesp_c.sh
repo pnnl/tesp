@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: tesp_c.sh
+
 if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi

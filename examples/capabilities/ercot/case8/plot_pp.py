@@ -1,5 +1,6 @@
-#	Copyright (C) 2017-2020 Battelle Memorial Institute
+#	Copyright (C) 2017-2021 Battelle Memorial Institute
 # file: process_pypower.py
+
 import json;
 #import sys;
 import numpy as np;

@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: test_parser.py
+
 
 import tesp_support.helpers as parse
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2021 Battelle Memorial Institute
 # file: simple_auction.py
 """Double-auction mechanism for the 5-minute markets in te30 and sgip1 examples
 

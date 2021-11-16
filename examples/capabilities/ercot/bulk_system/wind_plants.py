@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: wind_plants.py
+
 import numpy as np;
 import matplotlib.pyplot as plt;
 import math;

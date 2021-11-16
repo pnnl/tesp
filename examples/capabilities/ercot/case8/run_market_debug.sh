@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: run_market_debug.sh
 
 (export FNCS_BROKER="tcp://*:5570" && export FNCS_LOG_LEVEL="DEBUG2" && FNCS_TRACE=yes && FNCS_LOG_STDOUT=yes && exec fncs_broker 20 &> broker.log &)
 (export WEATHER_CONFIG=weatherIAH.json && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weatherIAH.dat')"  &> weatherIAH.log &)

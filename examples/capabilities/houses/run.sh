@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run.py
+
 SCHED_PATH=$TESPDIR/data/schedules
 TMY_PATH=$TESPDIR/data/weather
 

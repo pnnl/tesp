@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runInv8500.sh
+
 clear
 scenarioFolder="ieee8500/PNNLteam"
 scenarioName="inv8500"

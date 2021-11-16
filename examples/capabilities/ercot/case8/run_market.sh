@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: run_market.sh
 
 #(export FNCS_BROKER="tcp://*:5570" && export FNCS_LOG_LEVEL="DEBUG2" && FNCS_TRACE=yes && FNCS_LOG_STDOUT=yes && exec fncs_broker 20 &> broker.log &)
 (export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 20 &> broker.log &)

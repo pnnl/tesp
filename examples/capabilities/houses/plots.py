@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: plots.py
+
 # usage 'python3 plots.py'
 import tesp_support.process_gld as gp
 import tesp_support.process_houses as hp

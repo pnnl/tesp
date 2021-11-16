@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: schedule_client.py
+
 from multiprocessing.managers import BaseManager
 #import psutil  # 3rd party module for process info (not strictly required)
 

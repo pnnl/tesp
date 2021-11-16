@@ -1,3 +1,7 @@
+..
+    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ file: pypower.rst
+
 pypower - verifies PYPOWER over FNCS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

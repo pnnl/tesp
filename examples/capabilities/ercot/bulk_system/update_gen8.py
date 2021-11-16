@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: update_gen8.py
+
 import json
 
 fp = open ('../case8/ercot_8.json', mode='r')

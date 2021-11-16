@@ -1,3 +1,7 @@
+..
+    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ file: Standard_third_party_toos.rst
+
 Standard Third-Party Tools
 ==========================
 

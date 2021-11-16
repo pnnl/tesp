@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: make_lines.py
+
 import json
 import numpy as np
 from scipy.spatial import Delaunay

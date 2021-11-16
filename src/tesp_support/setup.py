@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020 Battelle Memorial Institute
+# Copyright (C) 2017-2021 Battelle Memorial Institute
 # file: setup.py
 
 from setuptools import setup, find_packages
@@ -7,8 +7,8 @@ from setuptools import setup, find_packages
 setup(
     name='tesp_support',
     version='1.0.2',
-    author='Thomas McDermott',
-    author_email='Thomas.McDermott@PNNL.gov',
+    author='Trevor Hardy',
+    author_email='trevor.hardy@PNNL.gov',
     description='Python support for the Transactive Energy Simulation Platform',
     long_description='\n\n'.join(
         open(f, 'rb').read().decode('utf-8')

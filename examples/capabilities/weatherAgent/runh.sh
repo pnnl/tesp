@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runh.sh
+
 TMY_PATH=$TESPDIR/data/weather
 
 # generate the weather text file

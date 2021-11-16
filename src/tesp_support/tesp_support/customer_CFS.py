@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: customer_CFS.py
+
 """
 @author: yint392
 """

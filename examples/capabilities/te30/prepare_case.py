@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: prepare_case.py
+
 import tesp_support.api as tesp
 import os
 

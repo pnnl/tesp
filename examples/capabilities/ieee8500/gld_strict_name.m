@@ -1,3 +1,6 @@
+% Copyright (C) 2021 Battelle Memorial Institute
+% file: gld_strict_name.m
+
 function [ id ] = gld_strict_name( rawname )
 %gld_strict_name to make sure GridLAB-D names don't start numerically
 %   Prepends gld_ if necessary

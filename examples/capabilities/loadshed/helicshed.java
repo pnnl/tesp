@@ -1,3 +1,7 @@
+// Copyright (C) 2021 Battelle Memorial Institute
+// file: helicsshed.java
+
+
 import com.java.helics.helics;
 import com.java.helics.*;
 

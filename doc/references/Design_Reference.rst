@@ -1,3 +1,7 @@
+..
+    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ file: Design_Reference.rst
+
 .. _design_reference:
 
 Design Reference

@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: Dockerfile
+
 FROM temcderm/tesp_foundation:1.0.2
 LABEL maintainer="Thomas.McDermott@pnnl.gov"
 

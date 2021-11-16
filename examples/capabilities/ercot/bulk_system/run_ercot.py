@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run_ercot.py
+
 import numpy as np;
 import pypower.api as pp;
 import tesp_support.api as tesp;

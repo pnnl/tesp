@@ -1,4 +1,6 @@
-#   Copyright (C) 2017-2020 Battelle Memorial Institute
+#   Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: fncsTSO.py
+
 import numpy as np
 import scipy.interpolate as ip
 import pypower.api as pp

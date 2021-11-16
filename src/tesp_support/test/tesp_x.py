@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: tesp_x.py
+
 import sys
 import json
 import numpy as np

@@ -1,3 +1,8 @@
+#	Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: testScript.py
+
+
+
 """
 Test script for synComGraph.py. Saves the output communication graph topology
 as a JSON in the same format as the input feeder topology.

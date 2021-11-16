@@ -1,4 +1,7 @@
-%	Copyright (C) 2017 Battelle Memorial Institute
+%	Copyright (C) 2017-2021 Battelle Memorial Institute
+% file: user_configuration.m
+
+
 function [LUSolv,tax_files,tax_dir,out_dir,my_reg] = user_configuration(user_name)
 
 if (strcmp(user_name,'default') ~= 0)

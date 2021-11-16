@@ -1,3 +1,6 @@
+// Copyright (C) 2021 Battelle Memorial Institute
+// file: invti30.glm
+
 #set double_format=%+.12lg
 #set profiler=1
 #set randomseed=10

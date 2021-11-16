@@ -1,4 +1,7 @@
-%	Copyright (C) 2017 Battelle Memorial Institute
+%	Copyright (C) 2017-2021 Battelle Memorial Institute
+% file: TaxFeederData.m
+
+
 function [data] = TaxFeederData(file_to_extract,region)
 % This will contain data particular to each taxonomy feeder
 

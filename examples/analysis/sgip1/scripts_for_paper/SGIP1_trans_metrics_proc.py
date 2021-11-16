@@ -1,3 +1,6 @@
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: SGIP1_trans_metrics_proc.py
+
 from TransmissionMetricsProcessor import TransmissionMetricsProcessor
 import os
 import matplotlib.pyplot as plt

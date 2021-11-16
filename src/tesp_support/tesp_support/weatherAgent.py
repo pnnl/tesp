@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: weatherAgent.py
+
 """Weather Agent
 
 This weather agent needs an WEATHER_CONFIG environment variable to be set, which is a json file.

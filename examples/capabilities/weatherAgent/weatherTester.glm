@@ -1,3 +1,6 @@
+// Copyright (C) 2021 Battelle Memorial Institute
+// file: weatherTester.glm
+
 clock{
   timezone CST+6CDT;
   timestamp '2000-01-01 6:00:00';

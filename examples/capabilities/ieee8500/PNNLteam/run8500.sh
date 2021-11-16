@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run8500.sh
+
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 3 &> broker.log &)
 (export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec gridlabd -D USE_FNCS -D INV_MODE=CONSTANT_PF -D METRICS_ROOT=inv8500 inv8500.glm &> gridlabd.log &)
 (export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec fncs_player 24h prices.player &> player.log &)

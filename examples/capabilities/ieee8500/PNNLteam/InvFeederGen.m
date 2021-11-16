@@ -1,3 +1,6 @@
+% Copyright (C) 2021 Battelle Memorial Institute
+% file: InvFeederGen.glm
+
 clear all;
 format long g;
 

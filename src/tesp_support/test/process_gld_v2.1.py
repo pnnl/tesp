@@ -1,5 +1,5 @@
 #	Copyright (C) 2017 Battelle Memorial Institute
-# file: process_gld.py
+# file: process_gld_v2.1.py
 import json;
 import sys;
 import numpy as np;

@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: anim.py
+
 import sys
 import tkinter as tk
 import tkinter.ttk as ttk

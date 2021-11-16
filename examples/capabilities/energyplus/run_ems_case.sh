@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run_ems_case.sh
+
 # need to have made ems*.idf in the local directory, with bHELICS=True
 # or cp ~/src/tesp/support/energyplus/emsHELICS/*.idf .
 

@@ -1,5 +1,5 @@
 #	Copyright (C) 2017 Battelle Memorial Institute
-# file: process_matpower.py
+# file: process_matpower_v2.4.py
 import json;
 import sys;
 import numpy as np;

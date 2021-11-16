@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: gui.py
+
 import tesp_support.tesp_monitor as tesp
 import os
 os.environ['FNCS_CONFIG_FILE'] = 'TESP_Monitor.yaml'

@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: seasonal_plots.sh
+
 declare -r ROOT=$1
 declare -r TITLE=$2
 

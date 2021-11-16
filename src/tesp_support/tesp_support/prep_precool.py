@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2020 Battelle Memorial Institute
+# Copyright (C) 2018-2021 Battelle Memorial Institute
 # file: prep_precool.py
 """Writes the precooling agent and GridLAB-D metadata for NIST TE Challenge 2 example
  

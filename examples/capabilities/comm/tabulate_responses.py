@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: tabulate_responses.py
+
 # usage 'python3 tabulate_metrics.py'
 import sys
 import os

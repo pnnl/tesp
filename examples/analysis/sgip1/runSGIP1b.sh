@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: runSGIP1b.sh
 
 SCHED_PATH=$TESPDIR/data/schedules
 EPLUS_PATH=$TESPDIR/data/energyplus

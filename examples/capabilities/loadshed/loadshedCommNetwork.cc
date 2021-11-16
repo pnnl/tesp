@@ -1,4 +1,4 @@
-/*
+/* Copyright (C) 2019-2021 Battelle Memorial Institute
  * loadshedCommNetwork.cc
  *
  *  Created on: Sep 25, 2019

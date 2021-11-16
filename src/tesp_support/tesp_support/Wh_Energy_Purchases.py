@@ -1,3 +1,5 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: Wh_Energy_Purchases.py
 import os
 import pandas as pd
 import numpy as np

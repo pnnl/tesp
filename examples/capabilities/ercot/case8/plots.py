@@ -1,3 +1,6 @@
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: plots.py
+
 # usage 'python plots metrics_root'
 import os
 import sys

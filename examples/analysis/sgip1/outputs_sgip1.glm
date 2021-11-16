@@ -1,3 +1,5 @@
+// Copyright (C) 2017-2021 Battelle Memorial Institute
+// file: outputs_sgip1.glm
 // Weather information
 object recorder {
 	parent "localWeather";

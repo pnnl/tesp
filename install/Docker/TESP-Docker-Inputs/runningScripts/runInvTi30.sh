@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runInvTi30.sh
+
 clear
 scenarioFolder="ieee8500/PNNLteam"
 scenarioName="invti30"

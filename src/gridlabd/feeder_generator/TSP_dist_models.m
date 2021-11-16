@@ -1,4 +1,7 @@
-%	Copyright (C) 2017 Battelle Memorial Institute
+%	Copyright (C) 2017-2021 Battelle Memorial Institute
+% file: TSO_dist_models.m
+
+
 clear;
 clc;
 

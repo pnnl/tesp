@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runh0.sh
+
 EPLUS_PATH=$TESPDIR/data/energyplus
 SCHED_PATH=$TESPDIR/data/schedules
 

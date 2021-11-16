@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runErcotCase8.sh
+
 clear
 scenarioFolder="ercot"
 scenarioName="case8"

@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: compare_csv.py
+
 import csv;
 import sys;
 import numpy as np;

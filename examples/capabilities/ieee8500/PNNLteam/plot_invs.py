@@ -1,5 +1,6 @@
-# Copyright (C) 2018-2020 Battelle Memorial Institute
+# Copyright (C) 2018-2021 Battelle Memorial Institute
 # file: plot_invs.py; custom for the IEEE 8500-node circuit
+
 import json
 import sys
 import numpy as np

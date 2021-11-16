@@ -1,3 +1,7 @@
+..
+    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ file: TESP_Overview.rst
+
 .. role:: math(raw)
    :format: html latex
 ..

@@ -1,3 +1,5 @@
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: DistributionMetricsProcessor.py
 # class: DistributionMetricsProcessor.py
 import json;
 import sys;

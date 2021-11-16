@@ -1,3 +1,6 @@
+% Copyright (C) 2021 Battelle Memorial Institute
+% file: estimate_ac_size.m
+
 function [ btuperhr kw ] = estimate_ac_size (floor_area, thermal_integrity)
 % estimate_ac_size mimics the GridLAB-D design_cooling_capacity
 %   floor_area is the total floor area of the house in square feet

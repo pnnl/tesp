@@ -1,3 +1,5 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: gen_map.py
 import json
 import math
 import os

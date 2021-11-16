@@ -1,4 +1,5 @@
-#   Copyright (C) 2020 Battelle Memorial Institute
+#   Copyright (C) 2020-2021 Battelle Memorial Institute
+# file: parse_msout.py
 import numpy as np;
 
 def next_val (fp, var, bInteger = True):

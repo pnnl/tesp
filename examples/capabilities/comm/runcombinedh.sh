@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runcombinedh.sh
 
 (exec helics_broker -f 4 --loglevel=4 --name=mainbroker &> helics_broker.log &)
 (exec gridlabd -D USE_HELICS -D METRICS_FILE=CombinedCaseH_metrics.json CombinedCase.glm &> helics_gld1.log &)

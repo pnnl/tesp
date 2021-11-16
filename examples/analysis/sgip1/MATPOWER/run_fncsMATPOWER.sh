@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run_fncsMATPOWER.sh
 # script for execution of deployed applications
 #
 # Sets up the MATLAB runtime environment for the current $ARCH and executes 

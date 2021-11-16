@@ -1,3 +1,7 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: loadshed.py
+
+
 import string;
 import sys;
 import fncs;

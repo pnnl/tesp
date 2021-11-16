@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: run30.glm
+
 SCHED_PATH=$TESPDIR/data/schedules
 
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 3 &> broker30.log &)

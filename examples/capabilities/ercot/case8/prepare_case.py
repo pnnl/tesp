@@ -1,3 +1,6 @@
+# Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: prepare_case.py
+
 import prep_ercot_substation as prep
 import tesp_support.api as tesp
 import utilities

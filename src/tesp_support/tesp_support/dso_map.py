@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: dso_map.py
+
 import json
 import math
 import os

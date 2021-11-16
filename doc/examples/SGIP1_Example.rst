@@ -1,3 +1,7 @@
+..
+    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ file: SGIP1_Example.rst
+
 SGIP1 Analysis Example
 ======================
 

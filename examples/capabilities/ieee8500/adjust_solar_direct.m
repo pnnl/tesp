@@ -1,3 +1,6 @@
+% Copyright (C) 2021 Battelle Memorial Institute
+% file: adjust_solar_direct.m
+
 function [ cloudy_direct ] = adjust_solar_direct( sunny_direct )
 % ramps direct solar from 100% down to 10% between 1430 and 1440
 % then back up to 100% from 1600 to 1630

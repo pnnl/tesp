@@ -1,5 +1,5 @@
-# Copyright (C) 2018-2019 Battelle Memorial Institute
-# file: feederGenerator.py
+# Copyright (C) 2018-2021 Battelle Memorial Institute
+# file: feederGenerator_dsot_v1.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
 As this module populates the feeder backbone wiht houses and DER, it uses

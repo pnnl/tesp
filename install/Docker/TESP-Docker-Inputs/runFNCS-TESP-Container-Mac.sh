@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runFNCS-TESP-Container-Mac.sh
+
 #!/bin/bash
 clear
 # 

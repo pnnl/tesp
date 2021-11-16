@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runcombined.sh
 
 (export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> broker.log &)
 (export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=CombinedCase_metrics.json CombinedCase.glm &> gridlabd.log &)

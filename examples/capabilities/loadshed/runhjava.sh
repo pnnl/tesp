@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runhjava.sh
+
+
 JAVAPATH=$INSTDIR/java
 
 # Compile helicshed

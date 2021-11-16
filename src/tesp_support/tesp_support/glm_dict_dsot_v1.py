@@ -1,5 +1,5 @@
-#	Copyright (C) 2017-2019 Battelle Memorial Institute
-# file: glm_dict.py
+#	Copyright (C) 2017-2021 Battelle Memorial Institute
+# file: glm_dict_dsot_v1.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
 """Functions to create metadata from a GridLAB-D input (GLM) file
 

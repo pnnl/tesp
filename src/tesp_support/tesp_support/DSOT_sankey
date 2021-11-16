@@ -1,3 +1,5 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: DSOT_sankey
 import plotly.graph_objects as go
 import urllib, json
 import tesp_support.DSOT_plots

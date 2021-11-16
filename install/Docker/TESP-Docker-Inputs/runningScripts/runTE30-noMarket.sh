@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: runTE30-noMarket.sh
+
 clear
 scenarioFolder="te30"
 scenarioName="TE_Challenge"

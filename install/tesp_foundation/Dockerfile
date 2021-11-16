@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: Dockerfile
+
 FROM ubuntu:20.04
 LABEL maintainer="Thomas.McDermott@pnnl.gov"
 RUN apt-get update;apt-get dist-upgrade -y

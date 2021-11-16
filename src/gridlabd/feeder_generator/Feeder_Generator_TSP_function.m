@@ -1,4 +1,6 @@
-%	Copyright (C) 2017 Battelle Memorial Institute
+%	Copyright (C) 2017-2021 Battelle Memorial Institute
+% file: Feeder_Generator_TSP_function.m
+
 function Feeder_Generator_TSP_function(rng_seed, PV_penetration_factor,...
     ES_penetration_factor, num_commercial, taxonomy_directory, output_directory)
 

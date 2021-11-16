@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: weatherAgentTest.py
+
 import tesp_support.weatherAgent as tesp
 import sys
 

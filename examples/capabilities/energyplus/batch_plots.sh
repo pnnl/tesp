@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: batch_plots.sh
+
 ./seasonal_plots.sh "FullServiceRestaurant" "Full Service Restaurant" 
 ./seasonal_plots.sh "Hospital" "Hospital"
 ./seasonal_plots.sh "LargeHotel" "Large Hotel"

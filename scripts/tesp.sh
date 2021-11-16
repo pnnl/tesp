@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: tesp.sh
+
 # From termial in the VM, enter the these lines to build
 #   cd
 #	  wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/evolve/scripts/tesp.sh

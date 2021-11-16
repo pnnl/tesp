@@ -1,4 +1,5 @@
-# file: process_gld.py
+# Copyright (C) 2021 Battelle Memorial Institute
+# file: plot_loadshed.py
 import json;
 import sys;
 import numpy as np;

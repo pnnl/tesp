@@ -1,4 +1,7 @@
-%	Copyright (C) 2017 Battelle Memorial Institute
+%	Copyright (C) 2017-2021 Battelle Memorial Institute
+% file: TechnologyParameters.m
+
+
 function [data,use_flags] = TechnologyParameters(use_flags,TechToTest)
 %% Tech flags
 % each tech turns on certain flags
