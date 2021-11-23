@@ -1,3 +1,8 @@
+```eval_rst
+.. _PYPOWER Readme:
+
+```
+
 # PYPOWER Example
 
 This example simply verifies that PYPOWER will run a 9-bus case and communicate
