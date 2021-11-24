@@ -11,4 +11,4 @@ pypower - verifies PYPOWER over FNCS
  ./runpp.sh
  python3 plots.py
 
-For more details, see :ref:`PYPOWER Readme`.
+For more details, see :ref:`PYPOWER Example README`.
