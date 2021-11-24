@@ -1,4 +1,4 @@
-.. _PYPOWER Example README:
+.. _pypower_exmple_readme:
 
 ===============
 PYPOWER Example
@@ -7,8 +7,8 @@ PYPOWER Example
 This example simply verifies that PYPOWER will run a 9-bus case and communicate
 over FNCS. To run and plot it:
 
-# ./runpp.sh
-# python3 plots.py
+#. ./runpp.sh
+#. python3 plots.py
 
 In addition, traced FNCS messages will be written to pptracer.out
 
