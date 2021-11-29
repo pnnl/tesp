@@ -31,7 +31,7 @@ By choosing to enable all participants in the management through appropriate val
 
 
 Transactive Energy Simulation Platform (TESP)
-======================================
+=============================================
 
 .. sidebar:: Transactive Systems Program
 

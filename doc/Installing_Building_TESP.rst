@@ -22,7 +22,7 @@ Creating a Ubuntu Linux VM with VirtualBox
 ------------------------------------------
 There is lots of documentation out there on installing Ubuntu on a VirtualBox VM and we won't re-harsh those instructions here. Below are a few links you can try:
 
-- `Install Ubuntun on Oracle VirtualBox <https://brb.nci.nih.gov/seqtools/installUbuntu.html?`_
+- `Install Ubuntu on Oracle VirtualBox <https://brb.nci.nih.gov/seqtools/installUbuntu.html?>`_
 - `How to Install Ubuntu on VirtualBox? Here’s the Full Guide <https://www.minitool.com/partition-disk/how-to-install-ubuntu-on-virtualbox.html>`_
 - `How to install Ubuntu on VirtualBox <https://www.freecodecamp.org/news/how-to-install-ubuntu-with-oracle-virtualbox/>`_
 
@@ -60,6 +60,17 @@ For me, the last line looks like this:
 Running this script will kick off a process where all repositories for the necessary tools are cloned locally and then compiled one-by-one. Depending on the computing resources available and network bandwidth, this process will generally take a few hours. Due to this length of time, `sudo` credentials will likely expire at one or more points in the build process and will need to be re-entered.
 
 The TESP installation will be created at the same level as the `tesp.sh` script.
+
+
+Setting Up TESP Environment
+---------------------------
+After getting all the TESP software built, prior to running any of the included examples, be sure to set up the compute environment so that all the new TESP software can be found by the system. The `tespEnv` file is added at the same level as the root `tesp` folder and it contains all the environment configuration you'll need. 
+
+::
+
+    source tespEnv
+    
+You'll need to do this every time you open a new terminal. If the computing set-up you're using allows it, you can add this command to your ".bashrc" or equivalent so that it is automatically run for you each time you start a terminal session.
 
 
 Validate TESP installation 

@@ -1,19 +1,17 @@
-.. _pypower_exmple_readme:
 
-===============
-PYPOWER Example
-===============
+
 
 This example simply verifies that PYPOWER will run a 9-bus case and communicate
 over FNCS. To run and plot it:
 
-#. ./runpp.sh
-#. python3 plots.py
+::
+
+ ./runpp.sh
+ python3 plots.py
 
 In addition, traced FNCS messages will be written to pptracer.out
 
-File Directory
-==============
+**Directory contents:**
 
 * *clean.sh*; script that removes output and temporary files
 * *kill5570.sh*; helper script that stops processes listening on port 5570 (Linux/Mac)
