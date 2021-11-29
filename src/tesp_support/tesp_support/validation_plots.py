@@ -14,15 +14,17 @@ Needs to be run from the same folder as the SGIP results data.
 @author: hard312 (Trevor Hardy)
 """
 
+import argparse
 import logging
 import pprint
-import argparse
 import sys
 from os import path
-import tesp_support.process_pypower as pp
-import tesp_support.process_gld as gp
-import tesp_support.process_eplus as ep
+
 import matplotlib.pyplot as plt
+
+import tesp_support.process_eplus as ep
+import tesp_support.process_gld as gp
+import tesp_support.process_pypower as pp
 
 # Setting up logging
 logger = logging.getLogger(__name__)
@@ -31,109 +33,114 @@ logger = logging.getLogger(__name__)
 ppt = pprint.PrettyPrinter(indent=4, )
 
 
-
 def load_pypower_data(data, case, data_path):
-    '''
+    """
     Loads data collected from PYPOWER into data dictionary
 
     :param data: dictionary of nparrays
-    :param case: string case designator used as key in data dict
+    :param case: string case designator used as key in data diction
+    :param data_path: string directory path for file
     :return:
-        data: data dict with PYPOWER data added
-    '''
+        data: data diction with PYPOWER data added
+    """
+    diction = None
+    found_data = False
     try:
-        dict = pp.read_pypower_metrics(data_path, f'SGIP1{case}')
+        diction = pp.read_pypower_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load PYPOWER data for Case {case}.')
-        found_data = False
 
     data[case]['pypower'] = {}
     data[case]['pypower']['found_data'] = found_data
     if found_data:
-        data[case]['pypower']['hrs'] = dict['hrs']
-        data[case]['pypower']['data_b'] = dict['data_b']
-        data[case]['pypower']['data_g'] = dict['data_g']
-        data[case]['pypower']['idx_b'] = dict['idx_b']
-        data[case]['pypower']['idx_g'] = dict['idx_g']
-        data[case]['pypower']['keys_b'] = dict['keys_b']
-        data[case]['pypower']['keys_g'] = dict['keys_g']
+        data[case]['pypower']['hrs'] = diction['hrs']
+        data[case]['pypower']['data_b'] = diction['data_b']
+        data[case]['pypower']['data_g'] = diction['data_g']
+        data[case]['pypower']['idx_b'] = diction['idx_b']
+        data[case]['pypower']['idx_g'] = diction['idx_g']
+        data[case]['pypower']['keys_b'] = diction['keys_b']
+        data[case]['pypower']['keys_g'] = diction['keys_g']
         logger.info(f'\tLoaded PYPOWER data for Case {case}.')
     return data
 
+
 def load_gld_data(data, case, data_path):
-    '''
+    """
     Loads data collected from GridLAB-D into data dictionary. Not all
     GridLAB-D data is loaded into the dictionary, only that which is needed.
 
     :param data: dictionary of nparrays
-    :param case: string case designator used as key in data dict
+    :param case: string case designator used as key in data diction
+    :param data_path: string directory path for file
     :return:
-        data: data dict with PYPOWER data added
-    '''
+        data: data diction with PYPOWER data added
+    """
 
+    diction = None
+    found_data = False
     try:
-        dict = gp.read_gld_metrics(data_path, f'SGIP1{case}')
+        diction = gp.read_gld_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load GridLAB-D data for Case {case}.')
-        found_data = False
 
     data[case]['gld'] = {}
     data[case]['gld']['found_data'] = found_data
     if found_data:
-        data[case]['gld']['hrs'] = dict['hrs']
-        data[case]['gld']['data_h'] = dict['data_h']
-        data[case]['gld']['keys_h'] = dict['keys_h']
-        data[case]['gld']['idx_h'] = dict['idx_h']
-        data[case]['gld']['solar_kw'] = dict['solar_kw']
-        data[case]['gld']['battery_kw'] = dict['battery_kw']
+        data[case]['gld']['hrs'] = diction['hrs']
+        data[case]['gld']['data_h'] = diction['data_h']
+        data[case]['gld']['keys_h'] = diction['keys_h']
+        data[case]['gld']['idx_h'] = diction['idx_h']
+        data[case]['gld']['solar_kw'] = diction['solar_kw']
+        data[case]['gld']['battery_kw'] = diction['battery_kw']
         logger.info(f'\tLoaded GridLAB-D data for Case {case}.')
     return data
 
 
 def load_energy_plus_data(data, case, data_path):
-    '''
+    """
     Loads data collected from Energy+ into data dictionary.
 
     :param data: dictionary of nparrays
-    :param case: string case designator used as key in data dict
+    :param case: string case designator used as key in data diction
+    :param data_path: string directory path for file
     :return:
-        data: data dict with PYPOWER data added
-    '''
+        data: data diction with PYPOWER data added
+    """
 
+    diction = None
+    found_data = False
     try:
-        dict = ep.read_eplus_metrics(data_path, f'SGIP1{case}')
+        diction = ep.read_eplus_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load Energy+ data for Case {case}.')
-        found_data = False
 
     data[case]['eplus'] = {}
     data[case]['eplus']['found_data'] = found_data
     if found_data:
-        data[case]['eplus']['hrs'] = dict['hrs']
-        data[case]['eplus']['data_e'] = dict['data_e']
-        data[case]['eplus']['idx_e'] = dict['idx_e']
+        data[case]['eplus']['hrs'] = diction['hrs']
+        data[case]['eplus']['data_e'] = diction['data_e']
+        data[case]['eplus']['idx_e'] = diction['idx_e']
         logger.info(f'\tLoaded Energy+ data for Case {case}.')
     return data
 
 
-
 def load_data(data_path):
-    '''
+    """
      Loads data from a variety of sources to allow cross-case comparison
 
+    :param data_path: string directory path for file
     :return:
         data: dictionary of nparrays for use in plotting functions
-    '''
+    """
 
     logger.info('Loading processed metrics data')
     data = {}
     cases = ['a', 'b', 'c', 'd', 'e']
     for case in cases:
         data[case] = {}
-
 
     # Load PYPOWER data
     for case in cases:
@@ -147,20 +154,18 @@ def load_data(data_path):
     for case in cases:
         data = load_energy_plus_data(data, case, data_path)
 
-
     return data
 
 
-
 def plot_gen_comparison(data, save_path):
-    '''
+    """
     SGIP1(a) output of individual generators vs time. Expect to see dramatic
     change in dispatch on day 2 as a generator goes out.
 
     :param data: Data dictionary with necessary data for creating plot
+    :param save_path: string directory path for file
     :return:
-    '''
-
+    """
 
     if 'a' in data.keys():
         if 'pypower' in data['a'].keys():
@@ -203,15 +208,16 @@ def plot_gen_comparison(data, save_path):
 
 
 def plot_transactive_bus_LMP(data, save_path):
-    '''
+    """
     SGIP1(a) and (b) LMP for transactive bus vs time. Expect to see price
     spike on second day as generator goes out; should have lower prices for
     the transactive case (b)
 
     Bus 7 is the only bus for which data is recorded.
     :param data: Data dictionary with necessary data for creating plot
+    :param save_path: string directory path for file
     :return:
-    '''
+    """
 
     if 'a' in data.keys() and 'b' in data.keys():
         if 'pypower' in data['a'].keys() and 'pypower' in data['b'].keys():
@@ -248,9 +254,9 @@ def plot_transactive_bus_LMP(data, save_path):
             else:
                 logger.error('\tMissing PYPOWER data; unable to complete '
                              'plot_transactive_bus_LMP.')
-                if (data['a']['pypower']['found_data']) == False:
+                if not (data['a']['pypower']['found_data']):
                     logger.error('\t\tMissing data for Case (a)')
-                if (data['b']['pypower']['found_data']) == False:
+                if not (data['b']['pypower']['found_data']):
                     logger.error('\t\tMissing data for Case (b)')
         else:
             if 'pypower' not in data['a'].keys():
@@ -269,19 +275,19 @@ def plot_transactive_bus_LMP(data, save_path):
 
 
 def plot_transactive_feeder_load(data, save_path):
-    '''
+    """
     SGIP1(a), and (b) total feeder load vs time. (a) is base and (b) is
     transactive. Expect (b) to show peak-shaving, snapback, and
     valley-filling where (a) does not.
 
     Bus 7 is the only bus for which data is recorded.
     :param data: Data dictionary with necessary data for creating plot
+    :param save_path: string directory path for file
     :return:
-    '''
+    """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'pypower' in data['a'].keys() and 'pypower' in data['b'].keys():
-            if data['a']['pypower']['found_data'] and data['b']['pypower'][
-                'found_data']:
+            if data['a']['pypower']['found_data'] and data['b']['pypower']['found_data']:
 
                 a_hrs = data['a']['pypower']['hrs']
                 a_data_b = data['a']['pypower']['data_b']
@@ -321,9 +327,9 @@ def plot_transactive_feeder_load(data, save_path):
             else:
                 logger.error('\tMissing PYPOWER data; unable to complete '
                              'plot_transactive_feeder_load.')
-                if (data['a']['pypower']['found_data']) == False:
+                if not (data['a']['pypower']['found_data']):
                     logger.error('\tMissing data for Case (a)')
-                if (data['b']['pypower']['found_data']) == False:
+                if not (data['b']['pypower']['found_data']):
                     logger.error('\t\tMissing data for Case (b)')
         else:
             if 'pypower' not in data['a'].keys():
@@ -340,26 +346,27 @@ def plot_transactive_feeder_load(data, save_path):
             logger.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_transactive_feeder_load.')
 
+
 def plot_transactive_feeder_load_solar(data, save_path):
-    '''
+    """
     SGIP1a, b, c, d, e transactive total feeder load vs time. (a) is base
     and (b)-(e) are transactive with increasing amounts of solar and energy
     storage systems. Expect to see decreasing daytime loads with increasing
     solar penetration ((b) to (e)).
 
     :param data: Data dictionary with necessary data for creating plot
+    :param save_path: string directory path for file
     :return:
-    '''
+    """
     if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
             'e' in data.keys():
         if 'pypower' in data['b'].keys() and 'pypower' in data['c'].keys() \
-                and 'pypower' in data['d'].keys() and 'pypower' in data[
-            'e'].keys():
+                and 'pypower' in data['d'].keys() and 'pypower' in data['e'].keys():
 
             if data['b']['pypower']['found_data'] and \
-                data['c']['pypower']['found_data'] and \
-                data['d']['pypower']['found_data'] and \
-                data['e']['pypower']['found_data']:
+                    data['c']['pypower']['found_data'] and \
+                    data['d']['pypower']['found_data'] and \
+                    data['e']['pypower']['found_data']:
 
                 b_hrs = data['b']['pypower']['hrs']
                 b_data_b = data['b']['pypower']['data_b']
@@ -401,13 +408,13 @@ def plot_transactive_feeder_load_solar(data, save_path):
             else:
                 logger.error('\tMissing PYPOWER data; unable to complete '
                              'plot_transactive_feeder_load_solar')
-                if (data['b']['pypower']['found_data']) == False:
+                if not (data['b']['pypower']['found_data']):
                     logger.error('\t\tMissing data for Case (b)')
-                if (data['c']['pypower']['found_data']) == False:
+                if not (data['c']['pypower']['found_data']):
                     logger.error('\t\tMissing data for Case (c)')
-                if (data['d']['pypower']['found_data']) == False:
+                if not (data['d']['pypower']['found_data']):
                     logger.error('\t\tMissing data for Case (d)')
-                if (data['e']['pypower']['found_data']) == False:
+                if not (data['e']['pypower']['found_data']):
                     logger.error('\t\tMissing data for Case (e)')
         else:
             if 'pypower' not in data['b'].keys():
@@ -439,20 +446,21 @@ def plot_transactive_feeder_load_solar(data, save_path):
 
 
 def plot_avg_indoor_air_temperature(data, save_path):
-    '''
+    """
     SGIP1(a) and (b) all residential customer average indoor temperature
     vs time. SGIP1(a) is base and (b) is transactive. Expect to see
     constant temperatures for (a) and higher temperatures for (b) on the
     second day with the generator outage while (a) is unaffected.
 
     :param data: Data dictionary with necessary data for creating plot
+    :param save_path: string directory path for file
     :return:
-    '''
+    """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'gld' in data['a'].keys() and 'gld' in data['b'].keys() and \
                 'pypower' in data['a'].keys():
             if data['a']['gld']['found_data'] and \
-                data['b']['gld']['found_data']:
+                    data['b']['gld']['found_data']:
 
                 a_hrs = data['a']['gld']['hrs']
                 a_data_h = data['a']['gld']['data_h']
@@ -468,19 +476,19 @@ def plot_avg_indoor_air_temperature(data, save_path):
                 bp_data_b = data['b']['pypower']['data_b']
                 bp_idx_b = data['b']['pypower']['idx_b']
 
-                a_avg = (a_data_h[:,:,a_idx_h['HSE_AIR_AVG_IDX']]).squeeze()
+                a_avg = (a_data_h[:, :, a_idx_h['HSE_AIR_AVG_IDX']]).squeeze()
                 a_avg2 = a_avg.mean(axis=0)
-                b_avg = (b_data_h[:,:,b_idx_h['HSE_AIR_AVG_IDX']]).squeeze()
+                b_avg = (b_data_h[:, :, b_idx_h['HSE_AIR_AVG_IDX']]).squeeze()
                 b_avg2 = b_avg.mean(axis=0)
 
                 fig, ax = plt.subplots()
                 ax2 = ax.twinx()
                 ln1 = ax.plot(a_hrs, a_avg2, color='blue', label='Case (a) - '
-                                                           'Non-Transactive')
+                                                                 'Non-Transactive')
                 ln2 = ax.plot(b_hrs, b_avg2, color='red', label='Case (b) - '
-                                                         'Transactive')
+                                                                'Transactive')
                 ln3 = ax2.plot(bp_hrs, bp_data_b[0, :, bp_idx_b['LMP_P_IDX']],
-                        color='red', label='Case (b) - Transactive Price',
+                               color='red', label='Case (b) - Transactive Price',
                                linestyle='dashed', linewidth=1)
                 ax.set_ylabel(a_idx_h['HSE_AIR_AVG_UNITS'])
                 ax2.set_ylabel(bp_idx_b['LMP_P_UNITS'])
@@ -504,11 +512,11 @@ def plot_avg_indoor_air_temperature(data, save_path):
             else:
                 logger.error('\tMissing GridLAB-D or PYPOWER data; unable to '
                              'complete plot_avg_indoor_air_temperature.')
-                if (data['a']['gld']['found_data']) == False:
+                if not (data['a']['gld']['found_data']):
                     logger.error('\t\tMissing GridLAB-D data for Case (a)')
-                if (data['b']['gld']['found_data']) == False:
+                if not (data['b']['gld']['found_data']):
                     logger.error('\t\tMissing GridLAB-D data for Case (b)')
-                if (data['b']['pypower']['found_data']) == False:
+                if not (data['b']['pypower']['found_data']):
                     logger.error('\t\tMissing PYPOWER data for Case (b)')
         else:
             if 'gld' not in data['a'].keys():
@@ -533,23 +541,24 @@ def plot_avg_indoor_air_temperature(data, save_path):
 
 
 def plot_solar_output(data, save_path):
-    '''
+    """
     SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
 
     :param data: Data dictionary with necessary data for creating plot
+    :param save_path: string directory path for file
     :return:
-    '''
+    """
 
     if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
             'e' in data.keys():
         if 'gld' in data['b'].keys() and 'gld' in data['c'].keys() and \
-             'gld' in data['d'].keys() and 'gld' in data['e'].keys():
+                'gld' in data['d'].keys() and 'gld' in data['e'].keys():
 
             if data['b']['gld']['found_data'] and \
-                data['c']['gld']['found_data'] and \
-                data['d']['gld']['found_data'] and \
-                data['e']['gld']['found_data']:
+                    data['c']['gld']['found_data'] and \
+                    data['d']['gld']['found_data'] and \
+                    data['e']['gld']['found_data']:
 
                 b_hrs = data['b']['gld']['hrs']
                 b_solar_kw = data['b']['gld']['solar_kw']
@@ -562,9 +571,9 @@ def plot_solar_output(data, save_path):
 
                 plt.plot(b_hrs, b_solar_kw, color='red', label='Case (b) - 0 PV systems')
                 plt.plot(c_hrs, c_solar_kw, color='green', label='Case (c) - 159 PV '
-                                                                'systems')
+                                                                 'systems')
                 plt.plot(d_hrs, d_solar_kw, color='magenta', label='Case (d) - 311 PV '
-                                                                  'systems')
+                                                                   'systems')
                 plt.plot(e_hrs, e_solar_kw, color='gray', label='Case (e) - 464 PV '
                                                                 'systems')
                 plt.ylabel('kW')
@@ -586,13 +595,13 @@ def plot_solar_output(data, save_path):
             else:
                 logger.error('\tMissing GridLAB-D data; unable to complete '
                              'plot_solar_output')
-                if (data['b']['gld']['found_data']) == False:
+                if not (data['b']['gld']['found_data']):
                     logger.error('\t\tMissing data for Case (b)')
-                if (data['c']['gld']['found_data']) == False:
+                if not (data['c']['gld']['found_data']):
                     logger.error('\t\tMissing data for Case (c)')
-                if (data['d']['gld']['found_data']) == False:
+                if not (data['d']['gld']['found_data']):
                     logger.error('\t\tMissing data for Case (d)')
-                if (data['e']['gld']['found_data']) == False:
+                if not (data['e']['gld']['found_data']):
                     logger.error('\t\tMissing data for Case (e)')
         else:
             if 'gld' not in data['b'].keys():
@@ -621,24 +630,26 @@ def plot_solar_output(data, save_path):
             logger.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_solar_output.')
 
+
 def plot_ES_output(data, save_path):
-    '''
+    """
     SGIP1(a) and (b) Energy+ average indoor cooling temperature vs time.
     Expect to case (b) to show higher temperatures as it is
     price-responsive.
 
     :param data: Data dictionary with necessary data for creating plot
+    :param save_path: string directory path for file
     :return:
-    '''
+    """
     if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
             'e' in data.keys():
         if 'gld' in data['b'].keys() and 'gld' in data['c'].keys() and \
-             'gld' in data['d'].keys() and 'gld' in data['e'].keys():
+                'gld' in data['d'].keys() and 'gld' in data['e'].keys():
 
             if data['b']['gld']['found_data'] and \
-                data['c']['gld']['found_data'] and \
-                data['d']['gld']['found_data'] and \
-                data['e']['gld']['found_data']:
+                    data['c']['gld']['found_data'] and \
+                    data['d']['gld']['found_data'] and \
+                    data['e']['gld']['found_data']:
 
                 b_hrs = data['b']['gld']['hrs']
                 b_battery_kw = data['b']['gld']['battery_kw']
@@ -650,13 +661,13 @@ def plot_ES_output(data, save_path):
                 e_battery_kw = data['e']['gld']['battery_kw']
 
                 plt.plot(b_hrs, b_battery_kw, color='red', label='Case (b) - 0 ES '
-                                                        'systems')
+                                                                 'systems')
                 plt.plot(c_hrs, c_battery_kw, color='green', label='Case (c) - 82 ES '
-                                                        'systems')
+                                                                   'systems')
                 plt.plot(d_hrs, d_battery_kw, color='magenta', label='Case ('
-                                                        'd) - 170 ES systems')
+                                                                     'd) - 170 ES systems')
                 plt.plot(e_hrs, e_battery_kw, color='gray', label='Case (e) '
-                                                        '- 253 ES systems')
+                                                                  '- 253 ES systems')
                 plt.ylabel('kW')
                 plt.xlabel('Simulated time (hrs)')
                 plt.title('Comparison of Total Residential ES Output')
@@ -676,13 +687,13 @@ def plot_ES_output(data, save_path):
             else:
                 logger.error('\tMissing GridLAB-D data; unable to complete '
                              'plot_ES_output')
-                if (data['b']['gld']['found_data']) == False:
+                if not (data['b']['gld']['found_data']):
                     logger.error('\t\tMissing data for Case (b)')
-                if (data['c']['gld']['found_data']) == False:
+                if not (data['c']['gld']['found_data']):
                     logger.error('\t\tMissing data for Case (c)')
-                if (data['d']['gld']['found_data']) == False:
+                if not (data['d']['gld']['found_data']):
                     logger.error('\t\tMissing data for Case (d)')
-                if (data['e']['gld']['found_data']) == False:
+                if not (data['e']['gld']['found_data']):
                     logger.error('\t\tMissing data for Case (e)')
         else:
             if 'gld' not in data['b'].keys():
@@ -711,19 +722,21 @@ def plot_ES_output(data, save_path):
             logger.error('\tNo data loaded for Case (e); unable to complete '
                          'plot_ES_output.')
 
+
 def plot_energy_plus_indoor_temperature(data, save_path):
-    '''
+    """
     SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
 
     :param data: Data dictionary with necessary data for creating plot
+    :param save_path: string directory path for file
     :return:
-    '''
+    """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys() and \
                 'pypower' in data['b'].keys():
             if data['a']['eplus']['found_data'] and \
-                data['b']['eplus']['found_data']:
+                    data['b']['eplus']['found_data']:
 
                 a_hrs = data['a']['eplus']['hrs']
                 a_data = data['a']['eplus']['data_e']
@@ -737,14 +750,14 @@ def plot_energy_plus_indoor_temperature(data, save_path):
 
                 fig, ax = plt.subplots()
                 ax2 = ax.twinx()
-                ln2 = ax.plot(b_hrs, b_data[:,b_idx[
-                                                  'COOLING_TEMPERATURE_IDX']],
-                         color='red', label='Case (b) - Transactive')
-                ln1 = ax.plot(a_hrs, a_data[:,a_idx[
-                                                  'COOLING_TEMPERATURE_IDX']],
-                         color='blue', label='Case (a) - Non-transactive')
+                ln2 = ax.plot(b_hrs, b_data[:, b_idx[
+                                                   'COOLING_TEMPERATURE_IDX']],
+                              color='red', label='Case (b) - Transactive')
+                ln1 = ax.plot(a_hrs, a_data[:, a_idx[
+                                                   'COOLING_TEMPERATURE_IDX']],
+                              color='blue', label='Case (a) - Non-transactive')
                 ln3 = ax2.plot(bp_hrs, bp_data_b[0, :, bp_idx_b['LMP_P_IDX']],
-                        color='red', label='Case (b) - Transactive Price',
+                               color='red', label='Case (b) - Transactive Price',
                                linestyle='dashed', linewidth=1)
                 ax.set_ylabel(a_idx['COOLING_TEMPERATURE_UNITS'])
                 ax2.set_ylabel(bp_idx_b['LMP_P_UNITS'])
@@ -768,9 +781,9 @@ def plot_energy_plus_indoor_temperature(data, save_path):
             else:
                 logger.error('\tMissing Energy+ data; unable to complete '
                              'plot_energy_plus_indoor_temperature.')
-                if (data['a']['eplus']['found_data']) == False:
+                if not (data['a']['eplus']['found_data']):
                     logger.error('\t\tMissing data for Case (a)')
-                if (data['b']['eplus']['found_data']) == False:
+                if not (data['b']['eplus']['found_data']):
                     logger.error('\t\tMissing data for Case (b)')
         else:
             if 'eplus' not in data['a'].keys():
@@ -793,18 +806,20 @@ def plot_energy_plus_indoor_temperature(data, save_path):
             logger.error('\tNo data loaded for Case (b); unable to complete '
                          'plot_energy_plus_indoor_temperature.')
 
+
 def plot_energy_plus_prices(data, save_path):
-    '''
+    """
     SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
 
     :param data: Data dictionary with necessary data for creating plot
+    :param save_path: string directory path for file
     :return:
-    '''
+    """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys():
             if data['a']['eplus']['found_data'] and \
-                data['b']['eplus']['found_data']:
+                    data['b']['eplus']['found_data']:
 
                 a_hrs = data['a']['eplus']['hrs']
                 a_data = data['a']['eplus']['data_e']
@@ -813,9 +828,9 @@ def plot_energy_plus_prices(data, save_path):
                 b_data = data['b']['eplus']['data_e']
                 b_idx = data['b']['eplus']['idx_e']
 
-                plt.plot(a_hrs, a_data[:,a_idx['PRICE_IDX']], color='blue',
+                plt.plot(a_hrs, a_data[:, a_idx['PRICE_IDX']], color='blue',
                          label='Case (a) - Non-transactive')
-                plt.plot(a_hrs, b_data[:,b_idx['PRICE_IDX']], color='red',
+                plt.plot(a_hrs, b_data[:, b_idx['PRICE_IDX']], color='red',
                          label='Case (b) - Transactive')
                 plt.ylabel(a_idx['PRICE_UNITS'])
                 plt.xlabel('Simulated time (hrs)')
@@ -836,9 +851,9 @@ def plot_energy_plus_prices(data, save_path):
             else:
                 logger.error('\tMissing Energy+ data; unable to complete '
                              'plot_energy_plus_prices.')
-                if (data['a']['eplus']['found_data']) == False:
+                if not (data['a']['eplus']['found_data']):
                     logger.error('\t\tMissing data for Case (a)')
-                if (data['b']['eplus']['found_data']) == False:
+                if not (data['b']['eplus']['found_data']):
                     logger.error('\t\tMissing data for Case (b)')
         else:
             if 'eplus' not in data['a'].keys():
@@ -856,7 +871,6 @@ def plot_energy_plus_prices(data, save_path):
                          'plot_energy_plus_prices.')
 
 
-
 def create_validation_plots(data, save_path):
     logger.info('Creating plots')
     plot_gen_comparison(data, save_path)
@@ -868,14 +882,6 @@ def create_validation_plots(data, save_path):
     plot_ES_output(data, save_path)
     plot_energy_plus_indoor_temperature(data, save_path)
     plot_energy_plus_prices(data, save_path)
-
-
-
-
-
-
-
-
 
 
 ########################################################################
@@ -890,15 +896,10 @@ def create_validation_plots(data, save_path):
 ########################################################################
 
 
-
-
-
-
-
-
 def _auto_run(args):
     data = load_data(args.data_path)
     create_validation_plots(data, args.save_path)
+
 
 if __name__ == '__main__':
     # TDH: This slightly complex mess allows lower importance messages
@@ -927,4 +928,3 @@ if __name__ == '__main__':
                                 '/simulation data/sgip1 case 5')
     args = parser.parse_args()
     _auto_run(args)
-

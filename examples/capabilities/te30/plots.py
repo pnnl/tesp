@@ -21,7 +21,7 @@ if os.path.exists('auction_' + rootname + '_metrics.json'):
     ametrics = ap.read_agent_metrics(rootname, 'TE_Challenge_agent_dict.json')
     ap.plot_agents(ametrics)
 
-gmetrics = gp.read_gld_metrics(rootname, 'TE_Challenge_glm_dict.json')
+gmetrics = gp.read_gld_metrics(os.getcwd(), rootname, 'TE_Challenge_glm_dict.json')
 gp.plot_gld(gmetrics)
 hp.plot_houses(gmetrics)
 vp.plot_voltages(gmetrics)
