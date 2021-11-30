@@ -3,7 +3,7 @@
 # Copyright (C) 2021 Battelle Memorial Institute
 # file: tesp.sh
 
-# From termial in the VM, enter the these lines to build
+# From terminal in the VM, enter the these lines to build
 #   cd
 #	  wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/evolve/scripts/tesp.sh
 # if vpn is used --no-check-certificate in wget command line
@@ -23,6 +23,15 @@
 #alternatives command line for java or python
 #sudo update-alternatives --config java
 
+
+while true; do
+    read -p "Do you wish to build the binaries? " yn
+    case $yn in
+        [Yy]* ) binaries=develop; break;;
+        [Nn]* ) binaries=copy; break;;
+        * ) echo "Please answer [y]es or [n]o.";;
+    esac
+done
 
 # build tools
 sudo apt-get update
@@ -87,54 +96,56 @@ fi
 git config --global credential.helper store
 
 echo
-echo ++++++++++++++ FNCS
-git clone -b feature/opendss https://github.com/FNCS/fncs.git
-#For dsot
-#git clone -b develop https://github.com/FNCS/fncs.git
-
-echo
-echo ++++++++++++++ HELICS
-git clone -b helics2 https://github.com/GMLC-TDC/HELICS-src
-#git clone -b main https://github.com/GMLC-TDC/HELICS-src
-
-echo
-echo ++++++++++++++ GRIDLAB
-#develop - dec21 commit number for dsot
-#ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
-git clone -b develop https://github.com/gridlab-d/gridlab-d.git
-
-echo
-echo ++++++++++++++ ENERGYPLUS
-git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
-
-echo
 echo ++++++++++++++ TESP
 git clone -b evolve https://github.com/pnnl/tesp.git
 # need for back port of DSOT
 # git clone -b main https://stash.pnnl.gov/scm/tesp/tesp-private.git
 
-echo
-echo ++++++++++++++ NS-3
-git clone https://gitlab.com/nsnam/ns-3-dev.git
+if [[ $binaries == "develop" ]]; then
+  echo
+  echo ++++++++++++++ FNCS
+  git clone -b feature/opendss https://github.com/FNCS/fncs.git
+  #For dsot
+  #git clone -b develop https://github.com/FNCS/fncs.git
 
-echo
-echo ++++++++++++++ HELICS-NS-3
-cd ns-3-dev || exit
-git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+  echo
+  echo ++++++++++++++ HELICS
+  git clone -b helics2 https://github.com/GMLC-TDC/HELICS-src
+  #git clone -b main https://github.com/GMLC-TDC/HELICS-src
 
-echo
-echo ++++++++++++++ Python Bindings Generator
-cd ..
-git clone https://github.com/gjcarneiro/pybindgen.git
+  echo
+  echo ++++++++++++++ GRIDLAB
+  #develop - dec21 commit number for dsot
+  #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
+  git clone -b develop https://github.com/gridlab-d/gridlab-d.git
 
-echo
-echo ++++++++++++++ PSST
-# git clone https://github.com/ames-market/psst.git
-git clone https://github.com/ames-market/AMES-V5.0.git
+  echo
+  echo ++++++++++++++ ENERGYPLUS
+  git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
 
-echo
-echo ++++++++++++++ KLU SOLVER
-svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
+  echo
+  echo ++++++++++++++ NS-3
+  git clone https://gitlab.com/nsnam/ns-3-dev.git
+
+  echo
+  echo ++++++++++++++ HELICS-NS-3
+  cd ns-3-dev || exit
+  git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+
+  echo
+  echo ++++++++++++++ Python Bindings Generator
+  cd ..
+  git clone https://github.com/gjcarneiro/pybindgen.git
+
+  echo
+  echo ++++++++++++++ PSST
+  # git clone https://github.com/ames-market/psst.git
+  git clone https://github.com/ames-market/AMES-V5.0.git
+
+  echo
+  echo ++++++++++++++ KLU SOLVER
+  svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
+fi
 
 # Install snap Pycharm IDE for python
 # sudo snap install pycharm-community --classic
@@ -146,4 +157,4 @@ cd tesp/scripts || exit
 # Copy TESP environment to $HOME for shell scripts
 cp tespEnv "$HOME/"
 # Compile all relevant executables
-./tesp_c.sh develop
+./tesp_c.sh $binaries

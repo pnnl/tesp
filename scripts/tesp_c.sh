@@ -58,12 +58,14 @@ if [[ $1 == "develop" ]]; then
 
   echo "Compiling and Installing Ipopt with ASL and Mumps..."
   ./ipopt_b.sh clean > ipopt.log 2>&1
+
 else
 
-  echo "Installing TESP binaries..."
-  wget --no-check-certificate https://mepas.pnnl.gov/FramesV1/Install/tesp_binaries.zip
+  echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
-  unzip tesp_binaries.zip .
+  wget --no-check-certificate https://mepas.pnnl.gov/FramesV1/Install/tesp_binaries.zip
+  unzip tesp_binaries.zip > "${TESPDIR}/scripts/build/tesp_binaries.log" 2>&1
+  rm tesp_binaries.zip
 fi
 
 echo
@@ -74,5 +76,6 @@ echo "Installation logs are found in '${TESPDIR}/scripts/build'"
 # and in the trusted directories (/lib and /usr/lib).
 sudo ldconfig
 
+cd "${TESPDIR}/scripts/build" || exit
 ./versions.sh
 
