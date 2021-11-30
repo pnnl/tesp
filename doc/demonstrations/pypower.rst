@@ -2,13 +2,8 @@
     _ Copyright (C) 2021 Battelle Memorial Institute
     _ file: pypower.rst
 
-pypower - verifies PYPOWER over FNCS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===============
+PYPOWER Example
+===============
 
-::
-
- cd ~/tesp/examples/pypower
- ./runpp.sh
- python3 plots.py
-
-For more details, see `PYPOWER Example Readme`_
+.. include:: ../../examples/capabilities/pypower/README.rst

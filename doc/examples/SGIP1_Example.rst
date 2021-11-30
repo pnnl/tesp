@@ -69,7 +69,8 @@ Metrics Identification
 ......................
 To guide the development of the analysis, it is important that key metrics are identified in the value model. The diagram below shows the specific metrics identified as sub-elements of the Accounting Table object. Though this diagram does not define the means by which these metrics are calculated, it does define the need for such a defintion, leading to a data requirement from the analysis process.
 
-	Value exchanges modeled during the transactive system operation
+Value exchanges modeled during the transactive system operation
+
 .. figure:: ../media/SGIP1/ValueModelMetrics.png
 	:name: fig_value_model_metrics
 
@@ -105,7 +106,7 @@ Social Welfare:
     * :math:`N_G` is the total number of generators
     
 Electrical energy per day
-,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,
     
 .. math::
     
@@ -152,7 +153,7 @@ where
     
     
 Electrical energy per day per customer:
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
  
 .. math::
  
@@ -239,7 +240,7 @@ Co-simulation
 The "Co-simulation" activity block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a sub-diagram shown in :numref:`fig_AD_co-simulation`. The GridLAB-D model plays a central role as a significant portion of the modeling effort is centered around enabling loads (specifically HVACs) to participate in the transactive system. In addition to the previously shown information flows between the activities the dynamic data exchange that takes place during the co-simulation run; this is shown by the "<<flow>>" arrows. 
 
 .. figure:: ../media/SGIP1/AD_co-simulation.png
-	:name: fig_AD_prepare_co-simulation
+	:name: fig_AD_co-simulation
 	
 	Detailed model of the co-simulation process showing the dynamic data exchanges with "<<flow>>" arrows.
 	
@@ -419,10 +420,12 @@ Simulated Functionalities
 The functionalities shown in :numref:`fig_sgip1` are implemented in simulation through a collection of software entities. Some of these entities perform dual roles (such as PYPOWER), solving equations that define the physical state of the system (in this case by solving the powerflow problem) and in also performing market operations to define prices (in this case by solving the optimal power flow problem).
 
     -  **GridLAB-D**
+    
         - Simulates the physics of the electrical distribution system by solving the power flow of the specified distribution feeder model. To accomplish this it must provide the total distribution feeder load to PYPOWER (bulk power system simulator) and receives from it the substation input voltage.
         - Simulates the thermodynamics and HVAC thermostat control for all residential buildings in the specified distribution feeder model. Provides thermodynamic state information to the Substation Agent to allow formation of real-time energy bids.
         - Simulates the production of the solar PV panels and their local controller (for the cases that include such devices).
         Simulates the physics of the energy storage devices and the behavior of their local controllers.
+        
     - **Substation Agent**
         - Contains all the transactive agents for the residential customers. Using the current state of the individual customers' residences (*e.g.* indoor air temperature) These agents form real-time energy bids for their respective customers and adjust HVAC thermostat setpoints based on the cleared price.
         - Aggregates all individual HVAC agents' real-time energy bids to form a single bid to present to the wholesale real-time energy market.
@@ -546,7 +549,7 @@ The first entry in every line of the file is the number of seconds in the co-sim
 
 Analysis Results - Model Validation
 -----------------------------------
-The graphs below were created by running ``validation_plots.py`` (**TODO: Update default path to match where the data will be) to validate the performance of the models in the co-simulation. Most of these plots involve comparisons across the cases evaluated in this study (see :numref:`tbl_sgip1`).
+The graphs below were created by running ``validation_plots.py`` (**TODO:** Update default path to match where the data will be) to validate the performance of the models in the co-simulation. Most of these plots involve comparisons across the cases evaluated in this study (see :numref:`tbl_sgip1`).
 
 
 .. figure:: ../media/SGIP1/validation_generator_outputs.png

@@ -23,6 +23,7 @@
 #sys.path.insert(0, os.path.abspath('../../install/Linux'))
 #sys.path.insert(0, os.path.abspath('../../install/MacOSX'))
 #sys.path.insert(0, os.path.abspath('../../install/Windows'))
+#sys.path.insert(0, os.path.abspath('../examples/capabilities'))
 
 
 # -- General configuration ------------------------------------------------
