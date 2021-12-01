@@ -1,24 +1,21 @@
-# TESP Examples for the NIST TE Challenge
-
 These example files are based on the IEEE 8500-node Feeder model, as adapted
-for the SGIP-3 use case and the NIST TE Challenge 2. More information 
-is available at https://pages.nist.gov/TEChallenge/library/ and panel 
-presentations from IEEE ISGT 2018.  The backbone feeder model is documented at
+for the SGIP-3 use case and the NIST TE Challenge 2. This is a larger example and takes longer to run. More information 
+is available at https://pages.nist.gov/TEChallenge/library/ and panel presentations from IEEE ISGT 2018.  The backbone feeder model is documented at
 https://ieeexplore.ieee.org/document/5484381/
 
-To run the base case:
+**Running the base case:**
 
-1. A current build of GridLAB-D from branch feature/1048 (or newer feature/1173) is required. A Windows binary has been released here: https://github.com/pnnl/tesp/releases/tag/v0.2
+1. A current build of GridLAB-D from branch feature/1048 (or newer feature/1173) is required.
 
 2. "gridlabd IEEE_8500.glm" runs the base case.  
 
 In order to plot results from the JSON files, Python 3 and the matplotlib package can be used:
 
-1. "python3 glm_dict.py IEEE_8500" will create circuit metadata for plotting. On Windows, use "python" instead of "python3".
+1. "python3 glm_dict.py IEEE_8500" will create circuit metadata for plotting. 
 
-2. "python3 process_gld.py IEEE_8500 &" will plot various metrics when the simulation finishes. On Windows, use "python" instead of "python3".
+2. "python3 process_gld.py IEEE_8500 &" will plot various metrics when the simulation finishes.
 
-3. "python3 process_voltages.py IEEE_8500 &" will plot all meter voltages on the same graph. On Windows, use "python" instead of "python3".
+3. "python3 process_voltages.py IEEE_8500 &" will plot all meter voltages on the same graph.
 
 Alternatively, you can insert "recorders" into IEEE_8500.glm, which will create CSV files
 for plotting and post-processing. The simulation takes longer with CSV file output.

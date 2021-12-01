@@ -20,7 +20,7 @@ TESP Capability Demonstrations
     ./demonstrations/loadshed.rst
     ./demonstrations/pypower.rst
     ./demonstrations/weatherAgent.rst
-    ./demonstrations/energyplys.rst
+    ./demonstrations/energyplus.rst
     ./demonstrations/te30.rst
     ./demonstrations/ieee8500.rst
     
