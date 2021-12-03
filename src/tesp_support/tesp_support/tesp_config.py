@@ -11,8 +11,8 @@ References:
 import sys
 import json
 import csv
-import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter as tk
 import numpy as np
 from tkinter import filedialog
 from tkinter import messagebox
@@ -145,7 +145,7 @@ varsPP = [['OPF Type','DC','for dispatch and price','PYPOWERConfiguration','ACOP
           ['Branch Outage End','','GLD Date/Time','PYPOWERConfiguration','BranchOutEnd']
           ];
 varsEP = [['Energy+ Base File','SchoolDualController','','EplusConfiguration','BuildingChoice','buildingChoices'],
-          ['Energy+ EMS File', 'ems/emsSchoolDualController', '','EplusConfiguration','EMSFile'],
+          ['Energy+ EMS File', 'emsFNCS/emsSchoolDualController', '','EplusConfiguration','EMSFile'],
           ['Time Steps per Hour',12,'','EplusConfiguration','StepsPerHour'],
           ['Eplus Bus','Feeder_head','','EplusConfiguration','EnergyPlusBus'],
           ['Eplus Service Voltage',480,'V','EplusConfiguration','EnergyPlusServiceV','eplusVoltageChoices'],
@@ -482,7 +482,7 @@ class TespConfigGUI:
         config[section][attribute] = val
 
   def UpdateEMS (self, event):
-    emsFile = 'ems/ems' + self.bldg_cb.get()
+    emsFile = 'emsFNCS/ems' + self.bldg_cb.get()
     self.update_entry (self.bldg_ems, emsFile)
 
   def update_entry (self, ctl, val):
