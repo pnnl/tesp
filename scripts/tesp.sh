@@ -101,6 +101,11 @@ git clone -b evolve https://github.com/pnnl/tesp.git
 # need for back port of DSOT
 # git clone -b main https://stash.pnnl.gov/scm/tesp/tesp-private.git
 
+echo
+echo ++++++++++++++ PSST
+# git clone https://github.com/ames-market/psst.git
+git clone https://github.com/ames-market/AMES-V5.0.git
+
 if [[ $binaries == "develop" ]]; then
   echo
   echo ++++++++++++++ FNCS
@@ -136,11 +141,6 @@ if [[ $binaries == "develop" ]]; then
   echo ++++++++++++++ Python Bindings Generator
   cd ..
   git clone https://github.com/gjcarneiro/pybindgen.git
-
-  echo
-  echo ++++++++++++++ PSST
-  # git clone https://github.com/ames-market/psst.git
-  git clone https://github.com/ames-market/AMES-V5.0.git
 
   echo
   echo ++++++++++++++ KLU SOLVER
