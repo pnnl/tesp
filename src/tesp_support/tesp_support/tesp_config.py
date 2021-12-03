@@ -19,8 +19,15 @@ from tkinter import messagebox
 
 import numpy as np
 
-config = {'BackboneFiles': {}, 'FeederGenerator': {}, 'EplusConfiguration': {}, 'PYPOWERConfiguration': {},
-          'AgentPrep': {}, 'ThermostatSchedule': {}, 'WeatherPrep': {}, 'SimulationConfig': {}, 'MonteCarloCase': {}}
+config = {'BackboneFiles': {},
+          'FeederGenerator': {},
+          'EplusConfiguration': {},
+          'PYPOWERConfiguration': {},
+          'AgentPrep': {},
+          'ThermostatSchedule': {},
+          'WeatherPrep': {},
+          'SimulationConfig': {},
+          'MonteCarloCase': {}}
 
 StartTime = "2013-07-01 00:00:00"
 EndTime = "2013-07-03 00:00:00"
@@ -120,7 +127,8 @@ varsFD = [['Electric Cooling Penetration', 90, '%', 'FeederGenerator', 'Electric
           ['Solar Penetration', 0, '%', 'FeederGenerator', 'SolarPercentage'],
           ['Storage Penetration', 0, '%', 'FeederGenerator', 'StoragePercentage'],
           ['Solar Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'SolarInverterMode', 'inverterModesPV'],
-          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode', 'inverterModesBattery'],
+          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode',
+           'inverterModesBattery'],
           ['Billing Mode', 'TIERED', '', 'FeederGenerator', 'BillingMode', 'billingModes'],
           ['Monthly Fee', 13, '$', 'FeederGenerator', 'MonthlyFee'],
           ['Price', 0.102013, '$/kwh', 'FeederGenerator', 'Price'],
