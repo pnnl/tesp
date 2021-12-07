@@ -93,11 +93,12 @@ Some (but not all) of the key performance metrics used in this analysis are as f
 
 Social Welfare:
 
-    .. math::
+.. math::
 
     SW = \sum_{i=1}^{N_L}U_i(p_i^L) - \sum_{j=1}^{N_G}C_j(p_j^G)
 
-     where
+where
+
     * :math:`U_i()` are the utility functions of the individual loads
     * :math:`C_j()` are the utility functions of the individual generators
     * :math:`p_i^L` is the power consumption of the individual loads
@@ -114,11 +115,9 @@ Electrical energy per day
 
 where
 
-    :math:`t` is simulation time
-
-    :math:`t_{day}` is the last simulated time for each day
-
-    :math:`P_{sub}` is the real power for the feeder as measured at the substation
+    * :math:`t` is simulation time
+    * :math:`t_{day}` is the last simulated time for each day
+    * :math:`P_{sub}` is the real power for the feeder as measured at the substation
 
 
 
@@ -131,7 +130,7 @@ Electrical energy per day per customer:
 
 where
 
-    :math:`N_c` is the number of customers
+    * :math:`N_c` is the number of customers
 
 
 
@@ -144,11 +143,9 @@ Electrical energy fee per day:
 
 where
 
-    :math:`t` is simulation time
-
-    :math:`t_{day}` is the last simulated time for each day
-
-    :math:`LMP_{sub}` is the real power for the feeder as measured at the substation
+    * :math:`t` is simulation time
+    * :math:`t_{day}` is the last simulated time for each day
+    * :math:`LMP_{sub}` is the real power for the feeder as measured at the substation
 
 
 
@@ -161,7 +158,84 @@ Electrical energy per day per customer:
 
 where
 
-    :math:`N_c` is the number of customers
+    * :math:`N_c` is the number of customers
+
+The following equations were used to produce the metrics calculated for the Accounting Table. These equations use the following definitions:
+
+Accounting Table Variable Definitions:
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+.. math::
+
+    \Delta t & = \text{time step} \\
+    n_{\text{obs}} & = \text{number of daily observations} \\
+    n_{\text{days}} & = \text{number of days} \\
+    E_\text{purchased} & = \text{wholesale energy purchased at substation test feeder per day, [MWh/d]} \\
+    P_{\text{sub}} & = \text{power consumed at substation test feeder, [W]} \\
+    P_{\text{generated}} & = \text{power generated at generation substations, [W]} \\
+    aF & = \text{amp factor} \\
+    P_\text{cost} & = \text{wholesale energy purchase cost per day, [\$/d]} \\
+    LMP_\text{purchase} & = \text{wholesale purchase price, [\$/kWh]} \\
+    LMP_\text{sell} & = \text{wholesale revenue price, [\$/kWh]} \\
+    P_\text{revenue} & = \text{wholesale generation revenue per day, [\$/d]} \\
+    E_\text{generated} & = \text{wholesale energy generated per day, [MWh/d]}
+
+Wholesale electricity purchases for test feeder (MWh/d):
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+.. math::
+
+    E_\text{purchased} & = \Delta t\cdot \frac{aF}{1\times 10^6} \cdot
+           \sum_{i=1}^{n_{\text{days}}}{
+           \sum_{j=1}^{n_{\text{obs}}}{
+           P_{\text{sub},i,j} }}
+
+
+Wholesale electricity purchase cost for test feeder ($/day)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+.. math::
+
+    P_\text{cost} & = \Delta t\cdot \frac{aF}{1\times 10^3} \cdot
+             \sum_{i=1}^{n_{\text{days}}}{
+             \sum_{j=1}^{n_{\text{obs}}}{
+             P_{\text{sub},i,j}\cdot LMP_{i,j} }}
+
+Total wholesale generation revenue ($/day)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+Transmission and Distribution Losses (% of MWh generated):
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+Average PV energy transacted (kWh/day):
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+Average PV energy revenue ($/day):
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+Average ES energy transacted (kWh/day):
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+Average ES energy net revenue:
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+Total CO2 emissions (MT/day):
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+Total SOx emissions (kg/day):
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+Total NOx emissions (kg/day):
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
 
 
 
@@ -640,7 +714,7 @@ The graphs below were created by running ``createAccountingTable.py`` and ``plot
 
 .. table:: Accounting Table
   :name: tbl_accounting_day2
-  
+
   +---------------------------------------------------------------+---------------+--------------+--------------+--------------+--------------+
   | Metric   Description                                          | SGIP1a Day 2  | SGIP1b Day 2 | SGIP1c Day 2 | SGIP1d Day 2 | SGIP1e Day 2 |
   +---------------------------------------------------------------+---------------+--------------+--------------+--------------+--------------+
