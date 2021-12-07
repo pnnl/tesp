@@ -690,7 +690,9 @@ The graphs below were created by running ``createAccountingTable.py`` and ``plot
 .. figure:: ../media/SGIP1/Emissions.png
 	:name: fig_metrics_emissions
 
-	Generator outputs of bulk power system, showing the loss of Unit 3 on the second day.
+
+
+	description of plots.
 
 
 
