@@ -611,6 +611,7 @@ The graphs below were created by running ``createAccountingTable.py`` and ``plot
 
 .. table:: Accounting Table
   :name: tbl_accounting_day1
+
   +---------------------------------------------------------------+--------------+--------------+--------------+--------------+--------------+
   | Metric   Description                                          | SGIP1a Day 1 | SGIP1b Day 1 | SGIP1c Day 1 | SGIP1d Day 1 | SGIP1e Day 1 |
   +---------------------------------------------------------------+--------------+--------------+--------------+--------------+--------------+
@@ -639,6 +640,7 @@ The graphs below were created by running ``createAccountingTable.py`` and ``plot
 
 .. table:: Accounting Table
   :name: tbl_accounting_day2
+  
   +---------------------------------------------------------------+---------------+--------------+--------------+--------------+--------------+
   | Metric   Description                                          | SGIP1a Day 2  | SGIP1b Day 2 | SGIP1c Day 2 | SGIP1d Day 2 | SGIP1e Day 2 |
   +---------------------------------------------------------------+---------------+--------------+--------------+--------------+--------------+
