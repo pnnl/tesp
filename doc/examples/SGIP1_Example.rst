@@ -167,25 +167,34 @@ Accounting Table Variable Definitions:
 
 .. math::
 
-    \Delta t & = \text{time step} \\
-    n_{\text{obs}} & = \text{number of daily observations} \\
-    n_{\text{days}} & = \text{number of days} \\
-    E_\text{purchased} & = \text{wholesale energy purchased at substation test feeder per day, [MWh/d]} \\
-    P_{\text{sub}} & = \text{power consumed at substation test feeder, [W]} \\
-    P_{\text{generated}} & = \text{power generated at generation substations, [W]} \\
-    aF & = \text{amp factor} \\
-    P_\text{cost} & = \text{wholesale energy purchase cost per day, [\$/d]} \\
-    LMP_\text{purchase} & = \text{wholesale purchase price, [\$/kWh]} \\
-    LMP_\text{sell} & = \text{wholesale revenue price, [\$/kWh]} \\
-    P_\text{revenue} & = \text{wholesale generation revenue per day, [\$/d]} \\
-    E_\text{generated} & = \text{wholesale energy generated per day, [MWh/d]}
+\Delta t & = \text{time step} \\
+n_{\text{obs}} & = \text{number of daily observations} \\
+n_{\text{days}} & = \text{number of days} \\
+E_\text{purchase} & = \text{wholesale energy purchased at substation test feeder per day, [MWh/d]} \\
+P_{\text{sub}} & = \text{power consumed at substation test feeder, [W]} \\
+P_{\text{generation}} & = \text{power generated at generation substations, [MW]} \\
+aF & = \text{amp factor} \\
+E_\text{cost} & = \text{wholesale energy purchase cost per day, [\$/d]} \\
+LMP_\text{purchase} & = \text{wholesale purchase price, [\$/kWh]} \\
+LMP_\text{sell} & = \text{wholesale revenue price, [\$/kWh]} \\
+R_\text{generation} & = \text{wholesale generation revenue per day, [\$/d]} \\
+E_\text{generation} & = \text{wholesale energy generated per day, [MWh/d]} \\
+L & = \text{losses at substation, [W]} \\
+TnD & = \text{transmission and distribution losses, [\% of MWh generated]} \\
+P_\text{PV} & = \text{PV power (positive only), [kW]} \\
+P_\text{ES} & = \text{ES power (positive and negative), [KW]} \\
+Y & = \text{retail clearing price, [\$/kWh]} \\
+E_\text{PV} & = \text{average PV energy transacted, [kWh/d]} \\
+R_\text{PV} & = \text{average PV energy revenue, [\$/d]} \\
+E_\text{ES} & = \text{average ES energy transacted, [kWh/d]} \\
+R_\text{ES} & = \text{average ES energy revenue, [\$/d]}
 
 Wholesale electricity purchases for test feeder (MWh/d):
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 .. math::
 
-    E_\text{purchased} & = \Delta t\cdot \frac{aF}{1\times 10^6} \cdot
+    E_\text{purchase} & = \Delta t\cdot \frac{aF}{1\times 10^6} \cdot
            \sum_{i=1}^{n_{\text{days}}}{
            \sum_{j=1}^{n_{\text{obs}}}{
            P_{\text{sub},i,j} }}
@@ -196,34 +205,74 @@ Wholesale electricity purchase cost for test feeder ($/day)
 
 .. math::
 
-    P_\text{cost} & = \Delta t\cdot \frac{aF}{1\times 10^3} \cdot
-             \sum_{i=1}^{n_{\text{days}}}{
-             \sum_{j=1}^{n_{\text{obs}}}{
-             P_{\text{sub},i,j}\cdot LMP_{i,j} }}
+    E_\text{cost} & = \Delta t\cdot \frac{aF}{1\times 10^3} \cdot
+           \sum_{i=1}^{n_{\text{days}}}{
+           \sum_{j=1}^{n_{\text{obs}}}{
+           P_{\text{sub},i,j}\cdot LMP_{\text{purchase},i,j} }}
 
 Total wholesale generation revenue ($/day)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
+.. math::
+
+    R_\text{generation} & = \Delta t\cdot 1\times 10^3 \cdot
+           \sum_{i=1}^{n_{\text{days}}}{
+           \sum_{j=1}^{n_{\text{obs}}}{
+           P_{\text{generation},i,j}\cdot LMP_{\text{sell},i,j} }}
 
 Transmission and Distribution Losses (% of MWh generated):
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
+.. math::
+
+    TnD & = \sum_{i=1}^{n_{\text{days}}}{
+            \sum_{j=1}^{n_{\text{obs}}}{
+            \frac{L_{i,j}}{P_{\text{sub},i,j}}
+             }}
 
 Average PV energy transacted (kWh/day):
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
+.. math:
+
+    E_\text{PV} & = \frac{\Delta t}{n_\text{obs}\cdot n_\text{days}} \cdot
+           \sum_{i=1}^{n_{\text{days}}}{
+           \sum_{j=1}^{n_{\text{obs}}}{
+           P_{\text{PV},i,j}
+           }}
 
 Average PV energy revenue ($/day):
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
+.. math:
+
+    R_\text{PV} & = \Delta t \cdot
+           \sum_{i=1}^{n_{\text{days}}}{
+           \sum_{j=1}^{n_{\text{obs}}}{
+           Y_{i,j}\cdot P_{\text{PV},i,j}
+           }}
 
 Average ES energy transacted (kWh/day):
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
+.. math:
+
+    E_\text{ES} & =  \frac{\Delta t}{n_\text{obs}\cdot n_\text{days}} \cdot
+               \sum_{i=1}^{n_{\text{days}}}{
+               \sum_{j=1}^{n_{\text{obs}}}{
+               P_{\text{ES},i,j}
+               }}
 
 Average ES energy net revenue:
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
+.. math:
+
+    R_\text{ES} & = \Delta t \cdot 
+               \sum_{i=1}^{n_{\text{days}}}{
+               \sum_{j=1}^{n_{\text{obs}}}{
+               Y_{i,j}\cdot P_{\text{ES},i,j}
+               }}
 
 Total CO2 emissions (MT/day):
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
