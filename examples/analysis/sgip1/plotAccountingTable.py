@@ -2,7 +2,7 @@
 # @Date:   2021-11-12T15:21:15-08:00
 # @Email:  allison.m.campbell@pnnl.gov
 # @Last modified by:   camp426
-# @Last modified time: 2021-11-12T15:32:14-08:00
+# @Last modified time: 2021-12-07T11:40:02-08:00
 
 
 
@@ -13,7 +13,7 @@ import lca_standard_graphs as lsg
 import pandas as pd
 import numpy as np
 
-base_dir = '/Users/camp426/TESP Virtual Machine'
+base_dir = '.'
 accounting_table_final = pd.read_csv(base_dir+'/SGIP1_accounting_table.csv')
 new_table = accounting_table_final.iloc[:,:11].copy()
 
