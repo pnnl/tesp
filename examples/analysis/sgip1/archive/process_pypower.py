@@ -1,31 +1,30 @@
 #	Copyright (C) 2017 Battelle Memorial Institute
-# file: process_matpower.py
+# file: process_pypower.py
 import json;
 import sys;
 import numpy as np;
 import matplotlib as mpl;
 import matplotlib.pyplot as plt;
 
-# first, read and print a dictionary of relevant MATPOWER objects
+# first, read and print a dictionary of relevant PYPOWER objects
 lp = open (sys.argv[1] + "_m_dict.json").read()
 dict = json.loads(lp)
 baseMVA = dict['baseMVA']
-ampFactor = dict['ampFactor']
 gen_keys = list(dict['generators'].keys())
 gen_keys.sort()
 bus_keys = list(dict['fncsBuses'].keys())
 bus_keys.sort()
-print ("\n\nFile", sys.argv[1], "has baseMVA", baseMVA, "with GLD load scaling =", ampFactor)
+print ("\n\nFile", sys.argv[1], "has baseMVA", baseMVA)
 print("\nGenerator Dictionary:")
 print("Unit Bus Type Pnom Pmax Costs[Start Stop C2 C1 C0]")
 for key in gen_keys:
     row = dict['generators'][key]
     print (key, row['bus'], row['bustype'], row['Pnom'], row['Pmax'], "[", row['StartupCost'], row['ShutdownCost'], row['c2'], row['c1'], row['c0'], "]")
 print("\nFNCS Bus Dictionary:")
-print("Bus Pnom Qnom [GridLAB-D Substations]")
+print("Bus Pnom Qnom ampFactor [GridLAB-D Substations]")
 for key in bus_keys:
     row = dict['fncsBuses'][key]
-    print (key, row['Pnom'], row['Qnom'], row['GLDsubstations'])
+    print (key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])
 
 # read the bus metrics file
 lp_b = open ("bus_" + sys.argv[1] + "_metrics.json").read()
@@ -59,7 +58,7 @@ for key, val in meta_b.items():
     elif key == 'PD':
         PD_IDX = val['index']
         PD_UNITS = val['units']
-    elif key == 'PQ':
+    elif key == 'QD':
         QD_IDX = val['index']
         QD_UNITS = val['units']
     elif key == 'Vang':
@@ -90,9 +89,9 @@ for key in bus_keys:
 # display some averages
 print ("Average real power LMP =", data_b[0,:,LMP_P_IDX].mean(), LMP_P_UNITS)
 print ("Maximum real power LMP =", data_b[0,:,LMP_P_IDX].max(), LMP_P_UNITS)
-print ("First day LMP mean/std dev=", data_b[0,0:287,LMP_P_IDX].mean(), data_b[0,0:287,LMP_P_IDX].std())
-print ("Maximum bus voltage =", data_b[0,:,VMAG_IDX].max(), VMAG_UNITS)
-print ("Minimum bus voltage =", data_b[0,:,VMIN_IDX].max(), VMIN_UNITS)
+print ("First day LMP mean/std dev=", data_b[0,0:25,LMP_P_IDX].mean(), data_b[0,0:25,LMP_P_IDX].std())
+print ("Maximum bus voltage =", data_b[0,:,VMAX_IDX].max(), VMAX_UNITS)
+print ("Minimum bus voltage =", data_b[0,:,VMIN_IDX].min(), VMIN_UNITS)
 
 # read the generator metrics file
 lp_g = open ("gen_" + sys.argv[1] + "_metrics.json").read()
@@ -110,6 +109,9 @@ for key, val in meta_g.items():
     elif key == 'Qgen':
         QGEN_IDX = val['index']
         QGEN_UNITS = val['units']
+    elif key == 'LMP_P':
+        GENLMP_IDX = val['index']
+        GENLMP_UNITS = val['units']
 
 # create a NumPy array of all bus metrics
 data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
@@ -141,10 +143,17 @@ ax[1,0].legend(loc='best')
 ax[2,0].plot(hrs, data_b[0,:,VMAG_IDX], color="blue", label="Magnitude")
 ax[2,0].plot(hrs, data_b[0,:,VMAX_IDX], color="red", label="Vmax")
 ax[2,0].plot(hrs, data_b[0,:,VMIN_IDX], color="green", label="Vmin")
-ax[2,0].set_xlabel("Hours")
 ax[2,0].set_ylabel(VMAG_UNITS)
 ax[2,0].set_title ("Voltages at " + bus_keys[0])
 ax[2,0].legend(loc='best')
+
+ax[3,0].plot(hrs, data_g[0,:,GENLMP_IDX], color='blue', label='unit 1')
+ax[3,0].plot(hrs, data_g[1,:,GENLMP_IDX], color='red', label='unit 2')
+ax[3,0].plot(hrs, data_g[2,:,GENLMP_IDX], color='green', label='unit 3')
+ax[3,0].plot(hrs, data_g[3,:,GENLMP_IDX], color='magenta', label='unit 4')
+ax[3,0].set_ylabel(GENLMP_UNITS)
+ax[3,0].set_title ('Generator Prices')
+ax[3,0].legend(loc='best')
 
 for i in range(0,4):
     ax[i,1].plot(hrs, data_g[i,:,PGEN_IDX], color="blue", label="P")
@@ -152,7 +161,9 @@ for i in range(0,4):
     ax[i,1].set_ylabel(PGEN_UNITS + "/" + QGEN_UNITS)
     ax[i,1].set_title ("Output from unit " + gen_keys[i])
     ax[i,1].legend(loc='best')
-ax[2,1].set_xlabel("Hours")
+
+ax[3,0].set_xlabel("Hours")
+ax[3,1].set_xlabel("Hours")
 
 plt.show()
 

@@ -1,5 +1,10 @@
-# Copyright (C) 2017-2021 Battelle Memorial Institute
-# file: TransmissionMetricsProcessor.py
+# @Author: Allison Campbell <camp426>
+# @Date:   2021-03-31T15:36:25-07:00
+# @Email:  allison.m.campbell@pnnl.gov
+# @Last modified by:   camp426
+# @Last modified time: 2021-10-22T15:22:42-07:00
+
+
 
 import json;
 import sys;
@@ -22,7 +27,7 @@ class TransmissionMetricsProcessor:
             self.casename = case_name
         if(len(case_path)>0):
             self.casepath = case_path
-        
+
         lp = open(self.casepath + self.casename + "_m_dict.json").read()
         dict = json.loads(lp)
         baseMVA = dict['baseMVA']
@@ -163,8 +168,8 @@ class TransmissionMetricsProcessor:
         # Combination of the tables 11.3 and 11. 5 in the last years' report
         #                         CO2                SOX        NOX
         # coal                   205.57*10.09     0.1*10.09     0.06*10.09
-        # natrual gas (CC)       117.08*7.67      0.001*7.67    0.0075*7.67
-        # natrual gas (CT)       117.08*11.37     0.001*11.37   0.0075*11.37
+        # natural gas (CC)       117.08*7.67      0.001*7.67    0.0075*7.67
+        # natural gas (CT)       117.08*11.37     0.001*11.37   0.0075*11.37
 
         gen_emission_rate = {'coal': [205.57 * 10.09, 0.1 * 10.09, 0.06 * 10.09],
                              'gas_combinedcycle': [117.08 * 7.67, 0.001 * 7.67, 0.0075 * 7.67],
