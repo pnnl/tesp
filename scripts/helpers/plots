@@ -1,7 +1,7 @@
 #!/usr/bin/python3
+# usage 'python3 plots.py metrics_root [save_ext] [save_only]'
 
 import os
-# usage 'python3 plots.py metrics_root [save_ext] [save_only]'
 import sys
 
 import tesp_support.process_agents as ap
@@ -29,7 +29,7 @@ if os.path.exists('bus_' + rootname + '_metrics.json'):
     pp.plot_pypower(pmetrics, save_file=save_file, save_only=save_only)
 
 if os.path.exists('substation_' + rootname + '_metrics.json'):
-    gmetrics = gp.read_gld_metrics(rootname)
+    gmetrics = gp.read_gld_metrics(os.getcwd(), rootname)
     if save_ext is not None:
         save_file = '{:s}_gld.{:s}'.format(rootname, save_ext)
     gp.plot_gld(gmetrics, save_file=save_file, save_only=save_only)
@@ -47,7 +47,7 @@ if os.path.exists('auction_' + rootname + '_metrics.json'):
     ap.plot_agents(ametrics, save_file=save_file, save_only=save_only)
 
 if os.path.exists('eplus_' + rootname + '_metrics.json'):
-    emetrics = ep.read_eplus_metrics(rootname)
+    emetrics = ep.read_eplus_metrics(os.getcwd(), rootname)
     if save_ext is not None:
         save_file = '{:s}_ep.{:s}'.format(rootname, save_ext)
     ep.plot_eplus(emetrics, save_file=save_file, save_only=save_only)
