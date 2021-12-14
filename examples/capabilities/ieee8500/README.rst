@@ -62,6 +62,7 @@ Notes on building or modifying the base case:
 - *sunny.csv*; copy to *climate.csv* to simulate a clear, sunny day
 - *sunny.fig*; MATLAB plot of the correlated sunny day temperature and solar irradiance
 - *TE_Challenge_Metrics.docx*; documentation of the use case metrics of interest to the entire NIST TE Challenge 2 team
+- *voltage.player*; player file for voltage
 
 ### PNNL Team Files
 

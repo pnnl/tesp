@@ -79,7 +79,7 @@ class player {
 
 object player {
     name VOLTAGE;
-    file "../../players/voltage.player";
+    file "../voltage.player";
     loop 1;
 }
 

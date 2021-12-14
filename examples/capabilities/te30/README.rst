@@ -54,6 +54,9 @@ To run a FNCS case from the GUI monitor for market only:
 * *launch_pp.py*; helper script that launches PYPOWER from tesp_monitor
 * *NonGLDLoad.txt*; text file of non-responsive loads on transmission buses
 * *outputs_te.glm*; requests for CSV file outputs of GridLAB-D variables
+* *phase_A.player*; player file for phase A
+* *phase_B.player*; player file for phase B
+* *phase_C.player*; player file for phase C
 * *plots.py*; makes 5 pages of plots for a case; eg 'python plots.py TE_Challenge'
 * *prepare_case.py*; sets up the dictionaries and GLD/Agent FNCS configurations for all cases
 * *pypower30.yaml*; FNCS configuration for PYPOWER
