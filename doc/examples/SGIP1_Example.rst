@@ -160,6 +160,10 @@ where
 
     * :math:`N_c` is the number of customers
 
+
+Accounting Table Metrics Definitions
+....................................
+
 The following equations were used to produce the metrics calculated for the Accounting Table. These equations use the following definitions:
 
 Accounting Table Variable Definitions:
@@ -273,6 +277,22 @@ Average ES energy net revenue:
                \sum_{j=1}^{n_{\text{obs}}}{
                Y_{i,j}\cdot P_{\text{ES},i,j}
                }}
+
+Emissions:
+,,,,,,,,,,
+
+.. table:: Emissions Concentrations by Technology Type
+  :name: tbl_emissions
+
+  +----------------+-----------+---------+----------+
+  |                | CO2       | SOX     | NOX      |
+  +================+===========+=========+==========+
+  | coal           | 2074.2013 | 1.009   | 0.6054   |
+  +----------------+-----------+---------+----------+
+  | combined cycle | 898.0036  | 0.00767 | 0.057525 |
+  +----------------+-----------+---------+----------+
+  | single cycle   | 1331.1996 | 0.01137 | 0.085275 |
+  +----------------+-----------+---------+----------+
 
 Total CO2 emissions (MT/day):
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
