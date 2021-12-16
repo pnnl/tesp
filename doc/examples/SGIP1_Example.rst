@@ -830,29 +830,45 @@ The final results for the key performance metrics are presented below in :numref
   | Total   NOx emissions (kg/day)                                | 0.23          | 0.21          | 0.17         | 0.15         | 0.12         |
   +---------------------------------------------------------------+---------------+---------------+--------------+--------------+--------------+
 
-The following graphs  were created by running ``createAccountingTable.py`` and ``plotAccountingTable.py``, which calls the function ``lca_standard_graphs.py``. These plots involve comparisons across the cases evaluated in this study (see :numref:`tbl_accounting_day1` and :numref:`tbl_accounting_day2`).
+The following graphs  were created by running ``createAccountingTable.py`` and ``plotAccountingTable.py``, which calls the function ``lca_standard_graphs.py``. These plots involve comparisons across the cases evaluated in this study (see :numref:`tbl_accounting_day1` and :numref:`tbl_accounting_day2`). As shown in :numref: `tbl_sgip1`, the cases a through e correspond to a growth model of progressive adoption of transactive energy. Case a is no transactive energy and case b is the control year with transactive. Cases c through e account for increased adoption of PV and energy storage systems. These cases are analyzed over two days of operation, where the first day is a control with regular operations, and the second experiences the trip of a generator. These graphs convey the respective results from the simulation.
 
+The wholesale energy purchased at the test feeder reduces with the growth model, however with the generator trip on day two, energy demand increases slightly.
 
 .. figure:: ../media/SGIP1/Wholesale_Energy_Purchased_at_Test_Feeder.png
 	:name: fig_metrics_wholesale_purchase
 
+The cost of wholesale energy decreases slightly on day one with adoption of PV and energy storage. This decrease in cost is more dramatic on the second day with the generator trip.
+
 .. figure:: ../media/SGIP1/Wholesale_Energy_Cost_at_Test_Feeder.png
 	:name: fig_metrics_wholesale_cost
+
+The total revenue to the generators is much more on the second day with the generator failure, although this revenue reduces with the growth model.
 
 .. figure:: ../media/SGIP1/Total_Generator_Revenue.png
 	:name: fig_metrics_generator_revenue
 
+
+The average PV energy transacted in the system increases with adoption, and this amount progressively diverges with the generator trip on the second day.
+
 .. figure:: ../media/SGIP1/PV_Energy_Transacted.png
 	:name: fig_metrics_PV_energy
+
+The average revenue to households with PV markedly increases on the second day with the generator trip.
 
 .. figure:: ../media/SGIP1/PV_Average_Revenue.png
 	:name: fig_metrics_PV_revenue
 
+The average energy storage energy transacted is much larger on day one compared with day two. The impact of the generator trip is nonlinear with increasing adoption of storage.
+
 .. figure:: ../media/SGIP1/ES_Energy_Transacted.png
 	:name: fig_metrics_ES_energy
 
+Regardless of the average energy transacted, the average revenue to households is much larger on day two.
+
 .. figure:: ../media/SGIP1/ES_Average_Revenue.png
 	:name: fig_metrics_ES_revenue
+
+The following graph dispays the total daily emissions by greenhouse gas type  (CO2 is in units of MT, or 1000 kg). Between case a (no transactive) and case b (transactive year 0), the CO2 emissions jump by 100 MT in day one. The emissions in day two increase between these two cases as well by about half as much. Across all cases, the total emissions on day one are higher with transactive compared to without. On day two, the growth model cases experience less total emissions than the non-transactive case.
 
 .. figure:: ../media/SGIP1/Emissions.png
 	:name: fig_metrics_emissions
