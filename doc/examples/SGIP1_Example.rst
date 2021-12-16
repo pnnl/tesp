@@ -191,7 +191,13 @@ Accounting Table Variable Definitions:
     E_\text{PV} & = \text{average PV energy transacted, [kWh/d]} \\
     R_\text{PV} & = \text{average PV energy revenue, [\$/d]} \\
     E_\text{ES} & = \text{average ES energy transacted, [kWh/d]} \\
-    R_\text{ES} & = \text{average ES energy revenue, [\$/d]}
+    R_\text{ES} & = \text{average ES energy revenue, [\$/d]} \\
+    g & = \text{number of generator types in system which emit GHG out of coal, combined cycle, and single cycle} \\
+    \bf{R} & = \text{3$\times g$ matrix of emission rates for CO$_2$, SO$_\text{x}$, and NO$_\text{x}$ by generator type for coal, combined cycle, and single cycle} \\
+    \bf{G} & = \text{$g\times (n_\text{obs}\cdot n_\text{days})$ matrix of MWh by generator type for coal, combined cycle, and single cycle for each interval over the study period} \\
+    \bf{K} & = \text{1$\times$3 matrix of emission conversion from lb to MT (CO$_2$) and kg (SO$_\text{x}$, NO$_\text{x}$)} \\
+    \bf{E} & = \text{3$\times$1 matrix of total emissions by GHG type (CO$_2$, SO$_\text{x}$,  NO$_\text{x}$) over study period}
+
 
 Wholesale electricity purchases for test feeder (MWh/d):
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -199,9 +205,9 @@ Wholesale electricity purchases for test feeder (MWh/d):
 .. math::
 
     E_\text{purchase} & = \Delta t\cdot \frac{aF}{1\times 10^6} \cdot
-           \sum_{i=1}^{n_{\text{days}}}{
-           \sum_{j=1}^{n_{\text{obs}}}{
-           P_{\text{sub},i,j} }}
+       \sum_{i=1}^{n_{\text{days}}}{
+       \sum_{j=1}^{n_{\text{obs}}}{
+       P_{\text{sub},i,j} }}
 
 
 Wholesale electricity purchase cost for test feeder ($/day)
@@ -239,7 +245,7 @@ Average PV energy transacted (kWh/day):
 
 .. math::
 
-    E_\text{PV} & = \frac{\Delta t}{n_\text{obs}\cdot n_\text{days}} \cdot
+    E_\text{PV} & = \frac{\Delta t}{n_\text{obs}} \cdot
            \sum_{i=1}^{n_{\text{days}}}{
            \sum_{j=1}^{n_{\text{obs}}}{
            P_{\text{PV},i,j}
@@ -250,7 +256,7 @@ Average PV energy revenue ($/day):
 
 .. math::
 
-    R_\text{PV} & = \Delta t \cdot
+    R_\text{PV} & = \frac{\Delta t}{n_\text{obs}} \cdot
            \sum_{i=1}^{n_{\text{days}}}{
            \sum_{j=1}^{n_{\text{obs}}}{
            Y_{i,j}\cdot P_{\text{PV},i,j}
@@ -261,22 +267,22 @@ Average ES energy transacted (kWh/day):
 
 .. math::
 
-    E_\text{ES} & =  \frac{\Delta t}{n_\text{obs}\cdot n_\text{days}} \cdot
-               \sum_{i=1}^{n_{\text{days}}}{
-               \sum_{j=1}^{n_{\text{obs}}}{
-               P_{\text{ES},i,j}
-               }}
+    E_\text{ES} & =  \frac{\Delta t}{n_\text{obs}} \cdot
+           \sum_{i=1}^{n_{\text{days}}}{
+           \sum_{j=1}^{n_{\text{obs}}}{
+           P_{\text{ES},i,j}
+           }}
 
 Average ES energy net revenue:
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 .. math::
 
-    R_\text{ES} & = \Delta t \cdot
-               \sum_{i=1}^{n_{\text{days}}}{
-               \sum_{j=1}^{n_{\text{obs}}}{
-               Y_{i,j}\cdot P_{\text{ES},i,j}
-               }}
+    R_\text{ES} & = \frac{\Delta t}{n_\text{obs}} \cdot
+           \sum_{i=1}^{n_{\text{days}}}{
+           \sum_{j=1}^{n_{\text{obs}}}{
+           Y_{i,j}\cdot P_{\text{ES},i,j}
+           }}
 
 Emissions:
 ,,,,,,,,,,
@@ -294,17 +300,30 @@ Emissions:
   | single cycle   | 1331.1996 | 0.01137 | 0.085275 |
   +----------------+-----------+---------+----------+
 
-Total CO2 emissions (MT/day):
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+.. table:: Conversion from lb to MT (CO2) and kg (SOx, NOx)
+  :name: tbl_conv
 
+  +-------+-------------+
+  |       |  K          |
+  +=====================+
+  | CO2   | 0.000453592 |
+  +---------------------+
+  | SOx   | 0.453592    |
+  +---------------------+
+  | NOx   | 0.453592    |
+  +-------+-------------+
 
-Total SOx emissions (kg/day):
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Total CO2, SOx, NOx emissions (MT/day, kg/day, kg/day):
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
+.. math::
 
-Total NOx emissions (kg/day):
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-
+    \mathbf{E} & = 
+            \sum_{i=1}^{n_{\text{days}}}{
+            \sum_{j=1}^{n_{\text{obs}}}{
+            \sum_{k=1}^{g}{
+            \mathbf{G}_{i,j,k}\times \mathbf{R}_{k}\times \mathbf{K}
+            }}}
 
 
 
