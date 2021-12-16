@@ -874,14 +874,6 @@ The following graph dispays the total daily emissions by greenhouse gas type  (C
 	:name: fig_metrics_emissions
 
 
-
-	description of plots.
-
-
-
-
-Summary metrics results, likely in tabular form. May copy results from publications
-
 Related Publications
 --------------------
 
