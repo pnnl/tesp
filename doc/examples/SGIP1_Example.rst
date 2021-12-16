@@ -26,6 +26,8 @@ The goal of this analysis are as follows:
     - Evaluate the value exchange for residential customers in terms of comfort lost and monetary compensation.
     - Evaluate the impacts of increasing rooftop solar PV penetration and energy storage on the transactive system performance.
     - Demonstrate the capabilities of TESP to perform transactive system co-simulations.
+    
+The software version of this study implemented in TESP is similar to but not identical to earlier versions used to produce results found in :cite:`Hammerstrom:2017ta` and :cite:`Huang:2018kt`. As such the specific values presented here may differ from those seen in the aforementioned publications.
 
 
 Valuation Model
@@ -89,22 +91,35 @@ Transactive Mechanism Flowchart (Sequence Diagram)
 Key Performance Metrics Definitions
 ...................................
 
+
+
 Some (but not all) of the key performance metrics used in this analysis are as follows. A list of the final metrics collected can be found in tabular form in Appendix C of :cite:`Hammerstrom:2017ta`.
 
+Key Performance Variable Definitions:
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+.. math::
+
+    U_i & = \text{utility functions of the individual loads}\\
+    C_i & = \text{utility functions of the individual generators}\\
+    p_i^L & = \text{power consumption of the individual loads}\\
+    p_j^G & = \text{power generation of the individual generators}\\
+    N_L  &  = \text{total number of loads}\\
+    N_G  & = \text{total number of loads}\\
+    N_c  &  = \text{total number of customers}\\
+    t    &  = \text{simulated time}\\
+    t_{\text{da}y} & = \text{last simulated time for each day}\\
+    P_{\text{sub}} & = \text{real power as measured at the transactive feeder's substation}\\
+    LMP_{\text{sub}} & = \text{price of energy at the transactive feeder's substation}\\
+
+
 Social Welfare:
+,,,,,,,,,,,,,,,
 
 .. math::
 
     SW = \sum_{i=1}^{N_L}U_i(p_i^L) - \sum_{j=1}^{N_G}C_j(p_j^G)
 
-where
-
-    * :math:`U_i()` are the utility functions of the individual loads
-    * :math:`C_j()` are the utility functions of the individual generators
-    * :math:`p_i^L` is the power consumption of the individual loads
-    * :math:`p_j^G` is the power generation of the individual generators
-    * :math:`N_L` is the total number of loads
-    * :math:`N_G` is the total number of generators
 
 Electrical energy per day
 ,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -112,12 +127,6 @@ Electrical energy per day
 .. math::
 
     EE_{day} = \sum_{t=0}^{t_{day}} P_{sub}
-
-where
-
-    * :math:`t` is simulation time
-    * :math:`t_{day}` is the last simulated time for each day
-    * :math:`P_{sub}` is the real power for the feeder as measured at the substation
 
 
 
@@ -128,10 +137,6 @@ Electrical energy per day per customer:
 
     EE_{cust \cdot day} = EE_{day} / N_c
 
-where
-
-    * :math:`N_c` is the number of customers
-
 
 
 Electrical energy fee per day:
@@ -141,11 +146,6 @@ Electrical energy fee per day:
 
     EF_{day} =  \sum_{t=0}^{t_{day}} LMP_{sub}
 
-where
-
-    * :math:`t` is simulation time
-    * :math:`t_{day}` is the last simulated time for each day
-    * :math:`LMP_{sub}` is the real power for the feeder as measured at the substation
 
 
 
@@ -156,15 +156,12 @@ Electrical energy per day per customer:
 
     EF_{cust \cdot day} = EF_{day} / N_c
 
-where
-
-    * :math:`N_c` is the number of customers
 
 
 Accounting Table Metrics Definitions
 ....................................
 
-The following equations were used to produce the metrics calculated for the Accounting Table. These equations use the following definitions:
+From the value model, it is possible to define metrics that will reveal the value-based outcomes of the individual participants in the transactive system. These metrics often have a financial dimension but not always. The following equations were used to produce the metrics calculated for the Accounting Table. These equations use the following definitions:
 
 Accounting Table Variable Definitions:
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -175,8 +172,8 @@ Accounting Table Variable Definitions:
     n_{\text{obs}} & = \text{number of daily observations} \\
     n_{\text{days}} & = \text{number of days} \\
     E_\text{purchase} & = \text{wholesale energy purchased at substation test feeder per day, [MWh/d]} \\
-    P_{\text{sub}} & = \text{power consumed at substation test feeder, [W]} \\
-    P_{\text{generation}} & = \text{power generated at generation substations, [MW]} \\
+    P_{\text{sub}} & = \text{power consumed at test feeder substation, [W]} \\
+    P_{\text{generation}} & = \text{output power of individual generator, [MW]} \\
     aF & = \text{amp factor} \\
     E_\text{cost} & = \text{wholesale energy purchase cost per day, [\$/d]} \\
     LMP_\text{purchase} & = \text{wholesale purchase price, [\$/kWh]} \\
@@ -194,7 +191,7 @@ Accounting Table Variable Definitions:
     R_\text{ES} & = \text{average ES energy revenue, [\$/d]} \\
     g & = \text{number of generator types in system which emit GHG out of coal, combined cycle, and single cycle} \\
     \bf{R} & = \text{3$\times g$ matrix of emission rates for CO$_2$, SO$_\text{x}$, and NO$_\text{x}$ by generator type for coal, combined cycle, and single cycle} \\
-    \bf{G} & = \text{$g\times (n_\text{obs}\cdot n_\text{days})$ matrix of MWh by generator type for coal, combined cycle, and single cycle for each interval over the study period} \\
+    \bf{G} & = \text{$g\times (n_\text{obs}\cdot n_\text{days})$ matrix of MWh output by generator type for coal, combined cycle, and single cycle for each interval over the study period} \\
     \bf{K} & = \text{1$\times$3 matrix of emission conversion from lb to MT (CO$_2$) and kg (SO$_\text{x}$, NO$_\text{x}$)} \\
     \bf{E} & = \text{3$\times$1 matrix of total emissions by GHG type (CO$_2$, SO$_\text{x}$,  NO$_\text{x}$) over study period}
 
