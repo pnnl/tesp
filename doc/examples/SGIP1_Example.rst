@@ -305,7 +305,7 @@ Emissions:
 
   +-------+-------------+
   |       |  K          |
-  +=====================+
+  +=======+=============+
   | CO2   | 0.000453592 |
   +---------------------+
   | SOx   | 0.453592    |
@@ -318,7 +318,7 @@ Total CO2, SOx, NOx emissions (MT/day, kg/day, kg/day):
 
 .. math::
 
-    \mathbf{E} & = 
+    \mathbf{E} & =
             \sum_{i=1}^{n_{\text{days}}}{
             \sum_{j=1}^{n_{\text{obs}}}{
             \sum_{k=1}^{g}{
