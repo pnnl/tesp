@@ -8,7 +8,7 @@ https://ieeexplore.ieee.org/document/5484381/
 1. A current build of GridLAB-D from branch feature/1048 (or newer feature/1173) is required.
 
 2. "gridlabd IEEE_8500.glm" runs the base case. This example simulates one day but can take tens of minutes.
- 
+
 
 In order to plot results from the JSON files, Python 3 and the matplotlib package can be used:
 
@@ -31,7 +31,8 @@ Notes on building or modifying the base case:
 
 **Base File Directory:**
 
-- *adjust_solar_direct.m* MATLAB helper function that ramps the direct solar insulation during a postulated cloud transient
+- *adjust_solar_direct.m*: MATLAB helper function that ramps the direct
+solar insulation during a postulated cloud transient
 - *adjust_temperature.m*: MATLAB helper function that ramps the temperature during a postulated cloud transient
 - *backbone*: the IEEE 8500-node model as defined by the original authors for OpenDSS
 - *CAISO_DAM_and_RTP_SG_LNODE13A_20170706-07_data.xlsx*: optional day-ahead market and real-time locational marginal price (LMP) data
