@@ -208,7 +208,7 @@ Wholesale electricity purchases for test feeder (MWh/d):
 
 
 Wholesale electricity purchase cost for test feeder ($/day)
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 .. math::
 
@@ -218,7 +218,7 @@ Wholesale electricity purchase cost for test feeder ($/day)
            P_{\text{sub},i,j}\cdot LMP_{\text{purchase},i,j} }}
 
 Total wholesale generation revenue ($/day)
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 .. math::
 
@@ -583,7 +583,7 @@ The functionalities shown in :numref:`fig_sgip1` are implemented in simulation t
         - Simulates the physics of the electrical distribution system by solving the power flow of the specified distribution feeder model. To accomplish this it must provide the total distribution feeder load to PYPOWER (bulk power system simulator) and receives from it the substation input voltage.
         - Simulates the thermodynamics and HVAC thermostat control for all residential buildings in the specified distribution feeder model. Provides thermodynamic state information to the Substation Agent to allow formation of real-time energy bids.
         - Simulates the production of the solar PV panels and their local controller (for the cases that include such devices).
-        Simulates the physics of the energy storage devices and the behavior of their local controllers.
+        - Simulates the physics of the energy storage devices and the behavior of their local controllers.
 
     - **Substation Agent**
         - Contains all the transactive agents for the residential customers. Using the current state of the individual customers' residences (*e.g.* indoor air temperature) These agents form real-time energy bids for their respective customers and adjust HVAC thermostat setpoints based on the cleared price.
