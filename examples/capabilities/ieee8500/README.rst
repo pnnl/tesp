@@ -7,7 +7,8 @@ https://ieeexplore.ieee.org/document/5484381/
 
 1. A current build of GridLAB-D from branch feature/1048 (or newer feature/1173) is required.
 
-2. "gridlabd IEEE_8500.glm" runs the base case.  
+2. "gridlabd IEEE_8500.glm" runs the base case. This example simulates one day but can take tens of minutes.
+
 
 In order to plot results from the JSON files, Python 3 and the matplotlib package can be used:
 
@@ -28,43 +29,43 @@ Notes on building or modifying the base case:
 
 3. The house*.csv files contain equivalent thermal parameter (ETP) model parameters exported from GridLAB-D. These may be helpful if simulating houses on your own. See http://gridlab-d.shoutwiki.com/wiki/Residential_module_user%27s_guide for information about GridLAB-D's house model, including equivalent thermal parameters (ETP).
 
-### Base File Directory
+**Base File Directory:**
 
-- *adjust_solar_direct.m*; MATLAB helper function that ramps the direct solar insulation during a postulated cloud transient
-- *adjust_temperature.m*; MATLAB helper function that ramps the temperature during a postulated cloud transient
-- *backbone*; the IEEE 8500-node model as defined by the original authors for OpenDSS
-- *CAISO_DAM_and_RTP_SG_LNODE13A_20170706-07_data.xlsx*; optional day-ahead market and real-time locational marginal price (LMP) data
-- *clean.bat*; Windows batch file that removes output and temporary files
-- *clean.sh*; Linux/Mac script that removes output and temporary files
-- *climate.csv*; hourly temperature, humidity, solar_direct, solar_diffuse, pressure, wind_speed read by IEEE_8500.glm; **copy either sunny.csv or cloudy.csv to this file, depending on which case you wish to run**
-- *Cloudy_Day.png*; screen shot of process_gld.py plots for the cloudy day
-- *Cloudy_Voltages.png*; screen shot of process_voltages.py plots for the cloudy day
-- *cloudy.csv*; copy to *climate.csv* to simulate a day with afternoon cloud transient
-- *Cloudy.fig*; MATLAB plot of the correlated cloudy day temperature and solar irradiance
-- *estimate_ac_size.m*; MATLAB helper function that estimates the house HVAC load as determined by GridLAB-D's autosizing feature. These values are embedded as comments in *IEEE_8500.glm*, which may be useful if modeling the HVAC load as a ZIP load.
-- *gld_strict_name.m*; MATLAB helper function to ensure GridLAB-D names don't start with a number, as they can with OpenDSS files under *backbone*, but is not allowed in GridLAB-D
-- *glm_dict.py*; creates output metadata for a GridLAB-D input file; **python glm_dict.py IEEE_8500** before attempting to plot the JSON files
-- *house_ca.csv*; house ETP parameters from the base case; may be useful for your own house models.
-- *house_cm.csv*; house ETP parameters from the base case; may be useful for your own house models.
-- *house_ua.csv*; house ETP parameters from the base case; may be useful for your own house models.
-- *house_um.csv*; house ETP parameters from the base case; may be useful for your own house models.
-- *IEEE_8500.glm*; base case feeder, populated with houses, PV and batteries.
-- *IEEE_8500gener_whouses.m*; MATLAB script that produces *IEEE_8500.glm* from files under *backbone*
-- *main_regulator.csv*; total feeder current in the base case; may be useful in benchmarking your own power flow solver.
-- *PNNLteam*; subdirectory with PNNL's participation files; see next section.
-- *process_gld.py*; sample Python script to plot feeder, capacitor, regulator, voltage, inverter and house variables
-- *process_voltages.py*; sample Python script to plot all house voltages
-- *README.md*; this file
-- *schedules.glm*; cooling, heating, lighting and other end-use appliance schedules referenced by *IEEE_8500.glm*
-- *substation_load.csv*; total feeder load and positive sequence voltage in the base case; may be useful in benchmarking your own power flow solver.
-- *Sunny_Day.png*; screen shot of process_gld.py plots for the sunny day
-- *Sunny_Voltages.png*; screen shot of process_voltages.py plots for the sunny day
-- *sunny.csv*; copy to *climate.csv* to simulate a clear, sunny day
-- *sunny.fig*; MATLAB plot of the correlated sunny day temperature and solar irradiance
-- *TE_Challenge_Metrics.docx*; documentation of the use case metrics of interest to the entire NIST TE Challenge 2 team
-- *voltage.player*; player file for voltage
+- *adjust_solar_direct.m*: MATLAB helper function that ramps the direct
+solar insulation during a postulated cloud transient
+- *adjust_temperature.m*: MATLAB helper function that ramps the temperature during a postulated cloud transient
+- *backbone*: the IEEE 8500-node model as defined by the original authors for OpenDSS
+- *CAISO_DAM_and_RTP_SG_LNODE13A_20170706-07_data.xlsx*: optional day-ahead market and real-time locational marginal price (LMP) data
+- *clean.bat*: Windows batch file that removes output and temporary files
+- *clean.sh*: Linux/Mac script that removes output and temporary files
+- *climate.csv*: hourly temperature, humidity, solar_direct, solar_diffuse, pressure, wind_speed read by IEEE_8500.glm: **copy either sunny.csv or cloudy.csv to this file, depending on which case you wish to run**
+- *Cloudy_Day.png*: screen shot of process_gld.py plots for the cloudy day
+- *Cloudy_Voltages.png*: screen shot of process_voltages.py plots for the cloudy day
+- *cloudy.csv*: copy to *climate.csv* to simulate a day with afternoon cloud transient
+- *Cloudy.fig*: MATLAB plot of the correlated cloudy day temperature and solar irradiance
+- *estimate_ac_size.m*: MATLAB helper function that estimates the house HVAC load as determined by GridLAB-D's autosizing feature. These values are embedded as comments in *IEEE_8500.glm*, which may be useful if modeling the HVAC load as a ZIP load.
+- *gld_strict_name.m*: MATLAB helper function to ensure GridLAB-D names don't start with a number, as they can with OpenDSS files under *backbone*, but is not allowed in GridLAB-D
+- *glm_dict.py*: creates output metadata for a GridLAB-D input file: **python glm_dict.py IEEE_8500** before attempting to plot the JSON files
+- *house_ca.csv*: house ETP parameters from the base case: may be useful for your own house models.
+- *house_cm.csv*: house ETP parameters from the base case: may be useful for your own house models.
+- *house_ua.csv*: house ETP parameters from the base case: may be useful for your own house models.
+- *house_um.csv*: house ETP parameters from the base case: may be useful for your own house models.
+- *IEEE_8500.glm*: base case feeder, populated with houses, PV and batteries.
+- *IEEE_8500gener_whouses.m*: MATLAB script that produces *IEEE_8500.glm* from files under *backbone*
+- *main_regulator.csv*: total feeder current in the base case: may be useful in benchmarking your own power flow solver.
+- *PNNLteam*: subdirectory with PNNL's participation files: see next section.
+- *process_gld.py*: sample Python script to plot feeder, capacitor, regulator, voltage, inverter and house variables
+- *process_voltages.py*: sample Python script to plot all house voltages
+- *README.md*: this file
+- *schedules.glm*: cooling, heating, lighting and other end-use appliance schedules referenced by *IEEE_8500.glm*
+- *substation_load.csv*: total feeder load and positive sequence voltage in the base case: may be useful in benchmarking your own power flow solver.
+- *Sunny_Day.png*: screen shot of process_gld.py plots for the sunny day
+- *Sunny_Voltages.png*: screen shot of process_voltages.py plots for the sunny day
+- *sunny.csv*: copy to *climate.csv* to simulate a clear, sunny day
+- *sunny.fig*: MATLAB plot of the correlated sunny day temperature and solar irradiance
+- *TE_Challenge_Metrics.docx*: documentation of the use case metrics of interest to the entire NIST TE Challenge 2 team
 
-### PNNL Team Files
+**PNNL Team Files:**
 
 The subdirectory *PNNLteam* contains files used only for the pre-cooling
 thermostat and smart inverter simulations, as presented by PNNL at
@@ -88,7 +89,7 @@ individual R values and airchange_per_hour values.  The log file
 All three run over FNCS with the precooling agent in tesp_support.precool.  
 Since ISGT 2018, some changes have been made to the precooling agent:
 
-- Only 25 houses are allowed to change setpoint at each time step; others wait until a subsequent step
+- Only 25 houses are allowed to change setpoint at each time step: others wait until a subsequent step
 - The precooling temperature offset is randomized from 1.9 to 2.1 degrees
 
 These simulations take up to 1 hour to run.  Example steps are: 
@@ -116,26 +117,26 @@ directory, to populate *inv8500.glm* in a similar way, but with smart
 inverter functions added.  See the TESP documentation for guidance on 
 interpreting the other files in this directory.  
 
-- *bill.py*; calculates and plots a summary of meter bills
-- *clean.sh*; script to clean out log files and output files
-- *inv30.glm*; a 30-house test case with smart inverters
-- *inv8500.glm*; the 8500-node test case with smart inverters
-- *invti30.glm*; a 30-house test case with smart inverters and simplified house thermal integrity inputs
-- *invFeederGen.m*; a MATLAB helper script that populates 8500-node with smart inverters, based on the ../backbone directory
-- *kill5570.sh*; helper script that stops processes listening on port 5570
-- *parser.py*; testing script for parsing FNCS values
-- *plot_invs.py*; tabulates and plots the meter with most overvoltage counts
-- *plots.py*; plots the GridLAB-D and agent outputs using tesp_support functions
-- *prepare_cases.py*; prepares the JSON dictionaries and FNCS configuration for both cases, using tesp_support functions
-- *prices.player*; time-of-day rates to publish over FNCS
-- *run30.sh*; script that runs the 30-house case, inverters in constant power factor mode
-- *runti30.sh*; script that runs the 30-house case with simplified thermal integrity input, and volt-var mode inverters
-- *run8500.sh*; script that runs the 8500-node case with no price, voltage or smart inverter response
-- *run8500base.sh*; script that runs the 8500-node case, responsive to time-of-use rates and overvoltages
-- *run8500tou.sh*; script that runs the 8500-node case, price response to time-of-use rates, no smart inverters
-- *run8500volt.sh*; script that runs the 8500-node case, precooling response to overvoltage, no smart inverters
-- *run8500vvar.sh*; script that runs the 8500-node case, non-transactive, smart inverter volt-var mode
-- *run8500vwatt.sh*; script that runs the 8500-node case, non-transactive, smart inverter volt-watt mode
+- *bill.py*: calculates and plots a summary of meter bills
+- *clean.sh*: script to clean out log files and output files
+- *inv30.glm*: a 30-house test case with smart inverters
+- *inv8500.glm*: the 8500-node test case with smart inverters
+- *invti30.glm*: a 30-house test case with smart inverters and simplified house thermal integrity inputs
+- *invFeederGen.m*: a MATLAB helper script that populates 8500-node with smart inverters, based on the ../backbone directory
+- *kill5570.sh*: helper script that stops processes listening on port 5570
+- *parser.py*: testing script for parsing FNCS values
+- *plot_invs.py*: tabulates and plots the meter with most overvoltage counts
+- *plots.py*: plots the GridLAB-D and agent outputs using tesp_support functions
+- *prepare_cases.py*: prepares the JSON dictionaries and FNCS configuration for both cases, using tesp_support functions
+- *prices.player*: time-of-day rates to publish over FNCS
+- *run30.sh*: script that runs the 30-house case, inverters in constant power factor mode
+- *runti30.sh*: script that runs the 30-house case with simplified thermal integrity input, and volt-var mode inverters
+- *run8500.sh*: script that runs the 8500-node case with no price, voltage or smart inverter response
+- *run8500base.sh*: script that runs the 8500-node case, responsive to time-of-use rates and overvoltages
+- *run8500tou.sh*: script that runs the 8500-node case, price response to time-of-use rates, no smart inverters
+- *run8500volt.sh*: script that runs the 8500-node case, precooling response to overvoltage, no smart inverters
+- *run8500vvar.sh*: script that runs the 8500-node case, non-transactive, smart inverter volt-var mode
+- *run8500vwatt.sh*: script that runs the 8500-node case, non-transactive, smart inverter volt-watt mode
 
 Copyright (c) 2017-2020, Battelle Memorial Institute
 
