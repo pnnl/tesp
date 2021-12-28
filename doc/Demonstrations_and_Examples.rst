@@ -22,6 +22,7 @@ TESP Capability Demonstrations
     ./demonstrations/weatherAgent.rst
     ./demonstrations/energyplus.rst
     ./demonstrations/te30.rst
+    ./demonstrations/dsostub.rst
     ./demonstrations/ieee8500.rst
     ./demonstrations/houses.rst
     ./demonstrations/gld_player_recorder.rst
