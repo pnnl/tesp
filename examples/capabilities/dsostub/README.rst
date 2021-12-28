@@ -4,7 +4,7 @@ dsostub supports a real-time and day-ahead double-auction energy market implemen
 
 Almost of the parameters for the models used in this dsostub example are defined in the "case_config.json" file; this includes the transmission and generation system model. The "dsostub.py" script has a price-responsive curve hard-coded into the real-time market bidding.
 
-This TESP capability was published in the IEEE Power and Energy Society General Meeting in July of 2021 and the publication can be found in :cite:`Hanif:2021aa`. 
+This TESP capability was published in the IEEE Power and Energy Society General Meeting in July of 2021 and the publication can be found in :cite:`Hanif:2021aa` (https://doi.org/10.1109/PESGM46819.2021.9638030). 
 
 
 Running the demonstration
