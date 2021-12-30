@@ -12,5 +12,6 @@ References for TESP
     
     ./references/Design_Reference
     ./references/Code_Reference
+    ./references/Design_Philosophy_and_Development_Plans
     ./references/zBibliography
     ./references/LICENSE
