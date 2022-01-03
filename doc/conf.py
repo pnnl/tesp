@@ -44,8 +44,10 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx-jsonschema',
-    'sphinxcontrib.bibtex']
-
+    'sphinxcontrib.bibtex'
+    ]
+bibtex_bibfiles = ['./references/refs.bib']
+bibtex_default_style = 'unsrt' # alpha, plain, unsrt, unsrtalpha
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
