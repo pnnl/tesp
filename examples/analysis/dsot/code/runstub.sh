@@ -1,20 +1,21 @@
 #!/bin/bash
 
-mkdir -p $1
+mkdir -p "$1"
 if [ -d "$1" ]
 then
 
   archive_folder="/mnt/simdata/done"
+  touch "./$1/run.sh"
   python3 -c "import tesp_support.helpers_dsot_v1 as tesp; tesp.write_management_script('$archive_folder', '$1', '.', 0, 0)"
 
   cd "$1" || exit
-  rm -f *metrics.h5
-  rm -f *metrics.json
-  rm -f *dict.json
-  rm -f *.log
-  rm -f *opf.csv
-  rm -f *pf.csv
-  rm -f *.dat
+  rm -f "./*metrics.h5"
+  rm -f "./*metrics.json"
+  rm -f "./*dict.json"
+  rm -f "./*.log"
+  rm -f "./*opf.csv"
+  rm -f "./*pf.csv"
+  rm -f "./*.dat"
   mkdir -p PyomoTempFiles
 
   cp -f ../8_system_case_config.json generate_case_config.json
@@ -25,7 +26,7 @@ then
 
   python3 -c "import sys; sys.path.insert(1,'..'); import dsoStub; dsoStub.dso_make_yaml('./generate_case_config')"
 
-echo "
+  echo "#!/bin/bash
 #export FNCS_FATAL=YES
 #export FNCS_LOG_STDOUT=yes
 export FNCS_LOG_LEVEL=INFO
@@ -38,7 +39,6 @@ export FNCS_LOG_LEVEL=INFO
 (export FNCS_CONFIG_FILE=ind_player.yaml && exec python3 -c \"import tesp_support.load_player as tesp;tesp.load_player_loop('./generate_case_config', 'indLoad')\" &> ./ind_player.log &)
 (export FNCS_CONFIG_FILE=gld_player.yaml && exec python3 -c \"import tesp_support.load_player as tesp;tesp.load_player_loop('./generate_case_config', 'gldLoad')\" &> ./gld_player.log &)
 (export FNCS_CONFIG_FILE=ref_player.yaml && exec python3 -c \"import tesp_support.load_player as tesp;tesp.load_player_loop('./generate_case_config', 'refLoadMn')\" &> ./ref_player.log &)
-" > run.sh
-  chmod 755 run.sh
+" >> run.sh
 
 fi

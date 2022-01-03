@@ -22,7 +22,10 @@ TESP Capability Demonstrations
     ./demonstrations/weatherAgent.rst
     ./demonstrations/energyplus.rst
     ./demonstrations/te30.rst
+    ./demonstrations/dsostub.rst
     ./demonstrations/ieee8500.rst
+    ./demonstrations/houses.rst
+    ./demonstrations/gld_player_recorder.rst
     
 TESP uses TCP/IP port 5570 for communication and requires Python 3. Simulations can start many processes, and take minutes or hours to complete. At this time, instructions are given only for the Linux package or Docker version of TESP, which is installable. See below for advice on running TESP in native Mac OS X or Windows.
 

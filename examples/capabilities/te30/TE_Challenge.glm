@@ -57,17 +57,17 @@ class player {
 
 object player {
     name PHASE_A;
-    file "../players/phase_A.player";
+    file "phase_A.player";
     loop 1;
 }
 object player {
     name PHASE_B;
-    file "../players/phase_B.player";
+    file "phase_B.player";
     loop 1;
 }
 object player {
     name PHASE_C;
-    file "../players/phase_C.player";
+    file "phase_C.player";
     loop 1;
 }
 

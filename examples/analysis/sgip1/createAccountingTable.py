@@ -5,7 +5,7 @@
 # @Date:   2021-04-09T10:37:55-07:00
 # @Email:  allison.m.campbell@pnnl.gov
 # @Last modified by:   camp426
-# @Last modified time: 2021-10-26T10:35:55-07:00
+# @Last modified time: 2021-12-07T14:12:33-08:00
 
 import numpy as np
 import pandas as pd
@@ -33,7 +33,7 @@ accounting_table = \
                   'Total CO2 emissions (MT/day)',
                   'Total SOx emissions (kg/day)',
                   'Total NOx emissions (kg/day)'], columns=['Metric Description'])
-base_dir = '/Users/camp426/TESP Virtual Machine'
+base_dir = '.'
 
 
 def calculate_metrics(dir, name):
@@ -70,7 +70,7 @@ def calculate_metrics(dir, name):
     wholesale_revenue_d = total_generation_revenue.reshape(int(n_days), int(n_daily_obs)).sum(axis=1)
 
     TnD_losses = gld_dict['data_s'][:, :, gld_dict['idx_s']['SUB_LOSSES_IDX']] * time_diff / 1e6
-    TnD_losses = TnD_losses.reshape(int(n_days), int(n_daily_obs)) * 20
+    TnD_losses = TnD_losses.reshape(int(n_days), int(n_daily_obs)) * aF
     # substation_MWh.sum(axis=1)
     TnD_loss_pct = TnD_losses.sum(axis=1) / (substation_MWh.sum(axis=1))
 
