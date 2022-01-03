@@ -1,6 +1,7 @@
 The SGIP1 analysis example is one of the first analysis performed with TESP. In it, an integrated whole-sale/retail real-time energy market is implemented using a double-auction transactive mechanism. The mechanism is used to evaluate a contingency event in the bulk power system when a generator trips offline during a peak-load day. The systems is also evaluated in this same scenario under a variety of rooftop solar PV and energy storage installations.
 
 A few publications have resulted from this analysis:
+
 :cite:`Hammerstrom:2017ta` (http://www.osti.gov/servlets/purl/1379448/)
 
 :cite:`Huang:2018kt` (https://ieeexplore.ieee.org/document/8360969/)
