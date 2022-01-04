@@ -1,4 +1,4 @@
-#   Copyright (C) 2017-2020 Battelle Memorial Institute
+#   Copyright (C) 2017-2022 Battelle Memorial Institute
 import numpy as np;
 import scipy.interpolate as ip;
 import tesp_support.api as tesp;

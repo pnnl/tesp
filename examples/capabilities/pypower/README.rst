@@ -23,6 +23,6 @@ In addition, traced FNCS messages will be written to pptracer.out
 * *README.md*; this file
 * *runpp.sh*; script for running the case
 
-Copyright (c) 2017-2021, Battelle Memorial Institute
+Copyright (c) 2017-2022, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE

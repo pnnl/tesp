@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021 Battelle Memorial Institute
+# Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: run_seasonal_cases.sh
 
 EPLUS_PATH=$TESPDIR/data/energyplus

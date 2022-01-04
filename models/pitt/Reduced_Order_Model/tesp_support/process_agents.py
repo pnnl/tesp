@@ -1,4 +1,4 @@
-#   Copyright (C) 2017-2019 Battelle Memorial Institute
+#   Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: process_agents.py
 """Functions to plot data from GridLAB-D substation agents
 

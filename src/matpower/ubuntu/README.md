@@ -111,7 +111,7 @@ So far (that is by 2016/12/13), there haven't been any simulations done involvin
 ## Launching the MATPOWER Power Flow / Optimal Power Flow solver from a C++ wrapper ##
 ****************************************
 ```start_MATPOWER.cpp```  
-_Copyright (C) 2013, Battelle Memorial Institute_  
+_Copyright (C) 2013-2022, Battelle Memorial Institute_  
 _Written by_ **Laurentiu Dan Marinovici**, Pacific Northwest National Laboratory  
 _Additional updates by_ **Jacob Hansen**, Pacific Northwest National Laboratory
 ****************************************

@@ -1,7 +1,7 @@
 DSO+T Stub Simulation Files
 ---------------------------
 
-Copyright (c) 2019-2020, Battelle Memorial Institute
+Copyright (c) 2019-2022, Battelle Memorial Institute
 
 This directory contains a test harness based on the ERCOT 8-bus case, with
 one DSO emulator in place of the GridLAB-D and substation federates at each bus.

@@ -45,4 +45,4 @@ The following topics are published by the agent:
 	- weather/pressure/forecast
 	- weather/wind_speed/forecast
 	
-Copyright (c) 2017-2021, Battelle Memorial Institute
+Copyright (c) 2017-2022, Battelle Memorial Institute

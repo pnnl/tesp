@@ -92,6 +92,6 @@ Layout of the full-order feeder models used in this example.
 
 ![](R5-12.47-5.png)
 
-Copyright (c) 2017-2021, Battelle Memorial Institute
+Copyright (c) 2017-2022, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE

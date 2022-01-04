@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2021 Battelle Memorial Institute
+# Copyright (C) 2018-2022 Battelle Memorial Institute
 # file: bill.py; custom for the IEEE 8500-node circuit
 
 import json

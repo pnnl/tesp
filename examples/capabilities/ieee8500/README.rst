@@ -138,6 +138,6 @@ interpreting the other files in this directory.
 - *run8500vvar.sh*: script that runs the 8500-node case, non-transactive, smart inverter volt-var mode
 - *run8500vwatt.sh*: script that runs the 8500-node case, non-transactive, smart inverter volt-watt mode
 
-Copyright (c) 2017-2021, Battelle Memorial Institute
+Copyright (c) 2017-2022, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE

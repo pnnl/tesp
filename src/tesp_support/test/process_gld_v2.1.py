@@ -1,4 +1,4 @@
-#	Copyright (C) 2017 Battelle Memorial Institute
+#	Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: process_gld_v2.1.py
 import json;
 import sys;

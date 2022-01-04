@@ -1,4 +1,4 @@
-#   Copyright (C) 2017-2020 Battelle Memorial Institute
+#   Copyright (C) 2017-2022 Battelle Memorial Institute
 import json;
 import numpy as np;
 import matplotlib as mpl;

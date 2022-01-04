@@ -1,6 +1,6 @@
 /*
 ==========================================================================================
-Copyright (C) 2016, Battelle Memorial Institute
+Copyright (C) 2016-2022, Battelle Memorial Institute
 Written by Jacob Hansen, Pacific Northwest National Laboratory
 ==========================================================================================
 */

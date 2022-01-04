@@ -48,7 +48,7 @@ In addition, traced messages will be written to recorder and log files.
 * *tabulate_responses.py*; 
 * *tracer.yaml*; FNCS configuration for the message tracing utility
 
-Copyright (c) 2017-2020, Battelle Memorial Institute
+Copyright (c) 2017-2022, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE
 

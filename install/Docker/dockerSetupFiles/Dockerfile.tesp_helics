@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Battelle Memorial Institute
+# Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: Dockerfile.tesp_helics
 
 ARG DOCKER_IMG=laurmarinovici/tesp

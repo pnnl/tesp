@@ -1,5 +1,5 @@
 ..
-    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ Copyright (C) 2021-2022 Battelle Memorial Institute
     _ file: Code_References.rst
 
 .. _code-reference-label:

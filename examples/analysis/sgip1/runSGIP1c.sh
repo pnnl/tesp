@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2017-2021 Battelle Memorial Institute
+# Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: runSGIP1c.sh
 
 SCHED_PATH=$TESPDIR/data/schedules

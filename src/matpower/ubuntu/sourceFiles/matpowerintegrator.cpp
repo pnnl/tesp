@@ -2,7 +2,7 @@
 ``matpowerintegrator'' represents the collection of functions necessary to implement the right communication
 between the distribution simulator/player (Gridlab-D) and the transmission player (MATPOWER)
 ==========================================================================================
-Copyright (C) 2015, Battelle Memorial Institute
+Copyright (C) 2015-2022, Battelle Memorial Institute
 Written by Laurentiu Dan Marinovici, Pacific Northwest National Laboratory
 Updated: 03/24/2015
    Purpose: GETPOWER function rewritten to compy to FNCS2 standards

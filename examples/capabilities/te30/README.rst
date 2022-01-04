@@ -67,7 +67,7 @@ To run a FNCS case from the GUI monitor for market only:
 * *tesp_monitor.json*: commands for solution monitor to run a case with market
 * *TESP_Monitor.yaml*: FNCS configuration for the solution monitor
 
-Copyright (c) 2017-2020, Battelle Memorial Institute
+Copyright (c) 2017-2022, Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/master/LICENSE
 

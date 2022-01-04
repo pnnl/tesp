@@ -1,7 +1,7 @@
 .. _RunExamples:
 
 ..
-    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ Copyright (C) 2021-2022 Battelle Memorial Institute
     _ file: Running_Examples.rst
 
 Using Docker and the autotest.py script

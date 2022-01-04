@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2021 Battelle Memorial Institute
+# Copyright (C) 2018-2022 Battelle Memorial Institute
 # file: tesp_monitor_ercot.py
 """Presents a GUI to launch a TESP simulation and monitor its progress
 
