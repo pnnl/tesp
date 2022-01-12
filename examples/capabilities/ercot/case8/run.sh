@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021 Battelle Memorial Institute
+# Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: run.sh
 
 (export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 12 &> broker.log &)

@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Battelle Memorial Institute
+# Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: compile_png.py
 
 import operator

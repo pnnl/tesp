@@ -1,6 +1,6 @@
 # jModelica large building example
 
-Copyright (c) 2017-19, Battelle Memorial Institute
+Copyright (c) 2017-2022, Battelle Memorial Institute
 
 This example has the jModelica large building model. 
 

@@ -1,6 +1,6 @@
 # Commercial Building Models for DSO+T Study
 
-Copyright (c) 2019, Battelle Memorial Institute
+Copyright (c) 2019-2022, Battelle Memorial Institute
 
 These are post-1980 reference buildings for Houston, TX
 

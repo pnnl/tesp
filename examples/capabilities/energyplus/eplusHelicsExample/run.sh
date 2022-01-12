@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2021 Battelle Memorial Institute
+# Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: run.sh
 
 #(exec helics_broker -f 4 --loglevel=7 --name=mainbroker &> broker.log &)

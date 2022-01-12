@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Battelle Memorial Institute
+# Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: make_case8.py
 
 import json

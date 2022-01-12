@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Battelle Memorial Institute
+# Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: createAccountingTable.py
 
 # @Author: Allison Campbell <camp426>

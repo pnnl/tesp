@@ -1,5 +1,5 @@
 ..
-    _ Copyright (C) 2021 Battelle Memorial Institute
+    _ Copyright (C) 2021-2022 Battelle Memorial Institute
     _ file: References.rst
 
 References
@@ -12,5 +12,6 @@ References for TESP
     
     ./references/Design_Reference
     ./references/Code_Reference
+    ./references/Design_Philosophy_and_Development_Plans
     ./references/zBibliography
     ./references/LICENSE

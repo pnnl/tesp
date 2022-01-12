@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Battelle Memorial Institute
+# Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: make_all_ems.sh
 
 declare -r TESP_SUPPORT=$TESP_INSTALL/share/support/energyplus

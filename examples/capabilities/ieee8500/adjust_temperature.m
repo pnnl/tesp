@@ -1,4 +1,4 @@
-% Copyright (C) 2021 Battelle Memorial Institute
+% Copyright (C) 2021-2022 Battelle Memorial Institute
 % file: adjust_temperature.m
 
 function [ cloudy_temp ] = adjust_temperature( temp )

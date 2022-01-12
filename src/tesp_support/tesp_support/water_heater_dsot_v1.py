@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021 Battelle Memorial Institute
+# Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: water_heater_dsot_v1_new.py with the implementation of new SOHC model and new delta_SOHC model
 """Class that controls the Water Heater DER
 

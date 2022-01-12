@@ -1,4 +1,4 @@
-% Copyright (C) 2021 Battelle Memorial Institute
+% Copyright (C) 2021-2022 Battelle Memorial Institute
 % file: estimate_ac_size.m
 
 function [ btuperhr kw ] = estimate_ac_size (floor_area, thermal_integrity)

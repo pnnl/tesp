@@ -1,6 +1,6 @@
 # TESP Models for DSO+T Study
 
-Copyright (c) 2018-2021, Battelle Memorial Institute
+Copyright (c) 2018-2022, Battelle Memorial Institute
 
 These files implement 8-bus and 200-bus models of ERCOT for the FY19
 DSO+T study. The bulk system generation and loads were developed from public

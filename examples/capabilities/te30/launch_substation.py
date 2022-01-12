@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Battelle Memorial Institute
+# Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: launch_substation.py
 
 import tesp_support.api as tesp

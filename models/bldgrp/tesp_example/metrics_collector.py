@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: metrics_collector.py
 """ Utility functions for metrics collection within tesp_support, able to write to JSON and HDF5 """
 

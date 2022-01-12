@@ -3,7 +3,7 @@
 ***************************************
 _Author: **Laurentiu Dan Marinovici**_
 
-Copyright (C) 2018-2021, Battelle Memorial Institute
+Copyright (C) 2018-2022, Battelle Memorial Institute
 ***************************************
 Updated 04/17/2019
 

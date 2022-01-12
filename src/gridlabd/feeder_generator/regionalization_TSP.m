@@ -1,4 +1,4 @@
-%	Copyright (C) 2017-2021 Battelle Memorial Institute
+%	Copyright (C) 2017-2022 Battelle Memorial Institute
 % file: regionalization.m
 
 function [data] = regionalization_TSP(region)

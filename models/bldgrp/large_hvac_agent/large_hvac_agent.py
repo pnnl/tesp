@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
+# Copyright (C) 2017-2022 Battelle Memorial Institute
 # file large_hvac_agent.py
 """Test Class that that implements large Commercial Building HVAC Agent.
 The main goal of the agent is to approximate power consumption of the building, given user settings such as temperature
