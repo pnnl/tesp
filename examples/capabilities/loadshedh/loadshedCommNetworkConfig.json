@@ -1,0 +1,38 @@
+{
+  "name": "loadshedCommNetwork",
+  "coretype": "zmq",
+  "log_level": "warning",
+  "period": 0.000000001,
+  "endpoints": [
+    {
+      "name": "loadshed/sw_status",
+      "info": "1",
+      "global": false
+    },
+    {
+      "name": "gridlabdSimulator1/sw_status",
+      "info": "1",
+      "global": false
+    }
+  ],
+  "filters": [
+    {
+      "name": "gld_sw_status_filter",
+      "sourcetargets": ["gridlabdSimulator1/sw_status"],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "loadshedCommNetwork/gridlabdSimulator1/sw_status"
+      }
+    },
+    {
+      "name": "loadshed_sw_status_filter",
+      "sourcetargets": ["loadshed/sw_status"],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "loadshedCommNetwork/loadshed/sw_status"
+      }
+    }
+  ]
+}

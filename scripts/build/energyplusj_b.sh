@@ -10,7 +10,7 @@ autoheader
 aclocal
 automake --add-missing
 autoconf
-./configure --prefix="${INSTDIR}"  --with-fncs="${INSTDIR}" 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2'
+./configure --prefix="${INSTDIR}" --with-fncs="${INSTDIR}" 'CXXFLAGS=-w -O2' 'CFLAGS=-w -O2'
 if [[ $1 == "clean" ]]; then
   make clean
 fi

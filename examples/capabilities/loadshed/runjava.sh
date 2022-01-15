@@ -3,7 +3,6 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: runjava.sh
 
-
 JAVAPATH=$INSTDIR/java
 
 # Compile loadshed 

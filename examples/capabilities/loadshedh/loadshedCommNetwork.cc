@@ -67,22 +67,23 @@ int main(int argc, char *argv[])
 	p2pInterfaces = address.Assign (p2pDevices);
 
 	//Attach Helics Application to nodes.
-  NS_LOG_INFO ("Running " << nNodes << " nodes to end time " << Seconds(simulationRunTime));
+    NS_LOG_INFO ("Running " << nNodes << " nodes to end time " << Seconds(simulationRunTime));
+//  std::cout << "Running " << nNodes << " nodes to end time " << Seconds(simulationRunTime) << std::endl;
 	std::vector<ApplicationContainer> helicsFilterApps;
 	for(int i=0; i<nNodes; i++) {
-    NS_LOG_INFO (i << ":Filter:" << helics_federate->getFilter(i).getName() << ":Endpoint:" << helics_federate->getEndpoint(i).getName());
-		ApplicationContainer apps = helicsHelper.InstallFilter(p2pNodes.Get(i), helics_federate->getFilter(i), helics_federate->getEndpoint(i));
-		apps.Start(Seconds(0.0));
-		apps.Stop(Seconds(simulationRunTime));
-		helicsFilterApps.push_back(apps);
+      NS_LOG_INFO (i << ":Filter:" << helics_federate->getFilter(i).getName() << ":Endpoint:" << helics_federate->getEndpoint(i).getName());
+	  ApplicationContainer apps = helicsHelper.InstallFilter(p2pNodes.Get(i), helics_federate->getFilter(i), helics_federate->getEndpoint(i));
+	  apps.Start(Seconds(0.0));
+	  apps.Stop(Seconds(simulationRunTime));
+	  helicsFilterApps.push_back(apps);
 	}
 	Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 	pointToPoint.EnablePcapAll ("second");
-  NS_LOG_INFO ("About to Run simulator");
+    NS_LOG_INFO ("About to Run simulator");
 //  std::cout << "About to Run simulator" << std::endl;
 	Simulator::Stop(Seconds(simulationRunTime));
 	Simulator::Run();
-  NS_LOG_INFO ("About to Destroy simulator");
+    NS_LOG_INFO ("About to Destroy simulator");
 //  std::cout << "About to Destroy simulator" << std::endl;
 	Simulator::Destroy();
 	return 0;

@@ -27,15 +27,6 @@
 #include <helics/application_api/ValueFederate.hpp>
 #include <helics/application_api/Inputs.hpp>
 #include <helics/application_api/Publications.hpp>
-/*
-#include "helics/ValueFederate.hpp"
-#include "helics/apps/BrokerApp.hpp"
-#include "helics/core/helicsCLI11.hpp"
-#include "helics/core/helics_definitions.hpp"
-#include <helics/application_api/CombinationFederate.hpp>
-#include <helics/application_api/Endpoints.hpp>
-#include <helics/helics_enums.h>
-*/
 
 // #include "fncs_internal.hpp"
 namespace fncs {
@@ -195,23 +186,24 @@ int main(int argc, char **argv)
     for (int i = 0; i < pub_count; i++) {
       helics::Publication pub = pHelicsFederate->getPublication(i);
       if (pub.isValid() ) {
-        cout << " pub " << i << ":" << pub.getName() << ":" << pub.getKey() << ":" << pub.getType() << ":" << pub.getUnits() << endl;
-        if (pub.getKey().find("power_A") != string::npos) {
+        auto name = pub.getName();
+        cout << " pub " << i << ":" << name << ":" << pub.getType() << ":" << pub.getUnits() << endl;
+        if (name.find("power_A") != string::npos) {
           bPubA = true;
           hPubA = pub;
-        } else if (pub.getKey().find("power_B") != string::npos) {
+        } else if (name.find("power_B") != string::npos) {
           bPubB = true;
           hPubB = pub;
-        } else if (pub.getKey().find("power_C") != string::npos) {
+        } else if (name.find("power_C") != string::npos) {
           bPubC = true;
           hPubC = pub;
-        } else if (pub.getKey().find("monthly_fee") != string::npos) {
+        } else if (name.find("monthly_fee") != string::npos) {
           bPubFee = true;
           hPubFee = pub;
-        } else if (pub.getKey().find("price") != string::npos) {
+        } else if (name.find("price") != string::npos) {
           bPubPrice = true;
           hPubPrice = pub;
-        } else if (pub.getKey().find("bill_mode") != string::npos) {
+        } else if (name.find("bill_mode") != string::npos) {
           bPubMode = true;
           hPubMode = pub;
         }
@@ -220,7 +212,7 @@ int main(int argc, char **argv)
     for (int i = 0; i < sub_count; i++) {
       helics::Input sub = pHelicsFederate->getInput(i);
       if (sub.isValid() ) {
-        cout << " sub " << i << ":" << sub.getTarget() << ":" << sub.getKey() << ":" << sub.getType() << ":" << sub.getUnits() << endl;
+        cout << " sub " << i << ":" << sub.getTarget() << ":" << sub.getName() << ":" << sub.getType() << ":" << sub.getUnits() << endl;
         if (sub.getTarget().find("clear_price") != string::npos) {
           bSubPrice = true;
           hSubPrice = sub;

@@ -12,11 +12,11 @@ public class helicshed {
 	SWIGTYPE_p_void fi = helics.helicsCreateFederateInfo();
 	helics.helicsFederateInfoSetCoreTypeFromString (fi, "zmq");
 	helics.helicsFederateInfoSetCoreInitString (fi, "--federates=1");
-    	helics.helicsFederateInfoSetTimeProperty (fi, helics_properties.helics_property_time_delta.swigValue(), 1.0);
+    	helics.helicsFederateInfoSetTimeProperty (fi, HelicsProperties.HELICS_PROPERTY_TIME_DELTA.swigValue(), 1.0);
     	SWIGTYPE_p_void fed = helics.helicsCreateCombinationFederate ("shedfed", fi);
 
 	SWIGTYPE_p_void pubid = helics.helicsFederateRegisterGlobalPublication (fed, 
-		"loadshed/sw_status", helics_data_type.helics_data_type_string, "");
+		"loadshed/sw_status", HelicsDataTypes.HELICS_DATA_TYPE_STRING, "");
 
 	helics.helicsFederateEnterInitializingMode (fed);
 	helics.helicsFederateEnterExecutingMode (fed);

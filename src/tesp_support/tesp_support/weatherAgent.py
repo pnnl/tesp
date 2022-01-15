@@ -5,15 +5,17 @@
 
 This weather agent needs an WEATHER_CONFIG environment variable to be set, which is a json file.
 """
-import sys, os
-import pandas as pd
 import json
+import os
+import random
+import sys
 from datetime import datetime
 from datetime import timedelta
-import random
+
 import numpy
+import pandas as pd
 from scipy.stats import truncnorm
-import time
+
 if sys.platform != 'win32':
     import resource
 
@@ -22,24 +24,27 @@ try:
 except:
     pass
 
-def stop_helics_federate (fed):
+
+def stop_helics_federate(fed):
     helics.helicsFederateDestroy(fed)
 
-def show_resource_consumption ():
-  if sys.platform != 'win32':
-    usage = resource.getrusage(resource.RUSAGE_SELF)
-    RESOURCES = [
-        ('ru_utime', 'User time'),
-        ('ru_stime', 'System time'),
-        ('ru_maxrss', 'Max. Resident Set Size'),
-        ('ru_ixrss', 'Shared Memory Size'),
-        ('ru_idrss', 'Unshared Memory Size'),
-        ('ru_isrss', 'Stack Size'),
-        ('ru_inblock', 'Block inputs'),
-        ('ru_oublock', 'Block outputs')]
-    print('Resource usage:')
-    for name, desc in RESOURCES:
-      print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
+
+def show_resource_consumption():
+    if sys.platform != 'win32':
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        RESOURCES = [
+            ('ru_utime', 'User time'),
+            ('ru_stime', 'System time'),
+            ('ru_maxrss', 'Max. Resident Set Size'),
+            ('ru_ixrss', 'Shared Memory Size'),
+            ('ru_idrss', 'Unshared Memory Size'),
+            ('ru_isrss', 'Stack Size'),
+            ('ru_inblock', 'Block inputs'),
+            ('ru_oublock', 'Block outputs')]
+        print('Resource usage:')
+        for name, desc in RESOURCES:
+            print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
+
 
 def startWeatherAgent(file):
     """the weather agent publishes weather data as configured by the json file
@@ -50,7 +55,7 @@ def startWeatherAgent(file):
     """
     # read the weather data file, arguments to mimic deprecated from_csv function
     weatherData = pd.read_csv(file, index_col=0, parse_dates=True)
-    config = os.environ['WEATHER_CONFIG'] # read the weather config json file
+    config = os.environ['WEATHER_CONFIG']  # read the weather config json file
     if os.path.isfile(config):
         with open(config, 'r') as stream:
             try:
@@ -60,7 +65,7 @@ def startWeatherAgent(file):
                 timeStop = conf['time_stop']
                 StartTime = conf['StartTime']
                 timeFormat = '%Y-%m-%d %H:%M:%S'
-                dtStart = datetime.strptime (StartTime, timeFormat)
+                dtStart = datetime.strptime(StartTime, timeFormat)
                 timeDeltaStr = conf['time_delta']
                 publishInterval = conf['publishInterval']
                 forecast = conf['Forecast']
@@ -101,14 +106,15 @@ def startWeatherAgent(file):
     except Exception as ex:
         print("Error in time_stop", ex)
 
-    #write fncs.zpl file here
-    #it actually worked now. # this config str won't work as an argument to fncs::initialize, so write fncs.zpl just in time
-    zplstr = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds, timeStopInSeconds, broker)
+    # write fncs.zpl file here
+    # this config str won't work as an argument to fncs::initialize, so write fncs.zpl just in time
+    zplstr = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(
+              agentName, timeDeltaInSeconds, timeStopInSeconds, broker)
 
     # when doing resample(), use publishIntervalInSeconds to make it uniform
     # the reason for that is due to some of the units that we use for fncs, such as 'min',
     # is not recognized by the resample() function
-    weatherData2 = weatherData.resample(rule=str(publishIntervalInSeconds)+"s",closed='left').first()
+    weatherData2 = weatherData.resample(rule=str(publishIntervalInSeconds) + "s", closed='left').first()
     weatherData2 = weatherData2.interpolate(method='quadratic')
 
     # find weather data on the hour for the hourly forecast
@@ -119,12 +125,12 @@ def startWeatherAgent(file):
     timeNeedToPublishForecast = [0]
     # real time need to publish
     numberOfRealtimeBroadcast = timeStopInSeconds // publishIntervalInSeconds + 1
-    for i in range(1,numberOfRealtimeBroadcast):
+    for i in range(1, numberOfRealtimeBroadcast):
         timeNeedToPublishRealtime.append(i * publishIntervalInSeconds)
     if forecast == 1:
         # time need to publish forecast, which is on the hour
         numberOfForecast = timeStopInSeconds // 3600 + 1
-        for i in range(1,numberOfForecast):
+        for i in range(1, numberOfForecast):
             timeNeedToPublishForecast.append(i * 3600)
         # combine real time and forecast time
         timeNeedToBePublished = list(set([0] + timeNeedToPublishRealtime + timeNeedToPublishForecast))
@@ -140,98 +146,106 @@ def startWeatherAgent(file):
     #  file locking didn't work, because fncs.initialize() doesn't return until broker hears from all other simulators
     hFed = None
     hPubs = {}
-    fedName = agentName # 'weather'
+    fedName = agentName  # 'weather'
     if broker == 'HELICS':
-      fedInfo = helics.helicsCreateFederateInfo()
-      helics.helicsFederateInfoSetCoreName(fedInfo, fedName)
-      helics.helicsFederateInfoSetCoreTypeFromString(fedInfo, 'zmq')
-      helics.helicsFederateInfoSetCoreInitString(fedInfo, '--federates=1')
-      helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.helics_property_time_delta, timeDeltaInSeconds)
-      hFed = helics.helicsCreateValueFederate(fedName, fedInfo)
-      for col in weatherData.columns:
-        pubName = fedName + '/' + col
-        hPubs[col] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
-        pubName = pubName + '/forecast'
-        hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(hFed, pubName, helics.helics_data_type_string, "")
-      helics.helicsFederateEnterExecutingMode(hFed)
-      print('HELICS initialized to publish', hPubs, flush=True)
+        fedInfo = helics.helicsCreateFederateInfo()
+        helics.helicsFederateInfoSetCoreName(fedInfo, fedName)
+        helics.helicsFederateInfoSetCoreTypeFromString(fedInfo, 'zmq')
+        helics.helicsFederateInfoSetCoreInitString(fedInfo, '--federates=1')
+        helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.helics_property_time_delta, timeDeltaInSeconds)
+        hFed = helics.helicsCreateValueFederate(fedName, fedInfo)
+        for col in weatherData.columns:
+            pubName = fedName + '/' + col
+            hPubs[col] = helics.helicsFederateRegisterGlobalPublication(
+                         hFed, pubName, helics.helics_data_type_string, "")
+            pubName = pubName + '/forecast'
+            hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(
+                                       hFed, pubName, helics.helics_data_type_string, "")
+        helics.helicsFederateEnterExecutingMode(hFed)
+        print('HELICS initialized to publish', hPubs, flush=True)
     else:
-      try:
-        import tesp_support.fncs as fncs
-      except:
-        pass
-      configstr = zplstr.encode('utf-8')
-      fncs.initialize(configstr)
-      print('FNCS initialized', flush=True)
+        try:
+            import tesp_support.fncs as fncs
+        except:
+            pass
+        configstr = zplstr.encode('utf-8')
+        fncs.initialize(configstr)
+        print('FNCS initialized', flush=True)
 
     time_granted = 0
     for i in range(len(timeNeedToPublish)):
         if i > 0:
             timeToRequest = timeNeedToPublish[i]
             if hFed is not None:
-              time_granted = int (helics.helicsFederateRequestTime(hFed, timeToRequest))
+                time_granted = int(helics.helicsFederateRequestTime(hFed, timeToRequest))
             else:
-              time_granted = fncs.time_request(timeToRequest)
+                time_granted = fncs.time_request(timeToRequest)
         if timeNeedToBePublished[i] in timeNeedToPublishRealtime:
             # find the data by the time point and publish them
             row = weatherData2.loc[dtStart + timedelta(seconds=timeNeedToBePublished[i])]
-#            print('publishing at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i]))
-#                  + ' for weather at ' + str(dtStart + timedelta(seconds=timeNeedToBePublished[i])), flush=True)
+            #            print('publishing at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i]))
+            #                  + ' for weather at ' + str(dtStart + timedelta(seconds=timeNeedToBePublished[i])), flush=True)
             for key, value in row.iteritems():
-                #remove the improper value generated by interpolation
+                # remove the improper value generated by interpolation
                 if key != "temperature" and value < 1e-4:
                     value = 0
                 if hFed is not None:
-                  helics.helicsPublicationPublishDouble(hPubs[key], value)
+                    helics.helicsPublicationPublishDouble(hPubs[key], value)
                 else:
-                  fncs.publish(key, value)
+                    fncs.publish(key, value)
         # if forecasting needed and the time is on the hour
         if forecast == 1 and timeNeedToBePublished[i] in timeNeedToPublishForecast:
-            print('forecasting at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i])) + ' for weather starting from '
+            print('forecasting at ' + str(
+                dtStart + timedelta(seconds=timeNeedToPublish[i])) + ' for weather starting from '
                   + str(dtStart + timedelta(seconds=timeNeedToBePublished[i])), flush=True)
             forecastStart = dtStart + timedelta(seconds=timeNeedToBePublished[i])
             forecastEnd = dtStart + timedelta(seconds=forecastLength) + timedelta(seconds=timeNeedToBePublished[i])
             # find the data by forecast starting and ending time, should be multiple data point for each weather factor
-            rows = hourlyWeatherData.loc[(hourlyWeatherData.index >= forecastStart) & (hourlyWeatherData.index < forecastEnd)].copy()
-            rows.solar_direct[rows.solar_direct<1e-4]=0
-            rows.solar_diffuse[rows.solar_diffuse<1e-4]=0
-            rows.wind_speed[rows.wind_speed<1e-4]=0
-            rows.humidity[rows.humidity<1e-4]=0
-            rows.pressure[rows.pressure<1e-4]=0
+            rows = hourlyWeatherData.loc[
+                (hourlyWeatherData.index >= forecastStart) & (hourlyWeatherData.index < forecastEnd)].copy()
+            rows.solar_direct[rows.solar_direct < 1e-4] = 0
+            rows.solar_diffuse[rows.solar_diffuse < 1e-4] = 0
+            rows.wind_speed[rows.wind_speed < 1e-4] = 0
+            rows.humidity[rows.humidity < 1e-4] = 0
+            rows.pressure[rows.pressure < 1e-4] = 0
             for col in rows.columns:
                 data = rows[col].values
                 times = rows.index
-                # if user wants to add error to the forecasted data to mimick weather forecast
+                # if user wants to add error to the forecasted data to mimic weather forecast
                 if addErrorToForecast == 1:
                     WF_obj = weather_forecast(col, forecastPeriod * 2, forecastParameters)  # make object
                     data = WF_obj.make_forecast(data, len(data))
                 wd = dict()
-                # convert data to a dictionary with time as the key so it can be published as json string
+                # convert data to a dictionary with time as the key, so it can be published as json string
                 for v in range(len(data)):
                     if col != "temperature" and data[v] < 1e-4:
                         data[v] = 0
                     wd[str(times[v])] = str(data[v])
+#               print(col, json.dumps(wd))
                 if hFed is not None:
-                  helics.helicsPublicationPublishString(hPubs[col + '/forecast'], json.dumps(wd))
+                    helics.helicsPublicationPublishString(hPubs[col + '/forecast'], json.dumps(wd))
                 else:
-                  fncs.publish(col + '/forecast', json.dumps(wd))
+                    fncs.publish(col + '/forecast', json.dumps(wd))
 
     # if the last time step/stop time is not requested
     if timeStopInSeconds not in timeNeedToPublish:
         if hFed is not None:
-          time_granted = int (helics.helicsFederateRequestTime(hFed, timeStopInSeconds))
+            time_granted = int(helics.helicsFederateRequestTime(hFed, timeStopInSeconds))
         else:
-          time_granted = fncs.time_request(timeStopInSeconds)
+            time_granted = fncs.time_request(timeStopInSeconds)
 
     if hFed is not None:
-      stop_helics_federate (hFed)
+        print('finalizing HELICS', flush=True)
+        stop_helics_federate(hFed)
     else:
-      print('finalizing FNCS', flush=True)
-      fncs.finalize()
+        print('finalizing FNCS', flush=True)
+        fncs.finalize()
     show_resource_consumption()
+
 
 def usage():
     print("usage: python weatherAgent.py <input weather file full path>")
+
 
 def convertTimeToSeconds(time):
     """Convert time string with unit to integer in seconds
@@ -257,6 +271,7 @@ def convertTimeToSeconds(time):
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
 
+
 def deltaTimeToResmapleFreq(time):
     """Convert time unit to a resampling frequency that can be recognized by pandas.DataFrame.resample()
 
@@ -280,6 +295,7 @@ def deltaTimeToResmapleFreq(time):
         return str(timeNum) + "s"
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
+
 
 def findDeltaTimeMultiplier(time):
     """find the multiplier to convert delta_time to seconds
@@ -305,6 +321,7 @@ def findDeltaTimeMultiplier(time):
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
 
+
 """Class that includes error to the known Weather data 
 
 Implements the range of values the errors are randomly selected. The range is time
@@ -319,6 +336,8 @@ All the variables utilize in the class are time dependent. Thus, arrays where
 element "0" is the next hour and so forth.   
 
 """
+
+
 class weather_forecast:
     """This object includes the error to a weather variable
 
@@ -357,13 +376,13 @@ class weather_forecast:
     def get_truncated_normal(self, EL, EH):
         """Truncated normal distribution
         """
-        mean=(EL+EH)/2
-        sd=(abs(EL)+abs(EH))/4 #95% of values are within bounds remaining is truncated
+        mean = (EL + EH) / 2
+        sd = (abs(EL) + abs(EH)) / 4  # 95% of values are within bounds remaining is truncated
         if sd <= 0.0:
             return 0.0
         a = (EL - mean) / sd
         b = (EH - mean) / sd
-        sample = truncnorm.rvs(a,b,loc=mean,scale=sd,size=1)[0]
+        sample = truncnorm.rvs(a, b, loc=mean, scale=sd, size=1)[0]
         return sample
 
     def make_forecast(self, weather, t=0):
@@ -410,10 +429,10 @@ class weather_forecast:
         weather_f = error + weather
         return weather_f
 
+
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         usage()
         sys.exit()
     inputFile = sys.argv[1]
     startWeatherAgent(inputFile)
-

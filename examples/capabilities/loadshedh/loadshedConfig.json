@@ -1,0 +1,13 @@
+{
+  "name": "loadshed",
+  "coreType": "zmq",
+  "loglevel": "warning",
+  "period": 60.0,
+  "endpoints": [
+    {
+      "global": false,
+      "name": "sw_status",
+      "destination": "gridlabdSimulator1/sw_status"
+    }
+  ]
+}

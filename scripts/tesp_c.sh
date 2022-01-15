@@ -32,6 +32,9 @@ pip3 install -e . > "${TESPDIR}/scripts/build/psst.log" 2>&1
 cd "${TESPDIR}/scripts/build" || exit
 if [[ $1 == "develop" ]]; then
 
+  echo "Installing Python Sphinx for documentation..."
+  pip3 install recommonmark sphinx-jsonschema sphinx-bibtex sphinxcontrib-bibtex >> "${TESPDIR}/scripts/build/pylib.log" 2>&1
+
   echo "Compiling and Installing FNCS..."
   ./fncs_b.sh clean > fncs.log 2>&1
 

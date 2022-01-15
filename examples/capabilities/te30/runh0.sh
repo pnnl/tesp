@@ -15,3 +15,4 @@ SCHED_PATH=$TESPDIR/data/schedules
 
 (export HELICS_CONFIG_FILE=helics_eplus.json && exec energyplus -w "$EPLUS_PATH/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw" -d output -r MergedH.idf &> helics_eplus0.log &)
 (exec eplus_agent_helics 172800s 300s SchoolDualController eplus_TE_ChallengeH0_metrics.json  0.02 25 4 4 helics_eplus_agent.json &> helics_eplus_agent0.log &)
+#(exec helics_recorder rec.json --stop 5 &> rec.log &)

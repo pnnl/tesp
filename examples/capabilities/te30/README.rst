@@ -2,7 +2,10 @@ This example file comprises 30 houses and a school building on a small
 stiff circuit. It provides a medium-level test case for multiple transactive
 agents, with or without the double-auction market.
 
-**NOTE:** This example can take several minutes to run. After launching the "run" shell script check the status of the co-simulation by running "ps" and looking to see if "energyplus"", "gridlabd"", etc have are executing or not.
+**NOTE:** This example can take several minutes to run.
+After launching the "run" shell script check the status of the co-simulation by
+running "ps" and looking to see if "energyplus"", "gridlabd"", etc have are executing or not.
+If running ./clean.sh, you must rerun prepare_case.py
 
 Using FNCS
 To run and plot a case without the market, from the Terminal:

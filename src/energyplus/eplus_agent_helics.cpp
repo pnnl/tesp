@@ -26,9 +26,6 @@
 #include <helics/application_api/ValueFederate.hpp>
 #include <helics/application_api/Inputs.hpp>
 #include <helics/application_api/Publications.hpp>
-#include <helics/application_api/helicsTypes.hpp>
-#include <helics/shared_api_library/api-data.h>
-#include <helics/shared_api_library/helics.h>
 
 using namespace ::std;
 
@@ -99,7 +96,6 @@ void output_metrics (metrics_t metrics, Json::Value& root, Json::Value& ary, int
   root[key1] = bldg;
 }
 
-unordered_map<string, helics::Publication> mpubs;
 unordered_map<string, helics::Input> msubs;
 
 bool aggregate_this_subscription (string key)
@@ -111,8 +107,8 @@ bool aggregate_this_subscription (string key)
 int main(int argc, char **argv)
 {
   // configuration variables to define on command line or in a JSON file
-  helics_time time_stop = 0;
-  helics_time time_agg = 0;
+  double time_stop = 0;
+  double time_agg = 0;
   double load_scale = 1.0;
   string StartTime = "2012-01-01 00:00:00 PST";
   string HelicsConfigFile = "";
@@ -123,9 +119,10 @@ int main(int argc, char **argv)
   double max_delta_lo = 4.0;
   bool bUsePriceRamp = true;
   bool bUseConsensus = false;
+  const std::string billmode = "HOURLY";
 
-  helics_time time_granted = 0;
-  helics_time time_written = 0;
+  double time_granted = 0;
+  double time_written = 0;
   vector<string> events;
   vector<string> keys;
   ofstream fout;
@@ -215,34 +212,33 @@ int main(int argc, char **argv)
   for (int i = 0; i < pub_count; i++) {
     helics::Publication pub = pHelicsFederate->getPublication(i);
     if (pub.isValid() ) {
-      cout << " pub " << i << ":" << pub.getName() << ":" << pub.getKey() << ":" << pub.getType() << ":" << pub.getUnits() << endl;
-      auto pubkey = pub.getKey();
-      mpubs[pubkey] = pub;
-      if (pub.getKey().find("power_A") != string::npos) {
+      auto name = pub.getName();
+      cout << " pub " << i << ":" << name << ":" << pub.getType() << ":" << pub.getUnits() << endl;
+      if (name.find("power_A") != string::npos) {
         bPubA = true;
         hPubA = pub;
-      } else if (pub.getKey().find("power_B") != string::npos) {
+      } else if (name.find("power_B") != string::npos) {
         bPubB = true;
         hPubB = pub;
-      } else if (pub.getKey().find("power_C") != string::npos) {
+      } else if (name.find("power_C") != string::npos) {
         bPubC = true;
         hPubC = pub;
-      } else if (pub.getKey().find("monthly_fee") != string::npos) {
+      } else if (name.find("monthly_fee") != string::npos) {
         bPubFee = true;
         hPubFee = pub;
-      } else if (pub.getKey().find("price") != string::npos) {
+      } else if (name.find("price") != string::npos) {
         bPubPrice = true;
         hPubPrice = pub;
-      } else if (pub.getKey().find("bill_mode") != string::npos) {
+      } else if (name.find("bill_mode") != string::npos) {
         bPubMode = true;
         hPubMode = pub;
-      } else if (pub.getKey().find("cooling_setpoint_delta") != string::npos) {
+      } else if (name.find("cooling_setpoint_delta") != string::npos) {
         bPubCool = true;
         hCoolDelta = pub;
-      } else if (pub.getKey().find("heating_setpoint_delta") != string::npos) {
+      } else if (name.find("heating_setpoint_delta") != string::npos) {
         bPubHeat = true;
         hHeatDelta = pub;
-      } else if (pub.getKey().find("bid_curve") != string::npos) {
+      } else if (name.find("bid_curve") != string::npos) {
         bPubCurve = true;
         hCurve = pub;
       }
@@ -346,12 +342,12 @@ int main(int argc, char **argv)
   ary.resize(idx);
 
   // launch the HELICS federate
-  cout << "HELICS enter intializing mode" << endl;
+  cout << "HELICS enter initializing mode" << endl;
   pHelicsFederate->enterInitializingMode();
   cout << "HELICS enter executing mode" << endl;
   pHelicsFederate->enterExecutingMode();
-  helics_time deltaTime = pHelicsFederate->getTimeProperty(helics_property_time_period);
-  helics_time nextTime = 0;
+  double deltaTime = pHelicsFederate->getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
+  double nextTime = 0;
   do {
     auto currentTime = pHelicsFederate->getCurrentTime();
     for (auto it = msubs.begin(); it != msubs.end(); ++it ) {
@@ -437,7 +433,7 @@ int main(int argc, char **argv)
     hPubC.publish(phaseWatts);
     hPubPrice.publish(price);
     hPubFee.publish(0.0);
-    hPubMode.publish("HOURLY");
+    hPubMode.publish(billmode);
     hCoolDelta.publish(delta);
     hHeatDelta.publish(-delta);
     if (bPublishBidCurve) {

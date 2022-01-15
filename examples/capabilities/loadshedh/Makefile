@@ -5,6 +5,7 @@ CXXFLAGS =
 #CXXFLAGS += -g
 #CXXFLAGS += -O2
 #CXXFLAGS += -std=c++0x
+CXXFLAGS += -std=c++17
 
 CPPFLAGS =
 CPPFLAGS += -I$(INSTALL_PATH)/include
@@ -25,7 +26,8 @@ LIBS += -lns3-dev-point-to-point-optimized
 #LIBS += -lns3-dev-network-debug
 #LIBS += -lns3-dev-core-debug
 #LIBS += -lns3-dev-point-to-point-debug
-LIBS += -lhelics-shared
+LIBS += -lhelicscpp-apps
+LIBS += -lhelicscpp
 
 all: loadshedCommNetwork
 

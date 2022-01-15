@@ -25,10 +25,12 @@ fncs_save_LIBS="$LIBS"
 CPPFLAGS="$CPPFLAGS $ZMQ_CPPFLAGS"
 LDFLAGS="$LDFLAGS $ZMQ_LDFLAGS"
 LIBS="$LIBS $ZMQ_LIBS"
+
 FNCS_CHECK_PACKAGE([czmq], [czmq.h], [czmq], [zctx_new])
 CPPFLAGS="$CPPFLAGS $CZMQ_CPPFLAGS"
 LDFLAGS="$LDFLAGS $CZMQ_LDFLAGS"
 LIBS="$LIBS $CZMQ_LIBS"
+
 FNCS_CHECK_PACKAGE([fncs], [fncs.hpp], [fncs], [fncs_get_simulator_count])
 CPPFLAGS="$fncs_save_CPPFLAGS"
 LDFLAGS="$fncs_save_LDFLAGS"

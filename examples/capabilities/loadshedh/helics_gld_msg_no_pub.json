@@ -1,0 +1,14 @@
+{
+  "name": "gridlabdSimulator1",
+  "period": 1.0,
+  "subscriptions": [
+    {
+      "key": "loadshed/sw_status",
+      "type": "string",
+      "info": {
+        "object": "sw_loadshed",
+        "property": "phase_A_state"
+      }
+    }
+  ]
+}

@@ -106,6 +106,9 @@ echo ++++++++++++++ PSST
 # git clone https://github.com/ames-market/psst.git
 git clone https://github.com/ames-market/AMES-V5.0.git
 
+# tags for all repos
+
+
 if [[ $binaries == "develop" ]]; then
   echo
   echo ++++++++++++++ FNCS
@@ -115,18 +118,20 @@ if [[ $binaries == "develop" ]]; then
 
   echo
   echo ++++++++++++++ HELICS
-  git clone -b helics2 https://github.com/GMLC-TDC/HELICS-src
-  #git clone -b main https://github.com/GMLC-TDC/HELICS-src
+  #git clone -b helics2 https://github.com/GMLC-TDC/HELICS-src
+  git clone -b main https://github.com/GMLC-TDC/HELICS-src
 
   echo
   echo ++++++++++++++ GRIDLAB
   #develop - dec21 commit number for dsot
   #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
   git clone -b develop https://github.com/gridlab-d/gridlab-d.git
+  ./tesp/scripts/build/patch.sh gridlab-d tesp/scripts/build/gridlabd.patch
 
   echo
   echo ++++++++++++++ ENERGYPLUS
   git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
+  ./tesp/scripts/build/patch.sh EnergyPlus tesp/scripts/build/energyplus.patch
 
   echo
   echo ++++++++++++++ NS-3
@@ -136,10 +141,11 @@ if [[ $binaries == "develop" ]]; then
   echo ++++++++++++++ HELICS-NS-3
   cd ns-3-dev || exit
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
+  cd ..
+  ./tesp/scripts/build/patch.sh ns-3-dev/contrib/helics tesp/scripts/build/helics-ns3.patch
 
   echo
   echo ++++++++++++++ Python Bindings Generator
-  cd ..
   git clone https://github.com/gjcarneiro/pybindgen.git
 
   echo

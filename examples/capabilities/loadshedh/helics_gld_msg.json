@@ -1,0 +1,16 @@
+{
+  "name": "gridlabdSimulator1",
+  "period": 1.0,
+  "log_level": "warning",
+  "endpoints": [
+    {
+      "name": "sw_status",
+      "global": false,
+      "type": "string",
+      "info": {
+        "object": "sw_loadshed",
+        "property": "phase_A_state"
+      }
+    }
+  ]
+}

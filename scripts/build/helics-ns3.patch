@@ -1,0 +1,128 @@
+diff --git a/helper/helics-helper.cc b/helper/helics-helper.cc
+index 63a930e..e53d4e6 100644
+--- a/helper/helics-helper.cc
++++ b/helper/helics-helper.cc
+@@ -17,7 +17,9 @@ SPDX-License-Identifier: BSD-3-Clause
+ #include "ns3/helics-static-source-application.h"
+ #include "ns3/helics-helper.h"
+ 
+-#include "helics/core/core-types.hpp"
++#include "helics/application_api/typeOperations.hpp"
++#include "helics/application_api/timeOperations.hpp"
++#include "helics/core/CoreTypes.hpp"
+ 
+ namespace ns3 {
+ 
+@@ -38,7 +40,7 @@ HelicsHelper::SetupFederate(void) {
+     helics::FederateInfo fi{};
+     fi.broker = broker;
+     fi.coreType = helics::coreTypeFromString(core);
+-    fi.setProperty(helics_property_time_delta, helics::loadTimeFromString("1ns"));
++    fi.setProperty(HELICS_PROPERTY_TIME_DELTA, helics::loadTimeFromString("1ns"));
+     if (!coreinit.empty()) {
+         fi.coreInitString = coreinit;
+     }
+diff --git a/model/helics-application.cc b/model/helics-application.cc
+index 26c2f6c..7b17592 100644
+--- a/model/helics-application.cc
++++ b/model/helics-application.cc
+@@ -297,7 +297,7 @@ HelicsApplication::StopApplication ()
+ }
+ 
+ static uint8_t
+-char_to_uint8_t (char c)
++char_to_uint8_t (std::byte c)
+ {
+   return uint8_t(c);
+ }
+@@ -375,7 +375,7 @@ HelicsApplication::Send (std::string dest, std::unique_ptr<helics::Message> mess
+         << to->GetName()
+         << "' at address "
+         << address.GetIpv4()
+-        << " port "
++        << " port '"
+         << address.GetPort()
+         << "' uid '"
+         << p->GetUid () <<"'");
+@@ -406,7 +406,7 @@ HelicsApplication::Send (std::string dest, std::unique_ptr<helics::Message> mess
+         << to->GetName()
+         << "' at address "
+         << address.GetIpv6()
+-        << " port "
++        << " port '"
+         << address.GetPort()
+         << "' uid '"
+         << p->GetUid () <<"'");
+@@ -514,7 +514,7 @@ HelicsApplication::HandleRead (Ptr<Socket> socket)
+             << size
+             << " bytes at address "
+             << InetSocketAddress::ConvertFrom (from).GetIpv4 ()
+-            << " port "
++            << " port '"
+             << InetSocketAddress::ConvertFrom (from).GetPort ()
+             << "' sdata '"
+             << sdata
+@@ -543,7 +543,7 @@ HelicsApplication::HandleRead (Ptr<Socket> socket)
+             << size
+             << " bytes at address "
+             << Inet6SocketAddress::ConvertFrom (from).GetIpv6 ()
+-            << " port "
++            << " port '"
+             << Inet6SocketAddress::ConvertFrom (from).GetPort ()
+             << "' sdata '"
+             << sdata
+diff --git a/model/helics-filter-application.cc b/model/helics-filter-application.cc
+index ea520f5..30a16f7 100644
+--- a/model/helics-filter-application.cc
++++ b/model/helics-filter-application.cc
+@@ -84,8 +84,10 @@ HelicsFilterApplication::DoRead (std::unique_ptr<helics::Message> message)
+ {
+   NS_LOG_FUNCTION (this << message->to_string());
+ 
+-  message->dest = message->original_dest;
+-  helics_federate->sendMessage (m_endpoint_id, std::move (message));
++//  message->dest = message->original_dest;
++//  helics_federate->sendMessage (m_endpoint_id, std::move (message));
++
++  helics_federate->getEndpoint(message->original_dest).sendTo(message->data, message->original_dest);
+ }
+ 
+ } // Namespace ns3
+diff --git a/model/helics-static-source-application.cc b/model/helics-static-source-application.cc
+index f8039b0..d8f80dc 100644
+--- a/model/helics-static-source-application.cc
++++ b/model/helics-static-source-application.cc
+@@ -118,7 +118,9 @@ HelicsStaticSourceApplication::DoRead (std::unique_ptr<helics::Message> message)
+ 
+   NS_LOG_INFO ("sending message on to " << m_destination);
+ 
+-  helics_federate->sendMessage (m_endpoint_id, m_destination, message->data.data(), message->data.size());
++//  helics_federate->sendMessage (m_endpoint_id, m_destination, message->data.data(), message->data.size());
++//  Send (message->dest, std::move (message));
++  helics_endpoint.sendTo(message->data.char_data(), message->data.size(), m_destination.data());
+ }
+ 
+ } // Namespace ns3
+diff --git a/wscript b/wscript
+index 2b227a7..d866d02 100644
+--- a/wscript
++++ b/wscript
+@@ -100,7 +100,8 @@ int main()
+     # Look for HELICS library
+     # HELICS 2.3+: helics-shared, helics-sharedd
+     # HELICS pre-2.3: helics-static, helics-staticd
+-    possible_helics_lib_names = ['helics-shared', 'helics-sharedd', 'helics-static', 'helics-staticd']
++#    possible_helics_lib_names = ['helics-shared', 'helics-sharedd', 'helics-static', 'helics-staticd']
++    possible_helics_lib_names = ['helicscpp']
+     for try_helics_lib in possible_helics_lib_names:
+         retval = conf.check_nonfatal(fragment=helics_test_code, lib=try_helics_lib, libpath=conf.env['LIBPATH_HELICS'], use='HELICS')
+         if retval:
+@@ -123,7 +124,7 @@ int main()
+     if conf.env['HELICS']:
+         for index,flag in enumerate(conf.env['CXXFLAGS']):
+             if 'c++11' in flag:
+-                conf.env['CXXFLAGS'][index] = '-std=c++14'
++                conf.env['CXXFLAGS'][index] = '-std=c++17'
+                 break
+         print(conf.env['CXXFLAGS'])
+ 
