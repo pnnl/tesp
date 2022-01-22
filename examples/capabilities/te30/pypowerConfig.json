@@ -1,7 +1,7 @@
 {
-	"name": "pypower",
-	"period": 15.0,
-  "publications":[
+  "name": "pypower",
+  "period": 15.0,
+  "publications": [
     {
       "global": false,
       "key": "three_phase_voltage_B7",
@@ -13,7 +13,7 @@
       "type": "double"
     }
   ],
-  "subscriptions":[
+  "subscriptions": [
     {
       "name": "SUBSTATION7",
       "key": "gld1/distribution_load",

@@ -236,7 +236,7 @@ def startWeatherAgent(file):
 
     if hFed is not None:
         print('finalizing HELICS', flush=True)
-        stop_helics_federate(hFed)
+        helics.helicsFederateDestroy(hFed)
     else:
         print('finalizing FNCS', flush=True)
         fncs.finalize()

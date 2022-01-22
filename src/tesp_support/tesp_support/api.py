@@ -29,6 +29,8 @@ Public Functions:
 
 from __future__ import absolute_import
 
+from .helpers import load_json_case
+
 from .feederGenerator import populate_feeder
 from .feederGenerator import write_node_houses
 from .feederGenerator import write_node_house_configs
@@ -53,9 +55,6 @@ from .case_merge import merge_substation_yaml
 from .case_merge import merge_fncs_config
 from .case_merge import merge_gld_msg
 from .case_merge import merge_substation_msg
- 
-from .fncsPYPOWER import load_json_case
-from .fncsPYPOWER import summarize_opf
 
 from .make_ems import make_ems
 from .make_ems import merge_idf
@@ -86,5 +85,3 @@ from .parse_msout import read_most_solution
 #from .sgip1.compare_pypower import compare_pypower
 
 #from .valuation.TransmissionMetricsProcessor import TransmissionMetricsProcessor
-
-

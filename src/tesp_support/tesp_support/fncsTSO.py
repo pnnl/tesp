@@ -12,7 +12,7 @@ import tesp_support.fncs as fncs
 from copy import deepcopy
 from datetime import datetime
 from .metrics_collector import MetricsStore, MetricsCollector
-from .fncsPYPOWER import load_json_case
+from .helpers import load_json_case
 from .helpers import parse_mva
 from .helpers import print_mod_load
 

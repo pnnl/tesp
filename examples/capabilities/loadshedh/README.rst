@@ -36,6 +36,20 @@ Before running, the *clean* command will remove any existing results.
  python3 plot_loadshed.py loadshed
 
 
+loadshed - verify GridLAB-D and Python over HELICS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Results should be identical to other versions of this example.
+Before running, the *clean* command will remove any existing results.
+
+::
+
+ cd ~/tesp/examples/loadshed
+ ./clean.sh
+ ./runhpy0.sh
+ python3 plot_loadshed.py loadshed
+
+
 loadshed - verify GridLAB-D and Java over HELICS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -49,33 +63,6 @@ Before running, the *clean* command will remove any existing results.
  ./runhjava.sh
  python3 plot_loadshed.py loadshed
 
-
-loadshed - verify GridLAB-D and Python over FNCS 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Results should be identical to other versions of this example.
-Before running, the *clean* command will remove any existing results.
-
-::
-
- cd ~/tesp/examples/loadshed
- ./clean.sh
- ./run.sh
- python3 plot_loadshed.py loadshed
-
-
-loadshed - verify GridLAB-D and Java over FNCS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Results should be identical to other versions of this example.
-Before running, the *clean* command will remove any existing results.
-
-::
-
- cd ~/tesp/examples/loadshed
- ./clean.sh
- ./runjava.sh
- python3 plot_loadshed.py loadshed
 
 
 If you're interested in C++ agent development, the GitHub

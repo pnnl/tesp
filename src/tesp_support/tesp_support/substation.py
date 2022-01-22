@@ -234,7 +234,8 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     print(json.dumps(controller_metrics), file=controller_op)
     auction_op.close()
     controller_op.close()
-    helpers.stop_helics_federate(hFed)
+    print('finalizing HELICS', flush=True)
+    helics.helicsFederateDestroy(hFed)
 
 
 def fncs_substation_loop(configfile, metrics_root, hour_stop=48, flag='WithMarket'):

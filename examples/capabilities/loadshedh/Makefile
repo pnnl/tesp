@@ -26,8 +26,8 @@ LIBS += -lns3-dev-point-to-point-optimized
 #LIBS += -lns3-dev-network-debug
 #LIBS += -lns3-dev-core-debug
 #LIBS += -lns3-dev-point-to-point-debug
-LIBS += -lhelicscpp-apps
 LIBS += -lhelicscpp
+LIBS += -lhelicscpp-apps
 
 all: loadshedCommNetwork
 

@@ -3,7 +3,7 @@ import logging as log
 import os
 
 import tesp_support.fncs as fncs
-from tesp_support.fncsPYPOWER import load_json_case
+from tesp_support.helpers import load_json_case
 from tesp_support.helpers import parse_mva
 
 

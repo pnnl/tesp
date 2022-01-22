@@ -4,13 +4,9 @@
 """
 import re
 import math
+import json
 import numpy as np
 from enum import IntEnum
-
-try:
-    import helics
-except:
-    pass
 
 
 def idf_int(val):
@@ -26,18 +22,6 @@ def idf_int(val):
     if len(sval) < 2:
         return sval + ', '
     return sval + ','
-
-
-def stop_helics_federate(fed):
-    print('finalizing HELICS', flush=True)
-    helics.helicsFederateDestroy(fed)
-    # status = helics.helicsFederateFinalize(fed)
-    # state = helics.helicsFederateGetState(fed)
-    # assert state == 3
-    # while helics.helicsBrokerIsConnected(None):
-    #   time.sleep(1)
-    # helics.helicsFederateFree(fed)
-    # helics.helicsCloseLibrary()
 
 
 def zoneMeterName(ldname):
@@ -68,6 +52,31 @@ def gld_strict_name(val):
     if val[0].isdigit():
         val = 'gld_' + val
     return val.replace('-', '_')
+
+
+def load_json_case(fname, FNCS=False):
+    """ Helper function to load PYPOWER case from a JSON file
+
+    Args:
+      fname (str): the JSON file to open
+
+    Returns:
+      dict: the loaded PYPOWER case structure
+    """
+    lp = open(fname, encoding='utf-8').read()
+    ppc = json.loads(lp)
+    ppc['bus'] = np.array(ppc['bus'])
+    ppc['gen'] = np.array(ppc['gen'])
+    ppc['branch'] = np.array(ppc['branch'])
+    ppc['areas'] = np.array(ppc['areas'])
+    ppc['gencost'] = np.array(ppc['gencost'])
+    if FNCS == True:
+        ppc['FNCS'] = np.array(ppc['FNCS'])
+    else:
+        ppc['DSO'] = np.array(ppc['DSO'])
+    ppc['UnitsOut'] = np.array(ppc['UnitsOut'])
+    ppc['BranchesOut'] = np.array(ppc['BranchesOut'])
+    return ppc
 
 
 class ClearingType(IntEnum):
