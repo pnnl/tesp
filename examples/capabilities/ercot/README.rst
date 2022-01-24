@@ -1,6 +1,4 @@
-# TESP Models for DSO+T Study
-
-Copyright (c) 2018-2022, Battelle Memorial Institute
+TESP Models for DSO+T Study
 
 These files implement 8-bus and 200-bus models of ERCOT for the FY19
 DSO+T study. The bulk system generation and loads were developed from public
@@ -34,3 +32,4 @@ The sub-directory structure is:
 - *case8* contains the complete 8-bus model; run simulations from here
 - *dist_system* contains the reduced-order feeder models; populate feeders with houses from here
 
+Copyright (c) 2018-2022, Battelle Memorial Institute
