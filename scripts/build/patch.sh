@@ -1,9 +1,5 @@
 #!/bin/bash
 
-if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
-fi
-
 if [[ -f "${2}" ]]; then
   cp "${2}" "${1}"/tesp_patch
   cd "${1}"

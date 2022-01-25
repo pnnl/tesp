@@ -23,6 +23,16 @@ fi
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 sudo make install
 
-# Install HELICS Python 3 bindings for a version that exactly matches the local build
+# Install HELICS Python3 bindings for a version that exactly matches the local build
 ver=$(helics_recorder --version)
-pip3 install helics=="${ver% *}"
+
+#version='1.2.33-main5675'
+#version='1.2.33 (1-12-20)'
+# replace points, split into array
+a=( ${ver//./ } )
+# trim element 2 by increment and decrement
+((a[2]++))
+((a[2]--))
+
+ver="${a[0]}.${a[1]}.${a[2]}"
+pip3 install helics=="${ver}"
