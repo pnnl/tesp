@@ -42,7 +42,7 @@ if [[ $1 == "develop" ]]; then
   ./fncs_java_b.sh clean > fncs_java.log 2>&1
 
   echo "Compiling and Installing HELICS..."
-  ./helics2_b.sh clean > helics2.log 2>&1
+  ./helics_b.sh clean > helics.log 2>&1
 
   echo "Compiling and Installing KLU..."
   ./klu_b.sh clean > klu.log 2>&1
