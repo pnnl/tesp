@@ -5,7 +5,7 @@ loadshed
 This directory contains Python and Java versions of a loadshed example on the 13-bus IEEE test feeder, modeled in GridLAB-D. In this model, a stand-alone external controller (`helicshed.py` and `helicshed.java`) send "OPEN" and "CLOSED" commands to a switch in the GridLAB-D model (`loadshed.glm`) through a simple two-node communication model in ns-3 (`loadshedCommNetwork.cc`).
 
 .. image:: ../../../doc/media/loadshed/loadshed_diagram.png
-    :width: 400
+    :width: 800
 
 
 It differs from the other examples, in not using the *tesp_support* Python package. Instead, three local source files have been provided as possible starting points in developing your own source files in Python or Java:
@@ -68,7 +68,7 @@ Results
 Running any of the above versions and plotting the results will yield the following graph.
 
 .. image:: ../../../doc/media/loadshed/loadshed_results.png
-    :width: 400
+    :width: 800
 
 
 
