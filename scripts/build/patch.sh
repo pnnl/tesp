@@ -1,23 +1,24 @@
 #!/bin/bash
 
-build="tesp/scripts/build"
+id="tesp/scripts/build/${2}.id"
+patch="tesp/scripts/build/${2}.patch"
 
+a=$(cat "$id")
 cd "${1}" || exit
-a=$(git rev-parse HEAD)
-b=$(cat "$build/${3}")
-
+b=$(git rev-parse HEAD)
 if [ "$a" = "$b" ]; then
-  echo "Repository has been installed to commit id on file"
+  echo "Repository has been installed to a commit id on file"
 else
-  git reset --hard "$b"
-  echo "Repository HEAD does not match, resetting to previous commit id on file"
+  echo "Repository HEAD does not match, resetting to a commit id on file"
+  git reset --hard "$a"
 fi
 
-if [ -f "$build/${2}" ]; then
-  if [ -s "$build/${2}" ]; then
-    cp "$build/${2}" "${1}"/tesp_patch
+cd - > /dev/null || exit
+if [ -f "$patch" ]; then
+  if [ -s "$patch" ]; then
+    cp "$patch" "${1}/tesp.patch"
     cd "${1}" || exit
-    git apply tesp_patch
+    git apply tesp.patch
     echo "Apply patches for repository ${1}"
   fi
 fi

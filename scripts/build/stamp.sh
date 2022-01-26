@@ -1,6 +1,10 @@
 #!/bin/bash
 
-build=${TESPDIR}/scripts/build
+if [[ -z ${INSTDIR} ]]; then
+  . "${HOME}/tespEnv"
+fi
+
+build="${TESPDIR}/scripts/build"
 cd "${REPODIR}" || exit
 
 for dir in *

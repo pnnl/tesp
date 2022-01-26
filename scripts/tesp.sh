@@ -100,13 +100,13 @@ echo ++++++++++++++ TESP
 git clone -b evolve https://github.com/pnnl/tesp.git
 # need for back port of DSOT
 # git clone -b main https://stash.pnnl.gov/scm/tesp/tesp-private.git
-./tesp/scripts/build/patch.sh tesp tesp.patch tesp.id
+#./tesp/scripts/build/patch.sh tesp tesp
 
 echo
 echo ++++++++++++++ PSST
 # git clone https://github.com/ames-market/psst.git
 git clone https://github.com/ames-market/AMES-V5.0.git
-./tesp/scripts/build/patch.sh AMES-V5.0 AMES-V5.0.patch AMES-V5.0.id
+./tesp/scripts/build/patch.sh AMES-V5.0 AMES-V5.0
 
 if [[ $binaries == "develop" ]]; then
   echo
@@ -114,42 +114,42 @@ if [[ $binaries == "develop" ]]; then
   git clone -b feature/opendss https://github.com/FNCS/fncs.git
   #For dsot
   #git clone -b develop https://github.com/FNCS/fncs.git
-  ./tesp/scripts/build/patch.sh fncs fncs.patch fncs.id
+  ./tesp/scripts/build/patch.sh fncs fncs
 
   echo
   echo ++++++++++++++ HELICS
   #git clone -b helics2 https://github.com/GMLC-TDC/HELICS-src
   git clone -b main https://github.com/GMLC-TDC/HELICS-src
-  ./tesp/scripts/build/patch.sh HELICS-src HELICS-src.patch HELICS-src.id
+  ./tesp/scripts/build/patch.sh HELICS-src HELICS-src
 
   echo
   echo ++++++++++++++ GRIDLAB
   #develop - dec21 commit number for dsot
   #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
   git clone -b develop https://github.com/gridlab-d/gridlab-d.git
-  ./tesp/scripts/build/patch.sh gridlab-d gridlab-d.patch gridlab-d.id
+  ./tesp/scripts/build/patch.sh gridlab-d gridlab-d
 
   echo
   echo ++++++++++++++ ENERGYPLUS
   git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
-  ./tesp/scripts/build/patch.sh EnergyPlus EnergyPlus.patch EnergyPlus.id
+  ./tesp/scripts/build/patch.sh EnergyPlus EnergyPlus
 
   echo
   echo ++++++++++++++ NS-3
   git clone https://gitlab.com/nsnam/ns-3-dev.git
-  ./tesp/scripts/build/patch.sh ns-3-dev ns-3-dev.patch ns-3-dev.id
+  ./tesp/scripts/build/patch.sh ns-3-dev ns-3-dev
 
   echo
   echo ++++++++++++++ HELICS-NS-3
   cd ns-3-dev || exit
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
   cd ..
-  ./tesp/scripts/build/patch.sh ns-3-dev/contrib/helics helics-ns3.patch helics-ns3.id
+  ./tesp/scripts/build/patch.sh ns-3-dev/contrib/helics helics-ns3
 
   echo
   echo ++++++++++++++ Python Bindings Generator
   git clone https://github.com/gjcarneiro/pybindgen.git
-  ./tesp/scripts/build/patch.sh pybindgen pybindgen.patch pybindgen.id
+  ./tesp/scripts/build/patch.sh pybindgen pybindgen
 
   echo
   echo ++++++++++++++ KLU SOLVER
