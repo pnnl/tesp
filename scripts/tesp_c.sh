@@ -24,7 +24,7 @@ pip3 install -e . > "${TESPDIR}/scripts/build/tespapi.log" 2>&1
 echo "Installing Python PSST..."
 #cd "${REPODIR}/psst" || exit
 cd "${REPODIR}/AMES-V5.0/psst" || exit
-pip3 install -e . > "${TESPDIR}/scripts/build/psst.log" 2>&1
+pip3 install -e . > "${TESPDIR}/scripts/build/AMES-V5.0.log" 2>&1
 
 #  pip3 install tesp_support --upgrade
 #  pip3 install psst --upgrade
@@ -39,25 +39,25 @@ if [[ $1 == "develop" ]]; then
   ./fncs_b.sh clean > fncs.log 2>&1
 
   echo "Compiling and Installing FNCS for Java..."
-  ./fncs_java_b.sh clean > fncs_java.log 2>&1
+  ./fncs_java_b.sh clean > fncs_j.log 2>&1
 
   echo "Compiling and Installing HELICS..."
-  ./helics_b.sh clean > helics.log 2>&1
+  ./helics_b.sh clean > HELICS-src.log 2>&1
 
   echo "Compiling and Installing KLU..."
-  ./klu_b.sh clean > klu.log 2>&1
+  ./klu_b.sh clean > KLU_DLL 2>&1
 
   echo "Compiling and Installing Gridlabd..."
-  ./gridlabd_b.sh clean > gridlabd.log 2>&1
+  ./gridlabd_b.sh clean > gridlab-d.log 2>&1
 
   echo "Compiling and Installing EnergyPlus..."
-  ./energyplus_b.sh clean > energyplus.log 2>&1
+  ./energyplus_b.sh clean > EnergyPlus.log 2>&1
 
   echo "Compiling and Installing EnergyPlus for Java..."
-  ./energyplusj_b.sh clean > energyplusj.log 2>&1
+  ./energyplusj_b.sh clean > EnergyPlus_j.log 2>&1
 
   echo "Compiling and Installing NS-3..."
-  ./ns-3_b.sh clean > ns3.log 2>&1
+  ./ns-3_b.sh clean > ns-3-dev.log 2>&1
 
   echo "Compiling and Installing Ipopt with ASL and Mumps..."
   ./ipopt_b.sh clean > ipopt.log 2>&1
