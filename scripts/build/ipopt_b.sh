@@ -33,6 +33,7 @@ fi
 echo
 echo "===== Make coin-or's third party ASL ====="
 cd "${WAREDIR}/ThirdParty-ASL" || exit
+sed -i "s:wgetcmd="wget":wgetcmd="wget --no-check-certificate":g" ./get.ASL
 ./get.ASL
 ./configure --prefix="${INSTDIR}"
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
@@ -41,6 +42,7 @@ sudo make install
 echo
 echo "===== Make coin-or's third party Mumps ====="
 cd "${WAREDIR}/ThirdParty-Mumps" || exit
+sed -i "s:wgetcmd="wget":wgetcmd="wget --no-check-certificate":g" ./get.ASL
 ./get.Mumps
 ./configure --prefix="${INSTDIR}"
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
