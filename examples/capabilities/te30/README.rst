@@ -76,12 +76,12 @@ Bulk Power System Generators (PYPOWER)
 ......................................
 Base case
 
-.. image:: ../../../doc/media/te30/te30_H0_Generator.png
+.. image:: ../../../doc/media/te30/te30_H0_Generators.png
     :width: 800
 
 Transactive case
 
-.. image:: ../../../doc/media/te30/te30_H1_Generator.png
+.. image:: ../../../doc/media/te30/te30_H1_Generators.png
     :width: 800
 
 
@@ -90,12 +90,12 @@ Residential HVAC (GridLAB-D)
 ............................
 Base case
 
-.. image:: ../../../doc/media/te30/te30_H0_HVAC.png
+.. image:: ../../../doc/media/te30/te30_H0_HVACs.png
     :width: 800
 
 Transactive case
 
-.. image:: ../../../doc/media/te30/te30_H1_HVAC.png
+.. image:: ../../../doc/media/te30/te30_H1_HVACs.png
     :width: 800
     
     
@@ -116,12 +116,12 @@ Residential Votlage (GridLAB-D)
 ............................
 Base case
 
-.. image:: ../../../doc/media/te30/te30_H0_Voltage.png
+.. image:: ../../../doc/media/te30/te30_H0_Voltages.png
     :width: 800
 
 Transactive case
 
-.. image:: ../../../doc/media/te30/te30_H1_Voltage.png
+.. image:: ../../../doc/media/te30/te30_H1_Voltages.png
     :width: 800
 
 
