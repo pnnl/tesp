@@ -46,10 +46,12 @@ Running any of the above versions and plotting the results will yield the follow
 Transactive HVAC Controllers
 .............................
 Base case
+
 .. image:: ../../../doc/media/te30/te30_H0_Controllers.png
     :width: 800
 
 Transactive case
+
 .. image:: ../../../doc/media/te30/te30_H1_Controllers.png
     :width: 800
     
@@ -59,10 +61,12 @@ Transactive case
 School (EnergyPlus)
 ...................
 Base case
+
 .. image:: ../../../doc/media/te30/te30_H0_EnergyPlus.png
     :width: 800
 
 Transactive case
+
 .. image:: ../../../doc/media/te30/te30_H1_EnergyPlus.png
     :width: 800
 
@@ -71,10 +75,12 @@ Transactive case
 Bulk Power System Generators (PYPOWER)
 ......................................
 Base case
+
 .. image:: ../../../doc/media/te30/te30_H0_Generator.png
     :width: 800
 
 Transactive case
+
 .. image:: ../../../doc/media/te30/te30_H1_Generator.png
     :width: 800
 
@@ -83,10 +89,12 @@ Transactive case
 Residential HVAC (GridLAB-D)
 ............................
 Base case
+
 .. image:: ../../../doc/media/te30/te30_H0_HVAC.png
     :width: 800
 
 Transactive case
+
 .. image:: ../../../doc/media/te30/te30_H1_HVAC.png
     :width: 800
     
@@ -94,10 +102,12 @@ Transactive case
 Rooftop Solar PV (GridLAB-D)
 ............................
 Base case
+
 .. image:: ../../../doc/media/te30/te30_H0_Inverters.png
     :width: 800
 
 Transactive case
+
 .. image:: ../../../doc/media/te30/te30_H1_Inverters.png
     :width: 800
     
@@ -105,10 +115,12 @@ Transactive case
 Residential Votlage (GridLAB-D)
 ............................
 Base case
+
 .. image:: ../../../doc/media/te30/te30_H0_Voltage.png
     :width: 800
 
 Transactive case
+
 .. image:: ../../../doc/media/te30/te30_H1_Voltage.png
     :width: 800
 
