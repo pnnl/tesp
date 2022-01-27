@@ -33,31 +33,32 @@ cd "${TESPDIR}/scripts/build" || exit
 if [[ $1 == "develop" ]]; then
 
   echo "Installing Python Sphinx for documentation..."
-  pip3 install recommonmark sphinx-jsonschema sphinx-bibtex sphinxcontrib-bibtex >> "${TESPDIR}/scripts/build/pylib.log" 2>&1
+  pip3 install recommonmark sphinx-jsonschema sphinx_rtd_theme sphinxcontrib-bibtex >> "${TESPDIR}/scripts/build/pylib.log" 2>&1
+  #  ./docs_b.sh clean > docs.log 2>&1
 
   echo "Compiling and Installing FNCS..."
   ./fncs_b.sh clean > fncs.log 2>&1
 
   echo "Compiling and Installing FNCS for Java..."
-  ./fncs_java_b.sh clean > fncs_j.log 2>&1
+  ./fncs_j_b.sh clean > fncs_j.log 2>&1
 
   echo "Compiling and Installing HELICS..."
-  ./helics_b.sh clean > HELICS-src.log 2>&1
+  ./HELICS-src_b.sh clean > HELICS-src.log 2>&1
 
   echo "Compiling and Installing KLU..."
-  ./klu_b.sh clean > KLU_DLL 2>&1
+  ./KLU_DLL_b.sh clean > KLU_DLL.log 2>&1
 
   echo "Compiling and Installing Gridlabd..."
-  ./gridlabd_b.sh clean > gridlab-d.log 2>&1
+  ./gridlab-d_b.sh clean > gridlab-d.log 2>&1
 
   echo "Compiling and Installing EnergyPlus..."
-  ./energyplus_b.sh clean > EnergyPlus.log 2>&1
+  ./EnergyPlus_b.sh clean > EnergyPlus.log 2>&1
 
   echo "Compiling and Installing EnergyPlus for Java..."
-  ./energyplusj_b.sh clean > EnergyPlus_j.log 2>&1
+  ./EnergyPlus_j_b.sh clean > EnergyPlus_j.log 2>&1
 
   echo "Compiling and Installing NS-3..."
-  ./ns-3_b.sh clean > ns-3-dev.log 2>&1
+  ./ns-3-dev_b.sh clean > ns-3-dev.log 2>&1
 
   echo "Compiling and Installing Ipopt with ASL and Mumps..."
   ./ipopt_b.sh clean > ipopt.log 2>&1
