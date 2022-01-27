@@ -32,3 +32,7 @@ if [ -d "$dir" ]; then
   echo "...$name"
   cd "${REPODIR}" || exit
 fi
+
+echo "Creating tesp_binaries.zip for installed binaries on TESP install"
+cd "${INSTDIR}" || exit
+zip -r -9 tesp_binaries.zip . &> binaries.log &
