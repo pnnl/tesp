@@ -1,75 +1,82 @@
+========
+loadshed
+========
 
-This directory contains Python and Java versions of a
-loadshed example on the 13-bus IEEE test feeder, modeled
-in GridLAB-D. It differs from the other examples, in
-not using the *tesp_support* Python package. Instead, three
-local source files have been provided as possible starting
-points in developing your own source files in Python or Java:
+Co-Simulation Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+This directory contains Python and Java versions of a loadshed example on the 13-bus IEEE test feeder, modeled in GridLAB-D. In this model, a stand-alone external controller (`helicshed.py` and `helicshed.java`) send "OPEN" and "CLOSED" commands to a switch in the GridLAB-D model (`loadshed.glm`) through a simple two-node communication model in ns-3 (`loadshedCommNetwork.cc`).
 
-- *loadshed.py* is a loadshedding agent, implemented in Python for FNCS. Test with *run.sh*. A local copy of *fncs.py* is provided, so this example runs without importing the *tesp_support* package.
-- *loadshed.java* is the same loadshedding agent, implemented in Java for FNCS. Test with *runjava.sh*
-- *helicshed0.py* is the same loadshedding agent, implemented in Python for HELICS. Test with *runhpy0.sh*
-- *helicshed.java* is the same loadshedding agent, implemented in Java for HELICS. Test with *runhjava.sh*
-- *helicshed.py* is the same loadshedding agent, implemented in Python for HELICS with ns-3. Test with *runhpy.sh*
-- *plot_loadshed.py* is a plotting program for the simulation results
-- *kill5570.sh* is a helper script that shuts down a TESP federation
-- *kill23404.sh* is a helper script that shuts down a HELICS federation
-- Various JSON files are used to configure the HELICS federates for *runhpy0.sh* and *runhpy.sh* and *runhjava.sh*
-- Various TXT files are used to configure helics_recorder for tracing output
-- *Makefile* builds the ns-3 federate for *runhpy.sh*.
-- *loadshedCommNetwork.cc* is the ns-3 federate source code. Note that ns-3 logging is enabled only if ns-3 was built in debug mode.
-- *loadshed.glm* is the IEEE 13-bus model for GridLAB-D, configured to run as a FNCS or HELICS federate with various options
-- *loadshed_dict.json* supports plotting the GridLAB-D metrics
-- *killtesp.sh* is an alternative method of shutting down the TESP federation by process ID (pid) rather than by the port (5570 or 23404), Currently, only *runhpy.sh* captures pids to a file for use by this script.
+.. image:: ../../../doc/media/loadshed/loadshed_co-sim_diagram.png
+    :width: 800
 
-loadshed - verify GridLAB-D and Python over HELICS 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running the Demonstration
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Results should be identical to other versions of this example.
-Before running, the *clean* command will remove any existing results.
-
+loadshed - verify GridLAB-D, ns-3 and Python over HELICS 
+........................................................
 ::
 
- cd ~/tesp/examples/loadshed
- ./clean.sh
+ cd ~/tesp/repository/tesp/examples/capabilities/loadshedh
+ ./clean.sh # Removes any left-over results and log files
  ./runhpy.sh
- python3 plot_loadshed.py loadshed
+ ./plot.sh
 
 
-loadshed - verify GridLAB-D and Python over HELICS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Results should be identical to other versions of this example.
-Before running, the *clean* command will remove any existing results.
-
+loadshed - Python without ns-3
+........................................................
 ::
 
- cd ~/tesp/examples/loadshed
- ./clean.sh
+ cd ~/tesp/repository/tesp/examples/capabilities/loadshedh
+ ./clean.sh # Removes any left-over results and log files
  ./runhpy0.sh
- python3 plot_loadshed.py loadshed
+ ./plot.sh
 
 
-loadshed - verify GridLAB-D and Java over HELICS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Results should be identical to other versions of this example.
-Before running, the *clean* command will remove any existing results.
-
+loadshed - verify GridLAB-D, ns3 and Java over HELICS
+........................................................
 ::
 
- cd ~/tesp/examples/loadshed
+ cd ~/tesp/repository/tesp/examples/capabilities/loadshedh
  ./clean.sh
  ./runhjava.sh
- python3 plot_loadshed.py loadshed
+ ./plot.sh
 
 
+Results
+~~~~~~~
+Running any of the above versions and plotting the results will yield the following graph.
 
-If you're interested in C++ agent development, the GitHub
-source code for *eplus_json*, under *tesp/src/energyplus*,
-may provide a useful starting point. *eplus_json* handles
-time synchronization, FNCS publish, FNCS subscribe, and
-generating JSON output files with metrics.
+.. image:: ../../../doc/media/loadshed/loadshed_results.png
+    :width: 800
+
+
+File Listing
+~~~~~~~~~~~~
+It differs from the other examples, in not using the *tesp_support* Python package. Instead, three local source files have been provided as possible starting points in developing your own source files in Python or Java.
+
+* *clean.sh* - shell script that deletes any existing results and log file in the current directory.
+* *helics_gld_msg0.json* - GridLAB-D configuration file when running without ns-3. 
+* *helics_gld_msg.json* - GridLAB-D configuration file when running with ns-3.
+* *helics_gld_msg_no_pub.json* 
+* *helics_gld_msg_old_island.json* 
+* *helicshed0.py* is the same loadshedding agent, implemented in Python for HELICS. Test with *runhpy0.sh*
+* *helicshed.java* is the same loadshedding agent, implemented in Java for HELICS. Test with *runhjava.sh*
+* *helicshed.py* is the same loadshedding agent, implemented in Python for HELICS with ns-3. Test with *runhpy.sh*
+* *helicsRecorder.json* - HELICS configuration file for the helics_recorder used to capture the switch commands.
+* *loadshedCommNetwork.cc* - ns-3 federate source code. Note that ns-3 logging is enabled only if ns-3 was built in debug mode.
+* *loadshedCommNetworkConfig.json* - HELICS configuration file for the ns-3 federate.
+* *loadshedConfig.json* - HELICS configuration file for the Python or Java federate
+* *loadshed_dict.json*
+* *loadshed.glm* - GridLAB-D model of the IEEE 13-bus feeder containing the switch being controlled by the Python or Java controllers.
+* *Makefile* - defines the build process for the ns-3 model
+* *plot_loadshed.py* - plotting program for the simulation results
+* *plot.sh* - shell script used to plot the results
+* *README.rst* - This file
+* *runjava.sh* - launcher script for running the loadshed demo using a Java loadshed agent.
+* *runhpy0.sh* - launcher script for running the loadshed demo using a Python agent without using the ns-3 communication network model.
+* *runhpy.sh* - launcher script for running the loadshed demo using a Python agent include the ns-3 communication model.
+
+
 
 Copyright (c) 2017-2022, Battelle Memorial Institute
 
