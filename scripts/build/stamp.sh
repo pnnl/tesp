@@ -7,6 +7,7 @@ fi
 build="${TESPDIR}/scripts/build"
 cd "${REPODIR}" || exit
 
+echo "Stamping commit ids for:"
 for dir in *
 do
   if [ -d "$dir" ]; then
@@ -15,6 +16,7 @@ do
       cd "$dir" || exit
       git rev-parse HEAD > "$build/$dir.id"
       git diff > "$build/$dir.patch"
+      echo "...$dir"
       cd "${REPODIR}" || exit
     fi
   fi
@@ -27,5 +29,6 @@ if [ -d "$dir" ]; then
   cd "$dir" || exit
   git rev-parse HEAD > "$build/$name.id"
   git diff > "$build/$name.patch"
+  echo "...$name"
   cd "${REPODIR}" || exit
 fi

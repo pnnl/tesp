@@ -5,7 +5,7 @@ if [[ -z ${INSTDIR} ]]; then
 fi
 
 cd "${REPODIR}/pybindgen" || exit
-sudo python3 setup.py install
+pip3 install .
 
 cd "${REPODIR}/ns-3-dev" || exit
 # first build: use the following command for HELICS interface to ns3:
