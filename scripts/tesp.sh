@@ -164,5 +164,6 @@ fi
 # to Run pycharm
 # pycharm-community &> ~/charm.log&
 
+cd "$TESPDIR"/script || exit
 # Compile all relevant executables
 ./tesp_c.sh $binaries
