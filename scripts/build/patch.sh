@@ -1,7 +1,11 @@
 #!/bin/bash
 
-id="tesp/scripts/build/${2}.id"
-patch="tesp/scripts/build/${2}.patch"
+if [[ -z ${INSTDIR} ]]; then
+  . "${HOME}/tespEnv"
+fi
+
+id="${TESPBUILD}/${2}.id"
+patch="${TESPBUILD}/${2}.patch"
 
 a=$(cat "$id")
 cd "${1}" || exit

@@ -2,9 +2,12 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: testhelicsjava.sh
 
-JAVAPATH=$INSTDIR/java
+if [[ -z ${INSTDIR} ]]; then
+  . "${HOME}/tespEnv"
+fi
 
-cd $TESPDIR/scripts/helpers
+JAVAPATH=${INSTDIR}/java
 
+cd "${TESPHELPR}"
 javac -classpath ".:$JAVAPATH/helics.jar" test_helics.java
 java -classpath ".:$JAVAPATH/helics.jar" -Djava.library.path="$JAVAPATH" test_helics

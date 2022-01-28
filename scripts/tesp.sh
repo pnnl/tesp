@@ -25,6 +25,7 @@
 
 
 while true; do
+    # shellcheck disable=SC2162
     read -p "Do you wish to build the binaries? " yn
     case $yn in
         [Yy]* ) binaries=develop; break;;
@@ -75,17 +76,6 @@ sudo apt-get -y install python3-tk
 
 
 echo
-echo "Set create directory structure for TESP"
-cd "${HOME}" || exit
-mkdir -p tesp
-cd tesp || exit
-mkdir -p repository
-mkdir -p installed
-mkdir -p software
-# Download all relevant repositories
-cd repository || exit
-
-echo
 if [[ -z $1 && -z $2 ]]; then
   echo "No user name set for git repositories!"
 else
@@ -95,18 +85,30 @@ else
 fi
 git config --global credential.helper store
 
+
 echo
+echo "Create directory structure for TESP"
+cd "${HOME}" || exit
+mkdir -p tesp
+cd tesp || exit
+mkdir -p repository
+mkdir -p installed
+mkdir -p software
+cd repository || exit
+
 echo ++++++++++++++ TESP
 git clone -b evolve https://github.com/pnnl/tesp.git
-# need for back port of DSOT
-# git clone -b main https://stash.pnnl.gov/scm/tesp/tesp-private.git
-#./tesp/scripts/build/patch.sh tesp tesp
+echo "Copy TESP environment variables to $HOME/tespEnv for shell scripts"
+cp tesp/scripts/tespEnv "$HOME/"
+. "${HOME}/tespEnv"
 
+echo
+echo "Download all relevant repositories..."
 echo
 echo ++++++++++++++ PSST
 # git clone https://github.com/ames-market/psst.git
 git clone https://github.com/ames-market/AMES-V5.0.git
-./tesp/scripts/build/patch.sh AMES-V5.0 AMES-V5.0
+"${TESPBUILD}"/patch.sh AMES-V5.0 AMES-V5.0
 
 if [[ $binaries == "develop" ]]; then
   echo
@@ -114,42 +116,42 @@ if [[ $binaries == "develop" ]]; then
   git clone -b feature/opendss https://github.com/FNCS/fncs.git
   #For dsot
   #git clone -b develop https://github.com/FNCS/fncs.git
-  ./tesp/scripts/build/patch.sh fncs fncs
+  "${TESPBUILD}"/patch.sh fncs fncs
 
   echo
   echo ++++++++++++++ HELICS
   #git clone -b helics2 https://github.com/GMLC-TDC/HELICS-src
   git clone -b main https://github.com/GMLC-TDC/HELICS-src
-  ./tesp/scripts/build/patch.sh HELICS-src HELICS-src
+  "${TESPBUILD}"/patch.sh HELICS-src HELICS-src
 
   echo
   echo ++++++++++++++ GRIDLAB
   #develop - dec21 commit number for dsot
   #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
   git clone -b develop https://github.com/gridlab-d/gridlab-d.git
-  ./tesp/scripts/build/patch.sh gridlab-d gridlab-d
+  "${TESPBUILD}"/patch.sh gridlab-d gridlab-d
 
   echo
   echo ++++++++++++++ ENERGYPLUS
   git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
-  ./tesp/scripts/build/patch.sh EnergyPlus EnergyPlus
+  "${TESPBUILD}"/patch.sh EnergyPlus EnergyPlus
 
   echo
   echo ++++++++++++++ NS-3
   git clone https://gitlab.com/nsnam/ns-3-dev.git
-  ./tesp/scripts/build/patch.sh ns-3-dev ns-3-dev
+  "${TESPBUILD}"/patch.sh ns-3-dev ns-3-dev
 
   echo
   echo ++++++++++++++ HELICS-NS-3
   cd ns-3-dev || exit
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
   cd ..
-  ./tesp/scripts/build/patch.sh ns-3-dev/contrib/helics helics-ns3
+  "${TESPBUILD}"/patch.sh ns-3-dev/contrib/helics helics-ns3
 
   echo
   echo ++++++++++++++ Python Bindings Generator
   git clone https://github.com/gjcarneiro/pybindgen.git
-  ./tesp/scripts/build/patch.sh pybindgen pybindgen
+  "${TESPBUILD}"/patch.sh pybindgen pybindgen
 
   echo
   echo ++++++++++++++ KLU SOLVER
@@ -162,8 +164,5 @@ fi
 # to Run pycharm
 # pycharm-community &> ~/charm.log&
 
-cd tesp/scripts || exit
-# Copy TESP environment to $HOME for shell scripts
-cp tespEnv "$HOME/"
 # Compile all relevant executables
 ./tesp_c.sh $binaries

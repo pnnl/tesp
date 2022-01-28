@@ -1,9 +1,12 @@
 
 # TESP exports
-export WAREDIR=$HOME/tesp/software
-export REPODIR=$HOME/tesp/repository
+export TESPDIR=$HOME/tesp/repository/tesp
 export INSTDIR=$HOME/tesp/installed
-export TESPDIR=$REPODIR/tesp
+export REPODIR=$HOME/tesp/repository
+export WAREDIR=$HOME/tesp/software
+export TESPBUILD=$TESPDIR/scripts/build
+export TESPHELPR=$TESPDIR/scripts/helpers
+
 export GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
 export FNCS_INCLUDE_DIR=$INSTDIR/include
 export FNCS_LIBRARY=$INSTDIR/lib
@@ -22,7 +25,7 @@ export PATH=$PATH:$INSTDIR/bin
 export PATH=$PATH:$INSTDIR/energyplus
 export PATH=$PATH:$INSTDIR/energyplus/PreProcess
 export PATH=$PATH:$INSTDIR/energyplus/PostProcess
-export PATH=$PATH:$TESPDIR/scripts/helpers
+export PATH=$PATH:$TESPHELPR
 
 # PSST environment variables
 export PSST_SOLVER=cbc
