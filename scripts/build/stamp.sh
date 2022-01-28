@@ -35,4 +35,4 @@ fi
 echo "Creating tesp_binaries.zip for installed binaries on TESP install"
 cd "${INSTDIR}" || exit
 zip -r -9 "${TESPBUILD}/tesp_binaries.zip" . &> "${TESPBUILD}/tesp_binaries.log" &
-pip3 list > "${TESPBUILD}/tesp_pypi.lst"
+pip3 list > "${TESPBUILD}/tesp_pypi.id"

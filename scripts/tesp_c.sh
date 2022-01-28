@@ -13,9 +13,9 @@ echo
 
 # Install all pip libraries
 echo "Installing Python Libraries..."
-pip3 install wheel colorama glm seaborn matplotlib networkx numpy pandas pulp  > "${TESPBUILD}/pylib.log" 2>&1
-pip3 install pyutilib==5.8.0 pyomo==5.6.8 PYPOWER scikit-learn scipy tables h5py xlrd >> "${TESPBUILD}/pylib.log" 2>&1
-pip3 install recommonmark sphinx-jsonschema sphinx_rtd_theme sphinxcontrib-bibtex >> "${TESPBUILD}/pylib.log" 2>&1
+pip3 install wheel colorama glm seaborn matplotlib networkx numpy pandas pulp xlrd > "${TESPBUILD}/tesp_pypi.log" 2>&1
+pip3 install pyutilib==5.8.0 pyomo==5.6.8 PYPOWER scikit-learn scipy tables h5py >> "${TESPBUILD}/tesp_pypi.log" 2>&1
+pip3 install recommonmark sphinx-jsonschema sphinx-rtd-theme sphinxcontrib-bibtex >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 
 #develop tesp api
 echo "Installing Python TESP API..."
