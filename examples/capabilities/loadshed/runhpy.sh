@@ -3,7 +3,7 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: runhpy.sh
 
-#(exec helics_broker -f 3 --loglevel=4 --name=mainbroker &> broker.log & jobs -p > tesp.pid)
+#(exec helics_broker -f 3 --loglevel=warning --name=mainbroker &> broker.log & jobs -p > tesp.pid)
 #(exec gridlabd -D NEW_ISLANDING -D WANT_HELICS_NS3 loadshed.glm &> gridlabd.log & jobs -p >> tesp.pid)
 #(export 'NS_LOG=loadshedCommNetwork:HelicsApplication:HelicsFilterApplication:HelicsIdTag:HelicsSimulatorImpl:HelicsStaticSinkApplication:HelicsStaticSourceApplication=level_all|prefix_func|prefix_time' && exec loadshedCommNetwork --helicsConfigFile=loadshedCommNetworkConfig.json --simulationRunTime=21600.0 &> network.log & jobs -p >> tesp.pid)
 #(exec python3 helicshed.py &> loadshed.log & jobs -p >> tesp.pid)
