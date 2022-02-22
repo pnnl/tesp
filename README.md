@@ -4,7 +4,7 @@ Copyright (c) 2017-2022, Battelle Memorial Institute
 
 Documentation: http://tesp.readthedocs.io
 
-License: https://github.com/pnnl/tesp/blob/master/LICENSE
+License: https://github.com/pnnl/tesp/blob/main/LICENSE
 
 TESP provides a set of simulation tools and example implementations of transactive systems to provide a means of more easily developing and evaluating transactive systems. TESP utilizes the HELICS co-simulation framework to enable coordination between a number of simulation tools: GridLAB-D, EnergyPlus v9.3, AMES/PSST, PYPOWER and ns-3 (optimized build with logging enabled). TESP comes with several test cases, including the NIST TE Challenge 2, the SGIP use case 1, and an 8-bus test system for ERCOT. There are examples of the double-auction
 real-time market in real-time and day-ahead modes, and a transactive consensus mechanism for large buildings. The intended use case for TESP is to focus on the development and testing

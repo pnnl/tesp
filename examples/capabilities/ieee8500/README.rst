@@ -140,4 +140,4 @@ interpreting the other files in this directory.
 
 Copyright (c) 2017-2022, Battelle Memorial Institute
 
-License: https://github.com/pnnl/tesp/blob/master/LICENSE
+License: https://github.com/pnnl/tesp/blob/main/LICENSE
