@@ -38,6 +38,6 @@ To use TMY2 files, one shall directly call the TMY2EPW.py.
 
 Copyright (c) 2017-2022, Battelle Memorial Institute
 
-License: https://github.com/pnnl/tesp/blob/master/LICENSE
+License: https://github.com/pnnl/tesp/blob/main/LICENSE
 
 

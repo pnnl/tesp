@@ -51,6 +51,6 @@ generating JSON output files with metrics.
 
 Copyright (c) 2017-2022, Battelle Memorial Institute
 
-License: https://github.com/pnnl/tesp/blob/master/LICENSE
+License: https://github.com/pnnl/tesp/blob/main/LICENSE
 
 
