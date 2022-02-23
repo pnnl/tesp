@@ -321,7 +321,7 @@ def tso_loop(casename):
             os.rename(psst_case, fle)
 
         dispatch = {}
-        if outcomes[1] is 'optimal':
+        if outcomes[1] == 'optimal':
             status = True
             for g in sorted(instance.Generators.value):
                 dispatch[g] = []
@@ -489,7 +489,7 @@ def tso_loop(casename):
             uc.close()
 
         dispatch = {}
-        if outcomes[1] is 'optimal':
+        if outcomes[1] == 'optimal':
             status = True
             for g in sorted(instance.Generators.value):
                 dispatch[g] = []
