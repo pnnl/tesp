@@ -526,6 +526,7 @@ values:
     if not freshdir:
         return
 
+    # ====================================================================
     # FNCS shell scripts and chmod for Mac/Linux - need to specify python3
     aucline = """python3 -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
     ppline = """python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
@@ -563,6 +564,7 @@ values:
     # shfile = casedir + '/clean.sh'
     # os.chmod (shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
+    # ======================================================================
     # HELICS shell scripts and chmod for Mac/Linux - need to specify python3
     PypowerConfigFile = 'pypowerConfig.json'
     SubstationConfigFile = casename + '_HELICS_substation.json'
@@ -580,7 +582,7 @@ values:
         #      print ('#(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent', EpAgentStop, EpAgentStep,
         #             EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo, 'helics_eplus_agent.json &> dual_eplus_agent.log &)', file=op)
         #      print ('# HELICS federation is GridLAB-D, PYPOWER, substation, weather, E+ and E+ agent', file=op)
-        print('(exec helics_broker -f 6 --loglevel=4 --name=mainbroker &> broker.log &)', file=op)
+        print('(exec helics_broker -f 6 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
         print(
             '(export HELICS_CONFIG_FILE=eplus.json && exec energyplus -w ' + EpWeather + ' -d output Merged.idf &> eplus.log &)',
             file=op)
@@ -588,7 +590,7 @@ values:
               EpLimLo,
               'eplus_agent.json &> eplus_agent.log &)', file=op)
     else:
-        print('(exec helics_broker -f 4 --loglevel=4 --name=mainbroker &> broker.log &)', file=op)
+        print('(exec helics_broker -f 4 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
     print('(exec gridlabd -D USE_HELICS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' &> gld1.log &)', file=op)
     print('(exec ' + aucline + ' &> sub1.log &)', file=op)
     print('(exec ' + ppline + ' &> pypower.log &)', file=op)

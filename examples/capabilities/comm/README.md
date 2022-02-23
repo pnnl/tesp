@@ -94,4 +94,4 @@ Layout of the full-order feeder models used in this example.
 
 Copyright (c) 2017-2022, Battelle Memorial Institute
 
-License: https://github.com/pnnl/tesp/blob/master/LICENSE
+License: https://github.com/pnnl/tesp/blob/main/LICENSE

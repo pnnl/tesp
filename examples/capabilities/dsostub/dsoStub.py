@@ -1,88 +1,226 @@
-import json
-import logging as log
-import os
+# Copyright (C) 2017-2022 Battelle Memorial Institute
+# file: dsoStub.py
 
-import tesp_support.fncs as fncs
+import json
+import helics
+
+import logging as log
+
 from tesp_support.helpers import load_json_case
 from tesp_support.helpers import parse_mva
 
 
-def dso_make_yaml(casename):
+def dso_make_stub(casename):
     log.info('Reading configuration...')
     ppc = load_json_case(casename + '.json', True)
     port = str(ppc['port'])
     nd = ppc['FNCS'].shape[0]
 
-    # write player yaml(s) for load and generator players
+    # write player helics config.json file for load and generator players
     players = ppc["players"]
     for idx in range(len(players)):
         player = ppc[players[idx]]
-        yamlfile = player[0] + '_player.yaml'
-        yp = open(yamlfile, 'w')
-        print('name: ' + player[0] + 'player', file=yp)
-        print('time_delta: 15s', file=yp)
-        print('broker: tcp://localhost:' + port, file=yp)
-        print('aggregate_sub: true', file=yp)
-        print('aggregate_pub: true', file=yp)
+        jsonfile = player[0] + '_player_h.json'
+        yp = open(jsonfile, 'w')
+        print('{', file=yp)
+        print('  "name": "' + player[0] + 'player",', file=yp)
+        print('  "period": 15.0,', file=yp)
+        print('  "publications": [', file=yp)
+        if player[8]:
+            # load
+            comma = ","
+            for i in range(nd):
+                bs = str(i + 1)
+                print('    {', file=yp)
+                print('      "global": false,', file=yp)
+                print('      "key": "' + player[0] + '_load_' + bs + '",', file=yp)
+                print('      "type": "string"', file=yp)
+                print('    },', file=yp)
+                print('    {', file=yp)
+                print('      "global": false,', file=yp)
+                print('      "key": "' + player[0] + "_ld_hist_" + bs + '",', file=yp)
+                print('      "type": "string"', file=yp)
+                if nd == i+1:
+                    comma = ""
+                print('    }' + comma, file=yp)
+            print('  ]', file=yp)
+            print('}', file=yp)
+        else:
+            # power
+            brace = False
+            genFuel = ppc['genfuel']
+            for i in range(len(genFuel)):
+                if genFuel[i][0] in ppc['renewables']:
+                    idx = str(genFuel[i][2])
+                    if player[6]:
+                        if brace:
+                            print('    },', file=yp)
+                        print('    {', file=yp)
+                        print('      "global": false,', file=yp)
+                        print('      "key": "' + player[0] + '_power_' + idx + '",', file=yp)
+                        print('      "type": "string"', file=yp)
+                        brace = True
+                    if player[7]:
+                        if brace:
+                            print('    },', file=yp)
+                        print('    {', file=yp)
+                        print('      "global": false,', file=yp)
+                        print('      "key": "' + player[0] + '_pwr_hist_' + idx + '",', file=yp)
+                        print('      "type": "string"', file=yp)
+                        brace = True
+            print('    }', file=yp)
+            print('  ]', file=yp)
+            print('}', file=yp)
+
         yp.close()
 
-    yp = open('dso.yaml', 'w')
-    print('name: dsostub', file=yp)
-    print('time_delta: 15s', file=yp)
-    print('broker: tcp://localhost:' + port, file=yp)
-    print('aggregate_sub: true', file=yp)
-    print('aggregate_pub: true', file=yp)
-    print('values:', file=yp)
+    yp = open('dso_h.json', 'w')
+    print('{', file=yp)
+    print('  "name": "dsostub",', file=yp)
+    print('  "period": 15.0,', file=yp)
+    print('  "publications": [', file=yp)
+    comma = ","
     for i in range(nd):
         bs = str(i + 1)
-        print('  SUBSTATION_' + bs + ':', file=yp)
-        print('    topic: refplayer/ref_load_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  SUBHISTORY_' + bs + ':', file=yp)
-        print('    topic: refplayer/ref_load_history_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  IND_LOAD_' + bs + ':', file=yp)
-        print('    topic: indplayer/ind_load_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  IND_LD_HIST_' + bs + ':', file=yp)
-        print('    topic: indplayer/ind_load_history_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  LMP_DA_Bus_' + bs + ':', file=yp)
-        print('    topic: pypower/lmp_da_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  LMP_RT_Bus_' + bs + ':', file=yp)
-        print('    topic: pypower/lmp_rt_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  V_Bus_' + bs + ':', file=yp)
-        print('    topic: pypower/three_phase_voltage_' + bs, file=yp)
-        print('    default: 1.0', file=yp)
+        print('    {', file=yp)
+        print('      "global": false,', file=yp)
+        print('      "key": "rt_bid_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "global": false,', file=yp)
+        print('      "key": "da_bid_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        if nd == i + 1:
+            comma = ""
+        print('    }' + comma, file=yp)
+    print('  ],', file=yp)
+    print('  "subscriptions": [', file=yp)
+    comma = ","
+    for i in range(nd):
+        bs = str(i + 1)
+        print('    {', file=yp)
+        print('      "name": "SUBSTATION_' + bs + '",', file=yp)
+        print('      "key": "refplayer/ref_load_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "SUBHISTORY_' + bs + '",', file=yp)
+        print('      "key": "refplayer/ref_ld_hist_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "IND_LOAD_' + bs + '",', file=yp)
+        print('      "key": "indplayer/ind_load_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "IND_LD_HIST_' + bs + '",', file=yp)
+        print('      "key": "indplayer/ind_ld_hist_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "LMP_DA_Bus_' + bs + '",', file=yp)
+        print('      "key": "pypower/lmp_da_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "LMP_RT_Bus_' + bs + '",', file=yp)
+        print('      "key": "pypower/lmp_rt_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "cleared_q_rt_' + bs + '",', file=yp)
+        print('      "key": "pypower/cleared_q_rt_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "cleared_q_da_' + bs + '",', file=yp)
+        print('      "key": "pypower/cleared_q_da_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "V_Bus_' + bs + '",', file=yp)
+        print('      "key": "pypower/three_phase_voltage_' + bs + '",', file=yp)
+        print('      "type": "double"', file=yp)
+        if nd == i + 1:
+            comma = ""
+        print('    }' + comma, file=yp)
+    print('  ]', file=yp)
+    print('}', file=yp)
     yp.close()
 
-    yp = open('tso.yaml', 'w')
-    print('name: pypower', file=yp)
-    print('time_delta: 15s', file=yp)
-    print('broker: tcp://localhost:' + port, file=yp)
-    print('values:', file=yp)
+    yp = open('tso_h.json', 'w')
+    print('{', file=yp)
+    print('  "name": "pypower",', file=yp)
+    print('  "period": 15,', file=yp)
+    print('  "publications": [', file=yp)
+    comma = ","
     for i in range(nd):
         bs = str(i + 1)
-        print('  DA_BID_' + bs + ':', file=yp)
-        print('    topic: dsostub/da_bid_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  RT_BID_' + bs + ':', file=yp)
-        print('    topic: dsostub/rt_bid_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  REF_LOAD_' + bs + ':', file=yp)
-        print('    topic: refplayer/ref_load_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  REF_LD_HIST_' + bs + ':', file=yp)
-        print('    topic: refplayer/ref_load_history' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  GLD_LOAD_' + bs + ':', file=yp)
-        print('    topic: gldplayer/gld_load_' + bs, file=yp)
-        print('    default: 0', file=yp)
-        print('  GLD_LD_HIST_' + bs + ':', file=yp)
-        print('    topic: gldplayer/gld_load_history_' + bs, file=yp)
-        print('    default: 0', file=yp)
+        print('    {', file=yp)
+        print('      "global": false,', file=yp)
+        print('      "key": "lmp_rt_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "global": false,', file=yp)
+        print('      "key": "lmp_da_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "global": false,', file=yp)
+        print('      "key": "cleared_q_rt_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "global": false,', file=yp)
+        print('      "key": "cleared_q_da_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "global": false,', file=yp)
+        print('      "key": "three_phase_voltage_' + bs + '",', file=yp)
+        print('      "type": "double"', file=yp)
+        if nd == i + 1:
+            comma = ""
+        print('    }' + comma, file=yp)
+    print('  ],', file=yp)
+
+    print('  "subscriptions": [', file=yp)
+    for i in range(nd):
+        bs = str(i + 1)
+        print('    {', file=yp)
+        print('      "name": "DA_BID_' + bs + '",', file=yp)
+        print('      "key": "dsostub/da_bid_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "RT_BID_' + bs + '",', file=yp)
+        print('      "key": "dsostub/rt_bid_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "REF_LOAD_' + bs + '",', file=yp)
+        print('      "key": "refplayer/ref_load_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "REF_LD_HIST_' + bs + '",', file=yp)
+        print('      "key": "refplayer/ref_ld_hist_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "GLD_LOAD_' + bs + '",', file=yp)
+        print('      "key": "gldplayer/gld_load_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        print('    },', file=yp)
+        print('    {', file=yp)
+        print('      "name": "GLD_LD_HIST_' + bs + '",', file=yp)
+        print('      "key": "gldplayer/gld_ld_hist_' + bs + '",', file=yp)
+        print('      "type": "string"', file=yp)
+        if nd != i + 1:
+            print('    },', file=yp)
     if ppc['genPower']:
         genFuel = ppc['genfuel']
         for i in range(len(genFuel)):
@@ -91,14 +229,20 @@ def dso_make_yaml(casename):
                 for plyr in ["genMn", "genForecastHr"]:
                     player = ppc[plyr]
                     if player[6] and not player[8]:
-                        print('  ' + player[0].upper() + '_POWER_' + idx + ':', file=yp)
-                        print('    topic: ' + player[0] + 'player/' + player[0] + '_power_' + idx, file=yp)
-                        print('    default: 0', file=yp)
+                        print('    },', file=yp)
+                        print('    {', file=yp)
+                        print('      "name": "' + player[0].upper() + '_POWER_' + idx + '",', file=yp)
+                        print('      "key": "' + player[0] + 'player/' + player[0] + '_power_' + idx + '",', file=yp)
+                        print('      "type": "string"', file=yp)
                     if player[7] and not player[8]:
-                        print('  ' + player[0].upper() + '_PWR_HIST_' + idx + ':', file=yp)
-                        print('    topic: ' + player[0] + 'player/' + player[0] + '_power_history_' + idx, file=yp)
-                        print('    default: 0', file=yp)
-
+                        print('    },', file=yp)
+                        print('    {', file=yp)
+                        print('      "name": "' + player[0].upper() + '_PWR_HIST_' + idx + '",', file=yp)
+                        print('      "key": "' + player[0] + 'player/' + player[0] + '_pwr_hist_' + idx + '",', file=yp)
+                        print('      "type": "string"', file=yp)
+        print('    }' + comma, file=yp)
+    print('  ]', file=yp)
+    print('}', file=yp)
     yp.close()
 
 
@@ -134,45 +278,56 @@ def dso_loop(casename):
             'p_i': 0, 'q_i': 0, 'p_i_hist': {}
         }
 
-    log.info("FNCS Initalize")
-    fncs.initialize()
+    log.info("Initialize HELICS dso federate")
+    hFed = helics.helicsCreateValueFederateFromConfig("./dso_h.json")
+    fedName = helics.helicsFederateGetName(hFed)
+    subCount = helics.helicsFederateGetInputCount(hFed)
+    pubCount = helics.helicsFederateGetPublicationCount(hFed)
+    log.info('Federate name: ' + fedName)
+    log.info('Subscription count: ' + str(subCount))
+    log.info('Publications count: ' + str(pubCount))
+    log.info('Starting HELICS dso federate')
+    helics.helicsFederateEnterExecutingMode(hFed)
 
-    log.info("starting tso loop...")
     while ts <= tmax:
-        events = fncs.get_events()
-        # log.info('at ' + str(ts))
-        for topic in events:
-            val = fncs.get_value(topic)
-            # get voltages and LMPs from the TSO
-            if 'LMP_DT_Bus_' in topic:
-                busnum = int(topic[11:])
-                # gld_bus[busnum]['dalmp'] = float(val)
-            elif 'LMP_RT_Bus_' in topic:
-                busnum = int(topic[11:])
-                # gld_bus[busnum]['rtlmp'] = float(val)
-            elif 'V_Bus_' in topic:
-                busnum = int(topic[6:])
-                # gld_bus[busnum]['v'] = float(val)
-            elif 'SUBSTATION_' in topic:  # gridlabd - residential/commercial
-                busnum = int(topic[11:])
-                p, q = parse_mva(val)
-                # log.info('at ' + str(ts) + " " + topic + " " + val)
-                gld_bus[busnum]['p'] = p  # MW active
-                gld_bus[busnum]['q'] = q  # MW reactive
-            elif 'SUBHISTORY_' in topic:  # gridlabd - residential/commercial
-                busnum = int(topic[11:])
-                # log.info('at ' + str(ts) + " " + topic + val)
-                gld_bus[busnum]['p_hist'] = json.loads(val)  # MW active
-            elif 'IND_LOAD_' in topic:
-                busnum = int(topic[9:])
-                p, q = parse_mva(val)
-                # log.info('at ' + str(ts) + " " + topic + " " + val)
-                gld_bus[busnum]['p_i'] = p  # MW
-                gld_bus[busnum]['q_i'] = q  # MW
-            elif 'IND_LD_HIST_' in topic:
-                busnum = int(topic[12:])
-                # log.info('at ' + str(ts) + " " + topic + val)
-                gld_bus[busnum]['p_i_hist'] = json.loads(val)  # MW active
+        # see another example for helics integration at fncsPYPOWER.py
+        for t in range(subCount):
+            sub = helics.helicsFederateGetInputByIndex(hFed, t)
+            key = helics.helicsSubscriptionGetKey(sub)
+            topic = key.upper().split('/')[1]
+            # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
+            if helics.helicsInputIsUpdated(sub):
+                val = helics.helicsInputGetString(sub)
+                # get voltages and LMPs from the TSO
+                if 'LMP_DT_' in topic:
+                    busnum = int(topic[7:])
+                    # gld_bus[busnum]['dalmp'] = float(val)
+                elif 'LMP_RT_' in topic:
+                    busnum = int(topic[7:])
+                    # gld_bus[busnum]['rtlmp'] = float(val)
+                elif 'V_Bus_' in topic:
+                    busnum = int(topic[6:])
+                    # gld_bus[busnum]['v'] = float(val)
+                elif 'REF_LOAD_' in topic:  # gridlabd - residential/commercial
+                    busnum = int(topic[9:])
+                    p, q = parse_mva(val)
+                    # log.info('at ' + str(ts) + " " + topic + " " + val)
+                    gld_bus[busnum]['p'] = p  # MW active
+                    gld_bus[busnum]['q'] = q  # MW reactive
+                elif 'REF_LD_HIST_' in topic:  # gridlabd - residential/commercial
+                    busnum = int(topic[12:])
+                    # log.info('at ' + str(ts) + " " + topic + val)
+                    gld_bus[busnum]['p_hist'] = json.loads(val)  # MW active
+                elif 'IND_LOAD_' in topic:
+                    busnum = int(topic[9:])
+                    p, q = parse_mva(val)
+                    # log.info('at ' + str(ts) + " " + topic + " " + val)
+                    gld_bus[busnum]['p_i'] = p  # MW
+                    gld_bus[busnum]['q_i'] = q  # MW
+                elif 'IND_LD_HIST_' in topic:
+                    busnum = int(topic[12:])
+                    # log.info('at ' + str(ts) + " " + topic + val)
+                    gld_bus[busnum]['p_i_hist'] = json.loads(val)  # MW active
 
         # bid into the day-ahead market for each bus
         # as with real-time market, half the hourly load will be unresponsive and half responsive
@@ -201,7 +356,8 @@ def dso_loop(casename):
 
                     # this is what the tso8stub.yaml expects to receive from a dso auction
                     log.info('Day-Ahead bid for DSO stub at' + str(ts) + ' = ' + str(da_bid))
-                    fncs.publish('da_bid_' + str(busnum), json.dumps(da_bid))
+                    pub = helics.helicsFederateGetPublication(hFed, 'da_bid_' + str(busnum))
+                    helics.helicsPublicationPublishString(pub, json.dumps(da_bid))
             tnext_da += da_period
 
         # update the bid, and publish simulated load as unresponsive + cleared_responsive
@@ -228,7 +384,8 @@ def dso_loop(casename):
 
                     # this is what the tso8stub.yaml expects to receive from a dso auction
                     log.info('Real Time bid for DSO stub at ' + str(ts) + ' = ' + str(rt_bid))
-                    fncs.publish('rt_bid_' + str(busnum), json.dumps(rt_bid))
+                    pub = helics.helicsFederateGetPublication(hFed, 'rt_bid_' + str(busnum))
+                    helics.helicsPublicationPublishString(pub, json.dumps(rt_bid))
 
             tnext_rt += rt_period
 
@@ -236,13 +393,13 @@ def dso_loop(casename):
         if ts >= tmax:
             log.info('breaking out at ' + str(ts))
             break
-        ts = fncs.time_request(min(ts + dt, tmax))
+        ts = int(helics.helicsFederateRequestTime(hFed, min(ts + dt, tmax)))
 
     # ======================================================
-    log.info('finalizing FNCS')
-    fncs.finalize()
+    log.info('Finalizing HELICS dso federate')
+    helics.helicsFederateDestroy(hFed)
 
 
 if __name__ == "__main__":
-    # dso_make_yaml('./generate_case_config')
-    dso_loop('./generate_case_config')
+    dso_make_stub('./case_config')
+    # dso_loop('./generate_case_config')

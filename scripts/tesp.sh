@@ -34,6 +34,9 @@ while true; do
     esac
 done
 
+# repo for git
+sudo add-apt-repository ppa:git-core/ppa
+
 # build tools
 sudo apt-get update
 sudo apt-get -y upgrade
@@ -97,7 +100,7 @@ mkdir -p software
 cd repository || exit
 
 echo ++++++++++++++ TESP
-git clone -b evolve https://github.com/pnnl/tesp.git
+git clone -b main https://github.com/pnnl/tesp.git
 echo "Copy TESP environment variables to $HOME/tespEnv for shell scripts"
 cp tesp/scripts/tespEnv "$HOME/"
 . "${HOME}/tespEnv"
@@ -107,7 +110,7 @@ echo "Download all relevant repositories..."
 echo
 echo ++++++++++++++ PSST
 # git clone https://github.com/ames-market/psst.git
-git clone https://github.com/ames-market/AMES-V5.0.git
+git clone -b master https://github.com/ames-market/AMES-V5.0.git
 "${TESPBUILD}"/patch.sh AMES-V5.0 AMES-V5.0
 
 if [[ $binaries == "develop" ]]; then
@@ -120,7 +123,6 @@ if [[ $binaries == "develop" ]]; then
 
   echo
   echo ++++++++++++++ HELICS
-  #git clone -b helics2 https://github.com/GMLC-TDC/HELICS-src
   git clone -b main https://github.com/GMLC-TDC/HELICS-src
   "${TESPBUILD}"/patch.sh HELICS-src HELICS-src
 
@@ -138,19 +140,20 @@ if [[ $binaries == "develop" ]]; then
 
   echo
   echo ++++++++++++++ NS-3
-  git clone https://gitlab.com/nsnam/ns-3-dev.git
+  git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
   "${TESPBUILD}"/patch.sh ns-3-dev ns-3-dev
 
   echo
   echo ++++++++++++++ HELICS-NS-3
   cd ns-3-dev || exit
+
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
   cd ..
   "${TESPBUILD}"/patch.sh ns-3-dev/contrib/helics helics-ns3
 
   echo
   echo ++++++++++++++ Python Bindings Generator
-  git clone https://github.com/gjcarneiro/pybindgen.git
+  git clone -b master https://github.com/gjcarneiro/pybindgen.git
   "${TESPBUILD}"/patch.sh pybindgen pybindgen
 
   echo

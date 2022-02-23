@@ -50,5 +50,5 @@ In addition, traced messages will be written to recorder and log files.
 
 Copyright (c) 2017-2022, Battelle Memorial Institute
 
-License: https://github.com/pnnl/tesp/blob/master/LICENSE
+License: https://github.com/pnnl/tesp/blob/main/LICENSE
 

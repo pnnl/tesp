@@ -1,6 +1,5 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: plot_loadshed.py
-
 import json
 import sys
 import numpy as np
