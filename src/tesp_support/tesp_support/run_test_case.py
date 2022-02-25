@@ -1,18 +1,25 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: run_test_case.py
-"""Runs the set of TESP test cases
+"""Auto test runner for TESP run* cases
+Runs a test case based on pre-existing shell script file.
+
+If FNCS or HELICS broker exist the test waits for
+ the broker process to finish before function returns.
+
+This code has limited functionality as the 'run*' scripts
+for the examples are written in a very specified way.
 """
-import sys
-import subprocess
 import os
+import sys
 import time
+import subprocess
 
 if sys.platform == 'win32':
     pycall = 'python'
 else:
     pycall = 'python3'
 
-reports = None
+reports = []
 bReporting = False
 
 
@@ -29,8 +36,8 @@ def GetTestCaseReports():
 def InitializeTestCaseReports():
     global reports, bReporting
 
-    bReporting = True
     reports = []
+    bReporting = True
 
 
 def ProcessLine(line, local_vars):
@@ -41,13 +48,6 @@ def ProcessLine(line, local_vars):
         exports = exports + 'export ' + var['key'] + '=' + var['val'] + ' && '
     #  print (' line transformed to:', exports + foreground)
     return exports + foreground
-
-
-"""Runs a test case based on pre-existing shell script file.
-
-Waits for the FNCS or HELICS broker process to finish before function returns.
-
-"""
 
 
 def RunTestCase(fname, casename=None):
@@ -71,6 +71,7 @@ def RunTestCase(fname, casename=None):
             keyval = toks[2].split('=')
             local_vars.append({'key': keyval[0], 'val': keyval[1]})
         elif line.startswith('javac') or line.startswith('python') or \
+                line.startswith('make') or line.startswith('chmod') or \
                 line.startswith('gridlabd') or line.startswith('TMY3toTMY2_ansi'):
             jc = subprocess.Popen(ProcessLine(line, local_vars), shell=True)
             jc.wait()

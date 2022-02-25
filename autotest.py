@@ -20,15 +20,18 @@ else:
 
 def loadshed_test():
     # FNCS loadshed examples
-    print('==  Prepare: loadshed examples: ')
-    os.chdir('./examples/capabilities/loadshedf')
-    p1 = subprocess.Popen('./clean.sh', shell=True)
-    p1.wait()
+    print('==  Prepare: loadshed examples', flush=True)
     if bTryHELICS:
+        os.chdir('./examples/capabilities/loadshed')
+        p1 = subprocess.Popen('./clean.sh', shell=True)
+        p1.wait()
         RunTestCase('runhpy.sh', 'Loadshed HELICS ns-3')
         RunTestCase('runhpy0.sh', 'Loadshed HELICS Python')
         RunTestCase('runhjava.sh', 'Loadshed HELICS Java')
     else:
+        os.chdir('./examples/capabilities/loadshedf')
+        p1 = subprocess.Popen('./clean.sh', shell=True)
+        p1.wait()
         RunTestCase('run.sh', 'Loadshed FNCS Python')
         RunTestCase('runjava.sh', 'Loadshed FNCS Java')
     os.chdir(basePath)
@@ -36,7 +39,7 @@ def loadshed_test():
 
 def weatherAgent_test():
     # weatherAgent example
-    print('==  Prepare: weatherAgent examples: ')
+    print('==  Prepare: weatherAgent examples', flush=True)
     os.chdir('./examples/capabilities/weatherAgent')
     p1 = subprocess.Popen('./clean.sh', shell=True)
     p1.wait()
@@ -49,7 +52,7 @@ def weatherAgent_test():
 
 def PYPOWER_test():
     # PYPOWER example
-    print('==  Prepare: PYPOWER examples: ')
+    print('==  Prepare: PYPOWER examples', flush=True)
     os.chdir('./examples/capabilities/pypower')
     p1 = subprocess.Popen('./clean.sh', shell=True)
     p1.wait()
@@ -62,7 +65,7 @@ def PYPOWER_test():
 
 def EnergyPlus_test():
     # EnergyPlus examples
-    print('==  Prepare: EnergyPlus examples: ')
+    print('==  Prepare: EnergyPlus examples', flush=True)
     os.chdir('./examples/capabilities/energyplus')
     p1 = subprocess.Popen('./clean.sh', shell=True)
     p1.wait()
@@ -81,7 +84,7 @@ def EnergyPlus_test():
 
 def TE30_test():
     # TE30 example
-    print('==  Prepare: TE30 examples')
+    print('==  Prepare: TE30 examples', flush=True)
     os.chdir('./examples/capabilities/te30')
     p1 = subprocess.Popen('./clean.sh', shell=True)
     p1.wait()
@@ -98,7 +101,7 @@ def TE30_test():
 
 def make_comm_base_test():
     # make_comm_base, next three cases
-    print('==  Prepare: Nocomm_Base examples: ')
+    print('==  Prepare: Nocomm_Base examples', flush=True)
     os.chdir('./examples/capabilities/comm')
     p1 = subprocess.Popen(pycall + ' make_comm_base.py', shell=True)
     p1.wait()
@@ -143,7 +146,7 @@ def make_comm_base_test():
 def make_comm_eplus_test():
     # make_comm_eplus
     # generated Nocomm_Base example
-    print('==  Prepare: Eplus with comm example: ')
+    print('==  Prepare: Eplus with comm example', flush=True)
     os.chdir('./examples/capabilities/comm')
     p1 = subprocess.Popen(pycall + ' make_comm_eplus.py', shell=True)
     p1.wait()
@@ -156,7 +159,7 @@ def make_comm_eplus_test():
 
 def combine_feeders_test():
     # generated CombinedCase example
-    print('==  Prepare: CombinedCase example: ')
+    print('==  Prepare: CombinedCase example', flush=True)
     os.chdir('./examples/capabilities/comm')
     p1 = subprocess.Popen(pycall + ' combine_feeders.py', shell=True)
     p1.wait()
@@ -175,16 +178,16 @@ def combine_feeders_test():
 
 
 def block(call):
-    print('\n<!--')
+    print('\n<!--', flush=True)
     call()
-    print('--!>')
+    print('--!>', flush=True)
 
 
 if __name__ == '__main__':
     InitializeTestCaseReports()
 
     basePath = os.getcwd()
-    bTryHELICS = False
+    bTryHELICS = True
 
     block(loadshed_test)
     block(weatherAgent_test)
