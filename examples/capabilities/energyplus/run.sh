@@ -3,8 +3,8 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: run.sh
 
-EPLUS_PATH=$TESPDIR/data/energyplus
-EPWFILE=$EPLUS_PATH/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw
+declare -r EPLUS_PATH=$TESPDIR/data/energyplus
+declare -r EPWFILE=$EPLUS_PATH/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw
 
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 4 &> broker.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w $EPWFILE -d outSchoolBase $EPLUS_PATH/SchoolDualController.idf &> eplus.log &)

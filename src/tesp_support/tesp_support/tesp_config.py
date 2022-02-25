@@ -674,9 +674,9 @@ def show_tesp_config():
         if len(tespdir) > 0:
             #   config['SimulationConfig']['SourceDirectory'] = tespdir
             if sys.platform == 'win32':
-                varsTM[varsTMSupportDirIndex][1] = tespdir + '\support'
+                varsTM[varsTMSupportDirIndex][1] = tespdir + '\data'
             else:
-                varsTM[varsTMSupportDirIndex][1] = tespdir + '/support'
+                varsTM[varsTMSupportDirIndex][1] = tespdir + '/data'
     my_gui = TespConfigGUI(root)
     while True:
         try:

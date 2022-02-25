@@ -3,8 +3,8 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: run2.sh
 
-EPLUS_PATH=$TESPDIR/data/energyplus
-TMY_PATH=$TESPDIR/data/weather
+declare -r EPLUS_PATH=$TESPDIR/data/energyplus
+declare -r TMY_PATH=$TESPDIR/data/weather
 
 #python3 -c "import tesp_support.api as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf', '12')"
 #python3 -c "import tesp_support.api as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', '12')"

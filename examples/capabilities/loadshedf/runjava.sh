@@ -3,7 +3,7 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: runjava.sh
 
-JAVAPATH=$INSTDIR/java
+declare -r JAVAPATH=$INSTDIR/java
 
 # Compile loadshed 
 javac -classpath ".:$JAVAPATH/fncs.jar" loadshed.java
