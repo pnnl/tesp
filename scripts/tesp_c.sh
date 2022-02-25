@@ -66,9 +66,10 @@ if [[ $1 == "develop" ]]; then
 
 else
 
+  ver=$(cat "${TESPBUILD}/version")
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
-  wget --no-check-certificate https://mepas.pnnl.gov/FramesV1/Install/tesp_binaries.zip
+  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/tesp_binaries.zip
   unzip tesp_binaries.zip > "${TESPBUILD}/tesp_binaries.log" 2>&1
   rm tesp_binaries.zip
 fi

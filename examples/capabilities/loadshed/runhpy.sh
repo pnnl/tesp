@@ -9,10 +9,9 @@
 #(exec python3 helicshed.py &> loadshed.log & jobs -p >> tesp.pid)
 
 
-make
-chmod +x loadshedCommNetwork
+make; chmod +x loadshedCommNetwork;
 
-ns3=
+declare -r ns3=
 #Errorlevel for ns3-helics loadshedCommNetwork, uncomment next three lines for debugging
 #ns3=loadshedCommNetwork:HelicsApplication:HelicsFilterApplication
 #ns3=$ns3:HelicsIdTag:HelicsSimulatorImpl:HelicsStaticSinkApplication:

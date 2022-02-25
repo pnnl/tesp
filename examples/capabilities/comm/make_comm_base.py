@@ -2,9 +2,8 @@
 # file: make_comm_base.py
 
 import tesp_support.api as tesp
-tesp.make_tesp_case ('Nocomm_Base.json')
 
-tesp.make_tesp_case ('Eplus_Restaurant.json')
-
-tesp.make_tesp_case ('SGIP1c.json')
-
+if __name__ == '__main__':
+    tesp.make_tesp_case('Nocomm_Base.json')
+    tesp.make_tesp_case('Eplus_Restaurant.json')
+    tesp.make_tesp_case('SGIP1c.json')

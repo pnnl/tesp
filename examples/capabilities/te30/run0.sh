@@ -3,8 +3,8 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: run0.sh
 
-EPLUS_PATH=$TESPDIR/data/energyplus
-SCHED_PATH=$TESPDIR/data/schedules
+declare -r EPLUS_PATH=$TESPDIR/data/energyplus
+declare -r SCHED_PATH=$TESPDIR/data/schedules
 
 (export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 6 &> broker0.log &)
 (export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w "$EPLUS_PATH/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw" -d output -r Merged.idf &> eplus0.log &)

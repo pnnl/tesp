@@ -3,7 +3,7 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: runhjava.sh
 
-JAVAPATH=$INSTDIR/java
+declare -r JAVAPATH=$INSTDIR/java
 
 # Compile helicshed
 javac -classpath ".:$JAVAPATH/helics.jar" helicshed.java
