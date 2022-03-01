@@ -11,5 +11,5 @@ rm -f SGIP1*.yaml
 rm -f *.xml
 rm -f weather.dat
 rm -f output/*
-rmdir output
+rmdir output 2> /dev/null
 rm -f *.bnd

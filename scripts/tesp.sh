@@ -35,7 +35,7 @@ while true; do
 done
 
 # repo for git
-sudo add-apt-repository ppa:git-core/ppa
+# sudo add-apt-repository ppa:git-core/ppa
 
 # build tools
 sudo apt-get update

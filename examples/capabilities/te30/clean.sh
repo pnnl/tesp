@@ -13,6 +13,6 @@ rm -f *Weather_Config.json
 rm -f *substation.yaml
 rm -f *.dat
 rm -f output/*
-rmdir output
+rmdir output 2> /dev/null
 rm -f *.idf
 rm -f *.bnd

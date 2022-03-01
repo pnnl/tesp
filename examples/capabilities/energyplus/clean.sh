@@ -6,7 +6,7 @@ rm -f *.xml
 rm -f *.png
 rm -f *metrics.json
 rm -f out*/*
-rmdir out*
+rmdir out* 2> /dev/null
 rm -f Winter*.idf
 rm -f Summer*.idf
 rm -f ems*.idf
