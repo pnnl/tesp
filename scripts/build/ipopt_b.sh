@@ -10,9 +10,9 @@ MUMPS_VERSION=2.1
 
 if [[ $1 == "clean" ]]; then
   cd "${WAREDIR}" || exit
-  sudo rm -rf Ipopt
-  sudo rm -rf ThirdParty-ASL
-  sudo rm -rf ThirdParty-Mumps
+  rm -rf Ipopt
+  rm -rf ThirdParty-ASL
+  rm -rf ThirdParty-Mumps
   
   wget --no-check-certificate https://www.coin-or.org/download/source/Ipopt/Ipopt-${IPOPT_VERSION}.tgz
   tar -xzf Ipopt-${IPOPT_VERSION}.tgz
@@ -37,7 +37,7 @@ sed -i "s:wgetcmd=\"wget\":wgetcmd=\"wget --no-check-certificate\":g" ./get.ASL
 ./get.ASL
 ./configure --prefix="${INSTDIR}"
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
-sudo make install
+make install
 
 echo
 echo "===== Make coin-or's third party Mumps ====="
@@ -46,7 +46,7 @@ sed -i "s:wgetcmd=\"wget\":wgetcmd=\"wget --no-check-certificate\":g" ./get.Mump
 ./get.Mumps
 ./configure --prefix="${INSTDIR}"
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
-sudo make install
+make install
 
 echo
 echo "===== Make Ipopt ====="
@@ -54,4 +54,4 @@ cd "${WAREDIR}/Ipopt" || exit
 ./configure --prefix="${INSTDIR}"
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 make test
-sudo make install
+make install

@@ -6,7 +6,7 @@ fi
 
 cd "${REPODIR}/HELICS-src" || exit
 if [[ $1 == "clean" ]]; then
-  sudo rm -rf build
+  rm -rf build
 fi
 mkdir -p build
 cd build || exit
@@ -21,7 +21,7 @@ if [[ $1 == "clean" ]]; then
   pip3 uninstall -y helics
 fi
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
-sudo make install
+make install
 
 # Install HELICS Python3 bindings for a version that exactly matches the local build
 ver=$(helics_recorder --version)

@@ -4,8 +4,8 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-cd "${REPODIR}/pybindgen" || exit
-pip3 install .
+# cd "${REPODIR}/pybindgen" || exit
+# pip3 install .
 
 cd "${REPODIR}/ns-3-dev" || exit
 # first build: use the following command for HELICS interface to ns3:
@@ -27,5 +27,5 @@ fi
 
 ./waf build
 
-sudo ./waf install
+./waf install
 #./test.py
