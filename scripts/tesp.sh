@@ -28,8 +28,8 @@ while true; do
     # shellcheck disable=SC2162
     read -p "Do you wish to build the binaries? " yn
     case $yn in
-        [Yy]* ) binaries=develop; break;;
-        [Nn]* ) binaries=copy; break;;
+        [Yy]* ) binaries="develop"; break;;
+        [Nn]* ) binaries="copy"; break;;
         * ) echo "Please answer [y]es or [n]o.";;
     esac
 done
@@ -150,11 +150,6 @@ if [[ $binaries == "develop" ]]; then
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
   cd ..
   "${TESPBUILD}"/patch.sh ns-3-dev/contrib/helics helics-ns3
-
-  echo
-  echo ++++++++++++++ Python Bindings Generator
-  git clone -b master https://github.com/gjcarneiro/pybindgen.git
-  "${TESPBUILD}"/patch.sh pybindgen pybindgen
 
   echo
   echo ++++++++++++++ KLU SOLVER
