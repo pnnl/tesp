@@ -1,0 +1,37 @@
+{
+  "broker": true,
+  "name": "LoadShedFederation",
+  "federates": [
+    {
+      "directory": ".",
+      "exec": "gridlabd -D WANT_HELICS loadshed.glm",
+      "host": "localhost",
+      "name": "GLD_Federate"
+    },
+    {
+      "directory": ".",
+      "exec": "python3 helicshed.py",
+      "host": "localhost",
+      "name": "Loadshed_Federate"
+    },
+    {
+      "directory": ".",
+      "exec": "energyplus -w ../../../data/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw -d output loadshedSchoolBase.idf",
+      "host": "localhost",
+      "name": "energyPlus_Federate",
+      "env": {"HELICS_CONFIG_FILE" : "helics_eplus.json"}
+    },
+    {
+      "directory": ".",
+      "exec": "eplus_agent_helics 21600s 300s SchoolDualController eplus_agent_metrics.json  0.02 25 4 4 helics_eplus_agent.json",
+      "host": "localhost",
+      "name": "energyPlusAgent_Federate"
+    },
+    {
+      "directory": ".",
+      "exec": "helics_player --input=prices.txt --local --time_units=ns --stop 21600s",
+      "host": "localhost",
+      "name": "player_Federate"
+    }
+  ]
+}

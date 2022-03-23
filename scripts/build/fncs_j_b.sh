@@ -35,7 +35,7 @@ cmake ..
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 
 JAVAPATH=$INSTDIR/java
-sudo mkdir -p "$JAVAPATH"
-sudo cp fncs.jar "$JAVAPATH/"
-sudo cp libJNIfncs.so "$JAVAPATH/"
+mkdir -p "$JAVAPATH"
+cp fncs.jar "$JAVAPATH/"
+cp libJNIfncs.so "$JAVAPATH/"
 
