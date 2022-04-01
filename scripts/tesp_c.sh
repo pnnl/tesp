@@ -74,6 +74,10 @@ else
   rm tesp_binaries.zip
 fi
 
+cd "${TESPBUILD}" || exit
+echo "Installing HELICS Python bindings..."
+./HELICS-py.sh "$1"
+
 echo
 echo "Installation logs are found in '${TESPBUILD}'"
 
