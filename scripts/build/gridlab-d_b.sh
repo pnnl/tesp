@@ -16,5 +16,5 @@ if [[ $1 == "clean" ]]; then
   make clean
 fi
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
-sudo make install
+make install
 #gridlabd --validate

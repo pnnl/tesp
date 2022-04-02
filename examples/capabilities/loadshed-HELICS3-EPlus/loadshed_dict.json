@@ -1,0 +1,1 @@
+{"matpower_id": "TBD", "transformer_MVA": 12.0, "feeders": {"n650": {"house_count": 0, "inverter_count": 0}}, "billingmeters": {"m675": {"feeder_id": "n650", "phases": "ABC", "children": []}, "m692": {"feeder_id": "n650", "phases": "ABC", "children": []}}, "houses": {}, "inverters": {}}

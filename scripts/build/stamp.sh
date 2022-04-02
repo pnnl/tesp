@@ -6,7 +6,7 @@ if [[ -z ${INSTDIR} ]]; then
 fi
 
 
-ver="v1.1.4"
+ver="v1.1.5"
 
 cd "${REPODIR}" || exit
 echo "Stamping commit ids for:"

@@ -28,18 +28,19 @@ while true; do
     # shellcheck disable=SC2162
     read -p "Do you wish to build the binaries? " yn
     case $yn in
-        [Yy]* ) binaries=develop; break;;
-        [Nn]* ) binaries=copy; break;;
+        [Yy]* ) binaries="develop"; break;;
+        [Nn]* ) binaries="copy"; break;;
         * ) echo "Please answer [y]es or [n]o.";;
     esac
 done
 
 # repo for git
-sudo add-apt-repository ppa:git-core/ppa
+# sudo add-apt-repository ppa:git-core/ppa
 
 # build tools
 sudo apt-get update
 sudo apt-get -y upgrade
+sudo apt-get -y install pkgconf
 sudo apt-get -y install git
 sudo apt-get -y install build-essential
 sudo apt-get -y install autoconf
@@ -62,10 +63,12 @@ sudo apt-get -y install libboost-dev
 # for GridLAB-D
 sudo apt-get -y install libxerces-c-dev
 sudo apt-get -y install libhdf5-serial-dev
+
+# for solvers used by AMES/Agents/GridLAB-D
+# needed for KLU
 sudo apt-get -y install libsuitesparse-dev
 # end users replace libsuitesparse-dev with libklu1, which is licensed LGPL
-
-# for solvers Ipopt/cbc used by AMES/Agents
+# needed for Ipopt/cbc
 sudo apt-get -y install coinor-cbc
 sudo apt-get -y install coinor-libcbc-dev
 sudo apt-get -y install coinor-libipopt-dev
@@ -73,7 +76,6 @@ sudo apt-get -y install liblapack-dev
 sudo apt-get -y install libmetis-dev
 
 # Python support
-# if not using miniconda (avoid Python 3.7 on Ubuntu for now)
 sudo apt-get -y install python3-pip
 sudo apt-get -y install python3-tk
 
@@ -150,11 +152,6 @@ if [[ $binaries == "develop" ]]; then
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
   cd ..
   "${TESPBUILD}"/patch.sh ns-3-dev/contrib/helics helics-ns3
-
-  echo
-  echo ++++++++++++++ Python Bindings Generator
-  git clone -b master https://github.com/gjcarneiro/pybindgen.git
-  "${TESPBUILD}"/patch.sh pybindgen pybindgen
 
   echo
   echo ++++++++++++++ KLU SOLVER
