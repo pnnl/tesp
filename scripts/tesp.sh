@@ -40,6 +40,7 @@ done
 # build tools
 sudo apt-get update
 sudo apt-get -y upgrade
+sudo apt-get -y install pkgconf
 sudo apt-get -y install git
 sudo apt-get -y install build-essential
 sudo apt-get -y install autoconf
@@ -62,10 +63,12 @@ sudo apt-get -y install libboost-dev
 # for GridLAB-D
 sudo apt-get -y install libxerces-c-dev
 sudo apt-get -y install libhdf5-serial-dev
+
+# for solvers used by AMES/Agents/GridLAB-D
+# needed for KLU
 sudo apt-get -y install libsuitesparse-dev
 # end users replace libsuitesparse-dev with libklu1, which is licensed LGPL
-
-# for solvers Ipopt/cbc used by AMES/Agents
+# needed for Ipopt/cbc
 sudo apt-get -y install coinor-cbc
 sudo apt-get -y install coinor-libcbc-dev
 sudo apt-get -y install coinor-libipopt-dev
@@ -73,7 +76,6 @@ sudo apt-get -y install liblapack-dev
 sudo apt-get -y install libmetis-dev
 
 # Python support
-# if not using miniconda (avoid Python 3.7 on Ubuntu for now)
 sudo apt-get -y install python3-pip
 sudo apt-get -y install python3-tk
 

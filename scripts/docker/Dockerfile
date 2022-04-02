@@ -104,7 +104,7 @@ RUN git config --global user.name "${USER_NAME}" && \
   mkdir -p software && \
   cd repository && \
   echo "++++++++++++++ TESP" && \
-  git clone -b evolve https://github.com/pnnl/tesp.git && \
+  git clone -b main https://github.com/pnnl/tesp.git && \
   echo "Download all relevant repositories..." && \
   echo "++++++++++++++ PSST" && \
   git clone https://github.com/ames-market/AMES-V5.0.git && \
@@ -177,6 +177,10 @@ RUN git config --global user.name "${USER_NAME}" && \
   echo "Compiling and Installing Ipopt with ASL and Mumps..." && \
   ./ipopt_b.sh clean && \
   /bin/rm -r ${WAREDIR} && \
+  echo "Compiling and Installing TMY3toTMY2_ansi..." && \
+  cd "${TESPDIR}/data/weather/TMY2EPW/source_code" && \
+  gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi && \
+  /bin/mv TMY3toTMY2_ansi "${INSTDIR}/bin" && \
   echo "${USER_NAME}" | sudo -S ldconfig && \
   cd "${TESPBUILD}" && \
   ./versions.sh
