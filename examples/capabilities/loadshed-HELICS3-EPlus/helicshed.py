@@ -59,10 +59,10 @@ def main():
       if int(currTime) == t:
         if val == 1:
           logger.info(f'Switching {end_name} to CLOSED at second {int(currTime)} ({t})')
-          h.helicsEndpointSendMessageRaw(swStatusEp, '', 'CLOSED'.encode())
+          h.helicsEndpointSendBytes(swStatusEp, 'CLOSED'.encode())
         elif val == 0:
           logger.info(f'Switching {end_name} to OPEN at second {int(currTime)} ({t})')
-          h.helicsEndpointSendMessageRaw(swStatusEp, '', 'OPEN'.encode())
+          h.helicsEndpointSendBytes(swStatusEp, 'OPEN'.encode())
         else:
           logger.info('!!!!!!! Signals should only be 0 or 1 !!!!!!!')
     grantedTime = h.helicsFederateRequestNextStep(fed)

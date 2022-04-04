@@ -104,7 +104,7 @@ RUN git config --global user.name "${USER_NAME}" && \
   mkdir -p software && \
   cd repository && \
   echo "++++++++++++++ TESP" && \
-  git clone -b main https://github.com/pnnl/tesp.git && \
+  git clone -b develop https://github.com/pnnl/tesp.git && \
   echo "Download all relevant repositories..." && \
   echo "++++++++++++++ PSST" && \
   git clone https://github.com/ames-market/AMES-V5.0.git && \
