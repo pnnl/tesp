@@ -25,6 +25,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   cmake \
   subversion \
   unzip \
+  lsof \
   # Java support
   openjdk-11-jdk \
   # for HELICS and FNCS
