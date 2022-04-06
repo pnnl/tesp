@@ -1,11 +1,14 @@
 #!/bin/bash
 
+
 if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-cd "${REPODIR}" || exit
 
+ver="v1.1.5"
+
+cd "${REPODIR}" || exit
 echo "Stamping commit ids for:"
 for dir in *
 do
@@ -36,3 +39,7 @@ echo "Creating tesp_binaries.zip for installed binaries on TESP install"
 cd "${INSTDIR}" || exit
 zip -r -9 "${TESPBUILD}/tesp_binaries.zip" . &> "${TESPBUILD}/tesp_binaries.log" &
 pip3 list > "${TESPBUILD}/tesp_pypi.id"
+
+echo "Stamping TESP $ver for install"
+echo "$ver" > "${TESPBUILD}/version"
+#git tag $ver

@@ -3,8 +3,8 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: runh0.sh
 
-EPLUS_PATH=$TESPDIR/data/energyplus
-SCHED_PATH=$TESPDIR/data/schedules
+declare -r EPLUS_PATH=$TESPDIR/data/energyplus
+declare -r SCHED_PATH=$TESPDIR/data/schedules
 
 # start a HELICS federation for GridLAB-D, substation, weather, PYPOWER, E+ and E+ agent
 (exec helics_broker -f 6 --loglevel=warning --name=mainbroker &> helics_broker.log &)

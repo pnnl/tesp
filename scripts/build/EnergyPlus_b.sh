@@ -8,7 +8,7 @@ cd "${INSTDIR}" || exit
 mkdir -p energyplus
 cd "${REPODIR}/EnergyPlus" || exit
 if [[ $1 == "clean" ]]; then
-  sudo rm -rf build
+  rm -rf build
 fi
 mkdir -p build
 cd build || exit
@@ -19,4 +19,4 @@ if [[ $1 == "clean" ]]; then
   make clean
 fi
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
-sudo make install
+make install

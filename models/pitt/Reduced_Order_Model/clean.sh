@@ -3,5 +3,5 @@ rm -f *.csv
 rm -f *.xml
 rm -f *metrics.json
 rm -f output/*
-rmdir output
+rmdir output 2> /dev/null
 

@@ -3,7 +3,7 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: runh.sh
 
-TMY_PATH=$TESPDIR/data/weather
+declare -r TMY_PATH=$TESPDIR/data/weather
 
 # generate the weather text file
 python3 -c "import tesp_support.api as tesp;tesp.weathercsv('${TMY_PATH}/TX-Dallasfort_Worth_Intl_Ap.tmy3','weather.dat','2000-01-01 00:00:00','2000-01-07 00:00:00',2000)"

@@ -1,42 +1,49 @@
 #!/bin/bash
 
-declare -r CWD=$pwd
+CWD=$(pwd)
 
-cd $TESDIR/examples/capabilities/loadshed
+cd "$TESPDIR/examples/capabilities/loadshed" || exit
 ./clean.sh
 make clean
-cd ../energyplus
+cd ../loadshedf || exit
 ./clean.sh
-cd ../te30
+cd ../energyplus || exit
 ./clean.sh
-cd ../pypower
+cd ../te30 || exit
 ./clean.sh
-cd ../weatherAgent
+cd ../pypower || exit
 ./clean.sh
-cd ../ieee8500
+cd ../weatherAgent || exit
 ./clean.sh
-cd PNNLteam
+cd ../dsostub || exit
+./clean.sh
+cd ../dsostubf || exit
+./clean.sh
+cd ../ieee8500 || exit
+./clean.sh
+cd PNNLteam || exit
  ./clean.sh
-cd ../../comm
+cd ../../comm || exit
 rm -rf CombinedCase
 rm -rf Nocomm_Base
 rm -rf Eplus_Restaurant
-rm -rf SummerTest
+rm -rf SGIP1c
 rm -rf Eplus_Comm
-cd ../../ercot/case8
+cd ../ercot/case8 || exit
 ./clean.sh
-rm -f *.glm
-cd dsostub
+rm -f ./*.glm
+cd dsostub || exit
 ./clean.sh
-cd ../../bulk_system
+cd ../../bulk_system || exit
 ./clean.sh
-cd ../dist_system
-./clean.sh
-
-cd ../$TESDIR/examples/analysis/sgip1
-./clean.sh
-cd ../dsot
+cd ../dist_system || exit
 ./clean.sh
 
 
-cd $CWD
+cd "$TESPDIR/examples/analysis/sgip1" || exit
+./clean.sh
+cd ../dsot/code || exit
+./clean.sh
+
+
+cd "$CWD" || exit

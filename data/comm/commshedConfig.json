@@ -1,7 +1,7 @@
 {
   "name": "commshed",
   "coreType": "zmq",
-  "loglevel": 4,
+  "loglevel": "warning",
   "period" : 5,
   "publications": [
     {

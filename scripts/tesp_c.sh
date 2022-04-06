@@ -64,17 +64,27 @@ if [[ $1 == "develop" ]]; then
   echo "Compiling and Installing Ipopt with ASL and Mumps..."
   ./ipopt_b.sh clean > ipopt.log 2>&1
 
+  echo "Compiling and Installing TMY3toTMY2_ansi..."
+  cd "${TESPDIR}/data/weather/TMY2EPW/source_code" || exit
+  gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi
+  mv TMY3toTMY2_ansi "${INSTDIR}/bin"
+
 else
 
+  ver=$(cat "${TESPBUILD}/version")
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
-  wget --no-check-certificate https://mepas.pnnl.gov/FramesV1/Install/tesp_binaries.zip
+  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/tesp_binaries.zip
   unzip tesp_binaries.zip > "${TESPBUILD}/tesp_binaries.log" 2>&1
   rm tesp_binaries.zip
 fi
 
+cd "${TESPBUILD}" || exit
+echo "Installing HELICS Python bindings..."
+./HELICS-py.sh "$1"
+
 echo
-echo "Installation logs are found in '${TESPBUILD}'"
+echo "Installation logs are found in ${TESPBUILD}"
 
 # creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
