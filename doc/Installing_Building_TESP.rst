@@ -83,19 +83,25 @@ TESP includes a small script that attempts to run a trivial command with each of
 
 .. code-block:: text
 
-    ++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++
+++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++
 
-    FNCS broker installed
+FNCS, installed
 
-    Helics 2.8.0 (2021-09-17)
+HELICS, 3.1.0 (2021-11-24)
 
-    GridLAB-D 4.3.0-18923 (Navajo [107009aa:develop]) 64-bit LINUX RELEASE
+HELICS Java, 3.1.1-main-g9a5726ba9 (2022-04-01)
 
-    EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
+GridLAB-D 4.3.0-18941 (Navajo [725bec8d:develop:Mod]) 64-bit LINUX RELEASE
 
-    NS-3 installed
+EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
 
-    Ipopt 3.13.2 (x86_64-pc-linux-gnu), ASL(20190605)
+NS-3, installed
+
+Ipopt 3.13.2 (x86_64-pc-linux-gnu), ASL(20190605)
+
+
+++++++++++++++  TESP versions has been installed! That's all folks!  ++++++++++++++
+
 
 If you see any messages indicating `command not found` if indicates one of the software packages did not install correctly.
 
@@ -184,12 +190,45 @@ An easy manual high-level check to see if TESP installed correctly is to look at
 
 
 
-Run minimal autotests (forthcoming)
+Shorter Autotest: Example Subset
 ...................................
+A (relatively) shorter autotest script has been written that tests many (but not all) of the installed examples to verify the installation was successful. This test can be run as follows:
+
+.. code-block:: shell-session
+    :caption: TESP example subset autotest
+
+    source tespEnv
+    cd tesp/repository/tesp/
+    python3 autotest.py
+
+The first command is essential after starting a terminal session prior to running anything in TESP for the first time. If you don't, simulations will generally fail for lack of being able to find their dependencies. If things aren't working, double-check to make sure you sourced the file.
+   
+Even this subset of examples can take several hours to run (roughly 3.5 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
+
+.. code-block:: text
+
+    Test Case(s)                     Time Taken  
+    ===========================================
+    Loadshed HELICS ns-3               4.233624
+    Loadshed HELICS Python             0.782010
+    Loadshed HELICS Java               1.468049
+    Weather Agent HELICS               6.509814
+    PYPOWER HELICS                     4.155286
+    EnergyPlus HELICS EMS              7.423045
+    TE30 HELICS Market              2060.595345
+    TE30 HELICS No Market            295.993975
+    Nocomm Base HELICS              3168.131399
+    Eplus Restaurant HELICS         2919.214805
+    SGIP1c HELICS                   3709.280971
+    EPLus comm HELICS                 50.658486
+    4 Feeders HELICS                 725.793661
+
+Total runtime will depend on the compute resources available and each example run serially.
 
 
-Run all examples (forthcoming)
-..............................
+
+Longer Autotest: All examples (forthcoming)
+............................................
 
 
 Trouble-shooting Installation (forthcoming)
