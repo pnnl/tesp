@@ -2,15 +2,17 @@
 # file: helpers_dsot_v1.py
 """ Utility functions for use within tesp_support, including new agents. This is DSO+T specific helper functions
 """
-import numpy as np
-from enum import IntEnum
+import os
+import json
+import logging
 import platform
 import subprocess
-import os
-import logging
-import json
 from copy import deepcopy
+from enum import IntEnum
+
+import numpy as np
 from scipy.stats import truncnorm
+
 
 def get_run_solver(name, pyo, model, solver):
     # prefer cplex over ipopt (for production runs)
@@ -20,13 +22,13 @@ def get_run_solver(name, pyo, model, solver):
         print('Warning ' + solver + ' not present; got exception {}'.format(e))
         exit()
     results = solver.solve(model, tee=False)
-    #TODO better solver handling
-#    if results.solver.status != SolverStatus.ok:
-#    print("The " + name + " solver status of: {}".format(results.solver.status))
-        # exit()
-#    if results.solver.termination_condition != TerminationCondition.optimal:
-#    print("The " + name + " termination condition of: {}".format(results.solver.termination_condition))
-        # exit()
+    # TODO better solver handling
+    #    if results.solver.status != SolverStatus.ok:
+    #    print("The " + name + " solver status of: {}".format(results.solver.status))
+    # exit()
+    #    if results.solver.termination_condition != TerminationCondition.optimal:
+    #    print("The " + name + " termination condition of: {}".format(results.solver.termination_condition))
+    # exit()
     return results
 
 
@@ -92,6 +94,119 @@ class all_but_one_level(object):
 
     def filter(self, logRecord):
         return logRecord.levelno != 11
+
+
+def write_dsot_management_script(master_file, case_path, system_config=None, substation_config=None,
+                                 weather_config=None):
+    """ Write experiment management scripts from JSON configuration data
+
+    Reads the simulation configuration file or dictionary and writes
+
+    - run.{sh, bat}, simple run script to launch experiment
+    - kill.{sh, bat}, simple run script to kill experiment
+    - clean.{sh, bat}, simple run script to clean generated output files from the experiment
+
+    Args:
+        master_file (str): name of the master file to the experiment case
+        case_path (str): path to the experiment case
+        system_config (dict): configuration of the system for the experiment case
+        substation_config (dict): configuration of the substations in the experiment case
+        weather_config (dict): configuration of the climates being used
+    """
+    out_folder = './' + case_path
+    players = system_config["players"]
+    tso = 1 + len(players)
+    if master_file == '':
+        tso = 0
+    outPath = system_config['outputPath']
+    if outPath == "":
+        outPath = "."
+
+    archive_folder = system_config['archivePath']
+
+    config_file = system_config['dataPath'] + '/' + system_config['dsoScheduleServerFile']
+    # count how many schedule servers we need
+    ports = []
+    for sub_key, sub_val in substation_config.items():
+        if "DSO" not in sub_key:
+            continue
+        try:
+            if not sub_val['used']:
+                continue
+        except:
+            pass
+        bus = sub_val['bus_number']
+        dm = divmod(bus, 20)
+        if dm[0] not in ports:
+            ports.append(dm[0])
+
+    dbgOptions = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
+    dbg = dbgOptions[system_config['gldDebug']]
+
+    with open(out_folder + '/run.sh', 'w') as outfile:
+        outfile.write('#!/bin/bash\n\n')
+        if platform.system() == 'Darwin':
+            # this is needed if you are not comfortable disabling System Integrity Protection
+            dyldPath = os.environ.get('DYLD_LIBRARY_PATH')
+            if dyldPath is not None:
+                outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
+
+        outfile.write('# To run agents set with_market=1 else set with_market=0 \n')
+        if system_config["market"]:
+            outfile.write('with_market=1\n\n')
+        else:
+            outfile.write('with_market=0\n\n')
+
+        for cnt in range(len(ports)):
+            outfile.write('(exec python3 -c "import tesp_support.schedule_server as schedule;'
+                          'schedule.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
+                          % (config_file, str(5150 + ports[cnt]), outPath))
+        outfile.write('# wait schedule server to populate\n')
+        outfile.write('sleep 60\n')
+
+        outfile.write('(helics_broker -f %s --loglevel=warning --name=mainbroker &> %s/broker.log &)\n'
+                      % (str(len(weather_config) * 3 + tso), outPath))
+
+        for w_key, w_val in weather_config.items():
+            outfile.write('cd %s\n' % w_key)
+            outfile.write('(export WEATHER_CONFIG=weather_Config.json '
+                          '&& exec python3 -c "import tesp_support.api as tesp;'
+                          'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
+                          % (outPath, w_key))
+            outfile.write('cd ..\n')
+
+        for sub_key, sub_val in substation_config.items():
+            if "DSO" not in sub_key:
+                continue
+            try:
+                if not sub_val['used']:
+                    continue
+            except:
+                pass
+            outfile.write('cd %s\n' % sub_val['substation'])
+            outfile.write(
+                '(%sgridlabd -D USE_HELICS -D METRICS_FILE="%s/%s_metrics_" %s.glm &> %s/%s_gridlabd.log &)\n'
+                % (dbg, outPath, sub_val['substation'], sub_val['substation'], outPath, sub_val['substation']))
+            outfile.write('cd ..\n')
+            outfile.write('cd %s\n' % sub_key)
+            outfile.write('(exec python3 -c "import tesp_support.substation_dsot as tesp;'
+                          'tesp.substation_loop(\'%s\',$with_market)" &> '
+                          '%s/%s_substation.log &)\n'
+                          % (sub_val['substation'], outPath, sub_key))
+            outfile.write('cd ..\n')
+
+        if master_file != '':
+            outfile.write('(exec python3 -c "import tesp_support.tso_psst as tesp;'
+                          'tesp.tso_loop(\'./%s\')" &> %s/tso.log &)\n'
+                          % (master_file, outPath))
+            for plyr in range(len(players)):
+                player = system_config[players[plyr]]
+                if player[6] or player[7]:
+                    outfile.write('(exec python3 -c "import tesp_support.player as tesp;'
+                                  'tesp.load_player_loop(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
+                                  % (master_file, players[plyr], outPath, player[0]))
+
+    write_management_script(archive_folder, case_path, outPath, system_config['gldDebug'], 1)
 
 
 def write_experiment_management_script(master_file, case_path, system_config=None, substation_config=None,
@@ -227,7 +342,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
             outfile.write('del broker_trace.txt\n')
     else:  # Unix
         with open(out_folder + '/run.sh', 'w') as outfile:
-            outfile.write('# !/bin/bash\n\n')
+            outfile.write('#!/bin/bash\n\n')
             outfile.write('export FNCS_LOG_LEVEL=INFO\n')
             if platform.system() == 'Darwin':
                 # this is needed if you are not comfortable disabling System Integrity Protection
@@ -294,15 +409,14 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                                       'tesp.load_player_loop(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                       % (player[0], master_file, players[plyr], outPath, player[0]))
 
-            write_management_script(archive_folder, case_path, outPath, system_config['gldDebug'], 1)
+        write_management_script(archive_folder, case_path, outPath, system_config['gldDebug'], 1)
 
 
 def write_management_script(archive_folder, case_path, outPath, gld_Debug, run_post):
-
     out_folder = './' + case_path
 
     with open(out_folder + '/monitor.sh', 'w') as outfile:
-        outfile.write('# !/bin/bash\n')
+        outfile.write('#!/bin/bash\n')
         outfile.write("""
 # capture docker id so we can stop easily using stopSims.sh
 cat /etc/hostname > docker_id            
@@ -372,8 +486,9 @@ docker run \\
 
     with open(out_folder + '/kill.sh', 'w') as outfile:
         outfile.write('pkill -9 fncs_broker\n')
+        outfile.write('pkill -9 helics_broker\n')
         outfile.write('pkill -9 python\n')
-        outfile.write('pkill -9 gridlab\n')
+        outfile.write('pkill -9 gridlabd\n')
 
     with open(out_folder + '/clean.sh', 'w') as outfile:
         outfile.write('cd ' + outPath + '\n')
@@ -397,6 +512,68 @@ docker run \\
     subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/postprocess.sh'])
+
+
+class HelicsMsg(object):
+
+    def __init__(self, name):
+        self._name = name
+        # self._level = "debug"
+        self._level = "warning"
+        self._subs = []
+        self._pubs = []
+        pass
+
+    def write_file(self, _dt, _fn):
+        msg = {"name": self._name,
+               "period": _dt,
+               "logging": self._level,
+               "publications": self._pubs,
+               "subscriptions": self._subs}
+        op = open(_fn, 'w', encoding='utf-8')
+        json.dump(msg, op, ensure_ascii=False, indent=2)
+        op.close()
+
+    def pubs_append(self, _g, _k, _t, _o, _p):
+        # for object and property is for internal code interface for gridlabd
+        self._pubs.append({"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}})
+
+    def pubs_append_n(self, _g, _k, _t):
+        self._pubs.append({"global": _g, "key": _k, "type": _t})
+
+    def subs_append(self, _k, _t, _o, _p):
+        # for object and property is for internal code interface for gridlabd
+        self._subs.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
+
+    def subs_append_n(self, _n, _k, _t):
+        self._subs.append({"name": _n, "key": _k, "type": _t})
+
+
+def write_players_msg(case_name, sys_config, dt):
+    # write player helics message file for load and generator players
+
+    dso_cnt = len(sys_config['FNCS'])
+    players = sys_config["players"]
+    for idx in range(len(players)):
+        player = sys_config[players[idx]]
+        pf = HelicsMsg(player[0] + "player")
+        if player[8]:
+            # load
+            for i in range(dso_cnt):
+                bs = str(i + 1)
+                pf.pubs_append_n(False, player[0] + "_load_" + bs, "string")
+                pf.pubs_append_n(False, player[0] + "_ld_hist_" + bs, "string")
+        else:
+            # power
+            genfuel = sys_config["genfuel"]
+            for i in range(len(genfuel)):
+                if genfuel[i][0] in sys_config["renewables"]:
+                    idx = str(genfuel[i][2])
+                    if player[6]:
+                        pf.pubs_append_n(False, player[0] + "_power_" + idx, "string")
+                    if player[7]:
+                        pf.pubs_append_n(False, player[0] + "_pwr_hist_" + idx, "string")
+        pf.write_file(dt, case_name + "/" + player[0] + "_player.json")
 
 
 class ClearingType(IntEnum):
@@ -500,7 +677,7 @@ class curve:
                     else:
                         bid_curve.insert(0, bid_curve_orig[idx])
             # print(bid_curve)
-            bid_curve=deepcopy(bid_curve)
+            bid_curve = deepcopy(bid_curve)
         if bid_curve[-1][1] < self.L_pricecap:  # if the last element is less than L pricecap
             # print('L inside cut-off price cap...')
             # print(bid_curve)
@@ -533,16 +710,16 @@ class curve:
                 pass
             else:
                 segment_start = int(((self.pricecap) - bid_curve[idx][1]) * (
-                            self.num_samples / (self.pricecap - self.L_pricecap)))
+                        self.num_samples / (self.pricecap - self.L_pricecap)))
                 segment_end = int(((self.pricecap) - bid_curve[idx + 1][1]) * (
-                            self.num_samples / (self.pricecap - self.L_pricecap)))
+                        self.num_samples / (self.pricecap - self.L_pricecap)))
                 len_segment = segment_end - segment_start
                 # print('bid curve ...')
                 # print(bid_curve)
                 # print(self.pricecap)
                 self.quantities[segment_start:segment_end] = np.add(self.quantities[segment_start:segment_end],
                                                                     np.linspace(bid_curve[idx][0],
-                                                                    bid_curve[idx + 1][0], len_segment))
+                                                                                bid_curve[idx + 1][0], len_segment))
         if len(set(self.quantities)) > 1:
             self.uncontrollable_only = False
 
@@ -652,6 +829,7 @@ if __name__ == "__main__":
     y_vec_1 = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06]
     x_vec_1 = [0.0, 1.5, 2.5, 5.5, 10, 11]
     x_vec_2 = [8.0, 9.0, 10.0, 12]
+    y_vec_2 = [8.0, 9.0, 10.0, 12]  # ?
     flatList = [item for elem in [x_vec_1, x_vec_2] for item in elem]
     x = np.array(flatList)
     x = np.sort(x)

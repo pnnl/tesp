@@ -210,7 +210,7 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
         subCount = helics.helicsFederateGetInputCount(hFed)
         for i in range(pubCount):
             pub = helics.helicsFederateGetPublicationByIndex(hFed, i)
-            key = helics.helicsPublicationGetKey(pub)
+            key = helics.helicsPublicationGetName(pub)
             print('HELICS publication key', i, key)
             if 'LMP_' in key:
                 pub_lmp = pub
@@ -218,8 +218,8 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
                 pub_volts = pub
         for i in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, i)
-            key = helics.helicsInputGetKey(sub)
-            target = helics.helicsSubscriptionGetKey(sub)
+            key = helics.helicsInputGetName(sub)
+            target = helics.helicsSubscriptionGetTarget(sub)
             print('HELICS subscription key', i, key, 'target', target)
             upper_target = target.upper()  # FNCS-compatible matching
             if 'RESPONSIVE_C2' in upper_target:

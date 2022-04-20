@@ -221,7 +221,7 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
 
 
 def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percentage, ev_metadata, ev_percentage,
-                      solar_percentage, pv_rating_MW, solar_Q_player, caseType, metrics, metrics_interval, mode=None):
+                      solar_percentage, pv_rating_MW, solar_Q_player, case_type, metrics, metrics_interval, mode=None):
     """For large buildings, breaks building up into multiple zones.  For all buildings sends definition dictionary to
     function that writes out building definition to GLD file format.
         Args:
@@ -368,17 +368,17 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
         if np.random.uniform(0, 1) <= storage_percentage:
             # TODO: Review battery results to see if one battery per 10000 sq ft. is appropriate.
             num_batt = math.floor(bldg_size / 10000) + 1
-            batt_capacity = num_batt * res_FG.get_dist(batt_metadata['capacity(kWh)']['mean'],
+            battery_capacity = num_batt * res_FG.get_dist(batt_metadata['capacity(kWh)']['mean'],
                                                        batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
-            max_charge_rt = res_FG.get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
+            max_charge_rate = res_FG.get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
                                             batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
-            max_discharge_rt = max_charge_rt
-            inv_eff = batt_metadata['inv_efficiency(per)'] / 100
+            max_discharge_rate = max_charge_rate
+            inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
             charging_loss = res_FG.get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
                                             batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
             discharging_loss = charging_loss
-            bat_rt_efficiency = charging_loss * discharging_loss
-            rated_power = max(max_charge_rt, max_discharge_rt)
+            round_trip_efficiency = charging_loss * discharging_loss
+            rated_power = max(max_charge_rate, max_discharge_rate)
 
             basenode = mtr
             bat_m_name = gld_strict_name(basenode + '_mbat')
@@ -386,7 +386,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
             bat_i_name = gld_strict_name(basenode + '_ibat')
             storage_inv_mode = 'CONSTANT_PQ'
 
-            if caseType['batteryCase']:
+            if case_type['bt']:
                 # battery_count += 1
                 print('object meter {', file=op)
                 print('  name', bat_m_name + ';', file=op)
@@ -404,14 +404,14 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('    charge_lockout_time 1;', file=op)
                 print('    discharge_lockout_time 1;', file=op)
                 print('    rated_power', '{:.2f}'.format(rated_power) + ';', file=op)
-                print('    max_charge_rate', '{:.2f}'.format(max_charge_rt) + ';', file=op)
-                print('    max_discharge_rate', '{:.2f}'.format(max_discharge_rt) + ';', file=op)
+                print('    max_charge_rate', '{:.2f}'.format(max_charge_rate) + ';', file=op)
+                print('    max_discharge_rate', '{:.2f}'.format(max_discharge_rate) + ';', file=op)
                 print('    sense_object', mtr + ';', file=op)
                 # print ('    charge_on_threshold -100;', file=op)
                 # print ('    charge_off_threshold 0;', file=op)
                 # print ('    discharge_off_threshold 2000;', file=op)
                 # print ('    discharge_on_threshold 3000;', file=op)
-                print('    inverter_efficiency', '{:.2f}'.format(inv_eff) + ';', file=op)
+                print('    inverter_efficiency', '{:.2f}'.format(inverter_efficiency) + ';', file=op)
                 print('    power_factor 1.0;', file=op)
                 print('    object battery { // Tesla Powerwall 2', file=op)
                 print('      name', batname + ';', file=op)
@@ -420,8 +420,8 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('      generator_mode CONSTANT_PQ;', file=op)
                 print('      battery_type LI_ION;', file=op)
                 print('      nominal_voltage 480;', file=op)
-                print('      battery_capacity', '{:.2f}'.format(batt_capacity) + ';', file=op)
-                print('      round_trip_efficiency', '{:.2f}'.format(bat_rt_efficiency) + ';', file=op)
+                print('      battery_capacity', '{:.2f}'.format(battery_capacity) + ';', file=op)
+                print('      round_trip_efficiency', '{:.2f}'.format(round_trip_efficiency) + ';', file=op)
                 print('      state_of_charge 0.50;', file=op)
                 print('      generator_mode SUPPLY_DRIVEN;', file=op)
                 print('    };', file=op)
@@ -447,7 +447,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
             sol_i_name = gld_strict_name(basenode + '_isol')
             metrics_interval = 300
             solar_inv_mode = 'CONSTANT_PQ'
-            if caseType['pvCase']:
+            if case_type['pv']:
                 # solar_count += 1
                 # solar_kw += 0.001 * inv_power
                 print('object meter {', file=op)
@@ -516,7 +516,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
             evname = gld_strict_name(basenode + '_ev')
             hsename = gld_strict_name(basenode + '_ev_hse')
             parent_zone = bldg['zonename']
-            if caseType['pvCase']:  # all pvCases(HR) have ev populated
+            if case_type['pv']:  # all pvCases(HR) have ev populated
                 print('object evcharger_det {', file=op)
                 print('    name', evname + ';', file=op)
                 print('    parent', parent_zone + ';', file=op)

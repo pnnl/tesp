@@ -1379,15 +1379,15 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
     sim_start = datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')
     ercot_df = load_ercot_data(metadata_file, sim_start, day_range)
 
-    if case_config['caseType']['batteryCase'] == 1:
+    if case_config['caseType']['bt'] == 1:
         battery_case = True
     else:
         battery_case = False
-    if case_config['caseType']['flexLoadCase'] == 1:
+    if case_config['caseType']['fl'] == 1:
         flexload_case = True
     else:
         flexload_case = False
-    if case_config['caseType']['pvCase'] == 1:
+    if case_config['caseType']['pv'] == 1:
         pv_case = True
     else:
         pv_case = False
@@ -1491,15 +1491,15 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None):
     ames_rt_df = load_ames_data(case, day_range)
     ames_rt_df = ames_rt_df.set_index(ercot_df.index)
 
-    if case_config['caseType']['batteryCase'] == 1:
+    if case_config['caseType']['bt'] == 1:
         battery_case = True
     else:
         battery_case = False
-    if case_config['caseType']['flexLoadCase'] == 1:
+    if case_config['caseType']['fl'] == 1:
         flexload_case = True
     else:
         flexload_case = False
-    if case_config['caseType']['pvCase'] == 1:
+    if case_config['caseType']['pv'] == 1:
         pv_case = True
     else:
         pv_case = False

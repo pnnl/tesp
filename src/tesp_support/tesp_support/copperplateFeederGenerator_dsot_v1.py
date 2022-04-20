@@ -42,8 +42,10 @@ from .helpers import parse_kva
 from .helpers import gld_strict_name
 import tesp_support.commbldgenerator as com_FG
 
-# forERCOT = False
-# forDSOT = False
+tesp_share = os.path.expandvars('$TESPDIR/data/')
+feeders_path = tesp_share + 'feeders/'
+scheduled_path = tesp_share + 'schedules/'
+weather_path = tesp_share + 'weather/'
 
 transmissionVoltage = 138000.0
 transmissionXfmrMVAbase = 12.0
@@ -51,7 +53,7 @@ transmissionXfmrXpct = 8.0
 transmissionXfmrRpct = 1.0
 transmissionXfmrNLLpct = 0.4
 transmissionXfmrImagpct = 1.0
-fncs_case = ''
+caseName = ''
 
 base_feeder_name = ''
 
@@ -62,9 +64,6 @@ fuseMargin = 2.50
 starttime = '2010-06-01 00:00:00'
 endtime = '2010-06-03 00:00:00'
 timestep = 15
-use_fncs = True
-use_houses = True
-use_Eplus = True
 Eplus_Bus = ''
 Eplus_Volts = 480.0
 Eplus_kVA = 150.0
@@ -144,7 +143,7 @@ inv_efficiency = 0.97
 array_efficiency = 0.2
 rated_insolation = 1000.0
 
-bat_rt_efficiency = 0.86
+round_trip_efficiency = 0.86
 
 # TODO: move the following data to metadta.json
 # techdata dict:[heatgain fraction, Zpf, Ipf, Ppf, Z, I, P]
@@ -1357,12 +1356,12 @@ def write_substation(op, name, phs, vnom, vll):
         vll (float): feeder primary line-to-line voltage
     """
     # if this feeder will be combined with others, need USE_FNCS to appear first as a marker for the substation
-    if len(fncs_case) > 0:
+    if len(caseName) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
         print('  name gridlabd' + substationName + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
-        print('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
+        print('  configure', caseName + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port 5570";', file=op)
         print('  aggregate_subscriptions true;', file=op)
         print('  aggregate_publications true;', file=op)
@@ -1693,10 +1692,8 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
     global base_feeder_name
 
     base_feeder_name = gld_strict_name(rootname)
-    fname = glmpath + rootname + '.glm'
-    print(fname)
-    rootname = gld_strict_name(rootname)
-    rgn = 0
+    fname = feeders_path + rootname + '.glm'
+    print('Populating From:', fname)
 
     if os.path.isfile(fname):
         ip = open(fname, 'r')
@@ -1795,12 +1792,13 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print('module residential {', file=op)
         print('  implicit_enduses NONE;', file=op)
         print('};', file=op)
-        print('#include "' + supportpath + 'appliance_schedules.glm";', file=op)
-        print('#include "' + supportpath + 'water_and_setpoint_schedule_v5.glm";', file=op)
-        print('#include "' + supportpath + 'commercial_schedules.glm";', file=op)
+        print('#include "${TESPDIR}/data/appliance_schedules.glm";', file=op)
+        print('#include "${TESPDIR}/data/water_and_setpoint_schedule_v5.glm";', file=op)
+        print('#include "${TESPDIR}/data/commercial_schedules.glm";', file=op)
         print('#set minimum_timestep=' + str(timestep) + ';', file=op)
         print('#set relax_naming_rules=1;', file=op)
         print('#set warn=0;', file=op)
+
         if metrics_interval > 0:
             print('object metrics_collector_writer {', file=op)
             print('  interval', str(metrics_interval) + ';', file=op)
@@ -1810,9 +1808,10 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('  alternate yes;', file=op)
             print('  extension {0:s};'.format(metrics_type), file=op)
             print('};', file=op)
+
         print('object climate {', file=op)
         print('  name', str(weather_name) + ';', file=op)
-        print('  // tmyfile "' + weatherpath + weather_file + '";', file=op)
+        print('  // tmyfile "' + weather_path + weather_file + '";', file=op)
         print('  interpolate QUADRATIC;', file=op)
         print('  latitude', str(latitude) + ';', file=op)
         print('  longitude', str(longitude) + ';', file=op)
@@ -1895,7 +1894,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                                                        ashrae_zone, comm_bldg_metadata)
             com_FG.create_comm_zones(bldg_definition, comm_loads, bldg, op, batt_metadata,
                                      storage_percentage, ev_metadata, ev_percentage, solar_percentage,
-                                     pv_rating_MW, solar_Q_player, caseType, metrics, metrics_interval, None)
+                                     pv_rating_MW, solar_Q_player, case_type, metrics, metrics_interval, None)
         op.close()
 
 
@@ -1910,16 +1909,16 @@ def populate_feeder(config=None):
     global transmissionVoltage, transmissionXfmrMVAbase
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage
     global ev_percentage, ev_metadata, pv_rating_MW, solar_Q_player
-    global outpath, glmpath, supportpath, weatherpath, weather_file
+    global outpath, feeders_path, weather_path, weather_file
     global timezone, starttime, endtime, timestep
     global metrics, metrics_interval, metrics_interim, metrics_type, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
-    global fncs_case, substationName  # , forERCOT, forDSOT
+    global caseName, substationName
     global house_nodes, small_nodes, comm_loads
-    global inv_efficiency, bat_rt_efficiency
+    global inv_efficiency, round_trip_efficiency
     global latitude, longitude, weather_name, feeder_commercial_building_number
     global dso_type
-    global caseType
+    global case_type
     global ashrae_zone, comm_bldg_metadata, comm_bldgs_pop
     # (Laurentiu Marinovici 11/18/2019)
     global res_bldg_metadata  # to store residential metadata
@@ -1935,20 +1934,9 @@ def populate_feeder(config=None):
     else:
         np.random.seed(0)
     rootname = config['BackboneFiles']['TaxonomyChoice']
-    tespdir = config['SimulationConfig']['SourceDirectory']
-    glmpath = tespdir + '/data/feeders/'
-    supportpath = ''  # tespdir + '/data/schedules'
-
-    if 'supportpath' in config['BackboneFiles']:
-        supportpath = config['BackboneFiles']['supportpath']
-    weatherpath = ''  # tespdir + '/data/weather'
-    if 'weatherpath' in config['BackboneFiles']:
-        weatherpath = config['BackboneFiles']['weatherpath']
     outpath = './' + config['SimulationConfig']['CaseName'] + '/'
     if 'OutputPath' in config['SimulationConfig']:
         outpath = './' + config['SimulationConfig']['OutputPath'] + '/'
-    # if 'DSOTCase' in config['SimulationConfig']:
-    #    forDSOT = config['SimulationConfig']['DSOTCase']
     substationName = config['SimulationConfig']['Substation']
     timezone = config['SimulationConfig']['TimeZone']
     starttime = config['SimulationConfig']['StartTime']
@@ -1972,7 +1960,7 @@ def populate_feeder(config=None):
     if 'InverterEfficiency' in config['FeederGenerator']:
         inv_efficiency = config['FeederGenerator']['InverterEfficiency']
     if 'BatteryRoundTripEfficiency' in config['FeederGenerator']:
-        bat_rt_efficiency = config['FeederGenerator']['BatteryRoundTripEfficiency']
+        round_trip_efficiency = config['FeederGenerator']['BatteryRoundTripEfficiency']
     weather_file = config['WeatherPrep']['DataSource']
     bill_mode = config['FeederGenerator']['BillingMode']
     kwh_price = float(config['FeederGenerator']['Price'])
@@ -1999,7 +1987,7 @@ def populate_feeder(config=None):
     ashrae_zone = config['BuildingPrep']['ASHRAEZone']
     comm_bldg_metadata = config['BuildingPrep']['CommBldgMetaData']
     comm_bldgs_pop = config['BuildingPrep']['CommBldgPopulation']
-    caseType = config['SimulationConfig']['caseType']
+    case_type = config['SimulationConfig']['caseType']
 
     # -------- create cop lookup table by vintage bin-----------
     # (Laurentiu MArinovici 11/18/2019) moving the cop_lookup inside this function as it requires
@@ -2009,9 +1997,9 @@ def populate_feeder(config=None):
                  range(1980, 1990), range(1990, 2000), range(2000, 2010), range(2010, 2016)]
     years_bin = [list(years_bin[ind]) for ind in range(len(years_bin))]
     cop_lookup = []
-    for bin in range(len(years_bin)):
+    for _bin in range(len(years_bin)):
         temp = []
-        for yr in years_bin[bin]:
+        for yr in years_bin[_bin]:
             temp.append(cop_mat[str(yr)])
         cop_lookup.append(temp)
     # cop_lookup will have similar structure as years bin with years replaced with corresponding mean cop value
@@ -2025,5 +2013,5 @@ def populate_feeder(config=None):
     print(rootname, 'to', outpath, 'using', weather_file)
     print('times: start = {0:s}, end = {1:s}'.format(starttime, endtime))
     print('steps: simulation step = {0}, metrics interval = {1}'.format(timestep, metrics_interval))
-    fncs_case = config['SimulationConfig']['CaseName']
-    ProcessTaxonomyFeeder(fncs_case, rootname, 12470.0, 7200.0, 4000.0, 20000.0)
+    caseName = config['SimulationConfig']['CaseName']
+    ProcessTaxonomyFeeder(caseName, rootname, 12470.0, 7200.0, 4000.0, 20000.0)

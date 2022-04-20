@@ -71,7 +71,7 @@ def dso_CFS(case_config,
 
     system_case_config = case_config
 
-    TransactiveCaseFlag = system_case_config["caseType"]["batteryCase"] or system_case_config["caseType"]["flexLoadCase"]
+    TransactiveCaseFlag = system_case_config["caseType"]["bt"] or system_case_config["caseType"]["fl"]
     # placeholder for testing
     # TransactiveCaseFlag = 1
 

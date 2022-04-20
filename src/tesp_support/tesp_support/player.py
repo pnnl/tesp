@@ -78,7 +78,7 @@ def load_player_loop(casename, keyName):
         dtyp.append((j, '<f8'))
 
     print('Initialize HELICS player federate', flush=True)
-    hFed = helics.helicsCreateValueFederateFromConfig("./" + prefix + "_player_h.json")
+    hFed = helics.helicsCreateValueFederateFromConfig("./" + prefix + "_player.json")
     fedName = helics.helicsFederateGetName(hFed)
     subCount = helics.helicsFederateGetInputCount(hFed)
     pubCount = helics.helicsFederateGetPublicationCount(hFed)

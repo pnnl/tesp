@@ -1,12 +1,19 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: prepare_case.py
 
-import prep_ercot_substation as prep
 import tesp_support.api as tesp
 import utilities
 import json
 from datetime import datetime
 import os
+
+_FNCS = False
+#_FNCS = True
+if _FNCS:
+    import prep_ercot_substation_f as prep
+else:
+    import prep_ercot_substation as prep
+
 
 tesp_share = os.path.expandvars('$TESPDIR/data/')
 
@@ -14,6 +21,7 @@ tesp_share = os.path.expandvars('$TESPDIR/data/')
 ercotFlag = True
 # for full-order feeder
 # ercotFlag = False 
+
 te30Flag = False
 
 tesp.glm_dict('Bus1', ercot=ercotFlag, te30=te30Flag)
@@ -25,7 +33,15 @@ tesp.glm_dict('Bus6', ercot=ercotFlag, te30=te30Flag)
 tesp.glm_dict('Bus7', ercot=ercotFlag, te30=te30Flag)
 tesp.glm_dict('Bus8', ercot=ercotFlag, te30=te30Flag)
 
-utilities.write_FNCS_config_yaml_file_header()
+if _FNCS:
+    broker = 'tcp://localhost:5570'
+    #FNCS for monitor each sub adds to monitor
+    utilities.write_FNCS_config_yaml_file_header()
+    # FNCS for monitor
+    utilities.write_json_for_ercot_monitor(3600, 15, 10)
+else:
+    broker = 'HELICS'
+    utilities.write_ercot_tso_msg(8)
 
 prep.prep_ercot_substation('Bus1', weatherName='weatherIAH')
 prep.prep_ercot_substation('Bus2', weatherName='weatherIAH')
@@ -35,8 +51,6 @@ prep.prep_ercot_substation('Bus5', weatherName='weatherIAH')
 prep.prep_ercot_substation('Bus6', weatherName='weatherIAH')
 prep.prep_ercot_substation('Bus7', weatherName='weatherIAH')
 prep.prep_ercot_substation('Bus8', weatherName='weatherELP')
-
-utilities.write_json_for_ercot_monitor(3600, 15, 10)
 
 weather_agents = [
     {'weatherName': 'weatherIAH', 'tmy3': 'TX-Houston_Bush_Intercontinental.tmy3', 'lat': 30.000, 'lon': -95.367},
@@ -71,7 +85,7 @@ for i in range(len(weather_agents)):
                'ForecastLength': '24h',
                'PublishTimeAhead': '3s',
                'AddErrorToForecast': 1,
-               'broker': 'tcp://localhost:5570',
+               'broker': broker,
                'forecastPeriod': 48,
                'parameters': {}}
     for parm in ['temperature', 'humidity', 'pressure', 'solar_diffuse', 'solar_direct', 'wind_speed']:

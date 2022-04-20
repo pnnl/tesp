@@ -4,8 +4,10 @@
 import json
 import math
 import os
+
 import numpy as np
-import utilities as util
+
+import utilities
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -17,7 +19,7 @@ np.random.seed(0)
 ######################################################
 # top-level data, not presently configurable from JSON
 broker = 'tcp://localhost:5570'
-# network_node = 'network_node'
+network_node = 'network_node'
 marketName = 'Market_1'
 unit = 'kW'
 control_mode = 'CN_RAMP'
@@ -174,7 +176,8 @@ def ProcessGLM(fileroot, weatherName):
                                   'charge': val['bat_soc'] * val['bat_capacity'],
                                   'efficiency': float('{:.4f}'.format(val['inv_eta'] * math.sqrt(val['bat_eta'])))}
 
-    print('controllers', nControllers, 'for', nAirConditioners, 'air conditioners and', nBatteries, 'batteries')
+    print('configured', nControllers, 'controllers for', nAirConditioners, 'air conditioners and', nBatteries,
+          'batteries')
     # Write market dictionary
     auctions[marketName] = {'market_id': 1,
                             'unit': unit,
@@ -198,24 +201,92 @@ def ProcessGLM(fileroot, weatherName):
 
     dictfile = fileroot + '_agent_dict.json'
     dp = open(dictfile, 'w')
-    meta = {'markets': auctions,
-            'controllers': controllers,
-            'batteries': batteries,
-            'dt': dt,
-            'GridLABD': gldSimName,
+    meta = {'markets': auctions, 'controllers': controllers, 'batteries': batteries, 'dt': dt, 'GridLABD': gldSimName,
             'Weather': weatherName}
     print(json.dumps(meta), file=dp)
     dp.close()
 
-    # write the substation publications and subscriptions for HELICS
-    # TODO verify what should be done here to enforce minimum time step
-    util.write_substation_msg(fileroot, gldSimName, aucSimName, controllers, 15)
+    # write YAML file
+    yamlfile = fileroot + '_substation.yaml'
+    yp = open(yamlfile, 'w')
+    print('name:', aucSimName, file=yp)
+    print('time_delta: ' + str(dt) + 's', file=yp)
+    print('broker:', broker, file=yp)
+    print('aggregate_sub: true', file=yp)
+    print('aggregate_pub: true', file=yp)
+    print('values:', file=yp)
+    print('  LMP:', file=yp)
+    print('    topic: pypower/LMP_' + fileroot, file=yp)
+    print('    default: 0.1', file=yp)
+    print('    type: double', file=yp)
+    print('    list: false', file=yp)
+    print('  refload:', file=yp)
+    print('    topic: ' + gldSimName + '/distribution_load', file=yp)
+    print('    default: 0', file=yp)
+    print('    type: complex', file=yp)
+    print('    list: false', file=yp)
+    for key, val in controllers.items():
+        houseName = val['houseName']
+        meterName = val['meterName']
+        print('  ' + key + '#V1:', file=yp)
+        print('    topic: ' + gldSimName + '/' + meterName + '/measured_voltage_1', file=yp)
+        print('    default: 120', file=yp)
+        print('  ' + key + '#Tair:', file=yp)
+        print('    topic: ' + gldSimName + '/' + houseName + '/air_temperature', file=yp)
+        print('    default: 80', file=yp)
+        print('  ' + key + '#Load:', file=yp)
+        print('    topic: ' + gldSimName + '/' + houseName + '/hvac_load', file=yp)
+        print('    default: 0', file=yp)
+        print('  ' + key + '#On:', file=yp)
+        print('    topic: ' + gldSimName + '/' + houseName + '/power_state', file=yp)
+        print('    default: 0', file=yp)
+    yp.close()
 
-    util.write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, 15)
+    op = open(fileroot + '_FNCS_Config.txt', 'w')
+    print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
+    print(
+        'subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_' + fileroot + '";',
+        file=op)
+    print('subscribe "precommit:localWeather.temperature <- ' + weatherName + '/temperature";', file=op)
+    print('subscribe "precommit:localWeather.humidity <- ' + weatherName + '/humidity";', file=op)
+    print('subscribe "precommit:localWeather.solar_direct <- ' + weatherName + '/solar_direct";', file=op)
+    print('subscribe "precommit:localWeather.solar_diffuse <- ' + weatherName + '/solar_diffuse";', file=op)
+    print('subscribe "precommit:localWeather.pressure <- ' + weatherName + '/pressure";', file=op)
+    print('subscribe "precommit:localWeather.wind_speed <- ' + weatherName + '/wind_speed";', file=op)
+    #	if len(Eplus_Bus) > 0: # hard-wired names for a single building
+    #		print ('subscribe "precommit:Eplus_load.constant_power_A <- eplus_json/power_A";', file=op)
+    #		print ('subscribe "precommit:Eplus_load.constant_power_B <- eplus_json/power_B";', file=op)
+    #		print ('subscribe "precommit:Eplus_load.constant_power_C <- eplus_json/power_C";', file=op)
+    #		print ('subscribe "precommit:Eplus_meter.bill_mode <- eplus_json/bill_mode";', file=op)
+    #		print ('subscribe "precommit:Eplus_meter.price <- eplus_json/price";', file=op)
+    #		print ('subscribe "precommit:Eplus_meter.monthly_fee <- eplus_json/monthly_fee";', file=op)
+    for key, val in controllers.items():
+        houseName = val['houseName']
+        houseClass = val['houseClass']
+        meterName = val['meterName']
+        aucSimKey = aucSimName + '/' + key
+        print('publish "commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature";', file=op)
+        print('publish "commit:' + houseName + '.power_state -> ' + houseName + '/power_state";', file=op)
+        print('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
+        if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
+            print('publish "commit:' + meterName + '.measured_voltage_A -> ' + meterName + '/measured_voltage_1";',
+                  file=op)
+        else:
+            print('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";',
+                  file=op)
+        print('subscribe "precommit:' + houseName + '.cooling_setpoint <- ' + aucSimKey + '/cooling_setpoint";',
+              file=op)
+        print('subscribe "precommit:' + houseName + '.heating_setpoint <- ' + aucSimKey + '/heating_setpoint";',
+              file=op)
+        print('subscribe "precommit:' + houseName + '.thermostat_deadband <- ' + aucSimKey + '/thermostat_deadband";',
+              file=op)
+        print('subscribe "precommit:' + meterName + '.bill_mode <- ' + aucSimKey + '/bill_mode";', file=op)
+        print('subscribe "precommit:' + meterName + '.price <- ' + aucSimKey + '/price";', file=op)
+        print('subscribe "precommit:' + meterName + '.monthly_fee <- ' + aucSimKey + '/monthly_fee";', file=op)
+    op.close()
 
-    # TODO monitor for helics
-    # write topics to the FNCS config yaml file that will be used/shown in the monitor
-    # util.write_FNCS_config_yaml_file_values(fileroot, controllers)
+    # write topics to the FNCS config yaml file that will be shown in the monitor
+    utilities.write_FNCS_config_yaml_file_values(fileroot, controllers)
 
 
 def prep_ercot_substation(gldfileroot, jsonfile='', weatherName=''):

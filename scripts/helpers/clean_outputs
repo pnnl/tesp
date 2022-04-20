@@ -41,9 +41,9 @@ cd ../dist_system || exit
 
 
 cd "$TESPDIR/examples/analysis/sgip1" || exit
-./clean.sh
+#./clean.sh
 cd ../dsot/code || exit
-./clean.sh
+#./clean.sh
 
 
 cd "$CWD" || exit

@@ -13,10 +13,8 @@ Public Functions:
 
 """
 
-import json;
-import sys;
-import math;
-from traceback import format_exc
+import json
+import math
 
 
 def ercotMeterName(objname):
@@ -58,14 +56,13 @@ def ti_enumeration_string(tok):
     return tok
 
 
-def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
+def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
     """ Writes the JSON metadata file from a GLM file
-
-	This function reads *nameroot.glm* and writes *nameroot_glm_dict.json*
-	The GLM file should have some meters and triplex_meters with the
-	bill_mode attribute defined, which identifies them as billing meters
-	that parent houses and inverters. If this is not the case, ERCOT naming
-	rules can be applied to identify billing meters.
+        	This function reads *nameroot.glm* and writes *nameroot_glm_dict.json*
+	        The GLM file should have some meters and triplex_meters with the
+	        bill_mode attribute defined, which identifies them as billing meters
+	        that parent houses and inverters. If this is not the case, ERCOT naming
+	        rules can be applied to identify billing meters.
 
 	Args:
 	    nameroot (str): path and file name of the GLM file, without the extension
@@ -73,16 +70,16 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
 	    ercot (boolean): request ERCOT billing meter naming. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
 	    te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
 	"""
-    
+
     # Laurentiu Marinovici 01/28/2020
     # Commenting out the if ercot part, as config does not even have a feeder key anyway
-    #if ercot:
+    # if ercot:
     #    ip = open(config['feeder'] + '.glm', 'r')
-    #else:
+    # else:
     ip = open(nameroot + '.glm', 'r')
     op = open(nameroot + '_glm_dict.json', 'w')
 
-    FNCSmsgName = ''
+    message_name = ''
     feeder_id = 'feeder'
     name = ''
     if config is not None:
@@ -111,7 +108,7 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
         if len(lst) > 1:
             if lst[1] == 'substation':
                 inSwing = True
-            if inSwing == True:
+            if inSwing:
                 if lst[0] == 'name':
                     feeder_id = lst[1].strip(';')
                 if lst[0] == 'groupid':
@@ -137,13 +134,13 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
     hasSolar = False
     inCapacitors = False
     inRegulators = False
-    inFNCSmsg = False
+    inMessage = False
     inClimate = False
     for line in ip:
         lst = line.split()
         if len(lst) > 1:  # terminates with a } or };
             if lst[1] == 'fncs_msg':
-                inFNCSmsg = True
+                inMessage = True
             if lst[1] == 'climate':
                 inClimate = True
             if lst[1] == 'house':
@@ -168,11 +165,11 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                 cooling_COP = 3.5
                 total_thermal_mass_per_floor_area = 2
                 house_class = 'SINGLE_FAMILY'
-            if inFNCSmsg == True:
+            if inMessage:
                 if lst[0] == 'name':
-                    FNCSmsgName = lst[1].strip(';')
-                    inFNCSmsg = False
-            if inClimate == True:
+                    message_name = lst[1].strip(';')
+                    inMessage = False
+            if inClimate:
                 if lst[0] == 'name':
                     climateName = lst[1].strip(';')
                 if lst[0] == 'interpolate':
@@ -212,17 +209,17 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                 inZIPload = True
             if lst[1] == 'evcharger_det':
                 inEV = True
-            if inCapacitors == True:
+            if inCapacitors:
                 if lst[0] == 'name':
                     lastCapacitor = lst[1].strip(';')
                     capacitors[lastCapacitor] = {'feeder_id': feeder_id}
                     inCapacitors = False
-            if inRegulators == True:
+            if inRegulators:
                 if lst[0] == 'name':
                     lastRegulator = lst[1].strip(';')
                     regulators[lastRegulator] = {'feeder_id': feeder_id}
                     inRegulators = False
-            if inInverters == True:
+            if inInverters:
                 if lst[0] == 'name' and lastInverter == '':
                     lastInverter = lst[1].strip(';')
                 if lst[1] == 'solar':
@@ -248,7 +245,7 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                     soc = float(lst[1].strip(' ').strip(';')) * 1.0
                 if lst[0] == 'battery_capacity':
                     capacity = float(lst[1].strip(' ').strip(';')) * 1.0
-            if inEV == True:
+            if inEV:
                 if lst[0] == 'name':
                     ev_name = lst[1].strip(';')
                 if lst[0] == 'parent':
@@ -290,7 +287,7 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                                      'miles_per_kwh': ev_mileage,
                                      'range_miles': ev_range,
                                      'efficiency': ev_charg_eff}
-            if inHouses == True:
+            if inHouses:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')
                 if lst[0] == 'parent':
@@ -346,12 +343,12 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                 if lst[0] == 'exterior_ceiling_fraction':
                     ECR = float(lst[1].strip(';'))
                 if (lst[0] == 'cooling_setpoint') or (lst[0] == 'heating_setpoint'):
-                    #if ercot:
+                    # if ercot:
                     #    lastBillingMeter = ercotMeterName(name)
                     #  if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
                     # TODO:  Need to make this more robust.
                     comm_bldg_list = ['OFFICE', 'STRIPMALL', 'BIGBOX', 'large_office', 'office',
-                                     'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service',
+                                      'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service',
                                       'food_sales', 'lodging', 'healthcare_inpatient', 'low_occupancy']
                     # comm_bldg_list = ['OFFICE', 'STRIPMALL', 'BIGBOX', 'large', 'medium',
                     #                  'warehouse', 'big', 'strip', 'education', 'food',
@@ -370,23 +367,23 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                                     'Rdoors': Rdoors, 'airchange_per_hour': airchange_per_hour,
                                     'ceiling_height': ceiling_height,
                                     'thermal_mass_per_floor_area': total_thermal_mass_per_floor_area,
-                                    'aspect_ratio':aspect_ratio,'exterior_wall_fraction':EWR,
-                                    'exterior_floor_fraction':EFR,'exterior_ceiling_fraction':ECR,
-                                    'window_exterior_transmission_coefficient':WETC,
+                                    'aspect_ratio': aspect_ratio, 'exterior_wall_fraction': EWR,
+                                    'exterior_floor_fraction': EFR, 'exterior_ceiling_fraction': ECR,
+                                    'window_exterior_transmission_coefficient': WETC,
                                     'glazing_layers': glazing_layers, 'glass_type': glass_type,
                                     'window_frame': window_frame, 'glazing_treatment': glazing_treatment,
                                     'cooling_COP': cooling_COP, 'over_sizing_factor': over_sizing_factor,
                                     'fuel_type': fuel_type}
                     lastHouse = name
                     inHouses = False
-            if inWaterHeaters == True:
+            if inWaterHeaters:
                 if lst[0] == 'name':
                     whname = lst[1].strip(' ').strip(';')
                     waterheaters[lastHouse] = {'name': whname, 'skew': 0, 'gallons': 0.0, 'tmix': 0.0, 'mlayer': False}
                 if lst[0] == 'schedule_skew':
                     waterheaters[lastHouse]['skew'] = float(lst[1].strip(' ').strip(';')) * 1.0
                 if lst[0] == 'water_demand':
-                    waterheaters[lastHouse]['scalar'] = float(lst[1].split('*')[1].strip(' ').strip(';'))*1.0
+                    waterheaters[lastHouse]['scalar'] = float(lst[1].split('*')[1].strip(' ').strip(';')) * 1.0
                     waterheaters[lastHouse]['schedule_name'] = (lst[1].split('*')[0].strip(' ').strip(';'))
                 if lst[0] == 'tank_volume':
                     waterheaters[lastHouse]['gallons'] = float(lst[1].strip(' ').strip(';')) * 1.0
@@ -395,7 +392,7 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                 if lst[0] == 'waterheater_model':
                     if 'MULTILAYER' == lst[1].strip(' ').strip(';'):
                         waterheaters[lastHouse]['mlayer'] = True
-            if inZIPload == True:
+            if inZIPload:
                 if lastHouse not in ziploads:
                     hf = 1.0  # default heatgain_fraction = 1.0
                     pf = 1.0  # default power factor = 1.0
@@ -428,8 +425,7 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                         ziploads[lastHouse]['power_pf']['constant'] = pf
                         ziploads[lastHouse]['power_fraction']['constant'] = pfr
 
-
-            if inTriplexMeters == True:
+            if inTriplexMeters:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')
                 if lst[0] == 'phases':
@@ -437,18 +433,18 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                 if lst[0] == 'parent':
                     lastMeterParent = lst[1].strip(';')
                 if lst[0] == 'bill_mode':
-                    #if te30 == True:
+                    # if te30:
                     #    if 'flatrate' not in name:
                     #        billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln,
                     #                               'children': [], 'building_type': 'UNKNOWN',
                     #                               'tariff_class': 'industrial'}
                     #        lastBillingMeter = name
-                    #else:
+                    # else:
                     billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln,
-                        'children': [], 'building_type': 'UNKNOWN', 'tariff_class': 'industrial'}
+                                           'children': [], 'building_type': 'UNKNOWN', 'tariff_class': 'industrial'}
                     lastBillingMeter = name
                     inTriplexMeters = False
-            if inMeters == True:
+            if inMeters:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')
                 if lst[0] == 'phases':
@@ -465,9 +461,9 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                     inMeters = False
         elif len(lst) == 1:
             if hasSolar:
-                #if ercot:
+                # if ercot:
                 #    lastBillingMeter = ercotMeterName(name)
-                #elif te30:
+                # elif te30:
                 #    lastBillingMeter = lastMeterParent
                 inverters[lastInverter] = {'feeder_id': feeder_id,
                                            'billingmeter_id': lastBillingMeter,
@@ -477,9 +473,9 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                                            'resource': 'solar',
                                            'inv_eta': inv_eta}
             elif hasBattery:
-                #if ercot:
+                # if ercot:
                 #    lastBillingMeter = ercotMeterName(name)
-                #elif te30:
+                # elif te30:
                 #    lastBillingMeter = lastMeterParent
                 inverters[lastInverter] = {'feeder_id': feeder_id,
                                            'billingmeter_id': lastBillingMeter,
@@ -499,7 +495,7 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
             inInverters = False
             inCapacitors = False
             inRegulators = False
-            inFNCSmsg = False
+            inMessage = False
 
     for key, val in houses.items():
         if key in waterheaters:
@@ -531,9 +527,9 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                 if bldg in mtr['building_type']:
                     mtr['tariff_class'] = 'residential'
         except KeyError as keyErr:
-        #	print('I got a KeyError. Reason - {0}. See: {1}'.format(str(keyErr), format_exc())) # sys.exc_info()[2].tb_)
+            #	print('I got a KeyError. Reason - {0}. See: {1}'.format(str(keyErr), format_exc())) # sys.exc_info()[2].tb_)
             pass
-        #except:
+        # except:
         #	print('Cannot find id {0} from {1} in the list of billing meters.'.format(val['billingmeter_id'], key))
         #	print('System returned error code: {0}.'.format(sys.exc_info()[0]))
         #	pass
@@ -549,7 +545,7 @@ def glm_dict (nameroot, config = None , ercot=False): # , te30=False):
                'longitude': climateLongitude}
 
     feeders[feeder_id] = {'house_count': len(houses), 'inverter_count': len(inverters), 'ev_count': len(ev)}
-    substation = {'bulkpower_bus': bulkpowerBus, 'FNCS': FNCSmsgName,
+    substation = {'bulkpower_bus': bulkpowerBus, 'message_name': message_name,
                   'transformer_MVA': substationTransformerMVA,
                   'base_feeder': base_feeder, 'feeders': feeders,
                   'billingmeters': billingmeters, 'houses': houses, 'inverters': inverters, 'ev': ev,

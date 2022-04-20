@@ -18,7 +18,7 @@ import tesp_support.glm_dict_dsot_v1 as gd
 import tesp_support.commbldgenerator as com_FG
 import tesp_support.feederGenerator_dsot_v1 as res_FG
 import tesp_support.copperplateFeederGenerator_dsot_v1 as cp_FG
-import prep_substation_dsot_v3 as prep
+import prep_substation_dsot as prep
 
 
 # Simulation settings for the this experimental case
@@ -99,9 +99,10 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     eIdx = (e - ep).total_seconds()
     sys_config['Tmax'] = int((eIdx - sIdx))
 
+    dt = sys_config['dt']
     gen = sys_config['gen']
     genFuel = sys_config['genfuel']
-    fncs_config = sys_config['FNCS']
+    tso_config = sys_config['FNCS']
     out_Path = sys_config['outputPath']
 
     sim = case_config['SimulationConfig']
@@ -161,27 +162,11 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     else:
         out_Path = caseName
 
-    # write player yaml(s) for load and generator players
-    players = sys_config["players"]
-    for idx in range(len(players)):
-        player = sys_config[players[idx]]
-        yamlfile = caseName + '/' + player[0] + '_player.yaml'
-        yp = open(yamlfile, 'w')
-        print('name: ' + player[0] + 'player', file=yp)
-        print('time_delta: 15s', file=yp)
-        print('broker: tcp://localhost:' + port, file=yp)
-        print('aggregate_sub: true', file=yp)
-        print('aggregate_pub: true', file=yp)
-        yp.close()
+    # write player helics config json file for load and generator players
+    helpers.write_players_msg(caseName, sys_config, dt)
 
-    # write tso yaml beginning
-    yamlfile = caseName + '/tso.yaml'
-    yp = open(yamlfile, 'w')
-    print('name: pypower', file=yp)
-    print('time_delta: 15s', file=yp)
-    print('broker: tcp://localhost:' + port, file=yp)
-    print('values:', file=yp)
-
+    tso = helpers.HelicsMsg("pypower")
+    # config helics subs/pubs
     # Running renewables wind, solar
     if sys_config['genPower']:
         for i in range(len(gen)):
@@ -190,13 +175,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                 for plyr in ["genMn", "genForecastHr"]:
                     player = sys_config[plyr]
                     if player[6] and not player[8]:
-                        print('  ' + player[0].upper() + '_POWER_' + idx + ':', file=yp)
-                        print('    topic: ' + player[0] + 'player/' + player[0] + '_power_' + idx, file=yp)
-                        print('    default: 0', file=yp)
+                        tso.subs_append_n(player[0].upper() + "_POWER_" + idx, player[0] + "player/" + player[0] + "_power_" + idx, "string")
                     if player[7] and not player[8]:
-                        print('  ' + player[0].upper() + '_PWR_HIST_' + idx + ':', file=yp)
-                        print('    topic: ' + player[0] + 'player/' + player[0] + '_power_history_' + idx, file=yp)
-                        print('    default: 0', file=yp)
+                        tso.subs_append_n(player[0].upper() + "_PWR_HIST_" + idx, player[0] + "player/" + player[0] + "_pwr_hist_" + idx, "string")
 
     # First step is to create the dso folders and populate the feeders
     for dso_key, dso_val in dso_config.items():
@@ -209,36 +190,35 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sub_key = dso_val['substation']
         bus = str(dso_val['bus_number'])
 
-        # write the tso connections for this substation
-        print('  RT_BID_' + bus + ':', file=yp)
-        print('    topic: ' + sub_key + '/rt_bid', file=yp)
-        print('    default: 0', file=yp)
-        print('  DA_BID_' + bus + ':', file=yp)
-        print('    topic: ' + sub_key + '/da_bid', file=yp)
-        print('    default: 0', file=yp)
+        # write the tso pubscribe connections for this substation
+        tso.pubs_append_n(False, "cleared_q_rt_" + bus, "string")
+        tso.pubs_append_n(False, "cleared_q_da_" + bus, "string")
+        tso.pubs_append_n(False, "rt_lmp_" + bus, "string")
+        tso.pubs_append_n(False, "da_lmp_" + bus, "string")
+        tso.pubs_append_n(False, "three_phase_voltage_" + bus, "string")
+
+        # write the tso subscribe connections for this substation
+        tso.subs_append_n("RT_BID_" + bus, sub_key + "/rt_bid_" + bus, "string")
+        tso.subs_append_n("DA_BID_" + bus, sub_key + "/da_bid_" + bus, "string")
 
         try:
             # running reference load, using a player for the load reference for comparison
             player = sys_config['refLoadMn']
             if player[6] and player[8]:
-                print('  ' + player[0].upper() + '_LOAD_' + bus + ':', file=yp)
-                print('    topic: ' + player[0] + 'player/' + player[0] + '_load_' + bus, file=yp)
-                print('    default: 0', file=yp)
+                tso.subs_append_n(player[0].upper() + "_LOAD_" + bus,
+                                   player[0] + "player/" + player[0] + "_load_" + bus, "string")
             if player[7] and player[8]:
-                print('  ' + player[0].upper() + '_LD_HIST_' + bus + ':', file=yp)
-                print('    topic: ' + player[0] + 'player/' + player[0] + '_load_history_' + bus, file=yp)
-                print('    default: 0', file=yp)
+                tso.subs_append_n(player[0].upper() + "_LD_HIST_" + bus,
+                                   player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
             if not dso_val['used']:
                 # running reference load res and ind, (no gridlabd instance, using a player for the load)
                 player = sys_config['gldLoad']
                 if player[6] and player[8]:
-                    print('  ' + player[0].upper() + '_LOAD_' + bus + ':', file=yp)
-                    print('    topic: ' + player[0] + 'player/' + player[0] + '_load_' + bus, file=yp)
-                    print('    default: 0', file=yp)
+                    tso.subs_append_n(player[0].upper() + "_LOAD_" + bus,
+                                       player[0] + "player/" + player[0] + "_load_" + bus, "string")
                 if player[7] and player[8]:
-                    print('  ' + player[0].upper() + '_LD_HIST_' + bus + ':', file=yp)
-                    print('    topic: ' + player[0] + 'player/' + player[0] + '_load_history_' + bus, file=yp)
-                    print('    default: 0', file=yp)
+                    tso.subs_append_n(player[0].upper() + "_LD_HIST_" + bus,
+                                       player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
                 continue
         except:
             pass
@@ -279,9 +259,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         # Following block is for AMES:
         PQ_val = [0, 0, 0, 0]
-        for i in range(len(fncs_config)):
-            if bus == str(fncs_config[i][0]):
-                PQ_val = fncs_config[i]
+        for i in range(len(tso_config)):
+            if bus == str(tso_config[i][0]):
+                PQ_val = tso_config[i]
         mktPrep['DSO']['Bus'] = PQ_val[0]
         mktPrep['DSO']['Pnom'] = PQ_val[3]
         mktPrep['DSO']['Qnom'] = PQ_val[4]
@@ -339,9 +319,11 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         # in the subsequent part that processes each feeder;
         # the reason is the way the code was written for feeder generator
         # when only one feeder was expected
-        
         with open(caseName + '/case_config_' + str(dso_val['bus_number']) + '.json', 'w') as outfile:
             json.dump(case_config, outfile, ensure_ascii=False, indent=2)
+
+        helpers.gld = helpers.HelicsMsg("gld" + case_config['SimulationConfig']['Substation'])
+        helpers.dso = helpers.HelicsMsg("dso" + case_config['SimulationConfig']['Substation'])
         feeders = dso_val['feeders']
         feedercnt = 1
         for feed_key, feed_val in feeders.items():
@@ -414,17 +396,17 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         os.makedirs(caseName + "/" + sub_key)
         cm.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
 
-        print("\n=== MERGING THE FNCS CONFIGURATION FILES UNDER THE SUBSTATION FNCS CONFIGURATION =====")
-        cm.merge_fncs_config(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '_FNCS_Config.txt'), list(dso_val['feeders'].keys()))
+        print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
+        helpers.gld.write_file(dt, os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.json'))
 
-        print("\n=== MERGING THE FEEDERS GLM DICTIONARIES =====")
+        print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
         cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
 
-        print("\n=== MERGING THE SUBSTATION AGENT DICTIONARIES =====")
+        print("\n=== MERGING/WRITING THE SUBSTATION AGENT DICTIONARIES =====")
         cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
 
-        print("\n=== MERGING THE SUBSTATION YAML =====")
-        cm.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.yaml'), list(dso_val['feeders'].keys()))
+        print("\n=== MERGING/WRITING THE DSO MESSAGE FILE=====")
+        helpers.dso.write_file(dt, os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
 
         # cleaning after feeders had been merged
         foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName)) if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
@@ -436,10 +418,10 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, dso_key))
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
-    yp.close()
+    tso.write_file(dt, caseName + '/tso_h.json')
 
     # Also create the launch, kill and clean scripts for this case
-    helpers.write_experiment_management_script(master_file="generate_case_config", case_path=caseName, system_config=sys_config,
+    helpers.write_dsot_management_script(master_file="generate_case_config", case_path=caseName, system_config=sys_config,
                                                substation_config=dso_config, weather_config=weather_config)
 
 

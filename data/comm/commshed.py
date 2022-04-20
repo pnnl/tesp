@@ -22,14 +22,14 @@ def helics_loop(tmax, market_period, thresh_kW, max_offset_kW):
 
     for i in range(pubCount):
         pub = helics.helicsFederateGetPublicationByIndex(hFed, i)
-        key = helics.helicsPublicationGetKey(pub)
+        key = helics.helicsPublicationGetName(pub)
         print('HELICS publication key', i, key)
         if 'offer' in key:
             pub_offer = pub
     for i in range(subCount):
         sub = helics.helicsFederateGetInputByIndex(hFed, i)
-        key = helics.helicsInputGetKey(sub)
-        target = helics.helicsSubscriptionGetKey(sub)
+        key = helics.helicsInputGetName(sub)
+        target = helics.helicsSubscriptionGetTarget(sub)
         print('HELICS subscription key', i, key, 'target', target)
         if 'distribution_load' in target:
             sub_load = sub

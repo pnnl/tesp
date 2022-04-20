@@ -70,7 +70,7 @@ def load_json_case(fname, FNCS=False):
     ppc['branch'] = np.array(ppc['branch'])
     ppc['areas'] = np.array(ppc['areas'])
     ppc['gencost'] = np.array(ppc['gencost'])
-    if FNCS == True:
+    if FNCS:
         ppc['FNCS'] = np.array(ppc['FNCS'])
     else:
         ppc['DSO'] = np.array(ppc['DSO'])
@@ -316,7 +316,7 @@ def parse_kva(arg):  # this drops the sign of p and q
     Returns:
         float: the parsed kva value
     """
-    toks = list(filter(None, re.split('[+j-]', arg)))
+    toks = list(filter(None, re.split('[\+j-]', arg)))
     p = float(toks[0])
     q = float(toks[1])
     return 0.001 * math.sqrt(p * p + q * q)

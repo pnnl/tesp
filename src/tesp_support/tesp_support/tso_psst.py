@@ -1,5 +1,6 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
-# file: fncsTSO.py
+# file: tso_psst.py
+
 import os
 import math
 import json
@@ -12,10 +13,10 @@ import helics
 
 from copy import deepcopy
 from datetime import datetime
-from .metrics_collector import MetricsStore, MetricsCollector
 from .helpers import load_json_case
 from .helpers import parse_mva
 from .helpers import print_mod_load
+from .metrics_collector import MetricsStore, MetricsCollector
 
 
 def make_generater_plants(ppc, renewables):
@@ -38,7 +39,7 @@ def make_dictionary(ppc):
     Args:
       ppc (dict): PYPOWER case file structure
     """
-    fncsBuses = {}
+    dsoBuses = {}
     generators = {}
     unitsout = []
     branchesout = []
@@ -46,7 +47,7 @@ def make_dictionary(ppc):
     gen = ppc['gen']
     genCost = ppc['gencost']
     genFuel = ppc['genfuel']
-    fncsBus = ppc['FNCS']
+    dsoBus = ppc['FNCS']
     units = ppc['UnitsOut']
     branches = ppc['BranchesOut']
     output_Path = ppc['outputPath']
@@ -71,13 +72,13 @@ def make_dictionary(ppc):
                                   'StartupCost': float(genCost[i, 1]), 'ShutdownCost': float(genCost[i, 2]), 'c2': c2,
                                   'c1': c1, 'c0': c0}
 
-    for i in range(fncsBus.shape[0]):
-        busnum = int(fncsBus[i, 0])
+    for i in range(dsoBus.shape[0]):
+        busnum = int(dsoBus[i, 0])
         busidx = busnum - 1
-        fncsBuses[str(busnum)] = {'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
+        dsoBuses[str(busnum)] = {'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
                                   'area': int(bus[busidx, 6]), 'zone': int(bus[busidx, 10]),
-                                  'ampFactor': float(fncsBus[i, 2]), 'GLDsubstations': [fncsBus[i, 1]],
-                                  'curveScale': float(fncsBus[i, 5]), 'curveSkew': int(fncsBus[i, 6])}
+                                  'ampFactor': float(dsoBus[i, 2]), 'GLDsubstations': [dsoBus[i, 1]],
+                                  'curveScale': float(dsoBus[i, 5]), 'curveSkew': int(dsoBus[i, 6])}
 
     for i in range(units.shape[0]):
         unitsout.append({'unit': int(units[i, 0]), 'tout': int(units[i, 1]), 'tin': int(units[i, 2])})
@@ -86,7 +87,7 @@ def make_dictionary(ppc):
         branchesout.append({'branch': int(branches[i, 0]), 'tout': int(branches[i, 1]), 'tin': int(branches[i, 2])})
 
     dp = open(os.path.join(output_Path, 'model_dict.json'), 'w')
-    ppdict = {'baseMVA': ppc['baseMVA'], 'fncsBuses': fncsBuses, 'generators': generators, 'UnitsOut': unitsout,
+    ppdict = {'baseMVA': ppc['baseMVA'], 'fncsBuses': dsoBuses, 'generators': generators, 'UnitsOut': unitsout,
               'BranchesOut': branchesout}
     print(json.dumps(ppdict), file=dp, flush=True)
     dp.close()
@@ -339,7 +340,7 @@ def tso_loop(casename):
                 log.critical('ERROR - No DA starting point')
                 exit()
 
-        for ii in range(fncsBus.shape[0]):
+        for ii in range(dsoBus.shape[0]):
             pub = helics.helicsFederateGetPublication(hFed, 'lmp_da_' + str(ii + 1))
             helics.helicsPublicationPublishString(pub, json.dumps(DA_LMPs[ii]))
             row = DA_LMPs[ii]
@@ -399,9 +400,9 @@ def tso_loop(casename):
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
                     # log.debug(str(ld) + " cleared quantity for hour " + str(t) + " --> " + str(instance.PSLoadDemand[ld, t].value))
-            for ii in range(fncsBus.shape[0]):
+            for ii in range(dsoBus.shape[0]):
                 bus_num = ii + 1
-                gld_scale = float(fncsBus[ii, 2])
+                gld_scale = float(dsoBus[ii, 2])
                 lse = 'LSE' + str(bus_num)
                 try:
                     row = lseDispatch[lse]
@@ -423,10 +424,10 @@ def tso_loop(casename):
                     row[18], row[19], row[20], row[21], row[22], row[23]
                 )
         else:
-            for ii in range(fncsBus.shape[0]):
+            for ii in range(dsoBus.shape[0]):
                 row = []
                 bus_num = ii + 1
-                gld_scale = float(fncsBus[ii, 2])
+                gld_scale = float(dsoBus[ii, 2])
                 for z in range(24):
                     if dso_bid:
                         row.append((respMaxMW[ii][z] + unRespMW[ii][z]) * gld_scale)
@@ -551,9 +552,9 @@ def tso_loop(casename):
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
 
-            for ii in range(fncsBus.shape[0]):
+            for ii in range(dsoBus.shape[0]):
                 bus_num = ii + 1
-                gld_scale = float(fncsBus[ii, 2])
+                gld_scale = float(dsoBus[ii, 2])
                 lse = 'LSE' + str(bus_num)
                 try:
                     row = lseDispatch[lse]
@@ -577,9 +578,9 @@ def tso_loop(casename):
                     row[0]
                 )
         else:
-            for ii in range(fncsBus.shape[0]):
+            for ii in range(dsoBus.shape[0]):
                 bus_num = ii + 1
-                gld_scale = float(fncsBus[ii, 2])
+                gld_scale = float(dsoBus[ii, 2])
                 if dso_bid:
                     ld = gld_load[bus_num]['unresp']
                     if ld <= 0:                           # no bid add the unresp through tape event
@@ -590,7 +591,7 @@ def tso_loop(casename):
 
                 row = []
                 for z in range(TAU):
-                    row.append(ld)
+                   row.append(ld)
                 pub = helics.helicsFederateGetPublication(hFed, 'cleared_q_rt_' + str(bus_num))
                 helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
                 rt_q_store.append_data(
@@ -643,14 +644,14 @@ def tso_loop(casename):
             nobid_unresp_da[jj] = []
             for ii in range(bus.shape[0]):
                 bus_num = ii + 1
-                if bus_num <= fncsBus.shape[0]:      # only low voltage bus and with dso
+                if bus_num <= dsoBus.shape[0]:      # only low voltage bus and with dso
                     total = unRespMW[ii][jj]
                     if not priceSensLoad:
                         total += respMaxMW[ii][jj]
                     if total == 0:                   # no unresp bid add through tape event
                         total = gld_load_hist[bus_num][jj+24]
                         nobid_unresp_da[jj].append(total)
-                    total = (total * float(fncsBus[ii][2])) / baseS
+                    total = (total * float(dsoBus[ii][2])) / baseS
                 else:                                # high voltage buses are added
                     total = unRespMW[ii][jj] / baseS
                 dso_loads.append(total)
@@ -724,14 +725,14 @@ def tso_loop(casename):
         for ii in range(bus.shape[0]):
             total = 0.0
             bus_num = ii + 1
-            if bus_num <= fncsBus.shape[0]:  # only low voltage bus and with dso
+            if bus_num <= dsoBus.shape[0]:  # only low voltage bus and with dso
                 total = gld_load[bus_num]['unresp']
                 if not priceSensLoad:
                     total += gld_load[bus_num]['resp_max']
                 if total == 0:  # no unresp bid add through tape event
                     total = gld_load[bus_num]['p']
                     nobid_unresp_rt[ii] = total
-                total = (total * float(fncsBus[ii][2])) / baseS
+                total = (total * float(dsoBus[ii][2])) / baseS
             # else:                                       # high voltage buses are added
             # where is this in real time
             dso_loads.append(total)
@@ -975,7 +976,7 @@ def tso_loop(casename):
                       '{: .1f}'.format(zones[jj][2]) + '{: .1f}'.format(zones[jj][3]), file=fp)
             print(';\n', file=fp)
 
-        # Market ie bidding from a dso (fncsBus) and bus
+        # Market ie bidding from a dso (dsoBus) and bus
         # in dsot there are multiple bus' for a dso
         if dso_bid:
             if dayahead:
@@ -997,14 +998,14 @@ def tso_loop(casename):
 
             if priceSensLoad:
                 writeLine = 'set PricesSensitiveLoadNames :='
-                for ii in range(fncsBus.shape[0] - 1):
+                for ii in range(dsoBus.shape[0] - 1):
                     writeLine = writeLine + ' LSE' + str(ii + 1) + ','
                 print(writeLine + ' LSE' + str(ii + 2), ';\n', file=fp)
 
                 print('param: Name ID atBus hourIndex d e f SLMax NS :=', file=fp)
-                for ii in range(fncsBus.shape[0]):
+                for ii in range(dsoBus.shape[0]):
                     bus_num = ii + 1
-                    gld_scale = float(fncsBus[ii][2])
+                    gld_scale = float(dsoBus[ii][2])
                     if dayahead:                                # 12am to 12am
                         for jj in range(hours_in_a_day):
                             print('LSE' + str(bus_num) + ' ' + str(bus_num) + ' Bus' + str(bus_num) +
@@ -1038,7 +1039,7 @@ def tso_loop(casename):
                         for key, row in generater_plants.items():
                             if row[0] == bus_num:
                                 ndg += float(row[2][jj+24])
-                        if bus_num <= fncsBus.shape[0]:
+                        if bus_num <= dsoBus.shape[0]:
                             net = ref_load_hist[bus_num][jj+24] - ndg  # uses history
                         else:
                             net = - ndg
@@ -1050,7 +1051,7 @@ def tso_loop(casename):
                             for jj in range(znumGen):
                                 if zgenFuel[jj][2] == row[3]:
                                     ndg += zgen[jj, 1]
-                    if bus_num <= fncsBus.shape[0]:
+                    if bus_num <= dsoBus.shape[0]:
                         net = gld_load[bus_num]['pcrv'] - ndg
                     else:
                         net = - ndg
@@ -1159,7 +1160,7 @@ def tso_loop(casename):
         # Define a dictionary of hourly load forecasts, collected from ppc
         #    GridLAB-D via FNCS, to replace ppc['bus']
         lse = []
-        for i in range(fncsBus.shape[0]):
+        for i in range(dsoBus.shape[0]):
             Pd = unRespMW[i] + respMaxMW[i]
             fbus = int(bus[i, 0])
             lse.append([fbus, Pd])
@@ -1233,14 +1234,16 @@ def tso_loop(casename):
     def update_cost_and_load():
         # update cost coefficients, set dispatchable load, put unresp load on bus
         bus_total = {'pcrv': 0, 'p': 0, 'p_r': 0, 'unresp': 0, 'resp_max': 0}
-        for row in fncsBus:
+        for row in dsoBus:
             busnum = int(row[0])
             gld_scale = float(row[2])
             load = gld_load[busnum]
             log.debug("Bus" + str(busnum) + " " + str(load))
 
-            # track the latest bid in the metrics
+            # track the latest bid in the metrics and power
             if load['unresp'] > 0:  # we have a bid
+                load['p'] = load['unresp']
+                load['q'] = load['unresp'] * 0.57
                 unresp = load['unresp'] * gld_scale
                 resp_max = load['resp_max'] * gld_scale
                 c2 = load['c2'] / gld_scale * gld_scale
@@ -1255,9 +1258,6 @@ def tso_loop(casename):
                 c0 = 0
                 deg = 0
 
-            if load['unresp'] > 0:
-                load['p'] = load['unresp']
-                load['q'] = load['unresp'] * 0.57
             load['pcrv'] = load['p'] * gld_scale
             load['qcrv'] = load['q'] * gld_scale
             bus[busnum - 1, 2] = load['pcrv']
@@ -1353,7 +1353,7 @@ def tso_loop(casename):
             # genFuel: [[fuel type, fuel name, id, uniton]]
             zones = ppc['zones']
             # zones: [[zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]]
-            fncsBus = ppc['FNCS']
+            dsoBus = ppc['FNCS']
             # FNCS: [[bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]]
 
             # Not being used at this time
@@ -1585,13 +1585,13 @@ def tso_loop(casename):
             rt_lmps = {}
             rt_dispatch = {}
 
-            # listening to fncs objects key on bus number
+            # listening to message objects key on bus number
             gld_load = {}
             gld_load_hist = {}
             ind_load_hist = {}
             ref_load_hist = {}
             nobid_unresp_da = [[]] * hours_in_a_day
-            nobid_unresp_rt = [0] * fncsBus.shape[0]
+            nobid_unresp_rt = [0] * dsoBus.shape[0]
 
             # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
             if not ames:
@@ -1599,17 +1599,17 @@ def tso_loop(casename):
                     row[9] = 0.1 * row[8]
 
             # TODO: more efficient to concatenate outside a loop, lot to do
-            # fncsBus[] (i.e. dso) is one to one with the bus[] to fnscBus length
+            # dsoBus[] (i.e. dso) is one to one with the bus[] to fnscBus length
             # bus length must be >= fnscBus length
             # bus must be in order from low(138) to high(345) voltage
-            # fncsBus (DSOT, ERCOT stub) at this point only low voltage bus are used
-            for i in range(fncsBus.shape[0]):
+            # dsoBus (DSOT, ERCOT stub) at this point only low voltage bus are used
+            for i in range(dsoBus.shape[0]):
                 busnum = i + 1
                 gld_load_hist[busnum] = {}
                 ind_load_hist[busnum] = {}
                 ref_load_hist[busnum] = {}
                 if noScale:
-                    fncsBus[i, 2] = 1.0   # gld_scale
+                    dsoBus[i, 2] = 1.0  # gld_scale
                 # Sets a generator for each dso for responsive loads
                 ppc['gen'] = np.concatenate(
                     (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
@@ -1626,7 +1626,7 @@ def tso_loop(casename):
             genFuel = ppc['genfuel']
 
             # log.info('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
-            # log.info(fncsBus)
+            # log.info(dsoBus)
             # log.info(gld_load)
             # log.info(gen)
             # log.info(genCost)
@@ -1642,8 +1642,8 @@ def tso_loop(casename):
             bus_accum = {}
             gen_accum = {}
 
-            for i in range(fncsBus.shape[0]):
-                busnum = int(fncsBus[i, 0])
+            for i in range(dsoBus.shape[0]):
+                busnum = int(dsoBus[i, 0])
                 bus_accum[str(busnum)] = [0, 0, 0, 0, 0, 0, 0, 99999.0, 0, 0, 0, 0]
 
             for i in range(gen.shape[0]):
@@ -1727,7 +1727,7 @@ def tso_loop(casename):
         # see another example for helics integration at fncsPYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
-            key = helics.helicsSubscriptionGetKey(sub)
+            key = helics.helicsSubscriptionGetTarget(sub)
             topic = key.upper().split('/')[1]
             # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
             if helics.helicsInputIsUpdated(sub):
@@ -1937,16 +1937,16 @@ def tso_loop(casename):
 
             # write OPF metrics
             Pswing = 0
-            for i in range(numGen):
-                if gen[i, 0] == swing_bus:
-                    Pswing += gen[i, 1]
+            for idx in range(numGen):
+                if gen[idx, 0] == swing_bus:
+                    Pswing += gen[idx, 1]
 
             sum_w = 0
             sum_hr = 0
             for key, row in generater_plants.items():
-                for i in range(numGen):
-                    if genFuel[i][2] == row[3]:
-                        sum_w += gen[i, 1]
+                for idx in range(numGen):
+                    if genFuel[idx][2] == row[3]:
+                        sum_w += gen[idx, 1]
                         sum_hr += float(row[2][hour])
 
             line = str(ts) + ', ' + "True" + ','
@@ -1954,16 +1954,16 @@ def tso_loop(casename):
             line += '{: .2f}'.format(gen[:, 1].sum()) + ','
             line += '{: .2f}'.format(Pswing) + ','
             da_sum = 0
-            for i in range(bus.shape[0]):
-                line += '{: .2f}'.format(bus[i, 13]) + ','
-                da_sum += last_unRespMW[i][hour] + last_respMaxMW[i][hour]
+            for idx in range(bus.shape[0]):
+                line += '{: .2f}'.format(bus[idx, 13]) + ','
+                da_sum += last_unRespMW[idx][hour] + last_respMaxMW[idx][hour]
 
             # Must keep the generators in original order for printing when outages are applied
             for uidx in range(unumGen):
                 notUsed = True
-                for i in range(numGen):
-                    if ugenFuel[uidx][2] == genFuel[i][2]:
-                        line += '{: .2f}'.format(gen[i, 1]) + ','
+                for idx in range(numGen):
+                    if ugenFuel[uidx][2] == genFuel[idx][2]:
+                        line += '{: .2f}'.format(gen[idx, 1]) + ','
                         notUsed = False
                         break
                 if notUsed:
@@ -2004,9 +2004,9 @@ def tso_loop(casename):
 
             sum_w = 0
             for key, row in generater_plants.items():
-                for i in range(numGen):
-                    if genFuel[i][2] == row[3]:
-                        sum_w += gen[i, 1]
+                for idx in range(numGen):
+                    if genFuel[idx][2] == row[3]:
+                        sum_w += gen[idx, 1]
 
             line = str(ts) + ',' + "True" + ','
             line += '{: .2f}'.format(opf_bus[:, 2].sum()) + ','
@@ -2017,7 +2017,7 @@ def tso_loop(casename):
             for idx in range(opf_gen.shape[0]):
                 if numGen > idx:
                     line += ',' + '{: .2f}'.format(opf_gen[idx, 1])
-            line += '{: .2f}'.format(sum_w)
+            line += ',{: .2f}'.format(sum_w)
             print(line, sep=', ', file=op, flush=True)
 
             tnext_opf_pp += period
@@ -2030,12 +2030,12 @@ def tso_loop(casename):
 
         # add the actual scaled GridLAB-D loads to the baseline loads
         if new_event:
-            for row in fncsBus:
+            for row in dsoBus:
                 busnum = int(row[0])
-                g_load = gld_load[busnum]
+                load = gld_load[busnum]
                 log.debug("Turn off responsive / dispatchable loads")
                 for idx in range(numGen, gen.shape[0]):
-                    if genFuel[idx][2] == g_load['genidx']:
+                    if genFuel[idx][2] == load['genidx']:
                         log.debug('Bus' + str(busnum) + ', Gen' + str(idx))
                         gen[idx, 1] = 0  # p
                         gen[idx, 2] = 0  # q
@@ -2091,22 +2091,14 @@ def tso_loop(casename):
         # update the metrics
         n_accum += 1
         loss_accum += Ploss
-        for i in range(fncsBus.shape[0]):
-            busnum = fncsBus[i, 0]
-            busidx = int(fncsBus[i, 0]) - 1
+        for i in range(dsoBus.shape[0]):
+            busnum = dsoBus[i, 0]
+            busidx = int(dsoBus[i, 0]) - 1
             row = rBus[busidx].tolist()
-            # publish the bus VLN ?for GridLAB-D
+            # publish the bus VLN for GridLAB-D
             bus_vln = 1000.0 * row[7] * row[9] / math.sqrt(3.0)
             pub = helics.helicsFederateGetPublication(hFed, 'three_phase_voltage_' + busnum)
             helics.helicsPublicationPublishDouble(pub, bus_vln)
-
-            # publish the bus LMP [$/kwh] ?for GridLAB-D
-            # if ames:
-            #     lmp = float(bus[busidx, 13]) * 0.001
-            # else:
-            #     lmp = float(opf_bus[busidx, 13]) * 0.001
-            # pub = helics.helicsFederateGetPublication(hFed, 'LMP_Bus' + busnum)
-            # helics.helicsPublicationPublishString(pub, str(lmp))
 
             # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
             PD = row[2]  # + resp # TODO, if more than one FNCS bus, track scaled_resp separately
@@ -2145,8 +2137,8 @@ def tso_loop(casename):
                 conv_accum,
             )
 
-            for i in range(fncsBus.shape[0]):
-                busnum = fncsBus[i, 0]
+            for i in range(dsoBus.shape[0]):
+                busnum = dsoBus[i, 0]
                 met = bus_accum[busnum]
                 # ('LMP_P', 'USD/kwh'),
                 # ('LMP_Q', 'USD/kvarh'),

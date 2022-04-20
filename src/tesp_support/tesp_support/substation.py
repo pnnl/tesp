@@ -86,12 +86,12 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     subCount = helics.helicsFederateGetInputCount(hFed)
     # for i in range(pubCount):
     #   pub = helics.helicsFederateGetPublicationByIndex(hFed, i)
-    #   key = helics.helicsPublicationGetKey (pub)
+    #   key = helics.helicsPublicationGetName (pub)
     #   print ('** Available HELICS publication key', i, key)
     # for i in range(subCount):
     #   sub = helics.helicsFederateGetInputByIndex(hFed, i)
-    #   key = helics.helicsInputGetKey(sub)
-    #   target = helics.helicsSubscriptionGetKey(sub)
+    #   key = helics.helicsInputGetName(sub)
+    #   target = helics.helicsSubscriptionGetTarget(sub)
     #   print ('== Available HELICS subscription key', i, key, 'target', target)
     gldName = diction['GridLABD']
     fedName = helics.helicsFederateGetName(hFed)

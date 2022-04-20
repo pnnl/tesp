@@ -14,10 +14,7 @@ backbone_config = {'backbone_feeders': {
     'sim_R5-12.47-2': {'vll': 12470.0, 'vln': 7200.0, 'avg_house': 4500.0, 'avg_comm': 15000.0},
     'sim_R5-12.47-4': {'vll': 12470.0, 'vln': 7200.0, 'avg_house': 6000.0, 'avg_comm': 30000.0},
     'sim_R5-12.47-5': {'vll': 12470.0, 'vln': 7200.0, 'avg_house': 4500.0, 'avg_comm': 25000.0}},
-    'outpath': '../case8/',
-    'glmpath': tesp_share + 'feeders/',
-    'supportpath': tesp_share + 'schedules/',
-    'weatherpath': tesp_share + 'weather/'}
+    'work_path': '../case8/'}
 
 # inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 # inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
@@ -28,7 +25,6 @@ case_config = {'SimulationConfig': {
     'CaseName': 'Bus1',
     'StartTime': '2013-07-01 00:00:00',
     'EndTime': '2013-07-04 00:00:00',
-    'SourceDirectory': tesp_share + 'support',
     'WorkingDirectory': '../case8'},
     'FeederGenerator': {
         'MetricsInterval': 300,
@@ -101,7 +97,7 @@ for i in range(len(bus_config)):
     case_config['WeatherPrep']['DataSource'] = bus_config[i]['tmy3']
     case_config['WeatherPrep']['Latitude'] = bus_config[i]['lat']
     case_config['WeatherPrep']['Longitude'] = bus_config[i]['lon']
-    case_config['WeatherPrep']['AgentName'] = bus_config[i]['weather']
+    case_config['WeatherPrep']['Name'] = bus_config[i]['weather']
     case_config['SimulationConfig']['CaseName'] = 'Bus' + str(bus_config[i]['bus'])
     fg.populate_feeder(config=case_config, taxconfig=backbone_config)  # reduced-order feeders
     # fg.populate_feeder (config=case_config)  # full-order feeders

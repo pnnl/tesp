@@ -1,9 +1,9 @@
 {
   "caseType": {
-    "batteryCase": 0,
-    "flexLoadCase": 0,
-    "evCase": 0,
-    "pvCase": 1
+    "bt": 0,
+    "fl": 0,
+    "ev": 0,
+    "pv": 0
   },
   "agent_debug_mode": {
     "ON": 0,

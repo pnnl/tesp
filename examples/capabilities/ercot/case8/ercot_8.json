@@ -10,6 +10,7 @@
   "priceCap": 200.0,
   "zonalReserves": false,
   "caseName": "ercot_8",
+  "outputPath": "",
   "version": 2,
   "baseMVA": 100.0,
   "StartTime": "2013-07-01 00:00:00",

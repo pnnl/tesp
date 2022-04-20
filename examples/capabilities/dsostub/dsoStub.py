@@ -20,7 +20,7 @@ def dso_make_stub(casename):
     players = ppc["players"]
     for idx in range(len(players)):
         player = ppc[players[idx]]
-        jsonfile = player[0] + '_player_h.json'
+        jsonfile = player[0] + '_player.json'
         yp = open(jsonfile, 'w')
         print('{', file=yp)
         print('  "name": "' + player[0] + 'player",', file=yp)
@@ -293,7 +293,7 @@ def dso_loop(casename):
         # see another example for helics integration at fncsPYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
-            key = helics.helicsSubscriptionGetKey(sub)
+            key = helics.helicsSubscriptionGetTarget(sub)
             topic = key.upper().split('/')[1]
             # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
             if helics.helicsInputIsUpdated(sub):

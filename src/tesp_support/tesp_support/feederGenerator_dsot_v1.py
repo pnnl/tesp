@@ -32,20 +32,35 @@ Todo:
 """
 
 import json
-import math
 import os.path
 import re
 import sys
 import networkx as nx
 import numpy as np
 import pandas as pd
+from math import sqrt
 
-from .helpers import parse_kva
-from .helpers import gld_strict_name
-from .helpers_dsot_v1 import random_norm_trunc
+from tesp_support.helpers import parse_kva
+from tesp_support.helpers import gld_strict_name
+from tesp_support.helpers_dsot_v1 import random_norm_trunc
 import tesp_support.commbldgenerator as com_FG
 
-forDSOT = False
+tesp_share = os.path.expandvars('$TESPDIR/data/')
+feeders_path = tesp_share + 'feeders/'
+scheduled_path = tesp_share + 'schedules/'
+weather_path = tesp_share + 'weather/'
+
+forERCOT = False
+port = 5570
+case_name = 'Tesp'
+name_prefix = ''
+work_path = './Dummy/'
+substation = ""
+base_feeder_name = ''
+solar_path = ''
+solar_P_player = ''
+solar_Q_player = ''
+case_type = {"bt": 1, "fl": 0, "ev": 0, "pv": 0}
 
 transmissionVoltage = 138000.0
 transmissionXfmrMVAbase = 12.0
@@ -53,9 +68,6 @@ transmissionXfmrXpct = 8.0
 transmissionXfmrRpct = 1.0
 transmissionXfmrNLLpct = 0.4
 transmissionXfmrImagpct = 1.0
-fncs_case = ''
-
-base_feeder_name = ''
 
 max208kva = 100.0
 xfmrMargin = 1.20
@@ -64,22 +76,45 @@ fuseMargin = 2.50
 starttime = '2010-06-01 00:00:00'
 endtime = '2010-06-03 00:00:00'
 timestep = 15
-use_fncs = True
-use_houses = True
-use_Eplus = True
+timezone = ''
+metrics_interval = 300
+metrics_interim = 7200
+metrics_type = "json"
+metrics = [
+    "house",
+    "waterheater",
+    "meter",
+    "line",
+    "transformer",
+    "capacitor",
+    "inverter",
+    "regulator",
+    "substation"
+],
 Eplus_Bus = ''
 Eplus_Volts = 480.0
 Eplus_kVA = 150.0
-# solar_percentage = 0.2
-# storage_percentage = 0.0
-# water_heater_percentage = 0.0  # if not provided in JSON config, use a regional default
-# water_heater_participation = 0.5
-# solar_inv_mode = 'CONSTANT_PF'
+
+electric_cooling_percentage = 0.0  # if not provided in JSON config, use a regional default
+solar_percentage = 0.2
+storage_percentage = 0.5
+water_heater_percentage = 0.0  # if not provided in JSON config, use a regional default
+water_heater_participation = 0.5
+solar_inv_mode = 'CONSTANT_PF'
+
 latitude = 30.0
 longitude = -110.0
 weather_name = 'localWeather'
-port = 5570
+tz_meridian = 0.0
+altitude = 0.0
+time_zone_offset = 0
 
+rated_power = 5000
+max_charge_rate = 5000
+max_discharge_rate = 5000
+inverter_efficiency = 0.97
+battery_capacity = 13500
+round_trip_efficiency = 0.86
 
 # EV population functions
 def process_nhts_data(data_file):
@@ -285,7 +320,7 @@ def write_solar_inv_settings(op):
     Args:
         op (file): an open GridLAB-D input file
     """
-    print('    four_quadrant_control_mode ${INVERTER_MODE};', file=op)
+    print('    four_quadrant_control_mode ${' + name_prefix + 'INVERTER_MODE};', file=op)
     print('    V_base ${INV_VBASE};', file=op)
     print('    V1 ${INV_V1};', file=op)
     print('    Q1 ${INV_Q1};', file=op)
@@ -304,7 +339,7 @@ def write_solar_inv_settings(op):
     print('    VW_P2 ${INV_VW_P2};', file=op)
 
 
-# storage_inv_mode = 'LOAD_FOLLOWING'
+storage_inv_mode = 'LOAD_FOLLOWING'
 weather_file = 'AZ-Tucson_International_Ap.tmy3'
 bill_mode = 'UNIFORM'
 kwh_price = 0.1243
@@ -339,9 +374,10 @@ def write_tariff(op):
             print('  third_tier_price', '{:.6f}'.format(tier3_price) + ';', file=op)
 
 
-# bat_rt_efficiency = 0.86
+inv_undersizing = 1.0
+array_efficiency = 0.2
+rated_insolation = 1000.0
 
-# TODO: move the following data to metadta.json
 # techdata dict:[heatgain fraction, Zpf, Ipf, Ppf, Z, I, P]
 techdata = [0.9, 1.0, 1.0, 1.0, 0.2, 0.4, 0.4]
 
@@ -362,7 +398,7 @@ rgnName = ['West_Coast',
 rgnTimeZone = ['PST+8PDT', 'EST+5EDT', 'MST+7MDT', 'CST+6CDT', 'EST+5EDT']
 rgnWeather = ['CA-San_francisco', 'OH-Cleveland', 'AZ-Phoenix', 'TN-Nashville', 'FL-Miami']
 vint_type = ['pre_1950', '1950-1959', '1960-1969', '1970-1979', '1980-1989', '1990-1999', '2000-2009', '2010-2015']
-
+dsoThermalPct = []
 
 # -----------fraction of vintage type by home type in a given dso type---------
 # index 0 is the home type:
@@ -371,7 +407,9 @@ vint_type = ['pre_1950', '1950-1959', '1960-1969', '1970-1979', '1980-1989', '19
 #   2 = mh: mobile homes (mobile_home)
 # index 1 is the vintage type
 #       0:pre-1950, 1:1950-1959, 2:1960-1969, 3:1970-1979, 4:1980-1989, 5:1990-1999, 6:2000-2009, 7:2010-2015
-def getDsoThermalTable(dso_type):
+
+
+def getDsoThermalTable():
     vintage_mat = res_bldg_metadata['housing_vintage'][dso_type]
     df = pd.DataFrame(vintage_mat)
     # df = df.transpose()
@@ -393,7 +431,7 @@ def getDsoThermalTable(dso_type):
 
 
 def selectResidentialBuilding(rgnTable, prob):
-    """Selects the building and vintage type
+    """Selects the building with region and probability
 
     Args:
         rgnTable:
@@ -526,6 +564,12 @@ def selectSetpointBins(bldg, rand):
 def checkResidentialBuildingTable():
     """Verify that the regional building parameter histograms sum to one
     """
+    for tbl in range(len(dsoThermalPct)):
+        total = 0
+        for row in range(len(dsoThermalPct[tbl])):
+            for col in range(len(dsoThermalPct[tbl][row])):
+                total += dsoThermalPct[tbl][row][col]
+        print(rgnName[tbl], 'dsoThermalPct sums to', '{:.4f}'.format(total))
     for tbl in range(len(bldgCoolingSetpoints)):
         total = 0
         for row in range(len(bldgCoolingSetpoints[tbl])):
@@ -659,7 +703,7 @@ def selectThermalProperties(bldgIdx, tiIdx):
 
     Args:
         bldgIdx (int): 0 for single-family, 1 for apartment, 2 for mobile home
-        tiIdx (int): 0..7
+        tiIdx (int): 0..7 for single-family, apartment or mobile home
     """
     if bldgIdx == 0:
         tiProps = singleFamilyProperties[tiIdx]
@@ -702,7 +746,6 @@ single_phase = [[5, 2.10, 1.53, 0.90, 3.38],
                 [250, 1.10, 3.85, 0.36, 1.81],
                 [333, 1.00, 4.90, 0.34, 1.97],
                 [500, 1.00, 4.90, 0.29, 1.98]]
-
 
 # leave off intermediate fuse sizes 8, 12, 20, 30, 50, 80, 140
 # leave off 6, 10, 15, 25 from the smallest sizes, too easily blown
@@ -754,7 +797,8 @@ def Find1PhaseXfmrKva(kva):
     for row in single_phase:
         if row[0] >= kva:
             return row[0]
-    return 0.0
+    n500 = int((kva + 250.0) / 500.0)
+    return 500.0 * n500
 
 
 def Find3PhaseXfmrKva(kva):
@@ -773,7 +817,8 @@ def Find3PhaseXfmrKva(kva):
     for row in three_phase:
         if row[0] >= kva:
             return row[0]
-    return 0.0
+    n10 = int((kva + 5000.0) / 10000.0)
+    return 500.0 * n10
 
 
 def Find1PhaseXfmr(kva):
@@ -790,7 +835,7 @@ def Find1PhaseXfmr(kva):
     for row in single_phase:
         if row[0] >= kva:
             return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
-    return 0, 0, 0, 0, 0
+    return Find1PhaseXfmrKva(kva), 0.01, 0.06, 0.005, 0.01
 
 
 def Find3PhaseXfmr(kva):
@@ -808,7 +853,7 @@ def Find3PhaseXfmr(kva):
     for row in three_phase:
         if row[0] >= kva:
             return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
-    return 0, 0, 0, 0, 0
+    return Find3PhaseXfmrKva(kva), 0.01, 0.08, 0.005, 0.01
 
 
 # Root Name, VLL, VLN, Avg House, Avg Commercial
@@ -931,7 +976,7 @@ def obj(parent, model, line, itr, oidh, octr):
             val = m.group(2)
             intobj = 0
             if param == 'name':
-                oname = gld_strict_name(val)
+                oname = gld_strict_name(name_prefix + val)
             elif param == 'object':
                 # found a nested object
                 intobj += 1
@@ -956,7 +1001,7 @@ def obj(parent, model, line, itr, oidh, octr):
             line = next(itr)
     # If undefined, use a default name
     if oname is None:
-        oname = 'ID_' + str(octr)
+        oname = name_prefix + 'ID_' + str(octr)
     oidh[oname] = oname
     # Hash an object identifier to the object name
     if n:
@@ -1040,7 +1085,7 @@ def write_local_triplex_configurations(op):
     """
     for row in triplex_conductors:
         print('object triplex_line_conductor {', file=op)
-        print('  name', row[0] + ';', file=op)
+        print('  name', name_prefix + row[0] + ';', file=op)
         print('  resistance', str(row[1]) + ';', file=op)
         print('  geometric_mean_radius', str(row[2]) + ';', file=op)
         print('  rating.summer.continuous', str(row[3]) + ';', file=op)
@@ -1050,10 +1095,10 @@ def write_local_triplex_configurations(op):
         print('}', file=op)
     for row in triplex_configurations:
         print('object triplex_line_configuration {', file=op)
-        print('  name', row[0] + ';', file=op)
-        print('  conductor_1', row[1] + ';', file=op)
-        print('  conductor_2', row[1] + ';', file=op)
-        print('  conductor_N', row[2] + ';', file=op)
+        print('  name', name_prefix + row[0] + ';', file=op)
+        print('  conductor_1', name_prefix + row[1] + ';', file=op)
+        print('  conductor_2', name_prefix + row[1] + ';', file=op)
+        print('  conductor_N', name_prefix + row[2] + ';', file=op)
         print('  insulation_thickness', str(row[3]) + ';', file=op)
         print('  diameter', str(row[4]) + ';', file=op)
         print('}', file=op)
@@ -1273,7 +1318,7 @@ def identify_ercot_houses(model, h, t, avgHouse, rgn):
         rgn (int): the region number, 1..5
     """
     # let's get the vintage table for dso_type
-    dsoThermalPct = getDsoThermalTable(dso_type)
+    dsoThermalPct = getDsoThermalTable()
     print('Average ERCOT House', avgHouse, rgn)
     total_houses = {'A': 0, 'B': 0, 'C': 0}
     total_small = {'A': 0, 'B': 0, 'C': 0}
@@ -1346,9 +1391,9 @@ def replace_commercial_loads(model, h, t, avgBuilding):
     total_comm_kva = 0
     total_zipload = 0
     total_office = 0
-    total_warehouse_storage = 0
     total_big_box = 0
     total_strip_mall = 0
+    total_warehouse_storage = 0
     total_education = 0
     total_food_service = 0
     total_food_sales = 0
@@ -1437,11 +1482,12 @@ def replace_commercial_loads(model, h, t, avgBuilding):
                     comm_loads[o] = [mtr, comm_type, comm_size, kva, nphs, phases, vln, total_commercial, comm_name]
                     model[t][o]['groupid'] = comm_type + '_' + str(comm_size)
                     del model[t][o]
+    # Print commercial info
     print('Found', total_commercial, 'commercial loads totaling', '{:.2f}'.format(total_comm_kva), 'KVA')
     print('  ', total_office, 'med/small offices,')
-    print('  ', total_warehouse_storage, 'warehouses,')
-    print('  ', total_big_box, 'bigbox retail,')
+    print('  ', total_big_box, 'big box retail,')
     print('  ', total_strip_mall, 'strip malls,')
+    print('  ', total_warehouse_storage, 'warehouses,')
     print('  ', total_education, 'education,')
     print('  ', total_food_service, 'food service,')
     print('  ', total_food_sales, 'food sales,')
@@ -1468,7 +1514,7 @@ def identify_xfmr_houses(model, h, t, seg_loads, avgHouse, rgn):
         rgn (int): the region number, 1..5
     """
     # let's get the vintage table for dso_type
-    dsoThermalPct = getDsoThermalTable(dso_type)
+    dsoThermalPct = getDsoThermalTable()
     print('Average House', avgHouse)
     total_houses = 0
     total_sf = 0
@@ -1582,9 +1628,7 @@ def write_houses(basenode, op, vnom):
         op (file): open file to write to
         vnom (float): nominal line-to-neutral voltage at basenode
     """
-    global solar_count
-    global solar_kw
-    global battery_count, ev_count
+    global solar_count, solar_kw, battery_count, ev_count
 
     nhouse = int(house_nodes[basenode][0])
     rgn = int(house_nodes[basenode][1])
@@ -1623,7 +1667,7 @@ def write_houses(basenode, op, vnom):
             print('  to', mtrname + ';', file=op)
             print('  phases', phs + ';', file=op)
             print('  length 30;', file=op)
-            print('  configuration', triplex_configurations[0][0] + ';', file=op)
+            print('  configuration', name_prefix + triplex_configurations[0][0] + ';', file=op)
             print('}', file=op)
             print('object triplex_meter {', file=op)
             print('  name', mtrname + ';', file=op)
@@ -1889,14 +1933,12 @@ def write_houses(basenode, op, vnom):
         # Set point bins dict:[Bin Prob, NightTimeAvgDiff, HighBinSetting, LowBinSetting]
         cooling_bin, heating_bin = selectSetpointBins(bldg, np.random.uniform(0, 1))
         # randomly choose setpoints within bins, and then widen the separation to account for deadband
-        cooling_set = cooling_bin[3] + np.random.uniform(0, 1) * (cooling_bin[2] - cooling_bin[3]) + 1
-        heating_set = heating_bin[3] + np.random.uniform(0, 1) * (heating_bin[2] - heating_bin[3]) - 1
+        cooling_set = cooling_bin[3] + np.random.uniform(0, 1) * (cooling_bin[2] - cooling_bin[3])
+        heating_set = heating_bin[3] + np.random.uniform(0, 1) * (heating_bin[2] - heating_bin[3])
         cooling_diff = 2.0 * cooling_bin[1] * np.random.uniform(0, 1)
         heating_diff = 2.0 * heating_bin[1] * np.random.uniform(0, 1)
-        cooling_str = 'cooling' + '{:.0f}'.format(cooling_sch) + '*' + '{:.2f}'.format(
-            cooling_diff) + '+' + '{:.2f}'.format(cooling_set)
-        heating_str = 'heating' + '{:.0f}'.format(heating_sch) + '*' + '{:.2f}'.format(
-            heating_diff) + '+' + '{:.2f}'.format(heating_set)
+        cooling_str = 'cooling{:.0f}*{:.4f}+{:.2f}'.format(cooling_sch, cooling_diff, cooling_set)
+        heating_str = 'heating{:.0f}*{:.4f}+{:.2f}'.format(heating_sch, heating_diff, heating_set)
         # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
         # we need more separation to assure no overlaps during transactive simulations
         print('  cooling_setpoint 80.0; // ', cooling_str + ';', file=op)
@@ -1905,8 +1947,8 @@ def write_houses(basenode, op, vnom):
         # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
         print('  object ZIPload { // responsive', file=op)
         print('    schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
-        print('    heatgain_fraction', '{:.2f}'.format(techdata[0]) + ';', file=op)
         print('    base_power', 'responsive_loads*' + '{:.2f}'.format(resp_scalar) + ';', file=op)
+        print('    heatgain_fraction', '{:.2f}'.format(techdata[0]) + ';', file=op)
         print('    impedance_pf', '{:.2f}'.format(techdata[1]) + ';', file=op)
         print('    current_pf', '{:.2f}'.format(techdata[2]) + ';', file=op)
         print('    power_pf', '{:.2f}'.format(techdata[3]) + ';', file=op)
@@ -1916,8 +1958,8 @@ def write_houses(basenode, op, vnom):
         print('  };', file=op)
         print('  object ZIPload { // unresponsive', file=op)
         print('    schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
-        print('    heatgain_fraction', '{:.2f}'.format(techdata[0]) + ';', file=op)
         print('    base_power', 'unresponsive_loads*' + '{:.2f}'.format(unresp_scalar) + ';', file=op)
+        print('    heatgain_fraction', '{:.2f}'.format(techdata[0]) + ';', file=op)
         print('    impedance_pf', '{:.2f}'.format(techdata[1]) + ';', file=op)
         print('    current_pf', '{:.2f}'.format(techdata[2]) + ';', file=op)
         print('    power_pf', '{:.2f}'.format(techdata[3]) + ';', file=op)
@@ -1954,26 +1996,19 @@ def write_houses(basenode, op, vnom):
             wh_data = res_bldg_metadata['water_heater_tank_size']
             if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
                 size_array = range(wh_data['tank_size']['1_2_people']['min'],
-                                   wh_data['tank_size']['1_2_people']['max'] + 1,
-                                   5)
-                wh_size = np.random.choice(size_array)
+                                   wh_data['tank_size']['1_2_people']['max'] + 1, 5)
                 wh_demand_type = 'small_'
             elif floor_area <= wh_data['floor_area']['2_3_people']['floor_area_max']:
                 size_array = range(wh_data['tank_size']['2_3_people']['min'],
-                                   wh_data['tank_size']['2_3_people']['max'] + 1,
-                                   5)
-                wh_size = np.random.choice(size_array)
+                                   wh_data['tank_size']['2_3_people']['max'] + 1, 5)
                 wh_demand_type = 'small_'
             elif floor_area <= wh_data['floor_area']['3_4_people']['floor_area_max']:
                 size_array = range(wh_data['tank_size']['3_4_people']['min'],
-                                   wh_data['tank_size']['3_4_people']['max'] + 1,
-                                   10)
-                wh_size = np.random.choice(size_array)
+                                   wh_data['tank_size']['3_4_people']['max'] + 1, 10)
             else:
                 size_array = range(wh_data['tank_size']['5_plus_people']['min'],
-                                   wh_data['tank_size']['5_plus_people']['max'] + 1,
-                                   10)
-                wh_size = np.random.choice(size_array)
+                                   wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
+            wh_size = np.random.choice(size_array)
 
             wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
             wh_skew_value = 3 * residential_skew_std * np.random.randn()
@@ -2020,7 +2055,7 @@ def write_houses(basenode, op, vnom):
                 # bConsiderStorage = False
             if np.random.uniform(0, 1) <= solar_percentage:  # some single-family houses have PV
                 # bConsiderStorage = True
-                ## This is legacy code method to find solar rating
+                # This is legacy code method to find solar rating
                 # panel_area = 0.1 * floor_area
                 # if panel_area < 162:
                 #     panel_area = 162
@@ -2032,7 +2067,7 @@ def write_houses(basenode, op, vnom):
                 # inv_power = inv_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
                 # this results in solar ranging from 3 to 5 kW
 
-                ## new method directly proportional to sq. ft.
+                # new method directly proportional to sq. ft.
                 # typical PV panel is 350 Watts and avg home has 5kW installed.
                 # If we assume 2500 sq. ft as avg area of a single family house, we can say:
                 # one 350 W panel for every 175 sq. ft.
@@ -2040,7 +2075,7 @@ def write_houses(basenode, op, vnom):
                 inv_undersizing = 1.0
                 inv_power = num_panel * 350 * inv_undersizing
                 pv_scaling_factor = inv_power / pv_rating_MW
-                if caseType['pvCase']:
+                if case_type['pv']:
                     solar_count += 1
                     solar_kw += 0.001 * inv_power
                     print('object triplex_meter {', file=op)
@@ -2084,19 +2119,19 @@ def write_houses(basenode, op, vnom):
                     print('  };', file=op)
                     print('}', file=op)
         if np.random.uniform(0, 1) <= storage_percentage:
-            batt_capacity = get_dist(batt_metadata['capacity(kWh)']['mean'],
+            battery_capacity = get_dist(batt_metadata['capacity(kWh)']['mean'],
                                      batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
-            max_charge_rt = get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
+            max_charge_rate = get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
                                      batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
-            max_discharge_rt = max_charge_rt
-            inv_eff = batt_metadata['inv_efficiency(per)'] / 100
+            max_discharge_rate = max_charge_rate
+            inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
             charging_loss = get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
                                      batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
             discharging_loss = charging_loss
-            bat_rt_efficiency = charging_loss * discharging_loss
-            rated_power = max(max_charge_rt, max_discharge_rt)
+            round_trip_efficiency = charging_loss * discharging_loss
+            rated_power = max(max_charge_rate, max_discharge_rate)
 
-            if caseType['batteryCase']:
+            if case_type['bt']:
                 battery_count += 1
                 print('object triplex_meter {', file=op)
                 print('  name', bat_m_name + ';', file=op)
@@ -2114,24 +2149,23 @@ def write_houses(basenode, op, vnom):
                 print('    charge_lockout_time 1;', file=op)
                 print('    discharge_lockout_time 1;', file=op)
                 print('    rated_power', '{:.2f}'.format(rated_power) + ';', file=op)
-                print('    max_charge_rate', '{:.2f}'.format(max_charge_rt) + ';', file=op)
-                print('    max_discharge_rate', '{:.2f}'.format(max_discharge_rt) + ';', file=op)
+                print('    max_charge_rate', '{:.2f}'.format(max_charge_rate) + ';', file=op)
+                print('    max_discharge_rate', '{:.2f}'.format(max_discharge_rate) + ';', file=op)
                 print('    sense_object', mtrname + ';', file=op)
                 # print('    charge_on_threshold -100;', file=op)
                 # print('    charge_off_threshold 0;', file=op)
                 # print('    discharge_off_threshold 2000;', file=op)
                 # print('    discharge_on_threshold 3000;', file=op)
-                print('    inverter_efficiency', '{:.2f}'.format(inv_eff) + ';', file=op)
+                print('    inverter_efficiency', '{:.2f}'.format(inverter_efficiency) + ';', file=op)
                 print('    power_factor 1.0;', file=op)
                 print('    object battery { // Tesla Powerwall 2', file=op)
                 print('      name', batname + ';', file=op)
                 print('      generator_status ONLINE;', file=op)
                 print('      use_internal_battery_model true;', file=op)
-                print('      generator_mode CONSTANT_PQ;', file=op)
                 print('      battery_type LI_ION;', file=op)
                 print('      nominal_voltage 480;', file=op)
-                print('      battery_capacity', '{:.2f}'.format(batt_capacity) + ';', file=op)
-                print('      round_trip_efficiency', '{:.2f}'.format(bat_rt_efficiency) + ';', file=op)
+                print('      battery_capacity', '{:.2f}'.format(battery_capacity) + ';', file=op)
+                print('      round_trip_efficiency', '{:.2f}'.format(round_trip_efficiency) + ';', file=op)
                 print('      state_of_charge 0.50;', file=op)
                 print('      generator_mode SUPPLY_DRIVEN;', file=op)
                 print('    };', file=op)
@@ -2162,7 +2196,7 @@ def write_houses(basenode, op, vnom):
             # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
 
             # Should be able to turn off ev entirely using ev_percentage, definitely in debugging
-            if caseType['pvCase']:  # evs are populated when its pvCase i.e. high renewable case
+            if case_type['pv']:  # evs are populated when its pvCase i.e. high renewable case
                 # few sanity checks
                 if drive_sch['daily_miles'] > ev_range:
                     raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
@@ -2210,15 +2244,20 @@ def write_substation(op, name, phs, vnom, vll):
         vll (float): feeder primary line-to-line voltage
     """
     # if this feeder will be combined with others, need USE_FNCS to appear first as a marker for the substation
-    if len(fncs_case) > 0:
+    if len(case_name) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gridlabd' + substationName + ';', file=op)  # for full-order DSOT
+        print('  name gld' + substationName + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
-        print('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
+        print('  configure', case_name + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port ' + str(port) + '";', file=op)
         print('  aggregate_subscriptions true;', file=op)
         print('  aggregate_publications true;', file=op)
+        print('}', file=op)
+        print('#endif', file=op)
+        print('#ifdef USE_HELICS', file=op)
+        print('object helics_msg {', file=op)
+        print('  configure', case_name + '.json;', file=op)
         print('}', file=op)
         print('#endif', file=op)
     print('object transformer_configuration {', file=op)
@@ -2240,7 +2279,7 @@ def write_substation(op, name, phs, vnom, vll):
     print('  phases', phs + ';', file=op)
     print('  configuration substation_xfmr_config;', file=op)
     print('}', file=op)
-    vsrcln = transmissionVoltage / math.sqrt(3.0)
+    vsrcln = transmissionVoltage / sqrt(3.0)
     print('object substation {', file=op)
     print('  name network_node;', file=op)
     print('  groupid', base_feeder_name + ';', file=op)
@@ -2314,7 +2353,7 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
                 bHaveS = True
             else:
                 bHaveS = False
-            if bHaveS and bHadS is False:
+            if bHaveS and not bHadS:
                 prefix = 'triplex_'
             print('object ' + prefix + t + ' {', file=op)
             if len(parent) > 0:
@@ -2410,7 +2449,7 @@ def write_xfmr_config(key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln
         op (file): an open GridLAB-D input file
     """
     print('object transformer_configuration {', file=op)
-    print('  name ' + key + ';', file=op)
+    print('  name ' + name_prefix + key + ';', file=op)
     print('  power_rating ' + format(kvat, '.2f') + ';', file=op)
     kvaphase = kvat
     if 'XF2' in key:
@@ -2544,14 +2583,17 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         avgcommercial (float): the average commercial load in kVA, not used
     """
     global solar_count, solar_kw, battery_count, ev_count, base_feeder_name
+    global electric_cooling_percentage, storage_percentage, solar_percentage, ev_percentage
+    global water_heater_percentage, water_heater_participation
+
     solar_count = 0
     solar_kw = 0
     battery_count = 0
     ev_count = 0
 
     base_feeder_name = gld_strict_name(rootname)
-    fname = glmpath + rootname + '.glm'
-    print(fname)
+    fname = feeders_path + rootname + '.glm'
+    print('Populating From:', fname)
     rootname = gld_strict_name(rootname)
     rgn = 0
     if 'R1' in rootname:
@@ -2564,8 +2606,6 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         rgn = 4
     elif 'R5' in rootname:
         rgn = 5
-    global electric_cooling_percentage, storage_percentage, solar_percentage, ev_percentage
-    global water_heater_percentage, water_heater_participation
     print('using', solar_percentage, 'solar and', storage_percentage, 'storage penetration')
     if electric_cooling_percentage <= 0.0:
         electric_cooling_percentage = rgnPenElecCool[rgn - 1]
@@ -2589,12 +2629,12 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             line = ip.readline()
         ip.close()
 
-        op = open(outpath + outname + '.glm', 'w')
+        op = open(work_path + outname + '.glm', 'w')
+        print('###### Writing to', work_path + outname + '.glm')
         octr = 0
         model = {}
         h = {}  # OID hash
         itr = iter(lines)
-
         for line in itr:
             if re.search('object', line):
                 line, octr = obj(None, model, line, itr, h, octr)
@@ -2610,6 +2650,19 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                     print('  lu_solver \"KLU\";', file=op)
                 else:
                     print(line, file=op)
+
+        # apply the nameing prefix if necessary
+        if len(name_prefix) > 0:
+            for t in model:
+                for o in model[t]:
+                    elem = model[t][o]
+                    for tok in ['name', 'parent', 'from', 'to', 'configuration', 'spacing',
+                                'conductor_1', 'conductor_2', 'conductor_N',
+                                'conductor_A', 'conductor_B', 'conductor_C']:
+                        if tok in elem:
+                            elem[tok] = name_prefix + elem[tok]
+
+        #        log_model (model, h)
 
         # construct a graph of the model, starting with known links
         G = nx.Graph()
@@ -2644,9 +2697,8 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 if 'bustype' in data['ndata']:
                     if data['ndata']['bustype'] == 'SWING':
                         swing_node = n1
-        #  nx.connected_component_subgraphs deprecated in earlier version.
-        #  sub_graphs = nx.connected_component_subgraphs(G)
-        sub_graphs = [G.subgraph(c).copy() for c in nx.connected_components(G)]
+
+        sub_graphs = nx.connected_components(G)
         seg_loads = {}  # [name][kva, phases]
         total_kva = 0.0
         for n1, data in G.nodes(data=True):
@@ -2677,10 +2729,10 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print('module connection;', file=op)
         print('module residential {', file=op)
         print('  implicit_enduses NONE;', file=op)
-        print('};', file=op)
-        print('#include "' + supportpath + 'appliance_schedules.glm";', file=op)
-        print('#include "' + supportpath + 'water_and_setpoint_schedule_v5.glm";', file=op)
-        print('#include "' + supportpath + 'commercial_schedules.glm";', file=op)
+        print('}', file=op)
+        print('#include "${TESPDIR}/data/schedules/appliance_schedules.glm";', file=op)
+        print('#include "${TESPDIR}/data/schedules/water_and_setpoint_schedule_v5.glm";', file=op)
+        print('#include "${TESPDIR}/data/schedules/commercial_schedules.glm";', file=op)
         print('#set minimum_timestep=' + str(timestep) + ';', file=op)
         print('#set relax_naming_rules=1;', file=op)
         print('#set warn=0;', file=op)
@@ -2690,26 +2742,26 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('  interval', str(metrics_interval) + ';', file=op)
             print('  interim', str(metrics_interim) + ';', file=op)
             print('  filename ${METRICS_FILE};', file=op)
-            print('  // filename your_metrics;', file=op)
             print('  alternate yes;', file=op)
             print('  extension {0:s};'.format(metrics_type), file=op)
-            print('};', file=op)
+            print('}', file=op)
 
         print('object climate {', file=op)
         print('  name', str(weather_name) + ';', file=op)
-        print('  // tmyfile "' + weatherpath + weather_file + '";', file=op)
+        print('  // tmyfile "' + weather_path + weather_file + '";', file=op)
         print('  interpolate QUADRATIC;', file=op)
         print('  latitude', str(latitude) + ';', file=op)
         print('  longitude', str(longitude) + ';', file=op)
+        print('  // altitude', str(altitude) + ';', file=op)
         print('  tz_meridian {0:.2f};'.format(15 * time_zone_offset), file=op)
-        print('};', file=op)
+        print('}', file=op)
 
         #        print('// taxonomy_base_feeder', rootname, file=op)
         #        print('// region_name', rgnName[rgn-1], file=op)
-
-        if caseType['pvCase']:  # solar_percentage > 0.0:
+        if case_type['pv']:  # solar_percentage > 0.0:
             print('// default IEEE 1547-2018 for Category B; modes are CONSTANT_PF, VOLT_VAR, VOLT_WATT', file=op)
-            print('#define INVERTER_MODE=' + solar_inv_mode, file=op)
+            print('// solar inverter mode on this feeder', file=op)
+            print('#define ' + name_prefix + 'INVERTER_MODE=' + solar_inv_mode, file=op)
             print('#define INV_VBASE=240.0', file=op)
             print('#define INV_V1=0.92', file=op)
             print('#define INV_V2=0.98', file=op)
@@ -2727,29 +2779,30 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('#define INV_VW_P1=1.0', file=op)
             print('#define INV_VW_P2=0.0', file=op)
 
-            print('// player class and object for solar P_out and Q_out', file=op)
-            print('class player{', file=op)
-            print(' double value; // must defined the filed "value"', file=op)
-            print('}', file=op)
-            print('object player{', file=op)
-            print(' name P_out_inj;', file=op)
-            print(' file "' + solar_path + solar_P_player + '";', file=op)
-            print('}', file=op)
-            if 'no_file' not in solar_Q_player:
-                print('object player{', file=op)
-                print(' name Q_out_inj;', file=op)
-                print(' file "' + solar_path + solar_Q_player + '";', file=op)
+            if solar_path + solar_P_player != "":
+                print('// player class and object for solar P_out and Q_out', file=op)
+                print('class player{', file=op)
+                print(' double value; // must defined the filed "value"', file=op)
                 print('}', file=op)
+                print('object player{', file=op)
+                print(' name P_out_inj;', file=op)
+                print(' file "' + solar_path + solar_P_player + '";', file=op)
+                print('}', file=op)
+                if solar_Q_player != "":
+                    print('object player{', file=op)
+                    print(' name Q_out_inj;', file=op)
+                    print(' file "' + solar_path + solar_Q_player + '";', file=op)
+                    print('}', file=op)
 
         # write the optional volt_dump and curr_dump for validation
         print('#ifdef WANT_VI_DUMP', file=op)
         print('object voltdump {', file=op)
         print('  filename Voltage_Dump_' + outname + '.csv;', file=op)
-        print('  mode polar;', file=op)
+        # print('  mode polar;', file=op)
         print('}', file=op)
         print('object currdump {', file=op)
         print('  filename Current_Dump_' + outname + '.csv;', file=op)
-        print('  mode polar;', file=op)
+        # print('  mode polar;', file=op)
         print('}', file=op)
         print('#endif', file=op)
 
@@ -2796,7 +2849,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             raw_key = 'XF' + str(nphs) + '_' + install_type + '_' + seg_phs + '_' + str(kvat)
             key = raw_key.replace('.', 'p')
 
-            model[t][o]['configuration'] = key
+            model[t][o]['configuration'] = name_prefix + key
             model[t][o]['phases'] = seg_phs
             if key not in xfused:
                 xfused[key] = [seg_phs, kvat, vnom, vsec, install_type]
@@ -2826,7 +2879,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 if 'C' in seg_phs:
                     nphs += 1
                 if nphs == 3:
-                    amps = 1000.0 * seg_kva / math.sqrt(3.0) / vll
+                    amps = 1000.0 * seg_kva / sqrt(3.0) / vll
                 elif nphs == 2:
                     amps = 1000.0 * seg_kva / 2.0 / vln
                 else:
@@ -2872,7 +2925,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 com_FG.create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
                                          storage_percentage, ev_metadata, ev_percentage,
                                          solar_percentage, pv_rating_MW, solar_Q_player,
-                                         caseType, metrics, metrics_interval, None)
+                                         case_type, metrics, metrics_interval, None)
 
         else:
             replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
@@ -2888,7 +2941,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 com_FG.create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
                                          storage_percentage, ev_metadata, ev_percentage,
                                          solar_percentage, pv_rating_MW, solar_Q_player,
-                                         caseType, metrics, metrics_interval, None)
+                                         case_type, metrics, metrics_interval, None)
 
         write_voltage_class(model, h, 'node', op, vln, vll, secnode)
         write_voltage_class(model, h, 'meter', op, vln, vll, secnode)
@@ -2899,12 +2952,12 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             row = Find3PhaseXfmr(Eplus_kVA)
             actual_kva = row[0]
             watts_per_phase = 1000.0 * actual_kva / 3.0
-            Eplus_vln = Eplus_Volts / math.sqrt(3.0)
+            Eplus_vln = Eplus_Volts / sqrt(3.0)
             vstarta = format(Eplus_vln, '.2f') + '+0.0j'
             vstartb = format(-0.5 * Eplus_vln, '.2f') + format(-0.866025 * Eplus_vln, '.2f') + 'j'
             vstartc = format(-0.5 * Eplus_vln, '.2f') + '+' + format(0.866025 * Eplus_vln, '.2f') + 'j'
             print('object transformer_configuration {', file=op)
-            print('  name Eplus_transformer_configuration;', file=op)
+            print('  name ' + name_prefix + 'Eplus_transformer_configuration;', file=op)
             print('  connect_type WYE_WYE;', file=op)
             print('  install_type PADMOUNT;', file=op)
             print('  power_rating', str(actual_kva) + ';', file=op)
@@ -2916,14 +2969,14 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             print('  shunt_reactance ' + format(1.0 / row[4], '.2f') + ';', file=op)
             print('}', file=op)
             print('object transformer {', file=op)
-            print('  name Eplus_transformer;', file=op)
+            print('  name ' + name_prefix + 'Eplus_transformer;', file=op)
             print('  phases ABCN;', file=op)
-            print('  from', Eplus_Bus + ';', file=op)
-            print('  to Eplus_meter;', file=op)
-            print('  configuration Eplus_transformer_configuration;', file=op)
+            print('  from ' + name_prefix + Eplus_Bus + ';', file=op)
+            print('  to ' + name_prefix + 'Eplus_meter;', file=op)
+            print('  configuration ' + name_prefix + 'Eplus_transformer_configuration;', file=op)
             print('}', file=op)
             print('object meter {', file=op)
-            print('  name Eplus_meter;', file=op)
+            print('  name ' + name_prefix + 'Eplus_meter;', file=op)
             print('  phases ABCN;', file=op)
             print('  meter_power_consumption 1+15j;', file=op)
             print('  nominal_voltage', '{:.4f}'.format(Eplus_vln) + ';', file=op)
@@ -2934,11 +2987,11 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             if metrics_interval > 0 and "meter" in metrics:
                 print('  object metrics_collector {', file=op)
                 print('    interval', str(metrics_interval) + ';', file=op)
-                print('  };', file=op)
+                print('  }', file=op)
             print('}', file=op)
             print('object load {', file=op)
-            print('  name Eplus_load;', file=op)
-            print('  parent Eplus_meter;', file=op)
+            print('  name ' + name_prefix + 'Eplus_load;', file=op)
+            print('  parent ' + name_prefix + 'Eplus_meter;', file=op)
             print('  phases ABCN;', file=op)
             print('  nominal_voltage', '{:.4f}'.format(Eplus_vln) + ';', file=op)
             print('  voltage_A ' + vstarta + ';', file=op)
@@ -2969,16 +3022,16 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global Eplus_Bus, Eplus_Volts, Eplus_kVA
     global transmissionVoltage, transmissionXfmrMVAbase
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage, ev_percentage
-    global outpath, glmpath, supportpath, weatherpath, weather_file
+    global work_path, weather_path, weather_file
     global timezone, starttime, endtime, timestep
     global metrics, metrics_type, metrics_interval, metrics_interim, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
-    global fncs_case, port, forERCOT, forDSOT, substationName
+    global case_name, name_prefix, port, forERCOT, substationName
     global house_nodes, small_nodes, comm_loads
-    global inv_efficiency, bat_rt_efficiency
+    # global inv_efficiency, round_trip_efficiency
     global latitude, longitude, time_zone_offset, weather_name, feeder_commercial_building_number
     global dso_type, gld_scaling_factor, pv_rating_MW
-    global caseType
+    global case_type
     global ashrae_zone, comm_bldg_metadata, comm_bldgs_pop
     # (Laurentiu Marinovici 11/18/2019)
     global res_bldg_metadata  # to store residential metadata
@@ -2995,28 +3048,16 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
         lp = open(configfile).read()
         config = json.loads(lp)
 
-    # This seeding has already been done in the prepare_case_dsot_v3.py for each DSO
-    # No need to reseed.
     # we want the same pseudo-random variables each time, for repeatability
-    # if 'RandomSeed' in config['BackboneFiles']:
-    #     np.random.seed(config['BackboneFiles']['RandomSeed'])
-    # else:
     #     np.random.seed(0)
     rootname = config['BackboneFiles']['TaxonomyChoice']
-    tespdir = config['SimulationConfig']['SourceDirectory']
-    glmpath = tespdir + '/data/feeders/'
-    supportpath = ''  # tespdir + '/data/schedules'
-
-    if 'supportpath' in config['BackboneFiles']:
-        supportpath = config['BackboneFiles']['supportpath']
-    weatherpath = ''  # tespdir + '/data/weather'
-    if 'weatherpath' in config['BackboneFiles']:
-        weatherpath = config['BackboneFiles']['weatherpath']
-    outpath = './' + config['SimulationConfig']['CaseName'] + '/'
+    if 'NamePrefix' in config['BackboneFiles']:
+        name_prefix = config['BackboneFiles']['NamePrefix']
+    work_path = './' + config['SimulationConfig']['CaseName'] + '/'
+    if 'WorkingDirectory' in config['SimulationConfig']:
+        work_path = config['SimulationConfig']['WorkingDirectory'] + '/'
     if 'OutputPath' in config['SimulationConfig']:
-        outpath = './' + config['SimulationConfig']['OutputPath'] + '/'
-    if 'DSOTCase' in config['SimulationConfig']:
-        forDSOT = config['SimulationConfig']['DSOTCase']
+        work_path = config['SimulationConfig']['OutputPath'] + '/'
     substationName = config['SimulationConfig']['Substation']
     timezone = config['SimulationConfig']['TimeZone']
     starttime = config['SimulationConfig']['StartTime']
@@ -3035,10 +3076,6 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     ev_percentage = 0.01 * float(config['FeederGenerator']['EVPercentage'])
     solar_inv_mode = config['FeederGenerator']['SolarInverterMode']
     storage_inv_mode = config['FeederGenerator']['StorageInverterMode']
-    # if 'InverterEfficiency' in config['FeederGenerator']:
-    #     inv_efficiency = config['FeederGenerator']['InverterEfficiency']
-    # if 'BatteryRoundTripEfficiency' in config['FeederGenerator']:
-    #     bat_rt_efficiency = config['FeederGenerator']['BatteryRoundTripEfficiency']
     weather_file = config['WeatherPrep']['DataSource']
     bill_mode = config['FeederGenerator']['BillingMode']
     kwh_price = float(config['FeederGenerator']['Price'])
@@ -3075,7 +3112,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     ashrae_zone = config['BuildingPrep']['ASHRAEZone']
     comm_bldg_metadata = config['BuildingPrep']['CommBldgMetaData']
     comm_bldgs_pop = config['BuildingPrep']['CommBldgPopulation']
-    caseType = config['SimulationConfig']['caseType']
+    case_type = config['SimulationConfig']['caseType']
 
     # -------- create cop lookup table by vintage bin-----------
     # (Laurentiu MArinovici 11/18/2019) moving the cop_lookup inside this function as it requires
@@ -3107,19 +3144,16 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
             vln = taxrow['vln']
             avg_house = taxrow['avg_house']
             avg_comm = taxrow['avg_comm']
-            fncs_case = config['SimulationConfig']['CaseName']
-            glmpath = taxconfig['glmpath']
-            outpath = taxconfig['outpath']
-            supportpath = taxconfig['supportpath']
-            weatherpath = taxconfig['weatherpath']
-            print(fncs_case, rootname, vll, vln, avg_house, avg_comm, glmpath, outpath, supportpath, weatherpath)
-            ProcessTaxonomyFeeder(fncs_case, rootname, vll, vln, avg_house, avg_comm)
+            case_name = config['SimulationConfig']['CaseName']
+            work_path = taxconfig['work_path']
+            print(case_name, rootname, vll, vln, avg_house, avg_comm, feeders_path, work_path, weather_path)
+            ProcessTaxonomyFeeder(case_name, rootname, vll, vln, avg_house, avg_comm)
         else:
             print(rootname, 'not found in taxconfig backbone_feeders')
     else:
         forERCOT = config['SimulationConfig']['simplifiedFeeders']
         print('using the built-in taxonomy')
-        print(rootname, 'to', outpath, 'using', weather_file)
+        print(rootname, 'to', work_path, 'using', weather_file)
         print('times', starttime, endtime)
         print('steps', timestep, metrics_interval)
         print('hvac', electric_cooling_percentage)
@@ -3127,11 +3161,9 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
         print('storage', storage_percentage, storage_inv_mode)
         print('billing', kwh_price, monthly_fee)
         for c in taxchoice:
-            # if c[0] == rootname:
             if c[0] in rootname:
-                fncs_case = config['SimulationConfig']['CaseName']
-                # ProcessTaxonomyFeeder(fncs_case, c[0], c[1], c[2], c[3], c[4])
-                ProcessTaxonomyFeeder(fncs_case, rootname, c[1], c[2], c[3], c[4])
+                case_name = config['SimulationConfig']['CaseName']
+                ProcessTaxonomyFeeder(case_name, rootname, c[1], c[2], c[3], c[4])
 #                quit()
 
 
@@ -3142,7 +3174,7 @@ def populate_all_feeders():
         batname = 'run_all.bat'
     else:
         batname = 'run_all.sh'
-    op = open(outpath + batname, 'w')
+    op = open(work_path + batname, 'w')
     for c in casefiles:
         print('gridlabd -D WANT_VI_DUMP=1 -D METRICS_FILE=' + c[0] + '.json', c[0] + '.glm', file=op)
     op.close()
@@ -3150,204 +3182,5 @@ def populate_all_feeders():
         ProcessTaxonomyFeeder(c[0], c[0], c[1], c[2], c[3], c[4])
 
 
-def new_populate_feeder(configfile=None, config=None, taxconfig=None):
-    """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
-
-    Args:
-        configfile (str): JSON file name for the feeder population data, mutually exclusive with config
-        config (dict): dictionary of feeder population data already read in, mutually exclusive with configfile
-        taxconfig (dict): dictionary of custom taxonomy data for ERCOT processing
-    """
-    global tier1_energy, tier1_price, tier2_energy, tier2_price, tier3_energy, tier3_price
-    global bill_mode, kwh_price, monthly_fee
-    global Eplus_Bus, Eplus_Volts, Eplus_kVA
-    global transmissionVoltage, transmissionXfmrMVAbase
-    global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage, ev_percentage
-    global outpath, glmpath, supportpath, weatherpath, weather_file
-    global timezone, starttime, endtime, timestep
-    global metrics, metrics_type, metrics_interval, metrics_interim, electric_cooling_percentage
-    global water_heater_percentage, water_heater_participation
-    global fncs_case, port, forERCOT, forDSOT, substationName
-    global house_nodes, small_nodes, comm_loads
-    global inv_efficiency, bat_rt_efficiency
-    global latitude, longitude, time_zone_offset, weather_name, feeder_commercial_building_number
-    global dso_type, gld_scaling_factor, pv_rating_MW
-    global caseType
-    global ashrae_zone, comm_bldg_metadata, comm_bldgs_pop
-    # (Laurentiu Marinovici 11/18/2019)
-    global res_bldg_metadata  # to store residential metadata
-    global batt_metadata  # to store battery metadata
-    global ev_metadata  # to store ev model metadata
-    global ev_reserved_soc  # minimum allowed soc level in EV battery, affects the assignment of daily miles to an EV
-    global ev_driving_metadata  # to store driving data from nhts
-    global solar_path, solar_P_player, solar_Q_player  # solar active and reactive power player
-    global cop_lookup
-
-    if configfile is not None:
-        checkResidentialBuildingTable()
-    if config is None:
-        lp = open(configfile).read()
-        config = json.loads(lp)
-
-    # This seeding has already been done in the prepare_case_dsot_v3.py for each DSO
-    # No need to reseed.
-    # we want the same pseudo-random variables each time, for repeatability
-    # if 'RandomSeed' in config['BackboneFiles']:
-    #     np.random.seed(config['BackboneFiles']['RandomSeed'])
-    # else:
-    #     np.random.seed(0)
-
-    with Diction(config['BackboneFiles']) as tmp:
-        rootname = tmp['TaxonomyChoice']
-        supportpath = ''
-        if 'supportpath' in tmp:
-            supportpath = tmp['supportpath']
-        weatherpath = ''
-        if 'weatherpath' in tmp:
-            weatherpath = tmp['weatherpath']
-
-    with Diction(config['SimulationConfig']) as tmp:
-        tespdir = tmp['SourceDirectory']
-        glmpath = tespdir + '/feeders/'
-        outpath = './' + tmp['CaseName'] + '/'
-        if 'OutputPath' in tmp:
-            outpath = './' + tmp['OutputPath'] + '/'
-        if 'DSOTCase' in tmp:
-            forDSOT = tmp['DSOTCase']
-
-        substationName = tmp['Substation']
-        timezone = tmp['TimeZone']
-        starttime = tmp['StartTime']
-        endtime = tmp['EndTime']
-        port = tmp['port']
-        dso_type = tmp['DSO_type']
-        gld_scaling_factor = tmp['scaling_factor']
-        pv_rating_MW = tmp['rooftop_pv_rating_MW']
-        caseType = tmp['caseType']
-        fncs_case = tmp['CaseName']
-
-    with Diction(config['FeederGenerator']) as tmp:
-        timestep = int(tmp['MinimumStep'])
-        metrics = tmp['Metrics']
-        metrics_type = tmp['MetricsType']
-        metrics_interval = int(tmp['MetricsInterval'])
-        metrics_interim = int(tmp['MetricsInterim'])
-        # electric_cooling_percentage = 0.01 * float(tmp['ElectricCoolingPercentage'])
-        # water_heater_percentage = 0.01 * float(tmp['WaterHeaterPercentage'])
-        # water_heater_participation = 0.01 * float(tmp['WaterHeaterParticipation'])
-        solar_percentage = 0.01 * float(tmp['SolarPercentage'])
-        storage_percentage = 0.01 * float(tmp['StoragePercentage'])
-        ev_percentage = 0.01 * float(tmp['EVPercentage'])
-        solar_inv_mode = tmp['SolarInverterMode']
-        storage_inv_mode = tmp['StorageInverterMode']
-        # if 'InverterEfficiency' in tmp:
-        #     inv_efficiency = tmp['InverterEfficiency']
-        # if 'BatteryRoundTripEfficiency' in tmp:
-        #     bat_rt_efficiency = tmp['BatteryRoundTripEfficiency']
-        bill_mode = tmp['BillingMode']
-        kwh_price = float(tmp['Price'])
-        monthly_fee = float(tmp['MonthlyFee'])
-        tier1_energy = float(tmp['Tier1Energy'])
-        tier1_price = float(tmp['Tier1Price'])
-        tier2_energy = float(tmp['Tier2Energy'])
-        tier2_price = float(tmp['Tier2Price'])
-        tier3_energy = float(tmp['Tier3Energy'])
-        tier3_price = float(tmp['Tier3Price'])
-        Eplus_Bus = tmp['EnergyPlusBus']
-        Eplus_Volts = float(tmp['EnergyPlusServiceV'])
-        Eplus_kVA = float(tmp['EnergyPlusXfmrKva'])
-
-    with Diction(config['PYPOWERConfiguration']) as tmp:
-        transmissionXfmrMVAbase = float(tmp['TransformerBase'])
-        transmissionVoltage = 1000.0 * float(tmp['TransmissionVoltage'])
-
-    with Diction(config['WeatherPrep']) as tmp:
-        weather_name = tmp['Name']
-        weather_file = tmp['DataSource']
-        latitude = float(tmp['Latitude'])
-        longitude = float(tmp['Longitude'])
-        time_zone_offset = float(tmp['TimeZoneOffset'])
-
-    with Diction(config['BuildingPrep']) as tmp:
-        res_bldg_metadata = tmp['ResBldgMetaData']
-        batt_metadata = tmp['BattMetaData']
-        ev_metadata = tmp['EvModelMetaData']
-        driving_data_file = tmp['EvDrivingDataFile']
-        ev_driving_metadata = process_nhts_data(tmp['MetaDataPath'] + driving_data_file)
-        ev_reserved_soc = config['AgentPrep']['EV']['EVReserveHi']
-        solar_path = tmp['SolarDataPath']
-        solar_P_player = tmp['SolarPPlayerFile']
-        solar_Q_player = tmp['SolarQPlayerFile']
-        # if not provided in JSON config, use a regional default
-        electric_cooling_percentage = res_bldg_metadata['air_conditioning']
-        ashrae_zone = tmp['ASHRAEZone']
-        comm_bldg_metadata = tmp['CommBldgMetaData']
-        comm_bldgs_pop = tmp['CommBldgPopulation']
-
-    # -------- create cop lookup table by vintage bin-----------
-    # (Laurentiu MArinovici 11/18/2019) moving the cop_lookup inside this function as it requires
-    # residential building metadata
-    cop_mat = res_bldg_metadata['COP_average']
-    years_bin = [range(1945, 1950), range(1950, 1960), range(1960, 1970), range(1970, 1980),
-                 range(1980, 1990), range(1990, 2000), range(2000, 2010), range(2010, 2016)]
-    years_bin = [list(years_bin[ind]) for ind in range(len(years_bin))]
-    cop_lookup = []
-    for _bin in range(len(years_bin)):
-        temp = []
-        for yr in years_bin[_bin]:
-            temp.append(cop_mat[str(yr)])
-        cop_lookup.append(temp)
-    # cop_lookup will have similar structure as years bin with years replaced with corresponding mean cop value
-    # cop_lookup: index 0: vintage bins (0,1..7)
-    #             index 1: each year in the corresponding vintage bin
-
-    house_nodes = {}
-    small_nodes = {}
-    comm_loads = {}
-
-    if taxconfig is not None:
-        print('called with a custom taxonomy configuration')
-        forERCOT = True
-        if rootname in taxconfig['backbone_feeders']:
-            taxrow = taxconfig['backbone_feeders'][rootname]
-            vll = taxrow['vll']
-            vln = taxrow['vln']
-            avg_house = taxrow['avg_house']
-            avg_comm = taxrow['avg_comm']
-            fncs_case = config['SimulationConfig']['CaseName']
-            glmpath = taxconfig['glmpath']
-            outpath = taxconfig['outpath']
-            supportpath = taxconfig['supportpath']
-            weatherpath = taxconfig['weatherpath']
-            print(fncs_case, rootname, vll, vln, avg_house, avg_comm, glmpath, outpath, supportpath, weatherpath)
-            ProcessTaxonomyFeeder(fncs_case, rootname, vll, vln, avg_house, avg_comm)
-        else:
-            print(rootname, 'not found in taxconfig backbone_feeders')
-    else:
-        forERCOT = config['SimulationConfig']['simplifiedFeeders']
-        print('using the built-in taxonomy')
-        print(rootname, 'to', outpath, 'using', weather_file)
-        print('times', starttime, endtime)
-        print('steps', timestep, metrics_interval)
-        print('hvac', electric_cooling_percentage)
-        print('pv', solar_percentage, solar_inv_mode)
-        print('storage', storage_percentage, storage_inv_mode)
-        print('billing', kwh_price, monthly_fee)
-        for c in taxchoice:
-            # if c[0] == rootname:
-            if c[0] in rootname:
-                fncs_case = config['SimulationConfig']['CaseName']
-                # ProcessTaxonomyFeeder(fncs_case, c[0], c[1], c[2], c[3], c[4])
-                ProcessTaxonomyFeeder(fncs_case, rootname, c[1], c[2], c[3], c[4])
-#                quit()
-
-
-class Diction(object):
-    def __init__(self, diction):
-        self.obj = diction
-
-    def __enter__(self):
-        return self.obj
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        return self
+if __name__ == "__main__":
+    populate_all_feeders()
