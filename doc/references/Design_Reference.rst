@@ -295,8 +295,7 @@ arrays in Python. The TESP code repository includes examples of working
 with metrics output in Python. :numref:`fig_met_cap` and :numref:`fig_met_reg` show how capacitor
 switching and regulator tap changing counts are captured as metrics.
 
-:numref:`fig_met_mtr` shows the structure of billing meter metrics, which is very
-similar to that of substation metrics, except that each array contains
+:numref:`fig_met_mtr` shows the structure of billing meter metrics, which is very similar to that of substation metrics, except that each array contains
 30 values. The billing meter metrics aggregate real and reactive power
 for any houses and inverters connected to the meter, with several
 voltage magnitude and unbalance metrics. The interval bill is also
@@ -328,7 +327,7 @@ be used to calculate reliability indices in post-processing, with
 flexible weighting and aggregation options by customer, owner, circuit,
 etc. These include the System Average Interruption Frequency Index
 (SAIFI) and System Average Interruption Duration Index (SAIDI)
-:cite:`12,13`. This voltage-based approach
+:cite:`12,IEEE:2014aa`. This voltage-based approach
 to reliability indices works whether the outage resulted from a
 distribution, transmission, or bulk generation event. The voltage-based
 metrics also support Momentary Average Interruption Frequency Index

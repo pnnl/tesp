@@ -60,19 +60,14 @@ The Transactive Energy Simulation Platform (TESP) has been developed by Pacific 
 TESP Software Stack Overview
 ============================
 
-:numref:`fig_federates` shows ta typical co-simulation software stack when using TESP for TE analysis.  
-GridLAB-D covers the electric power distribution system :cite:`3` and residential
-buildings (OpenDSS is a similar alternative). 
-PYPOWER, MATPOWER/MOST or AMES covers the bulk power system and the transmission system operator (TSO). 
-:cite:`4,17`. 
-EnergyPlus covers large commercial buildings :cite:`5` and ns-3 is a communication
-system simulator that can also host software agents. The integrating message
-bus, using either the Hierarchical Engine for Large-scale Infrastructure Co-Simulation 
-(HELICS) or Framework 
-for Network Co-simulation (FNCS), manages the time step synchronization and 
-message exchange among all of the federated simulation modules :cite:`Ciraci:2014ud`.  
-In this way, TESP builds mostly on proven components, 
-which helps mitigate risk in software development. 
+:numref:`fig_federates` shows the typical co-simulation software stack when using TESP for TE analysis.  
+
+ - GridLAB-D covers the electric power distribution system :cite:`3` and residential buildings (OpenDSS is a similar alternative). 
+ - PYPOWER, MATPOWER/MOST or AMES covers the bulk power system and the transmission system operator (TSO) :cite:`4,17`. 
+ - EnergyPlus covers large commercial buildings :cite:`5` 
+ - ns-3 is a communication system simulator that can also host software agents. 
+ - The integrating message bus, using either the Hierarchical Engine for Large-scale Infrastructure Co-Simulation (HELICS :cite:`Palmintier:2017aa`) manages the time step synchronization and message exchange among all of the federated simulation modules.  
+
 
 .. figure:: ./media/Federates.png
 	:name: fig_federates
@@ -112,7 +107,7 @@ With the value exchanges modeled, it is much easier to identify and define relev
 
 Finally, prior to writing any code, it is worth developing a flowchart or sequence diagram of how the TE system (or even all simulated activities) will operate. This flowchart helps provide clarity of how and when the value exchanges will take place and the process by which each actor accrues value. It will also serve as a good starting place when writing the code to realize the TE system.
 
-**TODO: link to value model example in SGIP analysis**
+An example of these models can be found in the :ref:`SGIP1 value model`.
 
 Design of Analysis
 ------------------
@@ -125,7 +120,7 @@ To show the impact of the TE system, to demonstrate the impacts of the system th
 
 Lastly, in addition to the key performance metrics, there are likely to be supplemental data that is helpful in validating the performance of the co-simulation and the analysis as a whole. These validation metrics would not generally be defined by the value model because they generally are not tied to the value flows. For example, if the TE system adjusts air-conditioning thermostats higher during high price periods and lower as the price drops a validation graph could be created to show the thermostat setpoint throughout the day with the energy price overlayed. Though this graph and its associated data are not necessarily needed to calculate the final value-based metrics it is useful to confirm that the co-simulation that produced this data is working as expected.
 
-**TODO: link to analysis design plan example in SGIP analysis**
+An example of these models can be found in the :ref:`SGIP1 analysis design model`.
 
 Co-Simulation Implementation and Execution
 ------------------------------------------
@@ -134,7 +129,6 @@ With an analysis plan in place, now the direct work of implementation can begin.
 
 The co-simulation will be run at some point and this may require computation resources beyond what a typical desktop or laptop computer provides. There may need to be some extra work done in developing deployment plans and tools for the co-simulation components. Relatedly, the datasets produced by the co-simulation could be very large and requires more complex data handling and storage techniques.
 
-**TODO: link to code base example in SGIP analysis**
 
 Post-Processing and Analysis
 ----------------------------
