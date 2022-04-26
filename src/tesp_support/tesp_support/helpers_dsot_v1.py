@@ -151,7 +151,8 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
             if dyldPath is not None:
                 outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
 
-        outfile.write('# To run agents set with_market=1 else set with_market=0 \n')
+        outfile.write('mkdir -p PyomoTempFiles\n\n')
+        outfile.write('# To run agents set with_market=1 else set with_market=0\n')
         if system_config["market"]:
             outfile.write('with_market=1\n\n')
         else:
@@ -492,6 +493,7 @@ docker run \\
 
     with open(out_folder + '/clean.sh', 'w') as outfile:
         outfile.write('cd ' + outPath + '\n')
+        outfile.write('rm - rf PyomoTempFiles\n')
         outfile.write('find . -name \\*.log -type f -delete\n')
         outfile.write('find . -name \\*.csv -type f -delete\n')
         outfile.write('find . -name \\*.out -type f -delete\n')

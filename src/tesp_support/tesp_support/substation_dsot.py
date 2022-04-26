@@ -55,7 +55,6 @@ def inner_substation_loop(metrics_root, with_market):
         else:
             log.warning('Publish type not found!')
 
-
     def worker(arg):
         timing(arg.__class__.__name__, True)
         worker_results = arg.DA_optimal_quantities()

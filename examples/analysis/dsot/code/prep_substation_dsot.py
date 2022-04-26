@@ -816,10 +816,10 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.pubs_append_n(False, key + "/bill_mode", "string")
         dso.pubs_append_n(False, key + "/price", "double")
         dso.pubs_append_n(False, key + "/monthly_fee", "double")
-        dso.subs_append_n(key + "#V1:", gld_sim_name + "/" + meter_name + "/measured_voltage_1", "string")
-        dso.subs_append_n(key + "#Tair:", gld_sim_name + "/" + house_name + "/air_temperature", "string")
-        dso.subs_append_n(key + "#HvacLoad:", gld_sim_name + "/" + house_name + "/hvac_load", "string")
-        dso.subs_append_n(key + "#TotalLoad:", gld_sim_name + "/" + house_name + "/total_load", "string")
+        dso.subs_append_n(key + "#V1:", gld_sim_name + "/" + meter_name + "/measured_voltage_1", "complex")
+        dso.subs_append_n(key + "#Tair:", gld_sim_name + "/" + house_name + "/air_temperature", "double")
+        dso.subs_append_n(key + "#HvacLoad:", gld_sim_name + "/" + house_name + "/hvac_load", "double")
+        dso.subs_append_n(key + "#TotalLoad:", gld_sim_name + "/" + house_name + "/total_load", "double")
         dso.subs_append_n(key + "#On:", gld_sim_name + "/" + house_name + "/power_state", "string")
 
     for key, val in water_heater_agents.items():
