@@ -46,7 +46,15 @@ def inner_substation_loop(metrics_root, with_market):
 
     def publish(name, val):
         pub = helics.helicsFederateGetPublication(hFed, name)
-        helics.helicsPublicationPublishString(pub, val)
+        if type(val) is str:
+            helics.helicsPublicationPublishString(pub, val)
+        elif type(val) is float:
+            helics.helicsPublicationPublishDouble(pub, val)
+        elif type(val) is bool:
+            helics.helicsPublicationPublishBoolean(pub, val)
+        else:
+            log.warning('Publish type not found!')
+
 
     def worker(arg):
         timing(arg.__class__.__name__, True)

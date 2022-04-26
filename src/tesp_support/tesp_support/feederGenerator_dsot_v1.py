@@ -2,7 +2,7 @@
 # file: feederGenerator_dsot_v1.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
-As this module populates the feeder backbone wiht houses and DER, it uses
+As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
 fuses, transformers and lines to serve the expected load. Transformers have
 a margin of 20% to avoid overloads, while fuses have a margin of 150% to
@@ -11,7 +11,7 @@ source file.
 
 There are two kinds of house populating methods implemented:
 
-    * :Feeders with Service Transfomers: This case applies to the full PNNL taxonomy feeders.
+    * :Feeders with Service Transformers: This case applies to the full PNNL taxonomy feeders.
     Do not specify the *taxchoice* argument to *populate_feeder*.
     Each service transformer receiving houses will have a short service drop and a small number of houses attached.
     * :Feeders without Service Transformers: This applies to the reduced-order ERCOT feeders.

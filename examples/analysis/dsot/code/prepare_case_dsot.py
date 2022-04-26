@@ -193,8 +193,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         # write the tso pubscribe connections for this substation
         tso.pubs_append_n(False, "cleared_q_rt_" + bus, "string")
         tso.pubs_append_n(False, "cleared_q_da_" + bus, "string")
-        tso.pubs_append_n(False, "rt_lmp_" + bus, "string")
-        tso.pubs_append_n(False, "da_lmp_" + bus, "string")
+        tso.pubs_append_n(False, "lmp_rt_" + bus, "string")
+        tso.pubs_append_n(False, "lmp_da_" + bus, "string")
         tso.pubs_append_n(False, "three_phase_voltage_" + bus, "string")
 
         # write the tso subscribe connections for this substation
