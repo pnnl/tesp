@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: hvac_dsot_v1.py
+# file: hvac_dsot.py
 """Class that ...
 
 TODO: update the purpose of this Agent
@@ -18,7 +18,7 @@ import pytz
 from scipy import linalg
 
 import tesp_support.helpers as helpers
-import tesp_support.helpers_dsot_v1 as agent_helpers
+import tesp_support.helpers_dsot as agent_helpers
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)

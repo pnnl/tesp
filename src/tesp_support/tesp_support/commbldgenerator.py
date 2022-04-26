@@ -12,7 +12,7 @@ from os.path import dirname, abspath
 import matplotlib.pyplot as plt
 
 from .helpers import gld_strict_name
-import tesp_support.feederGenerator_dsot_v1 as res_FG
+import tesp_support.feederGenerator_dsot as res_FG
 
 
 sys.path.insert(0, dirname(abspath(__file__)))

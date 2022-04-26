@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: dso_market_dsot_v1.py 
+# file: dso_market_dsot.py
 """Class that manages the operation of DSO agent
 
 Functionalities include: 
@@ -9,7 +9,7 @@ Conversion between wholesale price and retail price;
 Generate substation supply curves with and without consideration of the transformer degradation.
 
 """
-import tesp_support.helpers_dsot_v1 as helpers
+import tesp_support.helpers_dsot as helpers
 import tesp_support.helpers as helpers_tesp
 from copy import deepcopy
 import numpy as np

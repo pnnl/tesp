@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: retail_market_dsot_v1.py 
+# file: retail_market_dsot.py
 """Class that manages the operation of retail market at substation-level
 
 Functionalities include: collecting curve bids from DER and DSO agents; 
@@ -26,7 +26,7 @@ The function call order for this agent is:
 
 """
 
-import tesp_support.helpers_dsot_v1 as helpers 
+import tesp_support.helpers_dsot as helpers
 from copy import deepcopy
 import numpy as np
 import logging as log

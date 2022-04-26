@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: pv_dsot_v1.py #
+# file: pv_dsot.py #
 """Class that controls the Photovoltaic Solar agents
 for now, it only provides day ahead forecast for each agent.
 It does not participate in bidding
@@ -7,8 +7,8 @@ It does not participate in bidding
 import math
 import numpy as np
 import tesp_support.helpers as helpers
-import tesp_support.helpers_dsot_v1 as hlprs
-import tesp_support.feederGenerator_dsot_v1 as fg
+import tesp_support.helpers_dsot as hlprs
+import tesp_support.feederGenerator_dsot as fg
 from copy import deepcopy
 import logging as log
 import pyomo.environ as pyo

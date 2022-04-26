@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: feederGenerator_dsot_v1.py
+# file: feederGenerator_dsot.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
 As this module populates the feeder backbone with houses and DER, it uses
@@ -42,7 +42,7 @@ from math import sqrt
 
 from tesp_support.helpers import parse_kva
 from tesp_support.helpers import gld_strict_name
-from tesp_support.helpers_dsot_v1 import random_norm_trunc
+from tesp_support.helpers_dsot import random_norm_trunc
 import tesp_support.commbldgenerator as com_FG
 
 tesp_share = os.path.expandvars('$TESPDIR/data/')

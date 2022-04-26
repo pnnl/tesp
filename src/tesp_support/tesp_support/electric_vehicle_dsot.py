@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: electric_vehicle_dsot_v1.py
+# file: electric_vehicle_dsot.py
 """Class that ...
 
 TODO: update the purpose of this Agent

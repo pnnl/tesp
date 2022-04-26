@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: battery_dsot_v1.py
+# file: battery_dsot.py
 """Class that controls the Battery DER
 
 Implements the optimum schedule of charging and discharging DA; generate the bids
@@ -28,7 +28,7 @@ import logging as log
 import pyomo.environ as pyo
 import pyomo.opt as opt
 import tesp_support.helpers as helpers
-import tesp_support.helpers_dsot_v1 as agent_helpers
+import tesp_support.helpers_dsot as agent_helpers
 
 logger = log.getLogger()
 

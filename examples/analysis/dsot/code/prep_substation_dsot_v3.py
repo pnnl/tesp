@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: prep_substation_dsot_v1.py
+# file: prep_substation_dsot.py
 """ Sets up the FNCS and agent configurations for DSOT ercot case 8 example
 
 Public Functions:
@@ -10,7 +10,7 @@ import numpy as np
 import os
 import math
 from datetime import datetime
-from tesp_support.helpers_dsot_v1 import random_norm_trunc as random_norm_trunc
+from tesp_support.helpers_dsot import random_norm_trunc as random_norm_trunc
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages

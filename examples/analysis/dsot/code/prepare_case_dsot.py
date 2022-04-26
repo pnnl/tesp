@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: prepare_case_dsot_v1.py
+# file: prepare_case_dsot.py
 """ Sets up a simple DSO+T use-case with one feeder
 
 Public Functions:
@@ -12,12 +12,12 @@ import json
 import shutil
 import datetime
 import numpy as np
-import tesp_support.helpers_dsot_v1 as helpers
-import tesp_support.case_merge_dsot_v1 as cm
-import tesp_support.glm_dict_dsot_v1 as gd
+import tesp_support.helpers_dsot as helpers
+import tesp_support.case_merge_dsot as cm
+import tesp_support.glm_dict_dsot as gd
 import tesp_support.commbldgenerator as com_FG
-import tesp_support.feederGenerator_dsot_v1 as res_FG
-import tesp_support.copperplateFeederGenerator_dsot_v1 as cp_FG
+import tesp_support.feederGenerator_dsot as res_FG
+import tesp_support.copperplateFeederGenerator_dsot as cp_FG
 import prep_substation_dsot as prep
 
 
@@ -225,7 +225,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         os.makedirs(caseName + '/' + dso_key)
 
-        # seed the random number here instead of in feedergenerator_dsot_v1.py
+        # seed the random number here instead of in feedergenerator_dsot.py
         np.random.seed(dso_val['random_seed'])
 
         # copy dso default config
@@ -284,7 +284,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         weaPrep['Longitude'] = dso_val['longitude']
         weaPrep['TimeZoneOffset'] = dso_val['time_zone_offset']
 
-        # could eliminate code here by changing helpers_dsot_v1.py, since only one weather for DSO
+        # could eliminate code here by changing helpers_dsot.py, since only one weather for DSO
         weather_config[weather_agent_name] = {
                 'type': weaPrep['WeatherChoice'],
                 'source': weaPrep['DataSource'],

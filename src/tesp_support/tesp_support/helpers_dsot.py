@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: helpers_dsot_v1.py
+# file: helpers_dsot.py
 """ Utility functions for use within tesp_support, including new agents. This is DSO+T specific helper functions
 """
 import os
@@ -305,7 +305,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('set FNCS_CONFIG_FILE=%s.yaml\n' % sub_val['substation'])
                 outfile.write('cd ..\n')
                 outfile.write('cd %s\n' % sub_key)
-                outfile.write('start /b cmd /c python -c "import tesp_support.substation_dsot_v1 as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.substation_dsot as tesp;'
                               'tesp.substation_loop(\'%s_agent_dict.json\',\'%s\',%%with_market%%)" ^> '
                               '%s\\%s_substation.log 2^>^&1\n'
                               % (sub_val['substation'], sub_val['substation'], outPath, sub_key))

@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: substation_dsot_v1.py
+# file: substation_dsot.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
 
 Public Functions:
@@ -15,15 +15,15 @@ from datetime import datetime, timedelta
 from copy import deepcopy
 from joblib import Parallel, delayed
 
-from .helpers_dsot_v1 import enable_logging
-from .hvac_dsot_v1 import HVACDSOT
-from .water_heater_dsot_v1 import WaterHeaterDSOT
-from .ev_dsot_v1 import EVDSOT
-from .pv_dsot_v1 import PVDSOT
-from .battery_dsot_v1 import BatteryDSOT
-from .dso_market_dsot_v1 import DSOMarketDSOT
-from .retail_market_dsot_v1 import RetailMarketDSOT
-from .forecasting_dsot_v1 import Forecasting
+from .helpers_dsot import enable_logging
+from .hvac_dsot import HVACDSOT
+from .water_heater_dsot import WaterHeaterDSOT
+from .ev_dsot import EVDSOT
+from .pv_dsot import PVDSOT
+from .battery_dsot import BatteryDSOT
+from .dso_market_dsot import DSOMarketDSOT
+from .retail_market_dsot import RetailMarketDSOT
+from .forecasting_dsot import Forecasting
 from .metrics_collector import MetricsStore, MetricsCollector
 
 try:

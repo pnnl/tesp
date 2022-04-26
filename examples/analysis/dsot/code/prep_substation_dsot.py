@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: prep_substation_dsot_v1.py
+# file: prep_substation_dsot.py
 """ Sets up the message and agent configurations for DSOT ercot case 8 example
 
 Public Functions:
@@ -10,7 +10,7 @@ import math
 import json
 import numpy as np
 from datetime import datetime
-import tesp_support.helpers_dsot_v1 as helpers
+import tesp_support.helpers_dsot as helpers
 
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
@@ -804,8 +804,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.subs_append_n("cleared_q_da_" + bus, "pypower/cleared_q_da_" + bus, "string")
         dso.subs_append_n("cleared_q_rt_" + bus, "pypower/cleared_q_rt_" + bus, "string")
         plyr = simulation_config['keyLoad']
-        dso.subs_append_n(plyr + "_LOAD_" + bus, plyr + 'player/' + plyr + '_ld_hist_' + bus, "string")
-        dso.subs_append_n(plyr + "_LD_HIST_" + bus, plyr + 'player/' + plyr + '_ld_hist_' + bus, "string")
+        dso.subs_append_n(plyr + "_load_" + bus, plyr + 'player/' + plyr + '_load_' + bus, "string")
+        dso.subs_append_n(plyr + "_ld_hist_" + bus, plyr + 'player/' + plyr + '_ld_hist_' + bus, "string")
 
     for key, val in hvac_agents.items():
         house_name = val["houseName"]

@@ -5,7 +5,7 @@
 import os
 import re
 import json
-import tesp_support.helpers_dsot_v1 as helpers
+import tesp_support.helpers_dsot as helpers
 
 
 class HelicsMsg(object):
