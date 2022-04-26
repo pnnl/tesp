@@ -1359,7 +1359,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(caseName) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gridlabd' + substationName + ';', file=op)  # for full-order DSOT
+        print('  name gld' + substationName + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
         print('  configure', caseName + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port 5570";', file=op)

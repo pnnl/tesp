@@ -55,7 +55,7 @@ port = 5570
 case_name = 'Tesp'
 name_prefix = ''
 work_path = './Dummy/'
-substation = ""
+substation_name = ""
 base_feeder_name = ''
 solar_path = ''
 solar_P_player = ''
@@ -2247,7 +2247,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(case_name) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gld' + substationName + ';', file=op)  # for full-order DSOT
+        print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
         print('  configure', case_name + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port ' + str(port) + '";', file=op)
@@ -3026,7 +3026,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global timezone, starttime, endtime, timestep
     global metrics, metrics_type, metrics_interval, metrics_interim, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
-    global case_name, name_prefix, port, forERCOT, substationName
+    global case_name, name_prefix, port, forERCOT, substation_name
     global house_nodes, small_nodes, comm_loads
     # global inv_efficiency, round_trip_efficiency
     global latitude, longitude, time_zone_offset, weather_name, feeder_commercial_building_number
@@ -3058,7 +3058,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
         work_path = config['SimulationConfig']['WorkingDirectory'] + '/'
     if 'OutputPath' in config['SimulationConfig']:
         work_path = config['SimulationConfig']['OutputPath'] + '/'
-    substationName = config['SimulationConfig']['Substation']
+    substation_name = config['SimulationConfig']['Substation']
     timezone = config['SimulationConfig']['TimeZone']
     starttime = config['SimulationConfig']['StartTime']
     endtime = config['SimulationConfig']['EndTime']

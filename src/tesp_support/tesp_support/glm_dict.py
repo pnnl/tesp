@@ -110,7 +110,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
         if len(lst) > 1:
             if lst[1] == 'substation':
                 inSwing = True
-            if inSwing == True:
+            if inSwing:
                 if lst[0] == 'name':
                     feeder_id = lst[1].strip(';')
                 if lst[0] == 'groupid':
@@ -165,11 +165,11 @@ def glm_dict(nameroot, ercot=False, te30=False):
                 thermal_integrity = 'UNKNOWN'
                 doors = 4
                 house_class = 'SINGLE_FAMILY'
-            if inHELICSmsg == True:
+            if inHELICSmsg:
                 if lst[0] == 'name':
                     FedName = lst[1].strip(';')
                     inHELICSmsg = False
-            if inFNCSmsg == True:
+            if inFNCSmsg:
                 if lst[0] == 'name':
                     FedName = lst[1].strip(';')
                     inFNCSmsg = False
@@ -202,24 +202,24 @@ def glm_dict(nameroot, ercot=False, te30=False):
             if lst[1] == 'load':
                 inLoads = True
                 parent = ''
-            if inLoads == True:
+            if inLoads:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')
                 if lst[0] == 'parent':
                     parent = lst[1].strip(';')
                     loads[name] = {'parent': parent}
                     inLoads = False
-            if inCapacitors == True:
+            if inCapacitors:
                 if lst[0] == 'name':
                     lastCapacitor = lst[1].strip(';')
                     capacitors[lastCapacitor] = {'feeder_id': feeder_id}
                     inCapacitors = False
-            if inRegulators == True:
+            if inRegulators:
                 if lst[0] == 'name':
                     lastRegulator = lst[1].strip(';')
                     regulators[lastRegulator] = {'feeder_id': feeder_id}
                     inRegulators = False
-            if inInverters == True:
+            if inInverters:
                 if lst[0] == 'name' and lastInverter == '':
                     lastInverter = lst[1].strip(';')
                 if lst[1] == 'solar':
@@ -238,7 +238,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
                     soc = float(lst[1].strip(' ').strip(';')) * 1.0
                 if lst[0] == 'battery_capacity':
                     capacity = float(lst[1].strip(' ').strip(';')) * 1.0
-            if inHouses == True:
+            if inHouses:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')
                 if lst[0] == 'parent':
@@ -269,7 +269,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
                                     'parent': parent}
                     lastHouse = name
                     inHouses = False
-            if inWaterHeaters == True:
+            if inWaterHeaters:
                 if lst[0] == 'name':  # non-controlled WH won't have a name
                     whname = lst[1].strip(' ').strip(';')
                     waterheaters[lastHouse] = {'name': whname, 'gallons': 0.0, 'tmix': 0.0, 'mlayer': False}
@@ -284,7 +284,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
                 if lst[0] == 'waterheater_model':
                     if 'MULTILAYER' == lst[1].strip(' ').strip(';'):
                         waterheaters[lastHouse]['mlayer'] = True
-            if inTriplexMeters == True:
+            if inTriplexMeters:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')
                 if lst[0] == 'phases':
@@ -292,7 +292,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
                 if lst[0] == 'parent':
                     lastMeterParent = lst[1].strip(';')
                 if lst[0] == 'bill_mode':
-                    if te30 == True:
+                    if te30:
                         if 'flatrate' not in name:
                             billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln, 'children': []}
                             lastBillingMeter = name
@@ -300,7 +300,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
                         billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln, 'children': []}
                         lastBillingMeter = name
                     inTriplexMeters = False
-            if inMeters == True:
+            if inMeters:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')
                 if lst[0] == 'phases':
