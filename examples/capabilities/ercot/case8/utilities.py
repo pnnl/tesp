@@ -117,17 +117,29 @@ def write_substation_msg(fileroot, gldSimName, aucSimName, controllers, dt):
     subs = []
     pubs = []
 
-    # pubs_append(pubs, False, "rt_bid_" + bs, "string", "dso", "rt_bid")
-    # pubs_append(pubs, False, "da_bid_" + bs, "string", "dso", "da_bid")
+    pubs_append_n(pubs, False, "responsive_c1", "double")
+    pubs_append_n(pubs, False, "responsive_c2", "double")
+    pubs_append_n(pubs, False, "responsive_deg", "integer")
+    pubs_append_n(pubs, False, "responsive_max_mw", "double")
+    pubs_append_n(pubs, False, "unresponsive_mw", "double")
+    pubs_append_n(pubs, False, "clear_price", "double")
+
     subs_append_n(subs, "LMP", "pypower/LMP_" + fileroot, "double")
     subs_append_n(subs, "refload", gldSimName + '/distribution_load', "complex")
     for key, val in controllers.items():
         houseName = str(val['houseName'])
         meterName = str(val['meterName'])
-        subs_append_n(subs, key + '#V1:',  gldSimName + '/' + meterName + '/measured_voltage_1', "double")
-        subs_append_n(subs, key + '#Tair:', gldSimName + '/' + houseName + '/air_temperature', "double")
-        subs_append_n(subs, key + '#Load:', gldSimName + '/' + houseName + '/hvac_load', "double")
-        subs_append_n(subs, key + '#On:', gldSimName + '/' + houseName + '/power_state', "string")
+        subs_append_n(subs, key + '#V1:',  gldSimName + '/' + meterName + '#measured_voltage_1', "double")
+        subs_append_n(subs, key + '#Tair:', gldSimName + '/' + houseName + '#air_temperature', "double")
+        subs_append_n(subs, key + '#Load:', gldSimName + '/' + houseName + '#hvac_load', "double")
+        subs_append_n(subs, key + '#On:', gldSimName + '/' + houseName + '#power_state', "string")
+
+        pubs_append_n(pubs, False, key + "/cooling_setpoint", "double")
+        pubs_append_n(pubs, False, key + "/heating_setpoint", "double")
+        pubs_append_n(pubs, False, key + "/thermostat_deadband", "double")
+        pubs_append_n(pubs, False, key + "/bill_mode", "string")
+        pubs_append_n(pubs, False, key + "/price", "double")
+        pubs_append_n(pubs, False, key + "/monthly_fee", "double")
 
     write_message_file(aucSimName, dt, pubs, subs, fileroot + '_substation.json')
 
@@ -140,7 +152,7 @@ def write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, dt):
     subs_append(subs, "pypower/three_phase_voltage_" + fileroot, "complex", "network_node", "positive_sequence_voltage")
     if len(weatherName) > 0:
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
-            subs_append(subs, "localWeather" + '/' + wTopic, "double", weatherName, wTopic)
+            subs_append(subs, weatherName + '/' + wTopic, "double", weatherName, wTopic)
     # if len(Eplus_Bus) > 0:  # hard-wired names for a single building
     #     subs_append("eplus_agent/power_A", "complex", Eplus_Load, "constant_power_A"}})
     #     subs_append("eplus_agent/power_B", "complex", Eplus_Load, "constant_power_B"}})
@@ -191,52 +203,14 @@ def write_ercot_tso_msg(nd):
     for i in range(nd):
         bs = str(i + 1)
         subs_append_n(subs, "SUBSTATION" + bs, "gridlabdBus" + bs + "/distribution_load", "complex")
-        subs_append_n(subs, "UNRESPONSIVE_MW_" + bs, "substationBus" + bs + "/unresponsive_mw_" + bs, "double")
-        subs_append_n(subs, "RESPONSIVE_MAX_MW_" + bs, "substationBus" + bs + "/responsive_max_mw_" + bs, "double")
-        subs_append_n(subs, "RESPONSIVE_C2_" + bs, "substationBus" + bs + "/responsive_c2_" + bs, "double")
-        subs_append_n(subs, "RESPONSIVE_C1_" + bs, "substationBus" + bs + "/responsive_c1_" + bs, "double")
-        subs_append_n(subs, "RESPONSIVE_DEG_" + bs, "substationBus" + bs + "/responsive_deg_" + bs, "integer")
-        subs_append_n(subs, "RT_BID_" + bs, "substationBus" + bs + "/da_bid_" + bs, "string")
-        subs_append_n(subs, "DA_BID_" + bs, "substationBus" + bs + "/da_bid_" + bs, "string")
+        subs_append_n(subs, "UNRESPONSIVE_MW_" + bs, "substationBus" + bs + "/unresponsive_mw", "double")
+        subs_append_n(subs, "RESPONSIVE_MAX_MW_" + bs, "substationBus" + bs + "/responsive_max_mw", "double")
+        subs_append_n(subs, "RESPONSIVE_C2_" + bs, "substationBus" + bs + "/responsive_c2", "double")
+        subs_append_n(subs, "RESPONSIVE_C1_" + bs, "substationBus" + bs + "/responsive_c1", "double")
+        subs_append_n(subs, "RESPONSIVE_DEG_" + bs, "substationBus" + bs + "/responsive_deg", "integer")
+        subs_append_n(subs, "CLEAR_PRICE_" + bs, "substationBus" + bs + "/clear_price", "double")
 
     write_message_file("pypower", 300, pubs, subs, 'tso_h.json')
-
-
-def write_psst_tso_msg(nd, ppc):
-    subs = []
-    pubs = []
-    for i in range(nd):
-        bs = str(i + 1)
-        pubs_append(pubs, False, "lmp_rt_" + bs, "string")
-        pubs_append(pubs, False, "lmp_da_" + bs, "string")
-        pubs_append(pubs, False, "cleared_q_rt_" + bs, "string")
-        pubs_append(pubs, False, "cleared_q_da_" + bs, "string")
-        pubs_append(pubs, False, "three_phase_voltage_" + bs, "double")
-
-    for i in range(nd):
-        bs = str(i + 1)
-        subs_append_n(subs, "DA_BID_" + bs, "dsostub/da_bid_" + bs, "string")
-        subs_append_n(subs, "RT_BID_" + bs, "dsostub/rt_bid_" + bs, "string")
-        subs_append_n(subs, "REF_LOAD_" + bs, "refplayer/ref_load_" + bs, "string")
-        subs_append_n(subs, "REF_LD_HIST_" + bs, "refplayer/ref_ld_hist_" + bs, "string")
-        subs_append_n(subs, "GLD_LOAD_" + bs, "gldplayer/gld_load_" + bs, "string")
-        subs_append_n(subs, "GLD_LD_HIST_" + bs, "gldplayer/gld_ld_hist_" + bs, "string")
-
-    if ppc['genPower']:
-        genFuel = ppc['genfuel']
-        for i in range(len(genFuel)):
-            if genFuel[i][0] in ppc['renewables']:
-                idx = str(genFuel[i][2])
-                for plyr in ["genMn", "genForecastHr"]:
-                    player = ppc[plyr]
-                    if player[6] and not player[8]:
-                        subs_append_n(subs, player[0].upper() + '_POWER_' + idx,
-                                      player[0] + 'player/' + player[0] + '_power_' + idx, "string")
-                    if player[7] and not player[8]:
-                        subs_append_n(subs, player[0].upper() + '_PWR_HIST_' + idx,
-                                      player[0] + 'player/' + player[0] + '_pwr_hist_' + idx, "string")
-
-    write_message_file("pypower", 15, pubs, subs, 'tso_h.json')
 
 
 if __name__ == "__main__":

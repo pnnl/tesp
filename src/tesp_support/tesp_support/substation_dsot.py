@@ -210,13 +210,14 @@ def inner_substation_loop(metrics_root, with_market):
             if dso_market_obj.number_of_gld_homes > 0.1:  # this is the number when you don't have any feeders
                 use_ref = False
                 scale = (dso_market_obj.num_of_customers * dso_market_obj.customer_count_mix_residential / dso_market_obj.number_of_gld_homes)
+            log.info('Use reference load -> ' + str(use_ref))
 
             # map topics
             topic_map['gld_load'] = [dso_market_obj.set_total_load]
-            topic_map['ind_rt_load'] = [dso_market_obj.set_ind_load]
+            topic_map['ind_load'] = [dso_market_obj.set_ind_load]
             topic_map['ind_ld_hist'] = [dso_market_obj.set_ind_load_da]
             if use_ref:
-                topic_map['ref_rt_load'] = [dso_market_obj.set_ref_load]
+                topic_map['ref_load'] = [dso_market_obj.set_ref_load]
                 topic_map['ref_ld_hist'] = [dso_market_obj.set_ref_load_da]
             topic_map['lmp_da'] = [dso_market_obj.set_lmp_da]
             topic_map['lmp_rt'] = [dso_market_obj.set_lmp_rt]

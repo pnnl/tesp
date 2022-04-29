@@ -98,7 +98,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     bulkName = 'pypower'
 
     subFeeder = helics.helicsFederateGetSubscription(hFed, gldName + '/distribution_load')
-    subLMP = helics.helicsFederateGetSubscription(hFed, bulkName + '/LMP_B7')
+    subLMP = helics.helicsFederateGetSubscription(hFed, bulkName + '/LMP_' + metrics_root)
     pubC1 = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_c1')
     pubC2 = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_c2')
     pubDeg = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_deg')
@@ -114,19 +114,20 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
         ctl = hvacObjs[key]
         hseSubTopic = gldName + '/' + ctl.houseName
         mtrSubTopic = gldName + '/' + ctl.meterName
-        mtrPubTopic = fedName + '/' + ctl.meterName
-        ctlPubTopic = fedName + '/' + ctl.name
-        #    print ('{:s} hseSub={:s} mtrSub={:s}  mtrSub={:s}  ctlPub={:s}'.format (key, hseSubTopic, mtrSubTopic, mtrPubTopic, ctlPubTopic))
+        ctlPubTopic = ctl.name
+        mtrPubTopic = ctl.name + '/' + ctl.meterName
+        # print('{:s} hseSub={:s} mtrSub={:s}  mtrPub={:s}  ctlPub={:s}'
+        #       .format(key, hseSubTopic, mtrSubTopic, mtrPubTopic, ctlPubTopic), flush=True)
         subTemp[ctl] = helics.helicsFederateGetSubscription(hFed, hseSubTopic + '#air_temperature')
         subVolt[ctl] = helics.helicsFederateGetSubscription(hFed, mtrSubTopic + '#measured_voltage_1')
         subState[ctl] = helics.helicsFederateGetSubscription(hFed, hseSubTopic + '#power_state')
         subHVAC[ctl] = helics.helicsFederateGetSubscription(hFed, hseSubTopic + '#hvac_load')
-        pubMtrMode[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/bill_mode')
-        pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/price')
-        pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/monthly_fee')
         pubHeating[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/heating_setpoint')
         pubCooling[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/cooling_setpoint')
         pubDeadband[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/thermostat_deadband')
+        pubMtrMode[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/bill_mode')
+        pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/price')
+        pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/monthly_fee')
 
     helics.helicsFederateEnterExecutingMode(hFed)
 
