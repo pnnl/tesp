@@ -852,9 +852,9 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.subs_append_n(weather_topic + "#humidity", "string")
         dso.subs_append_n(weather_topic + "#humidity/forecast", "string")
         dso.subs_append_n(weather_topic + "#solar_direct", "string")
-        # dso.subs_append_n(weather_topic + "#solar_direct/forecast", "string")
+        dso.subs_append_n(weather_topic + "#solar_direct/forecast", "string")
         dso.subs_append_n(weather_topic + "#solar_diffuse", "string")
-        # dso.subs_append_n(weather_topic + "#solar_diffuse/forecast", "string")
+        dso.subs_append_n(weather_topic + "#solar_diffuse/forecast", "string")
 
     # write GridLAB-D helics message configuration
     gld = helpers.gld

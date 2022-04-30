@@ -188,9 +188,9 @@ def inner_substation_loop(metrics_root, with_market):
     # pv_power path ('../../../../src/tesp_support/tesp_support/solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv
 
     weather_topic = config_glm['climate']['name']
-    topic_map[weather_topic + '#SolarDiffuseForecast'] = [forecast_obj.set_solar_diffuse_forecast]
-    topic_map[weather_topic + '#SolarDirectForecast'] = [forecast_obj.set_solar_direct_forecast]
-    topic_map[weather_topic + '#TempForecast'] = [forecast_obj.set_temperature_forecast]
+    topic_map[weather_topic + '#solar_diffuse/forecast'] = [forecast_obj.set_solar_diffuse_forecast]
+    topic_map[weather_topic + '#solar_direct/forecast'] = [forecast_obj.set_solar_direct_forecast]
+    topic_map[weather_topic + '#temperature/forecast'] = [forecast_obj.set_temperature_forecast]
 
     market_keys = list(config['markets'].keys())
     for key in market_keys:
@@ -200,6 +200,7 @@ def inner_substation_loop(metrics_root, with_market):
             dso_market_obj = DSOMarketDSOT(dso_config, dso_name)
 
             # check the unit of the market
+            dso_bus = config['markets'][key]['bus']
             dso_unit = config['markets'][key]['unit']
             dso_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
 
@@ -214,15 +215,15 @@ def inner_substation_loop(metrics_root, with_market):
 
             # map topics
             topic_map['gld_load'] = [dso_market_obj.set_total_load]
-            topic_map['ind_load'] = [dso_market_obj.set_ind_load]
-            topic_map['ind_ld_hist'] = [dso_market_obj.set_ind_load_da]
+            topic_map['ind_load_' + str(dso_bus)] = [dso_market_obj.set_ind_load]
+            topic_map['ind_ld_hist_' + str(dso_bus)] = [dso_market_obj.set_ind_load_da]
             if use_ref:
-                topic_map['ref_load'] = [dso_market_obj.set_ref_load]
-                topic_map['ref_ld_hist'] = [dso_market_obj.set_ref_load_da]
-            topic_map['lmp_da'] = [dso_market_obj.set_lmp_da]
-            topic_map['lmp_rt'] = [dso_market_obj.set_lmp_rt]
-            topic_map['cleared_q_da'] = [dso_market_obj.set_cleared_q_da]
-            topic_map['cleared_q_rt'] = [dso_market_obj.set_cleared_q_rt]
+                topic_map['ref_load_' + str(dso_bus)] = [dso_market_obj.set_ref_load]
+                topic_map['ref_ld_hist_' + str(dso_bus)] = [dso_market_obj.set_ref_load_da]
+            topic_map['lmp_da_' + str(dso_bus)] = [dso_market_obj.set_lmp_da]
+            topic_map['lmp_rt_' + str(dso_bus)] = [dso_market_obj.set_lmp_rt]
+            topic_map['cleared_q_da_' + str(dso_bus)] = [dso_market_obj.set_cleared_q_da]
+            topic_map['cleared_q_rt_' + str(dso_bus)] = [dso_market_obj.set_cleared_q_rt]
             log.info('instantiated DSO market agent')
 
         if 'Retail' in key:

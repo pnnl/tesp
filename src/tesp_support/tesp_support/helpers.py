@@ -256,8 +256,11 @@ def parse_magnitude(arg):
         b = complex(tok)
         return abs(b)  # b.real
     except:
-        print('parse_magnitude does not understand', arg)
-        return 0
+        if type(arg) == list:
+            return abs(arg[0])
+        else:
+            print('parse_magnitude does not understand', arg)
+            return 0
 
 
 def parse_mva(arg):
