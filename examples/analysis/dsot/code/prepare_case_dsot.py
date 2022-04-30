@@ -175,9 +175,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                 for plyr in ["genMn", "genForecastHr"]:
                     player = sys_config[plyr]
                     if player[6] and not player[8]:
-                        tso.subs_append_n(player[0].upper() + "_POWER_" + idx, player[0] + "player/" + player[0] + "_power_" + idx, "string")
+                        tso.subs_append_n(player[0] + "player/" + player[0] + "_power_" + idx, "string")
                     if player[7] and not player[8]:
-                        tso.subs_append_n(player[0].upper() + "_PWR_HIST_" + idx, player[0] + "player/" + player[0] + "_pwr_hist_" + idx, "string")
+                        tso.subs_append_n(player[0] + "player/" + player[0] + "_pwr_hist_" + idx, "string")
 
     # First step is to create the dso folders and populate the feeders
     for dso_key, dso_val in dso_config.items():
@@ -198,27 +198,23 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         tso.pubs_append_n(False, "three_phase_voltage_" + bus, "string")
 
         # write the tso subscribe connections for this substation
-        tso.subs_append_n("RT_BID_" + bus, "dso" + sub_key + "/rt_bid_" + bus, "string")
-        tso.subs_append_n("DA_BID_" + bus, "dso" + sub_key + "/da_bid_" + bus, "string")
+        tso.subs_append_n("dso" + sub_key + "/rt_bid_" + bus, "string")
+        tso.subs_append_n("dso" + sub_key + "/da_bid_" + bus, "string")
 
         try:
             # running reference load, using a player for the load reference for comparison
             player = sys_config['refLoadMn']
             if player[6] and player[8]:
-                tso.subs_append_n(player[0].upper() + "_LOAD_" + bus,
-                                   player[0] + "player/" + player[0] + "_load_" + bus, "string")
+                tso.subs_append_n(player[0] + "player/" + player[0] + "_load_" + bus, "string")
             if player[7] and player[8]:
-                tso.subs_append_n(player[0].upper() + "_LD_HIST_" + bus,
-                                   player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
+                tso.subs_append_n(player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
             if not dso_val['used']:
                 # running reference load res and ind, (no gridlabd instance, using a player for the load)
                 player = sys_config['gldLoad']
                 if player[6] and player[8]:
-                    tso.subs_append_n(player[0].upper() + "_LOAD_" + bus,
-                                       player[0] + "player/" + player[0] + "_load_" + bus, "string")
+                    tso.subs_append_n(player[0] + "player/" + player[0] + "_load_" + bus, "string")
                 if player[7] and player[8]:
-                    tso.subs_append_n(player[0].upper() + "_LD_HIST_" + bus,
-                                       player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
+                    tso.subs_append_n(player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
                 continue
         except:
             pass
