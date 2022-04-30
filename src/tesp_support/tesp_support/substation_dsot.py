@@ -187,7 +187,7 @@ def inner_substation_loop(metrics_root, with_market):
     #
     # pv_power path ('../../../../src/tesp_support/tesp_support/solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv
 
-    weather_topic = config_glm['climate']['name']
+    weather_topic = config_glm['climate']['name'] + '/'
     topic_map[weather_topic + '#solar_diffuse/forecast'] = [forecast_obj.set_solar_diffuse_forecast]
     topic_map[weather_topic + '#solar_direct/forecast'] = [forecast_obj.set_solar_direct_forecast]
     topic_map[weather_topic + '#temperature/forecast'] = [forecast_obj.set_temperature_forecast]
@@ -248,11 +248,12 @@ def inner_substation_loop(metrics_root, with_market):
         gld_row = config_glm['houses'][key]
         hvac_agent_objs[key] = HVACDSOT(row, gld_row, key, 11, current_time, solver)
 
-        weather_topic = config_glm['climate']['name']
+        weather_topic = config_glm['climate']['name'] + '/'
         if weather_topic + '#temperature' not in topic_map.keys():
             topic_map[weather_topic + '#temperature'] = [hvac_agent_objs[key].set_temperature]
         else:
             topic_map[weather_topic + '#temperature'].append(hvac_agent_objs[key].set_temperature)
+
         if weather_topic + '#temperature/forecast' not in topic_map.keys():
             topic_map[weather_topic + '#temperature/forecast'] = [hvac_agent_objs[key].set_temperature_forecast]
         else:
@@ -262,15 +263,17 @@ def inner_substation_loop(metrics_root, with_market):
             topic_map[weather_topic + '#humidity'] = [hvac_agent_objs[key].set_humidity]
         else:
             topic_map[weather_topic + '#humidity'].append(hvac_agent_objs[key].set_humidity)
-        if weather_topic + '#humidityForecast' not in topic_map.keys():
-            topic_map[weather_topic + '#forecast/humidityForecast'] = [hvac_agent_objs[key].set_humidity_forecast]
+
+        if weather_topic + '#humidity/forecast' not in topic_map.keys():
+            topic_map[weather_topic + '#humidity/forecast'] = [hvac_agent_objs[key].set_humidity_forecast]
         else:
-            topic_map[weather_topic + '#forecast/humidity'].append(hvac_agent_objs[key].set_humidity_forecast)
+            topic_map[weather_topic + '#humidity/forecast'].append(hvac_agent_objs[key].set_humidity_forecast)
 
         if weather_topic + '#solar_direct' not in topic_map.keys():
             topic_map[weather_topic + '#solar_direct'] = [hvac_agent_objs[key].set_solar_direct]
         else:
             topic_map[weather_topic + '#solar_direct'].append(hvac_agent_objs[key].set_solar_direct)
+
         if weather_topic + '#solar_diffuse' not in topic_map.keys():
             topic_map[weather_topic + '#solar_diffuse'] = [hvac_agent_objs[key].set_solar_diffuse]
         else:
@@ -736,7 +739,7 @@ def inner_substation_loop(metrics_root, with_market):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
             topic = key.split('/')[1]
-            # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
+            # log.info("HELICS subscription index: " + str(t) + ", key: " + key)
             if helics.helicsInputIsUpdated(sub):
                 value = helics.helicsInputGetString(sub)
                 log.debug(topic + ' -> ' + value)
