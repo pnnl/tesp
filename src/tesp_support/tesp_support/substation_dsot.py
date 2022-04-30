@@ -736,14 +736,14 @@ def inner_substation_loop(metrics_root, with_market):
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
-            topic = key.upper().split('/')[1]
+            topic = key.split('/')[1]
             # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
             if helics.helicsInputIsUpdated(sub):
                 value = helics.helicsInputGetString(sub)
                 log.debug(topic + ' -> ' + value)
                 if topic in topic_map:
                     for itopic in range(len(topic_map[topic])):
-                        if any(x in topic for x in ['#Tair', '#SOC', '#LTTEMP', '#UTTEMP']):
+                        if any(x in topic for x in ['#Tair', '#SOC', '#LTTemp', '#UTTemp']):
                             # these function has 2 additional inputs for logging
                             topic_map[topic][itopic](value, 11, current_time)
                         else:

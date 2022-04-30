@@ -86,7 +86,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # print(json.dumps(ev_model_config, sort_keys = True, indent = 2))
     # print(json.dumps(hvac_setpt, sort_keys = True, indent = 2))
 
-    port = str(sys_config['port'])
     caseName = sys_config['caseName']
     start_time = sys_config['StartTime']
     end_time = sys_config['EndTime']
@@ -198,8 +197,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         tso.pubs_append_n(False, "three_phase_voltage_" + bus, "string")
 
         # write the tso subscribe connections for this substation
-        tso.subs_append_n("dso" + sub_key + "/rt_bid_" + bus, "string")
-        tso.subs_append_n("dso" + sub_key + "/da_bid_" + bus, "string")
+        tso.subs_append_n("dso" + sub_key + "/rt_bid", "string")
+        tso.subs_append_n("dso" + sub_key + "/da_bid", "string")
 
         try:
             # running reference load, using a player for the load reference for comparison

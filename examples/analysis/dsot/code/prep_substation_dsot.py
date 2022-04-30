@@ -608,7 +608,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
         # will this device participate in market
         participating = np.random.uniform(0, 1) <= feeder_config['EVParticipation'] / 100
-        # ev wont participate at all if caseType is not ev
+        # ev won't participate at all if caseType is not ev
         if not simulation_config['caseType']['ev']:
             participating = False
 
@@ -796,9 +796,9 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     # write the dso helics message configuration
     dso = helpers.dso
     if feedercnt == 1:
-        dso.pubs_append_n(False, "da_bid_" + bus, "string")
-        dso.pubs_append_n(False, "rt_bid_" + bus, "string")
-        dso.subs_append_n(gld_sim_name + '/distribution_load', "string")
+        dso.pubs_append_n(False, "da_bid", "string")
+        dso.pubs_append_n(False, "rt_bid", "string")
+        dso.subs_append_n(gld_sim_name + '/gld_load', "string")
         dso.subs_append_n("pypower/lmp_da_" + bus, "string")
         dso.subs_append_n("pypower/lmp_rt_" + bus, "string")
         dso.subs_append_n("pypower/cleared_q_da_" + bus, "string")
@@ -816,7 +816,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.pubs_append_n(False, key + "/bill_mode", "string")
         dso.pubs_append_n(False, key + "/price", "double")
         dso.pubs_append_n(False, key + "/monthly_fee", "double")
-        dso.subs_append_n(gld_sim_name + "/" + meter_name + "#V1", "complex")
+        dso.subs_append_n(gld_sim_name + "/" + house_name + "#V1", "complex")
         dso.subs_append_n(gld_sim_name + "/" + house_name + "#Tair", "double")
         dso.subs_append_n(gld_sim_name + "/" + house_name + "#HvacLoad", "double")
         dso.subs_append_n(gld_sim_name + "/" + house_name + "#TotalLoad", "double")
@@ -859,7 +859,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     # write GridLAB-D helics message configuration
     gld = helpers.gld
     if feedercnt == 1:
-        gld.pubs_append(False, "distribution_load", "complex", "network_node", "distribution_load")
+        gld.pubs_append(False, "gld_load", "complex", "network_node", "distribution_load")
         # JH says removed this line below when we do not have the TSO in the federation
         gld.subs_append("pypower/three_phase_voltage_" + bus, "complex", "network_node", "positive_sequence_voltage")
         if 'climate' in gd:
@@ -876,12 +876,12 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         gld.pubs_append(False, house_name + "#HvacLoad", "double", house_name, "hvac_load")
         gld.pubs_append(False, house_name + "#TotalLoad", "double", house_name, "total_load")
         # Identify commercial buildings and map measured voltage correctly
-        if meter_name not in mtr_list:
-            mtr_list.append(meter_name)
-            if val['houseClass'] in comm_bldg_list:
-                gld.pubs_append(False, meter_name + "#V1", "complex", meter_name, "measured_voltage_A")
-            else:
-                gld.pubs_append(False, meter_name + "#V1", "complex", meter_name, "measured_voltage_1")
+#        if meter_name not in mtr_list:
+#            mtr_list.append(meter_name)
+        if val['houseClass'] in comm_bldg_list:
+            gld.pubs_append(False, house_name + "#V1", "complex", meter_name, "measured_voltage_A")
+        else:
+            gld.pubs_append(False, house_name + "#V1", "complex", meter_name, "measured_voltage_1")
         gld.subs_append(substation_sim_key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
         gld.subs_append(substation_sim_key + "/heating_setpoint", "double", house_name, "heating_setpoint")
         gld.subs_append(substation_sim_key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
