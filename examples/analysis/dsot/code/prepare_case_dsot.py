@@ -397,7 +397,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         cm.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
 
         print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
-        helpers.gld.write_file(dt, os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.json'))
+        helpers.gld.write_file(30, os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.json'))
 
         print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
         cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)

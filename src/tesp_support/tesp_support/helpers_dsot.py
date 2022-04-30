@@ -547,8 +547,8 @@ class HelicsMsg(object):
         # for object and property is for internal code interface for gridlabd
         self._subs.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
 
-    def subs_append_n(self, _n, _k, _t):
-        self._subs.append({"name": _n, "key": _k, "type": _t})
+    def subs_append_n(self, _k, _t):
+        self._subs.append({"key": _k, "type": _t})
 
 
 def write_players_msg(case_name, sys_config, dt):

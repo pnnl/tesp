@@ -284,7 +284,7 @@ def inner_substation_loop(metrics_root, with_market):
         topic_map[key + '#TotalLoad'] = [hvac_agent_objs[key].set_house_load]
         topic_map[key + '#On'] = [hvac_agent_objs[key].set_hvac_state]
         # topic_map[key + '#Demand'] = [hvac_agent_objs[key].set_hvac_demand]
-        topic_map[key + '#whLoad'] = [hvac_agent_objs[key].set_wh_load]
+        # topic_map[key + '#whLoad'] = [hvac_agent_objs[key].set_wh_load]
     log.info('instantiated %s HVAC control agents' % (len(hvac_keys)))
 
     # instantiate the water heater controller objects and map their message inputs
@@ -301,12 +301,12 @@ def inner_substation_loop(metrics_root, with_market):
                 water_heater_agent_objs[key] = WaterHeaterDSOT(row, gld_row, key, 11, current_time, solver)
 
                 # map topics
-                topic_map[wh_key + '#LTTEMP'] = [water_heater_agent_objs[key].set_wh_lower_temperature]
-                topic_map[wh_key + '#UTTEMP'] = [water_heater_agent_objs[key].set_wh_upper_temperature]
+                topic_map[wh_key + '#LTTemp'] = [water_heater_agent_objs[key].set_wh_lower_temperature]
+                topic_map[wh_key + '#UTTemp'] = [water_heater_agent_objs[key].set_wh_upper_temperature]
                 topic_map[wh_key + '#LTState'] = [water_heater_agent_objs[key].set_wh_lower_state]
                 topic_map[wh_key + '#UTState'] = [water_heater_agent_objs[key].set_wh_upper_state]
                 topic_map[wh_key + '#WHLoad'] = [water_heater_agent_objs[key].set_wh_load]
-                topic_map[wh_key + '#WDRATE'] = [water_heater_agent_objs[key].set_wh_wd_rate_val]
+                topic_map[wh_key + '#WDRate'] = [water_heater_agent_objs[key].set_wh_wd_rate_val]
             except KeyError as e:
                 log.info('Error {}, wh_name in key={}'.format(e, key))
     log.info('instantiated %s water heater control agents' % (len(water_heater_keys)))
@@ -320,7 +320,7 @@ def inner_substation_loop(metrics_root, with_market):
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
         topic_map[key + '#SOC'] = [battery_agent_objs[key].set_battery_SOC]
-    log.info('instantiated %s Battery control agents' % (len(battery_keys)))
+    log.info('instantiated %s battery control agents' % (len(battery_keys)))
 
     # instantiate the ev controller objects and map their message inputs
     ev_agent_objs = {}
@@ -332,7 +332,7 @@ def inner_substation_loop(metrics_root, with_market):
 
         # map topics
         topic_map[key + '#SOC'] = [ev_agent_objs[key].set_ev_SOC]
-    log.info('instantiated %s EV control agents' % (len(ev_keys)))
+    log.info('instantiated %s electric vehicle control agents' % (len(ev_keys)))
 
     # instantiate the pv objects and map their message inputs
     pv_agent_objs = {}
@@ -342,7 +342,7 @@ def inner_substation_loop(metrics_root, with_market):
         gld_row = config_glm['inverters'][key]
         pv_agent_objs[key] = PVDSOT(row, gld_row, key, 11, current_time)
         # nothing to map as topics
-    log.info('instantiated %s PV agents' % (len(pv_keys)))
+    log.info('instantiated %s solar control agents' % (len(pv_keys)))
     # read and store yearly pv forecast tape
 
     site_dictionary = config['site_agent']
@@ -620,7 +620,8 @@ def inner_substation_loop(metrics_root, with_market):
     billing_set_defaults = True
 
     # interval for metrics recording
-    # HACK: gld will be typically be on an (even) hour, so we will offset our frequency by 30 minutes (should be on the .5 hour)
+    # HACK: gld will be typically be on an (even) hour,
+    # so we will offset our frequency by 30 minutes (should be on the .5 hour)
     metrics_record_interval = 7200  # will actually be x2 after first round
     tnext_write_metrics_cnt = 1
     tnext_write_metrics = metrics_record_interval + 1800
@@ -746,7 +747,8 @@ def inner_substation_loop(metrics_root, with_market):
                             # these function has 2 additional inputs for logging
                             topic_map[topic][itopic](value, 11, current_time)
                         else:
-                            topic_map[topic][itopic](value)  # calls function to update the value in object. For details see topicMap
+                            # calls function to update the value in object. For details see topicMap
+                            topic_map[topic][itopic](value)
                 else:
                     log.warning('Unknown topic received from HELICS ({:s}), dropping it'.format(topic))
 

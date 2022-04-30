@@ -3,6 +3,8 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: runh.sh
 
+mkdir -p PyomoTempFiles
+
 (exec helics_broker -f 20 --loglevel=warning --name=mainbroker &> helics_broker.log &)
 
 (export WEATHER_CONFIG=weatherIAH.json && exec python3 -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weatherIAH.dat')"  &> weatherIAH.log &)
