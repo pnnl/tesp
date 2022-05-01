@@ -846,15 +846,15 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     # these messages are for weather agent used in DSOT agents
     if feedercnt == 1:
-        weather_topic = gd["climate"]["name"]
-        dso.subs_append_n(weather_topic + "/#temperature", "string")
-        dso.subs_append_n(weather_topic + "/#temperature/forecast", "string")
-        dso.subs_append_n(weather_topic + "/#humidity", "string")
-        dso.subs_append_n(weather_topic + "/#humidity/forecast", "string")
-        dso.subs_append_n(weather_topic + "/#solar_direct", "string")
-        dso.subs_append_n(weather_topic + "/#solar_direct/forecast", "string")
-        dso.subs_append_n(weather_topic + "/#solar_diffuse", "string")
-        dso.subs_append_n(weather_topic + "/#solar_diffuse/forecast", "string")
+        weather_topic = gd["climate"]["name"] + '/'
+        dso.subs_append_n(weather_topic + "#temperature", "string")
+        dso.subs_append_n(weather_topic + "#temperature#forecast", "string")
+        dso.subs_append_n(weather_topic + "#humidity", "string")
+        dso.subs_append_n(weather_topic + "#humidity#forecast", "string")
+        dso.subs_append_n(weather_topic + "#solar_direct", "string")
+        dso.subs_append_n(weather_topic + "#solar_direct#forecast", "string")
+        dso.subs_append_n(weather_topic + "#solar_diffuse", "string")
+        dso.subs_append_n(weather_topic + "#solar_diffuse#forecast", "string")
 
     # write GridLAB-D helics message configuration
     gld = helpers.gld

@@ -187,10 +187,9 @@ def inner_substation_loop(metrics_root, with_market):
     #
     # pv_power path ('../../../../src/tesp_support/tesp_support/solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv
 
-    weather_topic = config_glm['climate']['name'] + '/'
-    topic_map[weather_topic + '#solar_diffuse/forecast'] = [forecast_obj.set_solar_diffuse_forecast]
-    topic_map[weather_topic + '#solar_direct/forecast'] = [forecast_obj.set_solar_direct_forecast]
-    topic_map[weather_topic + '#temperature/forecast'] = [forecast_obj.set_temperature_forecast]
+    topic_map['#solar_diffuse#forecast'] = [forecast_obj.set_solar_diffuse_forecast]
+    topic_map['#solar_direct#forecast'] = [forecast_obj.set_solar_direct_forecast]
+    topic_map['#temperature#forecast'] = [forecast_obj.set_temperature_forecast]
 
     market_keys = list(config['markets'].keys())
     for key in market_keys:
@@ -248,36 +247,35 @@ def inner_substation_loop(metrics_root, with_market):
         gld_row = config_glm['houses'][key]
         hvac_agent_objs[key] = HVACDSOT(row, gld_row, key, 11, current_time, solver)
 
-        weather_topic = config_glm['climate']['name'] + '/'
-        if weather_topic + '#temperature' not in topic_map.keys():
-            topic_map[weather_topic + '#temperature'] = [hvac_agent_objs[key].set_temperature]
+        if '#temperature' not in topic_map.keys():
+            topic_map['#temperature'] = [hvac_agent_objs[key].set_temperature]
         else:
-            topic_map[weather_topic + '#temperature'].append(hvac_agent_objs[key].set_temperature)
+            topic_map['#temperature'].append(hvac_agent_objs[key].set_temperature)
 
-        if weather_topic + '#temperature/forecast' not in topic_map.keys():
-            topic_map[weather_topic + '#temperature/forecast'] = [hvac_agent_objs[key].set_temperature_forecast]
+        if '#temperature#forecast' not in topic_map.keys():
+            topic_map['#temperature#forecast'] = [hvac_agent_objs[key].set_temperature_forecast]
         else:
-            topic_map[weather_topic + '#temperature/forecast'].append(hvac_agent_objs[key].set_temperature_forecast)
+            topic_map['#temperature#forecast'].append(hvac_agent_objs[key].set_temperature_forecast)
 
-        if weather_topic + '#humidity' not in topic_map.keys():
-            topic_map[weather_topic + '#humidity'] = [hvac_agent_objs[key].set_humidity]
+        if '#humidity' not in topic_map.keys():
+            topic_map['#humidity'] = [hvac_agent_objs[key].set_humidity]
         else:
-            topic_map[weather_topic + '#humidity'].append(hvac_agent_objs[key].set_humidity)
+            topic_map['#humidity'].append(hvac_agent_objs[key].set_humidity)
 
-        if weather_topic + '#humidity/forecast' not in topic_map.keys():
-            topic_map[weather_topic + '#humidity/forecast'] = [hvac_agent_objs[key].set_humidity_forecast]
+        if '#humidity#forecast' not in topic_map.keys():
+            topic_map['#humidity#forecast'] = [hvac_agent_objs[key].set_humidity_forecast]
         else:
-            topic_map[weather_topic + '#humidity/forecast'].append(hvac_agent_objs[key].set_humidity_forecast)
+            topic_map['#humidity#forecast'].append(hvac_agent_objs[key].set_humidity_forecast)
 
-        if weather_topic + '#solar_direct' not in topic_map.keys():
-            topic_map[weather_topic + '#solar_direct'] = [hvac_agent_objs[key].set_solar_direct]
+        if '#solar_direct' not in topic_map.keys():
+            topic_map['#solar_direct'] = [hvac_agent_objs[key].set_solar_direct]
         else:
-            topic_map[weather_topic + '#solar_direct'].append(hvac_agent_objs[key].set_solar_direct)
+            topic_map['#solar_direct'].append(hvac_agent_objs[key].set_solar_direct)
 
-        if weather_topic + '#solar_diffuse' not in topic_map.keys():
-            topic_map[weather_topic + '#solar_diffuse'] = [hvac_agent_objs[key].set_solar_diffuse]
+        if '#solar_diffuse' not in topic_map.keys():
+            topic_map['#solar_diffuse'] = [hvac_agent_objs[key].set_solar_diffuse]
         else:
-            topic_map[weather_topic + '#solar_diffuse'].append(hvac_agent_objs[key].set_solar_diffuse)
+            topic_map['#solar_diffuse'].append(hvac_agent_objs[key].set_solar_diffuse)
 
         # map topics
         topic_map[key + '#Tair'] = [hvac_agent_objs[key].set_air_temp]

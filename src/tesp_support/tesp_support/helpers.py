@@ -221,6 +221,26 @@ def parse_magnitude_2(arg):
     return vals[0]
 
 
+def parse_magnitude_3(arg):
+    """Helper function to find the magnitude of a possibly complex number from Helics as a string
+
+    Args:
+      arg (str): The Helics value
+    """
+    try:
+
+        tok = arg.strip('[]')
+        vals = re.split(',', tok)
+        if len(vals) < 2:  # only a real part provided
+            vals.append('0')
+
+        vals[0] = float(vals[0])
+        return vals[0]
+    except:
+        print('parse_magnitude_3 does not understand"' + arg + '"')
+        return 0
+
+
 def parse_magnitude(arg):
     """ Parse the magnitude of a possibly complex number from FNCS
 
@@ -256,10 +276,10 @@ def parse_magnitude(arg):
         b = complex(tok)
         return abs(b)  # b.real
     except:
-        if type(arg) == list:
-            return abs(arg[0])
-        else:
-            print('parse_magnitude does not understand', arg)
+        try:
+            return parse_magnitude_3(arg)
+        except:
+            print('parse_magnitude does not understand' + arg)
             return 0
 
 
