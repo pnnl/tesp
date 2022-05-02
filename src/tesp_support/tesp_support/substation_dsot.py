@@ -53,7 +53,7 @@ def inner_substation_loop(metrics_root, with_market):
         elif type(val) is bool:
             helics.helicsPublicationPublishBoolean(pub, val)
         else:
-            log.warning('Publish type not found!')
+            log.warning('Publish ' + name + ', type ' + str(type(val)) + ' not found!')
 
     def worker(arg):
         timing(arg.__class__.__name__, True)
@@ -1239,7 +1239,7 @@ def inner_substation_loop(metrics_root, with_market):
                       'resp_c1': retail_market_obj.AMES_RT[3],
                       'resp_c0': retail_market_obj.AMES_RT[4],
                       'resp_deg': retail_market_obj.AMES_RT[5]}
-            publish('rt_bid', json.dumps(rt_bid))
+            publish('rt_bid_' + str(dso_bus), json.dumps(rt_bid))
 
             print('Real-time bid at', time_granted, '=', retail_market_obj.AMES_RT, flush=True)
             log.info('Total RT bid to AMES unresponsive' + '=' + str(retail_market_obj.AMES_RT[0]) + 'MW')
@@ -1280,7 +1280,7 @@ def inner_substation_loop(metrics_root, with_market):
 
             da_bid['unresp_mw'] = forecast_obj.correcting_Q_forecast_10_AM(da_bid['unresp_mw'], offset, day_of_week)
             
-            publish('da_bid', json.dumps(da_bid))
+            publish('da_bid_' + str(dso_bus), json.dumps(da_bid))
 
             print('Day-Ahead bid at', time_granted, '=', retail_market_obj.AMES_DA, flush=True)
 

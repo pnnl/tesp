@@ -796,8 +796,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     # write the dso helics message configuration
     dso = helpers.dso
     if feedercnt == 1:
-        dso.pubs_append_n(False, "da_bid", "string")
-        dso.pubs_append_n(False, "rt_bid", "string")
+        dso.pubs_append_n(False, "da_bid_" + bus, "string")
+        dso.pubs_append_n(False, "rt_bid_" + bus, "string")
         dso.subs_append_n(gld_sim_name + '/gld_load', "string")
         dso.subs_append_n("pypower/lmp_da_" + bus, "string")
         dso.subs_append_n("pypower/lmp_rt_" + bus, "string")

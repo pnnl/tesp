@@ -1728,12 +1728,12 @@ def tso_loop(casename):
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
+            log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
             topic = key.upper().split('/')[1]
-            # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
             if helics.helicsInputIsUpdated(sub):
                 new_event = True
                 val = helics.helicsInputGetString(sub)
-                # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                log.debug("at " + str(ts) + " " + topic + " " + val)
             # running from load_player - wind/solar generator
                 if 'GEN_POWER_' in topic or 'ALT_POWER_' in topic:
                     if ppc['genPower']:
@@ -1746,12 +1746,12 @@ def tso_loop(casename):
                                 if gen[i, 9] > p:
                                     gen[i, 9] = p
                                 gen[i, 1] = p
-                    # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                    log.debug("at " + str(ts) + " " + topic + " " + val)
                 elif 'GEN_PWR_HIST_' in topic or 'ALT_PWR_HIST_' in topic:
                     if ppc['genPower']:
                         gen_id = topic[13:]
                         generater_plants[gen_id][2] = json.loads(val)
-                    # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                    log.debug("at " + str(ts) + " " + topic + " " + val)
             # getting the latest inputs from DSO day ahead and real time
                 elif 'DA_BID_' in topic:
                     dso_bid = True
@@ -1766,7 +1766,7 @@ def tso_loop(casename):
                     respC1[busnum] = da_bid['resp_c1']
                     respC0[busnum] = da_bid['resp_c0']
                     resp_deg[busnum] = da_bid['resp_deg']
-                    # log.info("at " + str(ts) + " " + topic + " " + str(da_bid))
+                    log.debug("at " + str(ts) + " " + topic + " " + str(da_bid))
                 elif 'RT_BID_' in topic:
                     dso_bid = True
                     busnum = int(topic[7:])
@@ -1778,29 +1778,29 @@ def tso_loop(casename):
                     gld_load[busnum]['c1'] = rt_bid['resp_c1']
                     gld_load[busnum]['c0'] = rt_bid['resp_c0']
                     gld_load[busnum]['deg'] = rt_bid['resp_deg']
-                    # log.info("at " + str(ts) + " " + topic + " " + str(rt_bid))
+                    log.debug("at " + str(ts) + " " + topic + " " + str(rt_bid))
             # running from load_player - taped bus load
                 elif 'GLD_LOAD_' in topic:
                     busnum = int(topic[9:])
                     p, q = parse_mva(val)
                     gld_load[busnum]['p'] = p     # MW
                     gld_load[busnum]['q'] = q     # MW
-                    # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                    log.debug("at " + str(ts) + " " + topic + " " + val)
                 elif 'GLD_LD_HIST_' in topic:
                     busnum = int(topic[12:])
                     gld_load_hist[busnum] = json.loads(val)
-                    # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                    log.debug("at " + str(ts) + " " + topic + " " + val)
             # running from load_player - taped ref bus load
                 elif 'REF_LOAD_' in topic:
                     busnum = int(topic[9:])
                     p, q = parse_mva(val)
                     gld_load[busnum]['p_r'] = p  # MW
                     gld_load[busnum]['q_r'] = q  # MW
-                    # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                    log.debug("at " + str(ts) + " " + topic + " " + val)
                 elif 'REF_LD_HIST_' in topic:
                     busnum = int(topic[12:])
-                    # log.info("at " + str(ts) + " " + topic + " " + str(val))
                     ref_load_hist[busnum] = json.loads(val)
+                    log.debug("at " + str(ts) + " " + topic + " " + val)
 
         if new_event:
             log.info("at " + str(ts))

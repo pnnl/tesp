@@ -159,7 +159,7 @@ def startWeatherAgent(file):
             hPubs[col] = helics.helicsFederateRegisterGlobalPublication(
                          hFed, pubName, helics.helics_data_type_string, "")
             pubName = pubName + '#forecast'
-            hPubs[col + '#forecast'] = helics.helicsFederateRegisterGlobalPublication(
+            hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(
                                        hFed, pubName, helics.helics_data_type_string, "")
         helics.helicsFederateEnterExecutingMode(hFed)
         print('HELICS initialized to publish', hPubs, flush=True)

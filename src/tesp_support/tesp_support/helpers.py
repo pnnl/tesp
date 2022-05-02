@@ -221,7 +221,7 @@ def parse_magnitude_2(arg):
     return vals[0]
 
 
-def parse_magnitude_3(arg):
+def parse_helic_input(arg):
     """Helper function to find the magnitude of a possibly complex number from Helics as a string
 
     Args:
@@ -237,7 +237,7 @@ def parse_magnitude_3(arg):
         vals[0] = float(vals[0])
         return vals[0]
     except:
-        print('parse_magnitude_3 does not understand"' + arg + '"')
+        print('parse_helic_input does not understand"' + arg + '"')
         return 0
 
 
@@ -277,7 +277,7 @@ def parse_magnitude(arg):
         return abs(b)  # b.real
     except:
         try:
-            return parse_magnitude_3(arg)
+            return parse_helic_input(arg)
         except:
             print('parse_magnitude does not understand' + arg)
             return 0
@@ -440,8 +440,11 @@ def parse_kw(arg):
 
         return p
     except:
-        print('parse_kw does not understand', arg)
-        return 0
+        try:
+            return parse_helic_input(arg)
+        except:
+            print('parse_kw does not understand', arg)
+            return 0
 
 
 def print_mod_load(bus, dso, model_load, msg, ts):
