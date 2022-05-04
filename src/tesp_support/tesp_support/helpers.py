@@ -441,7 +441,7 @@ def parse_kw(arg):
         return p
     except:
         try:
-            return parse_helic_input(arg)
+            return parse_helic_input(arg)/1000.0
         except:
             print('parse_kw does not understand', arg)
             return 0

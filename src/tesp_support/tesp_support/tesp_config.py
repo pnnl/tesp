@@ -127,8 +127,7 @@ varsFD = [['Electric Cooling Penetration', 90, '%', 'FeederGenerator', 'Electric
           ['Solar Penetration', 0, '%', 'FeederGenerator', 'SolarPercentage'],
           ['Storage Penetration', 0, '%', 'FeederGenerator', 'StoragePercentage'],
           ['Solar Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'SolarInverterMode', 'inverterModesPV'],
-          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode',
-           'inverterModesBattery'],
+          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode','inverterModesBattery'],
           ['Billing Mode', 'TIERED', '', 'FeederGenerator', 'BillingMode', 'billingModes'],
           ['Monthly Fee', 13, '$', 'FeederGenerator', 'MonthlyFee'],
           ['Price', 0.102013, '$/kwh', 'FeederGenerator', 'Price'],
@@ -685,4 +684,6 @@ def show_tesp_config():
         except UnicodeDecodeError:
             pass
 
-# show_tesp_config ()
+
+if __name__ == "__main__":
+    show_tesp_config()

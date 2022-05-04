@@ -48,8 +48,10 @@ def inner_substation_loop(metrics_root, with_market):
         pub = helics.helicsFederateGetPublication(hFed, name)
         if type(val) is str:
             helics.helicsPublicationPublishString(pub, val)
-        elif type(val) is float:
+        elif type(val) is float or type(val) is np.float64:
             helics.helicsPublicationPublishDouble(pub, val)
+        elif type(val) is int:
+            helics.helicsPublicationPublishInteger(pub, val)
         elif type(val) is bool:
             helics.helicsPublicationPublishBoolean(pub, val)
         else:
