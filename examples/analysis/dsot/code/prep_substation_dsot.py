@@ -10,7 +10,8 @@ import math
 import json
 import numpy as np
 from datetime import datetime
-import tesp_support.helpers_dsot as helpers
+from tesp_support.helpers import HelicsMsg
+from tesp_support.helpers_dsot import random_norm_trunc
 
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
@@ -339,14 +340,14 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         weekend_night_set_heat = night_set_heat
                     else:
                         # New schedule to implmement CBEC's data
-                        wakeup_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
-                        daylight_start = wakeup_start + helpers.random_norm_trunc(
+                        wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
+                        daylight_start = wakeup_start + random_norm_trunc(
                             thermostat_schedule_config['WeekdayWakeToDaylightTime'])
-                        evening_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekdayEveningStart'])
-                        night_start = evening_start + helpers.random_norm_trunc(
+                        evening_start = random_norm_trunc(thermostat_schedule_config['WeekdayEveningStart'])
+                        night_start = evening_start + random_norm_trunc(
                             thermostat_schedule_config['WeekdayEveningToNightTime'])
-                        weekend_day_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
-                        weekend_night_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
+                        weekend_day_start = random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
+                        weekend_night_start = random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
                         # check if night_start_time is not beyond 24.0
                         night_start = min(night_start, 23.9)
                         weekend_night_start = min(weekend_night_start, 23.9)
@@ -794,7 +795,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     dp.close()
 
     # write the dso helics message configuration
-    dso = helpers.dso
+    dso = HelicsMsg.dso
     if feedercnt == 1:
         dso.pubs_append_n(False, "da_bid_" + bus, "string")
         dso.pubs_append_n(False, "rt_bid_" + bus, "string")
@@ -857,7 +858,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.subs_append_n(weather_topic + "#solar_diffuse#forecast", "string")
 
     # write GridLAB-D helics message configuration
-    gld = helpers.gld
+    gld = HelicsMsg.gld
     if feedercnt == 1:
         gld.pubs_append(False, "gld_load", "complex", "network_node", "distribution_load")
         # JH says removed this line below when we do not have the TSO in the federation

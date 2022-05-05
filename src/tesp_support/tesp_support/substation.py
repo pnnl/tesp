@@ -97,14 +97,15 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     fedName = helics.helicsFederateGetName(hFed)
     bulkName = 'pypower'
 
-    subFeeder = helics.helicsFederateGetSubscription(hFed, gldName + '/distribution_load')
-    subLMP = helics.helicsFederateGetSubscription(hFed, bulkName + '/LMP_' + metrics_root)
-    pubC1 = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_c1')
-    pubC2 = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_c2')
-    pubDeg = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_deg')
-    pubMax = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_max_mw')
-    pubUnresp = helics.helicsFederateGetPublication(hFed, fedName + '/unresponsive_mw')
-    pubAucPrice = helics.helicsFederateGetPublication(hFed, fedName + '/clear_price')
+    bus = metrics_root[3:]
+    subFeeder = helics.helicsFederateGetSubscription(hFed, gldName + '/distribution_load_' + bus)
+    subLMP = helics.helicsFederateGetSubscription(hFed, bulkName + '/LMP_' + bus)
+    pubC1 = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_c1_' + bus)
+    pubC2 = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_c2_' + bus)
+    pubDeg = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_deg_' + bus)
+    pubMax = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_max_mw_' + bus)
+    pubUnresp = helics.helicsFederateGetPublication(hFed, fedName + '/unresponsive_mw_' + bus)
+    pubAucPrice = helics.helicsFederateGetPublication(hFed, fedName + '/clear_price_' + bus)
 
     hvacObjs = {}
     hvac_keys = list(diction['controllers'].keys())

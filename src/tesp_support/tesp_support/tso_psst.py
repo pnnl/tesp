@@ -1074,163 +1074,6 @@ def tso_loop(casename):
         print(';\n', file=fp)
         fp.close()
 
-    def write_ames_base_case(fname):
-        fp = open(os.path.join(output_Path, fname), 'w')
-        print('// Base SI', file=fp)
-        print('BASE_S ', str(baseS), file=fp)
-        print('// Base Voltage', file=fp)
-        print('BASE_V ', str(baseV), file=fp)
-        print('', file=fp)
-
-        print('// Simulation Parameters', file=fp)
-        print('MaxDay ' + str(MaxDay), file=fp)
-        print('RTOPDur ' + str(RTOPDur), file=fp)
-        print('RandomSeed 695672061', file=fp)
-        print('// ThresholdProbability 0.999', file=fp)
-        print('PriceSensitiveDemandFlag ' + str(priceSensLoad), file=fp)
-        print('ReserveDownSystemPercent ' + str(reserveDown), file=fp)
-        print('ReserveUpSystemPercent ' + str(reserveUp), file=fp)
-        print('BalPenPos 1000', file=fp)
-        print('BalPenNeg 1000', file=fp)
-        print('NDGFlag 1', file=fp)
-
-        print('// Bus Data', file=fp)
-        print('NumberOfBuses', bus.shape[0], file=fp)
-        print('NumberOfReserveZones', len(zones), file=fp)
-        print('', file=fp)
-
-        print('#ZoneDataStart', file=fp)
-        print('// ZoneName   Buses   ReserveDownZonalPercent   ReserveUpZonalPercent', file=fp)
-        for j in range(len(zones)):
-            name = 'Zone' + str(j + 1)
-            buses = ''
-            for i in range(bus.shape[0]):
-                if zones[j][0] == bus[i, 10]:
-                    if buses == '':
-                        buses = str(i + 1)
-                    else:
-                        buses = buses + ',' + str(i + 1)
-            print(name, buses, '{: .1f}'.format(zones[j][2]), '{: .1f}'.format(zones[j][3]), file=fp)
-        print('#ZoneDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#LineDataStart', file=fp)
-        print('// Name   From   To   MaxCap(MWs)   Reactance(ohms)', file=fp)
-        # branch: fbus, tbus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax
-        # AMES wants branch name, from bus(< to bus), to bus, capacity(MVA), total X(pu)
-        for i in range(branch.shape[0]):
-            name = 'Line' + str(i + 1)
-            if branch[i, 1] > branch[i, 0]:
-                fbus = int(branch[i, 0])
-                tbus = int(branch[i, 1])
-            else:
-                fbus = int(branch[i, 1])
-                tbus = int(branch[i, 0])
-            print(name, fbus, tbus, '{: .2f}'.format(branch[i, 5]), '{: .6f}'.format(branch[i, 3]), file=fp)
-        print('#LineDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#GenDataStart', file=fp)
-        print('// Name   ID   atBus   SCost($H)   a($/MWh)   b($MW^2h)   CapL(MW)   CapU(MW)   Segments   InitMoney',
-              file=fp)
-        # TODO: replace ppc['gencost'] with dictionary of hourly bids, collected from the GridLAB-D agents over FNCS
-        # gen: bus, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
-        # gencost: 2, startup, shutdown, 3, c2, c1, c0
-        # AMES wants name, ID, bus, c0, c1, c2, capL, capU, NS, InitMoney
-        for i in range(numGen):
-            if genFuel[i][0] not in renewables:
-                name = 'GenCo' + str(i + 1)
-                fbus = int(gen[i, 0])
-                Pmax = gen[i, 8]
-                Pmin = gen[i, 9]
-                c0 = genCost[i, 6]
-                c1 = genCost[i, 5]
-                c2 = genCost[i, 4]
-                if Pmin > 0:
-                    print(name, str(i + 1), fbus, '{: .2f}'.format(c0), '{: .2f}'.format(c1),
-                          '{: .6f}'.format(c2), '{: .2f}'.format(Pmin), '{: .2f}'.format(Pmax),
-                          NS, '{: .2f}'.format(100000.0), file=fp)
-        print('#GenDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#LSEDataFixedDemandStart', file=fp)
-        # ppc arrays(bus type 1=load, 2 = gen(PV) and 3 = swing)
-        # bus: bus_i, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin
-        # AMES wants name, ID, bus, 8x hourly demands, in three blocks
-        # Define a dictionary of hourly load forecasts, collected from ppc
-        #    GridLAB-D via FNCS, to replace ppc['bus']
-        lse = []
-        for i in range(dsoBus.shape[0]):
-            Pd = unRespMW[i] + respMaxMW[i]
-            fbus = int(bus[i, 0])
-            lse.append([fbus, Pd])
-        print('// Name ID atBus H-00 H-01 H-02 H-03 H-04 H-05 H-06 H-07', file=fp)
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            print('LSE' + str(i + 1), str(i + 1), lse[i][0], '{: .2f}'.format(Pd[0]), '{: .2f}'.format(Pd[1]),
-                  '{: .2f}'.format(Pd[2]), '{: .2f}'.format(Pd[3]), '{: .2f}'.format(Pd[4]),
-                  '{: .2f}'.format(Pd[5]), '{: .2f}'.format(Pd[6]), '{: .2f}'.format(Pd[7]), file=fp)
-        print('// Name ID atBus H-08 H-09 H-10 H-11 H-12 H-13 H-14 H-15', file=fp)
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            print('LSE' + str(i + 1), str(i + 1), lse[i][0], '{: .2f}'.format(Pd[8]), '{: .2f}'.format(Pd[9]),
-                  '{: .2f}'.format(Pd[10]), '{: .2f}'.format(Pd[11]), '{: .2f}'.format(Pd[12]),
-                  '{: .2f}'.format(Pd[13]), '{: .2f}'.format(Pd[14]), '{: .2f}'.format(Pd[15]), file=fp)
-        print('// Name ID atBus H-16 H-17 H-18 H-19 H-20 H-21 H-22 H-23', file=fp)
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            print('LSE' + str(i + 1), str(i + 1), lse[i][0], '{: .2f}'.format(Pd[16]), '{: .2f}'.format(Pd[17]),
-                  '{: .2f}'.format(Pd[18]), '{: .2f}'.format(Pd[19]), '{: .2f}'.format(Pd[20]),
-                  '{: .2f}'.format(Pd[21]), '{: .2f}'.format(Pd[22]), '{: .2f}'.format(Pd[23]), file=fp)
-        print('#LSEDataFixedDemandEnd', file=fp)
-        print('', file=fp)
-
-        # Generator (wind/solar) Plants, AMES wants name, ID, bus, 8x hourly demands, in three blocks
-        print('#NDGDataStart', file=fp)
-        i = 1
-        print('// Name ID atBus H-00 H-01 H-02 H-03 H-04 H-05 H-06 H-07', file=fp)
-        for key, row in generater_plants.items():
-            Pd = row[2]
-            print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[0]), '{: .2f}'.format(Pd[1]),
-                  '{: .2f}'.format(Pd[2]), '{: .2f}'.format(Pd[3]), '{: .2f}'.format(Pd[4]),
-                  '{: .2f}'.format(Pd[5]), '{: .2f}'.format(Pd[6]), '{: .2f}'.format(Pd[7]), file=fp)
-            i += 1
-        i = 1
-        print('// Name ID atBus H-08 H-09 H-10 H-11 H-12 H-13 H-14 H-15', file=fp)
-        for key, row in generater_plants.items():
-            Pd = row[2]
-            print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[8]), '{: .2f}'.format(Pd[9]),
-                  '{: .2f}'.format(Pd[10]), '{: .2f}'.format(Pd[11]), '{: .2f}'.format(Pd[12]),
-                  '{: .2f}'.format(Pd[13]), '{: .2f}'.format(Pd[14]), '{: .2f}'.format(Pd[15]), file=fp)
-            i += 1
-        i = 1
-        print('// Name ID atBus H-16 H-17 H-18 H-19 H-20 H-21 H-22 H-23', file=fp)
-        for key, row in generater_plants.items():
-            Pd = row[2]
-            print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[16]), '{: .2f}'.format(Pd[17]),
-                  '{: .2f}'.format(Pd[18]), '{: .2f}'.format(Pd[19]), '{: .2f}'.format(Pd[20]),
-                  '{: .2f}'.format(Pd[21]), '{: .2f}'.format(Pd[22]), '{: .2f}'.format(Pd[23]), file=fp)
-            i += 1
-        print('#NDGDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#LSEDataPriceSensitiveDemandStart', file=fp)
-        print('// Name   ID    atBus   hourIndex   d   e   f   pMin   pMax', file=fp)
-        lse = []
-        for i in range(bus.shape[0]):
-            Pd = unRespMW[i]
-            fbus = int(bus[i, 0])
-            lse.append([fbus, Pd])
-
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            for k in range(hours_in_a_day):
-                print('LSE' + str(i + 1), str(i + 1), lse[i][0], str(k + 1),
-                      '{: .2f}'.format(0), '{: .2f}'.format(0.1),
-                      '{: .2f}'.format(0), '{: .2f}'.format(Pd[k]), file=fp)
-        print('#LSEDataPriceSensitiveDemandEnd', file=fp)
-        fp.close()
-
     def update_cost_and_load():
         # update cost coefficients, set dispatchable load, put unresp load on bus
         bus_total = {'pcrv': 0, 'p': 0, 'p_r': 0, 'unresp': 0, 'resp_max': 0}
@@ -1625,7 +1468,7 @@ def tso_loop(casename):
             genCost = ppc['gencost']
             genFuel = ppc['genfuel']
 
-            # log.info('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
+            # log.info('DSO Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
             # log.info(dsoBus)
             # log.info(gld_load)
             # log.info(gen)
@@ -1658,10 +1501,6 @@ def tso_loop(casename):
             respC1 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
             respC0 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
             resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-
-            # if ames:
-            #     write_ames_base_case('ames.dat')
-            # quit()
         finally:
             log.info('Finished initialize for day-ahead, time stepping variables')
             log.info('Finished initialize for bus and dso variables')
@@ -1724,7 +1563,7 @@ def tso_loop(casename):
     new_event = False
     while ts <= tmax:
         # start by getting the latest inputs from GridLAB-D and the auction
-        # see another example for helics integration at fncsPYPOWER.py
+        # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)

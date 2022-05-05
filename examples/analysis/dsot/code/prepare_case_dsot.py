@@ -19,6 +19,7 @@ import tesp_support.commbldgenerator as com_FG
 import tesp_support.feederGenerator_dsot as res_FG
 import tesp_support.copperplateFeederGenerator_dsot as cp_FG
 import prep_substation_dsot as prep
+from tesp_support.helpers import HelicsMsg
 
 
 # Simulation settings for the this experimental case
@@ -164,7 +165,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # write player helics config json file for load and generator players
     helpers.write_players_msg(caseName, sys_config, dt)
 
-    tso = helpers.HelicsMsg("pypower")
+    tso = HelicsMsg("pypower")
     # config helics subs/pubs
     # Running renewables wind, solar
     if sys_config['genPower']:
@@ -317,8 +318,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         with open(caseName + '/case_config_' + str(dso_val['bus_number']) + '.json', 'w') as outfile:
             json.dump(case_config, outfile, ensure_ascii=False, indent=2)
 
-        helpers.gld = helpers.HelicsMsg("gld" + case_config['SimulationConfig']['Substation'])
-        helpers.dso = helpers.HelicsMsg("dso" + case_config['SimulationConfig']['Substation'])
+        HelicsMsg.gld = HelicsMsg("gld" + case_config['SimulationConfig']['Substation'])
+        HelicsMsg.dso = HelicsMsg("dso" + case_config['SimulationConfig']['Substation'])
         feeders = dso_val['feeders']
         feedercnt = 1
         for feed_key, feed_val in feeders.items():
@@ -392,7 +393,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         cm.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
 
         print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
-        helpers.gld.write_file(30, os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.json'))
+        HelicsMsg.gld.write_file(30, os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.json'))
 
         print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
         cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
@@ -401,7 +402,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
 
         print("\n=== MERGING/WRITING THE DSO MESSAGE FILE=====")
-        helpers.dso.write_file(dt, os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
+        HelicsMsg.dso.write_file(dt, os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
 
         # cleaning after feeders had been merged
         foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName)) if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]

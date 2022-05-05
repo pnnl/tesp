@@ -1,5 +1,6 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: fncsTSO.py
+
 import os
 import math
 import json
@@ -9,12 +10,13 @@ import pandas as pd
 import pypower.api as pp
 import psst.cli as pst
 import tesp_support.fncs as fncs
+
 from copy import deepcopy
 from datetime import datetime
-from .metrics_collector import MetricsStore, MetricsCollector
 from .helpers import load_json_case
 from .helpers import parse_mva
 from .helpers import print_mod_load
+from .metrics_collector import MetricsStore, MetricsCollector
 
 
 def make_generater_plants(ppc, renewables):
@@ -37,7 +39,7 @@ def make_dictionary(ppc):
     Args:
       ppc (dict): PYPOWER case file structure
     """
-    fncsBuses = {}
+    dsoBuses = {}
     generators = {}
     unitsout = []
     branchesout = []
@@ -45,7 +47,7 @@ def make_dictionary(ppc):
     gen = ppc['gen']
     genCost = ppc['gencost']
     genFuel = ppc['genfuel']
-    fncsBus = ppc['FNCS']
+    dsoBus = ppc['FNCS']
     units = ppc['UnitsOut']
     branches = ppc['BranchesOut']
     output_Path = ppc['outputPath']
@@ -70,13 +72,13 @@ def make_dictionary(ppc):
                                   'StartupCost': float(genCost[i, 1]), 'ShutdownCost': float(genCost[i, 2]), 'c2': c2,
                                   'c1': c1, 'c0': c0}
 
-    for i in range(fncsBus.shape[0]):
-        busnum = int(fncsBus[i, 0])
+    for i in range(dsoBus.shape[0]):
+        busnum = int(dsoBus[i, 0])
         busidx = busnum - 1
-        fncsBuses[str(busnum)] = {'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
+        dsoBuses[str(busnum)] = {'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
                                   'area': int(bus[busidx, 6]), 'zone': int(bus[busidx, 10]),
-                                  'ampFactor': float(fncsBus[i, 2]), 'GLDsubstations': [fncsBus[i, 1]],
-                                  'curveScale': float(fncsBus[i, 5]), 'curveSkew': int(fncsBus[i, 6])}
+                                  'ampFactor': float(dsoBus[i, 2]), 'GLDsubstations': [dsoBus[i, 1]],
+                                  'curveScale': float(dsoBus[i, 5]), 'curveSkew': int(dsoBus[i, 6])}
 
     for i in range(units.shape[0]):
         unitsout.append({'unit': int(units[i, 0]), 'tout': int(units[i, 1]), 'tin': int(units[i, 2])})
@@ -85,7 +87,7 @@ def make_dictionary(ppc):
         branchesout.append({'branch': int(branches[i, 0]), 'tout': int(branches[i, 1]), 'tin': int(branches[i, 2])})
 
     dp = open(os.path.join(output_Path, 'model_dict.json'), 'w')
-    ppdict = {'baseMVA': ppc['baseMVA'], 'fncsBuses': fncsBuses, 'generators': generators, 'UnitsOut': unitsout,
+    ppdict = {'baseMVA': ppc['baseMVA'], 'fncsBuses': dsoBuses, 'generators': generators, 'UnitsOut': unitsout,
               'BranchesOut': branchesout}
     print(json.dumps(ppdict), file=dp, flush=True)
     dp.close()
@@ -320,7 +322,7 @@ def tso_loop(casename):
             os.rename(psst_case, fle)
 
         dispatch = {}
-        if outcomes[1] is 'optimal':
+        if outcomes[1] == 'optimal':
             status = True
             for g in sorted(instance.Generators.value):
                 dispatch[g] = []
@@ -338,7 +340,7 @@ def tso_loop(casename):
                 log.critical('ERROR - No DA starting point')
                 exit()
 
-        for ii in range(fncsBus.shape[0]):
+        for ii in range(dsoBus.shape[0]):
             fncs.publish('lmp_da_' + str(ii + 1), json.dumps(DA_LMPs[ii]))
             row = DA_LMPs[ii]
             da_lmp_store.append_data(
@@ -397,9 +399,9 @@ def tso_loop(casename):
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
                     # log.debug(str(ld) + " cleared quantity for hour " + str(t) + " --> " + str(instance.PSLoadDemand[ld, t].value))
-            for ii in range(fncsBus.shape[0]):
+            for ii in range(dsoBus.shape[0]):
                 bus_num = ii + 1
-                gld_scale = float(fncsBus[ii, 2])
+                gld_scale = float(dsoBus[ii, 2])
                 lse = 'LSE' + str(bus_num)
                 try:
                     row = lseDispatch[lse]
@@ -420,10 +422,10 @@ def tso_loop(casename):
                     row[18], row[19], row[20], row[21], row[22], row[23]
                 )
         else:
-            for ii in range(fncsBus.shape[0]):
+            for ii in range(dsoBus.shape[0]):
                 row = []
                 bus_num = ii + 1
-                gld_scale = float(fncsBus[ii, 2])
+                gld_scale = float(dsoBus[ii, 2])
                 for z in range(24):
                     if dso_bid:
                         row.append((respMaxMW[ii][z] + unRespMW[ii][z]) * gld_scale)
@@ -485,7 +487,7 @@ def tso_loop(casename):
             uc.close()
 
         dispatch = {}
-        if outcomes[1] is 'optimal':
+        if outcomes[1] == 'optimal':
             status = True
             for g in sorted(instance.Generators.value):
                 dispatch[g] = []
@@ -546,9 +548,9 @@ def tso_loop(casename):
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
 
-            for ii in range(fncsBus.shape[0]):
+            for ii in range(dsoBus.shape[0]):
                 bus_num = ii + 1
-                gld_scale = float(fncsBus[ii, 2])
+                gld_scale = float(dsoBus[ii, 2])
                 lse = 'LSE' + str(bus_num)
                 try:
                     row = lseDispatch[lse]
@@ -572,9 +574,9 @@ def tso_loop(casename):
                     row[0]
                 )
         else:
-            for ii in range(fncsBus.shape[0]):
+            for ii in range(dsoBus.shape[0]):
                 bus_num = ii + 1
-                gld_scale = float(fncsBus[ii, 2])
+                gld_scale = float(dsoBus[ii, 2])
                 if dso_bid:
                     ld = gld_load[bus_num]['unresp']
                     if ld <= 0:                           # no bid add the unresp through tape event
@@ -637,14 +639,14 @@ def tso_loop(casename):
             nobid_unresp_da[jj] = []
             for ii in range(bus.shape[0]):
                 bus_num = ii + 1
-                if bus_num <= fncsBus.shape[0]:      # only low voltage bus and with dso
+                if bus_num <= dsoBus.shape[0]:      # only low voltage bus and with dso
                     total = unRespMW[ii][jj]
                     if not priceSensLoad:
                         total += respMaxMW[ii][jj]
                     if total == 0:                   # no unresp bid add through tape event
                         total = gld_load_hist[bus_num][jj+24]
                         nobid_unresp_da[jj].append(total)
-                    total = (total * float(fncsBus[ii][2])) / baseS
+                    total = (total * float(dsoBus[ii][2])) / baseS
                 else:                                # high voltage buses are added
                     total = unRespMW[ii][jj] / baseS
                 dso_loads.append(total)
@@ -718,14 +720,14 @@ def tso_loop(casename):
         for ii in range(bus.shape[0]):
             total = 0.0
             bus_num = ii + 1
-            if bus_num <= fncsBus.shape[0]:  # only low voltage bus and with dso
+            if bus_num <= dsoBus.shape[0]:  # only low voltage bus and with dso
                 total = gld_load[bus_num]['unresp']
                 if not priceSensLoad:
                     total += gld_load[bus_num]['resp_max']
                 if total == 0:  # no unresp bid add through tape event
                     total = gld_load[bus_num]['p']
                     nobid_unresp_rt[ii] = total
-                total = (total * float(fncsBus[ii][2])) / baseS
+                total = (total * float(dsoBus[ii][2])) / baseS
             # else:                                       # high voltage buses are added
             # where is this in real time
             dso_loads.append(total)
@@ -969,7 +971,7 @@ def tso_loop(casename):
                       '{: .1f}'.format(zones[jj][2]) + '{: .1f}'.format(zones[jj][3]), file=fp)
             print(';\n', file=fp)
 
-        # Market ie bidding from a dso (fncsBus) and bus
+        # Market ie bidding from a dso (dsoBus) and bus
         # in dsot there are multiple bus' for a dso
         if dso_bid:
             if dayahead:
@@ -991,14 +993,14 @@ def tso_loop(casename):
 
             if priceSensLoad:
                 writeLine = 'set PricesSensitiveLoadNames :='
-                for ii in range(fncsBus.shape[0] - 1):
+                for ii in range(dsoBus.shape[0] - 1):
                     writeLine = writeLine + ' LSE' + str(ii + 1) + ','
                 print(writeLine + ' LSE' + str(ii + 2), ';\n', file=fp)
 
                 print('param: Name ID atBus hourIndex d e f SLMax NS :=', file=fp)
-                for ii in range(fncsBus.shape[0]):
+                for ii in range(dsoBus.shape[0]):
                     bus_num = ii + 1
-                    gld_scale = float(fncsBus[ii][2])
+                    gld_scale = float(dsoBus[ii][2])
                     if dayahead:                                # 12am to 12am
                         for jj in range(hours_in_a_day):
                             print('LSE' + str(bus_num) + ' ' + str(bus_num) + ' Bus' + str(bus_num) +
@@ -1032,7 +1034,7 @@ def tso_loop(casename):
                         for key, row in generater_plants.items():
                             if row[0] == bus_num:
                                 ndg += float(row[2][jj+24])
-                        if bus_num <= fncsBus.shape[0]:
+                        if bus_num <= dsoBus.shape[0]:
                             net = ref_load_hist[bus_num][jj+24] - ndg  # uses history
                         else:
                             net = - ndg
@@ -1044,7 +1046,7 @@ def tso_loop(casename):
                             for jj in range(znumGen):
                                 if zgenFuel[jj][2] == row[3]:
                                     ndg += zgen[jj, 1]
-                    if bus_num <= fncsBus.shape[0]:
+                    if bus_num <= dsoBus.shape[0]:
                         net = gld_load[bus_num]['pcrv'] - ndg
                     else:
                         net = - ndg
@@ -1067,174 +1069,19 @@ def tso_loop(casename):
         print(';\n', file=fp)
         fp.close()
 
-    def write_ames_base_case(fname):
-        fp = open(os.path.join(output_Path, fname), 'w')
-        print('// Base SI', file=fp)
-        print('BASE_S ', str(baseS), file=fp)
-        print('// Base Voltage', file=fp)
-        print('BASE_V ', str(baseV), file=fp)
-        print('', file=fp)
-
-        print('// Simulation Parameters', file=fp)
-        print('MaxDay ' + str(MaxDay), file=fp)
-        print('RTOPDur ' + str(RTOPDur), file=fp)
-        print('RandomSeed 695672061', file=fp)
-        print('// ThresholdProbability 0.999', file=fp)
-        print('PriceSensitiveDemandFlag ' + str(priceSensLoad), file=fp)
-        print('ReserveDownSystemPercent ' + str(reserveDown), file=fp)
-        print('ReserveUpSystemPercent ' + str(reserveUp), file=fp)
-        print('BalPenPos 1000', file=fp)
-        print('BalPenNeg 1000', file=fp)
-        print('NDGFlag 1', file=fp)
-
-        print('// Bus Data', file=fp)
-        print('NumberOfBuses', bus.shape[0], file=fp)
-        print('NumberOfReserveZones', len(zones), file=fp)
-        print('', file=fp)
-
-        print('#ZoneDataStart', file=fp)
-        print('// ZoneName   Buses   ReserveDownZonalPercent   ReserveUpZonalPercent', file=fp)
-        for j in range(len(zones)):
-            name = 'Zone' + str(j + 1)
-            buses = ''
-            for i in range(bus.shape[0]):
-                if zones[j][0] == bus[i, 10]:
-                    if buses == '':
-                        buses = str(i + 1)
-                    else:
-                        buses = buses + ',' + str(i + 1)
-            print(name, buses, '{: .1f}'.format(zones[j][2]), '{: .1f}'.format(zones[j][3]), file=fp)
-        print('#ZoneDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#LineDataStart', file=fp)
-        print('// Name   From   To   MaxCap(MWs)   Reactance(ohms)', file=fp)
-        # branch: fbus, tbus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax
-        # AMES wants branch name, from bus(< to bus), to bus, capacity(MVA), total X(pu)
-        for i in range(branch.shape[0]):
-            name = 'Line' + str(i + 1)
-            if branch[i, 1] > branch[i, 0]:
-                fbus = int(branch[i, 0])
-                tbus = int(branch[i, 1])
-            else:
-                fbus = int(branch[i, 1])
-                tbus = int(branch[i, 0])
-            print(name, fbus, tbus, '{: .2f}'.format(branch[i, 5]), '{: .6f}'.format(branch[i, 3]), file=fp)
-        print('#LineDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#GenDataStart', file=fp)
-        print('// Name   ID   atBus   SCost($H)   a($/MWh)   b($MW^2h)   CapL(MW)   CapU(MW)   Segments   InitMoney',
-              file=fp)
-        # TODO: replace ppc['gencost'] with dictionary of hourly bids, collected from the GridLAB-D agents over FNCS
-        # gen: bus, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
-        # gencost: 2, startup, shutdown, 3, c2, c1, c0
-        # AMES wants name, ID, bus, c0, c1, c2, capL, capU, NS, InitMoney
-        for i in range(numGen):
-            if genFuel[i][0] not in renewables:
-                name = 'GenCo' + str(i + 1)
-                fbus = int(gen[i, 0])
-                Pmax = gen[i, 8]
-                Pmin = gen[i, 9]
-                c0 = genCost[i, 6]
-                c1 = genCost[i, 5]
-                c2 = genCost[i, 4]
-                if Pmin > 0:
-                    print(name, str(i + 1), fbus, '{: .2f}'.format(c0), '{: .2f}'.format(c1),
-                          '{: .6f}'.format(c2), '{: .2f}'.format(Pmin), '{: .2f}'.format(Pmax),
-                          NS, '{: .2f}'.format(100000.0), file=fp)
-        print('#GenDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#LSEDataFixedDemandStart', file=fp)
-        # ppc arrays(bus type 1=load, 2 = gen(PV) and 3 = swing)
-        # bus: bus_i, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin
-        # AMES wants name, ID, bus, 8x hourly demands, in three blocks
-        # Define a dictionary of hourly load forecasts, collected from ppc
-        #    GridLAB-D via FNCS, to replace ppc['bus']
-        lse = []
-        for i in range(fncsBus.shape[0]):
-            Pd = unRespMW[i] + respMaxMW[i]
-            fbus = int(bus[i, 0])
-            lse.append([fbus, Pd])
-        print('// Name ID atBus H-00 H-01 H-02 H-03 H-04 H-05 H-06 H-07', file=fp)
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            print('LSE' + str(i + 1), str(i + 1), lse[i][0], '{: .2f}'.format(Pd[0]), '{: .2f}'.format(Pd[1]),
-                  '{: .2f}'.format(Pd[2]), '{: .2f}'.format(Pd[3]), '{: .2f}'.format(Pd[4]),
-                  '{: .2f}'.format(Pd[5]), '{: .2f}'.format(Pd[6]), '{: .2f}'.format(Pd[7]), file=fp)
-        print('// Name ID atBus H-08 H-09 H-10 H-11 H-12 H-13 H-14 H-15', file=fp)
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            print('LSE' + str(i + 1), str(i + 1), lse[i][0], '{: .2f}'.format(Pd[8]), '{: .2f}'.format(Pd[9]),
-                  '{: .2f}'.format(Pd[10]), '{: .2f}'.format(Pd[11]), '{: .2f}'.format(Pd[12]),
-                  '{: .2f}'.format(Pd[13]), '{: .2f}'.format(Pd[14]), '{: .2f}'.format(Pd[15]), file=fp)
-        print('// Name ID atBus H-16 H-17 H-18 H-19 H-20 H-21 H-22 H-23', file=fp)
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            print('LSE' + str(i + 1), str(i + 1), lse[i][0], '{: .2f}'.format(Pd[16]), '{: .2f}'.format(Pd[17]),
-                  '{: .2f}'.format(Pd[18]), '{: .2f}'.format(Pd[19]), '{: .2f}'.format(Pd[20]),
-                  '{: .2f}'.format(Pd[21]), '{: .2f}'.format(Pd[22]), '{: .2f}'.format(Pd[23]), file=fp)
-        print('#LSEDataFixedDemandEnd', file=fp)
-        print('', file=fp)
-
-        # Generator (wind/solar) Plants, AMES wants name, ID, bus, 8x hourly demands, in three blocks
-        print('#NDGDataStart', file=fp)
-        i = 1
-        print('// Name ID atBus H-00 H-01 H-02 H-03 H-04 H-05 H-06 H-07', file=fp)
-        for key, row in generater_plants.items():
-            Pd = row[2]
-            print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[0]), '{: .2f}'.format(Pd[1]),
-                  '{: .2f}'.format(Pd[2]), '{: .2f}'.format(Pd[3]), '{: .2f}'.format(Pd[4]),
-                  '{: .2f}'.format(Pd[5]), '{: .2f}'.format(Pd[6]), '{: .2f}'.format(Pd[7]), file=fp)
-            i += 1
-        i = 1
-        print('// Name ID atBus H-08 H-09 H-10 H-11 H-12 H-13 H-14 H-15', file=fp)
-        for key, row in generater_plants.items():
-            Pd = row[2]
-            print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[8]), '{: .2f}'.format(Pd[9]),
-                  '{: .2f}'.format(Pd[10]), '{: .2f}'.format(Pd[11]), '{: .2f}'.format(Pd[12]),
-                  '{: .2f}'.format(Pd[13]), '{: .2f}'.format(Pd[14]), '{: .2f}'.format(Pd[15]), file=fp)
-            i += 1
-        i = 1
-        print('// Name ID atBus H-16 H-17 H-18 H-19 H-20 H-21 H-22 H-23', file=fp)
-        for key, row in generater_plants.items():
-            Pd = row[2]
-            print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[16]), '{: .2f}'.format(Pd[17]),
-                  '{: .2f}'.format(Pd[18]), '{: .2f}'.format(Pd[19]), '{: .2f}'.format(Pd[20]),
-                  '{: .2f}'.format(Pd[21]), '{: .2f}'.format(Pd[22]), '{: .2f}'.format(Pd[23]), file=fp)
-            i += 1
-        print('#NDGDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#LSEDataPriceSensitiveDemandStart', file=fp)
-        print('// Name   ID    atBus   hourIndex   d   e   f   pMin   pMax', file=fp)
-        lse = []
-        for i in range(bus.shape[0]):
-            Pd = unRespMW[i]
-            fbus = int(bus[i, 0])
-            lse.append([fbus, Pd])
-
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            for k in range(hours_in_a_day):
-                print('LSE' + str(i + 1), str(i + 1), lse[i][0], str(k + 1),
-                      '{: .2f}'.format(0), '{: .2f}'.format(0.1),
-                      '{: .2f}'.format(0), '{: .2f}'.format(Pd[k]), file=fp)
-        print('#LSEDataPriceSensitiveDemandEnd', file=fp)
-        fp.close()
-
     def update_cost_and_load():
         # update cost coefficients, set dispatchable load, put unresp load on bus
         bus_total = {'pcrv': 0, 'p': 0, 'p_r': 0, 'unresp': 0, 'resp_max': 0}
-        for row in fncsBus:
+        for row in dsoBus:
             busnum = int(row[0])
             gld_scale = float(row[2])
             load = gld_load[busnum]
             log.debug("Bus" + str(busnum) + " " + str(load))
 
-            # track the latest bid in the metrics
+            # track the latest bid in the metrics and power
             if load['unresp'] > 0:  # we have a bid
+                load['p'] = load['unresp']
+                load['q'] = load['unresp'] * 0.57
                 unresp = load['unresp'] * gld_scale
                 resp_max = load['resp_max'] * gld_scale
                 c2 = load['c2'] / gld_scale * gld_scale
@@ -1249,9 +1096,6 @@ def tso_loop(casename):
                 c0 = 0
                 deg = 0
 
-            if load['unresp'] > 0:
-                load['p'] = load['unresp']
-                load['q'] = load['unresp'] * 0.57
             load['pcrv'] = load['p'] * gld_scale
             load['qcrv'] = load['q'] * gld_scale
             bus[busnum - 1, 2] = load['pcrv']
@@ -1347,7 +1191,7 @@ def tso_loop(casename):
             # genFuel: [[fuel type, fuel name, id, uniton]]
             zones = ppc['zones']
             # zones: [[zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]]
-            fncsBus = ppc['FNCS']
+            dsoBus = ppc['FNCS']
             # FNCS: [[bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]]
 
             # Not being used at this time
@@ -1579,13 +1423,13 @@ def tso_loop(casename):
             rt_lmps = {}
             rt_dispatch = {}
 
-            # listening to fncs objects key on bus number
+            # listening to message objects key on bus number
             gld_load = {}
             gld_load_hist = {}
             ind_load_hist = {}
             ref_load_hist = {}
             nobid_unresp_da = [[]] * hours_in_a_day
-            nobid_unresp_rt = [0] * fncsBus.shape[0]
+            nobid_unresp_rt = [0] * dsoBus.shape[0]
 
             # we need to adjust Pmin downward so the OPF and PF can converge, or else implement unit commitment
             if not ames:
@@ -1593,17 +1437,17 @@ def tso_loop(casename):
                     row[9] = 0.1 * row[8]
 
             # TODO: more efficient to concatenate outside a loop, lot to do
-            # fncsBus[] (i.e. dso) is one to one with the bus[] to fnscBus length
+            # dsoBus[] (i.e. dso) is one to one with the bus[] to fnscBus length
             # bus length must be >= fnscBus length
             # bus must be in order from low(138) to high(345) voltage
-            # fncsBus (DSOT, ERCOT stub) at this point only low voltage bus are used
-            for i in range(fncsBus.shape[0]):
+            # dsoBus (DSOT, ERCOT stub) at this point only low voltage bus are used
+            for i in range(dsoBus.shape[0]):
                 busnum = i + 1
                 gld_load_hist[busnum] = {}
                 ind_load_hist[busnum] = {}
                 ref_load_hist[busnum] = {}
                 if noScale:
-                    fncsBus[i, 2] = 1.0   # gld_scale
+                    dsoBus[i, 2] = 1.0   # gld_scale
                 # Sets a generator for each dso for responsive loads
                 ppc['gen'] = np.concatenate(
                     (ppc['gen'], np.array([[busnum, 0, 0, 0, 0, 1, 250, 1, 0, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])))
@@ -1620,7 +1464,7 @@ def tso_loop(casename):
             genFuel = ppc['genfuel']
 
             # log.info('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
-            # log.info(fncsBus)
+            # log.info(dsoBus)
             # log.info(gld_load)
             # log.info(gen)
             # log.info(genCost)
@@ -1636,8 +1480,8 @@ def tso_loop(casename):
             bus_accum = {}
             gen_accum = {}
 
-            for i in range(fncsBus.shape[0]):
-                busnum = int(fncsBus[i, 0])
+            for i in range(dsoBus.shape[0]):
+                busnum = int(dsoBus[i, 0])
                 bus_accum[str(busnum)] = [0, 0, 0, 0, 0, 0, 0, 99999.0, 0, 0, 0, 0]
 
             for i in range(gen.shape[0]):
@@ -1652,10 +1496,6 @@ def tso_loop(casename):
             respC1 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
             respC0 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
             resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-
-            # if ames:
-            #     write_ames_base_case('ames.dat')
-            # quit()
         finally:
             log.info('Finished initialize for day-ahead, time stepping variables')
             log.info('Finished initialize for bus and dso variables')
@@ -1713,7 +1553,7 @@ def tso_loop(casename):
         for topic in events:
             new_event = True
             val = fncs.get_value(topic)
-            # log.info("at " + str(ts) + " " + topic + " " + str(val))
+            log.debug("at " + str(ts) + " " + topic + " " + val)
         # running from load_player - wind/solar generator
             if 'GEN_POWER_' in topic or 'ALT_POWER_' in topic:
                 if ppc['genPower']:
@@ -1726,12 +1566,12 @@ def tso_loop(casename):
                             if gen[i, 9] > p:
                                 gen[i, 9] = p
                             gen[i, 1] = p
-                # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                log.debug("at " + str(ts) + " " + topic + " " + val)
             elif 'GEN_PWR_HIST_' in topic or 'ALT_PWR_HIST_' in topic:
                 if ppc['genPower']:
                     gen_id = topic[13:]
                     generater_plants[gen_id][2] = json.loads(val)
-                # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                log.debug("at " + str(ts) + " " + topic + " " + val)
         # getting the latest inputs from DSO day ahead and real time
             elif 'DA_BID_' in topic:
                 dso_bid = True
@@ -1746,7 +1586,7 @@ def tso_loop(casename):
                 respC1[busnum] = da_bid['resp_c1']
                 respC0[busnum] = da_bid['resp_c0']
                 resp_deg[busnum] = da_bid['resp_deg']
-                # log.info("at " + str(ts) + " " + topic + " " + str(da_bid))
+                log.debug("at " + str(ts) + " " + topic + " " + str(da_bid))
             elif 'RT_BID_' in topic:
                 dso_bid = True
                 busnum = int(topic[7:])
@@ -1758,29 +1598,29 @@ def tso_loop(casename):
                 gld_load[busnum]['c1'] = rt_bid['resp_c1']
                 gld_load[busnum]['c0'] = rt_bid['resp_c0']
                 gld_load[busnum]['deg'] = rt_bid['resp_deg']
-                # log.info("at " + str(ts) + " " + topic + " " + str(rt_bid))
+                log.debug("at " + str(ts) + " " + topic + " " + str(rt_bid))
         # running from load_player - taped bus load
             elif 'GLD_LOAD_' in topic:
                 busnum = int(topic[9:])
                 p, q = parse_mva(val)
                 gld_load[busnum]['p'] = p     # MW
                 gld_load[busnum]['q'] = q     # MW
-                # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                log.debug("at " + str(ts) + " " + topic + " " + val)
             elif 'GLD_LD_HIST_' in topic:
                 busnum = int(topic[12:])
                 gld_load_hist[busnum] = json.loads(val)
-                # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                log.debug("at " + str(ts) + " " + topic + " " + val)
         # running from load_player - taped ref bus load
             elif 'REF_LOAD_' in topic:
                 busnum = int(topic[9:])
                 p, q = parse_mva(val)
                 gld_load[busnum]['p_r'] = p  # MW
                 gld_load[busnum]['q_r'] = q  # MW
-                # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                log.debug("at " + str(ts) + " " + topic + " " + val)
             elif 'REF_LD_HIST_' in topic:
                 busnum = int(topic[12:])
-                # log.info("at " + str(ts) + " " + topic + " " + str(val))
                 ref_load_hist[busnum] = json.loads(val)
+                log.debug("at " + str(ts) + " " + topic + " " + val)
 
         if new_event:
             log.info("at " + str(ts))
@@ -1917,16 +1757,16 @@ def tso_loop(casename):
 
             # write OPF metrics
             Pswing = 0
-            for i in range(numGen):
-                if gen[i, 0] == swing_bus:
-                    Pswing += gen[i, 1]
+            for idx in range(numGen):
+                if gen[idx, 0] == swing_bus:
+                    Pswing += gen[idx, 1]
 
             sum_w = 0
             sum_hr = 0
             for key, row in generater_plants.items():
-                for i in range(numGen):
-                    if genFuel[i][2] == row[3]:
-                        sum_w += gen[i, 1]
+                for idx in range(numGen):
+                    if genFuel[idx][2] == row[3]:
+                        sum_w += gen[idx, 1]
                         sum_hr += float(row[2][hour])
 
             line = str(ts) + ', ' + "True" + ','
@@ -1934,16 +1774,16 @@ def tso_loop(casename):
             line += '{: .2f}'.format(gen[:, 1].sum()) + ','
             line += '{: .2f}'.format(Pswing) + ','
             da_sum = 0
-            for i in range(bus.shape[0]):
-                line += '{: .2f}'.format(bus[i, 13]) + ','
-                da_sum += last_unRespMW[i][hour] + last_respMaxMW[i][hour]
+            for idx in range(bus.shape[0]):
+                line += '{: .2f}'.format(bus[idx, 13]) + ','
+                da_sum += last_unRespMW[idx][hour] + last_respMaxMW[idx][hour]
 
             # Must keep the generators in original order for printing when outages are applied
             for uidx in range(unumGen):
                 notUsed = True
-                for i in range(numGen):
-                    if ugenFuel[uidx][2] == genFuel[i][2]:
-                        line += '{: .2f}'.format(gen[i, 1]) + ','
+                for idx in range(numGen):
+                    if ugenFuel[uidx][2] == genFuel[idx][2]:
+                        line += '{: .2f}'.format(gen[idx, 1]) + ','
                         notUsed = False
                         break
                 if notUsed:
@@ -1984,9 +1824,9 @@ def tso_loop(casename):
 
             sum_w = 0
             for key, row in generater_plants.items():
-                for i in range(numGen):
-                    if genFuel[i][2] == row[3]:
-                        sum_w += gen[i, 1]
+                for idx in range(numGen):
+                    if genFuel[idx][2] == row[3]:
+                        sum_w += gen[idx, 1]
 
             line = str(ts) + ',' + "True" + ','
             line += '{: .2f}'.format(opf_bus[:, 2].sum()) + ','
@@ -1997,7 +1837,7 @@ def tso_loop(casename):
             for idx in range(opf_gen.shape[0]):
                 if numGen > idx:
                     line += ',' + '{: .2f}'.format(opf_gen[idx, 1])
-            line += '{: .2f}'.format(sum_w)
+            line += ',{: .2f}'.format(sum_w)
             print(line, sep=', ', file=op, flush=True)
 
             tnext_opf_pp += period
@@ -2010,12 +1850,12 @@ def tso_loop(casename):
 
         # add the actual scaled GridLAB-D loads to the baseline loads
         if new_event:
-            for row in fncsBus:
+            for row in dsoBus:
                 busnum = int(row[0])
-                g_load = gld_load[busnum]
+                load = gld_load[busnum]
                 log.debug("Turn off responsive / dispatchable loads")
                 for idx in range(numGen, gen.shape[0]):
-                    if genFuel[idx][2] == g_load['genidx']:
+                    if genFuel[idx][2] == load['genidx']:
                         log.debug('Bus' + str(busnum) + ', Gen' + str(idx))
                         gen[idx, 1] = 0  # p
                         gen[idx, 2] = 0  # q
@@ -2071,11 +1911,11 @@ def tso_loop(casename):
         # update the metrics
         n_accum += 1
         loss_accum += Ploss
-        for i in range(fncsBus.shape[0]):
-            busnum = fncsBus[i, 0]
-            busidx = int(fncsBus[i, 0]) - 1
+        for i in range(dsoBus.shape[0]):
+            busnum = dsoBus[i, 0]
+            busidx = int(dsoBus[i, 0]) - 1
             row = rBus[busidx].tolist()
-            # publish the bus VLN ?for GridLAB-D
+            # publish the bus VLN for GridLAB-D
             bus_vln = 1000.0 * row[7] * row[9] / math.sqrt(3.0)
             fncs.publish('three_phase_voltage_' + busnum, bus_vln)
 
@@ -2123,8 +1963,8 @@ def tso_loop(casename):
                 conv_accum,
             )
 
-            for i in range(fncsBus.shape[0]):
-                busnum = fncsBus[i, 0]
+            for i in range(dsoBus.shape[0]):
+                busnum = dsoBus[i, 0]
                 met = bus_accum[busnum]
                 # ('LMP_P', 'USD/kwh'),
                 # ('LMP_Q', 'USD/kvarh'),

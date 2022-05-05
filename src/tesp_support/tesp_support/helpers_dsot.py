@@ -12,6 +12,7 @@ from enum import IntEnum
 
 import numpy as np
 from scipy.stats import truncnorm
+from .helpers import HelicsMsg
 
 
 def get_run_solver(name, pyo, model, solver):
@@ -514,41 +515,6 @@ docker run \\
     subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/postprocess.sh'])
-
-
-class HelicsMsg(object):
-
-    def __init__(self, name):
-        self._name = name
-        # self._level = "debug"
-        self._level = "warning"
-        self._subs = []
-        self._pubs = []
-        pass
-
-    def write_file(self, _dt, _fn):
-        msg = {"name": self._name,
-               "period": _dt,
-               "logging": self._level,
-               "publications": self._pubs,
-               "subscriptions": self._subs}
-        op = open(_fn, 'w', encoding='utf-8')
-        json.dump(msg, op, ensure_ascii=False, indent=2)
-        op.close()
-
-    def pubs_append(self, _g, _k, _t, _o, _p):
-        # for object and property is for internal code interface for gridlabd
-        self._pubs.append({"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}})
-
-    def pubs_append_n(self, _g, _k, _t):
-        self._pubs.append({"global": _g, "key": _k, "type": _t})
-
-    def subs_append(self, _k, _t, _o, _p):
-        # for object and property is for internal code interface for gridlabd
-        self._subs.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
-
-    def subs_append_n(self, _k, _t):
-        self._subs.append({"key": _k, "type": _t})
 
 
 def write_players_msg(case_name, sys_config, dt):

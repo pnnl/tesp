@@ -2,7 +2,6 @@
 # file: fncsTSO.py
 
 import os
-import re
 import math
 import json
 import logging as log
@@ -13,13 +12,10 @@ import psst.cli as pst
 import helics
 import scipy.interpolate as ip
 
-import tesp_support.api as tesp
-
 from copy import deepcopy
 from datetime import datetime
 from tesp_support.helpers import load_json_case
-from tesp_support.helpers import parse_mva
-from tesp_support.helpers import print_mod_load
+
 
 casename = 'ercot_8'
 ames_DAM_case_file = './../DAMReferenceModel.dat'
@@ -115,7 +111,7 @@ def shutoff_wind_plants(ppc):
             gen[i][7] = 0
 
 
-# this differs from tesp_support because of additions to FNCS, and Pnom==>Pmin for generators
+# this differs from tesp_support because of additions to DSO, and Pnom==>Pmin for generators
 def make_dictionary(ppc, rootname):
     """ Helper function to write the JSON metafile for post-processing
 
@@ -927,163 +923,6 @@ def tso_loop():
         print(';\n', file=fp)
         fp.close()
 
-    def write_ames_base_case(fname):
-        fp = open(os.path.join(output_Path, fname), 'w')
-        print('// Base SI', file=fp)
-        print('BASE_S ', str(baseS), file=fp)
-        print('// Base Voltage', file=fp)
-        print('BASE_V ', str(baseV), file=fp)
-        print('', file=fp)
-
-        print('// Simulation Parameters', file=fp)
-        print('MaxDay ' + str(MaxDay), file=fp)
-        print('RTOPDur ' + str(RTOPDur), file=fp)
-        print('RandomSeed 695672061', file=fp)
-        print('// ThresholdProbability 0.999', file=fp)
-        print('PriceSensitiveDemandFlag ' + str(priceSensLoad), file=fp)
-        print('ReserveDownSystemPercent ' + str(reserveDown), file=fp)
-        print('ReserveUpSystemPercent ' + str(reserveUp), file=fp)
-        print('BalPenPos 1000', file=fp)
-        print('BalPenNeg 1000', file=fp)
-        print('NDGFlag 1', file=fp)
-
-        print('// Bus Data', file=fp)
-        print('NumberOfBuses', bus.shape[0], file=fp)
-        print('NumberOfReserveZones', len(zones), file=fp)
-        print('', file=fp)
-
-        print('#ZoneDataStart', file=fp)
-        print('// ZoneName   Buses   ReserveDownZonalPercent   ReserveUpZonalPercent', file=fp)
-        for j in range(len(zones)):
-            name = 'Zone' + str(j + 1)
-            buses = ''
-            for i in range(bus.shape[0]):
-                if zones[j][0] == bus[i, 10]:
-                    if buses == '':
-                        buses = str(i + 1)
-                    else:
-                        buses = buses + ',' + str(i + 1)
-            print(name, buses, '{: .1f}'.format(zones[j][2]), '{: .1f}'.format(zones[j][3]), file=fp)
-        print('#ZoneDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#LineDataStart', file=fp)
-        print('// Name   From   To   MaxCap(MWs)   Reactance(ohms)', file=fp)
-        # branch: fbus, tbus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax
-        # AMES wants branch name, from bus(< to bus), to bus, capacity(MVA), total X(pu)
-        for i in range(branch.shape[0]):
-            name = 'Line' + str(i + 1)
-            if branch[i, 1] > branch[i, 0]:
-                fbus = int(branch[i, 0])
-                tbus = int(branch[i, 1])
-            else:
-                fbus = int(branch[i, 1])
-                tbus = int(branch[i, 0])
-            print(name, fbus, tbus, '{: .2f}'.format(branch[i, 5]), '{: .6f}'.format(branch[i, 3]), file=fp)
-        print('#LineDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#GenDataStart', file=fp)
-        print('// Name   ID   atBus   SCost($H)   a($/MWh)   b($MW^2h)   CapL(MW)   CapU(MW)   Segments   InitMoney',
-              file=fp)
-        # TODO: replace ppc['gencost'] with dictionary of hourly bids, collected from the GridLAB-D agents over FNCS
-        # gen: bus, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
-        # gencost: 2, startup, shutdown, 3, c2, c1, c0
-        # AMES wants name, ID, bus, c0, c1, c2, capL, capU, NS, InitMoney
-        for i in range(numGen):
-            if "wind" not in genFuel[i][0]:
-                name = 'GenCo' + str(i + 1)
-                fbus = int(gen[i, 0])
-                Pmax = gen[i, 8]
-                Pmin = gen[i, 9]
-                c0 = genCost[i, 6]
-                c1 = genCost[i, 5]
-                c2 = genCost[i, 4]
-                if Pmin > 0:
-                    print(name, str(i + 1), fbus, '{: .2f}'.format(c0), '{: .2f}'.format(c1),
-                          '{: .6f}'.format(c2), '{: .2f}'.format(Pmin), '{: .2f}'.format(Pmax),
-                          NS, '{: .2f}'.format(100000.0), file=fp)
-        print('#GenDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#LSEDataFixedDemandStart', file=fp)
-        # ppc arrays(bus type 1=load, 2 = gen(PV) and 3 = swing)
-        # bus: bus_i, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, Vmax, Vmin
-        # AMES wants name, ID, bus, 8x hourly demands, in three blocks
-        # Define a dictionary of hourly load forecasts, collected from ppc
-        #    GridLAB-D via FNCS, to replace ppc['bus']
-        lse = []
-        for i in range(dsoBus.shape[0]):
-            Pd = unRespMW[i] + respMaxMW[i]
-            fbus = int(bus[i, 0])
-            lse.append([fbus, Pd])
-        print('// Name ID atBus H-00 H-01 H-02 H-03 H-04 H-05 H-06 H-07', file=fp)
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            print('LSE' + str(i + 1), str(i + 1), lse[i][0], '{: .2f}'.format(Pd[0]), '{: .2f}'.format(Pd[1]),
-                  '{: .2f}'.format(Pd[2]), '{: .2f}'.format(Pd[3]), '{: .2f}'.format(Pd[4]),
-                  '{: .2f}'.format(Pd[5]), '{: .2f}'.format(Pd[6]), '{: .2f}'.format(Pd[7]), file=fp)
-        print('// Name ID atBus H-08 H-09 H-10 H-11 H-12 H-13 H-14 H-15', file=fp)
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            print('LSE' + str(i + 1), str(i + 1), lse[i][0], '{: .2f}'.format(Pd[8]), '{: .2f}'.format(Pd[9]),
-                  '{: .2f}'.format(Pd[10]), '{: .2f}'.format(Pd[11]), '{: .2f}'.format(Pd[12]),
-                  '{: .2f}'.format(Pd[13]), '{: .2f}'.format(Pd[14]), '{: .2f}'.format(Pd[15]), file=fp)
-        print('// Name ID atBus H-16 H-17 H-18 H-19 H-20 H-21 H-22 H-23', file=fp)
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            print('LSE' + str(i + 1), str(i + 1), lse[i][0], '{: .2f}'.format(Pd[16]), '{: .2f}'.format(Pd[17]),
-                  '{: .2f}'.format(Pd[18]), '{: .2f}'.format(Pd[19]), '{: .2f}'.format(Pd[20]),
-                  '{: .2f}'.format(Pd[21]), '{: .2f}'.format(Pd[22]), '{: .2f}'.format(Pd[23]), file=fp)
-        print('#LSEDataFixedDemandEnd', file=fp)
-        print('', file=fp)
-
-        # Wind Plants, AMES wants name, ID, bus, 8x hourly demands, in three blocks
-        print('#NDGDataStart', file=fp)
-        i = 1
-        print('// Name ID atBus H-00 H-01 H-02 H-03 H-04 H-05 H-06 H-07', file=fp)
-        for key, row in wind_plants.items():
-            Pd = row[9]
-            print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[0]), '{: .2f}'.format(Pd[1]),
-                  '{: .2f}'.format(Pd[2]), '{: .2f}'.format(Pd[3]), '{: .2f}'.format(Pd[4]),
-                  '{: .2f}'.format(Pd[5]), '{: .2f}'.format(Pd[6]), '{: .2f}'.format(Pd[7]), file=fp)
-            i += 1
-        i = 1
-        print('// Name ID atBus H-08 H-09 H-10 H-11 H-12 H-13 H-14 H-15', file=fp)
-        for key, row in wind_plants.items():
-            Pd = row[9]
-            print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[8]), '{: .2f}'.format(Pd[9]),
-                  '{: .2f}'.format(Pd[10]), '{: .2f}'.format(Pd[11]), '{: .2f}'.format(Pd[12]),
-                  '{: .2f}'.format(Pd[13]), '{: .2f}'.format(Pd[14]), '{: .2f}'.format(Pd[15]), file=fp)
-            i += 1
-        i = 1
-        print('// Name ID atBus H-16 H-17 H-18 H-19 H-20 H-21 H-22 H-23', file=fp)
-        for key, row in wind_plants.items():
-            Pd = row[9]
-            print('NDG' + str(i), str(i), row[0], '{: .2f}'.format(Pd[16]), '{: .2f}'.format(Pd[17]),
-                  '{: .2f}'.format(Pd[18]), '{: .2f}'.format(Pd[19]), '{: .2f}'.format(Pd[20]),
-                  '{: .2f}'.format(Pd[21]), '{: .2f}'.format(Pd[22]), '{: .2f}'.format(Pd[23]), file=fp)
-            i += 1
-        print('#NDGDataEnd', file=fp)
-        print('', file=fp)
-
-        print('#LSEDataPriceSensitiveDemandStart', file=fp)
-        print('// Name   ID    atBus   hourIndex   d   e   f   pMin   pMax', file=fp)
-        lse = []
-        for i in range(bus.shape[0]):
-            Pd = unRespMW[i]
-            fbus = int(bus[i, 0])
-            lse.append([fbus, Pd])
-
-        for i in range(len(lse)):
-            Pd = lse[i][1]
-            for k in range(hours_in_a_day):
-                print('LSE' + str(i + 1), str(i + 1), lse[i][0], str(k + 1),
-                      '{: .2f}'.format(0), '{: .2f}'.format(0.1),
-                      '{: .2f}'.format(0), '{: .2f}'.format(Pd[k]), file=fp)
-        print('#LSEDataPriceSensitiveDemandEnd', file=fp)
-        fp.close()
-
     def update_cost_and_load():
         # update cost coefficients, set dispatchable load, put unresp load on bus
         bus_total = {'pcrv': 0, 'p': 0, 'p_r': 0, 'unresp': 0, 'resp_max': 0}
@@ -1092,6 +931,16 @@ def tso_loop():
             gld_scale = float(row[2])
             load = gld_load[busnum]
             log.debug("Bus" + str(busnum) + " " + str(load))
+
+            # No DA_BID use history last day, substation.py does not do day ahead bidding
+            if lastHour != hour and not day_bid:
+                log.info('bus_' + str(busnum) + ' = ' + str(load['unresp']))
+                unRespMW[busnum-1][hour] = unRespMW[busnum-1][23-hour] = load['unresp'] * gld_scale
+                respMaxMW[busnum-1][hour] = respMaxMW[busnum-1][23-hour] = load['resp_max'] * gld_scale
+                respC2[busnum-1][hour] = respC2[busnum-1][23-hour] = load['c2'] / gld_scale * gld_scale
+                respC1[busnum-1][hour] = respC1[busnum-1][23-hour] = load['c1'] / gld_scale
+                respC0[busnum-1][hour] = respC0[busnum-1][23-hour] = 0.0  # load['c0']
+                resp_deg[busnum-1][hour] = resp_deg[busnum-1][23-hour] = load['deg']
 
             # track the latest bid in the metrics and power
             if load['unresp'] > 0:  # we have a bid
@@ -1225,7 +1074,7 @@ def tso_loop():
             zones = ppc['zones']
             # zones: [[zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]]
             dsoBus = ppc['DSO']
-            # FNCS: [[bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]]
+            # DSO: [[bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]]
             
             # Not being used at this time
             # UnitsOut: idx, time out[s], time back in[s]
@@ -1339,6 +1188,7 @@ def tso_loop():
             wind_hour = -1
             mn = 0
             hour = -1
+            lastHour = 1
             day = 1
             lastDay = 1
             file_time = ''
@@ -1351,6 +1201,7 @@ def tso_loop():
             TAU = 1
             NS = 4  # number of segments
             dso_bid = False
+            day_bid = False
             schedule = {}
             
             da_status = False
@@ -1404,7 +1255,7 @@ def tso_loop():
             genCost = ppc['gencost']
             genFuel = ppc['genfuel']
             
-            # log.info('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
+            # log.info('DSO Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
             # log.info(dsoBus)
             # log.info(gld_load)
             # log.info(gen)
@@ -1435,10 +1286,6 @@ def tso_loop():
             respC1 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
             respC0 = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
             resp_deg = np.zeros([total_bus_num, hours_in_a_day], dtype=float)
-            
-            # if ames:
-            #     write_ames_base_case('ames.dat')
-            # quit()
         finally:
             log.info('Finished initialize for day-ahead, time stepping variables')
             log.info('Finished initialize for bus and dso variables')
@@ -1462,16 +1309,20 @@ def tso_loop():
     for i in range(bus.shape[0]):
         line += ", " + "LMP" + str(i+1)
         line2 += ", " + "v" + str(i + 1)
-    w = 0;  n = 0;  c = 0;  g = 0
+    w = n = c = g = 0
     for i in range(numGen):
         if "wind" in genFuel[i][0]:
-            w += 1;    line += ", wind" + str(w)
+            w += 1
+            line += ", wind" + str(w)
         elif "nuclear" in genFuel[i][0]:
-            n += 1;    line += ", nuc" + str(n)
+            n += 1
+            line += ", nuc" + str(n)
         elif "coal" in genFuel[i][0]:
-            c += 1;    line += ", coal" + str(c)
+            c += 1
+            line += ", coal" + str(c)
         else:
-            g += 1;    line += ", gas" + str(g)
+            g += 1
+            line += ", gas" + str(g)
     line += ", TotalWindGen"
 
     op = open(casename + '_opf.csv', 'w')
@@ -1492,7 +1343,7 @@ def tso_loop():
             genFuel[i][3] = 1                  # turn on generator
         if "wind" not in genFuel[i][0]:
             # gen[i, 1] = gen[i, 8]              # set to maximum real power output (MW)
-            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * 0.55)
+            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * 0.25)
 
     # copy of originals for outages
     ugen = deepcopy(gen)
@@ -1507,67 +1358,62 @@ def tso_loop():
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
+            log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
             topic = key.upper().split('/')[1]
-            # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
             if helics.helicsInputIsUpdated(sub):
                 new_event = True
-                # val = helics.helicsInputGetString(sub)
-                # log.info("at " + str(ts) + " " + topic + " " + str(val))
-                # getting the latest inputs from DSO Real Time
+            # getting the latest inputs from DSO Real Time
                 if 'UNRESPONSIVE_MW_' in topic:
                     dso_bid = True
                     busnum = int(topic[16:])
                     gld_load[busnum]['unresp'] = helics.helicsInputGetDouble(sub)
-                #      print('UNRESPONSIVE_MW_', busnum, 'at', ts, '=', val, flush=True)
+                    log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['unresp']))
                 elif 'RESPONSIVE_MAX_MW_' in topic:
                     dso_bid = True
                     busnum = int(topic[18:])
                     gld_load[busnum]['resp_max'] = helics.helicsInputGetDouble(sub)
-                #      print('RESPONSIVE_MAX_MW_', busnum, 'at', ts, '=', val, flush=True)
+                    log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['resp_max']))
                 elif 'RESPONSIVE_C2_' in topic:
                     busnum = int(topic[14:])
                     gld_load[busnum]['c2'] = helics.helicsInputGetDouble(sub)
-                #      print('RESPONSIVE_C2_', busnum, 'at', ts, '=', val, flush=True)
+                    log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['c2']))
                 elif 'RESPONSIVE_C1_' in topic:
                     busnum = int(topic[14:])
                     gld_load[busnum]['c1'] = helics.helicsInputGetDouble(sub)
-                #      print('RESPONSIVE_C1_', busnum, 'at', ts, '=', val, flush=True)
+                    log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['c1']))
                 elif 'RESPONSIVE_C0_' in topic:
                     busnum = int(topic[14:])
                     gld_load[busnum]['c0'] = helics.helicsInputGetDouble(sub)
-                #      print('RESPONSIVE_C1_', busnum, 'at', ts, '=', val, flush=True)
+                    log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['c0']))
                 elif 'RESPONSIVE_DEG_' in topic:
                     busnum = int(topic[15:])
                     gld_load[busnum]['deg'] = helics.helicsInputGetInteger(sub)
-                #      print('RESPONSIVE_DEG_', busnum, 'at', ts, '=', val, flush=True)
-                #    elif 'wind_power' in topic:
-                #      busnum = int(topic[15:])
-                #      gld_load[busnum]['windpower'] = int(val)
+                    log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['deg']))
             # getting the latest inputs from GridlabD
-                elif 'DISTRIBUTION_LOAD' in topic:  # gld
-                    res = [re.findall(r'(\w+?)(\d+)', key)[0]]
-                    busnum = int(res[0][1])
-                    val = helics.helicsInputGetComplex(sub)  # TODO: pyhelics needs to return complex instead of tuple
-                    # log.info("at " + str(ts) + " " + topic + " " + str(val))
+                elif 'DISTRIBUTION_LOAD_' in topic:  # gld
+                    busnum = int(topic[18:])
+                    val = helics.helicsInputGetComplex(sub)  # TODO: helics needs to return complex instead of tuple
                     gld_load[busnum]['p'] = val[0] / 100000.0  # MW
                     gld_load[busnum]['q'] = val[1] / 100000.0  # MW
+                    log.debug("at " + str(ts) + " " + topic + " " + str(val))
             # getting the latest inputs from DSO day Ahead
                 elif 'DA_BID_' in topic:
                     dso_bid = True
+                    day_bid = True
                     busnum = int(topic[7:]) - 1
-                    day_ahead_bid = json.loads(helics.helicsInputGetString(sub))
+                    da_bid = json.loads(helics.helicsInputGetString(sub))
                     # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[hours_in_a_day]
                     last_unRespMW[busnum] = deepcopy(unRespMW[busnum])
                     last_respMaxMW[busnum] = deepcopy(respMaxMW[busnum])
-                    unRespMW[busnum] = day_ahead_bid['unresp_mw']     # fix load
-                    respMaxMW[busnum] = day_ahead_bid['resp_max_mw']  # slmax
-                    respC2[busnum] = day_ahead_bid['resp_c2']
-                    respC1[busnum] = day_ahead_bid['resp_c1']
-                    respC0[busnum] = 0.0  # day_ahead_bid['resp_c0']
-                    resp_deg[busnum] = day_ahead_bid['resp_deg']
-                    # print('Day Ahead Bid for Bus', busnum, 'at', ts, '=', day_ahead_bid, flush=True)
+                    unRespMW[busnum] = da_bid['unresp_mw']     # fix load
+                    respMaxMW[busnum] = da_bid['resp_max_mw']  # slmax
+                    respC2[busnum] = da_bid['resp_c2']
+                    respC1[busnum] = da_bid['resp_c1']
+                    respC0[busnum] = 0.0  # da_bid['resp_c0']
+                    resp_deg[busnum] = da_bid['resp_deg']
+                    log.debug("at " + str(ts) + " " + topic + " " + str(da_bid))
 
-        #  print(ts, 'FNCS inputs', gld_load, flush=True)
+        #  print(ts, 'DSO inputs', gld_load, flush=True)
         # fluctuate the wind plants
         if ts >= tnext_wind:
             wind_hour += 1
@@ -1622,7 +1468,8 @@ def tso_loop():
             log.info("at " + str(ts))
             # update cost coefficients, set dispatchable load, put unresp load on bus
             update_cost_and_load()
-            # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'EVT', ts)
+            lastHour = hour
+            # print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'EVT', ts)
             log.info('bus_load = ' + str(bus[:, 2].sum()))
             log.info('gen_power = ' + str(gen[:, 1].sum()))
 
@@ -1652,7 +1499,7 @@ def tso_loop():
                 psst_case = os.path.join(output_Path, file_time + "dam.dat")
                 write_psst_file(psst_case, True, da_gen, da_genCost, da_genFuel, da_numGen)
                 da_status, da_schedule, da_dispatch, da_lmps = scucDAM(psst_case)
-                print('$$$$ DAM finished [day_hour_min_', print_time, flush=True)
+                print('$$$$ DAM finished [day_hour_min_]->', print_time, flush=True)
                 print_matrix('DAM LMPs', da_lmps)
                 print_keyed_matrix('DAM Dispatches', da_dispatch, fmt='{:8.2f}')
                 print_keyed_matrix('DAM Schedule', da_schedule, fmt='{:8s}')
@@ -1701,7 +1548,7 @@ def tso_loop():
                 psst_case = os.path.join(output_Path, file_time + "rtm.dat")
                 write_psst_file(psst_case, False, gen, genCost, genFuel, numGen)
                 rt_status, rt_dispatch, rt_lmps = scedRTM(psst_case, rt_schedule)
-                print('#### RTM finished [day_hour_min_', print_time, flush=True)
+                print('#### RTM finished [day_hour_min_]->', print_time, flush=True)
                 print_matrix('RTM LMPs', rt_lmps)
                 print_keyed_matrix('RTM Dispatches', rt_dispatch, fmt='{:8.2f}')
 
@@ -1783,13 +1630,13 @@ def tso_loop():
 
         # update generation with consideration for distributed slack bus
         if opf:
-            # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'OPF', ts)
+            # print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'OPF', ts)
             # log.info('bus_opf = ' + str(bus[:, 2].sum()))
             # log.info('gen_opf = ' + str(gen[:, 1].sum()))
             ppc['gen'] = gen
             ppc['gen'][:, 1] = dist_slack(ppc, Pload)
             gen = ppc['gen']   # needed to be re-aliased because of [:, ] operator
-            # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'DIST', ts)
+            # print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'DIST', ts)
             # log.info('bus_dist = ' + str(bus[:, 2].sum()))
             # log.info('gen_dist = ' + str(gen[:, 1].sum()))
             opf = False
@@ -1808,7 +1655,7 @@ def tso_loop():
         #               success=rpf[0]['success'])
         rBus = rpf[0]['bus']
         rGen = rpf[0]['gen']
-        # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'PF', ts)
+        # print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'PF', ts)
         # log.info('bus_pf = ' + str(rBus[:, 2].sum()))
         # log.info('gen_pf = ' + str(rGen[:, 1].sum()))
 
@@ -1845,11 +1692,11 @@ def tso_loop():
             else:
                 lmp = float(opf_bus[busidx, 13]) * 0.001
 #            fncs.publish('LMP_Bus' + busnum, lmp)  # publishing $/kwh
-            pub = helics.helicsFederateGetPublication(hFed, 'LMP_Bus' + busnum)
+            pub = helics.helicsFederateGetPublication(hFed, 'LMP_' + busnum)
             helics.helicsPublicationPublishString(pub, str(lmp))
 
             # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
-            PD = row[2]  # + resp # TODO, if more than one FNCS bus, track scaled_resp separately
+            PD = row[2]  # + resp # TODO, if more than one DSO bus, track scaled_resp separately
             Vpu = row[7]
             bus_accum[busnum][0] += row[13] * 0.001
             bus_accum[busnum][1] += row[14] * 0.001
