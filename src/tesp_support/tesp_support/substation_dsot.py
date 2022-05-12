@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: substation_dsot_v1.py
+# file: substation_dsot.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
 
 Public Functions:
@@ -15,15 +15,15 @@ from datetime import datetime, timedelta
 from copy import deepcopy
 from joblib import Parallel, delayed
 
-from .helpers_dsot_v1 import enable_logging
-from .hvac_dsot_v1 import HVACDSOT
-from .water_heater_dsot_v1 import WaterHeaterDSOT
-from .ev_dsot_v1 import EVDSOT
-from .pv_dsot_v1 import PVDSOT
-from .battery_dsot_v1 import BatteryDSOT
-from .dso_market_dsot_v1 import DSOMarketDSOT
-from .retail_market_dsot_v1 import RetailMarketDSOT
-from .forecasting_dsot_v1 import Forecasting
+from .helpers_dsot import enable_logging
+from .hvac_dsot import HVACDSOT
+from .water_heater_dsot import WaterHeaterDSOT
+from .ev_dsot import EVDSOT
+from .pv_dsot import PVDSOT
+from .battery_dsot import BatteryDSOT
+from .dso_market_dsot import DSOMarketDSOT
+from .retail_market_dsot import RetailMarketDSOT
+from .forecasting_dsot import Forecasting
 from .metrics_collector import MetricsStore, MetricsCollector
 
 try:
@@ -46,7 +46,16 @@ def inner_substation_loop(metrics_root, with_market):
 
     def publish(name, val):
         pub = helics.helicsFederateGetPublication(hFed, name)
-        helics.helicsPublicationPublishString(pub, val)
+        if type(val) is str:
+            helics.helicsPublicationPublishString(pub, val)
+        elif type(val) is float or type(val) is np.float64:
+            helics.helicsPublicationPublishDouble(pub, val)
+        elif type(val) is int:
+            helics.helicsPublicationPublishInteger(pub, val)
+        elif type(val) is bool:
+            helics.helicsPublicationPublishBoolean(pub, val)
+        else:
+            log.warning('Publish ' + name + ', type ' + str(type(val)) + ' not found!')
 
     def worker(arg):
         timing(arg.__class__.__name__, True)
@@ -180,10 +189,9 @@ def inner_substation_loop(metrics_root, with_market):
     #
     # pv_power path ('../../../../src/tesp_support/tesp_support/solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv
 
-    weather_topic = config_glm['climate']['name']
-    topic_map[weather_topic + '#SolarDiffuseForecast'] = [forecast_obj.set_solar_diffuse_forecast]
-    topic_map[weather_topic + '#SolarDirectForecast'] = [forecast_obj.set_solar_direct_forecast]
-    topic_map[weather_topic + '#TempForecast'] = [forecast_obj.set_temperature_forecast]
+    topic_map['#solar_diffuse#forecast'] = [forecast_obj.set_solar_diffuse_forecast]
+    topic_map['#solar_direct#forecast'] = [forecast_obj.set_solar_direct_forecast]
+    topic_map['#temperature#forecast'] = [forecast_obj.set_temperature_forecast]
 
     market_keys = list(config['markets'].keys())
     for key in market_keys:
@@ -193,6 +201,7 @@ def inner_substation_loop(metrics_root, with_market):
             dso_market_obj = DSOMarketDSOT(dso_config, dso_name)
 
             # check the unit of the market
+            dso_bus = config['markets'][key]['bus']
             dso_unit = config['markets'][key]['unit']
             dso_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
 
@@ -203,18 +212,19 @@ def inner_substation_loop(metrics_root, with_market):
             if dso_market_obj.number_of_gld_homes > 0.1:  # this is the number when you don't have any feeders
                 use_ref = False
                 scale = (dso_market_obj.num_of_customers * dso_market_obj.customer_count_mix_residential / dso_market_obj.number_of_gld_homes)
+            log.info('Use reference load -> ' + str(use_ref))
 
             # map topics
             topic_map['gld_load'] = [dso_market_obj.set_total_load]
-            topic_map['ind_rt_load'] = [dso_market_obj.set_ind_load]
-            topic_map['ind_load_history'] = [dso_market_obj.set_ind_load_da]
+            topic_map['ind_load_' + str(dso_bus)] = [dso_market_obj.set_ind_load]
+            topic_map['ind_ld_hist_' + str(dso_bus)] = [dso_market_obj.set_ind_load_da]
             if use_ref:
-                topic_map['ref_rt_load'] = [dso_market_obj.set_ref_load]
-                topic_map['ref_load_history'] = [dso_market_obj.set_ref_load_da]
-            topic_map['lmp_da'] = [dso_market_obj.set_lmp_da]
-            topic_map['lmp_rt'] = [dso_market_obj.set_lmp_rt]
-            topic_map['cleared_q_da'] = [dso_market_obj.set_cleared_q_da]
-            topic_map['cleared_q_rt'] = [dso_market_obj.set_cleared_q_rt]
+                topic_map['ref_load_' + str(dso_bus)] = [dso_market_obj.set_ref_load]
+                topic_map['ref_ld_hist_' + str(dso_bus)] = [dso_market_obj.set_ref_load_da]
+            topic_map['lmp_da_' + str(dso_bus)] = [dso_market_obj.set_lmp_da]
+            topic_map['lmp_rt_' + str(dso_bus)] = [dso_market_obj.set_lmp_rt]
+            topic_map['cleared_q_da_' + str(dso_bus)] = [dso_market_obj.set_cleared_q_da]
+            topic_map['cleared_q_rt_' + str(dso_bus)] = [dso_market_obj.set_cleared_q_rt]
             log.info('instantiated DSO market agent')
 
         if 'Retail' in key:
@@ -239,35 +249,35 @@ def inner_substation_loop(metrics_root, with_market):
         gld_row = config_glm['houses'][key]
         hvac_agent_objs[key] = HVACDSOT(row, gld_row, key, 11, current_time, solver)
 
-        weather_topic = config_glm['climate']['name']
-        if weather_topic + '#TempForecast' not in topic_map.keys():
-            topic_map[weather_topic + '#TempForecast'] = [hvac_agent_objs[key].set_temperature_forecast]
+        if '#temperature' not in topic_map.keys():
+            topic_map['#temperature'] = [hvac_agent_objs[key].set_temperature]
         else:
-            topic_map[weather_topic + '#TempForecast'].append(hvac_agent_objs[key].set_temperature_forecast)
+            topic_map['#temperature'].append(hvac_agent_objs[key].set_temperature)
 
-        if weather_topic + '#Temperature' not in topic_map.keys():
-            topic_map[weather_topic + '#Temperature'] = [hvac_agent_objs[key].set_temperature]
+        if '#temperature#forecast' not in topic_map.keys():
+            topic_map['#temperature#forecast'] = [hvac_agent_objs[key].set_temperature_forecast]
         else:
-            topic_map[weather_topic + '#Temperature'].append(hvac_agent_objs[key].set_temperature)
+            topic_map['#temperature#forecast'].append(hvac_agent_objs[key].set_temperature_forecast)
 
-        if weather_topic + '#Humidity' not in topic_map.keys():
-            topic_map[weather_topic + '#Humidity'] = [hvac_agent_objs[key].set_humidity]
+        if '#humidity' not in topic_map.keys():
+            topic_map['#humidity'] = [hvac_agent_objs[key].set_humidity]
         else:
-            topic_map[weather_topic + '#Humidity'].append(hvac_agent_objs[key].set_humidity)
+            topic_map['#humidity'].append(hvac_agent_objs[key].set_humidity)
 
-        if weather_topic + '#HumidityForecast' not in topic_map.keys():
-            topic_map[weather_topic + '#HumidityForecast'] = [hvac_agent_objs[key].set_humidity_forecast]
+        if '#humidity#forecast' not in topic_map.keys():
+            topic_map['#humidity#forecast'] = [hvac_agent_objs[key].set_humidity_forecast]
         else:
-            topic_map[weather_topic + '#HumidityForecast'].append(hvac_agent_objs[key].set_humidity_forecast)
+            topic_map['#humidity#forecast'].append(hvac_agent_objs[key].set_humidity_forecast)
 
-        if weather_topic + '#SolarDirect' not in topic_map.keys():
-            topic_map[weather_topic + '#SolarDirect'] = [hvac_agent_objs[key].set_solar_direct]
+        if '#solar_direct' not in topic_map.keys():
+            topic_map['#solar_direct'] = [hvac_agent_objs[key].set_solar_direct]
         else:
-            topic_map[weather_topic + '#SolarDirect'].append(hvac_agent_objs[key].set_solar_direct)
-        if weather_topic + '#SolarDiffuse' not in topic_map.keys():
-            topic_map[weather_topic + '#SolarDiffuse'] = [hvac_agent_objs[key].set_solar_diffuse]
+            topic_map['#solar_direct'].append(hvac_agent_objs[key].set_solar_direct)
+
+        if '#solar_diffuse' not in topic_map.keys():
+            topic_map['#solar_diffuse'] = [hvac_agent_objs[key].set_solar_diffuse]
         else:
-            topic_map[weather_topic + '#SolarDiffuse'].append(hvac_agent_objs[key].set_solar_diffuse)
+            topic_map['#solar_diffuse'].append(hvac_agent_objs[key].set_solar_diffuse)
 
         # map topics
         topic_map[key + '#Tair'] = [hvac_agent_objs[key].set_air_temp]
@@ -276,7 +286,7 @@ def inner_substation_loop(metrics_root, with_market):
         topic_map[key + '#TotalLoad'] = [hvac_agent_objs[key].set_house_load]
         topic_map[key + '#On'] = [hvac_agent_objs[key].set_hvac_state]
         # topic_map[key + '#Demand'] = [hvac_agent_objs[key].set_hvac_demand]
-        topic_map[key + '#whLoad'] = [hvac_agent_objs[key].set_wh_load]
+        # topic_map[key + '#whLoad'] = [hvac_agent_objs[key].set_wh_load]
     log.info('instantiated %s HVAC control agents' % (len(hvac_keys)))
 
     # instantiate the water heater controller objects and map their message inputs
@@ -293,12 +303,12 @@ def inner_substation_loop(metrics_root, with_market):
                 water_heater_agent_objs[key] = WaterHeaterDSOT(row, gld_row, key, 11, current_time, solver)
 
                 # map topics
-                topic_map[wh_key + '#LTTEMP'] = [water_heater_agent_objs[key].set_wh_lower_temperature]
-                topic_map[wh_key + '#UTTEMP'] = [water_heater_agent_objs[key].set_wh_upper_temperature]
+                topic_map[wh_key + '#LTTemp'] = [water_heater_agent_objs[key].set_wh_lower_temperature]
+                topic_map[wh_key + '#UTTemp'] = [water_heater_agent_objs[key].set_wh_upper_temperature]
                 topic_map[wh_key + '#LTState'] = [water_heater_agent_objs[key].set_wh_lower_state]
                 topic_map[wh_key + '#UTState'] = [water_heater_agent_objs[key].set_wh_upper_state]
                 topic_map[wh_key + '#WHLoad'] = [water_heater_agent_objs[key].set_wh_load]
-                topic_map[wh_key + '#WDRATE'] = [water_heater_agent_objs[key].set_wh_wd_rate_val]
+                topic_map[wh_key + '#WDRate'] = [water_heater_agent_objs[key].set_wh_wd_rate_val]
             except KeyError as e:
                 log.info('Error {}, wh_name in key={}'.format(e, key))
     log.info('instantiated %s water heater control agents' % (len(water_heater_keys)))
@@ -312,7 +322,7 @@ def inner_substation_loop(metrics_root, with_market):
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
         topic_map[key + '#SOC'] = [battery_agent_objs[key].set_battery_SOC]
-    log.info('instantiated %s Battery control agents' % (len(battery_keys)))
+    log.info('instantiated %s battery control agents' % (len(battery_keys)))
 
     # instantiate the ev controller objects and map their message inputs
     ev_agent_objs = {}
@@ -324,7 +334,7 @@ def inner_substation_loop(metrics_root, with_market):
 
         # map topics
         topic_map[key + '#SOC'] = [ev_agent_objs[key].set_ev_SOC]
-    log.info('instantiated %s EV control agents' % (len(ev_keys)))
+    log.info('instantiated %s electric vehicle control agents' % (len(ev_keys)))
 
     # instantiate the pv objects and map their message inputs
     pv_agent_objs = {}
@@ -334,7 +344,7 @@ def inner_substation_loop(metrics_root, with_market):
         gld_row = config_glm['inverters'][key]
         pv_agent_objs[key] = PVDSOT(row, gld_row, key, 11, current_time)
         # nothing to map as topics
-    log.info('instantiated %s PV agents' % (len(pv_keys)))
+    log.info('instantiated %s solar control agents' % (len(pv_keys)))
     # read and store yearly pv forecast tape
 
     site_dictionary = config['site_agent']
@@ -612,7 +622,8 @@ def inner_substation_loop(metrics_root, with_market):
     billing_set_defaults = True
 
     # interval for metrics recording
-    # HACK: gld will be typically be on an (even) hour, so we will offset our frequency by 30 minutes (should be on the .5 hour)
+    # HACK: gld will be typically be on an (even) hour,
+    # so we will offset our frequency by 30 minutes (should be on the .5 hour)
     metrics_record_interval = 7200  # will actually be x2 after first round
     tnext_write_metrics_cnt = 1
     tnext_write_metrics = metrics_record_interval + 1800
@@ -727,18 +738,19 @@ def inner_substation_loop(metrics_root, with_market):
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
-            topic = key.upper().split('/')[1]
-            # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
+            topic = key.split('/')[1]
+            # log.info("HELICS subscription index: " + str(t) + ", key: " + key)
             if helics.helicsInputIsUpdated(sub):
                 value = helics.helicsInputGetString(sub)
                 log.debug(topic + ' -> ' + value)
                 if topic in topic_map:
                     for itopic in range(len(topic_map[topic])):
-                        if any(x in topic for x in ['#Tair', '#SOC', '#LTTEMP', '#UTTEMP']):
+                        if any(x in topic for x in ['#Tair', '#SOC', '#LTTemp', '#UTTemp']):
                             # these function has 2 additional inputs for logging
                             topic_map[topic][itopic](value, 11, current_time)
                         else:
-                            topic_map[topic][itopic](value)  # calls function to update the value in object. For details see topicMap
+                            # calls function to update the value in object. For details see topicMap
+                            topic_map[topic][itopic](value)
                 else:
                     log.warning('Unknown topic received from HELICS ({:s}), dropping it'.format(topic))
 
@@ -1229,7 +1241,7 @@ def inner_substation_loop(metrics_root, with_market):
                       'resp_c1': retail_market_obj.AMES_RT[3],
                       'resp_c0': retail_market_obj.AMES_RT[4],
                       'resp_deg': retail_market_obj.AMES_RT[5]}
-            publish('rt_bid', json.dumps(rt_bid))
+            publish('rt_bid_' + str(dso_bus), json.dumps(rt_bid))
 
             print('Real-time bid at', time_granted, '=', retail_market_obj.AMES_RT, flush=True)
             log.info('Total RT bid to AMES unresponsive' + '=' + str(retail_market_obj.AMES_RT[0]) + 'MW')
@@ -1270,7 +1282,7 @@ def inner_substation_loop(metrics_root, with_market):
 
             da_bid['unresp_mw'] = forecast_obj.correcting_Q_forecast_10_AM(da_bid['unresp_mw'], offset, day_of_week)
             
-            publish('da_bid', json.dumps(da_bid))
+            publish('da_bid_' + str(dso_bus), json.dumps(da_bid))
 
             print('Day-Ahead bid at', time_granted, '=', retail_market_obj.AMES_DA, flush=True)
 

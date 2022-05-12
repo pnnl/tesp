@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: prep_substation_dsot_v1.py
+# file: prep_substation_dsot.py
 """ Sets up the message and agent configurations for DSOT ercot case 8 example
 
 Public Functions:
@@ -10,7 +10,8 @@ import math
 import json
 import numpy as np
 from datetime import datetime
-import tesp_support.helpers_dsot_v1 as helpers
+from tesp_support.helpers import HelicsMsg
+from tesp_support.helpers_dsot import random_norm_trunc
 
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
@@ -339,14 +340,14 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         weekend_night_set_heat = night_set_heat
                     else:
                         # New schedule to implmement CBEC's data
-                        wakeup_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
-                        daylight_start = wakeup_start + helpers.random_norm_trunc(
+                        wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
+                        daylight_start = wakeup_start + random_norm_trunc(
                             thermostat_schedule_config['WeekdayWakeToDaylightTime'])
-                        evening_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekdayEveningStart'])
-                        night_start = evening_start + helpers.random_norm_trunc(
+                        evening_start = random_norm_trunc(thermostat_schedule_config['WeekdayEveningStart'])
+                        night_start = evening_start + random_norm_trunc(
                             thermostat_schedule_config['WeekdayEveningToNightTime'])
-                        weekend_day_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
-                        weekend_night_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
+                        weekend_day_start = random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
+                        weekend_night_start = random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
                         # check if night_start_time is not beyond 24.0
                         night_start = min(night_start, 23.9)
                         weekend_night_start = min(weekend_night_start, 23.9)
@@ -608,7 +609,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
         # will this device participate in market
         participating = np.random.uniform(0, 1) <= feeder_config['EVParticipation'] / 100
-        # ev wont participate at all if caseType is not ev
+        # ev won't participate at all if caseType is not ev
         if not simulation_config['caseType']['ev']:
             participating = False
 
@@ -794,18 +795,18 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     dp.close()
 
     # write the dso helics message configuration
-    dso = helpers.dso
+    dso = HelicsMsg.dso
     if feedercnt == 1:
         dso.pubs_append_n(False, "da_bid_" + bus, "string")
         dso.pubs_append_n(False, "rt_bid_" + bus, "string")
-        dso.subs_append_n("gld_load" + bus, gld_sim_name + '/distribution_load', "string")
-        dso.subs_append_n("lmp_da_" + bus, "pypower/lmp_da_" + bus, "string")
-        dso.subs_append_n("lmp_rt_" + bus, "pypower/lmp_rt_" + bus, "string")
-        dso.subs_append_n("cleared_q_da_" + bus, "pypower/cleared_q_da_" + bus, "string")
-        dso.subs_append_n("cleared_q_rt_" + bus, "pypower/cleared_q_rt_" + bus, "string")
+        dso.subs_append_n(gld_sim_name + '/gld_load', "string")
+        dso.subs_append_n("pypower/lmp_da_" + bus, "string")
+        dso.subs_append_n("pypower/lmp_rt_" + bus, "string")
+        dso.subs_append_n("pypower/cleared_q_da_" + bus, "string")
+        dso.subs_append_n("pypower/cleared_q_rt_" + bus, "string")
         plyr = simulation_config['keyLoad']
-        dso.subs_append_n(plyr + "_LOAD_" + bus, plyr + 'player/' + plyr + '_ld_hist_' + bus, "string")
-        dso.subs_append_n(plyr + "_LD_HIST_" + bus, plyr + 'player/' + plyr + '_ld_hist_' + bus, "string")
+        dso.subs_append_n(plyr + 'player/' + plyr + '_load_' + bus, "string")
+        dso.subs_append_n(plyr + 'player/' + plyr + '_ld_hist_' + bus, "string")
 
     for key, val in hvac_agents.items():
         house_name = val["houseName"]
@@ -816,72 +817,72 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.pubs_append_n(False, key + "/bill_mode", "string")
         dso.pubs_append_n(False, key + "/price", "double")
         dso.pubs_append_n(False, key + "/monthly_fee", "double")
-        dso.subs_append_n(key + "#V1:", gld_sim_name + "/" + meter_name + "/measured_voltage_1", "string")
-        dso.subs_append_n(key + "#Tair:", gld_sim_name + "/" + house_name + "/air_temperature", "string")
-        dso.subs_append_n(key + "#HvacLoad:", gld_sim_name + "/" + house_name + "/hvac_load", "string")
-        dso.subs_append_n(key + "#TotalLoad:", gld_sim_name + "/" + house_name + "/total_load", "string")
-        dso.subs_append_n(key + "#On:", gld_sim_name + "/" + house_name + "/power_state", "string")
+        dso.subs_append_n(gld_sim_name + "/" + house_name + "#V1", "complex")
+        dso.subs_append_n(gld_sim_name + "/" + house_name + "#Tair", "double")
+        dso.subs_append_n(gld_sim_name + "/" + house_name + "#HvacLoad", "double")
+        dso.subs_append_n(gld_sim_name + "/" + house_name + "#TotalLoad", "double")
+        dso.subs_append_n(gld_sim_name + "/" + house_name + "#On", "string")
 
     for key, val in water_heater_agents.items():
         wh_name = str(val["waterheaterName"])
         dso.pubs_append_n(False, key + "/lower_tank_setpoint", "double")
         dso.pubs_append_n(False, key + "/upper_tank_setpoint", "double")
-        dso.subs_append_n(key + "#LTTEMP:", gld_sim_name + "/" + wh_name + "/lower_tank_temperature", "string")
-        dso.subs_append_n(key + "#UTTEMP:", gld_sim_name + "/" + wh_name + "/upper_tank_temperature", "string")
-        dso.subs_append_n(key + "#LTState:", gld_sim_name + "/" + wh_name + "/lower_heating_element_state", "string")
-        dso.subs_append_n(key + "#UTState:", gld_sim_name + "/" + wh_name + "/upper_heating_element_state", "string")
-        dso.subs_append_n(key + "#WHLoad:", gld_sim_name + "/" + wh_name + "/heating_element_capacity", "string")
-        dso.subs_append_n(key + "#WDRATE:", gld_sim_name + "/" + wh_name + "/water_demand", "string")
+        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#LTTemp", "string")
+        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#UTTemp", "string")
+        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#LTState", "string")
+        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#UTState", "string")
+        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#WHLoad", "string")
+        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#WDRate", "string")
 
     for key, val in battery_agents.items():
         battery_name = str(val["batteryName"])
         dso.pubs_append_n(False, key + "/p_Out", "double")
         dso.pubs_append_n(False, key + "/q_Out", "double")
-        dso.subs_append_n(key + "#SOC:", gld_sim_name + "/" + battery_name + "/state_of_charge", "string")
+        dso.subs_append_n(gld_sim_name + "/" + battery_name + "#SOC", "string")
 
     for key, val in ev_agents.items():
         ev_name = str(val["evName"])
         dso.pubs_append_n(False, key + "/ev_out", "double")
-        dso.subs_append_n(key + "#SOC:", gld_sim_name + "/" + ev_name + "/battery_SOC", "string")
+        dso.subs_append_n(gld_sim_name + "/" + ev_name + "#SOC", "string")
 
     # these messages are for weather agent used in DSOT agents
     if feedercnt == 1:
-        weather_topic = gd["climate"]["name"]
-        dso.subs_append_n(weather_topic + "#Temperature:", weather_topic + "/temperature", "string")
-        dso.subs_append_n(weather_topic + "#TempForecast:", weather_topic + "/temperature/forecast", "string")
-        dso.subs_append_n(weather_topic + "#Humidity:", weather_topic + "/humidity", "string")
-        dso.subs_append_n(weather_topic + "#HumidityForecast:", weather_topic + "/humidity/forecast", "string")
-        dso.subs_append_n(weather_topic + "#SolarDirect:", weather_topic + "/solar_direct", "string")
-        dso.subs_append_n(weather_topic + "#SolarDirectForecast:", weather_topic + "/solar_direct/forecast", "string")
-        dso.subs_append_n(weather_topic + "#SolarDiffuse:", weather_topic + "/solar_diffuse", "string")
-        dso.subs_append_n(weather_topic + "#SolarDiffuseForecast:", weather_topic + "/solar_diffuse/forecast", "string")
+        weather_topic = gd["climate"]["name"] + '/'
+        dso.subs_append_n(weather_topic + "#temperature", "string")
+        dso.subs_append_n(weather_topic + "#temperature#forecast", "string")
+        dso.subs_append_n(weather_topic + "#humidity", "string")
+        dso.subs_append_n(weather_topic + "#humidity#forecast", "string")
+        dso.subs_append_n(weather_topic + "#solar_direct", "string")
+        dso.subs_append_n(weather_topic + "#solar_direct#forecast", "string")
+        dso.subs_append_n(weather_topic + "#solar_diffuse", "string")
+        dso.subs_append_n(weather_topic + "#solar_diffuse#forecast", "string")
 
     # write GridLAB-D helics message configuration
-    gld = helpers.gld
+    gld = HelicsMsg.gld
     if feedercnt == 1:
-        gld.pubs_append(False, "distribution_load", "complex", "network_node", "distribution_load")
+        gld.pubs_append(False, "gld_load", "complex", "network_node", "distribution_load")
         # JH says removed this line below when we do not have the TSO in the federation
         gld.subs_append("pypower/three_phase_voltage_" + bus, "complex", "network_node", "positive_sequence_voltage")
         if 'climate' in gd:
             for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
-                gld.subs_append(gd['climate']['name'] + "/" + wTopic, "double", gd['climate']['name'], wTopic)
+                gld.subs_append(gd['climate']['name'] + "/#" + wTopic, "double", gd['climate']['name'], wTopic)
 
     mtr_list = []
     for key, val in hvac_agents.items():
         house_name = val['houseName']
         meter_name = val['meterName']
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs_append(False, house_name + "/air_temperature", "double", house_name, "air_temperature")
-        gld.pubs_append(False, house_name + "/power_state", "string", house_name, "power_state")
-        gld.pubs_append(False, house_name + "/hvac_load", "double", house_name, "hvac_load")
-        gld.pubs_append(False, house_name + "/total_load", "double", house_name, "total_load")
+        gld.pubs_append(False, house_name + "#Tair", "double", house_name, "air_temperature")
+        gld.pubs_append(False, house_name + "#On", "string", house_name, "power_state")
+        gld.pubs_append(False, house_name + "#HvacLoad", "double", house_name, "hvac_load")
+        gld.pubs_append(False, house_name + "#TotalLoad", "double", house_name, "total_load")
         # Identify commercial buildings and map measured voltage correctly
-        if meter_name not in mtr_list:
-            mtr_list.append(meter_name)
-            if val['houseClass'] in comm_bldg_list:
-                gld.pubs_append(False, meter_name + "/measured_voltage_1", "complex", meter_name, "measured_voltage_A")
-            else:
-                gld.pubs_append(False, meter_name + "/measured_voltage_1", "complex", meter_name, "measured_voltage_1")
+#        if meter_name not in mtr_list:
+#            mtr_list.append(meter_name)
+        if val['houseClass'] in comm_bldg_list:
+            gld.pubs_append(False, house_name + "#V1", "complex", meter_name, "measured_voltage_A")
+        else:
+            gld.pubs_append(False, house_name + "#V1", "complex", meter_name, "measured_voltage_1")
         gld.subs_append(substation_sim_key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
         gld.subs_append(substation_sim_key + "/heating_setpoint", "double", house_name, "heating_setpoint")
         gld.subs_append(substation_sim_key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
@@ -893,12 +894,12 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         wh_name = key
         meter_name = val['meterName']
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs_append(False, wh_name + "/lower_tank_temperature", "double", wh_name, "lower_tank_temperature")
-        gld.pubs_append(False, wh_name + "/upper_tank_temperature", "double", wh_name, "upper_tank_temperature")
-        gld.pubs_append(False, wh_name + "/lower_heating_element_state", "string", wh_name, "lower_heating_element_state")
-        gld.pubs_append(False, wh_name + "/upper_heating_element_state", "string", wh_name, "upper_heating_element_state")
-        gld.pubs_append(False, wh_name + "/heating_element_capacity", "double", wh_name, "heating_element_capacity")
-        gld.pubs_append(False, wh_name + "/water_demand", "double", wh_name, "water_demand")
+        gld.pubs_append(False, wh_name + "#LTTemp", "double", wh_name, "lower_tank_temperature")
+        gld.pubs_append(False, wh_name + "#UTTemp", "double", wh_name, "upper_tank_temperature")
+        gld.pubs_append(False, wh_name + "#LTState", "string", wh_name, "lower_heating_element_state")
+        gld.pubs_append(False, wh_name + "#UTState", "string", wh_name, "upper_heating_element_state")
+        gld.pubs_append(False, wh_name + "#WHLoad", "double", wh_name, "heating_element_capacity")
+        gld.pubs_append(False, wh_name + "#WDRate", "double", wh_name, "water_demand")
         gld.subs_append(substation_sim_key + "/lower_tank_setpoint", "double", wh_name, "lower_tank_setpoint")
         gld.subs_append(substation_sim_key + "/upper_tank_setpoint", "double", wh_name, "upper_tank_setpoint")
 
@@ -906,14 +907,14 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         inverter_name = key
         battery_name = str(val['batteryName'])
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs_append(False, battery_name + "/state_of_charge", "double", battery_name, "state_of_charge")
+        gld.pubs_append(False, battery_name + "#SOC", "double", battery_name, "state_of_charge")
         gld.subs_append(substation_sim_key + "/p_Out", "double", inverter_name, "P_out")
         gld.subs_append(substation_sim_key + "/q_Out", "double", inverter_name, "Q_out")
 
     for key, val in ev_agents.items():
         ev_name = val['evName']
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs_append(False, ev_name + "/battery_SOC", "double", ev_name, "battery_SOC")
+        gld.pubs_append(False, ev_name + "#SOC", "double", ev_name, "battery_SOC")
         gld.subs_append(substation_sim_key + "/ev_out", "double", ev_name, "maximum_charge_rate")
 
 

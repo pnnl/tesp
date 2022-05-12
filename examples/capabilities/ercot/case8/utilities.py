@@ -2,8 +2,8 @@
 # file: uutilities.py
 
 import os
-import re
 import json
+import tesp_support.helpers as helpers
 
 yamlFile = 'Ercot_monitor.yaml'
 jsonFile = 'tesp_monitor_ercot.json'
@@ -88,59 +88,49 @@ def write_json_for_ercot_monitor(timeStop, timeDelta, numberOfFederates):
     print(json.dumps(federates), file=op)
 
 
-# HELICS message utilities
-def write_message_file(_n, _t, _p, _s, _fn):
-    msg = {"name": _n, "period": _t, "publications": _p, "subscriptions": _s}
-    op = open(_fn, 'w', encoding='utf-8')
-    json.dump(msg, op, ensure_ascii=False, indent=2)
-    op.close()
-
-
-def pubs_append(_pb, _g, _k, _t, _o, _p):
-    _pb.append({"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}})
-
-
-def pubs_append_n(_pb, _g, _k, _t):
-    _pb.append({"global": _g, "key": _k, "type": _t})
-
-
-def subs_append(_sb, _k, _t, _o, _p):
-    _sb.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
-
-
-def subs_append_n(_sb, _n, _k, _t):
-    _sb.append({"name": _n, "key": _k, "type": _t})
-
-
 # write helics json message files
 def write_substation_msg(fileroot, gldSimName, aucSimName, controllers, dt):
-    subs = []
-    pubs = []
+    dso = helpers.HelicsMsg(aucSimName)
 
-    # pubs_append(pubs, False, "rt_bid_" + bs, "string", "dso", "rt_bid")
-    # pubs_append(pubs, False, "da_bid_" + bs, "string", "dso", "da_bid")
-    subs_append_n(subs, "LMP", "pypower/LMP_" + fileroot, "double")
-    subs_append_n(subs, "refload", gldSimName + '/distribution_load', "complex")
+    bs = fileroot[3:]
+    dso.pubs_append_n(False, "responsive_c1_" + bs, "double")
+    dso.pubs_append_n(False, "responsive_c2_" + bs, "double")
+    dso.pubs_append_n(False, "responsive_deg_" + bs, "integer")
+    dso.pubs_append_n(False, "responsive_max_mw_" + bs, "double")
+    dso.pubs_append_n(False, "unresponsive_mw_" + bs, "double")
+    dso.pubs_append_n(False, "clear_price_" + bs, "double")
+
+    dso.subs_append_n("pypower/LMP_" + bs, "double")
+    dso.subs_append_n(gldSimName + "/distribution_load_" + bs, "complex")
     for key, val in controllers.items():
         houseName = str(val['houseName'])
         meterName = str(val['meterName'])
-        subs_append_n(subs, key + '#V1:',  gldSimName + '/' + meterName + '/measured_voltage_1', "double")
-        subs_append_n(subs, key + '#Tair:', gldSimName + '/' + houseName + '/air_temperature', "double")
-        subs_append_n(subs, key + '#Load:', gldSimName + '/' + houseName + '/hvac_load', "double")
-        subs_append_n(subs, key + '#On:', gldSimName + '/' + houseName + '/power_state', "string")
+        dso.subs_append_n(gldSimName + '/' + meterName + '#measured_voltage_1', "double")
+        dso.subs_append_n(gldSimName + '/' + houseName + '#air_temperature', "double")
+        dso.subs_append_n(gldSimName + '/' + houseName + '#hvac_load', "double")
+        dso.subs_append_n(gldSimName + '/' + houseName + '#power_state', "string")
 
-    write_message_file(aucSimName, dt, pubs, subs, fileroot + '_substation.json')
+        dso.pubs_append_n(False, key + "/cooling_setpoint", "double")
+        dso.pubs_append_n(False, key + "/heating_setpoint", "double")
+        dso.pubs_append_n(False, key + "/thermostat_deadband", "double")
+        dso.pubs_append_n(False, key + "/bill_mode", "string")
+        dso.pubs_append_n(False, key + "/price", "double")
+        dso.pubs_append_n(False, key + "/monthly_fee", "double")
+
+    dso.write_file(dt, fileroot + '_substation.json')
 
 
 def write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, dt):
     # write the GridLAB-D publications and subscriptions for HELICS
-    subs = []
-    pubs = []
-    pubs_append(pubs, False, "distribution_load", "complex", "network_node", "distribution_load")
-    subs_append(subs, "pypower/three_phase_voltage_" + fileroot, "complex", "network_node", "positive_sequence_voltage")
+    gld = helpers.HelicsMsg("gridlabd" + fileroot)
+
+    bs = fileroot[3:]
+    gld.pubs_append(False, "distribution_load_" + bs, "complex", "network_node", "distribution_load")
+    gld.subs_append("pypower/three_phase_voltage_" + fileroot, "complex", "network_node", "positive_sequence_voltage")
     if len(weatherName) > 0:
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
-            subs_append(subs, "localWeather" + '/' + wTopic, "double", weatherName, wTopic)
+            gld.subs_append(weatherName + '/#' + wTopic, "double", weatherName, wTopic)
+
     # if len(Eplus_Bus) > 0:  # hard-wired names for a single building
     #     subs_append("eplus_agent/power_A", "complex", Eplus_Load, "constant_power_A"}})
     #     subs_append("eplus_agent/power_B", "complex", Eplus_Load, "constant_power_B"}})
@@ -156,87 +146,48 @@ def write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, dt):
         meterName = val['meterName']
         aucSimKey = aucSimName + '/' + key + "/"
         for prop in ['power_state']:
-            pubs_append(pubs, False, houseName + "#" + prop, "string", houseName, prop)
+            gld.pubs_append(False, houseName + "#" + prop, "string", houseName, prop)
         for prop in ['air_temperature', 'hvac_load']:
-            pubs_append(pubs, False, houseName + "#" + prop, "double", houseName, prop)
+            gld.pubs_append(False, houseName + "#" + prop, "double", houseName, prop)
         for prop in ['cooling_setpoint', 'heating_setpoint', 'thermostat_deadband']:
-            subs_append(subs, aucSimKey + prop, "double", houseName, prop)
+            gld.subs_append(aucSimKey + prop, "double", houseName, prop)
         if meterName not in pubSubMeters:
             pubSubMeters.add(meterName)
             prop = 'measured_voltage_1'
             if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
                 prop = 'measured_voltage_A'  # TODO: the HELICS substation always expects measured_voltage_1
-            pubs_append(pubs, False, meterName + "#measured_voltage_1", "complex", meterName, prop)
+            gld.pubs_append(False, meterName + "#measured_voltage_1", "complex", meterName, prop)
             for prop in ['bill_mode']:
-                subs_append(subs, aucSimKey + prop, "string", meterName, prop)
+                gld.subs_append(aucSimKey + prop, "string", meterName, prop)
             for prop in ['price', 'monthly_fee']:
-                subs_append(subs, aucSimKey + prop, "double", meterName, prop)
+                gld.subs_append(aucSimKey + prop, "double", meterName, prop)
 
-    write_message_file("gridlabd" + fileroot, dt, pubs, subs, fileroot + '_HELICS_gld_msg.json')
+    gld.write_file(dt, fileroot + '_HELICS_gld_msg.json')
 
 
-def write_ercot_tso_msg(nd):
-    subs = []
-    pubs = []
+def write_ercot_tso_msg(numBuses):
+    tso = helpers.HelicsMsg("pypower")
 
-    for i in range(nd):
+    for i in range(numBuses):
         bs = str(i + 1)
-        pubs_append_n(pubs, False, "three_phase_voltage_Bus" + bs, "double")
-        pubs_append_n(pubs, False, "LMP_Bus" + bs, "double")
-        pubs_append_n(pubs, False, "LMP_RT_Bus_" + bs, "string")
-        pubs_append_n(pubs, False, "LMP_DA_Bus_" + bs, "string")
-        pubs_append_n(pubs, False, "cleared_q_rt_" + bs, "string")
-        pubs_append_n(pubs, False, "cleared_q_da_" + bs, "string")
+        tso.pubs_append_n(False, "three_phase_voltage_Bus" + bs, "double")
+        tso.pubs_append_n(False, "LMP_" + bs, "double")
+        tso.pubs_append_n(False, "LMP_RT_Bus_" + bs, "string")
+        tso.pubs_append_n(False, "LMP_DA_Bus_" + bs, "string")
+        tso.pubs_append_n(False, "cleared_q_rt_" + bs, "string")
+        tso.pubs_append_n(False, "cleared_q_da_" + bs, "string")
 
-    for i in range(nd):
+    for i in range(numBuses):
         bs = str(i + 1)
-        subs_append_n(subs, "SUBSTATION" + bs, "gridlabdBus" + bs + "/distribution_load", "complex")
-        subs_append_n(subs, "UNRESPONSIVE_MW_" + bs, "substationBus" + bs + "/unresponsive_mw_" + bs, "double")
-        subs_append_n(subs, "RESPONSIVE_MAX_MW_" + bs, "substationBus" + bs + "/responsive_max_mw_" + bs, "double")
-        subs_append_n(subs, "RESPONSIVE_C2_" + bs, "substationBus" + bs + "/responsive_c2_" + bs, "double")
-        subs_append_n(subs, "RESPONSIVE_C1_" + bs, "substationBus" + bs + "/responsive_c1_" + bs, "double")
-        subs_append_n(subs, "RESPONSIVE_DEG_" + bs, "substationBus" + bs + "/responsive_deg_" + bs, "integer")
-        subs_append_n(subs, "RT_BID_" + bs, "substationBus" + bs + "/da_bid_" + bs, "string")
-        subs_append_n(subs, "DA_BID_" + bs, "substationBus" + bs + "/da_bid_" + bs, "string")
+        tso.subs_append_n("gridlabdBus" + bs + "/distribution_load_" + bs, "complex")
+        tso.subs_append_n("substationBus" + bs + "/unresponsive_mw_" + bs, "double")
+        tso.subs_append_n("substationBus" + bs + "/responsive_max_mw_" + bs, "double")
+        tso.subs_append_n("substationBus" + bs + "/responsive_c2_" + bs, "double")
+        tso.subs_append_n("substationBus" + bs + "/responsive_c1_" + bs, "double")
+        tso.subs_append_n("substationBus" + bs + "/responsive_deg_" + bs, "integer")
+        tso.subs_append_n("substationBus" + bs + "/clear_price_" + bs, "double")
 
-    write_message_file("pypower", 300, pubs, subs, 'tso_h.json')
-
-
-def write_psst_tso_msg(nd, ppc):
-    subs = []
-    pubs = []
-    for i in range(nd):
-        bs = str(i + 1)
-        pubs_append(pubs, False, "lmp_rt_" + bs, "string")
-        pubs_append(pubs, False, "lmp_da_" + bs, "string")
-        pubs_append(pubs, False, "cleared_q_rt_" + bs, "string")
-        pubs_append(pubs, False, "cleared_q_da_" + bs, "string")
-        pubs_append(pubs, False, "three_phase_voltage_" + bs, "double")
-
-    for i in range(nd):
-        bs = str(i + 1)
-        subs_append_n(subs, "DA_BID_" + bs, "dsostub/da_bid_" + bs, "string")
-        subs_append_n(subs, "RT_BID_" + bs, "dsostub/rt_bid_" + bs, "string")
-        subs_append_n(subs, "REF_LOAD_" + bs, "refplayer/ref_load_" + bs, "string")
-        subs_append_n(subs, "REF_LD_HIST_" + bs, "refplayer/ref_ld_hist_" + bs, "string")
-        subs_append_n(subs, "GLD_LOAD_" + bs, "gldplayer/gld_load_" + bs, "string")
-        subs_append_n(subs, "GLD_LD_HIST_" + bs, "gldplayer/gld_ld_hist_" + bs, "string")
-
-    if ppc['genPower']:
-        genFuel = ppc['genfuel']
-        for i in range(len(genFuel)):
-            if genFuel[i][0] in ppc['renewables']:
-                idx = str(genFuel[i][2])
-                for plyr in ["genMn", "genForecastHr"]:
-                    player = ppc[plyr]
-                    if player[6] and not player[8]:
-                        subs_append_n(subs, player[0].upper() + '_POWER_' + idx,
-                                      player[0] + 'player/' + player[0] + '_power_' + idx, "string")
-                    if player[7] and not player[8]:
-                        subs_append_n(subs, player[0].upper() + '_PWR_HIST_' + idx,
-                                      player[0] + 'player/' + player[0] + '_pwr_hist_' + idx, "string")
-
-    write_message_file("pypower", 15, pubs, subs, 'tso_h.json')
+    tso.write_file(300, 'tso_h.json')
 
 
 if __name__ == "__main__":

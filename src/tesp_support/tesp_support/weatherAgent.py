@@ -155,10 +155,10 @@ def startWeatherAgent(file):
         helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.helics_property_time_delta, timeDeltaInSeconds)
         hFed = helics.helicsCreateValueFederate(fedName, fedInfo)
         for col in weatherData.columns:
-            pubName = fedName + '/' + col
+            pubName = fedName + '/#' + col
             hPubs[col] = helics.helicsFederateRegisterGlobalPublication(
                          hFed, pubName, helics.helics_data_type_string, "")
-            pubName = pubName + '/forecast'
+            pubName = pubName + '#forecast'
             hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(
                                        hFed, pubName, helics.helics_data_type_string, "")
         helics.helicsFederateEnterExecutingMode(hFed)

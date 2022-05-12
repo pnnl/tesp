@@ -168,6 +168,41 @@ class curve:
                 self.count += 1
 
 
+class HelicsMsg(object):
+
+    def __init__(self, name):
+        self._name = name
+        # self._level = "debug"
+        self._level = "warning"
+        self._subs = []
+        self._pubs = []
+        pass
+
+    def write_file(self, _dt, _fn):
+        msg = {"name": self._name,
+               "period": _dt,
+               "logging": self._level,
+               "publications": self._pubs,
+               "subscriptions": self._subs}
+        op = open(_fn, 'w', encoding='utf-8')
+        json.dump(msg, op, ensure_ascii=False, indent=2)
+        op.close()
+
+    def pubs_append(self, _g, _k, _t, _o, _p):
+        # for object and property is for internal code interface for gridlabd
+        self._pubs.append({"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}})
+
+    def pubs_append_n(self, _g, _k, _t):
+        self._pubs.append({"global": _g, "key": _k, "type": _t})
+
+    def subs_append(self, _k, _t, _o, _p):
+        # for object and property is for internal code interface for gridlabd
+        self._subs.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
+
+    def subs_append_n(self, _k, _t):
+        self._subs.append({"key": _k, "type": _t})
+
+
 def parse_number(arg):
     """ Parse floating-point number from a FNCS message; must not have leading sign or exponential notation
 
@@ -221,6 +256,26 @@ def parse_magnitude_2(arg):
     return vals[0]
 
 
+def parse_helic_input(arg):
+    """Helper function to find the magnitude of a possibly complex number from Helics as a string
+
+    Args:
+      arg (str): The Helics value
+    """
+    try:
+
+        tok = arg.strip('[]')
+        vals = re.split(',', tok)
+        if len(vals) < 2:  # only a real part provided
+            vals.append('0')
+
+        vals[0] = float(vals[0])
+        return vals[0]
+    except:
+        print('parse_helic_input does not understand"' + arg + '"')
+        return 0
+
+
 def parse_magnitude(arg):
     """ Parse the magnitude of a possibly complex number from FNCS
 
@@ -256,8 +311,11 @@ def parse_magnitude(arg):
         b = complex(tok)
         return abs(b)  # b.real
     except:
-        print('parse_magnitude does not understand', arg)
-        return 0
+        try:
+            return parse_helic_input(arg)
+        except:
+            print('parse_magnitude does not understand' + arg)
+            return 0
 
 
 def parse_mva(arg):
@@ -417,8 +475,11 @@ def parse_kw(arg):
 
         return p
     except:
-        print('parse_kw does not understand', arg)
-        return 0
+        try:
+            return parse_helic_input(arg)/1000.0
+        except:
+            print('parse_kw does not understand', arg)
+            return 0
 
 
 def print_mod_load(bus, dso, model_load, msg, ts):

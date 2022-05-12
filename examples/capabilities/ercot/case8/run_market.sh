@@ -23,4 +23,4 @@
 (export FNCS_CONFIG_FILE=Bus6_substation.yaml && export FNCS_FATAL=YES && exec python3 -c "import tesp_support.api as tesp;tesp.substation_loop('Bus6_agent_dict.json','Bus6', 72)" &> substation6.log &)
 (export FNCS_CONFIG_FILE=Bus7_substation.yaml && export FNCS_FATAL=YES && exec python3 -c "import tesp_support.api as tesp;tesp.substation_loop('Bus7_agent_dict.json','Bus7', 72)" &> substation7.log &)
 (export FNCS_CONFIG_FILE=Bus8_substation.yaml && export FNCS_FATAL=YES && exec python3 -c "import tesp_support.api as tesp;tesp.substation_loop('Bus8_agent_dict.json','Bus8', 72)" &> substation8.log &)
-(export FNCS_CONFIG_FILE=tso8.yaml && export FNCS_FATAL=YES && exec python3 fncsTSO.py &> bulk.log &)
+(export FNCS_CONFIG_FILE=tso8.yaml && export FNCS_FATAL=YES && exec python3 fncsTSO_f.py &> bulk.log &)

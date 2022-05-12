@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: forecasting_dsot_v1.py
+# file: forecasting_dsot.py
 """Class responsible for forecasting 
 
 Implements the substation level DA price forecast and load forecast
@@ -18,7 +18,7 @@ import glm
 import re
 import time as ti
 import os
-from tesp_support.hvac_dsot_v1 import HVACDSOT
+from tesp_support.hvac_dsot import HVACDSOT
 from tesp_support.schedule_client import *
 import logging as log
 

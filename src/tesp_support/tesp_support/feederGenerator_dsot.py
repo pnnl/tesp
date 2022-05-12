@@ -1,8 +1,8 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: feederGenerator_dsot_v1.py
+# file: feederGenerator_dsot.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
-As this module populates the feeder backbone wiht houses and DER, it uses
+As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
 fuses, transformers and lines to serve the expected load. Transformers have
 a margin of 20% to avoid overloads, while fuses have a margin of 150% to
@@ -11,7 +11,7 @@ source file.
 
 There are two kinds of house populating methods implemented:
 
-    * :Feeders with Service Transfomers: This case applies to the full PNNL taxonomy feeders.
+    * :Feeders with Service Transformers: This case applies to the full PNNL taxonomy feeders.
     Do not specify the *taxchoice* argument to *populate_feeder*.
     Each service transformer receiving houses will have a short service drop and a small number of houses attached.
     * :Feeders without Service Transformers: This applies to the reduced-order ERCOT feeders.
@@ -42,7 +42,7 @@ from math import sqrt
 
 from tesp_support.helpers import parse_kva
 from tesp_support.helpers import gld_strict_name
-from tesp_support.helpers_dsot_v1 import random_norm_trunc
+from tesp_support.helpers_dsot import random_norm_trunc
 import tesp_support.commbldgenerator as com_FG
 
 tesp_share = os.path.expandvars('$TESPDIR/data/')
@@ -55,7 +55,7 @@ port = 5570
 case_name = 'Tesp'
 name_prefix = ''
 work_path = './Dummy/'
-substation = ""
+substation_name = ""
 base_feeder_name = ''
 solar_path = ''
 solar_P_player = ''
@@ -2247,7 +2247,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(case_name) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gld' + substationName + ';', file=op)  # for full-order DSOT
+        print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
         print('  configure', case_name + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port ' + str(port) + '";', file=op)
@@ -3026,7 +3026,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global timezone, starttime, endtime, timestep
     global metrics, metrics_type, metrics_interval, metrics_interim, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
-    global case_name, name_prefix, port, forERCOT, substationName
+    global case_name, name_prefix, port, forERCOT, substation_name
     global house_nodes, small_nodes, comm_loads
     # global inv_efficiency, round_trip_efficiency
     global latitude, longitude, time_zone_offset, weather_name, feeder_commercial_building_number
@@ -3058,7 +3058,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
         work_path = config['SimulationConfig']['WorkingDirectory'] + '/'
     if 'OutputPath' in config['SimulationConfig']:
         work_path = config['SimulationConfig']['OutputPath'] + '/'
-    substationName = config['SimulationConfig']['Substation']
+    substation_name = config['SimulationConfig']['Substation']
     timezone = config['SimulationConfig']['TimeZone']
     starttime = config['SimulationConfig']['StartTime']
     endtime = config['SimulationConfig']['EndTime']

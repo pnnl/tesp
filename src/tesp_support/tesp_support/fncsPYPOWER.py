@@ -8,17 +8,7 @@ Public Functions:
 
 import json
 import sys
-
-
-try:
-    import tesp_support.fncs as fncs
-except:
-    pass
-try:
-    import helics
-except:
-    pass
-
+import tesp_support.fncs as fncs
 import numpy as np
 import pypower.api as pp
 from math import sqrt
@@ -119,7 +109,7 @@ def make_dictionary(ppc, rootname):
 
 
 def pypower_loop(casefile, rootname, helicsConfig=None):
-    """ Public function to start PYPOWER solutions under control of FNCS or HELICS
+    """ Public function to start PYPOWER solutions under control of FNCS
 
     The time step, maximum time, and other data must be set up in a JSON file.
     This function will run the case under FNCS, manage the FNCS message traffic,
@@ -203,40 +193,8 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
     sub_c2 = None
     sub_c1 = None
     sub_deg = None
-    if helicsConfig is not None:
-        hFed = helics.helicsCreateValueFederateFromConfig(helicsConfig)
-        fedName = helics.helicsFederateGetName(hFed)
-        pubCount = helics.helicsFederateGetPublicationCount(hFed)
-        subCount = helics.helicsFederateGetInputCount(hFed)
-        for i in range(pubCount):
-            pub = helics.helicsFederateGetPublicationByIndex(hFed, i)
-            key = helics.helicsPublicationGetName(pub)
-            print('HELICS publication key', i, key)
-            if 'LMP_' in key:
-                pub_lmp = pub
-            elif 'three_phase_voltage_' in key:
-                pub_volts = pub
-        for i in range(subCount):
-            sub = helics.helicsFederateGetInputByIndex(hFed, i)
-            key = helics.helicsInputGetName(sub)
-            target = helics.helicsSubscriptionGetTarget(sub)
-            print('HELICS subscription key', i, key, 'target', target)
-            upper_target = target.upper()  # FNCS-compatible matching
-            if 'RESPONSIVE_C2' in upper_target:
-                sub_c2 = sub
-            if 'RESPONSIVE_C1' in upper_target:
-                sub_c1 = sub
-            if 'RESPONSIVE_DEG' in upper_target:
-                sub_deg = sub
-            if 'RESPONSIVE_MAX_MW' in upper_target:
-                sub_max = sub
-            if 'UNRESPONSIVE_MW' in upper_target:
-                sub_unresp = sub
-            if 'distribution_load' in target:
-                sub_load = sub
-        helics.helicsFederateEnterExecutingMode(hFed)
-    else:
-        fncs.initialize()
+
+    fncs.initialize()
 
     # transactive load components
     csv_load = 0     # from the file
@@ -252,56 +210,29 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
         # start by getting the latest inputs from GridLAB-D and the auction
         new_bid = False
         load_scale = float(dsoBus[0][2])
-        # some notes on helicsInput timing
-        #  1) initial values are garbage until the other federate actually publishes
-        #  2) helicsInputIsValid checks the subscription pipeline for validity, but not the value
-        #  3) helicsInputIsUpdated resets to False immediately after you read the value, will become True if value changes later
-        #  4) helicsInputLastUpdateTime is > 0 only after the other federate published its first value
-        if hFed is not None:  # HELICS inputs
-            if (sub_unresp is not None) and helics.helicsInputIsUpdated(sub_unresp):
-                unresp = helics.helicsInputGetDouble(sub_unresp) * load_scale
+        events = fncs.get_events()
+        for topic in events:
+            value = fncs.get_value(topic)
+            if topic == 'UNRESPONSIVE_MW':
+                unresp = load_scale * float(value)
                 dsoBus[0][3] = unresp  # to poke unresponsive estimate into the bus load slot
-            if (sub_c2 is not None) and helics.helicsInputIsUpdated(sub_c2):
-                resp_c2 = helics.helicsInputGetDouble(sub_c2) / load_scale
-            if (sub_c1 is not None) and helics.helicsInputIsUpdated(sub_c1):
-                resp_c1 = helics.helicsInputGetDouble(sub_c1)
-            if (sub_deg is not None) and helics.helicsInputIsUpdated(sub_deg):
-                resp_deg = helics.helicsInputGetInteger(sub_deg)
-            if (sub_max is not None) and helics.helicsInputIsUpdated(sub_max):
-                #        print (ts,'resp_max updated before', helics.helicsInputIsUpdated(sub_max))
-                resp_max = helics.helicsInputGetComplex(sub_max)[0] * load_scale  # TODO: pyhelics needs to return complex instead of tuple
-                #        print (ts,'resp_max updated after', helics.helicsInputIsUpdated(sub_max))
                 new_bid = True
-            if (sub_load is not None) and helics.helicsInputIsUpdated(sub_load):
-                cval = helics.helicsInputGetComplex(sub_load)  # TODO: pyhelics needs to return complex instead of tuple
-                gld_load = complex(cval[0], cval[1])
-                feeder_load = gld_load.real * load_scale / 1.0e6
-        #      print ('HELICS inputs at', ts, feeder_load, load_scale, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid)
-        #      print ('HELICS resp_max', ts, resp_max, helics.helicsInputIsValid(sub_max),
-        #        helics.helicsInputIsUpdated(sub_max), helics.helicsInputLastUpdateTime(sub_max))
-        else:  # inputs coming from FNCS
-            events = fncs.get_events()
-            for topic in events:
-                value = fncs.get_value(topic)
-                if topic == 'UNRESPONSIVE_MW':
-                    unresp = load_scale * float(value)
-                    dsoBus[0][3] = unresp  # to poke unresponsive estimate into the bus load slot
-                    new_bid = True
-                elif topic == 'RESPONSIVE_MAX_MW':
-                    resp_max = load_scale * float(value)
-                    new_bid = True
-                elif topic == 'RESPONSIVE_C2':
-                    resp_c2 = float(value) / load_scale
-                    new_bid = True
-                elif topic == 'RESPONSIVE_C1':
-                    resp_c1 = float(value)
-                    new_bid = True
-                elif topic == 'RESPONSIVE_DEG':
-                    resp_deg = int(value)
-                    new_bid = True
-                else:
-                    gld_load = parse_mva(value)  # actual value, may not match unresp + resp load
-                    feeder_load = float(gld_load[0]) * load_scale
+            elif topic == 'RESPONSIVE_MAX_MW':
+                resp_max = load_scale * float(value)
+                new_bid = True
+            elif topic == 'RESPONSIVE_C2':
+                resp_c2 = float(value) / load_scale
+                new_bid = True
+            elif topic == 'RESPONSIVE_C1':
+                resp_c1 = float(value)
+                new_bid = True
+            elif topic == 'RESPONSIVE_DEG':
+                resp_deg = int(value)
+                new_bid = True
+            else:
+                gld_load = parse_mva(value)  # actual value, may not match unresp + resp load
+                feeder_load = float(gld_load[0]) * load_scale
+
         if new_bid == True:
             dummy = 2
         #      print('**Bid', ts, unresp, resp_max, resp_deg, resp_c2, resp_c1)
@@ -361,10 +292,7 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
             opf_gen = deepcopy(res['gen'])
             lmp = opf_bus[6, 13]
             resp = -1.0 * opf_gen[4, 1]
-            if pub_lmp is not None:
-                helics.helicsPublicationPublishDouble(pub_lmp, 0.001 * lmp)
-            else:
-                fncs.publish('LMP_B7', 0.001 * lmp)  # publishing $/kwh
+            fncs.publish('LMP_B7', 0.001 * lmp)  # publishing $/kwh
             #     print ('  OPF', ts, csv_load, '{:.3f}'.format(unresp), '{:.3f}'.format(resp),
             #            '{:.3f}'.format(feeder_load), '{:.3f}'.format(opf_bus[6,2]),
             #            '{:.3f}'.format(opf_gen[0,1]), '{:.3f}'.format(opf_gen[1,1]), '{:.3f}'.format(opf_gen[2,1]),
@@ -456,10 +384,7 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
             conv_accum = True
 
         volts = 1000.0 * bus[6, 7] * bus[6, 9] / sqrt(3.0)  # VLN for GridLAB-D
-        if pub_volts is not None:
-            helics.helicsPublicationPublishDouble(pub_volts, volts)
-        else:
-            fncs.publish('three_phase_voltage_B7', volts)
+        fncs.publish('three_phase_voltage_B7', volts)
 
         # CSV file output
         print(ts, res['success'],
@@ -489,10 +414,7 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
             print('breaking out at', ts, flush=True)
             break
         tRequest = min(ts + dt, tmax)
-        if hFed is not None:
-            ts = int(helics.helicsFederateRequestTime(hFed, tRequest))
-        else:
-            ts = fncs.time_request(tRequest)
+        ts = fncs.time_request(tRequest)
 
     # ===================================
     print('writing metrics', flush=True)
@@ -504,12 +426,8 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
     gen_mp.close()
     sys_mp.close()
     op.close()
-    if hFed is not None:
-        print('finalizing HELICS', flush=True)
-        helics.helicsFederateDestroy(hFed)
-    else:
-        print('finalizing DSO', flush=True)
-        fncs.finalize()
+    print('finalizing DSO', flush=True)
+    fncs.finalize()
 
     if sys.platform != 'win32':
         usage = resource.getrusage(resource.RUSAGE_SELF)

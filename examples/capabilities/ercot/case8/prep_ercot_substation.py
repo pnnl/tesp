@@ -5,7 +5,7 @@ import json
 import math
 import os
 import numpy as np
-import utilities as util
+import utilities
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -17,7 +17,6 @@ np.random.seed(0)
 ######################################################
 # top-level data, not presently configurable from JSON
 broker = 'tcp://localhost:5570'
-# network_node = 'network_node'
 marketName = 'Market_1'
 unit = 'kW'
 control_mode = 'CN_RAMP'
@@ -209,13 +208,13 @@ def ProcessGLM(fileroot, weatherName):
 
     # write the substation publications and subscriptions for HELICS
     # TODO verify what should be done here to enforce minimum time step
-    util.write_substation_msg(fileroot, gldSimName, aucSimName, controllers, 15)
+    utilities.write_substation_msg(fileroot, gldSimName, aucSimName, controllers, 15)
 
-    util.write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, 15)
+    utilities.write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, 15)
 
     # TODO monitor for helics
     # write topics to the FNCS config yaml file that will be used/shown in the monitor
-    # util.write_FNCS_config_yaml_file_values(fileroot, controllers)
+    # utilities.write_FNCS_config_yaml_file_values(fileroot, controllers)
 
 
 def prep_ercot_substation(gldfileroot, jsonfile='', weatherName=''):

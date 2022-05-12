@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: ev_dsot_v1.py #
+# file: ev_dsot.py #
 """Class that controls the Electric Vehicle
 
 Implements the optimum schedule of charging and discharging DA; generate the bids
@@ -29,8 +29,8 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 
 from .helpers import parse_number
-from .helpers_dsot_v1 import get_run_solver
-import tesp_support.feederGenerator_dsot_v1 as fg
+from .helpers_dsot import get_run_solver
+import tesp_support.feederGenerator_dsot as fg
 
 logger = log.getLogger()
 

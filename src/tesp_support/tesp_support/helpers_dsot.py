@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: helpers_dsot_v1.py
+# file: helpers_dsot.py
 """ Utility functions for use within tesp_support, including new agents. This is DSO+T specific helper functions
 """
 import os
@@ -12,6 +12,7 @@ from enum import IntEnum
 
 import numpy as np
 from scipy.stats import truncnorm
+from .helpers import HelicsMsg
 
 
 def get_run_solver(name, pyo, model, solver):
@@ -151,7 +152,8 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
             if dyldPath is not None:
                 outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
 
-        outfile.write('# To run agents set with_market=1 else set with_market=0 \n')
+        outfile.write('mkdir -p PyomoTempFiles\n\n')
+        outfile.write('# To run agents set with_market=1 else set with_market=0\n')
         if system_config["market"]:
             outfile.write('with_market=1\n\n')
         else:
@@ -304,7 +306,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('set FNCS_CONFIG_FILE=%s.yaml\n' % sub_val['substation'])
                 outfile.write('cd ..\n')
                 outfile.write('cd %s\n' % sub_key)
-                outfile.write('start /b cmd /c python -c "import tesp_support.substation_dsot_v1 as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.substation_dsot as tesp;'
                               'tesp.substation_loop(\'%s_agent_dict.json\',\'%s\',%%with_market%%)" ^> '
                               '%s\\%s_substation.log 2^>^&1\n'
                               % (sub_val['substation'], sub_val['substation'], outPath, sub_key))
@@ -492,6 +494,7 @@ docker run \\
 
     with open(out_folder + '/clean.sh', 'w') as outfile:
         outfile.write('cd ' + outPath + '\n')
+        outfile.write('rm - rf PyomoTempFiles\n')
         outfile.write('find . -name \\*.log -type f -delete\n')
         outfile.write('find . -name \\*.csv -type f -delete\n')
         outfile.write('find . -name \\*.out -type f -delete\n')
@@ -512,41 +515,6 @@ docker run \\
     subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/postprocess.sh'])
-
-
-class HelicsMsg(object):
-
-    def __init__(self, name):
-        self._name = name
-        # self._level = "debug"
-        self._level = "warning"
-        self._subs = []
-        self._pubs = []
-        pass
-
-    def write_file(self, _dt, _fn):
-        msg = {"name": self._name,
-               "period": _dt,
-               "logging": self._level,
-               "publications": self._pubs,
-               "subscriptions": self._subs}
-        op = open(_fn, 'w', encoding='utf-8')
-        json.dump(msg, op, ensure_ascii=False, indent=2)
-        op.close()
-
-    def pubs_append(self, _g, _k, _t, _o, _p):
-        # for object and property is for internal code interface for gridlabd
-        self._pubs.append({"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}})
-
-    def pubs_append_n(self, _g, _k, _t):
-        self._pubs.append({"global": _g, "key": _k, "type": _t})
-
-    def subs_append(self, _k, _t, _o, _p):
-        # for object and property is for internal code interface for gridlabd
-        self._subs.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
-
-    def subs_append_n(self, _n, _k, _t):
-        self._subs.append({"name": _n, "key": _k, "type": _t})
 
 
 def write_players_msg(case_name, sys_config, dt):

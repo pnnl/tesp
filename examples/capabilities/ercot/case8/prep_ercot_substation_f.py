@@ -4,9 +4,7 @@
 import json
 import math
 import os
-
 import numpy as np
-
 import utilities
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
@@ -19,7 +17,6 @@ np.random.seed(0)
 ######################################################
 # top-level data, not presently configurable from JSON
 broker = 'tcp://localhost:5570'
-network_node = 'network_node'
 marketName = 'Market_1'
 unit = 'kW'
 control_mode = 'CN_RAMP'
@@ -176,8 +173,7 @@ def ProcessGLM(fileroot, weatherName):
                                   'charge': val['bat_soc'] * val['bat_capacity'],
                                   'efficiency': float('{:.4f}'.format(val['inv_eta'] * math.sqrt(val['bat_eta'])))}
 
-    print('configured', nControllers, 'controllers for', nAirConditioners, 'air conditioners and', nBatteries,
-          'batteries')
+    print('controllers', nControllers, 'for', nAirConditioners, 'air conditioners and', nBatteries, 'batteries')
     # Write market dictionary
     auctions[marketName] = {'market_id': 1,
                             'unit': unit,
@@ -201,7 +197,11 @@ def ProcessGLM(fileroot, weatherName):
 
     dictfile = fileroot + '_agent_dict.json'
     dp = open(dictfile, 'w')
-    meta = {'markets': auctions, 'controllers': controllers, 'batteries': batteries, 'dt': dt, 'GridLABD': gldSimName,
+    meta = {'markets': auctions,
+            'controllers': controllers,
+            'batteries': batteries,
+            'dt': dt,
+            'GridLABD': gldSimName,
             'Weather': weatherName}
     print(json.dumps(meta), file=dp)
     dp.close()
@@ -244,9 +244,7 @@ def ProcessGLM(fileroot, weatherName):
 
     op = open(fileroot + '_FNCS_Config.txt', 'w')
     print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
-    print(
-        'subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_' + fileroot + '";',
-        file=op)
+    print('subscribe "precommit:network_node.positive_sequence_voltage <- pypower/three_phase_voltage_' + fileroot + '";', file=op)
     print('subscribe "precommit:localWeather.temperature <- ' + weatherName + '/temperature";', file=op)
     print('subscribe "precommit:localWeather.humidity <- ' + weatherName + '/humidity";', file=op)
     print('subscribe "precommit:localWeather.solar_direct <- ' + weatherName + '/solar_direct";', file=op)

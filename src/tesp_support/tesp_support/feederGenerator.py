@@ -52,7 +52,7 @@ port = 5570
 case_name = 'Tesp'
 name_prefix = ''
 work_path = './Dummy/'
-substation = ""
+substation_name = ""
 base_feeder_name = ''
 solar_path = ''
 solar_P_player = ''
@@ -2070,7 +2070,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(case_name) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gld' + substationName + ';', file=op)  # for full-order DSOT
+        print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
         print('  configure', case_name + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port ' + str(port) + '";', file=op)

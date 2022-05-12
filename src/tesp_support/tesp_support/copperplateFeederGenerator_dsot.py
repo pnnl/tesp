@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: copperplateFeederGenerator_dsot_v1.py
+# file: copperplateFeederGenerator_dsot.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
 As this module populates the feeder backbone wiht houses and DER, it uses
@@ -1359,7 +1359,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(caseName) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gridlabd' + substationName + ';', file=op)  # for full-order DSOT
+        print('  name gld' + substationName + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
         print('  configure', caseName + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port 5570";', file=op)

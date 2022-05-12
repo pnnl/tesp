@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: prepare_case_dsot_v1.py
+# file: prepare_case_dsot.py
 """ Sets up a simple DSO+T use-case with one feeder
 
 Public Functions:
@@ -12,13 +12,14 @@ import json
 import shutil
 import datetime
 import numpy as np
-import tesp_support.helpers_dsot_v1 as helpers
-import tesp_support.case_merge_dsot_v1 as cm
-import tesp_support.glm_dict_dsot_v1 as gd
+import tesp_support.helpers_dsot as helpers
+import tesp_support.case_merge_dsot as cm
+import tesp_support.glm_dict_dsot as gd
 import tesp_support.commbldgenerator as com_FG
-import tesp_support.feederGenerator_dsot_v1 as res_FG
-import tesp_support.copperplateFeederGenerator_dsot_v1 as cp_FG
+import tesp_support.feederGenerator_dsot as res_FG
+import tesp_support.copperplateFeederGenerator_dsot as cp_FG
 import prep_substation_dsot as prep
+from tesp_support.helpers import HelicsMsg
 
 
 # Simulation settings for the this experimental case
@@ -86,7 +87,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # print(json.dumps(ev_model_config, sort_keys = True, indent = 2))
     # print(json.dumps(hvac_setpt, sort_keys = True, indent = 2))
 
-    port = str(sys_config['port'])
     caseName = sys_config['caseName']
     start_time = sys_config['StartTime']
     end_time = sys_config['EndTime']
@@ -165,7 +165,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # write player helics config json file for load and generator players
     helpers.write_players_msg(caseName, sys_config, dt)
 
-    tso = helpers.HelicsMsg("pypower")
+    tso = HelicsMsg("pypower")
     # config helics subs/pubs
     # Running renewables wind, solar
     if sys_config['genPower']:
@@ -175,9 +175,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                 for plyr in ["genMn", "genForecastHr"]:
                     player = sys_config[plyr]
                     if player[6] and not player[8]:
-                        tso.subs_append_n(player[0].upper() + "_POWER_" + idx, player[0] + "player/" + player[0] + "_power_" + idx, "string")
+                        tso.subs_append_n(player[0] + "player/" + player[0] + "_power_" + idx, "string")
                     if player[7] and not player[8]:
-                        tso.subs_append_n(player[0].upper() + "_PWR_HIST_" + idx, player[0] + "player/" + player[0] + "_pwr_hist_" + idx, "string")
+                        tso.subs_append_n(player[0] + "player/" + player[0] + "_pwr_hist_" + idx, "string")
 
     # First step is to create the dso folders and populate the feeders
     for dso_key, dso_val in dso_config.items():
@@ -193,39 +193,35 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         # write the tso pubscribe connections for this substation
         tso.pubs_append_n(False, "cleared_q_rt_" + bus, "string")
         tso.pubs_append_n(False, "cleared_q_da_" + bus, "string")
-        tso.pubs_append_n(False, "rt_lmp_" + bus, "string")
-        tso.pubs_append_n(False, "da_lmp_" + bus, "string")
+        tso.pubs_append_n(False, "lmp_rt_" + bus, "string")
+        tso.pubs_append_n(False, "lmp_da_" + bus, "string")
         tso.pubs_append_n(False, "three_phase_voltage_" + bus, "string")
 
         # write the tso subscribe connections for this substation
-        tso.subs_append_n("RT_BID_" + bus, sub_key + "/rt_bid_" + bus, "string")
-        tso.subs_append_n("DA_BID_" + bus, sub_key + "/da_bid_" + bus, "string")
+        tso.subs_append_n("dso" + sub_key + "/rt_bid_" + bus, "string")
+        tso.subs_append_n("dso" + sub_key + "/da_bid_" + bus, "string")
 
         try:
             # running reference load, using a player for the load reference for comparison
             player = sys_config['refLoadMn']
             if player[6] and player[8]:
-                tso.subs_append_n(player[0].upper() + "_LOAD_" + bus,
-                                   player[0] + "player/" + player[0] + "_load_" + bus, "string")
+                tso.subs_append_n(player[0] + "player/" + player[0] + "_load_" + bus, "string")
             if player[7] and player[8]:
-                tso.subs_append_n(player[0].upper() + "_LD_HIST_" + bus,
-                                   player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
+                tso.subs_append_n(player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
             if not dso_val['used']:
                 # running reference load res and ind, (no gridlabd instance, using a player for the load)
                 player = sys_config['gldLoad']
                 if player[6] and player[8]:
-                    tso.subs_append_n(player[0].upper() + "_LOAD_" + bus,
-                                       player[0] + "player/" + player[0] + "_load_" + bus, "string")
+                    tso.subs_append_n(player[0] + "player/" + player[0] + "_load_" + bus, "string")
                 if player[7] and player[8]:
-                    tso.subs_append_n(player[0].upper() + "_LD_HIST_" + bus,
-                                       player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
+                    tso.subs_append_n(player[0] + "player/" + player[0] + "_ld_hist_" + bus, "string")
                 continue
         except:
             pass
 
         os.makedirs(caseName + '/' + dso_key)
 
-        # seed the random number here instead of in feedergenerator_dsot_v1.py
+        # seed the random number here instead of in feedergenerator_dsot.py
         np.random.seed(dso_val['random_seed'])
 
         # copy dso default config
@@ -284,7 +280,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         weaPrep['Longitude'] = dso_val['longitude']
         weaPrep['TimeZoneOffset'] = dso_val['time_zone_offset']
 
-        # could eliminate code here by changing helpers_dsot_v1.py, since only one weather for DSO
+        # could eliminate code here by changing helpers_dsot.py, since only one weather for DSO
         weather_config[weather_agent_name] = {
                 'type': weaPrep['WeatherChoice'],
                 'source': weaPrep['DataSource'],
@@ -322,8 +318,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         with open(caseName + '/case_config_' + str(dso_val['bus_number']) + '.json', 'w') as outfile:
             json.dump(case_config, outfile, ensure_ascii=False, indent=2)
 
-        helpers.gld = helpers.HelicsMsg("gld" + case_config['SimulationConfig']['Substation'])
-        helpers.dso = helpers.HelicsMsg("dso" + case_config['SimulationConfig']['Substation'])
+        HelicsMsg.gld = HelicsMsg("gld" + case_config['SimulationConfig']['Substation'])
+        HelicsMsg.dso = HelicsMsg("dso" + case_config['SimulationConfig']['Substation'])
         feeders = dso_val['feeders']
         feedercnt = 1
         for feed_key, feed_val in feeders.items():
@@ -397,7 +393,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         cm.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
 
         print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
-        helpers.gld.write_file(dt, os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.json'))
+        HelicsMsg.gld.write_file(30, os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.json'))
 
         print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
         cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
@@ -406,7 +402,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
 
         print("\n=== MERGING/WRITING THE DSO MESSAGE FILE=====")
-        helpers.dso.write_file(dt, os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
+        HelicsMsg.dso.write_file(dt, os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
 
         # cleaning after feeders had been merged
         foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName)) if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]

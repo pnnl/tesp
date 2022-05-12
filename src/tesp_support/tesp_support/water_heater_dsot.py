@@ -1,10 +1,10 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: water_heater_dsot_v1_new.py with the implementation of new SOHC model and new delta_SOHC model
+# file: water_heater_dsot.py
 """Class that controls the Water Heater DER
 
 Implements the optimum schedule of heating element operation given DA price forecast; generate the bids
 for DA and RT; monitor and supervisory control of GridLAB-D environment element.
-
+ with the implementation of new SOHC model and new delta_SOHC model
 The function call order for this agent is:
     initialize
 
@@ -25,10 +25,11 @@ import pyomo.environ as pyo
 import pyomo.opt as opt
 import logging as log
 import tesp_support.helpers as helpers
-import tesp_support.helpers_dsot_v1 as agent_helpers
+import tesp_support.helpers_dsot as agent_helpers
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
+
 
 class WaterHeaterDSOT:
     """This agent manage the operation of water heater
