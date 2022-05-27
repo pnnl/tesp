@@ -122,13 +122,18 @@ class curve:
             self.price.reverse()
             self.quantity.reverse()
 
-    def add_to_curve(self, price, quantity, is_on):
-        """ Add one point to the curve
+    def add_to_curve(self, price, quantity, is_on, bidder = 'null'):
+        """ Add one point to the curve in the correct location relative to
+        the other bids on a price basis.
 
         Args:
             price (float): the bid price, should be $/kWhr
             quantity (float): the bid quantity, should be kW
             is_on (Boolean): True if the load is currently on, False if not
+            bidder (str): unique identifier to allow market object to clear
+            specific bids. Optional parameter if operating on a
+            price-priority basis and there is not a need to ensure the
+            cleared quantity is less than a given amount.
         """
         if quantity == 0:
             return
@@ -142,8 +147,10 @@ class curve:
             # Since it is the first time assigning values to the curve, define an empty array for the price and mean
             self.price = []
             self.quantity = []
+            self.bidder = []
             self.price.append(price)
             self.quantity.append(quantity)
+            self.bidder.append(bidder)
             self.count += 1
         else:
             value_insert_flag = 0
@@ -154,9 +161,11 @@ class curve:
                         # If the price is larger than that of all the curve sections, insert at the beginning of the curve
                         self.price.insert(0, price)
                         self.quantity.insert(0, quantity)
+                        self.bidder.insert(0, bidder)
                     else:
                         self.price.insert(i, price)
                         self.quantity.insert(i, quantity)
+                        self.quantity.insert(i, bidder)
                     self.count += 1
                     value_insert_flag = 1
                     break
@@ -165,6 +174,7 @@ class curve:
             if value_insert_flag == 0:
                 self.price.append(price)
                 self.quantity.append(quantity)
+                self.bidder.append(bidder)
                 self.count += 1
 
 

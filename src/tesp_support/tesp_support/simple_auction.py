@@ -213,6 +213,9 @@ class simple_auction:
             b = -self.pricecap
             check = 0
             demand_quantity = supply_quantity = 0
+
+            # Summing total responsive and unresponsive supply and demand
+            # quantities
             for i in range(self.curve_seller.count):
                 if self.curve_seller.price[i] == self.pricecap:
                     self.unresponsive_sell += self.curve_seller.quantity[i]
@@ -223,26 +226,30 @@ class simple_auction:
                     self.unresponsive_buy += self.curve_buyer.quantity[i]
                 else:
                     self.responsive_buy += self.curve_buyer.quantity[i]
-            # Calculate clearing quantity and price here
-            # Define the section number of the buyer and the seller curves respectively as i and j
+
+            # Calculate clearing quantity and price
+            # Define the section number of the buyer and the seller curves
+            # respectively as i and j
             i = j = 0
             self.clearing_type = helpers.ClearingType.NULL
             self.clearing_quantity = self.clearing_price = 0
-            while i < self.curve_buyer.count and j < self.curve_seller.count and self.curve_buyer.price[i] >= self.curve_seller.price[j]:
+            while i < self.curve_buyer.count and j < \
+                    self.curve_seller.count and self.curve_buyer.price[i] \
+                    >= self.curve_seller.price[j]:
                 buy_quantity = demand_quantity + self.curve_buyer.quantity[i]
                 sell_quantity = supply_quantity + self.curve_seller.quantity[j]
-                # If marginal buyer currently:
+                # If i-th block is marginal buyer:
                 if buy_quantity > sell_quantity:
                     self.clearing_quantity = supply_quantity = sell_quantity
                     a = b = self.curve_buyer.price[i]
-                    j += 1
+                    j += 1 # Add another seller block to catch up to buyer
                     check = 0
                     self.clearing_type = helpers.ClearingType.BUYER
-                # If marginal seller currently:
+                # If j-th block is marginal seler:
                 elif buy_quantity < sell_quantity:
                     self.clearing_quantity = demand_quantity = buy_quantity
                     a = b = self.curve_seller.price[j]
-                    i += 1
+                    i += 1 # Add another seller block to catch up to seller
                     check = 0
                     self.clearing_type = helpers.ClearingType.SELLER
                 # Buy quantity equal sell quantity but price split  
@@ -369,23 +376,26 @@ class simple_auction:
                 self.clearing_type = helpers.ClearingType.PRICE
                 self.clearing_price = 0.0
             
-        # If the market mode MD_NONE and at least one side is not given
+        # At least one side of the double-auction is not given
         else:
+            # Sellers only, clear at lowest selling price
             if self.curve_seller.count > 0 and self.curve_buyer.count == 0:
                 self.clearing_price = self.curve_seller.price[0] - self.bid_offset
+            # Buyers only, clear at highest buyer price
             elif self.curve_seller.count == 0 and self.curve_buyer.count > 0:
                 self.clearing_price = self.curve_buyer.price[0] + self.bid_offset
-            elif self.curve_seller.count > 0 and self.curve_buyer.count > 0:
-                self.clearing_price = self.curve_seller.price[0] + (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.clearing_scalar
+            # Both missing, clear at zero
             elif self.curve_seller.count == 0 and self.curve_buyer.count == 0:
                 self.clearing_price = 0.0
             self.clearing_quantity = 0
             self.clearing_type = helpers.ClearingType.NULL
             if self.curve_seller.count == 0 :
-                missingBidder = "seller"
+                print ('  Market %s didn\'t clear due to missing seller' % (
+                    self.name), flush=True)
             elif self.curve_buyer.count == 0:
-                missingBidder = "buyer"
-            print ('  Market %s fails to clear due to missing %s' % (self.name, missingBidder), flush=True)
+                print('  Market %s didn\'t clear due to missing buyer' % (
+                    self.name), flush=True)
+
             
         # Calculation of the marginal 
         marginal_total = self.marginal_quantity = self.marginal_frac = 0.0
@@ -557,13 +567,15 @@ def _auto_run():
         'stat_mode': ['ST_CURR', 'ST_CURR'],
         'stat_interval': [84600, 84600],
         'stat_type': ['SY_MEAN', 'SY_STDEV'],
-        'stat_value': [0, 0]
+        'stat_value': [0, 0],
+        'capacity_constrained': True
     }
 
     # 2021-10-29 TDH: More arbitrary values for testing/demonstration.
     wholesale_LMP = 3
-    # 2021-10-29 TDH:
-    refload = 1000
+    # 2021-10-29 TDH: refload is the current total load at the substation
+    #  some of which is price-responsive load that is currenty running.
+    refload = 700
     # 2021-10-29 TDH: Bids take on the form [price, quantity, on_state] with
     #  units [$/kWh, kW, Boolean]
     #  I'll see once I fully implement this demonstration but it feels to me
