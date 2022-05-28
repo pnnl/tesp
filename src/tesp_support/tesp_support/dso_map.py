@@ -99,7 +99,7 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
     if write_industrials:
         dso_list = []
         indust_load_list = []
-    fncs_list = []
+    use_dso_list = []
 
     book = xlrd.open_workbook(data_path + 'bus_mapping.xlsx')
     sheet = book.sheet_by_name(sheet_name)
@@ -274,11 +274,11 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
             if write_case_config:
                 # [bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]
                 if bus_simulated:
-                    fncs_list.append([busid, "Substation_"+str(busid),
+                    use_dso_list.append([busid, "Substation_"+str(busid),
                                   (res_customers / num_gld_homes),
                                   max_load * congestion_factor, 0, 0.5, 0, total_average_load, 0])
                 else:
-                    fncs_list.append([busid, "Substation_"+str(busid),
+                    use_dso_list.append([busid, "Substation_"+str(busid),
                                   (res_customers / num_gld_homes),
                                   0, 0, 0.5, 0, total_average_load, 0])
 
@@ -351,7 +351,7 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
     if write_case_config:
         with open(case_path + config_file + '.json') as caseconfig_file:
             case_data = json.load(caseconfig_file)
-            case_data['FNCS'] = fncs_list
+            case_data['DSO'] = use_dso_list
             for i in range(len(case_data['bus'])):
                 if len(case_data['bus'][i]) == 13:
                     case_data['bus'][i].append(0)

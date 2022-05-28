@@ -4,28 +4,27 @@
 """
 Written by Ankit Singhal and Mitch Pelton
 This scripts use Tom's wind model to generate wind power generation and write in csv files.
-This script should be kept in tesp_support folder at tesp-private\src\tesp_support\tesp_support\wind_gen_year.py
+This script should be kept in tesp_support folder
 
 It writes two files:
-    1. wind.csv: can be considered as actual wind value. It is written with 5 minute resolution. Tom's model generates hourly
-    data which is interpolated to 5 minute (300 seconds) resolution.
+    1. wind.csv: can be considered as actual wind value. It is written with 5 minute resolution.
+    Tom's model generates hourly data which is interpolated to 5 minute (300 seconds) resolution.
 
-    2. wind_forecast.csv: a gaussian distribution of error is added to generate hourly wind forecast. First error is added
-    in 5 minute resolution data which then averaged to hourly data.
+    2. wind_forecast.csv: a gaussian distribution of error is added to generate hourly wind forecast.
+    First error is added in 5 minute resolution data which then averaged to hourly data.
 """
 
 import math
 import numpy as np
-import tesp_support.api as tesp
-import os
 import pandas as pd
-import matplotlib.pyplot as plt
-import copy
 
-resolution = 300 # seconds
-#casename = '../../../examples/analysis/dsot/code/system_case_config_new'
+import tesp_support.tso_helpers as tso
+
+resolution = 300  # seconds
+# casename = '../../../examples/analysis/dsot/code/system_case_config_new'
 casename = '../../../examples/analysis/dsot/code/system_case_config'
 output_Path = '../../../examples/analysis/dsot/data/'
+
 
 def make_wind_plants(ppc):
     gen = ppc['gen']
@@ -33,24 +32,24 @@ def make_wind_plants(ppc):
     genFuel = np.array(ppc['genfuel'])
     plants = {}
     Pnorm = 165.6
-    for i in range(gen.shape[0]):
-        busnum = int(gen[i, 0])
+    for idx in range(gen.shape[0]):
+        busnum = int(gen[idx, 0])
         # this ensures that legacy cases (len==18) still work
         if len(gen) == 18:
-            c2 = float(genCost[i, 4])
+            c2 = float(genCost[idx, 4])
             if c2 < 2e-5:  # genfuel would be 'wind'
                 gen_type = 'wind'
             else:
                 gen_type = 'other'
         else:
-            gen_type = genFuel[i, 0]
+            gen_type = genFuel[idx, 0]
         if 'wind' in gen_type:
-            MW = float(gen[i, 8])
+            MW = float(gen[idx, 8])
             if len(gen) == 18:
-                ERCOT_scaling_sdev = 2/3
+                ERCOT_scaling_sdev = 2 / 3
                 ERCOT_scaling_ave = 0.2
             else:
-                ERCOT_scaling_sdev = 13/3
+                ERCOT_scaling_sdev = 13 / 3
                 ERCOT_scaling_ave = 0.17
             scale = MW / Pnorm
             Theta0 = ERCOT_scaling_ave * 0.05 * math.sqrt(scale)
@@ -68,7 +67,8 @@ def make_wind_plants(ppc):
 def generate_wind_data_24hr():
     for j in range(24):
         for key, row in wind_plants.items():
-            # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, [24 hour p]]
+            # return dict with rows like
+            # wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, [24 hour p]]
             Theta0 = row[2]
             Theta1 = row[3]
             StdDev = row[4]
@@ -96,17 +96,17 @@ def generate_wind_data_24hr():
     return wind_plants
 
 
-ppc = tesp.load_json_case(casename + ".json")
+ppc = tso.load_json_case(casename + ".json")
 # initialize for variable wind
 wind_plants = make_wind_plants(ppc)
-Pbase = [row[1] for key, row in wind_plants.items()] # base MW for wind generators
+Pbase = [row[1] for key, row in wind_plants.items()]  # base MW for wind generators
 day = 0
 # year = 2016
 # max_days = 366  # days in 2016
 # start_day = pd.datetime(year,1,1)
 year = 2015
 max_days = 371  # days in 2016
-start_day = pd.datetime(year,12,29)
+start_day = pd.datetime(year, 12, 29)
 df_wind_yr = pd.DataFrame()
 if len(ppc['gen']) == 18:
     plant_name = ['wind1', 'wind2', 'wind3', 'wind4', 'wind5']
@@ -114,11 +114,12 @@ else:
     plant_name = []
     for i in range(len(ppc['genfuel'])):
         if 'wind' in ppc['genfuel'][i][0]:
-            plant_name.append('wind'+str(ppc['genfuel'][i][2]))
+            plant_name.append('wind' + str(ppc['genfuel'][i][2]))
 
 # Create Dataframe for a year wind generation with 1 hour resolution
 while day < max_days:
-    df_wind_day = pd.DataFrame(columns=plant_name, index=pd.date_range(start=start_day + pd.Timedelta(day, unit='d'), periods=24, freq='H'))
+    df_wind_day = pd.DataFrame(columns=plant_name,
+                               index=pd.date_range(start=start_day + pd.Timedelta(day, unit='d'), periods=24, freq='H'))
     wind_plant = generate_wind_data_24hr()  # generate 24 hour wind data with hourly resolution
     i = 0
     for key, row in wind_plants.items():
@@ -128,12 +129,12 @@ while day < max_days:
     day += 1
 
 # Interpolate to convert to 5 minutes from hourly
-end_day = start_day+pd.Timedelta(max_days, unit='d')
-min_index = pd.date_range(start=start_day, end=end_day, freq=str(resolution)+'s', closed='left')
+end_day = start_day + pd.Timedelta(max_days, unit='d')
+min_index = pd.date_range(start=start_day, end=end_day, freq=str(resolution) + 's', closed='left')
 df_wind_yr_minute = df_wind_yr.reindex(min_index).interpolate()  # linear interpolation
 df_wind_yr_minute.index.name = 'time'
 # Write to csv
-df_wind_yr_minute.to_csv(output_Path+'wind_Revised.csv', float_format='%.3f')
+df_wind_yr_minute.to_csv(output_Path + 'wind_Revised.csv', float_format='%.3f')
 print('writing wind_Revised.csv with', resolution, 'seconds resolution')
 
 # ------- Add Error to get forecast ------------------------------
@@ -144,10 +145,10 @@ error_df = pd.DataFrame(columns=plant_name)
 for err in range(max_days):
     temp_df = pd.DataFrame(columns=plant_name)
     for name in plant_name:
-        err_mean = wd_err_mean * (1 + 0.05*2*np.random.rand() - 0.05)  # +-5%
-        err_std = wd_err_std * (1 + 0.1*2*np.random.rand() - 0.1)  # +-10%
-        wd_error = np.random.normal(err_mean, err_std, int(24*3600/resolution))
-        temp_df[name]=wd_error
+        err_mean = wd_err_mean * (1 + 0.05 * 2 * np.random.rand() - 0.05)  # +-5%
+        err_std = wd_err_std * (1 + 0.1 * 2 * np.random.rand() - 0.1)  # +-10%
+        wd_error = np.random.normal(err_mean, err_std, int(24 * 3600 / resolution))
+        temp_df[name] = wd_error
     error_df = error_df.append(temp_df)
 error_df = error_df.set_index(df_wind_yr_minute.index)
 
@@ -171,7 +172,3 @@ print('writing wind_hour_Revised.csv with', resolution, 'seconds resolution')
 # plt.legend(plant_name)
 # plt.title("Day ahead error distribution in 5 wind plants")
 # plt.show()
-
-
-
-

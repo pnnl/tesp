@@ -127,7 +127,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     ip = open(glmname).read()
 
     gd = json.loads(ip)
-    gld_sim_name = gd['FNCS']
+    gld_sim_name = gd['DSO']
 
     print(
         '\tgldfileroot -> {0:s}\n\tsubstationfileroot -> {1:s}\n\tdirname -> {2:s}\n\tbasename -> {3:s}\n\tglmname -> {4:s}\n\tgld_sim_name -> {5:s}\n\tsubstation_name -> {6:s}'.format(

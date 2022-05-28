@@ -39,8 +39,8 @@ from math import ceil
 from math import floor
 from math import sqrt
 
-from tesp_support.helpers import parse_kva
-from tesp_support.helpers import gld_strict_name
+from .helpers import parse_kva
+from .helpers import gld_strict_name
 
 tesp_share = os.path.expandvars('$TESPDIR/data/')
 feeders_path = tesp_share + 'feeders/'
@@ -52,12 +52,11 @@ port = 5570
 case_name = 'Tesp'
 name_prefix = ''
 work_path = './Dummy/'
-substation_name = ""
+substation_name = "Sub1"
 base_feeder_name = ''
 solar_path = ''
 solar_P_player = ''
 solar_Q_player = ''
-
 
 transmissionVoltage = 138000.0
 transmissionXfmrMVAbase = 12.0
@@ -78,16 +77,16 @@ metrics_interval = 300
 metrics_interim = 7200
 metrics_type = "json"
 metrics = [
-              "house",
-              "waterheater",
-              "meter",
-              "line",
-              "transformer",
-              "capacitor",
-              "inverter",
-              "regulator",
-              "substation"
-          ],
+    "house",
+    "waterheater",
+    "meter",
+    "line",
+    "transformer",
+    "capacitor",
+    "inverter",
+    "regulator",
+    "substation"
+]
 Eplus_Bus = ''
 Eplus_Volts = 480.0
 Eplus_kVA = 150.0
@@ -99,9 +98,9 @@ water_heater_percentage = 0.0  # if not provided in JSON config, use a regional 
 water_heater_participation = 0.5
 solar_inv_mode = 'CONSTANT_PF'
 
+weather_name = 'localWeather'
 latitude = 30.0
 longitude = -110.0
-weather_name = 'localWeather'
 tz_meridian = 0.0
 altitude = 0.0
 
@@ -2080,6 +2079,7 @@ def write_substation(op, name, phs, vnom, vll):
         print('#endif', file=op)
         print('#ifdef USE_HELICS', file=op)
         print('object helics_msg {', file=op)
+        print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
         print('  configure', case_name + '_HELICS_gld_msg.json;', file=op)
         print('}', file=op)
         print('#endif', file=op)
@@ -2790,7 +2790,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             if metrics_interval > 0 and "meter" in metrics:
                 print('  object metrics_collector {', file=op)
                 print('    interval', str(metrics_interval) + ';', file=op)
-                print('  }', file=op)
+                print('  };', file=op)
             print('}', file=op)
             print('object load {', file=op)
             print('  name ' + name_prefix + 'Eplus_load;', file=op)
@@ -3098,7 +3098,8 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     Eplus_kVA = float(config['EplusConfiguration']['EnergyPlusXfmrKva'])
     transmissionXfmrMVAbase = float(config['PYPOWERConfiguration']['TransformerBase'])
     transmissionVoltage = 1000.0 * float(config['PYPOWERConfiguration']['TransmissionVoltage'])
-    weather_name = config['WeatherPrep']['Name']
+    if "Name" in config['WeatherPrep']:
+        weather_name = config['WeatherPrep']['Name']
     latitude = float(config['WeatherPrep']['Latitude'])
     longitude = float(config['WeatherPrep']['Longitude'])
     altitude = float(config['WeatherPrep']['Altitude'])

@@ -12,7 +12,7 @@ import tesp_support.process_pypower as pp
 import tesp_support.process_voltages as vp
 
 rootname = sys.argv[1]
-save_ext = None
+save_ext = 'png'
 save_file = None
 save_only = False
 if len(sys.argv) > 2:
@@ -41,7 +41,7 @@ if os.path.exists('substation_' + rootname + '_metrics.json'):
     vp.plot_voltages(gmetrics, save_file=save_file, save_only=save_only)
 
 if os.path.exists('auction_' + rootname + '_metrics.json'):
-    ametrics = ap.read_agent_metrics(rootname)
+    ametrics = ap.read_agent_metrics(os.getcwd(), rootname)
     if save_ext is not None:
         save_file = '{:s}_ag.{:s}'.format(rootname, save_ext)
     ap.plot_agents(ametrics, save_file=save_file, save_only=save_only)

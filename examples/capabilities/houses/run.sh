@@ -3,8 +3,8 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: run.py
 
-SCHED_PATH=$TESPDIR/data/schedules
-TMY_PATH=$TESPDIR/data/weather
+declare -r SCHED_PATH=$TESPDIR/data/schedules
+declare -r TMY_PATH=$TESPDIR/data/weather
 
 python3 WriteHouses.py
 python3 -c "import tesp_support.api as tesp;tesp.glm_dict('test_houses')"

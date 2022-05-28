@@ -10,7 +10,7 @@ declare -r SCHED_PATH=$TESPDIR/data/schedules
 (exec helics_broker -f 6 --loglevel=warning --name=mainbroker &> helics_broker.log &)
 (exec gridlabd -D SCHED_PATH=$SCHED_PATH -D USE_HELICS -D METRICS_FILE=TE_ChallengeH0_metrics.json TE_Challenge.glm &> helics_gridlabd0.log &)
 (export WEATHER_CONFIG=TE_Challenge_HELICS_Weather_Config.json && exec python3 -c "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')" &> helics_weather0.log &)
-(exec python3 -c "import tesp_support.tso_PYPOWER as tesp;tesp.pypower_loop('te30_pp.json','TE_ChallengeH0',helicsConfig='pypowerConfig.json')" &> helics_pypower0.log &)
+(exec python3 -c "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('te30_pp.json','TE_ChallengeH0',helicsConfig='pypowerConfig.json')" &> helics_pypower0.log &)
 (exec python3 -c "import tesp_support.substation as tesp;tesp.substation_loop('TE_Challenge_agent_dict.json','TE_ChallengeH0',helicsConfig='TE_Challenge_HELICS_substation.json',flag='NoMarket')" &> helics_substation0.log &)
 
 (export HELICS_CONFIG_FILE=helics_eplus.json && exec energyplus -w "$EPLUS_PATH/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw" -d output -r MergedH.idf &> helics_eplus0.log &)

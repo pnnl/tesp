@@ -8,48 +8,49 @@
       "global" : false,
       "key" : "power_A",
       "type" : "double",
-      "unit" : "W"
+      "units" : "W"
     },
     {
       "global" : false,
       "key" : "power_B",
       "type" : "double",
-      "unit" : "W"
+      "units" : "W"
     },
     {
       "global" : false,
       "key" : "power_C",
       "type" : "double",
-      "unit" : "W"
+      "units" : "W"
     },
     {
       "global" : false,
       "key" : "bill_mode",
-      "type" : "string"
+      "type" : "string",
+      "units" : ""
     },
     {
       "global" : false,
       "key" : "price",
       "type" : "double",
-      "unit" : "$/kwh"
+      "units" : "$/kwh"
     },
     {
       "global" : false,
       "key" : "monthly_fee",
       "type" : "double",
-      "unit" : "$"
+      "units" : "$"
     },
     {
       "global" : false,
       "key" : "cooling_setpoint_delta",
       "type" : "double",
-      "unit" : "degC"
+      "units" : "degC"
     },
     {
       "global" : false,
       "key" : "heating_setpoint_delta",
       "type" : "double",
-      "unit" : "degC"
+      "units" : "degC"
     }
   ],
   "subscriptions" : [
@@ -60,16 +61,16 @@
       "info" : "kwhr_price"
     },
     {
-      "key" : "energyPlus/EMS Heating Controlled Load", 
-      "type" : "double",
-      "required" : true,
-      "info" : "heating_controlled_load"
-    },
-    {
       "key" : "energyPlus/EMS Cooling Controlled Load",
       "type" : "double",
       "required" : true,
       "info" : "cooling_controlled_load"
+    },
+    {
+      "key" : "energyPlus/EMS Heating Controlled Load",
+      "type" : "double",
+      "required" : true,
+      "info" : "heating_controlled_load"
     },
     {
       "key" : "energyPlus/EMS Cooling Schedule Temperature",

@@ -19,15 +19,6 @@ from scipy.stats import truncnorm
 if sys.platform != 'win32':
     import resource
 
-try:
-    import helics  # set the broker = HELICS in WEATHER_CONFIG
-except:
-    pass
-
-
-def stop_helics_federate(fed):
-    helics.helicsFederateDestroy(fed)
-
 
 def show_resource_consumption():
     if sys.platform != 'win32':
@@ -148,6 +139,10 @@ def startWeatherAgent(file):
     hPubs = {}
     fedName = agentName  # 'weather'
     if broker == 'HELICS':
+        try:
+            import helics  # set the broker = HELICS in WEATHER_CONFIG
+        except:
+            pass
         fedInfo = helics.helicsCreateFederateInfo()
         helics.helicsFederateInfoSetCoreName(fedInfo, fedName)
         helics.helicsFederateInfoSetCoreTypeFromString(fedInfo, 'zmq')

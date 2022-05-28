@@ -54,31 +54,6 @@ def gld_strict_name(val):
     return val.replace('-', '_')
 
 
-def load_json_case(fname, FNCS=False):
-    """ Helper function to load PYPOWER case from a JSON file
-
-    Args:
-      fname (str): the JSON file to open
-
-    Returns:
-      dict: the loaded PYPOWER case structure
-    """
-    lp = open(fname, encoding='utf-8').read()
-    ppc = json.loads(lp)
-    ppc['bus'] = np.array(ppc['bus'])
-    ppc['gen'] = np.array(ppc['gen'])
-    ppc['branch'] = np.array(ppc['branch'])
-    ppc['areas'] = np.array(ppc['areas'])
-    ppc['gencost'] = np.array(ppc['gencost'])
-    if FNCS:
-        ppc['FNCS'] = np.array(ppc['FNCS'])
-    else:
-        ppc['DSO'] = np.array(ppc['DSO'])
-    ppc['UnitsOut'] = np.array(ppc['UnitsOut'])
-    ppc['BranchesOut'] = np.array(ppc['BranchesOut'])
-    return ppc
-
-
 class ClearingType(IntEnum):
     """ Describes the market clearing type
     """
@@ -170,36 +145,46 @@ class curve:
 
 class HelicsMsg(object):
 
-    def __init__(self, name):
-        self._name = name
-        # self._level = "debug"
-        self._level = "warning"
+    def __init__(self, name, period):
+        # change logging to debug, warning,
         self._subs = []
         self._pubs = []
+        self._cnfg = {"name": name,
+                      "period": period,
+                      "logging": "debug",
+                      }
         pass
 
-    def write_file(self, _dt, _fn):
-        msg = {"name": self._name,
-               "period": _dt,
-               "logging": self._level,
-               "publications": self._pubs,
-               "subscriptions": self._subs}
+    def write_file(self, _fn):
+        self.config("publications", self._pubs)
+        self.config("subscriptions", self._subs)
         op = open(_fn, 'w', encoding='utf-8')
-        json.dump(msg, op, ensure_ascii=False, indent=2)
+        json.dump(self._cnfg, op, ensure_ascii=False, indent=2)
         op.close()
 
-    def pubs_append(self, _g, _k, _t, _o, _p):
+    def config(self, _n, _v):
+        self._cnfg[_n] = _v
+
+    def pubs(self, _g, _k, _t, _o, _p):
         # for object and property is for internal code interface for gridlabd
         self._pubs.append({"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}})
 
-    def pubs_append_n(self, _g, _k, _t):
+    def pubs_n(self, _g, _k, _t):
         self._pubs.append({"global": _g, "key": _k, "type": _t})
 
-    def subs_append(self, _k, _t, _o, _p):
+    def pubs_e(self, _g, _k, _t, _u):
+        # for object and property is for internal code interface for eplus
+        self._pubs.append({"global": _g, "key": _k, "type": _t, "units": _u})
+
+    def subs(self, _k, _t, _o, _p):
         # for object and property is for internal code interface for gridlabd
         self._subs.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
 
-    def subs_append_n(self, _k, _t):
+    def subs_e(self, _r, _k, _t, _i):
+        # for object and property is for internal code interface for eplus
+        self._subs.append({"key": _k, "type": _t, "require": _r, "info": _i})
+
+    def subs_n(self, _k, _t):
         self._subs.append({"key": _k, "type": _t})
 
 
@@ -480,30 +465,6 @@ def parse_kw(arg):
         except:
             print('parse_kw does not understand', arg)
             return 0
-
-
-def print_mod_load(bus, dso, model_load, msg, ts):
-    print(msg, 'at', ts)
-    print('bus, genidx, pbus, qbus, pcrv, qcrv, pgld, qgld, unresp, resp_max, c2, c1, c0, deg')
-    for row in dso:
-        busnum = int(row[0])
-        gld_scale = float(row[2])
-        load = model_load[busnum]
-        genidx = -load['genidx']
-        print('{:4d}'.format(busnum),
-              '{:4d}'.format(genidx),
-              '{:8.2f}'.format(bus[busnum - 1, 2]),
-              '{:8.2f}'.format(bus[busnum - 1, 3]),
-              '{:8.2f}'.format(load['pcrv']),
-              '{:8.2f}'.format(load['qcrv']),
-              '{:8.2f}'.format(load['p'] * gld_scale),
-              '{:8.2f}'.format(load['q'] * gld_scale),
-              '{:8.2f}'.format(load['unresp'] * gld_scale),
-              '{:8.2f}'.format(load['resp_max'] * gld_scale),
-              '{:8.5f}'.format(load['c2'] / gld_scale),
-              '{:8.5f}'.format(load['c1']),
-              '{:8.5f}'.format(load['c0']),
-              '{:3.1f}'.format(load['deg']))
 
 
 def aggregate_bid(crv):

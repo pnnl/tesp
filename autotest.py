@@ -8,6 +8,7 @@ import sys
 import stat
 import shutil
 import subprocess
+from tesp_support.run_test_case import block
 from tesp_support.run_test_case import RunTestCase
 from tesp_support.run_test_case import InitializeTestCaseReports
 from tesp_support.run_test_case import GetTestCaseReports
@@ -18,53 +19,53 @@ else:
     pycall = 'python3'
 
 
+def gld_player_test():
+    print('==  Prepare: GridlabD Player/Recorder example', flush=True)
+    os.chdir('./examples/capabilities/gld_player_recorder')
+    RunTestCase('run.sh', 'GridlabD Player/Recorder')
+    os.chdir(tesp_path)
+
+
 def loadshed_test():
-    # FNCS loadshed examples
-    print('==  Prepare: loadshed examples', flush=True)
+    print('==  Prepare: Loadshed examples', flush=True)
     if bTryHELICS:
         os.chdir('./examples/capabilities/loadshed')
         p1 = subprocess.Popen('./clean.sh', shell=True)
         p1.wait()
-        RunTestCase('runhpy.sh', 'Loadshed HELICS ns-3')
-        RunTestCase('runhpy0.sh', 'Loadshed HELICS Python')
-        RunTestCase('runhjava.sh', 'Loadshed HELICS Java')
+        RunTestCase('runhpy.sh', 'Loadshed - HELICS ns-3')
+        RunTestCase('runhpy0.sh', 'Loadshed - HELICS Python')
+        RunTestCase('runhjava.sh', 'Loadshed - HELICS Java')
     else:
         os.chdir('./examples/capabilities/loadshedf')
         p1 = subprocess.Popen('./clean.sh', shell=True)
         p1.wait()
-        RunTestCase('run.sh', 'Loadshed FNCS Python')
-        RunTestCase('runjava.sh', 'Loadshed FNCS Java')
-    os.chdir(basePath)
+        RunTestCase('run.sh', 'Loadshed - FNCS Python')
+        RunTestCase('runjava.sh', 'Loadshed - FNCS Java')
+    os.chdir(tesp_path)
 
 
-def weatherAgent_test():
-    # weatherAgent example
-    print('==  Prepare: weatherAgent examples', flush=True)
-    os.chdir('./examples/capabilities/weatherAgent')
+def houses_test():
+    print('==  Prepare: Houses example', flush=True)
+    os.chdir('./examples/capabilities/houses')
     p1 = subprocess.Popen('./clean.sh', shell=True)
     p1.wait()
-    if bTryHELICS:
-        RunTestCase('runh.sh', 'Weather Agent HELICS')
-    else:
-        RunTestCase('run.sh', 'Weather Agent FNCS')
-    os.chdir(basePath)
+    RunTestCase('run.sh', 'Houses')
+    os.chdir(tesp_path)
 
 
 def PYPOWER_test():
-    # PYPOWER example
-    print('==  Prepare: PYPOWER examples', flush=True)
+    print('==  Prepare: PYPOWER example', flush=True)
     os.chdir('./examples/capabilities/pypower')
     p1 = subprocess.Popen('./clean.sh', shell=True)
     p1.wait()
     if bTryHELICS:
-        RunTestCase('runhpp.sh', 'PYPOWER HELICS')
+        RunTestCase('runhpp.sh', 'PYPOWER - HELICS')
     else:
-        RunTestCase('runpp.sh', 'PYPOWER FNCS')
-    os.chdir(basePath)
+        RunTestCase('runpp.sh', 'PYPOWER - FNCS')
+    os.chdir(tesp_path)
 
 
 def EnergyPlus_test():
-    # EnergyPlus examples
     print('==  Prepare: EnergyPlus examples', flush=True)
     os.chdir('./examples/capabilities/energyplus')
     p1 = subprocess.Popen('./clean.sh', shell=True)
@@ -74,16 +75,27 @@ def EnergyPlus_test():
     #  p1 = subprocess.Popen ('./make_all_ems.sh', shell=True)
     #  p1.wait()
     if bTryHELICS:
-        RunTestCase('runh.sh', 'EnergyPlus HELICS EMS')
+        RunTestCase('runh.sh', 'EnergyPlus - HELICS EMS')
     #    RunTestCase ('batch_ems_case.sh', 'EnergyPlus Batch EMS')
     else:
-        RunTestCase('run.sh', 'EnergyPlus FNCS IDF')
-        RunTestCase('run2.sh', 'EnergyPlus FNCS EMS')
-    os.chdir(basePath)
+        RunTestCase('run.sh', 'EnergyPlus - FNCS IDF')
+        RunTestCase('run2.sh', 'EnergyPlus - FNCS EMS')
+    os.chdir(tesp_path)
+
+
+def weather_agent_test():
+    print('==  Prepare: Weather Agent example', flush=True)
+    os.chdir('./examples/capabilities/weatherAgent')
+    p1 = subprocess.Popen('./clean.sh', shell=True)
+    p1.wait()
+    if bTryHELICS:
+        RunTestCase('runh.sh', 'Weather Agent - HELICS')
+    else:
+        RunTestCase('run.sh', 'Weather Agent - FNCS')
+    os.chdir(tesp_path)
 
 
 def TE30_test():
-    # TE30 example
     print('==  Prepare: TE30 examples', flush=True)
     os.chdir('./examples/capabilities/te30')
     p1 = subprocess.Popen('./clean.sh', shell=True)
@@ -91,17 +103,16 @@ def TE30_test():
     p1 = subprocess.Popen(pycall + ' prepare_case.py', shell=True)
     p1.wait()
     if bTryHELICS:
-        RunTestCase('runh.sh', 'TE30 HELICS Market')
-        RunTestCase('runh0.sh', 'TE30 HELICS No Market')
+        RunTestCase('runh.sh', 'TE30 - HELICS Market')
+        RunTestCase('runh0.sh', 'TE30 - HELICS No Market')
     else:
-        RunTestCase('run.sh', 'TE30 FNCS Market')
-        RunTestCase('run0.sh', 'TE30 FNCS No Market')
-    os.chdir(basePath)
+        RunTestCase('run.sh', 'TE30 - FNCS Market')
+        RunTestCase('run0.sh', 'TE30 - FNCS No Market')
+    os.chdir(tesp_path)
 
 
 def make_comm_base_test():
-    # make_comm_base, next three cases
-    print('==  Prepare: Nocomm_Base examples', flush=True)
+    print('==  Prepare: Communication Network examples', flush=True)
     os.chdir('./examples/capabilities/comm')
     p1 = subprocess.Popen(pycall + ' make_comm_base.py', shell=True)
     p1.wait()
@@ -111,42 +122,40 @@ def make_comm_base_test():
     if bTryHELICS:
         st = os.stat('runh.sh')
         os.chmod('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        RunTestCase('runh.sh', 'Nocomm Base HELICS')
+        RunTestCase('runh.sh', 'Nocomm Base - HELICS')
     else:
         st = os.stat('run.sh')
         os.chmod('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        RunTestCase('run.sh', 'Nocomm Base FNCS')
-    os.chdir(basePath)
+        RunTestCase('run.sh', 'Nocomm Base - FNCS')
+    os.chdir(tesp_path)
 
     # generated Eplus_Restaurant example
     os.chdir('./examples/capabilities/comm/Eplus_Restaurant')
     if bTryHELICS:
         st = os.stat('runh.sh')
         os.chmod('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        RunTestCase('runh.sh', 'Eplus Restaurant HELICS')
+        RunTestCase('runh.sh', 'Eplus Restaurant - HELICS')
     else:
         st = os.stat('run.sh')
         os.chmod('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        RunTestCase('run.sh', 'Eplus Restaurant FNCS')
-    os.chdir(basePath)
+        RunTestCase('run.sh', 'Eplus Restaurant - FNCS')
+    os.chdir(tesp_path)
 
     # generated SGIP1c example
     os.chdir('./examples/capabilities/comm/SGIP1c')
     if bTryHELICS:
         st = os.stat('runh.sh')
         os.chmod('runh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        RunTestCase('runh.sh', 'SGIP1c HELICS')
+        RunTestCase('runh.sh', 'SGIP1c - HELICS')
     else:
         st = os.stat('run.sh')
         os.chmod('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        RunTestCase('run.sh', 'SGIP1c FNCS')
-    os.chdir(basePath)
+        RunTestCase('run.sh', 'SGIP1c - FNCS')
+    os.chdir(tesp_path)
 
 
 def make_comm_eplus_test():
-    # make_comm_eplus
-    # generated Nocomm_Base example
-    print('==  Prepare: Eplus with comm example', flush=True)
+    print('==  Prepare: Eplus with Communication Network example', flush=True)
     os.chdir('./examples/capabilities/comm')
     p1 = subprocess.Popen(pycall + ' make_comm_eplus.py', shell=True)
     p1.wait()
@@ -154,48 +163,60 @@ def make_comm_eplus_test():
     st = os.stat('run.sh')
     os.chmod('run.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     RunTestCase('run.sh', 'EPLus comm HELICS')
-    os.chdir(basePath)
+    os.chdir(tesp_path)
 
 
 def combine_feeders_test():
-    # generated CombinedCase example
-    print('==  Prepare: CombinedCase example', flush=True)
+    print('==  Prepare: Communication Network Combined Case example', flush=True)
     os.chdir('./examples/capabilities/comm')
     p1 = subprocess.Popen(pycall + ' combine_feeders.py', shell=True)
     p1.wait()
-    shutil.copy('runcombined.sh', 'CombinedCase')
-    shutil.copy('runcombinedh.sh', 'CombinedCase')
+    shutil.copy('runcombined.sh', 'Combined Case')
+    shutil.copy('runcombinedh.sh', 'Combined Case')
     os.chdir('CombinedCase')
     if bTryHELICS:
         st = os.stat('runcombinedh.sh')
         os.chmod('runcombinedh.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        RunTestCase('runcombinedh.sh', '4 Feeders HELICS')
+        RunTestCase('runcombinedh.sh', '4 Feeders - HELICS')
     else:
         st = os.stat('runcombined.sh')
         os.chmod('runcombined.sh', st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        RunTestCase('runcombined.sh', '4 Feeders FNCS')
-    os.chdir(basePath)
+        RunTestCase('runcombined.sh', '4 Feeders - FNCS')
+    os.chdir(tesp_path)
 
 
-def block(call):
-    print('\n<!--', flush=True)
-    call()
-    print('--!>', flush=True)
+def dso_stub_test():
+    print('==  Prepare: DSO Stub example', flush=True)
+    if bTryHELICS:
+        os.chdir('./examples/capabilities/dsostub')
+    else:
+        os.chdir('./examples/capabilities/dsostubf')
+    p1 = subprocess.Popen('./clean.sh', shell=True)
+    p1.wait()
+    p1 = subprocess.Popen('./runstub.sh Test', shell=True)
+    p1.wait()
+    os.chdir('./Test')
+    RunTestCase('run.sh', 'DSO Stub')
+    os.chdir(tesp_path)
 
 
 if __name__ == '__main__':
     InitializeTestCaseReports()
 
-    basePath = os.getcwd()
+    tesp_path = os.path.expandvars('$TESPDIR/')
+    os.chdir(tesp_path)
     bTryHELICS = True
 
+    block(gld_player_test)
     block(loadshed_test)
-    block(weatherAgent_test)
     block(PYPOWER_test)
     block(EnergyPlus_test)
+    block(weather_agent_test)
+    block(houses_test)
     block(TE30_test)
     block(make_comm_base_test)
     block(make_comm_eplus_test)
     block(combine_feeders_test)
+    block(dso_stub_test)
 
     print(GetTestCaseReports())

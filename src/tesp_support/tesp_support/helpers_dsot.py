@@ -520,17 +520,17 @@ docker run \\
 def write_players_msg(case_name, sys_config, dt):
     # write player helics message file for load and generator players
 
-    dso_cnt = len(sys_config['FNCS'])
+    dso_cnt = len(sys_config['DSO'])
     players = sys_config["players"]
     for idx in range(len(players)):
         player = sys_config[players[idx]]
-        pf = HelicsMsg(player[0] + "player")
+        pf = HelicsMsg(player[0] + "player", dt)
         if player[8]:
             # load
             for i in range(dso_cnt):
                 bs = str(i + 1)
-                pf.pubs_append_n(False, player[0] + "_load_" + bs, "string")
-                pf.pubs_append_n(False, player[0] + "_ld_hist_" + bs, "string")
+                pf.pubs_n(False, player[0] + "_load_" + bs, "string")
+                pf.pubs_n(False, player[0] + "_ld_hist_" + bs, "string")
         else:
             # power
             genfuel = sys_config["genfuel"]
@@ -538,10 +538,10 @@ def write_players_msg(case_name, sys_config, dt):
                 if genfuel[i][0] in sys_config["renewables"]:
                     idx = str(genfuel[i][2])
                     if player[6]:
-                        pf.pubs_append_n(False, player[0] + "_power_" + idx, "string")
+                        pf.pubs_n(False, player[0] + "_power_" + idx, "string")
                     if player[7]:
-                        pf.pubs_append_n(False, player[0] + "_pwr_hist_" + idx, "string")
-        pf.write_file(dt, case_name + "/" + player[0] + "_player.json")
+                        pf.pubs_n(False, player[0] + "_pwr_hist_" + idx, "string")
+        pf.write_file(case_name + "/" + player[0] + "_player.json")
 
 
 class ClearingType(IntEnum):

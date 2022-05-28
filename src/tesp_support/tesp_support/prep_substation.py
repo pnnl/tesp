@@ -124,10 +124,7 @@ def ProcessGLM(fileroot):
     ip = open(glmname, 'r')
 
     # timings based on period and dt
-    periodController = period
     bid_delay = 3.0 * dt  # time controller bids before market clearing
-    periodMarket = period
-
     controllers = {}
     auctions = {}
     ip.seek(0, 0)
@@ -142,10 +139,14 @@ def ProcessGLM(fileroot):
     nAirConditioners = 0
     nControllers = 0
 
-    houseName = ''
-    meterName = ''
-    FedName = 'gld1'
-    climateName = ''
+    meter_name = ''
+    house_name = ''
+    house_class = ''
+    house_parent = ''
+    power_name = 'pypower'
+    federate_name = 'gldSub1'
+    substation_name = 'sub1'
+    climate_name = ''
     StartTime = ''
     EndTime = ''
 
@@ -160,8 +161,6 @@ def ProcessGLM(fileroot):
             if lst[1] == 'triplex_meter':
                 inTriplexMeters = True
             if lst[1] == 'house':
-                houseClass = ''
-                houseParent = ''
                 inHouses = True
             if lst[1] == 'fncs_msg':
                 inFNCSmsg = True
@@ -187,27 +186,27 @@ def ProcessGLM(fileroot):
                     inClock = False
             if inClimate:
                 if lst[0] == 'name':
-                    climateName = lst[1].strip(';')
+                    climate_name = lst[1].strip(';')
                     inClimate = False
             if inHELICSmsg:
                 if lst[0] == 'name':
-                    FedName = lst[1].strip(';')
+                    federate_name = lst[1].strip(';')
                     inHELICSmsg = False
             if inFNCSmsg:
                 if lst[0] == 'name':
-                    FedName = lst[1].strip(';')
+                    federate_name = lst[1].strip(';')
                     inFNCSmsg = False
             if inTriplexMeters:
                 if lst[0] == 'name':
-                    meterName = lst[1].strip(';')
+                    meter_name = lst[1].strip(';')
                     inTriplexMeters = False
             if inHouses:
                 if lst[0] == 'name' and not endedHouse:
-                    houseName = lst[1].strip(';')
+                    house_name = lst[1].strip(';')
                 if lst[0] == 'parent':
-                    houseParent = lst[1].strip(';')
+                    house_parent = lst[1].strip(';')
                 if lst[0] == 'groupid':
-                    houseClass = lst[1].strip(';')
+                    house_class = lst[1].strip(';')
                 if lst[0] == 'cooling_system_type':
                     if lst[1].strip(';') == 'ELECTRIC':
                         isELECTRIC = True
@@ -217,15 +216,15 @@ def ProcessGLM(fileroot):
                 inHouses = False
                 endedHouse = False
                 if isELECTRIC:
-                    if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
-                        meterName = helpers.zoneMeterName(houseParent)
+                    if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
+                        meter_name = helpers.zoneMeterName(house_parent)
                     nAirConditioners += 1
                     if np.random.uniform(0, 1) <= agent_participation:
                         nControllers += 1
                         control_mode = 'CN_RAMP'
                     else:
                         control_mode = 'CN_NONE'  # still follows the time-of-day schedule
-                    controller_name = houseName + '_hvac'
+                    controller_name = house_name + '_hvac'
                     wakeup_start = np.random.uniform(wakeup_start_lo, wakeup_start_hi)
                     daylight_start = np.random.uniform(daylight_start_lo, daylight_start_hi)
                     evening_start = np.random.uniform(evening_start_lo, evening_start_hi)
@@ -243,10 +242,10 @@ def ProcessGLM(fileroot):
                     ramp = np.random.uniform(ramp_lo, ramp_hi)
                     ctrl_cap = np.random.uniform(ctrl_cap_lo, ctrl_cap_hi)
                     controllers[controller_name] = {'control_mode': control_mode,
-                                                    'houseName': houseName,
-                                                    'houseClass': houseClass,
-                                                    'meterName': meterName,
-                                                    'period': periodController,
+                                                    'meterName': meter_name,
+                                                    'houseName': house_name,
+                                                    'houseClass': house_class,
+                                                    'period': period,
                                                     'wakeup_start': float('{:.3f}'.format(wakeup_start)),
                                                     'daylight_start': float('{:.3f}'.format(daylight_start)),
                                                     'evening_start': float('{:.3f}'.format(evening_start)),
@@ -277,7 +276,7 @@ def ProcessGLM(fileroot):
                             'use_future_mean_price': use_future_mean_price,
                             'pricecap': price_cap,
                             'clearing_scalar': clearing_scalar,
-                            'period': periodMarket,
+                            'period': period,
                             'latency': latency,
                             'init_price': initial_price,
                             'init_stdev': std_dev,
@@ -293,85 +292,78 @@ def ProcessGLM(fileroot):
     # Close files
     ip.close()
 
-    meta = {'markets': auctions, 'controllers': controllers, 'dt': dt, 'GridLABD': FedName}
+    meta = {'markets': auctions, 'controllers': controllers, 'dt': dt, 'GridLABD': federate_name}
     dictfile = fileroot + '_agent_dict.json'
     dp = open(dictfile, 'w')
     json.dump(meta, dp, ensure_ascii=False, indent=2)
     dp.close()
 
     # write HELICS config file
-    pubs = [{"key": "clear_price", "type": "double", "global": False},
-            {"key": "unresponsive_mw", "type": "double", "global": False},
-            {"key": "responsive_max_mw", "type": "double", "global": False},
-            {"key": "responsive_c2", "type": "double", "global": False},
-            {"key": "responsive_c1", "type": "double", "global": False},
-            {"key": "responsive_deg", "type": "integer", "global": False}]
-    subs = [{"key": "pypower/LMP_B7", "type": "double"},
-            {"key": "gld1/distribution_load", "type": "complex"}]
+    dso = helpers.HelicsMsg(substation_name, dt)
+    dso.pubs_n(False, "unresponsive_mw_1", "double")
+    dso.pubs_n(False, "responsive_max_mw_1", "double")
+    dso.pubs_n(False, "responsive_c2_1", "double")
+    dso.pubs_n(False, "responsive_c1_1", "double")
+    dso.pubs_n(False, "responsive_deg_1", "integer")
+    dso.pubs_n(False, "clear_price_1", "double")
+    dso.subs_n(power_name + "/" + "LMP_1", "double")
+    dso.subs_n(federate_name + "/" + "distribution_load_1", "complex")
     pubSubMeters = set()
     for key, val in controllers.items():
-        meterName = val['meterName']
-        houseName = val['houseName']
-        subs.append({"key": "gld1/" + houseName + "#air_temperature", "type": "double"})  # Tair
-        subs.append({"key": "gld1/" + houseName + "#hvac_load", "type": "double"})  # Load
-        subs.append({"key": "gld1/" + houseName + "#power_state", "type": "string"})  # On
-        pubs.append({"key": key + "/cooling_setpoint", "type": "double", "global": False})
-        pubs.append({"key": key + "/heating_setpoint", "type": "double", "global": False})
-        pubs.append({"key": key + "/thermostat_deadband", "type": "double", "global": False})
-        if meterName not in pubSubMeters:
-            pubSubMeters.add(meterName)
-            subs.append({"key": "gld1/" + meterName + "#measured_voltage_1", "type": "complex"})  # V1
-            pubs.append({"key": meterName + "/bill_mode", "type": "string", "global": False})
-            pubs.append({"key": meterName + "/price", "type": "double", "global": False})
-            pubs.append({"key": meterName + "/monthly_fee", "type": "double", "global": False})
-
-    msg = {"name": "sub1",
-           "period": dt,
-           "publications": pubs,
-           "subscriptions": subs
-           }
-    op = open(fileroot + '_HELICS_substation.json', 'w', encoding='utf-8')
-    json.dump(msg, op, ensure_ascii=False, indent=2)
-    op.close()
+        house_name = val['houseName']
+        meter_name = val['meterName']
+        dso.subs_n(federate_name + "/" + house_name + "#air_temperature", "double")  # Tair
+        dso.subs_n(federate_name + "/" + house_name + "#hvac_load", "double")  # Load
+        dso.subs_n(federate_name + "/" + house_name + "#power_state", "string")  # On
+        dso.pubs_n(False, key + "/cooling_setpoint", "double")
+        dso.pubs_n(False, key + "/heating_setpoint", "double")
+        dso.pubs_n(False, key + "/thermostat_deadband", "double")
+        if meter_name not in pubSubMeters:
+            pubSubMeters.add(meter_name)
+            dso.subs_n(federate_name + "/" + meter_name + "#measured_voltage_1", "complex")  # V1
+            dso.pubs_n(False, key + "/" + meter_name + "/bill_mode", "string")
+            dso.pubs_n(False, key + "/" + meter_name + "/price", "double")
+            dso.pubs_n(False, key + "/" + meter_name + "/monthly_fee", "double")
+    dso.write_file(fileroot + '_HELICS_substation.json')
 
     # write YAML file
     yamlfile = fileroot + '_substation.yaml'
     yp = open(yamlfile, 'w')
-    print('name: sub1', file=yp)
+    print('name: ' + substation_name, file=yp)
     print('time_delta: ' + str(dt) + 's', file=yp)
     print('broker:', broker, file=yp)
     print('aggregate_sub: true', file=yp)
     print('aggregate_pub: true', file=yp)
     print('values:', file=yp)
     print('  LMP:', file=yp)
-    print('    topic: pypower/LMP_B7', file=yp)
+    print('    topic: ' + power_name + '/' + 'LMP_1', file=yp)
     print('    default: 0.1', file=yp)
     print('    type: double', file=yp)
     print('    list: false', file=yp)
     print('  refload:', file=yp)
-    print('    topic: gld1/distribution_load', file=yp)
+    print('    topic: ' + federate_name + '/' + 'distribution_load', file=yp)
     print('    default: 0', file=yp)
     print('    type: complex', file=yp)
     print('    list: false', file=yp)
     for key, val in controllers.items():
-        houseName = val['houseName']
-        meterName = val['meterName']
+        house_name = val['houseName']
+        meter_name = val['meterName']
         print('  ' + key + '#V1:', file=yp)
-        print('    topic: gld1/' + meterName + '/measured_voltage_1', file=yp)
+        print('    topic: ' + federate_name + '/' + meter_name + '/measured_voltage_1', file=yp)
         print('    default: 120', file=yp)
         print('  ' + key + '#Tair:', file=yp)
-        print('    topic: gld1/' + houseName + '/air_temperature', file=yp)
+        print('    topic: ' + federate_name + '/' + house_name + '/air_temperature', file=yp)
         print('    default: 80', file=yp)
         print('  ' + key + '#Load:', file=yp)
-        print('    topic: gld1/' + houseName + '/hvac_load', file=yp)
+        print('    topic: ' + federate_name + '/' + house_name + '/hvac_load', file=yp)
         print('    default: 0', file=yp)
         print('  ' + key + '#On:', file=yp)
-        print('    topic: gld1/' + houseName + '/power_state', file=yp)
+        print('    topic: ' + federate_name + '/' + house_name + '/power_state', file=yp)
         print('    default: 0', file=yp)
     yp.close()
 
     # write the weather agent's configuration file
-    if len(climateName) > 0:
+    if len(climate_name) > 0:
         time_fmt = '%Y-%m-%d %H:%M:%S'
         dt1 = datetime.strptime(StartTime, time_fmt)
         dt2 = datetime.strptime(EndTime, time_fmt)
@@ -380,7 +372,7 @@ def ProcessGLM(fileroot):
         # hours = int(seconds / 3600)
         # days = int(seconds / 86400)
         # print (days, hours, minutes, seconds)
-        wconfig = {'name': climateName,
+        wconfig = {'name': climate_name,
                    'StartTime': StartTime,
                    'time_stop': str(minutes) + 'm',
                    'time_delta': '1s',
@@ -408,73 +400,50 @@ def ProcessGLM(fileroot):
         wp.close()
 
     # write the GridLAB-D publications and subscriptions for HELICS
-    pubs = [{"global": False, "key": "distribution_load", "type": "complex",
-             "info": {"object": network_node, "property": "distribution_load"}}]
-    subs = [{"key": "pypower/three_phase_voltage_B7", "type": "complex",
-             "info": {"object": network_node, "property": "positive_sequence_voltage"}}]
-    if len(climateName) > 0:
+    gld = helpers.HelicsMsg(federate_name + "", dt)
+    gld.pubs(False, "distribution_load_1", "complex", network_node, "distribution_load")
+    gld.subs(power_name + "/" + "three_phase_voltage_1", "complex", network_node, "positive_sequence_voltage")
+    if len(climate_name) > 0:
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
-            subs.append({"key": climateName + '/' + wTopic, "type": "double",
-                         "info": {"object": climateName, "property": wTopic}})
+            gld.subs(climate_name + "/#" + wTopic, "double", climate_name, wTopic)
     if len(Eplus_Bus) > 0:  # hard-wired names for a single building
-        subs.append({"key": "eplus_agent/power_A", "type": "complex",
-                     "info": {"object": Eplus_Load, "property": "constant_power_A"}})
-        subs.append({"key": "eplus_agent/power_B", "type": "complex",
-                     "info": {"object": Eplus_Load, "property": "constant_power_B"}})
-        subs.append({"key": "eplus_agent/power_C", "type": "complex",
-                     "info": {"object": Eplus_Load, "property": "constant_power_C"}})
-        subs.append({"key": "eplus_agent/bill_mode", "type": "string",
-                     "info": {"object": Eplus_Meter, "property": "bill_mode"}})
-        subs.append({"key": "eplus_agent/price", "type": "double",
-                     "info": {"object": Eplus_Meter, "property": "price"}})
-        subs.append({"key": "eplus_agent/monthly_fee", "type": "double",
-                     "info": {"object": Eplus_Meter, "property": "monthly_fee"}})
+        gld.subs("eplus_agent/power_A", "complex", Eplus_Load, "constant_power_A")
+        gld.subs("eplus_agent/power_B", "complex", Eplus_Load, "constant_power_B")
+        gld.subs("eplus_agent/power_C", "complex", Eplus_Load, "constant_power_C")
+        gld.subs("eplus_agent/bill_mode", "string", Eplus_Meter, "bill_mode")
+        gld.subs("eplus_agent/price", "double", Eplus_Meter, "price")
+        gld.subs("eplus_agent/monthly_fee", "double", Eplus_Meter, "monthly_fee")
 
     pubSubMeters = set()
     for key, val in controllers.items():
-        houseName = val['houseName']
-        houseClass = val['houseClass']
-        meterName = val['meterName']
-        for prop in ['power_state']:
-            pubs.append({"global": False, "key": houseName + "#" + prop, "type": "string",
-                         "info": {"object": houseName, "property": prop}})
-        for prop in ['air_temperature', 'hvac_load']:
-            pubs.append({"global": False, "key": houseName + "#" + prop, "type": "double",
-                         "info": {"object": houseName, "property": prop}})
-        for prop in ['cooling_setpoint', 'heating_setpoint', 'thermostat_deadband']:
-            subs.append({"key": "sub1/" + key + "/" + prop, "type": "double",
-                         "info": {"object": houseName, "property": prop}})
-        if meterName not in pubSubMeters:
-            pubSubMeters.add(meterName)
+        meter_name = val['meterName']
+        house_name = val['houseName']
+        house_class = val['houseClass']
+        gld.pubs(False, house_name + "#power_state", "string", house_name, "power_state")
+        gld.pubs(False, house_name + "#air_temperature", "double", house_name, "air_temperature")
+        gld.pubs(False, house_name + "#hvac_load", "double", house_name, "hvac_load")
+        gld.subs(substation_name + "/" + key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
+        gld.subs(substation_name + "/" + key + "/heating_setpoint", "double", house_name, "heating_setpoint")
+        gld.subs(substation_name + "/" + key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
+        if meter_name not in pubSubMeters:
+            pubSubMeters.add(meter_name)
             prop = 'measured_voltage_1'
-            if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
+            if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
                 prop = 'measured_voltage_A'  # TODO: the HELICS substation always expects measured_voltage_1
-            pubs.append({"global": False, "key": meterName + "#measured_voltage_1", "type": "complex",
-                         "info": {"object": meterName, "property": prop}})
-            for prop in ['bill_mode']:
-                subs.append({"key": "sub1/" + meterName + "/" + prop, "type": "string",
-                             "info": {"object": meterName, "property": prop}})
-            for prop in ['price', 'monthly_fee']:
-                subs.append({"key": "sub1/" + meterName + "/" + prop, "type": "double",
-                             "info": {"object": meterName, "property": prop}})
-
+            gld.pubs(False, meter_name + "#measured_voltage_1", "complex", meter_name, prop)
+            gld.subs(substation_name + "/" + key + "/" + meter_name + "/bill_mode", "string", meter_name, "bill_mode")
+            gld.subs(substation_name + "/" + key + "/" + meter_name + "/price", "double", meter_name, "price")
+            gld.subs(substation_name + "/" + key + "/" + meter_name + "/monthly_fee", "double", meter_name, "monthly_fee")
     # TODO verify what should be done here to enforce minimum time step
-    msg = {"name": "gld1",
-           "period": dt,
-           "publications": pubs,
-           "subscriptions": subs
-           }
-    op = open(fileroot + '_HELICS_gld_msg.json', 'w', encoding='utf-8')
-    json.dump(msg, op, ensure_ascii=False, indent=2)
-    op.close()
+    gld.write_file(fileroot + '_HELICS_gld_msg.json')
 
     # write the GridLAB-D publications and subscriptions for FNCS
     op = open(fileroot + '_FNCS_Config.txt', 'w')
     print('publish "commit:' + network_node + '.distribution_load -> distribution_load; 1000";', file=op)
-    print('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_B7";', file=op)
-    if len(climateName) > 0:
+    print('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_1";', file=op)
+    if len(climate_name) > 0:
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
-            print('subscribe "precommit:' + climateName + '.' + wTopic + ' <- ' + climateName + '/' + wTopic + '";', file=op)
+            print('subscribe "precommit:' + climate_name + '.' + wTopic + ' <- ' + climate_name + '/' + wTopic + '";', file=op)
     if len(Eplus_Bus) > 0:  # hard-wired names for a single building
         print('subscribe "precommit:{:s}.constant_power_A <- eplus_agent/power_A";'.format(Eplus_Load), file=op)
         print('subscribe "precommit:{:s}.constant_power_B <- eplus_agent/power_B";'.format(Eplus_Load), file=op)
@@ -484,24 +453,24 @@ def ProcessGLM(fileroot):
         print('subscribe "precommit:{:s}.monthly_fee <- eplus_agent/monthly_fee";'.format(Eplus_Meter), file=op)
     pubSubMeters = set()
     for key, val in controllers.items():
-        houseName = val['houseName']
-        houseClass = val['houseClass']
-        meterName = val['meterName']
-        print('publish "commit:' + houseName + '.air_temperature -> ' + houseName + '/air_temperature";', file=op)
-        print('publish "commit:' + houseName + '.power_state -> ' + houseName + '/power_state";', file=op)
-        print('publish "commit:' + houseName + '.hvac_load -> ' + houseName + '/hvac_load";', file=op)
-        print('subscribe "precommit:' + houseName + '.cooling_setpoint <- sub1/' + key + '/cooling_setpoint";', file=op)
-        print('subscribe "precommit:' + houseName + '.heating_setpoint <- sub1/' + key + '/heating_setpoint";', file=op)
-        print('subscribe "precommit:' + houseName + '.thermostat_deadband <- sub1/' + key + '/thermostat_deadband";', file=op)
-        if meterName not in pubSubMeters:
-            pubSubMeters.add(meterName)
-            if ('BIGBOX' in houseClass) or ('OFFICE' in houseClass) or ('STRIPMALL' in houseClass):
-                print('publish "commit:' + meterName + '.measured_voltage_A -> ' + meterName + '/measured_voltage_1";', file=op)
+        meter_name = val['meterName']
+        house_name = val['houseName']
+        house_class = val['houseClass']
+        print('publish "commit:' + house_name + '.air_temperature -> ' + house_name + '/air_temperature";', file=op)
+        print('publish "commit:' + house_name + '.power_state -> ' + house_name + '/power_state";', file=op)
+        print('publish "commit:' + house_name + '.hvac_load -> ' + house_name + '/hvac_load";', file=op)
+        print('subscribe "precommit:' + house_name + '.cooling_setpoint <- ' + substation_name + '/' + key + '/cooling_setpoint";', file=op)
+        print('subscribe "precommit:' + house_name + '.heating_setpoint <- ' + substation_name + '/' + key + '/heating_setpoint";', file=op)
+        print('subscribe "precommit:' + house_name + '.thermostat_deadband <- ' + substation_name + '/' + key + '/thermostat_deadband";', file=op)
+        if meter_name not in pubSubMeters:
+            pubSubMeters.add(meter_name)
+            if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
+                print('publish "commit:' + meter_name + '.measured_voltage_A -> ' + meter_name + '/measured_voltage_1";', file=op)
             else:
-                print('publish "commit:' + meterName + '.measured_voltage_1 -> ' + meterName + '/measured_voltage_1";', file=op)
-            print('subscribe "precommit:' + meterName + '.bill_mode <- sub1/' + key + '/bill_mode";', file=op)
-            print('subscribe "precommit:' + meterName + '.price <- sub1/' + key + '/price";', file=op)
-            print('subscribe "precommit:' + meterName + '.monthly_fee <- sub1/' + key + '/monthly_fee";', file=op)
+                print('publish "commit:' + meter_name + '.measured_voltage_1 -> ' + meter_name + '/measured_voltage_1";', file=op)
+            print('subscribe "precommit:' + meter_name + '.bill_mode <- ' + substation_name + '/' + key + '/bill_mode";', file=op)
+            print('subscribe "precommit:' + meter_name + '.price <- ' + substation_name + '/' + key + '/price";', file=op)
+            print('subscribe "precommit:' + meter_name + '.monthly_fee <- ' + substation_name + '/' + key + '/monthly_fee";', file=op)
     op.close()
 
 

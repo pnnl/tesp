@@ -101,7 +101,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
     gen = sys_config['gen']
     genFuel = sys_config['genfuel']
-    fncs_config = sys_config['FNCS']
+    fncs_config = sys_config['DSO']
     out_Path = sys_config['outputPath']
 
     sim = case_config['SimulationConfig']

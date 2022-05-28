@@ -10,12 +10,10 @@ import pandas as pd
 import pypower.api as pp
 import psst.cli as pst
 import helics
-
+import tesp_support.tso_helpers as tso
 from copy import deepcopy
 from datetime import datetime
-from .helpers import load_json_case
 from .helpers import parse_mva
-from .helpers import print_mod_load
 from .metrics_collector import MetricsStore, MetricsCollector
 
 
@@ -30,248 +28,6 @@ def make_generater_plants(ppc, renewables):
             unRespMW = [0] * 48
             plants[str(genFuel[i][2])] = [busnum, MW, unRespMW, genFuel[i][2]]
     return plants
-
-
-# this differs from tesp_support because of additions to FNCS, and Pnom==>Pmin for generators
-def make_dictionary(ppc):
-    """ Helper function to write the JSON metafile for post-processing
-
-    Args:
-      ppc (dict): PYPOWER case file structure
-    """
-    dsoBuses = {}
-    generators = {}
-    unitsout = []
-    branchesout = []
-    bus = ppc['bus']
-    gen = ppc['gen']
-    genCost = ppc['gencost']
-    genFuel = ppc['genfuel']
-    dsoBus = ppc['FNCS']
-    units = ppc['UnitsOut']
-    branches = ppc['BranchesOut']
-    output_Path = ppc['outputPath']
-
-    for i in range(gen.shape[0]):
-        busnum = int(gen[i, 0])
-        bustype = bus[busnum - 1, 1]
-        if bustype == 1:
-            bustypename = 'pq'
-        elif bustype == 2:
-            bustypename = 'pv'
-        elif bustype == 3:
-            bustypename = 'swing'
-        else:
-            bustypename = 'unknown'
-        gentype = 'other'  # as opposed to simple cycle or combined cycle
-        c2 = float(genCost[i, 4])
-        c1 = float(genCost[i, 5])
-        c0 = float(genCost[i, 6])
-        generators[str(i + 1)] = {'bus': int(busnum), 'bustype': bustypename, 'Pmin': float(gen[i, 9]),
-                                  'Pmax': float(gen[i, 8]), 'genfuel': genFuel[i][0], 'gentype': gentype,
-                                  'StartupCost': float(genCost[i, 1]), 'ShutdownCost': float(genCost[i, 2]), 'c2': c2,
-                                  'c1': c1, 'c0': c0}
-
-    for i in range(dsoBus.shape[0]):
-        busnum = int(dsoBus[i, 0])
-        busidx = busnum - 1
-        dsoBuses[str(busnum)] = {'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
-                                  'area': int(bus[busidx, 6]), 'zone': int(bus[busidx, 10]),
-                                  'ampFactor': float(dsoBus[i, 2]), 'GLDsubstations': [dsoBus[i, 1]],
-                                  'curveScale': float(dsoBus[i, 5]), 'curveSkew': int(dsoBus[i, 6])}
-
-    for i in range(units.shape[0]):
-        unitsout.append({'unit': int(units[i, 0]), 'tout': int(units[i, 1]), 'tin': int(units[i, 2])})
-
-    for i in range(branches.shape[0]):
-        branchesout.append({'branch': int(branches[i, 0]), 'tout': int(branches[i, 1]), 'tin': int(branches[i, 2])})
-
-    dp = open(os.path.join(output_Path, 'model_dict.json'), 'w')
-    ppdict = {'baseMVA': ppc['baseMVA'], 'fncsBuses': dsoBuses, 'generators': generators, 'UnitsOut': unitsout,
-              'BranchesOut': branchesout}
-    print(json.dumps(ppdict), file=dp, flush=True)
-    dp.close()
-
-
-def dist_slack(mpc, prev_load):
-    # this section will calculate the delta power from previous cycle using the prev_load
-    # if previous load is equal to 0 we assume this is the first run and will
-    # calculate delta power based on the difference between real power and real generation
-
-    tot_load = sum(mpc['bus'][:, 2])
-
-    if prev_load == 0:
-        del_P = tot_load - sum(mpc['gen'][np.where(mpc['gen'][:, 7] == 1)[0], 1])
-    else:
-        del_P = tot_load - prev_load
-
-    # if mpc.governor is not passed on then the governor assumes default parameters
-    if 'governor' not in mpc:
-        mpc['governor'] = {'coal': 0.00, 'gas': 0.05, 'nuclear': 0, 'hydro': 0.05}
-
-    ramping_time = int(mpc["Period"]) / 60  # in minutes
-
-    # .............Getting indexes of fuel type if not passed as an input argument......................................
-    # checking fuel type to get index
-    # checking generator status to make sure generator is active
-    # checking generator regulation value to make sure generator participates in governor action
-    # if fuel type matrix is not available we will assume all generators are gas turbines
-
-    coal_idx = []
-    hydro_idx = []
-    nuclear_idx = []
-    gas_idx = []
-    governor_capacity = 0
-
-    # Disabling (if mpc['gen'][i, 16] <= 0:) update of ramp rates and using the values already entered into the model
-    if 'genfuel' in mpc:
-        for i in range(len(mpc['genfuel'])):
-            if (mpc['genfuel'][i][0] == "coal") & (mpc['gen'][i, 7] == 1) & (mpc['governor']['coal'] != 0):
-                coal_idx.append(i)
-                if mpc['gen'][i, 16] <= 0:
-                    mpc['gen'][i, 16] = 5 / 100 * mpc['gen'][i, 8]  # ramp_rate (%) * PG_max (MW) / 100  -> (MW)
-                governor_capacity = governor_capacity + mpc['gen'][i, 8] * (.05 / mpc['governor']['coal'])
-            elif (mpc['genfuel'][i][0] == "gas") & (mpc['gen'][i, 7] == 1) & (mpc['governor']['gas'] != 0):
-                gas_idx.append(i)
-                if mpc['gen'][i, 16] <= 0:
-                    if mpc['gen'][i, 8] < 200:
-                        mpc['gen'][i, 16] = 2.79   # (MW)
-                    elif mpc['gen'][i, 8] < 400:
-                        mpc['gen'][i, 16] = 7.62   # (MW)
-                    elif mpc['gen'][i, 8] < 600:
-                        mpc['gen'][i, 16] = 4.8    # (MW)
-                    elif mpc['gen'][i, 8] >= 600:
-                        mpc['gen'][i, 16] = 26.66  # (MW)
-                governor_capacity = governor_capacity + mpc['gen'][i, 8] * (.05 / mpc['governor']['gas'])
-            elif (mpc['genfuel'][i][0] == "nuclear") & (mpc['gen'][i, 7] == 1) & (mpc['governor']['nuclear'] != 0):
-                nuclear_idx.append(i)
-                if mpc['gen'][i, 16] <= 0:
-                    mpc['gen'][i, 16] = 6.98  # (MW)
-                governor_capacity = governor_capacity + mpc['gen'][i, 8] * (.05 / mpc['governor']['nuclear'])
-            elif (mpc['genfuel'][i][0] == "hydro") & (mpc['gen'][i, 7] == 1) & (mpc['governor']['hydro'] != 0):
-                hydro_idx.append(i)
-                if mpc['gen'][i, 16] <= 0:
-                    mpc['gen'][i, 16] = 5 / 100 * mpc['gen'][i, 8]  # ramp_rate (%) * PG_max (MW) / 100  -> (MW)
-                governor_capacity = governor_capacity + mpc['gen'][i, 8] * (.05 / mpc['governor']['hydro'])
-    else:
-        gas_idx = np.where(mpc['gen'][:, 7] == 1)[0]
-        governor_capacity = sum(mpc['gen'][gas_idx, 8] * (.05 / mpc['governor']['gas']))
-        for i in range(len(mpc['gen'])):
-            if mpc['gen'][i, 16] <= 0:
-                if mpc['gen'][i, 8] < 200:
-                    mpc['gen'][i, 16] = 2.79  # (MW)
-                elif mpc['gen'][i, 8] < 400:
-                    mpc['gen'][i, 16] = 7.62  # (MW)
-                elif mpc['gen'][i, 8] < 600:
-                    mpc['gen'][i, 16] = 4.8   # (MW)
-                elif mpc['gen'][i, 8] >= 600:
-                    mpc['gen'][i, 16] = 26.66  # (MW)
-    ramping_capacity = mpc['gen'][:, 16] * ramping_time  # ramp rate (MW/min) * ramp time (min)  ->  (MW)
-
-    # ........................Sorting the generators based on capacity..................................
-    gov_R = np.array([])
-    gov_idx = []
-    if len(coal_idx) != 0:
-        gov_idx.append(coal_idx)
-        gov_R = np.append(gov_R, mpc['governor']['coal'] * np.ones(len(coal_idx)))
-    if len(hydro_idx) != 0:
-        gov_idx.append(hydro_idx)
-        gov_R = np.append(gov_R, mpc['governor']['hydro'] * np.ones(len(hydro_idx)))
-    if len(nuclear_idx) != 0:
-        gov_idx.append(nuclear_idx)
-        gov_R = np.append(gov_R, mpc['governor']['nuclear'] * np.ones(len(nuclear_idx)))
-    if len(gas_idx) != 0:
-        gov_idx.append(gas_idx)
-        gov_R = np.append(gov_R, mpc['governor']['gas'] * np.ones(len(gas_idx)))
-
-    gov_R = gov_R.tolist()
-    try:
-        capacity = mpc['gen'][gov_idx, 8][0]
-    except:
-        log.info("Distribution governor idx length -> " + str(len(gov_idx)))
-        log.info("Distribution governor capacity failed, trying coal")
-        for i in range(len(mpc['genfuel'])):
-            if (mpc['genfuel'][i][0] == "coal") & (mpc['gen'][i, 7] == 1):
-                coal_idx.append(i)
-                if mpc['gen'][i, 16] <= 0:
-                    mpc['gen'][i, 16] = 5 / 100 * mpc['gen'][i, 8]  # ramp_rate (%) * PG_max (MW) / 100  -> (MW)
-                governor_capacity = governor_capacity + mpc['gen'][i, 8]
-        gov_R = np.array([])
-        gov_idx = []
-        if len(coal_idx) != 0:
-            gov_idx.append(coal_idx)
-            gov_R = np.append(gov_R, 0.05 * np.ones(len(coal_idx)))
-        gov_R = gov_R.tolist()
-        capacity = mpc['gen'][gov_idx, 8][0]
-
-    I = np.argsort(capacity)
-    index = [gov_idx[0][i] for i in I]  # gov_idx[I]
-
-    # ...........................................Governor Action........................................
-    del_P_pu = del_P / governor_capacity
-    del_f = .05 * del_P_pu
-    del_P_new = del_P
-
-    gen_update = deepcopy(mpc['gen'][:, 1])
-    for i in range(len(index)):
-        up_ramp_flag = 0
-        max_flag = 0
-        down_ramp_flag = 0
-        min_flag = 0
-        gen_update[index[i]] = mpc['gen'][index[i], 1] + mpc['gen'][index[i], 8] * del_f / gov_R[I[i]]  # P (MW) + del_P (MW)
-
-        # .........................For Increasing Loads.............................
-        # Checking Ramp Rates
-        if mpc['gen'][index[i], 8] * del_f / gov_R[I[i]] > ramping_capacity[index[i]]:  # if del_P (MW) > del_P_max (MW)
-            up_ramp_flag = 1
-            gen_update[index[i]] = mpc['gen'][index[i], 1] + ramping_capacity[index[i]]  # P (MW) + del_P_max (MW)
-            del_P_new = del_P_new - ramping_capacity[index[i]]
-            governor_capacity = governor_capacity - mpc['gen'][index[i], 8] * .05 / gov_R[I[i]]  # total capacity (MW) - del_P_max MW) * del_P (pu) -> (MW)
-
-        # Checking generation max Limits
-        if gen_update[index[i]] > mpc['gen'][index[i], 8]:  # PG > PG_max (MW)
-            max_flag = 1                                    # limit is reached
-            # both the limits are reached
-            if (up_ramp_flag == 1) & (max_flag == 1):
-                gen_update[index[i]] = mpc['gen'][index[i], 8]
-                del_P_new = del_P_new - (mpc['gen'][index[i], 8] - mpc['gen'][index[i], 1]) + ramping_capacity[index[i]]
-                # Total_capacity already taken off in the ramp stage
-                # only generation capacity limit is reached
-            else:
-                gen_update[index[i]] = mpc['gen'][index[i], 8]
-                del_P_new = del_P_new - (mpc['gen'][index[i], 8] - mpc['gen'][index[i], 1])
-                governor_capacity = governor_capacity - (mpc['gen'][index[i], 8] * (.05 / (gov_R[I[i]])))
-
-        # ................................For Decreasing Loads.....................................
-        # checking for negative ramping
-        if mpc['gen'][index[i], 8] * del_f / gov_R[I[i]] < -1 * ramping_capacity[index[i]]:
-            down_ramp_flag = 1
-            gen_update[index[i]] = mpc['gen'][index[i], 1] - ramping_capacity[index[i]]
-            del_P_new = del_P_new - (-1 * ramping_capacity[index[i]])
-            governor_capacity = governor_capacity - mpc['gen'][index[i], 8] * .05 / gov_R[I[i]]
-
-        # Checking generation min Limits
-        if gen_update[index[i]] < mpc['gen'][index[i], 9]:
-            min_flag = 1
-            # both the limits are reached
-            if (down_ramp_flag == 1) & (min_flag == 1):
-                gen_update[index[i]] = mpc['gen'][index[i], 9]
-                del_P_new = del_P_new - (mpc['gen'][index[i], 9] - mpc['gen'][index[i], 1]) + (-1 * ramping_capacity[index[i]])
-            # Total_capacity already taken off in the ramp stage
-            # only generation capacity limit is reached
-            else:
-                gen_update[index[i]] = mpc['gen'][index[i], 9]
-                del_P_new = del_P_new - (mpc['gen'][index[i], 9] - mpc['gen'][index[i], 1])
-                governor_capacity = governor_capacity - mpc['gen'][index[i], 8] * .05 / gov_R[I[i]]
-
-        if governor_capacity != 0:
-            del_P_pu = del_P_new / governor_capacity
-        else:
-            del_P_pu = 0
-        del_f = .05 * del_P_pu
-
-    # updating the generators gen_update
-    return gen_update
 
 
 def tso_loop(casename):
@@ -1169,7 +925,7 @@ def tso_loop(casename):
             hours_in_a_day = 24
             secs_in_a_hr = 3600
 
-            ppc = load_json_case(casename + '.json', True)
+            ppc = tso.load_json_case(casename + '.json')
             ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
             ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
@@ -1196,7 +952,7 @@ def tso_loop(casename):
             # genFuel: [[fuel type, fuel name, id, uniton]]
             zones = ppc['zones']
             # zones: [[zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]]
-            dsoBus = ppc['FNCS']
+            dsoBus = ppc['DSO']
             # FNCS: [[bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]]
 
             # Not being used at this time
@@ -1387,7 +1143,7 @@ def tso_loop(casename):
             log.info('Started outages and renewables')
         try:
             log.info('making dictionary for plotting later')
-            make_dictionary(ppc)
+            tso.make_dictionary(ppc)
 
             # initialize for day-ahead, OPF and time stepping
             ts = 0
@@ -1645,7 +1401,7 @@ def tso_loop(casename):
             log.info("at " + str(ts))
             # update cost coefficients, set dispatchable load, put unresp load on bus
             update_cost_and_load()
-            # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'EVT', ts)
+            # tso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'EVT', ts)
             log.info('bus_load = ' + str(bus[:, 2].sum()))
             log.info('gen_power = ' + str(gen[:, 1].sum()))
 
@@ -1883,13 +1639,13 @@ def tso_loop(casename):
 
         # update generation with consideration for distributed slack bus
         if opf:
-            # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'OPF', ts)
+            # tso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'OPF', ts)
             # log.info('bus_opf = ' + str(bus[:, 2].sum()))
             # log.info('gen_opf = ' + str(gen[:, 1].sum()))
             ppc['gen'] = gen
-            ppc['gen'][:, 1] = dist_slack(ppc, Pload)
+            ppc['gen'][:, 1] = tso.dist_slack(ppc, Pload)
             gen = ppc['gen']   # needed to be re-aliased because of [:, ] operator
-            # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'DIST', ts)
+            # tso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'DIST', ts)
             # log.info('bus_dist = ' + str(bus[:, 2].sum()))
             # log.info('gen_dist = ' + str(gen[:, 1].sum()))
             opf = False
@@ -1908,7 +1664,7 @@ def tso_loop(casename):
         #               success=rpf[0]['success'])
         rBus = rpf[0]['bus']
         rGen = rpf[0]['gen']
-        # print_mod_load(ppc['bus'], ppc['FNCS'], gld_load, 'PF', ts)
+        # tso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'PF', ts)
         # log.info('bus_pf = ' + str(rBus[:, 2].sum()))
         # log.info('gen_pf = ' + str(rGen[:, 1].sum()))
 

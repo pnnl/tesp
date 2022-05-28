@@ -86,6 +86,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
         ercot (boolean): request ERCOT billing meter naming. Defaults to false.
         te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false.
     """
+
     # first pass, collect first-level include files
     collected_lines = []
     ip = open(nameroot + '.glm', 'r')
@@ -97,7 +98,6 @@ def glm_dict(nameroot, ercot=False, te30=False):
                 append_include_file(collected_lines, incfile)
         else:
             collected_lines.append(line)
-
     ip.close()
 
     # second pass, look for the substation
@@ -374,3 +374,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
     op = open(nameroot + '_glm_dict.json', 'w')
     json.dump(substation, op, ensure_ascii=False, indent=2)
     op.close()
+
+
+if __name__ == "__main__":
+    glm_dict("Test")

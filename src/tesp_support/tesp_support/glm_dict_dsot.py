@@ -13,6 +13,7 @@ Public Functions:
 
 """
 
+import os
 import json
 import math
 
@@ -20,14 +21,14 @@ import math
 def ercotMeterName(objname):
     """ Enforces the meter naming convention for ERCOT
 
-	Replaces anything after the last _ with *mtr*.
+    Replaces anything after the last _ with *mtr*.
 
-	Args:
-	    objname (str): the GridLAB-D name of a house or inverter
+    Args:
+        objname (str): the GridLAB-D name of a house or inverter
 
-	Returns:
-		str: The GridLAB-D name of upstream meter
-	"""
+    Returns:
+        str: The GridLAB-D name of upstream meter
+    """
     k = objname.rfind('_')
     root1 = objname[:k]
     k = root1.rfind('_')
@@ -36,7 +37,7 @@ def ercotMeterName(objname):
 
 def ti_enumeration_string(tok):
     """ if thermal_integrity_level is an integer, convert to a string for the metadata
-	"""
+    """
     if tok == '0':
         return 'VERY_LITTLE'
     if tok == '1':
@@ -56,54 +57,49 @@ def ti_enumeration_string(tok):
     return tok
 
 
+def append_include_file(lines, fname):
+    if os.path.isfile(fname):
+        fp = open(fname, 'r')
+        for line in fp:
+            lines.append(line)
+        fp.close()
+
+
 def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
     """ Writes the JSON metadata file from a GLM file
-        	This function reads *nameroot.glm* and writes *nameroot_glm_dict.json*
-	        The GLM file should have some meters and triplex_meters with the
-	        bill_mode attribute defined, which identifies them as billing meters
-	        that parent houses and inverters. If this is not the case, ERCOT naming
-	        rules can be applied to identify billing meters.
 
-	Args:
-	    nameroot (str): path and file name of the GLM file, without the extension
-	    config (dict):
-	    ercot (boolean): request ERCOT billing meter naming. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
-	    te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
-	"""
+    This function reads *nameroot.glm* and writes *nameroot_glm_dict.json*
+    The GLM file should have some meters and triplex_meters with the
+    bill_mode attribute defined, which identifies them as billing meters
+    that parent houses and inverters. If this is not the case, ERCOT naming
+    rules can be applied to identify billing meters.
 
-    # Laurentiu Marinovici 01/28/2020
-    # Commenting out the if ercot part, as config does not even have a feeder key anyway
-    # if ercot:
-    #    ip = open(config['feeder'] + '.glm', 'r')
-    # else:
+    Args:
+        nameroot (str): path and file name of the GLM file, without the extension
+        config (dict):
+        ercot (boolean): request ERCOT billing meter naming. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
+        te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
+    """
+
+    # first pass, collect first-level include files
+    collected_lines = []
     ip = open(nameroot + '.glm', 'r')
-    op = open(nameroot + '_glm_dict.json', 'w')
+    for line in ip:
+        if '#include' in line:
+            lst = line.split()
+            if len(lst) > 1:
+                incfile = os.path.expandvars(lst[1].strip('\"'))
+                append_include_file(collected_lines, incfile)
+        else:
+            collected_lines.append(line)
+    ip.close()
 
-    message_name = ''
+    # second pass, look for the substation
     feeder_id = 'feeder'
-    name = ''
-    if config is not None:
-        bulkpowerBus = config['SimulationConfig']['BulkpowerBus']
-    else:
-        bulkpowerBus = 'TBD'
     base_feeder = ''
     substationTransformerMVA = 12
-    houses = {}
-    waterheaters = {}
-    ziploads = {}
-    billingmeters = {}
-    inverters = {}
-    ev = {}
-    feeders = {}
-    capacitors = {}
-    regulators = {}
-    climateName = ''
-    climateInterpolate = ''
-    climateLatitude = ''
-    climateLongitude = ''
-
     inSwing = False
-    for line in ip:
+    for line in collected_lines:
         lst = line.split()
         if len(lst) > 1:
             if lst[1] == 'substation':
@@ -122,7 +118,27 @@ def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
                     inSwing = False
                     break
 
-    ip.seek(0, 0)
+    # third pass, process the other objects
+    message_name = ''
+    if config is not None:
+        bulkpowerBus = config['SimulationConfig']['BulkpowerBus']
+    else:
+        bulkpowerBus = 'TBD'
+    name = ''
+    houses = {}
+    waterheaters = {}
+    ziploads = {}
+    billingmeters = {}
+    inverters = {}
+    ev = {}
+    feeders = {}
+    capacitors = {}
+    regulators = {}
+    climateName = ''
+    climateInterpolate = ''
+    climateLatitude = ''
+    climateLongitude = ''
+
     inHouses = False
     inWaterHeaters = False
     inZIPload = False
@@ -136,7 +152,7 @@ def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
     inRegulators = False
     inMessage = False
     inClimate = False
-    for line in ip:
+    for line in collected_lines:
         lst = line.split()
         if len(lst) > 1:  # terminates with a } or };
             if lst[1] == 'fncs_msg':
@@ -468,8 +484,6 @@ def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
                 inverters[lastInverter] = {'feeder_id': feeder_id,
                                            'billingmeter_id': lastBillingMeter,
                                            'rated_W': rating,
-                                           # 'charge_rating_W': max_charge_rating,
-                                           # 'discharge_rating_W': max_discharge_rating,
                                            'resource': 'solar',
                                            'inv_eta': inv_eta}
             elif hasBattery:
@@ -513,7 +527,8 @@ def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
             val['zip_power_fraction'] = ziploads[key]['power_fraction']
             val['zip_power_pf'] = ziploads[key]['power_pf']
 
-        # Laurentiu Dan Marinovici 2019/10/22 - turned out that the commercial buildings do not have a bill_mode field in their GLM objects,
+        # Laurentiu Dan Marinovici 2019/10/22 -
+        # turned out that the commercial buildings do not have a bill_mode field in their GLM objects,
         # which led to not have them added to the billing meters fields
         try:
             mtr = billingmeters[val['billingmeter_id']]
@@ -550,7 +565,10 @@ def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
                   'base_feeder': base_feeder, 'feeders': feeders,
                   'billingmeters': billingmeters, 'houses': houses, 'inverters': inverters, 'ev': ev,
                   'capacitors': capacitors, 'regulators': regulators, 'climate': climate}
-    print(json.dumps(substation), file=op)
-
-    ip.close()
+    op = open(nameroot + '_glm_dict.json', 'w')
+    json.dump(substation, op, ensure_ascii=False, indent=2)
     op.close()
+
+
+if __name__ == "__main__":
+    glm_dict("Test")

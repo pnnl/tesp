@@ -97,7 +97,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     fedName = helics.helicsFederateGetName(hFed)
     bulkName = 'pypower'
 
-    bus = metrics_root[3:]
+    bus = fedName[3:]
     subFeeder = helics.helicsFederateGetSubscription(hFed, gldName + '/distribution_load_' + bus)
     subLMP = helics.helicsFederateGetSubscription(hFed, bulkName + '/LMP_' + bus)
     pubC1 = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_c1_' + bus)
@@ -107,6 +107,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     pubUnresp = helics.helicsFederateGetPublication(hFed, fedName + '/unresponsive_mw_' + bus)
     pubAucPrice = helics.helicsFederateGetPublication(hFed, fedName + '/clear_price_' + bus)
 
+    pubSubMeters = set()
     hvacObjs = {}
     hvac_keys = list(diction['controllers'].keys())
     for key in hvac_keys:
@@ -120,15 +121,18 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
         # print('{:s} hseSub={:s} mtrSub={:s}  mtrPub={:s}  ctlPub={:s}'
         #       .format(key, hseSubTopic, mtrSubTopic, mtrPubTopic, ctlPubTopic), flush=True)
         subTemp[ctl] = helics.helicsFederateGetSubscription(hFed, hseSubTopic + '#air_temperature')
-        subVolt[ctl] = helics.helicsFederateGetSubscription(hFed, mtrSubTopic + '#measured_voltage_1')
         subState[ctl] = helics.helicsFederateGetSubscription(hFed, hseSubTopic + '#power_state')
         subHVAC[ctl] = helics.helicsFederateGetSubscription(hFed, hseSubTopic + '#hvac_load')
+
         pubHeating[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/heating_setpoint')
         pubCooling[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/cooling_setpoint')
         pubDeadband[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/thermostat_deadband')
-        pubMtrMode[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/bill_mode')
-        pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/price')
-        pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/monthly_fee')
+        if ctl.meterName not in pubSubMeters:
+            pubSubMeters.add(ctl.meterName)
+            subVolt[ctl] = helics.helicsFederateGetSubscription(hFed, mtrSubTopic + '#measured_voltage_1')
+            pubMtrMode[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/bill_mode')
+            pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/price')
+            pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/monthly_fee')
 
     helics.helicsFederateEnterExecutingMode(hFed)
 
@@ -147,7 +151,6 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     time_last = 0
     while (time_granted < time_stop):
         nextHELICSTime = int(min([tnext_bid, tnext_agg, tnext_clear, tnext_adjust, time_stop]))
-        #    fncs.update_time_delta (nextFNCSTime-time_granted)
         time_granted = int(helics.helicsFederateRequestTime(hFed, nextHELICSTime))
         time_delta = time_granted - time_last
         time_last = time_granted
@@ -163,8 +166,9 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
         aucObj.set_refload(refload)
         for key, obj in hvacObjs.items():
             obj.set_air_temp_from_helics(helics.helicsInputGetDouble(subTemp[obj]))
-            cval = helics.helicsInputGetComplex(subVolt[obj])  # TODO: pyhelics needs to return complex instead of tuple
-            obj.set_voltage_from_helics(complex(cval[0], cval[1]))
+            if obj in subVolt:
+                cval = helics.helicsInputGetComplex(subVolt[obj])  # TODO: pyhelics needs to return complex instead of tuple
+                obj.set_voltage_from_helics(complex(cval[0], cval[1]))
             obj.set_hvac_load_from_helics(helics.helicsInputGetDouble(subHVAC[obj]))
             obj.set_hvac_state_from_helics(helics.helicsInputGetString(subState[obj]))
 
@@ -174,8 +178,9 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
                 helics.helicsPublicationPublishDouble(pubCooling[obj], obj.basepoint)
         if bSetDefaults:
             for key, obj in hvacObjs.items():
-                helics.helicsPublicationPublishString(pubMtrMode[obj], 'HOURLY')
-                helics.helicsPublicationPublishDouble(pubMtrMonthly[obj], 0.0)
+                if obj in pubMtrMode:
+                    helics.helicsPublicationPublishString(pubMtrMode[obj], 'HOURLY')
+                    helics.helicsPublicationPublishDouble(pubMtrMonthly[obj], 0.0)
                 helics.helicsPublicationPublishDouble(pubDeadband[obj], obj.deadband)
                 helics.helicsPublicationPublishDouble(pubHeating[obj], 60.0)
             bSetDefaults = False
@@ -221,7 +226,8 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
         if time_granted >= tnext_adjust:
             if bWantMarket:
                 for key, obj in hvacObjs.items():
-                    helics.helicsPublicationPublishDouble(pubMtrPrice[obj], aucObj.clearing_price)
+                    if obj in pubMtrPrice:
+                        helics.helicsPublicationPublishDouble(pubMtrPrice[obj], aucObj.clearing_price)
                     if obj.bid_accepted():
                         helics.helicsPublicationPublishDouble(pubCooling[obj], obj.setpoint)
             tnext_adjust += period
@@ -462,4 +468,6 @@ def substation_loop(configfile, metrics_root, hour_stop=48, flag='WithMarket', h
 
 if __name__ == '__main__':
     # substation_loop('C:\\Users\\wang690\\Desktop\\projects\\TESP\\tesp_1st\\ercot\\case8\\Bus1_agent_dict.json','Bus1',24)
-    substation_loop('TE_Challenge_agent_dict.json', 'TE_ChallengeH0', helicsConfig='TE_Challenge_HELICS_substation.json', flag='NoMarket')
+    # substation_loop('TE_Challenge_agent_dict.json', 'TE_ChallengeH0', helicsConfig='TE_Challenge_HELICS_substation.json', flag='NoMarket')
+    # substation_loop('SGIP1b_agent_dict.json', 'SGIP1a', flag='NoMarket', helicsConfig='SGIP1a_HELICS_substation.json')
+    substation_loop('Test_agent_dict.json', 'Test', helicsConfig='Test_HELICS_substation.json')

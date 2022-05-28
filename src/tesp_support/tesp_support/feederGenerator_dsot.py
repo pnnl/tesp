@@ -90,7 +90,7 @@ metrics = [
     "inverter",
     "regulator",
     "substation"
-],
+]
 Eplus_Bus = ''
 Eplus_Volts = 480.0
 Eplus_kVA = 150.0
@@ -2987,7 +2987,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             if metrics_interval > 0 and "meter" in metrics:
                 print('  object metrics_collector {', file=op)
                 print('    interval', str(metrics_interval) + ';', file=op)
-                print('  }', file=op)
+                print('  };', file=op)
             print('}', file=op)
             print('object load {', file=op)
             print('  name ' + name_prefix + 'Eplus_load;', file=op)

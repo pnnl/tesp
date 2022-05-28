@@ -6,10 +6,11 @@ Public Functions:
         :process_pypower: Reads the data and metadata, then makes the plots.  
 
 """
+import logging
 import json
 import os
+
 import numpy as np
-import logging
 
 try:
     import matplotlib as mpl
@@ -21,65 +22,8 @@ except:
 logger = logging.getLogger(__name__)
 
 
-def plot_pypower(dict, title=None, save_file=None, save_only=False):
-    hrs = dict['hrs']
-    data_b = dict['data_b']
-    data_g = dict['data_g']
-    idx_b = dict['idx_b']
-    idx_g = dict['idx_g']
-    keys_b = dict['keys_b']
-    keys_g = dict['keys_g']
-
-    # display a plot - hard-wired assumption of 3 generators from Case 9
-    fig, ax = plt.subplots(4, 2, sharex='col')
-    if title is not None:
-        fig.suptitle(title)
-
-    ax[0, 0].plot(hrs, data_b[0, :, idx_b['PD_IDX']], color='blue', label='Real')
-    ax[0, 0].plot(hrs, data_b[0, :, idx_b['QD_IDX']], color='red', label='Reactive')
-    ax[0, 0].set_ylabel(idx_b['PD_UNITS'] + '/' + idx_b['QD_UNITS'])
-    ax[0, 0].set_title('Demands at ' + keys_b[0])
-    ax[0, 0].legend(loc='best')
-
-    ax[1, 0].plot(hrs, data_b[0, :, idx_b['LMP_P_IDX']], color='blue', label='Real')
-    ax[1, 0].plot(hrs, data_b[0, :, idx_b['LMP_Q_IDX']], color='red', label='Reactive')
-    ax[1, 0].set_ylabel(idx_b['LMP_P_UNITS'])
-    ax[1, 0].set_title('Prices at ' + keys_b[0])
-    ax[1, 0].legend(loc='best')
-
-    ax[2, 0].plot(hrs, data_b[0, :, idx_b['VMAG_IDX']], color='blue', label='Magnitude')
-    ax[2, 0].plot(hrs, data_b[0, :, idx_b['VMAX_IDX']], color='red', label='Vmax')
-    ax[2, 0].plot(hrs, data_b[0, :, idx_b['VMIN_IDX']], color='green', label='Vmin')
-    ax[2, 0].set_ylabel(idx_b['VMAG_UNITS'])
-    ax[2, 0].set_title('Voltages at ' + keys_b[0])
-    ax[2, 0].legend(loc='best')
-
-    ax[3, 0].plot(hrs, data_g[0, :, idx_g['GENLMP_IDX']], color='blue', label='unit 1')
-    ax[3, 0].plot(hrs, data_g[1, :, idx_g['GENLMP_IDX']], color='red', label='unit 2')
-    ax[3, 0].plot(hrs, data_g[2, :, idx_g['GENLMP_IDX']], color='green', label='unit 3')
-    ax[3, 0].plot(hrs, data_g[3, :, idx_g['GENLMP_IDX']], color='magenta', label='unit 4')
-    ax[3, 0].set_ylabel(idx_g['GENLMP_UNITS'])
-    ax[3, 0].set_title('Generator Prices')
-    ax[3, 0].legend(loc='best')
-
-    for i in range(0, 4):
-        ax[i, 1].plot(hrs, data_g[i, :, idx_g['PGEN_IDX']], color='blue', label='P')
-        ax[i, 1].plot(hrs, data_g[i, :, idx_g['QGEN_IDX']], color='red', label='Q')
-        ax[i, 1].set_ylabel(idx_g['PGEN_UNITS'] + '/' + idx_g['QGEN_UNITS'])
-        ax[i, 1].set_title('Output from unit ' + keys_g[i])
-        ax[i, 1].legend(loc='best')
-
-    ax[3, 0].set_xlabel('Hours')
-    ax[3, 1].set_xlabel('Hours')
-
-    if save_file is not None:
-        plt.savefig(save_file)
-    if not save_only:
-        plt.show()
-
-
 def read_pypower_metrics(path, nameroot):
-    m_dict_path = os.path.join(path, f'{nameroot}_m_dict.json')
+    m_dict_path = os.path.join(path, 'model_dict.json')
     b_dict_path = os.path.join(path, f'bus_{nameroot}_metrics.json')
     g_dict_path = os.path.join(path, f'gen_{nameroot}_metrics.json')
 
@@ -96,7 +40,7 @@ def read_pypower_metrics(path, nameroot):
     print('Unit Bus Type Pnom Pmax Costs[Start Stop C2 C1 C0]')
     for key in gen_keys:
         row = dict['generators'][key]
-        print(key, row['bus'], row['bustype'], row['Pnom'], row['Pmax'], '[', row['StartupCost'], row['ShutdownCost'], row['c2'], row['c1'], row['c0'], ']')
+        print(key, row['bus'], row['bustype'], row['Pmin'], row['Pmax'], '[', row['StartupCost'], row['ShutdownCost'], row['c2'], row['c1'], row['c0'], ']')
     print('\nDSO Bus Dictionary:')
     print('Bus Pnom Qnom ampFactor [GridLAB-D Substations]')
     for key in bus_keys:
@@ -214,6 +158,63 @@ def read_pypower_metrics(path, nameroot):
     dict['keys_g'] = gen_keys
     dict['idx_g'] = idx_g
     return dict
+
+
+def plot_pypower(dict, title=None, save_file=None, save_only=False):
+    hrs = dict['hrs']
+    data_b = dict['data_b']
+    data_g = dict['data_g']
+    idx_b = dict['idx_b']
+    idx_g = dict['idx_g']
+    keys_b = dict['keys_b']
+    keys_g = dict['keys_g']
+
+    # display a plot - hard-wired assumption of 3 generators from Case 9
+    fig, ax = plt.subplots(4, 2, sharex='col')
+    if title is not None:
+        fig.suptitle(title)
+
+    ax[0, 0].plot(hrs, data_b[0, :, idx_b['PD_IDX']], color='blue', label='Real')
+    ax[0, 0].plot(hrs, data_b[0, :, idx_b['QD_IDX']], color='red', label='Reactive')
+    ax[0, 0].set_ylabel(idx_b['PD_UNITS'] + '/' + idx_b['QD_UNITS'])
+    ax[0, 0].set_title('Demands at ' + keys_b[0])
+    ax[0, 0].legend(loc='best')
+
+    ax[1, 0].plot(hrs, data_b[0, :, idx_b['LMP_P_IDX']], color='blue', label='Real')
+    ax[1, 0].plot(hrs, data_b[0, :, idx_b['LMP_Q_IDX']], color='red', label='Reactive')
+    ax[1, 0].set_ylabel(idx_b['LMP_P_UNITS'])
+    ax[1, 0].set_title('Prices at ' + keys_b[0])
+    ax[1, 0].legend(loc='best')
+
+    ax[2, 0].plot(hrs, data_b[0, :, idx_b['VMAG_IDX']], color='blue', label='Magnitude')
+    ax[2, 0].plot(hrs, data_b[0, :, idx_b['VMAX_IDX']], color='red', label='Vmax')
+    ax[2, 0].plot(hrs, data_b[0, :, idx_b['VMIN_IDX']], color='green', label='Vmin')
+    ax[2, 0].set_ylabel(idx_b['VMAG_UNITS'])
+    ax[2, 0].set_title('Voltages at ' + keys_b[0])
+    ax[2, 0].legend(loc='best')
+
+    ax[3, 0].plot(hrs, data_g[0, :, idx_g['GENLMP_IDX']], color='blue', label='unit 1')
+    ax[3, 0].plot(hrs, data_g[1, :, idx_g['GENLMP_IDX']], color='red', label='unit 2')
+    ax[3, 0].plot(hrs, data_g[2, :, idx_g['GENLMP_IDX']], color='green', label='unit 3')
+    ax[3, 0].plot(hrs, data_g[3, :, idx_g['GENLMP_IDX']], color='magenta', label='unit 4')
+    ax[3, 0].set_ylabel(idx_g['GENLMP_UNITS'])
+    ax[3, 0].set_title('Generator Prices')
+    ax[3, 0].legend(loc='best')
+
+    for i in range(0, 4):
+        ax[i, 1].plot(hrs, data_g[i, :, idx_g['PGEN_IDX']], color='blue', label='P')
+        ax[i, 1].plot(hrs, data_g[i, :, idx_g['QGEN_IDX']], color='red', label='Q')
+        ax[i, 1].set_ylabel(idx_g['PGEN_UNITS'] + '/' + idx_g['QGEN_UNITS'])
+        ax[i, 1].set_title('Output from unit ' + keys_g[i])
+        ax[i, 1].legend(loc='best')
+
+    ax[3, 0].set_xlabel('Hours')
+    ax[3, 1].set_xlabel('Hours')
+
+    if save_file is not None:
+        plt.savefig(save_file)
+    if not save_only:
+        plt.show()
 
 
 def process_pypower(nameroot, title=None, save_file=None, save_only=True):

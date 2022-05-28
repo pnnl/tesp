@@ -66,7 +66,7 @@ def load_json_case(fname):
   ppc['branch'] = np.array (ppc['branch'])
   ppc['areas'] = np.array (ppc['areas'])
   ppc['gencost'] = np.array (ppc['gencost'])
-  ppc['FNCS'] = np.array (ppc['FNCS'])
+  ppc['DSO'] = np.array (ppc['DSO'])
   ppc['UnitsOut'] = np.array (ppc['UnitsOut'])
   ppc['BranchesOut'] = np.array (ppc['BranchesOut'])
   return ppc
@@ -85,7 +85,7 @@ def make_dictionary(ppc, rootname):
   bus = ppc['bus']
   gen = ppc['gen']
   cost = ppc['gencost']
-  fncsBus = ppc['FNCS']
+  dsoBus = ppc['DSO']
   units = ppc['UnitsOut']
   branches = ppc['BranchesOut']
 
@@ -103,11 +103,11 @@ def make_dictionary(ppc, rootname):
     generators[str(i+1)] = {'bus':int(busnum),'bustype':bustypename,'Pnom':float(gen[i,1]),'Pmax':float(gen[i,8]),'genfuel':'tbd','gentype':'tbd',
       'StartupCost':float(cost[i,1]),'ShutdownCost':float(cost[i,2]), 'c2':float(cost[i,4]), 'c1':float(cost[i,5]), 'c0':float(cost[i,6])}
 
-  for i in range (fncsBus.shape[0]):
-    busnum = int(fncsBus[i,0])
+  for i in range (dsoBus.shape[0]):
+    busnum = int(dsoBus[i,0])
     busidx = busnum - 1
     fncsBuses[str(busnum)] = {'Pnom':float(bus[busidx,2]),'Qnom':float(bus[busidx,3]),'area':int(bus[busidx,6]),'zone':int(bus[busidx,10]),
-      'ampFactor':float(fncsBus[i,2]),'GLDsubstations':[fncsBus[i,1]]}
+      'ampFactor':float(dsoBus[i,2]),'GLDsubstations':[dsoBus[i,1]]}
 
   for i in range (units.shape[0]):
     unitsout.append ({'unit':int(units[i,0]),'tout':int(units[i,1]),'tin':int(units[i,2])})
@@ -211,7 +211,7 @@ def pypower_loop (casefile, rootname):
   sys_metrics = {'Metadata':sys_meta,'StartTime':StartTime}
 
   gencost = ppc['gencost']
-  fncsBus = ppc['FNCS']
+  dsoBus = ppc['DSO']
   gen = ppc['gen']
   ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'])
   ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'])
@@ -233,8 +233,8 @@ def pypower_loop (casefile, rootname):
   n_accum = 0
   bus_accum = {}
   gen_accum = {}
-  for i in range (fncsBus.shape[0]):
-    busnum = int(fncsBus[i,0])
+  for i in range (dsoBus.shape[0]):
+    busnum = int(dsoBus[i,0])
     bus_accum[str(busnum)] = [0,0,0,0,0,0,0,99999.0]
   for i in range (gen.shape[0]):
     gen_accum[str(i+1)] = [0,0,0]
@@ -257,12 +257,12 @@ def pypower_loop (casefile, rootname):
     # start by getting the latest inputs from GridLAB-D and the auction
     events = fncs.get_events()
     new_bid = False
-    load_scale = float (fncsBus[0][2])
+    load_scale = float (dsoBus[0][2])
     for topic in events:
       value = fncs.get_value(topic)
       if topic == 'UNRESPONSIVE_MW':
         unresp = load_scale * float(value)
-        fncsBus[0][3] = unresp # to poke unresponsive estimate into the bus load slot
+        dsoBus[0][3] = unresp # to poke unresponsive estimate into the bus load slot
         new_bid = True
       elif topic == 'RESPONSIVE_MAX_MW':
         resp_max = load_scale * float(value)
@@ -324,7 +324,7 @@ def pypower_loop (casefile, rootname):
       bus = ppc['bus']
       gen = ppc['gen']
       bus[6,2] = csv_load
-      for row in ppc['FNCS']:
+      for row in ppc['DSO']:
         unresp = float(row[3])
         newidx = int(row[0]) - 1
         if unresp >= feeder_load:
@@ -380,8 +380,8 @@ def pypower_loop (casefile, rootname):
     # update the metrics
     n_accum += 1
     loss_accum += Ploss
-    for i in range (fncsBus.shape[0]):
-      busnum = int(fncsBus[i,0])
+    for i in range (dsoBus.shape[0]):
+      busnum = int(dsoBus[i,0])
       busidx = busnum - 1
       row = bus[busidx].tolist()
       # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
@@ -410,8 +410,8 @@ def pypower_loop (casefile, rootname):
       sys_metrics[str(ts)] = {rootname:[loss_accum / n_accum,conv_accum]}
 
       bus_metrics[str(ts)] = {}
-      for i in range (fncsBus.shape[0]):
-        busnum = int(fncsBus[i,0])
+      for i in range (dsoBus.shape[0]):
+        busnum = int(dsoBus[i,0])
         busidx = busnum - 1
         row = bus[busidx].tolist()
         met = bus_accum[str(busnum)]

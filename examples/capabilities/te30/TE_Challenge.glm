@@ -159,6 +159,7 @@ object fncs_msg {
 
 #ifdef USE_HELICS
 object helics_msg {
+  name gld1;
   configure TE_Challenge_HELICS_gld_msg.json;
 }
 #endif

@@ -18,7 +18,7 @@ pmetrics = pp.read_pypower_metrics(os.getcwd(), rootname)
 pp.plot_pypower(pmetrics)
 
 if os.path.exists('auction_' + rootname + '_metrics.json'):
-    ametrics = ap.read_agent_metrics(rootname, 'TE_Challenge_agent_dict.json')
+    ametrics = ap.read_agent_metrics(os.getcwd(), rootname, 'TE_Challenge_agent_dict.json')
     ap.plot_agents(ametrics)
 
 gmetrics = gp.read_gld_metrics(os.getcwd(), rootname, 'TE_Challenge_glm_dict.json')

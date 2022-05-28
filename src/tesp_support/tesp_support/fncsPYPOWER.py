@@ -6,106 +6,22 @@ Public Functions:
     :pypower_loop: Initializes and runs the simulation.  
 """
 
-import json
 import sys
-import tesp_support.fncs as fncs
+import json
 import numpy as np
 import pypower.api as pp
 from math import sqrt
 from copy import deepcopy
+
+import tesp_support.fncs as fncs
+import tesp_support.tso_helpers as tso
 from .helpers import parse_mva
-from .helpers import load_json_case
 
 #import cProfile
 #import pstats
 
 if sys.platform != 'win32':
     import resource
-
-
-def summarize_opf(res):
-    """ Helper function to print optimal power flow solution (debugging)
-
-    Args:
-      res (dict): solved PYPOWER case structure
-    """
-    bus = res['bus']
-    gen = res['gen']
-
-    Pload = bus[:, 2].sum()
-    Pgen = gen[:, 1].sum()
-    PctLoss = 100.0 * (Pgen - Pload) / Pgen
-
-    print('success =', res['success'], 'in', '{:.3f}'.format(res['et']), 'seconds')
-    print('Total Gen = {:.2f}'.format(Pgen), ' Load = {:.2f}'.format(Pload), ' Loss = {:.3f}'.format(PctLoss), '%')
-
-    print('bus #       Pd       Qd       Vm     Vang    LMP_P    LMP_Q  MU_VMAX  MU_VMIN')
-    for row in bus:
-        print('{:4d}  {:8.2f} {:8.2f} {:8.4f} {:8.4f} {:8.5f} {:8.5f} {:8.5f} {:8.5f}'.
-              format(int(row[0]), float(row[2]), float(row[3]), float(row[7]), float(row[8]),
-                     float(row[13]), float(row[14]), float(row[15]), float(row[16])))
-
-    print('gen # bus       Pg       Qg   MU_PMAX   MU_PMIN   MU_QMAX   MU_QMIN')
-    idx = 1
-    for row in gen:
-        print('{:4d} {:4d} {:8.2f} {:8.2f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}'.
-              format(idx, int(row[0]), float(row[1]), float(row[2]), float(row[21]),
-                     float(row[22]), float(row[23]), float(row[24])))
-        ++idx
-
-
-def make_dictionary(ppc, rootname):
-    """ Helper function to write the JSON metafile for post-processing
-
-    Args:
-      ppc (dict): PYPOWER case file structure
-      rootname (str): to write rootname_m_dict.json
-    """
-    dsoBuses = {}
-    generators = {}
-    unitsout = []
-    branchesout = []
-    bus = ppc['bus']
-    gen = ppc['gen']
-    cost = ppc['gencost']
-    dsoBus = ppc['DSO']
-    units = ppc['UnitsOut']
-    branches = ppc['BranchesOut']
-
-    for i in range(gen.shape[0]):
-        busnum = gen[i, 0]
-        bustype = bus[busnum - 1, 1]
-        if bustype == 1:
-            bustypename = 'pq'
-        elif bustype == 2:
-            bustypename = 'pv'
-        elif bustype == 3:
-            bustypename = 'swing'
-        else:
-            bustypename = 'unknown'
-        generators[str(i + 1)] = {'bus': int(busnum), 'bustype': bustypename, 'Pnom': float(gen[i, 1]),
-                                  'Pmax': float(gen[i, 8]), 'genfuel': 'tbd', 'gentype': 'tbd',
-                                  'StartupCost': float(cost[i, 1]), 'ShutdownCost': float(cost[i, 2]),
-                                  'c2': float(cost[i, 4]), 'c1': float(cost[i, 5]), 'c0': float(cost[i, 6])}
-
-    for i in range(dsoBus.shape[0]):
-        busnum = int(dsoBus[i, 0])
-        busidx = busnum - 1
-        dsoBuses[str(busnum)] = {'Pnom': float(bus[busidx, 2]), 'Qnom': float(bus[busidx, 3]),
-                                 'area': int(bus[busidx, 6]), 'zone': int(bus[busidx, 10]),
-                                 'ampFactor': float(dsoBus[i, 2]), 'GLDsubstations': [dsoBus[i, 1]]}
-
-    for i in range(units.shape[0]):
-        unitsout.append({'unit': int(units[i, 0]), 'tout': int(units[i, 1]), 'tin': int(units[i, 2])})
-
-    for i in range(branches.shape[0]):
-        branchesout.append({'branch': int(branches[i, 0]), 'tout': int(branches[i, 1]), 'tin': int(branches[i, 2])})
-
-    dp = open(rootname + "_m_dict.json", "w")
-    ppdict = {'baseMVA': ppc['baseMVA'], 'dsoBuses': dsoBuses, 'generators': generators, 'UnitsOut': unitsout,
-              'BranchesOut': branchesout}
-    json.dump(ppdict, dp, ensure_ascii=False, indent=2)
-    dp.close()
 
 
 def pypower_loop(casefile, rootname, helicsConfig=None):
@@ -126,12 +42,12 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
       rootname (str): the root filename for metrics output, without extension
     """
 
-    ppc = load_json_case(casefile)
+    ppc = tso.load_json_case(casefile)
     StartTime = ppc['StartTime']
     tmax = int(ppc['Tmax'])
     period = int(ppc['Period'])
     dt = int(ppc['dt'])
-    make_dictionary(ppc, rootname)
+    tso.make_dictionary(ppc)
 
     bus_mp = open("bus_" + rootname + "_metrics.json", "w")
     gen_mp = open("gen_" + rootname + "_metrics.json", "w")

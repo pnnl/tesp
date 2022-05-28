@@ -797,125 +797,125 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     # write the dso helics message configuration
     dso = HelicsMsg.dso
     if feedercnt == 1:
-        dso.pubs_append_n(False, "da_bid_" + bus, "string")
-        dso.pubs_append_n(False, "rt_bid_" + bus, "string")
-        dso.subs_append_n(gld_sim_name + '/gld_load', "string")
-        dso.subs_append_n("pypower/lmp_da_" + bus, "string")
-        dso.subs_append_n("pypower/lmp_rt_" + bus, "string")
-        dso.subs_append_n("pypower/cleared_q_da_" + bus, "string")
-        dso.subs_append_n("pypower/cleared_q_rt_" + bus, "string")
+        dso.pubs_n(False, "da_bid_" + bus, "string")
+        dso.pubs_n(False, "rt_bid_" + bus, "string")
+        dso.subs_n(gld_sim_name + '/gld_load', "string")
+        dso.subs_n("pypower/lmp_da_" + bus, "string")
+        dso.subs_n("pypower/lmp_rt_" + bus, "string")
+        dso.subs_n("pypower/cleared_q_da_" + bus, "string")
+        dso.subs_n("pypower/cleared_q_rt_" + bus, "string")
         plyr = simulation_config['keyLoad']
-        dso.subs_append_n(plyr + 'player/' + plyr + '_load_' + bus, "string")
-        dso.subs_append_n(plyr + 'player/' + plyr + '_ld_hist_' + bus, "string")
+        dso.subs_n(plyr + 'player/' + plyr + '_load_' + bus, "string")
+        dso.subs_n(plyr + 'player/' + plyr + '_ld_hist_' + bus, "string")
 
     for key, val in hvac_agents.items():
         house_name = val["houseName"]
         meter_name = val["meterName"]
-        dso.pubs_append_n(False, key + "/cooling_setpoint", "double")
-        dso.pubs_append_n(False, key + "/heating_setpoint", "double")
-        dso.pubs_append_n(False, key + "/thermostat_deadband", "double")
-        dso.pubs_append_n(False, key + "/bill_mode", "string")
-        dso.pubs_append_n(False, key + "/price", "double")
-        dso.pubs_append_n(False, key + "/monthly_fee", "double")
-        dso.subs_append_n(gld_sim_name + "/" + house_name + "#V1", "complex")
-        dso.subs_append_n(gld_sim_name + "/" + house_name + "#Tair", "double")
-        dso.subs_append_n(gld_sim_name + "/" + house_name + "#HvacLoad", "double")
-        dso.subs_append_n(gld_sim_name + "/" + house_name + "#TotalLoad", "double")
-        dso.subs_append_n(gld_sim_name + "/" + house_name + "#On", "string")
+        dso.pubs_n(False, key + "/cooling_setpoint", "double")
+        dso.pubs_n(False, key + "/heating_setpoint", "double")
+        dso.pubs_n(False, key + "/thermostat_deadband", "double")
+        dso.pubs_n(False, key + "/bill_mode", "string")
+        dso.pubs_n(False, key + "/price", "double")
+        dso.pubs_n(False, key + "/monthly_fee", "double")
+        dso.subs_n(gld_sim_name + "/" + house_name + "#V1", "complex")
+        dso.subs_n(gld_sim_name + "/" + house_name + "#Tair", "double")
+        dso.subs_n(gld_sim_name + "/" + house_name + "#HvacLoad", "double")
+        dso.subs_n(gld_sim_name + "/" + house_name + "#TotalLoad", "double")
+        dso.subs_n(gld_sim_name + "/" + house_name + "#On", "string")
 
     for key, val in water_heater_agents.items():
         wh_name = str(val["waterheaterName"])
-        dso.pubs_append_n(False, key + "/lower_tank_setpoint", "double")
-        dso.pubs_append_n(False, key + "/upper_tank_setpoint", "double")
-        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#LTTemp", "string")
-        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#UTTemp", "string")
-        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#LTState", "string")
-        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#UTState", "string")
-        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#WHLoad", "string")
-        dso.subs_append_n(gld_sim_name + "/" + wh_name + "#WDRate", "string")
+        dso.pubs_n(False, key + "/lower_tank_setpoint", "double")
+        dso.pubs_n(False, key + "/upper_tank_setpoint", "double")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "#LTTemp", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "#UTTemp", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "#LTState", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "#UTState", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "#WHLoad", "string")
+        dso.subs_n(gld_sim_name + "/" + wh_name + "#WDRate", "string")
 
     for key, val in battery_agents.items():
         battery_name = str(val["batteryName"])
-        dso.pubs_append_n(False, key + "/p_Out", "double")
-        dso.pubs_append_n(False, key + "/q_Out", "double")
-        dso.subs_append_n(gld_sim_name + "/" + battery_name + "#SOC", "string")
+        dso.pubs_n(False, key + "/p_Out", "double")
+        dso.pubs_n(False, key + "/q_Out", "double")
+        dso.subs_n(gld_sim_name + "/" + battery_name + "#SOC", "string")
 
     for key, val in ev_agents.items():
         ev_name = str(val["evName"])
-        dso.pubs_append_n(False, key + "/ev_out", "double")
-        dso.subs_append_n(gld_sim_name + "/" + ev_name + "#SOC", "string")
+        dso.pubs_n(False, key + "/ev_out", "double")
+        dso.subs_n(gld_sim_name + "/" + ev_name + "#SOC", "string")
 
     # these messages are for weather agent used in DSOT agents
     if feedercnt == 1:
         weather_topic = gd["climate"]["name"] + '/'
-        dso.subs_append_n(weather_topic + "#temperature", "string")
-        dso.subs_append_n(weather_topic + "#temperature#forecast", "string")
-        dso.subs_append_n(weather_topic + "#humidity", "string")
-        dso.subs_append_n(weather_topic + "#humidity#forecast", "string")
-        dso.subs_append_n(weather_topic + "#solar_direct", "string")
-        dso.subs_append_n(weather_topic + "#solar_direct#forecast", "string")
-        dso.subs_append_n(weather_topic + "#solar_diffuse", "string")
-        dso.subs_append_n(weather_topic + "#solar_diffuse#forecast", "string")
+        dso.subs_n(weather_topic + "#temperature", "string")
+        dso.subs_n(weather_topic + "#temperature#forecast", "string")
+        dso.subs_n(weather_topic + "#humidity", "string")
+        dso.subs_n(weather_topic + "#humidity#forecast", "string")
+        dso.subs_n(weather_topic + "#solar_direct", "string")
+        dso.subs_n(weather_topic + "#solar_direct#forecast", "string")
+        dso.subs_n(weather_topic + "#solar_diffuse", "string")
+        dso.subs_n(weather_topic + "#solar_diffuse#forecast", "string")
 
     # write GridLAB-D helics message configuration
     gld = HelicsMsg.gld
     if feedercnt == 1:
-        gld.pubs_append(False, "gld_load", "complex", "network_node", "distribution_load")
+        gld.pubs(False, "gld_load", "complex", "network_node", "distribution_load")
         # JH says removed this line below when we do not have the TSO in the federation
-        gld.subs_append("pypower/three_phase_voltage_" + bus, "complex", "network_node", "positive_sequence_voltage")
+        gld.subs("pypower/three_phase_voltage_" + bus, "complex", "network_node", "positive_sequence_voltage")
         if 'climate' in gd:
             for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
-                gld.subs_append(gd['climate']['name'] + "/#" + wTopic, "double", gd['climate']['name'], wTopic)
+                gld.subs(gd['climate']['name'] + "/#" + wTopic, "double", gd['climate']['name'], wTopic)
 
     mtr_list = []
     for key, val in hvac_agents.items():
         house_name = val['houseName']
         meter_name = val['meterName']
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs_append(False, house_name + "#Tair", "double", house_name, "air_temperature")
-        gld.pubs_append(False, house_name + "#On", "string", house_name, "power_state")
-        gld.pubs_append(False, house_name + "#HvacLoad", "double", house_name, "hvac_load")
-        gld.pubs_append(False, house_name + "#TotalLoad", "double", house_name, "total_load")
+        gld.pubs(False, house_name + "#Tair", "double", house_name, "air_temperature")
+        gld.pubs(False, house_name + "#On", "string", house_name, "power_state")
+        gld.pubs(False, house_name + "#HvacLoad", "double", house_name, "hvac_load")
+        gld.pubs(False, house_name + "#TotalLoad", "double", house_name, "total_load")
         # Identify commercial buildings and map measured voltage correctly
 #        if meter_name not in mtr_list:
 #            mtr_list.append(meter_name)
         if val['houseClass'] in comm_bldg_list:
-            gld.pubs_append(False, house_name + "#V1", "complex", meter_name, "measured_voltage_A")
+            gld.pubs(False, house_name + "#V1", "complex", meter_name, "measured_voltage_A")
         else:
-            gld.pubs_append(False, house_name + "#V1", "complex", meter_name, "measured_voltage_1")
-        gld.subs_append(substation_sim_key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
-        gld.subs_append(substation_sim_key + "/heating_setpoint", "double", house_name, "heating_setpoint")
-        gld.subs_append(substation_sim_key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
-        gld.subs_append(substation_sim_key + "/bill_mode", "string", meter_name, "bill_mode")
-        gld.subs_append(substation_sim_key + "/price", "double", meter_name, "price")
-        gld.subs_append(substation_sim_key + "/monthly_fee", "double", meter_name, "monthly_fee")
+            gld.pubs(False, house_name + "#V1", "complex", meter_name, "measured_voltage_1")
+        gld.subs(substation_sim_key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
+        gld.subs(substation_sim_key + "/heating_setpoint", "double", house_name, "heating_setpoint")
+        gld.subs(substation_sim_key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
+        gld.subs(substation_sim_key + "/bill_mode", "string", meter_name, "bill_mode")
+        gld.subs(substation_sim_key + "/price", "double", meter_name, "price")
+        gld.subs(substation_sim_key + "/monthly_fee", "double", meter_name, "monthly_fee")
 
     for key, val in water_heater_agents.items():
         wh_name = key
         meter_name = val['meterName']
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs_append(False, wh_name + "#LTTemp", "double", wh_name, "lower_tank_temperature")
-        gld.pubs_append(False, wh_name + "#UTTemp", "double", wh_name, "upper_tank_temperature")
-        gld.pubs_append(False, wh_name + "#LTState", "string", wh_name, "lower_heating_element_state")
-        gld.pubs_append(False, wh_name + "#UTState", "string", wh_name, "upper_heating_element_state")
-        gld.pubs_append(False, wh_name + "#WHLoad", "double", wh_name, "heating_element_capacity")
-        gld.pubs_append(False, wh_name + "#WDRate", "double", wh_name, "water_demand")
-        gld.subs_append(substation_sim_key + "/lower_tank_setpoint", "double", wh_name, "lower_tank_setpoint")
-        gld.subs_append(substation_sim_key + "/upper_tank_setpoint", "double", wh_name, "upper_tank_setpoint")
+        gld.pubs(False, wh_name + "#LTTemp", "double", wh_name, "lower_tank_temperature")
+        gld.pubs(False, wh_name + "#UTTemp", "double", wh_name, "upper_tank_temperature")
+        gld.pubs(False, wh_name + "#LTState", "string", wh_name, "lower_heating_element_state")
+        gld.pubs(False, wh_name + "#UTState", "string", wh_name, "upper_heating_element_state")
+        gld.pubs(False, wh_name + "#WHLoad", "double", wh_name, "heating_element_capacity")
+        gld.pubs(False, wh_name + "#WDRate", "double", wh_name, "water_demand")
+        gld.subs(substation_sim_key + "/lower_tank_setpoint", "double", wh_name, "lower_tank_setpoint")
+        gld.subs(substation_sim_key + "/upper_tank_setpoint", "double", wh_name, "upper_tank_setpoint")
 
     for key, val in battery_agents.items():
         inverter_name = key
         battery_name = str(val['batteryName'])
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs_append(False, battery_name + "#SOC", "double", battery_name, "state_of_charge")
-        gld.subs_append(substation_sim_key + "/p_Out", "double", inverter_name, "P_out")
-        gld.subs_append(substation_sim_key + "/q_Out", "double", inverter_name, "Q_out")
+        gld.pubs(False, battery_name + "#SOC", "double", battery_name, "state_of_charge")
+        gld.subs(substation_sim_key + "/p_Out", "double", inverter_name, "P_out")
+        gld.subs(substation_sim_key + "/q_Out", "double", inverter_name, "Q_out")
 
     for key, val in ev_agents.items():
         ev_name = val['evName']
         substation_sim_key = "dso" + substation_name + '/' + key
-        gld.pubs_append(False, ev_name + "#SOC", "double", ev_name, "battery_SOC")
-        gld.subs_append(substation_sim_key + "/ev_out", "double", ev_name, "maximum_charge_rate")
+        gld.pubs(False, ev_name + "#SOC", "double", ev_name, "battery_SOC")
+        gld.subs(substation_sim_key + "/ev_out", "double", ev_name, "maximum_charge_rate")
 
 
 def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,

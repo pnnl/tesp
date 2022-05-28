@@ -357,7 +357,7 @@ values:
     ppcase['branch'] = ppcase['branch'].tolist()
     ppcase['areas'] = ppcase['areas'].tolist()
     ppcase['gencost'] = ppcase['gencost'].tolist()
-    ppcase['FNCS'] = ppcase['FNCS'].tolist()
+    ppcase['DSO'] = ppcase['DSO'].tolist()
     ppcase['UnitsOut'] = ppcase['UnitsOut'].tolist()
     ppcase['BranchesOut'] = ppcase['BranchesOut'].tolist()
 
@@ -377,8 +377,8 @@ values:
         ppcase['pf_dc'] = 1
     fncsBus = int (config['PYPOWERConfiguration']['GLDBus'])
     fncsScale = float (config['PYPOWERConfiguration']['GLDScale'])
-    ppcase['FNCS'][0][0] = fncsBus
-    ppcase['FNCS'][0][2] = fncsScale
+    ppcase['DSO'][0][0] = fncsBus
+    ppcase['DSO'][0][2] = fncsScale
     baseKV = float(config['PYPOWERConfiguration']['TransmissionVoltage'])
     for row in ppcase['bus']:
         if row[0] == fncsBus:

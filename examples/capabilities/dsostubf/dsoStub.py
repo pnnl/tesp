@@ -3,15 +3,15 @@ import logging as log
 import os
 
 import tesp_support.fncs as fncs
-from tesp_support.helpers import load_json_case
+import tesp_support.tso_helpers as tso
 from tesp_support.helpers import parse_mva
 
 
 def dso_make_yaml(casename):
     log.info('Reading configuration...')
-    ppc = load_json_case(casename + '.json', True)
+    ppc = tso.load_json_case(casename + '.json')
     port = str(ppc['port'])
-    nd = ppc['FNCS'].shape[0]
+    nd = ppc['DSO'].shape[0]
 
     # write player yaml(s) for load and generator players
     players = ppc["players"]
@@ -116,13 +116,13 @@ def dso_loop(casename):
     # logger.setLevel(log.WARNING)
 
     log.info('Reading configuration...')
-    ppc = load_json_case(casename + '.json', True)
+    ppc = tso.load_json_case(casename + '.json')
 
     tmax = int(ppc['Tmax'])
     dt = int(ppc['dt'])
     bWantMarket = ppc['priceSensLoad']
-    fncs_bus = ppc['FNCS']
-    nd = fncs_bus.shape[0]
+    dso_bus = ppc['DSO']
+    nd = dso_bus.shape[0]
     dsoList = [1, 2, 3, 4, 5, 6, 7, 8]
 
     gld_bus = {}  # key on bus number
@@ -179,7 +179,7 @@ def dso_loop(casename):
         # the bid curve is also fixed
         # however, we will add some noise to the day-ahead bid
         if ts >= tnext_da:
-            for row in fncs_bus:
+            for row in dso_bus:
                 busnum = int(row[0])
                 if busnum in dsoList:
                     da_bid = {
@@ -206,7 +206,7 @@ def dso_loop(casename):
 
         # update the bid, and publish simulated load as unresponsive + cleared_responsive
         if ts >= tnext_rt:
-            for row in fncs_bus:
+            for row in dso_bus:
                 busnum = int(row[0])
                 if busnum in dsoList:
                     p = gld_bus[busnum]['p']  # + gld_bus[busnum]['p_i']

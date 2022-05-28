@@ -17,7 +17,7 @@ def load_player_loop(casename, keyName):
     tmax = int(ppc['Tmax'])
     dt = int(ppc['dt'])
     genFuel = ppc['genfuel']
-    fncs_bus = ppc['FNCS']
+    fncs_bus = ppc['DSO']
     renew = ppc['renewables']
 
     key = ppc[keyName]

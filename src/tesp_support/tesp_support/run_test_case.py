@@ -23,6 +23,12 @@ reports = []
 bReporting = False
 
 
+def block(call):
+    print('\n<!--', flush=True)
+    call()
+    print('--!>', flush=True)
+
+
 def GetTestCaseReports():
     global reports
 

@@ -1780,7 +1780,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
     industrial_file = os.path.join(ercot_dir, case_config['indLoad'][5].split('/')[-1])
     indust_df = load_indust_data(industrial_file, range(int(day),int(day)+1))
 
-    FNCS = case_config['FNCS']
+    FNCS = case_config['DSO']
 
     # Load DSO MetaData
     DSOmetadata = load_json(ercot_dir, dso_metadata_file)

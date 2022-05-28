@@ -1,5 +1,7 @@
 #!/usr/bin/python3
+# Copyright (C) 2021-2022 Battelle Memorial Institute
+# file: editconfig
 
-import tesp_support.tesp_config as tesp
+import tesp_support.tesp_config as tc
 
-tesp.show_tesp_config()
+tc.show_tesp_config()

@@ -298,7 +298,7 @@ def glm_dict (nameroot, ercot=False, te30=False):
 		mtr['children'].append(key)
 
 	feeders[feeder_id] = {'house_count': len(houses),'inverter_count': len(inverters)}
-	substation = {'bulkpower_bus':bulkpowerBus,'FNCS':FNCSmsgName,
+	substation = {'bulkpower_bus':bulkpowerBus,'DSO':FNCSmsgName,
 		'transformer_MVA':substationTransformerMVA,
 		'base_feeder':base_feeder,'feeders':feeders, 
 		'billingmeters':billingmeters,'houses':houses,'inverters':inverters,
