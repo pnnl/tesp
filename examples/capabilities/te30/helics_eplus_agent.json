@@ -55,7 +55,7 @@
   ],
   "subscriptions" : [
     {
-      "key" : "sub1/clear_price_1",
+      "key" : "sub_7/clear_price",
       "type" : "double",
       "required" : true,
       "info" : "kwhr_price"

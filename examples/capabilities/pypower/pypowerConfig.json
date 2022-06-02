@@ -4,18 +4,17 @@
   "publications":[
     {
       "global": false,
-      "key": "three_phase_voltage_B7",
+      "key": "three_phase_voltage_7",
       "type": "double"
     },
     {
       "global": false,
-      "key": "LMP_B7",
+      "key": "LMP_7",
       "type": "double"
     }
   ],
   "subscriptions":[
     {
-      "name": "SUBSTATION7",
       "key": "player/distribution_load",
       "type": "complex"
     }  
