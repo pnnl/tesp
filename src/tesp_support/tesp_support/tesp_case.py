@@ -175,6 +175,9 @@ def write_tesp_case(config, cfgfile, freshdir=True):
 
     ppfile = ppdir + config['BackboneFiles']['PYPOWERFile']
     ppcsv = ppdir + config['PYPOWERConfiguration']['CSVLoadFile']
+    dso_substation_bus_id = int(config['PYPOWERConfiguration']['GLDBus'])
+    gld_federate = "gld_" + str(dso_substation_bus_id)
+    sub_federate = "sub_" + str(dso_substation_bus_id)
 
     if freshdir:
         # process TMY3 ==> weather.dat
@@ -223,7 +226,7 @@ time_delta: """ + str(EpAgentStep) + """
 broker: tcp://localhost:5570
 values:
     kwhr_price:
-        topic: sub1/clear_price
+        topic: """ + sub_federate + """/clear_price
         default: 0.10
     indoor_air:
         topic: eplus/EMS INDOOR AIR TEMPERATURE
@@ -322,7 +325,7 @@ values:
         epa.config("time_delta", 1)
         epa.config("uninterruptible", False)
         # Subs
-        epa.subs_e(True, "sub1/clear_price_1", "double", "kwhr_price")
+        epa.subs_e(True, sub_federate + "/clear_price", "double", "kwhr_price")
         epa.subs_e(True, "energyPlus/EMS Cooling Controlled Load", "double", "cooling_controlled_load")
         epa.subs_e(True, "energyPlus/EMS Heating Controlled Load", "double", "heating_controlled_load")
         epa.subs_e(True, "energyPlus/EMS Cooling Schedule Temperature", "double", "cooling_schedule_temperature")
@@ -386,17 +389,14 @@ values:
         ppcase['pf_dc'] = 0
     else:
         ppcase['pf_dc'] = 1
-    fncsBus = int(config['PYPOWERConfiguration']['GLDBus'])
-    fncsScale = float(config['PYPOWERConfiguration']['GLDScale'])
-    ppcase['DSO'][0][0] = fncsBus
-    ppcase['DSO'][0][2] = fncsScale
+    ppcase['DSO'][0][0] = dso_substation_bus_id
+    ppcase['DSO'][0][2] = float(config['PYPOWERConfiguration']['GLDScale'])
     baseKV = float(config['PYPOWERConfiguration']['TransmissionVoltage'])
     for row in ppcase['bus']:
-        if row[0] == fncsBus:
+        if row[0] == dso_substation_bus_id:
             row[9] = baseKV
 
-    if len(config['PYPOWERConfiguration']['UnitOutStart']) > 0 and len(
-            config['PYPOWERConfiguration']['UnitOutEnd']) > 0:
+    if len(config['PYPOWERConfiguration']['UnitOutStart']) > 0 and len(config['PYPOWERConfiguration']['UnitOutEnd']) > 0:
         dt3 = datetime.strptime(config['PYPOWERConfiguration']['UnitOutStart'], time_fmt)
         tout_start = int((dt3 - dt1).total_seconds())
         dt3 = datetime.strptime(config['PYPOWERConfiguration']['UnitOutEnd'], time_fmt)
@@ -405,8 +405,7 @@ values:
     else:
         ppcase['UnitsOut'] = []
 
-    if len(config['PYPOWERConfiguration']['BranchOutStart']) > 0 and len(
-            config['PYPOWERConfiguration']['BranchOutEnd']) > 0:
+    if len(config['PYPOWERConfiguration']['BranchOutStart']) > 0 and len(config['PYPOWERConfiguration']['BranchOutEnd']) > 0:
         dt3 = datetime.strptime(config['PYPOWERConfiguration']['BranchOutStart'], time_fmt)
         tout_start = int((dt3 - dt1).total_seconds())
         dt3 = datetime.strptime(config['PYPOWERConfiguration']['BranchOutEnd'], time_fmt)
@@ -427,23 +426,23 @@ values:
 time_delta: """ + str(config['PYPOWERConfiguration']['PFStep']) + """s
 broker: tcp://localhost:5570
 values:
-    SUBSTATION7:
-        topic: gldSub1/distribution_load
+    SUBSTATION""" + str(dso_substation_bus_id) + """:
+        topic: """ + gld_federate + """/distribution_load
         default: 0
     UNRESPONSIVE_MW:
-        topic: sub1/unresponsive_mw
+        topic: """ + sub_federate + """/unresponsive_mw
         default: 0
     RESPONSIVE_MAX_MW:
-        topic: sub1/responsive_max_mw
+        topic: """ + sub_federate + """/responsive_max_mw
         default: 0
     RESPONSIVE_C2:
-        topic: sub1/responsive_c2
+        topic: """ + sub_federate + """/responsive_c2
         default: 0
     RESPONSIVE_C1:
-        topic: sub1/responsive_c1
+        topic: """ + sub_federate + """/responsive_c1
         default: 0
     RESPONSIVE_DEG:
-        topic: sub1/responsive_deg
+        topic: """ + sub_federate + """/responsive_deg
         default: 0
 """
         op = open(casedir + '/pypower.yaml', 'w')
@@ -451,39 +450,39 @@ values:
         op.close()
 
         ppc = helpers.HelicsMsg("pypower", int(config['PYPOWERConfiguration']['PFStep']))
-        ppc.subs_n("gldSub1/distribution_load_1", "complex")
-        ppc.subs_n("sub1/unresponsive_mw_1", "double")
-        ppc.subs_n("sub1/responsive_max_mw_1", "double")
-        ppc.subs_n("sub1/responsive_c1_1", "double")
-        ppc.subs_n("sub1/responsive_c2_1", "double")
-        ppc.subs_n("sub1/responsive_deg_1", "integer")
-        ppc.pubs_n(False, "three_phase_voltage_1", "double")
-        ppc.pubs_n(False, "LMP_1", "double")
+        ppc.subs_n(gld_federate + "/distribution_load", "complex")
+        ppc.subs_n(sub_federate + "/unresponsive_mw", "double")
+        ppc.subs_n(sub_federate + "/responsive_max_mw", "double")
+        ppc.subs_n(sub_federate + "/responsive_c1", "double")
+        ppc.subs_n(sub_federate + "/responsive_c2", "double")
+        ppc.subs_n(sub_federate + "/responsive_deg", "integer")
+        ppc.pubs_n(False, "three_phase_voltage_" + str(dso_substation_bus_id), "double")
+        ppc.pubs_n(False, "LMP_" + str(dso_substation_bus_id), "double")
         ppc.write_file(casedir + '/pypowerConfig.json')
 
     # write a YAML for the solution monitor
     tespyamlstr = """name = tesp_monitor
-time_delta = """ + str(int(config['AgentPrep']['MarketClearingPeriod'])) + """s
+time_delta = """ + str(config['AgentPrep']['MarketClearingPeriod']) + """s
 broker: tcp://localhost:5570
 aggregate_sub: true
 values:
-  vpos7:
-    topic: pypower/three_phase_voltage_1
+  vpos""" + str(dso_substation_bus_id) + """:
+    topic: pypower/three_phase_voltage_""" + str(dso_substation_bus_id) + """
     default: 0
     type: double
     list: false
-  LMP7:
-    topic: pypower/LMP_1
+  LMP_""" + str(dso_substation_bus_id) + """:
+    topic: pypower/LMP_""" + str(dso_substation_bus_id) + """
     default: 0
     type: double
     list: false
   clear_price:
-    topic: sub1/clear_price
+    topic: """ + sub_federate + """/clear_price
     default: 0
     type: double
     list: false
   distribution_load:
-    topic: gld1/distribution_load
+    topic: """ + gld_federate + """/distribution_load
     default: 0
     type: complex
     list: false
@@ -531,9 +530,9 @@ values:
         print('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> fncs_broker.log &)',
               file=op)
     print('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile +
-          ' &> fncs_gld1.log &)', file=op)
+          ' &> fncs_gld_1.log &)', file=op)
     print('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline +
-          ' &> fncs_sub1.log &)', file=op)
+          ' &> fncs_sub_1.log &)', file=op)
     print('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && ' +
           'export FNCS_LOG_STDOUT=yes && exec ' + ppline +
           ' &> fncs_pypower.log &)', file=op)
@@ -565,8 +564,8 @@ values:
               'eplus_agent.json &> eplus_agent.log &)', file=op)
     else:
         print('(exec helics_broker -f 4 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
-    print('(exec gridlabd -D USE_HELICS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' &> gld1.log &)', file=op)
-    print('(exec ' + aucline + ' &> sub1.log &)', file=op)
+    print('(exec gridlabd -D USE_HELICS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' &> gld_1.log &)', file=op)
+    print('(exec ' + aucline + ' &> sub_1.log &)', file=op)
     print('(exec ' + ppline + ' &> pypower.log &)', file=op)
     print('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec ' + weatherline + ' &> weather.log &)', file=op)
     op.close()
@@ -607,11 +606,11 @@ values:
                                  'log': 'broker.log'})
     cmds['commands'].append({'args': ['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile],
                              'env': [['FNCS_FATAL', 'YES'], ['FNCS_LOG_STDOUT', 'yes']],
-                             'log': 'gld1.log'})
+                             'log': 'gld_1.log'})
     cmds['commands'].append({'args': [pycall, 'launch_auction.py'],
                              'env': [['FNCS_CONFIG_FILE', SubstationYamlFile], ['FNCS_FATAL', 'YES'],
                                      ['FNCS_LOG_STDOUT', 'yes']],
-                             'log': 'sub1.log'})
+                             'log': 'sub_1.log'})
     cmds['commands'].append({'args': [pycall, 'launch_pp.py'],
                              'env': [['FNCS_CONFIG_FILE', 'pypower.yaml'], ['FNCS_FATAL', 'YES'],
                                      ['FNCS_LOG_STDOUT', 'yes']],

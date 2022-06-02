@@ -145,7 +145,7 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
             elif topic == 'RESPONSIVE_DEG':
                 resp_deg = int(value)
                 new_bid = True
-            else:
+            elif topic == 'SUBSTATION7':
                 gld_load = parse_mva(value)  # actual value, may not match unresp + resp load
                 feeder_load = float(gld_load[0]) * load_scale
 
@@ -300,7 +300,7 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
             conv_accum = True
 
         volts = 1000.0 * bus[6, 7] * bus[6, 9] / sqrt(3.0)  # VLN for GridLAB-D
-        fncs.publish('three_phase_voltage_B7', volts)
+        fncs.publish('three_phase_voltage_7', volts)
 
         # CSV file output
         print(ts, res['success'],
@@ -342,7 +342,7 @@ def pypower_loop(casefile, rootname, helicsConfig=None):
     gen_mp.close()
     sys_mp.close()
     op.close()
-    print('finalizing DSO', flush=True)
+    print('finalizing DSO - FNCS', flush=True)
     fncs.finalize()
 
     if sys.platform != 'win32':

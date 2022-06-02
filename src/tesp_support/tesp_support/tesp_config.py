@@ -115,8 +115,8 @@ varsTM = [['Start Time', StartTime, 'GLD Date/Time', 'SimulationConfig', 'StartT
           ['Altitude (not used yet)', 777.0, 'm', 'WeatherPrep', 'Altitude'],
           ['TZmeridian (E > 0)', -105.00, 'deg', 'WeatherPrep', 'TZmeridian'],
           ['Support Directory', '$TESPDIR', 'Directory of TESP', 'SimulationConfig', 'SourceDirectory'],
-          ['Working Directory', './Test', '', 'SimulationConfig', 'WorkingDirectory'],
-          ['Case Name', 'Test', '', 'SimulationConfig', 'CaseName']
+          ['Working Directory', './test', '', 'SimulationConfig', 'WorkingDirectory'],
+          ['Case Name', 'test', '', 'SimulationConfig', 'CaseName']
           ]
 varsTMSupportDirIndex = 16
 
@@ -129,14 +129,14 @@ varsFD = [['Electric Cooling Penetration', 90, '%', 'FeederGenerator', 'Electric
           ['Solar Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'SolarInverterMode', 'inverterModesPV'],
           ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode','inverterModesBattery'],
           ['Billing Mode', 'TIERED', '', 'FeederGenerator', 'BillingMode', 'billingModes'],
-          ['Monthly Fee', 13, '$', 'FeederGenerator', 'MonthlyFee'],
+          ['Monthly Fee', 13.0, '$', 'FeederGenerator', 'MonthlyFee'],
           ['Price', 0.102013, '$/kwh', 'FeederGenerator', 'Price'],
-          ['Tier 1 Energy', 500, 'kwh', 'FeederGenerator', 'Tier1Energy'],
+          ['Tier 1 Energy', 500.0, 'kwh', 'FeederGenerator', 'Tier1Energy'],
           ['Tier 1 Price', 0.117013, '$/kwh', 'FeederGenerator', 'Tier1Price'],
-          ['Tier 2 Energy', 1000, 'kwh', 'FeederGenerator', 'Tier2Energy'],
+          ['Tier 2 Energy', 1000.0, 'kwh', 'FeederGenerator', 'Tier2Energy'],
           ['Tier 2 Price', 0.122513, '$/kwh', 'FeederGenerator', 'Tier2Price'],
-          ['Tier 3 Energy', 0, 'kwh', 'FeederGenerator', 'Tier3Energy'],
-          ['Tier 3 Price', 0, '$/kwh', 'FeederGenerator', 'Tier3Price']
+          ['Tier 3 Energy', 0.0, 'kwh', 'FeederGenerator', 'Tier3Energy'],
+          ['Tier 3 Price', 0.0, '$/kwh', 'FeederGenerator', 'Tier3Price']
           ]
 varsPP = [['OPF Type', 'DC', 'for dispatch and price', 'PYPOWERConfiguration', 'ACOPF', 'optimalPowerFlowChoices'],
           ['PF Type', 'DC', 'for voltage', 'PYPOWERConfiguration', 'ACPF', 'powerFlowChoices'],
@@ -156,12 +156,12 @@ varsEP = [['Energy+ Base File', 'SchoolDualController', '', 'EplusConfiguration'
           ['Energy+ EMS File', 'emsFNCS/emsSchoolDualController', '', 'EplusConfiguration', 'EMSFile'],
           ['Time Steps per Hour', 12, '', 'EplusConfiguration', 'StepsPerHour'],
           ['Eplus Bus', 'Feeder_head', '', 'EplusConfiguration', 'EnergyPlusBus'],
-          ['Eplus Service Voltage', 480, 'V', 'EplusConfiguration', 'EnergyPlusServiceV', 'eplusVoltageChoices'],
-          ['Eplus Transformer Size', 150, 'kVA', 'EplusConfiguration', 'EnergyPlusXfmrKva'],
+          ['Eplus Service Voltage', 480.0, 'V', 'EplusConfiguration', 'EnergyPlusServiceV', 'eplusVoltageChoices'],
+          ['Eplus Transformer Size', 150.0, 'kVA', 'EplusConfiguration', 'EnergyPlusXfmrKva'],
           ['Reference Price', 0.02, '$', 'EplusConfiguration', 'ReferencePrice'],
-          ['Ramp', 25, 'degF/$', 'EplusConfiguration', 'Slope'],
-          ['Delta Limit Hi', 4, 'degF', 'EplusConfiguration', 'OffsetLimitHi'],
-          ['Delta Limit Lo', 4, 'degF', 'EplusConfiguration', 'OffsetLimitLo']
+          ['Ramp', 25.0, 'degF/$', 'EplusConfiguration', 'Slope'],
+          ['Delta Limit Hi', 4.0, 'degF', 'EplusConfiguration', 'OffsetLimitHi'],
+          ['Delta Limit Lo', 4.0, 'degF', 'EplusConfiguration', 'OffsetLimitLo']
           ]
 varsAC = [['Initial Price', 0.02078, '$', 'AgentPrep', 'InitialPriceMean'],
           ['Std Dev Price', 0.00361, '$', 'AgentPrep', 'InitialPriceStdDev'],
@@ -176,28 +176,28 @@ varsAC = [['Initial Price', 0.02078, '$', 'AgentPrep', 'InitialPriceMean'],
           ]
 varsTS = [['Weekday Wakeup Start Lo', 5.0, 'hour of day', 'ThermostatSchedule', 'WeekdayWakeStartLo'],
           ['Weekday Wakeup Start Hi', 6.5, 'hour of day', 'ThermostatSchedule', 'WeekdayWakeStartHi'],
-          ['Weekday Wakeup Set Lo', 78, 'degF', 'ThermostatSchedule', 'WeekdayWakeSetLo'],
-          ['Weekday Wakeup Set Hi', 80, 'degF', 'ThermostatSchedule', 'WeekdayWakeSetHi'],
+          ['Weekday Wakeup Set Lo', 78.0, 'degF', 'ThermostatSchedule', 'WeekdayWakeSetLo'],
+          ['Weekday Wakeup Set Hi', 80.0, 'degF', 'ThermostatSchedule', 'WeekdayWakeSetHi'],
           ['Weekday Daylight Start Lo', 8.0, 'hour of day', 'ThermostatSchedule', 'WeekdayDaylightStartLo'],
           ['Weekday Daylight Start Hi', 9.0, 'hour of day', 'ThermostatSchedule', 'WeekdayDaylightStartHi'],
-          ['Weekday Daylight Set Lo', 84, 'degF', 'ThermostatSchedule', 'WeekdayDaylightSetLo'],
-          ['Weekday Daylight Set Hi', 86, 'degF', 'ThermostatSchedule', 'WeekdayDaylightSetHi'],
+          ['Weekday Daylight Set Lo', 84.0, 'degF', 'ThermostatSchedule', 'WeekdayDaylightSetLo'],
+          ['Weekday Daylight Set Hi', 86.0, 'degF', 'ThermostatSchedule', 'WeekdayDaylightSetHi'],
           ['Weekday Evening Start Lo', 17.0, 'hour of day', 'ThermostatSchedule', 'WeekdayEveningStartLo'],
           ['Weekday Evening Start Hi', 18.5, 'hour of day', 'ThermostatSchedule', 'WeekdayEveningStartHi'],
-          ['Weekday Evening Set Lo', 78, 'degF', 'ThermostatSchedule', 'WeekdayEveningSetLo'],
-          ['Weekday Evening Set Hi', 80, 'degF', 'ThermostatSchedule', 'WeekdayEveningSetHi'],
+          ['Weekday Evening Set Lo', 78.0, 'degF', 'ThermostatSchedule', 'WeekdayEveningSetLo'],
+          ['Weekday Evening Set Hi', 80.0, 'degF', 'ThermostatSchedule', 'WeekdayEveningSetHi'],
           ['Weekday Night Start Lo', 22.0, 'hour of day', 'ThermostatSchedule', 'WeekdayNightStartLo'],
           ['Weekday Night Start Hi', 23.5, 'hour of day', 'ThermostatSchedule', 'WeekdayNightStartHi'],
-          ['Weekday Night Set Lo', 72, 'degF', 'ThermostatSchedule', 'WeekdayNightSetLo'],
-          ['Weekday Night Set Hi', 74, 'degF', 'ThermostatSchedule', 'WeekdayNightSetHi'],
+          ['Weekday Night Set Lo', 72.0, 'degF', 'ThermostatSchedule', 'WeekdayNightSetLo'],
+          ['Weekday Night Set Hi', 74.0, 'degF', 'ThermostatSchedule', 'WeekdayNightSetHi'],
           ['Weekend Daylight Start Lo', 8.0, 'hour of day', 'ThermostatSchedule', 'WeekendDaylightStartLo'],
           ['Weekend Daylight Start Hi', 9.0, 'hour of day', 'ThermostatSchedule', 'WeekendDaylightStartHi'],
-          ['Weekend Daylight Set Lo', 76, 'degF', 'ThermostatSchedule', 'WeekendDaylightSetLo'],
-          ['Weekend Daylight Set Hi', 84, 'degF', 'ThermostatSchedule', 'WeekendDaylightSetHi'],
+          ['Weekend Daylight Set Lo', 76.0, 'degF', 'ThermostatSchedule', 'WeekendDaylightSetLo'],
+          ['Weekend Daylight Set Hi', 84.0, 'degF', 'ThermostatSchedule', 'WeekendDaylightSetHi'],
           ['Weekend Night Start Lo', 22.0, 'hour of day', 'ThermostatSchedule', 'WeekendNightStartLo'],
           ['Weekend Night Start Hi', 24.0, 'hour of day', 'ThermostatSchedule', 'WeekendNightStartHi'],
-          ['Weekend Night Set Lo', 72, 'degF', 'ThermostatSchedule', 'WeekendNightSetLo'],
-          ['Weekend Night Set Hi', 74, 'degF', 'ThermostatSchedule', 'WeekendNightSetHi']
+          ['Weekend Night Set Lo', 72.0, 'degF', 'ThermostatSchedule', 'WeekendNightSetLo'],
+          ['Weekend Night Set Hi', 74.0, 'degF', 'ThermostatSchedule', 'WeekendNightSetHi']
           ]
 
 
@@ -487,6 +487,15 @@ class TespConfigGUI:
             row = int(w.grid_info()['row'])
             if col == 1 and row > 0 and row <= len(vars):
                 val = w.get()
+                try:
+                    tmp = int(val)
+                    val = tmp
+                except:
+                    try:
+                        tmp = float(val)
+                        val = tmp
+                    except:
+                        pass
                 section = vars[row - 1][3]
                 attribute = vars[row - 1][4]
                 config[section][attribute] = val

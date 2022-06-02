@@ -7,6 +7,7 @@ import helpers
 
 tesp_share = os.path.expandvars('$TESPDIR/data/')
 feeders_path = tesp_share + 'feeders/'
+feeders_path = tesp_share + 'entities/'
 scheduled_path = tesp_share + 'schedules/'
 weather_path = tesp_share + 'weather/'
 

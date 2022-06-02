@@ -348,7 +348,7 @@ def prepare_glm_dict(caseConfig):
 
     feeders[feeder_id] = {'house_count': 0, 'inverter_count': 0, 'base_feeder': caseConfig['BaseFeederName']}
     dict = {'bulkpower_bus': caseConfig['BulkBusName'],
-            'FedName': 'gld1',
+            'FedName': 'gld_1',
             'transformer_MVA': caseConfig['TransformerMVA'],
             'feeders': feeders,
             'billingmeters': meters,
@@ -364,7 +364,7 @@ def prepare_glm_dict(caseConfig):
 
 def prepare_glm_helics(caseConfig, fedMeters, fedLoadNames):
 
-    gld = helpers.HelicsMsg('gld1', int(caseConfig['GldStep']))
+    gld = helpers.HelicsMsg('gld_1', int(caseConfig['GldStep']))
     gld.pubs(False, 'distribution_load', 'complex', 'sourcebus', 'distribution_load')
     for bldg, meter in fedMeters.items():
         load = fedLoadNames[bldg]

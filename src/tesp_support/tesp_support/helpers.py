@@ -146,12 +146,12 @@ class curve:
 class HelicsMsg(object):
 
     def __init__(self, name, period):
-        # change logging to debug, warning,
+        # change logging to debug, warning, error
         self._subs = []
         self._pubs = []
         self._cnfg = {"name": name,
                       "period": period,
-                      "logging": "debug",
+                      "logging": "warning",
                       }
         pass
 

@@ -60,9 +60,9 @@ from .case_merge import merge_substation_msg
 from .make_ems import make_ems
 from .make_ems import merge_idf
 
-from .run_test_case import RunTestCase
-from .run_test_case import GetTestCaseReports
-from .run_test_case import InitializeTestCaseReports
+from .run_test_case import RunTest
+from .run_test_case import GetTestReports
+from .run_test_case import InitializeTestReports
 
 from .prep_eplus import make_gld_eplus_case
 

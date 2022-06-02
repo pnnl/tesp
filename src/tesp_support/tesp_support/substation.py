@@ -93,19 +93,19 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     #   key = helics.helicsInputGetName(sub)
     #   target = helics.helicsSubscriptionGetTarget(sub)
     #   print ('== Available HELICS subscription key', i, key, 'target', target)
-    gldName = diction['GridLABD']
-    fedName = helics.helicsFederateGetName(hFed)
-    bulkName = 'pypower'
+    gld_federate = diction['GridLABD']
+    sub_federate = helics.helicsFederateGetName(hFed)
+    tso_federate = 'pypower'
 
-    bus = fedName[3:]
-    subFeeder = helics.helicsFederateGetSubscription(hFed, gldName + '/distribution_load_' + bus)
-    subLMP = helics.helicsFederateGetSubscription(hFed, bulkName + '/LMP_' + bus)
-    pubC1 = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_c1_' + bus)
-    pubC2 = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_c2_' + bus)
-    pubDeg = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_deg_' + bus)
-    pubMax = helics.helicsFederateGetPublication(hFed, fedName + '/responsive_max_mw_' + bus)
-    pubUnresp = helics.helicsFederateGetPublication(hFed, fedName + '/unresponsive_mw_' + bus)
-    pubAucPrice = helics.helicsFederateGetPublication(hFed, fedName + '/clear_price_' + bus)
+    bus = sub_federate[4:]
+    subFeeder = helics.helicsFederateGetSubscription(hFed, gld_federate + '/distribution_load')
+    subLMP = helics.helicsFederateGetSubscription(hFed, tso_federate + '/LMP_' + bus)
+    pubC1 = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_c1')
+    pubC2 = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_c2')
+    pubDeg = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_deg')
+    pubMax = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_max_mw')
+    pubUnresp = helics.helicsFederateGetPublication(hFed, sub_federate + '/unresponsive_mw')
+    pubAucPrice = helics.helicsFederateGetPublication(hFed, sub_federate + '/clear_price')
 
     pubSubMeters = set()
     hvacObjs = {}
@@ -114,8 +114,8 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
         row = diction['controllers'][key]
         hvacObjs[key] = hvac.hvac(row, key, aucObj)
         ctl = hvacObjs[key]
-        hseSubTopic = gldName + '/' + ctl.houseName
-        mtrSubTopic = gldName + '/' + ctl.meterName
+        hseSubTopic = gld_federate + '/' + ctl.houseName
+        mtrSubTopic = gld_federate + '/' + ctl.meterName
         ctlPubTopic = ctl.name
         mtrPubTopic = ctl.name + '/' + ctl.meterName
         # print('{:s} hseSub={:s} mtrSub={:s}  mtrPub={:s}  ctlPub={:s}'

@@ -46,6 +46,7 @@ stat_type = ['SY_MEAN', 'SY_STDEV']
 # value = [0.02078, 0.01] # 0.00361]
 capacity_reference_object = 'substation_transformer'
 max_capacity_reference_bid_quantity = 5000
+dso_substation_bus_id = 1
 
 ###################################################
 # top-level data that can be reconfigured from JSON, defaults for TE30
@@ -113,6 +114,8 @@ def ProcessGLM(fileroot):
     - *fileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
     - *fileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
     - *nameroot_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *fileroot_HELICS_substation.json*, contains HELICS subscriptions for the psimple_auction and hvac agents
+    - *nameroot_HELICS_gld_msg.json*, a GridLAB-D include file with HELICS publications and subscriptions
 
     Args:
         fileroot (str): path to and base file name for the GridLAB-D file, without an extension
@@ -143,9 +146,9 @@ def ProcessGLM(fileroot):
     house_name = ''
     house_class = ''
     house_parent = ''
-    power_name = 'pypower'
-    federate_name = 'gldSub1'
-    substation_name = 'sub1'
+    tso_federate = 'pypower'
+    gld_federate = 'gld_' + str(dso_substation_bus_id)
+    sub_federate = 'sub_' + str(dso_substation_bus_id)
     climate_name = ''
     StartTime = ''
     EndTime = ''
@@ -190,11 +193,11 @@ def ProcessGLM(fileroot):
                     inClimate = False
             if inHELICSmsg:
                 if lst[0] == 'name':
-                    federate_name = lst[1].strip(';')
+                    gld_federate = lst[1].strip(';')
                     inHELICSmsg = False
             if inFNCSmsg:
                 if lst[0] == 'name':
-                    federate_name = lst[1].strip(';')
+                    gld_federate = lst[1].strip(';')
                     inFNCSmsg = False
             if inTriplexMeters:
                 if lst[0] == 'name':
@@ -292,35 +295,35 @@ def ProcessGLM(fileroot):
     # Close files
     ip.close()
 
-    meta = {'markets': auctions, 'controllers': controllers, 'dt': dt, 'GridLABD': federate_name}
+    meta = {'markets': auctions, 'controllers': controllers, 'dt': dt, 'GridLABD': gld_federate}
     dictfile = fileroot + '_agent_dict.json'
     dp = open(dictfile, 'w')
     json.dump(meta, dp, ensure_ascii=False, indent=2)
     dp.close()
 
     # write HELICS config file
-    dso = helpers.HelicsMsg(substation_name, dt)
-    dso.pubs_n(False, "unresponsive_mw_1", "double")
-    dso.pubs_n(False, "responsive_max_mw_1", "double")
-    dso.pubs_n(False, "responsive_c2_1", "double")
-    dso.pubs_n(False, "responsive_c1_1", "double")
-    dso.pubs_n(False, "responsive_deg_1", "integer")
-    dso.pubs_n(False, "clear_price_1", "double")
-    dso.subs_n(power_name + "/" + "LMP_1", "double")
-    dso.subs_n(federate_name + "/" + "distribution_load_1", "complex")
+    dso = helpers.HelicsMsg(sub_federate, dt)
+    dso.pubs_n(False, "unresponsive_mw", "double")
+    dso.pubs_n(False, "responsive_max_mw", "double")
+    dso.pubs_n(False, "responsive_c2", "double")
+    dso.pubs_n(False, "responsive_c1", "double")
+    dso.pubs_n(False, "responsive_deg", "integer")
+    dso.pubs_n(False, "clear_price", "double")
+    dso.subs_n(tso_federate + "/" + "LMP_" + str(dso_substation_bus_id), "double")
+    dso.subs_n(gld_federate + "/" + "distribution_load", "complex")
     pubSubMeters = set()
     for key, val in controllers.items():
         house_name = val['houseName']
         meter_name = val['meterName']
-        dso.subs_n(federate_name + "/" + house_name + "#air_temperature", "double")  # Tair
-        dso.subs_n(federate_name + "/" + house_name + "#hvac_load", "double")  # Load
-        dso.subs_n(federate_name + "/" + house_name + "#power_state", "string")  # On
+        dso.subs_n(gld_federate + "/" + house_name + "#air_temperature", "double")  # Tair
+        dso.subs_n(gld_federate + "/" + house_name + "#hvac_load", "double")  # Load
+        dso.subs_n(gld_federate + "/" + house_name + "#power_state", "string")  # On
         dso.pubs_n(False, key + "/cooling_setpoint", "double")
         dso.pubs_n(False, key + "/heating_setpoint", "double")
         dso.pubs_n(False, key + "/thermostat_deadband", "double")
         if meter_name not in pubSubMeters:
             pubSubMeters.add(meter_name)
-            dso.subs_n(federate_name + "/" + meter_name + "#measured_voltage_1", "complex")  # V1
+            dso.subs_n(gld_federate + "/" + meter_name + "#measured_voltage_1", "complex")  # V1
             dso.pubs_n(False, key + "/" + meter_name + "/bill_mode", "string")
             dso.pubs_n(False, key + "/" + meter_name + "/price", "double")
             dso.pubs_n(False, key + "/" + meter_name + "/monthly_fee", "double")
@@ -329,19 +332,19 @@ def ProcessGLM(fileroot):
     # write YAML file
     yamlfile = fileroot + '_substation.yaml'
     yp = open(yamlfile, 'w')
-    print('name: ' + substation_name, file=yp)
+    print('name: ' + sub_federate, file=yp)
     print('time_delta: ' + str(dt) + 's', file=yp)
     print('broker:', broker, file=yp)
     print('aggregate_sub: true', file=yp)
     print('aggregate_pub: true', file=yp)
     print('values:', file=yp)
     print('  LMP:', file=yp)
-    print('    topic: ' + power_name + '/' + 'LMP_1', file=yp)
+    print('    topic: ' + tso_federate + '/' + 'LMP_' + str(dso_substation_bus_id), file=yp)
     print('    default: 0.1', file=yp)
     print('    type: double', file=yp)
     print('    list: false', file=yp)
     print('  refload:', file=yp)
-    print('    topic: ' + federate_name + '/' + 'distribution_load', file=yp)
+    print('    topic: ' + gld_federate + '/' + 'distribution_load', file=yp)
     print('    default: 0', file=yp)
     print('    type: complex', file=yp)
     print('    list: false', file=yp)
@@ -349,16 +352,16 @@ def ProcessGLM(fileroot):
         house_name = val['houseName']
         meter_name = val['meterName']
         print('  ' + key + '#V1:', file=yp)
-        print('    topic: ' + federate_name + '/' + meter_name + '/measured_voltage_1', file=yp)
+        print('    topic: ' + gld_federate + '/' + meter_name + '/measured_voltage_1', file=yp)
         print('    default: 120', file=yp)
         print('  ' + key + '#Tair:', file=yp)
-        print('    topic: ' + federate_name + '/' + house_name + '/air_temperature', file=yp)
+        print('    topic: ' + gld_federate + '/' + house_name + '/air_temperature', file=yp)
         print('    default: 80', file=yp)
         print('  ' + key + '#Load:', file=yp)
-        print('    topic: ' + federate_name + '/' + house_name + '/hvac_load', file=yp)
+        print('    topic: ' + gld_federate + '/' + house_name + '/hvac_load', file=yp)
         print('    default: 0', file=yp)
         print('  ' + key + '#On:', file=yp)
-        print('    topic: ' + federate_name + '/' + house_name + '/power_state', file=yp)
+        print('    topic: ' + gld_federate + '/' + house_name + '/power_state', file=yp)
         print('    default: 0', file=yp)
     yp.close()
 
@@ -400,9 +403,9 @@ def ProcessGLM(fileroot):
         wp.close()
 
     # write the GridLAB-D publications and subscriptions for HELICS
-    gld = helpers.HelicsMsg(federate_name + "", dt)
-    gld.pubs(False, "distribution_load_1", "complex", network_node, "distribution_load")
-    gld.subs(power_name + "/" + "three_phase_voltage_1", "complex", network_node, "positive_sequence_voltage")
+    gld = helpers.HelicsMsg(gld_federate + "", dt)
+    gld.pubs(False, "distribution_load", "complex", network_node, "distribution_load")
+    gld.subs(tso_federate + "/" + "three_phase_voltage_" + str(dso_substation_bus_id), "complex", network_node, "positive_sequence_voltage")
     if len(climate_name) > 0:
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
             gld.subs(climate_name + "/#" + wTopic, "double", climate_name, wTopic)
@@ -422,25 +425,25 @@ def ProcessGLM(fileroot):
         gld.pubs(False, house_name + "#power_state", "string", house_name, "power_state")
         gld.pubs(False, house_name + "#air_temperature", "double", house_name, "air_temperature")
         gld.pubs(False, house_name + "#hvac_load", "double", house_name, "hvac_load")
-        gld.subs(substation_name + "/" + key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
-        gld.subs(substation_name + "/" + key + "/heating_setpoint", "double", house_name, "heating_setpoint")
-        gld.subs(substation_name + "/" + key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
+        gld.subs(sub_federate + "/" + key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
+        gld.subs(sub_federate + "/" + key + "/heating_setpoint", "double", house_name, "heating_setpoint")
+        gld.subs(sub_federate + "/" + key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
         if meter_name not in pubSubMeters:
             pubSubMeters.add(meter_name)
             prop = 'measured_voltage_1'
             if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
                 prop = 'measured_voltage_A'  # TODO: the HELICS substation always expects measured_voltage_1
             gld.pubs(False, meter_name + "#measured_voltage_1", "complex", meter_name, prop)
-            gld.subs(substation_name + "/" + key + "/" + meter_name + "/bill_mode", "string", meter_name, "bill_mode")
-            gld.subs(substation_name + "/" + key + "/" + meter_name + "/price", "double", meter_name, "price")
-            gld.subs(substation_name + "/" + key + "/" + meter_name + "/monthly_fee", "double", meter_name, "monthly_fee")
+            gld.subs(sub_federate + "/" + key + "/" + meter_name + "/bill_mode", "string", meter_name, "bill_mode")
+            gld.subs(sub_federate + "/" + key + "/" + meter_name + "/price", "double", meter_name, "price")
+            gld.subs(sub_federate + "/" + key + "/" + meter_name + "/monthly_fee", "double", meter_name, "monthly_fee")
     # TODO verify what should be done here to enforce minimum time step
     gld.write_file(fileroot + '_HELICS_gld_msg.json')
 
     # write the GridLAB-D publications and subscriptions for FNCS
     op = open(fileroot + '_FNCS_Config.txt', 'w')
     print('publish "commit:' + network_node + '.distribution_load -> distribution_load; 1000";', file=op)
-    print('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_1";', file=op)
+    print('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_' + str(dso_substation_bus_id) + ';', file=op)
     if len(climate_name) > 0:
         for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
             print('subscribe "precommit:' + climate_name + '.' + wTopic + ' <- ' + climate_name + '/' + wTopic + '";', file=op)
@@ -459,22 +462,22 @@ def ProcessGLM(fileroot):
         print('publish "commit:' + house_name + '.air_temperature -> ' + house_name + '/air_temperature";', file=op)
         print('publish "commit:' + house_name + '.power_state -> ' + house_name + '/power_state";', file=op)
         print('publish "commit:' + house_name + '.hvac_load -> ' + house_name + '/hvac_load";', file=op)
-        print('subscribe "precommit:' + house_name + '.cooling_setpoint <- ' + substation_name + '/' + key + '/cooling_setpoint";', file=op)
-        print('subscribe "precommit:' + house_name + '.heating_setpoint <- ' + substation_name + '/' + key + '/heating_setpoint";', file=op)
-        print('subscribe "precommit:' + house_name + '.thermostat_deadband <- ' + substation_name + '/' + key + '/thermostat_deadband";', file=op)
+        print('subscribe "precommit:' + house_name + '.cooling_setpoint <- ' + sub_federate + '/' + key + '/cooling_setpoint";', file=op)
+        print('subscribe "precommit:' + house_name + '.heating_setpoint <- ' + sub_federate + '/' + key + '/heating_setpoint";', file=op)
+        print('subscribe "precommit:' + house_name + '.thermostat_deadband <- ' + sub_federate + '/' + key + '/thermostat_deadband";', file=op)
         if meter_name not in pubSubMeters:
             pubSubMeters.add(meter_name)
             if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
                 print('publish "commit:' + meter_name + '.measured_voltage_A -> ' + meter_name + '/measured_voltage_1";', file=op)
             else:
                 print('publish "commit:' + meter_name + '.measured_voltage_1 -> ' + meter_name + '/measured_voltage_1";', file=op)
-            print('subscribe "precommit:' + meter_name + '.bill_mode <- ' + substation_name + '/' + key + '/bill_mode";', file=op)
-            print('subscribe "precommit:' + meter_name + '.price <- ' + substation_name + '/' + key + '/price";', file=op)
-            print('subscribe "precommit:' + meter_name + '.monthly_fee <- ' + substation_name + '/' + key + '/monthly_fee";', file=op)
+            print('subscribe "precommit:' + meter_name + '.bill_mode <- ' + sub_federate + '/' + key + '/bill_mode";', file=op)
+            print('subscribe "precommit:' + meter_name + '.price <- ' + sub_federate + '/' + key + '/price";', file=op)
+            print('subscribe "precommit:' + meter_name + '.monthly_fee <- ' + sub_federate + '/' + key + '/monthly_fee";', file=op)
     op.close()
 
 
-def prep_substation(gldfileroot, jsonfile=''):
+def prep_substation(gldfileroot, jsonfile='', bus_id=None):
     """ Process a base GridLAB-D file with supplemental JSON configuration data
 
     Always reads gldfileroot.glm and writes:
@@ -492,11 +495,13 @@ def prep_substation(gldfileroot, jsonfile=''):
     the default values from te30 and sgip1 examples will be used.  
 
     Args:
+        bus_id: substation bus identifier
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
         jsonfile (str): fully qualified path to an optional JSON configuration file 
                         (if not provided, an E+ connection to Eplus_load will be created)
     """
-    global dt, period, Eplus_Bus, Eplus_Load, Eplus_Meter, agent_participation, max_capacity_reference_bid_quantity
+    global dt, period, Eplus_Bus, Eplus_Load, Eplus_Meter, agent_participation
+    global max_capacity_reference_bid_quantity, dso_substation_bus_id
     global wakeup_start_lo, wakeup_start_hi, wakeup_set_lo, wakeup_set_hi
     global daylight_start_lo, daylight_start_hi, daylight_set_lo, daylight_set_hi
     global evening_start_lo, evening_start_hi, evening_set_lo, evening_set_hi
@@ -506,6 +511,9 @@ def prep_substation(gldfileroot, jsonfile=''):
     global ramp_lo, ramp_hi, deadband_lo, deadband_hi, offset_limit_lo, offset_limit_hi
     global ctrl_cap_lo, ctrl_cap_hi, initial_price, std_dev
     global latitude, longitude, name_prefix
+
+    if bus_id is not None:
+        dso_substation_bus_id = bus_id
 
     if len(jsonfile) > 1:
         lp = open(jsonfile).read()
@@ -571,5 +579,6 @@ def prep_substation(gldfileroot, jsonfile=''):
 
         # use the forced oil, forced air as 1.67 * transformer rating in kVA
         max_capacity_reference_bid_quantity = 1.6667 * 1000.0 * float(config['PYPOWERConfiguration']['TransformerBase'])
+        dso_substation_bus_id = int(config['PYPOWERConfiguration']['GLDBus'])
 
     ProcessGLM(gldfileroot)

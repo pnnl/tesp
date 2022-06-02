@@ -5,38 +5,38 @@
   "publications": [
     {
       "global": false,
-      "key": "three_phase_voltage_1",
+      "key": "three_phase_voltage_7",
       "type": "double"
     },
     {
       "global": false,
-      "key": "LMP_1",
+      "key": "LMP_7",
       "type": "double"
     }
   ],
   "subscriptions": [
     {
-      "key": "gld1/distribution_load_1",
+      "key": "gld1/distribution_load",
       "type": "complex"
     },
     {
-      "key": "sub1/unresponsive_mw_1",
+      "key": "sub_7/unresponsive_mw",
       "type": "double"
     },
     {
-      "key": "sub1/responsive_max_mw_1",
+      "key": "sub_7/responsive_max_mw",
       "type": "double"
     },
     {
-      "key": "sub1/responsive_c1_1",
+      "key": "sub_7/responsive_c1",
       "type": "double"
     },
     {
-      "key": "sub1/responsive_c2_1",
+      "key": "sub_7/responsive_c2_1",
       "type": "double"
     },
     {
-      "key": "sub1/responsive_deg_1",
+      "key": "sub_7/responsive_deg_1",
       "type": "integer"
     }
   ]

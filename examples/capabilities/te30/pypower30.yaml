@@ -6,17 +6,17 @@ values:
         topic: gld1/distribution_load
         default: 0
     UNRESPONSIVE_MW:
-        topic: sub1/unresponsive_mw
+        topic: sub_7/unresponsive_mw
         default: 0
     RESPONSIVE_MAX_MW:
-        topic: sub1/responsive_max_mw
+        topic: sub_7/responsive_max_mw
         default: 0
     RESPONSIVE_C2:
-        topic: sub1/responsive_c2
+        topic: sub_7/responsive_c2
         default: 0
     RESPONSIVE_C1:
-        topic: sub1/responsive_c1
+        topic: sub_7/responsive_c1
         default: 0
     RESPONSIVE_DEG:
-        topic: sub1/responsive_deg
+        topic: sub_7/responsive_deg
         default: 0

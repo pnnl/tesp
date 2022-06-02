@@ -103,7 +103,7 @@ def key_present(val, ary):
 def merge_gld_msg(target, sources):
     print('combining', sources, 'HELICS GridLAB-D json files into', target)
     workdir = './' + target + '/'
-    diction = {"name": "gld1", "period": 1, "subscriptions": [], "publications": []}
+    diction = {"name": "gld_1", "period": 1, "subscriptions": [], "publications": []}
     subs = []
     pubs = []
     for fdr in sources:
@@ -127,7 +127,7 @@ def merge_gld_msg(target, sources):
 def merge_substation_msg(target, sources):
     print('combining', sources, 'HELICS Substation json files into', target)
     workdir = './' + target + '/'
-    diction = {"name": "gld1", "period": 1, "subscriptions": [], "publications": []}
+    diction = {"name": "gld_1", "period": 1, "subscriptions": [], "publications": []}
     subs = []
     pubs = []
     for fdr in sources:
@@ -162,7 +162,7 @@ def merge_glm_dict(target, sources, xfmva):
     """
     print('combining', sources, 'GridLAB-D json files into', target)
     diction = {'bulkpower_bus': 'TBD',
-               'FedName': 'gld1',
+               'FedName': 'gld_1',
                'feeders': {},
                'transformer_MVA': xfmva,
                'billingmeters': {},

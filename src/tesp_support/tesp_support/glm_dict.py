@@ -125,7 +125,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
                     break
 
     # third pass, process the other objects
-    FedName = 'gld1'
+    gld_federate = 'gld_1'
     bulkpowerBus = 'TBD'
     name = ''
     houses = {}
@@ -167,11 +167,11 @@ def glm_dict(nameroot, ercot=False, te30=False):
                 house_class = 'SINGLE_FAMILY'
             if inHELICSmsg:
                 if lst[0] == 'name':
-                    FedName = lst[1].strip(';')
+                    gld_federate = lst[1].strip(';')
                     inHELICSmsg = False
             if inFNCSmsg:
                 if lst[0] == 'name':
-                    FedName = lst[1].strip(';')
+                    gld_federate = lst[1].strip(';')
                     inFNCSmsg = False
             if lst[1] == 'triplex_meter':
                 inTriplexMeters = True
@@ -367,7 +367,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
         mtr['children'].append(key)
 
     feeders[feeder_id] = {'house_count': len(houses), 'inverter_count': len(inverters), 'base_feeder': base_feeder}
-    substation = {'bulkpower_bus': bulkpowerBus, 'FedName': FedName,
+    substation = {'bulkpower_bus': bulkpowerBus, 'FedName': gld_federate,
                   'transformer_MVA': substationTransformerMVA, 'feeders': feeders,
                   'billingmeters': billingmeters, 'houses': houses, 'inverters': inverters,
                   'capacitors': capacitors, 'regulators': regulators}

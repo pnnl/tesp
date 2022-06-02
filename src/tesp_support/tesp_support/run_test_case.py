@@ -29,7 +29,7 @@ def block(call):
     print('--!>', flush=True)
 
 
-def GetTestCaseReports():
+def GetTestReports():
     global reports
 
     lines = '\n\n{:30s}   {:12s}\n'.format('Test Case(s)', 'Time Taken')
@@ -39,7 +39,7 @@ def GetTestCaseReports():
     return lines
 
 
-def InitializeTestCaseReports():
+def InitializeTestReports():
     global reports, bReporting
 
     reports = []
@@ -56,7 +56,11 @@ def ProcessLine(line, local_vars):
     return exports + foreground
 
 
-def RunTestCase(fname, casename=None):
+def PrepareTest(casename=None):
+    print('==  Prepare: ', casename, flush=True)
+
+
+def RunTest(fname, casename=None):
     global reports, bReporting
 
     tStart = time.time()
@@ -65,7 +69,7 @@ def RunTestCase(fname, casename=None):
     potherList = []
     pFNCSbroker = None
     pHELICSbroker = None
-    print('\n==  Run:', casename)
+    print('\n==  Run: ', casename, flush=True)
     for ln in fp:
         line = ln.rstrip('\n')
         if ('#!/bin/bash' in line) or (len(line) < 1):
@@ -82,10 +86,10 @@ def RunTestCase(fname, casename=None):
             jc = subprocess.Popen(ProcessLine(line, local_vars), shell=True)
             jc.wait()
         elif 'fncs_broker' in line:
-            print('====  Fncs Broker Start in', os.getcwd())
+            print('====  Fncs Broker Start in\n        ' + os.getcwd(), flush=True)
             pFNCSbroker = subprocess.Popen(ProcessLine(line, local_vars), shell=True)
         elif 'helics_broker' in line:
-            print('====  Helics Broker Start in', os.getcwd())
+            print('====  Helics Broker Start in\n        ' + os.getcwd(), flush=True)
             pHELICSbroker = subprocess.Popen(ProcessLine(line, local_vars), shell=True)
         else:
             pother = subprocess.Popen(ProcessLine(line, local_vars), shell=True)
@@ -93,10 +97,10 @@ def RunTestCase(fname, casename=None):
     fp.close()
     if pFNCSbroker is not None:
         pFNCSbroker.wait()
-        print('====  Fncs Broker Exit in', os.getcwd())
+        print('====  Fncs Broker Exit in\n        ' + os.getcwd(), flush=True)
     if pHELICSbroker is not None:
         pHELICSbroker.wait()
-        print('====  Helics Broker Exit in', os.getcwd())
+        print('====  Helics Broker Exit in\n        ' + os.getcwd(), flush=True)
     for p in potherList:
         p.wait()
 
@@ -106,4 +110,4 @@ def RunTestCase(fname, casename=None):
         if casename is None:
             casename = fname
         reports.append({'case': casename, 'elapsed': tElapsed})
-    print('==  Done:', casename)
+    print('==  Done: ', casename, flush=True)

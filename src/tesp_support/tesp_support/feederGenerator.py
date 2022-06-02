@@ -52,7 +52,7 @@ port = 5570
 case_name = 'Tesp'
 name_prefix = ''
 work_path = './Dummy/'
-substation_name = "Sub1"
+dso_substation_bus_id = 1
 base_feeder_name = ''
 solar_path = ''
 solar_P_player = ''
@@ -2069,7 +2069,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(case_name) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
+        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
         print('  configure', case_name + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port ' + str(port) + '";', file=op)
@@ -2079,7 +2079,7 @@ def write_substation(op, name, phs, vnom, vll):
         print('#endif', file=op)
         print('#ifdef USE_HELICS', file=op)
         print('object helics_msg {', file=op)
-        print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
+        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)  # for full-order DSOT
         print('  configure', case_name + '_HELICS_gld_msg.json;', file=op)
         print('}', file=op)
         print('#endif', file=op)
@@ -3049,7 +3049,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global tier1_energy, tier1_price, tier2_energy, tier2_price, tier3_energy, tier3_price
     global bill_mode, kwh_price, monthly_fee
     global Eplus_Bus, Eplus_Volts, Eplus_kVA
-    global transmissionVoltage, transmissionXfmrMVAbase
+    global transmissionVoltage, transmissionXfmrMVAbase, dso_substation_bus_id
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage
     global work_path, feeders_path, weather_path, weather_file
     global starttime, endtime, timestep, metrics_interval, electric_cooling_percentage
@@ -3098,6 +3098,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     Eplus_kVA = float(config['EplusConfiguration']['EnergyPlusXfmrKva'])
     transmissionXfmrMVAbase = float(config['PYPOWERConfiguration']['TransformerBase'])
     transmissionVoltage = 1000.0 * float(config['PYPOWERConfiguration']['TransmissionVoltage'])
+    dso_substation_bus_id = int(config['PYPOWERConfiguration']['GLDBus'])
     if "Name" in config['WeatherPrep']:
         weather_name = config['WeatherPrep']['Name']
     latitude = float(config['WeatherPrep']['Latitude'])

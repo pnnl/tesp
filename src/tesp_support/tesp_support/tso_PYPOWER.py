@@ -378,7 +378,7 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
     gen_mp.close()
     sys_mp.close()
     op.close()
-    print('finalizing HELICS', flush=True)
+    print('finalizing DSO - HELICS', flush=True)
     helics.helicsFederateDestroy(hFed)
 
     if sys.platform != 'win32':
