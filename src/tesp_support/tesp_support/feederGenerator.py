@@ -2077,6 +2077,7 @@ def write_substation(op, name, phs, vnom, vll):
         print('  aggregate_publications true;', file=op)
         print('}', file=op)
         print('#endif', file=op)
+        print('', file=op)
         print('#ifdef USE_HELICS', file=op)
         print('object helics_msg {', file=op)
         print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)  # for full-order DSOT
@@ -2597,17 +2598,17 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
             if solar_path + solar_P_player != "":
                 print('// player class and object for solar P_out and Q_out', file=op)
-                print('class player{', file=op)
-                print(' double value; // must defined the filed "value"', file=op)
+                print('class player {', file=op)
+                print('  double value; // must defined the filed "value"', file=op)
                 print('}', file=op)
-                print('object player{', file=op)
-                print(' name P_out_inj;', file=op)
-                print(' file "' + solar_path + solar_P_player + '";', file=op)
+                print('object player {', file=op)
+                print('  name P_out_inj;', file=op)
+                print('  file "' + solar_path + solar_P_player + '";', file=op)
                 print('}', file=op)
                 if solar_Q_player != "":
-                    print('object player{', file=op)
-                    print(' name Q_out_inj;', file=op)
-                    print(' file "' + solar_path + solar_Q_player + '";', file=op)
+                    print('object player {', file=op)
+                    print('  name Q_out_inj;', file=op)
+                    print('  file "' + solar_path + solar_Q_player + '";', file=op)
                     print('}', file=op)
 
         # write the optional volt_dump and curr_dump for validation

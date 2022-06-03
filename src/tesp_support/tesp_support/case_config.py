@@ -3,45 +3,52 @@
 
 import json
 import os
-import helpers
 
 tesp_share = os.path.expandvars('$TESPDIR/data/')
 feeders_path = tesp_share + 'feeders/'
-feeders_path = tesp_share + 'entities/'
+entities_path = tesp_share + 'entities/'
 scheduled_path = tesp_share + 'schedules/'
 weather_path = tesp_share + 'weather/'
 
-with open(tesp_share + 'master_config.json', 'r', encoding='utf-8') as json_file:
-    master_config = json.load(json_file)
+# 'module climate;'
+# 'module connection;'
+# 'module generators;'
+# 'module residential'
 
 
-def diction(_object, _default, _override=None):
-    default = master_config[_default]
-    for parameter in default:
-        setattr(_object, parameter, default[parameter])
-    if _override is not None:
-        override = master_config(_override)
-        for parameter in override:
-            setattr(_object, parameter, override[parameter])
-
-
-"""
-class Diction(object):
-    def __init__(self, diction):
-        self.obj = diction
+class Entity:
+    def __init__(self, name):
+        with open(entities_path + 'master_settings.json', 'r', encoding='utf-8') as json_file:
+            config = json.load(json_file)
+        for row in config[name]:
+            setattr(self, row[4], row[1])
+            setattr(self, row[4] + '__l', row[0])
+            setattr(self, row[4] + '__u', row[2])
+            setattr(self, row[4] + '__e', row[3])
+            # setattr(self, row[4] + '__s', row[5])
 
     def __enter__(self):
-        return self.obj
+        return self
 
     def __exit__(self, exception_type, exception_value, traceback):
         return self
 
-    with Diction(config['BackboneFiles']) as tmp:
-        rootname = tmp['TaxonomyChoice']
-        if 'weatherpath' in tmp:
-            weather_path = tmp['weatherpath']
-"""
+    def print(self):
+        # print(vars(self))
+        for field in self.__dict__:
+            if "__" not in field:
+                value = getattr(self, field)
+                print(field, "=", value)
+        return ""
+
 
 if __name__ == "__main__":
-    cr = helpers.curve()
-    diction(cr, "MonteCarloCase")
+
+    mylist = {}
+    entities = ["SimulationConfig", "BackboneFiles",  "WeatherPrep", "FeederGenerator",
+                "EplusConfiguration", "PYPOWERConfiguration", "AgentPrep", "ThermostatSchedule"]
+    # , 'house', 'inverter', 'battery', 'object solar', 'waterheater' ...]
+
+    for obj in entities:
+        mylist[obj] = Entity(obj)
+        mylist[obj].print()
