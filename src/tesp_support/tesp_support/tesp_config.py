@@ -78,6 +78,33 @@ buildingChoices = ['FullServiceRestaurant',
                    'Warehouse'
                    ]
 
+thermalIntegrityLevel = ['VERY_LITTLE',
+                        'LITTLE',
+                        'BELOW_NORMAL',
+                        'NORMAL',
+                        'ABOVE_NORMAL',
+                        'GOOD',
+                        'VERY_GOOD'
+                        ]
+bldgTypeName = ['SINGLE_FAMILY',
+                'MULTI_FAMILY',
+                'MOBILE_HOME',
+                'SMALL_COMMERCIAL'
+                ]
+rgnName = ['West_Coast',
+           'North_Central/Northeast',
+           'Southwest',
+           'Southeast_Central',
+           'Southeast_Coast'
+           ]
+rgnTimeZone = ['PST+8PDT',
+               'EST+5EDT',
+               'MST+7MDT',
+               'CST+6CDT',
+               'EST+5EDT'
+               ]
+rgnWeather = ['CA-San_francisco', 'OH-Cleveland', 'AZ-Phoenix', 'TN-Nashville', 'FL-Miami']
+
 inverterModesBattery = ['GROUP_LOAD_FOLLOWING', 'LOAD_FOLLOWING', 'VOLT_VAR_FREQ_PWR', 'VOLT_WATT', 'VOLT_VAR',
                         'CONSTANT_PF', 'CONSTANT_PQ', 'NONE']
 inverterModesPV = ['VOLT_VAR_FREQ_PWR', 'VOLT_WATT', 'VOLT_VAR', 'CONSTANT_PF', 'CONSTANT_PQ', 'NONE']
