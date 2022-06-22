@@ -441,6 +441,7 @@ c_p_pf = 0.97
 c_z_frac = 0.2
 c_i_frac = 0.4
 c_p_frac = 1.0 - c_z_frac - c_i_frac
+
 normalized_loadshape_scalar = 1.0
 cooling_COP = 3.0
 light_scalar_comm = 1.0
@@ -1811,6 +1812,7 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
         print('  parent', hse_m_name + ';', file=op)
         print('  groupid', bldgTypeName[bldg] + ';', file=op)
         # TODO: why thermal integrity level is not used ?
+        #  this sets the default house R* and other parameters
         print('  // thermal_integrity_level', tiName[ti] + ';', file=op)
         print('  schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
         print('  floor_area', '{:.0f}'.format(floor_area) + ';', file=op)
