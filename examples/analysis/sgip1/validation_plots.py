@@ -402,7 +402,7 @@ def plot_transactive_feeder_load_solar(data, save_path):
                 logger.info('\tCompleted plot_transactive_feeder_load_solar.')
                 if save_path != '':
                     save_file = path.join(save_path,
-                                          'validation_solar_output.png')
+                                          'transactive_feeder_load_solar.png')
                     fig1.savefig(save_file, dpi=200)
                     logger.info(f'\tSaved plot at {save_file}.')
             else:
@@ -881,7 +881,7 @@ def create_validation_plots(data, save_path):
     plot_solar_output(data, save_path)
     plot_ES_output(data, save_path)
     plot_energy_plus_indoor_temperature(data, save_path)
-    plot_energy_plus_prices(data, save_path)
+    # plot_energy_plus_prices(data, save_path)
 
 
 ########################################################################

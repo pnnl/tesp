@@ -201,7 +201,7 @@ def ProcessGLM(fileroot, weatherName):
             'controllers': controllers,
             'batteries': batteries,
             'dt': dt,
-            'GridLABD': gldSimName,
+            'GridLABD': "gridlabd" + fileroot,
             'Weather': weatherName}
     print(json.dumps(meta), file=dp)
     dp.close()

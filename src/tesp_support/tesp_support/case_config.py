@@ -17,15 +17,16 @@ weather_path = tesp_share + 'weather/'
 
 
 class Entity:
-    def __init__(self, name):
+    def __init__(self, aname):
         with open(entities_path + 'master_settings.json', 'r', encoding='utf-8') as json_file:
             config = json.load(json_file)
-        for row in config[name]:
-            setattr(self, row[4], row[1])
-            setattr(self, row[4] + '__l', row[0])
-            setattr(self, row[4] + '__u', row[2])
-            setattr(self, row[4] + '__e', row[3])
-            # setattr(self, row[4] + '__s', row[5])
+        for name in aname:
+            for row in config[name]:
+                setattr(self, row[4], row[1])
+                setattr(self, row[4] + '__l', row[0])
+                setattr(self, row[4] + '__u', row[2])
+                setattr(self, row[4] + '__e', row[3])
+                # setattr(self, row[4] + '__s', row[5])
 
     def __enter__(self):
         return self
@@ -41,6 +42,9 @@ class Entity:
                 print(field, "=", value)
         return ""
 
+    def print_obj(self):
+        return
+
 
 if __name__ == "__main__":
 
@@ -50,5 +54,5 @@ if __name__ == "__main__":
     # , 'house', 'inverter', 'battery', 'object solar', 'waterheater' ...]
 
     for obj in entities:
-        mylist[obj] = Entity(obj)
+        mylist[obj] = Entity(entities)
         mylist[obj].print()

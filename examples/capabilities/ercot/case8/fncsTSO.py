@@ -1071,7 +1071,7 @@ def tso_loop():
             genFuel[i][3] = 1                  # turn on generator
         if "wind" not in genFuel[i][0]:
             # gen[i, 1] = gen[i, 8]              # set to maximum real power output (MW)
-            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * 0.25)
+            gen[i, 1] = gen[i, 9]  # + ((gen[i, 8] - gen[i, 9]) * 0.25)
 
     # copy of originals for outages
     ugen = deepcopy(gen)
@@ -1087,39 +1087,35 @@ def tso_loop():
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
             log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
-            topic = key.upper().split('/')[1]
+            key = key.upper().split('/')
+            federate = key[0]
+            topic = key[1]
             if helics.helicsInputIsUpdated(sub):
                 new_event = True
+                busnum = int(''.join(ele for ele in federate if ele.isdigit()))
             # getting the latest inputs from DSO Real Time
-                if 'UNRESPONSIVE_MW_' in topic:
+                if 'UNRESPONSIVE_MW' in topic:
                     dso_bid = True
-                    busnum = int(topic[16:])
                     gld_load[busnum]['unresp'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['unresp']))
-                elif 'RESPONSIVE_MAX_MW_' in topic:
+                elif 'RESPONSIVE_MAX_MW' in topic:
                     dso_bid = True
-                    busnum = int(topic[18:])
                     gld_load[busnum]['resp_max'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['resp_max']))
-                elif 'RESPONSIVE_C2_' in topic:
-                    busnum = int(topic[14:])
+                elif 'RESPONSIVE_C2' in topic:
                     gld_load[busnum]['c2'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['c2']))
-                elif 'RESPONSIVE_C1_' in topic:
-                    busnum = int(topic[14:])
+                elif 'RESPONSIVE_C1' in topic:
                     gld_load[busnum]['c1'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['c1']))
-                elif 'RESPONSIVE_C0_' in topic:
-                    busnum = int(topic[14:])
+                elif 'RESPONSIVE_C0' in topic:
                     gld_load[busnum]['c0'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['c0']))
-                elif 'RESPONSIVE_DEG_' in topic:
-                    busnum = int(topic[15:])
+                elif 'RESPONSIVE_DEG' in topic:
                     gld_load[busnum]['deg'] = helics.helicsInputGetInteger(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['deg']))
             # getting the latest inputs from GridlabD
-                elif 'DISTRIBUTION_LOAD_' in topic:  # gld
-                    busnum = int(topic[18:])
+                elif 'DISTRIBUTION_LOAD' in topic:  # gld
                     val = helics.helicsInputGetComplex(sub)  # TODO: helics needs to return complex instead of tuple
                     gld_load[busnum]['p'] = val[0] / 100000.0  # MW
                     gld_load[busnum]['q'] = val[1] / 100000.0  # MW
@@ -1128,7 +1124,6 @@ def tso_loop():
                 elif 'DA_BID_' in topic:
                     dso_bid = True
                     day_bid = True
-                    busnum = int(topic[7:]) - 1
                     da_bid = json.loads(helics.helicsInputGetString(sub))
                     # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[hours_in_a_day]
                     last_unRespMW[busnum] = deepcopy(unRespMW[busnum])

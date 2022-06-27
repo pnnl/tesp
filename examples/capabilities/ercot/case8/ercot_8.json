@@ -1,10 +1,10 @@
 {
   "ames": true,
   "solver": "cbc",
-  "priceSensLoad": true,
+  "priceSensLoad": false,
   "windPower": true,
   "noScale": false,
-  "curve": true,
+  "curve": false,
   "reserveDown": 0.15,
   "reserveUp": 0.15,
   "priceCap": 200.0,
