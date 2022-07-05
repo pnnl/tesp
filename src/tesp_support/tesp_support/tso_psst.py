@@ -1417,8 +1417,8 @@ def tso_loop(casename):
                     day_of_year = day_of_year + 1
                     if day_of_year == 366:
                         day_of_year = 1
-                        
-            # set print time for different outputs  
+
+            # set print time for different outputs
             print_time = str(day) + '_' + str(hour) + '_' + str(mn) + '_'
 
             # un-comment file_time for multiple AMES files
@@ -1792,7 +1792,7 @@ def tso_loop(casename):
         ts = int(helics.helicsFederateRequestTime(hFed, min(ts + dt, tmax)))
 
     # ======================================================
-    log.info('finalizing metrics writing')
+    log.info('finalizing writing metrics')
     collector.finalize_writing()
     log.info('closing files')
     op.close()

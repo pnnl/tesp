@@ -974,21 +974,21 @@ def tso_loop():
                 ppc['gencost'] = np.concatenate(
                     (ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
                 ppc['genfuel'].append(['', '', -busnum, 0])
-            
+
                 gld_load[busnum] = {'pcrv': 0, 'qcrv': 0, 'p': 0, 'q': 0, 'p_r': 0, 'q_r': 0,
                                     'unresp': 0, 'resp_max': 0, 'c2': 0, 'c1': 0, 'c0': 0, 'deg': 0, 'genidx': -busnum}
-            
+
             # needed to be re-aliased after np.concatenate
             gen = ppc['gen']
             genCost = ppc['gencost']
             genFuel = ppc['genfuel']
-            
+
             # log.info('DSO Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
             # log.info(dsoBus)
             # log.info(gld_load)
             # log.info(gen)
             # log.info(genCost)
-            
+
             # interval for metrics recording
             tnext_metrics = 0
             
@@ -997,11 +997,11 @@ def tso_loop():
             n_accum = 0
             bus_accum = {}
             gen_accum = {}
-            
+
             for i in range(dsoBus.shape[0]):
                 busnum = int(dsoBus[i, 0])
                 bus_accum[str(busnum)] = [0, 0, 0, 0, 0, 0, 0, 99999.0, 0, 0, 0, 0]
-            
+
             for i in range(gen.shape[0]):
                 gen_accum[str(i + 1)] = [0, 0, 0]
             
@@ -1379,7 +1379,7 @@ def tso_loop():
         #               success=rpf[0]['success'])
         rBus = rpf[0]['bus']
         rGen = rpf[0]['gen']
-        # dso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'PF', ts)
+        # tso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'PF', ts)
         # log.info('bus_pf = ' + str(rBus[:, 2].sum()))
         # log.info('gen_pf = ' + str(rGen[:, 1].sum()))
 
@@ -1481,7 +1481,7 @@ def tso_loop():
         ts = int(helics.helicsFederateRequestTime(hFed, min(ts + dt, tmax)))
 
     # ======================================================
-    print('writing metrics', flush=True)
+    print('finalizing writing metrics', flush=True)
     print(json.dumps(sys_metrics), file=sys_mp, flush=True)
     print(json.dumps(bus_metrics), file=bus_mp, flush=True)
     print(json.dumps(gen_metrics), file=gen_mp, flush=True)

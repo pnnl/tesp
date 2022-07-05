@@ -120,7 +120,18 @@
   "inverter": [],
   "battery": [],
   "solar": [],
-  "waterheater": [],
+  "waterheater": [
+            ["Schedule shew", 1.0, "", "schedule_skew", "{:.0f}"],
+            print('    heating_element_capacity', '{:.1f}'.format(heat_element), 'kW;', file=op)
+            print('    thermostat_deadband', '{:.1f}'.format(therm_dead) + ';', file=op)
+            print('    location INSIDE;', file=op)
+            print('    tank_diameter 1.5;', file=op)
+            print('    tank_UA', '{:.1f}'.format(tank_UA) + ';', file=op)
+            print('    water_demand', wh_demand_str + ';', file=op)
+            print('    tank_volume', '{:.0f}'.format(wh_size) + ';', file=op)
+    "printcode":"def ljsdlfj"
+
+  ],
   "substation": [],
   "transformer": [],
   "transformer_configuration": [],

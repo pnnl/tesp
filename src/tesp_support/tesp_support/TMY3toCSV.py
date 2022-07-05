@@ -42,10 +42,11 @@ def readtmy3(filename=None, coerce_year=None, recolumn=True):
     head = ['USAF', 'Name', 'State', 'TZ', 'latitude', 'longitude', 'altitude']
 
     if filename.startswith('http'):
-        request = Request(filename, headers={'User-Agent':
-                                                 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) '
-                                                 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 '
-                                                 'Safari/537.36'})
+        request = Request(filename, headers={
+            'User-Agent':
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 '
+                'Safari/537.36'})
         response = urlopen(request)
         csvdata = io.StringIO(response.read().decode(errors='ignore'))
     else:
@@ -75,6 +76,21 @@ def readtmy3(filename=None, coerce_year=None, recolumn=True):
         parse_dates={'datetime': ['Date (MM/DD/YYYY)', 'Time (HH:MM)']},
         date_parser=lambda *x: _parsedate(*x, year=coerce_year),
         index_col='datetime')
+
+    # converters = {
+    #     'Time (HH:MM)': lambda x: _parsehour(x),
+    # }
+    #
+    # data = pd.read_csv(
+    #     csvdata, header=0,
+    #     parse_dates={'datetime': ['Date (MM/DD/YYYY)', 'Time (HH:MM)']},
+    #     converters=converters,
+    #     index_col='datetime'
+    # )
+    #
+    # if coerce_year is not None:
+    #     data['datetime'] = data['datetime'].replace(year=coerce_year)
+
     if recolumn:
         data = _recolumn(data)  # rename to standard column names
 
@@ -87,6 +103,13 @@ def _interactive_load():
     from tkFileDialog import askopenfilename
     Tkinter.Tk().withdraw()  # Start interactive file input
     return askopenfilename()
+
+
+def _parsehour(hour):
+    # return hour + ":00"
+    if hour[0] == "0":
+        return "0" + str(int(hour[1]) - 1) + hour[2:5] + ":00"
+    return str(int(hour[0:2]) - 1) + hour[2:5] + ":00"
 
 
 def _parsedate(ymd, hour, year=None):
@@ -206,7 +229,7 @@ def weathercsv_cloudy_day(start_time, end_time, outputfile):
     slope_up = mag / (stop_up - start_up)
 
     for i in range(len(b)):
-        if i >= start_down and i <= stop_down:
+        if start_down <= i <= stop_down:
             b[i] = b[i] + slope_down * (i - start_down)
         elif (i > stop_down) and (i < start_up):
             b[i] = b[i] - mag
@@ -225,7 +248,7 @@ def weathercsv_cloudy_day(start_time, end_time, outputfile):
     slope_down = -(start_mag - stop_mag) / (stop_down - start_down)
     slope_up = (d[stop_up] - start_up_mag) / (stop_up - start_up)
     for i in range(len(d)):
-        if i >= start_down and i <= stop_down:
+        if start_down <= i <= stop_down:
             d[i] = d[i] + slope_down * (i - start_down)
         elif (i > stop_down) and (i < start_up):
             d[i] = 0.1 * d[i]
@@ -233,14 +256,17 @@ def weathercsv_cloudy_day(start_time, end_time, outputfile):
             d[i] = start_up_mag + slope_up * (i - start_up)
     plt.subplot(212)
     plt.plot(d, color='r')
+    pd.set_option('mode.chained_assignment', None)
     day_weather['temperature'] = b
     day_weather['solar_direct'] = d
     day_weather.to_csv(outputfile)
 
 
 def _tests():
+    import os.path
+    tesp_share = os.path.expandvars('$TESPDIR/data/')
     # create a csv file contain the weather data for the input time period from the input tmy3 file
-    weathercsv('../../data/weather/TX-Houston_Bush_Intercontinental.tmy3', 'weather.csv', '2000-01-01 00:00:00',
+    weathercsv(tesp_share + 'weather/TX-Houston_Bush_Intercontinental.tmy3', 'weather.csv', '2000-01-01 00:00:00',
                '2000-01-14 00:00:00', 2000)
     # create a csv file for a cloudy day for the selected date
     weathercsv_cloudy_day('2000-01-01 00:00:00', '2000-01-02 00:00:00', 'cloudy_day.csv')
