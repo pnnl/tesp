@@ -5,7 +5,7 @@
 
 # From terminal in the VM, enter the these lines to build
 #   cd
-#	  wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/evolve/scripts/tesp.sh
+#	  wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp.sh
 # if vpn is used --no-check-certificate in wget command line
 #	  chmod 755 tesp.sh
 # Set the the first and second parameter on the command line:

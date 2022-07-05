@@ -174,7 +174,7 @@ class HelicsMsg(object):
 
     def pubs_e(self, _g, _k, _t, _u):
         # for object and property is for internal code interface for eplus
-        self._pubs.append({"global": _g, "key": _k, "type": _t, "units": _u})
+        self._pubs.append({"global": _g, "key": _k, "type": _t, "unit": _u})
 
     def subs(self, _k, _t, _o, _p):
         # for object and property is for internal code interface for gridlabd

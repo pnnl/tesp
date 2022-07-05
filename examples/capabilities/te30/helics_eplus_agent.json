@@ -8,19 +8,19 @@
       "global" : false,
       "key" : "power_A",
       "type" : "double",
-      "units" : "W"
+      "unit" : "W"
     },
     {
       "global" : false,
       "key" : "power_B",
       "type" : "double",
-      "units" : "W"
+      "unit" : "W"
     },
     {
       "global" : false,
       "key" : "power_C",
       "type" : "double",
-      "units" : "W"
+      "unit" : "W"
     },
     {
       "global" : false,
@@ -32,30 +32,30 @@
       "global" : false,
       "key" : "price",
       "type" : "double",
-      "units" : "$/kwh"
+      "unit" : "$/kwh"
     },
     {
       "global" : false,
       "key" : "monthly_fee",
       "type" : "double",
-      "units" : "$"
+      "unit" : "$"
     },
     {
       "global" : false,
       "key" : "cooling_setpoint_delta",
       "type" : "double",
-      "units" : "degC"
+      "unit" : "degC"
     },
     {
       "global" : false,
       "key" : "heating_setpoint_delta",
       "type" : "double",
-      "units" : "degC"
+      "unit" : "degC"
     }
   ],
   "subscriptions" : [
     {
-      "key" : "sub1/clear_price_1",
+      "key" : "sub_7/clear_price",
       "type" : "double",
       "required" : true,
       "info" : "kwhr_price"

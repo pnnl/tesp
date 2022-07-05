@@ -8,7 +8,7 @@ import tesp_support.api as tesp
 tmy_file = os.getenv('TESPDIR') + '/data/weather/AZ-Tucson_International_Ap.tmy3'
 tesp.weathercsv(tmy_file, 'weather.dat', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 2013)
 tesp.glm_dict('TE_Challenge', te30=True)
-tesp.prep_substation('TE_Challenge')
+tesp.prep_substation('TE_Challenge', bus_id=7)
 
 # to run the original E+ model with heating/cooling, copy the following file to Merged.idf
 # base_idf = os.getenv('TESPDIR') + '/data/energyplus/SchoolDualController.idf'

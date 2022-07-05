@@ -46,10 +46,10 @@ Once you have a working Ubuntu installation, the TESP install process is straigh
 .. code-block:: shell-session
    :caption: TESP installation commands
 
-   wget https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp.sh
+   wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp.sh
    chmod 755 tesp.sh
    ./tesp.sh <Github user name> <Github email address>
-   
+
 For me, the last line looks like this:
 
 .. code-block:: shell-session

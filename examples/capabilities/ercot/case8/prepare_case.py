@@ -35,7 +35,7 @@ tesp.glm_dict('Bus8', ercot=ercotFlag, te30=te30Flag)
 
 if _FNCS:
     broker = 'tcp://localhost:5570'
-    #FNCS for monitor each sub adds to monitor
+    # FNCS for monitor each sub adds to monitor
     utilities.write_FNCS_config_yaml_file_header()
     # FNCS for monitor
     utilities.write_json_for_ercot_monitor(3600, 15, 10)

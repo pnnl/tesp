@@ -45,7 +45,7 @@ def read_eplus_metrics(path, nameroot, quiet=False):
     times = list(map(int, list(lst.keys())))
     times.sort()
     if not quiet:
-        print('There are', len(times), 'sample times at', times[1] - times[0], 'seconds')
+        print('There are', len(times), 'sample times')
 
     # parse the metadata for things of specific interest
     idx_e = {}

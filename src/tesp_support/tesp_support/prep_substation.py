@@ -309,15 +309,15 @@ def ProcessGLM(fileroot):
     dso.pubs_n(False, "responsive_c1", "double")
     dso.pubs_n(False, "responsive_deg", "integer")
     dso.pubs_n(False, "clear_price", "double")
-    dso.subs_n(tso_federate + "/" + "LMP_" + str(dso_substation_bus_id), "double")
-    dso.subs_n(gld_federate + "/" + "distribution_load", "complex")
+    dso.subs_n(tso_federate + "/LMP_" + str(dso_substation_bus_id), "double")
+    dso.subs_n(gld_federate + "/distribution_load", "complex")
     pubSubMeters = set()
     for key, val in controllers.items():
         house_name = val['houseName']
         meter_name = val['meterName']
-        dso.subs_n(gld_federate + "/" + house_name + "#air_temperature", "double")  # Tair
-        dso.subs_n(gld_federate + "/" + house_name + "#hvac_load", "double")  # Load
-        dso.subs_n(gld_federate + "/" + house_name + "#power_state", "string")  # On
+        dso.subs_n(gld_federate + "/" + house_name + "#air_temperature", "double")
+        dso.subs_n(gld_federate + "/" + house_name + "#hvac_load", "double")
+        dso.subs_n(gld_federate + "/" + house_name + "#power_state", "string")
         dso.pubs_n(False, key + "/cooling_setpoint", "double")
         dso.pubs_n(False, key + "/heating_setpoint", "double")
         dso.pubs_n(False, key + "/thermostat_deadband", "double")
@@ -403,7 +403,7 @@ def ProcessGLM(fileroot):
         wp.close()
 
     # write the GridLAB-D publications and subscriptions for HELICS
-    gld = helpers.HelicsMsg(gld_federate + "", dt)
+    gld = helpers.HelicsMsg(gld_federate, dt)
     gld.pubs(False, "distribution_load", "complex", network_node, "distribution_load")
     gld.subs(tso_federate + "/" + "three_phase_voltage_" + str(dso_substation_bus_id), "complex", network_node, "positive_sequence_voltage")
     if len(climate_name) > 0:
@@ -422,21 +422,22 @@ def ProcessGLM(fileroot):
         meter_name = val['meterName']
         house_name = val['houseName']
         house_class = val['houseClass']
+        sub_key = sub_federate + "/" + key + "/"
         gld.pubs(False, house_name + "#power_state", "string", house_name, "power_state")
         gld.pubs(False, house_name + "#air_temperature", "double", house_name, "air_temperature")
         gld.pubs(False, house_name + "#hvac_load", "double", house_name, "hvac_load")
-        gld.subs(sub_federate + "/" + key + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
-        gld.subs(sub_federate + "/" + key + "/heating_setpoint", "double", house_name, "heating_setpoint")
-        gld.subs(sub_federate + "/" + key + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
+        gld.subs(sub_key + "cooling_setpoint", "double", house_name, "cooling_setpoint")
+        gld.subs(sub_key + "heating_setpoint", "double", house_name, "heating_setpoint")
+        gld.subs(sub_key + "thermostat_deadband", "double", house_name, "thermostat_deadband")
         if meter_name not in pubSubMeters:
             pubSubMeters.add(meter_name)
             prop = 'measured_voltage_1'
             if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
                 prop = 'measured_voltage_A'  # TODO: the HELICS substation always expects measured_voltage_1
             gld.pubs(False, meter_name + "#measured_voltage_1", "complex", meter_name, prop)
-            gld.subs(sub_federate + "/" + key + "/" + meter_name + "/bill_mode", "string", meter_name, "bill_mode")
-            gld.subs(sub_federate + "/" + key + "/" + meter_name + "/price", "double", meter_name, "price")
-            gld.subs(sub_federate + "/" + key + "/" + meter_name + "/monthly_fee", "double", meter_name, "monthly_fee")
+            gld.subs(sub_key + meter_name + "/bill_mode", "string", meter_name, "bill_mode")
+            gld.subs(sub_key + meter_name + "/price", "double", meter_name, "price")
+            gld.subs(sub_key + meter_name + "/monthly_fee", "double", meter_name, "monthly_fee")
     # TODO verify what should be done here to enforce minimum time step
     gld.write_file(fileroot + '_HELICS_gld_msg.json')
 

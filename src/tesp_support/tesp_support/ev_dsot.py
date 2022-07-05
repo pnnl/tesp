@@ -99,7 +99,7 @@ class EVDSOT:
         self.soc_upper_res = 0.99  # maximum soc
         self.Lin = float(ev_dict['efficiency'])  # charging efficiency in pu
         self.Lout = 1.0  # discharging has no efficiency factor
-        self.reserved_soc = 0.2#float(ev_dict['reserved_soc'])
+        self.reserved_soc = 0.2  # float(ev_dict['reserved_soc'])
         self.range = float(ev_dict['range_miles'])
         self.mileage = float(ev_dict['miles_per_kwh'])
         self.evCapacity = self.range / self.mileage

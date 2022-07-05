@@ -974,21 +974,21 @@ def tso_loop():
                 ppc['gencost'] = np.concatenate(
                     (ppc['gencost'], np.array([[2, 0, 0, 3, 0.0, 0.0, 0.0]])))
                 ppc['genfuel'].append(['', '', -busnum, 0])
-            
+
                 gld_load[busnum] = {'pcrv': 0, 'qcrv': 0, 'p': 0, 'q': 0, 'p_r': 0, 'q_r': 0,
                                     'unresp': 0, 'resp_max': 0, 'c2': 0, 'c1': 0, 'c0': 0, 'deg': 0, 'genidx': -busnum}
-            
+
             # needed to be re-aliased after np.concatenate
             gen = ppc['gen']
             genCost = ppc['gencost']
             genFuel = ppc['genfuel']
-            
+
             # log.info('DSO Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
             # log.info(dsoBus)
             # log.info(gld_load)
             # log.info(gen)
             # log.info(genCost)
-            
+
             # interval for metrics recording
             tnext_metrics = 0
             
@@ -997,11 +997,11 @@ def tso_loop():
             n_accum = 0
             bus_accum = {}
             gen_accum = {}
-            
+
             for i in range(dsoBus.shape[0]):
                 busnum = int(dsoBus[i, 0])
                 bus_accum[str(busnum)] = [0, 0, 0, 0, 0, 0, 0, 99999.0, 0, 0, 0, 0]
-            
+
             for i in range(gen.shape[0]):
                 gen_accum[str(i + 1)] = [0, 0, 0]
             
@@ -1071,7 +1071,7 @@ def tso_loop():
             genFuel[i][3] = 1                  # turn on generator
         if "wind" not in genFuel[i][0]:
             # gen[i, 1] = gen[i, 8]              # set to maximum real power output (MW)
-            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * 0.25)
+            gen[i, 1] = gen[i, 9]  # + ((gen[i, 8] - gen[i, 9]) * 0.25)
 
     # copy of originals for outages
     ugen = deepcopy(gen)
@@ -1087,39 +1087,35 @@ def tso_loop():
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
             log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
-            topic = key.upper().split('/')[1]
+            key = key.upper().split('/')
+            federate = key[0]
+            topic = key[1]
             if helics.helicsInputIsUpdated(sub):
                 new_event = True
+                busnum = int(''.join(ele for ele in federate if ele.isdigit()))
             # getting the latest inputs from DSO Real Time
-                if 'UNRESPONSIVE_MW_' in topic:
+                if 'UNRESPONSIVE_MW' in topic:
                     dso_bid = True
-                    busnum = int(topic[16:])
                     gld_load[busnum]['unresp'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['unresp']))
-                elif 'RESPONSIVE_MAX_MW_' in topic:
+                elif 'RESPONSIVE_MAX_MW' in topic:
                     dso_bid = True
-                    busnum = int(topic[18:])
                     gld_load[busnum]['resp_max'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['resp_max']))
-                elif 'RESPONSIVE_C2_' in topic:
-                    busnum = int(topic[14:])
+                elif 'RESPONSIVE_C2' in topic:
                     gld_load[busnum]['c2'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['c2']))
-                elif 'RESPONSIVE_C1_' in topic:
-                    busnum = int(topic[14:])
+                elif 'RESPONSIVE_C1' in topic:
                     gld_load[busnum]['c1'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['c1']))
-                elif 'RESPONSIVE_C0_' in topic:
-                    busnum = int(topic[14:])
+                elif 'RESPONSIVE_C0' in topic:
                     gld_load[busnum]['c0'] = helics.helicsInputGetDouble(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['c0']))
-                elif 'RESPONSIVE_DEG_' in topic:
-                    busnum = int(topic[15:])
+                elif 'RESPONSIVE_DEG' in topic:
                     gld_load[busnum]['deg'] = helics.helicsInputGetInteger(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['deg']))
             # getting the latest inputs from GridlabD
-                elif 'DISTRIBUTION_LOAD_' in topic:  # gld
-                    busnum = int(topic[18:])
+                elif 'DISTRIBUTION_LOAD' in topic:  # gld
                     val = helics.helicsInputGetComplex(sub)  # TODO: helics needs to return complex instead of tuple
                     gld_load[busnum]['p'] = val[0] / 100000.0  # MW
                     gld_load[busnum]['q'] = val[1] / 100000.0  # MW
@@ -1128,7 +1124,6 @@ def tso_loop():
                 elif 'DA_BID_' in topic:
                     dso_bid = True
                     day_bid = True
-                    busnum = int(topic[7:]) - 1
                     da_bid = json.loads(helics.helicsInputGetString(sub))
                     # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[hours_in_a_day]
                     last_unRespMW[busnum] = deepcopy(unRespMW[busnum])
@@ -1384,7 +1379,7 @@ def tso_loop():
         #               success=rpf[0]['success'])
         rBus = rpf[0]['bus']
         rGen = rpf[0]['gen']
-        # dso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'PF', ts)
+        # tso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'PF', ts)
         # log.info('bus_pf = ' + str(rBus[:, 2].sum()))
         # log.info('gen_pf = ' + str(rGen[:, 1].sum()))
 
@@ -1486,7 +1481,7 @@ def tso_loop():
         ts = int(helics.helicsFederateRequestTime(hFed, min(ts + dt, tmax)))
 
     # ======================================================
-    print('writing metrics', flush=True)
+    print('finalizing writing metrics', flush=True)
     print(json.dumps(sys_metrics), file=sys_mp, flush=True)
     print(json.dumps(bus_metrics), file=bus_mp, flush=True)
     print(json.dumps(gen_metrics), file=gen_mp, flush=True)

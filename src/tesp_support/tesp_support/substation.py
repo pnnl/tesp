@@ -37,7 +37,9 @@ if sys.platform != 'win32':
 
 def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConfig):
     print('starting HELICS substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
-    print ('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus', flush=True)
+    print('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,' +
+          'SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,' +
+          'ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus', flush=True)
     bWantMarket = True
     if flag == 'NoMarket':
         bWantMarket = False
@@ -97,7 +99,8 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     sub_federate = helics.helicsFederateGetName(hFed)
     tso_federate = 'pypower'
 
-    bus = sub_federate[4:]
+    bus = ''.join(ele for ele in sub_federate if ele.isdigit())
+    # print('subLMP -> ' + tso_federate + '/LMP_' + bus, flush=True)
     subFeeder = helics.helicsFederateGetSubscription(hFed, gld_federate + '/distribution_load')
     subLMP = helics.helicsFederateGetSubscription(hFed, tso_federate + '/LMP_' + bus)
     pubC1 = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_c1')
@@ -155,11 +158,12 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
         time_delta = time_granted - time_last
         time_last = time_granted
         hour_of_day = 24.0 * ((float(time_granted) / 86400.0) % 1.0)
-        #    print (dt_now, time_delta, timedelta (seconds=time_delta))
+        # print(dt_now, time_delta, timedelta (seconds=time_delta))
         dt_now = dt_now + timedelta(seconds=time_delta)
         day_of_week = dt_now.weekday()
         hour_of_day = dt_now.hour
-        #    print ('STEP', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, tnext_bid, tnext_agg, tnext_opf, tnext_clear, tnext_adjust, flush=True)
+        # print('STEP', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week,
+        # tnext_bid, tnext_agg, tnext_opf, tnext_clear, tnext_adjust, flush=True)
         LMP = helics.helicsInputGetDouble(subLMP)
         aucObj.set_lmp(LMP)
         refload = 0.001 * helics.helicsInputGetDouble(subFeeder)  # supposed to be kW?
@@ -167,7 +171,8 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
         for key, obj in hvacObjs.items():
             obj.set_air_temp_from_helics(helics.helicsInputGetDouble(subTemp[obj]))
             if obj in subVolt:
-                cval = helics.helicsInputGetComplex(subVolt[obj])  # TODO: pyhelics needs to return complex instead of tuple
+                # TODO: pyhelics needs to return complex instead of tuple
+                cval = helics.helicsInputGetComplex(subVolt[obj])
                 obj.set_voltage_from_helics(complex(cval[0], cval[1]))
             obj.set_hvac_load_from_helics(helics.helicsInputGetDouble(subHVAC[obj]))
             obj.set_hvac_state_from_helics(helics.helicsInputGetString(subState[obj]))
@@ -184,7 +189,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
                 helics.helicsPublicationPublishDouble(pubDeadband[obj], obj.deadband)
                 helics.helicsPublicationPublishDouble(pubHeating[obj], 60.0)
             bSetDefaults = False
-        #      print ('  SET DEFAULTS', flush=True)
+            # print('  SET DEFAULTS', flush=True)
 
         if time_granted >= tnext_bid:
             aucObj.clear_bids()
@@ -197,7 +202,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
                         aucObj.collect_bid(bid)
                     controller_metrics[time_key][obj.name] = [bid[0], bid[1]]
             tnext_bid += period
-        #      print ('  COLLECT BIDS', flush=True)
+            # print('  COLLECT BIDS', flush=True)
 
         if time_granted >= tnext_agg:
             aucObj.aggregate_bids()
@@ -207,7 +212,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
             helics.helicsPublicationPublishDouble(pubC1, aucObj.agg_c1)
             helics.helicsPublicationPublishInteger(pubDeg, aucObj.agg_deg)
             tnext_agg += period
-        #      print ('  AGGREGATE BIDS', flush=True)
+            # print('  AGGREGATE BIDS', flush=True)
 
         if time_granted >= tnext_clear:
             if bWantMarket:
@@ -221,7 +226,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
                 aucObj.name: [aucObj.clearing_price, aucObj.clearing_type, aucObj.consumerSurplus,
                               aucObj.averageConsumerSurplus, aucObj.supplierSurplus]}
             tnext_clear += period
-        #      print ('  CLEARED MARKET', flush=True)
+            # print('  CLEARED MARKET', flush=True)
 
         if time_granted >= tnext_adjust:
             if bWantMarket:
@@ -231,7 +236,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
                     if obj.bid_accepted():
                         helics.helicsPublicationPublishDouble(pubCooling[obj], obj.setpoint)
             tnext_adjust += period
-    #      print ('  ADJUSTED', flush=True)
+            # print('  ADJUSTED', flush=True)
 
     # ==================== Finalize the metrics output ===========================
 
@@ -246,7 +251,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     helics.helicsFederateDestroy(hFed)
 
 
-def fncs_substation_loop(configfile, metrics_root, hour_stop=48, flag='WithMarket'):
+def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
     """Helper function that initializes and runs the agents
 
     Reads configfile. Writes *auction_metrics_root_metrics.json* and
@@ -259,7 +264,9 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop=48, flag='WithMarke
         flag (str): WithMarket or NoMarket to use the simple_auction, or not
     """
     print('starting FNCS substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
-    print ('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus', flush=True)
+    print('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,' +
+          'SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,' +
+          'ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus', flush=True)
     bWantMarket = True
     if flag == 'NoMarket':
         bWantMarket = False

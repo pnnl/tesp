@@ -285,7 +285,6 @@ class DSOMarketDSOT:
                     self.curve_ws_node[day_of_week][hour_of_day], self.curve_DSO_RT, day_of_week, hour_of_day)
                 self.default_lmp = self.Pwclear_RT
 
-
     def set_Pwclear_DA (self, hour_of_day, day_of_week):
         """ Function used to implement the DA trial wholesale node clearing and update the Pwclear_DA value 
         
