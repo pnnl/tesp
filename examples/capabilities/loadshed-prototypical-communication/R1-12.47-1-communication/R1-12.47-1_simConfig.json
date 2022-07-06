@@ -1,0 +1,15 @@
+{
+  "Simulation": {
+    "Simulation_Duration": 300,
+    "Verbose": "true",
+    "Case_Name": "R1-12.47-1_HELICS",
+    "ns3_Network_Config": "./R1-12.47-1_ns3.json",
+    "ns3_EP_Config": "./R1-12.47-1_HELICS_ns3Conf.json",
+    "Anim_File": "./R1-12.47-1_HELICS_anim_P2P.xml",
+    "Routing_File": "./R1-12.47-1_HELICS_route_P2P.xml",
+    "Err_Log_File": "./R1-12.47-1_HELICS_P2P.log",
+    "Node_Loc_File": "./R1-12.47-1_HELICS_P2P_nodes_reduced.txt",
+    "Links_Loc_File": "./R1-12.47-1_HELICS_P2P_links.txt",
+    "Node_List_File": "./R1-12.47-1_HELICS_P2P.lst"
+  }
+}

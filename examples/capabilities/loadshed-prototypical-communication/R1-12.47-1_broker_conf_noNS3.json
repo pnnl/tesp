@@ -1,0 +1,18 @@
+{
+  "broker": true,
+  "name": "LoadshedFederation",
+  "federates": [
+    {
+      "name": "R1-12.47-1-federate",
+      "host": "localhost",
+      "directory": "./R1-12.47-1",
+      "exec": "gridlabd -D USE_HELICS R1-12.47-1_processed.glm"
+    },
+    {
+      "name": "R1-12.47-1-substation-federate",
+      "host": "localhost",
+      "directory": "./R1-12.47-1-substation",
+      "exec": "python3 R1-12.47-1_substation.py --config R1-12.47-1_HELICS_substConf.json --simTime 300"
+    }
+  ]
+}

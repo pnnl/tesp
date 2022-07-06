@@ -42,7 +42,8 @@ from math import sqrt
 from .helpers import parse_kva
 from .helpers import gld_strict_name
 
-tesp_share = os.path.expandvars('$TESPDIR/data/')
+currDirName = os.path.dirname(__file__)
+tesp_share = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(currDirName))), 'data/') # os.path.expandvars('$TESPDIR/data/')
 feeders_path = tesp_share + 'feeders/'
 scheduled_path = tesp_share + 'schedules/'
 weather_path = tesp_share + 'weather/'
@@ -51,7 +52,7 @@ forERCOT = False
 port = 5570
 case_name = 'Tesp'
 name_prefix = ''
-work_path = './Dummy/'
+work_path = os.path.join(currDirName, 'Dummy/') # './Dummy/'
 dso_substation_bus_id = 1
 base_feeder_name = ''
 solar_path = ''
