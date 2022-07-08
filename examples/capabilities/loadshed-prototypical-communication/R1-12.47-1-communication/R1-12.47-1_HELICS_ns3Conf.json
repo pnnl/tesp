@@ -1,0 +1,98 @@
+{
+  "name": "R1-12.47-1-communication",
+  "coreType": "zmq",
+  "core_name": "R1-12.47-1-ns3-core",
+  "loglevel": "SUMMARY",
+  "period": "1ns",
+  "wait_for_current_time_update": false,
+  "endpoints": [
+    {
+      "global": false,
+      "name": "R1-12.47-1-substation/R1_12_47_1_substation",
+      "info": "0"
+    },
+    {
+      "global": false,
+      "name": "R1-12.47-1/R1_12_47_1_tn_15_mhse_1",
+      "info": "0"
+    },
+    {
+      "global": false,
+      "name": "R1-12.47-1/R1_12_47_1_tn_128_mhse_2",
+      "info": "0"
+    },
+    {
+      "global": false,
+      "name": "R1-12.47-1/R1_12_47_1_tn_459_mhse_4",
+      "info": "0"
+    },
+    {
+      "global": false,
+      "name": "R1-12.47-1/R1_12_47_1_tn_564_mhse_4",
+      "info": "0"
+    },
+    {
+      "global": false,
+      "name": "R1-12.47-1/R1_12_47_1_tn_506_mhse_1",
+      "info": "0"
+    }
+  ],
+  "filters": [
+    {
+      "name": "filter_R1_12_47_1_substation",
+      "sourcetargets": ["R1-12.47-1-substation/R1_12_47_1_substation"],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "R1-12.47-1-communication/R1-12.47-1-substation/R1_12_47_1_substation"
+      }
+    },
+    {
+      "name": "filter_R1_12_47_1_tn_15_mhse_1",
+      "sourcetargets": ["R1-12.47-1/R1_12_47_1_tn_15_mhse_1"],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "R1-12.47-1-communication/R1-12.47-1/R1_12_47_1_tn_15_mhse_1"
+      }
+    },
+    {
+      "name": "filter_R1_12_47_1_tn_128_mhse_2",
+      "sourcetargets": ["R1-12.47-1/R1_12_47_1_tn_128_mhse_2"],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "R1-12.47-1-communication/R1-12.47-1/R1_12_47_1_tn_128_mhse_2"
+      }
+    },
+    {
+      "name": "filter_R1_12_47_1_tn_459_mhse_4",
+      "sourcetargets": ["R1-12.47-1/R1_12_47_1_tn_459_mhse_4"],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "R1-12.47-1-communication/R1-12.47-1/R1_12_47_1_tn_459_mhse_4"
+      }
+    },
+    {
+      "name": "filter_R1_12_47_1_tn_564_mhse_4",
+      "sourcetargets": [
+        "R1-12.47-1/R1_12_47_1_tn_564_mhse_4"
+      ],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "R1-12.47-1-communication/R1-12.47-1/R1_12_47_1_tn_564_mhse_4"
+      }
+    },
+    {
+      "name": "filter_R1_12_47_1_tn_506_mhse_1",
+      "sourcetargets": ["R1-12.47-1/R1_12_47_1_tn_506_mhse_1"],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "R1-12.47-1-communication/R1-12.47-1/R1_12_47_1_tn_506_mhse_1"
+      }
+    }
+  ]
+}
