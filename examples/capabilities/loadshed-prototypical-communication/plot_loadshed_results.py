@@ -16,11 +16,11 @@ import seaborn as sns
 LOWER_BOUND = 0.95
 UPPER_BOUND = 1.05
 VREFtoPU = 7199.558
-SMALLEST_SIZE = 10 # 10
-SMALLER_SIZE = 12 # 12
-SMALL_SIZE = 16 # 24
-MEDIUM_SIZE = 18 # 32
-BIG_SIZE = 24 # 48
+SMALLEST_SIZE = 12 # 10
+SMALLER_SIZE = 16 # 12
+SMALL_SIZE = 18 # 24
+MEDIUM_SIZE = 24 # 32
+BIG_SIZE = 32 # 48
 SAVE_FIG = False
 timeIdx = 0
 current_palette = sns.xkcd_palette(sns.xkcd_rgb)  # color_palette('pastel')
@@ -105,14 +105,16 @@ def main():
   figHeight = 8
   tickInt = 10
   scenarios = ['noNS3_noLoadShed', 'noNS3_LoadShed', 'withNS3_LoadShed']
-  nCol = 2
-  nRow = 5
-  hFig = plt.figure(constrained_layout = True, figsize = (figWidth, figHeight))
+  nCol = 1 #2
+  nRow = 1 #5
+  hBigFig = plt.figure(constrained_layout = True, figsize = (figWidth, figHeight))
+  hFigs = hBigFig.subfigures(1, 2, wspace = 0.07)
+  hFig = hFigs[0] # plt.figure(constrained_layout = True, figsize = (figWidth, figHeight))
   gs = GridSpec(nRow, nCol, figure = hFig)
   xLabelText = 'time [sec]'
   yLabelText = 'substation load [MW]'
   legendText = ['no load shed', 'load shed, no communication network', 'load shed, with communication network']
-  hAxis = hFig.add_subplot(gs[0:5, 0])
+  hAxis = hFig.add_subplot(gs[0, 0]) #(gs[0:5, 0])
   titleText = f'substation load'
   for scen in scenarios:
     if scenarios.index(scen) == 2:
@@ -133,15 +135,19 @@ def main():
   hAxis.xaxis.set_major_locator(plt.MaxNLocator(12))
   hAxis.yaxis.set_major_locator(plt.MaxNLocator(8))
   # hAxis.set_title(titleText, fontsize = BIG_SIZE, fontweight = 'bold')
-  # hAxis.set_xlabel(xLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
-  # hAxis.set_ylabel(yLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
-  hAxis.set_title(yLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
+  hAxis.set_xlabel(xLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
+  hAxis.set_ylabel(yLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
+  hAxis.set_title('Substation', fontsize = MEDIUM_SIZE, fontweight = 'bold')
   hAxis.legend(legendText, fontsize = SMALL_SIZE, markerscale = 2, loc = 'lower right')
   
-  shedLoad = ['R1_12_47_1_tn_1_mhse_1', 'R1_12_47_1_tn_2_mhse_1', 'R1_12_47_1_tn_2_mhse_2', 'R1_12_47_1_tn_564_mhse_4', 'R1_12_47_1_tn_562_mhse_2']
+  hFig = hFigs[1]
+  nCol = 1
+  nRow = 5
+  gs = GridSpec(nRow, nCol, figure = hFig)
+  shedLoad = ['R1_12_47_1_tn_15_mhse_1', 'R1_12_47_1_tn_128_mhse_2', 'R1_12_47_1_tn_459_mhse_4', 'R1_12_47_1_tn_564_mhse_4', 'R1_12_47_1_tn_506_mhse_1']
   yLabelText = 'load [kW]'
   for ld in shedLoad:
-    hAxis = hFig.add_subplot(gs[shedLoad.index(ld), 1])
+    hAxis = hFig.add_subplot(gs[shedLoad.index(ld), 0]) #1])
     for scen in scenarios[1:]:
       if scenarios.index(scen) == 2:
         lw = 2
@@ -161,17 +167,18 @@ def main():
     hAxis.tick_params(axis = 'both', which = 'major', labelsize = SMALL_SIZE, width = 2, labelrotation = 0, labelcolor = 'black')
     hAxis.grid(axis = 'both', alpha = 0.4, linestyle = ':', color = 'black')
     hAxis.xaxis.set_major_locator(plt.MaxNLocator(12))
-    hAxis.yaxis.set_major_locator(plt.MaxNLocator(1))
+    hAxis.yaxis.set_major_locator(plt.MaxNLocator(4))
     # if shedLoad.index(ld) == len(shedLoad) - 1:
     #   hAxis.set_xlabel(xLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
 
     # hAxis.set_ylabel(yLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
-    if shedLoad.index(ld) == 0:
-      hAxis.set_title(yLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
+    # if shedLoad.index(ld) == 0:
+    #   hAxis.set_title(yLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
     # hAxis.legend(legendText[1:], fontsize = SMALL_SIZE, markerscale = 2)
+    hAxis.set_title(ld, fontsize = MEDIUM_SIZE, fontweight = 'bold')
 
-  hFig.supxlabel(xLabelText, fontsize=MEDIUM_SIZE, fontweight='bold')
-  # hFig.supylabel(yLabelText, fontsize = SMALL_SIZE, fontweight = 'bold')
+  hFig.supxlabel(xLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
+  hFig.supylabel(yLabelText, fontsize = MEDIUM_SIZE, fontweight = 'bold')
 
   if SAVE_FIG:
     hFig.savefig(os.path.join(os.path.abspath('./'), 'generation.png'), format = 'png')

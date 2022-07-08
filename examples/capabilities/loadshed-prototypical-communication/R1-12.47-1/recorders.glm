@@ -1,23 +1,23 @@
 object recorder {
-  name R1_12_47_1_tn_1_mhse_1_rec;
-  parent R1_12_47_1_tn_1_mhse_1;
+  name R1_12_47_1_tn_15_mhse_1_rec;
+  parent R1_12_47_1_tn_15_mhse_1;
   property service_status,measured_real_power;
   interval 1;
-  file R1_12_47_1_tn_1_mhse_1_rec.csv;
+  file R1_12_47_1_tn_15_mhse_1_rec.csv;
 }
 object recorder {
-  name R1_12_47_1_tn_2_mhse_1_rec;
-  parent R1_12_47_1_tn_2_mhse_1;
+  name R1_12_47_1_tn_128_mhse_2_rec;
+  parent R1_12_47_1_tn_128_mhse_2;
   property service_status,measured_real_power;
   interval 1;
-  file R1_12_47_1_tn_2_mhse_1_rec.csv;
+  file R1_12_47_1_tn_128_mhse_2_rec.csv;
 }
 object recorder {
-  name R1_12_47_1_tn_2_mhse_2_rec;
-  parent R1_12_47_1_tn_2_mhse_2;
+  name R1_12_47_1_tn_459_mhse_4_rec;
+  parent R1_12_47_1_tn_459_mhse_4;
   property service_status,measured_real_power;
   interval 1;
-  file R1_12_47_1_tn_2_mhse_2_rec.csv;
+  file R1_12_47_1_tn_459_mhse_4_rec.csv;
 }
 object recorder {
   name R1_12_47_1_tn_564_mhse_4_rec;
@@ -27,11 +27,11 @@ object recorder {
   file R1_12_47_1_tn_564_mhse_4_rec.csv;
 }
 object recorder {
-  name R1_12_47_1_tn_562_mhse_2_rec;
-  parent R1_12_47_1_tn_562_mhse_2;
+  name R1_12_47_1_tn_506_mhse_1_rec;
+  parent R1_12_47_1_tn_506_mhse_1;
   property service_status,measured_real_power;
   interval 1;
-  file R1_12_47_1_tn_562_mhse_2_rec.csv;
+  file R1_12_47_1_tn_506_mhse_1_rec.csv;
 }
 object group_recorder {
   name substation_recorder;

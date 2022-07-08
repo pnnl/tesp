@@ -8,24 +8,24 @@
   "endpoints": [
     {
       "global": false,
-      "name": "R1_12_47_1_tn_1_mhse_1",
+      "name": "R1_12_47_1_tn_15_mhse_1",
       "destination": "R1-12.47-1-substation/R1_12_47_1_substation",
       "type": "string",
-      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_1_mhse_1\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_1_mhse_1\",\"property\":\"service_status\"}}"
+      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_15_mhse_1\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_15_mhse_1\",\"property\":\"service_status\"}}"
     },
     {
       "global": false,
-      "name": "R1_12_47_1_tn_2_mhse_1",
+      "name": "R1_12_47_1_tn_128_mhse_2",
       "destination": "R1-12.47-1-substation/R1_12_47_1_substation",
       "type": "string",
-      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_2_mhse_1\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_2_mhse_1\",\"property\":\"service_status\"}}"
+      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_128_mhse_2\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_128_mhse_2\",\"property\":\"service_status\"}}"
     },
     {
       "global": false,
-      "name": "R1_12_47_1_tn_2_mhse_2",
+      "name": "R1_12_47_1_tn_459_mhse_4",
       "destination": "R1-12.47-1-substation/R1_12_47_1_substation",
       "type": "string",
-      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_2_mhse_2\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_2_mhse_2\",\"property\":\"service_status\"}}"
+      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_459_mhse_4\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_459_mhse_4\",\"property\":\"service_status\"}}"
     }
     ,
     {
@@ -37,10 +37,10 @@
     },
     {
       "global": false,
-      "name": "R1_12_47_1_tn_562_mhse_2",
+      "name": "R1_12_47_1_tn_506_mhse_1",
       "destination": "R1-12.47-1-substation/R1_12_47_1_substation",
       "type": "string",
-      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_562_mhse_2\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_562_mhse_2\",\"property\":\"service_status\"}}"
+      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_506_mhse_1\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_506_mhse_1\",\"property\":\"service_status\"}}"
     }
   ]
 }
