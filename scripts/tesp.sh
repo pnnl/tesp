@@ -97,23 +97,26 @@ echo "Create directory structure for TESP"
 cd "${HOME}" || exit
 mkdir -p tesp
 cd tesp || exit
-mkdir -p repository
-mkdir -p installed
-mkdir -p software
+echo "Install a virtual python environment to $HOME/tesp/venv"
 mkdir -p venv
+python3 -m venv $HOME/tesp/venv --prompt TESP
+python3 -m venv $HOME/tesp/venv --upgrade
+echo "Install an executables environment to $HOME/tesp/installed"
+mkdir -p installed
+echo "Install git repository to $HOME/tesp/repository"
+mkdir -p repository
 cd repository || exit
 
-echo "Install a virtual environment to $HOME/tesp/venv for executables"
-python3 -m venv $HOME/tesp/venv --upgrade-deps --prompt TESP
+echo
+echo "Download all relevant repositories..."
 
+echo
 echo ++++++++++++++ TESP
 git clone -b main https://github.com/pnnl/tesp.git
 echo "Copy TESP environment variables to $HOME/tespEnv for shell scripts"
 cp tesp/scripts/tespEnv "$HOME/"
 source "${HOME}/tespEnv"
 
-echo
-echo "Download all relevant repositories..."
 echo
 echo ++++++++++++++ PSST
 # git clone https://github.com/ames-market/psst.git

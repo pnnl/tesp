@@ -4,7 +4,6 @@ source $HOME/tesp/venv/bin/activate
 export TESPDIR=$HOME/tesp/repository/tesp
 export INSTDIR=$HOME/tesp/installed
 export REPODIR=$HOME/tesp/repository
-export WAREDIR=$HOME/tesp/software
 export TESPBUILD=$TESPDIR/scripts/build
 export TESPHELPR=$TESPDIR/scripts/helpers
 
