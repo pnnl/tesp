@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 helicsversion = h.helicsGetVersion()
 logger.info('Loadshed Federate: HELICS version = {}'.format(helicsversion))
@@ -51,7 +51,7 @@ def main():
 
   while grantedTime < seconds:
     currTime = h.helicsFederateGetCurrentTime(fed)
-    logger.info(f'Granted time: {grantedTime}, Current time: {currTime}')
+    logger.debug(f'Granted time: {grantedTime}, Current time: {currTime}')
     end_name = h.helicsEndpointGetName(swStatusEp)
     for swt in switchings:
       t = swt[0]

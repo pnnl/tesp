@@ -4,15 +4,11 @@
 for now, it only provides day ahead forecast for each agent.
 It does not participate in bidding
 """
-import math
 import numpy as np
-import tesp_support.helpers as helpers
-import tesp_support.helpers_dsot as hlprs
-import tesp_support.feederGenerator_dsot as fg
-from copy import deepcopy
 import logging as log
-import pyomo.environ as pyo
 from datetime import datetime, timedelta
+
+import tesp_support.helpers_dsot as hlprs
 
 logger = log.getLogger()
 
@@ -58,7 +54,6 @@ if __name__ == "__main__":
     
     Makes a single battery agent and run DA 
     """
-    import time
     import pandas as pd
 
     a = pd.read_csv('solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv',index_col=0, header=None)
@@ -88,8 +83,7 @@ if __name__ == "__main__":
            [5.0, 0.03234319929066909]]
 
     ### Uncomment for testing logging functionality.
-    ### Supply these values when using the battery agent in the
-    ### simulation.
+    ### Supply these values when using the battery agent in the simulation.
     # model_diag_level = 11
     # hlprs.enable_logging('DEBUG', model_diag_level)
     start_time = '2016-08-12 13:59:00'

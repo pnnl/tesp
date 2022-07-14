@@ -3,7 +3,6 @@
 """ Utility functions for use within tesp_support, including new agents. This is DSO+T specific helper functions
 """
 import os
-import json
 import logging
 import platform
 import subprocess

@@ -76,6 +76,7 @@ sudo apt-get -y install liblapack-dev
 sudo apt-get -y install libmetis-dev
 
 # Python support
+sudo apt-get -y install python3-venv
 sudo apt-get -y install python3-pip
 sudo apt-get -y install python3-tk
 
@@ -99,13 +100,17 @@ cd tesp || exit
 mkdir -p repository
 mkdir -p installed
 mkdir -p software
+mkdir -p venv
 cd repository || exit
+
+echo "Install a virtual environment to $HOME/tesp/venv for executables"
+python3 -m venv $HOME/tesp/venv --upgrade-deps --prompt TESP
 
 echo ++++++++++++++ TESP
 git clone -b main https://github.com/pnnl/tesp.git
 echo "Copy TESP environment variables to $HOME/tespEnv for shell scripts"
 cp tesp/scripts/tespEnv "$HOME/"
-. "${HOME}/tespEnv"
+source "${HOME}/tespEnv"
 
 echo
 echo "Download all relevant repositories..."

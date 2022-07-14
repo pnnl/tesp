@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 helicsversion = h.helicsGetVersion()
 logger.info("Loadshed Federate: HELICS version = {}".format(helicsversion))
@@ -58,7 +58,7 @@ def main():
         currTime = h.helicsFederateGetCurrentTime(fed)
         grantedtime = h.helicsFederateRequestNextStep(fed)
         if (currTime * 100) % 100 == 0:
-            logger.info("Current time: {0}, Granted time: {1}".format(currTime, grantedtime))
+            logger.debug("Current time: {0}, Granted time: {1}".format(currTime, grantedtime))
         end_name = h.helicsEndpointGetName(swStatusEp)
         for swt in switchings:
             t = swt[0]
@@ -66,10 +66,10 @@ def main():
             if int(currTime) == t:
                 if val == 1:
                     logger.info("Switching " + end_name + " to CLOSED at second " + str(t))
-                    h.helicsEndpointSendMessageRaw(swStatusEp, "", "CLOSED".encode())
+                    h.helicsEndpointSendBytesTo(swStatusEp, "CLOSED".encode(), "")
                 elif val == 0:
                     logger.info("Switching " + end_name + " to OPEN at second " + str(t))
-                    h.helicsEndpointSendMessageRaw(swStatusEp, "", "OPEN".encode())
+                    h.helicsEndpointSendBytesTo(swStatusEp, "OPEN".encode(), "")
                 else:
                     logger.info("!!!!!!! Signals should only be 0 or 1 !!!!!!!")
     logger.info("Destroying federate")

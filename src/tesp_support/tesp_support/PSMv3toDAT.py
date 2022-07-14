@@ -4,18 +4,13 @@
 # The csv file include 6 columns for the following in addition to date and time information:
 # temperature, humidity, DNI, DHI, pressure and wind_speed'
 
-import matplotlib.pyplot as plt
-import dateutil
-import io
-from unittest.mock import inplace
 import os
+import pandas as pd
+
 try:
     from urllib2 import urlopen, Request
 except ImportError:
     from urllib.request import urlopen, Request
-
-import pandas as pd
-import numpy as np
 
 
 def weatherdat(psmv3csvfile, bus_str, location_str):

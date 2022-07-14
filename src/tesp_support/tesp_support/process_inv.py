@@ -60,7 +60,7 @@ def process_inv(nameroot, dictname='', save_file=None, save_only=False):
         except:
             logger.error(f'Unable to open inverter dictionary {dictname}')
     else:
-        inv_dict_path = path.join(nameroot, "_glm_dict.json")
+        inv_dict_path = os.path.join(nameroot, "_glm_dict.json")
         try:
             lp = open().read()
         except:
@@ -280,7 +280,7 @@ def process_inv(nameroot, dictname='', save_file=None, save_only=False):
     # Precooling: won't necessarily have the same times?
     fname_p = 'precool_' + nameroot + '_metrics.json'
     have_precool = False
-    if path.exists(fname_p):
+    if os.path.exists(fname_p):
         have_precool = True
         lp_p = open(fname_p).read()
         lst_p = json.loads(lp_p)

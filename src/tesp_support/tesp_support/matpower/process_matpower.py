@@ -1,10 +1,9 @@
-#	Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: process_matpower.py
-import json;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+
+import json
+import numpy as np
+import matplotlib.pyplot as plt
 
 def process_matpower (nameroot):
     # first, read and print a dictionary of relevant MATPOWER objects

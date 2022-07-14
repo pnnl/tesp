@@ -25,7 +25,7 @@ setup(
     ],
     packages=find_packages(),
     include_package_data=True,
-    python_requires='>=3.6.9',
+    python_requires='>=3.8',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -36,7 +36,7 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering',
     ],
     zip_safe=False

@@ -42,13 +42,13 @@ def dso_make_stub(casename):
 
     yp = HelicsMsg("dsostub", 15)
     for i in range(nd):
+        bs = str(i + 1)
         yp.pubs_n(False, "rt_bid_" + bs, "string")
         yp.pubs_n(False, "da_bid_" + bs, "string")
-    for i in range(nd):
         yp.subs_n("refplayer/ref_load_" + bs, "string")
         yp.subs_n("refplayer/ref_ld_hist_" + bs, "string")
         yp.subs_n("indplayer/ind_load_" + bs, "string")
-        yp.subs_n("indplayer/ind_ld_hist" + bs, "string")
+        yp.subs_n("indplayer/ind_ld_hist_" + bs, "string")
         yp.subs_n("pypower/lmp_rt_" + bs, "string")
         yp.subs_n("pypower/lmp_da_" + bs, "string")
         yp.subs_n("pypower/cleared_q_rt_" + bs, "string")
@@ -58,19 +58,18 @@ def dso_make_stub(casename):
 
     yp = HelicsMsg("pypower", 15)
     for i in range(nd):
+        bs = str(i + 1)
         yp.pubs_n(False, "lmp_rt_" + bs, "string")
         yp.pubs_n(False, "lmp_da_" + bs, "string")
         yp.pubs_n(False, "cleared_q_rt_" + bs, "string")
         yp.pubs_n(False, "cleared_q_da_" + bs, "string")
         yp.pubs_n(False, "three_phase_voltage_" + bs, "double")
-
-    for i in range(nd):
         yp.subs_n("dsostub/da_bid_" + bs, "string")
         yp.subs_n("dsostub/rt_bid_" + bs, "string")
         yp.subs_n("refplayer/ref_load_" + bs, "string")
         yp.subs_n("refplayer/ref_ld_hist_" + bs, "string")
-        yp.subs_n("ldplayer/gld_load_" + bs, "string")
-        yp.subs_n("ldplayer/gld_ld_hist_" + bs, "string")
+        yp.subs_n("gldplayer/gld_load_" + bs, "string")
+        yp.subs_n("gldplayer/gld_ld_hist_" + bs, "string")
 
     if ppc['genPower']:
         genFuel = ppc['genfuel']

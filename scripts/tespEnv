@@ -1,3 +1,4 @@
+source $HOME/tesp/venv/bin/activate
 
 # TESP exports
 export TESPDIR=$HOME/tesp/repository/tesp
