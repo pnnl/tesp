@@ -10,7 +10,7 @@ import pandas as pd
 import pypower.api as pp
 import psst.cli as pst
 import fncs
-import tso_helpers as tso
+import tesp_support.tso_helpers as tso
 from copy import deepcopy
 from datetime import datetime
 from .helpers import parse_mva
@@ -927,9 +927,9 @@ def tso_loop(casename):
             ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
             logger = log.getLogger()
+            # logger.setLevel(log.INFO)
+            logger.setLevel(log.WARNING)
             # logger.setLevel(log.DEBUG)
-            logger.setLevel(log.INFO)
-            # logger.setLevel(log.WARNING)
             log.info('starting tso loop...')
 
             if ppc['solver'] == 'cbc':
@@ -1221,7 +1221,7 @@ def tso_loop(casename):
             genCost = ppc['gencost']
             genFuel = ppc['genfuel']
 
-            # log.info('FNCS Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
+            # log.info('DSO Connections: bus, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit')
             # log.info(dsoBus)
             # log.info(gld_load)
             # log.info(gen)
@@ -1781,7 +1781,7 @@ def tso_loop(casename):
         ts = fncs.time_request(min(ts + dt, tmax))
 
     # ======================================================
-    log.info('finalizing metrics writing')
+    log.info('finalize metrics writing')
     collector.finalize_writing()
     log.info('closing files')
     op.close()

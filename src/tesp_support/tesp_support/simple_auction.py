@@ -11,14 +11,14 @@ Todo:
     * Distribute marginal quantities and fractions; these are not currently applied to HVACs
 
 2021-10-29 TDH: Key assumptions we need to refactor out of this:
-    - This is a retail market working under a wholesale market. We want
-    something more general that can operate at any market level.
-    - Load state is not necessary information to run a market. PNNL TSP has
-    traditionally had the construct of responsive and unresponsive loads and I
-    think the idea is crucial for being able to get good quadratic curve
-    fits on the demand curve (by lopping off the unresponsive portion) but
-    I thin we should refactor this so that these assumptions are not so
-    tightly integrated with the formulation.
+- This is a retail market working under a wholesale market. We want
+something more general that can operate at any market level.
+- Load state is not necessary information to run a market. PNNL TSP has
+traditionally had the construct of responsive and unresponsive loads and I
+think the idea is crucial for being able to get good quadratic curve
+fits on the demand curve (by lopping off the unresponsive portion) but
+I thin we should refactor this so that these assumptions are not so
+tightly integrated with the formulation.
 
 """
 import tesp_support.helpers as helpers

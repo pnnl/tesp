@@ -59,7 +59,7 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
     - *tesp_case.py*; supervises the assembly of a TESP case with one feeder, one EnergyPlus building and one PYPOWER model. Reads the JSON file from tesp_config.py
     - *tesp_config.py*; a GUI for creating the JSON file used to configure a TESP case
     - *tesp_monitor.py*; a GUI for launching a TESP simulation, monitoring its progress, and terminating it early if necessary
-		- *weatherAgent.py*; publishes weather and forecasts based on a CSV file
+    - *weatherAgent.py*; publishes weather and forecasts based on a CSV file
     - *README.md*; this file
     - **matpower**; legacy code that configures and post-processes MATPOWER v5+ for TESP. We now use PYPOWER and AMES instead.
     - **sgip1**; custom code that plotted curves from different cases on the same graph. Used for a 2018 journal paper on TESP and the SGIP1 example.

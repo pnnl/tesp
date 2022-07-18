@@ -94,9 +94,9 @@ def dso_loop(casename):
     power_factor = 0.57  # roughly 30 deg
 
     logger = log.getLogger()
+    # logger.setLevel(log.INFO)
+    logger.setLevel(log.WARNING)
     # logger.setLevel(log.DEBUG)
-    logger.setLevel(log.INFO)
-    # logger.setLevel(log.WARNING)
 
     log.info('Reading configuration...')
     ppc = tso.load_json_case(casename + '.json')

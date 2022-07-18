@@ -543,9 +543,11 @@ def tso_loop(casename):
                         zgen[jj, 1] = zgen[jj, 1] * curtail
         else:
             rt_curtail = []
+            tot_dso = 0.0
             for ii in range(bus.shape[0]):
                 bus_num = ii + 1
                 total = dso_loads[ii] - neg_loads[bus_num]
+                tot_dso += total
                 rt_curtail.append(total)
 
         log.info('Total DSO Load: ' + str(total_dso))
@@ -930,9 +932,9 @@ def tso_loop(casename):
             ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
             logger = log.getLogger()
+            # logger.setLevel(log.INFO)
+            logger.setLevel(log.WARNING)
             # logger.setLevel(log.DEBUG)
-            logger.setLevel(log.INFO)
-            # logger.setLevel(log.WARNING)
             log.info('starting tso loop...')
 
             if ppc['solver'] == 'cbc':
@@ -1792,7 +1794,7 @@ def tso_loop(casename):
         ts = int(helics.helicsFederateRequestTime(hFed, min(ts + dt, tmax)))
 
     # ======================================================
-    log.info('finalizing writing metrics')
+    log.info('finalize metrics writing')
     collector.finalize_writing()
     log.info('closing files')
     op.close()
