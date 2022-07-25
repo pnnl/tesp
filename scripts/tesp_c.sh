@@ -13,7 +13,7 @@ echo
 
 # Install all pip libraries
 echo "Installing Python Libraries..."
-pip3 install -r "$TESPDIR/requirements.txt" > "${TESPBUILD}/tesp_pypi.log" 2>&1
+pip3 install -r "${TESPDIR}/requirements.txt" > "${TESPBUILD}/tesp_pypi.log" 2>&1
 
 #develop tesp api
 echo "Installing Python TESP API..."
@@ -79,7 +79,7 @@ fi
 
 cd "${TESPBUILD}" || exit
 echo "Installing HELICS Python bindings..."
-./HELICS-py.sh "$1"
+./HELICS-py.sh clean > HELICS-py.log 2>&1
 
 echo
 echo "Installation logs are found in ${TESPBUILD}"

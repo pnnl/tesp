@@ -3,6 +3,17 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: tesp.sh
 
+
+# You should get familiar with the command line to have good success with TESP
+# As such, you may want to run in remote shh terminal.
+# Here is to how to install and configured ssh server
+#   sudo apt-get -y install openssh-server
+#   sudo nano /etc/ssh/sshd_config
+# Once you open the file, find and change the uncomment line: # Port 22
+#   sudo service ssh start
+#   sudo systemctl status ssh
+
+
 # From terminal in the VM, enter the these lines to build
 #   cd
 #	  wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp.sh
@@ -11,13 +22,10 @@
 # Set the the first and second parameter on the command line:
 #	  ./tesp.sh username username@email
 
-
-# If you want to run as shh this has to be installed and configured
-#  sudo -get -y install openssh-server
-#  sudo nano /etc/ssh/sshd_config
-# Once you open the file, find and change the uncomment line: # Port 22 
-#  sudo service ssh start
-#  sudo systemctl status ssh
+# If you would to use and IDE here's to install snap Pycharm IDE for python
+#   sudo snap install pycharm-community --classic
+# Here is how to start pycharm and capture pycharm log for any errors
+#   pycharm-community &> ~/charm.log&
 
 
 #alternatives command line for java or python
@@ -164,12 +172,6 @@ if [[ $binaries == "develop" ]]; then
   echo ++++++++++++++ KLU SOLVER
   svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
 fi
-
-# Install snap Pycharm IDE for python
-# sudo snap install pycharm-community --classic
-
-# to Run pycharm
-# pycharm-community &> ~/charm.log&
 
 cd "$TESPDIR"/scripts || exit
 # Compile all relevant executables
