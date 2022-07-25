@@ -1,11 +1,11 @@
 # file: process_gld.py
-import json;
-import sys;
+import json
+import sys
 import os
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
-import tesp_support.process_eplus as ep;
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import tesp_support.process_eplus as ep
 
 outputFolder = './'
 # first, read and print a dictionary of all the monitored GridLAB-D objects

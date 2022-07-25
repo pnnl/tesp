@@ -1,9 +1,9 @@
 #	Copyright (C) 2017-2022 Battelle Memorial Institute
-import json;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import json
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 casefiles = [['SGIP1a','red'],
 						 ['SGIP1b','blue'],

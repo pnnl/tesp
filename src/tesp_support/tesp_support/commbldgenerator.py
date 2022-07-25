@@ -439,7 +439,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
             num_panel = np.floor(bldg_size / 175)
             inv_undersizing = 1.0
             inv_power = num_panel * 350 * inv_undersizing
-            pv_scaling_factor = inv_power / (pv_rating_MW)
+            pv_scaling_factor = inv_power / pv_rating_MW
 
             basenode = mtr
             sol_m_name = gld_strict_name(basenode + '_msol')

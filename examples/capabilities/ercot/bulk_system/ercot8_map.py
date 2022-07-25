@@ -20,14 +20,14 @@ shapePath = './Texas_SHP/'
 def feature_from_archive (shp_path, zip_name, shp_root, asFeature=True):
   zf = zipfile.ZipFile (shp_path + zip_name)
   for ext in ['shp', 'shx', 'dbf']:
-    fname = '{:s}{:s}.{:s}'.format (shp_path, shp_root, ext)
-    if not os.path.isfile (fname):
-      zf.extract (shp_root + '.' + ext, shp_path)
+	fname = '{:s}{:s}.{:s}'.format (shp_path, shp_root, ext)
+	if not os.path.isfile (fname):
+	  zf.extract (shp_root + '.' + ext, shp_path)
   rdr = shpreader.Reader (shp_path + shp_root)
   if asFeature:
-    f = cfeature.ShapelyFeature (list(rdr.geometries()), ccrs.PlateCarree())
+	f = cfeature.ShapelyFeature (list(rdr.geometries()), ccrs.PlateCarree())
   else:
-    f = list(rdr.geometries())
+	f = list(rdr.geometries())
   zf.close()
   return f
 
@@ -48,7 +48,7 @@ ax.add_feature(COUNTIES, facecolor='none', edgecolor='gray')
 ax.add_feature(ROADS, facecolor='none', edgecolor='magenta')
 ax.add_feature(URBAN, zorder=10, facecolor='orange', edgecolor='orange', alpha=0.3)
 ax.scatter([point.x for point in WIND], [point.y for point in WIND], 
-           transform=ccrs.PlateCarree(), s=2, c='cyan')
+		   transform=ccrs.PlateCarree(), s=2, c='cyan')
 ax.coastlines(featureScale)
 
 ax.set_extent([-107.0, -93.0, 25.0, 37.0])
@@ -96,7 +96,7 @@ lroad = mlines.Line2D ([0,1], [0,1], color='magenta')
 lurban = mpatches.Rectangle ((0, 0), 1, 1, facecolor='orange')
 lwind = mpatches.Rectangle ((0, 0), 1, 1, facecolor='cyan')
 ax.legend ([lroad, lurban, lwind, gnodes345, glines345], 
-           ['Interstate', 'Urbanized', 'WindGen', 'EHV Sub', 'EHV Line'], loc='lower left')
+		   ['Interstate', 'Urbanized', 'WindGen', 'EHV Sub', 'EHV Line'], loc='lower left')
 
 plt.title ('Retained Buses and Lines - 345 kV')
 plt.xlabel ('Longitude [deg]')

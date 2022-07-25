@@ -5,7 +5,7 @@ Created on Thu Aug  9 08:50:19 2018
 @author: liub725
 """
 
-import networkx as nx;
+import networkx as nx
 import re
 import csv
 import matplotlib.pyplot as plt
@@ -34,7 +34,7 @@ def gld_strict_name(val):
         str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
     """
     if val[0].isdigit():
-        val = 'gld_' + val     
+        val = 'gld_' + val
     return val.replace ('-','_')
 
 def is_node_class(s):
@@ -70,7 +70,7 @@ def is_edge_class(s):
     return False
 
 def obj(parent,model,line,itr,oidh,octr):
-    '''
+    """
     Store an object in the model structure
     Inputs:
         parent: name of parent object (used for nested object defs)
@@ -79,7 +79,7 @@ def obj(parent,model,line,itr,oidh,octr):
         itr: iterator over the list of lines
         oidh: hash of object id's to object names
         octr: object counter
-    '''
+    """
     octr += 1
     # Identify the object type
     m = re.search('object ([^:{\s]+)[:{\s]',line,re.IGNORECASE)
@@ -144,7 +144,7 @@ def obj(parent,model,line,itr,oidh,octr):
     # Return the 
     return line,octr
 
-# %% get data from the full model  
+# %% get data from the full model
 def getV(model_name, simlistfile, V_datafile, new_Vdatafile):
 
     base_name = gld_strict_name (model_name)
@@ -178,7 +178,7 @@ def getV(model_name, simlistfile, V_datafile, new_Vdatafile):
     # get the segment node from the nodelist file
     simlistkeys=['phase_name','i_node','f_node','junction','i_branch','f_branch','out_branch_1','out_branch_2','out_branch_3']
     global simlist
-    with open (simlistfile,'r') as nodefile:            
+    with open (simlistfile,'r') as nodefile:
         siminfo=nodefile.read().splitlines()
         siminfolist=[]
         for n in range(len(siminfo)):
@@ -186,20 +186,20 @@ def getV(model_name, simlistfile, V_datafile, new_Vdatafile):
     # make a dict that contains the segment information
     simlist=[]
     for k in range(len(siminfolist)):
-        simlist.append(dict(zip(simlistkeys,siminfolist[k])))    
+        simlist.append(dict(zip(simlistkeys,siminfolist[k])))
     # read the voltage according to segment node
     global Via, Vib, Vic, Vfa, Vfb, Vfc
     Via=[]; Vib=[]; Vic=[]; Vfa=[]; Vfb=[]; Vfc=[]
-    
+
     for n in range(len(simlist)):
     #    temp_node='R5-12-47-1_'+nodelist[n]['i_node']
         Via.append(complex(float(Va[base_name+'_node_'+simlist[n]['i_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['i_node']])))
         Vib.append(complex(float(Vb[base_name+'_node_'+simlist[n]['i_node']]),float(Vbimg[base_name+'_node_'+simlist[n]['i_node']])))
         Vic.append(complex(float(Vc[base_name+'_node_'+simlist[n]['i_node']]),float(Vcimg[base_name+'_node_'+simlist[n]['i_node']])))
-        Vfa.append(complex(float(Va[base_name+'_node_'+simlist[n]['f_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['f_node']]))) 
+        Vfa.append(complex(float(Va[base_name+'_node_'+simlist[n]['f_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['f_node']])))
         Vfb.append(complex(float(Vb[base_name+'_node_'+simlist[n]['f_node']]),float(Vbimg[base_name+'_node_'+simlist[n]['f_node']])))
         Vfc.append(complex(float(Vc[base_name+'_node_'+simlist[n]['f_node']]),float(Vcimg[base_name+'_node_'+simlist[n]['f_node']])))
-        
+
 def getV_sim(model_name, simlistfile, V_datafile, new_Vdatafile):
     base_name = gld_strict_name (model_name)
     with open(V_datafile,'r') as f, open(new_Vdatafile,'w') as f1:
@@ -232,13 +232,13 @@ def getV_sim(model_name, simlistfile, V_datafile, new_Vdatafile):
     # read the voltage according to segment node
     global Vias, Vibs, Vics, Vfas, Vfbs, Vfcs
     Vias=[]; Vibs=[]; Vics=[]; Vfas=[]; Vfbs=[];  Vfcs=[]
-    
+
     for n in range(len(simlist)):
     #    temp_node='R5-12-47-1_'+nodelist[n]['i_node']
         Vias.append(complex(float(Va[base_name+'_node_'+simlist[n]['i_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['i_node']])))
         Vibs.append(complex(float(Vb[base_name+'_node_'+simlist[n]['i_node']]),float(Vbimg[base_name+'_node_'+simlist[n]['i_node']])))
         Vics.append(complex(float(Vc[base_name+'_node_'+simlist[n]['i_node']]),float(Vcimg[base_name+'_node_'+simlist[n]['i_node']])))
-        Vfas.append(complex(float(Va[base_name+'_node_'+simlist[n]['f_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['f_node']]))) 
+        Vfas.append(complex(float(Va[base_name+'_node_'+simlist[n]['f_node']]),float(Vaimg[base_name+'_node_'+simlist[n]['f_node']])))
         Vfbs.append(complex(float(Vb[base_name+'_node_'+simlist[n]['f_node']]),float(Vbimg[base_name+'_node_'+simlist[n]['f_node']])))
         Vfcs.append(complex(float(Vc[base_name+'_node_'+simlist[n]['f_node']]),float(Vcimg[base_name+'_node_'+simlist[n]['f_node']])))
 
@@ -273,21 +273,21 @@ def getI(model_name, linelistfile, I_datafile,new_I_datafile):
     r6=csv.DictReader(f2)
     Icimg=dict(zip(link,[row['currC_imag'] for row in r6]))
     f2.close()
-    
+
     global Iia, Iib, Iic, Ifa, Ifb, Ifc
     Iia=[]; Iib=[]; Iic=[]; Ifa=[]; Ifb=[]; Ifc=[]
-    
+
     for n in range(len(simlist)):
         Iia.append(complex(float(Ia[simlist[n]['i_branch']]),float(Iaimg[simlist[n]['i_branch']])))
         Iib.append(complex(float(Ib[simlist[n]['i_branch']]),float(Ibimg[simlist[n]['i_branch']])))
         Iic.append(complex(float(Ic[simlist[n]['i_branch']]),float(Icimg[simlist[n]['i_branch']])))
-        Ifa.append(complex(float(Ia[simlist[n]['f_branch']]),float(Iaimg[simlist[n]['f_branch']]))) 
+        Ifa.append(complex(float(Ia[simlist[n]['f_branch']]),float(Iaimg[simlist[n]['f_branch']])))
         Ifb.append(complex(float(Ib[simlist[n]['f_branch']]),float(Ibimg[simlist[n]['f_branch']])))
         Ifc.append(complex(float(Ic[simlist[n]['f_branch']]),float(Icimg[simlist[n]['f_branch']])))
 
 #***********************************************************************************************************
 # get current for junction load aggreggation
-        
+
 def getI_agg(model_name, simlistfile, I_datafile, new_I_datafile):
     base_name = gld_strict_name (model_name)
     with open(I_datafile,'r') as f, open(new_I_datafile,'w') as f1:
@@ -319,50 +319,50 @@ def getI_agg(model_name, simlistfile, I_datafile, new_I_datafile):
 
     global IiaJ, IibJ, IicJ, IoaJ, IobJ, IocJ
     IiaJ=[]; IibJ=[]; IicJ=[]; IoaJ=[]; IobJ=[]; IocJ=[]
-    
+
     for n in range(len(simlist)):
         if simlist[n]['out_branch_1']=='' and simlist[n]['out_branch_2']=='' and simlist[n]['out_branch_3']=='':
             IiaJ.append(complex(float(Ia[simlist[n]['f_branch']]),float(Iaimg[simlist[n]['f_branch']])))
             IibJ.append(complex(float(Ib[simlist[n]['f_branch']]),float(Ibimg[simlist[n]['f_branch']])))
             IicJ.append(complex(float(Ic[simlist[n]['f_branch']]),float(Icimg[simlist[n]['f_branch']])))
-            IoaJ.append(complex(float(0),float(0))) 
-            IobJ.append(complex(float(0),float(0))) 
-            IocJ.append(complex(float(0),float(0))) 
+            IoaJ.append(complex(float(0),float(0)))
+            IobJ.append(complex(float(0),float(0)))
+            IocJ.append(complex(float(0),float(0)))
         elif simlist[n]['out_branch_1']!='' and simlist[n]['out_branch_2']=='' and simlist[n]['out_branch_3']=='':
             IiaJ.append(complex(float(Ia[simlist[n]['f_branch']]),float(Iaimg[simlist[n]['f_branch']])))
             IibJ.append(complex(float(Ib[simlist[n]['f_branch']]),float(Ibimg[simlist[n]['f_branch']])))
             IicJ.append(complex(float(Ic[simlist[n]['f_branch']]),float(Icimg[simlist[n]['f_branch']])))
-            IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']]))) 
+            IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']])))
             IobJ.append(complex(float(Ib[simlist[n]['out_branch_1']]),float(Ibimg[simlist[n]['out_branch_1']])))
             IocJ.append(complex(float(Ic[simlist[n]['out_branch_1']]),float(Icimg[simlist[n]['out_branch_1']])))
         elif simlist[n]['out_branch_1']!='' and simlist[n]['out_branch_2']!='' and simlist[n]['out_branch_3']=='':
             IiaJ.append(complex(float(Ia[simlist[n]['f_branch']]),float(Iaimg[simlist[n]['f_branch']])))
             IibJ.append(complex(float(Ib[simlist[n]['f_branch']]),float(Ibimg[simlist[n]['f_branch']])))
             IicJ.append(complex(float(Ic[simlist[n]['f_branch']]),float(Icimg[simlist[n]['f_branch']])))
-            IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']]))+complex(float(Ia[simlist[n]['out_branch_2']]),float(Iaimg[simlist[n]['out_branch_2']]))) 
+            IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']]))+complex(float(Ia[simlist[n]['out_branch_2']]),float(Iaimg[simlist[n]['out_branch_2']])))
             IobJ.append(complex(float(Ib[simlist[n]['out_branch_1']]),float(Ibimg[simlist[n]['out_branch_1']]))+complex(float(Ib[simlist[n]['out_branch_2']]),float(Ibimg[simlist[n]['out_branch_2']])))
             IocJ.append(complex(float(Ic[simlist[n]['out_branch_1']]),float(Icimg[simlist[n]['out_branch_1']]))+complex(float(Ic[simlist[n]['out_branch_2']]),float(Icimg[simlist[n]['out_branch_2']])))
         elif simlist[n]['out_branch_1']!='' and simlist[n]['out_branch_2']!='' and simlist[n]['out_branch_3']!='':
             IiaJ.append(complex(float(Ia[simlist[n]['f_branch']]),float(Iaimg[simlist[n]['f_branch']])))
             IibJ.append(complex(float(Ib[simlist[n]['f_branch']]),float(Ibimg[simlist[n]['f_branch']])))
             IicJ.append(complex(float(Ic[simlist[n]['f_branch']]),float(Icimg[simlist[n]['f_branch']])))
-            IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']]))+complex(float(Ia[simlist[n]['out_branch_2']]),float(Iaimg[simlist[n]['out_branch_2']]))+complex(float(Ia[simlist[n]['out_branch_3']]),float(Iaimg[simlist[n]['out_branch_3']]))) 
+            IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']]))+complex(float(Ia[simlist[n]['out_branch_2']]),float(Iaimg[simlist[n]['out_branch_2']]))+complex(float(Ia[simlist[n]['out_branch_3']]),float(Iaimg[simlist[n]['out_branch_3']])))
             IobJ.append(complex(float(Ib[simlist[n]['out_branch_1']]),float(Ibimg[simlist[n]['out_branch_1']]))+complex(float(Ib[simlist[n]['out_branch_2']]),float(Ibimg[simlist[n]['out_branch_2']]))+complex(float(Ib[simlist[n]['out_branch_3']]),float(Ibimg[simlist[n]['out_branch_3']])))
             IocJ.append(complex(float(Ic[simlist[n]['out_branch_1']]),float(Icimg[simlist[n]['out_branch_1']]))+complex(float(Ic[simlist[n]['out_branch_2']]),float(Icimg[simlist[n]['out_branch_2']]))+complex(float(Ic[simlist[n]['out_branch_3']]),float(Icimg[simlist[n]['out_branch_3']])))
         if  simlist[n]['out_branch_4']!='':
             IiaJ.append(complex(float(Ia[simlist[n]['f_branch']]),float(Iaimg[simlist[n]['f_branch']])))
             IibJ.append(complex(float(Ib[simlist[n]['f_branch']]),float(Ibimg[simlist[n]['f_branch']])))
             IicJ.append(complex(float(Ic[simlist[n]['f_branch']]),float(Icimg[simlist[n]['f_branch']])))
-            IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']]))+complex(float(Ia[simlist[n]['out_branch_2']]),float(Iaimg[simlist[n]['out_branch_2']]))+complex(float(Ia[simlist[n]['out_branch_3']]),float(Iaimg[simlist[n]['out_branch_3']]))+complex(float(Ia[simlist[n]['out_branch_4']]),float(Iaimg[simlist[n]['out_branch_4']]))) 
+            IoaJ.append(complex(float(Ia[simlist[n]['out_branch_1']]),float(Iaimg[simlist[n]['out_branch_1']]))+complex(float(Ia[simlist[n]['out_branch_2']]),float(Iaimg[simlist[n]['out_branch_2']]))+complex(float(Ia[simlist[n]['out_branch_3']]),float(Iaimg[simlist[n]['out_branch_3']]))+complex(float(Ia[simlist[n]['out_branch_4']]),float(Iaimg[simlist[n]['out_branch_4']])))
             IobJ.append(complex(float(Ib[simlist[n]['out_branch_1']]),float(Ibimg[simlist[n]['out_branch_1']]))+complex(float(Ib[simlist[n]['out_branch_2']]),float(Ibimg[simlist[n]['out_branch_2']]))+complex(float(Ib[simlist[n]['out_branch_3']]),float(Ibimg[simlist[n]['out_branch_3']]))+complex(float(Ib[simlist[n]['out_branch_4']]),float(Ibimg[simlist[n]['out_branch_4']])))
             IocJ.append(complex(float(Ic[simlist[n]['out_branch_1']]),float(Icimg[simlist[n]['out_branch_1']]))+complex(float(Ic[simlist[n]['out_branch_2']]),float(Icimg[simlist[n]['out_branch_2']]))+complex(float(Ic[simlist[n]['out_branch_3']]),float(Icimg[simlist[n]['out_branch_3']]))+complex(float(Ic[simlist[n]['out_branch_4']]),float(Icimg[simlist[n]['out_branch_4']])))
-#a=inv((np.dot(Ii[10],Ii[10].transpose().conjugate())))           
+#a=inv((np.dot(Ii[10],Ii[10].transpose().conjugate())))
 
 #***********************************************************************************************************
 # calculate impedance and load for simplified model
 #%%
 def calculate_Z_S():
-    global Z, S, S_agg, dV, dV2, dI, dI2, Ii, Ii2, Zv, Zv2, S2, dIJ   
+    global Z, S, S_agg, dV, dV2, dI, dI2, Ii, Ii2, Zv, Zv2, S2, dIJ
     #initiallize the arrays
     size=len(simlist)
     dV=np.empty((size,3,1),dtype=complex)
@@ -378,22 +378,22 @@ def calculate_Z_S():
     S2=np.empty((size,2,1),dtype=complex)
     dIJ=np.empty((size,3,1),dtype=complex)
     S_agg=np.empty((size,3,1),dtype=complex)
-        
+
     for n in range(len(Via)):
-        
+
         if simlist[n]['junction']=='junction':
             dIJ[n]=np.array([[IiaJ[n]-IoaJ[n]],[IibJ[n]-IobJ[n]],[IicJ[n]-IocJ[n]]])
             S_agg[n][0][0]=Vfa[n]*dIJ[n][0][0].conjugate()
             S_agg[n][1][0]=Vfb[n]*dIJ[n][1][0].conjugate()
             S_agg[n][2][0]=Vfc[n]*dIJ[n][2][0].conjugate()
         else:
-            S_agg[n]=np.array([[0],[0],[0]]) 
-        
+            S_agg[n]=np.array([[0],[0],[0]])
+
         if simlist[n]['phase_name']=='ABC': # 3phase segment
-            
+
             dV[n]=np.array([[Via[n]-Vfa[n]],[Vib[n]-Vfb[n]],[Vic[n]-Vfc[n]]])
             dI[n]=np.array([[Iia[n]-Ifa[n]],[Iib[n]-Ifb[n]],[Iic[n]-Ifc[n]]])
-            
+
             Ii[n]=np.array([[Iia[n],Iib[n],Iic[n],0,0,0],[0,Iia[n],0,Iib[n],Iic[n],0],[0,0,Iia[n],0,Iib[n],Iic[n]]])
             Zv[n]=np.dot(np.dot(Ii[n].transpose().conjugate(),inv((np.dot(Ii[n],Ii[n].transpose().conjugate())))),dV[n])
             Z[n]=np.array([[Zv[n].item(0),Zv[n].item(1),Zv[n].item(2)],[Zv[n].item(1),Zv[n].item(3),Zv[n].item(4)],[Zv[n].item(2),Zv[n].item(4),Zv[n].item(5)]])
@@ -402,10 +402,10 @@ def calculate_Z_S():
             else:
                 S[n]=np.multiply(np.array([[Vfa[n]],[Vfb[n]],[Vfc[n]]]),dI[n].conjugate())
         elif simlist[n]['phase_name']=='AB':
-        
+
             dV2[n]=np.array([[Via[n]-Vfa[n]],[Vib[n]-Vfb[n]]])
             dI2[n]=np.array([[Iia[n]-Ifa[n]],[Iib[n]-Ifb[n]]])
-            
+
             Ii2[n]=np.array([[Iia[n],Iib[n],0],[0,Iia[n],Iib[n]]])
             Zv2[n]=np.dot(np.dot(Ii2[n].transpose().conjugate(),inv((np.dot(Ii2[n],Ii2[n].transpose().conjugate())))),dV2[n])
             Z[n]=np.array([[Zv2[n].item(0),Zv2[n].item(1),0],[Zv2[n].item(1),Zv2[n].item(2),0],[0,0,0]])
@@ -416,10 +416,10 @@ def calculate_Z_S():
             else:
                 S[n]=np.array([[S2[n][0][0]],[S2[n][1][0]],[0]])
         elif simlist[n]['phase_name']=='AC':
-        
+
             dV2[n]=np.array([[Via[n]-Vfa[n]],[Vic[n]-Vfc[n]]])
             dI2[n]=np.array([[Iia[n]-Ifa[n]],[Iic[n]-Ifc[n]]])
-            
+
             Ii2[n]=np.array([[Iia[n],Iic[n],0],[0,Iia[n],Iic[n]]])
             Zv2[n]=np.dot(np.dot(Ii2[n].transpose().conjugate(),inv((np.dot(Ii2[n],Ii2[n].transpose().conjugate())))),dV2[n])
             Z[n]=np.array([[Zv2[n].item(0),Zv2[n].item(1),0],[Zv2[n].item(1),Zv2[n].item(2),0],[0,0,0]])
@@ -428,12 +428,12 @@ def calculate_Z_S():
                 S[n]=np.array([[0],[0],[0]])
             else:
                 S[n]=np.array([[S2[n][0][0]],[0],[S2[n][1][0]]])
-        
+
         elif simlist[n]['phase_name']=='BC':
-        
+
             dV2[n]=np.array([[Vib[n]-Vfb[n]],[Vic[n]-Vfc[n]]])
             dI2[n]=np.array([[Iib[n]-Ifb[n]],[Iic[n]-Ifc[n]]])
-            
+
             Ii2[n]=np.array([[Iib[n],Iic[n],0],[0,Iib[n],Iic[n]]])
             Zv2[n]=np.dot(np.dot(Ii2[n].transpose().conjugate(),inv((np.dot(Ii2[n],Ii2[n].transpose().conjugate())))),dV2[n])
             Z[n]=np.array([[Zv2[n].item(0),Zv2[n].item(1),0],[Zv2[n].item(1),Zv2[n].item(2),0],[0,0,0]])
@@ -442,41 +442,41 @@ def calculate_Z_S():
                 S[n]=np.array([[0],[0],[0]])
             else:
                 S[n]=np.array([[0],[S2[n][0][0]],[S2[n][1][0]]])
-                
+
         elif simlist[n]['phase_name']=='A':
-            
+
             dV[n]=np.array([[Via[n]-Vfa[n]],[0],[0]])
             dI[n]=np.array([[Iia[n]-Ifa[n]],[0],[0]])
-            
+
             Z[n]=np.array([[np.dot(Via[n]-Vfa[n],(Iia[n])**(-1)),0,0],[0,0,0],[0,0,0]])
             if simlist[n]['i_branch']==simlist[n]['f_branch']:
                 S[n]=np.array([[0],[0],[0]])
             else:
                 S[n]=np.array([[np.multiply(Vfa[n],dI[n][0].conjugate())],[0],[0]])
-        
+
         elif simlist[n]['phase_name']=='B':
-        
+
             dV[n]=np.array([[0],[Vib[n]-Vfb[n]],[0]])
             dI[n]=np.array([[0],[Iib[n]-Ifb[n]],[0]])
-            
+
             Z[n]=np.array([[0,0,0],[0,np.dot(Vib[n]-Vfb[n],(Iib[n])**(-1)),0],[0,0,0]])
             if simlist[n]['i_branch']==simlist[n]['f_branch']:
                 S[n]=np.array([[0],[0],[0]])
             else:
                 S[n]=np.array([[0],[np.multiply(Vfb[n],dI[n][1].conjugate())],[0]])
-        
+
         elif simlist[n]['phase_name']=='C':
-        
+
             dV[n]=np.array([[0],[0],[Vic[n]-Vfc[n]]])
             dI[n]=np.array([[0],[0],[Iic[n]-Ifc[n]]])
-        
+
             Z[n]=np.array([[0,0,0],[0,0,0],[0,0,np.dot(Vic[n]-Vfc[n],(Iic[n])**(-1))]])
             if simlist[n]['i_branch']==simlist[n]['f_branch']:
                 S[n]=np.array([[0],[0],[0]])
             else:
                 S[n]=np.array([[0],[0],[np.multiply(Vfc[n],dI[n][2].conjugate())]])
-                
-#***********************************************************************************************************               
+
+#***********************************************************************************************************
 # %%write new gld model 
 def CreateNode(modelname,seg_number,glmfile):
     base_name = gld_strict_name (modelname)
@@ -490,61 +490,61 @@ def CreateNode(modelname,seg_number,glmfile):
     f.write('   voltage_C '+vc+';\n')
     f.write('}\n')
     return
-    
+
 # create line configurations
 def CreateLineConfig(seg_number,glmfile):
     f=open(glmfile,'a')
     if simlist[seg_number]['phase_name']=='ABC':
         f.write('object line_configuration {\n')
-        f.write('    name line_config_seg_'+str(seg_number)+';\n')  
-        f.write('    z11 '+np.array2string(Z[seg_number][0][0])+';\n') 
-        f.write('    z12 '+np.array2string(Z[seg_number][0][1])+';\n') 
-        f.write('    z13 '+np.array2string(Z[seg_number][0][2])+';\n') 
-        f.write('    z21 '+np.array2string(Z[seg_number][1][0])+';\n') 
-        f.write('    z22 '+np.array2string(Z[seg_number][1][1])+';\n') 
-        f.write('    z23 '+np.array2string(Z[seg_number][1][2])+';\n') 
-        f.write('    z31 '+np.array2string(Z[seg_number][2][0])+';\n') 
-        f.write('    z32 '+np.array2string(Z[seg_number][2][1])+';\n') 
-        f.write('    z33 '+np.array2string(Z[seg_number][2][2])+';\n') 
+        f.write('    name line_config_seg_'+str(seg_number)+';\n')
+        f.write('    z11 '+np.array2string(Z[seg_number][0][0])+';\n')
+        f.write('    z12 '+np.array2string(Z[seg_number][0][1])+';\n')
+        f.write('    z13 '+np.array2string(Z[seg_number][0][2])+';\n')
+        f.write('    z21 '+np.array2string(Z[seg_number][1][0])+';\n')
+        f.write('    z22 '+np.array2string(Z[seg_number][1][1])+';\n')
+        f.write('    z23 '+np.array2string(Z[seg_number][1][2])+';\n')
+        f.write('    z31 '+np.array2string(Z[seg_number][2][0])+';\n')
+        f.write('    z32 '+np.array2string(Z[seg_number][2][1])+';\n')
+        f.write('    z33 '+np.array2string(Z[seg_number][2][2])+';\n')
         f.write('}\n')
     elif simlist[seg_number]['phase_name']=='AB':
         f.write('object line_configuration {\n')
-        f.write('    name line_config_seg_'+str(seg_number)+';\n')  
-        f.write('    z11 '+np.array2string(Z[seg_number][0][0])+';\n') 
-        f.write('    z12 '+np.array2string(Z[seg_number][0][1])+';\n') 
-        f.write('    z21 '+np.array2string(Z[seg_number][1][0])+';\n') 
-        f.write('    z22 '+np.array2string(Z[seg_number][1][1])+';\n')         
+        f.write('    name line_config_seg_'+str(seg_number)+';\n')
+        f.write('    z11 '+np.array2string(Z[seg_number][0][0])+';\n')
+        f.write('    z12 '+np.array2string(Z[seg_number][0][1])+';\n')
+        f.write('    z21 '+np.array2string(Z[seg_number][1][0])+';\n')
+        f.write('    z22 '+np.array2string(Z[seg_number][1][1])+';\n')
         f.write('}\n')
     elif simlist[seg_number]['phase_name']=='AC':
         f.write('object line_configuration {\n')
-        f.write('    name line_config_seg_'+str(seg_number)+';\n')  
-        f.write('    z11 '+np.array2string(Z[seg_number][0][0])+';\n')         
-        f.write('    z13 '+np.array2string(Z[seg_number][0][1])+';\n')         
-        f.write('    z31 '+np.array2string(Z[seg_number][1][0])+';\n') 
-        f.write('    z33 '+np.array2string(Z[seg_number][1][1])+';\n') 
+        f.write('    name line_config_seg_'+str(seg_number)+';\n')
+        f.write('    z11 '+np.array2string(Z[seg_number][0][0])+';\n')
+        f.write('    z13 '+np.array2string(Z[seg_number][0][1])+';\n')
+        f.write('    z31 '+np.array2string(Z[seg_number][1][0])+';\n')
+        f.write('    z33 '+np.array2string(Z[seg_number][1][1])+';\n')
         f.write('}\n')
     elif simlist[seg_number]['phase_name']=='BC':
         f.write('object line_configuration {\n')
-        f.write('    name line_config_seg_'+str(seg_number)+';\n')          
-        f.write('    z22 '+np.array2string(Z[seg_number][0][0])+';\n') 
-        f.write('    z23 '+np.array2string(Z[seg_number][0][1])+';\n') 
-        f.write('    z32 '+np.array2string(Z[seg_number][1][0])+';\n') 
-        f.write('    z33 '+np.array2string(Z[seg_number][1][1])+';\n') 
+        f.write('    name line_config_seg_'+str(seg_number)+';\n')
+        f.write('    z22 '+np.array2string(Z[seg_number][0][0])+';\n')
+        f.write('    z23 '+np.array2string(Z[seg_number][0][1])+';\n')
+        f.write('    z32 '+np.array2string(Z[seg_number][1][0])+';\n')
+        f.write('    z33 '+np.array2string(Z[seg_number][1][1])+';\n')
         f.write('}\n')
     elif simlist[seg_number]['phase_name']=='A':
         f.write('object line_configuration {\n')
-        f.write('    name line_config_seg_'+str(seg_number)+';\n')  
-        f.write('    z11 '+np.array2string(Z[seg_number][0][0])+';\n') 
+        f.write('    name line_config_seg_'+str(seg_number)+';\n')
+        f.write('    z11 '+np.array2string(Z[seg_number][0][0])+';\n')
         f.write('}\n')
     elif simlist[seg_number]['phase_name']=='B':
         f.write('object line_configuration {\n')
-        f.write('    name line_config_seg_'+str(seg_number)+';\n')  
-        f.write('    z22 '+np.array2string(Z[seg_number][1][1])+';\n') 
-        f.write('}\n')        
+        f.write('    name line_config_seg_'+str(seg_number)+';\n')
+        f.write('    z22 '+np.array2string(Z[seg_number][1][1])+';\n')
+        f.write('}\n')
     elif simlist[seg_number]['phase_name']=='C':
         f.write('object line_configuration {\n')
-        f.write('    name line_config_seg_'+str(seg_number)+';\n')  
-        f.write('    z33 '+np.array2string(Z[seg_number][2][2])+';\n') 
+        f.write('    name line_config_seg_'+str(seg_number)+';\n')
+        f.write('    z33 '+np.array2string(Z[seg_number][2][2])+';\n')
         f.write('}\n')
     return
 
@@ -552,8 +552,8 @@ def CreateLineConfig(seg_number,glmfile):
 def CreateLine(model_name,seg_number,glmfile):
     base_name = gld_strict_name (model_name)
     f=open(glmfile,'a')
-    f.write('object overhead_line {\n')    
-    f.write('    name line_seg_'+str(seg_number)+';\n') 
+    f.write('object overhead_line {\n')
+    f.write('    name line_seg_'+str(seg_number)+';\n')
     if simlist[seg_number]['phase_name']=='ABC':
         f.write('    phases ABC;\n')
     elif simlist[seg_number]['phase_name']=='A':
@@ -568,14 +568,14 @@ def CreateLine(model_name,seg_number,glmfile):
         f.write('    phases AC;\n')
     elif simlist[seg_number]['phase_name']=='BC':
         f.write('    phases BC;\n')
-    f.write('    from '+base_name+'_node_'+simlist[seg_number]['i_node']+';\n') 
+    f.write('    from '+base_name+'_node_'+simlist[seg_number]['i_node']+';\n')
     f.write('    to '+base_name+'_node_'+simlist[seg_number]['f_node']+';\n')
     f.write('    length 5280 ft;\n')
     f.write('    configuration line_config_seg_'+str(seg_number)+';\n')
     f.write('}\n')
     return
 
-# Creat Meters to attached the loads    
+# Creat Meters to attached the loads
 def CreateMeter(model_name,seg_number,glmfile):
     base_name = gld_strict_name (model_name)
     f=open(glmfile,'a')
@@ -584,7 +584,7 @@ def CreateMeter(model_name,seg_number,glmfile):
     f.write('    parent '+base_name+'_node_'+simlist[seg_number]['f_node']+';\n')
     f.write('}\n')
     return
-      
+
 def parse_kva(cplx):
     toks = re.split('[\+j]',cplx)
     p = float(toks[0])
@@ -678,7 +678,7 @@ def CreateOneClassLoad (parent_name, load_name, phase_name, cls, p0, p1, p2, f):
     f.write('}\n')
     return
 
-# Create loads   
+# Create loads
 def CreateLoad(model_name,seg_number,glmfile,class_factors):
     base_name = gld_strict_name (model_name)
     parent_name = base_name+ '_node_' + simlist[seg_number]['f_node']
@@ -700,7 +700,7 @@ def CreateLoad(model_name,seg_number,glmfile,class_factors):
 #        print (class_factor_node, class_factors[class_factor_node])
         for cls in ['A', 'I', 'C', 'R', 'U']:
             if class_factors[class_factor_node][cls] > 0.0:
-                CreateOneClassLoad (parent_name, load_name + '_' + cls, phase_name, cls, 
+                CreateOneClassLoad (parent_name, load_name + '_' + cls, phase_name, cls,
                                     class_factors[class_factor_node][cls] * p0,
                                     class_factors[class_factor_node][cls] * p1,
                                     class_factors[class_factor_node][cls] * p2, f)
@@ -736,7 +736,7 @@ def CreateLoad_agg(model_name,seg_number,glmfile,class_factors):
 #        print (class_factor_node, class_factors[class_factor_node])
         for cls in ['A', 'I', 'C', 'R', 'U']:
             if class_factors[class_factor_node][cls] > 0.0:
-                CreateOneClassLoad (parent_name, load_name + '_' + cls, phase_name, cls, 
+                CreateOneClassLoad (parent_name, load_name + '_' + cls, phase_name, cls,
                                     class_factors[class_factor_node][cls] * p0,
                                     class_factors[class_factor_node][cls] * p1,
                                     class_factors[class_factor_node][cls] * p2, f)
@@ -761,12 +761,12 @@ def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_
     f.write("}\n")
     f.write("#set profiler=1\n\n")
     #create the module section
-    f.write("\n")  
+    f.write("\n")
     f.write('module tape;\n')
     f.write('module powerflow{\n')
     f.write("  solver_method NR;\n")
     f.write("  default_maximum_voltage_error 1e-6;\n};\n\n")
-    
+
     #swing bus node define
     f.write('object node {\n')
     f.write('    name '+base_name+'_node_'+swingbus+';\n')
@@ -777,7 +777,7 @@ def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_
     f.write('    voltage_B '+v2+';\n')
     f.write('    voltage_C '+v3+';\n')
     f.write('}\n')
-    
+
     f.write('object regulator_configuration {\n')
     f.write('    name feeder_reg_cfg;\n')
     f.write('    Control OUTPUT_VOLTAGE;\n')
@@ -792,7 +792,7 @@ def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_
     f.write('    tap_pos_B 0;\n')
     f.write('    tap_pos_C 0;\n')
     f.write('}\n')
-    
+
     f.write('object meter {\n')
     f.write('    name '+base_name+'_meter_head;\n')
     f.write('    phases ABCN;\n')
@@ -801,7 +801,7 @@ def CreateHeader(glmfile,modelname,swingbus,v_base,v1,v2,v3,reg_band_center,reg_
     f.write('    voltage_B '+v2+';\n')
     f.write('    voltage_C '+v3+';\n')
     f.write('}\n')
-    
+
     f.write('object regulator {\n')
     f.write('    name feeder_reg_1;\n')
     f.write('    from '+base_name+'_node_'+swingbus+';\n')
@@ -841,25 +841,25 @@ def CreateCurrdump(glmfile,outputfileName,):
 def errorplot(baseV):
     global errora
     global errorb
-    global errorc 
+    global errorc
     global errormean
     errora=[]
     errorb=[]
     errorc=[]
     for n in range(len(Vfa)):
-        if Vfas[n]!=0j:      
+        if Vfas[n]!=0j:
             errora.append(abs((abs(Vfa[n])-abs(Vfas[n])))/baseV)
-        else:            
+        else:
             n=n+1
     for n in range(len(Vfb)):
-        if Vfbs[n]!=0j:      
+        if Vfbs[n]!=0j:
             errorb.append(abs((abs(Vfb[n])-abs(Vfbs[n])))/baseV)
-        else:            
+        else:
             n=n+1
     for n in range(len(Vfc)):
-        if Vfcs[n]!=0j:      
+        if Vfcs[n]!=0j:
             errorc.append(abs((abs(Vfc[n])-abs(Vfcs[n])))/baseV)
-        else:            
+        else:
             n=n+1
     errormean=errora+errorb+errorc
     errormean=np.mean(errormean)
@@ -909,7 +909,7 @@ tax       = [['R1-12.47-1',12470.0, 7200.0, 4000.0, 20000.0,'617','7520','120'],
              ['GC-12.47-1',12470.0, 7200.0, 8000.0, 13000.0,'28','7500','120']]#23
 
 def get_base_gld_path (root):
-    return '../../data/feeders/' + root + '.glm' 
+    return '../../data/feeders/' + root + '.glm'
 
 def _one_test(k):
     fname = get_base_gld_path (tax[k][0])
@@ -930,27 +930,27 @@ def _one_test(k):
 
     if os.path.exists('sim_'+tax[k][0]+'.glm'):
         os.remove('sim_'+tax[k][0]+'.glm')
-   
+
     # read the model
     ip = open (fname, 'r')
     lines = []
     line = ip.readline()
     while line != '':
-        while re.match('\s*//',line) or re.match('\s+$',line):
+        while re.match('\s*//', line) or re.match('\s+$', line):
             # skip comments and white space
             line = ip.readline()
         lines.append(line.rstrip())
         line = ip.readline()
     ip.close()
-    
-    octr = 0;
+
+    octr = 0
     model = {}
     h = {}		# OID hash
     itr = iter(lines)
     for line in itr:
         if re.search('object',line):
             line,octr = obj(None,model,line,itr,h,octr)
-    
+
     # construct a graph of the model, starting with known links
     global G
     G = nx.Graph()
@@ -960,7 +960,7 @@ def _one_test(k):
                 n1 = model[t][o]['from']
                 n2 = model[t][o]['to']
                 G.add_edge(n1,n2,eclass=t,ename=o,edata=model[t][o])
-    
+
     # add the parent-child node links
     for t in model:
         if is_node_class(t):
@@ -968,7 +968,7 @@ def _one_test(k):
                 if 'parent' in model[t][o]:
                     p = model[t][o]['parent']
                     G.add_edge(o,p,eclass='parent',ename=o,edata={})
-    
+
     # now we backfill node attributes
     for t in model:
         if is_node_class(t):
@@ -978,25 +978,25 @@ def _one_test(k):
                     G.nodes()[o]['ndata'] = model[t][o]
                 else:
                     print('orphaned node', t, o)
-    
+
     getV(mname,
          mname+'_sim_list.csv',
          'Voltage_Dump_' + mname + '.csv', # mname+'_voltage.csv',
-         mname+'_voltage1.csv')   
-    
+         mname+'_voltage1.csv')
+
     # create the list with given node : get branch name by networkx 
     i_branch=[]
     f_branch=[]
     segment_node=[]
-    for n in range(len(simlist)): 
+    for n in range(len(simlist)):
         segment_node=nx.shortest_path(G, source=base_name+'_node_'+simlist[n]['i_node'], target=base_name+'_node_'+simlist[n]['f_node'])
         i_branch.append(G.edges[segment_node[0],segment_node[1]]['ename'])
         f_branch.append(G.edges[segment_node[-2],segment_node[-1]]['ename'])
-    for n in range(len(simlist)):    
+    for n in range(len(simlist)):
         simlist[n]['i_branch']=i_branch[n]
         simlist[n]['f_branch']=f_branch[n]
-    
-    for n in range(len(simlist)): 
+
+    for n in range(len(simlist)):
         if simlist[n]['junction']=='junction':
             count=-1
             junction_outbranch=['','','','']
@@ -1006,7 +1006,7 @@ def _one_test(k):
                     junction_outbranch[count]=(simlist[m]['i_branch'])
                 simlist[n]['out_branch_1']=junction_outbranch[0]
                 simlist[n]['out_branch_2']=junction_outbranch[1]
-                simlist[n]['out_branch_3']=junction_outbranch[2] 
+                simlist[n]['out_branch_3']=junction_outbranch[2]
                 simlist[n]['out_branch_4']=junction_outbranch[3]
         else:
             junction_outbranch=['','','','']
@@ -1014,7 +1014,7 @@ def _one_test(k):
             simlist[n]['out_branch_2']=junction_outbranch[1]
             simlist[n]['out_branch_3']=junction_outbranch[2]
             simlist[n]['out_branch_4']=junction_outbranch[3]
-    
+
     #
     getI(mname,
          mname+'_sim_list.csv',
@@ -1084,7 +1084,7 @@ def _one_test(k):
 #            print ('Node Summary for', o, 'A={:.2f} I={:.2f} C={:.2f} R={:.2f} U={:.2f}'.format (cls_a, cls_i, cls_c, cls_r, cls_u))
             class_factors[o] = {'A':cls_a/cls_sum, 'I':cls_i/cls_sum, 'C':cls_c/cls_sum, 'R':cls_r/cls_sum, 'U':cls_u/cls_sum}
     print ('summarized load class allocation factors at', count_summary, 'retained primary nodes')
-    
+
     global simple_kva
     simple_kva = {'A':0, 'I': 0, 'C': 0, 'R': 0, 'U': 0}
     CreateHeader(sim_fname,mname,tax[k][5],v_base,va,vb,vc,tax[k][6],tax[k][7])
@@ -1092,17 +1092,17 @@ def _one_test(k):
         CreateNode(mname,n,sim_fname)
     for n in range(len(simlist)):
         CreateLineConfig(n,sim_fname)
-    for n in range(len(simlist)):        
+    for n in range(len(simlist)):
         CreateLine(mname,n,sim_fname)
-    for n in range(len(simlist)):        
+    for n in range(len(simlist)):
         CreateLoad(mname,n,sim_fname,class_factors)
-    for n in range(len(simlist)):  
+    for n in range(len(simlist)):
         CreateLoad_agg(mname,n,sim_fname,class_factors)
     CreateVoltdump(sim_fname,mname+'_node_voltage_sim.csv')
     CreateCurrdump(sim_fname,mname+'_branch_current_sim.csv')
 
     for cls in ['A', 'I', 'C', 'R', 'U']:
-        print ('class', cls, class_count[cls], 'customers = {:.2f} kva'.format(total_kva[cls]), 
+        print ('class', cls, class_count[cls], 'customers = {:.2f} kva'.format(total_kva[cls]),
             'simplified to {:.2f} kva'.format(0.001 * simple_kva[cls]))
 # run the simplified feeder model
     os.system('gridlabd '+sim_fname)
@@ -1114,7 +1114,7 @@ def _one_test(k):
     print()
     print('Reduced order model of '+fname+' is written in '+sim_fname)
     print('Average error is '+str(errormean))
-    
+
 if __name__ == '__main__':
 #    print (simlist)
 
@@ -1123,9 +1123,9 @@ if __name__ == '__main__':
 
     for k in range (len(tax)):
         _one_test(k)
-    
+
 ##locate the error segment
-    
+
 #for i in range(45):
 #    
 #    inv((np.dot(Ii[i],Ii[i].transpose().conjugate())))

@@ -25,13 +25,13 @@ Todo:
     * Populate commercial building loads
 
 """
-import sys;
-import re;
-import os.path;
-import networkx as nx;
-import numpy as np;
-from math import sqrt;
-import json; 
+import sys
+import re
+import os.path
+import networkx as nx
+import numpy as np
+from math import sqrt
+import json
 
 forERCOT = False
 
@@ -1328,7 +1328,7 @@ def write_houses(basenode, op, vnom):
         stories = 1
         ceiling_height = 8
         if bldg == 0: # SF homes
-            floor_area = fa_base + 0.5 * fa_base * fa_rand * (ti - 3) / 3;
+            floor_area = fa_base + 0.5 * fa_base * fa_rand * (ti - 3) / 3
             if np.random.uniform (0, 1) > rgnOneStory[rgn-1]:
                 stories = 2
             ceiling_height += np.random.randint (0, 2)
@@ -1336,9 +1336,9 @@ def write_houses(basenode, op, vnom):
             floor_area = fa_base + 0.5 * fa_base * (0.5 - fa_rand) # +/- 50%
         floor_area = (1 + lg_v_sm) * floor_area # adjustment depends on whether nhouses rounded up or down
         if floor_area > 4000:
-            floor_area = 3800 + fa_rand*200;
+            floor_area = 3800 + fa_rand*200
         elif floor_area < 300:
-            floor_area = 300 + fa_rand*100;
+            floor_area = 300 + fa_rand*100
 
         scalar1 = 324.9/8907 * floor_area**0.442
         scalar2 = 0.8 + 0.4 * np.random.uniform(0,1)
@@ -1402,13 +1402,13 @@ def write_houses(basenode, op, vnom):
             else:
                 print ('  cooling_system_type NONE;', file=op)
         elif heat_rand <= rgnPenGasHeat[rgn-1] + rgnPenHeatPump[rgn-1]:
-            print ('  heating_system_type HEAT_PUMP;', file=op);                   
-            print ('  heating_COP', '{:.1f}'.format(h_COP) + ';', file=op);
-            print ('  cooling_system_type ELECTRIC;', file=op);
-            print ('  auxiliary_strategy DEADBAND;', file=op);
-            print ('  auxiliary_system_type ELECTRIC;', file=op);
-            print ('  motor_model BASIC;', file=op);
-            print ('  motor_efficiency AVERAGE;', file=op);
+            print ('  heating_system_type HEAT_PUMP;', file=op)
+            print ('  heating_COP', '{:.1f}'.format(h_COP) + ';', file=op)
+            print ('  cooling_system_type ELECTRIC;', file=op)
+            print ('  auxiliary_strategy DEADBAND;', file=op)
+            print ('  auxiliary_system_type ELECTRIC;', file=op)
+            print ('  motor_model BASIC;', file=op)
+            print ('  motor_efficiency AVERAGE;', file=op)
         elif floor_area * ceiling_height > 12000.0: # electric heat not allowed on large homes
             print ('  heating_system_type GAS;', file=op)
             if cool_rand <= electric_cooling_percentage:
@@ -1419,8 +1419,8 @@ def write_houses(basenode, op, vnom):
             print ('  heating_system_type RESISTANCE;', file=op)
             if cool_rand <= electric_cooling_percentage:
                 print ('  cooling_system_type ELECTRIC;', file=op)
-                print ('  motor_model BASIC;', file=op);
-                print ('  motor_efficiency GOOD;', file=op);
+                print ('  motor_model BASIC;', file=op)
+                print ('  motor_efficiency GOOD;', file=op)
             else:
                 print ('  cooling_system_type NONE;', file=op)
 
@@ -1464,15 +1464,15 @@ def write_houses(basenode, op, vnom):
         print ('    power_fraction', '{:.2f}'.format(techdata[6]) + ';', file=op)
         print ('  };', file=op)
         if np.random.uniform (0, 1) <= water_heater_percentage: # rgnPenElecWH[rgn-1]:
-          heat_element = 3.0 + 0.5 * np.random.randint (1,6);  # numpy randint (lo, hi) returns lo..(hi-1)
-          tank_set = 110 + 16 * np.random.uniform (0, 1);
-          therm_dead = 4 + 4 * np.random.uniform (0, 1);
-          tank_UA = 2 + 2 * np.random.uniform (0, 1);
+          heat_element = 3.0 + 0.5 * np.random.randint (1,6)  # numpy randint (lo, hi) returns lo..(hi-1)
+          tank_set = 110 + 16 * np.random.uniform (0, 1)
+          therm_dead = 4 + 4 * np.random.uniform (0, 1)
+          tank_UA = 2 + 2 * np.random.uniform (0, 1)
           water_sch = np.ceil(waterHeaterScheduleNumber * np.random.uniform (0, 1))
           water_var = 0.95 + np.random.uniform (0, 1) * 0.1 # +/-5% variability
           wh_demand_type = 'large_'
           sizeIncr = np.random.randint (0,3)  # MATLAB randi(imax) returns 1..imax
-          sizeProb = np.random.uniform (0, 1);
+          sizeProb = np.random.uniform (0, 1)
           if sizeProb <= rgnWHSize[rgn-1][0]:
               wh_size = 20 + sizeIncr * 5
               wh_demand_type = 'small_'
@@ -1970,7 +1970,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         lines = []
         line = ip.readline()
         while line is not '':
-            while re.match('\s*//',line) or re.match('\s+$',line):
+            while re.match('\s*//', line) or re.match('\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())
@@ -1978,7 +1978,7 @@ def ProcessTaxonomyFeeder (outname, rootname, vll, vln, avghouse, avgcommercial)
         ip.close()
 
         op = open (outpath + outname + '.glm', 'w')
-        octr = 0;
+        octr = 0
         model = {}
         h = {}		# OID hash
         itr = iter(lines)

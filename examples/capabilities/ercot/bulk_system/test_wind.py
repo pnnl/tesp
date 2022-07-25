@@ -1,11 +1,12 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: test_wind.py
 
-import numpy as np;
-import matplotlib.pyplot as plt;
-import math;
-from scipy import stats;
-from statsmodels import api as sm;
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+from scipy import stats
+from statsmodels import api as sm
+
 
 def acf(x, t=1):
   return np.corrcoef(np.array([x[0:len(x)-t], x[t:len(x)]]))

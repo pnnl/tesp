@@ -1,10 +1,10 @@
 #	Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: process_matpower.py
-import json;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import json
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 # first, read and print a dictionary of relevant MATPOWER objects
 lp = open (sys.argv[1] + "_m_dict.json").read()

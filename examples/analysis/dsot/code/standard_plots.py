@@ -13,7 +13,8 @@ import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
 ######################################################start conf plot
-import matplotlib.pyplot as plt;
+import matplotlib.pyplot as plt
+
 plt.rcParams['figure.figsize'] = (7, 8)
 plt.rcParams['figure.dpi'] = 100
 SMALL_SIZE = 14

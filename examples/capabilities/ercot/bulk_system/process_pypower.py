@@ -1,11 +1,12 @@
 #	Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: process_pypower.py
-import json;
+import json
 #import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
-from matplotlib.lines import Line2D;
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+
 
 def bus_color(key):
     if key == '1':

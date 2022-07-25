@@ -167,11 +167,11 @@ def TEAM(FteLev1=100.0, SalaryEsc1=1.3):
 # group = 'operator'
 
 def labor(group, metadata_general, metadata_dso, utility_type, NoSubstations):
-    labor_Lev1Fte = (metadata_general['labor'][group][group + '_labor_ratios']['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor'][group][group + '_labor_ratios']['constant'] +
                      metadata_general['labor'][group][group + '_labor_ratios']['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor'][group][group + '_labor_ratios']['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor'][group][group + '_labor_ratios']['per_substation'] * NoSubstations)
 
     FteTeam, CostRatio, LeaderRatio, LeaderLevel = TEAM(labor_Lev1Fte,
@@ -187,11 +187,11 @@ def labor(group, metadata_general, metadata_dso, utility_type, NoSubstations):
 
 
 def labor_transactive(group, metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag):
-    labor_Lev1Fte = (metadata_general['labor'][group][group + '_labor_ratios']['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor'][group][group + '_labor_ratios']['constant'] +
                      metadata_general['labor'][group][group + '_labor_ratios']['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor'][group][group + '_labor_ratios']['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor'][group][group + '_labor_ratios'][
                          'per_substation'] * NoSubstations) * TransactiveCaseFlag
 
@@ -236,11 +236,11 @@ def labor_increase(group, metadata_general, metadata_dso, utility_type, NoSubsta
 
 
 def labor_network_admin(group, hourly_rate, metadata_general, metadata_dso, utility_type, NoSubstations):
-    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] +
                      metadata_general['labor']['network_admin'][group]['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor']['network_admin'][group]['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor']['network_admin'][group]['per_substation'] * NoSubstations)
 
     FteTeam, CostRatio, LeaderRatio, LeaderLevel = TEAM(labor_Lev1Fte,
@@ -257,11 +257,11 @@ def labor_network_admin(group, hourly_rate, metadata_general, metadata_dso, util
 
 def labor_network_admin_transactive(group, hourly_rate, metadata_general, metadata_dso, utility_type, NoSubstations,
                                     TransactiveCaseFlag):
-    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] +
                      metadata_general['labor']['network_admin'][group]['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor']['network_admin'][group]['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor']['network_admin'][group][
                          'per_substation'] * NoSubstations) * TransactiveCaseFlag
 
@@ -281,11 +281,11 @@ def labor_network_admin_transactive(group, hourly_rate, metadata_general, metada
 
 def labor_network_admin_increase(group, hourly_rate, metadata_general, metadata_dso, utility_type, NoSubstations,
                                  TransactiveCaseFlag):
-    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] +
                      metadata_general['labor']['network_admin'][group]['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor']['network_admin'][group]['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor']['network_admin'][group]['per_substation'] * NoSubstations)
 
     FteTeam, CostRatio, LeaderRatio, LeaderLevel = TEAM(labor_Lev1Fte,

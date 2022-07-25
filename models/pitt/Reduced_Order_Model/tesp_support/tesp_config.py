@@ -49,21 +49,21 @@ taxonomyChoices = ['TE_Base',
                    'R5-12.47-5',
                    'R5-25.00-1',
                    'R5-35.00-1'
-                   ];
+                   ]
 
-inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
-inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
+inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE']
+inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE']
 
-billingModes = ['TIERED_TOU','TIERED_RTP','HOURLY','TIERED','UNIFORM','NONE'];
+billingModes = ['TIERED_TOU','TIERED_RTP','HOURLY','TIERED','UNIFORM','NONE']
 
-eplusVoltageChoices = ['208', '480'];
+eplusVoltageChoices = ['208', '480']
 
-powerFlowChoices = ['AC','DC'];
-optimalPowerFlowChoices = ['AC','DC'];
+powerFlowChoices = ['AC','DC']
+optimalPowerFlowChoices = ['AC','DC']
 
 # if one of these ends in 'Mid' we need to supply a 'Band' input
 monteCarloChoices = ['None','ElectricCoolingParticipation','ThermostatRampMid','ThermostatOffsetLimitMid',
-                     'WeekdayEveningStartMid','WeekdayEveningSetMid'];
+                     'WeekdayEveningStartMid','WeekdayEveningSetMid']
 
 weatherChoices = ['TMY3'] # ,'CSV','WeatherBug']
 
@@ -88,7 +88,7 @@ varsTM = [['Start Time',StartTime,'GLD Date/Time','SimulationConfig','StartTime'
           ['Support Directory','~/src/tesp/support','Parent directory of base model files','SimulationConfig','SourceDirectory'], # row 13 for TESPDIR
           ['Working Directory','./','','SimulationConfig','WorkingDirectory'],
           ['Case Name','Test','','SimulationConfig','CaseName']
-          ];
+          ]
 varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCoolingPercentage'],
           ['Electric Cooling Participation',50,'%','FeederGenerator','ElectricCoolingParticipation'],
           ['Water Heater Penetration',75,'%','FeederGenerator','WaterHeaterPercentage'],
@@ -109,7 +109,7 @@ varsFD = [['Electric Cooling Penetration',90,'%','FeederGenerator','ElectricCool
           ['Tier 2 Price',0.122513,'$/kwh','FeederGenerator','Tier2Price'],
           ['Tier 3 Energy',0,'kwh','FeederGenerator','Tier3Energy'],
           ['Tier 3 Price',0,'$/kwh','FeederGenerator','Tier3Price']
-          ];
+          ]
 varsPP = [['OPF Type','DC','for dispatch and price','PYPOWERConfiguration','ACOPF','optimalPowerFlowChoices'],
           ['PF Type','DC','for voltage','PYPOWERConfiguration','ACPF','powerFlowChoices'],
           ['Substation Voltage',230.0,'kV','PYPOWERConfiguration','TransmissionVoltage'],
@@ -123,12 +123,12 @@ varsPP = [['OPF Type','DC','for dispatch and price','PYPOWERConfiguration','ACOP
           ['Branch Out',3,'','PYPOWERConfiguration','BranchOut'],
           ['Branch Outage Start','','GLD Date/Time','PYPOWERConfiguration','BranchOutStart'],
           ['Branch Outage End','','GLD Date/Time','PYPOWERConfiguration','BranchOutEnd']
-          ];
+          ]
 varsEP = [['Reference Price',0.02,'$','EplusConfiguration','ReferencePrice'],
           ['Ramp',25,'degF/$','EplusConfiguration','Slope'],
           ['Delta Limit Hi',4,'degF','EplusConfiguration','OffsetLimitHi'],
           ['Delta Limit Lo',4,'degF','EplusConfiguration','OffsetLimitLo']
-          ];
+          ]
 varsAC = [['Initial Price',0.02078,'$','AgentPrep','InitialPriceMean'],
           ['Std Dev Price',0.00361,'$','AgentPrep','InitialPriceStdDev'],
           ['Ramp Lo',0.5,'$(std dev)/degF','AgentPrep','ThermostatRampLo'],
@@ -139,7 +139,7 @@ varsAC = [['Initial Price',0.02078,'$','AgentPrep','InitialPriceMean'],
           ['Offset Limit Hi',6.0,'degF','AgentPrep','ThermostatOffsetLimitHi'],
           ['Price Cap Lo',1.00,'$','AgentPrep','PriceCapLo'],
           ['Price Cap Hi',3.00,'$','AgentPrep','PriceCapHi']
-          ];
+          ]
 varsTS = [['Weekday Wakeup Start Lo',5.0,'hour of day','ThermostatSchedule','WeekdayWakeStartLo'],
           ['Weekday Wakeup Start Hi',6.5,'hour of day','ThermostatSchedule','WeekdayWakeStartHi'],
           ['Weekday Wakeup Set Lo',78,'degF','ThermostatSchedule','WeekdayWakeSetLo'],
@@ -164,7 +164,8 @@ varsTS = [['Weekday Wakeup Start Lo',5.0,'hour of day','ThermostatSchedule','Wee
           ['Weekend Night Start Hi',24.0,'hour of day','ThermostatSchedule','WeekendNightStartHi'],
           ['Weekend Night Set Lo',72,'degF','ThermostatSchedule','WeekendNightSetLo'],
           ['Weekend Night Set Hi',74,'degF','ThermostatSchedule','WeekendNightSetHi']
-          ];
+          ]
+
 
 class TespConfigGUI:
   """Manages a seven-page GUI for case configuration

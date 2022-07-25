@@ -702,7 +702,7 @@ wh_demand_avg = data_s[0,12:,meta_S[V_analis4]['index']]
 
 fig1, ax1 = plt.subplots(3, sharex='col')
 
-ax1[0].plot(first_h_df_rt.values/1e3,label='DA Cleared');
+ax1[0].plot(first_h_df_rt.values/1e3,label='DA Cleared')
 #print(len(first_h_df_rt.index[1:]),len(first_h_rt))
 # plt.plot(first_h_rt,label='RT');plt.legend();plt.ylabel('price ($/kWh)');plt.xlabel('time (5-min)');plt.grid(True);
 ax1[0].plot(np.array(first_h_rt)/1e3,label='RT Cleared')
@@ -803,33 +803,33 @@ if Water_agent and 1:
             # print(meta_da)
             # print(da_bid_hvac)
             # print(opt_bid)
-            ax1[0].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid');
+            ax1[0].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid')
             actual = participating_hvac_df[
                 data_keys_da[i]]  # rt_bid_hvac[i][meta_rt['inverter_p_setpoint']['index']]
             # ax1[0].plot(-(actual.resample('60min').mean() / 1000).values, label='actual power')
             ax1[0].plot(actual.values, label='actual power')
             ax1[0].set_ylabel('kW')
-            ax1[0].grid(True);
+            ax1[0].grid(True)
             ax1[0].set_title(
                 "Optimal bid and actual kW by hvac agent with slider setting {}".format(
-                    0.71));  # ax1.set_ylabel('(F)');
+                    0.71))  # ax1.set_ylabel('(F)');
             ax1[0].legend()
 
             if data_keys_da[i] == "R5_12_47_2_tn_4_hse_3":  # "R5_12_47_2_tn_3_hse_5":
             # i = 5
                 opt_bid = da_bid_hvac[i][meta_da['bid_four_point_rt_3']['index']]
-            ax1[1].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid');
+            ax1[1].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid')
             actual = participating_hvac_df[
                 data_keys_da[i]]  # rt_bid_hvac[i][meta_rt['inverter_p_setpoint']['index']]
             # ax1[1].plot(-(actual.resample('60min').mean() / 1000).values, label='actual power')
             ax1[1].plot(actual.values, label='actual power')
             ax1[1].set_ylabel('kW')
-            ax1[1].grid(True);
+            ax1[1].grid(True)
             ax1[1].set_title(
                 "Optimal bid and actual kW by battery agent with slider setting {}".format(
-                    0.1225));  # 0.0295
+                    0.1225))  # 0.0295
             ax1[1].legend()
-            plt.xlabel('time (hours)');
+            plt.xlabel('time (hours)')
             plt.show()
 
 if Water:

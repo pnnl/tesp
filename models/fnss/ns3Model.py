@@ -1,11 +1,11 @@
-'''
+"""
 .. module:: ns3Model
 
 :platform: Unix, Windows
-:synopsis: 
+:synopsis:
 
 .. moduleauthor:: Laurentiu Marinovici
-'''
+"""
 import random
 import numpy as np
 try:
@@ -25,7 +25,7 @@ try:
 except ImportError:
     pass
 def buildNS3model(topo):
-  '''
+  """
   The function builds an ns-3 model based on an FNSS topology.
 
   :param topo: FNSS topology in dictionary format
@@ -46,7 +46,7 @@ def buildNS3model(topo):
     * allocate node positions for mobility and netanim
     * create CBR flows based on adjacency matrix
 
-  '''
+  """
   # ---------- Simulation Variables ------------------------------------------
 
   # Change the variables and file names only in this block!

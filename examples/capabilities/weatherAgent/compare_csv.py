@@ -1,11 +1,12 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: compare_csv.py
 
-import csv;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import csv
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
 
 def add_plot (x, y, ax, i, j, key, col, lbl):
   ax[i,j].set_title (key + ':' + lbl)

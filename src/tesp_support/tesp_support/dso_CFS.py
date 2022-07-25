@@ -98,16 +98,16 @@ def dso_CFS(case_config,
 
     GreenfieldGrowthLocalSub = ((pddn_f / pddn_u )**(1 / years_greenfield)) - 1
 
-    CapacityMarginBrown = 1 - 1 / ((1+substation_costs['brownfield_growth_rate_dso_total'][utility_type]) ** \
-                          substation_costs['years_sub_design_life'])
+    CapacityMarginBrown = 1 - 1 / ((1+substation_costs['brownfield_growth_rate_dso_total'][utility_type]) **
+                                   substation_costs['years_sub_design_life'])
 
     CapacityMarginGreen = 1 - ( (1 - CapacityMarginBrown)  *  pddn_u  /  pddn_f )
 
     PeakDemandDensityNormGreen = (pddn_f -  pddn_u ) / np.log( pddn_f / pddn_u )
 
-    ShareGreenfield = ( substation_costs['greenfield_growth_rate_dso_total'][utility_type]  /  ( GreenfieldGrowthLocalSub * PeakDemandDensityNormGreen )  * \
+    ShareGreenfield = ( substation_costs['greenfield_growth_rate_dso_total'][utility_type]  /  ( GreenfieldGrowthLocalSub * PeakDemandDensityNormGreen )  *
                         ((pddn_u * (1-sasfd)) + (pddn_f * sasfd))) / \
-          (   1  +  ( substation_costs['greenfield_growth_rate_dso_total'][utility_type]  /  ( GreenfieldGrowthLocalSub * PeakDemandDensityNormGreen ) * \
+          (   1  +  ( substation_costs['greenfield_growth_rate_dso_total'][utility_type]  /  ( GreenfieldGrowthLocalSub * PeakDemandDensityNormGreen ) *
                       (pddn_u - PeakDemandDensityNormGreen)))
 
     ShareUndeveloped = 1  -  ShareGreenfield  -  sasfd
@@ -138,14 +138,14 @@ def dso_CFS(case_config,
     SubExistCapacityGreenfield * power_factor_peak / substation_costs['substation_capacity_avg']['greenfield'] + \
     SubExistCapacityDeveloped * power_factor_peak / substation_costs['substation_capacity_avg']['fully-developed']
 
-    SubConstructAnnualCapacity = ((max(0, substation_costs['brownfield_growth_rate_dso_total'][utility_type]) + 1/years_greenfield) * (pddn_f - pddn_u) * \
+    SubConstructAnnualCapacity = ((max(0, substation_costs['brownfield_growth_rate_dso_total'][utility_type]) + 1/years_greenfield) * (pddn_f - pddn_u) *
                                   ShareGreenfield * (DSO_base_case_peak_demand / power_factor_peak )) / (PeakDemandDensityTotal * (1 - CapacityMarginBrown))
 
     SubUpAnnualCapacity = (max(0, substation_costs['brownfield_growth_rate_dso_total'][utility_type]) * SubExistCapacityUndeveloped ) + \
     (max(0, substation_costs['brownfield_growth_rate_dso_total'][utility_type]) * SubExistCapacityDeveloped )
 
-    SubExistCostPerKva = (frac_exist_sub_built_new  *  substation_new_cost_per_kVA   +  \
-    (1 - frac_exist_sub_built_new)  *  substation_upgrade_cost_per_kVA)
+    SubExistCostPerKva = (frac_exist_sub_built_new  *  substation_new_cost_per_kVA   +
+                          (1 - frac_exist_sub_built_new)  *  substation_upgrade_cost_per_kVA)
 
     SubsExistCapitalCost = ( SubExistCapacityUndeveloped + SubExistCapacityGreenfield + SubExistCapacityDeveloped ) * \
                            SubExistCostPerKva * 1000 / 1000
@@ -166,8 +166,8 @@ def dso_CFS(case_config,
     Meters = (meter_cost('residential') + meter_cost('commercial')+ meter_cost('industrial')) * \
     ACCF_distribution_infrastructure * \
     (1 + substation_costs['greenfield_growth_rate_dso_total'][utility_type] +
-     metadata_general['brownfield_growth_new_meters_frac'] * \
-      substation_costs['brownfield_growth_rate_dso_total'][utility_type]) / 1000
+     metadata_general['brownfield_growth_new_meters_frac'] *
+     substation_costs['brownfield_growth_rate_dso_total'][utility_type]) / 1000
 
 
     MktHdw = (NoSubstations + 1) * \
@@ -234,9 +234,9 @@ def dso_CFS(case_config,
 
 
     WhReserves = EnergyQuantityPurchased * \
-                 ( ( system_case_config['reserveUp'] - metadata_general['reserve']['regulation_fraction'] ) * \
-                 ( metadata_general['reserve']['spinning_reserve_cost'] + metadata_general['reserve']['non_spinning_reserve_cost']) + \
-                 metadata_general['reserve']['regulation_fraction'] * metadata_general['reserve']['regulation_cost'] ) /1000
+                 ( ( system_case_config['reserveUp'] - metadata_general['reserve']['regulation_fraction'] ) *
+                   ( metadata_general['reserve']['spinning_reserve_cost'] + metadata_general['reserve']['non_spinning_reserve_cost']) +
+                   metadata_general['reserve']['regulation_fraction'] * metadata_general['reserve']['regulation_cost'] ) /1000
 
     # 0 for now
     WhLosses = Market_Purchases['OtherWholesale']['WhLosses']
@@ -396,9 +396,9 @@ def dso_CFS(case_config,
     industrial_workspace_costs = metadata_general['workspace_costs']['industrial_workspace_costs'][utility_type]
     office_workspace_costs = metadata_general['workspace_costs']['office_workspace_costs'][utility_type]
     Space = LinemenLev1Fte * linemen_sqft_employee * industrial_workspace_costs / 1000 + \
-            (LinemenFte - LinemenLev1Fte +  MktOpsFte +  CustomerServiceAgentFte +  DerRecruiterFte + \
-            BillingFte +  AmiNetFte +  AmiCyberFte +  DerNetFte +  DerCyberFte + \
-            OperatorFte + PlanningFte + AdminFte + DmsNetFte + DmsCyberFte + BusinessNetworkFte + LegalFte + \
+            (LinemenFte - LinemenLev1Fte +  MktOpsFte +  CustomerServiceAgentFte +  DerRecruiterFte +
+             BillingFte +  AmiNetFte +  AmiCyberFte +  DerNetFte +  DerCyberFte +
+             OperatorFte + PlanningFte + AdminFte + DmsNetFte + DmsCyberFte + BusinessNetworkFte + LegalFte +
              HRFte + AccountingFte + EconomicsFte + PRFte + 1 + CioLevel_bool + CfoLevel_bool) * \
             office_sqft_employee * office_workspace_costs / 1000
 

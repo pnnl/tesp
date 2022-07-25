@@ -5,8 +5,8 @@
 #    1) actual data begins on the next line
 #    2) only one object entry per line
 # further, only 2nd-order polynomial gencost models are parsed
-import json;
-import sys;
+import json
+import sys
 
 ip = open (sys.argv[1] + ".m", "r")
 op = open (sys.argv[1] + "_m_dict.json", "w")
@@ -64,8 +64,8 @@ for line in ip:
 	if inSubNameFNCS == True and len(lst) > 1:
 		name = lst[0].strip(" ").strip(";").strip("]")
 		bus = int(lst[1].strip(" ").strip(";").strip("]"))
-		subBuses[name] = bus;
-	if inBusFNCS == True:
+		subBuses[name] = bus
+    if inBusFNCS == True:
 		bus = int(lst[0].strip(" ").strip(";").strip("]"))
 		fncsBuses[bus] = {'Pnom':0,'Qnom':0,'GLDsubstations':[]}
 	if len(lst) > 2:

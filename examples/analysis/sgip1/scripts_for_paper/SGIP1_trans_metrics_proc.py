@@ -26,9 +26,7 @@ all_bus_metrics_eventDay = {}
 all_gen_metrics_eventDay = {}
 
 colors = {0:'k', 1: 'b', 2:'r', 3: 'g',4: 'm',5:'y'}
-time_interval_hours = 5/60;
-
-
+time_interval_hours = 5/60
 
 for i in range(0,len(subdir)):
     casepath = subdir[i]+"/"
@@ -37,7 +35,7 @@ for i in range(0,len(subdir)):
 
     tmp.loadAllMetricsFromJSONFiles(casename, casepath)
     if i ==0:
-        time_interval_hours = 5/60; ##5 mins by default
+        time_interval_hours = 5/60  ##5 mins by default
 
         #print(tmp.get_bus_metrics())
     print('\n\n', casename)

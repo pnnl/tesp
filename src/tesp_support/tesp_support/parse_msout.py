@@ -1,6 +1,7 @@
 #   Copyright (C) 2020-2022 Battelle Memorial Institute
 # file: parse_msout.py
-import numpy as np;
+import numpy as np
+
 
 def next_val (fp, var, bInteger = True):
   match = '# name: ' + var

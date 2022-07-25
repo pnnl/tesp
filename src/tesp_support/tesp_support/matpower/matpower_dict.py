@@ -5,8 +5,9 @@
 #    1) actual data begins on the next line
 #    2) only one object entry per line
 # further, only 2nd-order polynomial gencost models are parsed
-import json;
-import sys;
+import json
+import sys
+
 
 def matpower_dict (nameroot):
 	ip = open (nameroot + ".m", "r")
@@ -65,8 +66,8 @@ def matpower_dict (nameroot):
 		if inSubNameFNCS == True and len(lst) > 1:
 			name = lst[0].strip(" ").strip(";").strip("]")
 			bus = int(lst[1].strip(" ").strip(";").strip("]"))
-			subBuses[name] = bus;
-		if inBusFNCS == True:
+			subBuses[name] = bus
+        if inBusFNCS == True:
 			bus = int(lst[0].strip(" ").strip(";").strip("]"))
 			fncsBuses[bus] = {'Pnom':0,'Qnom':0,'GLDsubstations':[]}
 		if len(lst) > 2:

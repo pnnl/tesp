@@ -27,7 +27,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 
 def find_parent_xfmr(input_glm_dict, starting_key):
-    '''Crawls .glm to identify a given object's parent transformer.'''
+    """Crawls .glm to identify a given object's parent transformer."""
     # Searching for distribution transformer
     logger.debug("Beginning parent transformer search for {}.".format(
                  input_glm_dict[starting_key]['name']))
@@ -56,7 +56,7 @@ def find_parent_xfmr(input_glm_dict, starting_key):
 
 
 def gather_house_stats(input_glm_dict):
-    '''Crawls .glm gathering data on houses and their parent transformers.'''
+    """Crawls .glm gathering data on houses and their parent transformers."""
     logger.info("Beginning data collection from parsed .glm model.")
     house_stats = []
     xfmr_configs = []
@@ -121,10 +121,10 @@ def gather_house_stats(input_glm_dict):
 
 
 def summarize_xfmr_stats(house_stats):
-    '''
+    """
     Creates summarized data dictionary of transformer data from dictionary
     of collected data from .glm.
-    '''
+    """
     logger.info("Beginning summarization of data on transformers in model.")
     xfmr_summary = {}
     for key, item in enumerate(house_stats):
@@ -164,7 +164,7 @@ def summarize_xfmr_stats(house_stats):
 
 
 def make_list(xfmr_summary, key_string):
-    '''Extracts pre-defined data gathered from .glm for ease of processing. '''
+    """Extracts pre-defined data gathered from .glm for ease of processing. """
     value_list = []
     for key in xfmr_summary:
         value_list.append(xfmr_summary[key][key_string])
@@ -174,7 +174,7 @@ def make_list(xfmr_summary, key_string):
 
 
 def make_histograms(xfmr_summary):
-    '''Creates histograms of pre-defined data gathered from .glm'''
+    """Creates histograms of pre-defined data gathered from .glm"""
     logger.info("Making histograms.")
     rating_per_house = make_list(xfmr_summary, 'rating_per_house')
     plt.hist(rating_per_house, bins='auto')
@@ -191,7 +191,7 @@ def make_histograms(xfmr_summary):
 
 
 def update_brownfield_loads(mod_glm_dict, growth_rate):
-    '''Grows existing loads in model at ramdom rates specified by average'''
+    """Grows existing loads in model at ramdom rates specified by average"""
     logger.info('Starting growth of brownfield loads...')
     for key in mod_glm_dict:
         if 'object' in mod_glm_dict[key]:
@@ -217,7 +217,7 @@ def update_brownfield_loads(mod_glm_dict, growth_rate):
 
 
 def grow_ZIPload(power_str, growth_rate):
-    '''Grows ZIPload by random value from a Guassian distribution'''
+    """Grows ZIPload by random value from a Guassian distribution"""
     mu = 1 + growth_rate
     sigma = growth_rate/2
     pattern = re.compile('[\d.]+')
@@ -232,7 +232,7 @@ def grow_ZIPload(power_str, growth_rate):
 
 
 def grow_water_heater(demand_str, growth_rate):
-    '''Grows water heater load  by random value from a Gaussian distribution'''
+    """Grows water heater load  by random value from a Gaussian distribution"""
     mu = 1 + growth_rate
     sigma = growth_rate/8
     pattern = re.compile('[\d.]{3,}')
@@ -247,11 +247,11 @@ def grow_water_heater(demand_str, growth_rate):
 
 
 def add_greenfield_loads(mod_glm_dict, house_stats, growth_rate):
-    '''
+    """
     Generates an appropriate number of new house models and supporting
     infrastructure (triplex lines, meters) to grow the feeder load by the
     provided factor
-    '''
+    """
     logger.info("Adding houses as greenfield loads to feeder.")
     house_count = len(house_stats)
     num_new_houses = int(house_count * growth_rate)
@@ -274,11 +274,11 @@ def add_greenfield_loads(mod_glm_dict, house_stats, growth_rate):
 
 def add_new_house_infrastructure(house_stats, new_house_stats_key,
                                  new_house_exp_node, mod_glm_dict):
-    '''
+    """
     Adds in all the power flow infrastructure from the expansion node,
     adds the house proper and all the supporting loads (ZIPloads, water
     heaters, etc...)
-    '''
+    """
     # Getting parts of new house name
     new_house_name_parts = {}
     pattern = re.compile('[a-zA-Z0-9-]*')
@@ -363,7 +363,7 @@ def add_new_house_infrastructure(house_stats, new_house_stats_key,
 
 def add_triplex_line(mod_glm_dict, new_house_exp_node, house_stats,
                      new_house_name_parts, new_house_stats_key):
-    '''Adds a triplex line following the customary format for houses.'''
+    """Adds a triplex line following the customary format for houses."""
     key = len(mod_glm_dict)+1
     mod_glm_dict[key] = {}
     mod_glm_dict[key]['object'] = 'triplex_line'
@@ -380,7 +380,7 @@ def add_triplex_line(mod_glm_dict, new_house_exp_node, house_stats,
 
 
 def add_triplex_meter(mod_glm_dict, new_house_name_parts, meter_num):
-    '''Adds the triplex meters following the customary form.'''
+    """Adds the triplex meters following the customary form."""
     # Finding parallel house meters to steal paramter values from
     parallel_meter_num = int(new_house_name_parts['number']) - 1
     if meter_num == 1:
@@ -420,10 +420,10 @@ def add_triplex_meter(mod_glm_dict, new_house_name_parts, meter_num):
 
 
 def add_house(mod_glm_dict, new_house_name_parts):
-    '''
+    """
     Generates the new house model parameters and calls the function that
     actually fully defines those parameters for the model.
-    '''
+    """
 
 #==============================================================================
 #     # Finding house to copy and doing so
@@ -456,7 +456,7 @@ def add_house(mod_glm_dict, new_house_name_parts):
 
 
 def generate_new_params(region):
-    '''Generates house model parameters as MATLAB Feeder_Generator.m does'''
+    """Generates house model parameters as MATLAB Feeder_Generator.m does"""
     reg_data = {}
     # Setting a few parameters by hand
     reg_data['residential_skew_max'] = 8100
@@ -724,11 +724,11 @@ def generate_new_params(region):
 
 
 def generate_new_house(mod_glm_dict, key, new_params):
-    '''
+    """
     Fully defines the house model based on the newly generated regionalized
     parameters. The values added to the dictionary should be the literal
     values that show up in the .glm
-    '''
+    """
     mod_glm_dict[key]['schedule_skew'] = new_params['schedule_skew']
 
     # Defining building thermal parameters
@@ -806,10 +806,10 @@ def generate_new_house(mod_glm_dict, key, new_params):
 
 def add_ZIPLoad(mod_glm_dict, new_house_name_parts, parent_house_key,
                 price_responsivity, ZIPload_params, new_house_params):
-    '''
+    """
     Adds the price responsive and unresponsive loads as new objects to the
     feeder model (doesn't embed them in the house object).
-    '''
+    """
     key = len(mod_glm_dict) + 1
     mod_glm_dict[key] = {}
 
@@ -850,7 +850,7 @@ def add_ZIPLoad(mod_glm_dict, new_house_name_parts, parent_house_key,
 
 def add_pool_pump(mod_glm_dict, new_house_name_parts, parent_house_key,
                   ZIPload_params):
-    '''Adds a pool pump as an explicit child of the house object.'''
+    """Adds a pool pump as an explicit child of the house object."""
     key = len(mod_glm_dict) + 1
     mod_glm_dict[key] = {}
 
@@ -889,7 +889,7 @@ def add_pool_pump(mod_glm_dict, new_house_name_parts, parent_house_key,
 
 def add_water_heater(mod_glm_dict, new_house_name_parts, parent_house_key,
                      new_house_params):
-    '''Adds a water heater as an explicit child of the house object.'''
+    """Adds a water heater as an explicit child of the house object."""
     key = len(mod_glm_dict) + 1
     mod_glm_dict[key] = {}
 
@@ -948,7 +948,7 @@ def add_water_heater(mod_glm_dict, new_house_name_parts, parent_house_key,
 
 
 def _tests():
-    '''Self-test to verify module functions correctly.'''
+    """Self-test to verify module functions correctly."""
     logger.info('Started parsing .glm...')
     input_glm_dict = feeder.parse("/Users/hard312/Documents/Projects/TSP/rev0/"
                                   "models/gridlabd/testbed2/"

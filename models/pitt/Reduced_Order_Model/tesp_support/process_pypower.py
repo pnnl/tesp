@@ -6,12 +6,13 @@ Public Functions:
         :process_pypower: Reads the data and metadata, then makes the plots.  
 
 """
-import json;
+import json
 #import sys;
-import numpy as np;
+import numpy as np
+
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
     pass
 

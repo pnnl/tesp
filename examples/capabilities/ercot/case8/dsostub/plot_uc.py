@@ -1,9 +1,9 @@
 #   Copyright (C) 2020-2022 Battelle Memorial Institute
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
-import tesp_support.api as tesp;
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import tesp_support.api as tesp
 
 f, nb, ng, nl, ns, nt, nj_max, Pg, Pd, Pf, u, lamP = tesp.read_most_solution ('msout.txt')
 print ('f={:.2f} nb={:d} ng={:d} nl={:d} ns={:d} nt={:d} nj_max={:d}'.format (f, nb, ng, nl, ns, nt, nj_max))

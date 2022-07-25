@@ -1,9 +1,9 @@
 # class: DistributionMetricsProcessor.py
-import json;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import json
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import xarray as xr
 
 class DistributionMetricsProcessor:
@@ -19,7 +19,7 @@ class DistributionMetricsProcessor:
     hse_keys = None
     mtr_keys = None
     hrs = None
-    time_interval_hours = 5/60; ##5 mins by default
+    time_interval_hours = 5/60  ##5 mins by default
     
     def __init__(self,case_name="",case_path=""):
         self.casename = case_name

@@ -7,14 +7,14 @@ Public Functions:
 
 """
 import os
-import json;
-import sys;
-import numpy as np;
-import csv;
+import json
+import sys
+import numpy as np
+import csv
 
 try:
-    import matplotlib as mpl;
-    import matplotlib.pyplot as plt;
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
 except:
     pass
 

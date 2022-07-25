@@ -13,8 +13,9 @@ Public Functions:
 
 """
 
-import json;
-import sys;
+import json
+import sys
+
 
 def ercotMeterName(objname):
 	""" Enforces the meter naming convention for ERCOT
@@ -160,13 +161,13 @@ def glm_dict (nameroot, ercot=False, te30=False):
 				if lst[0] == 'name':
 					lastCapacitor = lst[1].strip(';')
 					capacitors[lastCapacitor] = {'feeder_id':feeder_id}
-					inCapacitors = False;
-			if inRegulators == True:
+					inCapacitors = False
+            if inRegulators == True:
 				if lst[0] == 'name':
 					lastRegulator = lst[1].strip(';')
 					regulators[lastRegulator] = {'feeder_id':feeder_id}
-					inRegulators = False;
-			if inInverters == True:
+					inRegulators = False
+            if inInverters == True:
 				if lst[0] == 'name' and lastInverter == '':
 					lastInverter = lst[1].strip(';')
 				if lst[1] == 'solar':

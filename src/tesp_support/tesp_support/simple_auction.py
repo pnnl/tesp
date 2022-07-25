@@ -533,11 +533,11 @@ class simple_auction:
                sep=',', flush=True)
 
 def _auto_run():
-    '''
+    """
     This method implements the basic functionalities offered by
     simple_auction and demonstrates a typical single-period market operation
 
-    '''
+    """
     # 2021-10-29 TDH: This is a subset of values from the
     #  "SGIP1b_agent_dict.json" "markets" object. Many of these are only
     #  used to initialize the simple_auction object but not used by any

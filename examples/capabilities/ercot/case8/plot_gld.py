@@ -1,11 +1,11 @@
 #	Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: process_gld.py; custom for the IEEE 8500-node circuit
 
-import json;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import json
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 # first, read and print a dictionary of all the monitored GridLAB-D objects
 lp = open (sys.argv[1] + '_glm_dict.json').read()

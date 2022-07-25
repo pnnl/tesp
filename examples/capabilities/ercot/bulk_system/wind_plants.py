@@ -1,9 +1,9 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: wind_plants.py
 
-import numpy as np;
-import matplotlib.pyplot as plt;
-import math;
+import numpy as np
+import matplotlib.pyplot as plt
+import math
 
 days = 2
 Pnorm = 165.6

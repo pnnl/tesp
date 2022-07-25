@@ -1,8 +1,8 @@
-import csv;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import csv
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 # here are the columns, after ignore 'True/False' with usecols
 plotvars = [[0, 't[s]', 'seconds'],

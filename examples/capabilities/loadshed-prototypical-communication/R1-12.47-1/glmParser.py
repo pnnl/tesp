@@ -1,11 +1,11 @@
-import sys;
-import re;
-import os.path;
-import networkx as nx;
-import numpy as np;
-import math;
-import pandas as pd;
-import json;
+import sys
+import re
+import os.path
+import networkx as nx
+import numpy as np
+import math
+import pandas as pd
+import json
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import FixedLocator
@@ -34,7 +34,7 @@ def ProcessGLM (glmFile):
         lines = []
         line = ip.readline()
         while line != '':
-            while re.match('\s*//',line) or re.match('\s+$',line):
+            while re.match('\s*//', line) or re.match('\s+$', line):
                 # skip comments and white space
                 line = ip.readline()
             lines.append(line.rstrip())
@@ -43,7 +43,7 @@ def ProcessGLM (glmFile):
 
         # op = open (outpath + outname + '.glm', 'w')
         # print ('###### Writing to', outpath + outname + '.glm')
-        octr = 0;
+        octr = 0
         model = {}
         h = {}		# OID hash
         itr = iter(lines)

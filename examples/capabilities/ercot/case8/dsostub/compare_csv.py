@@ -1,9 +1,9 @@
 #   Copyright (C) 2020-2022 Battelle Memorial Institute
-import csv;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import csv
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 # OPF: seconds, OPFconverged, TotalLoad, Production, SwingGen, ClearedResp, LMP1, LMP2, LMP3, LMP4, LMP5, LMP6, LMP7, LMP8, gas1, coal1, nuc1, gas2, coal2, nuc2, gas3, coal3, gas4, gas5, coal4, gas6, coal5, wind1, wind2, wind3, wind4, wind5, TotalWindGen
 # PF: seconds, PFConverged, TotalLoad, TotalGen, TotalLoss, SwingGen, v1, v2, v3, v4, v5, v6, v7, v8

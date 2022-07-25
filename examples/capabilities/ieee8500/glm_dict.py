@@ -2,8 +2,8 @@
 # file: glm_dict.py
 
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
-import json;
-import sys;
+import json
+import sys
 
 ip = open (sys.argv[1] + ".glm", "r")
 op = open (sys.argv[1] + "_glm_dict.json", "w")
@@ -70,13 +70,13 @@ for line in ip:
 			if lst[0] == "name":
 				lastCapacitor = lst[1].strip(";")
 				capacitors[lastCapacitor] = {'feeder_id':feeder_id}
-				inCapacitors = False;
-		if inRegulators == True:
+				inCapacitors = False
+        if inRegulators == True:
 			if lst[0] == "name":
 				lastRegulator = lst[1].strip(";")
 				regulators[lastRegulator] = {'feeder_id':feeder_id}
-				inRegulators = False;
-		if inInverters == True:
+				inRegulators = False
+        if inInverters == True:
 			if lst[0] == "name":
 				lastInverter = lst[1].strip(";")
 			if lst[0] == "rated_power":

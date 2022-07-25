@@ -1805,7 +1805,7 @@ class HVACDSOT:  # TODO: update class name
         return val_cool, val_heat
 
     def DA_model_parameters(self, moh3, hod3, dow3):
-        '''
+        """
         self.basepoint_cooling = 73.278
         self.temp_min_cool = self.temp_min_cool + self.basepoint_cooling
         self.temp_max_cool = self.temp_max_cool + self.basepoint_cooling
@@ -1817,7 +1817,7 @@ class HVACDSOT:  # TODO: update class name
         else:
             temp_min_48hour = self.temp_min_heat
             temp_max_48hour = self.temp_max_heat
-        '''
+        """
 
         self.moh = moh3
         self.hod = hod3

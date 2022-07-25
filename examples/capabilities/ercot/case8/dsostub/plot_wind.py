@@ -1,8 +1,9 @@
 #   Copyright (C) 2017-2022 Battelle Memorial Institute
-import json;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import json
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
 
 def bus_color(key):
     if key == '1':

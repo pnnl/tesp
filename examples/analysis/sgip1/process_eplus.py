@@ -6,13 +6,14 @@ Public Functions:
         :process_eplus: Reads the data and metadata, then makes the plots.  
 
 """
-import json;
-import sys;
+import json
+import sys
 import os
-import numpy as np;
+import numpy as np
+
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
 

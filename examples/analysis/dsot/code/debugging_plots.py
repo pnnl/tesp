@@ -13,7 +13,8 @@ import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
 ######################################################start conf plot
-import matplotlib.pyplot as plt;
+import matplotlib.pyplot as plt
+
 plt.rcParams['figure.figsize'] = (3, 4)
 plt.rcParams['figure.dpi'] = 100
 SMALL_SIZE = 14
@@ -446,7 +447,7 @@ if __name__ == "__main__":
         for i in range(14,15):#range(len(data_individual)):
             for ivar in range(len(V_analis)-1):
                 AVG_power = data_individual[i][meta_S[V_analis[ivar]]['index']]
-                ax1.plot((AVG_power/to_kW).values,marker='x',label=V_analis[ivar]);ax1.set_ylabel('(F)');plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i)+' - day {:.0f}'.format(iday));
+                ax1.plot((AVG_power/to_kW).values,marker='x',label=V_analis[ivar]);ax1.set_ylabel('(F)');plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i)+' - day {:.0f}'.format(iday))
             ax1.legend()
             AVG_power = data_individual[i][meta_S[V_analis[-1]]['index']]
             ax2.plot((AVG_power/to_kW).values,'-', color='k',label=V_analis[-1]);ax2.set_ylabel('price ($/kW)');plt.xlabel('time (hours)');plt.grid(True)
@@ -464,7 +465,7 @@ if __name__ == "__main__":
         for i in [14]:#range(len(data_individual)):
             for ivar in range(len(V_analis)-1):
                 AVG_power = data_individual[i][meta_S[V_analis[ivar]]['index']]
-                ax1.plot((AVG_power/to_kW).values,marker='x',label=V_analis[ivar]);ax1.set_ylabel('(F)');plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i));
+                ax1.plot((AVG_power/to_kW).values,marker='x',label=V_analis[ivar]);ax1.set_ylabel('(F)');plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i))
             ax1.legend()
             AVG_power = data_individual[i][meta_S[V_analis[-1]]['index']]
             ax2.plot((AVG_power/to_kW).values,'-', color='k',label=V_analis[-1]);ax2.set_ylabel('price ($/kW)');plt.xlabel('time (hours)');plt.grid(True)
@@ -482,7 +483,7 @@ if __name__ == "__main__":
         for i in [14]:#range(len(data_individual)):
             for ivar in range(len(V_analis)):
                 AVG_power = data_individual[i][meta_S[V_analis[ivar]]['index']]
-                ax1.plot((AVG_power.resample('60min').mean()/to_kW).values,marker='x',label=V_analis[ivar]);plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i));#ax1.set_ylabel('(F)');
+                ax1.plot((AVG_power.resample('60min').mean()/to_kW).values,marker='x',label=V_analis[ivar]);plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i))  #ax1.set_ylabel('(F)');
             ax1.legend()
             '''
             AVG_power = data_individual[i][meta_S[V_analis[-1]]['index']]

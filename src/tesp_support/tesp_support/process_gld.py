@@ -584,7 +584,7 @@ def plot_gld(dict, save_file=None, save_only=False):
 
 
 def process_gld(nameroot, dictname='', save_file=None, save_only=False):
-    ''' Plots a summary/sample of power, air temperature and voltage
+    """ Plots a summary/sample of power, air temperature and voltage
 
     This function reads *substation_nameroot_metrics.json*,
     *billing_meter_nameroot_metrics.json* and
@@ -603,7 +603,7 @@ def process_gld(nameroot, dictname='', save_file=None, save_only=False):
       dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
       save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
       save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
-    '''
+    """
     path = os.getcwd()
     dict = read_gld_metrics(path, nameroot, dictname)
     plot_gld(dict, save_file, save_only)

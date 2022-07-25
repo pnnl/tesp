@@ -1,8 +1,8 @@
 #	Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: feeder.py
 
-''' Functions for manipulting electrical distribution feeder models.
-Updated for Python3.'''
+""" Functions for manipulting electrical distribution feeder models.
+Updated for Python3."""
 
 
 import datetime
@@ -25,16 +25,16 @@ newFeederWireframe = {"links": [], "hiddenLinks": [], "nodes": [],
 
 
 def parse(inputStr, filePath=True):
-    ''' Parse a GLM into an omf.feeder tree. This is so we can walk the tree,
+    """ Parse a GLM into an omf.feeder tree. This is so we can walk the tree,
     change things in bulk, etc.
     Input can be a filepath or GLM string.
-    '''
+    """
     tokens = _tokenizeGlm(inputStr, filePath)
     return _parseTokenList(tokens)
 
 
 def write(inTree):
-    ''' Turn an omf.feeder tree object into a GLM-formatted string. '''
+    """ Turn an omf.feeder tree object into a GLM-formatted string. """
     output = ''
     for key in inTree:
         output += _dictToString(inTree[key]) + '\n'
@@ -42,9 +42,9 @@ def write(inTree):
 
 
 def sortedWrite(inTree):
-    ''' Write out a GLM from a tree, and order all tree objects by their key.
+    """ Write out a GLM from a tree, and order all tree objects by their key.
     Sometimes Gridlab breaks if you rearrange a GLM.
-    '''
+    """
     sortedKeys = sorted(inTree.keys(), key=int)
     output = ''
     try:
@@ -60,16 +60,16 @@ def sortedWrite(inTree):
 
 
 def getMaxKey(inTree):
-    '''
+    """
     Find the largest key value in the tree. We need this because
     de-embedding causes noncontiguous keys.
-    '''
+    """
     keys = [int(x) for x in inTree.keys()]
     return max(keys)
 
 
 def adjustTime(tree, simLength, simLengthUnits, simStartDate):
-    ''' Adjust a GLM clock and recorders to start/stop/step specified. '''
+    """ Adjust a GLM clock and recorders to start/stop/step specified. """
     # translate LengthUnits to minutes.
     if simLengthUnits == 'minutes':
         lengthInSeconds = simLength * 60
@@ -105,7 +105,7 @@ def adjustTime(tree, simLength, simLengthUnits, simStartDate):
 
 
 def fullyDeEmbed(glmTree):
-    ''' Take any embedded objects in a GLM and make them top-level objects.
+    """ Take any embedded objects in a GLM and make them top-level objects.
 
     Example, turns the tree that looks this:
         object house {name myhouse; object ZIPload
@@ -114,7 +114,7 @@ def fullyDeEmbed(glmTree):
     Into this:
         object house {name myhouse; ZIPload newZIP; size 234sqft;};
         object ZIPload {name newZIP; inductance bigind; power newpower;};
-    '''
+    """
     lenDiff = 1
     while lenDiff != 0:
         currLen = len(glmTree)
@@ -123,10 +123,10 @@ def fullyDeEmbed(glmTree):
 
 
 def attachRecorders(tree, recorderType, keyToJoin, valueToJoin):
-    '''
+    """
     Walk through a tree an and attach Gridlab recorders to the indicated
     type of node.
-    '''
+    """
     # HACK: the biggestKey assumption only works for a flat tree or one
     # that has a flat node for the last item...
     biggestKey = sorted([int(key) for key in tree.keys()])[-1] + 1
@@ -234,7 +234,7 @@ def attachRecorders(tree, recorderType, keyToJoin, valueToJoin):
 
 
 def groupSwingKids(tree):
-    ''' Apply group properties to all links attached to swing nodes.'''
+    """ Apply group properties to all links attached to swing nodes."""
     staticTree = copy.copy(tree)
     swingNames = []
     swingTypes = []
@@ -264,7 +264,7 @@ def groupSwingKids(tree):
 
 
 def treeToNxGraph(inTree):
-    ''' Convert feeder tree to networkx graph. '''
+    """ Convert feeder tree to networkx graph. """
     outGraph = nx.Graph()
     for key in inTree:
         item = inTree[key]
@@ -305,7 +305,7 @@ def treeToNxGraph(inTree):
 
 
 def latLonNxGraph(inGraph, labels=False, neatoLayout=False, showPlot=False):
-    ''' Draw a networkx graph representing a feeder.'''
+    """ Draw a networkx graph representing a feeder."""
     plt.axis('off')
     plt.tight_layout()
     # Layout the graph via GraphViz neato. Handy if there's no lat/lon data.
@@ -358,7 +358,7 @@ def latLonNxGraph(inGraph, labels=False, neatoLayout=False, showPlot=False):
 
 
 def _tokenizeGlm(inputStr, filePath=True):
-    ''' Turn a GLM file/string into a linked list of tokens.
+    """ Turn a GLM file/string into a linked list of tokens.
 
     E.g. turn a string like this:
     clock {clockey valley;};
@@ -370,7 +370,7 @@ def _tokenizeGlm(inputStr, filePath=True):
     '{','name','myhouse',';',
         'object','ZIPload','{','inductance','bigind',';','power','newpower','}
         ','size','234sqft','}']
-    '''
+    """
     if filePath:
         with open(inputStr, 'r') as glmFile:
             data = glmFile.read()
@@ -391,10 +391,10 @@ def _tokenizeGlm(inputStr, filePath=True):
 
 
 def _parseTokenList(tokenList):
-    '''
+    """
     Given a list of tokens from a GLM, parse those into a
     tree data structure.
-    '''
+    """
     def currentLeafAdd(key, value):
         # Helper function to add to the current leaf we're visiting.
         current = tree
@@ -473,10 +473,10 @@ def _parseTokenList(tokenList):
 
 
 def _gatherKeyValues(inDict, keyToAvoid):
-    '''
+    """
     Helper function: put key/value pairs for objects into the
     format Gridlab needs.
-    '''
+    """
     otherKeyValues = ''
     for key in inDict:
         if type(inDict[key]) is dict:
@@ -502,9 +502,9 @@ def _gatherKeyValues(inDict, keyToAvoid):
 
 
 def _dictToString(inDict):
-    ''' Helper function: given a single dict representing a GLM object,
+    """ Helper function: given a single dict representing a GLM object,
     concatenate it into a string.
-    '''
+    """
     # Handle the different types of dictionaries that are leafs of
     # the tree root:
     if 'omftype' in inDict:
@@ -536,10 +536,10 @@ def _dictToString(inDict):
 
 
 def _deEmbedOnce(glmTree):
-    ''' Take all objects nested inside top-level objects and move them to
+    """ Take all objects nested inside top-level objects and move them to
     the top level. Note that this function only removes things embedded one
     level deep. The fullyDeEmbed runs this until it can't deEmbed any more.
-    '''
+    """
     iterTree = copy.deepcopy(glmTree)
     for x in iterTree:
         for y in iterTree[x]:
@@ -596,12 +596,12 @@ def _deEmbedOnce(glmTree):
 
 
 def _phaseCount(phaseString):
-    ''' Return number of phases not including neutrals. '''
+    """ Return number of phases not including neutrals. """
     return sum([phaseString.lower().count(x) for x in ['a', 'b', 'c']])
 
 
 def _obToCol(obStr):
-    ''' Graph drawing helper to color by node/edge type. '''
+    """ Graph drawing helper to color by node/edge type. """
     obToColor = {'node': 'gray',
                  'house': '#3366FF',
                  'load': '#3366FF',

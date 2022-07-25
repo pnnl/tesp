@@ -1,8 +1,8 @@
-import csv;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import csv
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 casefiles = [['SGIP1a','red'],
 						 ['SGIP1b','blue'],

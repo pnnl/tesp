@@ -2,9 +2,10 @@
 # file: loadshed.py
 
 
-import string;
-import sys;
-import fncs;
+import string
+import sys
+import fncs
+
 if sys.platform != 'win32':
 	import resource
 

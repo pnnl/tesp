@@ -439,7 +439,7 @@ class WaterHeaterDSOT:
         Delta_T_average = (self.weight_SOHC * self.his_T_upper[-1] + (1 - self.weight_SOHC) * self.his_T_bottom[
             -1]) / 2 - \
                           (self.weight_SOHC * self.his_T_upper[-2] + (1 - self.weight_SOHC) * self.his_T_bottom[-2]) / 2
-        T_average = (self.weight_SOHC * self.his_T_upper[-1] + (1 - self.weight_SOHC) * self.his_T_bottom[-1] + \
+        T_average = (self.weight_SOHC * self.his_T_upper[-1] + (1 - self.weight_SOHC) * self.his_T_bottom[-1] +
                      self.weight_SOHC * self.his_T_upper[-2] + (1 - self.weight_SOHC) * self.his_T_bottom[-2]) / 2
 
         Delta_heat = self.A_tank * self.H_tank * self.Cp * self.Rho * Delta_T_average

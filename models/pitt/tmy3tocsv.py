@@ -16,9 +16,9 @@ import pandas as pd
 
 
 def readtmy3(filename=None, coerce_year=None, recolumn=True):
-    '''
+    """
     Read a TMY3 file in to a pandas dataframe.
-    '''
+    """
 
     if filename is None:
         try:

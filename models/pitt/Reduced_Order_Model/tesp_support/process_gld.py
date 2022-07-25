@@ -1,39 +1,40 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: process_gld.py
-'''Functions to plot data from GridLAB-D
+"""Functions to plot data from GridLAB-D
 
 Public Functions:
-    :process_gld: Reads the data and metadata, then makes the plots.  
+    :process_gld: Reads the data and metadata, then makes the plots.
 
-'''
-import json;
-import sys;
-import numpy as np;
+"""
+import json
+import sys
+import numpy as np
+
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
 
 def process_gld(nameroot, dictname = ''):
-  ''' Plots a summary/sample of power, air temperature and voltage
+  """ Plots a summary/sample of power, air temperature and voltage
 
-  This function reads *substation_nameroot_metrics.json*,  
+  This function reads *substation_nameroot_metrics.json*,
   *billing_meter_nameroot_metrics.json* and
   *house_nameroot_metrics.json* for the data;
-  it reads *nameroot_glm_dict.json* for the metadata.  
-  These must all exist in the current working directory.  
+  it reads *nameroot_glm_dict.json* for the metadata.
+  These must all exist in the current working directory.
   Makes one graph with 4 subplots:
-  
+
   1. Substation real power and losses
   2. Average air temperature over all houses
   3. Min/Max line-to-neutral voltage and Min/Max line-to-line voltage at the first billing meter
-  4. Min, Max and Average air temperature at the first house 
+  4. Min, Max and Average air temperature at the first house
 
   Args:
     nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
     dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
-  '''
+  """
 
   # the feederGenerator needs to insert metrics_collector objects on capacitors and regulators
   bCollectedRegCapMetrics = False 

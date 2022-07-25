@@ -8,19 +8,20 @@
 
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: process_gld.py
-'''Functions to plot data from GridLAB-D
+"""Functions to plot data from GridLAB-D
 
 Public Functions:
     :process_gld: Reads the data and metadata, then makes the plots.
 
-'''
-import json;
-import sys;
+"""
+import json
+import sys
 import os
-import numpy as np;
+import numpy as np
+
 try:
-  import matplotlib as mpl;
-  import matplotlib.pyplot as plt;
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
 except:
   pass
 
@@ -546,7 +547,7 @@ def plot_gld (dict):
   plt.show()
 
 def process_gld(nameroot, dictname = ''):
-  ''' Plots a summary/sample of power, air temperature and voltage
+  """ Plots a summary/sample of power, air temperature and voltage
 
   This function reads *substation_nameroot_metrics.json*,
   *billing_meter_nameroot_metrics.json* and
@@ -563,7 +564,7 @@ def process_gld(nameroot, dictname = ''):
   Args:
     nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
     dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
-  '''
+  """
   path = os.getcwd()
   dict = read_gld_metrics (path, nameroot, dictname)
   plot_gld (dict)

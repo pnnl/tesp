@@ -1,9 +1,9 @@
 #   Copyright (C) 2020-2022 Battelle Memorial Institute
-import csv;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import csv
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 # CSV: seconds, 8*LMP, 8*CLR, 8*BID, 8*SET
 
