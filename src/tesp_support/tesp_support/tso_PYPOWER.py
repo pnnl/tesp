@@ -1,18 +1,19 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: fncsPYPOWER.py
-""" PYPOWER solutions under control of FNCS or HELICS for te30 and dsot, sgip1 examples
+# file: tso_PYPOWER.py
+""" PYPOWER solutions under control of HELICS for te30 and dsot, sgip1 examples
 
 Public Functions:
     :pypower_loop: Initializes and runs the simulation.  
 """
 
-import json
 import sys
+import json
 import helics
 import numpy as np
 import pypower.api as pp
 from math import sqrt
 from copy import deepcopy
+
 import tesp_support.tso_helpers as tso
 
 #import cProfile
@@ -143,13 +144,13 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
     helics.helicsFederateEnterExecutingMode(hFed)
 
     # transactive load components
-    csv_load = 0  # from the file
-    unresp = 0  # unresponsive load estimate from the auction agent
-    resp = 0  # will be the responsive load as dispatched by OPF
-    resp_deg = 0  # RESPONSIVE_DEG from DSO
-    resp_c1 = 0  # RESPONSIVE_C1 from DSO
-    resp_c2 = 0  # RESPONSIVE_C2 from DSO
-    resp_max = 0  # RESPONSIVE_MAX_MW from DSO
+    csv_load = 0     # from the file
+    unresp = 0       # unresponsive load estimate from the auction agent
+    resp = 0         # will be the responsive load as dispatched by OPF
+    resp_deg = 0     # RESPONSIVE_DEG from DSO
+    resp_c1 = 0      # RESPONSIVE_C1 from DSO
+    resp_c2 = 0      # RESPONSIVE_C2 from DSO
+    resp_max = 0     # RESPONSIVE_MAX_MW from DSO
     feeder_load = 0  # amplified feeder MW
 
     while ts <= tmax:
@@ -244,7 +245,7 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
             opf_gen = deepcopy(res['gen'])
             lmp = opf_bus[6, 13]
             resp = -1.0 * opf_gen[4, 1]
-            helics.helicsPublicationPublishDouble(pub_lmp, 0.001 * lmp)
+            helics.helicsPublicationPublishDouble(pub_lmp, 0.001 * lmp)  # publishing $/kwh
             #     print ('  OPF', ts, csv_load, '{:.3f}'.format(unresp), '{:.3f}'.format(resp),
             #            '{:.3f}'.format(feeder_load), '{:.3f}'.format(opf_bus[6,2]),
             #            '{:.3f}'.format(opf_gen[0,1]), '{:.3f}'.format(opf_gen[1,1]), '{:.3f}'.format(opf_gen[2,1]),

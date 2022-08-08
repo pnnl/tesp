@@ -1,5 +1,5 @@
 #   Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: fncsTSO2.py
+# file: tso_most.py
 
 import json
 import math
@@ -217,7 +217,7 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
 
     fp = open(froot + 'case.m', 'w')
     print('function mpc = {:s}case'.format(froot), file=fp)
-    print('%% MATPOWER/MOST base case from PNNL TESP, fncsTSO2.py, model name', casename, file=fp)
+    print('%% MATPOWER/MOST base case from PNNL TESP, tso_most.py, model name', casename, file=fp)
     print("""mpc.version = '2';""", file=fp)
     print("""mpc.baseMVA = 100;""", file=fp)
     print("""%% bus_i  type  Pd  Qd  Gs  Bs  area  Vm  Va  baseKV  zone  Vmax  Vmin""", file=fp)
@@ -391,7 +391,7 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
 def write_most_base_case(ppc, fname):
     fp = open(fname, 'w')
     print('function mpc = basecase', file=fp)
-    print('%% MATPOWER base case from PNNL TESP, fncsTSO2.py, model name', casename, file=fp)
+    print('%% MATPOWER base case from PNNL TESP, tso_most.py, model name', casename, file=fp)
     print("""mpc.version = '2';""", file=fp)
     print("""mpc.baseMVA = 100;""", file=fp)
     print("""%% bus_i  type  Pd  Qd  Gs  Bs  area  Vm  Va  baseKV  zone  Vmax  Vmin""", file=fp)
@@ -478,7 +478,7 @@ def update_cost_and_load(ppc, for_optimization):
             bus[busnum - 1, 3] += gld_load[busnum]['q'] * gld_scale
 
 
-def tso_loop(bTestDAM=False, test_bids=None):
+def tso_most_loop_f(bTestDAM=False, test_bids=None):
     # Initialize the program
     hours_in_a_day = 24
     secs_in_a_hr = 3600
@@ -754,7 +754,7 @@ def tso_loop(bTestDAM=False, test_bids=None):
             elif 'RESPONSIVE_DEG_' in topic:
                 busnum = int(topic[15:])
                 gld_load[busnum]['deg'] = int(val)
-            # getting the latest inputs from GridlabD or DSO stub
+            # getting the latest inputs from GridLAB-D or DSO stub
             elif 'SUBSTATION' in topic:  # gld
                 busnum = int(topic[10:])
                 p, q = parse_mva(val)
@@ -1088,6 +1088,6 @@ if __name__ == '__main__':
         fp = open(sys.argv[1], 'r')
         da_bids = json.load(fp)
         fp.close()
-        tso_loop(True, da_bids)
+        tso_most_loop_f(True, da_bids)
         quit()
-    tso_loop()
+    tso_most_loop_f()

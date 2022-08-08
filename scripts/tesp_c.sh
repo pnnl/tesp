@@ -66,7 +66,6 @@ if [[ $1 == "develop" ]]; then
   cd "${TESPDIR}/data/weather/TMY2EPW/source_code" || exit
   gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi
   mv TMY3toTMY2_ansi "${INSTDIR}/bin"
-
 else
 
   ver=$(cat "${TESPBUILD}/version")

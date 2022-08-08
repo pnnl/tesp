@@ -67,11 +67,11 @@ def get_date(dir_path, dso, day):
 def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
     """Update GLM dictionary with information from agent dictionary needed for customer billing.
     Arguments:
-        glm_meta (dict): dictionary of GridLab-D information
+        glm_meta (dict): dictionary of GridLAB-D information
         agent_meta (dict): dictionary of transactive agent information
         dso_metadata_path (str): location of metadata for commercial buildings
     Returns:
-        glm_meta (dict): dictionary of GridLab-D information
+        glm_meta (dict): dictionary of GridLAB-D information
 
         """
     # Determine tariff rate class of each meter up front.
@@ -1058,7 +1058,7 @@ def find_edge_cases(dso, case, day_range, agent_prefix, gld_prefix):
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         case (str): folder extension of case of interest
         agent_prefix (str): folder extension for agent data
-        gld_prefix (str): folder extension for GridLab-D data
+        gld_prefix (str): folder extension for GridLAB-D data
     Returns:
         dataframe with values for each day
         dictionary of worst values.
@@ -1188,7 +1188,7 @@ def bldg_load_stack(dso, day_range, case, agent_prefix, gld_prefix, metadata_pat
         case (str): folder extension of case of interest
         comp (str): folder extension of a comparison case of interest.  Optional - set to None to show just one case.
         agent_prefix (str): folder extension for agent data
-        gld_prefix (str): folder extension for GridLab-D data
+        gld_prefix (str): folder extension for GridLAB-D data
     Returns:
         saves daily profile plot to file
         """
@@ -1367,7 +1367,7 @@ def der_load_stack(dso, day_range, case, gld_prefix, metadata_path):
         dso (int): the DSO that the data should be plotted for (e.g. '1')
         day_range (range): the day range to plotted.
         case (str): folder extension of case of interest
-        gld_prefix (str): folder extension for GridLab-D data
+        gld_prefix (str): folder extension for GridLAB-D data
         metadata_path (str): path of folder containing metadata
     Returns:
         saves dso DER loads data to file
@@ -1603,7 +1603,7 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
         case (str): folder extension of case of interest
         comp (str): folder extension of a comparison case of interest.  Optional - set to None to show just one case.
         agent_prefix (str): folder extension for agent data
-        gld_prefix (str): folder extension for GridLab-D data
+        gld_prefix (str): folder extension for GridLAB-D data
     Returns:
         saves daily profile plot to file
         """
@@ -1676,7 +1676,7 @@ def load_duration_plot(dso, system, subsystem, variable, day, case, comp, agent_
         case (str): folder extension of case of interest
         comp (str): folder extension of a comparison case of interest.  Optional - set to None to show just one case.
         agent_prefix (str): folder extension for agent data
-        gld_prefix (str): folder extension for GridLab-D data
+        gld_prefix (str): folder extension for GridLAB-D data
     Returns:
         saves load duration plot to file
         """
@@ -1726,7 +1726,7 @@ def dso_comparison_plot(dso_range, system, subsystem, variable, day, case, agent
         day (str): the day to plotted.
         case (str): folder extension of case of interest
         agent_prefix (str): folder extension for agent data
-        gld_prefix (str): folder extension for GridLab-D data
+        gld_prefix (str): folder extension for GridLAB-D data
     Returns:
         saves dso comparison plot to file
         """
@@ -3227,7 +3227,7 @@ def heatmap_plots(dso, system, subsystem, variable, day_range, case, agent_prefi
         day_range (range): range of the day indexes to be plotted.  Day 1 has an index of 0
         case (str): folder extension of case of interest
         agent_prefix (str): folder extension for agent data
-        gld_prefix (str): folder extension for GridLab-D data
+        gld_prefix (str): folder extension for GridLAB-D data
     Returns:
         saves heatmap to file
         """
@@ -3314,7 +3314,7 @@ def daily_summary_plots(dso, system, subsystem, variable, day_range, case, comp,
         diff (bool): If True will plot the difference between the baseline (case) and comparison (comp)
         denom (value): denominator that values should be divided by before plotting
         agent_prefix (str): folder extension for agent data
-        gld_prefix (str): folder extension for GridLab-D data
+        gld_prefix (str): folder extension for GridLAB-D data
     Returns:
         saves plots to file
         """
@@ -4302,7 +4302,7 @@ def limit_check(log_list, dso_num, system, variable, day_range, case, agent_pref
         day_range (range): range of the day indexes to be checked.  Day 1 has an index of 0
         case (str): folder extension of case of interest
         agent_prefix (str): folder extension for agent data
-        GLD_prefix (str): folder extension for GridLab-D data
+        GLD_prefix (str): folder extension for GridLAB-D data
         max_lim (float): upper value that variable should not exceed during simulation
         min_lim (float): lower value that variable should not exceed during simulation
     Returns:
@@ -4491,7 +4491,7 @@ def get_day_df(dso, system, subsystem, variable, day, case, agent_prefix, gld_pr
         day (str): the day to plotted.
         case (str): folder extension of case of interest
         agent_prefix (str): folder extension for agent data
-        gld_prefix (str): folder extension for GridLab-D data
+        gld_prefix (str): folder extension for GridLAB-D data
     Returns:
         df (dataframe): reduced dataframe
         """
@@ -4524,7 +4524,7 @@ def df_reduction(df, subsystem, variable, format):
         subsystem (str): the individual house to be plotted (e.g. 'HousesA_hse_1') or the operator to be used if
                 aggregating many houses (e.g. 'sum', 'mean').  If system has no subsystems set equal to None
         variable (str): variable to be plotted from system dataframe (e.g. 'cooling_setpoint' or 'real_power_avg')
-        format (str): flag as to whether the data is GridLab-D ('gld') or agent ('agent') as the format is slightly
+        format (str): flag as to whether the data is GridLAB-D ('gld') or agent ('agent') as the format is slightly
                 different.
     Returns:
         df (dataframe): reduced dataframe

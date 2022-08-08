@@ -159,8 +159,8 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
             outfile.write('with_market=0\n\n')
 
         for cnt in range(len(ports)):
-            outfile.write('(exec python3 -c "import tesp_support.schedule_server as schedule;'
-                          'schedule.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
+            outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
+                          'tesp.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
                           % (config_file, str(5150 + ports[cnt]), outPath))
         outfile.write('# wait schedule server to populate\n')
         outfile.write('sleep 60\n')
@@ -190,15 +190,15 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
                 % (dbg, outPath, sub_val['substation'], sub_val['substation'], outPath, sub_val['substation']))
             outfile.write('cd ..\n')
             outfile.write('cd %s\n' % sub_key)
-            outfile.write('(exec python3 -c "import tesp_support.substation_dsot as tesp;'
-                          'tesp.substation_loop(\'%s\',$with_market)" &> '
+            outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
+                          'tesp.dso_loop(\'%s\',$with_market)" &> '
                           '%s/%s_substation.log &)\n'
                           % (sub_val['substation'], outPath, sub_key))
             outfile.write('cd ..\n')
 
         if master_file != '':
-            outfile.write('(exec python3 -c "import tesp_support.tso_psst as tesp;'
-                          'tesp.tso_loop(\'./%s\')" &> %s/tso.log &)\n'
+            outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
+                          'tesp.tso_psst_loop(\'./%s\')" &> %s/tso.log &)\n'
                           % (master_file, outPath))
             for plyr in range(len(players)):
                 player = system_config[players[plyr]]
@@ -273,8 +273,8 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('set with_market=0\n')
 
             for cnt in range(len(ports)):
-                outfile.write('start /b cmd /c python -c "import tesp_support.schedule_server as schedule;'
-                              'schedule.schedule_server(\'..\\%s\', %s)" ^> %s\\schedule.log 2^>^&1\n'
+                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                              'tesp.schedule_server(\'..\\%s\', %s)" ^> %s\\schedule.log 2^>^&1\n'
                               % (config_file, str(5150 + ports[cnt]), outPath))
             outfile.write('rem wait schedule server to populate\n')
             outfile.write('sleep 60\n')
@@ -305,15 +305,15 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('set FNCS_CONFIG_FILE=%s.yaml\n' % sub_val['substation'])
                 outfile.write('cd ..\n')
                 outfile.write('cd %s\n' % sub_key)
-                outfile.write('start /b cmd /c python -c "import tesp_support.substation_dsot as tesp;'
-                              'tesp.substation_loop(\'%s_agent_dict.json\',\'%s\',%%with_market%%)" ^> '
+                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                              'tesp.dso_loop_f(\'%s_agent_dict.json\',\'%s\',%%with_market%%)" ^> '
                               '%s\\%s_substation.log 2^>^&1\n'
                               % (sub_val['substation'], sub_val['substation'], outPath, sub_key))
                 outfile.write('cd ..\n')
             if master_file != '':
                 outfile.write('set FNCS_CONFIG_FILE=tso.yaml\n')
-                outfile.write('start /b cmd /c python -c "import tesp_support.fncsTSO as tesp;'
-                              'tesp.tso_loop(\'./%s\')" ^> %s\\tso.log 2^>^&1\n'
+                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                              'tesp.tso_psst_loop_f(\'./%s\')" ^> %s\\tso.log 2^>^&1\n'
                               % (master_file, outPath))
 
                 for plyr in range(len(players)):
@@ -358,8 +358,8 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('with_market=0\n\n')
 
             for cnt in range(len(ports)):
-                outfile.write('(exec python3 -c "import tesp_support.schedule_server as schedule;'
-                              'schedule.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
+                outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
+                              'tesp.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
                               % (config_file, str(5150 + ports[cnt]), outPath))
             outfile.write('# wait schedule server to populate\n')
             outfile.write('sleep 60\n')
@@ -391,16 +391,16 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('cd ..\n')
                 outfile.write('cd %s\n' % sub_key)
                 outfile.write('(export FNCS_CONFIG_FILE=%s.yaml '
-                              '&& exec python3 -c "import tesp_support.substation_dsot_v1 as tesp;'
-                              'tesp.substation_loop(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
+                              '&& exec python3 -c "import tesp_support.api as tesp;'
+                              'tesp.dso_loop_f(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
                               '%s/%s_substation.log &)\n'
                               % (sub_val['substation'], sub_val['substation'], sub_val['substation'], outPath, sub_key))
                 outfile.write('cd ..\n')
 
             if master_file != '':
                 outfile.write('(export FNCS_CONFIG_FILE=tso.yaml '
-                              '&& exec python3 -c "import tesp_support.fncsTSO as tesp;'
-                              'tesp.tso_loop(\'./%s\')" &> %s/tso.log &)\n'
+                              '&& exec python3 -c "import tesp_support.api as tesp;'
+                              'tesp.tso_psst_loop_f(\'./%s\')" &> %s/tso.log &)\n'
                               % (master_file, outPath))
                 for plyr in range(len(players)):
                     player = system_config[players[plyr]]

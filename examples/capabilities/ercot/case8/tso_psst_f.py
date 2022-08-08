@@ -1,5 +1,5 @@
 #   Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: fncsTSO.py
+# file: tso_psst_f.py
 
 import os
 import json
@@ -80,7 +80,7 @@ def shutoff_wind_plants (ppc):
       gen[i][7] = 0
 
 
-def tso_loop():
+def tso_psst_loop_f():
 
     def scucDAM(data, output, solver):
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
@@ -375,7 +375,7 @@ def tso_loop():
 
     def write_psst_file(fname, dayahead):
         fp = open(fname, 'w')
-        print('# Written by fncsTSO.py', file=fp)
+        print('# Written by tso_psst_f.py', file=fp)
         print('', file=fp)
         print('set StageSet := FirstStage SecondStage ;', file=fp)
         print('', file=fp)
@@ -1115,7 +1115,7 @@ def tso_loop():
             #    elif 'wind_power' in topic:
             #      busnum = int(topic[15:])
             #      gld_load[busnum]['windpower'] = int(val)
-        # getting the latest inputs from GridlabD
+        # getting the latest inputs from GridLAB-D
             elif 'SUBSTATION' in topic:  # gld
                 busnum = int(topic[10:])
                 p, q = parse_mva(val)
@@ -1499,4 +1499,4 @@ def tso_loop():
 
 
 if __name__ == "__main__":
-    tso_loop()
+    tso_psst_loop_f()

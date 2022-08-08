@@ -269,7 +269,7 @@ def annual_energy(month_list, folder_prefix, dso_num, metadata):
         month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
         folder_prefix (str): prefix of GLD folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
-        metadata (dict): metadata of GridLab-D model entities
+        metadata (dict): metadata of GridLAB-D model entities
     Returns:
         year_meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
         year_energysum_df: dataframe of energy consumption summations by customer class (res., commercial, and indust)

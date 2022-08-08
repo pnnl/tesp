@@ -18,10 +18,7 @@ import math
 import h5py
 import errno
 import numpy as np
-# from tesp_support.dso_helper_functions import *
-# from tesp_support.dso_helper_functions import labor, labor_increase, labor_network_admin, \
-#     labor_network_admin_increase, TEAM, labor_transactive, labor_network_admin_transactive
-import tesp_support.dso_helper_functions
+import tesp_support.dso_helper_functions as tesp
 
 
 # This dso_CFS function calculates cash flow statement ...
@@ -30,7 +27,7 @@ import tesp_support.dso_helper_functions
 # dso number
 
 # path_to_write: path to write the balance sheet
-# save_path: path to save some of the calculated values, especially the ones that take a long time
+# save_path: path to save some calculated values, especially the ones that take a long time
 
 # outputs: DSO CFS and parts (as python dictionaries or .csv)
 
@@ -247,8 +244,8 @@ def dso_CFS(case_config,
 
 
 
-    RetailDAEnergy = tesp_support.dso_helper_functions.returnDictSum(DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailDAEnergy'])
-    RetailRTEnergy = tesp_support.dso_helper_functions.returnDictSum(DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailRTEnergy'])
+    RetailDAEnergy = tesp.returnDictSum(DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailDAEnergy'])
+    RetailRTEnergy = tesp.returnDictSum(DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailRTEnergy'])
     TransactFees = metadata_general['dso_transaction_fee_per_KWh']  *  ( RetailDAEnergy + RetailRTEnergy ) /1000 * 1000
 
 
@@ -261,19 +258,19 @@ def dso_CFS(case_config,
 
     if TransactiveCaseFlag:
         MktOpsLev1Fte, MktOpsFte, MktOpsLev1Cost, MktOpsLeaderRatio, MktOpsLabor, MktOpsLeaderLevel = \
-            tesp_support.dso_helper_functions.labor_transactive('market_operations', metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
+            tesp.labor_transactive('market_operations', metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
         DerRecruiterLev1Fte, DerRecruiterFte, DerRecruiterLev1Cost, DerRecruiterLeaderRatio, AssetR_R, DerRecruiterLeaderLevel = \
-            tesp_support.dso_helper_functions.labor_transactive('DER_recruiter', metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
+            tesp.labor_transactive('DER_recruiter', metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
 
         DerNetLev1Fte, DerNetFte, DerNetLev1Cost, DerNetLeaderRatio, CustNetworkLabor, DerNetworkLeaderLevel = \
-            tesp_support.dso_helper_functions.labor_network_admin_transactive('DER_network_labor_ratios',
+            tesp.labor_network_admin_transactive('DER_network_labor_ratios',
                                                                               'network_admin_hourly_rate',
                                                                               metadata_general,
                                                                               metadata_dso, utility_type, NoSubstations,
                                                                               TransactiveCaseFlag)
 
         DerCyberLev1Fte, DerCyberFte, DerCyberLev1Cost, DerCyberLeaderRatio, CustCyberLabor, DerCyberLeaderLevel = \
-            tesp_support.dso_helper_functions.labor_network_admin_transactive('DER_cyber_labor_ratios',
+            tesp.labor_network_admin_transactive('DER_cyber_labor_ratios',
                                                                               'cyber_analyst_hourly_rate',
                                                                               metadata_general,
                                                                               metadata_dso, utility_type, NoSubstations,
@@ -286,61 +283,61 @@ def dso_CFS(case_config,
 
     CustomerServiceAgentLev1Fte, CustomerServiceAgentFte, CustomerServiceAgentLev1Cost, \
     CustomerServiceAgentLeaderRatio, CustomerServiceAgent, CustomerServiceAgentLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('customer_service_agent', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('customer_service_agent', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     LinemenLev1Fte, LinemenFte, LinemenLev1Cost, LinemenLeaderRatio, Linemen, LinemenLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('linemen', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('linemen', metadata_general, metadata_dso, utility_type, NoSubstations)
     OperatorLev1Fte, OperatorFte, OperatorLev1Cost, OperatorLeaderRatio, Operators, OperatorLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('operator', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('operator', metadata_general, metadata_dso, utility_type, NoSubstations)
     PlanningLev1Fte, PlanningFte, PlanningLev1Cost ,PlanningLeaderRatio, Planning, PlanningLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('planning', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('planning', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     MeteringLev1Fte, MeteringFte, MeteringLev1Cost, MeteringLeaderRatio, Metering, MeteringLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('metering', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('metering', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     DmsNetLev1Fte, DmsNetFte, DmsNetLev1Cost ,DmsNetLeaderRatio, DmsNetworkLabor, DmsNetLeaderLevel = \
-        tesp_support.dso_helper_functions.labor_network_admin('DMS_network_labor_ratios', 'network_admin_hourly_rate',
+        tesp.labor_network_admin('DMS_network_labor_ratios', 'network_admin_hourly_rate',
                             metadata_general, metadata_dso, utility_type, NoSubstations)
     DmsCyberLev1Fte, DmsCyberFte, DmsCyberLev1Cost, DmsCyberLeaderRatio, DmsCyberLabor, DmsCyberLeaderLevel = \
-        tesp_support.dso_helper_functions.labor_network_admin('DMS_cyber_labor_ratios', 'cyber_analyst_hourly_rate',
+        tesp.labor_network_admin('DMS_cyber_labor_ratios', 'cyber_analyst_hourly_rate',
               metadata_general, metadata_dso, utility_type, NoSubstations)
 
     BusinessNetworkTotalLabor = DmsNetworkLabor + DmsCyberLabor
     BusinessNetworkFte = DmsNetFte + DmsCyberFte
 
     LegalLev1Fte, LegalFte, LawyerLev1Cost, LawyerLeaderRatio, LegalLabor, LawyerLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('corporate_lawyer', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('corporate_lawyer', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     HRLev1Fte, HRFte, HRLev1Cost, HRLeaderRatio, HRLabor, HRLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('human_resources', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('human_resources', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     AccountingLev1Fte, AccountingFte, AccountingLev1Cost, AccountingLeaderRatio, AccountingLabor, AccountingLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('accounting', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('accounting', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     EconomicsLev1Fte, EconomicsFte, EconomicsLev1Cost, EconomicsLeaderRatio, EconomicsLabor, EconomicsLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('economist', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('economist', metadata_general, metadata_dso, utility_type, NoSubstations)
 
 
 
     BillingLev1Fte, BillingFte, BillingLev1Cost, BillingLeaderRatio, Billing, BillingLeaderLevel = \
-        tesp_support.dso_helper_functions.labor_increase('billing', metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
+        tesp.labor_increase('billing', metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
 
     AmiCyberLev1Fte, AmiCyberFte, AmiCyberLev1Cost, AmiCyberLeaderRatio, AmiCyberLabor, AmiCyberLeaderLevel = \
-        tesp_support.dso_helper_functions.labor_network_admin_increase('AMI_cyber_labor_ratios', 'cyber_analyst_hourly_rate', metadata_general,
+        tesp.labor_network_admin_increase('AMI_cyber_labor_ratios', 'cyber_analyst_hourly_rate', metadata_general,
                                      metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
 
     AmiNetLev1Fte, AmiNetFte, AmiNetLev1Cost, AmiNetLeaderRatio, AmiNetworkLabor, AmiNetworkLeaderLevel = \
-        tesp_support.dso_helper_functions.labor_network_admin_increase('AMI_network_labor_ratios', 'network_admin_hourly_rate', metadata_general,
+        tesp.labor_network_admin_increase('AMI_network_labor_ratios', 'network_admin_hourly_rate', metadata_general,
                                      metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
 
 
 
 
     AdminLev1Fte, AdminFte, AdminLev1Cost, AdminLeaderRatio, AdminLabor, AdminLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('admin', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('admin', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     PRLev1Fte, PRFte, PRLev1Cost, PRLeaderRatio, PRLabor, PRLeaderLevel = \
-        tesp_support.dso_helper_functions.labor('public_relations', metadata_general, metadata_dso, utility_type, NoSubstations)
+        tesp.labor('public_relations', metadata_general, metadata_dso, utility_type, NoSubstations)
 
 
     team_salary_escalation_1 = metadata_general['labor']['team_salary_escalation_1']
@@ -448,9 +445,9 @@ def dso_CFS(case_config,
     }
 
 
-    RSPtoDO = 0 #tesp_support.dso_helper_functions.returnDictSum(Revenues_dict) - (MktSoft + MktHdw + MktOpsLabor)
+    RSPtoDO = 0 #tesp.returnDictSum(Revenues_dict) - (MktSoft + MktHdw + MktOpsLabor)
 
-    #Revenues = tesp_support.dso_helper_functions.returnDictSum(Revenues_dict)
+    #Revenues = tesp.returnDictSum(Revenues_dict)
     #TaxesRevenues = Revenues * metadata_general['effective_income_tax_rate'][utility_type]
 
 
@@ -505,13 +502,13 @@ def dso_CFS(case_config,
                      }
                      }
 
-    OperatingExpenses = tesp_support.dso_helper_functions.returnDictSum(OperatingExpenses_dict)
+    OperatingExpenses = tesp.returnDictSum(OperatingExpenses_dict)
     #TaxExpDeduct = Expenses * metadata_general['effective_income_tax_rate'][utility_type]
     #Taxes = TaxesRevenues + TaxExpDeduct
 
-    NetIncome = tesp_support.dso_helper_functions.returnDictSum(Revenues_dict) - \
-                tesp_support.dso_helper_functions.returnDictSum(CapitalExpenses_dict) - \
-                tesp_support.dso_helper_functions.returnDictSum(OperatingExpenses_dict)
+    NetIncome = tesp.returnDictSum(Revenues_dict) - \
+                tesp.returnDictSum(CapitalExpenses_dict) - \
+                tesp.returnDictSum(OperatingExpenses_dict)
 
     DSO_Cash_Flows_dict = {
         'CapitalExpenses': CapitalExpenses_dict,
@@ -555,8 +552,8 @@ def dso_CFS(case_config,
                DmsOps + RetailOps + Admin + Space #+ TransFrom
 
 
-    FixedSales = tesp_support.dso_helper_functions.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales'])
-    TransactiveSales = tesp_support.dso_helper_functions.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales'])
+    FixedSales = tesp.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales'])
+    TransactiveSales = tesp.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales'])
     RetailSales = FixedSales + TransactiveSales
 
     Revenues = RetailSales # + TransactFees +

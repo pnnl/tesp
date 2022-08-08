@@ -1,8 +1,8 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: compare_prices.py
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 # here are the columns, after ignore 'True/False' with usecols
 plotvars = [[0, 't[s]', 'seconds'],
@@ -53,7 +53,7 @@ def MakePlotData(root):
     return hrs, lmp, lmp1, lmp2, lmp3, lmp4, lmp5
 
 
-def compare_prices(rootname):
+def compare_prices(root):
     # display a plot
     tmin = 0.0
     tmax = 48.0
@@ -61,7 +61,7 @@ def compare_prices(rootname):
 
     fig, ax = plt.subplots(1, 1, sharex='col')
 
-    hrs, lmp, lmp1, lmp2, lmp3, lmp4, lmp5 = MakePlotData(rootname)
+    hrs, lmp, lmp1, lmp2, lmp3, lmp4, lmp5 = MakePlotData(root)
     # ax.plot(hrs, lmp1, color='blue', label='LMP1')
     # ax.plot(hrs, lmp2, color='green', label='LMP2')
     # ax.plot(hrs, lmp3, color='magenta', label='LMP3')
@@ -69,7 +69,7 @@ def compare_prices(rootname):
     ax.plot(hrs, lmp5, color='orange', label='LMP5')
     ax.plot(hrs, lmp, color='red', label='LMP')
 
-    ax.set_title('Price Comparison for ' + rootname)
+    ax.set_title('Price Comparison for ' + root)
     ax.set_ylabel('$/MWHR')
     ax.set_xlabel('Hours')
     ax.grid()

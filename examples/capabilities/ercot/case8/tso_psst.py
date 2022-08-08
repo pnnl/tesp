@@ -1,5 +1,5 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
-# file: fncsTSO.py
+# file: tso_psst.py
 
 import os
 import math
@@ -82,7 +82,7 @@ def shutoff_wind_plants(ppc):
             gen[i][7] = 0
 
 
-def tso_loop():
+def tso_psst_loop():
 
     def scucDAM(data):
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
@@ -363,7 +363,7 @@ def tso_loop():
 
     def write_psst_file(fname, dayahead, zgen, zgenCost, zgenFuel, znumGen):
         fp = open(fname, 'w')
-        print('# Written by fncsTSO.py, format: psst\n', file=fp)
+        print('# Written by tso_psst.py, format: psst\n', file=fp)
         print('set StageSet := FirstStage SecondStage ;\n', file=fp)
         print('set CommitmentTimeInStage[FirstStage] := 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 ;', file=fp)
         print('set CommitmentTimeInStage[SecondStage] := ;\n', file=fp)
@@ -1082,7 +1082,7 @@ def tso_loop():
     new_event = False
     while ts <= tmax:
         # start by getting the latest inputs from GridLAB-D and the auction
-        # see another example for helics integration at fncsPYPOWER.py
+        # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
@@ -1114,7 +1114,7 @@ def tso_loop():
                 elif 'RESPONSIVE_DEG' in topic:
                     gld_load[busnum]['deg'] = helics.helicsInputGetInteger(sub)
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['deg']))
-            # getting the latest inputs from GridlabD
+            # getting the latest inputs from GridLAB-D
                 elif 'DISTRIBUTION_LOAD' in topic:  # gld
                     val = helics.helicsInputGetComplex(sub)  # TODO: helics needs to return complex instead of tuple
                     gld_load[busnum]['p'] = val[0] / 100000.0  # MW
@@ -1496,4 +1496,4 @@ def tso_loop():
 
 
 if __name__ == "__main__":
-    tso_loop()
+    tso_psst_loop()

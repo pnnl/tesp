@@ -70,8 +70,8 @@ class EVDSOT:
         pm_lo (float): Lowest possible profit margin in %
         RT_state_maintaing (boolean): true if battery must maintain charging or discharging state for 1 hour
         RT_state_maintaing_flag (int): (0) not define at current hour (-1) charging (+1) discharging
-        RT_FNCS_flag (boolean): if True, FNCS has to update Gridlab-D
-        inv_P_setpoint (float): next Gridlab-D inverter power output
+        RT_FNCS_flag (boolean): if True, FNCS has to update GridLAB-D
+        inv_P_setpoint (float): next GridLAB-D inverter power output
         optimized_Quantity (float) (1 X Window Length): Optimized quantity
         #not used if not biding DA
         prev_clr_Quantity (float) (1 X Window Length): cleared quantities (kWh) from previous market iteration for all hours

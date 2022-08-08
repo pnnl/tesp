@@ -1,9 +1,9 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: substation_dsot.py
+# file: substation_dsot_f.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
 
 Public Functions:
-    :substation_loop: initializes and runs the agents
+    :dso_loop_f: initializes and runs the agents
 
 """
 import sys
@@ -45,7 +45,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     Args:
         configfile (str): fully qualified path to the JSON agent configuration file
-        metrics_root (str): base name of the case for metrics output
+        metrics_root (str): base name of the case for input/output
         with_market (bool): flag that determines if we run with markets
     """
 
@@ -151,7 +151,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     parallel = Parallel(n_jobs=_NUM_CORE, backend=_backend, verbose=_verbose)
 
     dso_config = {}
-    topic_map = {}  # Map to dispatch incoming FNCS messages. Format [<key>][<receiving object function>]
+    topic_map = {}  # Map to dispatch incoming messages. Format [<key>][<receiving object function>]
     dso_market_obj = {}
     dso_unit = 'kW'  # default that will be overwritten by the market definition
     retail_market_obj = {}
@@ -159,13 +159,14 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     retail_period_rt = 300  # default that will be overwritten by the market definition
     retail_unit = 'kW'  # default that will be overwritten by the market definition
 
-    # instantiate the forecasting object and map their fncs input
-    forecast_obj = Forecasting(port,config['markets']['Q_bid_forecast_correction'])  # make object
+    # instantiate the forecasting object and map their message input
+    forecast_obj = Forecasting(port, config['markets']['Q_bid_forecast_correction'])  # make object
     # first, set the simulation year
     forecast_obj.set_sch_year(current_time.year)
     # All schedules are served up through schedule_server.py
     # For reference all schedules paths  [support_path+'name'+'csv']
-    # support_path = '../../../../data/schedules/'
+    # tesp_share = os.path.expandvars('$TESPDIR/data/')
+    # support_path = tesp_share + 'schedules/'
     # appliance_sch = ['responsive_loads', 'unresponsive_loads']
     # wh_sch = ['small_1', 'small_2', 'small_3', 'small_4', 'small_5', 'small_6',
     #           'large_1', 'large_2', 'large_3', 'large_4', 'large_5', 'large_6']
@@ -205,8 +206,9 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             if dso_market_obj.number_of_gld_homes > 0.1:  # this is the number when you don't have any feeders
                 use_ref = False
                 scale = (dso_market_obj.num_of_customers * dso_market_obj.customer_count_mix_residential / dso_market_obj.number_of_gld_homes)
+            log.info('Use reference load -> ' + str(use_ref))
 
-            # map FNCS topics
+            # map topics
             topic_map['gld_load'] = [dso_market_obj.set_total_load]
             topic_map['ind_rt_load'] = [dso_market_obj.set_ind_load]
             topic_map['ind_load_history'] = [dso_market_obj.set_ind_load_da]
@@ -233,7 +235,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             retail_full_metrics = config['markets'][key]['full_metrics_detail']  # True for full
             log.info('instantiated Retail market agent')
 
-    # instantiate the HVAC controller objects and map their FNCS inputs
+    # instantiate the HVAC controller objects and map their message inputs
     hvac_agent_objs = {}
     hvac_keys = list(config['hvacs'].keys())
     for key in hvac_keys:
@@ -266,22 +268,23 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             topic_map[weather_topic + '#SolarDirect'] = [hvac_agent_objs[key].set_solar_direct]
         else:
             topic_map[weather_topic + '#SolarDirect'].append(hvac_agent_objs[key].set_solar_direct)
+
         if weather_topic + '#SolarDiffuse' not in topic_map.keys():
             topic_map[weather_topic + '#SolarDiffuse'] = [hvac_agent_objs[key].set_solar_diffuse]
         else:
             topic_map[weather_topic + '#SolarDiffuse'].append(hvac_agent_objs[key].set_solar_diffuse)
 
-        # map FNCS topics
+        # map topics
         topic_map[key + '#Tair'] = [hvac_agent_objs[key].set_air_temp]
         topic_map[key + '#V1'] = [hvac_agent_objs[key].set_voltage]
         topic_map[key + '#HvacLoad'] = [hvac_agent_objs[key].set_hvac_load]
         topic_map[key + '#TotalLoad'] = [hvac_agent_objs[key].set_house_load]
         topic_map[key + '#On'] = [hvac_agent_objs[key].set_hvac_state]
-        #topic_map[key + '#Demand'] = [hvac_agent_objs[key].set_hvac_demand]
+        # topic_map[key + '#Demand'] = [hvac_agent_objs[key].set_hvac_demand]
         topic_map[key + '#whLoad'] = [hvac_agent_objs[key].set_wh_load]
     log.info('instantiated %s HVAC control agents' % (len(hvac_keys)))
 
-    # instantiate the water heater controller objects and map their FNCS inputs
+    # instantiate the water heater controller objects and map their message inputs
     water_heater_agent_objs = {}
     water_heater_keys = []
     house_keys = list(config_glm['houses'].keys())  # each house will have a water heater
@@ -294,7 +297,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 gld_row = config_glm['houses'][key]
                 water_heater_agent_objs[key] = WaterHeaterDSOT(row, gld_row, key, 11, current_time, solver)
 
-                # map FNCS topics
+                # map topics
                 topic_map[wh_key + '#LTTEMP'] = [water_heater_agent_objs[key].set_wh_lower_temperature]
                 topic_map[wh_key + '#UTTEMP'] = [water_heater_agent_objs[key].set_wh_upper_temperature]
                 topic_map[wh_key + '#LTState'] = [water_heater_agent_objs[key].set_wh_lower_state]
@@ -305,18 +308,18 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 log.info('Error {}, wh_name in key={}'.format(e, key))
     log.info('instantiated %s water heater control agents' % (len(water_heater_keys)))
 
-    # instantiate the Battery controller objects and map their FNCS inputs
+    # instantiate the Battery controller objects and map their message inputs
     battery_agent_objs = {}
     battery_keys = list(config['batteries'].keys())
     for key in battery_keys:
         row = config['batteries'][key]
         gld_row = config_glm['inverters'][key]
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
-        # map FNCS topics
+        # map topics
         topic_map[key + '#SOC'] = [battery_agent_objs[key].set_battery_SOC]
-    log.info('instantiated %s Battery control agents' % (len(battery_keys)))
+    log.info('instantiated %s battery control agents' % (len(battery_keys)))
 
-    # instantiate the ev controller objects and map their FNCS inputs
+    # instantiate the ev controller objects and map their message inputs
     ev_agent_objs = {}
     ev_keys = list(config['ev'].keys())
     for key in ev_keys:
@@ -324,19 +327,19 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         gld_row = config_glm['ev'][row['houseName']]
         ev_agent_objs[key] = EVDSOT(row, gld_row, key, 11, current_time, solver)
 
-        # map FNCS topics
+        # map topics
         topic_map[key + '#SOC'] = [ev_agent_objs[key].set_ev_SOC]
-    log.info('instantiated %s EV control agents' % (len(ev_keys)))
+    log.info('instantiated %s electric vehicle control agents' % (len(ev_keys)))
 
-    # instantiate the pv objects and map their FNCS inputs
+    # instantiate the pv objects and map their message inputs
     pv_agent_objs = {}
     pv_keys = list(config['pv'].keys())
     for key in pv_keys:
         row = config['pv'][key]
         gld_row = config_glm['inverters'][key]
         pv_agent_objs[key] = PVDSOT(row, gld_row, key, 11, current_time)
-        # nothing to map as FNCS topics
-    log.info('instantiated %s PV agents' % (len(pv_keys)))
+        # nothing to map as topics
+    log.info('instantiated %s solar control agents' % (len(pv_keys)))
     # read and store yearly pv forecast tape
 
     site_dictionary = config['site_agent']
@@ -541,8 +544,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 ('DA_bid_quantity', '$'),
                 ('cleared_price', '$'),
                 ('agent_RT_price', '$'),
-                ('DA_temp','F'),
-                ('DA_price','$'),
+                ('DA_temp', 'F'),
+                ('DA_price', '$'),
             ],
             file_string='hvac_agent_{}_300'.format(metrics_root),
             collector=collector,
@@ -614,7 +617,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     billing_set_defaults = True
 
     # interval for metrics recording
-    # HACK: gld will be typically be on an (even) hour, so we will offset our frequency by 30 minutes (should be on the .5 hour)
+    # HACK: gld will be typically be on an (even) hour,
+    # so we will offset our frequency by 30 minutes (should be on the .5 hour)
     metrics_record_interval = 7200  # will actually be x2 after first round
     tnext_write_metrics_cnt = 1
     tnext_write_metrics = metrics_record_interval + 1800
@@ -664,21 +668,21 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     ames_lmp = False
     timing(proc[0], False)
 
-    # initialize FNCS
+    log.info("Initialize FNCS dso federate")
     fncs.initialize()
 
     timing(proc[1], True)
     while time_granted < simulation_duration:
         # determine the next FNCS time
         timing(proc[16], True)
-        next_fncs_time =\
+        next_time =\
             int(min([tnext_historic_load_da, tnext_water_heater_update,
                      tnext_retail_bid_rt, tnext_retail_bid_da, tnext_dso_bid_rt, tnext_dso_bid_da,
                      tnext_wholesale_bid_rt, tnext_wholesale_bid_da, tnext_wholesale_clear_rt, tnext_wholesale_clear_da,
                      tnext_dso_clear_rt, tnext_dso_clear_da, tnext_retail_clear_da, tnext_retail_clear_rt,
                      tnext_retail_adjust_rt, tnext_write_metrics, simulation_duration]))
-        fncs.update_time_delta(next_fncs_time - time_granted)
-        time_granted = fncs.time_request(next_fncs_time)
+        fncs.update_time_delta(next_time - time_granted)
+        time_granted = fncs.time_request(next_time)
         time_delta = time_granted - time_last
         time_last = time_granted
         timing(proc[16], False)
@@ -730,7 +734,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                         # these function has 2 additional inputs for logging
                         topic_map[topic][itopic](value, 11, current_time)
                     else:
-                        topic_map[topic][itopic](value)  # calls function to update the value in object. For details see topicMap
+                            # calls function to update the value in object. For details see topicMap
+                            topic_map[topic][itopic](value)
             else:
                 log.warning('Unknown topic received from FNCS ({:s}), dropping it'.format(topic))
 
@@ -1055,14 +1060,13 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 timing(p_age.__class__.__name__, False)
                 retail_market_obj.curve_aggregator_DA('Buyer', bid, p_age.name)
 
-
-            #colect angent only DA quantities and price
+            # collect agent only DA quantities and price
             # retail_market_obj.AMES_DA_agent_quantities=dict()
             # retail_market_obj.AMES_DA_agent_prices=dict()
             # for idx in range(retail_market_obj.windowLength):
             #     retail_market_obj.AMES_DA_agent_quantities[idx] = retail_market_obj.curve_buyer_DA[idx].quantities
             #     retail_market_obj.AMES_DA_agent_prices[idx]     = retail_market_obj.curve_buyer_DA[idx].prices
-            # #scaling DA agent only AMES bid before convert_2_AMES_quadratic_BID
+            # scaling DA agent only AMES bid before convert_2_AMES_quadratic_BID
             # for idx in range(retail_market_obj.windowLength):
             #     retail_market_obj.AMES_DA_agent_quantities[idx] = retail_market_obj.AMES_DA_agent_quantities[idx]*scale
 
@@ -1187,8 +1191,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         # ----------------------------------------------------------------------------------------------------
         if time_granted >= tnext_wholesale_bid_rt:
             gld_load_scaled_mean = gld_load_rolling_mean * scale
-            log.info('AMES-RT-Bid-current real-time cleared bid -> ' + str((retail_cleared_quantity_RT) / 1.0e3) + ' MW')
-            log.info('AMES-RT-Bid-current real-time gld mean load scaled -> ' + str((gld_load_scaled_mean) / 1.0e3) + ' MW')
+            log.info('AMES-RT-Bid-current real-time cleared bid -> ' + str(retail_cleared_quantity_RT / 1.0e3) + ' MW')
+            log.info('AMES-RT-Bid-current real-time gld mean load scaled -> ' + str(gld_load_scaled_mean / 1.0e3) + ' MW')
 
             if not use_ref:
                 log.info('AMES-RT-Bid-current current real-time gld mean load scaled + industrial load -> ' +
@@ -1212,7 +1216,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             # retail_cleared_quantity_RT -= load_base_for_wholesale
             log.info("-- wholesale AMES real-time bidding --")
             log.info('current real-time cleared quantities -> ' + str(retail_cleared_quantity_RT) + ' kW')
-            log.info('current real-time corrected cleared quantities -> ' + str(retail_market_obj.cleared_quantity_RT_for_AMES ) + ' kW')
+            log.info('current real-time corrected cleared quantities -> ' + str(retail_market_obj.cleared_quantity_RT_for_AMES) + ' kW')
 
             retail_market_obj.curve_aggregator_AMES_RT(retail_market_obj.curve_buyer_RT_for_AMES, dso_market_obj.DSO_Q_max,  retail_market_obj.cleared_quantity_RT_for_AMES, forecast_obj.retail_price_forecast[0])  # makes AMES_RT
 
@@ -1261,7 +1265,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                          ', unresponsive:' + str(retail_market_obj.AMES_DA[idx][0]) +
                          ', responsive max:' + str(retail_market_obj.AMES_DA[idx][1]))
 
-            da_bid['unresp_mw']=forecast_obj.correcting_Q_forecast_10_AM(da_bid['unresp_mw'], offset, day_of_week)
+            da_bid['unresp_mw'] = forecast_obj.correcting_Q_forecast_10_AM(da_bid['unresp_mw'], offset, day_of_week)
             
             fncs.publish('da_bid', json.dumps(da_bid))
 
@@ -1328,11 +1332,11 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
             # the actual load is the unresponsive load, plus a cleared portion of the responsive load
             try:
-                lmp_rt = dso_market_obj.lmp_rt[0]   # fncsTSO sends the price in $/MWh
-                dso_market_obj.active_power_rt = (dso_market_obj.cleared_q_rt * 1.0e3) + retail_cleared_quantity_diff_observed_last  # fncsTSO sends back the total quantity in MW
+                lmp_rt = dso_market_obj.lmp_rt[0]   # TSO sends the price in $/MWh
+                dso_market_obj.active_power_rt = (dso_market_obj.cleared_q_rt * 1.0e3) + retail_cleared_quantity_diff_observed_last  # TSO sends back the total quantity in MW
                 ames_lmp = True
             except:
-                dso_market_obj.active_power_rt = retail_market_obj.cleared_quantity_RT_for_AMES + retail_cleared_quantity_diff_observed_last # fncsTSO sends back the total quantity in MW
+                dso_market_obj.active_power_rt = retail_market_obj.cleared_quantity_RT_for_AMES + retail_cleared_quantity_diff_observed_last  # TSO sends back the total quantity in MW
                 lmp_rt = dso_market_obj.default_lmp * 1.0e3
                 log.info("No AMES running -- assigned a default lmp using the lmp forecaster")
 
@@ -1342,7 +1346,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             unresp_rt = retail_market_obj.AMES_RT[0] * 1.0e3  # Retail agent had prepared bid in MW
             # resp_rt = (dso_market_obj.cleared_q_rt - retail_market_obj.AMES_RT[0]) * 1.0e3
             # dso_market_obj.active_power_rt = unresp_rt + resp_rt
-            dso_market_obj.reactive_power_rt = ((dso_market_obj.active_power_rt) * dso_config['Qnom'] / dso_config['Pnom'])
+            dso_market_obj.reactive_power_rt = (dso_market_obj.active_power_rt * dso_config['Qnom'] / dso_config['Pnom'])
 
             log.info('wholesale real-time cleared quantity  --> ' + str(dso_market_obj.active_power_rt / 1.0e3) + ' MW')
             log.info('wholesale real-time cleared price     --> ' + str(lmp_rt) + ' $/MWh')
@@ -1374,14 +1378,14 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             qf = (dso_config['Qnom'] / dso_config['Pnom'])
             for ii in range(24):
                 try:
-                    lmp_da.append(dso_market_obj.lmp_da[ii] / 1.0e3)  # fncsTSO sends the price in $/MWh
+                    lmp_da.append(dso_market_obj.lmp_da[ii] / 1.0e3)  # TSO sends the price in $/MWh
                 except:
                     lmp_da.append(0.0)
                 c1 = retail_market_obj.AMES_DA[ii][3]
                 c2 = retail_market_obj.AMES_DA[ii][2]
                 resp_max = retail_market_obj.AMES_DA[ii][1]
                 unresp_da.append(retail_market_obj.AMES_DA[ii][0] * 1.0e3)  # Retail agent had prepared bid in MW)
-                # resp_da.append((dso_market_obj.cleared_q_da[ii]-retail_market_obj.AMES_DA[ii][0]) * 1.0e3) # fncsTSO sends the quantity back in MW
+                # resp_da.append((dso_market_obj.cleared_q_da[ii]-retail_market_obj.AMES_DA[ii][0]) * 1.0e3) # TSO sends the quantity back in MW
                 # TODO: Fix this
                 dso_market_obj.active_power_total_da.append(dso_market_obj.cleared_q_da[ii] * 1.0e3)  # active power
                 dso_market_obj.reactie_power_total_da.append((dso_market_obj.cleared_q_da[ii] * 1.0e3) * qf)  # reactive power
@@ -1436,7 +1440,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 log.info("Current DSO price received from AMES-->" + str(lmp_rt / 1.0e3) + '$/kWh')
                 log.info("Current DSO quantity received from AMES-->" + str(dso_market_obj.active_power_rt / 1.0e3) + 'MW')
                 log.info("Current DSO projected price on curve -->" + str(dso_market_obj.Pwclear_RT) + '$/kWh')
-                log.info("Current DSO projected quantity on curve -->" + str(dso_market_obj.trial_cleared_quantity_RT / 1.0e3 ) + 'MW')
+                log.info("Current DSO projected quantity on curve -->" + str(dso_market_obj.trial_cleared_quantity_RT / 1.0e3) + 'MW')
                 log.info("Current DSO Clear Type from AMES -->" + str(dso_market_obj.trial_clear_type_RT))
             else:
                 dso_market_obj.set_Pwclear_RT(hour_of_day, day_of_week)
@@ -1518,8 +1522,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             log.info('current retail real-time cleared quantity unscaled -> ' + str(retail_market_obj.cleared_quantity_RT_unscaled / 1.0e3) + ' MW')
             log.info('current gld load -> ' + str(dso_market_obj.total_load / 1.0e3) + ' MW')
             log.info('current gld load mean -> ' + str(gld_load_rolling_mean / 1.0e3) + ' MW')
-            log.info('current diff (gld_mean minus cleared bid)'+str(-retail_market_obj.cleared_quantity_RT_unscaled+gld_load_rolling_mean)+ ' kW')
-            log.info('current diff (gld_inst minus cleared bid)'+str(-retail_market_obj.cleared_quantity_RT_unscaled+dso_market_obj.total_load)+ ' kW')
+            log.info('current diff (gld_mean minus cleared bid)' + str(-retail_market_obj.cleared_quantity_RT_unscaled+gld_load_rolling_mean) + ' kW')
+            log.info('current diff (gld_inst minus cleared bid)' + str(-retail_market_obj.cleared_quantity_RT_unscaled+dso_market_obj.total_load) + ' kW')
 
             if with_market:
                 for key, obj in hvac_agent_objs.items():
@@ -1771,11 +1775,11 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     fncs.publish(obj.name + '/price', retail_market_obj.cleared_price_RT)
                     if obj.participating and obj.bid_accepted(11, current_time):
                         # if HVAC real-time bid is accepted adjust the cooling setpoint in GridLAB-D
-                        #if obj.thermostat_mode == 'Cooling':
+                        # if obj.thermostat_mode == 'Cooling':
                         fncs.publish(obj.name + '/cooling_setpoint', obj.cooling_setpoint)
-                        #elif obj.thermostat_mode == 'Heating':
+                        # elif obj.thermostat_mode == 'Heating':
                         fncs.publish(obj.name + '/heating_setpoint', obj.heating_setpoint)
-                        #else:
+                        # else:
                         #    continue
 
                     timing(proc[17], True)
@@ -1914,7 +1918,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     timing(proc[17], True)
     collector.finalize_writing()
     timing(proc[17], False)
-    log.info('finalizing FNCS')
+    log.info('finalizing FNCS dso federate')
     timing(proc[1], False)
     op = open('timing.csv', 'w')
     print(proc_time, sep=', ', file=op, flush=True)
@@ -1923,7 +1927,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     fncs.finalize()
 
 
-def substation_loop(configfile, metrics_root, with_market):
+def dso_loop_f(configfile, metrics_root, with_market):
     """Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
@@ -1935,7 +1939,7 @@ def substation_loop(configfile, metrics_root, with_market):
 
     inner_substation_loop(configfile, metrics_root, market)
 
-     # Code that can be used to profile the substation
+# Code that can be used to profile the substation
 #    import cProfile
 #    command = """inner_substation_loop(configfile, metrics_root, with_market)"""
 #    cProfile.runctx(command, globals(), locals(), filename="profile.stats")
@@ -1955,5 +1959,5 @@ def substation_loop(configfile, metrics_root, with_market):
         for name, desc in resource_names:
             print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
 
-#for debugging
-#substation_loop('Substation_1_agent_dict.json', 'Substation_1', 1)
+# for debugging
+# dso_loop_f('Substation_1_agent_dict.json', 'Substation_1', 1)

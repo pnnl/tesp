@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: fncsPYPOWER.py
+# file: tso_PYPOWER_f.py
 """ PYPOWER solutions under control of FNCS or HELICS for te30 and dsot, sgip1 examples
 
 Public Functions:
@@ -24,7 +24,7 @@ if sys.platform != 'win32':
     import resource
 
 
-def pypower_loop(casefile, rootname, helicsConfig=None):
+def tso_pypower_loop_f(casefile, rootname, helicsConfig=None):
     """ Public function to start PYPOWER solutions under control of FNCS
 
     The time step, maximum time, and other data must be set up in a JSON file.

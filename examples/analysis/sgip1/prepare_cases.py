@@ -3,7 +3,7 @@ import shutil
 
 import tesp_support.api as tesp
 
-tmy_file = os.getenv('TESPDIR') + '/data/weather/AZ-Tucson_International_Ap.tmy3'
+tmy_file = os.path.expandvars('$TESPDIR/data/') + 'weather/AZ-Tucson_International_Ap.tmy3'
 tesp.weathercsv(tmy_file, 'weather.dat', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 2013)
 
 tesp.glm_dict('SGIP1a', te30=True)

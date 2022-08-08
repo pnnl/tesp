@@ -63,6 +63,7 @@ object fncs_msg {
 
 #ifdef USE_HELICS
 object helics_msg {
+  name gridlabdweatheragent;
   configure helics_gld.json;
 }
 #endif

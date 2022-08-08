@@ -129,7 +129,7 @@ def dso_loop(casename):
     helics.helicsFederateEnterExecutingMode(hFed)
 
     while ts <= tmax:
-        # see another example for helics integration at fncsPYPOWER.py
+        # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)

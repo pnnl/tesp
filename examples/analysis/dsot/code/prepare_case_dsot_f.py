@@ -18,7 +18,7 @@ import tesp_support.glm_dict_dsot as gd
 import tesp_support.commbldgenerator as com_FG
 import tesp_support.feederGenerator_dsot as res_FG
 import tesp_support.copperplateFeederGenerator_dsot as cp_FG
-import prep_substation_dsot_v3 as prep
+import prep_substation_dsot_f as prep
 
 
 # Simulation settings for the this experimental case

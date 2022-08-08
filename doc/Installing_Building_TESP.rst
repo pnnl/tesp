@@ -66,7 +66,7 @@ Setting Up TESP Environment
 ---------------------------
 After getting all the TESP software built, prior to running any of the included examples, be sure to set up the compute environment so that all the new TESP software can be found by the system. The `tespEnv` file is added at the same level as the root `tesp` folder and it contains all the environment configuration you'll need. 
 
-::
+.. code-block:: shell-session
 
     source tespEnv
     
@@ -83,24 +83,23 @@ TESP includes a small script that attempts to run a trivial command with each of
 
 .. code-block:: text
 
-++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++
+    ++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++
 
-FNCS, installed
+    FNCS, installed
 
-HELICS, 3.1.0 (2021-11-24)
+    HELICS, 3.1.0 (2021-11-24)
 
-HELICS Java, 3.1.1-main-g9a5726ba9 (2022-04-01)
+    HELICS Java, 3.1.1-main-g9a5726ba9 (2022-04-01)
 
-GridLAB-D 4.3.0-18941 (Navajo [725bec8d:develop:Mod]) 64-bit LINUX RELEASE
+    GridLAB-D 4.3.0-18941 (Navajo [725bec8d:develop:Mod]) 64-bit LINUX RELEASE
 
-EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
+    EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
 
-NS-3, installed
+    NS-3, installed
 
-Ipopt 3.13.2 (x86_64-pc-linux-gnu), ASL(20190605)
+    Ipopt 3.13.2 (x86_64-pc-linux-gnu), ASL(20190605)
 
-
-++++++++++++++  TESP versions has been installed! That's all folks!  ++++++++++++++
+    ++++++++++++++  TESP versions has been installed! That's all folks!  ++++++++++++++
 
 
 If you see any messages indicating `command not found` if indicates one of the software packages did not install correctly.
@@ -109,99 +108,100 @@ Check directory structure
 .........................
 An easy manual high-level check to see if TESP installed correctly is to look at the directory structure that was installed and make sure everything ended up in the right place. This can easily be done by running `tree -L 3` from inside the top-level `tesp` folder. Your output should look something like this:
 
-
 .. code-block:: text
  
     tesp
-    ├── installed
-    │   ├── bin
-    │   │   ├── eplus_agent
-    │   │   ├── eplus_agent_helics
-    │   │   ├── fncs_*
-    │   │   ├── gridlabd
-    │   │   ├── gridlabd.sh
-    │   │   ├── helics_*
-    │   │   ├── ipopt
-    │   │   ├── ipopt_sens
-    │   │   ├── mini_federate
-    │   │   ├── ns3-*
-    │   │   └── test_comm
-    │   ├── energyplus
-    │   │   ├── ...
-    │   ├── include
-    │   │   ├── coin-or
-    │   │   ├── fncs.h
-    │   │   ├── fncs.hpp
-    │   │   ├── gridlabd
-    │   │   ├── helics
-    │   │   └── ns3-dev
-    │   ├── java
-    │   │   ├── fncs.jar
-    │   │   ├── helics-2.8.0.jar
-    │   │   ├── helics.jar -> helics-2.8.0.jar
-    │   │   ├── libhelicsJava.so
-    │   │   └── libJNIfncs.so
-    │   ├── lib
-    │   │   ├── cmake
-    │   │   ├── gridlabd
-    │   │   ├── libcoinasl.*
-    │   │   ├── libcoinmumps.*
-    │   │   ├── libfncs.*
-    │   │   ├── libhelics*
-    │   │   ├── libipoptamplinterface.*
-    │   │   ├── libipopt.*
-    │   │   ├── libns3*
-    │   │   ├── libsipopt.*
-    │   │   └── pkgconfig
-    │   └── share
-    │       ├── doc
-    │       ├── gridlabd
-    │       ├── helics
-    │       ├── java
-    │       └── man
+    ├── venv
+    │   ├── bin
+    │   │   ├── ...
+    │   │   ├── python
+    │   │   └── python3
+    │   ├── man
+    │   ├── include
+    │   ├── lib
+    │   │   └── python3.8
+    │   └── share
+    │       ├── man
+    │       └── doc
+    ├── tenv
+    │   ├── bin
+    │   │   ├── eplus_agent*
+    │   │   ├── fncs*
+    │   │   ├── gridlabd*
+    │   │   ├── helics*
+    │   │   ├── ipopt*
+    │   │   ├── mini_federate
+    │   │   ├── ns3-*
+    │   │   └── test_comm
+    │   ├── energyplus
+    │   │   ├── ...
+    │   ├── include
+    │   │   ├── coin-or
+    │   │   ├── fncs.h
+    │   │   ├── fncs.hpp
+    │   │   ├── gridlabd
+    │   │   ├── helics
+    │   │   └── ns3-dev
+    │   ├── java
+    │   │   ├── fncs.jar
+    │   │   ├── helics-2.8.0.jar
+    │   │   ├── helics.jar -> helics-2.8.0.jar
+    │   │   ├── libhelicsJava.so
+    │   │   └── libJNIfncs.so
+    │   ├── lib
+    │   │   ├── cmake
+    │   │   ├── gridlabd
+    │   │   ├── libcoinasl.*
+    │   │   ├── libcoinmumps.*
+    │   │   ├── libfncs.*
+    │   │   ├── libhelics*
+    │   │   ├── libipoptamplinterface.*
+    │   │   ├── libipopt.*
+    │   │   ├── libns3*
+    │   │   ├── libsipopt.*
+    │   │   └── pkgconfig
+    │   └── share
+    │       ├── doc
+    │       ├── gridlabd
+    │       ├── helics
+    │       ├── java
+    │       └── man
     ├── repository
-    │   ├── EnergyPlus
-    │   │   ├── ...
-    │   ├── fncs
-    │   │   ├── ...
-    │   ├── gridlab-d
-    │   │   ├── ...
-    │   ├── HELICS-src
-    │   │   ├── ...
-    │   ├── KLU_DLL
-    │   │   ├── ...
-    │   ├── ns-3-dev
-    │   │   ├── ...
-    │   ├── psst
-    │   │   ├── ...
-    │   ├── pybindgen
-    │   │   ├── ...
-    │   └── tesp
-    │       ├── ...
-    └── software
-        ├── Ipopt
-        │   ├── ...
-        ├── ThirdParty-ASL
-        │   ├── ...
-        ├── ThirdPart-Mumps
-        │   ├── ...
-
-
-
-
+    │   ├── Ames-V5.0
+    │   ├── EnergyPlus
+    │   ├── fncs
+    │   ├── gridlab-d
+    │   ├── HELICS-src
+    │   ├── Ipopt
+    │   ├── KLU_DLL
+    │   ├── ns-3-dev
+    │   ├── tesp
+    │   ├── ThirdParty-ASL
+    └── └── ThirdPart-Mumps
 
 Shorter Autotest: Example Subset
 ...................................
-A (relatively) shorter autotest script has been written that tests many (but not all) of the installed examples to verify the installation was successful. This test can be run as follows:
+A (relatively) shorter autotest script has been written that tests many (but not all) of the
+installed examples to verify the installation was successful. This test can be run as follows
+and assumes the commandline prompt '~/tesp$' in the TESP root directory:
 
 .. code-block:: shell-session
     :caption: TESP example subset autotest
 
-    source tespEnv
-    cd tesp/repository/tesp/
-    python3 autotest.py
+    ~/tesp$ source tespEnv
+    (TESP) ~/tesp$ cd tesp/repository/tesp/
+    (TESP) ~/tesp/repository/tesp$ python3 autotest.py
+    (TESP) ~/tesp/repository/tesp$ deactivate
+    ~/tesp/repository/tesp$
 
-The first command is essential after starting a terminal session prior to running anything in TESP for the first time. If you don't, simulations will generally fail for lack of being able to find their dependencies. If things aren't working, double-check to make sure you sourced the file.
+
+The first command is essential after starting a terminal session prior to running anything in
+TESP for the first time. After running the first line, the prompt now shows the prefix `(TESP)` being using for the variable environment.
+If you don't run the first line, simulations will generally fail for lack of being able to find their dependencies.
+If things aren't working, double-check to make sure your commandline shows the prefix `(TESP)`.
+
+The forth command, 'deactivate', returns the environment path to the state it was before the the first command started and remove the `(TESP)` prefix from the prompt.
+All other environment variables are present but path and the TESP python may be present, depending on your configuration.
    
 Even this subset of examples can take several hours to run (roughly 3.5 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
 

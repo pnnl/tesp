@@ -147,7 +147,7 @@ export FNCS_LOG_LEVEL=$fncsLOGlevel && \
 export PYPOWER_LOG_LEVEL=$ppLOGlevel && \
 export FNCS_FATAL=YES && \
 cd ${SCEN_ROOT} && \
-python -c "import tesp_support.api as tesp;tesp.pypower_loop('${scenarioName}_pp.json','${scenarioName}')" > $ppOutFile 2>&1 &
+python -c "import tesp_support.api as tesp;tesp.tso_pypower_loop_f('${scenarioName}_pp.json','${scenarioName}')" > $ppOutFile 2>&1 &
 
 # ================================================ starting GridLAB-D ===============================================================
 for ((i=0; i<$gldNum; i++)); do

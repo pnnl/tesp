@@ -184,7 +184,8 @@ def read_agent_metrics(path, nameroot, dictname = '', print_dictionary=False):
     if this_max_p > max_p:
       max_p = this_max_p
       cidx = i
-  print ('Out of {:d} controllers, {:d} submitted bids and the highest bidder was {:s} [{:d}]'.format (len(c_keys), nbidding, c_keys[cidx], cidx))
+  print('Out of {:d} controllers, {:d} submitted bids and the highest bidder was {:s} [{:d}]'
+        .format(len(c_keys), nbidding, c_keys[cidx], cidx))
 
   dict = {}
   dict['hrs'] = hrs

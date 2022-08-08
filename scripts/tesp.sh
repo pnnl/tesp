@@ -108,8 +108,8 @@ cd tesp || exit
 echo "Install a virtual python environment to $HOME/tesp/venv"
 mkdir -p venv
 python3 -m venv $HOME/tesp/venv --prompt TESP
-echo "Install executables environment to $HOME/tesp/installed"
-mkdir -p installed
+echo "Install executables environment to $HOME/tesp/tenv"
+mkdir -p tenv
 echo "Install repositories to $HOME/tesp/repository"
 mkdir -p repository
 cd repository || exit

@@ -3,7 +3,7 @@
 """Manages the Transactive Control scheme for DSO+T implementation version 1
 
 Public Functions:
-    :substation_loop: initializes and runs the agents
+    :dso_loop: initializes and runs the agents
 
 """
 import sys
@@ -30,7 +30,7 @@ try:
     import helics
 except ImportError:
     # helics = None
-    print('WARNING: unable to load helics module.', flush=True)
+    print('WARNING: unable to load HELICS module.', flush=True)
 
 if sys.platform != 'win32':
     import resource
@@ -172,7 +172,8 @@ def inner_substation_loop(metrics_root, with_market):
     forecast_obj.set_sch_year(current_time.year)
     # All schedules are served up through schedule_server.py
     # For reference all schedules paths  [support_path+'name'+'csv']
-    # support_path = '../../../../data/schedules/'
+    # tesp_share = os.path.expandvars('$TESPDIR/data/')
+    # support_path = tesp_share + 'schedules/'
     # appliance_sch = ['responsive_loads', 'unresponsive_loads']
     # wh_sch = ['small_1', 'small_2', 'small_3', 'small_4', 'small_5', 'small_6',
     #           'large_1', 'large_2', 'large_3', 'large_4', 'large_5', 'large_6']
@@ -673,7 +674,7 @@ def inner_substation_loop(metrics_root, with_market):
     ames_lmp = False
     timing(proc[0], False)
 
-    log.info("Initialize HELICS tso federate")
+    log.info("Initialize HELICS dso federate")
     hFed = helics.helicsCreateValueFederateFromConfig("./" + metrics_root + ".json")
     fedName = helics.helicsFederateGetName(hFed)
     subCount = helics.helicsFederateGetInputCount(hFed)
@@ -1075,7 +1076,7 @@ def inner_substation_loop(metrics_root, with_market):
                 timing(p_age.__class__.__name__, False)
                 retail_market_obj.curve_aggregator_DA('Buyer', bid, p_age.name)
 
-            # colect angent only DA quantities and price
+            # collect agent only DA quantities and price
             # retail_market_obj.AMES_DA_agent_quantities=dict()
             # retail_market_obj.AMES_DA_agent_prices=dict()
             # for idx in range(retail_market_obj.windowLength):
@@ -1933,7 +1934,7 @@ def inner_substation_loop(metrics_root, with_market):
     timing(proc[17], True)
     collector.finalize_writing()
     timing(proc[17], False)
-    log.info('Finalizing HELICS tso federate')
+    log.info('finalizing HELICS dso federate')
     timing(proc[1], False)
     op = open('timing.csv', 'w')
     print(proc_time, sep=', ', file=op, flush=True)
@@ -1942,7 +1943,7 @@ def inner_substation_loop(metrics_root, with_market):
     helics.helicsFederateDestroy(hFed)
 
 
-def substation_loop(metrics_root, with_market):
+def dso_loop(metrics_root, with_market):
     """Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
@@ -1975,4 +1976,4 @@ def substation_loop(metrics_root, with_market):
             print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
 
 # for debugging
-# substation_loop('Substation_1', 1)
+# dso_loop('Substation_1', 1)

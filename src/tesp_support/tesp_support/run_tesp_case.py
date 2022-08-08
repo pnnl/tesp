@@ -19,34 +19,29 @@ if sys.platform == 'win32':
 else:
     pycall = 'python3'
 
+
 reports = []
-bReporting = False
+b_reporting = False
 
 
-def block(call):
+def init_tests():
+    global reports, b_reporting
+
+    reports = []
+    b_reporting = True
+
+
+def block_test(call):
     print('\n<!--', flush=True)
     call()
     print('--!>', flush=True)
 
 
-def GetTestReports():
-    global reports
-
-    lines = '\n\n{:30s}   {:12s}\n'.format('Test Case(s)', 'Time Taken')
-    lines += '===========================================\n'
-    for row in reports:
-        lines += '{:30s} {:12.6f}\n'.format(row['case'], row['elapsed'])
-    return lines
+def start_test(casename=None):
+    print('==  Prepare: ', casename, flush=True)
 
 
-def InitializeTestReports():
-    global reports, bReporting
-
-    reports = []
-    bReporting = True
-
-
-def ProcessLine(line, local_vars):
+def process_line(line, local_vars):
     #  print ('@@@@ input line to execute:', line)
     foreground = line.replace(' &)', ')').replace(' &>', ' >')
     exports = ''
@@ -56,19 +51,13 @@ def ProcessLine(line, local_vars):
     return exports + foreground
 
 
-def PrepareTest(casename=None):
-    print('==  Prepare: ', casename, flush=True)
-
-
-def RunTest(fname, casename=None):
-    global reports, bReporting
-
-    tStart = time.time()
+def run_test(file_name, casename=None):
+    t_start = time.time()
     local_vars = []
-    fp = open(fname, 'r')
-    potherList = []
-    pFNCSbroker = None
-    pHELICSbroker = None
+    fp = open(file_name, 'r')
+    p_list = []
+    p_FNCS_broker = None
+    p_HELICS_broker = None
     print('\n==  Run: ', casename, flush=True)
     for ln in fp:
         line = ln.rstrip('\n')
@@ -77,37 +66,46 @@ def RunTest(fname, casename=None):
         if line[0] == '#':
             continue
         if line.startswith('declare'):
-            toks = line.split()
-            keyval = toks[2].split('=')
+            tokens = line.split()
+            keyval = tokens[2].split('=')
             local_vars.append({'key': keyval[0], 'val': keyval[1]})
         elif line.startswith('javac') or line.startswith('python') or \
                 line.startswith('make') or line.startswith('chmod') or \
                 line.startswith('gridlabd') or line.startswith('TMY3toTMY2_ansi'):
-            jc = subprocess.Popen(ProcessLine(line, local_vars), shell=True)
+            jc = subprocess.Popen(process_line(line, local_vars), shell=True)
             jc.wait()
         elif 'fncs_broker' in line:
             print('====  Fncs Broker Start in\n        ' + os.getcwd(), flush=True)
-            pFNCSbroker = subprocess.Popen(ProcessLine(line, local_vars), shell=True)
+            p_FNCS_broker = subprocess.Popen(process_line(line, local_vars), shell=True)
         elif 'helics_broker' in line:
             print('====  Helics Broker Start in\n        ' + os.getcwd(), flush=True)
-            pHELICSbroker = subprocess.Popen(ProcessLine(line, local_vars), shell=True)
+            p_HELICS_broker = subprocess.Popen(process_line(line, local_vars), shell=True)
         else:
-            pother = subprocess.Popen(ProcessLine(line, local_vars), shell=True)
-            potherList.append(pother)
+            pother = subprocess.Popen(process_line(line, local_vars), shell=True)
+            p_list.append(pother)
     fp.close()
-    if pFNCSbroker is not None:
-        pFNCSbroker.wait()
+    if p_FNCS_broker is not None:
+        p_FNCS_broker.wait()
         print('====  Fncs Broker Exit in\n        ' + os.getcwd(), flush=True)
-    if pHELICSbroker is not None:
-        pHELICSbroker.wait()
+    if p_HELICS_broker is not None:
+        p_HELICS_broker.wait()
         print('====  Helics Broker Exit in\n        ' + os.getcwd(), flush=True)
-    for p in potherList:
+    for p in p_list:
         p.wait()
 
-    tEnd = time.time()
-    if bReporting:
-        tElapsed = tEnd - tStart
+    t_end = time.time()
+    if b_reporting:
+        t_elapsed = t_end - t_start
         if casename is None:
-            casename = fname
-        reports.append({'case': casename, 'elapsed': tElapsed})
+            casename = file_name
+        reports.append({'case': casename, 'elapsed': t_elapsed})
+        print('====  Time elapsed: {:12.6f}'.format(t_elapsed), flush=True)
     print('==  Done: ', casename, flush=True)
+
+
+def report_tests():
+    lines = '\n\n{:30s}   {:12s}\n'.format('Test Case(s)', 'Time Taken')
+    lines += '===========================================\n'
+    for row in reports:
+        lines += '{:30s} {:12.6f}\n'.format(row['case'], row['elapsed'])
+    return lines

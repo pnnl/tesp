@@ -17,7 +17,7 @@ from .helpers import parse_mva
 from .metrics_collector import MetricsStore, MetricsCollector
 
 
-def make_generater_plants(ppc, renewables):
+def make_generator_plants(ppc, renewables):
     gen = ppc['gen']
     genFuel = ppc['genfuel']
     plants = {}
@@ -30,7 +30,7 @@ def make_generater_plants(ppc, renewables):
     return plants
 
 
-def tso_loop(casename):
+def tso_psst_loop(casename):
 
     def scucDAM(data):
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
@@ -392,7 +392,7 @@ def tso_loop(casename):
             total_neg = 0
             total_dso = 0
             neg_loads = [0] * (bus.shape[0] + 1)
-            for key, row in generater_plants.items():
+            for key, row in generator_plants.items():
                 neg_loads[row[0]] += float(row[2][jj+24]) / baseS
                 total_neg += float(row[2][jj+24]) / baseS
 
@@ -471,7 +471,7 @@ def tso_loop(casename):
         total_neg = 0
         total_dso = 0
         neg_loads = [0] * (bus.shape[0] + 1)
-        for key, row in generater_plants.items():
+        for key, row in generator_plants.items():
             for jj in range(znumGen):
                 if zgenFuel[jj][2] == row[3]:
                     neg_loads[row[0]] += zgen[jj, 1] / baseS
@@ -536,7 +536,7 @@ def tso_loop(casename):
 
             # Set renewable generation for curtailment
             tot_lost = 0
-            for key, row in generater_plants.items():
+            for key, row in generator_plants.items():
                 for jj in range(znumGen):
                     if zgenFuel[jj][2] == row[3]:
                         tot_lost += zgen[jj, 1] * (1.0 - curtail)
@@ -557,7 +557,7 @@ def tso_loop(casename):
 
     def write_psst_file(fname, dayahead, zgen, zgenCost, zgenFuel, znumGen):
         fp = open(fname, 'w')
-        print('# Written by fncsTSO.py, format: psst\n', file=fp)
+        print('# Written by tso_psst_f.py, format: psst\n', file=fp)
         print('set StageSet := FirstStage SecondStage ;\n', file=fp)
         print('set CommitmentTimeInStage[FirstStage] := 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 ;', file=fp)
         print('set CommitmentTimeInStage[SecondStage] := ;\n', file=fp)
@@ -794,7 +794,7 @@ def tso_loop(casename):
                 if dayahead:
                     for jj in range(hours_in_a_day):
                         ndg = 0
-                        for key, row in generater_plants.items():
+                        for key, row in generator_plants.items():
                             if row[0] == bus_num:
                                 ndg += float(row[2][jj+24])
                         if bus_num <= dsoBus.shape[0]:
@@ -804,7 +804,7 @@ def tso_loop(casename):
                         print('Bus' + str(bus_num) + ' ' + str(jj + 1) + ' {:.4f}'.format(net / baseS), file=fp)
                 else:
                     ndg = 0
-                    for key, row in generater_plants.items():
+                    for key, row in generator_plants.items():
                         if row[0] == bus_num:
                             for jj in range(znumGen):
                                 if zgenFuel[jj][2] == row[3]:
@@ -1118,11 +1118,11 @@ def tso_loop(casename):
                 unplanned_df = pd.read_csv(ppc['unplanned'], index_col=0)
 
             # initialize for variable wind/solar generator plants
-            generater_plants = {}
+            generator_plants = {}
             if ppc['genPower']:
                 log.info('wind/solar power fluctuation requested')
-                generater_plants = make_generater_plants(ppc, renewables)
-            if len(generater_plants) < 1:
+                generator_plants = make_generator_plants(ppc, renewables)
+            if len(generator_plants) < 1:
                 log.info('there are no generator plants in this case')
                 log.info('remove any wind/solar generator in generator fleet')
                 ngen = []
@@ -1347,7 +1347,7 @@ def tso_loop(casename):
                 elif 'GEN_PWR_HIST_' in topic or 'ALT_PWR_HIST_' in topic:
                     if ppc['genPower']:
                         gen_id = topic[13:]
-                        generater_plants[gen_id][2] = json.loads(val)
+                        generator_plants[gen_id][2] = json.loads(val)
                     log.debug("at " + str(ts) + " " + topic + " " + val)
             # getting the latest inputs from DSO day ahead and real time
                 elif 'DA_BID_' in topic:
@@ -1540,7 +1540,7 @@ def tso_loop(casename):
 
             sum_w = 0
             sum_hr = 0
-            for key, row in generater_plants.items():
+            for key, row in generator_plants.items():
                 for idx in range(numGen):
                     if genFuel[idx][2] == row[3]:
                         sum_w += gen[idx, 1]
@@ -1600,7 +1600,7 @@ def tso_loop(casename):
                     Pswing += opf_gen[idx, 1]
 
             sum_w = 0
-            for key, row in generater_plants.items():
+            for key, row in generator_plants.items():
                 for idx in range(numGen):
                     if genFuel[idx][2] == row[3]:
                         sum_w += gen[idx, 1]
@@ -1799,9 +1799,9 @@ def tso_loop(casename):
     log.info('closing files')
     op.close()
     vp.close()
-    log.info('Finalizing HELICS tso federate')
+    log.info('finalizing HELICS tso federate')
     helics.helicsFederateDestroy(hFed)
 
 
 if __name__ == "__main__":
-    tso_loop('./generate_case_config')
+    tso_psst_loop('./generate_case_config')

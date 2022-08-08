@@ -6,11 +6,11 @@ import os
 import subprocess
 import sys
 
-from tesp_support.run_test_case import GetTestReports
-from tesp_support.run_test_case import InitializeTestReports
-from tesp_support.run_test_case import PrepareTest
-from tesp_support.run_test_case import RunTest
-from tesp_support.run_test_case import block
+from tesp_support.run_tesp_case import init_tests
+from tesp_support.run_tesp_case import block_test
+from tesp_support.run_tesp_case import start_test
+from tesp_support.run_tesp_case import run_test
+from tesp_support.run_tesp_case import report_tests
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -19,36 +19,36 @@ else:
 
 
 def sgip_test():
-    PrepareTest('SGIP1 examples')
+    start_test('SGIP1 examples')
     os.chdir('./examples/analysis/sgip1')
     p1 = subprocess.Popen('./clean.sh', shell=True)
     p1.wait()
     p1 = subprocess.Popen(pycall + ' prepare_cases.py', shell=True)
     p1.wait()
     if bTryHELICS:
-        RunTest('ruhSGIP1a.sh', 'SGIP1a - HELICS')
-        RunTest('ruhSGIP1b.sh', 'SGIP1b - HELICS')
-        RunTest('ruhSGIP1c.sh', 'SGIP1c - HELICS')
-        RunTest('ruhSGIP1d.sh', 'SGIP1d - HELICS')
-        RunTest('ruhSGIP1e.sh', 'SGIP1e - HELICS')
-        RunTest('ruhSGIP1ex.sh', 'SGIP1ex - HELICS')
+        run_test('ruhSGIP1a.sh', 'SGIP1a - HELICS')
+        run_test('ruhSGIP1b.sh', 'SGIP1b - HELICS')
+        run_test('ruhSGIP1c.sh', 'SGIP1c - HELICS')
+        run_test('ruhSGIP1d.sh', 'SGIP1d - HELICS')
+        run_test('ruhSGIP1e.sh', 'SGIP1e - HELICS')
+        run_test('ruhSGIP1ex.sh', 'SGIP1ex - HELICS')
     else:
-        RunTest('runSGIP1a.sh', 'SGIP1a - FNCS')
-        RunTest('runSGIP1b.sh', 'SGIP1b - FNCS')
-        RunTest('runSGIP1c.sh', 'SGIP1c - FNCS')
-        RunTest('runSGIP1d.sh', 'SGIP1d - FNCS')
-        RunTest('runSGIP1e.sh', 'SGIP1e - FNCS')
-        RunTest('runSGIP1ex.sh', 'SGIP1ex - FNCS')
+        run_test('runSGIP1a.sh', 'SGIP1a - FNCS')
+        run_test('runSGIP1b.sh', 'SGIP1b - FNCS')
+        run_test('runSGIP1c.sh', 'SGIP1c - FNCS')
+        run_test('runSGIP1d.sh', 'SGIP1d - FNCS')
+        run_test('runSGIP1e.sh', 'SGIP1e - FNCS')
+        run_test('runSGIP1ex.sh', 'SGIP1ex - FNCS')
     os.chdir(tesp_path)
 
 
 if __name__ == '__main__':
-    InitializeTestReports()
+    init_tests()
 
     tesp_path = os.path.expandvars('$TESPDIR/')
     os.chdir(tesp_path)
     bTryHELICS = True
 
-    block(sgip_test)
+    block_test(sgip_test)
 
-    print(GetTestReports())
+    print(report_tests())
