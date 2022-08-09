@@ -207,21 +207,24 @@ Even this subset of examples can take several hours to run (roughly 3.5 hours in
 
 .. code-block:: text
 
-    Test Case(s)                     Time Taken  
+
+    Test Case(s)                     Time Taken
     ===========================================
-    Loadshed HELICS ns-3               4.233624
-    Loadshed HELICS Python             0.782010
-    Loadshed HELICS Java               1.468049
-    Weather Agent HELICS               6.509814
-    PYPOWER HELICS                     4.155286
-    EnergyPlus HELICS EMS              7.423045
-    TE30 HELICS Market              2060.595345
-    TE30 HELICS No Market            295.993975
-    Nocomm Base HELICS              3168.131399
-    Eplus Restaurant HELICS         2919.214805
-    SGIP1c HELICS                   3709.280971
-    EPLus comm HELICS                 50.658486
-    4 Feeders HELICS                 725.793661
+    GridLAB-D Player/Recorder          0.033965
+    Loadshed - HELICS ns-3             6.103482
+    Loadshed - HELICS Python           1.116138
+    Loadshed - HELICS Java             1.754056
+    PYPOWER - HELICS                   7.025858
+    EnergyPlus EMS - HELICS           10.403496
+    Weather Agent - HELICS            11.020228
+    Houses                           284.137236
+    TE30 - HELICS Market             293.542043
+    TE30 - HELICS No Market          282.648197
+    No Comm Base - HELICS           6138.132330
+    Eplus Restaurant - HELICS       4206.033149
+    SGIP1c - HELICS                 5104.257472
+    Eplus w/Comm - HELICS             64.887238
+    4 Feeders - HELICS              1241.105777
 
 Total runtime will depend on the compute resources available and each example run serially.
 

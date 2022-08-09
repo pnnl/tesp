@@ -110,9 +110,9 @@ def make_comm_base_test():
     # generated Nocomm_Base example
     os.chdir('Nocomm_Base')
     if b_helics:
-        run_test('runh.sh', 'Nocomm Base - HELICS')
+        run_test('runh.sh', 'No Comm Base - HELICS')
     else:
-        run_test('run.sh', 'Nocomm Base - FNCS')
+        run_test('run.sh', 'No Comm Base - FNCS')
 
     # generated Eplus_Restaurant example
     os.chdir(tesp_path + '/capabilities/comm/Eplus_Restaurant')
@@ -135,7 +135,7 @@ def make_comm_eplus_test():
     os.chdir('capabilities/comm')
     subprocess.Popen(pycall + ' make_comm_eplus.py', shell=True).wait()
     os.chdir('Eplus_Comm')
-    run_test('run.sh', 'EPLus comm HELICS')
+    run_test('run.sh', 'Eplus w/Comm - HELICS')
     os.chdir(tesp_path)
 
 
