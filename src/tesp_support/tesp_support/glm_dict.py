@@ -28,7 +28,7 @@ def ercotMeterName(objname):
         objname (str): the GridLAB-D name of a house or inverter
 
     Returns:
-      str: The GridLAB-D name of upstream meter
+        str: The GridLAB-D name of upstream meter
     """
     k = objname.rfind('_')
     root1 = objname[:k]

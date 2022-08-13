@@ -166,42 +166,42 @@ An easy manual high-level check to see if TESP installed correctly is to look at
     │       ├── helics
     │       ├── java
     │       └── man
-    ├── repository
-    │   ├── Ames-V5.0
-    │   ├── EnergyPlus
-    │   ├── fncs
-    │   ├── gridlab-d
-    │   ├── HELICS-src
-    │   ├── Ipopt
-    │   ├── KLU_DLL
-    │   ├── ns-3-dev
-    │   ├── tesp
-    │   ├── ThirdParty-ASL
-    └── └── ThirdPart-Mumps
+    └── repository
+        ├── Ames-V5.0
+        ├── EnergyPlus
+        ├── fncs
+        ├── gridlab-d
+        ├── HELICS-src
+        ├── Ipopt
+        ├── KLU_DLL
+        ├── ns-3-dev
+        ├── tesp
+        ├── ThirdParty-ASL
+        └── ThirdPart-Mumps
 
 Shorter Autotest: Example Subset
 ...................................
 A (relatively) shorter autotest script has been written that tests many (but not all) of the
 installed examples to verify the installation was successful. This test can be run as follows
-and assumes the commandline prompt '~/tesp$' in the TESP root directory:
+and assumes the commandline prompt '~$' in the TESP root directory:
 
 .. code-block:: shell-session
     :caption: TESP example subset autotest
 
-    ~/tesp$ source tespEnv
-    (TESP) ~/tesp$ cd tesp/repository/tesp/
+    ~$ source tespEnv
+    (TESP) ~$ cd tesp/repository/tesp/
     (TESP) ~/tesp/repository/tesp$ python3 autotest.py
     (TESP) ~/tesp/repository/tesp$ deactivate
     ~/tesp/repository/tesp$
 
 
 The first command is essential after starting a terminal session prior to running anything in
-TESP for the first time. After running the first line, the prompt now shows the prefix `(TESP)` being using for the variable environment.
+TESP for the first time. After running the first line above, the prompt now shows the prefix `(TESP)` being using for the variable environment.
 If you don't run the first line, simulations will generally fail for lack of being able to find their dependencies.
 If things aren't working, double-check to make sure your commandline shows the prefix `(TESP)`.
 
 The forth command, 'deactivate', returns the environment path to the state it was before the the first command started and remove the `(TESP)` prefix from the prompt.
-All other environment variables are present but path and the TESP python may be present, depending on your configuration.
+All other environment variables are present but the TESP python requirements may be present, depending on your configuration.
    
 Even this subset of examples can take several hours to run (roughly 3.5 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
 

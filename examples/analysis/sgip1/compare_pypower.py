@@ -1,4 +1,5 @@
-#	Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2022 Battelle Memorial Institute
+# file: compare_pypower.py
 import json
 
 import matplotlib.pyplot as plt

@@ -170,11 +170,16 @@ def dso_stub_test():
 
 
 if __name__ == '__main__':
+    b_helics = True
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "FNCS":
+            b_helics = False
+
     init_tests()
 
     tesp_path = os.path.expandvars('$TESPDIR/examples')
     os.chdir(tesp_path)
-    b_helics = True
+    b_helics = False
 
     block_test(gld_player_test)
     block_test(loadshed_test)

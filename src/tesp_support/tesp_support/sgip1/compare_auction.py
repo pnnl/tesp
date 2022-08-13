@@ -1,5 +1,5 @@
-#	Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: process_houses.py; focus on HVAC
+# Copyright (C) 2017-2022 Battelle Memorial Institute
+# file: compare_auction.py
 import json
 
 import matplotlib.pyplot as plt

@@ -1,5 +1,7 @@
-import sys
+# Copyright (C) 2021-2022 Battelle Memorial Institute
+# file: compare_prices.py
 
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
 

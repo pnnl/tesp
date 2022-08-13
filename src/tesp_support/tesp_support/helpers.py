@@ -26,9 +26,8 @@ def idf_int(val):
 
 def zoneMeterName(ldname):
     """ Enforces the meter naming convention for commercial zones
-
-    Commercial zones must be children of load objects. This routine
-    replaces "_load_" with "_meter".
+    The commercial zones must be children of load objects
+    This routine replaces "_load_" with "_meter".
 
     Args:
         ldname (str): the GridLAB-D name of a load, ends with _load_##
@@ -41,7 +40,6 @@ def zoneMeterName(ldname):
 
 def gld_strict_name(val):
     """Sanitizes a name for GridLAB-D publication to FNCS
-
     GridLAB-D name should not begin with a number, or contain '-' for FNCS
 
     Args:
@@ -67,8 +65,7 @@ class ClearingType(IntEnum):
 
 
 class curve:
-    """ Accumulates a set of price, quantity bids for later aggregation
-
+    """ Accumulates a set of price, quantity bids for later aggregation.
     The default order is descending by price.
 
     Attributes:

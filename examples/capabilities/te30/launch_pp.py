@@ -2,5 +2,5 @@
 # file: launch_pp.py
 
 import tesp_support.api as tesp
-tesp.pypower_loop('te30_pp.json','TE_Challenge')
 
+tesp.tso_pypower_loop('te30_pp.json', 'TE_Challenge')

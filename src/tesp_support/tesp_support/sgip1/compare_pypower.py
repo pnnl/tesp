@@ -1,5 +1,5 @@
-#	Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: process_houses.py; focus on HVAC
+# Copyright (C) 2017-2022 Battelle Memorial Institute
+# file: compare_pypower.py
 import json
 
 import matplotlib.pyplot as plt
@@ -26,7 +26,7 @@ def MakePlotData(root):
     lst_g.pop('StartTime')
     meta_g = lst_g.pop('Metadata')
 
-    bus_keys = list(dict['fncsBuses'].keys())
+    bus_keys = list(dict['dsoBuses'].keys())
     bus_keys.sort()
     lp_b = open('bus_' + root + '_metrics.json')
     lst_b = json.loads(lp_b.read())
@@ -121,13 +121,13 @@ def compare_pypower():
         ax[1].plot(hrs, tgen, color=root[1], label=root[0])
         ax[2].plot(hrs, lmp, color=root[1], label=root[0])
 
-    ax[0].set_title('FNCS Bus Load')
+    ax[0].set_title('Bus Load')
     ax[0].set_ylabel('MW')
 
     ax[1].set_title('Total Generation')
     ax[1].set_ylabel('MW')
 
-    ax[2].set_title('FNCS Bus LMP')
+    ax[2].set_title('Bus LMP')
     ax[2].set_ylabel('$/kwh')
 
     ax[2].set_xlabel('Hours')

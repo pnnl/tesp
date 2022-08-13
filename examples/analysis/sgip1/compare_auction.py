@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: process_houses.py; focus on HVAC
+# file: compare_auction.py
 import json
 
 import matplotlib.pyplot as plt
@@ -15,8 +15,6 @@ casefiles = [['SGIP1a', 'red'],
 
 def MakePlotData(root):
     fdir = './'
-    #  lp = open (fdir + 'SGIP1b_agent_dict.json')
-    #	fdir = './SGIP1new/' + root + '/'
     lp = open(fdir + root + '_agent_dict.json')
     dict = json.loads(lp.read())
     lp.close()

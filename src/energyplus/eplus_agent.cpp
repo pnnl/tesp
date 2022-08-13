@@ -23,10 +23,6 @@
 /* fncs headers */
 #include "fncs.hpp"
 
-/* helics headers */
-#include <helics/application_api/ValueFederate.hpp>
-#include <helics/application_api/Inputs.hpp>
-#include <helics/application_api/Publications.hpp>
 
 // #include "fncs_internal.hpp"
 namespace fncs {
@@ -48,7 +44,15 @@ using namespace ::std;
 
 typedef map<string,double *> metrics_t; // keys to min, max, sum, count
 
-static helics::ValueFederate *pHelicsFederate(nullptr);
+string BuildingID = "EnergyPlus Building";
+fncs::time time_multiplier = 1;
+
+void usage ()
+{
+  cerr << "Usage 1: eplus_agent_helics ep_agent_config.json" << endl;
+  cerr << "Usage 2: eplus_agent_helics <stop time> <agg time> [bldg id] [output file] [ref price] [ramp] [limit hi] [limit lo]" << endl;
+  exit(EXIT_FAILURE);
+}
 
 void reset_metric (double *pVals)
 {
@@ -73,14 +77,11 @@ void update_metric (double *pVals, double newval)
   pVals[METRICS_CNT] += 1.0;
 }
 
-string param_bldg_id = "EnergyPlus Building";
-fncs::time time_multiplier = 1;
-
 void output_metrics (metrics_t metrics, Json::Value& root, Json::Value& ary, fncs::time time_granted, ostream& out)
 {
   double *pVals;
   string key1 = to_string (time_granted * time_multiplier);  // we want FNCS time, or seconds
-  string key2 = param_bldg_id;
+  string key2 = BuildingID;
   int idx = 0;
   for (metrics_t::iterator it = metrics.begin(); it != metrics.end(); ++it) {
     pVals = it->second;
@@ -130,8 +131,6 @@ int main(int argc, char **argv)
   double newval;
   fncs::time mod;
   fncs::time hod;
-  helics::Publication hPubA, hPubB, hPubC, hPubPrice, hPubMode, hPubFee;
-  helics::Input hSubPrice;
 
   // for real-time pricing response - can redefine on the command line
   double base_price = 0.02;
@@ -141,13 +140,13 @@ int main(int argc, char **argv)
 
   if (argc < 3) {
     cerr << "Missing stop time and/or aggregating time parameters." << endl;
-    cerr << "Usage: eplus_agent <stop time> <agg time> [bldg id] [output file] [ref price] [ramp] [limit hi] [limit lo] [helicsConfig]" << endl;
+    cerr << "Usage: eplus_agent <stop time> <agg time> [bldg id] [output file] [ref price] [ramp] [limit hi] [limit lo]" << endl;
     exit(EXIT_FAILURE);
   }
 
-  if (argc > 10) {
+  if (argc > 9) {
     cerr << "Too many parameters." << endl;
-    cerr << "Usage: eplus_agent <stop time> <agg time> <bldg id> <output file> <ref price> <ramp> <limit hi> <limit lo> <helicsConfig>" << endl;
+    cerr << "Usage: eplus_agent <stop time> <agg time> <bldg id> <output file> <ref price> <ramp> <limit hi> <limit lo>" << endl;
     exit(EXIT_FAILURE);
   }
 
@@ -174,61 +173,6 @@ int main(int argc, char **argv)
   }
   if (argc > 8) {
     max_delta_lo = atof (argv[8]);
-  }
-  if (argc > 9) { // create the optional HELICS federate, publications and subscriptions
-    bool bPubA = false, bPubB = false, bPubC = false, bPubFee = false, bPubPrice = false, bPubMode = false;
-    bool bSubPrice = false;
-    cout << "creating a ValueFederate from " << string (argv[9]) << endl;
-    pHelicsFederate = new helics::ValueFederate(string (argv[9]));
-    int pub_count = pHelicsFederate->getPublicationCount();
-    int sub_count = pHelicsFederate->getInputCount();
-    cout << " ==> " << pub_count << " publications and " << sub_count << " subscriptions" << endl;
-    for (int i = 0; i < pub_count; i++) {
-      helics::Publication pub = pHelicsFederate->getPublication(i);
-      if (pub.isValid() ) {
-        auto name = pub.getName();
-        cout << " pub " << i << ":" << name << ":" << pub.getType() << ":" << pub.getUnits() << endl;
-        if (name.find("power_A") != string::npos) {
-          bPubA = true;
-          hPubA = pub;
-        } else if (name.find("power_B") != string::npos) {
-          bPubB = true;
-          hPubB = pub;
-        } else if (name.find("power_C") != string::npos) {
-          bPubC = true;
-          hPubC = pub;
-        } else if (name.find("monthly_fee") != string::npos) {
-          bPubFee = true;
-          hPubFee = pub;
-        } else if (name.find("price") != string::npos) {
-          bPubPrice = true;
-          hPubPrice = pub;
-        } else if (name.find("bill_mode") != string::npos) {
-          bPubMode = true;
-          hPubMode = pub;
-        }
-      }
-    }
-    for (int i = 0; i < sub_count; i++) {
-      helics::Input sub = pHelicsFederate->getInput(i);
-      if (sub.isValid() ) {
-        cout << " sub " << i << ":" << sub.getTarget() << ":" << sub.getName() << ":" << sub.getType() << ":" << sub.getUnits() << endl;
-        if (sub.getTarget().find("clear_price") != string::npos) {
-          bSubPrice = true;
-          hSubPrice = sub;
-        }
-      }
-    }
-    if (!bPubA || !bPubB || !bPubC || !bPubFee || !bPubPrice || !bPubMode || !bSubPrice) {
-      if (!bPubA) cout << "missing publication for power_A" << endl;
-      if (!bPubB) cout << "missing publication for power_B" << endl;
-      if (!bPubC) cout << "missing publication for power_C" << endl;
-      if (!bPubPrice) cout << "missing publication for (meter) price" << endl;
-      if (!bPubFee) cout << "missing publication for (meter) monthly_fee" << endl;
-      if (!bPubMode) cout << "missing publication for (meter) bill_mode" << endl;
-      if (!bSubPrice) cout << "missing subscription for (market) clear_price" << endl;
-      exit(EXIT_FAILURE);
-    }
   }
 
   double price = base_price;
@@ -302,14 +246,6 @@ int main(int argc, char **argv)
   Json::Value ary(Json::arrayValue);
   ary.resize(idx);
 
-  // launch the HELICS federate
-  if (pHelicsFederate) {
-    cout << "HELICS enter intializing mode" << endl;
-    pHelicsFederate->enterInitializingMode();
-    cout << "HELICS enter executing mode" << endl;
-    pHelicsFederate->enterExecutingMode();
-  }
-
   do {
     time_granted = fncs::time_request(time_stop);
     events = fncs::get_events();
@@ -325,16 +261,6 @@ int main(int argc, char **argv)
         newval = newval * 1.8 + 32.0;
       }
       update_metric(metrics[*it], newval);
-    }
-     // if using HELICS, the price actually comes through HELICS
-    if (pHelicsFederate) { 
-      cout << "looking for an updated price from HELICS at " << time_granted << endl;
-      auto priceTime = pHelicsFederate->requestTime(time_granted);
-      if (hSubPrice.isUpdated()) {
-        price = hSubPrice.getValue<double>();
-        cout << "new price " << price << " at HELICS time " << priceTime << " and FNCS time " << time_granted << endl;
-      }
-      update_metric(metrics["kwhr_price"], price);
     }
     // this is price response
     delta = degF_per_price * (price - base_price);
@@ -355,22 +281,12 @@ int main(int argc, char **argv)
     fncs::publish ("cooling_setpoint_delta", to_string(delta));
     fncs::publish ("heating_setpoint_delta", to_string(-delta));
     phaseWatts = totalWatts / 3.0;
-    // GridLAB-D values go through FNCS or HELICS, not both
-    if (pHelicsFederate) {
-      hPubA.publish(phaseWatts);
-      hPubB.publish(phaseWatts);
-      hPubC.publish(phaseWatts);
-      hPubPrice.publish(price);
-      hPubFee.publish(0.0);
-      hPubMode.publish("HOURLY");
-    } else {
-      fncs::publish ("power_A", to_string(phaseWatts));
-      fncs::publish ("power_B", to_string(phaseWatts));
-      fncs::publish ("power_C", to_string(phaseWatts));
-      fncs::publish ("bill_mode", "HOURLY");
-      fncs::publish ("price", to_string(price));
-      fncs::publish ("monthly_fee", to_string(0.0));
-    }
+    fncs::publish ("power_A", to_string(phaseWatts));
+    fncs::publish ("power_B", to_string(phaseWatts));
+    fncs::publish ("power_C", to_string(phaseWatts));
+    fncs::publish ("bill_mode", "HOURLY");
+    fncs::publish ("price", to_string(price));
+    fncs::publish ("monthly_fee", to_string(0.0));
   } while (time_granted < time_stop);
   if (time_granted > time_written) {
     output_metrics (metrics, root, ary, time_granted, out);
@@ -389,11 +305,6 @@ int main(int argc, char **argv)
   }
 
   fncs::finalize();
-
-  if (pHelicsFederate) {
-    pHelicsFederate->finalize();
-    helics::cleanupHelicsLibrary();
-  }
 
   return EXIT_SUCCESS;
 }

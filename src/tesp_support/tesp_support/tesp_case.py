@@ -513,7 +513,7 @@ values:
     # ====================================================================
     # FNCS shell scripts and chmod for Mac/Linux - need to specify python3
     aucline = """python3 -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
-    ppline = """python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
+    ppline = """python3 -c "import tesp_support.api as tesp;tesp.tso_pypower_loop_f('""" + PPJsonFile + """','""" + casename + """')" """
     weatherline = """python3 -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weather.dat')" """
 
     shfile = casedir + '/run.sh'
@@ -579,7 +579,16 @@ values:
     op.close()
     op = open(casedir + '/launch_pp.py', 'w')
     print('import tesp_support.api as tesp', file=op)
-    print('tesp.pypower_loop(\'' + PPJsonFile + '\',\'' + casename + '\')', file=op)
+    print('tesp.tso_pypower_loop_f(\'' + PPJsonFile + '\',\'' + casename + '\')', file=op)
+    op.close()
+    # commands for launching Python federates
+    op = open(casedir + '/launch_hauction.py', 'w')
+    print('import tesp_support.api as tesp', file=op)
+    print('tesp.substation_loop(\'' + AgentDictFile + '\',\'' + casename + '\', helicsConfig=\'' + SubstationConfigFile + '\')', file=op)
+    op.close()
+    op = open(casedir + '/launch_hpp.py', 'w')
+    print('import tesp_support.api as tesp', file=op)
+    print('tesp.tso_pypower_loop(\'' + PPJsonFile + '\',\'' + casename + '\', helicsConfig=\'' + PypowerConfigFile + '\')', file=op)
     op.close()
     op = open(casedir + '/tesp_monitor.json', 'w')
     cmds = {'time_stop': seconds,

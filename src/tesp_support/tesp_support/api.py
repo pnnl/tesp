@@ -6,7 +6,12 @@ Example:
     To start PYPOWER for connection to FNCS::
 
         import tesp_support.api as tesp
-        tesp.pypower_loop('te30_pp.json','TE_Challenge')
+        tesp.tso_pypower_loop_f('te30_pp.json','TE_Challenge')
+
+    To start PYPOWER for connection to HELICS::
+
+        import tesp_support.api as tesp
+        tesp.tso_pypower_loop('te30_pp.json','TE_Challenge', helicsConfig='tso.json')
 
 Public Functions:
     :convert_tmy2_to_epw: Command line utility that converts TMY2 weather files to the EPW format for EnergyPlus.
