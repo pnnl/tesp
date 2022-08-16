@@ -918,13 +918,11 @@ if __name__ == '__main__':
     parser.add_argument('-p',
                         '--data_path',
                         nargs='?',
-                        default='/Users/hard312/testbeds/TESP_SGIP1_plots'
-                                '/simulation data/sgip1 case 5')
+                        default='/Users/hard312/Backup Exclude/sgip1Mitch')
     # Set save path to '' to prevent plots from being saved.
     parser.add_argument('-s',
                         '--save_path',
                         nargs='?',
-                        default='/Users/hard312/testbeds/TESP_SGIP1_plots'
-                                '/simulation data/sgip1 case 5')
+                        default='/Users/hard312/Backup Exclude/sgip1Mitch/outputs')
     args = parser.parse_args()
     _auto_run(args)
