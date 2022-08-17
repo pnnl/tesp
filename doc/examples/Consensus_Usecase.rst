@@ -2,7 +2,7 @@
     _ Copyright (C) 2021-2022 Battelle Memorial Institute
     _ file: Consensus_Usecase.rst
 
-Consensus-based Transactive Communities  Draft Examples and Documents
+Consensus-based Transactive Communities - Example and Documents
 ========================================
 
 This section links to models and design documents for a Consensus-based Transactive Communities use-case
