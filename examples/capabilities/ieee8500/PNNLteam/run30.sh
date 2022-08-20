@@ -3,7 +3,7 @@
 # Copyright (C) 2021 - 2022 Battelle Memorial Institute
 # file: run30.glm
 
-SCHED_PATH=$TESPDIR/data/schedules
+declare -r SCHED_PATH=$TESPDIR/data/schedules
 
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 3 &> broker30.log &)
 (export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec gridlabd -D SCHED_PATH=$SCHED_PATH -D INV_MODE=CONSTANT_PF -D USE_FNCS inv30.glm &> gridlabd30.log &)

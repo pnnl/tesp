@@ -22,26 +22,26 @@ except:
 logger = logging.getLogger(__name__)
 
 
-def read_voltage_metrics(path, nameroot, dictname=''):
-    glm_dict_path = os.path.join(path, f'{nameroot}_glm_dict.json')
-    billing_dict_path = os.path.join(path, f'billing_meter_{nameroot}_metrics.json')
+def read_voltages_metrics(path, name_root, diction_name=''):
+    glm_dict_path = os.path.join(path, f'{name_root}_glm_dict.json')
+    billing_dict_path = os.path.join(path, f'billing_meter_{name_root}_metrics.json')
     # first, read and print a dictionary of all the monitored GridLAB-D objects
-    if len(dictname) > 0:
+    if len(diction_name) > 0:
         try:
-            lp = open(dictname).read()
+            lp = open(diction_name).read()
         except:
-            logger.error(f'Unable to open voltage metric file {dictname}')
+            logger.error(f'Unable to open voltage metric file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
         except:
             logger.error(f'Unable to open voltage metrics file {glm_dict_path}')
-    dict = json.loads(lp)
-    mtr_keys = list(dict['billingmeters'].keys())
+    diction = json.loads(lp)
+    mtr_keys = list(diction['billingmeters'].keys())
     mtr_keys.sort()
     # print("\nBilling Meter Dictionary:")
     # for key in mtr_keys:
-    #   row = dict['billingmeters'][key]
+    #   row = diction['billingmeters'][key]
     # # print (key, "on phase", row['phases'], "of", row['feeder_id'], "with", row['children'])
 
     # make a sorted list of the sample times in hours
@@ -57,7 +57,6 @@ def read_voltage_metrics(path, nameroot, dictname=''):
     hrs /= denom
 
     # print("\nBilling Meter Metadata for", len(lst_m['3600']), "objects")
-    data_m = None
     idx_m = {}
     for key, val in meta_m.items():
         # print (key, val['index'], val['units'])
@@ -84,7 +83,7 @@ def read_voltage_metrics(path, nameroot, dictname=''):
     data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
     print("\nConstructed", data_m.shape, "NumPy array for Meters")
     j = 0
-    for key in mtr_keys:
+    for _ in mtr_keys:
         i = 0
         for t in times:
             ary = lst_m[str(t)][mtr_keys[j]]
@@ -95,8 +94,8 @@ def read_voltage_metrics(path, nameroot, dictname=''):
     # normalize the meter voltages to 100 percent
     j = 0
     for key in mtr_keys:
-        vln = dict['billingmeters'][key]['vln'] / 100.0
-        vll = dict['billingmeters'][key]['vll'] / 100.0
+        vln = diction['billingmeters'][key]['vln'] / 100.0
+        vll = diction['billingmeters'][key]['vll'] / 100.0
         data_m[j, :, idx_m['MTR_VOLT_MIN_IDX']] /= vln
         data_m[j, :, idx_m['MTR_VOLT_MAX_IDX']] /= vln
         data_m[j, :, idx_m['MTR_VOLT_AVG_IDX']] /= vln
@@ -104,23 +103,23 @@ def read_voltage_metrics(path, nameroot, dictname=''):
         data_m[j, :, idx_m['MTR_VOLT12_MAX_IDX']] /= vll
         j = j + 1
 
-    dict = {}
-    dict['hrs'] = hrs
-    dict['data_m'] = data_m
-    dict['keys_m'] = mtr_keys
-    dict['idx_m'] = idx_m
-    return dict
+    return {
+        'hrs': hrs,
+        'data_m': data_m,
+        'keys_m': mtr_keys,
+        'idx_m': idx_m
+    }
 
 
-def plot_voltages(dict, save_file=None, save_only=False):
-    hrs = dict['hrs']
-    data_m = dict['data_m']
-    keys_m = dict['keys_m']
-    idx_m = dict['idx_m']
+def plot_voltages(diction, save_file=None, save_only=False):
+    hrs = diction['hrs']
+    data_m = diction['data_m']
+    keys_m = diction['keys_m']
+    idx_m = diction['idx_m']
     # display a plot
     fig, ax = plt.subplots(2, 1, sharex='col')
     i = 0
-    for key in keys_m:
+    for _ in keys_m:
         ax[0].plot(hrs, data_m[i, :, idx_m['MTR_VOLT_MIN_IDX']], color='blue')
         ax[1].plot(hrs, data_m[i, :, idx_m['MTR_VOLT_MAX_IDX']], color='red')
         i = i + 1
@@ -135,12 +134,12 @@ def plot_voltages(dict, save_file=None, save_only=False):
         plt.show()
 
 
-def process_voltages(nameroot, dictname='', save_file=None, save_only=True):
+def process_voltages(name_root, diction_name='', save_file=None, save_only=True):
     """ Plots the min and max line-neutral voltages for every billing meter
 
-    This function reads *substation_nameroot_metrics.json* and
-    *billing_meter_nameroot_metrics.json* for the voltage data, and
-    *nameroot_glm_dict.json* for the meter names.
+    This function reads *substation_[name_root]_metrics.json* and
+    *billing_meter_[name_root]_metrics.json* for the voltage data, and
+    *[name_root]_glm_dict.json* for the meter names.
     These must all exist in the current working directory.
     One graph is generated with 2 subplots:
 
@@ -148,11 +147,11 @@ def process_voltages(nameroot, dictname='', save_file=None, save_only=True):
     2. The Max line-to-neutral voltage at each billing meter
 
     Args:
-      nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
-      dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+      name_root (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
+      diction_name (str): metafile name (with json extension) for a different GLM dictionary, if it's not *[name_root]_glm_dict.json*. Defaults to empty.
       save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
       save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
     """
     path = os.getcwd()
-    dict = read_voltage_metrics(path, nameroot, dictname)
-    plot_voltages(dict, save_file, save_only)
+    diction = read_voltages_metrics(path, name_root, diction_name)
+    plot_voltages(diction, save_file, save_only)

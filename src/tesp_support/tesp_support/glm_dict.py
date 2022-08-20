@@ -72,24 +72,24 @@ def append_include_file(lines, fname):
         fp.close()
 
 
-def glm_dict(nameroot, ercot=False, te30=False):
+def glm_dict(name_root, ercot=False, te30=False):
     """ Writes the JSON metadata file from a GLM file
 
-    This function reads *nameroot.glm* and writes *nameroot_glm_dict.json*
+    This function reads *name_root.glm* and writes *[name_root]_glm_dict.json*
     The GLM file should have some meters and triplex_meters with the
     bill_mode attribute defined, which identifies them as billing meters
     that parent houses and inverters. If this is not the case, ERCOT naming
     rules can be applied to identify billing meters.
 
     Args:
-        nameroot (str): path and file name of the GLM file, without the extension
+        name_root (str): path and file name of the GLM file, without the extension
         ercot (boolean): request ERCOT billing meter naming. Defaults to false.
         te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false.
     """
 
     # first pass, collect first-level include files
     collected_lines = []
-    ip = open(nameroot + '.glm', 'r')
+    ip = open(name_root + '.glm', 'r')
     for line in ip:
         if '#include' in line:
             lst = line.split()
@@ -371,7 +371,7 @@ def glm_dict(nameroot, ercot=False, te30=False):
                   'transformer_MVA': substationTransformerMVA, 'feeders': feeders,
                   'billingmeters': billingmeters, 'houses': houses, 'inverters': inverters,
                   'capacitors': capacitors, 'regulators': regulators}
-    op = open(nameroot + '_glm_dict.json', 'w')
+    op = open(name_root + '_glm_dict.json', 'w')
     json.dump(substation, op, ensure_ascii=False, indent=2)
     op.close()
 

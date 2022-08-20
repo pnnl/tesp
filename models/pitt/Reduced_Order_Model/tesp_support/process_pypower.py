@@ -17,12 +17,12 @@ except:
     pass
 
 
-def process_pypower(nameroot):
+def process_pypower(name_root):
     """ Plots bus and generator quantities for the 9-bus system used in te30 or sgip1 examples
 
-    This function reads *bus_nameroot_metrics.json* and 
-    *gen_nameroot_metrics.json* for the data, and 
-    *nameroot_m_dict.json* for the metadata.  
+    This function reads *bus_[name_root]_metrics.json* and
+    *gen_[name_root]_metrics.json* for the data, and
+    *[name_root]_m_dict.json* for the metadata.
     These must all exist in the current working directory.  
     One graph is generated with 8 subplots:
 
@@ -36,31 +36,31 @@ def process_pypower(nameroot):
     8. Generator 4 P and Q output 
 
     Args:
-        nameroot (str): file name of the TESP case, not necessarily the same as the PYPOWER case, without the JSON extension
+        name_root (str): file name of the TESP case, not necessarily the same as the PYPOWER case, without the JSON extension
     """
     # first, read and print a dictionary of relevant PYPOWER objects
-    lp = open(nameroot + "_m_dict.json").read()
-    dict = json.loads(lp)
-    baseMVA = dict['baseMVA']
-    gen_keys = list(dict['generators'].keys())
+    lp = open(name_root + "_m_dict.json").read()
+    diction = json.loads(lp)
+    baseMVA = diction['baseMVA']
+    gen_keys = list(diction['generators'].keys())
     gen_keys.sort()
-    bus_keys = list(dict['fncsBuses'].keys())
+    bus_keys = list(diction['fncsBuses'].keys())
     bus_keys.sort()
-    print("\n\nFile", nameroot, "has baseMVA", baseMVA)
+    print("\n\nFile", name_root, "has baseMVA", baseMVA)
     print("\nGenerator Dictionary:")
     print("Unit Bus Type Pnom Pmax Costs[Start Stop C2 C1 C0]")
     for key in gen_keys:
-        row = dict['generators'][key]
+        row = diction['generators'][key]
         print(key, row['bus'], row['bustype'], row['Pnom'], row['Pmax'], "[", row['StartupCost'], row['ShutdownCost'],
               row['c2'], row['c1'], row['c0'], "]")
     print("\nFNCS Bus Dictionary:")
     print("Bus Pnom Qnom ampFactor [GridLAB-D Substations]")
     for key in bus_keys:
-        row = dict['fncsBuses'][key]
+        row = diction['fncsBuses'][key]
         print(key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])
 
     # read the bus metrics file
-    lp_b = open("bus_" + nameroot + "_metrics.json").read()
+    lp_b = open("bus_" + name_root + "_metrics.json").read()
     lst_b = json.loads(lp_b)
     print("\nBus Metrics data starting", lst_b['StartTime'])
 
@@ -111,7 +111,7 @@ def process_pypower(nameroot):
     data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
     print("\nConstructed", data_b.shape, "NumPy array for Buses")
     j = 0
-    for key in bus_keys:
+    for _ in bus_keys:
         i = 0
         for t in times:
             ary = lst_b[str(t)][bus_keys[j]]
@@ -127,7 +127,7 @@ def process_pypower(nameroot):
     print("Minimum bus voltage =", data_b[0, :, VMIN_IDX].min(), VMIN_UNITS)
 
     # read the generator metrics file
-    lp_g = open("gen_" + nameroot + "_metrics.json").read()
+    lp_g = open("gen_" + name_root + "_metrics.json").read()
     lst_g = json.loads(lp_g)
     print("\nGenerator Metrics data starting", lst_g['StartTime'])
     # make a sorted list of the times, and NumPy array of times in hours
@@ -150,7 +150,7 @@ def process_pypower(nameroot):
     data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
     print("\nConstructed", data_g.shape, "NumPy array for Generators")
     j = 0
-    for key in gen_keys:
+    for _ in gen_keys:
         i = 0
         for t in times:
             ary = lst_g[str(t)][gen_keys[j]]

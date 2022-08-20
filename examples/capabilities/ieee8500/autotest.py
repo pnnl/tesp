@@ -6,11 +6,7 @@ import os
 import subprocess
 import sys
 
-from tesp_support.run_tesp_case import init_tests
-from tesp_support.run_tesp_case import block_test
-from tesp_support.run_tesp_case import start_test
-from tesp_support.run_tesp_case import run_test
-from tesp_support.run_tesp_case import report_tests
+import tesp_support.api as tesp 
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -19,7 +15,7 @@ else:
 
 
 def ieee8500_base_test():
-    start_test('IEEE8500 GridLAB-D example')
+    tesp.start_test('IEEE8500 GridLAB-D example')
     os.chdir('./examples/capabilities/ieee8500')
     p1 = subprocess.Popen('./clean.sh', shell=True)
     p1.wait()
@@ -31,44 +27,44 @@ def ieee8500_base_test():
 
 
 def ieee8500_precool_test():
-    start_test('ieee8500 PNNLteam examples')
+    tesp.start_test('ieee8500 PNNLteam examples')
     os.chdir('./examples/capabilities/ieee8500/PNNLteam')
     p1 = subprocess.Popen('./clean.sh', shell=True)
     p1.wait()
     if bTryHELICS:
         p1 = subprocess.Popen(pycall + ' prepare_cases.py', shell=True)
         p1.wait()
-        run_test('run30.sh', 'PNNL Team 30 - HELICS')
-        run_test('runti30.sh', 'PNNL Team ti30 - HELICS')
-        run_test('run8500.sh', 'PNNL Team 8500 - HELICS')
-        run_test('run8500base.sh', 'PNNL Team 8500 Base - HELICS')
-        run_test('run8500tou.sh', 'PNNL Team 8500 TOU - HELICS')
-        run_test('run8500volt.sh', 'PNNL Team 8500 Volt - HELICS')
-        run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar - HELICS')
-        run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt - HELICS')
+        tesp.run_test('ruh30.sh', 'PNNL Team 30 - HELICS')
+        tesp.run_test('ruhti30.sh', 'PNNL Team ti30 - HELICS')
+        tesp.run_test('ruh8500.sh', 'PNNL Team 8500 - HELICS')
+        tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base - HELICS')
+        tesp.run_test('ruh8500tou.sh', 'PNNL Team 8500 TOU - HELICS')
+        tesp.run_test('ruh8500volt.sh', 'PNNL Team 8500 Volt - HELICS')
+        tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar - HELICS')
+        tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt - HELICS')
         os.chdir(tesp_path)
     else:
         p1 = subprocess.Popen(pycall + ' prepare_cases.py', shell=True)
         p1.wait()
-        run_test('run30.sh', 'PNNL Team 30 - FNCS')
-        run_test('runti30.sh', 'PNNL Team ti30 - FNCS')
-        run_test('run8500.sh', 'PNNL Team 8500 - FNCS')
-        run_test('run8500base.sh', 'PNNL Team 8500 Base - FNCS')
-        run_test('run8500tou.sh', 'PNNL Team 8500 TOU - FNCS')
-        run_test('run8500volt.sh', 'PNNL Team 8500 Volt - FNCS')
-        run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar - FNCS')
-        run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt - FNCS')
+        tesp.run_test('run30.sh', 'PNNL Team 30 - FNCS')
+        tesp.run_test('runti30.sh', 'PNNL Team ti30 - FNCS')
+        tesp.run_test('run8500.sh', 'PNNL Team 8500 - FNCS')
+        tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base - FNCS')
+        tesp.run_test('run8500tou.sh', 'PNNL Team 8500 TOU - FNCS')
+        tesp.run_test('run8500volt.sh', 'PNNL Team 8500 Volt - FNCS')
+        tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar - FNCS')
+        tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt - FNCS')
         os.chdir(tesp_path)
 
 
 if __name__ == '__main__':
-    init_tests()
+    tesp.init_tests()
 
     tesp_path = os.path.expandvars('$TESPDIR/')
     os.chdir(tesp_path)
     bTryHELICS = True
 
-    block_test(ieee8500_base_test)
-    block_test(ieee8500_precool_test)
+    # tesp.block_test(ieee8500_base_test)
+    tesp.block_test(ieee8500_precool_test)
 
-    print(report_tests())
+    print(tesp.report_tests())

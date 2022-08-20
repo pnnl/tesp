@@ -1,4 +1,4 @@
-# file: process_gld.py
+# file: plot_loadshed.py
 import json
 import sys
 import os

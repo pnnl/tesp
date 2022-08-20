@@ -22,29 +22,30 @@ except:
 logger = logging.getLogger(__name__)
 
 
-def read_pypower_metrics(path, nameroot):
+def read_pypower_metrics(path, name_root):
     m_dict_path = os.path.join(path, 'model_dict.json')
-    b_dict_path = os.path.join(path, f'bus_{nameroot}_metrics.json')
-    g_dict_path = os.path.join(path, f'gen_{nameroot}_metrics.json')
+    b_dict_path = os.path.join(path, f'bus_{name_root}_metrics.json')
+    g_dict_path = os.path.join(path, f'gen_{name_root}_metrics.json')
 
     # first, read and print a dictionary of relevant PYPOWER objects
     lp = open(m_dict_path).read()
-    dict = json.loads(lp)
-    baseMVA = dict['baseMVA']
-    gen_keys = list(dict['generators'].keys())
+    diction = json.loads(lp)
+    baseMVA = diction['baseMVA']
+    gen_keys = list(diction['generators'].keys())
     gen_keys.sort()
-    bus_keys = list(dict['dsoBuses'].keys())
+    bus_keys = list(diction['dsoBuses'].keys())
     bus_keys.sort()
     print('\n\nFile', m_dict_path, 'has baseMVA', baseMVA)
     print('\nGenerator Dictionary:')
     print('Unit Bus Type Pnom Pmax Costs[Start Stop C2 C1 C0]')
     for key in gen_keys:
-        row = dict['generators'][key]
-        print(key, row['bus'], row['bustype'], row['Pmin'], row['Pmax'], '[', row['StartupCost'], row['ShutdownCost'], row['c2'], row['c1'], row['c0'], ']')
+        row = diction['generators'][key]
+        print(key, row['bus'], row['bustype'], row['Pmin'], row['Pmax'],
+              '[', row['StartupCost'], row['ShutdownCost'], row['c2'], row['c1'], row['c0'], ']')
     print('\nDSO Bus Dictionary:')
     print('Bus Pnom Qnom ampFactor [GridLAB-D Substations]')
     for key in bus_keys:
-        row = dict['dsoBuses'][key]
+        row = diction['dsoBuses'][key]
         print(key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])
 
     # read the bus metrics file
@@ -100,7 +101,7 @@ def read_pypower_metrics(path, nameroot):
     data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
     print('\nConstructed', data_b.shape, 'NumPy array for Buses')
     j = 0
-    for key in bus_keys:
+    for _ in bus_keys:
         i = 0
         for t in times:
             ary = lst_b[str(t)][bus_keys[j]]
@@ -141,7 +142,7 @@ def read_pypower_metrics(path, nameroot):
     data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
     print('\nConstructed', data_g.shape, 'NumPy array for Generators')
     j = 0
-    for key in gen_keys:
+    for _ in gen_keys:
         i = 0
         for t in times:
             ary = lst_g[str(t)][gen_keys[j]]
@@ -149,25 +150,25 @@ def read_pypower_metrics(path, nameroot):
             i = i + 1
         j = j + 1
 
-    dict = {}
-    dict['hrs'] = hrs
-    dict['data_b'] = data_b
-    dict['keys_b'] = bus_keys
-    dict['idx_b'] = idx_b
-    dict['data_g'] = data_g
-    dict['keys_g'] = gen_keys
-    dict['idx_g'] = idx_g
-    return dict
+    return {
+        'hrs': hrs,
+        'data_b': data_b,
+        'keys_b': bus_keys,
+        'idx_b': idx_b,
+        'data_g': data_g,
+        'keys_g': gen_keys,
+        'idx_g': idx_g
+    }
 
 
-def plot_pypower(dict, title=None, save_file=None, save_only=False):
-    hrs = dict['hrs']
-    data_b = dict['data_b']
-    data_g = dict['data_g']
-    idx_b = dict['idx_b']
-    idx_g = dict['idx_g']
-    keys_b = dict['keys_b']
-    keys_g = dict['keys_g']
+def plot_pypower(diction, title=None, save_file=None, save_only=False):
+    hrs = diction['hrs']
+    data_b = diction['data_b']
+    keys_b = diction['keys_b']
+    idx_b = diction['idx_b']
+    data_g = diction['data_g']
+    keys_g = diction['keys_g']
+    idx_g = diction['idx_g']
 
     # display a plot - hard-wired assumption of 3 generators from Case 9
     fig, ax = plt.subplots(4, 2, sharex='col')
@@ -217,12 +218,12 @@ def plot_pypower(dict, title=None, save_file=None, save_only=False):
         plt.show()
 
 
-def process_pypower(nameroot, title=None, save_file=None, save_only=True):
+def process_pypower(name_root, title=None, save_file=None, save_only=True):
     """ Plots bus and generator quantities for the 9-bus system used in te30 or sgip1 examples
 
-    This function reads *bus_nameroot_metrics.json* and
-    *gen_nameroot_metrics.json* for the data, and
-    *nameroot_m_dict.json* for the metadata.
+    This function reads *bus_[name_root]_metrics.json* and
+    *gen_[name_root]_metrics.json* for the data, and
+    *[name_root]_m_dict.json* for the metadata.
     These must all exist in the current working directory.
     One graph is generated with 8 subplots:
 
@@ -236,10 +237,11 @@ def process_pypower(nameroot, title=None, save_file=None, save_only=True):
     8. Generator 4 P and Q output
 
     Args:
-        nameroot (str): file name of the TESP case, not necessarily the same as the PYPOWER case, without the JSON extension
+        name_root (str): file name of the TESP case, not necessarily the same as the PYPOWER case, w/out the JSON extension
+        title (str): supertitle for the page of plots.
         save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
         save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
     """
     path = os.getcwd()
-    dict = read_pypower_metrics(path, nameroot)
-    plot_pypower(dict, title, save_file, save_only)
+    diction = read_pypower_metrics(path, name_root)
+    plot_pypower(diction, title, save_file, save_only)

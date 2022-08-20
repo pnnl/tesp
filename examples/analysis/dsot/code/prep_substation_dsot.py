@@ -112,7 +112,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     - *fileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
     - *fileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
-    - *nameroot_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *[name_root]_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
 
     Args:
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension

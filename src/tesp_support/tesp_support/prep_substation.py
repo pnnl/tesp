@@ -113,9 +113,9 @@ def ProcessGLM(fileroot):
 
     - *fileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
     - *fileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
-    - *nameroot_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *[name_root]_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
     - *fileroot_HELICS_substation.json*, contains HELICS subscriptions for the psimple_auction and hvac agents
-    - *nameroot_HELICS_gld_msg.json*, a GridLAB-D include file with HELICS publications and subscriptions
+    - *[name_root]_HELICS_gld_msg.json*, a GridLAB-D include file with HELICS publications and subscriptions
 
     Args:
         fileroot (str): path to and base file name for the GridLAB-D file, without an extension

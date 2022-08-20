@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: process_pypower.py
+# file: plot_pp.py
 
 import json
 
@@ -27,14 +27,14 @@ def bus_color(key):
     return 'k'
 
 
-def unit_width(dict, key):
-    if dict['generators'][key]['bustype'] == 'swing':
+def unit_width(diction, key):
+    if diction['generators'][key]['bustype'] == 'swing':
         return 2.0
     return 1.0
 
 
-def unit_color(dict, key):
-    genfuel = dict['generators'][key]['genfuel']
+def unit_color(diction, key):
+    genfuel = diction['generators'][key]['genfuel']
     if genfuel == 'wind':
         return 'g'
     if genfuel == 'nuclear':
@@ -46,30 +46,30 @@ def unit_color(dict, key):
     return 'y'
 
 
-def process_pypower(nameroot, nhours):
+def process_pypower(name_root, nhours):
     # first, read and print a dictionary of relevant PYPOWER objects
-    lp = open(nameroot + '_m_dict.json').read()
-    dict = json.loads(lp)
-    baseMVA = dict['baseMVA']
-    gen_keys = list(dict['generators'].keys())
+    lp = open(name_root + '_m_dict.json').read()
+    diction = json.loads(lp)
+    baseMVA = diction['baseMVA']
+    gen_keys = list(diction['generators'].keys())
     gen_keys.sort()
-    bus_keys = list(dict['dsoBuses'].keys())
+    bus_keys = list(diction['dsoBuses'].keys())
     bus_keys.sort()
-    print('\n\nFile', nameroot, 'has baseMVA', baseMVA)
+    print('\n\nFile', name_root, 'has baseMVA', baseMVA)
     print('\nGenerator Dictionary:')
     print('Unit Bus Type Fuel Pmin Pmax Costs[Start Stop C2 C1 C0]')
     for key in gen_keys:
-        row = dict['generators'][key]
+        row = diction['generators'][key]
         print(key, row['bus'], row['bustype'], row['genfuel'], row['Pmin'], row['Pmax'], '[', row['StartupCost'],
               row['ShutdownCost'], row['c2'], row['c1'], row['c0'], ']')
     print('\nFNCS Bus Dictionary:')
     print('Bus Pnom Qnom ampFactor [GridLAB-D Substations]')
     for key in bus_keys:
-        row = dict['dsoBuses'][key]
+        row = diction['dsoBuses'][key]
         print(key, row['Pnom'], row['Qnom'], row['ampFactor'], row['GLDsubstations'])  # TODO curveScale, curveSkew
 
     # read the bus metrics file
-    lp_b = open('bus_' + nameroot + '_metrics.json').read()
+    lp_b = open('bus_' + name_root + '_metrics.json').read()
     lst_b = json.loads(lp_b)
     print('\nBus Metrics data starting', lst_b['StartTime'])
 
@@ -150,7 +150,7 @@ def process_pypower(nameroot, nhours):
         j = j + 1
 
     # read the generator metrics file
-    lp_g = open('gen_' + nameroot + '_metrics.json').read()
+    lp_g = open('gen_' + name_root + '_metrics.json').read()
     lst_g = json.loads(lp_g)
     print('\nGenerator Metrics data starting', lst_g['StartTime'])
     # make a sorted list of the times, and NumPy array of times in hours
@@ -182,7 +182,7 @@ def process_pypower(nameroot, nhours):
             i = i + 1
         p_avg = data_g[j, :, PGEN_IDX].mean()
         p_std = data_g[j, :, PGEN_IDX].std()
-        row = dict['generators'][key]
+        row = diction['generators'][key]
         p_max = float(row['Pmax'])
         print(key, row['bus'], row['bustype'], row['genfuel'],
               '{:.4f}'.format(p_avg / p_max),
@@ -218,8 +218,8 @@ def process_pypower(nameroot, nhours):
     ax[1, 0].set_title('Generator Outputs')
     ax[1, 0].set_ylabel(PGEN_UNITS)
     for i in range(data_g.shape[0]):
-        ax[1, 0].plot(hrs, data_g[i, :, PGEN_IDX], color=unit_color(dict, gen_keys[i]),
-                      linewidth=unit_width(dict, gen_keys[i]))
+        ax[1, 0].plot(hrs, data_g[i, :, PGEN_IDX], color=unit_color(diction, gen_keys[i]),
+                      linewidth=unit_width(diction, gen_keys[i]))
 
     ax[0, 1].set_title('Bus Voltages')
     ax[0, 1].set_ylabel(VMAG_UNITS)

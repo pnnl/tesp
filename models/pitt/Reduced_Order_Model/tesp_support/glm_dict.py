@@ -55,22 +55,22 @@ def ti_enumeration_string(tok):
     return tok
 
 
-def glm_dict(nameroot, ercot=False, te30=False):
+def glm_dict(name_root, ercot=False, te30=False):
     """ Writes the JSON metadata file from a GLM file
 
-    This function reads *nameroot.glm* and writes *nameroot_glm_dict.json*
+    This function reads *name_root.glm* and writes *[name_root]_glm_dict.json*
     The GLM file should have some meters and triplex_meters with the
     bill_mode attribute defined, which identifies them as billing meters
     that parent houses and inverters. If this is not the case, ERCOT naming
     rules can be applied to identify billing meters.
 
     Args:
-        nameroot (str): path and file name of the GLM file, without the extension
+        name_root (str): path and file name of the GLM file, without the extension
         ercot (boolean): request ERCOT billing meter naming. Defaults to false.
         te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false.
     """
-    ip = open(nameroot + '.glm', 'r')
-    op = open(nameroot + '_glm_dict.json', 'w')
+    ip = open(name_root + '.glm', 'r')
+    op = open(name_root + '_glm_dict.json', 'w')
 
     FNCSmsgName = ''
     feeder_id = 'feeder'

@@ -283,8 +283,7 @@ def add_new_house_infrastructure(house_stats, new_house_stats_key,
     new_house_name_parts = {}
     pattern = re.compile('[a-zA-Z0-9-]*')
     match = pattern.search(new_house_exp_node)
-    root_name = match.group()
-    new_house_name_parts['root'] = root_name
+    new_house_name_parts['root'] = match.group()
     pattern = re.compile('_tm_[0-9]+')
     match = pattern.search(house_stats[new_house_stats_key]['name'])
     suffix = match.group()

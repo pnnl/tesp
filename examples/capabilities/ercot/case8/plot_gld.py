@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: process_gld.py; custom for the IEEE 8500-node circuit
+# file: plot_gld.py; custom for the IEEE 8500-node circuit
 
 import json
 import sys
@@ -9,15 +9,15 @@ import numpy as np
 
 # first, read and print a dictionary of all the monitored GridLAB-D objects
 lp = open(sys.argv[1] + '_glm_dict.json').read()
-dict = json.loads(lp)
-sub_keys = list(dict['feeders'].keys())
+diction = json.loads(lp)
+sub_keys = list(diction['feeders'].keys())
 sub_keys.sort()
-hse_keys = list(dict['houses'].keys())
+hse_keys = list(diction['houses'].keys())
 hse_keys.sort()
-mtr_keys = list(dict['billingmeters'].keys())
+mtr_keys = list(diction['billingmeters'].keys())
 mtr_keys.sort()
-xfMVA = dict['transformer_MVA']
-bulkBus = dict['bulkpower_bus']
+xfMVA = diction['transformer_MVA']
+bulkBus = diction['bulkpower_bus']
 print("\n\nFile", sys.argv[1], "has substation", sub_keys[0], "at bulk system bus", bulkBus, "with", xfMVA,
       "MVA transformer")
 
@@ -176,8 +176,8 @@ for key in mtr_keys:
 # normalize each meter voltage
 j = 0
 for key in mtr_keys:
-    vln = dict['billingmeters'][key]['vln']
-    vll = dict['billingmeters'][key]['vll']
+    vln = diction['billingmeters'][key]['vln']
+    vll = diction['billingmeters'][key]['vll']
     data_m[j, :, MTR_VOLT_MIN_IDX] /= vln
     data_m[j, :, MTR_VOLT_MAX_IDX] /= vln
     data_m[j, :, MTR_VOLT_AVG_IDX] /= vln

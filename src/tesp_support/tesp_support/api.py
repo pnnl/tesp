@@ -34,7 +34,7 @@ Public Functions:
 
 from __future__ import absolute_import
 
-from .case_config import tesp_share
+# from .case_config import tesp_share
 
 from .helpers_dsot import enable_logging
 from .tso_helpers import load_json_case
@@ -85,6 +85,29 @@ from .tesp_monitor import show_tesp_monitor
 from .prep_eplus import make_gld_eplus_case
 from .parse_msout import read_most_solution
 
+# metrics processing and plotting
+from .process_agents import process_agents
+from .process_agents import read_agent_metrics
+from .process_agents import plot_agents
+from .process_eplus import process_eplus
+from .process_eplus import read_eplus_metrics
+from .process_eplus import plot_eplus
+from .process_gld import process_gld
+from .process_gld import read_gld_metrics
+from .process_gld import plot_gld
+from .process_houses import process_houses
+from .process_houses import read_houses_metrics
+from .process_houses import plot_houses
+from .process_inv import process_inv
+from .process_inv import read_inv_metrics
+from .process_inv import plot_inv
+from .process_pypower import process_pypower
+from .process_pypower import read_pypower_metrics
+from .process_pypower import plot_pypower
+from .process_voltages import process_voltages
+from .process_voltages import read_voltages_metrics
+from .process_voltages import plot_voltages
+
 # from DSOT
 from .hvac_dsot import HVACDSOT
 from .water_heater_dsot import WaterHeaterDSOT
@@ -97,13 +120,6 @@ from .forecasting_dsot import Forecasting
 from .metrics_collector import MetricsStore, MetricsCollector
 from .schedule_server import schedule_server
 
-# from .process_agents import process_agents
-# from .process_eplus import process_eplus
-# from .process_gld import process_gld
-# from .process_houses import process_houses
-# from .process_inv import process_inv
-# from .process_pypower import process_pypower
-# from .process_voltages import process_voltages
 
 # from .matpower.matpower_dict import matpower_dict
 # from .matpower.process_matpower import process_matpower

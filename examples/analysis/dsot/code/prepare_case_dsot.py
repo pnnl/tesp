@@ -22,7 +22,7 @@ import prep_substation_dsot as prep
 from tesp_support.helpers import HelicsMsg
 
 
-# Simulation settings for the this experimental case
+# Simulation settings for the experimental case
 def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
     # We need to load in the master metadata (*system_case_config.josn)
@@ -425,7 +425,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 6:
         prepare_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
     else:
-        prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
+        prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=0, ev=0)
         # prepare_case(8, "8_system_case_config", pv=0, bt=1, fl=0, ev=0)
         # prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)

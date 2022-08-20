@@ -22,35 +22,35 @@ except:
 logger = logging.getLogger(__name__)
 
 
-def read_agent_metrics(path, nameroot, dictname='', print_dictionary=False):
-    agent_dict_path = os.path.join(path, f'{nameroot}_agent_dict.json')
-    auction_dict_path = os.path.join(path, f'auction_{nameroot}_metrics.json')
+def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False):
+    agent_dict_path = os.path.join(path, f'{name_root}_agent_dict.json')
+    auction_dict_path = os.path.join(path, f'auction_{name_root}_metrics.json')
     # first, read and print a dictionary of relevant agents
-    if len(dictname) > 0:
+    if len(diction_name) > 0:
         try:
-            lp = open(dictname).read()
+            lp = open(diction_name).read()
         except:
-            logger.error(f'Unable to open agent metrics file {dictname}')
+            logger.error(f'Unable to open agent metrics file {diction_name}')
     else:
         try:
             lp = open(agent_dict_path).read()
         except:
             logger.error(f'Unable to open agent metrics file {agent_dict_path}')
-    dict = json.loads(lp)
-    a_keys = list(dict['markets'].keys())
+    model = json.loads(lp)
+    a_keys = list(model['markets'].keys())
     a_keys.sort()
-    c_keys = list(dict['controllers'].keys())
+    c_keys = list(model['controllers'].keys())
     c_keys.sort()
     if print_dictionary:
         print('\nMarket Dictionary:')
         print('ID Period Unit Init StDev')
         for key in a_keys:
-            row = dict['markets'][key]
+            row = model['markets'][key]
             print(key, row['period'], row['unit'], row['init_price'], row['init_stdev'])
         print('\nController Dictionary:')
         print('ID House Mode BaseDaylight Ramp Offset Cap')
         for key in c_keys:
-            row = dict['controllers'][key]
+            row = model['controllers'][key]
             print(key, row['houseName'], row['control_mode'], row['daylight_set'], row['ramp'], row['offset_limit'],
                   row['price_cap'])
 
@@ -103,7 +103,7 @@ def read_agent_metrics(path, nameroot, dictname='', print_dictionary=False):
         j = j + 1
 
     # read the controller metrics file
-    lp_c = open('controller_' + nameroot + '_metrics.json').read()
+    lp_c = open('controller_' + name_root + '_metrics.json').read()
     lst_c = json.loads(lp_c)
     print('\nController Metrics data starting', lst_c['StartTime'])
 
@@ -152,27 +152,27 @@ def read_agent_metrics(path, nameroot, dictname='', print_dictionary=False):
     print('Out of {:d} controllers, {:d} submitted bids and the highest bidder was {:s} [{:d}]'
           .format(len(c_keys), nbidding, c_keys[cidx], cidx))
 
-    dict = {}
-    dict['hrs'] = hrs
-    dict['data_a'] = data_a
-    dict['data_c'] = data_c
-    dict['idx_a'] = idx_a
-    dict['idx_c'] = idx_c
-    dict['keys_a'] = a_keys
-    dict['keys_c'] = c_keys
-    dict['high_bid_idx'] = cidx
-    return dict
+    return {
+        'hrs': hrs,
+        'data_a': data_a,
+        'data_c': data_c,
+        'idx_a': idx_a,
+        'idx_c': idx_c,
+        'keys_a': a_keys,
+        'keys_c': c_keys,
+        'high_bid_idx': cidx
+    }
 
 
-def plot_agents(dict, save_file=None, save_only=False):
-    hrs = dict['hrs']
-    data_a = dict['data_a']
-    data_c = dict['data_c']
-    idx_a = dict['idx_a']
-    idx_c = dict['idx_c']
-    keys_a = dict['keys_a']
-    keys_c = dict['keys_c']
-    cidx = dict['high_bid_idx']
+def plot_agents(diction, save_file=None, save_only=False):
+    hrs = diction['hrs']
+    data_a = diction['data_a']
+    data_c = diction['data_c']
+    idx_a = diction['idx_a']
+    idx_c = diction['idx_c']
+    keys_a = diction['keys_a']
+    keys_c = diction['keys_c']
+    cidx = diction['high_bid_idx']
     # display a plot
     fig, ax = plt.subplots(2, 2, sharex='col')
 
@@ -206,12 +206,12 @@ def plot_agents(dict, save_file=None, save_only=False):
         plt.show()
 
 
-def process_agents(nameroot, dictname='', save_file=None, save_only=False, print_dictionary=False):
+def process_agents(name_root, diction_name='', save_file=None, save_only=False, print_dictionary=False):
     """ Plots cleared price, plus bids from the first HVAC controller
 
-    This function reads *auction_nameroot_metrics.json* and
-    *controller_nameroot_metrics.json* for the data;
-    it reads *nameroot_glm_dict.json* for the metadata.
+    This function reads *auction_[name_root]_metrics.json* and
+    *controller_[name_root]_metrics.json* for the data;
+    it reads *[name_root]_glm_dict.json* for the metadata.
     These must all exist in the current working directory.
     Makes one graph with 2 subplots:
 
@@ -219,11 +219,12 @@ def process_agents(nameroot, dictname='', save_file=None, save_only=False, print
     2. Bid quantity from the first controller
 
     Args:
-        nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
-        dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+        name_root (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
+        diction_name (str): metafile name (with json extension) for a different GLM dictionary, if it's not *[name_root]_glm_dict.json*. Defaults to empty.
         save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
         save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
+        print_dictionary (Boolean): set True to print dictionary.
     """
     path = os.getcwd()
-    dict = read_agent_metrics(path, nameroot, dictname, print_dictionary)
-    plot_agents(dict, save_file, save_only)
+    diction = read_agent_metrics(path, name_root, diction_name, print_dictionary)
+    plot_agents(diction, save_file, save_only)

@@ -8,9 +8,9 @@
 import json
 
 
-def matpower_dict(nameroot):
-    ip = open(nameroot + ".m", "r")
-    op = open(nameroot + "_m_dict.json", "w")
+def matpower_dict(name_root):
+    ip = open(name_root + ".m", "r")
+    op = open(name_root + "_m_dict.json", "w")
 
     baseMVA = 1
     ampFactor = 1

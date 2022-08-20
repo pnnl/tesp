@@ -1,5 +1,6 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: process_gld.py; custom for the IEEE 8500-node circuit
+# file: process_voltages.py; custom for the IEEE 8500-node circuit
+
 import json
 import sys
 
@@ -8,35 +9,35 @@ import numpy as np
 
 # first, read and print a dictionary of all the monitored GridLAB-D objects
 lp = open(sys.argv[1] + "_glm_dict.json").read()
-dict = json.loads(lp)
-sub_keys = list(dict['feeders'].keys())
+diction = json.loads(lp)
+sub_keys = list(diction['feeders'].keys())
 sub_keys.sort()
-inv_keys = list(dict['inverters'].keys())
+inv_keys = list(diction['inverters'].keys())
 inv_keys.sort()
-hse_keys = list(dict['houses'].keys())
+hse_keys = list(diction['houses'].keys())
 hse_keys.sort()
-mtr_keys = list(dict['billingmeters'].keys())
+mtr_keys = list(diction['billingmeters'].keys())
 mtr_keys.sort()
-xfMVA = dict['transformer_MVA']
-matBus = dict['matpower_id']
+xfMVA = diction['transformer_MVA']
+matBus = diction['matpower_id']
 print("\n\nFile", sys.argv[1], "has substation", sub_keys[0], "at Matpower bus", matBus, "with", xfMVA,
       "MVA transformer")
 print("\nFeeder Dictionary:")
 for key in sub_keys:
-    row = dict['feeders'][key]
+    row = diction['feeders'][key]
     # print (key, "has", row['house_count'], "houses and", row['inverter_count'], "inverters")
 print("\nBilling Meter Dictionary:")
 for key in mtr_keys:
-    row = dict['billingmeters'][key]
+    row = diction['billingmeters'][key]
     # print (key, "on phase", row['phases'], "of", row['feeder_id'], "with", row['children'])
 print("\nHouse Dictionary:")
 for key in hse_keys:
-    row = dict['houses'][key]
+    row = diction['houses'][key]
     # print (key, "on", row['billingmeter_id'], "has", row['sqft'], "sqft", row['cooling'], "cooling", row['heating'], "heating", row['wh_gallons'], "gal WH")
 # row['feeder_id'] is also available
 print("\nInverter Dictionary:")
 for key in inv_keys:
-    row = dict['inverters'][key]
+    row = diction['inverters'][key]
     # print (key, "on", row['billingmeter_id'], "has", row['rated_W'], "W", row['resource'], "resource")
 # row['feeder_id'] is also available
 

@@ -84,7 +84,8 @@ sudo apt-get -y install liblapack-dev
 sudo apt-get -y install libmetis-dev
 
 # Python support
-sudo apt-get -y install python3-venv
+sudo apt-get -y install python3.8
+sudo apt-get -y install python3.8-venv
 sudo apt-get -y install python3-pip
 sudo apt-get -y install python3-tk
 
@@ -99,21 +100,23 @@ else
 fi
 git config --global credential.helper store
 
-
 echo
 echo "Create directory structure for TESP"
 cd "${HOME}" || exit
 mkdir -p tesp
 cd tesp || exit
+
 echo "Install a virtual python environment to $HOME/tesp/venv"
-mkdir -p venv
-python3 -m venv $HOME/tesp/venv --prompt TESP
+python3.8 -m pip install --upgrade pip
+python3.8 -m pip install virtualenv
+virtualenv venv --prompt TESP
+
 echo "Install executables environment to $HOME/tesp/tenv"
 mkdir -p tenv
+
 echo "Install repositories to $HOME/tesp/repository"
 mkdir -p repository
 cd repository || exit
-
 echo
 echo "Download all relevant repositories..."
 

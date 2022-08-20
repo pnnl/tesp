@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 
   param_time_stop = argv[1];
   param_time_agg = argv[2];
-  if (argc > 3) param_bldg_id = argv[3];
+  if (argc > 3) BuildingID = argv[3];
   if (argc > 4) {
     param_file_name = argv[4];
     fout.open(param_file_name.c_str());
