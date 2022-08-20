@@ -1,0 +1,331 @@
+{
+  "general" : {
+    "hours_per_year" : 2080,
+    "salary_to_total_compensation_ratio" : 0.801,
+    "customers_per_FTE" : 10000.01,
+	"comm_customers_per_bldg" : 2.09,
+    "transmission_access_fee_per_MWh" : 150.01,
+    "annual_material_cost_per_customer" : 75.01,
+    "distribution_automation_network_costs_per_customer" : {
+      "Rural" : 75.01,
+      "Suburban" : 70.01,
+      "Urban" : 50.01
+    },
+    "market_operations_costs" : {
+      "flat_cost" : 5000.01,
+      "cost_per_customer" : 10.01,
+      "cost_per_substation" : 150.01
+    },
+    "field_crew_hourly_rate" : {
+      "Urban" : 35.01,
+      "Suburban" : 30.01,
+      "Rural" : 25.01
+    },
+    "operations_center_hourly_rate" : {
+      "Urban" : 35.01,
+      "Suburban" : 30.01,
+      "Rural" : 25.01
+    },
+    "customer_service_agent_hourly_rate" : {
+      "Urban" : 35.01,
+      "Suburban" : 30.01,
+      "Rural" : 25.01
+    },
+    "DER_recruiter_hourly_rate" : {
+      "Urban" : 35.01,
+      "Suburban" : 30.01,
+      "Rural" : 25.01
+    },
+    "billing_representative_hourly_rate" : {
+      "Urban" : 35.01,
+      "Suburban" : 30.01,
+      "Rural" : 25.01
+    },
+    "market_operations_labor_hourly_rate" : {
+      "Urban" : 35.01,
+      "Suburban" : 30.01,
+      "Rural" : 25.01
+    },
+    "feeder_capital_cost_Rate" : {
+      "Urban" : 1000001,
+      "Suburban" : 5000001,
+      "Rural" : 10000001
+    },
+    "retail_operations_costs" : {
+      "flat_cost" : 4000.01,
+      "cost_per_customer" : 5.01
+    },
+    "substation_costs" : {
+      "transformer_capital_costs" : 111,
+      "substation_size" : 111,
+      "balance_of_substation_costs" : 111,
+      "land_cost" : {
+        "Urban" : 111,
+        "Suburban" : 111,
+        "Rural" : 111
+      },
+      "transformer_maintenance_costs" : 111,
+      "transformer_lifetime" : 11
+    },
+    "customer_transformer_rating" : {
+      "residential" : 11,
+      "commercial" : 111,
+      "industrial" : 1111
+    },
+    "meter_cost" : 0,
+    "RCI_customer_growth_rates" : {
+      "residential" : 0.11,
+      "commercial" : 0.11,
+      "industrial" : 0.11
+    },
+    "transmission_charge_rate" : 11,
+    "market_ops_hardware_software" : {
+      "flat_cost" : 11111,
+      "cost_per_customer" : 11
+    },
+    "workspace_costs" : {
+      "Urban" : 111,
+      "Suburban" : 111,
+      "Rural" : 111
+    }
+  },
+  "DSO" : {
+    "bus_number" : 1,
+	"size": 3000.0,
+    "name" : "East",
+    "climate_zone" : 5,
+    "latitude" : 29.65,
+    "longitude" : -95.42,
+    "time_zone_offset" : -6,
+    "utility_type" : "Urban",
+    "peak_season" : "Summer",
+    "substation": "Substation",
+    "random_seed": 2,
+	"generators": {
+		"generator_1": {
+			"name": "DG_1",
+			"parent": "n61",
+			"voltage": "2401.7771",
+			"filters": {
+				"operation":"randomdelay",
+				"properties": [
+					{
+						"name": "distribution",
+						"value": "uniform"
+					},
+					{
+						"name": "min",
+						"value": 0.0
+					},
+					{
+						"name": "max",
+						"value": 0.019
+					}
+				]
+			},
+			"size": 700,
+			"ramp_rate": 5,
+			"a": 0.0002,
+			"b": 0.185,
+			"c": 0.3
+		},
+		"generator_2": {
+			"name": "DG_2",
+			"parent": "n160",
+			"voltage": "2401.7771",
+			"filters": {
+				"operation":"randomdelay",
+				"properties": [
+					{
+						"name": "distribution",
+						"value": "uniform"
+					},
+					{
+						"name": "min",
+						"value": 0.0
+					},
+					{
+						"name": "max",
+						"value": 0.040
+					}
+				]
+			},
+			"size": 700,
+			"ramp_rate": 5,
+			"a": 0.00015,
+			"b": 0.152,
+			"c": 0.65
+		},
+		"generator_3": {
+			"name": "DG_3",
+			"parent": "l64",
+			"voltage": "2401.7771",
+			"filters": {
+				"operation":"randomdelay",
+				"properties": [
+					{
+						"name": "distribution",
+						"value": "uniform"
+					},
+					{
+						"name": "min",
+						"value": 0.0
+					},
+					{
+						"name": "max",
+						"value": 0.040
+					}
+				]
+			},
+			"size": 700,
+			"ramp_rate": 5,
+			"a": 0.0002,
+			"b": 0.185,
+			"c": 0.4
+		},
+		"generator_4": {
+			"name": "DG_4",
+			"parent": "l62",
+			"voltage": "2401.7771",
+			"filters": {
+				"operation":"randomdelay",
+				"properties": [
+					{
+						"name": "distribution",
+						"value": "uniform"
+					},
+					{
+						"name": "min",
+						"value": 0.0
+					},
+					{
+						"name": "max",
+						"value": 0.040
+					}
+				]
+			},
+			"size": 700,
+			"ramp_rate": 5,
+			"a": 0.00025,
+			"b": 0.156,
+			"c": 0.33
+		}
+	},
+	"microgrids": {
+      "Microgrid_1" : {
+        "name": "Microgrid_Agent_1",
+		"meter_prefix": ["l35","l37","l38","l39","l41","l42","l43","l45","l46","l47","l48","l49","l50","l51"],
+		"parent": "n135",
+		"filters": {
+				"operation":"randomdelay",
+				"properties": [
+					{
+						"name": "distribution",
+						"value": "uniform"
+					},
+					{
+						"name": "min",
+						"value": 0.0
+					},
+					{
+						"name": "max",
+						"value": 0.040
+					}
+				]
+			},
+        "ercot": false
+		},
+	"Microgrid_2" : {
+        "name": "Microgrid_Agent_2",
+		"meter_prefix": ["l98","l99","l100","l102","l103","l104","l106","l107","l109","l111","l112","l113","l114"],
+		"parent": "n97",
+		"filters": {
+				"operation":"randomdelay",
+				"properties": [
+					{
+						"name": "distribution",
+						"value": "uniform"
+					},
+					{
+						"name": "min",
+						"value": 0.0
+					},
+					{
+						"name": "max",
+						"value": 0.040
+					}
+				]
+			},
+        "ercot": false
+		},
+	  "Microgrid_3" : {
+        "name": "Microgrid_Agent_3",
+		"meter_prefix": ["l68","l69","l70","l71","l73","l74","l75","l76","l77","l79","l80","l82","l83","l84","l85","l86","l87","l88","l90","l92","l94","l95","l96"],
+		"parent": "n67",
+		"filters": {
+				"operation":"randomdelay",
+				"properties": [
+					{
+						"name": "distribution",
+						"value": "uniform"
+					},
+					{
+						"name": "min",
+						"value": 0.0
+					},
+					{
+						"name": "max",
+						"value": 0.040
+					}
+				]
+			},
+        "ercot": false
+		}
+	  },
+    "feeders": {
+      "feeder1" : {
+        "name": "IEEE-123",
+        "ercot": false
+      }
+    },
+    "RCI energy mix" : {
+      "residential" : 0.3927,
+      "commercial" : 0.3523,
+      "industrial" : 0.2509
+    },
+    "number_of_customers" : 3680144,
+    "number_of_gld_homes" : 168,
+    "number_of_substations" : 1,
+    "MVA_growth_rate" : 0.01,
+    "weather_file" : "weather_Bus 2_732873_29.65_-95.42_2016.dat",
+    "ashrae_zone" : "2A",
+    "RCI customer count mix" : {
+      "residential" : 0.9657,
+      "commercial" : 0.0,
+      "industrial" : 0.0343
+    },
+    "average_load_MW" : 15026,
+    "total_load_time_series_file" : "",
+    "industrial_load_time_series_file" : "",
+    "winter_peak_MW" : 0,
+    "summer_peak_MW" : 0,
+    "capacity_limit_MW" : 0,
+    "scaling_factor" : 0,
+    "substation_upgrade" : {
+      "greenfield_MVA" : [
+        111,
+        111
+      ],
+      "brownfield_MVA" : [
+        111,
+        111
+      ]
+    },
+    "substation_transformer_count" : 111,
+    "bilaterals" : {
+      "price" : 11.11,
+      "load_fraction" : 0.11
+    },
+    "DSO_system_energy_fraction" : 0.11
+  }
+ }
