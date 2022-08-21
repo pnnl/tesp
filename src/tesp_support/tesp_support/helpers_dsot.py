@@ -203,7 +203,7 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
             for plyr in range(len(players)):
                 player = system_config[players[plyr]]
                 if player[6] or player[7]:
-                    outfile.write('(exec python3 -c "import tesp_support.player as tesp;'
+                    outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
                                   'tesp.load_player_loop(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                   % (master_file, players[plyr], outPath, player[0]))
 
@@ -320,8 +320,8 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                     player = system_config[players[plyr]]
                     if player[6] or player[7]:
                         outfile.write('set FNCS_CONFIG_FILE=%s_player.yaml\n' % (player[0]))
-                        outfile.write('start /b cmd /c python -c "import tesp_support.load_player as tesp;'
-                                      'tesp.load_player_loop(\'./%s\', \'%s\')" ^> %s\\%s_player.log 2^>^&1\n'
+                        outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                                      'tesp.load_player_loop_f(\'./%s\', \'%s\')" ^> %s\\%s_player.log 2^>^&1\n'
                                       % (master_file, players[plyr], outPath, player[0]))
 
         with open(out_folder + '/kill.bat', 'w') as outfile:
@@ -406,8 +406,8 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                     player = system_config[players[plyr]]
                     if player[6] or player[7]:
                         outfile.write('(export FNCS_CONFIG_FILE=%s_player.yaml '
-                                      '&& exec python3 -c "import tesp_support.load_player as tesp;'
-                                      'tesp.load_player_loop(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
+                                      '&& exec python3 -c "import tesp_support.api as tesp;'
+                                      'tesp.load_player_loop_f(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                       % (player[0], master_file, players[plyr], outPath, player[0]))
 
         write_management_script(archive_folder, case_path, outPath, system_config['gldDebug'], 1)

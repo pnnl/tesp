@@ -156,10 +156,8 @@ if __name__ == '__main__':
             b_helics = False
 
     tesp.init_tests()
-
     tesp_path = os.path.expandvars('$TESPDIR/examples')
     os.chdir(tesp_path)
-    b_helics = False
 
     tesp.block_test(gld_player_test)
     tesp.block_test(loadshed_test)

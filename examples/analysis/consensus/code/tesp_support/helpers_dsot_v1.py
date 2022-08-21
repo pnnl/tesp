@@ -144,12 +144,12 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                               'tesp.tso_loop(\'./%s\')" ^> %s\\tso.log 2^>^&1\n'
                               % (master_file, outPath))
                 outfile.write('set FNCS_CONFIG_FILE=load_player.yaml\n')
-                outfile.write('start /b cmd /c python -c "import tesp_support.load_player as tesp;'
-                              'tesp.load_player_loop(\'./%s\', \'keyLoad\')" ^> %s\\load_player.log 2^>^&1\n'
+                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                              'tesp.load_player_loop_f(\'./%s\', \'keyLoad\')" ^> %s\\load_player.log 2^>^&1\n'
                               % (master_file, outPath))
                 outfile.write('set FNCS_CONFIG_FILE=wind_player.yaml\n')
-                outfile.write('start /b cmd /c python -c "import tesp_support.load_player as tesp;'
-                              'tesp.load_player_loop(\'./%s\', \'keyGen\')" ^> %s\\wind_player.log 2^>^&1\n'
+                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                              'tesp.load_player_loop_f(\'./%s\', \'keyGen\')" ^> %s\\wind_player.log 2^>^&1\n'
                               % (master_file, outPath))
 
         with open(out_folder + '/kill.bat', 'w') as outfile:
@@ -246,12 +246,12 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                                   'tesp.tso_loop(\'./%s\')" &> %s/tso.log &)\n'
                                   % (master_file, outPath))
                     outfile.write('(export FNCS_CONFIG_FILE=load_player.yaml '
-                                  '&& exec python3 -c "import tesp_support.load_player as tesp;'
-                                  'tesp.load_player_loop(\'./%s\', \'keyLoad\')" &> %s/load_player.log &)\n'
+                                  '&& exec python3 -c "import tesp_support.api as tesp;'
+                                  'tesp.load_player_loop_f(\'./%s\', \'keyLoad\')" &> %s/load_player.log &)\n'
                                   % (master_file, outPath))
                     outfile.write('(export FNCS_CONFIG_FILE=wind_player.yaml '
-                                  '&& exec python3 -c "import tesp_support.load_player as tesp;'
-                                  'tesp.load_player_loop(\'./%s\', \'keyGen\')" &> %s/wind_player.log &)\n'
+                                  '&& exec python3 -c "import tesp_support.api as tesp;'
+                                  'tesp.load_player_loop_f(\'./%s\', \'keyGen\')" &> %s/wind_player.log &)\n'
                                   % (master_file, outPath))
 
         with open(out_folder + '/monitor.sh', 'w') as outfile:
@@ -417,12 +417,12 @@ def write_experiment_management_script_with_microgrids(master_file, case_path, s
                               'tesp.tso_loop(\'./%s\')" ^> %s\\tso.log 2^>^&1\n'
                               % (master_file, outPath))
                 outfile.write('set FNCS_CONFIG_FILE=load_player.yaml\n')
-                outfile.write('start /b cmd /c python -c "import tesp_support.load_player as tesp;'
-                              'tesp.load_player_loop(\'./%s\', \'keyLoad\')" ^> %s\\load_player.log 2^>^&1\n'
+                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                              'tesp.load_player_loop_f(\'./%s\', \'keyLoad\')" ^> %s\\load_player.log 2^>^&1\n'
                               % (master_file, outPath))
                 outfile.write('set FNCS_CONFIG_FILE=wind_player.yaml\n')
-                outfile.write('start /b cmd /c python -c "import tesp_support.load_player as tesp;'
-                              'tesp.load_player_loop(\'./%s\', \'keyGen\')" ^> %s\\wind_player.log 2^>^&1\n'
+                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                              'tesp.load_player_loop_f(\'./%s\', \'keyGen\')" ^> %s\\wind_player.log 2^>^&1\n'
                               % (master_file, outPath))
 
         with open(out_folder + '/kill.bat', 'w') as outfile:
@@ -554,12 +554,12 @@ def write_experiment_management_script_with_microgrids(master_file, case_path, s
                                   'tesp.tso_loop(\'./%s\')" &> %s/tso.log &)\n'
                                   % (master_file, outPath))
                     outfile.write('(export FNCS_CONFIG_FILE=load_player.yaml '
-                                  '&& exec python3 -c "import tesp_support.load_player as tesp;'
-                                  'tesp.load_player_loop(\'./%s\', \'keyLoad\')" &> %s/load_player.log &)\n'
+                                  '&& exec python3 -c "import tesp_support.api as tesp;'
+                                  'tesp.load_player_loop_f(\'./%s\', \'keyLoad\')" &> %s/load_player.log &)\n'
                                   % (master_file, outPath))
                     outfile.write('(export FNCS_CONFIG_FILE=wind_player.yaml '
-                                  '&& exec python3 -c "import tesp_support.load_player as tesp;'
-                                  'tesp.load_player_loop(\'./%s\', \'keyGen\')" &> %s/wind_player.log &)\n'
+                                  '&& exec python3 -c "import tesp_support.api as tesp;'
+                                  'tesp.load_player_loop_f(\'./%s\', \'keyGen\')" &> %s/wind_player.log &)\n'
                                   % (master_file, outPath))
 
         with open(out_folder + '/monitor.sh', 'w') as outfile:

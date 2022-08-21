@@ -311,7 +311,8 @@ def glm_dict(name_root, ercot=False, te30=False):
                     vln = float(lst[1].strip(' ').strip(';')) * 1.0
                     vll = vln * math.sqrt(3.0)
                 if lst[0] == 'bill_mode':
-                    billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln, 'children': []}
+                    billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln,
+                                           'children': []}
                     lastBillingMeter = name
                     inMeters = False
         elif len(lst) == 1:

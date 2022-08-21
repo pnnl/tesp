@@ -5,29 +5,25 @@
 import os
 import sys
 
-import tesp_support.process_agents as ap
-# import tesp_support.process_eplus as ep
-import tesp_support.process_gld as gp
-import tesp_support.process_houses as hp
-# import tesp_support.process_pypower as pp
-import tesp_support.process_voltages as vp
+
+import tesp_support.api as tesp
 
 if __name__ == '__main__':
-    rootname = sys.argv[1]
+    name_root = sys.argv[1]
 
-    # pmetrics = pp.read_pypower_metrics(os.getcwd(), rootname)
-    # pp.plot_pypower(pmetrics)
+    # pmetrics = tesp.read_pypower_metrics(os.getcwd(), name_root)
+    # tesp.plot_pypower(pmetrics)
 
-    if os.path.exists('auction_' + rootname + '_metrics.json'):
-        ametrics = ap.read_agent_metrics(os.getcwd(), rootname, f'{rootname}_agent_dict.json')
-        ap.plot_agents(ametrics)
+    if os.path.exists('auction_' + name_root + '_metrics.json'):
+        ametrics = tesp.read_agent_metrics(os.getcwd(), name_root, f'{name_root}_agent_dict.json')
+        tesp.plot_agents(ametrics)
 
-    gmetrics = gp.read_gld_metrics(os.getcwd(), rootname, f'{rootname}_glm_dict.json')
-    gp.plot_gld(gmetrics)
-    hp.plot_houses(gmetrics)
-    vp.plot_voltages(gmetrics)
+    gmetrics = tesp.read_gld_metrics(os.getcwd(), name_root, f'{name_root}_glm_dict.json')
+    tesp.plot_gld(gmetrics)
+    tesp.plot_houses(gmetrics)
+    tesp.plot_voltages(gmetrics)
 
-    # emetrics = ep.read_eplus_metrics(os.getcwd(), rootname)
-    # ep.plot_eplus(emetrics)
+    # emetrics = tesp.read_eplus_metrics(os.getcwd(), name_root)
+    # tesp.plot_eplus(emetrics)
 
-    # ip.process_inv (rootname, 'Test_Challenge_glm_dict.json')
+    # tesp.process_inv (name_root, 'Test_Challenge_glm_dict.json')

@@ -40,6 +40,8 @@ from .helpers_dsot import enable_logging
 from .tso_helpers import load_json_case
 from .tso_helpers import summarize_opf
 
+from .player import load_player_loop
+from .player_f import load_player_loop_f
 from .feederGenerator import populate_feeder
 from .feederGenerator import write_node_houses
 from .feederGenerator import write_node_house_configs

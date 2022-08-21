@@ -1,12 +1,14 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
-# file: load_player.py
-import numpy as np
-import tesp_support.fncs as fncs
+# file: player_f.py
 import datetime
 import json
 
+import numpy as np
 
-def load_player_loop(casename, keyName):
+import tesp_support.fncs as fncs
+
+
+def load_player_loop_f(casename, keyName):
     print('Loading settings from json file ' + casename, flush=True)
     with open(casename + '.json', 'r', encoding='utf-8') as lp:
         ppc = json.load(lp)
@@ -57,7 +59,9 @@ def load_player_loop(casename, keyName):
         if sRow > vals_rows or eRow > vals_rows:
             raise Exception("Error: StartTime is after the end date of the data being loaded")
     if tmax > nRow:
-        raise Exception("Error: Tmax {} is more than nRow {}, the time period specified in StartTime and EndTime".format(tmax, nRow))
+        raise Exception(
+            "Error: Tmax {} is more than nRow {}, the time period specified in StartTime and EndTime".format(tmax,
+                                                                                                             nRow))
     if tmax < nRow:
         print("Warning: Tmax is less than the time period specified in StartTime and EndTime", flush=True)
 
@@ -93,7 +97,7 @@ def load_player_loop(casename, keyName):
                 time_series = load_data[[counter]]
             # print("Row:" + str(counter) + "  sec: " + str(ts), flush=True)
 
-        # history is a 48 hours (3600 / dt_load_collector) at a line for a time
+        # history is 48 hours (3600 / dt_load_collector) at a line for a time
         if tb % day == 0 or ts == 0:
             history_counter = counter
             time_series_history = [None] * history_cnt
@@ -189,8 +193,8 @@ def load_player_loop(casename, keyName):
 
 
 if __name__ == "__main__":
-    # load_player_loop('./generate_case_config', 'genMn')
-    # load_player_loop('./generate_case_config', 'genForecastHr')
-    load_player_loop('./generate_case_config', 'refLoadMn')
-    # load_player_loop('./generate_case_config', 'refLoadHr')
-    # load_player_loop('./generate_case_config', 'gldLoad')
+    # load_player_loop_f('./generate_case_config', 'genMn')
+    # load_player_loop_f('./generate_case_config', 'genForecastHr')
+    load_player_loop_f('./generate_case_config', 'refLoadMn')
+    # load_player_loop_f('./generate_case_config', 'refLoadHr')
+    # load_player_loop_f('./generate_case_config', 'gldLoad')

@@ -9,10 +9,10 @@ import json
 import copy
 from datetime import datetime
 import tesp_support.api as tesp
-import tesp_support.process_eplus as ep
 
-templateDir = tesp.tesp_share + 'comm'
-eplusDir = tesp.tesp_share + 'energyplus'
+tesp_share = os.path.expandvars('$TESPDIR/data/')
+templateDir = tesp_share + 'comm'
+eplusDir = tesp_share + 'energyplus'
 caseDir = './scratch'
 
 StartTime = '2013-08-01 00:00:00'
@@ -122,8 +122,8 @@ def configure_case(bldg_id, tcap, base_price=0.10, ramp=25.0):
     return bldg
 
 
-def get_kw(rootname):  # TODO - we want the kW difference between 9 a.m. and 7 p.m.
-    emetrics = ep.read_eplus_metrics(rootname, quiet=True)
+def get_kw(path, name_root):  # TODO - we want the kW difference between 9 a.m. and 7 p.m.
+    emetrics = tesp.read_eplus_metrics(path, name_root, quiet=True)
     data = emetrics['data_e']
     idx_e = emetrics['idx_e']
     avg_kw = 0.001 * data[:, idx_e['ELECTRIC_DEMAND_IDX']].mean()
@@ -136,11 +136,11 @@ def get_kw(rootname):  # TODO - we want the kW difference between 9 a.m. and 7 p
     return 0.5 * (avg_kw1 + avg_kw2)  # avg_kw
 
 
-def run_case(basePath, label, mfile):
+def run_case(path, label, mfile):
     os.chdir(caseDir)
     tesp.run_test('run.sh', label)
-    kw = get_kw(mfile)
-    os.chdir(basePath)
+    kw = get_kw(mfile, caseDir)
+    os.chdir(path)
     return kw
 
 
@@ -154,10 +154,10 @@ if __name__ == '__main__':
         shutil.rmtree(caseDir)
     os.makedirs(caseDir)
 
-    shutil.copy(tesp.tesp_share + '/comm/eplots.py', caseDir)
+    shutil.copy(tesp_share + '/comm/eplots.py', caseDir)
     shutil.copy('{:s}/{:s}'.format(eplusDir, EPWFile), '{:s}/{:s}'.format(caseDir, 'epWeather.epw'))
-    shutil.copy(tesp.tesp_share + 'comm/prices.txt', caseDir)
-    shutil.copy(tesp.tesp_share + 'comm/helicsRecorder.json', caseDir)
+    shutil.copy(tesp_share + '/comm/prices.txt', caseDir)
+    shutil.copy(tesp_share + '/comm/helicsRecorder.json', caseDir)
 
     for bldg in bldgs:
         configure_building(bldg)
