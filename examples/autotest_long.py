@@ -41,6 +41,8 @@ def ieee8500_base_test():
     tesp.start_test('IEEE8500 GridLAB-D example')
     os.chdir('capabilities/ieee8500')
     subprocess.Popen('./clean.sh', shell=True).wait()
+    os.chdir(tesp_path)
+    os.chdir('capabilities/ieee8500/PNNLteam')
     tesp.run_test('runIEEE8500.sh', 'PNNL Team IEEE8500')
     tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base')
     tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar')

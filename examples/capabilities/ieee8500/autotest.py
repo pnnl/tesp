@@ -19,6 +19,8 @@ def ieee8500_glm_test():
     os.chdir('capabilities/ieee8500')
     subprocess.Popen('./clean.sh', shell=True).wait()
     tesp.run_test('runIEEE8500.sh', 'PNNL Team IEEE 8500')
+    os.chdir(tesp_path)
+    os.chdir('capabilities/ieee8500/PNNLteam')
     tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base')
     tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar')
     tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt')
