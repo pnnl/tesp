@@ -41,9 +41,10 @@ def ieee8500_base_test():
     tesp.start_test('IEEE8500 GridLAB-D example')
     os.chdir('capabilities/ieee8500')
     subprocess.Popen('./clean.sh', shell=True).wait()
-    print('\n==  Run: IEEE8500 GridLAB-D')
-    subprocess.Popen('gridlabd IEEE_8500.glm', shell=True).wait()
-    print('\n==  Done IEEE8500 GridLAB-D')
+    tesp.run_test('runIEEE8500.sh', 'PNNL Team IEEE8500')
+    tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base')
+    tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar')
+    tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt')
     os.chdir(tesp_path)
 
 
@@ -56,20 +57,14 @@ def ieee8500_precool_test():
         tesp.run_test('ruh30.sh', 'PNNL Team 30 - HELICS')
         tesp.run_test('ruhti30.sh', 'PNNL Team ti30 - HELICS')
         tesp.run_test('ruh8500.sh', 'PNNL Team 8500 - HELICS')
-        tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base')
         tesp.run_test('ruh8500tou.sh', 'PNNL Team 8500 TOU - HELICS')
         tesp.run_test('ruh8500volt.sh', 'PNNL Team 8500 Volt - HELICS')
-        tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar')
-        tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt')
     else:
         tesp.run_test('run30.sh', 'PNNL Team 30 - FNCS')
         tesp.run_test('runti30.sh', 'PNNL Team ti30 - FNCS')
         tesp.run_test('run8500.sh', 'PNNL Team 8500 - FNCS')
-        tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base')
         tesp.run_test('run8500tou.sh', 'PNNL Team 8500 TOU - FNCS')
         tesp.run_test('run8500volt.sh', 'PNNL Team 8500 Volt - FNCS')
-        tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar')
-        tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt')
     os.chdir(tesp_path)
 
 
