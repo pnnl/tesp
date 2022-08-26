@@ -9,7 +9,7 @@ import json
 
 import numpy as np
 
-import tesp_support.helpers as helpers
+from .helpers import HelicsMsg
 
 
 def prep_precool(name_root, time_step=15):
@@ -62,8 +62,8 @@ def prep_precool(name_root, time_step=15):
     print('    default:', mean_price, file=yp)
 
     # HELICS open and write preambles
-    gld = helpers.HelicsMsg(gld_federate, dt)
-    cool = helpers.HelicsMsg(cool_federate, dt)
+    gld = HelicsMsg(gld_federate, dt)
+    cool = HelicsMsg(cool_federate, dt)
     cool.subs_n('player/price', "double")
 
     # find the house and meter names

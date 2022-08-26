@@ -15,7 +15,8 @@ import os
 import json
 import numpy as np
 from datetime import datetime
-import tesp_support.helpers as helpers
+
+from .helpers import zoneMeterName, HelicsMsg
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -220,7 +221,7 @@ def ProcessGLM(fileroot):
                 endedHouse = False
                 if isELECTRIC:
                     if ('BIGBOX' in house_class) or ('OFFICE' in house_class) or ('STRIPMALL' in house_class):
-                        meter_name = helpers.zoneMeterName(house_parent)
+                        meter_name = zoneMeterName(house_parent)
                     nAirConditioners += 1
                     if np.random.uniform(0, 1) <= agent_participation:
                         nControllers += 1
@@ -302,7 +303,7 @@ def ProcessGLM(fileroot):
     dp.close()
 
     # write HELICS config file
-    dso = helpers.HelicsMsg(sub_federate, dt)
+    dso = HelicsMsg(sub_federate, dt)
     dso.pubs_n(False, "unresponsive_mw", "double")
     dso.pubs_n(False, "responsive_max_mw", "double")
     dso.pubs_n(False, "responsive_c2", "double")
@@ -403,7 +404,7 @@ def ProcessGLM(fileroot):
         wp.close()
 
     # write the GridLAB-D publications and subscriptions for HELICS
-    gld = helpers.HelicsMsg(gld_federate, dt)
+    gld = HelicsMsg(gld_federate, dt)
     gld.pubs(False, "distribution_load", "complex", network_node, "distribution_load")
     gld.subs(tso_federate + "/" + "three_phase_voltage_" + str(dso_substation_bus_id), "complex", network_node, "positive_sequence_voltage")
     if len(climate_name) > 0:

@@ -3,8 +3,8 @@
 
 import json
 
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def process_matpower(name_root):

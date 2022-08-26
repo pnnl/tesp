@@ -16,7 +16,8 @@ Public Functions:
 import os
 import json
 import math
-import tesp_support.helpers as helpers
+
+from .helpers import zoneMeterName
 
 
 def ercotMeterName(objname):
@@ -261,7 +262,7 @@ def glm_dict(name_root, ercot=False, te30=False):
                     if ercot:
                         lastBillingMeter = ercotMeterName(name)
                     elif isCommercialHouse(house_class):
-                        lastBillingMeter = helpers.zoneMeterName(parent)
+                        lastBillingMeter = zoneMeterName(parent)
                     houses[name] = {'feeder_id': feeder_id, 'billingmeter_id': lastBillingMeter, 'sqft': sqft,
                                     'stories': stories, 'doors': doors,
                                     'thermal_integrity': thermal_integrity, 'cooling': cooling, 'heating': heating,

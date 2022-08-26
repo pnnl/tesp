@@ -40,15 +40,10 @@ import numpy as np
 import pandas as pd
 from math import sqrt
 
-from tesp_support.helpers import parse_kva
-from tesp_support.helpers import gld_strict_name
-from tesp_support.helpers_dsot import random_norm_trunc
-import tesp_support.commbldgenerator as com_FG
-
-tesp_share = os.path.expandvars('$TESPDIR/data/')
-feeders_path = tesp_share + 'feeders/'
-scheduled_path = tesp_share + 'schedules/'
-weather_path = tesp_share + 'weather/'
+from .data import feeders_path, weather_path
+from .helpers import parse_kva, gld_strict_name
+from .helpers_dsot import random_norm_trunc
+from .commbldgenerator import define_comm_loads, create_comm_zones
 
 forERCOT = False
 port = 5570
@@ -115,6 +110,7 @@ max_discharge_rate = 5000
 inverter_efficiency = 0.97
 battery_capacity = 13500
 round_trip_efficiency = 0.86
+
 
 # EV population functions
 def process_nhts_data(data_file):
@@ -255,11 +251,11 @@ def match_driving_schedule(ev_range, ev_mileage, ev_max_charge):
     home_arr_time = subtract_hhmm_secs(home_leave_time, home_duration)
 
     # estimate work duration and arrival time
-    commute_duration = min(3600, 24 * 3600 - home_duration)  # in secs.. maximum 1 hour: 30 minutes for work-home and
+    commute_duration = min(3600, 24 * 3600 - home_duration)  # in secs, maximum 1 hour: 30 minutes for work-home and
     # 30 minutes for home-work. If remaining time is less than an hour,
-    # make that commute time but it should not occur as maximum home duration is always less than 23 hours
+    # make that commute time, but it should not occur as maximum home duration is always less than 23 hours
     work_duration = max(24 * 3600 - (home_duration + commute_duration), 1)  # remaining time at work
-    # minimum work duration is 1 second to avoid 0 that may give error in gridlabd  sometimes
+    # minimum work duration is 1 second to avoid 0 that may give error in GridLABD sometimes
     work_arr_secs = get_secs_from_HHMM(home_leave_time) + commute_duration / 2
     if work_arr_secs > 24 * 3600:  # if midnight crossing
         work_arr_secs = work_arr_secs - 24 * 3600
@@ -2098,7 +2094,7 @@ def write_houses(basenode, op, vnom):
                         print('    Q_Out Q_out_inj.value * 0.0;', file=op)
                     else:
                         print('    Q_Out 0;', file=op)
-                    # write_solar_inv_settings(op)  # dont want volt/var control
+                    # write_solar_inv_settings(op)  # don't want volt/var control
                     # No need of solar object
                     # print('    object solar {', file=op)
                     # print('      name', solname + ';', file=op)
@@ -2109,7 +2105,7 @@ def write_houses(basenode, op, vnom):
                     # print('      area', '{:.2f}'.format(panel_area) + ';', file=op)
                     # print('    };', file=op)
                     # Instead of solar object, write a fake V_in and I_in sufficient high so
-                    # that it doesnt limit the player output
+                    # that it doesn't limit the player output
                     print('    V_In 10000000;', file=op)
                     print('    I_In 10000000;', file=op)
                     if metrics_interval > 0 and "inverter" in metrics:
@@ -2920,12 +2916,12 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 write_ercot_small_loads(key, op, vln)
             for key in comm_loads:
                 # write_commercial_loads (rgn, key, op)
-                bldg_definition = com_FG.define_comm_loads(comm_loads[key][1], comm_loads[key][2],
-                                                           dso_type, ashrae_zone, comm_bldg_metadata)
-                com_FG.create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
-                                         storage_percentage, ev_metadata, ev_percentage,
-                                         solar_percentage, pv_rating_MW, solar_Q_player,
-                                         case_type, metrics, metrics_interval, None)
+                bldg_definition = define_comm_loads(comm_loads[key][1], comm_loads[key][2],
+                                                    dso_type, ashrae_zone, comm_bldg_metadata)
+                create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
+                                  storage_percentage, ev_metadata, ev_percentage,
+                                  solar_percentage, pv_rating_MW, solar_Q_player,
+                                  case_type, metrics, metrics_interval, None)
 
         else:
             replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
@@ -2936,12 +2932,12 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 write_small_loads(key, op, 120.0)
             for key in comm_loads:
                 # write_commercial_loads (rgn, key, op)
-                bldg_definition = com_FG.define_comm_loads(comm_loads[key][1], comm_loads[key][2],
-                                                           dso_type, ashrae_zone, comm_bldg_metadata)
-                com_FG.create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
-                                         storage_percentage, ev_metadata, ev_percentage,
-                                         solar_percentage, pv_rating_MW, solar_Q_player,
-                                         case_type, metrics, metrics_interval, None)
+                bldg_definition = define_comm_loads(comm_loads[key][1], comm_loads[key][2],
+                                                    dso_type, ashrae_zone, comm_bldg_metadata)
+                create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
+                                  storage_percentage, ev_metadata, ev_percentage,
+                                  solar_percentage, pv_rating_MW, solar_Q_player,
+                                  case_type, metrics, metrics_interval, None)
 
         write_voltage_class(model, h, 'node', op, vln, vll, secnode)
         write_voltage_class(model, h, 'meter', op, vln, vll, secnode)
@@ -3022,7 +3018,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global Eplus_Bus, Eplus_Volts, Eplus_kVA
     global transmissionVoltage, transmissionXfmrMVAbase
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage, ev_percentage
-    global work_path, weather_path, weather_file
+    global work_path, weather_file
     global timezone, starttime, endtime, timestep
     global metrics, metrics_type, metrics_interval, metrics_interim, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation

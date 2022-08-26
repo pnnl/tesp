@@ -13,9 +13,7 @@ import json
 import sys
 from os import path
 
-import tesp_support.helpers as helpers
-
-# import colorama
+from helpers import gld_strict_name
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -138,7 +136,7 @@ def merge_glm_dict(target, sources, xfmva):
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_glm_dict.json').read()
         cfg = json.loads(lp)
-        fdr_id = helpers.gld_strict_name(cfg['base_feeder'])
+        fdr_id = gld_strict_name(cfg['base_feeder'])
         if sources.index(fdr) == 0:
             diction['bulkpower_bus'] = cfg['bulkpower_bus']
             diction['message_name'] = cfg['message_name']

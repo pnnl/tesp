@@ -18,13 +18,13 @@ import subprocess
 import sys
 from datetime import datetime
 
-import tesp_support.helpers as helpers
-import tesp_support.make_ems as idf
-import tesp_support.TMY2EPW as t2e
-import tesp_support.feederGenerator as fg
-import tesp_support.glm_dict as glm
-import tesp_support.prep_substation as ps
-
+from .data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
+from .glm_dict import glm_dict
+from .make_ems import merge_idf
+from .TMY2EPW import convert_tmy2_to_epw
+from .helpers import HelicsMsg
+from .feederGenerator import populate_feeder
+from .prep_substation import prep_substation
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -101,17 +101,11 @@ def write_tesp_case(config, cfgfile, freshdir=True):
     Todo:
         * Write gui.sh, per the te30 examples
     """
-    tesp_share = os.path.expandvars('$TESPDIR/data/')
-    feeders_path = tesp_share + 'feeders/'
-    scheduled_path = tesp_share + 'schedules/'
-    weather_path = tesp_share + 'weather/'
-    eplusdir = tesp_share + 'energyplus/'
-    ppdir = os.path.expandvars('$TESPDIR/models/pypower/')
     print('feeder backbone files from', feeders_path)
     print('schedule files from', scheduled_path)
     print('weather files from', weather_path)
-    print('E+ files from', eplusdir)
-    print('pypower backbone files from', ppdir)
+    print('E+ files from', energyplus_path)
+    print('pypower backbone files from', pypower_path)
 
     casename = config['SimulationConfig']['CaseName']
     workdir = config['SimulationConfig']['WorkingDirectory']
@@ -161,9 +155,9 @@ def write_tesp_case(config, cfgfile, freshdir=True):
     WeatherConfigFile = casename + '_FNCS_Weather_Config.json'
 
     weatherfile = weather_path + rootweather + '.tmy3'
-    eplusfile = eplusdir + EpBuilding + '.idf'
+    eplusfile = energyplus_path + EpBuilding + '.idf'
 
-    emsfile = eplusdir + EpEMS + '.idf'
+    emsfile = energyplus_path + EpEMS + '.idf'
     if 'emsHELICS' in emsfile:
         emsfileFNCS = emsfile.replace('emsHELICS', 'emsFNCS')
     if 'emsFNCS' in emsfile:
@@ -173,8 +167,8 @@ def write_tesp_case(config, cfgfile, freshdir=True):
     eplusout = casedir + '/Merged.idf'
     eplusoutFNCS = casedir + '/MergedFNCS.idf'
 
-    ppfile = ppdir + config['BackboneFiles']['PYPOWERFile']
-    ppcsv = ppdir + config['PYPOWERConfiguration']['CSVLoadFile']
+    ppfile = pypower_path + config['BackboneFiles']['PYPOWERFile']
+    ppcsv = pypower_path + config['PYPOWERConfiguration']['CSVLoadFile']
     dso_substation_bus_id = int(config['PYPOWERConfiguration']['GLDBus'])
     gld_federate = "gld_" + str(dso_substation_bus_id)
     sub_federate = "sub_" + str(dso_substation_bus_id)
@@ -195,8 +189,8 @@ def write_tesp_case(config, cfgfile, freshdir=True):
     if len(EpBus) > 0:
         bUseEplus = True
 
-        idf.merge_idf(eplusfile, emsfile, StartTime, EndTime, eplusout, EpStepsPerHour)
-        idf.merge_idf(eplusfile, emsfileFNCS, StartTime, EndTime, eplusoutFNCS, EpStepsPerHour)
+        merge_idf(eplusfile, emsfile, StartTime, EndTime, eplusout, EpStepsPerHour)
+        merge_idf(eplusfile, emsfileFNCS, StartTime, EndTime, eplusoutFNCS, EpStepsPerHour)
 
         # process TMY3 ==> TMY2 ==> EPW
         cmdline = 'TMY3toTMY2_ansi ' + weatherfile + ' > ' + casedir + '/' + rootweather + '.tmy2'
@@ -205,7 +199,7 @@ def write_tesp_case(config, cfgfile, freshdir=True):
         pw1.wait()
 
         print("Converting " + casedir + '/' + rootweather)
-        t2e.convert_tmy2_to_epw(casedir + '/' + rootweather)
+        convert_tmy2_to_epw(casedir + '/' + rootweather)
 
         # write the EnergyPlus YAML files
         op = open(casedir + '/eplus.yaml', 'w')
@@ -287,7 +281,7 @@ values:
         print(epjyamlstr, file=op)
         op.close()
 
-        eps = helpers.HelicsMsg("energyPlus", 60 * EpStep)
+        eps = HelicsMsg("energyPlus", 60 * EpStep)
         # Subs
         eps.subs_e(True, "eplus_agent/cooling_setpoint_delta", "double", "")
         eps.subs_e(True, "eplus_agent/heating_setpoint_delta", "double", "")
@@ -321,7 +315,7 @@ values:
         eps.pubs_e(False, "C1_NOM SCHEDULE VALUE", "double", "degC")
         eps.write_file(casedir + '/eplus.json')
 
-        epa = helpers.HelicsMsg("eplus_agent", 60 * EpStep)
+        epa = HelicsMsg("eplus_agent", 60 * EpStep)
         epa.config("time_delta", 1)
         epa.config("uninterruptible", False)
         # Subs
@@ -449,7 +443,7 @@ values:
         print(ppyamlstr, file=op)
         op.close()
 
-        ppc = helpers.HelicsMsg("pypower", int(config['PYPOWERConfiguration']['PFStep']))
+        ppc = HelicsMsg("pypower", int(config['PYPOWERConfiguration']['PFStep']))
         ppc.subs_n(gld_federate + "/distribution_load", "complex")
         ppc.subs_n(sub_federate + "/unresponsive_mw", "double")
         ppc.subs_n(sub_federate + "/responsive_max_mw", "double")
@@ -502,10 +496,10 @@ values:
         print(tespyamlstr, file=op)
         op.close()
 
-    fg.populate_feeder(cfgfile)
+    populate_feeder(cfgfile)
     glmfile = casedir + '/' + casename
-    glm.glm_dict(glmfile)
-    ps.prep_substation(glmfile, cfgfile)
+    glm_dict(glmfile)
+    prep_substation(glmfile, cfgfile)
 
     if not freshdir:
         return

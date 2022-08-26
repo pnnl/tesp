@@ -12,6 +12,7 @@ Todo:
 
 """
 import sys
+import json
 
 try:
     import helics
@@ -21,12 +22,13 @@ try:
     import tesp_support.fncs as fncs
 except:
     pass
-import tesp_support.simple_auction as auction
-import tesp_support.hvac as hvac
-import tesp_support.helpers as helpers
-import json
+
 from datetime import datetime
 from datetime import timedelta
+
+from .helpers import parse_kw, parse_magnitude
+from .hvac import hvac
+from .simple_auction import simple_auction
 
 # import gc
 # import cProfile
@@ -67,7 +69,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     auction_metrics = {'Metadata': auction_meta, 'StartTime': StartTime}
     controller_metrics = {'Metadata': controller_meta, 'StartTime': StartTime}
 
-    aucObj = auction.simple_auction(market_row, market_key)
+    aucObj = simple_auction(market_row, market_key)
 
     dt = float(diction['dt'])
     period = aucObj.period
@@ -115,7 +117,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     hvac_keys = list(diction['controllers'].keys())
     for key in hvac_keys:
         row = diction['controllers'][key]
-        hvacObjs[key] = hvac.hvac(row, key, aucObj)
+        hvacObjs[key] = hvac(row, key, aucObj)
         ctl = hvacObjs[key]
         hseSubTopic = gld_federate + '/' + ctl.houseName
         mtrSubTopic = gld_federate + '/' + ctl.meterName
@@ -152,7 +154,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
 
     time_granted = 0
     time_last = 0
-    while (time_granted < time_stop):
+    while time_granted < time_stop:
         nextHELICSTime = int(min([tnext_bid, tnext_agg, tnext_clear, tnext_adjust, time_stop]))
         time_granted = int(helics.helicsFederateRequestTime(hFed, nextHELICSTime))
         time_delta = time_granted - time_last
@@ -294,20 +296,20 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
     auction_metrics = {'Metadata': auction_meta, 'StartTime': StartTime}
     controller_metrics = {'Metadata': controller_meta, 'StartTime': StartTime}
 
-    aucObj = auction.simple_auction(market_row, market_key)
+    aucObj = simple_auction(market_row, market_key)
 
     dt = float(diction['dt'])
     period = aucObj.period
 
-    topicMap = {}  # to dispatch incoming FNCS messages; 0..5 for LMP, Feeder load, airtemp, mtr volts, hvac load, hvac state
-    topicMap['LMP'] = [aucObj, 0]
-    topicMap['refload'] = [aucObj, 1]
+    # to dispatch incoming FNCS messages; 0..5 for LMP, Feeder load, airtemp, mtr volts, hvac load, hvac state
+    topicMap = {'LMP': [aucObj, 0],
+                'refload': [aucObj, 1]}
 
     hvacObjs = {}
     hvac_keys = list(diction['controllers'].keys())
     for key in hvac_keys:
         row = diction['controllers'][key]
-        hvacObjs[key] = hvac.hvac(row, key, aucObj)
+        hvacObjs[key] = hvac(row, key, aucObj)
         ctl = hvacObjs[key]
         topicMap[key + '#Tair'] = [ctl, 2]
         topicMap[key + '#V1'] = [ctl, 3]
@@ -330,7 +332,7 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
 
     time_granted = 0
     time_last = 0
-    while (time_granted < time_stop):
+    while time_granted < time_stop:
         nextFNCSTime = int(min([tnext_bid, tnext_agg, tnext_clear, tnext_adjust, time_stop]))
         fncs.update_time_delta(nextFNCSTime - time_granted)
         time_granted = fncs.time_request(nextFNCSTime)
@@ -348,10 +350,10 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
             value = fncs.get_value(topic)
             row = topicMap[topic]
             if row[1] == 0:
-                LMP = helpers.parse_magnitude(value)
+                LMP = parse_magnitude(value)
                 aucObj.set_lmp(LMP)
             elif row[1] == 1:
-                refload = helpers.parse_kw(value)
+                refload = parse_kw(value)
                 aucObj.set_refload(refload)
             elif row[1] == 2:
                 row[0].set_air_temp_from_fncs_str(value)

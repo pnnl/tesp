@@ -38,14 +38,9 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from .helpers import parse_kva
-from .helpers import gld_strict_name
-import tesp_support.commbldgenerator as com_FG
-
-tesp_share = os.path.expandvars('$TESPDIR/data/')
-feeders_path = tesp_share + 'feeders/'
-scheduled_path = tesp_share + 'schedules/'
-weather_path = tesp_share + 'weather/'
+from .data import feeders_path, weather_path
+from .helpers import parse_kva, gld_strict_name
+from .commbldgenerator import define_comm_loads, create_comm_zones
 
 transmissionVoltage = 138000.0
 transmissionXfmrMVAbase = 12.0
@@ -1890,9 +1885,9 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             write_config_class(tmp, h, 'transformer_configuration', op)
             write_link_class(tmp, h, 'transformer', seg_loads, op)
             write_voltage_class(tmp, h, 'meter', op, comm_loads[bldg][6], vll, secnode)
-            bldg_definition = com_FG.define_comm_loads(comm_bldgs_pop[bldg][0], comm_bldgs_pop[bldg][1], dso_type,
+            bldg_definition = define_comm_loads(comm_bldgs_pop[bldg][0], comm_bldgs_pop[bldg][1], dso_type,
                                                        ashrae_zone, comm_bldg_metadata)
-            com_FG.create_comm_zones(bldg_definition, comm_loads, bldg, op, batt_metadata,
+            create_comm_zones(bldg_definition, comm_loads, bldg, op, batt_metadata,
                                      storage_percentage, ev_metadata, ev_percentage, solar_percentage,
                                      pv_rating_MW, solar_Q_player, case_type, metrics, metrics_interval, None)
         op.close()
@@ -1909,7 +1904,7 @@ def populate_feeder(config=None):
     global transmissionVoltage, transmissionXfmrMVAbase
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage
     global ev_percentage, ev_metadata, pv_rating_MW, solar_Q_player
-    global outpath, feeders_path, weather_path, weather_file
+    global outpath, weather_file
     global timezone, starttime, endtime, timestep
     global metrics, metrics_interval, metrics_interim, metrics_type, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation

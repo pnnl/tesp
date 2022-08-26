@@ -11,12 +11,7 @@ import json
 import os
 
 import numpy as np
-
-try:
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-except:
-    pass
+import matplotlib.pyplot as plt
 
 # Setting up logging
 logger = logging.getLogger(__name__)

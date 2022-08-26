@@ -9,8 +9,9 @@ import math
 import copy
 import subprocess
 from datetime import datetime
-import tesp_support.make_ems as idf
-import tesp_support.helpers as helpers
+
+from .make_ems import merge_idf
+from .helpers import HelicsMsg
 
 
 def configure_eplus(caseConfig, template_dir):
@@ -89,7 +90,7 @@ def configure_eplus(caseConfig, template_dir):
             op.close()
 
             oname = '{:s}/{:s}.idf'.format(caseDir, fedRoot)
-            idf.merge_idf(bldg['IDF'], bldg['EMS'], caseConfig['StartDate'], caseConfig['EndDate'],
+            merge_idf(bldg['IDF'], bldg['EMS'], caseConfig['StartDate'], caseConfig['EndDate'],
                           oname, caseConfig['EpStepsPerHour'])
     return fedMeters, fedLoads, fedLoadNames
 
@@ -313,9 +314,9 @@ def prepare_bldg_dict(caseConfig):
     oname = '{:s}/BuildingDefinitions.json'.format(caseConfig['CaseDir'])
     print('dictionary for buildings to', oname)
 
-    dict = {}
+    diction = {}
     for row in caseConfig['Buildings']:
-        dict[row['ID']] = {'Name': row['Name'],
+        diction[row['ID']] = {'Name': row['Name'],
                            'Meter': row['Meter'],
                            'Vnom': row['Vnom'],
                            'XfKVA': row['XfKVA'],
@@ -323,7 +324,7 @@ def prepare_bldg_dict(caseConfig):
                            'Pbase': row['Pbase']}
 
     op = open(oname, 'w')
-    json.dump(dict, op, ensure_ascii=False, indent=2)
+    json.dump(diction, op, ensure_ascii=False, indent=2)
     op.close()
 
 
@@ -347,7 +348,7 @@ def prepare_glm_dict(caseConfig):
         meters[mtr_id] = {'feeder_id': feeder_id, 'phases': 'ABC', 'vll': vll, 'vln': vln, 'children': [mtr_load]}
 
     feeders[feeder_id] = {'house_count': 0, 'inverter_count': 0, 'base_feeder': caseConfig['BaseFeederName']}
-    dict = {'bulkpower_bus': caseConfig['BulkBusName'],
+    diction = {'bulkpower_bus': caseConfig['BulkBusName'],
             'FedName': 'gld_1',
             'transformer_MVA': caseConfig['TransformerMVA'],
             'feeders': feeders,
@@ -358,13 +359,13 @@ def prepare_glm_dict(caseConfig):
             'regulators': {}}
 
     op = open(oname, 'w')
-    json.dump(dict, op, ensure_ascii=False, indent=2)
+    json.dump(diction, op, ensure_ascii=False, indent=2)
     op.close()
 
 
 def prepare_glm_helics(caseConfig, fedMeters, fedLoadNames):
 
-    gld = helpers.HelicsMsg('gld_1', int(caseConfig['GldStep']))
+    gld = HelicsMsg('gld_1', int(caseConfig['GldStep']))
     gld.pubs(False, 'distribution_load', 'complex', 'sourcebus', 'distribution_load')
     for bldg, meter in fedMeters.items():
         load = fedLoadNames[bldg]

@@ -11,12 +11,7 @@ import json
 import os
 
 import numpy as np
-
-try:
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-except:
-    pass
+import matplotlib.pyplot as plt
 
 # Setting up logging
 logger = logging.getLogger(__name__)
@@ -95,7 +90,7 @@ def read_houses_metrics(path, name_root, diction_name=''):
     data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
     print("\nConstructed", data_h.shape, "NumPy array for Houses")
     j = 0
-    for key in hse_keys:
+    for _ in hse_keys:
         i = 0
         for t in times:
             ary = lst_h[str(t)][hse_keys[j]]
@@ -120,7 +115,7 @@ def plot_houses(diction, save_file=None, save_only=False):
     # display a plot
     fig, ax = plt.subplots(2, 1, sharex='col')
     i = 0
-    for key in keys_h:
+    for _ in keys_h:
         ax[0].plot(hrs, data_h[i, :, idx_h['HSE_AIR_AVG_IDX']], color='blue')
         ax[1].plot(hrs, data_h[i, :, idx_h['HSE_HVAC_AVG_IDX']], color='red')
         i = i + 1

@@ -37,13 +37,8 @@ from math import ceil
 from math import floor
 from math import sqrt
 
-from .helpers import parse_kva
-from .helpers import gld_strict_name
-
-tesp_share = os.path.expandvars('$TESPDIR/data/')
-feeders_path = tesp_share + 'feeders/'
-scheduled_path = tesp_share + 'schedules/'
-weather_path = tesp_share + 'weather/'
+from .data import feeders_path, weather_path
+from .helpers import parse_kva, gld_strict_name
 
 forERCOT = False
 port = 5570
@@ -3053,7 +3048,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global Eplus_Bus, Eplus_Volts, Eplus_kVA
     global transmissionVoltage, transmissionXfmrMVAbase, dso_substation_bus_id
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage
-    global work_path, feeders_path, weather_path, weather_file
+    global work_path, weather_file
     global starttime, endtime, timestep, metrics_interval, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
     global case_name, name_prefix, forERCOT

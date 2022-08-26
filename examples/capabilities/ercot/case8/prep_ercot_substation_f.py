@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: prep_ercot_substation.py
+# file: prep_ercot_substation_f.py
 
 import json
 import math

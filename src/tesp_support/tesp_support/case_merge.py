@@ -13,7 +13,8 @@ Public Functions:
 """
 import json
 import sys
-import tesp_support.helpers as helpers
+
+from helpers import gld_strict_name
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -178,7 +179,7 @@ def merge_glm_dict(target, sources, xfmva):
 
         lp = open(workdir + fdr + '_glm_dict.json').read()
         cfg = json.loads(lp)
-        fdr_id = helpers.gld_strict_name(name_prefix + cfg['feeders']['network_node']['base_feeder'])
+        fdr_id = gld_strict_name(name_prefix + cfg['feeders']['network_node']['base_feeder'])
         print('created new feeder id', fdr_id, 'for', fdr)
         diction['feeders'][fdr_id] = {'house_count': cfg['feeders']['network_node']['house_count'],
                                       'inverter_count': cfg['feeders']['network_node']['inverter_count'],

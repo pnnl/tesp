@@ -1,20 +1,23 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: prepare_case.py
 
-import os
+from tesp_support.data import energyplus_path
+from tesp_support.data import weather_path
+from tesp_support.TMY3toCSV import weathercsv
+from tesp_support.glm_dict import glm_dict
+from tesp_support.make_ems import merge_idf
+from tesp_support.prep_substation import prep_substation
 
-import tesp_support.api as tesp
-
-tmy_file = os.getenv('TESPDIR') + '/data/weather/AZ-Tucson_International_Ap.tmy3'
-tesp.weathercsv(tmy_file, 'weather.dat', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 2013)
-tesp.glm_dict('TE_Challenge', te30=True)
-tesp.prep_substation('TE_Challenge', bus_id=7)
+tmy_file = weather_path + 'AZ-Tucson_International_Ap.tmy3'
+weathercsv(tmy_file, 'weather.dat', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 2013)
+glm_dict('TE_Challenge', te30=True)
+prep_substation('TE_Challenge', bus_id=7)
 
 # to run the original E+ model with heating/cooling, copy the following file to Merged.idf
-# base_idf = os.getenv('TESPDIR') + '/data/energyplus/SchoolDualController.idf'
+# base_idf = energyplus_path + 'SchoolDualController.idf'
 
 base_idf = '../energyplus/SchoolBase.idf'
 ems_idf = '../energyplus/forSchoolBase/emsSchoolBase.idf'
-tesp.merge_idf(base_idf, ems_idf, '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', 12)
+merge_idf(base_idf, ems_idf, '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', 12)
 ems_idf = '../energyplus/forSchoolBase/emsSchoolBaseH.idf'
-tesp.merge_idf(base_idf, ems_idf, '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'MergedH.idf', 12)
+merge_idf(base_idf, ems_idf, '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'MergedH.idf', 12)

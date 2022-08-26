@@ -7,10 +7,8 @@ Created on Tue Aug 14 10:05:06 2018
 import matplotlib.pyplot as plt
 import dateutil
 import io
-try:
-    from urllib2 import urlopen, Request
-except ImportError:
-    from urllib.request import urlopen, Request
+
+from urllib import urlopen, Request
 
 import pandas as pd
 

@@ -21,7 +21,7 @@ I think we should refactor this so that these assumptions are not so
 tightly integrated with the formulation.
 
 """
-import tesp_support.helpers as helpers
+from .helpers import ClearingType, curve, aggregate_bid
 
 
 # Class definition
@@ -32,20 +32,20 @@ class simple_auction:
         `Market Module Overview - Auction <http://gridlab-d.shoutwiki.com/wiki/Market_Auction>`_
 
     Args:
-        dict (dict): a row from the agent configuration JSON file
+        diction (diction): a row from the agent configuration JSON file
         key (str): the name of this agent, which is the market key from the agent configuration JSON file
 
     Attributes:
         name (str): the name of this auction, also the market key from the configuration JSON file
-        std_dev (float): the historical standard deviation of the price, in $/kwh, from dict
-        mean (float): the historical mean price in $/kwh, from dict
-        pricecap (float): the maximum allowed market clearing price, in $/kwh, from dict
+        std_dev (float): the historical standard deviation of the price, in $/kwh, from diction
+        mean (float): the historical mean price in $/kwh, from diction
+        pricecap (float): the maximum allowed market clearing price, in $/kwh, from diction
         max_capacity_reference_bid_quantity (float): this market's maximum capacity, likely defined by a physical limitation in the circuit(s) being managed.
-        statistic_mode (int): always 1, not used, from dict
-        stat_mode (str): always ST_CURR, not used, from dict
-        stat_interval (str): always 86400 seconds, for one day, not used, from dict
-        stat_type (str): always mean and standard deviation, not used, from dict
-        stat_value (str): always zero, not used, from dict
+        statistic_mode (int): always 1, not used, from diction
+        stat_mode (str): always ST_CURR, not used, from diction
+        stat_interval (str): always 86400 seconds, for one day, not used, from diction
+        stat_type (str): always mean and standard deviation, not used, from diction
+        stat_value (str): always zero, not used, from diction
         curve_buyer (curve): data structure to accumulate buyer bids
         curve_seller (curve): data structure to accumulate seller bids
         refload (float): the latest substation load from GridLAB-D. This is initially assumed to be all unresponsive and using the load state parameter when adding demand bids (which are generally price_responsive) all loads that bid and are on are removed from the assumed unresponsive load value
@@ -65,18 +65,18 @@ class simple_auction:
     """
 
     # ====================Define instance variables ===================================
-    def __init__(self, dict, key):
+    def __init__(self, diction, key):
         self.name = key
-        self.std_dev = float(dict['init_stdev'])
-        self.mean = float(dict['init_price'])
-        self.period = float(dict['period'])
-        self.pricecap = float(dict['pricecap'])
-        self.max_capacity_reference_bid_quantity = float(dict['max_capacity_reference_bid_quantity'])
-        self.statistic_mode = int(dict['statistic_mode'])
-        self.stat_mode = dict['stat_mode']
-        self.stat_interval = dict['stat_interval']
-        self.stat_type = dict['stat_type']
-        self.stat_value = dict['stat_value']
+        self.std_dev = float(diction['init_stdev'])
+        self.mean = float(diction['init_price'])
+        self.period = float(diction['period'])
+        self.pricecap = float(diction['pricecap'])
+        self.max_capacity_reference_bid_quantity = float(diction['max_capacity_reference_bid_quantity'])
+        self.statistic_mode = int(diction['statistic_mode'])
+        self.stat_mode = diction['stat_mode']
+        self.stat_interval = diction['stat_interval']
+        self.stat_type = diction['stat_type']
+        self.stat_value = diction['stat_value']
 
         # updated in collect_agent_bids, used in clear_market
         self.curve_buyer = None
@@ -90,7 +90,7 @@ class simple_auction:
         self.agg_deg = 0
         self.agg_c2 = 0.0
         self.agg_c1 = 0.0
-        self.clearing_type = helpers.ClearingType.NULL
+        self.clearing_type = ClearingType.NULL
         self.clearing_quantity = 0
         self.clearing_price = self.mean
         self.marginal_quantity = 0.0
@@ -137,8 +137,8 @@ class simple_auction:
     def clear_bids(self):
         """Re-initializes curve_buyer and curve_seller, sets the unresponsive load estimate to the total substation load.
         """
-        self.curve_buyer = helpers.curve()
-        self.curve_seller = helpers.curve()
+        self.curve_buyer = curve()
+        self.curve_seller = curve()
         self.unresp = self.refload
 
     def supplier_bid(self, bid):
@@ -189,8 +189,7 @@ class simple_auction:
                   sep=',', flush=True)
         if self.curve_buyer.count > 0:
             self.curve_buyer.set_curve_order('descending')
-        self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.agg_c1 = helpers.aggregate_bid(
-            self.curve_buyer)
+        self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.agg_c1 = aggregate_bid(self.curve_buyer)
 
     def clear_market(self, tnext_clear=0, time_granted=0):
         """Solves for the market clearing price and quantity
@@ -229,7 +228,7 @@ class simple_auction:
             # Calculate clearing quantity and price here
             # Define the section number of the buyer and the seller curves respectively as i and j
             i = j = 0
-            self.clearing_type = helpers.ClearingType.NULL
+            self.clearing_type = ClearingType.NULL
             self.clearing_quantity = self.clearing_price = 0
             while i < self.curve_buyer.count and j < self.curve_seller.count and \
                     self.curve_buyer.price[i] >= self.curve_seller.price[j]:
@@ -241,14 +240,14 @@ class simple_auction:
                     a = b = self.curve_buyer.price[i]
                     j += 1
                     check = 0
-                    self.clearing_type = helpers.ClearingType.BUYER
+                    self.clearing_type = ClearingType.BUYER
                 # If marginal seller currently:
                 elif buy_quantity < sell_quantity:
                     self.clearing_quantity = demand_quantity = buy_quantity
                     a = b = self.curve_seller.price[j]
                     i += 1
                     check = 0
-                    self.clearing_type = helpers.ClearingType.SELLER
+                    self.clearing_type = ClearingType.SELLER
                 # Buy quantity equal sell quantity but price split  
                 else:
                     self.clearing_quantity = demand_quantity = supply_quantity = buy_quantity
@@ -267,48 +266,48 @@ class simple_auction:
                     # At least one side exhausted at same quantity
                     if i == self.curve_buyer.count or j == self.curve_seller.count:
                         if a == b:
-                            self.clearing_type = helpers.ClearingType.EXACT
+                            self.clearing_type = ClearingType.EXACT
                         else:
-                            self.clearing_type = helpers.ClearingType.PRICE
+                            self.clearing_type = ClearingType.PRICE
                     # Exhausted buyers, sellers unsatisfied at same price
                     elif i == self.curve_buyer.count and b == self.curve_seller.price[j]:
-                        self.clearing_type = helpers.ClearingType.SELLER
+                        self.clearing_type = ClearingType.SELLER
                     # Exhausted sellers, buyers unsatisfied at same price
                     elif j == self.curve_seller.count and a == self.curve_buyer.price[i]:
-                        self.clearing_type = helpers.ClearingType.BUYER
+                        self.clearing_type = ClearingType.BUYER
                     # Both sides satisfied at price, but one side exhausted  
                     else:
                         if a == b:
-                            self.clearing_type = helpers.ClearingType.EXACT
+                            self.clearing_type = ClearingType.EXACT
                         else:
-                            self.clearing_type = helpers.ClearingType.PRICE
+                            self.clearing_type = ClearingType.PRICE
                 # No side exausted
                 else:
                     # Price changed in both directions
                     if a != self.curve_buyer.price[i] and b != self.curve_seller.price[j] and a == b:
-                        self.clearing_type = helpers.ClearingType.EXACT
+                        self.clearing_type = ClearingType.EXACT
                     # Sell price increased ~ marginal buyer since all sellers satisfied
                     elif a == self.curve_buyer.price[i] and b != self.curve_seller.price[j]:
-                        self.clearing_type = helpers.ClearingType.BUYER
+                        self.clearing_type = ClearingType.BUYER
                     # Buy price increased ~ marginal seller since all buyers satisfied
                     elif a != self.curve_buyer.price[i] and b == self.curve_seller.price[j]:
-                        self.clearing_type = helpers.ClearingType.SELLER
+                        self.clearing_type = ClearingType.SELLER
                         self.clearing_price = b  # use seller's price, not buyer's price
                     # Possible when a == b, q_buy == q_sell, and either the buyers or sellers are exhausted
                     elif a == self.curve_buyer.price[i] and b == self.curve_seller.price[j]:
                         if i == self.curve_buyer.count and j == self.curve_seller.count:
-                            self.clearing_type = helpers.ClearingType.EXACT
+                            self.clearing_type = ClearingType.EXACT
                         elif i == self.curve_buyer.count:
-                            self.clearing_type = helpers.ClearingType.SELLER
+                            self.clearing_type = ClearingType.SELLER
                         elif j == self.curve_seller.count:
-                            self.clearing_type = helpers.ClearingType.BUYER
+                            self.clearing_type = ClearingType.BUYER
                     else:
                         # Marginal price
-                        self.clearing_type = helpers.ClearingType.PRICE
+                        self.clearing_type = ClearingType.PRICE
 
                 # If ClearingType.PRICE, calculate the clearing price here
                 dHigh = dLow = 0
-                if self.clearing_type == helpers.ClearingType.PRICE:
+                if self.clearing_type == ClearingType.PRICE:
                     avg = (a + b) / 2.0
                     # Calculating clearing price limits:   
                     dHigh = a if i == self.curve_buyer.count else self.curve_buyer.price[i]
@@ -347,7 +346,7 @@ class simple_auction:
 
                             # Check for zero demand but non-zero first unit sell price
             if self.clearing_quantity == 0:
-                self.clearing_type = helpers.ClearingType.NULL
+                self.clearing_type = ClearingType.NULL
                 if self.curve_seller.count > 0 and self.curve_buyer.count == 0:
                     self.clearing_price = self.curve_seller.price[0] - self.bid_offset
                 elif self.curve_seller.count == 0 and self.curve_buyer.count > 0:
@@ -362,16 +361,16 @@ class simple_auction:
                                 self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.clearing_scalar
 
             elif self.clearing_quantity < self.unresponsive_buy:
-                self.clearing_type = helpers.ClearingType.FAILURE
+                self.clearing_type = ClearingType.FAILURE
                 self.clearing_price = self.pricecap
 
             elif self.clearing_quantity < self.unresponsive_sell:
-                self.clearing_type = helpers.ClearingType.FAILURE
+                self.clearing_type = ClearingType.FAILURE
                 self.clearing_price = -self.pricecap
 
             elif self.clearing_quantity == self.unresponsive_buy and self.clearing_quantity == self.unresponsive_sell:
                 # only cleared unresponsive loads
-                self.clearing_type = helpers.ClearingType.PRICE
+                self.clearing_type = ClearingType.PRICE
                 self.clearing_price = 0.0
 
         # If the market mode MD_NONE and at least one side is not given
@@ -386,7 +385,7 @@ class simple_auction:
             elif self.curve_seller.count == 0 and self.curve_buyer.count == 0:
                 self.clearing_price = 0.0
             self.clearing_quantity = 0
-            self.clearing_type = helpers.ClearingType.NULL
+            self.clearing_type = ClearingType.NULL
             if self.curve_seller.count == 0:
                 missingBidder = "seller"
             elif self.curve_buyer.count == 0:
@@ -395,7 +394,7 @@ class simple_auction:
 
         # Calculation of the marginal 
         marginal_total = self.marginal_quantity = self.marginal_frac = 0.0
-        if self.clearing_type == helpers.ClearingType.BUYER:
+        if self.clearing_type == ClearingType.BUYER:
             marginal_subtotal = 0
             i = 0
             for i in range(self.curve_buyer.count):
@@ -412,7 +411,7 @@ class simple_auction:
             if marginal_total > 0.0:
                 self.marginal_frac = float(self.marginal_quantity) / marginal_total
 
-        elif self.clearing_type == helpers.ClearingType.SELLER:
+        elif self.clearing_type == ClearingType.SELLER:
             marginal_subtotal = 0
             i = 0
             for i in range(0, self.curve_seller.count):

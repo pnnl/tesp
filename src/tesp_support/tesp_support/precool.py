@@ -33,8 +33,8 @@ import math
 if sys.platform != 'win32':
     import resource
 
-from tesp_support.helpers import parse_number
-from tesp_support.helpers import parse_magnitude_2
+from .helpers import parse_number
+from .helpers import parse_magnitude_2
 
 thermalIntegrity = {
     'VERY_LITTLE':

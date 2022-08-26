@@ -20,11 +20,6 @@ def ieee8500_glm_test():
     subprocess.Popen('./clean.sh', shell=True).wait()
     tesp.run_test('runIEEE8500.sh', 'PNNL Team IEEE 8500')
     os.chdir(tesp_path)
-    os.chdir('capabilities/ieee8500/PNNLteam')
-    tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base')
-    tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar')
-    tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt')
-    os.chdir(tesp_path)
 
 
 def ieee8500_precool_test():
@@ -44,6 +39,9 @@ def ieee8500_precool_test():
         tesp.run_test('run8500.sh', 'PNNL Team 8500 - FNCS')
         tesp.run_test('run8500tou.sh', 'PNNL Team 8500 TOU - FNCS')
         tesp.run_test('run8500volt.sh', 'PNNL Team 8500 Volt - FNCS')
+    tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base')
+    tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar')
+    tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt')
     os.chdir(tesp_path)
 
 

@@ -201,7 +201,7 @@ If you don't run the first line, simulations will generally fail for lack of bei
 If things aren't working, double-check to make sure your commandline shows the prefix `(TESP)`.
 
 The forth command, 'deactivate', returns the environment path to the state it was before the the first command started and remove the `(TESP)` prefix from the prompt.
-All other environment variables are present but the TESP python requirements may be present, depending on your configuration.
+All other environment variables are present but the TESP python requirements may/may not be present, depending on your configuration.
    
 Even this subset of examples can take several hours to run (roughly 3.5 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
 

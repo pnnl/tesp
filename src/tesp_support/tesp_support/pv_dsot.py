@@ -5,12 +5,8 @@ for now, it only provides day ahead forecast for each agent.
 It does not participate in bidding
 """
 import numpy as np
-import logging as log
+
 from datetime import datetime, timedelta
-
-import tesp_support.helpers_dsot as hlprs
-
-logger = log.getLogger()
 
 
 class PVDSOT:
@@ -58,7 +54,7 @@ if __name__ == "__main__":
 
     a = pd.read_csv('solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv',index_col=0, header=None)
     a.index = pd.to_datetime(a.index)
-
+    sim_time = 7200
     a.loc[pd.date_range(sim_time + timedelta(0, 60), periods=48, freq='H')][1]
 
     agent = {"evName": "R5_12_47_2_tn_1_ev_1",
@@ -84,8 +80,6 @@ if __name__ == "__main__":
 
     ### Uncomment for testing logging functionality.
     ### Supply these values when using the battery agent in the simulation.
-    # model_diag_level = 11
-    # hlprs.enable_logging('DEBUG', model_diag_level)
     start_time = '2016-08-12 13:59:00'
     time_format = '%Y-%m-%d %H:%M:%S'
     sim_time = datetime.strptime(start_time, time_format)

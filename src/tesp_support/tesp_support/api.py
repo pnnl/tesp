@@ -34,8 +34,6 @@ Public Functions:
 
 from __future__ import absolute_import
 
-# from .case_config import tesp_share
-
 from .helpers_dsot import enable_logging
 from .tso_helpers import load_json_case
 from .tso_helpers import summarize_opf

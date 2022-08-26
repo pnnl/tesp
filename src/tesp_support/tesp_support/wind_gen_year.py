@@ -18,7 +18,7 @@ import math
 import numpy as np
 import pandas as pd
 
-import tesp_support.tso_helpers as tso
+from .tso_helpers import load_json_case
 
 resolution = 300  # seconds
 # casename = '../../../examples/analysis/dsot/code/system_case_config_new'
@@ -96,7 +96,7 @@ def generate_wind_data_24hr():
     return wind_plants
 
 
-ppc = tso.load_json_case(casename + ".json")
+ppc = load_json_case(casename + ".json")
 # initialize for variable wind
 wind_plants = make_wind_plants(ppc)
 Pbase = [row[1] for key, row in wind_plants.items()]  # base MW for wind generators

@@ -19,6 +19,8 @@ from tkinter import messagebox
 
 import numpy as np
 
+from .data import weather_path
+
 config = {'BackboneFiles': {},
           'FeederGenerator': {},
           'EplusConfiguration': {},
@@ -127,7 +129,8 @@ varsFD = [['Electric Cooling Penetration', 90, '%', 'FeederGenerator', 'Electric
           ['Solar Penetration', 0, '%', 'FeederGenerator', 'SolarPercentage'],
           ['Storage Penetration', 0, '%', 'FeederGenerator', 'StoragePercentage'],
           ['Solar Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'SolarInverterMode', 'inverterModesPV'],
-          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode', 'inverterModesBattery'],
+          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode',
+           'inverterModesBattery'],
           ['Billing Mode', 'TIERED', '', 'FeederGenerator', 'BillingMode', 'billingModes'],
           ['Monthly Fee', 13.0, '$', 'FeederGenerator', 'MonthlyFee'],
           ['Price', 0.102013, '$/kwh', 'FeederGenerator', 'Price'],
@@ -513,7 +516,7 @@ class TespConfigGUI:
         """
         weatherpath = self.path_ent.get()
         weatherfile = self.tmy3_ent.get()
-        fname = os.path.expandvars(os.path.expanduser(weatherpath + '/data/weather/' + weatherfile))
+        fname = weather_path + weatherfile
         if os.path.isfile(fname):
             fd = open(fname, 'r')
             rd = csv.reader(fd, delimiter=',', skipinitialspace=True)

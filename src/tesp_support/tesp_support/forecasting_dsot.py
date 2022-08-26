@@ -6,21 +6,22 @@ Implements the substation level DA price forecast and load forecast
 
 """
 
-import numpy as np
-from copy import deepcopy
-import pandas as pd
-from datetime import datetime, timedelta
 import math
-from math import cos as cos
-from math import sin as sin
-import pytz
-import glm
 import re
 import time as ti
-import os
-from tesp_support.hvac_dsot import HVACDSOT
-from tesp_support.schedule_client import *
-import logging as log
+from copy import deepcopy
+from datetime import datetime, timedelta
+from math import cos as cos
+from math import sin as sin
+
+import glm
+import numpy as np
+import pandas as pd
+import pytz
+
+from .hvac_dsot import HVACDSOT
+from .schedule_client import *
+
 
 class Forecasting:
     """This Class perform the forecast
@@ -43,13 +44,13 @@ class Forecasting:
            windowLength : number of values that is to be forecast
            DA_output : forecast values as output
         """
-        self.correct_Q_DA=config_Q['correct']
+        self.correct_Q_DA = config_Q['correct']
         if self.correct_Q_DA:
-            self.gain_Q_DA=list(config_Q['Q_gain'])
-            self.gain_t_65=list(config_Q['t_65'])
-            self.gain_t_65_2=list(config_Q['t_65_2'])
-            self.DC_change_Q_DA=list(config_Q['DC_change_Q_DA'])
-        
+            self.gain_Q_DA = list(config_Q['Q_gain'])
+            self.gain_t_65 = list(config_Q['t_65'])
+            self.gain_t_65_2 = list(config_Q['t_65_2'])
+            self.DC_change_Q_DA = list(config_Q['DC_change_Q_DA'])
+
         self.gProxy = DataClient(port).proxy
         self.sch_df_dict = {}
         self.solar_df = {}
@@ -172,7 +173,7 @@ class Forecasting:
         sch_df = self.initialize_schedule_dataframe(sch_df_start_time, sch_df_end_time)
 
         for temp_i in range(len(temp1)):
-            #########minute
+            # minute
             minute = temp1[temp_i][0]
             if minute == '*':
                 pass
@@ -185,7 +186,7 @@ class Forecasting:
                 elif len(min_1) == 4:
                     min_1 = list(range(min_1[0], min_1[1] + 1)) + list(range(min_1[2], min_1[3] + 1))
                 temp1[temp_i][0] = min_1
-                ############hour
+            # hour
             hour = temp1[temp_i][1]
             if hour == '*':
                 pass
@@ -198,9 +199,9 @@ class Forecasting:
                 elif len(hour_1) == 4:
                     hour_1 = list(range(hour_1[0], hour_1[1] + 1)) + list(range(hour_1[2], hour_1[3] + 1))
                 temp1[temp_i][1] = hour_1
-                ############second
+            # second
             second = temp1[temp_i][2]
-            ############month
+            # month
             month = temp1[temp_i][3]
             if month == '*':
                 pass
@@ -308,7 +309,7 @@ class Forecasting:
         """
         solar_direct_forecast = eval(fncs_str)
         self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast.keys()]
-    
+
     def set_temperature_forecast(self, fncs_str):
         """ Set the 48 hour temperature forecast
 
@@ -318,7 +319,7 @@ class Forecasting:
         temperature_forecast = eval(fncs_str)
         self.temperature_forecast = [float(temperature_forecast[key]) for key in temperature_forecast.keys()]
         # log.info('FORECAST AGENT ' + str(self.temperature_forecast) )
-    
+
     def get_substation_unresponsive_load_forecast(self, peak_load=7500.0):
         """Get substation unresponsive load forecast
 
@@ -334,7 +335,7 @@ class Forecasting:
         if self.NOerrors:
             self.base_run_load = np.roll(self.base_run_load, -1)
 
-        load = self.base_run_load/max(self.base_run_load) * peak_load
+        load = self.base_run_load / max(self.base_run_load) * peak_load
 
         return deepcopy(load.tolist())
 
@@ -410,7 +411,7 @@ class Forecasting:
         # this solar_gain_forecast is nominal value and needs to be multiplied with heatgain_factor of the house
 
         # now = pd.Timestamp(time)
-        # DA48h = now + pd.Timedelta('2 day') # 48 hour DA forecast window
+        # DA48h = now + pd.Timedelta('2 day') # 48-hour DA forecast window
         # self.solar_gain_forecast = self.solar_gain_data[now:DA48h].to_numpy().tolist()
         return self.solar_gain_forecast
 
@@ -438,10 +439,12 @@ class Forecasting:
             # if p_frac = 0, it means the load is heatgain only where zip_load is considered 0 but not internal gain
             if p_frac == 0:
                 zip_load = zip_load + temp * p_frac  # adding up zip_loads
-                int_gain = int_gain + temp * skew_scalar['zip_heatgain_fraction'][zip_name] * 3412  # adding up int gains
+                int_gain = int_gain + temp * skew_scalar['zip_heatgain_fraction'][
+                    zip_name] * 3412  # adding up int gains
             else:
                 zip_load = zip_load + temp * 1  # adding up zip_loads
-                int_gain = int_gain + temp * skew_scalar['zip_heatgain_fraction'][zip_name] * 3412  # adding up int gains
+                int_gain = int_gain + temp * skew_scalar['zip_heatgain_fraction'][
+                    zip_name] * 3412  # adding up int gains
         return zip_load.tolist(), int_gain.tolist()
 
     def get_waterdraw_forecast(self, skew_scalar, time):
@@ -501,7 +504,7 @@ class Forecasting:
 
         return deepcopy(industrial_load.tolist())
 
-    def correcting_Q_forecast_10_AM(self,Q_10_AM, offset, day_of_week):
+    def correcting_Q_forecast_10_AM(self, Q_10_AM, offset, day_of_week):
         """ Correcs the quantity submited to the wolsale market at 10 AM
         
         Args:
@@ -515,18 +518,19 @@ class Forecasting:
             day = day_of_week + 1
             if day > 6:
                 day = 0
-            t_65 = abs(np.array(self.temperature_forecast[offset:offset+24])-65)
-            t_65_2 = t_65 **2
-            Q_10_AM=np.array(Q_10_AM)
+            t_65 = abs(np.array(self.temperature_forecast[offset:offset + 24]) - 65)
+            t_65_2 = t_65 ** 2
+            Q_10_AM = np.array(Q_10_AM)
             if day < 5:
-                idx=0
+                idx = 0
             else:
-                idx=1
-            new_Q = Q_10_AM*self.gain_Q_DA[idx] + t_65*self.gain_t_65[idx] + t_65_2*self.gain_t_65_2[idx] + self.DC_change_Q_DA[idx]
+                idx = 1
+            new_Q = Q_10_AM * self.gain_Q_DA[idx] + t_65 * self.gain_t_65[idx] + t_65_2 * self.gain_t_65_2[idx] + \
+                    self.DC_change_Q_DA[idx]
             return list(new_Q / 100.0)
         else:
             return Q_10_AM
-        
+
 
 if __name__ == "__main__":
     # a demo house agent object
@@ -610,17 +614,17 @@ if __name__ == "__main__":
     start_time = '2016-08-12 05:59:00'
     time_format = '%Y-%m-%d %H:%M:%S'
     sim_time = datetime.strptime(start_time, time_format)
-    hvac_obj = HVACDSOT(hvac_dict, hvac_properties, 'abc', 11, sim_time,'cplex')
-    
-    Q_DA={"correct": True,
-		"gain": [10,0.5,0.1],
-		"DC_change": [1,2,3]}
+    hvac_obj = HVACDSOT(hvac_dict, hvac_properties, 'abc', 11, sim_time, 'cplex')
+
+    Q_DA = {"correct": True,
+            "gain": [10, 0.5, 0.1],
+            "DC_change": [1, 2, 3]}
     # testing internalgain calculation and speed
     current_time = datetime(2016, 7, 1, 0, 59)
     obj = Forecasting(800, Q_DA)
     print('\n\n\n\n\n\n\n\n')
     print('Q DA correction')
-    temp=obj.correcting_Q_forecast_10_AM([10,11,12])
+    temp = obj.correcting_Q_forecast_10_AM([10, 11, 12])
     print(temp)
     print('\n\n\n\n\n\n\n\n')
     # instead of running the following block to load schedules, simply run in a terminal:
@@ -637,20 +641,22 @@ if __name__ == "__main__":
     t = ti.time()
     del_t = 3600
     # obj.extra_forecast_hours = 10  # give me forecast enough so that I only need to come back after this duration (hours)
-    for h in range(0,24*4):
-        for i in range(0,1):
+    for h in range(0, 24 * 4):
+        for i in range(0, 1):
             skew_scalar = {'zip_skew': int(-4456.0),
                            'zip_scalar': {'responsive_loads': 1.3,
                                           'unresponsive_loads': 1.14},
                            'zip_heatgain_fraction': {'responsive_loads': 0.9,
                                                      'unresponsive_loads': 0.9},
                            'zip_power_fraction': {'responsive_loads': 1,
-                                                     'unresponsive_loads': 1},
+                                                  'unresponsive_loads': 1},
                            'zip_power_pf': {'responsive_loads': 1,
-                                                     'unresponsive_loads': 1}
+                                            'unresponsive_loads': 1}
                            }
             if len(hvac_obj.full_internalgain_forecast) < 48:  # after every forecast interval hours
-                forecast_zpload,forecast_internalgain = obj.get_internal_gain_forecast(skew_scalar, current_time + timedelta(0, 60), obj.extra_forecast_hours)
+                forecast_zpload, forecast_internalgain = obj.get_internal_gain_forecast(skew_scalar,
+                                                                                        current_time + timedelta(0, 60),
+                                                                                        obj.extra_forecast_hours)
                 hvac_obj.store_full_internalgain_forecast(forecast_internalgain)
                 hvac_obj.store_full_zipload_forecast(forecast_zpload)
             hvac_obj.set_internalgain_forecast(hvac_obj.full_internalgain_forecast[0:48])
@@ -675,7 +681,7 @@ if __name__ == "__main__":
                              4650.728135399999, 4922.179178399999, 5078.3523894, 4486.8257208, 3492.1291140000003,
                              2837.5589214, 2570.8062024]
 
-    print(sum(np.array(expected_internalgain)-np.array(hvac_obj.internalgain_forecast)))
+    print(sum(np.array(expected_internalgain) - np.array(hvac_obj.internalgain_forecast)))
     # # Testing solargain calculation
     # obj = Forecasting()
     # solar_dhr = [0.0 for i in range(48)]

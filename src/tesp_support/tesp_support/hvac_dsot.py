@@ -17,8 +17,9 @@ import pyomo.environ as pyo
 import pytz
 from scipy import linalg
 
-import tesp_support.helpers as helpers
-import tesp_support.helpers_dsot as agent_helpers
+from .helpers import parse_number, parse_magnitude
+from .helpers_dsot import get_run_solver
+
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
@@ -877,7 +878,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with outdoor temperature in F
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
         self.outside_air_temperature = val
 
     def set_humidity(self, fncs_str):
@@ -886,7 +887,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with humidity
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
         if val > 0.0:
             self.humidity = val
 
@@ -896,7 +897,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with solar irradiance
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
         if val >= 0.0:
             self.solar_direct = val
 
@@ -906,7 +907,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with solar irradiance
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
         if val >= 0.0:
             self.solar_diffuse = val
 
@@ -1296,7 +1297,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
         if val > 0.0:
             self.house_kw = val
 
@@ -1306,7 +1307,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
         if val > 0.0:
             self.hvac_kw = val
 
@@ -1316,7 +1317,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
         if val >= 0.0:
             self.wh_kw = val
 
@@ -1339,7 +1340,7 @@ class HVACDSOT:  # TODO: update class name
             model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human readable
         """
-        T_air = helpers.parse_number(fncs_str)
+        T_air = parse_number(fncs_str)
         if self.T_lower_limit < T_air < self.T_upper_limit:
             pass
         else:
@@ -1367,7 +1368,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with meter line-neutral voltage
         """
-        self.mtr_v = helpers.parse_magnitude(fncs_str)
+        self.mtr_v = parse_magnitude(fncs_str)
 
     def formulate_bid_rt(self, model_diag_level, sim_time):
         """ Bid to run the air conditioner through the next period for real-time
@@ -1977,7 +1978,7 @@ class HVACDSOT:  # TODO: update class name
             # Constraints
             model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
             # Solve
-            results = agent_helpers.get_run_solver("hvac_" + self.name, pyo, model, self.solver)
+            results = get_run_solver("hvac_" + self.name, pyo, model, self.solver)
             Quantity = [0 for _ in self.TIME]
             temp_room = [0 for _ in self.TIME]
             TOL = 0.00001  # Tolerance for checking bid

@@ -2,13 +2,8 @@
 """
 
 import json
-import os
 
-tesp_share = os.path.expandvars('$TESPDIR/data/')
-feeders_path = tesp_share + 'feeders/'
-entities_path = tesp_share + 'entities/'
-scheduled_path = tesp_share + 'schedules/'
-weather_path = tesp_share + 'weather/'
+from .data import entities_path
 
 # 'module climate;'
 # 'module connection;'

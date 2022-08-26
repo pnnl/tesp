@@ -12,7 +12,7 @@ import warnings
 import networkx as nx
 import json
 import functools
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 import logging
 
 # Wireframe for new feeder objects:

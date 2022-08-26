@@ -11,7 +11,7 @@ import re
 import sys
 from datetime import datetime
 
-import tesp_support.helpers as helpers
+from .helpers import idf_int
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -599,13 +599,13 @@ def merge_idf(base, ems, StartTime, EndTime, target, StepsPerHour):
     for ln in ip:
         line = ln.rstrip('\n')
         if '!- Begin Month' in line:
-            print('    %s                      !- Begin Month' % helpers.idf_int(begin_month), file=op)
+            print('    %s                      !- Begin Month' % idf_int(begin_month), file=op)
         elif '!- Begin Day of Month' in line:
-            print('    %s                      !- Begin Day of Month' % helpers.idf_int(begin_day), file=op)
+            print('    %s                      !- Begin Day of Month' % idf_int(begin_day), file=op)
         elif '!- End Month' in line:
-            print('    %s                      !- End Month' % helpers.idf_int(end_month), file=op)
+            print('    %s                      !- End Month' % idf_int(end_month), file=op)
         elif '!- End Day of Month' in line:
-            print('    %s                      !- End Day of Month' % helpers.idf_int(end_day), file=op)
+            print('    %s                      !- End Day of Month' % idf_int(end_day), file=op)
         elif '!- Day of Week for Start Day' in line:
             print('    %s               !- Day of Week for Start Day' % ep_dow_names[dow], file=op)
         elif 'Timestep,' in line:

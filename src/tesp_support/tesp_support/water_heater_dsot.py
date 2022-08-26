@@ -24,8 +24,9 @@ from copy import deepcopy
 import pyomo.environ as pyo
 import pyomo.opt as opt
 import logging as log
-import tesp_support.helpers as helpers
-import tesp_support.helpers_dsot as agent_helpers
+
+from .helpers import parse_number
+from .helpers_dsot import get_run_solver
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
@@ -651,7 +652,7 @@ class WaterHeaterDSOT:
         model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_ine1)
         model.con2 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
 
-        results = agent_helpers.get_run_solver("wh_" + self.name, pyo, model, self.solver)
+        results = get_run_solver("wh_" + self.name, pyo, model, self.solver)
 
         Quantity = [0 for i in self.TIME]
         SC = [0 for i in self.TIME]
@@ -1054,7 +1055,7 @@ class WaterHeaterDSOT:
             sim_time (str): Current time in the simulation; should be human readable
         """
         try:
-            _tmp = helpers.parse_number(fncs_str)
+            _tmp = parse_number(fncs_str)
         except:
             _tmp = self.T_bottom
             print("Error wh lower temp:", fncs_str, self.name)
@@ -1078,7 +1079,7 @@ class WaterHeaterDSOT:
             sim_time (str): Current time in the simulation; should be human readable
         """
         try:
-            _tmp = helpers.parse_number(fncs_str)
+            _tmp = parse_number(fncs_str)
         except:
             _tmp = self.T_upper
             print("Error wh upper temp:", fncs_str, self.name)
@@ -1139,7 +1140,7 @@ class WaterHeaterDSOT:
         Args:
             fncs_str (str): FNCS message with wdrate value in gpm
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
 
         for i in range(len(self.wd_rate_val)):
             if self.wd_rate_val[i][0] == self.hour and self.wd_rate_val[i][1] == self.minute:
@@ -1156,7 +1157,7 @@ class WaterHeaterDSOT:
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
         if val > 0.0:
             self.Phw = val
         else:
@@ -1194,7 +1195,7 @@ class WaterHeaterDSOT:
             model_diag_level (int): Specific level for logging errors; set to 11
             sim_time (str): Current time in the simulation; should be human readable
         """
-        self.Tambient = helpers.parse_number(fncs_str)
+        self.Tambient = parse_number(fncs_str)
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object
 

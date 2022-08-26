@@ -7,10 +7,7 @@
 import os
 import pandas as pd
 
-try:
-    from urllib2 import urlopen, Request
-except ImportError:
-    from urllib.request import urlopen, Request
+from urllib.request import urlopen, Request
 
 
 def weatherdat(psmv3csvfile, bus_str, location_str):
@@ -61,6 +58,8 @@ def weatherdat(psmv3csvfile, bus_str, location_str):
 
 
 if __name__ == '__main__':
+    from .data import weather_path
+
     # loop to read and convert weather data files downloaded from NREL PSM v3
     # dictionary of csv weather datafile names corresponding to each bus
     bus_loc = {'Bus_1': ['704199_32.49_-96.7_2016', '32.49_-96.71'],
@@ -72,11 +71,9 @@ if __name__ == '__main__':
                'Bus_7': ['677635_27.37_-97.74_2016', '27.37_-97.74'],
                'Bus_8': ['509223_29.93_-104.02_2016', '29.93_-104.02']}
 
-    tesp_share = os.path.expandvars('$TESPDIR/data/')
-    os.chdir(tesp_share + "weather/8-node data/PSM source weather files")
+    os.chdir(weather_path + "8-node data/PSM source weather files")
 
     for bus in bus_loc:
-
         weather_file = bus_loc[bus][0]
         out_file = bus_loc[bus][1]
         weatherdat(weather_file, bus, out_file)

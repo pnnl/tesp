@@ -6,17 +6,13 @@ import json
 import os
 import sys
 
+import matplotlib.pyplot as plt
+
 import tesp_support.process_gld as gp
 
-try:
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-except:
-    pass
+name_root = sys.argv[1]
 
-rootname = sys.argv[1]
-
-diction = gp.read_gld_metrics(os.getcwd(), rootname)
+diction = gp.read_gld_metrics(os.getcwd(), name_root)
 hrs = diction['hrs']
 data_s = diction['data_s']
 data_m = diction['data_m']
@@ -42,7 +38,7 @@ prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
 
 fig, ax = plt.subplots(2, 3, sharex='col', figsize=(16, 8))
-fig.suptitle('GridLAB-D Metrics:' + rootname)
+fig.suptitle('GridLAB-D Metrics:' + name_root)
 
 ax[0, 0].set_title('Substation Real Power')
 ax[0, 0].plot(hrs, 0.001 * data_s[0, :, idx_s['SUB_POWER_IDX']], color='blue', label='Total')

@@ -17,16 +17,14 @@ Running the base case
 
 1. A current build of GridLAB-D from branch feature/1048 (or newer feature/1173) is required.
 
-2. "gridlabd IEEE_8500.glm" runs the base case. This example simulates one day but can take tens of minutes.
+2. "runIEEE_8500.sh" run the base case. This example simulates one day but can take tens of minutes.
 
 
 In order to plot results from the JSON files, Python 3 and the matplotlib package can be used:
 
-1. "python3 glm_dict.py IEEE_8500" will create circuit metadata for plotting. 
+1. "./runGLMDiction.sh" will create circuit metadata for plotting.
 
-2. "python3 process_gld.py IEEE_8500 &" will plot various metrics when the simulation finishes.
-
-3. "python3 process_voltages.py IEEE_8500 &" will plot all meter voltages on the same graph.
+2. "plots IEEE_8500" will plot various metrics when the simulation finishes.
 
 Alternatively, you can insert "recorders" into IEEE_8500.glm, which will create CSV files
 for plotting and post-processing. The simulation takes longer with CSV file output.
@@ -56,7 +54,6 @@ Base File Directory
 - *Cloudy.fig*: MATLAB plot of the correlated cloudy day temperature and solar irradiance
 - *estimate_ac_size.m*: MATLAB helper function that estimates the house HVAC load as determined by GridLAB-D's autosizing feature. These values are embedded as comments in *IEEE_8500.glm*, which may be useful if modeling the HVAC load as a ZIP load.
 - *gld_strict_name.m*: MATLAB helper function to ensure GridLAB-D names don't start with a number, as they can with OpenDSS files under *backbone*, but is not allowed in GridLAB-D
-- *glm_dict.py*: creates output metadata for a GridLAB-D input file: **python glm_dict.py IEEE_8500** before attempting to plot the JSON files
 - *house_ca.csv*: house ETP parameters from the base case: may be useful for your own house models.
 - *house_cm.csv*: house ETP parameters from the base case: may be useful for your own house models.
 - *house_ua.csv*: house ETP parameters from the base case: may be useful for your own house models.
@@ -65,8 +62,6 @@ Base File Directory
 - *IEEE_8500gener_whouses.m*: MATLAB script that produces *IEEE_8500.glm* from files under *backbone*
 - *main_regulator.csv*: total feeder current in the base case: may be useful in benchmarking your own power flow solver.
 - *PNNLteam*: subdirectory with PNNL's participation files: see next section.
-- *process_gld.py*: sample Python script to plot feeder, capacitor, regulator, voltage, inverter and house variables
-- *process_voltages.py*: sample Python script to plot all house voltages
 - *README.md*: this file
 - *schedules.glm*: cooling, heating, lighting and other end-use appliance schedules referenced by *IEEE_8500.glm*
 - *substation_load.csv*: total feeder load and positive sequence voltage in the base case: may be useful in benchmarking your own power flow solver.

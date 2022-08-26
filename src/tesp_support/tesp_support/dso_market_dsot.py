@@ -16,41 +16,42 @@ from copy import deepcopy
 
 import numpy as np
 
-import tesp_support.helpers as helpers_tesp
-import tesp_support.helpers_dsot as helpers
+from .helpers import parse_kw
+from .helpers_dsot import curve, get_intersect, ClearingType
 
 
 class DSOMarketDSOT:
     """This agent manages the DSO operating
 
-	Args:
-		name (str): name of the DSO agent
-		pricecap (float): the maximun price that is allowed in the market, in $/kWh
-		num_samples (int): the number of sampling points, describles how precisely the curve is sampled
-		windowLength (int): length of the planning horizon for the DA market, in hours
-		DSO_Q_max (float): maximum limit of the DSO load capacity, in kWh
-		transformer_degradation (boolean): flag variable, equals to 1 when transformer degradation effect is taken into account
+    Args:
+        name (str): name of the DSO agent
+        pricecap (float): the maximun price that is allowed in the market, in $/kWh
+        num_samples (int): the number of sampling points, describles how precisely the curve is sampled
+        windowLength (int): length of the planning horizon for the DA market, in hours
+        DSO_Q_max (float): maximum limit of the DSO load capacity, in kWh
+        transformer_degradation (boolean): flag variable, equals to 1 when transformer degradation effect is taken into account
 
-	Attributes:
-		curve_a (array): array of second order coefficients for the wholesale node curve, indexed by day_of_sim and hour_of_day
-		curve_b (array): array of first order coefficients of the wholesale node curve, indexed by day_of_sim and hour_of_day
-		curve_c (array): array of intercepts of the wholesale node curve, indexed by day_of_sim and hour_of_day
-		Pwclear_RT (float): cleared wholesale price by real-time wholesale node trial clearing, in $/kWh
-		Pwclear_DA (list): list of cleared wholesale price by day-ahead wholesale node trial clearing, in $/kWh, indexed by hour
-		trial_cleared_quantity_RT (float): trial cleared quantity by real-time wholesale node trial clearing, in kWh
-		trial_cleared_quantity_DA (list): trial cleared quantity by day-ahead wholesale node trial clearing, in kWh
-		curve_DSO_RT (curve): aggregated demand curve at DSO level from real-time retail market
-		curve_DSO_DA (dict): dictionary of aggregated demand curves at DSO level from day-ahead retail market, indexed by hour
-		curve_ws_node (dict): dictionary of wholesale node curves, indexed by day_of_sim and hour_of_day
-		trial_clear_type_RT (int): trial cleared type of real-time wholesale node trial clearing
-		trial_clear_type_DA (list): trial cleared type of day-ahead wholesale node trial clearing, indexed by hour
-		hour_of_day (int): current hour of the day
-		day_of_week (int): current day of the week
-		num_of_cutstomers: total number of customers for the DSO
-		customer_count_mix_residential: Residential percentage of the total customer count mix
-		number_of_gld_homes: Total number of GLD homes for the DSO
-		quadratic (boolean): if true use quadratic curve dictionary, false use hard code
-	"""
+    Attributes:
+        curve_a (array): array of second order coefficients for the wholesale node curve, indexed by day_of_sim and hour_of_day
+        curve_b (array): array of first order coefficients of the wholesale node curve, indexed by day_of_sim and hour_of_day
+        curve_c (array): array of intercepts of the wholesale node curve, indexed by day_of_sim and hour_of_day
+        Pwclear_RT (float): cleared wholesale price by real-time wholesale node trial clearing, in $/kWh
+        Pwclear_DA (list): list of cleared wholesale price by day-ahead wholesale node trial clearing, in $/kWh, indexed by hour
+        trial_cleared_quantity_RT (float): trial cleared quantity by real-time wholesale node trial clearing, in kWh
+        trial_cleared_quantity_DA (list): trial cleared quantity by day-ahead wholesale node trial clearing, in kWh
+        curve_DSO_RT (curve): aggregated demand curve at DSO level from real-time retail market
+        curve_DSO_DA (dict): dictionary of aggregated demand curves at DSO level from day-ahead retail market, indexed by hour
+        curve_ws_node (dict): dictionary of wholesale node curves, indexed by day_of_sim and hour_of_day
+        trial_clear_type_RT (int): trial cleared type of real-time wholesale node trial clearing
+        trial_clear_type_DA (list): trial cleared type of day-ahead wholesale node trial clearing, indexed by hour
+        hour_of_day (int): current hour of the day
+        day_of_week (int): current day of the week
+        num_of_cutstomers: total number of customers for the DSO
+        customer_count_mix_residential: Residential percentage of the total customer count mix
+        number_of_gld_homes: Total number of GLD homes for the DSO
+        quadratic (boolean): if true use quadratic curve dictionary, false use hard code
+    """
+
     def __init__(self, dso_dict, key):
         """ Initializes the class
         """
@@ -140,7 +141,7 @@ class DSOMarketDSOT:
         for day in range(7):
             self.curve_ws_node[day] = dict()
             for hour in range(24):
-                self.curve_ws_node[day][hour] = helpers.curve(self.pricecap, self.num_samples)
+                self.curve_ws_node[day][hour] = curve(self.pricecap, self.num_samples)
                 self.curve_ws_node[day][hour].quantities = np.linspace(0, self.DSO_Q_max, self.num_samples)
                 self.curve_ws_node[day][hour].prices = \
                     np.array(
@@ -156,7 +157,7 @@ class DSOMarketDSOT:
         self.trial_cleared_quantity_RT = 0.0
         self.curve_DSO_RT = None
         self.trial_clear_type_RT = None
-        self.curve_DSO_RT = helpers.curve(self.pricecap, self.num_samples)
+        self.curve_DSO_RT = curve(self.pricecap, self.num_samples)
 
     def clean_bids_DA(self):
         """ Initialize the day-ahead wholesale node trial clearing
@@ -166,7 +167,7 @@ class DSOMarketDSOT:
         self.curve_DSO_DA = dict()
         self.trial_clear_type_DA = [None] * self.windowLength
         for idx in range(self.windowLength):
-            self.curve_DSO_DA[idx] = helpers.curve(self.pricecap, self.num_samples)
+            self.curve_DSO_DA[idx] = curve(self.pricecap, self.num_samples)
 
     def curve_aggregator_DSO_RT(self, demand_curve_RT, Q_max):
         """ Function used to aggregate the substation-level RT demand curves into a DSO-level RT demand curve
@@ -217,7 +218,7 @@ class DSOMarketDSOT:
 			preprocessed_curve (curve): preprossed demand curve
 
 		"""
-        preprocessed_curve = helpers.curve(self.pricecap, self.num_samples)
+        preprocessed_curve = curve(self.pricecap, self.num_samples)
         preprocessed_curve.prices = deepcopy(substation_demand_curve.prices)
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
         for i in range(self.num_samples):
@@ -281,9 +282,9 @@ class DSOMarketDSOT:
                                   self.curve_c[day_of_week][hour_of_day]
 
                 if self.trial_cleared_quantity_RT > self.DSO_Q_max:
-                    self.trial_clear_type_RT = helpers.ClearingType.CONGESTED
+                    self.trial_clear_type_RT = ClearingType.CONGESTED
                 else:
-                    self.trial_clear_type_RT = helpers.ClearingType.UNCONGESTED
+                    self.trial_clear_type_RT = ClearingType.UNCONGESTED
             except:
                 self.Pwclear_RT, self.trial_cleared_quantity_RT, self.trial_clear_type_RT = self.trial_wholesale_clearing(
                     self.curve_ws_node[day_of_week][hour_of_day], self.curve_DSO_RT, day_of_week, hour_of_day)
@@ -335,8 +336,8 @@ class DSOMarketDSOT:
             temp = curve_DSO.quantities[0]
             if temp < 0.0:
                 log.info(
-                    "Warning quantities submitted to DSO are negative. The returns are price set to 0, first quantity of the curve, and helpers.ClearingType.UNCONGESTED. BAU case.")
-                return 0.0, temp, helpers.ClearingType.UNCONGESTED
+                    "Warning quantities submitted to DSO are negative. The returns are price set to 0, first quantity of the curve, and ClearingType.UNCONGESTED. BAU case.")
+                return 0.0, temp, ClearingType.UNCONGESTED
             if min(curve_ws_node.quantities) <= temp <= max(curve_ws_node.quantities):
                 cleared_quantity = temp
                 for idx in range(1, self.num_samples):
@@ -349,7 +350,7 @@ class DSOMarketDSOT:
                         cleared_price = curve_ws_node.prices[idx - 1]
                     elif curve_ws_node.quantities[idx] == cleared_quantity:
                         cleared_price = curve_ws_node.prices[idx]
-                clear_type = helpers.ClearingType.UNCONGESTED
+                clear_type = ClearingType.UNCONGESTED
                 if cleared_price > self.pricecap:
                     cleared_price = self.pricecap
                 return cleared_price, cleared_quantity, clear_type
@@ -358,25 +359,25 @@ class DSOMarketDSOT:
                 log.info("ERROR dso min: " + str(min(curve_ws_node.quantities)) + ", max: " + str(
                     max(curve_ws_node.quantities)) + " curve_DSO.quantities[0] " + str(curve_DSO.quantities[0]))
                 log.info("dso quantities: curve_DSO" + str(curve_DSO.quantities))
-                return float('inf'), float('inf'), helpers.ClearingType.FAILURE
+                return float('inf'), float('inf'), ClearingType.FAILURE
         else:
 
             max_q = min(max(curve_ws_node.quantities), max(curve_DSO.quantities))
             min_q = max(min(curve_ws_node.quantities), min(curve_DSO.quantities))
             if max_q <= min_q:
                 log.info("ERROR dso min: " + str(min_q) + ", max: " + str(max_q))
-                return float('inf'), float('inf'), helpers.ClearingType.FAILURE
+                return float('inf'), float('inf'), ClearingType.FAILURE
 
-            # x,buyer_prices,seller_prices=helpers.resample_curve_for_market(curve_DSO.quantities, curve_DSO.prices,curve_ws_node.quantities, curve_ws_node.prices)
+            # x,buyer_prices,seller_prices=resample_curve_for_market(curve_DSO.quantities, curve_DSO.prices,curve_ws_node.quantities, curve_ws_node.prices)
             buyer_prices = curve_DSO.prices
             buyer_quantities = curve_DSO.quantities
             seller_quantities = buyer_quantities
             seller_prices = self.get_prices_of_quantities(buyer_quantities, day, hour)
             # seller_prices[0]=0.0
             seller_prices[-1] = self.pricecap
-            # buyer_quantities, buyer_prices = helpers.resample_curve(curve_DSO.quantities, curve_DSO.prices,
+            # buyer_quantities, buyer_prices = resample_curve(curve_DSO.quantities, curve_DSO.prices,
             #                                                     min_q, max_q, self.num_samples)
-            # seller_quantities, seller_prices = helpers.resample_curve(curve_ws_node.quantities, curve_ws_node.prices,
+            # seller_quantities, seller_prices = resample_curve(curve_ws_node.quantities, curve_ws_node.prices,
             #                                                       min_q, max_q, self.num_samples)
             for idx in range(len(buyer_quantities) - 1):
                 if buyer_prices[idx] > seller_prices[idx] and buyer_prices[idx + 1] < seller_prices[idx + 1]:
@@ -389,13 +390,13 @@ class DSOMarketDSOT:
                         price_point = self.get_prices_of_quantities(quantity_point, day, hour)
                         p3 = (quantity_point[0], price_point[0])
                         p4 = (quantity_point[1], price_point[1])
-                        Pwclear, cleared_quantity = helpers.get_intersect(p1, p2, p3, p4)
+                        Pwclear, cleared_quantity = get_intersect(p1, p2, p3, p4)
                     else:
                         p1 = (buyer_quantities[idx], buyer_prices[idx])
                         p2 = (buyer_quantities[idx + index_delta], buyer_prices[idx + index_delta])
                         p3 = (seller_quantities[idx], seller_prices[idx])
                         p4 = (seller_quantities[idx + index_delta], seller_prices[idx + index_delta])
-                        Pwclear, cleared_quantity = helpers.get_intersect(p1, p2, p3, p4)
+                        Pwclear, cleared_quantity = get_intersect(p1, p2, p3, p4)
                     if Pwclear == float('inf'):
                         # if buyer_quantities[idx] == buyer_quantities[idx + index_delta]:
                         log.info(" Warning dso clearing problem points -- buyer_quantities[idx]: " + str(
@@ -419,15 +420,15 @@ class DSOMarketDSOT:
                         p2 = (buyer_quantities[idx + index_delta], buyer_prices[idx + index_delta])
                         p3 = (seller_quantities[idx], seller_prices[idx])
                         p4 = (seller_quantities[idx + index_delta], seller_prices[idx + index_delta])
-                        Pwclear, cleared_quantity = helpers.get_intersect(p1, p2, p3, p4)
+                        Pwclear, cleared_quantity = get_intersect(p1, p2, p3, p4)
                     if Pwclear == float('inf'):
                         log.info(" Error dso no intersection: " + str(buyer_quantities) +
                                  " buyer_prices : " + str(buyer_prices) + " seller_prices: " + str(seller_prices) +
                                  " day: " + str(day) + " hour: " + str(hour))
                     if cleared_quantity > self.DSO_Q_max:
-                        trial_clear_type = helpers.ClearingType.CONGESTED
+                        trial_clear_type = ClearingType.CONGESTED
                     else:
-                        trial_clear_type = helpers.ClearingType.UNCONGESTED
+                        trial_clear_type = ClearingType.UNCONGESTED
                     return Pwclear, cleared_quantity, trial_clear_type
             log.info("ERROR dso intersection not found (not supposed to happen). quantities: " + str(
                 buyer_quantities) + ", buyer_prices: " + str(buyer_prices) + ", seller_prices: " + str(seller_prices))
@@ -435,20 +436,20 @@ class DSOMarketDSOT:
                 if max_q == max(curve_ws_node.quantities):
                     Pwclear = buyer_prices[-1]
                     cleared_quantity = buyer_quantities[-1]
-                    trial_clear_type = helpers.ClearingType.CONGESTED
+                    trial_clear_type = ClearingType.CONGESTED
                 elif max_q == max(curve_DSO.quantities):
                     Pwclear = seller_prices[-1]
                     cleared_quantity = seller_quantities[-1]
-                    trial_clear_type = helpers.ClearingType.UNCONGESTED
+                    trial_clear_type = ClearingType.UNCONGESTED
             else:
                 if min_q == min(curve_ws_node.quantities):
                     Pwclear = buyer_prices[0]
                     cleared_quantity = buyer_quantities[0]
-                    trial_clear_type = helpers.ClearingType.UNCONGESTED
+                    trial_clear_type = ClearingType.UNCONGESTED
                 elif min_q == min(curve_DSO.quantities):
                     Pwclear = seller_prices[0]
                     cleared_quantity = seller_quantities[0]
-                    trial_clear_type = helpers.ClearingType.UNCONGESTED
+                    trial_clear_type = ClearingType.UNCONGESTED
             return Pwclear, cleared_quantity, trial_clear_type
 
     def substation_supply_curve_RT(self, retail_obj):
@@ -474,8 +475,8 @@ class DSOMarketDSOT:
         maxPuLoading = retail_obj.maxPuLoading
         TOC_dict = retail_obj.TOC_dict
         Prclear_RT = self.retail_rate(self.Pwclear_RT)
-        supply_curve_RT = helpers.curve(self.retail_rate(self.pricecap),
-                                        self.num_samples)  # pricecap of the supply_curve has to be the retail pricecap
+        supply_curve_RT = curve(self.retail_rate(self.pricecap),
+                                self.num_samples)  # pricecap of the supply_curve has to be the retail pricecap
         max_buyer = retail_obj.curve_buyer_RT.quantities[0]
         max_retail = max(max_buyer, Q_max_retail)
         if self.transformer_degradation == True:
@@ -544,8 +545,8 @@ class DSOMarketDSOT:
         supply_curve_DA = dict()
         for idx in range(self.windowLength):
             Prclear_DA[idx] = self.retail_rate(self.Pwclear_DA[idx])
-            supply_curve_DA[idx] = helpers.curve(self.retail_rate(self.pricecap),
-                                                 self.num_samples)  # pricecap of the supply_curve has to be the retail pricecap
+            supply_curve_DA[idx] = curve(self.retail_rate(self.pricecap),
+                                         self.num_samples)  # pricecap of the supply_curve has to be the retail pricecap
 
         if self.transformer_degradation == True:
             for idx in range(self.windowLength):
@@ -723,7 +724,7 @@ class DSOMarketDSOT:
 			Args:
 				ref_load (str): total load of substation
 		"""
-        val = helpers_tesp.parse_kw(ref_load)
+        val = parse_kw(ref_load)
         self.total_load = val
 
     def set_total_load(self, total_load):
@@ -732,16 +733,16 @@ class DSOMarketDSOT:
 			Args:
 				gld_load (str): total load of substation
 		"""
-        val = helpers_tesp.parse_kw(total_load)
+        val = parse_kw(total_load)
         self.total_load = val
 
     def set_ind_load(self, industrial_load):
         """ Set the industrial load based on provided load by a csv file after base-case, complex number
 
-			Args:
-				industrial_load (str): industrial load of substation
-		"""
-        val = helpers_tesp.parse_kw(industrial_load)
+        Args:
+            industrial_load (str): industrial load of substation
+        """
+        val = parse_kw(industrial_load)
         self.ind_load = val
 
     def set_ind_load_da(self, industrial_load_da):
@@ -802,7 +803,7 @@ class DSOMarketDSOT:
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    import tesp_support.retail_market_dsot_v1 as Retail
+    from .retail_market_dsot import RetailMarketDSOT
 
 
     def test_dso_clearing_RT():
@@ -857,7 +858,7 @@ if __name__ == "__main__":
         DSO = DSOMarketDSOT(dso_dict, 'www')
 
         # Instantiate Retail agent
-        market = Retail.RetailMarketDSOT(retail_dict, "retail_1")
+        market = RetailMarketDSOT(retail_dict, "retail_1")
 
         # Retail agent initializes the RT retail market
         market.clean_bids_RT()
@@ -1018,7 +1019,7 @@ if __name__ == "__main__":
         DSO = DSOMarketDSOT(dso_dict, 'www')
 
         # instantiate Retail agent
-        market = Retail.RetailMarketDSOT(retail_dict, "retail_1")
+        market = RetailMarketDSOT(retail_dict, "retail_1")
 
         # Retail agent initializes the DA retail market
         market.clean_bids_DA()
@@ -1665,5 +1666,5 @@ if __name__ == "__main__":
 
     # test real-time portion
     test_dso_clearing_RT()
-# test day-ahead portion
-#    test_dso_clearing_DA()
+    # test day-ahead portion
+    # test_dso_clearing_DA()

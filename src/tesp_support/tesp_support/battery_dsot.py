@@ -27,8 +27,9 @@ from copy import deepcopy
 import logging as log
 import pyomo.environ as pyo
 import pyomo.opt as opt
-import tesp_support.helpers as helpers
-import tesp_support.helpers_dsot as agent_helpers
+
+from .helpers import parse_number
+from .helpers_dsot import get_run_solver
 
 logger = log.getLogger()
 
@@ -328,7 +329,7 @@ class BatteryDSOT:
         model.con5 = pyo.Constraint(self.TIME,rule=self.con_rule_eq3)
 
         # print('day_ahead_price_forecast...', self.f_DA)
-        results = agent_helpers.get_run_solver("bt_" + self.name, pyo, model, self.solver)
+        results = get_run_solver("bt_" + self.name, pyo, model, self.solver)
         # print('*** optimization model ***:')
         # print(model.pprint())
         # print('bt objective function is ', pyo.value(model.obj))
@@ -518,7 +519,7 @@ class BatteryDSOT:
              sim_time (str): Current time in the simulation; should be human readable
              
         """
-        val = helpers.parse_number(fncs_str)
+        val = parse_number(fncs_str)
         self.Cinit = self.batteryCapacity * val
         
         ### Sanity checks #TODO: following sanity check is wrong. should be reomved

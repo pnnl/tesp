@@ -14,7 +14,7 @@ import pypower.api as pp
 from math import sqrt
 from copy import deepcopy
 
-import tesp_support.tso_helpers as tso
+from .tso_helpers import load_json_case, make_dictionary
 
 #import cProfile
 #import pstats
@@ -41,12 +41,12 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
       rootname (str): the root filename for metrics output, without extension
     """
 
-    ppc = tso.load_json_case(casefile)
+    ppc = load_json_case(casefile)
     StartTime = ppc['StartTime']
     tmax = int(ppc['Tmax'])
     period = int(ppc['Period'])
     dt = int(ppc['dt'])
-    tso.make_dictionary(ppc)
+    make_dictionary(ppc)
 
     bus_mp = open("bus_" + rootname + "_metrics.json", "w")
     gen_mp = open("gen_" + rootname + "_metrics.json", "w")

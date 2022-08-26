@@ -9,12 +9,7 @@ Public Functions:
 import json
 
 import numpy as np
-
-try:
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-except:
-    pass
+import matplotlib.pyplot as plt
 
 
 def process_houses(name_root, diction_name=''):

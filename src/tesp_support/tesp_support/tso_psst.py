@@ -10,10 +10,11 @@ import pandas as pd
 import pypower.api as pp
 import psst.cli as pst
 import helics
-import tesp_support.tso_helpers as tso
 from copy import deepcopy
 from datetime import datetime
+
 from .helpers import parse_mva
+from .tso_helpers import load_json_case, make_dictionary, dist_slack
 from .metrics_collector import MetricsStore, MetricsCollector
 
 
@@ -927,7 +928,7 @@ def tso_psst_loop(casename):
             hours_in_a_day = 24
             secs_in_a_hr = 3600
 
-            ppc = tso.load_json_case(casename + '.json')
+            ppc = load_json_case(casename + '.json')
             ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
             ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
@@ -1145,7 +1146,7 @@ def tso_psst_loop(casename):
             log.info('Started outages and renewables')
         try:
             log.info('making dictionary for plotting later')
-            tso.make_dictionary(ppc)
+            make_dictionary(ppc)
 
             # initialize for day-ahead, OPF and time stepping
             ts = 0
@@ -1645,7 +1646,7 @@ def tso_psst_loop(casename):
             # log.info('bus_opf = ' + str(bus[:, 2].sum()))
             # log.info('gen_opf = ' + str(gen[:, 1].sum()))
             ppc['gen'] = gen
-            ppc['gen'][:, 1] = tso.dist_slack(ppc, Pload)
+            ppc['gen'][:, 1] = dist_slack(ppc, Pload)
             gen = ppc['gen']   # needed to be re-aliased because of [:, ] operator
             # tso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'DIST', ts)
             # log.info('bus_dist = ' + str(bus[:, 2].sum()))

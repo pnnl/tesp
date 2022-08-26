@@ -23,10 +23,9 @@ try:
     import tesp_support.fncs as fncs
 except:
     pass
-from tesp_support.helpers import parse_kw
+from .helpers import parse_kw
 
 import matplotlib
-
 try:
     matplotlib.use('TkAgg')
 except:
