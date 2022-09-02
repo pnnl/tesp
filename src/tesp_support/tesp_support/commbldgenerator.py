@@ -2,20 +2,15 @@
 # file: commbldgenerator.py
 
 import os
-import sys
 import json
 import math
 import numpy as np
 from datetime import datetime
-from os.path import dirname, abspath
 
 import matplotlib.pyplot as plt
 
 from .helpers import gld_strict_name
 import tesp_support.feederGenerator_dsot as res_FG
-
-
-sys.path.insert(0, dirname(abspath(__file__)))
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
@@ -437,8 +432,8 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
             # If we assume 2500 sq. ft as avg area of a single family house, we can say:
             # one 350 W panel for every 175 sq. ft.
             num_panel = np.floor(bldg_size / 175)
-            inv_undersizing = 1.0
-            inv_power = num_panel * 350 * inv_undersizing
+            inverter_undersizing = 1.0
+            inv_power = num_panel * 350 * inverter_undersizing
             pv_scaling_factor = inv_power / pv_rating_MW
 
             basenode = mtr

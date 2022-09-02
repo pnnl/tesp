@@ -911,7 +911,7 @@ def tso_psst_loop_f():
     # branch: from bus, to bus, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax
     # gen: bus id, Pg, Qg, Qmax, Qmin, Vg, mBase, status, Pmax, Pmin,(11 zeros)
     # gencost: 2, startup, shutdown, 3, c2, c1, c0
-    # FNCS: bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit
+    # DSO: bus id, name, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit
     # UnitsOut: idx, time out[s], time back in[s]
     # BranchesOut: idx, time out[s], time back in[s]
 

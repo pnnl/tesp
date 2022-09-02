@@ -32,12 +32,12 @@ def read_inv_metrics(path, name_root, diction_name=''):
         try:
             lp = open(diction_name).read()
         except:
-            logger.error(f'Unable to open inverter dictionary {diction_name}')
+            logger.error(f'Unable to open metrics diction file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
         except:
-            logger.error(f'Unable to open inverter dictionary {diction_name}')
+            logger.error(f'Unable to open metrics diction file {glm_dict_path}')
     diction = json.loads(lp)
     sub_keys = list(diction['feeders'].keys())
     sub_keys.sort()
@@ -77,14 +77,14 @@ def read_inv_metrics(path, name_root, diction_name=''):
     # each metrics file should have matching time points
     lp_s = open(sub_dict_path).read()
     lst_s = json.loads(lp_s)
-    print("\nMetrics data starting", lst_s['StartTime'])
+    print('\nMetrics data starting', lst_s['StartTime'])
 
     # make a sorted list of the sample times in hours
     lst_s.pop('StartTime')
     meta_s = lst_s.pop('Metadata')
     times = list(map(int, list(lst_s.keys())))
     times.sort()
-    print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
+    print('There are', len(times), 'sample times at', times[1] - times[0], 'second intervals')
     hrs = np.array(times, dtype=np.float)
     denom = 3600.0
     hrs /= denom
@@ -129,7 +129,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
     # houses
     lst_h.pop('StartTime')
     meta_h = lst_h.pop('Metadata')
-    # print("\nHouse Metadata for", len(lst_h[time_key]), "objects")
+    # print('\nHouse Metadata for', len(lst_h[time_key]), 'objects')
     for key, val in meta_h.items():
         # print (key, val['index'], val['units'])
         if key == 'air_temperature_max':
@@ -226,33 +226,40 @@ def read_inv_metrics(path, name_root, diction_name=''):
             i = i + 1
         j = j + 1
 
-    # Inverters
-    lst_i.pop('StartTime')
-    meta_i = lst_i.pop('Metadata')
-    # print("\nInverter Metadata for", len(lst_i[time_key]), "objects")
-    for key, val in meta_i.items():
-        # print (key, val['index'], val['units'])
-        if key == 'real_power_avg':
-            INV_P_AVG_IDX = val['index']
-            INV_P_AVG_UNITS = val['units']
-        elif key == 'reactive_power_avg':
-            INV_Q_AVG_IDX = val['index']
-            INV_Q_AVG_UNITS = val['units']
+    have_invs = False
+    have_precool = False
+    have_caps = False
+    have_regs = False
 
-    data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
-    print("\nConstructed", data_i.shape, "NumPy array for Inverters")
-    j = 0
-    for _ in inv_keys:
-        i = 0
-        for t in times:
-            ary = lst_i[str(t)][inv_keys[j]]
-            data_i[j, i, :] = ary
-            i = i + 1
-        j = j + 1
+    # Inverters
+    data_i = None
+    if len(inv_keys) > 0:
+        have_invs = True
+        lst_i.pop('StartTime')
+        meta_i = lst_i.pop('Metadata')
+        # print("\nInverter Metadata for", len(lst_i[time_key]), "objects")
+        for key, val in meta_i.items():
+            # print(key, val['index'], val['units'])
+            if key == 'real_power_avg':
+                INV_P_AVG_IDX = val['index']
+                INV_P_AVG_UNITS = val['units']
+            elif key == 'reactive_power_avg':
+                INV_Q_AVG_IDX = val['index']
+                INV_Q_AVG_UNITS = val['units']
+
+        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
+        print("\nConstructed", data_i.shape, "NumPy array for Inverters")
+        j = 0
+        for _ in inv_keys:
+            i = 0
+            for t in times:
+                ary = lst_i[str(t)][inv_keys[j]]
+                data_i[j, i, :] = ary
+                i = i + 1
+            j = j + 1
 
     # Precooling: won't necessarily have the same times?
-    have_precool = False
-    if path.exists(pre_dict_path):
+    if os.path.exists(pre_dict_path):
         have_precool = True
         lp_p = open(pre_dict_path).read()
         lst_p = json.loads(lp_p)
@@ -281,10 +288,8 @@ def read_inv_metrics(path, name_root, diction_name=''):
             ary = lst_p[str(t)]
             data_p[0, i, :] = ary
 
-    have_caps = False
-    have_regs = False
-
     # Capacitors
+    data_c = None
     if len(cap_keys) > 0:
         have_caps = True
         lst_c.pop('StartTime')
@@ -306,6 +311,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
             j = j + 1
 
     # Regulators
+    data_r = None
     if len(reg_keys) > 0:
         have_regs = True
         lst_r.pop('StartTime')
@@ -358,9 +364,10 @@ def read_inv_metrics(path, name_root, diction_name=''):
     print("Average feeder losses =", '{:.2f}'.format(0.001 * data_s[0, :, SUB_LOSSES_IDX].mean()), 'kW')
     print('Average all house temperatures Noon-8 pm day 1:',
           '{:.2f}'.format(data_h[:, 144:240, HSE_AIR_AVG_IDX].mean()))
-    # print ('Average all house temperatures Noon-8 pm day 2:', '{:.2f}'.format(data_h[:,432:528,HSE_AIR_AVG_IDX].mean()))
-    print("Average inverter P =", '{:.2f}'.format(data_i[:, :, INV_P_AVG_IDX].mean()), INV_P_AVG_UNITS)
-    print("Average inverter Q =", '{:.2f}'.format(data_i[:, :, INV_Q_AVG_IDX].mean()), INV_Q_AVG_UNITS)
+    # print('Average all house temperatures Noon-8 pm day 2:', '{:.2f}'.format(data_h[:,432:528,HSE_AIR_AVG_IDX].mean()))
+    if have_invs:
+        print("Average inverter P =", '{:.2f}'.format(data_i[:, :, INV_P_AVG_IDX].mean()), INV_P_AVG_UNITS)
+        print("Average inverter Q =", '{:.2f}'.format(data_i[:, :, INV_Q_AVG_IDX].mean()), INV_Q_AVG_UNITS)
     print("A Range Hi Duration =", '{:.2f}'.format(data_m[:, :, MTR_AHI_DURATION_IDX].sum() / 3600.0),
           "count =", '{:.2f}'.format(data_m[:, :, MTR_AHI_COUNT_IDX].sum()))
     print("A Range Lo Duration =", '{:.2f}'.format(data_m[:, :, MTR_ALO_DURATION_IDX].sum() / 3600.0),
@@ -379,7 +386,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
     final_bill = np.empty(shape=(len(times)), dtype=np.float)
     final_bill[0] = 0.0
     for i in range(1, len(hrs)):
-        if hrs[i] > 15.0 and hrs[i] <= 19.0:
+        if 15.0 < hrs[i] <= 19.0:
             price = 0.15
         else:
             price = 0.11
@@ -420,10 +427,11 @@ def read_inv_metrics(path, name_root, diction_name=''):
     wh2 = wh1.sum(axis=0)
     subkw = 0.001 * data_s[0, :, SUB_POWER_IDX]
     losskw = 0.001 * data_s[0, :, SUB_LOSSES_IDX]
-    pavg1 = (data_i[:, :, INV_P_AVG_IDX]).squeeze()
-    pavg2 = 0.001 * pavg1.mean(axis=0)
-    qavg1 = (data_i[:, :, INV_Q_AVG_IDX]).squeeze()
-    qavg2 = 0.001 * qavg1.mean(axis=0)
+    if have_invs:
+        pavg1 = (data_i[:, :, INV_P_AVG_IDX]).squeeze()
+        pavg2 = 0.001 * pavg1.mean(axis=0)
+        qavg1 = (data_i[:, :, INV_Q_AVG_IDX]).squeeze()
+        qavg2 = 0.001 * qavg1.mean(axis=0)
     tavg1 = (data_h[:, :, HSE_AIR_AVG_IDX]).squeeze()
     tavg2 = tavg1.mean(axis=0)
 
@@ -448,7 +456,6 @@ def read_inv_metrics(path, name_root, diction_name=''):
     MEDIUM_SIZE = 12
     BIGGER_SIZE = 14
 
-    plt.delaxes()
     plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
     plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
     plt.rc('axes', labelsize=SMALL_SIZE)  # fontsize of the x and y labels
@@ -462,13 +469,16 @@ def read_inv_metrics(path, name_root, diction_name=''):
     else:
         fig, ax = plt.subplots(2, 4, sharex='col', figsize=(14, 6))
 
-    ax[0, 0].plot(hrs, pavg2, color="blue", label="P")
-    ax[0, 0].plot(hrs, qavg2, color="red", label="Q")
-    ax[0, 0].set_ylabel("kVA")
-    ax[0, 0].set_title("Average Inverter Power", size=MEDIUM_SIZE)
-    ax[0, 0].legend(loc='best')
-    ax[0, 0].set_xlim(tmin, tmax)
-    ax[0, 0].set_xticks(xticks)
+    if have_invs:
+        ax[0, 0].plot(hrs, pavg2, color="blue", label="P")
+        ax[0, 0].plot(hrs, qavg2, color="red", label="Q")
+        ax[0, 0].set_ylabel("kVA")
+        ax[0, 0].set_title("Average Inverter Power", size=MEDIUM_SIZE)
+        ax[0, 0].legend(loc='best')
+        ax[0, 0].set_xlim(tmin, tmax)
+        ax[0, 0].set_xticks(xticks)
+    else:
+        ax[0, 0].set_title('No Inverters')
 
     # vabase = diction['inverters'][inv_keys[0]]['rated_W']
     # print ("Inverter base power =", vabase)
@@ -562,6 +572,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
         ax[0, 4].plot(hrs, data_c[1, :, CAP_COUNT_IDX], color="red", label=cap_keys[1])
         ax[0, 4].plot(hrs, data_c[2, :, CAP_COUNT_IDX], color="green", label=cap_keys[2])
         ax[0, 4].plot(hrs, data_c[3, :, CAP_COUNT_IDX], color="magenta", label=cap_keys[3])
+        ax[0, 4].set_xlabel("Hours")
         ax[0, 4].set_ylabel("")
         ax[0, 4].set_title("Cap Switchings", size=MEDIUM_SIZE)
         ax[0, 4].legend(loc='best')
@@ -579,9 +590,6 @@ def read_inv_metrics(path, name_root, diction_name=''):
         ax[1, 4].legend(loc='best')
         ax[1, 4].set_xlim(tmin, tmax)
         ax[1, 4].set_xticks(xticks)
-
-    if have_caps or have_regs:
-        ax[1, 4].set_xlabel("Hours")
 
     # return some data not being used it yet
     return {

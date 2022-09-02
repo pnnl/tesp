@@ -802,7 +802,7 @@ def tso_psst_loop():
             zones = ppc['zones']
             # zones: [[zone id, name, ReserveDownZonalPercent, ReserveUpZonalPercent]]
             dsoBus = ppc['DSO']
-            # DSO: [[bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]]
+            # DSO: [[bus id, name, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]]
             
             # Not being used at this time
             # UnitsOut: idx, time out[s], time back in[s]

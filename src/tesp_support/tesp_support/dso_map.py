@@ -272,7 +272,7 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
 
 
             if write_case_config:
-                # [bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]
+                # [bus id, name, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]
                 if bus_simulated:
                     use_dso_list.append([busid, "Substation_"+str(busid),
                                   (res_customers / num_gld_homes),

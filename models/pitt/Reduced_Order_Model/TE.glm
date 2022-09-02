@@ -34,11 +34,11 @@ object climate {
 #ifdef WANT_VI_DUMP
 object voltdump {
   filename Voltage_Dump_TE.csv;
-  mode polar;
+  mode POLAR;
 }
 object currdump {
   filename Current_Dump_TE.csv;
-  mode polar;
+  mode POLAR;
 }
 #endif
 

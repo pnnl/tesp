@@ -41,7 +41,7 @@ storage_inv_mode = 'LOAD_FOLLOWING'
 weather_file = 'AZ-Tucson_International_Ap.tmy3'
 kwh_price = 0.1243
 monthly_fee = 5.00
-inv_undersizing = 1.0
+inverter_undersizing = 1.0
 array_efficiency = 0.2
 rated_insolation = 1000.0
 
@@ -225,7 +225,7 @@ def checkResidentialBuildingTable():
         binZeroMargin = bldgHeatingSetpoints[bldg][0][0] - binZeroReserve
         if binZeroMargin < 0.0:
             binZeroMargin = 0.0
-        # print (bldg, binZeroReserve, binZeroMargin)
+        # print(bldg, binZeroReserve, binZeroMargin)
         for cBin in range(1, 6):
             denom = binZeroMargin
             for hBin in range(1, allowedHeatingBins[cBin]):
@@ -235,7 +235,7 @@ def checkResidentialBuildingTable():
                 conditionalHeatingBinProb[bldg][cBin][hBin] = bldgHeatingSetpoints[bldg][hBin][0] / denom
 
 
-#    print ('conditionalHeatingBinProb', conditionalHeatingBinProb)
+#    print('conditionalHeatingBinProb', conditionalHeatingBinProb)
 
 rgnPenPoolPump = [0.0904, 0.0591, 0.0818, 0.0657, 0.0657]
 
@@ -788,8 +788,8 @@ def write_houses(basenode, op, vnom):
         print('  parent', mtrname + ';', file=op)
         print('  phases', phs + ';', file=op)
         print('  nominal_voltage ' + str(vnom) + ';', file=op)
-        #        print ('  voltage_1 ' + vstart + ';', file=op)
-        #        print ('  voltage_2 ' + vstart + ';', file=op)
+        #        print('  voltage_1 ' + vstart + ';', file=op)
+        #        print('  voltage_2 ' + vstart + ';', file=op)
         print('}', file=op)
 
         fa_base = rgnFloorArea[rgn - 1][bldg]
@@ -987,7 +987,7 @@ def write_houses(basenode, op, vnom):
                     panel_area = 162
                 elif panel_area > 270:
                     panel_area = 270
-                inv_power = inv_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
+                inv_power = inverter_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
                 solar_count += 1
                 solar_kw += 0.001 * inv_power
                 print('object triplex_meter {', file=op)
@@ -1359,7 +1359,7 @@ for c in casefiles:
         seg_loads = {}  # [name][kva, phases]
         total_kva = 0.0
         #       for sg in sub_graphs:
-        #           print (sg.number_of_nodes())
+        #           print(sg.number_of_nodes())
         #           if sg.number_of_nodes() < 10:
         #               print(sg.nodes)
         #               print(sg.edges)
@@ -1370,7 +1370,7 @@ for c in casefiles:
                     total_kva += kva
                     nodes = nx.shortest_path(G, n1, swing_node)
                     edges = zip(nodes[0:], nodes[1:])
-                    #                    print (n1, '{:.2f}'.format(kva), 'kva on', data['ndata']['phases'])
+                    #                    print(n1, '{:.2f}'.format(kva), 'kva on', data['ndata']['phases'])
                     for u, v in edges:
                         eclass = G[u][v]['eclass']
                         if is_edge_class(eclass):
@@ -1383,7 +1383,7 @@ for c in casefiles:
         print('  swing node', swing_node, 'with', len(list(sub_graphs)), 'subgraphs and',
               '{:.2f}'.format(total_kva), 'total kva')
         #        for row in seg_loads:
-        #            print (' ', row, '{:.2f}'.format(seg_loads[row][0]), seg_loads[row][1])
+        #            print(' ', row, '{:.2f}'.format(seg_loads[row][0]), seg_loads[row][1])
 
         # preparatory items for TESP
         print('module climate;', file=op)
@@ -1413,11 +1413,11 @@ for c in casefiles:
         print('#ifdef WANT_VI_DUMP', file=op)
         print('object voltdump {', file=op)
         print('  filename Voltage_Dump_' + c[0] + '.csv;', file=op)
-        print('  mode polar;', file=op)
+        print('  mode POLAR;', file=op)
         print('}', file=op)
         print('object currdump {', file=op)
         print('  filename Current_Dump_' + c[0] + '.csv;', file=op)
-        print('  mode polar;', file=op)
+        print('  mode POLAR;', file=op)
         print('}', file=op)
         print('#endif', file=op)
 
@@ -1515,7 +1515,7 @@ for c in casefiles:
 
         write_link_class(model, h, 'overhead_line', seg_loads, op)
         write_link_class(model, h, 'underground_line', seg_loads, op)
-        #        write_link_class (model, h, 'triplex_line', seg_loads, op)
+        #        write_link_class(model, h, 'triplex_line', seg_loads, op)
         write_link_class(model, h, 'series_reactor', seg_loads, op)
 
         write_link_class(model, h, 'regulator', seg_loads, op)
@@ -1535,8 +1535,8 @@ for c in casefiles:
         print('cooling bins unused', cooling_bins)
         print('heating bins unused', heating_bins)
         print(solar_count, 'pv totaling', '{:.1f}'.format(solar_kw), 'kw with', battery_count, 'batteries')
-        #        write_voltage_class (model, h, 'triplex_node', op, c[2], secnode)
-        #        write_voltage_class (model, h, 'triplex_meter', op, c[2], secnode)
-        #        write_voltage_class (model, h, 'triplex_load', op, c[2], secnode)
+        #        write_voltage_class(model, h, 'triplex_node', op, c[2], secnode)
+        #        write_voltage_class(model, h, 'triplex_meter', op, c[2], secnode)
+        #        write_voltage_class(model, h, 'triplex_load', op, c[2], secnode)
 
         op.close()

@@ -34,12 +34,12 @@ def read_gld_metrics(path, name_root, diction_name=''):
         try:
             lp = open(diction_name).read()
         except:
-            logger.error(f'Unable to open GridLAB-D metrics file {diction_name}')
+            logger.error(f'Unable to open metrics diction file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
         except:
-            logger.error(f'Unable to open GridLAB-D metrics file {glm_dict_path}')
+            logger.error(f'Unable to open metrics diction file {glm_dict_path}')
     diction = json.loads(lp)
     fdr_keys = list(diction['feeders'].keys())
     fdr_keys.sort()
@@ -94,7 +94,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
     idx_s = {}
     data_s = None
     for key, val in meta_s.items():
-        #    print (key, val['index'], val['units'])
+        # print (key, val['index'], val['units'])
         if key == 'real_power_avg':
             idx_s['SUB_POWER_IDX'] = val['index']
             idx_s['SUB_POWER_UNITS'] = val['units']
@@ -129,15 +129,19 @@ def read_gld_metrics(path, name_root, diction_name=''):
     lst_m = json.loads(lp_m)
     lp_i = open(inv_dict_path).read()
     lst_i = json.loads(lp_i)
+    lp_c = open(cap_dict_path).read()
+    lst_c = json.loads(lp_c)
+    lp_r = open(reg_dict_path).read()
+    lst_r = json.loads(lp_r)
 
     # houses
     idx_h = {}
     data_h = None
     lst_h.pop('StartTime')
     meta_h = lst_h.pop('Metadata')
-    #  print('\nHouse Metadata for', len(lst_h[time_key]), 'objects')
+    # print('\nHouse Metadata for', len(lst_h[time_key]), 'objects')
     for key, val in meta_h.items():
-        #    print (key, val['index'], val['units'])
+        # print (key, val['index'], val['units'])
         if key == 'air_temperature_avg':
             idx_h['HSE_AIR_AVG_IDX'] = val['index']
             idx_h['HSE_AIR_AVG_UNITS'] = val['units']
@@ -194,7 +198,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
         nBillingMeters = len(lst_m[time_key])
     #  print('\nBilling Meter Metadata for', nBillingMeters, 'objects')
     for key, val in meta_m.items():
-        #    print (key, val['index'], val['units'])
+        #    print(key, val['index'], val['units'])
         if key == 'voltage_max':
             idx_m['MTR_VOLT_MAX_IDX'] = val['index']
             idx_m['MTR_VOLT_MAX_UNITS'] = val['units']
@@ -288,7 +292,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
     # assemble the total solar and battery inverter power
     solar_kw = np.zeros(len(times), dtype=np.float)
     battery_kw = np.zeros(len(times), dtype=np.float)
-    #  print ('\nInverter Metadata for', len(inv_keys), 'objects')
+    #  print('\nInverter Metadata for', len(inv_keys), 'objects')
     for key, val in meta_i.items():
         #    print (key, val['index'], val['units'])
         if key == 'real_power_avg':
@@ -316,12 +320,6 @@ def read_gld_metrics(path, name_root, diction_name=''):
             elif res == 'battery':
                 battery_kw += 0.001 * data_i[j, :, idx_i['INV_P_AVG_IDX']]
             j = j + 1
-
-    # capacitors and regulators
-    lp_c = open(cap_dict_path).read()
-    lst_c = json.loads(lp_c)
-    lp_r = open(reg_dict_path).read()
-    lst_r = json.loads(lp_r)
 
     idx_c = {}
     data_c = None

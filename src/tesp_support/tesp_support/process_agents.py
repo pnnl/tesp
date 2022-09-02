@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False):
     agent_dict_path = os.path.join(path, f'{name_root}_agent_dict.json')
     auction_dict_path = os.path.join(path, f'auction_{name_root}_metrics.json')
+    controller_dict_path = os.path.join(path, f'controller_{name_root}_metrics.json')
+
     # first, read and print a dictionary of relevant agents
     if len(diction_name) > 0:
         try:
@@ -98,7 +100,7 @@ def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False)
         j = j + 1
 
     # read the controller metrics file
-    lp_c = open('controller_' + name_root + '_metrics.json').read()
+    lp_c = open(controller_dict_path).read()
     lst_c = json.loads(lp_c)
     print('\nController Metrics data starting', lst_c['StartTime'])
 

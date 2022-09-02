@@ -8,7 +8,7 @@ from tesp_support.process_agents import read_agent_metrics, plot_agents
 from tesp_support.process_eplus import read_eplus_metrics, plot_eplus
 from tesp_support.process_gld import read_gld_metrics, plot_gld
 from tesp_support.process_houses import plot_houses
-from tesp_support.process_inv import plot_inv
+from tesp_support.process_inv import read_inv_metrics, plot_inv
 from tesp_support.process_pypower import read_pypower_metrics, plot_pypower
 from tesp_support.process_voltages import plot_voltages
 
@@ -24,7 +24,7 @@ if len(sys.argv) > 2:
         if ('T' in save_only_str) or ('t' in save_only_str) or ('1' in save_only_str):
             save_only = True
 
-if os.path.exists(name_root + 'model_dict.json') and \
+if os.path.exists('model_dict.json') and \
         os.path.exists('bus_' + name_root + '_metrics.json'):
     _metrics = read_pypower_metrics(os.getcwd(), name_root)
     if save_ext is not None:
@@ -33,7 +33,7 @@ if os.path.exists(name_root + 'model_dict.json') and \
 else:
     print("No bus model dictionary for the plotting")
 
-if os.path.exists(name_root + 'glm_dict.json') and \
+if os.path.exists(name_root + '_glm_dict.json') and \
         os.path.exists('substation_' + name_root + '_metrics.json'):
     _metrics = read_gld_metrics(os.getcwd(), name_root)
     if save_ext is not None:
@@ -45,16 +45,19 @@ if os.path.exists(name_root + 'glm_dict.json') and \
     plot_houses(_metrics, save_file=save_file, save_only=save_only)
 
     if save_ext is not None:
-        save_file = '{:s}_hse.{:s}'.format(name_root, save_ext)
-    plot_inv(_metrics, save_file=save_file, save_only=save_only)
-
-    if save_ext is not None:
         save_file = '{:s}_vlt.{:s}'.format(name_root, save_ext)
     plot_voltages(_metrics, save_file=save_file, save_only=save_only)
+
+    if save_ext is not None:
+        save_file = '{:s}_hse.{:s}'.format(name_root, save_ext)
+    # Have to read metrics again, see process_inv.py to see why
+    _metrics = read_inv_metrics(os.getcwd(), name_root)
+    plot_inv(_metrics, save_file=save_file, save_only=save_only)
+
 else:
     print("No glm dictionary for the plotting")
 
-if os.path.exists(name_root + 'agent_dict.json') and \
+if os.path.exists(name_root + '_agent_dict.json') and \
         os.path.exists('auction_' + name_root + '_metrics.json'):
     _metrics = read_agent_metrics(os.getcwd(), name_root)
     if save_ext is not None:

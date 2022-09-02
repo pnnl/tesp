@@ -152,7 +152,7 @@ def write_tariff(op):
             print('  third_tier_price', '{:.6f}'.format(tier3_price) + ';', file=op)
 
 
-inv_undersizing = 1.0
+inverter_undersizing = 1.0
 array_efficiency = 0.2
 rated_insolation = 1000.0
 
@@ -1582,7 +1582,7 @@ def write_houses(basenode, op, vnom):
                     panel_area = 162
                 elif panel_area > 270:
                     panel_area = 270
-                inv_power = inv_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
+                inv_power = inverter_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
                 solar_count += 1
                 solar_kw += 0.001 * inv_power
                 print('object triplex_meter {', file=op)
@@ -2163,11 +2163,11 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print('#ifdef WANT_VI_DUMP', file=op)
         print('object voltdump {', file=op)
         print('  filename Voltage_Dump_' + outname + '.csv;', file=op)
-        print('  mode polar;', file=op)
+        print('  mode POLAR;', file=op)
         print('}', file=op)
         print('object currdump {', file=op)
         print('  filename Current_Dump_' + outname + '.csv;', file=op)
-        print('  mode polar;', file=op)
+        print('  mode POLAR;', file=op)
         print('}', file=op)
         print('#endif', file=op)
 

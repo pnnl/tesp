@@ -11,6 +11,7 @@ import tesp_support.api as tesp
 if __name__ == '__main__':
     name_root = sys.argv[1]
 
+    # Comment out if don't you want power metrics plot
     # pmetrics = tesp.read_pypower_metrics(os.getcwd(), name_root)
     # tesp.plot_pypower(pmetrics)
 
@@ -23,6 +24,7 @@ if __name__ == '__main__':
     tesp.plot_houses(gmetrics)
     tesp.plot_voltages(gmetrics)
 
+    # Comment out if don't you want penerrrgyplus metrics plot
     # emetrics = tesp.read_eplus_metrics(os.getcwd(), name_root)
     # tesp.plot_eplus(emetrics)
 

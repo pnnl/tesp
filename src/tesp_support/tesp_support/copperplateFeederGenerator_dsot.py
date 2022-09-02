@@ -31,12 +31,12 @@ Todo:
 
 """
 
-import math
 import os.path
 import re
 import networkx as nx
 import numpy as np
 import pandas as pd
+from math import sqrt
 
 from .data import feeders_path, weather_path
 from .helpers import parse_kva, gld_strict_name
@@ -132,15 +132,12 @@ def write_tariff(op):
             print('  third_tier_price', '{:.6f}'.format(tier3_price) + ';', file=op)
 
 
-inv_undersizing = 1.0
-inv_efficiency = 0.97
-
+inverter_undersizing = 1.0
+inverter_efficiency = 0.97
 array_efficiency = 0.2
 rated_insolation = 1000.0
-
 round_trip_efficiency = 0.86
 
-# TODO: move the following data to metadta.json
 # techdata dict:[heatgain fraction, Zpf, Ipf, Ppf, Z, I, P]
 techdata = [0.9, 1.0, 1.0, 1.0, 0.2, 0.4, 0.4]
 
@@ -169,6 +166,8 @@ rgnWeather = ['CA-San_francisco', 'OH-Cleveland', 'AZ-Phoenix', 'TN-Nashville', 
 #   2 = mh: mobile homes (mobile_home)
 # index 1 is the vintage type
 #       0:pre-1950, 1:1950-1959, 2:1960-1969, 3:1970-1979, 4:1980-1989, 5:1990-1999, 6:2000-2009, 7:2010-2015
+
+
 def getDsoThermalTable(dso_type):
     vintage_mat = res_bldg_metadata['housing_vintage'][dso_type]
     df = pd.DataFrame(vintage_mat)
@@ -191,7 +190,7 @@ def getDsoThermalTable(dso_type):
 
 
 def selectResidentialBuilding(rgnTable, prob):
-    """Selects the building and vintage type
+    """Selects the building with region and probability
 
     Args:
         rgnTable:
@@ -433,7 +432,7 @@ def selectThermalProperties(bldgIdx, tiIdx):
 
     Args:
         bldgIdx (int): 0 for single-family, 1 for apartment, 2 for mobile home
-        tiIdx (int): 0..7
+        tiIdx (int): 0..7 for single-family, apartment or mobile home
     """
     if bldgIdx == 0:
         tiProps = singleFamilyProperties[tiIdx]
@@ -476,7 +475,6 @@ single_phase = [[5, 2.10, 1.53, 0.90, 3.38],
                 [250, 1.10, 3.85, 0.36, 1.81],
                 [333, 1.00, 4.90, 0.34, 1.97],
                 [500, 1.00, 4.90, 0.29, 1.98]]
-
 
 # leave off intermediate fuse sizes 8, 12, 20, 30, 50, 80, 140
 # leave off 6, 10, 15, 25 from the smallest sizes, too easily blown
@@ -639,7 +637,7 @@ def is_node_class(s):
 
 def is_edge_class(s):
     """Identify switch, fuse, recloser, regulator, transformer, overhead_line,
-    underground_line and triplex_line instances.
+    underground_line and triplex_line instances
 
     Edge class is networkx terminology. In GridLAB-D, edge classes are called links.
 
@@ -1206,7 +1204,7 @@ def replace_commercial_loads(model, h, t, avgBuilding):
     print('Found', total_commercial, 'commercial loads totaling', '{:.2f}'.format(total_comm_kva), 'KVA')
     print('  ', total_office, 'med/small offices,')
     print('  ', total_warehouse_storage, 'warehouses,')
-    print('  ', total_big_box, 'bigbox retail,')
+    print('  ', total_big_box, 'big box retail,')
     print('  ', total_strip_mall, 'strip malls,')
     print('  ', total_education, 'education,')
     print('  ', total_food_service, 'food service,')
@@ -1354,7 +1352,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(caseName) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gld' + substationName + ';', file=op)  # for full-order DSOT
+        print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
         print('  configure', caseName + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port 5570";', file=op)
@@ -1381,7 +1379,7 @@ def write_substation(op, name, phs, vnom, vll):
     print('  phases', phs + ';', file=op)
     print('  configuration substation_xfmr_config;', file=op)
     print('}', file=op)
-    vsrcln = transmissionVoltage / math.sqrt(3.0)
+    vsrcln = transmissionVoltage / sqrt(3.0)
     print('object substation {', file=op)
     print('  name network_node;', file=op)
     print('  groupid', base_feeder_name + ';', file=op)
@@ -1405,8 +1403,8 @@ def write_substation(op, name, phs, vnom, vll):
 
 
 # if triplex load, node or meter, the nominal voltage is 120
-#   if the name or parent attribute is found in secmtrnode, we look up the nominal voltage there
-#   otherwise, the nominal voltage is vprim
+#   if the name or parent attribute is found in secmtrnode, 
+#   we look up the nominal voltage there otherwise, the nominal voltage is vprim
 # secmtrnode[mtr_node] = [kva_total, phases, vnom]
 #   the transformer phasing was not changed, and the transformers were up-sized to the largest phase kva
 #   therefore, it should not be necessary to look up kva_total, but phases might have changed N==>S
@@ -1702,7 +1700,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
             line = ip.readline()
         ip.close()
 
-        op = open(outpath + outname + '.glm', 'w')
+        op = open(work_path + outname + '.glm', 'w')
         octr = 0
         model = {}
         h = {}  # OID hash
@@ -1837,11 +1835,11 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print('#ifdef WANT_VI_DUMP', file=op)
         print('object voltdump {', file=op)
         print('  filename Voltage_Dump_' + outname + '.csv;', file=op)
-        print('  mode polar;', file=op)
+        print('  mode POLAR;', file=op)
         print('}', file=op)
         print('object currdump {', file=op)
         print('  filename Current_Dump_' + outname + '.csv;', file=op)
-        print('  mode polar;', file=op)
+        print('  mode POLAR;', file=op)
         print('}', file=op)
         print('#endif', file=op)
 
@@ -1904,13 +1902,13 @@ def populate_feeder(config=None):
     global transmissionVoltage, transmissionXfmrMVAbase
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage
     global ev_percentage, ev_metadata, pv_rating_MW, solar_Q_player
-    global outpath, weather_file
+    global work_path, weather_file
     global timezone, starttime, endtime, timestep
     global metrics, metrics_interval, metrics_interim, metrics_type, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
-    global caseName, substationName
+    global caseName, substation_name
     global house_nodes, small_nodes, comm_loads
-    global inv_efficiency, round_trip_efficiency
+    global inverter_efficiency, round_trip_efficiency
     global latitude, longitude, weather_name, feeder_commercial_building_number
     global dso_type
     global case_type
@@ -1929,13 +1927,16 @@ def populate_feeder(config=None):
     else:
         np.random.seed(0)
     rootname = config['BackboneFiles']['TaxonomyChoice']
-    outpath = './' + config['SimulationConfig']['CaseName'] + '/'
+    work_path = './' + config['SimulationConfig']['CaseName'] + '/'
+    if 'WorkingDirectory' in config['SimulationConfig']:
+        work_path = config['SimulationConfig']['WorkingDirectory'] + '/'
     if 'OutputPath' in config['SimulationConfig']:
-        outpath = './' + config['SimulationConfig']['OutputPath'] + '/'
-    substationName = config['SimulationConfig']['Substation']
+        work_path = config['SimulationConfig']['OutputPath'] + '/'
+    substation_name = config['SimulationConfig']['Substation']
     timezone = config['SimulationConfig']['TimeZone']
     starttime = config['SimulationConfig']['StartTime']
     endtime = config['SimulationConfig']['EndTime']
+    port = config['SimulationConfig']['port']
     timestep = int(config['FeederGenerator']['MinimumStep'])
     metrics = config['FeederGenerator']['Metrics']
     metrics_type = config['FeederGenerator']['MetricsType']
@@ -1953,7 +1954,7 @@ def populate_feeder(config=None):
     solar_inv_mode = config['FeederGenerator']['SolarInverterMode']
     storage_inv_mode = config['FeederGenerator']['StorageInverterMode']
     if 'InverterEfficiency' in config['FeederGenerator']:
-        inv_efficiency = config['FeederGenerator']['InverterEfficiency']
+        inverter_efficiency = config['FeederGenerator']['InverterEfficiency']
     if 'BatteryRoundTripEfficiency' in config['FeederGenerator']:
         round_trip_efficiency = config['FeederGenerator']['BatteryRoundTripEfficiency']
     weather_file = config['WeatherPrep']['DataSource']
@@ -1999,13 +2000,13 @@ def populate_feeder(config=None):
         cop_lookup.append(temp)
     # cop_lookup will have similar structure as years bin with years replaced with corresponding mean cop value
     # cop_lookup: index 0: vintage bins (0,1..7)
-    #               index 1: each year in the corresponding vintage bin
+    #             index 1: each year in the corresponding vintage bin
 
     house_nodes = {}
     small_nodes = {}
     comm_loads = {}
 
-    print(rootname, 'to', outpath, 'using', weather_file)
+    print(rootname, 'to', work_path, 'using', weather_file)
     print('times: start = {0:s}, end = {1:s}'.format(starttime, endtime))
     print('steps: simulation step = {0}, metrics interval = {1}'.format(timestep, metrics_interval))
     caseName = config['SimulationConfig']['CaseName']

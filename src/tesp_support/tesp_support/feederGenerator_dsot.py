@@ -43,7 +43,7 @@ from math import sqrt
 from .data import feeders_path, weather_path
 from .helpers import parse_kva, gld_strict_name
 from .helpers_dsot import random_norm_trunc
-from .commbldgenerator import define_comm_loads, create_comm_zones
+import tesp_support.commbldgenerator as comm_FG
 
 forERCOT = False
 port = 5570
@@ -370,7 +370,7 @@ def write_tariff(op):
             print('  third_tier_price', '{:.6f}'.format(tier3_price) + ';', file=op)
 
 
-inv_undersizing = 1.0
+inverter_undersizing = 1.0
 array_efficiency = 0.2
 rated_insolation = 1000.0
 
@@ -1387,9 +1387,9 @@ def replace_commercial_loads(model, h, t, avgBuilding):
     total_comm_kva = 0
     total_zipload = 0
     total_office = 0
+    total_warehouse_storage = 0
     total_big_box = 0
     total_strip_mall = 0
-    total_warehouse_storage = 0
     total_education = 0
     total_food_service = 0
     total_food_sales = 0
@@ -1421,8 +1421,7 @@ def replace_commercial_loads(model, h, t, avgBuilding):
                     # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
                     # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
                     for bldg in comm_bldgs_pop:
-                        if (comm_bldgs_pop[bldg][1] - target_sqft) <= 0 and (
-                                comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
+                        if 0 >= (comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
                             select_bldg = bldg
                             sqft_error = comm_bldgs_pop[bldg][1] - target_sqft
 
@@ -1481,9 +1480,9 @@ def replace_commercial_loads(model, h, t, avgBuilding):
     # Print commercial info
     print('Found', total_commercial, 'commercial loads totaling', '{:.2f}'.format(total_comm_kva), 'KVA')
     print('  ', total_office, 'med/small offices,')
+    print('  ', total_warehouse_storage, 'warehouses,')
     print('  ', total_big_box, 'big box retail,')
     print('  ', total_strip_mall, 'strip malls,')
-    print('  ', total_warehouse_storage, 'warehouses,')
     print('  ', total_education, 'education,')
     print('  ', total_food_service, 'food service,')
     print('  ', total_food_sales, 'food sales,')
@@ -2057,10 +2056,10 @@ def write_houses(basenode, op, vnom):
                 #     panel_area = 162
                 # elif panel_area > 270:
                 #     panel_area = 270
-                # inv_undersizing = 1.0
+                # inverter_undersizing = 1.0
                 # array_efficiency = 0.2
                 # rated_insolation = 1000.0
-                # inv_power = inv_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
+                # inv_power = inverter_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
                 # this results in solar ranging from 3 to 5 kW
 
                 # new method directly proportional to sq. ft.
@@ -2068,8 +2067,8 @@ def write_houses(basenode, op, vnom):
                 # If we assume 2500 sq. ft as avg area of a single family house, we can say:
                 # one 350 W panel for every 175 sq. ft.
                 num_panel = np.floor(floor_area / 175)
-                inv_undersizing = 1.0
-                inv_power = num_panel * 350 * inv_undersizing
+                inverter_undersizing = 1.0
+                inv_power = num_panel * 350 * inverter_undersizing
                 pv_scaling_factor = inv_power / pv_rating_MW
                 if case_type['pv']:
                     solar_count += 1
@@ -2794,11 +2793,11 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print('#ifdef WANT_VI_DUMP', file=op)
         print('object voltdump {', file=op)
         print('  filename Voltage_Dump_' + outname + '.csv;', file=op)
-        # print('  mode polar;', file=op)
+        # print('  mode POLAR;', file=op)
         print('}', file=op)
         print('object currdump {', file=op)
         print('  filename Current_Dump_' + outname + '.csv;', file=op)
-        # print('  mode polar;', file=op)
+        # print('  mode POLAR;', file=op)
         print('}', file=op)
         print('#endif', file=op)
 
@@ -2916,9 +2915,9 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 write_ercot_small_loads(key, op, vln)
             for key in comm_loads:
                 # write_commercial_loads (rgn, key, op)
-                bldg_definition = define_comm_loads(comm_loads[key][1], comm_loads[key][2],
+                bldg_definition = comm_FG.define_comm_loads(comm_loads[key][1], comm_loads[key][2],
                                                     dso_type, ashrae_zone, comm_bldg_metadata)
-                create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
+                comm_FG.create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
                                   storage_percentage, ev_metadata, ev_percentage,
                                   solar_percentage, pv_rating_MW, solar_Q_player,
                                   case_type, metrics, metrics_interval, None)
@@ -2932,9 +2931,9 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 write_small_loads(key, op, 120.0)
             for key in comm_loads:
                 # write_commercial_loads (rgn, key, op)
-                bldg_definition = define_comm_loads(comm_loads[key][1], comm_loads[key][2],
+                bldg_definition = comm_FG.define_comm_loads(comm_loads[key][1], comm_loads[key][2],
                                                     dso_type, ashrae_zone, comm_bldg_metadata)
-                create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
+                comm_FG.create_comm_zones(bldg_definition, comm_loads, key, op, batt_metadata,
                                   storage_percentage, ev_metadata, ev_percentage,
                                   solar_percentage, pv_rating_MW, solar_Q_player,
                                   case_type, metrics, metrics_interval, None)
@@ -3024,7 +3023,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global water_heater_percentage, water_heater_participation
     global case_name, name_prefix, port, forERCOT, substation_name
     global house_nodes, small_nodes, comm_loads
-    # global inv_efficiency, round_trip_efficiency
+    # global inverter_efficiency, round_trip_efficiency
     global latitude, longitude, time_zone_offset, weather_name, feeder_commercial_building_number
     global dso_type, gld_scaling_factor, pv_rating_MW
     global case_type
