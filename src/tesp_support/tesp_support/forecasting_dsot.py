@@ -11,8 +11,7 @@ import re
 import time as ti
 from copy import deepcopy
 from datetime import datetime, timedelta
-from math import cos as cos
-from math import sin as sin
+from math import cos, sin
 
 import glm
 import numpy as np

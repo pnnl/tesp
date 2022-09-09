@@ -10,7 +10,7 @@
 import json
 import os
 
-from dso_helper_functions import returnDictSum
+from .dso_helper_functions import returnDictSum
 
 
 # This function calculates ...

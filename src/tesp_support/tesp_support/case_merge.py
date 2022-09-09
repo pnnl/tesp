@@ -14,7 +14,7 @@ Public Functions:
 import json
 import sys
 
-from helpers import gld_strict_name
+from .helpers import gld_strict_name
 
 if sys.platform == 'win32':
     pycall = 'python'

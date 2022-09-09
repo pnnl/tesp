@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def add_plot(x, y, ax, i, j, key, col, lbl):
-    ax[i, j].set_title(key + ':' + lbl)
-    ax[i, j].plot(x, y[key + '_tmy3'][:, col], color='red', label='TMY3')
-    ax[i, j].plot(x, y[key + '_agent'][:, col], color='blue', label='Agent')
-    ax[i, j].grid()
-    ax[i, j].legend()
+def add_plot(x, y, _ax, ii, jj, key, col, lbl):
+    _ax[ii, jj].set_title(key + ':' + lbl)
+    _ax[ii, jj].plot(x, y[key + '_tmy3'][:, col], color='red', label='TMY3')
+    _ax[ii, jj].plot(x, y[key + '_agent'][:, col], color='blue', label='Agent')
+    _ax[ii, jj].grid()
+    _ax[ii, jj].legend()
 
 
 data = {}
@@ -25,12 +25,14 @@ ccols = ['timestamp',
          'solar_azimuth',
          'solar_elevation',
          'solar_zenith']
+
 gcols = ['timestamp',
          'Insolation',
          'wind_speed',
          'Tmodule',
          'Tambient',
          'NOCT']
+
 hcols = ['timestamp',
          'solar_gain',
          'incident_solar',

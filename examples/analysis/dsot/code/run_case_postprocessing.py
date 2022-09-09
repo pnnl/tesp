@@ -1,8 +1,7 @@
-import sys
-from os.path import dirname, abspath, join, isdir
 import os
-sys.path.insert(0, dirname(abspath(__file__)))
-from datetime import datetime, date, timedelta
+from os.path import dirname, abspath, isdir
+
+from datetime import datetime, timedelta
 from joblib import Parallel, delayed
 
 import tesp_support.DSOT_plots
@@ -28,7 +27,7 @@ It has the following elements:
 # finally, you can register backends by calling register_parallel_backend.
 #   This will allow you to implement a backend of your liking.
 _NUM_CORE = -1
-_backend = 'loky'   # 'multiprocessing'  had some problems
+_backend = 'loky'  # 'multiprocessing'  had some problems
 _verbose = 10
 
 
@@ -43,21 +42,17 @@ def post_process():
         # return arg2
         return worker_results
 
-
     def DSO_bldg_loads(dso_num):
         os.chdir(config_path)
         tesp_support.DSOT_plots.bldg_load_stack(dso_num, day_range, case_path, agent_prefix, GLD_prefix, metadata_path)
-
 
     def DSO_der_loads(dso_num):
         os.chdir(config_path)
         tesp_support.DSOT_plots.der_load_stack(dso_num, day_range, case_path, GLD_prefix, metadata_path)
 
-
     def Daily_market_plot(day_num):
         os.chdir(config_path)
         tesp_support.DSOT_plots.dso_market_plot(dso_range, str(day_num), case_path, dso_metadata_file, metadata_path)
-
 
     def DSO_specific_cost(dso_num):
         # load DSO metadata
@@ -92,7 +87,8 @@ def post_process():
 
         GLD_metadata = tesp_support.DSOT_plots.customer_meta_data(GLD_metadata, agent_metadata, metadata_path)
 
-        # Need to preprocess agent retail data prior to calculating customer energy meter data.  This function saves an h5.
+        # Need to preprocess agent retail data prior to calculating customer energy meter data.
+        # This function saves an h5.
         if read_meters:
             tesp_support.DSOT_plots.tic()
             for day_num in day_range:
@@ -108,7 +104,7 @@ def post_process():
             meter_df, energysum_df = tesp_support.DSO_rate_making.read_meters(GLD_metadata, case_path, GLD_prefix,
                                                                               str(dso_num),
                                                                               day_range, dso_scaling_factor,
-                                                                              '../' + metadata_path)
+                                                                              metadata_path)
             print('Meter reading complete: DSO ' + str(dso_num) + ', Month ' + month_name)
             tesp_support.DSOT_plots.toc()
         # --------------- CALCULATE AMENITY SCORES  ------------------------------
@@ -148,12 +144,12 @@ def post_process():
     case_config = tesp_support.DSOT_plots.load_json(config_path, system_case)
 
     case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']
-    metadata_path = "../" + case_config['dataPath']
+    metadata_path = case_config['dataPath']
     dso_metadata_file = case_config['dsoPopulationFile']
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
 
-    # Check if there is a plots folder - create if not.
+    # Check if there is a plots' folder - create if not.
     check_folder = isdir(case_path + '/plots')
     if not check_folder:
         os.makedirs(case_path + '/plots')
@@ -181,19 +177,19 @@ def post_process():
 
     processlist = list()
     for dso_num in dso_range:
-      processlist.append([DSO_specific_cost, dso_num])
+        processlist.append([DSO_specific_cost, dso_num])
 
     if der_stack_plots:
         for dso_num in dso_range:
-          processlist.append([DSO_der_loads, dso_num])
+            processlist.append([DSO_der_loads, dso_num])
 
     if bldg_stack_plots:
         for dso_num in dso_range:
-          processlist.append([DSO_bldg_loads, dso_num])
+            processlist.append([DSO_bldg_loads, dso_num])
 
     if forecast_plots:
         for day_num in day_range:
-          processlist.append([Daily_market_plot, day_num])
+            processlist.append([Daily_market_plot, day_num])
 
     if len(processlist) > 0:
         print('About to parallelize available processes)'.format(len(processlist)))

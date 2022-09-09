@@ -6,7 +6,7 @@ In order to match results from a TMY3 file containing the same measurements, it'
 time zone meridian (in degrees, and &lt; 0 if in the Western hemisphere). Initial values matching the start-time csv data may also be provided to GridLAB-D. See the
 *WeatherTester.glm* file in this directory for an example.
 
-To run the example, invoke *./run.sh* from a command prompt. This creates a weather data file from TMY3. Then it runs a GridLAB-D simulation two ways, once using
+To run the example, invoke *./runh.sh* from a command prompt. This creates a weather data file from TMY3. Then it runs a GridLAB-D simulation two ways, once using
 the original TMY3 and again using the weather agent reading a data file. When the script completes, invoke *python3 compare_csv.py* from a command prompt; this
 verifies that both methods give essentially the same result.
 

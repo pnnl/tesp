@@ -29,11 +29,11 @@ fi
 
 mkdir build
 cd build || exit
-cmake -DCMAKE_INSTALL_PREFIX=/home/osboxes/tesp/installed \
-      -DGLD_USE_FNCS=ON -DFNCS_DIR=/home/osboxes/tesp/installed \
-      -DGLD_USE_HELICS=ON -DHELICS_DIR=/home/osboxes/tesp/installed ..
+cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}" \
+      -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" \
+      -DGLD_USE_HELICS=ON -DGLD_HELICS_DIR="${INSTDIR}" ..
 
 # Run the build system and install the application
-cmake --build . -j "$(grep -c "^processor" /proc/cpuinfo)" --target install
+cmake --build . --target install
 
 #gridlabd.sh -t 0 --validate
