@@ -178,3 +178,27 @@ Below are a sample of the standard plots that are created using the built-in pos
     Quantity of energy purchased by each of the eight modeled DSOs in the month of August when batteries are installed in the distribution system and participate in a transactive system.
 
 
+.. _`ERCOT Directory Readme`: https://github.com/pnnl/tesp/blob/develop/ercot/README.md
+.. _`ERCOT Bulk System Model Readme`: https://github.com/pnnl/tesp/blob/develop/ercot/bulk_system/README.md
+.. _`ERCOT Feeder Model Readme`: https://github.com/pnnl/tesp/blob/develop/ercot/dist_system/README.md
+.. _`ERCOT 8-Bus TESP Example Readme`: https://github.com/pnnl/tesp/blob/develop/ercot/case8/README.md
+.. _`Day-Ahead Battery Bidding`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/DayAheadBidsBattery.pdf
+.. _`Transformer Lifetime Agent`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/Transformer_transactive_control.pdf
+.. _`Stand-alone Agent Testing`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/MasterScriptDocumentation.pdf
+.. _`Water Heater Model Gaps - Overview`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/Water_Heater_Model_Deficiency_for_B2G.pdf
+.. _`Water Heater Model Gaps - Presentation`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/EWH_11_6_2018.pdf
+.. _`Water Heater Stratified Layer Model`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/Fixed_Layers_Stratified_Water_Heater.pdf
+.. _`Water Heater Agent`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/DSO%2BT_Water_Heater_Agent.pdf
+
+
+
+
+.. _`Distribution System Operator with Transactive (DSO+T) Study Volume 1: Main Report.`: https://doi.org/10.2172/1842485
+.. _`DSO+T: Integrated System Simulation DSO+T Study: Volume 2`: https://doi.org/10.2172/1842488
+.. _`DSO+T: Transactive Energy Coordination Framework DSO+T Study: Volume 3`: https://doi.org/10.2172/1842489
+.. _`DSO+T: Valuation Methodology and Economic Metrics DSO+T Study: Volume 4`: https://doi.org/10.2172/1842491
+
+.. _`HELICS co-simulation platform`: https://helics.org
+.. _`Github feeder repository`: https://github.com/gridlab-d/Taxonomy_Feeders
+.. _`feeder development report`: http://www.pnnl.gov/main/publications/external/technical_reports/PNNL-18035.pdf
+.. _`National Solar Radiation Database`: https://nsrdb.nrel.gov
