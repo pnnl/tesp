@@ -131,93 +131,50 @@ Figures :numref:`fig_dsot_peak_load_correlation` and :numref:`fig_dsot_min_load_
 
 Running DSO+T Example
 ---------------------
-Due to the scope and scale of the analysis, the DSO+T analysis typically takes 12-24 hours to run. 
+Due to the scope and scale of the analysis, the DSO+T analysis typically takes several days to simulate a whole month. Setting the simulation duration to a single week will reduce the simulation time to 12-24 hours though the built-in post-processing scripts called by 'postprocess.sh' will not function properly.
 
 Start by downloading supporting data that is not stored in the repository due to its size and static nature. This will add a "data" folder alongside the existing "code" folder from the repository.
 .. code-block:: sh
-    cd $TESP_INSTALL/repository/tesp/examples/analysis/dsot/code
+    cd tesp/repository/tesp/examples/analysis/dsot/code
     ./dsotData.sh
     
 Open up "8_system_case_config.json" and confirm/change the following parameters:
 .. code-block:: sh
-    "StartTime": "2016-08-05 00:00:00"
-    "EndTime": "2016-08-15 00:00:00"
+    "StartTime": "2016-08-01 00:00:00"
+    "EndTime": "2016-08-31 00:00:00"
+    "Tmax":<calculate number of seconds in above defined start time>
     "caseName": <arbitrary name>
     "dsoPopulationFile": "8-metadata-lean.json"
-    
-
-
-
 - prepare_case_dsot.py - pre-defined cases are shown; these are the ones used for DSO+T -creates directory in "code"
 - postprocess.sh
 
 
 Results
 -------
+Below are a sample of the standard plots that are created using the built-in post-processing scripts for this case.  These scripts are designed to work on one calendar month of data though the simulation can be configured to run on much shorter periods of time; to process those results custom post-processing scripts will need to be created. 
+
+.. _fig_dsot_results_base_fuel_mix:
+.. figure:: ../media/dsot/20210716_AMES_2016_fuelmix_profiles_base.png
+    :name: dsot_results_base_fuel_mix
+    
+    Fuel source for bulk power system generation for the month of August.
+    
+.. _fig_dsot_results_battery_fuel_mix:
+.. figure:: ../media/dsot/20210719_AMES_2016_fuelmix_profiles_bt.png
+    :name: dsot_results_battery_fuel_mix
+    
+    Fuel source for bulk power system generation for the month of August when batteries are installed in the distribution system and participate in a transactive system.
+    
+.. _fig_dsot_results_base_energy_quantity:
+.. figure:: ../media/dsot/20210716compare_DSO_market_Quantity_Day_08-01_base.png
+    :name: dsot_results_base_energy_quantity
+    
+    Quantity of energy purchased by each of the eight modeled DSOs in the month of August in the base case.
+    
+.. _fig_dsot_results_battery_energy_quantity:
+.. figure:: ../media/dsot/20210719compare_DSO_market_Quantity_Day_08-01_bt.png
+    :name: dsot_results_battery_energy_quantity
+    
+    Quantity of energy purchased by each of the eight modeled DSOs in the month of August when batteries are installed in the distribution system and participate in a transactive system.
 
 
-
-ERCOT System Models
--------------------
-
-The DSO+T study will be conducted on reduced-order 8-bus and 200-bus
-models of the ERCOT system in Texas. Each bus will have a GridLAB-D
-substation that serves from one to three feeders. The 8-bus model with
-supporting files are distributed with the TESP installers, but not yet
-documented as part of TESP. For more information about this 8-bus 
-model, see:
-
-* `ERCOT Directory Readme`_
-* `ERCOT Bulk System Model Readme`_
-* `ERCOT Feeder Model Readme`_
-* `ERCOT 8-Bus TESP Example Readme`_
-
-DSO+T Agents
-------------
-
-New agents for the DSO+T study include batteries, day-ahead markets
-and transformer control to optimize loss-of-life. Some of these agents
-have been developed and tested outside of TESP, under an internal
-PNNL code repository. These agents are being integrated into TESP.
-For draft documentation of the standalone agents, see:
-
-* `Day-Ahead Battery Bidding`_
-* `Transformer Lifetime Agent`_
-* `Stand-alone Agent Testing`_
-
-Water Heater Modeling
----------------------
-
-The GridLAB-D water heater model, as currently implemented, does not
-offer enough flexibility to participate in transactive systems. Upgrades
-are planned for the DSO+T study, as detailed in:
-
-* `Water Heater Model Gaps - Overview`_
-* `Water Heater Model Gaps - Presentation`_
-* `Water Heater Stratified Layer Model`_
-* `Water Heater Agent`_
-
-.. _`ERCOT Directory Readme`: https://github.com/pnnl/tesp/blob/develop/ercot/README.md
-.. _`ERCOT Bulk System Model Readme`: https://github.com/pnnl/tesp/blob/develop/ercot/bulk_system/README.md
-.. _`ERCOT Feeder Model Readme`: https://github.com/pnnl/tesp/blob/develop/ercot/dist_system/README.md
-.. _`ERCOT 8-Bus TESP Example Readme`: https://github.com/pnnl/tesp/blob/develop/ercot/case8/README.md
-.. _`Day-Ahead Battery Bidding`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/DayAheadBidsBattery.pdf
-.. _`Transformer Lifetime Agent`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/Transformer_transactive_control.pdf
-.. _`Stand-alone Agent Testing`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/MasterScriptDocumentation.pdf
-.. _`Water Heater Model Gaps - Overview`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/Water_Heater_Model_Deficiency_for_B2G.pdf
-.. _`Water Heater Model Gaps - Presentation`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/EWH_11_6_2018.pdf
-.. _`Water Heater Stratified Layer Model`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/Fixed_Layers_Stratified_Water_Heater.pdf
-.. _`Water Heater Agent`: https://github.com/pnnl/tesp/blob/develop/ercot/pdf/DSO%2BT_Water_Heater_Agent.pdf
-
-
-
-
-.. _`Distribution System Operator with Transactive (DSO+T) Study Volume 1: Main Report.`: https://doi.org/10.2172/1842485
-.. _`DSO+T: Integrated System Simulation DSO+T Study: Volume 2`: https://doi.org/10.2172/1842488
-.. _`DSO+T: Transactive Energy Coordination Framework DSO+T Study: Volume 3`: https://doi.org/10.2172/1842489
-.. _`DSO+T: Valuation Methodology and Economic Metrics DSO+T Study: Volume 4`: https://doi.org/10.2172/1842491
-
-.. _`HELICS co-simulation platform`: https://helics.org
-.. _`Github feeder repository`: https://github.com/gridlab-d/Taxonomy_Feeders
-.. _`feeder development report`: http://www.pnnl.gov/main/publications/external/technical_reports/PNNL-18035.pdf
-.. _`National Solar Radiation Database`: https://nsrdb.nrel.gov
