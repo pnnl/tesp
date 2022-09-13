@@ -52,7 +52,7 @@ class WaterHeaterDSOT:
         Participating (boolean): equals to 1 when participate in the price-responsive biddings
         price_cap (float): the maximun price that is allowed in the retail market, in $/kWh
         model_diag_level (int): Specific level for logging errors; set it to 11
-        sim_time (str): Current time in the simulation; should be human readable
+        sim_time (str): Current time in the simulation; should be human-readable
 
     Attributes:
         H_tank (float): height of the water tank, in ft
@@ -89,8 +89,8 @@ class WaterHeaterDSOT:
         f_DA_schedule (list): forecasted DA water draw schedule
         P (int): index of price in the bid curve matrix
         Q (int): index of quantity in the bid curve matrix
-        DA_cleared_prices (list): list of 48 hours day-ahead cleared prices
-        DA_cleared_quantities (list): list of 48 hours day-ahead cleared quantities
+        DA_cleared_prices (list): list of 48-hours day-ahead cleared prices
+        DA_cleared_quantities (list): list of 48-hours day-ahead cleared quantities
         RT_cleared_price (float): cleared price for the next 5min
         RT_cleared_quantity (float): cleared quantity for the next 5min
         hourto5min (int): conversion from hour to 5min, equals to 12
@@ -341,7 +341,7 @@ class WaterHeaterDSOT:
 
         Args:
             model_diag_level (int): Specific level for logging errors; set it to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
 
         """
         # Update the runtime variables of each element
@@ -555,7 +555,7 @@ class WaterHeaterDSOT:
     def get_uncntrl_wh_load(self):
         """
         This simulates the waterheater model without
-        :return: 48 hours forecast of non transactive waterheater kw consumption without optimization (agent participation)
+        :return: 48-hours forecast of non transactive waterheater kw consumption without optimization (agent participation)
         """
         self.delta_SOHC_model_hour()
         Q = []
@@ -741,7 +741,7 @@ class WaterHeaterDSOT:
         
         Args:
             model_diag_level (int): Specific level for logging errors: set it to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
             BID (float) (4 X 2): RT bid to be send to the retail RT market
@@ -965,7 +965,7 @@ class WaterHeaterDSOT:
         
         Args:
             model_diag_level (int): Specific level for logging errors; set it to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
            Boolean: True if the thermostat setting changes, False if not.
@@ -1052,7 +1052,7 @@ class WaterHeaterDSOT:
         Args:
             fncs_str (str): FNCS message with temperature in degrees Fahrenheit
             model_diag_level (int): Specific level for logging errors; set it to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
         """
         try:
             _tmp = parse_number(fncs_str)
@@ -1076,7 +1076,7 @@ class WaterHeaterDSOT:
         Args:
             fncs_str (str): FNCS message with temperature in degrees Fahrenheit
             model_diag_level (int): Specific level for logging errors; set it to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
         """
         try:
             _tmp = parse_number(fncs_str)
@@ -1193,7 +1193,7 @@ class WaterHeaterDSOT:
         Args:
             fncs_str (str): FNCS message with temperature in degrees Fahrenheit
             model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
         """
         self.Tambient = parse_number(fncs_str)
     def test_function(self):

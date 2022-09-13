@@ -97,7 +97,7 @@ def load_player_loop_f(casename, keyName):
                 time_series = load_data[[counter]]
             # print("Row:" + str(counter) + "  sec: " + str(ts), flush=True)
 
-        # history is 48 hours (3600 / dt_load_collector) at a line for a time
+        # history is 48-hours (3600 / dt_load_collector) at a line for a time
         if tb % day == 0 or ts == 0:
             history_counter = counter
             time_series_history = [None] * history_cnt

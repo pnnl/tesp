@@ -294,7 +294,7 @@ class Forecasting:
         return self.DA_output
 
     def set_solar_diffuse_forecast(self, fncs_str):
-        """ Set the 48 hour solar diffuse forecast
+        """ Set the 48-hour solar diffuse forecast
         Args:
             param fncs_str: solar_diffuse_forecast ([float x 48]):
         """
@@ -302,7 +302,7 @@ class Forecasting:
         self.solar_diffuse_forecast = [float(solar_diffuse_forecast[key]) for key in solar_diffuse_forecast.keys()]
 
     def set_solar_direct_forecast(self, fncs_str):
-        """ Set the 48 hour solar direct forecast
+        """ Set the 48-hour solar direct forecast
         Args:
             param fncs_str: solar_direct_forecast ([float x 48]):
         """
@@ -310,7 +310,7 @@ class Forecasting:
         self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast.keys()]
 
     def set_temperature_forecast(self, fncs_str):
-        """ Set the 48 hour temperature forecast
+        """ Set the 48-hour temperature forecast
 
         Args:
             fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
@@ -417,13 +417,13 @@ class Forecasting:
     def get_internal_gain_forecast(self, skew_scalar, time, extra_forecast_hours=0):
         """
         Forecast the electric zip_load and internal gain of all zip loads of a house by reading schedule files and
-        applying skew. Forecast is for 48 hours ahead from start time
+        applying skew. Forecast is for 48-hours ahead from start time
         :param skew_scalar: dictionary containing 'zip_skew', 'zip_scalar' and 'zip_heatgain_fraction' for each zip load
         'zip_skew' is a scalar and same for all type of zip loads for the given house. 'zip_scalar' and 'zip_heatgain_fraction'
         are dictionary containing different values for each tyoe of zip load
         :param time: Datetime format: forecast start time
         :param extra_forecast_hours: (int) number of hours for which forecast needs to be stored. For example if it is 24, then
-        we need to get forecast for 48+24=72 hours so that there is no need to come back to this function for next 24 hours.
+        we need to get forecast for 48+24=72 hours so that there is no need to come back to this function for next 24-hours.
         :return: list of (48+extra_forecast_hours) values of total zipl loads and total internal gain due to zip loads
         """
         len_forecast = self.windowLength + extra_forecast_hours

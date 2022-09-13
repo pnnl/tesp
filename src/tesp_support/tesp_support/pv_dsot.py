@@ -16,7 +16,7 @@ class PVDSOT:
         TODO: update inputs for this agent
 
         model_diag_level (int): Specific level for logging errors; set it to 11
-        sim_time (str): Current time in the simulation; should be human readable
+        sim_time (str): Current time in the simulation; should be human-readable
 
     Attributes: #TODO: update attributes for this agent
         #initialize from Args:

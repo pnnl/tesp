@@ -482,7 +482,7 @@ docker run \\
         if run_post == 1:
             outfile.write('python3 ../run_case_postprocessing.py > postprocessing.log\n')
         outfile.write('mkdir -p %s/$(cat tesp_version)\n' % (archive_folder))
-        outfile.write('rm -r %s/$(cat tesp_version)/%s\n' % (archive_folder, case_path))
+        outfile.write('rm -rf %s/$(cat tesp_version)/%s\n' % (archive_folder, case_path))
         outfile.write('mv -f ../%s %s/$(cat tesp_version)\n' % (case_path, archive_folder))
 
     with open(out_folder + '/kill.sh', 'w') as outfile:
@@ -493,7 +493,7 @@ docker run \\
 
     with open(out_folder + '/clean.sh', 'w') as outfile:
         outfile.write('cd ' + outPath + '\n')
-        outfile.write('rm - rf PyomoTempFiles\n')
+        outfile.write('rm -rf PyomoTempFiles/*\n')
         outfile.write('find . -name \\*.log -type f -delete\n')
         outfile.write('find . -name \\*.csv -type f -delete\n')
         outfile.write('find . -name \\*.out -type f -delete\n')

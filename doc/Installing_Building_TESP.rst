@@ -190,20 +190,21 @@ and assumes the commandline prompt '~$' in the TESP root directory:
     :caption: TESP example subset autotest
 
     ~$ source tespEnv
-    (TESP) ~$ cd tesp/repository/tesp/
-    (TESP) ~/tesp/repository/tesp$ python3 autotest.py
-    (TESP) ~/tesp/repository/tesp$ deactivate
-    ~/tesp/repository/tesp$
+    (TESP) ~$ cd tesp/repository/tesp/examples
+    (TESP) ~/tesp/repository/tesp/examples$ exec python3 autotest.py &> short.log &
+    (TESP) ~/tesp/repository/tesp/examples$ deactivate
+    ~/tesp/repository/tesp/examples$
 
 
 The first command is essential after starting a terminal session prior to running anything in
-TESP for the first time. After running the first line above, the prompt now shows the prefix `(TESP)` being using for the variable environment.
+TESP for the first time. After running the first line above, the prompt now shows the prefix `(TESP)` being used for the variable environment.
 If you don't run the first line, simulations will generally fail for lack of being able to find their dependencies.
 If things aren't working, double-check to make sure your commandline shows the prefix `(TESP)`.
 
 The forth command, 'deactivate', returns the environment path to the state it was before the the first command started and remove the `(TESP)` prefix from the prompt.
 All other environment variables are present but the TESP python requirements may/may not be present, depending on your configuration.
    
+The commandline that ran this autotest was executed in the background, so that can close the terminal, but don't close the VM. You can open terminal later and check progress by viewing the short.log.
 Even this subset of examples can take several hours to run (roughly 4.9 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
 
 .. code-block:: text
@@ -229,8 +230,38 @@ Even this subset of examples can take several hours to run (roughly 4.9 hours in
 
 Total runtime will depend on the compute resources available and each example run serially.
 
-Longer Autotest: All examples (forthcoming)
+Longer Autotest: Remaining examples
 ............................................
+
+.. code-block:: shell-session
+    :caption: TESP remaining examples autotest
+
+    ~$ source tespEnv
+    (TESP) ~$ cd tesp/repository/tesp/examples
+    (TESP) ~/tesp/repository/tesp/examples$ exec python3 autotest_long.py &> long.log &
+
+The commandline that ran this autotest was executed in the background, so that can close the terminal, but don't close the VM. You can open terminal later and check progress by viewing the long.log.
+This subset of examples can take several days to run (roughly 49.8 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:
+
+.. code-block:: text
+
+    Test Case(s)                     Time Taken
+    ===========================================
+    SGIP1a - HELICS                14132.360023
+    SGIP1b - HELICS                14143.111387
+    SGIP1c - HELICS                15305.805641
+    SGIP1d - HELICS                17289.504798
+    SGIP1e - HELICS                19784.953376
+    SGIP1ex - HELICS               19623.103407
+    PNNL Team IEEE8500                 0.023067
+    PNNL Team 30 - HELICS             98.790637
+    PNNL Team ti30 - HELICS          103.635829
+    PNNL Team 8500 - HELICS        13872.056659
+    PNNL Team 8500 TOU - HELICS    13375.151752
+    PNNL Team 8500 Volt - HELICS   13513.567733
+    PNNL Team 8500 Base            12338.000525
+    PNNL Team 8500 VoltVar         13278.476238
+    PNNL Team 8500 VoltWatt        12584.246679
 
 Trouble-shooting Installation (forthcoming)
 -------------------------------------------

@@ -14,7 +14,7 @@ The function call order for this agent is:
         formulate_bid_da(){return BID}
         set_price_forecast(forecasted_price)
         Repeats at every 5 min:
-            set_battery_SOC(fncs_str){updates C_init}
+            set_battery_SOC(msg_str){updates C_init}
             formulate_bid_rt(){return BID}
             inform_bid(price){update RTprice}
             bid_accepted(){update inv_P_setpoint and GridLAB-D P_out if needed}
@@ -38,11 +38,11 @@ class BatteryDSOT:
     """This agent manages the battery/inverter
 
     Args:
-        TODO: update inputs for this agent
+        # TODO: update inputs for this agent
         model_diag_level (int): Specific level for logging errors; set it to 11
-        sim_time (str): Current time in the simulation; should be human readable
+        sim_time (str): Current time in the simulation; should be human-readable
 
-    Attributes: #TODO: update attributes for this agent
+    Attributes:
         #initialize from Args:
         name (str): name of this agent
         Rc (float): rated charging power in kW for the battery
@@ -54,7 +54,7 @@ class BatteryDSOT:
         Cinit (float): initial stored energy in the battery in kWh
         batteryCapacity (float): battery capacity in kWh
         batteryLifeDegFactor (float): constant to model battery degradation
-        windowLength (int): length of day ahead optimization period in hours (e.g. 48 hours)
+        windowLength (int): length of day ahead optimization period in hours (e.g. 48-hours)
         dayAheadCapacity (float): % of battery capacity reserved for day ahead bidding
         
         #no initialization required
@@ -68,7 +68,7 @@ class BatteryDSOT:
         pm_lo (float): Lowest possible profit margin in %
         RT_state_maintaing (boolean): true if battery must maintain charging or discharging state for 1 hour
         RT_state_maintaing_flag (int): (0) not define at current hour (-1) charging (+1) discharging
-        RT_FNCS_flag (boolean): if True, FNCS has to update GridLAB-D
+        RT_flag (boolean): if True, has to update GridLAB-D
         inv_P_setpoint (float): next GridLAB-D inverter power output
         optimized_Quantity (float) (1 X Window Length): Optimized quantity 
         #not used if not biding DA
@@ -126,7 +126,7 @@ class BatteryDSOT:
         self.delta_Q = float(0.0)
         # self.previus_Q_DA = float(0.0)
 
-        self.RT_FNCS_flag = bool(False)
+        self.RT_flag = bool(False)
         self.inv_P_setpoint = float(0.0)
         self.inv_Q_setpoint = float(0.0)
         self.optimized_Quantity = [[]] * self.windowLength
@@ -205,7 +205,7 @@ class BatteryDSOT:
             Boolean: True if the inverter settings changed, False if not.
         """
         self.RT_gridlabd_set_P(11, current_time)
-        return self.RT_FNCS_flag
+        return self.RT_flag
 
     def set_price_forecast(self, forecasted_price):
         """ Set the f_DA attribute
@@ -226,7 +226,7 @@ class BatteryDSOT:
         self.prev_clr_Price = list()
         self.prev_clr_Price = deepcopy(price)
         self.BindingObjFunc = bool(True)
-        for _ in range(len(self.prev_clr_Price)):
+        for i in range(len(self.prev_clr_Price)):
             self.prev_clr_Quantity.append(self.from_P_to_Q_battery(self.bid_da[i], self.prev_clr_Price[i]))
         self.prev_clr_Price.pop(0)
         self.prev_clr_Quantity.pop(0)
@@ -278,13 +278,13 @@ class BatteryDSOT:
                 # BID[t][2][P] = Quantity[t]*CurveSlope[t]+yIntercept[t]-(self.ProfitMargin_intercept/100)*deltaf_DA
                 # BID[t][3][P] = self.Rc * CurveSlope[t] + yIntercept[t] - (self.ProfitMargin_intercept / 100) * deltaf_DA
                 BID[t][0][P] = -self.Rd * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
-                            1 + self.profit_margin)
+                        1 + self.profit_margin)
                 BID[t][1][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
-                            1 + self.profit_margin)
+                        1 + self.profit_margin)
                 BID[t][2][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] - self.batteryLifeDegFactor * (
-                            1 + self.profit_margin)
+                        1 + self.profit_margin)
                 BID[t][3][P] = self.Rc * CurveSlope[t] + yIntercept[t] - self.batteryLifeDegFactor * (
-                            1 + self.profit_margin)
+                        1 + self.profit_margin)
             else:
                 # if slider is 0: inflexible straight vertical bid
                 BID[t][0][Q] = Quantity[t]
@@ -307,8 +307,8 @@ class BatteryDSOT:
     def obj_rule(self, m):
         return sum(
             self.f_DA[i] * (m.E_DA_out[i] - m.E_DA_in[i]) - self.batteryLifeDegFactor * (1 + self.profit_margin) * (
-                        m.E_DA_out[i] + m.E_DA_in[i]) - 0.001 * (
-                        m.E_DA_out[i] * m.E_DA_out[i] + 2 * m.E_DA_out[i] * m.E_DA_in[i] + m.E_DA_in[i] * m.E_DA_in[i])
+                    m.E_DA_out[i] + m.E_DA_in[i]) - 0.001 * (
+                    m.E_DA_out[i] * m.E_DA_out[i] + 2 * m.E_DA_out[i] * m.E_DA_in[i] + m.E_DA_in[i] * m.E_DA_in[i])
             for i in self.TIME)  # - 0.0000003*(m.E_DA_out[i]+m.E_DA_in[i])**2
 
     def con_rule_ine1(self, m, i):
@@ -509,7 +509,7 @@ class BatteryDSOT:
         
         Args:
             model_diag_level (int): Specific level for logging errors; set it to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
         
         inv_P_setpoint is a float in W
         """
@@ -523,11 +523,11 @@ class BatteryDSOT:
 
         if (invPower - self.inv_P_setpoint) != 0.0:
             self.inv_P_setpoint = invPower * 1000.0
-            self.RT_FNCS_flag = True
+            self.RT_flag = True
         else:
-            self.RT_FNCS_flag = False
+            self.RT_flag = False
 
-        ### Sanity checks
+        # Sanity checks
         if self.inv_P_setpoint <= self.Rd * 1000:
             pass
         else:
@@ -542,25 +542,25 @@ class BatteryDSOT:
                     '{} {} -- input power ({}) is not <= rated input power ({}).'.format(self.name, sim_time,
                                                                                          -self.inv_P_setpoint, self.Rc))
 
-    def set_battery_SOC(self, fncs_str, model_diag_level, sim_time):
+    def set_battery_SOC(self, msg_str, model_diag_level, sim_time):
         """ Set the battery state of charge
         
         Updates the self.Cinit of the battery
         
         Args:
-             fncs_str (str): FNCS message with battery SOC in pu
+             msg_str (str): message with battery SOC in pu
              model_diag_level (int): Specific level for logging errors; set it to 11
-             sim_time (str): Current time in the simulation; should be human readable
+             sim_time (str): Current time in the simulation; should be human-readable
              
         """
-        val = parse_number(fncs_str)
+        val = parse_number(msg_str)
         self.Cinit = self.batteryCapacity * val
 
-        ### Sanity checks #TODO: following sanity check is wrong. should be reomved
+        # Sanity checks #TODO: following sanity check is wrong. should be reomved
         # assert 0 <= self.Cmin
         # assert 1 >= self.Cmax
 
-        if self.Cmin < self.Cinit and self.Cmax > self.Cinit:
+        if self.Cmin < self.Cinit < self.Cmax:
             pass
         else:
             log.log(model_diag_level,
@@ -575,7 +575,7 @@ class BatteryDSOT:
             PRICE (float): cleared price in $/kWh
           
         Returns:
-            quantity (float): active power (-) charging (+) discharging
+            _quantity (float): active power (-) charging (+) discharging
         """
         P = self.P
         Q = self.Q
@@ -600,24 +600,24 @@ class BatteryDSOT:
 
         if temp == 0:
             if PRICE >= BID[0][P]:  # battery at maximun discharg
-                quantity = -BID[0][Q]
+                _quantity = -BID[0][Q]
             elif PRICE <= BID[3][P]:  # battery at maximun charging
-                quantity = -BID[3][Q]
+                _quantity = -BID[3][Q]
             elif BID[2][P] <= PRICE <= BID[1][P]:  # battery at deadband
-                quantity = -BID[2][Q]
+                _quantity = -BID[2][Q]
             elif BID[1][P] <= PRICE <= BID[0][P]:  # frist curve
                 b = BID[1][P] - BID[1][Q] * m
-                quantity = -1 * ((PRICE - b) / m)
+                _quantity = -1 * ((PRICE - b) / m)
             else:
                 b = BID[3][P] - BID[3][Q] * m
-                quantity = -1 * ((PRICE - b) / m)
+                _quantity = -1 * ((PRICE - b) / m)
         else:
-            quantity = -BID[1][Q]
+            _quantity = -BID[1][Q]
 
-        return quantity
+        return _quantity
 
 
-if __name__ == "__main__":
+def test():    
     """Testing
     
     Makes a single battery agent and run DA 
@@ -651,9 +651,8 @@ if __name__ == "__main__":
     BID = [[-5.0, 0.42129778616103297], [-0.39676675, 0.30192681471917215], [-0.39676675, 0.17229206883635942],
            [5.0, 0.03234319929066909]]
 
-    ### Uncomment for testing logging functionality.
-    ### Supply these values when using the battery agent in the
-    ### simulation.
+    # Uncomment for testing logging functionality.
+    # Supply these values when using the battery agent in the simulation.
     # model_diag_level = 11
     # hlprs.enable_logging('DEBUG', model_diag_level)
     sim_time = '2019-11-20 07:47:00'
@@ -730,3 +729,8 @@ if __name__ == "__main__":
 #     print(getQ)
 #     getQ = B_obj1.from_P_to_Q_battery(fixed,10)
 #     print(getQ)
+
+
+if __name__ == "__main__":
+    test()
+    

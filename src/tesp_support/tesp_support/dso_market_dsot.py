@@ -746,7 +746,7 @@ class DSOMarketDSOT:
         self.ind_load = val
 
     def set_ind_load_da(self, industrial_load_da):
-        """ Set the ercot ind load for the next 24 hours provided load by a csv file after base-case, complex number
+        """ Set the ercot ind load for the next 24-hours provided load by a csv file after base-case, complex number
 
 			Args:
 				ercot_ind load (24 x 1 array of double): ercot ind load values for the next day ahead are given in MW and the json.loads function don't know that.
@@ -755,7 +755,7 @@ class DSOMarketDSOT:
         self.ind_load_da = np.array(temp) * 1000.0
 
     def set_ref_load_da(self, ref_load_da):
-        """ Set the ercot load for the next 24 hours provided load by a csv file after base-case, complex number
+        """ Set the ercot load for the next 24-hours provided load by a csv file after base-case, complex number
 
 			Args:
 				ercot_load (24 x 1 array of double): ercot load values for the next day ahead

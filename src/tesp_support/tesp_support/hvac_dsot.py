@@ -28,15 +28,15 @@ log.getLogger('pyomo.core').setLevel(log.ERROR)
 class HVACDSOT:  # TODO: update class name
     """This agent ...
 
-    TODO: update the purpose of this Agent
+    # TODO: update the purpose of this Agent
 
     Args:
-        TODO: update inputs for this agent
+        # TODO: update inputs for this agent
         model_diag_level (int): Specific level for logging errors; set it to 11
-        sim_time (str): Current time in the simulation; should be human readable
+        sim_time (str): Current time in the simulation; should be human-readable
 
     Attributes:
-        TODO: update attributes for this agent
+        # TODO: update attributes for this agent
 
     """
 
@@ -142,7 +142,7 @@ class HVACDSOT:  # TODO: update class name
         self.internalgain_forecast = [0.0 for _ in range(48)]
         self.forecast_ziploads = [0.0 for _ in range(48)]
 
-        # its important to initialize following two variables of length less than 48
+        # it is important to initialize following two variables of length less than 48
         # so that in very first run, they can be populated by actual forecast
         self.full_internalgain_forecast = [0]
         self.full_forecast_ziploads = [0]
@@ -453,7 +453,7 @@ class HVACDSOT:  # TODO: update class name
 
         Args:
             model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
 
         References:
             `Table 3 -  Easy to use slider settings <http://gridlab-d.shoutwiki.com/wiki/Transactive_controls>`_
@@ -791,7 +791,7 @@ class HVACDSOT:  # TODO: update class name
         # print('  CM -> {:.2f}'.format(self.CM))
 
     def set_price_forecast(self, price_forecast):
-        """ Set the 24 hour price forecast and calculate mean and std
+        """ Set the 24-hour price forecast and calculate mean and std
 
         Args:
             price_forecast ([float x 24]): predicted price in $/kwh
@@ -804,7 +804,7 @@ class HVACDSOT:  # TODO: update class name
         self.price_delta = np.max(self.price_forecast) - np.min(self.price_forecast)
 
     def set_temperature_forecast(self, fncs_str):
-        """ Set the 48 hour price forecast and calculate min and max
+        """ Set the 48-hour price forecast and calculate min and max
 
         Args:
             fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
@@ -819,7 +819,7 @@ class HVACDSOT:  # TODO: update class name
         self.temp_max_48hour = max(self.temperature_forecast)
 
     def set_humidity_forecast(self, fncs_str):
-        """ Set the 48 hour price forecast and calculate min and max
+        """ Set the 48-hour price forecast and calculate min and max
 
         Args:
             fncs_str: temperature_forecast ([float x 48]): predicted temperature in F
@@ -829,13 +829,13 @@ class HVACDSOT:  # TODO: update class name
         self.humidity_forecast = [float(humidity_forecast[key]) for key in humidity_forecast.keys()]
 
     def set_solargain_forecast(self, solargain_array):
-        """ Set the 48 hour solargain forecast
+        """ Set the 48-hour solargain forecast
 
         Args:
             solargain_array: solargain_forecast ([float x 48]): forecasted solargain in BTu/(h*sf)
         """
         # bringing solar gain to nominal for the use in different homes
-        # home A3 has solargain_factor of 40.548
+        # A3 has solargain_factor of 40.548
         self.solargain_forecast = solargain_array
 
     def store_full_internalgain_forecast(self, forecast_internalgain):
@@ -857,7 +857,7 @@ class HVACDSOT:  # TODO: update class name
         self.full_forecast_ziploads = forecast_ziploads
 
     def set_internalgain_forecast(self, internalgain_array):
-        """ Set the 48 hour internalgain forecast
+        """ Set the 48-hour internalgain forecast
         Args:
             internalgain_array: internalgain_forecast ([float x 48]): forecasted internalgain in BTu/h
         """
@@ -865,7 +865,7 @@ class HVACDSOT:  # TODO: update class name
 
     def set_zipload_forecast(self, forecast_ziploads):
         """
-        Set the 48 hour zipload forecast
+        Set the 48-hour zipload forecast
         Args:
             forecast_ziploads: array of zipload forecast
         Returns: nothing, sets the property
@@ -925,7 +925,7 @@ class HVACDSOT:  # TODO: update class name
         if dst:
             tz_offset = -5  # when daylight saving is on, offset for central time zone is UTC-5
         else:
-            tz_offset = -6  # other wise UTC-6
+            tz_offset = -6  # otherwise UTC-6
         day_of_yr = current_time.timetuple().tm_yday  # get day of year from datetime
         dnr = self.solar_direct
         dhr = self.solar_diffuse
@@ -1000,7 +1000,7 @@ class HVACDSOT:  # TODO: update class name
 
         Args:
             model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
             Boolean: True if the thermostat setting changes, False if not.
@@ -1087,7 +1087,7 @@ class HVACDSOT:  # TODO: update class name
                             setpoint_tmp = a * self.bid_quantity + b
                             break
 
-                # The following is code was for debugging and not being used so it was comment out
+                # The following is code was for debugging and not being used, so it was comment out
                 # LF = 1 + 0.1 + self.latent_load_fraction / (1 + math.exp(4 - 10 * self.humidity))
                 # eps_rt = math.exp(-self.UA / (self.CM + self.CA) * 1.0 / 12.0)
                 # setpoint_tmp_DA = eps_rt * self.air_temp + (1 - eps_rt) * (self.outside_air_temperature + (
@@ -1247,7 +1247,7 @@ class HVACDSOT:  # TODO: update class name
             hod (int): the hour of the day, from 0 to 23
             dow (int): the day of the week, zero being Monday
             model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
             Boolean: True if the setting changed, False if not
@@ -1338,7 +1338,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with temperature in degrees Fahrenheit
             model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
         """
         T_air = parse_number(fncs_str)
         if self.T_lower_limit < T_air < self.T_upper_limit:
@@ -1375,7 +1375,7 @@ class HVACDSOT:  # TODO: update class name
 
         Args:
             model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
             [[float, float], [float, float], [float, float], [float, float]]: [bid price $/kwh, bid quantity kW] x 4
@@ -1613,7 +1613,7 @@ class HVACDSOT:  # TODO: update class name
         if Q_min != Q_max:
             CurveSlope = (delta_DA_price / (0 - self.hvac_kw) * (1 + self.ProfitMargin_slope / 100))
             yIntercept = self.price_forecast_0 - CurveSlope * Qopt_DA
-            if Qopt_DA < Q_max and Qopt_DA > Q_min:
+            if Q_max > Qopt_DA > Q_min:
                 BID[0][Q] = Q_min
                 BID[1][Q] = Qopt_DA
                 BID[2][Q] = Qopt_DA
@@ -1709,13 +1709,13 @@ class HVACDSOT:  # TODO: update class name
         Function calls DA_optimal_quantities to obtain the optimal quantities for the DA market. With the quantities, a 4 point bids are formulated for each hour.
 
         Returns
-            BID (float) (windowLength X 4 X 2): DA bids to be send to the retail DA market
+            BID (float) (windowLength X 4 X 2): DA bids to be sent to the retail DA market
         """
 
         # save the previous bid quantity for interpolation use
         self.Qopt_da_prev = self.bid_da[0][1][0]
         self.price_forecast_0 = self.price_forecast[0]
-        BID = [[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] for i in self.TIME]
+        BID = [[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] for _ in self.TIME]
         if self.heating_system_type != 'HEAT_PUMP' and self.thermostat_mode == 'Heating':
             self.bid_da = BID
             return self.bid_da
@@ -2095,7 +2095,7 @@ class HVACDSOT:  # TODO: update class name
         return cleared_da_quantity
 
 
-if __name__ == "__main__":
+def test():
     """Testing
 
     Makes a single hvac agent and run DA 
@@ -2224,3 +2224,7 @@ if __name__ == "__main__":
     # print(getQ)
     # getQ = B_obj1.from_P_to_Q_battery(fixed, 10)
     # print(getQ)
+
+
+if __name__ == "__main__":
+    test()

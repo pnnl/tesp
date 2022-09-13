@@ -1006,7 +1006,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             timing(proc[10], True)
             uncntrl_pv = []  # list to store uncontrolled pv generation
             if len(pv_agent_objs) > 0:
-                # lets get the next 48 hours solar forecast from DSO level tape as it is same for all pv agents
+                # lets get the next 48-hours solar forecast from DSO level tape as it is same for all pv agents
                 solar_f = forecast_obj.get_solar_forecast(forecast_start_time, dso_config['bus'])
                 for key, obj in pv_agent_objs.items():
                     site_id = site_da_meter.index(config_glm['inverters'][key]['billingmeter_id'])

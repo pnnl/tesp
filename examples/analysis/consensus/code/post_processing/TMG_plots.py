@@ -161,7 +161,7 @@ def load_gen_data(dir_path, gen_name, day_range):
     start_time = sim_start + timedelta(days=int(day_range[0]) - 1)
     stop_time = start_time + (day_range[-1]-day_range[0]+1) * timedelta(days=1) - timedelta(minutes=5)
 
-    # For Day Ahead quantities need to layout 24 hour 10 am commitments to actual real time to match real time format.
+    # For Day Ahead quantities need to layout 24-hour 10 am commitments to actual real time to match real time format.
     if gen_name in ['da_q', 'da_lmp', 'da_line']:
         clear_time = start_time - timedelta(hours=14)
         column_key = {'da_q': 'ClearQ_',
@@ -298,7 +298,7 @@ def load_da_retail_price(dir_path, folder_prefix, dso_num, day_num):
     bid_time = date - timedelta(hours=14)  # + timedelta(seconds=1)
     retail_da_data_df = pd.read_hdf(filename, key='/metrics_df1', mode='r', where='index=bid_time')
     retail_da_data_df = retail_da_data_df.set_index([retail_da_data_df.index, retail_da_data_df['uid']])
-    # Reduce data frame to the 10am day ahead clearance and the 24 hours for the next day.
+    # Reduce data frame to the 10am day ahead clearance and the 24-hours for the next day.
 
     # retail_da_data_df = retail_da_data_df.loc[bid_time]
     retail_da_data_df = retail_da_data_df.loc[(retail_da_data_df['i'] >= 13) & (retail_da_data_df['i'] <= 36)]
@@ -337,7 +337,7 @@ def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
     # TODO: use where='index=bid_time' to slice h5 and eliminate need for loc below.
     retail_data_df = pd.read_hdf(filename, key='/metrics_df2', mode='r')
 
-    # Reduce data frame to the 10am day ahead clearance and the 24 hours for the next day.
+    # Reduce data frame to the 10am day ahead clearance and the 24-hours for the next day.
     bid_time = date - timedelta(hours=14) - timedelta(seconds=30)
     retail_data_df = retail_data_df.loc[bid_time]
     # retail_data_df = retail_data_df.loc[(retail_data_df['j'] >= 14) & (retail_data_df['j'] <= 37)]

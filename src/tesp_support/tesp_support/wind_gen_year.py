@@ -68,7 +68,7 @@ def generate_wind_data_24hr():
     for j in range(24):
         for key, row in wind_plants.items():
             # return dict with rows like
-            # wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, [24 hour p]]
+            # wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, [24-hour p]]
             Theta0 = row[2]
             Theta1 = row[3]
             StdDev = row[4]
@@ -120,7 +120,7 @@ else:
 while day < max_days:
     df_wind_day = pd.DataFrame(columns=plant_name,
                                index=pd.date_range(start=start_day + pd.Timedelta(day, unit='d'), periods=24, freq='H'))
-    wind_plant = generate_wind_data_24hr()  # generate 24 hour wind data with hourly resolution
+    wind_plant = generate_wind_data_24hr()  # generate 24-hour wind data with hourly resolution
     i = 0
     for key, row in wind_plants.items():
         df_wind_day[plant_name[i]] = row[9]
@@ -138,7 +138,7 @@ df_wind_yr_minute.to_csv(output_Path + 'wind_Revised.csv', float_format='%.3f')
 print('writing wind_Revised.csv with', resolution, 'seconds resolution')
 
 # ------- Add Error to get forecast ------------------------------
-# create normal distribution error for 24 hours with 5 minute resolution
+# create normal distribution error for 24-hours with 5 minute resolution
 wd_err_mean = 0.0177
 wd_err_std = 0.1187
 error_df = pd.DataFrame(columns=plant_name)

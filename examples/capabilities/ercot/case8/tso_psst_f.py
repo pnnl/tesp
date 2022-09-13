@@ -1149,7 +1149,7 @@ def tso_psst_loop_f():
                 # make next day forecast
                 for j in range(hours_in_a_day):
                     for key, row in wind_plants.items():
-                        # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, [24 hour p]]
+                        # return dict with rows like wind['unit'] = [bus, MW, Theta0, Theta1, StdDev, Psi1, Ylim, alag, ylag, [24-hour p]]
                         Theta0 = row[2]
                         Theta1 = row[3]
                         StdDev = row[4]

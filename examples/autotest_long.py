@@ -64,7 +64,7 @@ def ieee8500_precool_test():
         tesp.run_test('run8500volt.sh', 'PNNL Team 8500 Volt - FNCS')
     tesp.run_test('run8500base.sh', 'PNNL Team 8500 Base')
     tesp.run_test('run8500vvar.sh', 'PNNL Team 8500 VoltVar')
-    tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltVatt')
+    tesp.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltWatt')
     os.chdir(tesp_path)
 
 
@@ -114,6 +114,6 @@ if __name__ == '__main__':
     tesp.block_test(ieee8500_base_test)
     tesp.block_test(ieee8500_precool_test)
     # tesp.block_test(ercot_test)
-    tesp.block_test(dso_stub_test)
+    # tesp.block_test(dso_stub_test)
 
     print(tesp.report_tests())

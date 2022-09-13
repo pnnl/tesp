@@ -102,7 +102,7 @@ for tax_ind=1:no_of_tax
     % Markets? - NOT FINISHED
     use_flags.use_market = 1; % 0 = NONE, 1 = BIDDING, 2 = PASSIVE (NON-BIDDING)
                     % NOTE: using passive overrides statistics in market_info
-                    % and defaults to 24 hour statistics
+                    % and defaults to 24-hour statistics
 
     % Commercial Buildings - FINISHED
     % these may be used to represent large 3-ph loads as ziploads (0) or buildings (1)
@@ -838,7 +838,7 @@ for tax_ind=1:no_of_tax
         fprintf(write_file,'module market;\n\n');
         
         % create some new variables in stub auction that I can use to put
-        % my values of std and mean, instead of rolling 24 hour
+        % my values of std and mean, instead of rolling 24-hour
         if (use_flags.fncs_transactive ~= 0)
             fprintf(write_file,'class auction {\n');
             fprintf(write_file,'     double my_avg;\n');
