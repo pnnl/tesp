@@ -18,7 +18,6 @@ fi
 #fi
 #make -j "$(grep -c "^processor" /proc/cpuinfo)"
 #make install
-##gridlabd.sh -t 0 --validate
 
 # using cmake for >=5.0 GridLAB-D
 cd "${REPODIR}/gridlab-d" || exit
@@ -30,6 +29,7 @@ fi
 mkdir build
 cd build || exit
 cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}" \
+      -DGLD_USE_HDF5=ON \
       -DGLD_USE_HELICS=ON -DGLD_HELICS_DIR="${INSTDIR}" ..
 
 # Add to -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" if you need to use FNCS
@@ -37,4 +37,5 @@ cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}" \
 # Run the build system and install the application
 cmake --build . --target install
 
+# To validate the build
 #gridlabd.sh -t 0 --validate

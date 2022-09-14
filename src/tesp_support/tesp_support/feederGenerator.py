@@ -1312,8 +1312,8 @@ def write_small_loads(basenode, op, vnom):
     print('  voltage_1 ' + vstart + ';', file=op)
     print('  voltage_2 ' + vstart + ';', file=op)
     print('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
-    print('  power_12_real 10.0;', file=op)
-    print('  power_12_reac 8.0;', file=op)
+    print('  constant_power_12_real 10.0;', file=op)
+    print('  constant_power_12_reac 8.0;', file=op)
     print('}', file=op)
 
 

@@ -51,7 +51,8 @@ def enable_logging(level, model_diag_level):
 
     # Setting up main/standard debugging output
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    # logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     main_fh = logging.FileHandler('main_log.txt', mode='w')
     if level == 'DEBUG':
         main_fh.setLevel(logging.DEBUG)

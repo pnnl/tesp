@@ -2097,8 +2097,6 @@ def write_houses(basenode, op, vnom):
                     # No need of solar object
                     # print('    object solar {', file=op)
                     # print('      name', solname + ';', file=op)
-                    # print('      generator_mode SUPPLY_DRIVEN;', file=op)
-                    # print('      generator_status ONLINE;', file=op)
                     # print('      panel_type SINGLE_CRYSTAL_SILICON;', file=op)
                     # print('      efficiency', '{:.2f}'.format(array_efficiency) + ';', file=op)
                     # print('      area', '{:.2f}'.format(panel_area) + ';', file=op)
@@ -2155,14 +2153,12 @@ def write_houses(basenode, op, vnom):
                 print('    power_factor 1.0;', file=op)
                 print('    object battery { // Tesla Powerwall 2', file=op)
                 print('      name', batname + ';', file=op)
-                print('      generator_status ONLINE;', file=op)
                 print('      use_internal_battery_model true;', file=op)
                 print('      battery_type LI_ION;', file=op)
                 print('      nominal_voltage 480;', file=op)
                 print('      battery_capacity', '{:.2f}'.format(battery_capacity) + ';', file=op)
                 print('      round_trip_efficiency', '{:.2f}'.format(round_trip_efficiency) + ';', file=op)
                 print('      state_of_charge 0.50;', file=op)
-                print('      generator_mode SUPPLY_DRIVEN;', file=op)
                 print('    };', file=op)
                 if metrics_interval > 0 and "inverter" in metrics:
                     print('    object metrics_collector {', file=op)
