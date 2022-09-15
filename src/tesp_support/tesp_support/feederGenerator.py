@@ -1805,8 +1805,8 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
         print('  name', hsename + ';', file=op)
         print('  parent', hse_m_name + ';', file=op)
         print('  groupid', bldgTypeName[bldg] + ';', file=op)
-        # TODO: why thermal integrity level is not used ?
-        #  this sets the default house R* and other parameters
+        # why thermal integrity level is not used ?
+        # this sets the default house R* and other parameters
         print('  // thermal_integrity_level', tiName[ti] + ';', file=op)
         print('  schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
         print('  floor_area', '{:.0f}'.format(floor_area) + ';', file=op)
@@ -2065,7 +2065,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(case_name) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)  # for full-order DSOT
+        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)
         print('  parent network_node;', file=op)
         print('  configure', case_name + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port ' + str(port) + '";', file=op)
@@ -2076,7 +2076,7 @@ def write_substation(op, name, phs, vnom, vll):
         print('', file=op)
         print('#ifdef USE_HELICS', file=op)
         print('object helics_msg {', file=op)
-        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)  # for full-order DSOT
+        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)
         print('  configure', case_name + '_HELICS_gld_msg.json;', file=op)
         print('}', file=op)
         print('#endif', file=op)
@@ -2561,7 +2561,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         print('object climate {', file=op)
         print('  name', str(weather_name) + ';', file=op)
-        print('  // tmyfile "' + weather_path + weather_file + '";', file=op)
+        print('  // tmyfile "' + weather_file + '";', file=op)
         print('  interpolate QUADRATIC;', file=op)
         print('  latitude', str(latitude) + ';', file=op)
         print('  longitude', str(longitude) + ';', file=op)

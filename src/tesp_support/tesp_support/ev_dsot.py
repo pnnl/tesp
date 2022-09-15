@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: ev_dsot.py #
+# file: ev_dsot.py
 """Class that controls the Electric Vehicle
 
 Implements the optimum schedule of charging and discharging DA; generate the bids
@@ -14,7 +14,7 @@ The function call order for this agent is:
         formulate_bid_da(){return BID}
         set_price_forecast(forecasted_price)
         Repeats at every 5 min:
-            set_battery_SOC(fncs_str){updates C_init}
+            set_battery_SOC(msg_str){updates C_init}
             formulate_bid_rt(){return BID}
             inform_bid(price){update RTprice}
             bid_accepted(){update inv_P_setpoint and GridLAB-D P_out if needed}
@@ -25,7 +25,6 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from math import isnan
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pyomo.environ as pyo
 
@@ -55,7 +54,7 @@ class EVDSOT:
         Cmin (float): minimum allowable stored energy in kWh (state of charge lower limit)
         Cmax (float): maximum allowable stored energy in kWh (state of charge upper limit)
         Cinit (float): initial stored energy in the battery in kWh
-        batteryCapacity (float): battery capacity in kWh
+        evCapacity (float): battery capacity in kWh
         batteryLifeDegFactor (float): constant to model battery degradation
         windowLength (int): length of day ahead optimization period in hours (e.g. 48-hours)
         dayAheadCapacity (float): % of battery capacity reserved for day ahead bidding
@@ -71,7 +70,7 @@ class EVDSOT:
         pm_lo (float): Lowest possible profit margin in %
         RT_state_maintain (boolean): true if battery must maintain charging or discharging state for 1 hour
         RT_state_maintain_flag (int): (0) not define at current hour (-1) charging (+1) discharging
-        RT_FNCS_flag (boolean): if True, FNCS has to update GridLAB-D
+        RT_flag (boolean): if True, has to update GridLAB-D
         inv_P_setpoint (float): next GridLAB-D inverter power output
         optimized_Quantity (float) (1 X Window Length): Optimized quantity
         #not used if not biding DA
@@ -82,7 +81,7 @@ class EVDSOT:
 
     """
 
-    def __init__(self, ev_dict, inv_properties, key, model_diag_level, sim_time, solver):  
+    def __init__(self, ev_dict, inv_properties, key, model_diag_level, sim_time, solver):
         # TODO: update inputs for class
         """Initializes the class
         """
@@ -150,16 +149,16 @@ class EVDSOT:
         # interpolation
         self.interpolation = bool(True)
         self.RT_minute_count_interpolation = float(0.0)
-        self.previus_Q_RT = float(0.0)
+        self.previous_Q_RT = float(0.0)
         self.delta_Q = float(0.0)
-        # self.previus_Q_DA = float(0.0)
+        # self.previous_Q_DA = float(0.0)
 
         # price vector to initialize and to be used in the first optimization
         self.RTprice = 0.0
         self.profit_margin = float(ev_dict['profit_margin']) / 100
         self.RT_state_maintain = bool(False)
         self.RT_state_maintain_flag = int(0)
-        self.RT_FNCS_flag = bool(False)
+        self.RT_flag = bool(False)
         self.inv_P_setpoint = float(0.0)
         self.inv_Q_setpoint = float(0.0)
         self.optimized_Quantity = [[]] * self.windowLength
@@ -169,7 +168,7 @@ class EVDSOT:
         self.BindingObjFunc = bool(False)
 
         self.bid_rt = [[0., 0.], [0., 0.], [0., 0.], [0., 0.]]
-        self.bid_da = [[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] for _ in range(self.windowLength)]  
+        self.bid_da = [[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] for _ in range(self.windowLength)]
 
         # optimization
         self.TIME = range(0, self.windowLength)
@@ -179,8 +178,7 @@ class EVDSOT:
             # log.info('Cmin < evCapacity < Cmax.')
             pass
         else:
-            log.log(model_diag_level,
-                    '{} {} -- evCapacity is {}, not between Cmin ({}) and Cmax ({})'.
+            log.log(model_diag_level, '{} {} -- evCapacity is {}, not between Cmin ({}) and Cmax ({})'.
                     format(self.name, 'init', self.evCapacity, self.Cmin, self.Cmax))
 
         Lin_lower = 0
@@ -189,8 +187,7 @@ class EVDSOT:
             # log.info('Lin is within the bounds.')
             pass
         else:
-            log.log(model_diag_level,
-                    '{} {} -- Lin is {}, outside of nominal range of {} to {}'.
+            log.log(model_diag_level, '{} {} -- Lin is {}, outside of nominal range of {} to {}'.
                     format(self.name, 'init', self.Lin, Lin_lower, Lin_upper))
 
         Lout_lower = 0
@@ -199,8 +196,7 @@ class EVDSOT:
             # log.info('Lout is within the bounds.')
             pass
         else:
-            log.log(model_diag_level,
-                    '{} {} -- Lout is {}, outside of nominal range of {} to {}'.
+            log.log(model_diag_level, '{} {} -- Lout is {}, outside of nominal range of {} to {}'.
                     format(self.name, 'init', self.Lout, Lout_lower, Lout_upper))
 
         reserved_soc_lower = 0
@@ -209,17 +205,15 @@ class EVDSOT:
             # log.info('reserved_soc is within the bounds.')
             pass
         else:
-            log.log(model_diag_level,
-                    '{} {} -- reserved_soc is {}, outside of nominal range of {} to {}'.format(self.name, 'init',
-                                                                                               self.reserved_soc,
-                                                                                               reserved_soc_lower,
-                                                                                               reserved_soc_upper))
+            log.log(model_diag_level, '{} {} -- reserved_soc is {}, outside of nominal range of {} to {}'.
+                    format(self.name, 'init', self.reserved_soc, reserved_soc_lower, reserved_soc_upper))
 
-        # if 0 < self.batteryLifeDegFactor and 1 > self.batteryLifeDegFactor:
+        # if 0 < self.batteryLifeDegFactor < 1:
         #     # log.info('batteryLifeDegFactor is within the bounds.')
         #     pass
         # else:
-        #     log.log(model_diag_level, '{} {} -- batteryLifeDegFactor is out of bounds.'.format(self.name, 'init'))
+        #     log.log(model_diag_level, '{} {} -- batteryLifeDegFactor is out of bounds.'.
+        #             format(self.name, 'init'))
 
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object
@@ -242,7 +236,7 @@ class EVDSOT:
             Boolean: True if the inverter settings changed, False if not.
         """
         self.RT_gridlabd_set_P(11, current_time)
-        return self.RT_FNCS_flag
+        return self.RT_flag
 
     def set_price_forecast(self, forecasted_price):
         """ Set the f_DA attribute
@@ -288,8 +282,8 @@ class EVDSOT:
 
         P = self.P
         Q = self.Q
-        # previus hour quantity
-        # self.previus_Q=self.bid_da[0][1][Q]
+        # previous hour quantity
+        # self.previous_Q = self.bid_da[0][1][Q]
 
         TIME = range(0, self.windowLength)
         CurveSlope = [0] * len(TIME)
@@ -313,11 +307,11 @@ class EVDSOT:
                     BID[t][3][P] = min(self.f_DA)
                 else:
                     # Remains same in all hours of the window
-                    CurveSlope[t] = ((max(self.f_DA) - min(self.f_DA)) / (-self.Rd - self.Rc)) / self.slider  
+                    CurveSlope[t] = ((max(self.f_DA) - min(self.f_DA)) / (-self.Rd - self.Rc)) / self.slider
                     # print(CurveSlope[t])
                     # print(Quantity[t])
                     # Is different for each hour of the window
-                    yIntercept[t] = self.f_DA[t] - CurveSlope[t] * Quantity[t]  
+                    yIntercept[t] = self.f_DA[t] - CurveSlope[t] * Quantity[t]
 
                     BID[t][0][Q] = -self.Rd
                     BID[t][1][Q] = Quantity[t]
@@ -336,7 +330,8 @@ class EVDSOT:
                             1 + self.profit_margin)
                     BID[t][3][P] = self.Rc * CurveSlope[t] + yIntercept[t] - self.batteryLifeDegFactor * (
                             1 + self.profit_margin)
-            else:  # if slider is 0: inflexible straight vertical bid
+            else:
+                # if slider is 0: inflexible straight vertical bid
                 BID[t][0][Q] = Quantity[t]
                 BID[t][1][Q] = Quantity[t]
                 BID[t][2][Q] = Quantity[t]
@@ -431,7 +426,6 @@ class EVDSOT:
         Returns:
             Quantity (float) (1 x windowLength): Optimal quantity from optimization for all hours of the window specified by windowLength
         """
-
         if self.Cinit > self.Cmax:
             self.Cinit = self.Cmax
         if self.Cinit < self.Cmin:
@@ -505,7 +499,7 @@ class EVDSOT:
         # non-transactional hours for EV i.e. 0 quantity
         if 0 in self.non_trans_hours:
             self.bid_rt = BID
-            self.previus_Q_RT = 0.0
+            self.previous_Q_RT = 0.0
             return self.bid_rt
 
         # start interpolation
@@ -513,12 +507,12 @@ class EVDSOT:
             CurveSlope = ((max(self.f_DA) - min(self.f_DA)) / (-self.Rd - self.Rc)) / self.slider
             yIntercept = self.f_DA[0] - CurveSlope * BID[1][Q]
             if self.RT_minute_count_interpolation == 0.0:
-                self.delta_Q = deepcopy((self.bid_da[0][1][Q] - self.previus_Q_RT))
+                self.delta_Q = deepcopy((self.bid_da[0][1][Q] - self.previous_Q_RT))
             if self.RT_minute_count_interpolation == 30.0:
-                self.delta_Q = deepcopy((self.bid_da[1][1][Q] - self.previus_Q_RT) * 0.5)
-            Qopt_DA = self.previus_Q_RT + self.delta_Q * (5.0 / 30.0)
-            # Qopt_DA = self.bid_da[0][1][Q]*(self.RT_minute_count_interpolation/60.0) + self.previus_Q*(1-self.RT_minute_count_interpolation/60.0)
-            self.previus_Q_RT = Qopt_DA
+                self.delta_Q = deepcopy((self.bid_da[1][1][Q] - self.previous_Q_RT) * 0.5)
+            Qopt_DA = self.previous_Q_RT + self.delta_Q * (5.0 / 30.0)
+            # Qopt_DA = self.bid_da[0][1][Q]*(self.RT_minute_count_interpolation/60.0) + self.previous_Q*(1-self.RT_minute_count_interpolation/60.0)
+            self.previous_Q_RT = Qopt_DA
             BID[1][Q] = Qopt_DA
             BID[2][Q] = Qopt_DA
             BID[0][P] = -self.Rd * CurveSlope + yIntercept + self.batteryLifeDegFactor * (1 + self.profit_margin)
@@ -526,7 +520,6 @@ class EVDSOT:
             BID[2][P] = Qopt_DA * CurveSlope + yIntercept - self.batteryLifeDegFactor * (1 + self.profit_margin)
             BID[3][P] = self.Rc * CurveSlope + yIntercept - self.batteryLifeDegFactor * (1 + self.profit_margin)
         # end interpolation
-
         # identify error start
         state = 0
         t = self.period
@@ -653,12 +646,12 @@ class EVDSOT:
         # always dispatch ev charge set-point even if there is no change from previous set-point
         # because if nothing is sent, ev starts charging with its default value
         self.inv_P_setpoint = invPower * 1000.0
-        self.RT_FNCS_flag = True
+        self.RT_flag = True
         # if (invPower - self.inv_P_setpoint) != 0.0:
         #     self.inv_P_setpoint = invPower * 1000.0
-        #     self.RT_FNCS_flag = True
+        #     self.RT_flag = True
         # else:
-        #     self.RT_FNCS_flag = False
+        #     self.RT_flag = False
 
         # Sanity checks
         # self.Rd seems to be 0
@@ -667,38 +660,31 @@ class EVDSOT:
         # else:
         #     log.log(model_diag_level, '{} {} -- output power ({}) is not <= rated output power ({}).'.
         #             format(self.name, sim_time, self.inv_P_setpoint, self.Rd))
+
         if self.inv_P_setpoint >= -self.Rc * 1000:
             pass
         else:
-            log.log(model_diag_level,
-                    '{} {} -- input power ({}) is not <= rated input power ({}).'.
+            log.log(model_diag_level, '{} {} -- input power ({}) is not <= rated input power ({}).'.
                     format(self.name, sim_time, -self.inv_P_setpoint, self.Rc))
 
-    def set_ev_SOC(self, fncs_str, model_diag_level, sim_time):
+    def set_ev_SOC(self, msg_str, model_diag_level, sim_time):
         """ Set the ev state of charge
 
         Updates the self.Cinit of the battery
 
         Args:
-             fncs_str (str): FNCS message with ev SOC in percentage
+             msg_str (str): message with ev SOC in percentage
              model_diag_level (int): Specific level for logging errors; set it to 11
              sim_time (str): Current time in the simulation; should be human-readable
 
         """
-        # print('**fncs str** ', fncs_str)
-        val = parse_number(fncs_str)
-        # print(val)
+        val = parse_number(msg_str)
         self.Cinit = self.evCapacity / 100 * val
-
-        # Sanity checks #TODO: following sanity check is wrong. should be reomved
-        # assert 0 <= self.Cmin
-        # assert 1 >= self.Cmax
 
         if self.Cmin < self.Cinit < self.Cmax:
             pass
         else:
-            log.log(model_diag_level,
-                    '{} {} -- SOC ({}) is not between Cmin ({}) and Cmax ({}).'.
+            log.log(model_diag_level, '{} {} -- SOC ({}) is not between Cmin ({}) and Cmax ({}).'.
                     format(self.name, sim_time, self.Cinit, self.Cmin, self.Cmax))
 
     def is_car_home(self, cur_secs):
@@ -795,7 +781,7 @@ class EVDSOT:
             PRICE (float): cleared price in $/kWh
 
         Returns:
-            quantity (float): active power (-) charging (+) discharging
+            _quantity (float): active power (-) charging (+) discharging
         """
         P = self.P
         Q = self.Q
@@ -820,21 +806,21 @@ class EVDSOT:
 
         if temp == 0:
             if PRICE >= BID[0][P]:  # battery at maximun discharg
-                quantity = -BID[0][Q]
+                _quantity = -BID[0][Q]
             elif PRICE <= BID[3][P]:  # battery at maximun charging
-                quantity = -BID[3][Q]
+                _quantity = -BID[3][Q]
             elif BID[2][P] <= PRICE <= BID[1][P]:  # battery at deadband
-                quantity = -BID[2][Q]
+                _quantity = -BID[2][Q]
             elif BID[1][P] <= PRICE <= BID[0][P]:  # frist curve
                 b = BID[1][P] - BID[1][Q] * m
-                quantity = -1 * ((PRICE - b) / m)
+                _quantity = -1 * ((PRICE - b) / m)
             else:
                 b = BID[3][P] - BID[3][Q] * m
-                quantity = -1 * ((PRICE - b) / m)
+                _quantity = -1 * ((PRICE - b) / m)
         else:
-            quantity = -BID[1][Q]
+            _quantity = -BID[1][Q]
 
-        return -quantity
+        return -_quantity
 
 
 def test():
@@ -843,6 +829,7 @@ def test():
     Makes a single battery agent and run DA 
     """
     import time
+    import matplotlib.pyplot as plt
 
     start_time = time.time()
     price_DA = np.array([0.43, 0.41, 0.40, 0.39, 0.39, 0.40, 0.45, 0.45, 0.55, 0.80, 0.90, 0.98,
@@ -1099,7 +1086,7 @@ def test():
     # # rtbid = B_obj1.formulate_bid_rt()
     # # price_forecast = B_obj1.f_DA
     # # BIDS_of_agent = B_obj1.bid_da
-    # # # B_obj.Cinit = B_obj.batteryCapacity * 0.5#B_obj.set_battery_SOC()
+    # # # B_obj.Cinit = B_obj.evCapacity * 0.5#B_obj.set_battery_SOC()
     # # BID = [[-5.0, 6.0], [0.0, 5.0], [0.0, 4.0], [5.0, 3.0]]
     # # fixed = B_obj1.RT_fix_four_points_range(BID, 0.0, 10.0)
     # # print(fixed)

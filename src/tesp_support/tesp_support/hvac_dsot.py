@@ -173,8 +173,8 @@ class HVACDSOT:  # TODO: update class name
         # interpolation
         self.interpolation = bool(True)
         self.RT_minute_count_interpolation = float(0.0)
-        self.previus_Q_DA = float(0.0)
-        self.previus_T_DA = float(0.0)
+        self.previous_Q_DA = float(0.0)
+        self.previous_T_DA = float(0.0)
         self.delta_Q = float(0.0)
         self.delta_T = float(0.0)
 
@@ -1451,15 +1451,15 @@ class HVACDSOT:  # TODO: update class name
         # interpolating the DA quantities into RT
         if self.interpolation:
             if self.RT_minute_count_interpolation == 0.0:
-                self.delta_Q = (self.bid_da[0][1][0] - self.previus_Q_DA)
-                self.delta_T = (self.temp_room[0] - self.previus_T_DA)
+                self.delta_Q = (self.bid_da[0][1][0] - self.previous_Q_DA)
+                self.delta_T = (self.temp_room[0] - self.previous_T_DA)
             if self.RT_minute_count_interpolation == 30.0:
-                self.delta_Q = (self.bid_da[1][1][0] - self.previus_Q_DA) * 0.5
-                self.delta_T = (self.temp_room[1] - self.previus_T_DA) * 0.5
-            Qopt_DA = self.previus_Q_DA + self.delta_Q * (5.0 / 30.0)
-            Topt_DA = self.previus_T_DA + self.delta_T * (5.0 / 30.0)
-            self.previus_Q_DA = Qopt_DA
-            self.previus_T_DA = Topt_DA
+                self.delta_Q = (self.bid_da[1][1][0] - self.previous_Q_DA) * 0.5
+                self.delta_T = (self.temp_room[1] - self.previous_T_DA) * 0.5
+            Qopt_DA = self.previous_Q_DA + self.delta_Q * (5.0 / 30.0)
+            Topt_DA = self.previous_T_DA + self.delta_T * (5.0 / 30.0)
+            self.previous_Q_DA = Qopt_DA
+            self.previous_T_DA = Topt_DA
         else:
             Qopt_DA = self.bid_da[0][1][0]
             Topt_DA = self.temp_room[0]

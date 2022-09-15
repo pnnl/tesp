@@ -88,6 +88,7 @@ sudo apt-get -y install python3.8
 sudo apt-get -y install python3.8-venv
 sudo apt-get -y install python3-pip
 sudo apt-get -y install python3-tk
+sudo apt-get -y install python3-pil.imagetk
 
 
 echo

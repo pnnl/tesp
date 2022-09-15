@@ -21,7 +21,7 @@ import tesp_support.copperplateFeederGenerator_dsot as cp_FG
 import prep_substation_dsot_f as prep
 
 
-# Simulation settings for the this experimental case
+# Simulation settings for the experimental case
 def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
     # We need to load in the master metadata (*system_case_config.josn)
@@ -99,9 +99,10 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     eIdx = (e - ep).total_seconds()
     sys_config['Tmax'] = int((eIdx - sIdx))
 
+    dt = sys_config['dt']
     gen = sys_config['gen']
     genFuel = sys_config['genfuel']
-    fncs_config = sys_config['DSO']
+    tso_config = sys_config['DSO']
     out_Path = sys_config['outputPath']
 
     sim = case_config['SimulationConfig']
@@ -127,7 +128,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     sim['metricsFullDetail'] = sys_config['metricsFullDetail']
     sim['simplifiedFeeders'] = sys_config['simplifiedFeeders']
     sim['OutputPath'] = sys_config['caseName']  # currently only used for the experiment management scripts
-    sim['SourceDirectory'] = sys_config['supportPath']   # SourceDirectory is not used
     sim['priceSensLoad'] = sys_config['priceSensLoad']
     sim['quadratic'] = sys_config['quadratic']
     sim['quadraticFile'] = sys_config['dsoQuadraticFile']
@@ -168,7 +168,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         yamlfile = caseName + '/' + player[0] + '_player.yaml'
         yp = open(yamlfile, 'w')
         print('name: ' + player[0] + 'player', file=yp)
-        print('time_delta: 15s', file=yp)
+        print('time_delta: ' + str(dt) + 's', file=yp)
         print('broker: tcp://localhost:' + port, file=yp)
         print('aggregate_sub: true', file=yp)
         print('aggregate_pub: true', file=yp)
@@ -178,7 +178,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     yamlfile = caseName + '/tso.yaml'
     yp = open(yamlfile, 'w')
     print('name: pypower', file=yp)
-    print('time_delta: 15s', file=yp)
+    print('time_delta: ' + str(dt) + 's', file=yp)
     print('broker: tcp://localhost:' + port, file=yp)
     print('values:', file=yp)
 
@@ -279,9 +279,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         # Following block is for AMES:
         PQ_val = [0, 0, 0, 0]
-        for i in range(len(fncs_config)):
-            if bus == str(fncs_config[i][0]):
-                PQ_val = fncs_config[i]
+        for i in range(len(tso_config)):
+            if bus == str(tso_config[i][0]):
+                PQ_val = tso_config[i]
         mktPrep['DSO']['Bus'] = PQ_val[0]
         mktPrep['DSO']['Pnom'] = PQ_val[3]
         mktPrep['DSO']['Qnom'] = PQ_val[4]
@@ -298,7 +298,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         weather_agent_name = 'weather_' + sub_key
         weaPrep['WeatherChoice'] = str.upper(os.path.splitext(dso_val['weather_file'])[1][1:])
         weaPrep['Name'] = weather_agent_name
-        weaPrep['DataSourcePath'] = sys_config['WeatherDataSourcePath']
         weaPrep['DataSource'] = dso_val['weather_file']
         weaPrep['Latitude'] = dso_val['latitude']
         weaPrep['Longitude'] = dso_val['longitude']
@@ -319,7 +318,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             pass
 
         # (Laurentiu Marinovici 11/07/2019) but now, we are going to copy the .dat file from its location into the weather agent folder
-        shutil.copy(os.path.join(os.path.abspath(weaPrep['DataSourcePath']), dso_val['weather_file']),
+        shutil.copy(os.path.join(os.path.abspath(sys_config['WeatherDataSourcePath']), dso_val['weather_file']),
                     os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat'))
 
         # We need to generate the total population of commercial buildings by type and size
@@ -339,7 +338,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         # in the subsequent part that processes each feeder;
         # the reason is the way the code was written for feeder generator
         # when only one feeder was expected
-        
         with open(caseName + '/case_config_' + str(dso_val['bus_number']) + '.json', 'w') as outfile:
             json.dump(case_config, outfile, ensure_ascii=False, indent=2)
         feeders = dso_val['feeders']
@@ -414,16 +412,16 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         os.makedirs(caseName + "/" + sub_key)
         cm.merge_glm(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '.glm'), list(dso_val['feeders'].keys()), 20)
 
-        print("\n=== MERGING THE FNCS CONFIGURATION FILES UNDER THE SUBSTATION FNCS CONFIGURATION =====")
+        print("\n=== MERGING/WRITING THE SUBSTATION(GRIDLABD) MESSAGE FILE =====")
         cm.merge_fncs_config(os.path.abspath(caseName + '/' + sub_key + '/' + sub_key + '_FNCS_Config.txt'), list(dso_val['feeders'].keys()))
 
-        print("\n=== MERGING THE FEEDERS GLM DICTIONARIES =====")
+        print("\n=== MERGING/WRITING THE FEEDERS GLM DICTIONARIES =====")
         cm.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_glm_dict.json'), list(dso_val['feeders'].keys()), 20)
 
-        print("\n=== MERGING THE SUBSTATION AGENT DICTIONARIES =====")
+        print("\n=== MERGING/WRITING THE SUBSTATION AGENT DICTIONARIES =====")
         cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
 
-        print("\n=== MERGING THE SUBSTATION YAML =====")
+        print("\n=== MERGING/WRITING THE DSO MESSAGE FILE =====")
         cm.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.yaml'), list(dso_val['feeders'].keys()))
 
         # cleaning after feeders had been merged

@@ -116,6 +116,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
         substationfileroot (str): path to and base file name for the Substation file, without an extension
         weatherfileroot (str): path to the weather agent file location
+        feedercnt (int):  a count of feeders
     """
     dirname = os.path.dirname(gldfileroot) + '/'
     basename = os.path.basename(gldfileroot)
@@ -129,8 +130,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     gd = json.loads(ip)
     gld_sim_name = gd['DSO']
 
-    print(
-        '\tgldfileroot -> {0:s}\n\tsubstationfileroot -> {1:s}\n\tdirname -> {2:s}\n\tbasename -> {3:s}\n\tglmname -> {4:s}\n\tgld_sim_name -> {5:s}\n\tsubstation_name -> {6:s}'.format(
+    print('\tgldfileroot -> {0:s}\n\tsubstationfileroot -> {1:s}\n\tdirname -> {2:s}\n'
+          '\tbasename -> {3:s}\n\tglmname -> {4:s}\n\tgld_sim_name -> {5:s}\n\tsubstation_name -> {6:s}'.format(
             gldfileroot, substationfileroot, dirname, basename, glmname, gld_sim_name, substation_name))
 
     # dictionaries with agents and counters
@@ -275,7 +276,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                     num_hvac_agents_heating += 1
 
                 period = hvac_agent_config['MarketClearingPeriod']
-                deadband = 2.0 #np.random.uniform(hvac_agent_config['ThermostatBandLo'],hvac_agent_config['ThermostatBandHi'])
+                deadband = 2.0  # np.random.uniform(hvac_agent_config['ThermostatBandLo'],hvac_agent_config['ThermostatBandHi'])
 
                 # TODO: this is only until we agree on the new schedule
                 if simulation_config['ThermostatScheduleVersion'] == 2:
@@ -606,7 +607,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
         # will this device participate in market
         participating = np.random.uniform(0, 1) <= feeder_config['EVParticipation'] / 100
-        # ev wont participate at all if caseType is not evCase
+        # ev won't participate at all if caseType is not ev
         if not simulation_config['caseType']['ev']:
             participating = False
 
@@ -625,25 +626,25 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
         ev_agents[ev_name] = {'evName': ev_name,
                               'houseName': key,
-                          'meterName': meter_name,
-                          'work_charging': val['work_charging'],
-                          'boundary_cond': ev_agent_config['boundary_cond'],
-                          'ev_mode': ev_agent_config['ev_mode'],
-                          'initial_soc': val['battery_SOC'],
-                          'max_charge':   val['max_charge'],
-                          'daily_miles':  val['daily_miles'],
-                          'arrival_work': val['arrival_work'],
-                          'arrival_home': val['arrival_home'],
-                          'work_duration':val['work_duration'],
-                          'home_duration': val['home_duration'],
-                          'miles_per_kwh': val['miles_per_kwh'],
-                          'range_miles': val['range_miles'],
-                          'efficiency': val['efficiency'],
-                          'slider_setting': float('{:.4f}'.format(slider)),
-                          'reserved_soc': float('{:.4f}'.format(reserve_soc)),
-                          'profit_margin': float('{:.4f}'.format(profit_margin)),
-                          'degrad_factor': float('{:.4f}'.format(degrad_fac)),
-                          'participating': participating}
+                              'meterName': meter_name,
+                              'work_charging': val['work_charging'],
+                              'boundary_cond': ev_agent_config['boundary_cond'],
+                              'ev_mode': ev_agent_config['ev_mode'],
+                              'initial_soc': val['battery_SOC'],
+                              'max_charge':   val['max_charge'],
+                              'daily_miles':  val['daily_miles'],
+                              'arrival_work': val['arrival_work'],
+                              'arrival_home': val['arrival_home'],
+                              'work_duration':val['work_duration'],
+                              'home_duration': val['home_duration'],
+                              'miles_per_kwh': val['miles_per_kwh'],
+                              'range_miles': val['range_miles'],
+                              'efficiency': val['efficiency'],
+                              'slider_setting': float('{:.4f}'.format(slider)),
+                              'reserved_soc': float('{:.4f}'.format(reserve_soc)),
+                              'profit_margin': float('{:.4f}'.format(profit_margin)),
+                              'degrad_factor': float('{:.4f}'.format(degrad_fac)),
+                              'participating': participating}
 
     print('configured', num_evs, 'agents for electric vehicles and', num_ev_agents, 'are participating')
     # lets set random generator state same as before battery agent loop

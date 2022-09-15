@@ -383,15 +383,15 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         weekend_day_set_heat = wakeup_set_heat
                         weekend_night_set_heat = night_set_heat
                     # # Schedule V2
-                    # wakeup_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
-                    # daylight_start = wakeup_start + helpers.random_norm_trunc(
+                    # wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
+                    # daylight_start = wakeup_start + random_norm_trunc(
                     #     thermostat_schedule_config['WeekdayWakeToDaylightTime'])
-                    # evening_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekdayEveningStart'])
-                    # night_start = evening_start + helpers.random_norm_trunc(thermostat_schedule_config['WeekdayEveningToNightTime'])
-                    # weekend_day_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
-                    # weekend_night_start = helpers.random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
-                    # temp_midpoint = helpers.random_norm_trunc(thermostat_schedule_config['TemperatureMidPoint'])
-                    # schedule_scalar = helpers.random_norm_trunc(thermostat_schedule_config['ScheduleScalar'])
+                    # evening_start = random_norm_trunc(thermostat_schedule_config['WeekdayEveningStart'])
+                    # night_start = evening_start + random_norm_trunc(thermostat_schedule_config['WeekdayEveningToNightTime'])
+                    # weekend_day_start = random_norm_trunc(thermostat_schedule_config['WeekendDaylightStart'])
+                    # weekend_night_start = random_norm_trunc(thermostat_schedule_config['WeekendNightStart'])
+                    # temp_midpoint = random_norm_trunc(thermostat_schedule_config['TemperatureMidPoint'])
+                    # schedule_scalar = random_norm_trunc(thermostat_schedule_config['ScheduleScalar'])
                     # weekday_schedule_offset = thermostat_schedule_config['WeekdayScheduleOffset']
                     # weekend_schedule_offset = thermostat_schedule_config['WeekendScheduleOffset']
                     #
@@ -824,7 +824,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.subs_n(gld_sim_name + "/" + house_name + "#On", "string")
 
     for key, val in water_heater_agents.items():
-        wh_name = str(val["waterheaterName"])
+        wh_name = val["waterheaterName"]
         dso.pubs_n(False, key + "/lower_tank_setpoint", "double")
         dso.pubs_n(False, key + "/upper_tank_setpoint", "double")
         dso.subs_n(gld_sim_name + "/" + wh_name + "#LTTemp", "string")
@@ -835,7 +835,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.subs_n(gld_sim_name + "/" + wh_name + "#WDRate", "string")
 
     for key, val in battery_agents.items():
-        battery_name = str(val["batteryName"])
+        battery_name = val["batteryName"]
         dso.pubs_n(False, key + "/p_out", "double")
         dso.pubs_n(False, key + "/q_out", "double")
         dso.subs_n(gld_sim_name + "/" + battery_name + "#SOC", "double")
@@ -843,7 +843,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     for key, val in ev_agents.items():
         ev_name = str(val["evName"])
         dso.pubs_n(False, key + "/ev_out", "double")
-        dso.subs_n(gld_sim_name + "/" + ev_name + "#SOC", "string")
+        dso.subs_n(gld_sim_name + "/" + ev_name + "#SOC", "double")
 
     # these messages are for weather agent used in DSOT agents
     if feedercnt == 1:
@@ -905,7 +905,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     for key, val in battery_agents.items():
         inverter_name = key
-        battery_name = str(val['batteryName'])
+        battery_name = val['batteryName']
         substation_sim_key = "dso" + substation_name + '/' + key
         gld.pubs(False, battery_name + "#SOC", "double", battery_name, "state_of_charge")
         gld.subs(substation_sim_key + "/p_out", "double", inverter_name, "P_Out")

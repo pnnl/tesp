@@ -128,7 +128,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     sim['metricsFullDetail'] = sys_config['metricsFullDetail']
     sim['simplifiedFeeders'] = sys_config['simplifiedFeeders']
     sim['OutputPath'] = sys_config['caseName']  # currently only used for the experiment management scripts
-    sim['SourceDirectory'] = sys_config['supportPath']   # SourceDirectory is not used
     sim['priceSensLoad'] = sys_config['priceSensLoad']
     sim['quadratic'] = sys_config['quadratic']
     sim['quadraticFile'] = sys_config['dsoQuadraticFile']
@@ -190,7 +189,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sub_key = dso_val['substation']
         bus = str(dso_val['bus_number'])
 
-        # write the tso pubscribe connections for this substation
+        # write the tso published connections for this substation
         tso.pubs_n(False, "cleared_q_rt_" + bus, "string")
         tso.pubs_n(False, "cleared_q_da_" + bus, "string")
         tso.pubs_n(False, "lmp_rt_" + bus, "string")
@@ -274,7 +273,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         weather_agent_name = 'weather_' + sub_key
         weaPrep['WeatherChoice'] = str.upper(os.path.splitext(dso_val['weather_file'])[1][1:])
         weaPrep['Name'] = weather_agent_name
-        weaPrep['DataSourcePath'] = sys_config['WeatherDataSourcePath']
         weaPrep['DataSource'] = dso_val['weather_file']
         weaPrep['Latitude'] = dso_val['latitude']
         weaPrep['Longitude'] = dso_val['longitude']
@@ -295,7 +293,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
             pass
 
         # (Laurentiu Marinovici 11/07/2019) but now, we are going to copy the .dat file from its location into the weather agent folder
-        shutil.copy(os.path.join(os.path.abspath(weaPrep['DataSourcePath']), dso_val['weather_file']),
+        shutil.copy(os.path.join(os.path.abspath(sys_config['WeatherDataSourcePath']), dso_val['weather_file']),
                     os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat'))
 
         # We need to generate the total population of commercial buildings by type and size
@@ -401,7 +399,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         print("\n=== MERGING/WRITING THE SUBSTATION AGENT DICTIONARIES =====")
         cm.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '_agent_dict.json'), list(dso_val['feeders'].keys()))
 
-        print("\n=== MERGING/WRITING THE DSO MESSAGE FILE=====")
+        print("\n=== MERGING/WRITING THE DSO MESSAGE FILE =====")
         HelicsMsg.dso.write_file(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
 
         # cleaning after feeders had been merged

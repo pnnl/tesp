@@ -238,9 +238,9 @@ class WaterHeaterDSOT:
         #interpolation
         self.interpolation = bool(True)
         self.RT_minute_count_interpolation = float(0.0)
-        self.previus_Q_RT = float(0.0)
+        self.previous_Q_RT = float(0.0)
         self.delta_Q = float(0.0)
-        # self.previus_Q_DA = float(0.0)
+        # self.previous_Q_DA = float(0.0)
 
         # optimization
         self.TIME = range(self.windowLength)
@@ -499,8 +499,8 @@ class WaterHeaterDSOT:
 
         P = self.P
         Q = self.Q
-        #previus hour quantity
-        # self.previus_Q=self.bid_da[0][1][Q]
+        #previous hour quantity
+        # self.previous_Q=self.bid_da[0][1][Q]
 
         TIME = range(self.windowLength)
 
@@ -836,12 +836,12 @@ class WaterHeaterDSOT:
                 ##start interpolation
                 if self.interpolation:
                     if self.RT_minute_count_interpolation == 0.0:
-                        self.delta_Q = deepcopy((self.bid_da[0][1][Q]-self.previus_Q_RT))
+                        self.delta_Q = deepcopy((self.bid_da[0][1][Q]-self.previous_Q_RT))
                     if self.RT_minute_count_interpolation == 30.0:
-                        self.delta_Q = deepcopy((self.bid_da[1][1][Q]-self.previus_Q_RT)*0.5)
-                    Qopt_DA=self.previus_Q_RT+self.delta_Q*(5.0/30.0)
-                    # Qopt_DA = self.bid_da[0][1][Q]*(self.RT_minute_count_interpolation/60.0) + self.previus_Q*(1-self.RT_minute_count_interpolation/60.0)
-                    self.previus_Q_RT=Qopt_DA
+                        self.delta_Q = deepcopy((self.bid_da[1][1][Q]-self.previous_Q_RT)*0.5)
+                    Qopt_DA=self.previous_Q_RT+self.delta_Q*(5.0/30.0)
+                    # Qopt_DA = self.bid_da[0][1][Q]*(self.RT_minute_count_interpolation/60.0) + self.previous_Q*(1-self.RT_minute_count_interpolation/60.0)
+                    self.previous_Q_RT=Qopt_DA
                     BID[0][Q] = Q_min
                     BID[1][Q] = Qopt_DA
                     BID[2][Q] = Qopt_DA

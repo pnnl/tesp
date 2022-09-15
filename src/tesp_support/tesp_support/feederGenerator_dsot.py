@@ -1859,7 +1859,8 @@ def write_houses(basenode, op, vnom):
         print('  name', hsename + ';', file=op)
         print('  parent', hse_m_name + ';', file=op)
         print('  groupid', bldgTypeName[bldg] + ';', file=op)
-        # TODO: why thermal integrity level is not used ?
+        # why thermal integrity level is not used ?
+        # this sets the default house R* and other parameters
         print('  // thermal_integrity_level', tiName[ti] + ';', file=op)
         print('  schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
         print('  floor_area', '{:.0f}'.format(floor_area) + ';', file=op)
@@ -2238,7 +2239,7 @@ def write_substation(op, name, phs, vnom, vll):
     if len(case_name) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
+        print('  name gld' + substation_name + ';', file=op)
         print('  parent network_node;', file=op)
         print('  configure', case_name + '_FNCS_Config.txt;', file=op)
         print('  option "transport:hostname localhost, port ' + str(port) + '";', file=op)
@@ -2248,6 +2249,7 @@ def write_substation(op, name, phs, vnom, vll):
         print('#endif', file=op)
         print('#ifdef USE_HELICS', file=op)
         print('object helics_msg {', file=op)
+        print('  name gld' + substation_name + ';', file=op)
         print('  configure', case_name + '.json;', file=op)
         print('}', file=op)
         print('#endif', file=op)
@@ -2739,7 +2741,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         print('object climate {', file=op)
         print('  name', str(weather_name) + ';', file=op)
-        print('  // tmyfile "' + weather_path + weather_file + '";', file=op)
+        print('  // tmyfile "' + weather_file + '";', file=op)
         print('  interpolate QUADRATIC;', file=op)
         print('  latitude', str(latitude) + ';', file=op)
         print('  longitude', str(longitude) + ';', file=op)
@@ -2772,17 +2774,17 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
             if solar_path + solar_P_player != "":
                 print('// player class and object for solar P_out and Q_out', file=op)
-                print('class player{', file=op)
-                print(' double value; // must defined the filed "value"', file=op)
+                print('class player {', file=op)
+                print('  double value; // must defined the filed "value"', file=op)
                 print('}', file=op)
-                print('object player{', file=op)
-                print(' name P_out_inj;', file=op)
-                print(' file "' + solar_path + solar_P_player + '";', file=op)
+                print('object player {', file=op)
+                print('  name P_out_inj;', file=op)
+                print('  file "' + solar_path + solar_P_player + '";', file=op)
                 print('}', file=op)
                 if solar_Q_player != "":
-                    print('object player{', file=op)
-                    print(' name Q_out_inj;', file=op)
-                    print(' file "' + solar_path + solar_Q_player + '";', file=op)
+                    print('object player {', file=op)
+                    print('  name Q_out_inj;', file=op)
+                    print('  file "' + solar_path + solar_Q_player + '";', file=op)
                     print('}', file=op)
 
         # write the optional volt_dump and curr_dump for validation
