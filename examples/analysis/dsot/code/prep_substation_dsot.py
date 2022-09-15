@@ -5,14 +5,15 @@
 Public Functions:
     :prep_substation: processes a GridLAB-D file for one substation and one or more feeders
 """
-import os
-import math
 import json
-import numpy as np
+import math
+import os
 from datetime import datetime
+
+import numpy as np
+
 from tesp_support.helpers import HelicsMsg
 from tesp_support.helpers_dsot import random_norm_trunc
-
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -133,8 +134,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     gld_sim_name = gd['message_name']
 
     print('\tgldfileroot -> {0:s}\n\tsubstationfileroot -> {1:s}\n\tdirname -> {2:s}\n'
-          '\tbasename -> {3:s}\n\tglmname -> {4:s}\n\tgld_sim_name -> {5:s}\n\tsubstation_name -> {6:s}'.format(
-            gldfileroot, substationfileroot, dirname, basename, glmname, gld_sim_name, substation_name))
+          '\tbasename -> {3:s}\n\tglmname -> {4:s}\n\tgld_sim_name -> {5:s}\n\tsubstation_name -> {6:s}'.
+          format(gldfileroot, substationfileroot, dirname, basename, glmname, gld_sim_name, substation_name))
 
     # dictionaries with agents and counters
     markets = {}
@@ -582,7 +583,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             if participating:
                 num_battery_agents += 1
 
-            battery_agents[inverter_name] = {'batteryName': inverter_name.replace('ibat', 'bat'),
+            battery_name = inverter_name.replace('ibat', 'bat')
+            battery_agents[inverter_name] = {'batteryName': battery_name,
                                              'meterName': meter_name,
                                              'capacity': val['bat_capacity'],
                                              'rating': val['rated_W'],
@@ -633,11 +635,11 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                               'boundary_cond': ev_agent_config['boundary_cond'],
                               'ev_mode': ev_agent_config['ev_mode'],
                               'initial_soc': val['battery_SOC'],
-                              'max_charge':   val['max_charge'],
-                              'daily_miles':  val['daily_miles'],
+                              'max_charge': val['max_charge'],
+                              'daily_miles': val['daily_miles'],
                               'arrival_work': val['arrival_work'],
                               'arrival_home': val['arrival_home'],
-                              'work_duration':val['work_duration'],
+                              'work_duration': val['work_duration'],
                               'home_duration': val['home_duration'],
                               'miles_per_kwh': val['miles_per_kwh'],
                               'range_miles': val['range_miles'],
@@ -672,7 +674,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             # scaling factor to multiply with player file MW generation
             # actual pv gen (watt) = pv_rating(W)/rooftop_pv_rating_MW * player_value_MW
             # actual pv gen (watt) = pv_scaling_fac * player_value_MW
-            pv_scaling_fac = val['rated_W']/simulation_config['rooftop_pv_rating_MW']
+            pv_scaling_fac = val['rated_W'] / simulation_config['rooftop_pv_rating_MW']
 
             if participating:
                 num_pv_agents += 1
@@ -764,13 +766,13 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             print('WARNING: unknown market in configuration')
 
     print('configured', num_market_agents, 'agents for', num_markets, 'markets')
-    
+
     if Q_dso_key_g in list(Q_forecast_g.keys()):
-        dso_Q_bid_forecast_correction=Q_forecast_g[Q_dso_key_g]
+        dso_Q_bid_forecast_correction = Q_forecast_g[Q_dso_key_g]
     else:
-        dso_Q_bid_forecast_correction=Q_forecast_g['default']
+        dso_Q_bid_forecast_correction = Q_forecast_g['default']
         print('WARNING: utilizing default configuration for dso_Q_bid_forecast_correction')
-    markets['Q_bid_forecast_correction']=dso_Q_bid_forecast_correction
+    markets['Q_bid_forecast_correction'] = dso_Q_bid_forecast_correction
 
     dictfile = substationfileroot + '_agent_dict.json'
     dp = open(dictfile, 'w')
@@ -835,13 +837,14 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         dso.subs_n(gld_sim_name + "/" + wh_name + "#WDRate", "string")
 
     for key, val in battery_agents.items():
+        # key is the name of inverter resource
         battery_name = val["batteryName"]
         dso.pubs_n(False, key + "/p_out", "double")
         dso.pubs_n(False, key + "/q_out", "double")
         dso.subs_n(gld_sim_name + "/" + battery_name + "#SOC", "double")
 
     for key, val in ev_agents.items():
-        ev_name = str(val["evName"])
+        ev_name = val["evName"]
         dso.pubs_n(False, key + "/ev_out", "double")
         dso.subs_n(gld_sim_name + "/" + ev_name + "#SOC", "double")
 
@@ -867,7 +870,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             for wTopic in ['temperature', 'humidity', 'solar_direct', 'solar_diffuse', 'pressure', 'wind_speed']:
                 gld.subs(gd['climate']['name'] + "/#" + wTopic, "double", gd['climate']['name'], wTopic)
 
-    mtr_list = []
     for key, val in hvac_agents.items():
         house_name = val['houseName']
         meter_name = val['meterName']
@@ -877,8 +879,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         gld.pubs(False, house_name + "#HvacLoad", "double", house_name, "hvac_load")
         gld.pubs(False, house_name + "#TotalLoad", "double", house_name, "total_load")
         # Identify commercial buildings and map measured voltage correctly
-#        if meter_name not in mtr_list:
-#            mtr_list.append(meter_name)
         if val['houseClass'] in comm_bldg_list:
             gld.pubs(False, house_name + "#V1", "complex", meter_name, "measured_voltage_A")
         else:
@@ -892,7 +892,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     for key, val in water_heater_agents.items():
         wh_name = key
-        meter_name = val['meterName']
         substation_sim_key = "dso" + substation_name + '/' + key
         gld.pubs(False, wh_name + "#LTTemp", "double", wh_name, "lower_tank_temperature")
         gld.pubs(False, wh_name + "#UTTemp", "double", wh_name, "upper_tank_temperature")
@@ -904,12 +903,12 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         gld.subs(substation_sim_key + "/upper_tank_setpoint", "double", wh_name, "upper_tank_setpoint")
 
     for key, val in battery_agents.items():
-        inverter_name = key
+        # key is the name of inverter resource
         battery_name = val['batteryName']
         substation_sim_key = "dso" + substation_name + '/' + key
         gld.pubs(False, battery_name + "#SOC", "double", battery_name, "state_of_charge")
-        gld.subs(substation_sim_key + "/p_out", "double", inverter_name, "P_Out")
-        gld.subs(substation_sim_key + "/q_out", "double", inverter_name, "Q_Out")
+        gld.subs(substation_sim_key + "/p_out", "double", key, "P_Out")
+        gld.subs(substation_sim_key + "/q_out", "double", key, "Q_Out")
 
     for key, val in ev_agents.items():
         ev_name = val['evName']
@@ -942,10 +941,10 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
     """
     global case_config
     global hvac_setpt
-    
+
     global Q_forecast_g
     global Q_dso_key_g
-    
+
     Q_forecast_g = Q_forecast
     Q_dso_key_g = Q_dso_key
 

@@ -6,11 +6,13 @@ Public Functions:
     :prep_substation: processes a GridLAB-D file for one substation and one or more feeders
 """
 import json
-import numpy as np
-import os
 import math
+import os
 from datetime import datetime
-from tesp_support.helpers_dsot import random_norm_trunc as random_norm_trunc
+
+import numpy as np
+
+from tesp_support.helpers_dsot import random_norm_trunc
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -631,11 +633,11 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                               'boundary_cond': ev_agent_config['boundary_cond'],
                               'ev_mode': ev_agent_config['ev_mode'],
                               'initial_soc': val['battery_SOC'],
-                              'max_charge':   val['max_charge'],
-                              'daily_miles':  val['daily_miles'],
+                              'max_charge': val['max_charge'],
+                              'daily_miles': val['daily_miles'],
                               'arrival_work': val['arrival_work'],
                               'arrival_home': val['arrival_home'],
-                              'work_duration':val['work_duration'],
+                              'work_duration': val['work_duration'],
                               'home_duration': val['home_duration'],
                               'miles_per_kwh': val['miles_per_kwh'],
                               'range_miles': val['range_miles'],
@@ -670,7 +672,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             # scaling factor to multiply with player file MW generation
             # actual pv gen (watt) = pv_rating(W)/rooftop_pv_rating_MW * player_value_MW
             # actual pv gen (watt) = pv_scaling_fac * player_value_MW
-            pv_scaling_fac = val['rated_W']/simulation_config['rooftop_pv_rating_MW']
+            pv_scaling_fac = val['rated_W'] / simulation_config['rooftop_pv_rating_MW']
 
             if participating:
                 num_pv_agents += 1
@@ -762,13 +764,13 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             print('WARNING: unknown market in configuration')
 
     print('configured', num_market_agents, 'agents for', num_markets, 'markets')
-    
+
     if Q_dso_key_g in list(Q_forecast_g.keys()):
-        dso_Q_bid_forecast_correction=Q_forecast_g[Q_dso_key_g]
+        dso_Q_bid_forecast_correction = Q_forecast_g[Q_dso_key_g]
     else:
-        dso_Q_bid_forecast_correction=Q_forecast_g['default']
+        dso_Q_bid_forecast_correction = Q_forecast_g['default']
         print('WARNING: utilizing default configuration for dso_Q_bid_forecast_correction')
-    markets['Q_bid_forecast_correction']=dso_Q_bid_forecast_correction
+    markets['Q_bid_forecast_correction'] = dso_Q_bid_forecast_correction
 
     dictfile = substationfileroot + '_agent_dict.json'
     dp = open(dictfile, 'w')
@@ -965,7 +967,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     for key, val in water_heater_agents.items():
         wh_name = key
-        meter_name = val['meterName']
         substation_sim_key = substation_name + '/' + key
         print('publish "commit:' + wh_name + '.lower_tank_temperature -> '
               + wh_name + '/lower_tank_temperature; 0.01";', file=op)
@@ -988,7 +989,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     for key, val in battery_agents.items():
         inverter_name = key
         battery_name = val['batteryName']
-        meter_name = val['meterName']
         substation_sim_key = substation_name + '/' + key
         print('publish "commit:' + battery_name + '.state_of_charge -> '
               + battery_name + '/state_of_charge; 0.01";', file=op)
@@ -999,7 +999,6 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     for key, val in ev_agents.items():
         ev_name = val['evName']
-        meter_name = val['meterName']
         substation_sim_key = substation_name + '/' + key
         print('publish "commit:' + ev_name + '.battery_SOC -> '
               + ev_name + '/battery_SOC; 0.01";', file=op)
