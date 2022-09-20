@@ -3,7 +3,7 @@
 # file: editconfig
 
 import sys
-import tesp_support.api as tesp
+import tesp_support.tesp_case as tesp
 
 # normal command line argument is 'test.json'
 tesp.make_tesp_case(sys.argv[1])

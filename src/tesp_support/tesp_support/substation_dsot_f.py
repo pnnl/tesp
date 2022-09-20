@@ -39,9 +39,7 @@ if sys.platform != 'win32':
 def inner_substation_loop(configfile, metrics_root, with_market):
     """Helper function that initializes and runs the DSOT agents
 
-    TODO: This needs to be updated
-    Reads configfile. Writes *auction_metrics_root_metrics.json* and
-    *controller_metrics_root_metrics.json* upon completion.
+    Reads configfile. Writes *_metrics.json* upon completion.
 
     Args:
         configfile (str): fully qualified path to the JSON agent configuration file
@@ -279,7 +277,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         topic_map[key + '#TotalLoad'] = [hvac_agent_objs[key].set_house_load]
         topic_map[key + '#On'] = [hvac_agent_objs[key].set_hvac_state]
         # topic_map[key + '#Demand'] = [hvac_agent_objs[key].set_hvac_demand]
-        topic_map[key + '#whLoad'] = [hvac_agent_objs[key].set_wh_load]
+        # topic_map[key + '#whLoad'] = [hvac_agent_objs[key].set_wh_load]
     log.info('instantiated %s HVAC control agents' % (len(hvac_keys)))
 
     # instantiate the water heater controller objects and map their message inputs
@@ -324,7 +322,6 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         row = config['ev'][key]
         gld_row = config_glm['ev'][row['houseName']]
         ev_agent_objs[key] = EVDSOT(row, gld_row, key, 11, current_time, solver)
-
         # map topics
         topic_map[key + '#SOC'] = [ev_agent_objs[key].set_ev_SOC]
     log.info('instantiated %s electric vehicle control agents' % (len(ev_keys)))
@@ -732,8 +729,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                         # these function has 2 additional inputs for logging
                         topic_map[topic][itopic](value, 11, current_time)
                     else:
-                            # calls function to update the value in object. For details see topicMap
-                            topic_map[topic][itopic](value)
+                        # calls function to update the value in object. For details see topicMap
+                        topic_map[topic][itopic](value)
             else:
                 log.warning('Unknown topic received from FNCS ({:s}), dropping it'.format(topic))
 
@@ -872,9 +869,10 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             #          str(min(retail_market_obj.curve_buyer_RT.quantities)) + " , " +
             #          str(max(retail_market_obj.curve_buyer_RT.quantities)))
 
-            retail_market_obj.curve_aggregator_RT(
-                'Buyer', [[load_base, retail_market_obj.U_pricecap_CA], [load_base, retail_market_obj.L_pricecap_CA]], 'uncontrollable load'
-            )
+            retail_market_obj.curve_aggregator_RT('Buyer',
+                                                  [[load_base, retail_market_obj.U_price_cap_CA],
+                                                   [load_base, retail_market_obj.L_price_cap_CA]],
+                                                  'uncontrollable load')
             # log.info("Real-time total bid min, max " +
             #          str(min(retail_market_obj.curve_buyer_RT.quantities)) + " , " +
             #          str(max(retail_market_obj.curve_buyer_RT.quantities)))
@@ -1070,8 +1068,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
             # log.info("Max Hour 22 unscaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[22].quantities)))
             # log.info("Min Hour 22 unscaled flexible load " + str(min(retail_market_obj.curve_buyer_DA[22].quantities)))
-            # log.info("Max Hour 21 unscaled flexible load  " + str(min(retail_market_obj.curve_buyer_DA[21].quantities)))
-            # log.info("Max Hour 21 unscaled flexible load  " + str(max(retail_market_obj.curve_buyer_DA[21].quantities)))
+            # log.info("Max Hour 21 unscaled flexible load " + str(min(retail_market_obj.curve_buyer_DA[21].quantities)))
+            # log.info("Max Hour 21 unscaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[21].quantities)))
 
             # if retail_market_obj.basecase is not True:
             #     for idx in range(retail_market_obj.windowLength):
@@ -1083,10 +1081,10 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             #         retail_market_obj.curve_buyer_DA[idx].quantities = retail_market_obj.curve_buyer_DA[idx].quantities * \
             #             (dso_market_obj.num_of_customers * dso_market_obj.customer_count_mix_residential / dso_market_obj.number_of_gld_homes)
             # log.info("Max Hour 10 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[10].quantities)))
-            # log.info("Max Hour 0 scaled flexible load  " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
+            # log.info("Max Hour 0 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
 
             # log.info("Max Hour 10 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[10].quantities)))
-            # log.info("Max Hour 0 scaled flexible load  " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
+            # log.info("Max Hour 0 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
 
             # add the uncontrollable load
             uncontrollable_load_bid_da = [[[0], [0]]] * retail_market_obj.windowLength
@@ -1154,7 +1152,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             #     load_base_unadjusted = forecast_load_error[0]
             #     load_base_hourly = forecast_load_error
             for idx in range(retail_market_obj.windowLength):
-                uncontrollable_load_bid_da[idx] = [[load_base_hourly[idx], retail_market_obj.pricecap],
+                uncontrollable_load_bid_da[idx] = [[load_base_hourly[idx], retail_market_obj.price_cap],
                                                    [load_base_hourly[idx], 0]]
 
             retail_market_obj.curve_aggregator_DA('Buyer', uncontrollable_load_bid_da, 'uncontrollable load')

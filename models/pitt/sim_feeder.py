@@ -17,6 +17,8 @@ import networkx as nx
 import numpy as np
 from numpy.linalg import inv
 
+from tesp_support.data import feeders_path
+
 '''
 switch line 68 to line 69 for feeder #16 #17 #19 #20
 '''
@@ -1000,13 +1002,9 @@ tax = [['R1-12.47-1', 12470.0, 7200.0, 4000.0, 20000.0, '617', '7520', '120'],  
        ['GC-12.47-1', 12470.0, 7200.0, 8000.0, 13000.0, '28', '7500', '120']]  # 23
 
 
-def get_base_gld_path(root):
-    return os.path.expandvars('$TESPDIR/data/feeders/') + root + '.glm'
-
-
 def _one_test(k):
     base = tax[k][0] + '_d.glm'
-    fname = get_base_gld_path(tax[k][0])
+    fname = feeders_path + tax[k][0]
     mname = tax[k][0].replace('.', '-')
     base_name = gld_strict_name(mname)
     sim_fname = 'sim_' + tax[k][0] + '.glm'
@@ -1050,7 +1048,6 @@ def _one_test(k):
             line, octr = obj(None, model, line, itr, h, octr)
 
     # construct a graph of the model, starting with known links
-    global G
     G = nx.Graph()
     for t in model:
         if is_edge_class(t):
@@ -1160,12 +1157,12 @@ def _one_test(k):
                     if 'nclass' in n2:
                         if n2['nclass'] == 'node':
                             if x in retained_nodes:
-#                               if load_class == 'C':
-#                                   print ('assigning C load', kva, 'at', n1, 'to', x)
-#                                   for y in nodes:
-#                                       print ('  ', y)
-#                                       if y == x:
-#                                           break
+                                # if load_class == 'C':
+                                #     print ('assigning C load', kva, 'at', n1, 'to', x)
+                                #     for y in nodes:
+                                #         print ('  ', y)
+                                #         if y == x:
+                                #             break
                                 n2['ndata']['class_load'][load_class] += kva
                                 break
     count_summary = 0
@@ -1180,7 +1177,8 @@ def _one_test(k):
         cls_sum = cls_a + cls_i + cls_c + cls_r + cls_u
         if cls_sum > 0.0:
             count_summary += 1
-            #            print ('Node Summary for', o, 'A={:.2f} I={:.2f} C={:.2f} R={:.2f} U={:.2f}'.format (cls_a, cls_i, cls_c, cls_r, cls_u))
+            # print('Node Summary for', o, 'A={:.2f} I={:.2f} C={:.2f} R={:.2f} U={:.2f}'.
+            # format(cls_a, cls_i, cls_c, cls_r, cls_u))
             class_factors[o] = {'A': cls_a / cls_sum, 'I': cls_i / cls_sum, 'C': cls_c / cls_sum, 'R': cls_r / cls_sum,
                                 'U': cls_u / cls_sum}
     print('summarized load class allocation factors at', count_summary, 'retained primary nodes')

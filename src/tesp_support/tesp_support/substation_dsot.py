@@ -39,6 +39,8 @@ if sys.platform != 'win32':
 def inner_substation_loop(metrics_root, with_market):
     """Helper function that initializes and runs the DSOT agents
 
+    Reads configfile. Writes *_metrics.json* upon completion.
+
     Args:
         metrics_root (str): base name of the case for input/output
         with_market (bool): flag that determines if we run with markets
@@ -889,9 +891,10 @@ def inner_substation_loop(metrics_root, with_market):
             #          str(min(retail_market_obj.curve_buyer_RT.quantities)) + " , " +
             #          str(max(retail_market_obj.curve_buyer_RT.quantities)))
 
-            retail_market_obj.curve_aggregator_RT(
-                'Buyer', [[load_base, retail_market_obj.U_pricecap_CA], [load_base, retail_market_obj.L_pricecap_CA]], 'uncontrollable load'
-            )
+            retail_market_obj.curve_aggregator_RT('Buyer',
+                                                  [[load_base, retail_market_obj.U_price_cap_CA],
+                                                   [load_base, retail_market_obj.L_price_cap_CA]],
+                                                  'uncontrollable load')
             # log.info("Real-time total bid min, max " +
             #          str(min(retail_market_obj.curve_buyer_RT.quantities)) + " , " +
             #          str(max(retail_market_obj.curve_buyer_RT.quantities)))
@@ -1087,8 +1090,8 @@ def inner_substation_loop(metrics_root, with_market):
 
             # log.info("Max Hour 22 unscaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[22].quantities)))
             # log.info("Min Hour 22 unscaled flexible load " + str(min(retail_market_obj.curve_buyer_DA[22].quantities)))
-            # log.info("Max Hour 21 unscaled flexible load  " + str(min(retail_market_obj.curve_buyer_DA[21].quantities)))
-            # log.info("Max Hour 21 unscaled flexible load  " + str(max(retail_market_obj.curve_buyer_DA[21].quantities)))
+            # log.info("Max Hour 21 unscaled flexible load " + str(min(retail_market_obj.curve_buyer_DA[21].quantities)))
+            # log.info("Max Hour 21 unscaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[21].quantities)))
 
             # if retail_market_obj.basecase is not True:
             #     for idx in range(retail_market_obj.windowLength):
@@ -1100,10 +1103,10 @@ def inner_substation_loop(metrics_root, with_market):
             #         retail_market_obj.curve_buyer_DA[idx].quantities = retail_market_obj.curve_buyer_DA[idx].quantities * \
             #             (dso_market_obj.num_of_customers * dso_market_obj.customer_count_mix_residential / dso_market_obj.number_of_gld_homes)
             # log.info("Max Hour 10 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[10].quantities)))
-            # log.info("Max Hour 0 scaled flexible load  " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
+            # log.info("Max Hour 0 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
 
             # log.info("Max Hour 10 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[10].quantities)))
-            # log.info("Max Hour 0 scaled flexible load  " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
+            # log.info("Max Hour 0 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
 
             # add the uncontrollable load
             uncontrollable_load_bid_da = [[[0], [0]]] * retail_market_obj.windowLength
@@ -1171,7 +1174,7 @@ def inner_substation_loop(metrics_root, with_market):
             #     load_base_unadjusted = forecast_load_error[0]
             #     load_base_hourly = forecast_load_error
             for idx in range(retail_market_obj.windowLength):
-                uncontrollable_load_bid_da[idx] = [[load_base_hourly[idx], retail_market_obj.pricecap],
+                uncontrollable_load_bid_da[idx] = [[load_base_hourly[idx], retail_market_obj.price_cap],
                                                    [load_base_hourly[idx], 0]]
 
             retail_market_obj.curve_aggregator_DA('Buyer', uncontrollable_load_bid_da, 'uncontrollable load')

@@ -4,7 +4,7 @@
 
 # normal command line argument is 'case.json'
 import sys
-import tesp_support.api as tesp
+import tesp_support.tesp_case as tesp
 
 tesp.make_monte_carlo_cases(sys.argv[1])
 

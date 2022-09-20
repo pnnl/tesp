@@ -53,7 +53,6 @@ def read_houses_metrics(path, name_root, diction_name=''):
     hrs /= denom
 
     #  print("\nHouse Metadata for", len(lst_h[time_key]), "objects")
-    data_h = None
     idx_h = {}
     for key, val in meta_h.items():
         # print (key, val['index'], val['units'])

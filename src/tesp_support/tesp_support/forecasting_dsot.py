@@ -30,7 +30,7 @@ class Forecasting:
         # TODO: Load base case run files
 
     Attributes:
-        TODO: update attributes
+        # TODO: update attributes
 
     """
 
@@ -87,7 +87,7 @@ class Forecasting:
                                                   0.7, 0.8, 0.85, 0.95])
 
         self.retail_price_forecast = list()
-        self.fristRun = True
+        self.firstRun = True
         # data = pd.read_csv("C:\\Users\\sing492\\OneDrive - PNNL\\Documents\\Projects\\TESP_DSOT\\Hvac Debug Ahmad\\Qi_individual.csv",
         #                        index_col=0)
         # date_rng = pd.date_range(start='7/1/2013', end='7/10/2013', freq='H')
@@ -132,7 +132,7 @@ class Forecasting:
         sch_df['data'] = np.ones((len(date_rng)), dtype=float)
         sch_df['month'] = pd.DatetimeIndex(sch_df.index).month
         sch_df['day'] = pd.DatetimeIndex(sch_df.index).day
-        sch_df['dow'] = ((pd.DatetimeIndex(sch_df.index).dayofweek) + 1) % 7
+        sch_df['dow'] = (pd.DatetimeIndex(sch_df.index).dayofweek + 1) % 7
         sch_df['hour'] = pd.DatetimeIndex(sch_df.index).hour
         sch_df['minute'] = pd.DatetimeIndex(sch_df.index).minute
         return sch_df
@@ -398,7 +398,7 @@ class Forecasting:
         if dst:
             tz_offset = -5  # when daylight saving is on, offset for central time zone is UTC-5
         else:
-            tz_offset = -6  # other wise UTC-6
+            tz_offset = -6  # otherwise UTC-6
         day_of_yr = current_time.timetuple().tm_yday  # get day of year from datetime
         dnr = self.solar_direct_forecast
         dhr = self.solar_diffuse_forecast
@@ -473,8 +473,8 @@ class Forecasting:
         """
         temp = deepcopy(DA_SW_prices)
         temp = np.array(temp)
-        if self.fristRun:
-            self.fristRun = False
+        if self.firstRun:
+            self.firstRun = False
             self.retail_price_forecast = (np.roll(temp, -1)).tolist()
         else:
             deltaP = np.array(self.retail_price_forecast) - temp
@@ -531,50 +531,50 @@ class Forecasting:
             return Q_10_AM
 
 
-if __name__ == "__main__":
+def test():
     # a demo house agent object
-    hvac_properties = \
-        {"feeder_id": "R5_12.47_2",
-         "billingmeter_id": "R5_12_47_2_tn_3_mtr_1",
-         "sqft": 3977.0,
-         "stories": 1,
-         "doors": 4,
-         "thermal_integrity": "ABOVE_NORMAL",
-         "cooling": "ELECTRIC",
-         "heating": "GAS",
-         "wh_gallons": 0,
-         "house_class": "SINGLE_FAMILY",
-         "Rroof": 45.95,
-         "Rwall": 25.24,
-         "Rfloor": 33.73,
-         "Rdoors": 12.19,
-         "airchange_per_hour": 0.28,
-         "ceiling_height": 9,
-         "thermal_mass_per_floor_area": 3.406,
-         "glazing_layers": 3,
-         "glass_type": 2,
-         "window_frame": 4,
-         "glazing_treatment": 2,
-         "cooling_COP": 3.8,
-         "over_sizing_factor": 0.3038,
-         "fuel_type": "gas",
-         "aspect_ratio": 1,
-         "exterior_ceiling_fraction": 1,
-         "exterior_floor_fraction": 1,
-         "exterior_wall_fraction": 1,
-         "window_exterior_transmission_coefficient": 1,
-         "zip_skew": 1076.0,
-         "zip_heatgain_fraction": {
-             "constant": 1.0,
-             "responsive_loads": 0.9,
-             "unresponsive_loads": 0.9
-         },
-         "zip_scalar": {
-             "constant": 0.0,
-             "responsive_loads": 1.43,
-             "unresponsive_loads": 1.32
-         }
-         }
+    hvac_properties = {
+        "feeder_id": "R5_12.47_2",
+        "billingmeter_id": "R5_12_47_2_tn_3_mtr_1",
+        "sqft": 3977.0,
+        "stories": 1,
+        "doors": 4,
+        "thermal_integrity": "ABOVE_NORMAL",
+        "cooling": "ELECTRIC",
+        "heating": "GAS",
+        "wh_gallons": 0,
+        "house_class": "SINGLE_FAMILY",
+        "Rroof": 45.95,
+        "Rwall": 25.24,
+        "Rfloor": 33.73,
+        "Rdoors": 12.19,
+        "airchange_per_hour": 0.28,
+        "ceiling_height": 9,
+        "thermal_mass_per_floor_area": 3.406,
+        "glazing_layers": 3,
+        "glass_type": 2,
+        "window_frame": 4,
+        "glazing_treatment": 2,
+        "cooling_COP": 3.8,
+        "over_sizing_factor": 0.3038,
+        "fuel_type": "gas",
+        "aspect_ratio": 1,
+        "exterior_ceiling_fraction": 1,
+        "exterior_floor_fraction": 1,
+        "exterior_wall_fraction": 1,
+        "window_exterior_transmission_coefficient": 1,
+        "zip_skew": 1076.0,
+        "zip_heatgain_fraction": {
+            "constant": 1.0,
+            "responsive_loads": 0.9,
+            "unresponsive_loads": 0.9
+        },
+        "zip_scalar": {
+            "constant": 0.0,
+            "responsive_loads": 1.43,
+            "unresponsive_loads": 1.32
+        }
+    }
     hvac_dict = {
         "houseName": "R5_12_47_2_tn_3_hse_1",
         "meterName": "R5_12_47_2_tn_3_mtr_1",
@@ -618,7 +618,7 @@ if __name__ == "__main__":
     Q_DA = {"correct": True,
             "gain": [10, 0.5, 0.1],
             "DC_change": [1, 2, 3]}
-    # testing internalgain calculation and speed
+    # testing internal gain calculation and speed
     current_time = datetime(2016, 7, 1, 0, 59)
     obj = Forecasting(800, Q_DA)
     print('\n\n\n\n\n\n\n\n')
@@ -800,3 +800,8 @@ if __name__ == "__main__":
     # plt.ylabel('unresponsive load (kWh)')
     # plt.xlabel('time ahead (hours)')
     # plt.show()
+
+
+if __name__ == "__main__":
+    test()
+

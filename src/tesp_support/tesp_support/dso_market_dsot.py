@@ -4,7 +4,7 @@
 
 Functionalities include: 
 Aggregate demand bids from different substations; 
-Wholesale noda trial clearing; 
+Wholesale no da trial clearing;
 Conversion between wholesale price and retail price;   
 Generate substation supply curves with and without consideration of the transformer degradation.
 
@@ -24,14 +24,16 @@ class DSOMarketDSOT:
     """This agent manages the DSO operating
 
     Args:
+        dso_dict:
+        key:
+        
+    Attributes:
         name (str): name of the DSO agent
-        pricecap (float): the maximun price that is allowed in the market, in $/kWh
-        num_samples (int): the number of sampling points, describles how precisely the curve is sampled
+        price_cap (float): the maximum price that is allowed in the market, in $/kWh
+        num_samples (int): the number of sampling points, describes how precisely the curve is sampled
         windowLength (int): length of the planning horizon for the DA market, in hours
         DSO_Q_max (float): maximum limit of the DSO load capacity, in kWh
         transformer_degradation (boolean): flag variable, equals to 1 when transformer degradation effect is taken into account
-
-    Attributes:
         curve_a (array): array of second order coefficients for the wholesale node curve, indexed by day_of_sim and hour_of_day
         curve_b (array): array of first order coefficients of the wholesale node curve, indexed by day_of_sim and hour_of_day
         curve_c (array): array of intercepts of the wholesale node curve, indexed by day_of_sim and hour_of_day
@@ -46,10 +48,8 @@ class DSOMarketDSOT:
         trial_clear_type_DA (list): trial cleared type of day-ahead wholesale node trial clearing, indexed by hour
         hour_of_day (int): current hour of the day
         day_of_week (int): current day of the week
-        num_of_cutstomers: total number of customers for the DSO
         customer_count_mix_residential: Residential percentage of the total customer count mix
         number_of_gld_homes: Total number of GLD homes for the DSO
-        quadratic (boolean): if true use quadratic curve dictionary, false use hard code
     """
 
     def __init__(self, dso_dict, key):
@@ -59,6 +59,7 @@ class DSOMarketDSOT:
         self.DSO_Q_max = dso_dict['DSO_Q_max']
         Q_max_scale = (70.0e6 / self.DSO_Q_max)
 
+        # if true use quadratic curve dictionary, false use hard code
         quadratic = dso_dict['quadratic']
         if quadratic:
             try:
@@ -99,7 +100,7 @@ class DSOMarketDSOT:
 
         # Loading the dso agent configuration
         self.windowLength = dso_dict['windowLength']
-        self.pricecap = dso_dict['pricecap']
+        self.price_cap = dso_dict['pricecap']
         self.num_samples = dso_dict['num_samples']
         self.DSO_Q_max = dso_dict['DSO_Q_max']
         self.transformer_degradation = dso_dict['transformer_degradation']
@@ -107,6 +108,11 @@ class DSOMarketDSOT:
         self.Pwclear_DA = [0.0] * self.windowLength
         self.trial_cleared_quantity_RT = 0.0
         self.trial_cleared_quantity_DA = [0.0] * self.windowLength
+        self.lmp_rt = None
+        self.lmp_da = None
+        self.ref_load_da = None
+        self.ind_load = None
+        self.ind_load_da = None
         self.cleared_q_da = [0.0] * self.windowLength
         self.cleared_q_rt = 0.0
         self.curve_DSO_RT = None
@@ -117,6 +123,7 @@ class DSOMarketDSOT:
         self.default_lmp = 0.0
         self.distribution_charge_rate = dso_dict['distribution_charge_rate']
         self.scale = dso_dict['dso_retail_scaling']
+        self.dollarsPerKW = None
 
         self.hour_of_day = 0
         self.day_of_week = 0
@@ -134,14 +141,15 @@ class DSOMarketDSOT:
         self.last_bid_c0 = 0.0
 
     def update_wholesale_node_curve(self):
-        """ Update the wholesale node curves according to the most updated curve coefficients, may be updated every day
+        """ Update the wholesale node curves according to the most updated curve coefficients, 
+        may be updated every day
 
-		"""
+        """
         # Update the wholesale node curves according to the most updated curve coefficients
         for day in range(7):
             self.curve_ws_node[day] = dict()
             for hour in range(24):
-                self.curve_ws_node[day][hour] = curve(self.pricecap, self.num_samples)
+                self.curve_ws_node[day][hour] = curve(self.price_cap, self.num_samples)
                 self.curve_ws_node[day][hour].quantities = np.linspace(0, self.DSO_Q_max, self.num_samples)
                 self.curve_ws_node[day][hour].prices = \
                     np.array(
@@ -152,34 +160,34 @@ class DSOMarketDSOT:
 
     def clean_bids_RT(self):
         """ Initialize the real-time wholesale node trial clearing
-		"""
+        """
         self.Pwclear_RT = 0.0
         self.trial_cleared_quantity_RT = 0.0
         self.curve_DSO_RT = None
         self.trial_clear_type_RT = None
-        self.curve_DSO_RT = curve(self.pricecap, self.num_samples)
+        self.curve_DSO_RT = curve(self.price_cap, self.num_samples)
 
     def clean_bids_DA(self):
         """ Initialize the day-ahead wholesale node trial clearing
-		"""
+        """
         self.Pwclear_DA = [0.0] * self.windowLength
         self.trial_cleared_quantity_DA = [0.0] * self.windowLength
         self.curve_DSO_DA = dict()
         self.trial_clear_type_DA = [None] * self.windowLength
         for idx in range(self.windowLength):
-            self.curve_DSO_DA[idx] = curve(self.pricecap, self.num_samples)
+            self.curve_DSO_DA[idx] = curve(self.price_cap, self.num_samples)
 
     def curve_aggregator_DSO_RT(self, demand_curve_RT, Q_max):
         """ Function used to aggregate the substation-level RT demand curves into a DSO-level RT demand curve
 
-		Args:
-			demand_curve_RT (curve): demand curve to be aggregated for real-time
-			Q_max (float): maximun capacity of the substation, in kW
+        Args:
+            demand_curve_RT (curve): demand curve to be aggregated for real-time
+            Q_max (float): maximum capacity of the substation, in kW
 
-		"""
+        """
         if max(demand_curve_RT.quantities) > Q_max:
-            print(
-                " Demand Curve range exceeds beyond Q_max, changing the LMP forecaster's Q_max to reflect that and extending the supply curve")
+            print("Demand Curve range exceeds beyond Q_max, " +
+                  "changing the LMP forecaster's Q_max to reflect that and extending the supply curve")
             self.DSO_Q_max = max(demand_curve_RT.quantities)
             self.update_wholesale_node_curve()
         substation_curve = deepcopy(self.curve_preprocess(demand_curve_RT, self.DSO_Q_max))
@@ -189,17 +197,17 @@ class DSOMarketDSOT:
     def curve_aggregator_DSO_DA(self, demand_curve_DA, Q_max):
         """ Function used to aggregate the substation-level DA demand curves into a DSO-level DA demand curve
 
-		Args:
-			demand_curve_DA (dict): a collection of demand curves to be aggregated for day-ahead
-			Q_max (float): maximum capacity of the substation, in kW
+        Args:
+            demand_curve_DA (dict): a collection of demand curves to be aggregated for day-ahead
+            Q_max (float): maximum capacity of the substation, in kW
 
-		"""
+        """
         for idx in range(self.windowLength):
             if max(demand_curve_DA[idx].quantities) > Q_max:
                 if max(demand_curve_DA[idx].quantities) > self.DSO_Q_max:
-                    print(
-                        "Hour " + str(
-                            idx) + " Demand Curve range exceeds beyond Q_max, changing the LMP forecaster's Q_max to reflect that and extending the supply curve")
+                    print("Hour " + str(idx) +
+                          " Demand Curve range exceeds beyond Q_max," +
+                          " changing the LMP forecaster's Q_max to reflect that and extending the supply curve")
                     self.DSO_Q_max = max(demand_curve_DA[idx].quantities)
                     self.update_wholesale_node_curve()
             substation_curve = deepcopy(self.curve_preprocess(demand_curve_DA[idx], self.DSO_Q_max))
@@ -207,22 +215,22 @@ class DSOMarketDSOT:
             self.curve_DSO_DA[idx].update_price_caps()
 
     def curve_preprocess(self, substation_demand_curve, Q_max):
-        """ A internal shared function called by curve_aggregator_DSO_RT and curve_aggregator_DSO_DA functions to truncate
-			the substation demand curve before aggregation as well as convert the retail prices into wholesale prices
+        """ An internal shared function called by curve_aggregator_DSO_RT and curve_aggregator_DSO_DA functions to truncate
+            the substation demand curve before aggregation as well as convert the retail prices into wholesale prices
 
-		Args:
-			substation_demand_curve (curve): substation demand curve to be preprocessed
-			Q_max (float): maximum capacity of the substation, in kW
+        Args:
+            substation_demand_curve (curve): substation demand curve to be preprocessed
+            Q_max (float): maximum capacity of the substation, in kW
 
-		Return:
-			preprocessed_curve (curve): preprossed demand curve
+        Return:
+            preprocessed_curve (curve): preprocessed demand curve
 
-		"""
-        preprocessed_curve = curve(self.pricecap, self.num_samples)
+        """
+        preprocessed_curve = curve(self.price_cap, self.num_samples)
         preprocessed_curve.prices = deepcopy(substation_demand_curve.prices)
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
         for i in range(self.num_samples):
-            # Truncate the substation-level demand curve by maximun capacity of the substation
+            # Truncate the substation-level demand curve by maximum capacity of the substation
             if preprocessed_curve.quantities[i] >= Q_max:
                 preprocessed_curve.quantities[i] = Q_max
             # Convert the retail price into wholesale price
@@ -232,71 +240,74 @@ class DSOMarketDSOT:
     def retail_rate(self, Pw):
         """ Function used to convert the wholesale prices into retail prices
 
-		Args:
-			Pw (float): wholesale price, in $/kWh
+        Args:
+            Pw (float): wholesale price, in $/kWh
 
-		Return:
-			Pr (float): retail price, in $/kWh
-		"""
+        Return:
+            Pr (float): retail price, in $/kWh
+        """
         Pr = deepcopy(Pw * self.scale + self.distribution_charge_rate)
         return Pr
 
     def retail_rate_inverse(self, Pr):
         """ Function used to convert the retail prices into wholesale prices
 
-		Args:
-			Pr (float): retail price, in $/kWh
+        Args:
+            Pr (float): retail price, in $/kWh
 
-		Return:
-			Pw (float): wholesale price, in $/kWh
-		"""
+        Return:
+            Pw (float): wholesale price, in $/kWh
+        """
         Pw = deepcopy((Pr - self.distribution_charge_rate) / self.scale)
         return Pw
 
     def set_Pwclear_RT(self, hour_of_day, day_of_week, lmp=False):
         """ Function used to implement the RT trial wholesale node clearing and update the Pwclear_RT value
 
-		Args:
-			hour_of_day (int): current hour of the day
-			day_of_week (int): current day of the week
-		"""
+        Args:
+            hour_of_day (int): current hour of the day
+            day_of_week (int): current day of the week
+            lmp:
+        """
         if lmp is False:
-            self.Pwclear_RT, self.trial_cleared_quantity_RT, self.trial_clear_type_RT = self.trial_wholesale_clearing(
-                self.curve_ws_node[day_of_week][hour_of_day], self.curve_DSO_RT, day_of_week, hour_of_day)
+            self.Pwclear_RT, self.trial_cleared_quantity_RT, self.trial_clear_type_RT = \
+                self.trial_wholesale_clearing(self.curve_ws_node[day_of_week][hour_of_day], 
+                                              self.curve_DSO_RT, day_of_week, hour_of_day)
             self.default_lmp = self.Pwclear_RT
         else:
             try:
                 # flex_cleared = 0.0
-                # if (self.last_bid_c1 > self.lmp_rt[0]) and (self.lmp_rt[0] > 1e-3): # check to see if the bids were accepted or not, very small LMPs mean the market didn't converge
+                # check to see if the bids were accepted or not, very small LMPs mean the market didn't converge
+                # if (self.last_bid_c1 > self.lmp_rt[0]) and (self.lmp_rt[0] > 1e-3):
                 #     flex_cleared = 0.5*(self.last_bid_c1-self.lmp_rt[0])/(self.last_bid_c2)
-                #
                 #     self.trial_cleared_quantity_RT = self.last_unresponsive_load*1e3 + flex_cleared*1e3
                 # else:
                 #     self.trial_cleared_quantity_RT = self.active_power_rt
 
                 self.trial_cleared_quantity_RT = self.active_power_rt
 
-                self.Pwclear_RT = self.curve_a[day_of_week][
-                                      hour_of_day] * self.trial_cleared_quantity_RT * self.trial_cleared_quantity_RT + \
-                                  self.curve_b[day_of_week][hour_of_day] * self.trial_cleared_quantity_RT + \
-                                  self.curve_c[day_of_week][hour_of_day]
+                self.Pwclear_RT = \
+                    self.curve_a[day_of_week][hour_of_day] * self.trial_cleared_quantity_RT * \
+                    self.trial_cleared_quantity_RT + self.curve_b[day_of_week][hour_of_day] * \
+                    self.trial_cleared_quantity_RT + self.curve_c[day_of_week][hour_of_day]
 
                 if self.trial_cleared_quantity_RT > self.DSO_Q_max:
                     self.trial_clear_type_RT = ClearingType.CONGESTED
                 else:
                     self.trial_clear_type_RT = ClearingType.UNCONGESTED
             except:
-                self.Pwclear_RT, self.trial_cleared_quantity_RT, self.trial_clear_type_RT = self.trial_wholesale_clearing(
-                    self.curve_ws_node[day_of_week][hour_of_day], self.curve_DSO_RT, day_of_week, hour_of_day)
+                self.Pwclear_RT, self.trial_cleared_quantity_RT, self.trial_clear_type_RT = \
+                    self.trial_wholesale_clearing(self.curve_ws_node[day_of_week][hour_of_day],
+                                                  self.curve_DSO_RT, day_of_week, hour_of_day)
                 self.default_lmp = self.Pwclear_RT
 
     def set_Pwclear_DA(self, hour_of_day, day_of_week):
         """ Function used to implement the DA trial wholesale node clearing and update the Pwclear_DA value
 
-		Args:
-			hour_of_day (int): current hour of the day
-			day_of_week (int): current day of the week
-		"""
+        Args:
+            hour_of_day (int): current hour of the day
+            day_of_week (int): current day of the week
+        """
         for idx in range(self.windowLength):
             day = (day_of_week + (idx + hour_of_day) // 24) % 7
             hour = (hour_of_day + idx) % 24
@@ -306,37 +317,41 @@ class DSOMarketDSOT:
     def get_prices_of_quantities(self, Q, day, hour):
         """ Returns the prices DSO quadratic curve cost for a list of quantities
 
-		Args:
-			Q (list of float): quantities
-			day (int): day of the week
-			hour (int): hour of the day
+        Args:
+            Q (list of float): quantities
+            day (int): day of the week
+            hour (int): hour of the day
 
-		Return:
-			P (list of float): prices for the quantities
-		"""
+        Return:
+            P (list of float): prices for the quantities
+        """
         P = [self.curve_a[day][hour] * quantity * quantity +
              self.curve_b[day][hour] * quantity + self.curve_c[day][hour]
              for quantity in Q]
         return P
 
     def trial_wholesale_clearing(self, curve_ws_node, curve_DSO, day, hour):
-        """ A internal shared function called by set_Pwclear_RT and set_Pwclear_DA functions to implement the trial wholesale node clearing
+        """ An internal shared function called by set_Pwclear_RT and 
+        set_Pwclear_DA functions to implement the trial wholesale node clearing
 
-		Args:
-			curve_ws_node (curve): wholesale node curve
-			curve_DSO (curve): aggregated demand curve at DSO level
+        Args:
+            curve_ws_node (curve): wholesale node curve
+            curve_DSO (curve): aggregated demand curve at DSO level
+            day: 
+            hour: 
 
-		Return:
-			Pwclear (float): cleared price, in $/kWh
-			cleared_quantity(float): cleared quantity, in kWh
-			trial_clear_type (int): clear type
-		"""
+        Return:
+            Pwclear (float): cleared price, in $/kWh
+            cleared_quantity(float): cleared quantity, in kWh
+            trial_clear_type (int): clear type
+        """
 
-        if curve_DSO.uncontrollable_only == True:
+        if curve_DSO.uncontrollable_only:
             temp = curve_DSO.quantities[0]
             if temp < 0.0:
-                log.info(
-                    "Warning quantities submitted to DSO are negative. The returns are price set to 0, first quantity of the curve, and ClearingType.UNCONGESTED. BAU case.")
+                log.info("Warning quantities submitted to DSO are negative. " +
+                         "The returns are price set to 0, first quantity of the curve," +
+                         "and ClearingType.UNCONGESTED. BAU case.")
                 return 0.0, temp, ClearingType.UNCONGESTED
             if min(curve_ws_node.quantities) <= temp <= max(curve_ws_node.quantities):
                 cleared_quantity = temp
@@ -351,13 +366,14 @@ class DSOMarketDSOT:
                     elif curve_ws_node.quantities[idx] == cleared_quantity:
                         cleared_price = curve_ws_node.prices[idx]
                 clear_type = ClearingType.UNCONGESTED
-                if cleared_price > self.pricecap:
-                    cleared_price = self.pricecap
+                if cleared_price > self.price_cap:
+                    cleared_price = self.price_cap
                 return cleared_price, cleared_quantity, clear_type
             else:
                 log.info("dso quantities: curve_ws_node" + str(curve_ws_node.quantities))
-                log.info("ERROR dso min: " + str(min(curve_ws_node.quantities)) + ", max: " + str(
-                    max(curve_ws_node.quantities)) + " curve_DSO.quantities[0] " + str(curve_DSO.quantities[0]))
+                log.info("ERROR dso min: " + str(min(curve_ws_node.quantities)) + ", max: " +
+                         str(max(curve_ws_node.quantities)) + " curve_DSO.quantities[0] " +
+                         str(curve_DSO.quantities[0]))
                 log.info("dso quantities: curve_DSO" + str(curve_DSO.quantities))
                 return float('inf'), float('inf'), ClearingType.FAILURE
         else:
@@ -368,17 +384,19 @@ class DSOMarketDSOT:
                 log.info("ERROR dso min: " + str(min_q) + ", max: " + str(max_q))
                 return float('inf'), float('inf'), ClearingType.FAILURE
 
-            # x,buyer_prices,seller_prices=resample_curve_for_market(curve_DSO.quantities, curve_DSO.prices,curve_ws_node.quantities, curve_ws_node.prices)
+            # x, buyer_prices, seller_prices = \
+            #     resample_curve_for_market(curve_DSO.quantities, curve_DSO.prices,
+            #                               curve_ws_node.quantities, curve_ws_node.prices)
             buyer_prices = curve_DSO.prices
             buyer_quantities = curve_DSO.quantities
             seller_quantities = buyer_quantities
             seller_prices = self.get_prices_of_quantities(buyer_quantities, day, hour)
             # seller_prices[0]=0.0
-            seller_prices[-1] = self.pricecap
+            seller_prices[-1] = self.price_cap
             # buyer_quantities, buyer_prices = resample_curve(curve_DSO.quantities, curve_DSO.prices,
-            #                                                     min_q, max_q, self.num_samples)
+            #                                                 min_q, max_q, self.num_samples)
             # seller_quantities, seller_prices = resample_curve(curve_ws_node.quantities, curve_ws_node.prices,
-            #                                                       min_q, max_q, self.num_samples)
+            #                                                   min_q, max_q, self.num_samples)
             for idx in range(len(buyer_quantities) - 1):
                 if buyer_prices[idx] > seller_prices[idx] and buyer_prices[idx + 1] < seller_prices[idx + 1]:
                     idx_old = idx
@@ -455,18 +473,20 @@ class DSOMarketDSOT:
     def substation_supply_curve_RT(self, retail_obj):
         """ Function used to generate the RT supply curve for each substation
 
-		Args:
-			FeederCongPrice (float): feeder congestion price, in $/kWh
-			FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
-			FeederCongCapacity (float): feeder congestion capacity, in kWh
-			FeederPkDemandCapacity (float): feeder peak demand, in kWh
-			Q_max (float): substation limit, in kWh
-			maxPuLoading (float): maximum pu loading factor
-			TOC_dict (dict): configuration parameters for transformer
+        Args:
 
-		Return:
-			supply_curve_RT (curve): substation supply curve for real-time market clearing
-		"""
+        Variables:
+            FeederCongPrice (float): feeder congestion price, in $/kWh
+            FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
+            FeederCongCapacity (float): feeder congestion capacity, in kWh
+            FeederPkDemandCapacity (float): feeder peak demand, in kWh
+            Q_max (float): substation limit, in kWh
+            maxPuLoading (float): maximum pu loading factor
+            TOC_dict (dict): configuration parameters for transformer
+
+        Return:
+            supply_curve_RT (curve): substation supply curve for real-time market clearing
+        """
 
         FeederCongCapacity = retail_obj.FeederCongCapacity
         FeederPkDemandCapacity = retail_obj.FeederPkDemandCapacity
@@ -475,23 +495,25 @@ class DSOMarketDSOT:
         maxPuLoading = retail_obj.maxPuLoading
         TOC_dict = retail_obj.TOC_dict
         Prclear_RT = self.retail_rate(self.Pwclear_RT)
-        supply_curve_RT = curve(self.retail_rate(self.pricecap),
-                                self.num_samples)  # pricecap of the supply_curve has to be the retail pricecap
+        # price cap of the supply_curve has to be the retail price cap
+        supply_curve_RT = curve(self.retail_rate(self.price_cap), self.num_samples)  
         max_buyer = retail_obj.curve_buyer_RT.quantities[0]
         max_retail = max(max_buyer, Q_max_retail)
-        if self.transformer_degradation == True:
-            supply_curve_RT.quantities, supply_curve_RT.prices = self.supply_curve(Prclear_RT, FeederCongCapacity,
-                                                                                   FeederPkDemandCapacity,
-                                                                                   self.num_samples, Q_max_retail,
-                                                                                   maxPuLoading, TOC_dict)
-        elif self.trial_cleared_quantity_RT > Q_max_retail:  # the DSO's Q_max has been increased after observing buyer bids to be higher than the substation Q max
+        if self.transformer_degradation:
+            supply_curve_RT.quantities, supply_curve_RT.prices = \
+                self.supply_curve(Prclear_RT, FeederCongCapacity, FeederPkDemandCapacity,
+                                  self.num_samples, Q_max_retail, maxPuLoading, TOC_dict)
+        elif self.trial_cleared_quantity_RT > Q_max_retail:
+            # the DSO's Q_max has been increased
+            # after observing buyer bids to be higher than the substation Q max
             id_original_Q_max = int(Q_max_retail / (Q_max_DSO / self.num_samples))
             price_range_original_Q_max = np.array([Prclear_RT] * id_original_Q_max)
             range_congestion = self.num_samples - id_original_Q_max
             congestion_quantity = Q_max_DSO - Q_max_retail
-            price_max_congestion = congestion_quantity * retail_obj.FeederCongPrice  # place holder for congestion surcharge
+            # placeholder for congestion surcharge
+            price_max_congestion = congestion_quantity * retail_obj.FeederCongPrice
             price_range_congestion = np.linspace(Prclear_RT, Prclear_RT + price_max_congestion, range_congestion)
-            price_range_congestion[price_range_congestion > self.pricecap] = self.pricecap
+            price_range_congestion[price_range_congestion > self.price_cap] = self.price_cap
             supply_curve_RT.prices = np.concatenate((price_range_original_Q_max, price_range_congestion))
             supply_curve_RT.quantities = np.linspace(0, Q_max_DSO, self.num_samples)
         # if self.trial_cleared_quantity_RT > Q_max_DSO:
@@ -499,9 +521,10 @@ class DSOMarketDSOT:
         #     price_range_original_Q_max = np.array([Prclear_RT] * id_original_Q_max)
         #     range_congestion = self.num_samples - id_original_Q_max
         #     congestion_quantity = self.trial_cleared_quantity_RT - max_retail
-        #     price_max_congestion = congestion_quantity * retail_obj.FeederCongPrice # place holder for congestion surcharge
+        #     # placeholder for congestion surcharge
+        #     price_max_congestion = congestion_quantity * retail_obj.FeederCongPrice
         #     price_range_congestion = np.linspace(Prclear_RT, Prclear_RT + price_max_congestion, range_congestion)
-        #     price_range_congestion[price_range_congestion > self.pricecap] = self.pricecap
+        #     price_range_congestion[price_range_congestion > self.price_cap] = self.price_cap
         #     supply_curve_RT.prices = np.concatenate((price_range_original_Q_max, price_range_congestion))
         #     supply_curve_RT.quantities = np.linspace(0, self.trial_cleared_quantity_RT, self.num_samples)
         # elif self.trial_cleared_quantity_RT <= Q_max_DSO:
@@ -509,9 +532,10 @@ class DSOMarketDSOT:
         #     price_range_original_Q_max = np.array([Prclear_RT] * id_original_Q_max)
         #     range_congestion = self.num_samples - id_original_Q_max
         #     congestion_quantity = Q_max_DSO - max_retail
-        #     price_max_congestion = congestion_quantity * retail_obj.FeederCongPrice  # place holder for congestion surcharge
+        #     # placeholder for congestion surcharge
+        #     price_max_congestion = congestion_quantity * retail_obj.FeederCongPrice
         #     price_range_congestion = np.linspace(Prclear_RT, Prclear_RT + price_max_congestion, range_congestion)
-        #     price_range_congestion[price_range_congestion > self.pricecap] = self.pricecap
+        #     price_range_congestion[price_range_congestion > self.price_cap] = self.price_cap
         #     supply_curve_RT.prices = np.concatenate((price_range_original_Q_max, price_range_congestion))
         #     supply_curve_RT.quantities = np.linspace(0, Q_max_DSO, self.num_samples)
         else:
@@ -523,51 +547,54 @@ class DSOMarketDSOT:
     def substation_supply_curve_DA(self, retail_obj):
         """ Function used to generate the DA supply curves for each substation
 
-		Args:
-			FeederCongPrice (float): feeder congestion price, in $/kWh
-			FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
-			FeederCongCapacity (float): feeder congestion capacity, in kWh
-			FeederPkDemandCapacity (float): feeder peak deamand, in kWh
-			Q_max (float): substation limit, in kWh
-			maxPuLoading (float): maximum pu loading factor
-			TOC_dict (dict): configuration parameters for transformer
+        Args:
+            
+        Variables:
+            FeederCongPrice (float): feeder congestion price, in $/kWh
+            FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
+            FeederCongCapacity (float): feeder congestion capacity, in kWh
+            FeederPkDemandCapacity (float): feeder peak demand, in kWh
+            Q_max (float): substation limit, in kWh
+            maxPuLoading (float): maximum pu loading factor
+            TOC_dict (dict): configuration parameters for transformer
 
-		Return:
-			supply_curve_DA (list): a collection of substation supply curves for day-ahead market clearing
-		"""
+        Return:
+            supply_curve_DA (list): a collection of substation supply curves for day-ahead market clearing
+        """
         FeederCongCapacity = retail_obj.FeederCongCapacity
         FeederPkDemandCapacity = retail_obj.FeederPkDemandCapacity
         Q_max_retail = retail_obj.Q_max
-        Q_max_DSO = self.DSO_Q_max  # can change when the demand bid is higher than the original DSO limit
+        # can change when the demand bid is higher than the original DSO limit
+        Q_max_DSO = self.DSO_Q_max
         maxPuLoading = retail_obj.maxPuLoading
         TOC_dict = retail_obj.TOC_dict
         Prclear_DA = [0.0] * self.windowLength
         supply_curve_DA = dict()
         for idx in range(self.windowLength):
             Prclear_DA[idx] = self.retail_rate(self.Pwclear_DA[idx])
-            supply_curve_DA[idx] = curve(self.retail_rate(self.pricecap),
-                                         self.num_samples)  # pricecap of the supply_curve has to be the retail pricecap
+            # price cap of the supply_curve has to be the retail price cap
+            supply_curve_DA[idx] = curve(self.retail_rate(self.price_cap), self.num_samples)
 
-        if self.transformer_degradation == True:
+        if self.transformer_degradation:
             for idx in range(self.windowLength):
-                supply_curve_DA[idx].quantities, supply_curve_DA[idx].prices = self.supply_curve(Prclear_DA[idx],
-                                                                                                 FeederCongCapacity,
-                                                                                                 FeederPkDemandCapacity,
-                                                                                                 self.num_samples,
-                                                                                                 Q_max_retail,
-                                                                                                 maxPuLoading, TOC_dict)
+                supply_curve_DA[idx].quantities, supply_curve_DA[idx].prices = \
+                    self.supply_curve(Prclear_DA[idx], FeederCongCapacity,
+                                      FeederPkDemandCapacity, self.num_samples,
+                                      Q_max_retail, maxPuLoading, TOC_dict)
         else:
             for idx in range(self.windowLength):
-                if self.trial_cleared_quantity_DA[
-                    idx] > Q_max_retail:  # the DSO's Q_max has been increased after observing buyer bids to be higher than the substation Q max
+                if self.trial_cleared_quantity_DA[idx] > Q_max_retail:
+                    # the DSO's Q_max has been increased 
+                    # after observing buyer bids to be higher than the substation Q max
                     id_original_Q_max = int(Q_max_retail / (self.trial_cleared_quantity_DA[idx] / self.num_samples))
                     price_range_original_Q_max = np.array([Prclear_DA[idx]] * id_original_Q_max)
                     range_congestion = self.num_samples - id_original_Q_max
                     congestion_quantity = self.trial_cleared_quantity_DA[idx] - Q_max_retail
-                    price_max_congestion = congestion_quantity * retail_obj.FeederCongPrice  # place holder for congestion surcharge
+                    # placeholder for congestion surcharge
+                    price_max_congestion = congestion_quantity * retail_obj.FeederCongPrice
                     price_range_congestion = np.linspace(Prclear_DA[idx], Prclear_DA[idx] + price_max_congestion,
                                                          range_congestion)
-                    price_range_congestion[price_range_congestion > self.pricecap] = self.pricecap
+                    price_range_congestion[price_range_congestion > self.price_cap] = self.price_cap
                     supply_curve_DA[idx].prices = np.concatenate((price_range_original_Q_max, price_range_congestion))
                     supply_curve_DA[idx].quantities = np.linspace(0, self.trial_cleared_quantity_DA[idx],
                                                                   self.num_samples)
@@ -578,28 +605,30 @@ class DSOMarketDSOT:
 
     def supply_curve(self, Prclear, FeederCongCapacity, FeederPkDemandCapacity, num_samples, Q_max, maxPuLoading,
                      TOC_dict):
-        """ A internal shared function called by substation_supply_curve_RT and substation_supply_curve_DA functions to generate the supply curve
-			when considering the transformer degradation
+        """ An internal shared function called by substation_supply_curve_RT and substation_supply_curve_DA functions 
+        to generate the supply curve when considering the transformer degradation
 
-		Args:
-			Prclear (float): retail price overted from wholesale price obstained from trial wholesale node clearing, in $/kWh
-			FeederCongPrice (float): feeder congestion price, in $/kWh
-			FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
-			FeederCongCapacity (float): feeder congestion capacity, in kWh
-			FeederPkDemandCapacity (float): feeder peak deamand, in kWh
-			num_samples (int): number of sampling points
-			Q_max (float): substation limit, in kWh
-			maxPuLoading (float): maximum pu loading factor
-			TOC_dict (dict): configuration parameters for transformer
+        Args:
+            Prclear (float): retail price overted from wholesale price obtained from trial wholesale node clearing, in $/kWh
+            FeederCongCapacity (float): feeder congestion capacity, in kWh
+            FeederPkDemandCapacity (float): feeder peak demand, in kWh
+            num_samples (int): number of sampling points
+            Q_max (float): substation limit, in kWh
+            maxPuLoading (float): maximum pu loading factor
+            TOC_dict (dict): configuration parameters for transformer
 
-		Return:
-			SupplyQuantities (list): quantity sampling of the supply curve, in kWh
-			SupplyPrices (list): prices sampleing of the supply curve, in $/kWh
-		"""
+        Variables:
+            FeederCongPrice (float): feeder congestion price, in $/kWh
+            FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
+
+        Return:
+            SupplyQuantities (list): quantity sampling of the supply curve, in kWh
+            SupplyPrices (list): prices sampling of the supply curve, in $/kWh
+        """
         FeederCongPrice = Prclear
         FeederPkDemandPrice = Prclear
         SupplyQuantities = np.linspace(0, Q_max * maxPuLoading, num_samples)
-        SupplyPrices = [0 for i in range(0, num_samples)]
+        SupplyPrices = [0 for _ in range(0, num_samples)]
         for i in range(0, len(SupplyQuantities)):
             if FeederPkDemandCapacity <= FeederCongCapacity:
                 if SupplyQuantities[i] < FeederPkDemandCapacity:
@@ -617,7 +646,7 @@ class DSOMarketDSOT:
         dollars, pu_loading = self.generate_TOC(60, maxPuLoading, num_samples,
                                                 TOC_dict)  # cost per 60 minutes (so kW is same as kWh)
 
-        self.dollarsPerKW = [0 for i in range(0, len(SupplyQuantities))]
+        self.dollarsPerKW = [0 for _ in range(0, len(SupplyQuantities))]
         for i in range(0, len(pu_loading)):
             if pu_loading[i] != 0:
                 self.dollarsPerKW[i] = dollars[i] / (pu_loading[i] * Q_max)
@@ -630,16 +659,16 @@ class DSOMarketDSOT:
     def generate_TOC(self, costInterval, maxPuLoad, num_samples, TOC_dict):
         """ Function used to calculate the total owning cost of transformer
 
-		Args:
-			costInterval (int): interval for calculating the cost, in minutes
-			maxPuLoad (float): maximum pu loading factor
-			num_samples (int): number of sampling points
-			TOC_dict (dict): configuration parameters for transformer
+        Args:
+            costInterval (int): interval for calculating the cost, in minutes
+            maxPuLoad (float): maximum pu loading factor
+            num_samples (int): number of sampling points
+            TOC_dict (dict): configuration parameters for transformer
 
-		Return:
-			DollarsForPlot (list): price axis of unit owning cost, in $/kWh
-			LoadsForPlot (list): quantity axis of unit owing cost, in kWh
-		"""
+        Return:
+            DollarsForPlot (list): price axis of unit owning cost, in $/kWh
+            LoadsForPlot (list): quantity axis of unit owing cost, in kWh
+        """
         # Import TOC dictionary
         OperatingPeriod = TOC_dict['OperatingPeriod']
         timeStep = TOC_dict['timeStep']
@@ -662,8 +691,8 @@ class DSOMarketDSOT:
         delta_T_ave_wind_R = TOC_dict['delta_T_ave_wind_R']
 
         plotLoadDelta = maxPuLoad / num_samples
-        T_amb = [Tamb for t in range(0, OperatingPeriod)]
-        F_AA = [0 for t in range(0, OperatingPeriod)]
+        T_amb = [Tamb for _ in range(0, OperatingPeriod)]
+        F_AA = [0 for _ in range(0, OperatingPeriod)]
         P_NLL = P_Rated * NLL_rate / 100
         P_LL = P_Rated * LL_rate / 100
         R_ratio = P_LL / P_NLL
@@ -671,20 +700,20 @@ class DSOMarketDSOT:
         delta_T_WR = delta_T_hotspot_R - delta_T_TOR
 
         # Variable Initialization
-        delta_T_TO = [0 for t in range(0, OperatingPeriod)]
-        delta_T_W = [0 for t in range(0, OperatingPeriod)]
-        T_HS = [0 for t in range(0, OperatingPeriod)]
+        delta_T_TO = [0 for _ in range(0, OperatingPeriod)]
+        delta_T_W = [0 for _ in range(0, OperatingPeriod)]
+        T_HS = [0 for _ in range(0, OperatingPeriod)]
 
         # Computing TOC
         TOC = BP + toc_A * P_NLL + toc_B * P_LL
         I_rated = P_Rated / Sec_V
 
         plotLoadlevel = 0  # pu load level initialized to zero
-        DollarsForPlot = [0 for i in range(0, num_samples)]
-        self.Feqa_T = [0 for i in range(0, num_samples)]
+        DollarsForPlot = [0 for _ in range(0, num_samples)]
+        self.Feqa_T = [0 for _ in range(0, num_samples)]
         for Iterator in range(0, num_samples):
             plotLoadlevel = plotLoadlevel + plotLoadDelta
-            I_load = [I_rated * plotLoadlevel for t in range(0, OperatingPeriod)]
+            I_load = [I_rated * plotLoadlevel for _ in range(0, OperatingPeriod)]
             for t in range(0, OperatingPeriod):
                 # Computing hot-spot temperature
                 K_U = I_load[t] / I_rated
@@ -705,7 +734,7 @@ class DSOMarketDSOT:
                 F_EQA_den = F_EQA_den + timeStep
             F_EQA = F_EQA_num / F_EQA_den  # unit per day
 
-            ##to include loss of life as FEQA per hour in metrics colector
+            # to include loss of life as FEQA per hour in metrics colector
             self.Feqa_T[Iterator] = F_EQA / 24  # unit per hour
 
             # Computing Projected lifetime L in years
@@ -721,18 +750,18 @@ class DSOMarketDSOT:
     def set_ref_load(self, ref_load):
         """ Set the reference (ercot) load based on provided load by a csv file after base-case, complex number
 
-			Args:
-				ref_load (str): total load of substation
-		"""
+            Args:
+                ref_load (str): total load of substation
+        """
         val = parse_kw(ref_load)
         self.total_load = val
 
     def set_total_load(self, total_load):
         """ Set the residential load based on provided load by GLD, complex number
 
-			Args:
-				gld_load (str): total load of substation
-		"""
+            Args:
+                total_load (str): total load of substation
+        """
         val = parse_kw(total_load)
         self.total_load = val
 
@@ -748,63 +777,62 @@ class DSOMarketDSOT:
     def set_ind_load_da(self, industrial_load_da):
         """ Set the ercot ind load for the next 24-hours provided load by a csv file after base-case, complex number
 
-			Args:
-				ercot_ind load (24 x 1 array of double): ercot ind load values for the next day ahead are given in MW and the json.loads function don't know that.
-		"""
+            Args:
+                industrial_load_da (24 x 1 array of double): ercot ind load values for the next day ahead are given in MW and the json.loads function don't know that.
+        """
         temp = json.loads(industrial_load_da)
         self.ind_load_da = np.array(temp) * 1000.0
 
     def set_ref_load_da(self, ref_load_da):
         """ Set the ercot load for the next 24-hours provided load by a csv file after base-case, complex number
 
-			Args:
-				ercot_load (24 x 1 array of double): ercot load values for the next day ahead
-		"""
+            Args:
+                ref_load_da (24 x 1 array of double): ercot load values for the next day ahead
+        """
         self.ref_load_da = json.loads(ref_load_da)
 
     def set_lmp_da(self, val):
         """ Set the lmp for day ahead
 
-			Args:
-				lmp (array of double): lmp for the the ahead
-		"""
+            Args:
+                val (array of double): lmp for the day ahead
+        """
         self.lmp_da = json.loads(val)
 
     def set_lmp_rt(self, val):
         """ Set the lmp for real time
 
-			Args:
-				lmp (double): lmp for the bus/substation
-		"""
+        Args:
+            val (double): lmp for the bus/substation
+        """
         self.lmp_rt = json.loads(val)
 
     def set_cleared_q_da(self, val):
-        """ Set the clear  quatity for daya ahead
+        """ Set the clear quantity for day ahead
 
-			Args:
-				lmp (double): lmp for the bus/substation
-		"""
+            Args:
+                val (double): lmp for the bus/substation
+        """
         self.cleared_q_da = json.loads(val)
 
     def set_cleared_q_rt(self, val):
-        """ Set the clear  quatity for real time
+        """ Set the clear quantity for real time
 
-			Args:
-				lmp (double): lmp for the bus/substation
-		"""
+            Args:
+                val (double): lmp for the bus/substation
+        """
         self.cleared_q_rt = json.loads(val)
 
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object
 
-		"""
+        """
         return self.name
 
 
-if __name__ == "__main__":
+def test():
     import matplotlib.pyplot as plt
     from .retail_market_dsot import RetailMarketDSOT
-
 
     def test_dso_clearing_RT():
         # Dictionary for DSO, Retail agent and TOC calculation
@@ -828,7 +856,7 @@ if __name__ == "__main__":
         retail_dict = {
             "num_samples": 1000,
             "pricecap": 1 * 1.25,
-            # pricecap of the retail agent has to be pricecap of the DSO agent multiplies retail rate
+            # price cap of the retail agent has to be price cap of the DSO agent multiplies retail rate
             "Q_max": 14875000,
             "maxPuLoading": 1.5,
             "windowLength": 48,
@@ -909,7 +937,6 @@ if __name__ == "__main__":
         plt.plot(market.curve_buyer_RT.quantities, market.curve_buyer_RT.prices,
                  label='Aggregated demand curve before preprocessing')
         plt.plot(DSO.curve_DSO_RT.quantities, DSO.curve_DSO_RT.prices, label='Aggregated demand curve at DSO level')
-        # plt.plot(DSO.curve_DSO_RT.quantities/1000, DSO.curve_DSO_RT.prices, label='Aggregated demand curve at DSO level')
         plt.plot(DSO.curve_ws_node[day_of_week][hour_of_day].quantities,
                  DSO.curve_ws_node[day_of_week][hour_of_day].prices, label='wholesale node supply curve')
         plt.axvline(dso_dict['DSO_Q_max'], label='Original Q max', linewidth=2.0, color='r')
@@ -955,7 +982,6 @@ if __name__ == "__main__":
         print("Retail clear type:", market.clear_type_RT)
         print("Retail congestion surcharge:", market.congestion_surcharge_RT)
 
-
     # dollars, pu_loading = DSO.generate_TOC(60, retail_dict['maxPuLoading'], retail_dict['num_samples'],
     #                                        retail_dict)  # cost per 60 minutes (so kW is same as kWh)
     #
@@ -990,7 +1016,7 @@ if __name__ == "__main__":
         retail_dict = {
             "num_samples": 1000,
             "pricecap": 1 * 1.25,
-            # pricecap of the retail agent has to be pricecap of the DSO agent multiplies retail rate
+            # price cap of the retail agent has to be price cap of the DSO agent multiplies retail rate
             "Q_max": 14875000,
             "maxPuLoading": 1.5,
             "windowLength": 48,
@@ -1663,8 +1689,11 @@ if __name__ == "__main__":
         print("Retail cleared quantity:", market.cleared_quantity_DA)
         print("Retail clear type:", market.clear_type_DA)
 
-
     # test real-time portion
     test_dso_clearing_RT()
     # test day-ahead portion
     # test_dso_clearing_DA()
+
+
+if __name__ == "__main__":
+    test()

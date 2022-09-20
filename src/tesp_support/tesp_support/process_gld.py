@@ -92,7 +92,6 @@ def read_gld_metrics(path, name_root, diction_name=''):
     # parse the substation metadata for 2 things of specific interest
     # print ('\nSubstation Metadata for', len(lst_s[time_key]), 'objects')
     idx_s = {}
-    data_s = None
     for key, val in meta_s.items():
         # print (key, val['index'], val['units'])
         if key == 'real_power_avg':
@@ -177,7 +176,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
         data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
         print('\nConstructed', data_h.shape, 'NumPy array for Houses')
         j = 0
-        for key in hse_keys:
+        for _ in hse_keys:
             i = 0
             for t in times:
                 ary = lst_h[str(t)][hse_keys[j]]
@@ -265,7 +264,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
         data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
         print('\nConstructed', data_m.shape, 'NumPy array for Meters')
         j = 0
-        for key in mtr_keys:
+        for _ in mtr_keys:
             i = 0
             for t in times:
                 ary = lst_m[str(t)][mtr_keys[j]]
@@ -305,7 +304,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
         data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
         print('\nConstructed', data_i.shape, 'NumPy array for Inverters')
         j = 0
-        for key in inv_keys:
+        for _ in inv_keys:
             i = 0
             for t in times:
                 ary = lst_i[str(t)][inv_keys[j]]
@@ -334,7 +333,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
         data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=np.float)
         print('\nConstructed', data_c.shape, 'NumPy array for Capacitors')
         j = 0
-        for key in cap_keys:
+        for _ in cap_keys:
             i = 0
             for t in times:
                 ary = lst_c[str(t)][cap_keys[j]]
@@ -356,7 +355,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
         data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=np.float)
         print('\nConstructed', data_r.shape, 'NumPy array for Regulators')
         j = 0
-        for key in reg_keys:
+        for _ in reg_keys:
             i = 0
             for t in times:
                 ary = lst_r[str(t)][reg_keys[j]]
@@ -402,19 +401,19 @@ def plot_gld(diction, save_file=None, save_only=False):
     hrs = diction['hrs']
     data_s = diction['data_s']
     data_m = diction['data_m']
-    data_i = diction['data_i']
+    # data_i = diction['data_i']  # not used
     data_h = diction['data_h']
     data_c = diction['data_c']
     data_r = diction['data_r']
-    keys_s = diction['keys_s']
+    # keys_s = diction['keys_s']  # not used
     keys_m = diction['keys_m']
-    keys_i = diction['keys_i']
+    # keys_i = diction['keys_i']  # not used
     keys_h = diction['keys_h']
     keys_c = diction['keys_c']
     keys_r = diction['keys_r']
     idx_s = diction['idx_s']
     idx_m = diction['idx_m']
-    idx_i = diction['idx_i']
+    # idx_i = diction['idx_i']  # not used
     idx_h = diction['idx_h']
     idx_c = diction['idx_c']
     idx_r = diction['idx_r']
@@ -424,6 +423,9 @@ def plot_gld(diction, save_file=None, save_only=False):
     # display a plot
     fig, ax = plt.subplots(2, 5, sharex='col')
 
+    total2 = None
+    hvac2 = None
+    wh2 = None
     if len(keys_h) > 0:
         total1 = (data_h[:, :, idx_h['HSE_TOTAL_AVG_IDX']]).squeeze()
         total2 = total1.sum(axis=0)

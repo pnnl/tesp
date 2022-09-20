@@ -26,26 +26,28 @@ The function call order for this agent is:
 
 """
 
-import tesp_support.helpers_dsot as helpers
-from copy import deepcopy
-import numpy as np
 import logging as log
+from copy import deepcopy
+
+import numpy as np
+
+import tesp_support.helpers_dsot as helpers
 
 
-class RetailMarketDSOT:  
+class RetailMarketDSOT:
     """This agent manages the retail market operating
 
     Args:
-        
+        retail_dict:
+        key:
+
+    Attributes:
         name (str): name of the retail market agent
-        pricecap (float): the maximun price that is allowed in the market, in $/kWh
-        num_samples (int): the number of sampling points, describles how precisely the curve is sampled
+        price_cap (float): the maximum price that is allowed in the market, in $/kWh
+        num_samples (int): the number of sampling points, describes how precisely the curve is sampled
         windowLength (int): length of the planning horizon for the DA market, in hours
         Q_max (float): capacity of the substation, in kWh
         maxPuLoading (float): rate of the maxPuLoading for transformer
-        
-    Attributes:
-        
         curve_buyer_RT (curve): aggregated buyer curve, updated after receiving each RT buyer bid
         curve_seller_RT (curve): aggregated seller curve, updated after receiving each RT seller bid
         curve_buyer_DA (dict of curves): 48 aggregated buyer curves, updated after receiving each DA buyer bid
@@ -56,34 +58,34 @@ class RetailMarketDSOT:
         cleared_price_DA (list): list of cleared price at each hour
         cleared_quantity_RT (float): cleared quantity for the substation for the next 5-min 
         cleared_quantity_DA (list): list of cleared quantity at each hour
-        site_responsive_DA (list): Site_Day_Ahead quantity which is responsive
         site unresponsive DA (list): Site Day Ahead quantity which is unresponsive
-        TOC_dict (dict): parameters related to transformer lifetime cost calculation, including
-        OperatingPeriod (int): operating period, in minute
-        timeStep (int): timestep, in minute
-        Tamb (float): ambient temperature, in deg C
-        delta_T_TO_init (int): initial delta temperature of top oil, in deg C
-        delta_T_W_init (int): initial delta temperature of winding, in deg C
-        BP (float): intial cost of transformer, in $
-        toc_A (float): cost per watt for no-load losses, in $/W
-        toc_B (float): cost per watt for load losses, in $/W
-        Base_Year (float): expected lifespan of transformer, in year
-        P_Rated (float): capacity, in W
-        NLL_rate (float): no load loss rate, in %
-        LL_rate (float): load loss rate, in %
-        Sec_V (float): secondary voltage level, in volt
-        TOU_TOR (float): oil time constant, in minute
-        TOU_GR (float): winding time constant, in minute
-        Oil_n (float): Oil exponent n
-        Wind_m (float): Winding exponent m
-        delta_T_TOR (float): top oil temperature rise, in deg C
-        delta_T_ave_wind_R (float): average winding temperature rise over ambient temperature, in deg C
         AMES_RT (list X 5): Smooth Quadratics
         AMES_DA ((list X 5) X windowLength): Smooth Quadratics
         basecase (boolean) If true no agent market, false agent market
         load_flexibility (boolean) If true load is bid in to the market, false all load is unresponsive
-        U_pricecap_CA (float): Upper price range for curve aggregator (CA)
-        L_pricecap_CA (float): Lower price range for curve aggregator (CA)
+        U_price_cap_CA (float): Upper price range for curve aggregator (CA)
+        L_price_cap_CA (float): Lower price range for curve aggregator (CA)
+
+        TOC_dict (dict): parameters related to transformer lifetime cost calculation, including
+            OperatingPeriod (int): operating period, in minute
+            timeStep (int): timestep, in minute
+            Tamb (float): ambient temperature, in deg C
+            delta_T_TO_init (int): initial delta temperature of top oil, in deg C
+            delta_T_W_init (int): initial delta temperature of winding, in deg C
+            BP (float): initial cost of transformer, in $
+            toc_A (float): cost per watt for no-load losses, in $/W
+            toc_B (float): cost per watt for load losses, in $/W
+            Base_Year (float): expected lifespan of transformer, in year
+            P_Rated (float): capacity, in W
+            NLL_rate (float): no load loss rate, in %
+            LL_rate (float): load loss rate, in %
+            Sec_V (float): secondary voltage level, in volt
+            TOU_TOR (float): oil time constant, in minute
+            TOU_GR (float): winding time constant, in minute
+            Oil_n (float): Oil exponent n
+            Wind_m (float): Winding exponent m
+            delta_T_TOR (float): top oil temperature rise, in deg C
+            delta_T_ave_wind_R (float): average winding temperature rise over ambient temperature, in deg C
 
     """
 
@@ -94,14 +96,14 @@ class RetailMarketDSOT:
         self.basecase = retail_dict['basecase']
         self.load_flexibility = retail_dict['load_flexibility']
         self.num_samples = retail_dict['num_samples']
-        self.pricecap = retail_dict['pricecap']
-        self.U_pricecap_CA = self.pricecap # updated at every DA retail clearing for curve aggregator only
-        self.L_pricecap_CA = 0.0
+        self.price_cap = retail_dict['pricecap']
+        self.U_price_cap_CA = self.price_cap  # updated at every DA retail clearing for curve aggregator only
+        self.L_price_cap_CA = 0.0
         self.Q_max = retail_dict['Q_max']
         self.maxPuLoading = retail_dict['maxPuLoading']
         self.windowLength = retail_dict['windowLength']
         self.FeederCongCapacity = self.Q_max
-        self.FeederPkDemandCapacity = self.Q_max 
+        self.FeederPkDemandCapacity = self.Q_max
         self.curve_buyer_RT = None
         self.curve_seller_RT = None
         self.curve_buyer_DA = dict()
@@ -109,7 +111,7 @@ class RetailMarketDSOT:
         self.FeederCongPrice = 1e-7  # TODO: maybe initialize it for different feeders, with different values
 
         self.clear_type_RT = None
-        self.clear_type_DA = []        
+        self.clear_type_DA = []
         self.cleared_price_RT = None
         self.cleared_price_DA = []
         self.cleared_quantity_RT = None
@@ -125,39 +127,39 @@ class RetailMarketDSOT:
         # Industrial Load Parameters
         self.industrial_bid_da = []
         self.industrial_bid_rt = []
-        self.industrial_load_elasticity = 5 # delP/delQ
+        self.industrial_load_elasticity = 5  # delP/delQ
         self.site_quantity_DA = dict()
         # substation transformer lifetime cost parameters
         self.TOC_dict = {
-                'OperatingPeriod': retail_dict['OperatingPeriod'], 
-                'timeStep': retail_dict['timeStep'], 
-                'Tamb': retail_dict['Tamb'], 
-                'delta_T_TO_init': retail_dict['delta_T_TO_init'],
-                'delta_T_W_init': retail_dict['delta_T_W_init'],
-                'BP': retail_dict['BP'], 
-                'toc_A': retail_dict['toc_A'], 
-                'toc_B': retail_dict['toc_B'],   
-                'Base_Year': retail_dict['Base_Year'], 
-                'P_Rated': retail_dict['P_Rated'],
-                'NLL_rate': retail_dict['NLL_rate'], 
-                'LL_rate': retail_dict['LL_rate'], 
-                'Sec_V': retail_dict['Sec_V'], 
-                'TOU_TOR': retail_dict['TOU_TOR'], 
-                'TOU_GR': retail_dict['TOU_GR'], 
-                'Oil_n': retail_dict['Oil_n'], 
-                'Wind_m': retail_dict['Wind_m'], 
-                'delta_T_TOR': retail_dict['delta_T_TOR'], 
-                'delta_T_ave_wind_R': retail_dict['delta_T_ave_wind_R'], 
-                }
-        #AMES
+            'OperatingPeriod': retail_dict['OperatingPeriod'],
+            'timeStep': retail_dict['timeStep'],
+            'Tamb': retail_dict['Tamb'],
+            'delta_T_TO_init': retail_dict['delta_T_TO_init'],
+            'delta_T_W_init': retail_dict['delta_T_W_init'],
+            'BP': retail_dict['BP'],
+            'toc_A': retail_dict['toc_A'],
+            'toc_B': retail_dict['toc_B'],
+            'Base_Year': retail_dict['Base_Year'],
+            'P_Rated': retail_dict['P_Rated'],
+            'NLL_rate': retail_dict['NLL_rate'],
+            'LL_rate': retail_dict['LL_rate'],
+            'Sec_V': retail_dict['Sec_V'],
+            'TOU_TOR': retail_dict['TOU_TOR'],
+            'TOU_GR': retail_dict['TOU_GR'],
+            'Oil_n': retail_dict['Oil_n'],
+            'Wind_m': retail_dict['Wind_m'],
+            'delta_T_TOR': retail_dict['delta_T_TOR'],
+            'delta_T_ave_wind_R': retail_dict['delta_T_ave_wind_R'],
+        }
+        # AMES
         self.AMES_RT = None
         self.AMES_DA = None
-        
+
         # self.AMES_RT_agent_quantities = None
         # self.AMES_RT_agent_prices = None
         # self.AMES_DA_agent_quantities = None
         # self.AMES_DA_agent_prices = None
-        
+
     def clean_bids_RT(self):
         """Initialize the real-time market  
         """
@@ -170,13 +172,13 @@ class RetailMarketDSOT:
         self.cleared_quantity_RT_unscaled = None
 
         self.cleared_quantity_RT_for_AMES = None
-        self.curve_buyer_RT_for_AMES = helpers.curve([self.U_pricecap_CA,self.L_pricecap_CA], self.num_samples)
-        self.curve_buyer_RT = helpers.curve([self.U_pricecap_CA,self.L_pricecap_CA], self.num_samples)
-        self.curve_seller_RT = helpers.curve(self.pricecap, self.num_samples)
+        self.curve_buyer_RT_for_AMES = helpers.curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
+        self.curve_buyer_RT = helpers.curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
+        self.curve_seller_RT = helpers.curve(self.price_cap, self.num_samples)
 
     def clean_bids_DA(self):
         """Initialize the day-ahead market
-        """  
+        """
         self.clear_type_DA = []
         self.cleared_price_DA = []
         self.cleared_quantity_DA = []
@@ -186,18 +188,18 @@ class RetailMarketDSOT:
         self.cleared_quantity_DA_unscaled = []
 
         for i in range(self.windowLength):
-            self.curve_buyer_DA[i] = helpers.curve([self.U_pricecap_CA,self.L_pricecap_CA], self.num_samples)
+            self.curve_buyer_DA[i] = helpers.curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
 
         for i in range(self.windowLength):
-            self.curve_seller_DA[i] = helpers.curve(self.pricecap, self.num_samples)
+            self.curve_seller_DA[i] = helpers.curve(self.price_cap, self.num_samples)
 
-    def curve_aggregator_RT(self, identity, bid_RT, id):
+    def curve_aggregator_RT(self, identity, bid_RT, name):
         """Function used to collect the RT bid and update the accumulated buyer or seller curve 
         
         Args:
             identity (str): identifies whether the bid is collected from a "Buyer" or "Seller"
             bid_RT (list): a nested list with dimension (m, 2), with m equals 2 to 4 
-            id (str): name of the buyer or seller
+            name (str): name of the buyer or seller
         
         """
         if identity == 'Buyer':
@@ -205,13 +207,13 @@ class RetailMarketDSOT:
         else:
             self.curve_seller_RT.curve_aggregator(identity, bid_RT)
 
-    def curve_aggregator_DA(self, identity, bid_DA, id):
+    def curve_aggregator_DA(self, identity, bid_DA, name):
         """Function used to collect the DA bid and update the accumulated buyer or seller curve  
         
         Args:
             identity (str): identifies whether the bid is collected from a "Buyer" or "Seller"
             bid_DA (list): a nested list with dimension (self.windowLength, m, 2), with m equals 2 to 4 
-            id (str): name of the buyer or seller
+            name (str): name of the buyer or seller
         
         """
         if identity == 'Buyer':
@@ -222,7 +224,8 @@ class RetailMarketDSOT:
                 self.curve_seller_DA[i].curve_aggregator(identity, bid_DA[i])
 
     def clear_market(self, curve_buyer, curve_seller, transformer_degradation, Q_max):
-        """Shared function called by both clear_market_RT and clear_market_DA functions to find the intersection between supply curve and demand curve
+        """Shared function called by both clear_market_RT and clear_market_DA functions 
+        to find the intersection between supply curve and demand curve
         
         Args:
             curve_buyer (curve): aggregated buyer curve
@@ -239,21 +242,28 @@ class RetailMarketDSOT:
         cleared_price = 0.0
         cleared_quantity = 0.0
         clear_type = 0
-        
-        if curve_buyer.uncontrollable_only == True:
+
+        if curve_buyer.uncontrollable_only:
             temp = curve_buyer.quantities[0]
             if temp < 0.0:
-                log.info("Warning quantities submitted to retail are negative. The returns are helpers.ClearingType.UNCONGESTED, price set to 0, first quantity of the curve, and congestion price is set to 0. BAU case.")
+                log.info("Warning quantities submitted to retail are negative." +
+                         "The returns are helpers.ClearingType.UNCONGESTED, " +
+                         "price set to 0, first quantity of the curve, " +
+                         "and congestion price is set to 0. BAU case.")
                 return helpers.ClearingType.UNCONGESTED, 0.0, temp, 0.0
-            # log.info("Uncontrolable true, temp:" + str(temp) + " min: " + str(min(curve_seller.quantities)) +
-            #          "  max: " + str(max(curve_seller.quantities)))
+            # log.info("Uncontrollable true, temp:" + str(temp) +
+            #          " min: " + str(min(curve_seller.quantities)) +
+            #          " max: " + str(max(curve_seller.quantities)))
             if min(curve_seller.quantities) <= temp <= max(curve_seller.quantities):
                 cleared_quantity = temp
                 for idx in range(1, self.num_samples):
-                    if curve_seller.quantities[idx-1] < cleared_quantity < curve_seller.quantities[idx]:
-                        cleared_price = curve_seller.prices[idx-1]+(cleared_quantity-curve_seller.quantities[idx-1])*(curve_seller.prices[idx]-curve_seller.prices[idx-1])/(curve_seller.quantities[idx]-curve_seller.quantities[idx-1])
-                    elif curve_seller.quantities[idx-1] == cleared_quantity:
-                        cleared_price = curve_seller.prices[idx-1]
+                    if curve_seller.quantities[idx - 1] < cleared_quantity < curve_seller.quantities[idx]:
+                        cleared_price = curve_seller.prices[idx - 1] + (
+                                    cleared_quantity - curve_seller.quantities[idx - 1]) * (
+                                                    curve_seller.prices[idx] - curve_seller.prices[idx - 1]) / (
+                                                    curve_seller.quantities[idx] - curve_seller.quantities[idx - 1])
+                    elif curve_seller.quantities[idx - 1] == cleared_quantity:
+                        cleared_price = curve_seller.prices[idx - 1]
                     elif curve_seller.quantities[idx] == cleared_quantity:
                         cleared_price = curve_seller.prices[idx]
                 # if cleared_quantity > self.Q_max:
@@ -265,25 +275,27 @@ class RetailMarketDSOT:
                     uncongested_price = curve_seller.prices[0]
                     # uncongested_price = cleared_price - (cleared_quantity-Q_max) * self.FeederCongPrice
                     if uncongested_price < 0:
-                        # that means that approximation was too crude which led to uncongested price negative, in this case congestion charge is simply the difference between any two points across the congestion line
+                        # that means that approximation was too crude which led to uncongested price negative
+                        # the congestion charge is simply the difference between any two points across the line
                         price_diff = curve_seller.prices[-1] - curve_seller.prices[-2]
                         uncongested_price = cleared_price - price_diff
                     congestion_surcharge = cleared_price - uncongested_price
-                    if congestion_surcharge > self.pricecap:
-                        congestion_surcharge = self.pricecap
-                        log.info("congestion surchage is beyond pricecap, scale is too high!")
+                    if congestion_surcharge > self.price_cap:
+                        congestion_surcharge = self.price_cap
+                        log.info("congestion surcharge is beyond price cap, scale is too high!")
                 else:
                     clear_type = helpers.ClearingType.UNCONGESTED
                     congestion_surcharge = 0.0
                 return clear_type, cleared_price, cleared_quantity, congestion_surcharge
             else:
                 log.info("dso quantities: " + str(curve_buyer.quantities))
-                log.info("ERROR retail min: " + str(min(curve_seller.quantities)) + ", max: " + str(max(curve_seller.quantities)))
+                log.info("ERROR retail min: " + str(min(curve_seller.quantities)) +
+                         ", max: " + str(max(curve_seller.quantities)))
                 return helpers.ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
         else:
             max_q = min(max(curve_seller.quantities), max(curve_buyer.quantities))
             min_q = max(min(curve_seller.quantities), min(curve_buyer.quantities))
-            # log.info("Uncontrolable false, min: " + str(min_q) + "  max: " + str(max_q))
+            # log.info("Uncontrollable false, min: " + str(min_q) + "  max: " + str(max_q))
             if max_q < min_q:
                 log.info("ERROR retail min_q: " + str(min_q) + ", max_q:" + str(max_q))
                 return helpers.ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
@@ -295,23 +307,24 @@ class RetailMarketDSOT:
             #                                                        min_q, max_q, self.num_samples)
             # seller_quantities, seller_prices = helpers.resample_curve(curve_seller.quantities, curve_seller.prices,
             #                                                          min_q, max_q, self.num_samples)
-            buyer_prices=curve_buyer.prices
-            buyer_quantities=curve_buyer.quantities
-            seller_quantities=buyer_quantities
+            buyer_prices = curve_buyer.prices
+            buyer_quantities = curve_buyer.quantities
+            seller_quantities = buyer_quantities
             # log.info("curve_seller.prices: "+str(curve_seller.prices))
-            seller_prices = helpers.resample_curve_for_price_only(buyer_quantities,curve_seller.quantities, curve_seller.prices)
+            seller_prices = helpers.resample_curve_for_price_only(buyer_quantities,
+                                                                  curve_seller.quantities,
+                                                                  curve_seller.prices)
             # seller_prices[0]=0.0
-            seller_prices[-1]=self.pricecap
+            seller_prices[-1] = self.price_cap
 
             for idx in range(len(buyer_quantities) - 1):
                 if buyer_prices[idx] > seller_prices[idx] and buyer_prices[idx + 1] < seller_prices[idx + 1]:
-                    idx_old=idx
-                    index_delta=1
+                    index_delta = 1
                     if idx < self.num_samples and buyer_quantities[idx] == buyer_quantities[idx + index_delta]:
                         p1 = (buyer_quantities[idx], buyer_prices[idx])
                         p2 = (buyer_quantities[idx + 1], buyer_prices[idx + 1])
-                        p3 = (seller_quantities[idx]-0.1, seller_prices[idx])
-                        p4 = (seller_quantities[idx + 1]+0.1, seller_prices[idx + 1])
+                        p3 = (seller_quantities[idx] - 0.1, seller_prices[idx])
+                        p4 = (seller_quantities[idx + 1] + 0.1, seller_prices[idx + 1])
                         cleared_price, cleared_quantity = helpers.get_intersect(p1, p2, p3, p4)
                     else:
                         p1 = (buyer_quantities[idx], buyer_prices[idx])
@@ -326,17 +339,19 @@ class RetailMarketDSOT:
                         if uncongested_price < 0:
                             uncongested_price = 0
                         congestion_surcharge = cleared_price - uncongested_price
-                        if congestion_surcharge > self.pricecap:
-                            congestion_surcharge = self.pricecap
+                        if congestion_surcharge > self.price_cap:
+                            congestion_surcharge = self.price_cap
 
-                            log.info("congestion surchage is beyond pricecap, scale is too high!")
+                            log.info("congestion surcharge is beyond price cap, scale is too high!")
                     else:
                         clear_type = helpers.ClearingType.UNCONGESTED
                         congestion_surcharge = 0.0
                     return clear_type, cleared_price, cleared_quantity, congestion_surcharge
 
-            log.info("ERROR retail intersection not found (not supposed to happen). quantities: " + str(
-                buyer_quantities) + ", buyer_prices: " + str(buyer_prices) + ", seller_prices: " + str(seller_prices))
+            log.info("ERROR retail intersection not found (not supposed to happen)" +
+                     "\n  quantities: " + str(buyer_quantities) +
+                     "\n  buyer_prices: " + str(buyer_prices) +
+                     "\n  seller_prices: " + str(seller_prices))
 
             if buyer_prices[0] > seller_prices[0]:
                 if max_q == max(curve_seller.quantities):
@@ -362,13 +377,13 @@ class RetailMarketDSOT:
                 if uncongested_price < 0:
                     uncongested_price = 0
                 congestion_surcharge = cleared_price - uncongested_price
-                if congestion_surcharge > self.pricecap:
-                    congestion_surcharge = self.pricecap
-                    log.info("congestion surchage is beyond pricecap, scale is too high!")
+                if congestion_surcharge > self.price_cap:
+                    congestion_surcharge = self.price_cap
+                    log.info("congestion surcharge is beyond price cap, scale is too high!")
             else:
                 congestion_surcharge = 0.0
             return clear_type, cleared_price, cleared_quantity, congestion_surcharge
-        
+
     def clear_market_RT(self, transformer_degradation, Q_max):
         """Function used for clearing the RT market
         
@@ -401,15 +416,16 @@ class RetailMarketDSOT:
             self.cleared_quantity_DA.append(cleared_quantity)
             self.congestion_surcharge_DA.append(congestion_surcharge)
 
-    def update_price_CA(self,price_forecast):
+    def update_price_CA(self, price_forecast):
         """ Updates the price_CA
 
         """
         price_DA = np.array(price_forecast)
         delta_DA = price_DA.max() - price_DA.min()
-        self.U_pricecap_CA = min(self.pricecap,(price_DA.max()+delta_DA))
-        self.L_pricecap_CA = max(0.0,(price_DA.min()-delta_DA))
-        log.info(" Retail updated price for CA --> U_pricecap_CA: " + str(self.U_pricecap_CA) + " L_pricecap_CA: " + str(self.L_pricecap_CA) )
+        self.U_price_cap_CA = min(self.price_cap, (price_DA.max() + delta_DA))
+        self.L_price_cap_CA = max(0.0, (price_DA.min() - delta_DA))
+        log.info(" Retail updated price for CA --> U_price_cap_CA: " +
+                 str(self.U_price_cap_CA) + " L_price_cap_CA: " + str(self.L_price_cap_CA))
 
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object
@@ -428,23 +444,23 @@ class RetailMarketDSOT:
             price_forecast (float): locally forecast price at the substation level
 
         """
-#        log.info("runing curve_aggregator_AMES_RT")
+        #        log.info("running curve_aggregator_AMES_RT")
         self.AMES_RT = list()
         substation_curve = deepcopy(self.curve_preprocess(demand_curve_RT, Q_max))
-#        print(
-#            "RT [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " + str(
-#                min(substation_curve.quantities)) + "]")
+        # print("RT [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " +
+        #       str(min(substation_curve.quantities)) + "]")
 
-        if (min(substation_curve.quantities) == max(substation_curve.quantities)):
+        if min(substation_curve.quantities) == max(substation_curve.quantities):
             for i in range(self.num_samples):
                 substation_curve.quantities[i] = Q_cleared
-#            print(
-#            "RT [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " + str(
-#                min(substation_curve.quantities)) + "]")
+        # print("RT [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " +
+        #       str(min(substation_curve.quantities)) + "]")
         self.AMES_RT = self.convert_2_AMES_quadratic_BID(substation_curve, Q_cleared, price_forecast, c_type='RT')
 
-        log.info("-- AMES RT conversion: --> demand bid [min,max] = [ " + str(min(substation_curve.quantities)) + ", " + str(Q_cleared/1000.0) + " ]")
-        log.info("-- AMES RT conversion: --> AMES bid [unresp_mw, respmax_mw] = [ " + str(self.AMES_RT[0]) + ", " + str(self.AMES_RT[1]) + " ]")
+        log.info("-- AMES RT conversion: --> demand bid [min,max] = [ " +
+                 str(min(substation_curve.quantities)) + ", " + str(Q_cleared/1000.0) + " ]")
+        log.info("-- AMES RT conversion: --> AMES bid [unresp_mw, respmax_mw] = [ " +
+                 str(self.AMES_RT[0]) + ", " + str(self.AMES_RT[1]) + " ]")
 
     def curve_aggregator_AMES_DA(self, demand_curve_DA, Q_max, Q_cleared, price_forecast):
         """ Function used to aggregate the substation-level DA demand curves into a DSO-level DA demand curve  
@@ -455,25 +471,29 @@ class RetailMarketDSOT:
             Q_cleared (float): locally cleared quantity of the substation in kW
             price_forecast (float): locally forecast price at the substation level
         """
-#        log.info("runing curve_aggregator_AMES_DA")
+        # log.info("running curve_aggregator_AMES_DA")
         self.AMES_DA = list()
         for idx in range(self.windowLength):
             substation_curve = deepcopy(self.curve_preprocess(demand_curve_DA[idx], Q_max))
-            # since we plan to now not use the ./run.sh base, we need to make sure that the difference between substation curve
+            # since we plan to now not use the ./run.sh base, 
+            # we need to make sure that the difference between substation curve
             # resizing is not taken as the flexibility
-#            print("Hour " + str(idx) + " Cleared Quantity " + str(Q_cleared[idx]))
+            # print("Hour " + str(idx) + " Cleared Quantity " + str(Q_cleared[idx]))
 
-#            print("Before Adjusting hour " + str(idx)+ " [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " + str(max(substation_curve.quantities)) + "]")
-            if (min(substation_curve.quantities) == max(substation_curve.quantities)):
+            # print("Before Adjusting hour " + str(idx) + " [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " + str(max(substation_curve.quantities)) + "]")
+            if min(substation_curve.quantities) == max(substation_curve.quantities):
                 for i in range(self.num_samples):
-                        substation_curve.quantities[i] = Q_cleared[idx]
+                    substation_curve.quantities[i] = Q_cleared[idx]
+            # print("After Adjusting hour " + str(idx) + " [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " + str(max(substation_curve.quantities)) + "]")
 
-#            print("After Adjusting hour " + str(idx) + " [min, max] substation curve: [" + str(min(substation_curve.quantities)) + ", " + str(max(substation_curve.quantities)) + "]")
+            self.AMES_DA.append(self.convert_2_AMES_quadratic_BID(substation_curve, 
+                                                                  Q_cleared[idx], price_forecast[idx], 
+                                                                  c_type='DA'))
 
-            self.AMES_DA.append(self.convert_2_AMES_quadratic_BID(substation_curve, Q_cleared[idx], price_forecast[idx], c_type='DA', idx=idx))
-
-            log.info("-- AMES DA conversion hour: " + str(idx) + "--> demand bid [min,max] = [ " + str(min(substation_curve.quantities)) + ", " + str(Q_cleared[idx]/1000.0) + " ]")
-            log.info("-- AMES DA conversion hour: " + str(idx) + "--> AMES bid [unresp_mw, respmax_mw] = [ " + str(self.AMES_DA[idx][0]) + ", " + str(self.AMES_DA[idx][1]) + " ]")
+            log.info("-- AMES DA conversion hour: " + str(idx) + "--> demand bid [min,max] = [ " +
+                     str(min(substation_curve.quantities)) + ", " + str(Q_cleared[idx]/1000.0) + " ]")
+            log.info("-- AMES DA conversion hour: " + str(idx) + "--> AMES bid [unresp_mw, respmax_mw] = [ " +
+                     str(self.AMES_DA[idx][0]) + ", " + str(self.AMES_DA[idx][1]) + " ]")
 
     def curve_preprocess(self, substation_demand_curve, Q_max):
         """ An internal shared function called by curve_aggregator_DSO_RT and curve_aggregator_DSO_DA functions to truncate 
@@ -484,17 +504,18 @@ class RetailMarketDSOT:
             Q_max (float): maximum capacity of the substation, in kW
             
         Return:
-            preprocessed_curve (curve): preprossed demand curve
+            preprocessed_curve (curve): preprocessed demand curve
         
         """
-        preprocessed_curve = helpers.curve([self.U_pricecap_CA,self.L_pricecap_CA], self.num_samples)
+        preprocessed_curve = helpers.curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
         preprocessed_curve.prices = deepcopy(substation_demand_curve.prices)
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
-        for i in range(self.num_samples): 
-            # Truncate the substation-level demand curve by maximun capacity of the substation
-            if preprocessed_curve.quantities[i] >= Q_max:        
+        for i in range(self.num_samples):
+            # Truncate the substation-level demand curve by maximum capacity of the substation
+            if preprocessed_curve.quantities[i] >= Q_max:
                 preprocessed_curve.quantities[i] = Q_max
-            # #  we are much lower than what TSO is expecting from us, with this low quantity AMES won't clear market as there can be high wind values
+            # we are much lower than what TSO is expecting from us,
+            # with this low quantity AMES won't clear market as there can be high wind values
             # elif (Q_max - preprocessed_curve.quantities[i]  > 1000):
             #     # increase the quantity to match what's TSO is expecting
             #     preprocessed_curve.quantities[i] = preprocessed_curve.quantities[i] \
@@ -502,8 +523,8 @@ class RetailMarketDSOT:
 
             # Convert the retail price into wholesale price   
             preprocessed_curve.prices[i] = self.retail_rate_inverse(preprocessed_curve.prices[i])
-        return preprocessed_curve  
-    
+        return preprocessed_curve
+
     def retail_rate_inverse(self, Pr):
         """ Function used to convert the retail prices into wholesale prices
         
@@ -513,10 +534,10 @@ class RetailMarketDSOT:
         Return: 
             Pw (float): wholesale price, in $/kWh
         """
-        Pw = deepcopy(Pr/1.25)
+        Pw = deepcopy(Pr / 1.25)
         return Pw
-    
-    def convert_2_AMES_quadratic_BID(self, curve, Q_cleared, price_forecast, c_type, idx=0):
+
+    def convert_2_AMES_quadratic_BID(self, curve, Q_cleared, price_forecast, c_type):
         """ Convert aggregated DSO type bid to AMES quadratic curve
         
         Args:
@@ -524,62 +545,63 @@ class RetailMarketDSOT:
             price_forecast: locally forecast price at the substation level
             Q_cleared: locally cleared quantity at the substation
             c_type (str): 'DA' for day-ahead and 'RT' for real-time
-            idx (int): in case of day-ahead, it informs the hour
         Return:
-            quadractive_bid (list): f(Q)=resp_c2*Q^2+C1*Q+C0
-                unresp_mw (float): minimun demand MW
-                resp_max_mw (float): maximun demand MW
+            quadratic_bid (list): f(Q)=resp_c2*Q^2+C1*Q+C0
+                unresp_mw (float): minimum demand MW
+                resp_max_mw (float): maximum demand MW
                 resp_c2 (float): quadratic coefficient 
                 resp_c1 (float): linear coefficient
                 resp_c0 (float): constant coefficient
                 resp_deg (int): equal to "2" to represent the current order in the list
         """
         # All substation quantities are in kW, converting them to MW and $/MWh to be used for AMES
-        curve.quantities = curve.quantities/1000
-        Q_cleared = Q_cleared/1000
-        curve.prices = curve.prices*1000
-        price_forecast = price_forecast*1000
+        curve.quantities = curve.quantities / 1000
+        Q_cleared = Q_cleared / 1000
+        curve.prices = curve.prices * 1000
+        price_forecast = price_forecast * 1000
 
         if self.basecase or (np.amax(curve.quantities) <= np.amin(curve.quantities)) or \
                 len(curve.quantities) <= 5 or c_type == 'DA' or not self.load_flexibility:
-            #initialize values
+            # initialize values
             unresp_mw = Q_cleared
             zsc = [0.0, 0.0, 0.0]  # [f,e,d]
             Q_sc_max = 0.0
         else:
-            x_range=np.array(curve.quantities)
-            y_range=np.array(curve.prices)
+            x_range = np.array(curve.quantities)
+            y_range = np.array(curve.prices)
 
-            Q_range=x_range[-1]-x_range[0]
+            Q_range = x_range[-1] - x_range[0]
 
-            index=np.where( (x_range>=x_range[0]+Q_range*0.05) & (x_range<=x_range[-1]-Q_range*0.05) )[0]
+            index = np.where((x_range >= x_range[0] + Q_range * 0.05) & (x_range <= x_range[-1] - Q_range * 0.05))[0]
 
-            temp_unresp_mw = x_range[index[0]]#local temporary variable
-            x_range=x_range-temp_unresp_mw
-            z=np.polyfit(x_range[index],y_range[index], deg=1)
+            temp_unresp_mw = x_range[index[0]]  # local temporary variable
+            x_range = x_range - temp_unresp_mw
+            z = np.polyfit(x_range[index], y_range[index], deg=1)
 
-            e=z[1]
-            f=z[0]*-0.5
+            e = z[1]
+            f = z[0] * -0.5
 
-            if (e-2*x_range[-1]*f) >= 0.0 and f > 0.0 and e > 0.0:
-                unresp_mw=temp_unresp_mw
-                Q_sc_max=x_range[-1]
-                zsc=[f,e,0.0]
-                log.info("-- convert_2_AMES sc coefficients --> "+c_type +' '+ str(zsc)+' bided_range: '+str(Q_sc_max/Q_range))
+            if (e - 2 * x_range[-1] * f) >= 0.0 and f > 0.0 and e > 0.0:
+                unresp_mw = temp_unresp_mw
+                Q_sc_max = x_range[-1]
+                zsc = [f, e, 0.0]
+                log.info("-- convert_2_AMES sc coefficients --> " + c_type + ' ' + str(zsc) + ' bided_range: ' + str(
+                    Q_sc_max / Q_range))
             else:
-                unresp_mw=Q_cleared
-                Q_sc_max=0.0
-                zsc=[0.0,0.0,0.0]
-                log.info("-- convert_2_AMES failed --> "+c_type+' '+str([f,e,0.0])+' curve.prices: '+str(curve.prices)+' curve.quantities: '+str(curve.quantities))
+                unresp_mw = Q_cleared
+                Q_sc_max = 0.0
+                zsc = [0.0, 0.0, 0.0]
+                log.info("-- convert_2_AMES failed --> " + c_type + ' ' + str([f, e, 0.0]) + ' curve.prices: ' + str(
+                    curve.prices) + ' curve.quantities: ' + str(curve.quantities))
 
         resp_deg = 2
         # below conversion is because fncsTSO is written in terms of MWs and the DSO is in kWs
         bid = list()
         bid.append(unresp_mw)
         bid.append(Q_sc_max)  # maximum flexible load
-        bid.append(zsc[0])    # c2 ----> f in the manual, B_j,k(P)=d_j(k)+e_j(k)*P-f_j(k)*P**2
-        bid.append(zsc[1])    # c1 ----> e in the manual
-        bid.append(zsc[2])    # c0 ----> d in the manual
+        bid.append(zsc[0])  # c2 ----> f in the manual, B_j,k(P)=d_j(k)+e_j(k)*P-f_j(k)*P**2
+        bid.append(zsc[1])  # c1 ----> e in the manual
+        bid.append(zsc[2])  # c0 ----> d in the manual
         bid.append(resp_deg)
 
         return bid
@@ -675,270 +697,281 @@ class RetailMarketDSOT:
         return self.site_quantity_DA
 
 
-if __name__ == "__main__":
+def test():
     """ Testing AMES
     """
     import matplotlib.pyplot as plt
-    agent={"unit": "kW", "pricecap": 1.0, "num_samples": 100, "windowLength": 48, "Q_max": 3310000, "maxPuLoading": 1.5, "period_da": 3600, "period_rt": 300, "OperatingPeriod": 1440, "timeStep": 1, "Tamb": 30, "delta_T_TO_init": 25, "delta_T_W_init": 25, "BP": 100000, "toc_A": 1, "toc_B": 1, "Base_Year": 20.54794520547945, "P_Rated": 2500000.0, "NLL_rate": 0.3, "LL_rate": 1.0, "Sec_V": 69000, "TOU_TOR": 75.0, "TOU_GR": 5, "Oil_n": 0.8, "Wind_m": 0.8, "delta_T_TOR": 55, "delta_T_ave_wind_R": 65, "distribution_charge_rate": 0.04}
-    market = RetailMarketDSOT(agent,'test')
+
+    agent = {"unit": "kW", "pricecap": 1.0, "num_samples": 100, "windowLength": 48, "Q_max": 3310000,
+             "maxPuLoading": 1.5, "period_da": 3600, "period_rt": 300, "OperatingPeriod": 1440, "timeStep": 1,
+             "Tamb": 30, "delta_T_TO_init": 25, "delta_T_W_init": 25, "BP": 100000, "toc_A": 1, "toc_B": 1,
+             "Base_Year": 20.54794520547945, "P_Rated": 2500000.0, "NLL_rate": 0.3, "LL_rate": 1.0, "Sec_V": 69000,
+             "TOU_TOR": 75.0, "TOU_GR": 5, "Oil_n": 0.8, "Wind_m": 0.8, "delta_T_TOR": 55, "delta_T_ave_wind_R": 65,
+             "distribution_charge_rate": 0.04}
+    market = RetailMarketDSOT(agent, 'test')
     market.clean_bids_DA()
     market.basecase = False
     # Retail agent collects DA bids from DERs
-    buyer_bid_1 = [[[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
-                   [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
+    buyer_bid_1 = [
+        [[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
+        [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
     market.curve_aggregator_DA('Buyer', buyer_bid_1, 'abc')
- 
-    buyer_bid_2 = [[[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
-                   [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
+
+    buyer_bid_2 = [
+        [[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
+        [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
     market.curve_aggregator_DA('Buyer', buyer_bid_2, 'def')
-    
-    buyer_bid_3 = [[[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
-                   [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
+
+    buyer_bid_3 = [
+        [[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
+        [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
     market.curve_aggregator_DA('Buyer', buyer_bid_3, 'ghi')
-    
-    buyer_bid_4 = [[[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
-                   [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
+
+    buyer_bid_4 = [
+        [[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
+        [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
     market.curve_aggregator_DA('Buyer', buyer_bid_4, 'jkl')
-    
-    buyer_bid_5 = [[[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
-                   [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
-                   [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
+
+    buyer_bid_5 = [
+        [[5.0, 0.19751947247066967], [10, 0.1505365976142517], [10, 0.11320393929262458], [15.0, 0.06622106443620661]],
+        [[0.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [0.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]],
+        [[-5.0, 0.19751947247066967], [0, 0.1505365976142517], [0, 0.11320393929262458], [50.0, 0.06622106443620661]]]
     market.curve_aggregator_DA('Buyer', buyer_bid_5, 'mno')
     price_forecast = np.array([0.43, 0.41, 0.40, 0.39, 0.39, 0.40, 0.45, 0.45, 0.55, 0.80, 0.90, 0.98,
-                       0.99, 1.00, 1.00, 0.99, 0.98, 0.97, 0.97, 0.90, 0.70, 0.60, 0.55, 0.45,
-                       0.43, 0.41, 0.40, 0.39, 0.39, 0.40, 0.45, 0.45, 0.55, 0.80, 0.90, 0.98,
-                       0.99, 1.00, 1.00, 0.99, 0.98, 0.97, 0.97, 0.90, 0.70, 0.60, 0.55, 0.45])/2
+                               0.99, 1.00, 1.00, 0.99, 0.98, 0.97, 0.97, 0.90, 0.70, 0.60, 0.55, 0.45,
+                               0.43, 0.41, 0.40, 0.39, 0.39, 0.40, 0.45, 0.45, 0.55, 0.80, 0.90, 0.98,
+                               0.99, 1.00, 1.00, 0.99, 0.98, 0.97, 0.97, 0.90, 0.70, 0.60, 0.55, 0.45]) / 2
     for idx in range(market.windowLength):
-        market.cleared_quantity_DA.append(max(market.curve_buyer_DA[idx].quantities)/2)
+        market.cleared_quantity_DA.append(max(market.curve_buyer_DA[idx].quantities) / 2)
 
     market.curve_aggregator_AMES_DA(market.curve_buyer_DA, market.Q_max, market.cleared_quantity_DA, price_forecast)
 
@@ -946,47 +979,46 @@ if __name__ == "__main__":
 
     unresp_mw = np.amin(market.curve_buyer_DA[hr].quantities)
     resp_max_mw = np.amax(market.curve_buyer_DA[hr].quantities)
-    resp_deg = 2
-    
+
     #    #with bids
     old_Q = market.curve_buyer_DA[hr].quantities
     old_P = market.curve_buyer_DA[hr].prices
-#    old_P = old_P/1.25
+    #    old_P = old_P/1.25
     new_Q, new_P = helpers.resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
-    
-    new_P = np.array(new_P)
-    
-    inde = np.where((new_Q>unresp_mw) & (new_Q<resp_max_mw))
-    Q_range = (new_Q[inde] - unresp_mw)/1000.0 #to Mw
-    P_range = (new_P[inde])/1.25 #to DSO level
-    Benefit_range = Q_range*P_range
 
-#    print("For the plot to be acurate a line must be uncommented in convert_2_AMES_quadratic_BID function")
-    y=list()
-    y2=list()
+    new_P = np.array(new_P)
+
+    inde = np.where((new_Q > unresp_mw) & (new_Q < resp_max_mw))
+    Q_range = (new_Q[inde] - unresp_mw) / 1000.0  # to Mw
+    P_range = (new_P[inde]) / 1.25  # to DSO level
+    Benefit_range = Q_range * P_range
+
+    #    print("For the plot to be accurate a line must be uncommented in convert_2_AMES_quadratic_BID function")
+    y = list()
+    y2 = list()
 
     for i in Q_range:
-        y.append(market.AMES_DA[hr][2]*(i**2) + market.AMES_DA[hr][3]*i + market.AMES_DA[hr][4] )
+        y.append(market.AMES_DA[hr][2] * (i ** 2) + market.AMES_DA[hr][3] * i + market.AMES_DA[hr][4])
 
     # new_Q_range = np.linspace(market.AMES_DA[hr][0], market.AMES_DA[hr][1], 100)
     # for i in new_Q_range:
     #     y2.append(market.AMES_DA[hr][2]*(i**2) + market.AMES_DA[hr][3]*i + market.AMES_DA[hr][4])
     #
 
-    fig, ax = plt.subplots(2,1, figsize=(8,8))
-#    ax[0].plot(Q_range, P_range, label='Aggregate demand curve',marker='x')
-    ax[0].plot(new_Q/1000, 1000*new_P/1.25, label='New Aggregate demand curve',marker='x')
-    ax[0].plot(old_Q/1000, 1000*old_P/1.25, label='Old Aggregate demand curve',marker='x')
+    fig, ax = plt.subplots(2, 1, figsize=(8, 8))
+    #    ax[0].plot(Q_range, P_range, label='Aggregate demand curve',marker='x')
+    ax[0].plot(new_Q / 1000, 1000 * new_P / 1.25, label='New Aggregate demand curve', marker='x')
+    ax[0].plot(old_Q / 1000, 1000 * old_P / 1.25, label='Old Aggregate demand curve', marker='x')
     ax[0].set_ylabel('Price ($/MWh)')
-    ax[0].set_xlabel('Qantity (MWh)')
+    ax[0].set_xlabel('Quantity (MWh)')
     ax[0].legend()
-    ax[1].plot(Q_range, y, label='Fitted for AMES - with Strict Concavity - e - f.P ='+str(market.AMES_DA[hr][3] - market.AMES_DA[hr][2]*market.AMES_DA[hr][1])+' >= 0')
-#    ax[1].plot(Q_range, Benefit_range, label='Piecewise Benefit Curve',marker='x')
+    ax[1].plot(Q_range, y, label='Fitted for AMES - with Strict Concavity - e - f.P =' + str(
+        market.AMES_DA[hr][3] - market.AMES_DA[hr][2] * market.AMES_DA[hr][1]) + ' >= 0')
+    #    ax[1].plot(Q_range, Benefit_range, label='Piecewise Benefit Curve',marker='x')
     ax[1].set_ylabel('Benefit ($/h)')
     ax[1].set_xlabel('Quantity (MWh)')
     ax[1].legend()
     plt.show()
-    
 
 #    
 #    unresp_mw = np.amin(market.curve_buyer_DA[1].quantities)
@@ -995,3 +1027,7 @@ if __name__ == "__main__":
 #    old_Q = market.curve_buyer_DA[1].quantities
 #    old_P = market.curve_buyer_DA[1].prices
 #    new_Q, new_P = helpers.resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
+
+
+if __name__ == "__main__":
+    test()

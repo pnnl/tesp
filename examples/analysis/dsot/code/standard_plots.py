@@ -2,7 +2,7 @@
 
     Develop only for json output 
         
-    The file will frist reads all the requiers input files. The plots are made 
+    The file will first reads all the requiers input files. The plots are made 
     by functions that receave the objects with the input data.
 """
 import itertools

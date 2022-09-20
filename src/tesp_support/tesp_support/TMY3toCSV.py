@@ -5,6 +5,9 @@
 
 Convert typical meteorological year version 3 (TMY3) data to
 comma separated values (CSV) for common use by TESP agents.
+
+Created on Tue Aug 14 10:05:06 2018
+@author: liub725
 """
 
 import io

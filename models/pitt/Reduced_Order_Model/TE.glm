@@ -1,5 +1,5 @@
-clock{
-     timezone EST+5EDT;
+clock {
+  timezone EST+5EDT;
   timestamp '2018-05-28 00:00:00';
   stoptime '2018-06-03 00:00:00';
 }
@@ -15,8 +15,8 @@ module connection;
 module residential {
   implicit_enduses NONE;
 };
-#include "appliance_schedules.glm";
-#include "water_and_setpoint_schedule_v5.glm";
+#include "$TESPDIR/data/schedules/appliance_schedules.glm";
+#include "$TESPDIR/data/schedules/water_and_setpoint_schedule_v5.glm";
 #include "commercial_schedules.glm";
 #set minimum_timestep=15;
 #set relax_naming_rules=1;
@@ -28,7 +28,7 @@ object metrics_collector_writer {
 };
 object climate {
   name "RegionalWeather";
-  tmyfile "FL-Miami_Intl_Ap.tmy3";
+  tmyfile "$TESPDIR/data/weather/FL-Miami_Intl_Ap.tmy3";
   interpolate QUADRATIC;
 };
 #ifdef WANT_VI_DUMP

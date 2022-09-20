@@ -39,7 +39,7 @@ class simple_auction:
         name (str): the name of this auction, also the market key from the configuration JSON file
         std_dev (float): the historical standard deviation of the price, in $/kwh, from diction
         mean (float): the historical mean price in $/kwh, from diction
-        pricecap (float): the maximum allowed market clearing price, in $/kwh, from diction
+        price_cap (float): the maximum allowed market clearing price, in $/kwh, from diction
         max_capacity_reference_bid_quantity (float): this market's maximum capacity, likely defined by a physical limitation in the circuit(s) being managed.
         statistic_mode (int): always 1, not used, from diction
         stat_mode (str): always ST_CURR, not used, from diction
@@ -70,7 +70,7 @@ class simple_auction:
         self.std_dev = float(diction['init_stdev'])
         self.mean = float(diction['init_price'])
         self.period = float(diction['period'])
-        self.pricecap = float(diction['pricecap'])
+        self.price_cap = float(diction['pricecap'])
         self.max_capacity_reference_bid_quantity = float(diction['max_capacity_reference_bid_quantity'])
         self.statistic_mode = int(diction['statistic_mode'])
         self.stat_mode = diction['stat_mode']
@@ -177,7 +177,7 @@ class simple_auction:
         """Aggregates the unresponsive load and responsive load bids for submission to the bulk system market
         """
         if self.unresp > 0:
-            self.curve_buyer.add_to_curve(self.pricecap, self.unresp, True)
+            self.curve_buyer.add_to_curve(self.price_cap, self.unresp, True)
         else:
             print('$$ flag,Unresp,BuyCount,BuyTotal,BuyOn,BuyOff', flush=True)
             print('$$ unresp < 0',
@@ -211,17 +211,17 @@ class simple_auction:
         self.unresponsive_sell = self.responsive_sell = self.unresponsive_buy = self.responsive_buy = 0
 
         if self.curve_buyer.count > 0 and self.curve_seller.count > 0:
-            a = self.pricecap
-            b = -self.pricecap
+            a = self.price_cap
+            b = -self.price_cap
             check = 0
             demand_quantity = supply_quantity = 0
             for i in range(self.curve_seller.count):
-                if self.curve_seller.price[i] == self.pricecap:
+                if self.curve_seller.price[i] == self.price_cap:
                     self.unresponsive_sell += self.curve_seller.quantity[i]
                 else:
                     self.responsive_sell += self.curve_seller.quantity[i]
             for i in range(self.curve_buyer.count):
-                if self.curve_buyer.price[i] == self.pricecap:
+                if self.curve_buyer.price[i] == self.price_cap:
                     self.unresponsive_buy += self.curve_buyer.quantity[i]
                 else:
                     self.responsive_buy += self.curve_buyer.quantity[i]
@@ -281,7 +281,7 @@ class simple_auction:
                             self.clearing_type = ClearingType.EXACT
                         else:
                             self.clearing_type = ClearingType.PRICE
-                # No side exausted
+                # No side exhausted
                 else:
                     # Price changed in both directions
                     if a != self.curve_buyer.price[i] and b != self.curve_seller.price[j] and a == b:
@@ -313,17 +313,17 @@ class simple_auction:
                     dHigh = a if i == self.curve_buyer.count else self.curve_buyer.price[i]
                     dLow = b if j == self.curve_seller.count else self.curve_seller.price[j]
                     # Needs to be just off such that it does not trigger any other bids
-                    if a == self.pricecap and b != -self.pricecap:
+                    if a == self.price_cap and b != -self.price_cap:
                         if self.curve_buyer.price[i] > b:
                             self.clearing_price = self.curve_buyer.price[i] + self.bid_offset
                         else:
                             self.clearing_price = b
-                    elif a != self.pricecap and b == -self.pricecap:
+                    elif a != self.price_cap and b == -self.price_cap:
                         if self.curve_seller.price[j] < a:
                             self.clearing_price = self.curve_seller.price[j] - self.bid_offset
                         else:
                             self.clearing_price = a
-                    elif a == self.pricecap and b == -self.pricecap:
+                    elif a == self.price_cap and b == -self.price_cap:
                         if i == self.curve_buyer.count and j == self.curve_seller.count:
                             self.clearing_price = 0  # no additional bids on either side
                         elif j == self.curve_seller.count:  # buyers left
@@ -352,9 +352,9 @@ class simple_auction:
                 elif self.curve_seller.count == 0 and self.curve_buyer.count > 0:
                     self.clearing_price = self.curve_buyer.price[0] + self.bid_offset
                 else:
-                    if self.curve_seller.price[0] == self.pricecap:
+                    if self.curve_seller.price[0] == self.price_cap:
                         self.clearing_price = self.curve_buyer.price[0] + self.bid_offset
-                    elif self.curve_seller.price[0] == -self.pricecap:
+                    elif self.curve_seller.price[0] == -self.price_cap:
                         self.clearing_price = self.curve_seller.price[0] - self.bid_offset
                     else:
                         self.clearing_price = self.curve_seller.price[0] + (
@@ -362,11 +362,11 @@ class simple_auction:
 
             elif self.clearing_quantity < self.unresponsive_buy:
                 self.clearing_type = ClearingType.FAILURE
-                self.clearing_price = self.pricecap
+                self.clearing_price = self.price_cap
 
             elif self.clearing_quantity < self.unresponsive_sell:
                 self.clearing_type = ClearingType.FAILURE
-                self.clearing_price = -self.pricecap
+                self.clearing_price = -self.price_cap
 
             elif self.clearing_quantity == self.unresponsive_buy and self.clearing_quantity == self.unresponsive_sell:
                 # only cleared unresponsive loads
@@ -380,17 +380,16 @@ class simple_auction:
             elif self.curve_seller.count == 0 and self.curve_buyer.count > 0:
                 self.clearing_price = self.curve_buyer.price[0] + self.bid_offset
             elif self.curve_seller.count > 0 and self.curve_buyer.count > 0:
-                self.clearing_price = self.curve_seller.price[0] + (
-                        self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.clearing_scalar
+                self.clearing_price = self.curve_seller.price[0] + \
+                                      (self.curve_buyer.price[0] - self.curve_seller.price[0]) * self.clearing_scalar
             elif self.curve_seller.count == 0 and self.curve_buyer.count == 0:
                 self.clearing_price = 0.0
             self.clearing_quantity = 0
             self.clearing_type = ClearingType.NULL
             if self.curve_seller.count == 0:
-                missingBidder = "seller"
+                print('  Market %s fails to clear due to missing seller' % self.name, flush=True)
             elif self.curve_buyer.count == 0:
-                missingBidder = "buyer"
-            print('  Market %s fails to clear due to missing %s' % (self.name, missingBidder), flush=True)
+                print('  Market %s fails to clear due to missing buyer' % self.name, flush=True)
 
         # Calculation of the marginal 
         marginal_total = self.marginal_quantity = self.marginal_frac = 0.0
@@ -443,7 +442,7 @@ class simple_auction:
         """Calculates consumer surplus (and its average) and supplier surplus.
 
         This function goes through all the bids higher than clearing price from buyers to calculate consumer surplus,
-        and also accumlates the quantities that will be cleared while doing so. Of the cleared quantities,
+        and also accumulates the quantities that will be cleared while doing so. Of the cleared quantities,
         the quantity for unresponsive loads are also collected. Then go through each seller to calculate supplier surplus.
         Part of the supplier surplus corresponds to unresponsive load are excluded and calculated separately.
 
@@ -467,16 +466,16 @@ class simple_auction:
         for i in range(self.curve_buyer.count):
             # if a buyer pays higher than clearing_price, the power is granted
             if self.curve_buyer.price[i] >= self.clearing_price:
-                # unresponsive load, they pay infinite amount price, here it is set at self.pricecap
-                if self.curve_buyer.price[i] == self.pricecap:
+                # unresponsive load, they pay infinite amount price, here it is set at self.price_cap
+                if self.curve_buyer.price[i] == self.price_cap:
                     grantedUnrespQuantity += self.curve_buyer.quantity[i]
                     numberOfUnrespBuyerAboveClearingPrice += 1
                 # responsive load, this is the part consumer surplus is calculated
                 else:
                     grantedRespQuantity += self.curve_buyer.quantity[i]
                     numberOfResponsiveBuyerAboveClearingPrice += 1
-                    self.consumerSurplus += (self.curve_buyer.price[i] - self.clearing_price) * \
-                                            self.curve_buyer.quantity[i]
+                    self.consumerSurplus += \
+                        (self.curve_buyer.price[i] - self.clearing_price) * self.curve_buyer.quantity[i]
             # if a buy pays lower than clearing_price, it does not get the quantity requested
             else:
                 declinedQuantity += self.curve_buyer.quantity[i]

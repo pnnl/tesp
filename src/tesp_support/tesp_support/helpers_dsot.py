@@ -2,8 +2,8 @@
 # file: helpers_dsot.py
 """ Utility functions for use within tesp_support, including new agents. This is DSO+T specific helper functions
 """
-import os
 import logging
+import os
 import platform
 import subprocess
 from copy import deepcopy
@@ -11,6 +11,7 @@ from enum import IntEnum
 
 import numpy as np
 from scipy.stats import truncnorm
+
 from .helpers import HelicsMsg
 
 
@@ -19,7 +20,7 @@ def get_run_solver(name, pyo, model, solver):
     try:
         solver = pyo.SolverFactory(solver)
     except Exception as e:  # could be better/more specific
-        print('Warning ' + solver + ' not present; got exception {}'.format(e))
+        print('Name {}\n Warning ' + solver + ' not present; got exception {}'.format(name, e))
         exit()
     results = solver.solve(model, tee=False)
     # TODO better solver handling
@@ -93,7 +94,8 @@ class all_but_one_level(object):
     def __init__(self, level):
         self.__level = level
 
-    def filter(self, logRecord):
+    @staticmethod
+    def filter(logRecord):
         return logRecord.levelno != 11
 
 
@@ -441,7 +443,7 @@ while sleep 120; do
   if [ $PROCESS_1_STATUS -ne 0 ] && [ $PROCESS_2_STATUS -ne 0 ] && [ $PROCESS_3_STATUS -ne 0 ]; then
     echo "All processes (python, gridlabd, fncs_broker) have exited, so we are done."
     # TODO: kill top manually?
-    # TODO: then, massage stats.log into slighty easier-to-read TSV with: sed -i 's/./&"/68;s/$/"/;$d' stats.log
+    # TODO: then, massage stats.log into slightly easier-to-read TSV with: sed -i 's/./&"/68;s/$/"/;$d' stats.log
     #  which wraps the commands in quotes and removes the last line which could be cut off
 
     ./postprocess.sh
@@ -517,7 +519,7 @@ docker run \\
     subprocess.run(['chmod', '+x', out_folder + '/postprocess.sh'])
 
 
-def write_players_msg(case_name, sys_config, dt):
+def write_players_msg(case_path, sys_config, dt):
     # write player helics message file for load and generator players
 
     dso_cnt = len(sys_config['DSO'])
@@ -541,7 +543,7 @@ def write_players_msg(case_name, sys_config, dt):
                         pf.pubs_n(False, player[0] + "_power_" + idx, "string")
                     if player[7]:
                         pf.pubs_n(False, player[0] + "_pwr_hist_" + idx, "string")
-        pf.write_file(case_name + "/" + player[0] + "_player.json")
+        pf.write_file(case_path + "/" + player[0] + "_player.json")
 
 
 class ClearingType(IntEnum):
@@ -563,8 +565,8 @@ class curve:
     """ Accumulates a set of price, quantity bidding curves for later aggregation
 
     Args:
-        pricecap (float): the maximun price that is allowed in the market, in $/kWh
-        num_samples (int): the number of sampling points, describles how precisely the curve is sampled
+        pricecap (float): the maximum price that is allowed in the market, in $/kWh
+        num_samples (int): the number of sampling points, describes how precisely the curve is sampled
 
 
     Attributes:
@@ -578,19 +580,19 @@ class curve:
         """Initializes the class
 
         Args:
-            pricecap (float): the maximun price that is allowed in the market, in $/kWh
-            num_samples (int): the number of sampling points, describles how precisely the curve is sampled
+            pricecap (float): the maximum price that is allowed in the market, in $/kWh
+            num_samples (int): the number of sampling points, describes how precisely the curve is sampled
 
         """
         self.num_samples = num_samples
         if isinstance(pricecap, list):
-            self.pricecap = pricecap[0]
-            self.L_pricecap = pricecap[1]
-            self.prices = np.linspace(self.pricecap, self.L_pricecap, self.num_samples)
+            self.price_cap = pricecap[0]
+            self.L_price_cap = pricecap[1]
+            self.prices = np.linspace(self.price_cap, self.L_price_cap, self.num_samples)
         else:
-            self.pricecap = pricecap
-            self.L_pricecap = 0.0
-            self.prices = np.linspace(self.pricecap, self.L_pricecap, self.num_samples)
+            self.price_cap = pricecap
+            self.L_price_cap = 0.0
+            self.prices = np.linspace(self.price_cap, self.L_price_cap, self.num_samples)
         self.quantities = np.zeros(self.num_samples)
         self.uncontrollable_only = True
 
@@ -625,66 +627,66 @@ class curve:
                     else:
                         bid_curve.append(bid_curve_orig[idx])
 
-        if bid_curve[0][1] > self.pricecap:  # if the first element is more than pricecap
+        if bid_curve[0][1] > self.price_cap:  # if the first element is more than price cap
             # print('U inside cut-off price cap...')
             # print(bid_curve)
-            if bid_curve[-1][1] > self.pricecap:  # do not add bid if all prices are above pricecap
+            if bid_curve[-1][1] > self.price_cap:  # do not add bid if all prices are above price cap
                 return
             else:
                 # cut-off prices above price cap points in bid
                 bid_curve_orig = deepcopy(bid_curve)
                 bid_curve = []
                 for idx in range(-1, -len(bid_curve_orig) - 1, -1):
-                    if bid_curve_orig[idx][1] > self.pricecap:
+                    if bid_curve_orig[idx][1] > self.price_cap:
                         bid_curve.insert(0, [(bid_curve_orig[idx + 1][0] * bid_curve_orig[idx][1] -
                                               bid_curve_orig[idx][0] * bid_curve_orig[idx + 1][1] +
-                                              self.pricecap * (bid_curve_orig[idx][0] - bid_curve_orig[idx + 1][0])) /
-                                             (bid_curve_orig[idx][1] - bid_curve_orig[idx + 1][1]), self.pricecap])
+                                              self.price_cap * (bid_curve_orig[idx][0] - bid_curve_orig[idx + 1][0])) /
+                                             (bid_curve_orig[idx][1] - bid_curve_orig[idx + 1][1]), self.price_cap])
                         bid_curve = np.array(bid_curve)
                         break
                     else:
                         bid_curve.insert(0, bid_curve_orig[idx])
             # print(bid_curve)
             bid_curve = deepcopy(bid_curve)
-        if bid_curve[-1][1] < self.L_pricecap:  # if the last element is less than L pricecap
+        if bid_curve[-1][1] < self.L_price_cap:  # if the last element is less than L price cap
             # print('L inside cut-off price cap...')
             # print(bid_curve)
-            if bid_curve[0][1] < self.L_pricecap:  # do not add bid if all prices are below L pricecap
+            if bid_curve[0][1] < self.L_price_cap:  # do not add bid if all prices are below L price cap
                 return
             else:
                 # cut-off prices below L price cap points in bid
                 bid_curve_orig = deepcopy(bid_curve)
                 bid_curve = []
                 for idx in range(len(bid_curve_orig)):
-                    if bid_curve_orig[idx][1] < self.L_pricecap:
+                    if bid_curve_orig[idx][1] < self.L_price_cap:
                         bid_curve.append([(bid_curve_orig[idx - 1][0] * bid_curve_orig[idx][1] -
                                            bid_curve_orig[idx][0] * bid_curve_orig[idx - 1][1] +
-                                           self.L_pricecap * (bid_curve_orig[idx][0] - bid_curve_orig[idx - 1][0])) /
-                                          (bid_curve_orig[idx][1] - bid_curve_orig[idx - 1][1]), self.L_pricecap])
+                                           self.L_price_cap * (bid_curve_orig[idx][0] - bid_curve_orig[idx - 1][0])) /
+                                          (bid_curve_orig[idx][1] - bid_curve_orig[idx - 1][1]), self.L_price_cap])
                         bid_curve = np.array(bid_curve)
                         break
                     else:
                         bid_curve.append(bid_curve_orig[idx])
             # print(bid_curve)
         # Adding two points representing the two extreme price cases
-        if bid_curve[0][1] < self.pricecap:
-            bid_curve = np.insert(bid_curve, [0], [[bid_curve[0][0], self.pricecap]], axis=0)
-        if bid_curve[-1][1] > self.L_pricecap:
-            bid_curve = np.append(bid_curve, [[bid_curve[-1][0], self.L_pricecap]], axis=0)
+        if bid_curve[0][1] < self.price_cap:
+            bid_curve = np.insert(bid_curve, [0], [[bid_curve[0][0], self.price_cap]], axis=0)
+        if bid_curve[-1][1] > self.L_price_cap:
+            bid_curve = np.append(bid_curve, [[bid_curve[-1][0], self.L_price_cap]], axis=0)
 
         # Divide the curve into len(bid_curve)-1 segments for generating the sampling
         for idx in range(len(bid_curve) - 1):
             if bid_curve[idx, 1] == bid_curve[idx + 1, 1]:
                 pass
             else:
-                segment_start = int(((self.pricecap) - bid_curve[idx][1]) * (
-                        self.num_samples / (self.pricecap - self.L_pricecap)))
-                segment_end = int(((self.pricecap) - bid_curve[idx + 1][1]) * (
-                        self.num_samples / (self.pricecap - self.L_pricecap)))
+                segment_start = int((self.price_cap - bid_curve[idx][1]) * (
+                        self.num_samples / (self.price_cap - self.L_price_cap)))
+                segment_end = int((self.price_cap - bid_curve[idx + 1][1]) * (
+                        self.num_samples / (self.price_cap - self.L_price_cap)))
                 len_segment = segment_end - segment_start
                 # print('bid curve ...')
                 # print(bid_curve)
-                # print(self.pricecap)
+                # print(self.price_cap)
                 self.quantities[segment_start:segment_end] = np.add(self.quantities[segment_start:segment_end],
                                                                     np.linspace(bid_curve[idx][0],
                                                                                 bid_curve[idx + 1][0], len_segment))
@@ -692,7 +694,8 @@ class curve:
             self.uncontrollable_only = False
 
     def curve_aggregator_DSO(self, substation_demand_curve):
-        """Adding one substation bid curve to the aggregated DSO bid curve, applied when then curve instance is a DSO demand curve
+        """Adding one substation bid curve to the aggregated DSO bid curve, 
+        applied when then curve instance is a DSO demand curve
 
         Args:
             substation_demand_curve(curve): a curve object representing the aggregated substation demand curve
@@ -707,8 +710,8 @@ class curve:
         """ Update price caps based on the price points
 
         """
-        self.pricecap = max(self.prices)
-        self.L_pricecap = min(self.prices)
+        self.price_cap = max(self.prices)
+        self.L_price_cap = min(self.prices)
 
 
 def curve_bid_sorting(identity, bid_curve):
@@ -725,12 +728,13 @@ def curve_bid_sorting(identity, bid_curve):
         sorted_bid_curve ([list]): sorted curve bid
 
     """
+    idx_start = 0
+    value = bid_curve[0, 1]
     sorted_bid_curve = np.empty((0, 2))
     bid_curve = bid_curve[bid_curve[:, 1].argsort()[::-1]]
     for i in range(len(bid_curve)):
         if i == 0:
-            value = bid_curve[i, 1]
-            idx_start = 0
+            pass
         elif i == len(bid_curve) - 1:
             idx_end = len(bid_curve)
             segment = bid_curve[idx_start: idx_end]
@@ -793,7 +797,7 @@ def resample_curve_for_market(x_vec_1, y_vec_1, x_vec_2, y_vec_2):  # , min_q, m
     return x, new_p_1, new_p_2
 
 
-if __name__ == "__main__":
+def test():
     y_vec_1 = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06]
     x_vec_1 = [0.0, 1.5, 2.5, 5.5, 10, 11]
     x_vec_2 = [8.0, 9.0, 10.0, 12]
@@ -807,3 +811,7 @@ if __name__ == "__main__":
     for val in x:
         new_p_1.append(np.interp(val, x_vec_1, y_vec_1))
         new_p_2.append(np.interp(val, x_vec_2, y_vec_2))
+
+
+if __name__ == "__main__":
+    test()

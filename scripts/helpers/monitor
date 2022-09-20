@@ -2,7 +2,7 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: monitor
 
-import tesp_support.api as tesp
+import tesp_support.tesp_monitor as tesp
 
 tesp.show_tesp_monitor()
 

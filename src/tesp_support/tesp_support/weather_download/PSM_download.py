@@ -10,7 +10,7 @@ DAT files.
 
 In the name of expediency, this script contains two functions that were
 copy and pasted from dsot_solar.py. I wish that those functions had been
-better abstracted when I wrote them but its not worth the time and effort
+better abstracted when I wrote them but, it's not worth the time and effort
 to do so now. This script will likely ever only be run a few times as it
 is just creating input files and is not a part of the co-sim runtime.
 
@@ -23,21 +23,18 @@ not completely stand-alone.
 """
 
 import argparse
+import importlib.util
 import logging
-import pprint
 import os
+import pprint
 import sys
-import openpyxl as xl
-import requests
 from pathlib import Path
 
+import openpyxl as xl
 
-import importlib.util
-spec = importlib.util.spec_from_file_location("PSMv3toDAT",
-                                              "../PSMv3toDAT.py")
+spec = importlib.util.spec_from_file_location("PSMv3toDAT", "../PSMv3toDAT.py")
 PSM = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(PSM)
-
 
 # Setting up logging
 logger = logging.getLogger(__name__)
@@ -46,25 +43,26 @@ logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
 
 
-def _open_file(file_path, type='r'):
+def _open_file(file_path, typ='r'):
     """Utilty function to open file with reasonable error handling.
 
 
     Args:
         file_path (str) - Path to the file to be opened
 
-        type (str) - Type of the open method. Default is read ('r')
+        typ (str) - Type of the open method. Default is read ('r')
 
 
     Returns:
         fh (file object) - File handle for the open file
     """
     try:
-        fh = open(file_path, type)
+        fh = open(file_path, typ)
     except IOError:
-       logger.error('Unable to open {}'.format(file_path))
+        logger.error('Unable to open {}'.format(file_path))
     else:
         return fh
+
 
 def parse_DSO_location(dso_metadata_path, worksheet_name):
     """This function parses the DSO metadata which is contained in an
@@ -83,8 +81,7 @@ def parse_DSO_location(dso_metadata_path, worksheet_name):
         metadata captured.
     """
 
-
-    # openpyxl doesn't use file handles so I just use my function to
+    # openpyxl doesn't use file handles so, I just use my function to
     #   make sure the file is really there and then close it up to allo
     #   openpyxl to be able to grab it and do its thing.
     dso_fh = _open_file(dso_metadata_path)
@@ -110,18 +107,19 @@ def parse_DSO_location(dso_metadata_path, worksheet_name):
         # Skip the header row and the spacer row beneath
         if row[0].row > 2:
             for item in row:
-                    if item.col_idx == header_idx['lat']:
-                        lat = item.value
-                    if item.col_idx == header_idx['long']:
-                        long = item.value
-                    if item.col_idx == header_idx['200-bus']:
-                        bus_200 = item.value
-            dso_meta.append({'lat':lat,
-                            'long':long,
-                            '200-bus':bus_200})
+                if item.col_idx == header_idx['lat']:
+                    lat = item.value
+                if item.col_idx == header_idx['long']:
+                    long = item.value
+                if item.col_idx == header_idx['200-bus']:
+                    bus_200 = item.value
+            dso_meta.append({'lat': lat,
+                             'long': long,
+                             '200-bus': bus_200})
     logger.info('Parsed DSO metadata file {}'.format(dso_metadata_path))
     logger.info(pp.pformat(dso_meta))
     return dso_meta
+
 
 def download_nsrdb_data(dso_meta, output_path):
     """This function queries the NSRDB database over the web and pulls
@@ -160,9 +158,10 @@ def download_nsrdb_data(dso_meta, output_path):
         leap_year = 'false'
         # Set time interval in minutes, i.e., '30' is half hour intervals. Valid intervals are 30 & 60.
         interval = '30'
-        # Specify Coordinated Universal Time (UTC), 'true' will use UTC, 'false' will use the local time zone of the data.
-        # NOTE: In order to use the NSRDB data in SAM, you must specify UTC as 'false'. SAM requires the data to be in the
-        # local time zone.
+        # Specify Coordinated Universal Time (UTC),
+        #   'true' will use UTC, 'false' will use the local time zone of the data.
+        # NOTE: In order to use the NSRDB data in SAM, you must specify UTC as 'false'.
+        # SAM requires the data to be in the local time zone.
         utc = 'false'
         # Your full name, use '+' instead of spaces.
         your_name = 'Trevor+Hardy'
@@ -172,21 +171,19 @@ def download_nsrdb_data(dso_meta, output_path):
         your_affiliation = 'PNNL'
         # Your email address
         your_email = 'trevor.hardy@pnnl.gov'
-        # Please join our mailing list so we can keep you up-to-date on new developments.
+        # Please join our mailing list so, we can keep you up-to-date on new developments.
         mailing_list = 'false'
 
-        # Declare url string
+        # Declare url string for the requests
         url = 'http://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv?wkt=POINT({lon}%20{lat})&names={year}&leap_day={leap}&interval={interval}&utc={utc}&full_name={name}&email={email}&affiliation={affiliation}&mailing_list={mailing_list}&reason={reason}&api_key={api}&attributes={attr}'.format(
-            year=year, lat=lat, lon=long, leap=leap_year,
-            interval=interval,
+            year=year, lat=lat, lon=long, leap=leap_year, interval=interval,
             utc=utc, name=your_name, email=your_email, mailing_list=mailing_list,
-            affiliation=your_affiliation, reason=reason_for_use, api=api_key,
-            attr=attributes)
+            affiliation=your_affiliation, reason=reason_for_use, api=api_key, attr=attributes)
 
         # Check to see if file exists (indicating we downloaded it before
-        #   and don't need to do so again). If file does exist, we load
-        #   it and add it to the list of dataframes.
-        filename = 'DSO_{}_{}_{}_weather_data.csv'.format(dso_num,lat,long)
+        # and don't need to do so again). If file does exist, we load
+        # it and add it to the list of dataframes.
+        filename = 'DSO_{}_{}_{}_weather_data.csv'.format(dso_num, lat, long)
         output_file = os.path.join(output_path, filename)
 
         # r = requests.get(url, allow_redirects=True)
@@ -199,9 +196,10 @@ def download_nsrdb_data(dso_meta, output_path):
         #   function and all that is needed is the filename.
         file, ext = os.path.splitext(filename)
         PSM.weatherdat(file,
-                       'Bus_{}'.format(dso_num+1),
-                       '{}_{}'.format(lat,long))
+                       'Bus_{}'.format(dso_num + 1),
+                       '{}_{}'.format(lat, long))
         logger.info('\t...converted PSM to DAT for DSO {}'.format(dso_num))
+
 
 def _auto_run(args):
     """
@@ -215,12 +213,12 @@ def _auto_run(args):
         of the format and contents expected in said files
 
         '-d' or '--dso_metadata' - Path to .xlsx file with all DSO
-        metadata (file is part of the DSO+T planning/documentation
+        metadata file is part of the DSO+T planning/documentation
         dataset and should not need to be manually created or edited.
 
         '-n' or '--nsrdb_path' - Location to save downloaded solar files
 
-        '-x' or '--dso_metadata_worksheet_name - Name of worksheet in
+        '-x' or '--dso_metadata_worksheet_name' - Name of worksheet in
         file specified by dso_metdata that contains the location metadata.
 
     Returns:
@@ -229,17 +227,17 @@ def _auto_run(args):
 
     # Must parse solar metadata file first as it contains the name of the
     #   Excel worksheet that contains the values for the DSO metadata.
-    dso_meta = parse_DSO_location(args.dso_metadata,
-                                  args.dso_metadata_worksheet_name)
+    dso_meta = parse_DSO_location(args.dso_metadata, args.dso_metadata_worksheet_name)
     download_nsrdb_data(dso_meta, args.nsrdb_output_path)
     logger.info('Download and conversion for all weather files complete.')
+
 
 if __name__ == '__main__':
     # TDH: This slightly complex mess allows lower importance messages
     # to be sent to the log file and ERROR messages to additionally
     # be sent to the console as well. Thus, when bad things happen
     # the user will get an error message in both places which,
-    # hopefully, will aid in trouble-shooting.
+    # hopefully, will aid in troubleshooting.
     fileHandle = logging.FileHandler("dsot_weather_download.log", mode='w')
     fileHandle.setLevel(logging.DEBUG)
     streamHandle = logging.StreamHandler(sys.stdout)
@@ -248,9 +246,8 @@ if __name__ == '__main__':
                         handlers=[fileHandle, streamHandle])
 
     parser = argparse.ArgumentParser(description='Download NSRDB data.')
-    # TDH: Have to do a little bit of work to generate a good default
-    # path for the auto_run folder (where the development test data is
-    # held.
+    # TDH: Have to do a bit of work to generate a good default
+    # path for the auto_run folder where the development test data is held.
     script_path = os.path.dirname(os.path.realpath(__file__))
     auto_run_dir = os.path.join(script_path, 'auto_run')
     parser.add_argument('-a',

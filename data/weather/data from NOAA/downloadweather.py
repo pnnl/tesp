@@ -21,11 +21,14 @@ def downloadweather_NOAA(stationid, startdate, enddate, outputFilename):
     for dicts in data['results']:
         list_station.append(dicts['name'])
         list_id.append(dicts['id'])
-        station_dict = dict(zip(list_id, list_station))
+    station_dict = dict(zip(list_id, list_station))
 
-    myUrl_1 = 'https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=NORMAL_HLY&datatypeid=HLY-TEMP-NORMAL&unit=standard&stationid=' + stationid + '&startdate=' + startdate + '&enddate=' + enddate + '&limit=1000'
-    myUrl_2 = 'https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=NORMAL_HLY&datatypeid=HLY-WIND-AVGSPD&unit=standard&stationid=' + stationid + '&startdate=' + startdate + '&enddate=' + enddate + '&limit=1000'
-    myUrl_3 = 'https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=NORMAL_HLY&datatypeid=HLY-PRES-NORMAL&unit=standard&stationid=' + stationid + '&startdate=' + startdate + '&enddate=' + enddate + '&limit=1000'
+    prefix = 'https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=NORMAL_HLY'
+    suffix = '&unit=standard' + '&stationid=' + stationid + \
+             '&startdate=' + startdate + '&enddate=' + enddate + '&limit=1000'
+    myUrl_1 = prefix + '&datatypeid=HLY-TEMP-NORMAL' + suffix
+    myUrl_2 = prefix + '&datatypeid=HLY-WIND-AVGSPD' + suffix
+    myUrl_3 = prefix + '&datatypeid=HLY-PRES-NORMAL' + suffix
     head = {'token': myToken}
     r1 = requests.get(url=myUrl_1, headers=head)
     r2 = requests.get(url=myUrl_2, headers=head)
@@ -35,7 +38,7 @@ def downloadweather_NOAA(stationid, startdate, enddate, outputFilename):
     data3 = r3.json()
 
     if data1 == {} or data2 == {} or data3 == {}:
-        print('no data avaliable for one of the url')
+        print('no data available for one of the url')
     else:
 
         f_1 = open("temperature.csv", "w", newline='')
@@ -86,7 +89,7 @@ def downloadweather_NOAA(stationid, startdate, enddate, outputFilename):
         timestamp = []
         temperature = []
         for row in reader_1:
-            # skip frist row
+            # skip first row
             if reader_1.line_num == 1:
                 continue
             # read the timestamp after transfer the data type
@@ -99,7 +102,7 @@ def downloadweather_NOAA(stationid, startdate, enddate, outputFilename):
         # timestamp=[]
         windspeed = []
         for row in reader_2:
-            # skip frist row
+            # skip first row
             if reader_2.line_num == 1:
                 continue
             windspeed.append(row[1])
@@ -110,7 +113,7 @@ def downloadweather_NOAA(stationid, startdate, enddate, outputFilename):
         # timestamp=[]
         pressure = []
         for row in reader_3:
-            # skip frist row
+            # skip first row
             if reader_3.line_num == 1:
                 continue
             pressure.append(row[1])
@@ -141,7 +144,7 @@ def downloadweather_NOAA(stationid, startdate, enddate, outputFilename):
 
 
 def _tests():
-    # avaliable station id is in stationid_with_hourly_data.csv 
+    # available station id is in stationid_with_hourly_data.csv
     downloadweather_NOAA('GHCND:USW00024233', '2010-05-01', '2010-06-01', '5min_temp_wind_pressure.csv')
 
 

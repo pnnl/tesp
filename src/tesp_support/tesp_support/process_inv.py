@@ -106,7 +106,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
     data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float)
     # print ("\nConstructed", data_s.shape, "NumPy array for Substations")
     j = 0
-    for key in sub_keys:
+    for _ in sub_keys:
         i = 0
         for t in times:
             ary = lst_s[str(t)][sub_keys[j]]
@@ -157,7 +157,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
     data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
     # print ("\nConstructed", data_h.shape, "NumPy array for Houses")
     j = 0
-    for key in hse_keys:
+    for _ in hse_keys:
         i = 0
         for t in times:
             ary = lst_h[str(t)][hse_keys[j]]
@@ -218,7 +218,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
     data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
     # print ("\nConstructed", data_m.shape, "NumPy array for Meters")
     j = 0
-    for key in mtr_keys:
+    for _ in mtr_keys:
         i = 0
         for t in times:
             ary = lst_m[str(t)][mtr_keys[j]]
@@ -324,7 +324,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
         data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=np.float)
         print("\nConstructed", data_r.shape, "NumPy array for Regulators")
         j = 0
-        for key in reg_keys:
+        for _ in reg_keys:
             i = 0
             for t in times:
                 ary = lst_r[str(t)][reg_keys[j]]
@@ -637,6 +637,7 @@ def process_inv(name_root, diction_name='', title=None, save_file=None, save_onl
     Args:
       name_root (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
       diction_name (str): metafile name (with json extension) for a different GLM dictionary, if it's not *[name_root]_glm_dict.json*. Defaults to empty.
+      title (str):
       save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
       save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
     """

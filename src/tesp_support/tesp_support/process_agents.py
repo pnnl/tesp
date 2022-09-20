@@ -91,7 +91,7 @@ def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False)
     data_a = np.empty(shape=(len(a_keys), len(times), len(lst_a[str(times[0])][a_keys[0]])), dtype=np.float)
     print('\nConstructed', data_a.shape, 'NumPy array for Auctions')
     j = 0
-    for key in a_keys:
+    for _ in a_keys:
         i = 0
         for t in times:
             ary = lst_a[str(t)][a_keys[j]]
@@ -124,7 +124,7 @@ def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False)
     print('\nConstructed', data_c.shape, 'NumPy array for Controllers')
     zary = np.zeros(len(meta_c.items()))
     j = 0
-    for key in c_keys:
+    for _ in c_keys:
         i = 0
         for t in times:
             if c_keys[j] in lst_c[str(t)]:
@@ -167,9 +167,10 @@ def plot_agents(diction, save_file=None, save_only=False):
     data_c = diction['data_c']
     idx_a = diction['idx_a']
     idx_c = diction['idx_c']
-    keys_a = diction['keys_a']
+    # keys_a = diction['keys_a']  # not used
     keys_c = diction['keys_c']
     cidx = diction['high_bid_idx']
+
     # display a plot
     fig, ax = plt.subplots(2, 2, sharex='col')
 

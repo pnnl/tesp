@@ -21,7 +21,7 @@ from datetime import datetime
 from .data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
 from .glm_dict import glm_dict
 from .make_ems import merge_idf
-from .TMY2EPW import convert_tmy2_to_epw
+from .TMYtoEPW import convert_tmy2_to_epw
 from .helpers import HelicsMsg
 from .feederGenerator import populate_feeder
 from .prep_substation import prep_substation

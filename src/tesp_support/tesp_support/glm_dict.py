@@ -15,7 +15,7 @@ Public Functions:
 
 import os
 import json
-import math
+from math import sqrt
 
 from .helpers import zoneMeterName
 
@@ -310,7 +310,7 @@ def glm_dict(name_root, ercot=False, te30=False):
                     lastMeterParent = lst[1].strip(';')
                 if lst[0] == 'nominal_voltage':
                     vln = float(lst[1].strip(' ').strip(';')) * 1.0
-                    vll = vln * math.sqrt(3.0)
+                    vll = vln * sqrt(3.0)
                 if lst[0] == 'bill_mode':
                     billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln,
                                            'children': []}

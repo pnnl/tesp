@@ -805,13 +805,13 @@ class EVDSOT:
             temp = 1
 
         if temp == 0:
-            if PRICE >= BID[0][P]:  # battery at maximun discharg
+            if PRICE >= BID[0][P]:  # battery at maximum discharge
                 _quantity = -BID[0][Q]
-            elif PRICE <= BID[3][P]:  # battery at maximun charging
+            elif PRICE <= BID[3][P]:  # battery at maximum charging
                 _quantity = -BID[3][Q]
             elif BID[2][P] <= PRICE <= BID[1][P]:  # battery at deadband
                 _quantity = -BID[2][Q]
-            elif BID[1][P] <= PRICE <= BID[0][P]:  # frist curve
+            elif BID[1][P] <= PRICE <= BID[0][P]:  # first curve
                 b = BID[1][P] - BID[1][Q] * m
                 _quantity = -1 * ((PRICE - b) / m)
             else:

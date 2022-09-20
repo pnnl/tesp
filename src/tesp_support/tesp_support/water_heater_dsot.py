@@ -50,7 +50,7 @@ class WaterHeaterDSOT:
         ProfitMargin_intercept (float): specified in % and used to modify slope of bid curve. Set to 0 to disable
         ProfitMargin_slope (float): specified in % to generate a small dead band (i.e., change in price does not affect quantity). Set to 0 to disable
         Participating (boolean): equals to 1 when participate in the price-responsive biddings
-        price_cap (float): the maximun price that is allowed in the retail market, in $/kWh
+        price_cap (float): the maximum price that is allowed in the retail market, in $/kWh
         model_diag_level (int): Specific level for logging errors; set it to 11
         sim_time (str): Current time in the simulation; should be human-readable
 
@@ -67,8 +67,8 @@ class WaterHeaterDSOT:
         T_bottom (float): current set point of the bottom heating element, in degF
         SOHC (float): statue of heat charge, in %
         SOHC_desired (float): desired SOHC, in %
-        SOHC_max (float): maximun SOHC, in %
-        SOHC_min (float): minimun SOHC, in %
+        SOHC_max (float): maximum SOHC, in %
+        SOHC_min (float): minimum SOHC, in %
         states_upper (list): list of states and time in 5-min of upper element
         states_bottom (list): list of states and time in 5-min of bottom element
         runtime_upper (float): runtime of the upper element during 5-min
@@ -104,8 +104,8 @@ class WaterHeaterDSOT:
         co1_5min (float): coefficient of the water draw flow rate in the 5min delta SOHC model
         co2_5min (float): coefficient of the upper element consumption in the 5min delta SOHC model
         co3_5min (float): coefficient of the bottom element consumption in the 5min delta SOHC model
-        RT_SOHC_max (float): the maximun SOHC the water heater can achieve in the next 5min, in %
-        RT_SOHC_min (float): the minimun SOHC the water heater can achieve in the next 5min, in %
+        RT_SOHC_max (float): the maximum SOHC the water heater can achieve in the next 5min, in %
+        RT_SOHC_min (float): the minimum SOHC the water heater can achieve in the next 5min, in %
         RT_Q_max (float): higher quantity boundary of the RT bid curve, in kWh
         RT_Q_min (float): lower quantity boundary of the RT bid curve, in kWh
     """
@@ -802,7 +802,7 @@ class WaterHeaterDSOT:
                     Q_max = self.Phw #/ self.hourto5min
                 self.RT_SOHC_max = self.SOHC_max
 
-            #Decides minimun bidding quantity
+            #Decides minimum bidding quantity
             delta_SOHC_min = (self.co0_5min + self.co1_5min * (-Qdraw_5min) + self.co2_5min * (self.SOHC / 100))*100
             #print("Qdraw_5min, SOHC at that 5min , delta_SOHC_max ,delta_SOHC_min ", Qdraw_5min, self.SOHC, delta_SOHC_max, delta_SOHC_min)
             if self.SOHC + delta_SOHC_min > self.SOHC_min:  #scenario 5 coded
