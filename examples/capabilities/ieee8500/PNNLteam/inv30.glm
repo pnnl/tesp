@@ -194,7 +194,7 @@ object substation {
 object fncs_msg {
   name gld_1;
   parent network_node;
-  configure inv30_FNCS_Config.txt;
+  configure inv30_gridlabd.txt;
   option "transport:hostname localhost, port 5570";
   aggregate_subscriptions true;
   aggregate_publications true;
@@ -205,7 +205,7 @@ object fncs_msg {
 object helics_msg {
   name gld_1;
   parent network_node;
-  configure inv30_HELICS_Config.json;
+  configure inv30_gridlabd.json;
 }
 #endif
 

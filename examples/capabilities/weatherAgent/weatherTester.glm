@@ -54,7 +54,7 @@ object house {
 #ifdef USE_FNCS
 object fncs_msg {
   name gridlabdweatheragent;
-  configure weather_FNCS_Config.txt;
+  configure weather_gridlabd.txt;
   option "transport:hostname localhost, port 5570";
 }
 #endif

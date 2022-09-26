@@ -18,7 +18,7 @@ def prep_precool(name_root):
 
     - *[name_root]_agent_dict.json*, contains configuration data for the precooler agents
     - *[name_root]_precool.yaml*, contains FNCS subscriptions for the precooler agents
-    - *[name_root]_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *[name_root]_gridlabd.txt*, a GridLAB-D include file with FNCS publications and subscriptions
 
     Args:
         name_root (str): the name of the GridLAB-D file, without extension
@@ -41,7 +41,7 @@ def prep_precool(name_root):
     gp = open(name_root + '.glm', 'r')
     dp = open(name_root + '_agent_dict.json', 'w')
     yp = open(name_root + '_precool.yaml', 'w')
-    cp = open(name_root + '_FNCS_Config.txt', 'w')
+    cp = open(name_root + '_gridlabd.txt', 'w')
 
     # write preambles
     print('name: precool', file=yp)

@@ -162,7 +162,7 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
             outfile.write('with_market=0\n\n')
 
         for cnt in range(len(ports)):
-            outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
+            outfile.write('(exec python3 -c "import tesp_support.schedule_server as tesp;'
                           'tesp.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
                           % (config_file, str(5150 + ports[cnt]), outPath))
         outfile.write('# wait schedule server to populate\n')
@@ -174,7 +174,7 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
         for w_key, w_val in weather_config.items():
             outfile.write('cd %s\n' % w_key)
             outfile.write('(export WEATHER_CONFIG=weather_Config.json '
-                          '&& exec python3 -c "import tesp_support.api as tesp;'
+                          '&& exec python3 -c "import tesp_support.weatherAgent as tesp;'
                           'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
                           % (outPath, w_key))
             outfile.write('cd ..\n')
@@ -193,20 +193,20 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
                 % (dbg, outPath, sub_val['substation'], sub_val['substation'], outPath, sub_val['substation']))
             outfile.write('cd ..\n')
             outfile.write('cd %s\n' % sub_key)
-            outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
+            outfile.write('(exec python3 -c "import tesp_support.substation_dsot as tesp;'
                           'tesp.dso_loop(\'%s\',$with_market)" &> '
                           '%s/%s_substation.log &)\n'
                           % (sub_val['substation'], outPath, sub_key))
             outfile.write('cd ..\n')
 
         if master_file != '':
-            outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
+            outfile.write('(exec python3 -c "import tesp_support.tso_psst as tesp;'
                           'tesp.tso_psst_loop(\'./%s\')" &> %s/tso.log &)\n'
                           % (master_file, outPath))
             for plyr in range(len(players)):
                 player = system_config[players[plyr]]
                 if player[6] or player[7]:
-                    outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
+                    outfile.write('(exec python3 -c "import tesp_support.player as tesp;'
                                   'tesp.load_player_loop(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                   % (master_file, players[plyr], outPath, player[0]))
 
@@ -276,7 +276,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('set with_market=0\n')
 
             for cnt in range(len(ports)):
-                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.schedule_server as tesp;'
                               'tesp.schedule_server(\'..\\%s\', %s)" ^> %s\\schedule.log 2^>^&1\n'
                               % (config_file, str(5150 + ports[cnt]), outPath))
             outfile.write('rem wait schedule server to populate\n')
@@ -288,7 +288,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
             for w_key, w_val in weather_config.items():
                 outfile.write('set FNCS_CONFIG_FILE=%s.zpl\n' % w_key)
                 outfile.write('cd %s\n' % w_key)
-                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.weatherAgent as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" ^> %s\\%s_weather.log 2^>^&1\n'
                               % (outPath, w_key))
                 outfile.write('cd ..\n')
@@ -308,14 +308,14 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('set FNCS_CONFIG_FILE=%s.yaml\n' % sub_val['substation'])
                 outfile.write('cd ..\n')
                 outfile.write('cd %s\n' % sub_key)
-                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.substation_dsot_f as tesp;'
                               'tesp.dso_loop_f(\'%s_agent_dict.json\',\'%s\',%%with_market%%)" ^> '
                               '%s\\%s_substation.log 2^>^&1\n'
                               % (sub_val['substation'], sub_val['substation'], outPath, sub_key))
                 outfile.write('cd ..\n')
             if master_file != '':
                 outfile.write('set FNCS_CONFIG_FILE=tso.yaml\n')
-                outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.tso_psst_f as tesp;'
                               'tesp.tso_psst_loop_f(\'./%s\')" ^> %s\\tso.log 2^>^&1\n'
                               % (master_file, outPath))
 
@@ -323,7 +323,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                     player = system_config[players[plyr]]
                     if player[6] or player[7]:
                         outfile.write('set FNCS_CONFIG_FILE=%s_player.yaml\n' % (player[0]))
-                        outfile.write('start /b cmd /c python -c "import tesp_support.api as tesp;'
+                        outfile.write('start /b cmd /c python -c "import tesp_support.player_f as tesp;'
                                       'tesp.load_player_loop_f(\'./%s\', \'%s\')" ^> %s\\%s_player.log 2^>^&1\n'
                                       % (master_file, players[plyr], outPath, player[0]))
 
@@ -361,7 +361,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('with_market=0\n\n')
 
             for cnt in range(len(ports)):
-                outfile.write('(exec python3 -c "import tesp_support.api as tesp;'
+                outfile.write('(exec python3 -c "import tesp_support.schedule_server as tesp;'
                               'tesp.schedule_server(\'../%s\', %s)" &> %s/schedule.log &)\n'
                               % (config_file, str(5150 + ports[cnt]), outPath))
             outfile.write('# wait schedule server to populate\n')
@@ -374,7 +374,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
             for w_key, w_val in weather_config.items():
                 outfile.write('cd %s\n' % w_key)
                 outfile.write('(export FNCS_CONFIG_FILE=%s.zpl && export WEATHER_CONFIG=weather_Config.json '
-                              '&& exec python3 -c "import tesp_support.api as tesp;'
+                              '&& exec python3 -c "import tesp_support.weatherAgent as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
                               % (w_key, outPath, w_key))
                 outfile.write('cd ..\n')
@@ -394,7 +394,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 outfile.write('cd ..\n')
                 outfile.write('cd %s\n' % sub_key)
                 outfile.write('(export FNCS_CONFIG_FILE=%s.yaml '
-                              '&& exec python3 -c "import tesp_support.api as tesp;'
+                              '&& exec python3 -c "import tesp_support.substation_dsot_f as tesp;'
                               'tesp.dso_loop_f(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
                               '%s/%s_substation.log &)\n'
                               % (sub_val['substation'], sub_val['substation'], sub_val['substation'], outPath, sub_key))
@@ -402,14 +402,14 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
 
             if master_file != '':
                 outfile.write('(export FNCS_CONFIG_FILE=tso.yaml '
-                              '&& exec python3 -c "import tesp_support.api as tesp;'
+                              '&& exec python3 -c "import tesp_support.tso_psst_f as tesp;'
                               'tesp.tso_psst_loop_f(\'./%s\')" &> %s/tso.log &)\n'
                               % (master_file, outPath))
                 for plyr in range(len(players)):
                     player = system_config[players[plyr]]
                     if player[6] or player[7]:
                         outfile.write('(export FNCS_CONFIG_FILE=%s_player.yaml '
-                                      '&& exec python3 -c "import tesp_support.api as tesp;'
+                                      '&& exec python3 -c "import tesp_support.player_f as tesp;'
                                       'tesp.load_player_loop_f(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                       % (player[0], master_file, players[plyr], outPath, player[0]))
 

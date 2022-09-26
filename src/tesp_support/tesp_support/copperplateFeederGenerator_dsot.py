@@ -1354,7 +1354,7 @@ def write_substation(op, name, phs, vnom, vll):
         print('object fncs_msg {', file=op)
         print('  name gld' + substation_name + ';', file=op)  # for full-order DSOT
         print('  parent network_node;', file=op)
-        print('  configure', caseName + '_FNCS_Config.txt;', file=op)
+        print('  configure', caseName + '_gridlabd.txt;', file=op)
         print('  option "transport:hostname localhost, port 5570";', file=op)
         print('  aggregate_subscriptions true;', file=op)
         print('  aggregate_publications true;', file=op)

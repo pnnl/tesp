@@ -19,13 +19,10 @@ import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import messagebox
 
-try:
-    import tesp_support.fncs as fncs
-except:
-    pass
 from .helpers import parse_kw
 
 import matplotlib
+
 try:
     matplotlib.use('TkAgg')
 except:
@@ -35,6 +32,9 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
+
+helics = None
+fncs = None
 
 
 class TespMonitorGUI:
@@ -87,9 +87,15 @@ class TespMonitorGUI:
       ax (Axes): set of 4 xy axes to plot on
       canvas (FigureCanvasTkAgg): a TCL Tk canvas that can host Matplotlib
       bFNCSactive (Boolean): True if a TESP simulation is running with other FNCS federates, False if not
+      bHELICSactive (Boolean): True if a HELICS simulation is running with other HELICS federates, False if not
     """
 
-    def __init__(self, master):
+    def __init__(self, master, HELICS=True):
+        self.HELICS = HELICS
+        self.pids = []
+        self.idxlast = -1
+        self.time_granted = 0
+        self.hFed = None
         self.root = master
         self.root.protocol('WM_DELETE_WINDOW', self.on_closing)
         self.top = self.root.winfo_toplevel()
@@ -102,7 +108,11 @@ class TespMonitorGUI:
 
         btn = ttk.Button(self.root, text='Open...', command=self.OpenConfig)
         btn.grid(row=0, column=0, sticky=tk.NSEW)
-        btn = ttk.Button(self.root, text='Start All', command=self.launch_all)
+        self.filename = 'monitor.json'
+        if HELICS:
+            btn = ttk.Button(self.root, text='Start All', command=self.launch_all)
+        else:
+            btn = ttk.Button(self.root, text='Start All', command=self.launch_all_f)
         btn.grid(row=0, column=1, sticky=tk.NSEW)
         btn = ttk.Button(self.root, text='Kill All', command=self.kill_all)
         btn.grid(row=0, column=2, sticky=tk.NSEW)
@@ -171,6 +181,7 @@ class TespMonitorGUI:
         self.canvas.get_tk_widget().grid(row=1, columnspan=5, sticky=tk.W + tk.E + tk.N + tk.S)
 
         self.bFNCSactive = False
+        self.bHELICSactive = False
 
     def on_closing(self):
         """Verify whether the user wants to stop TESP simulations before exiting the monitor
@@ -179,32 +190,36 @@ class TespMonitorGUI:
         down all other FNCS federates in the TESP simulation.
         """
         if messagebox.askokcancel('Quit', 'Do you want to close this window? This is likely to stop all simulations.'):
-            self.root.quit()
-            self.root.destroy()
-            if self.bFNCSactive:
-                fncs.finalize()
-                self.bFNCSactive = False
+            self.Quit()
 
     def Quit(self):
-        """Shuts down this monitor, and also shuts down FNCS if active
+        """Shuts down this monitor, and also shuts down FNCS/HELICS if active
         """
         self.root.quit()
         self.root.destroy()
         if self.bFNCSactive:
             fncs.finalize()
             self.bFNCSactive = False
+        if self.bHELICSactive:
+            helics.helicsFederateDestroy(self.hFed)
+            self.bHELICSactive = False
 
     def OpenConfig(self):
         """Read the JSON configuration file for this monitor, and initialize the plot axes
         """
         fname = filedialog.askopenfilename(initialdir='.',
-                                           initialfile='tesp_monitor.json',
+                                           initialfile=self.filename,
                                            title='Open JSON Monitor Configuration',
                                            filetypes=(('JSON files', '*.json'), ('all files', '*.*')),
                                            defaultextension='json')
         lp = open(fname)
         cfg = json.loads(lp.read())
-        self.commands = cfg['commands']
+        if self.HELICS:
+            self.msg_config = cfg['helics_config']
+            self.commands = cfg['commands']
+        else:
+            self.msg_config = cfg['fncs_config']
+            self.commands = cfg['commands_f']
         # no longer converting seconds to minutes
         self.time_stop = int(cfg['time_stop'])
         self.yaml_delta = int(cfg['yaml_delta'])
@@ -225,13 +240,20 @@ class TespMonitorGUI:
         """
         for proc in self.pids:
             print('trying to kill', proc.pid)
-            proc.terminate()
+            # proc.terminate()
+            proc.kill()
+            del proc
+        self.pids = []
         self.root.update()
-        print('trying to finalize FNCS')
+        print('trying to finalize federate')
         if self.bFNCSactive:
             fncs.finalize()
             self.bFNCSactive = False
-        print('FNCS finalized')
+            print('FNCS finalized')
+        if self.bHELICSactive:
+            helics.helicsFederateDestroy(self.hFed)
+            self.bHELICSactive = False
+            print('HELICS finalized')
 
     def expand_limits(self, v, vmin, vmax):
         """Whenever a variable meets a vertical axis limit, expand the limits with 10% padding above and below
@@ -252,7 +274,7 @@ class TespMonitorGUI:
             vmax = v + vpad
         return vmin, vmax
 
-    def update_plots(self, i):
+    def update_plots_f(self, i):
         """This function is called by Matplotlib for each animation frame
 
         Each time called, collect FNCS messages until the next time to plot
@@ -289,17 +311,17 @@ class TespMonitorGUI:
                 value = fncs.get_value(topic)
                 if topic == 'power_A':
                     v1 = 3.0 * float(value.strip('+ degFkW')) / 1000.0
-                elif topic == 'distribution_load':
-                    v3 = parse_kw(value)
-                    self.gld_load = v3
-                elif topic == 'vpos7':
+                elif topic == 'TPV_7':
                     v0 = float(value.strip('+ degFkW')) / 133000.0
                 elif topic == 'clear_price':
                     v2auc = float(value.strip('+ degFkW'))
-                elif topic == 'LMP7':
+                elif topic == 'LMP_7':
                     v2lmp = float(value.strip('+ degFkW'))
-                elif topic == 'SUBSTATION7':
+                elif topic == 'electric_demand_power':
                     v1 = float(value.strip('+ degFkW'))  # already in kW
+                elif topic == 'distribution_load':
+                    v3 = parse_kw(value)
+                    self.gld_load = v3
 
             # expand the Y axis limits if necessary, keeping a 10% padding around the range
             if v0 < self.y0min or v0 > self.y0max:
@@ -355,7 +377,7 @@ class TespMonitorGUI:
         # in case we miss the last point
         return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
 
-    def launch_all(self):
+    def launch_all_f(self):
         """Launches the simulators, initializes FNCS and starts the animated plots
         """
         self.root.update()
@@ -368,8 +390,9 @@ class TespMonitorGUI:
                 if procargs[0] == 'python3':
                     procargs[0] = 'python'  # python3 not defined on Windows
             procenv = os.environ.copy()
-            for var in row['env']:
-                procenv[var[0]] = var[1]
+            if 'env' in row:
+                for var in row['env']:
+                    procenv[var[0]] = var[1]
             logfd = None
             if 'log' in row:
                 logfd = open(row['log'], 'w')
@@ -379,25 +402,203 @@ class TespMonitorGUI:
         print('launched', len(self.pids), 'simulators')
         self.root.update()
 
-        #    print ('want to initialize FNCS', os.environ['FNCS_CONFIG_FILE'], os.getcwd())
+        os.environ["FNCS_CONFIG_FILE"] = self.msg_config
         fncs.initialize()
         self.bFNCSactive = True
         print('FNCS initialized')
+
         self.nsteps = int(self.time_stop / self.yaml_delta)
         self.idxlast = -1
         self.time_granted = 0
+        ani = animation.FuncAnimation(self.fig, self.update_plots_f, frames=self.nsteps,
+                                      blit=True, repeat=False, interval=0)
+        self.fig.canvas.draw()
 
+    def update_plots(self, i):
+        """This function is called by Matplotlib for each animation frame
+
+        Each time called, collect HELICS messages until the next time to plot
+        has been reached. Then update the plot quantities and return the
+        Line2D objects that have been updated for plotting. Check for new
+        data outside the plotted vertical range, which triggers a full
+        re-draw of the axes. On the last frame, finalize HELICS.
+
+        Args:
+          i (int): the animation frame number
+        """
+        #    print ('.', end='')
+        #    print ('frame', i, 'of', self.nsteps)
+
+        bRedraw = False
+        while self.time_granted < self.time_stop:  # time in seconds
+            # find the time value and index into the time (X) array
+            self.time_granted = int(helics.helicsFederateRequestTime(self.hFed, self.time_stop))
+            self.root.update()
+            idx = int(self.time_granted / self.yaml_delta)
+            if idx <= self.idxlast:
+                continue
+            self.idxlast = idx
+            h = float(self.time_granted / 3600.0)
+            self.hrs.append(h)
+
+            # find the newest Y values
+            v0 = 0.0
+            v1 = 0.0
+            v2auc = 0.0
+            v2lmp = 0.0
+            v3 = 0.0
+
+            if helics.helicsInputIsUpdated(self.sub_power_A):
+                v1 = 3.0 * helics.helicsInputGetDouble(self.sub_power_A) / 1000.0
+            if helics.helicsInputIsUpdated(self.sub_TPV_7):
+                v0 = helics.helicsInputGetDouble(self.sub_TPV_7) / 133000.0
+            if helics.helicsInputIsUpdated(self.sub_clear_price):
+                v2auc = helics.helicsInputGetDouble(self.sub_clear_price)
+            if helics.helicsInputIsUpdated(self.sub_LMP_7):
+                v2lmp = helics.helicsInputGetDouble(self.sub_LMP_7)
+            if helics.helicsInputIsUpdated(self.sub_TEDP):
+                v1 = helics.helicsInputGetDouble(self.sub_TEDP)
+            if helics.helicsInputIsUpdated(self.sub_dist_load):
+                cval = helics.helicsInputGetComplex(self.sub_dist_load)
+                v3 = complex(cval[0], cval[1])
+                v3 = v3.real / 1.0e3
+                self.gld_load = v3
+
+            # expand the Y axis limits if necessary, keeping a 10% padding around the range
+            if v0 < self.y0min or v0 > self.y0max:
+                self.y0min, self.y0max = self.expand_limits(v0, self.y0min, self.y0max)
+                self.ax[0].set_ylim(self.y0min, self.y0max)
+                bRedraw = True
+            if v1 < self.y1min or v1 > self.y1max:
+                self.y1min, self.y1max = self.expand_limits(v1, self.y1min, self.y1max)
+                self.ax[1].set_ylim(self.y1min, self.y1max)
+                bRedraw = True
+            if v2auc > v2lmp:
+                v2max = v2auc
+                v2min = v2lmp
+            else:
+                v2max = v2lmp
+                v2min = v2auc
+            if v2min < self.y2min or v2max > self.y2max:
+                self.y2min, self.y2max = self.expand_limits(v2min, self.y2min, self.y2max)
+                self.y2min, self.y2max = self.expand_limits(v2max, self.y2min, self.y2max)
+                self.ax[2].set_ylim(self.y2min, self.y2max)
+                bRedraw = True
+            if v3 < self.y3min or v3 > self.y3max:
+                self.y3min, self.y3max = self.expand_limits(v3, self.y3min, self.y3max)
+                self.ax[3].set_ylim(self.y3min, self.y3max)
+                bRedraw = True
+
+            # update the Y axis data to draw
+            self.y0.append(v0)  # Vpu
+            self.y1.append(v1)  # school kW
+            self.y2auc.append(v2auc)  # price
+            self.y2lmp.append(v2lmp)  # LMP
+            self.y3fncs.append(v3)  # this feeder load from HELICS (could be zero if no update)
+            self.y3gld.append(self.gld_load)  # most recent feeder load from HELICS
+            self.ln0.set_data(self.hrs, self.y0)
+            self.ln1.set_data(self.hrs, self.y1)
+            self.ln2auc.set_data(self.hrs, self.y2auc)
+            self.ln2lmp.set_data(self.hrs, self.y2lmp)
+            self.ln3fncs.set_data(self.hrs, self.y3fncs)
+            self.ln3gld.set_data(self.hrs, self.y3gld)
+
+            if bRedraw:
+                #        print ('redrawing axes')
+                self.fig.canvas.draw()
+
+            if i >= (self.nsteps - 1):
+                print('finalizing HELICS')
+                helics.helicsFederateDestroy(self.hFed)
+                print('HELICS active to False')
+                del self.hFed
+                self.bHELICSactive = False
+
+            return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
+
+        print('not finalizing HELICS')
+        # in case we miss the last point
+        return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
+
+    def launch_all(self):
+        """Launches the simulators, initializes HELICS and starts the animated plots
+        """
+        self.root.update()
+
+        print('launching all simulators')
+        self.pids = []
+        for row in self.commands:
+            procargs = row['args']
+            if sys.platform == 'win32':
+                if procargs[0] == 'python3':
+                    procargs[0] = 'python'  # python3 not defined on Windows
+            procenv = os.environ.copy()
+            if 'env' in row:
+                for var in row['env']:
+                    procenv[var[0]] = var[1]
+            logfd = None
+            if 'log' in row:
+                logfd = open(row['log'], 'w')
+            proc = subprocess.Popen(procargs, env=procenv, stdout=logfd)
+            self.pids.append(proc)
+
+        print('launched', len(self.pids), 'simulators')
+        self.root.update()
+
+        self.hFed = None
+        self.sub_power_A = None
+        self.sub_TEDP = None
+        self.sub_clear_price = None
+        self.sub_LMP_7 = None
+        self.sub_TPV_7 = None
+        self.sub_dist_load = None
+
+        # Initialize controllers, map HELICS values to Python attributes
+        self.hFed = helics.helicsCreateValueFederateFromConfig(self.msg_config)
+        pubCount = helics.helicsFederateGetPublicationCount(self.hFed)
+        subCount = helics.helicsFederateGetInputCount(self.hFed)
+        for i in range(subCount):
+            sub = helics.helicsFederateGetInputByIndex(self.hFed, i)
+            key = helics.helicsInputGetName(sub)
+            target = helics.helicsSubscriptionGetTarget(sub)
+            print('HELICS subscription key', i, key, 'target', target)
+            if 'power_A' in target:
+                self.sub_power_A = sub
+            if 'three_phase_voltage_7' in target:
+                self.sub_TPV_7 = sub
+            if 'LMP_7' in target:
+                self.sub_LMP_7 = sub
+            if 'clear_price' in target:
+                self.sub_clear_price = sub
+            if 'WHOLE BUILDING' in target:
+                self.sub_TEDP = sub
+            if 'distribution_load' in target:
+                self.sub_dist_load = sub
+        print('Done HELICS subscriptions')
+        helics.helicsFederateEnterExecutingMode(self.hFed)
+        self.bHELICSactive = True
+        print('HELICS initialized')
+
+        self.nsteps = int(self.time_stop / self.yaml_delta)
+        self.idxlast = -1
+        self.time_granted = 0
         ani = animation.FuncAnimation(self.fig, self.update_plots, frames=self.nsteps,
                                       blit=True, repeat=False, interval=0)
         self.fig.canvas.draw()
 
 
-def show_tesp_monitor():
+def show_tesp_monitor(HELICS=True):
     """Creates and displays the monitor GUI
     """
+    global helics, fncs
+    if HELICS:
+        import helics as helics
+    else:
+        import tesp_support.fncs as fncs
+
     root = tk.Tk()
     root.title('Transactive Energy Simulation Platform: Solution Monitor')
-    my_gui = TespMonitorGUI(root)
+    my_gui = TespMonitorGUI(root, HELICS)
     root.update()
     while True:
         try:

@@ -147,7 +147,7 @@ for tax_ind=1:no_of_tax
     
     %Creating GridLAB-D FNCS configuration file
     if use_flags.fncs_powerflow == 1 || use_flags.fncs_transactive == 1
-        fncs_config_filename = sprintf('%s_FNCS_config.txt',file4);
+        fncs_config_filename = sprintf('%s_gridlabd.txt',file4);
         fncs_fid = fopen(sprintf('%s%s',output_directory,fncs_config_filename),'w');
     end
     

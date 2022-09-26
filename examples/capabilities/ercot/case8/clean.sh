@@ -7,7 +7,7 @@ rm -f weather*.json
 rm -f *auction.yaml
 # tso8.yaml - static
 rm -f *substation.yaml
-rm -f *_FNCS_Config.txt
+rm -f *_gridlabd.txt
 #if HELICS
 #no monitor file yet
 rm -f tso_h.json

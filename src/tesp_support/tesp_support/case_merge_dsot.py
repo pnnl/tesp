@@ -74,7 +74,7 @@ def merge_glm(target, sources, xfmva):
                     if inSubstation:
                         if ' configure ' in line:
                             if '.txt' in line:
-                                line = '  configure ' + path.splitext(path.basename(target))[0] + '_FNCS_Config.txt;'
+                                line = '  configure ' + path.splitext(path.basename(target))[0] + '_gridlabd.txt;'
                             else:
                                 line = '  configure ' + path.splitext(path.basename(target))[0] + '.json;'
                         elif ' power_rating ' in line:
@@ -213,7 +213,7 @@ def merge_fncs_config(target, sources):
     workdir = path.split(path.dirname(target))[0]
     op = open(target, 'w')
     for fdr in sources:
-        with open(workdir + '/' + fdr + '/' + fdr + '_FNCS_Config.txt') as ip:
+        with open(workdir + '/' + fdr + '/' + fdr + '_gridlabd.txt') as ip:
             for line in ip:
                 print(line.rstrip(), file=op)
     op.close()

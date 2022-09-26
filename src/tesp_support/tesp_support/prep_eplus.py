@@ -470,7 +470,7 @@ def make_gld_eplus_case(fname, bGlmReady=False):
     print(cmdline)
     pw1 = subprocess.Popen(cmdline, shell=True)
     pw1.wait()
-    cmdline = """python3 -c "import tesp_support.api as tesp;tesp.convert_tmy2_to_epw('""" + caseDir + '/epWeather' + """')" """
+    cmdline = """python3 -c "import tesp_support.TMYtoEPW as tesp;tesp.convert_tmy2_to_epw('""" + caseDir + '/epWeather' + """')" """
     print(cmdline)
     pw2 = subprocess.Popen(cmdline, shell=True)
     pw2.wait()

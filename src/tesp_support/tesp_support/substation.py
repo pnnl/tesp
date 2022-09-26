@@ -477,6 +477,6 @@ def substation_loop(configfile, metrics_root, hour_stop=48, flag='WithMarket', h
 
 if __name__ == '__main__':
     # substation_loop('C:\\Users\\wang690\\Desktop\\projects\\TESP\\tesp_1st\\ercot\\case8\\Bus1_agent_dict.json','Bus1',24)
-    # substation_loop('TE_Challenge_agent_dict.json', 'TE_ChallengeH0', helicsConfig='TE_Challenge_HELICS_substation.json', flag='NoMarket')
-    # substation_loop('SGIP1b_agent_dict.json', 'SGIP1a', flag='NoMarket', helicsConfig='SGIP1a_HELICS_substation.json')
-    substation_loop('Test_agent_dict.json', 'Test', helicsConfig='Test_HELICS_substation.json')
+    # substation_loop('TE_Challenge_agent_dict.json', 'TE_ChallengeH0', helicsConfig='TE_Challenge_substation.json', flag='NoMarket')
+    # substation_loop('SGIP1b_agent_dict.json', 'SGIP1a', flag='NoMarket', helicsConfig='SGIP1a_substation.json')
+    substation_loop('Test_agent_dict.json', 'Test', helicsConfig='Test_substation.json')

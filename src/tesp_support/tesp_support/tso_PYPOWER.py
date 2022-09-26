@@ -23,7 +23,7 @@ if sys.platform != 'win32':
     import resource
 
 
-def tso_pypower_loop(casefile, rootname, helicsConfig=None):
+def tso_pypower_loop(casefile, rootname, helicsConfig):
     """ Public function to start PYPOWER solutions under control of HELICS
 
     The time step, maximum time, and other data must be set up in a JSON file.
@@ -108,6 +108,8 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
     sub_c2 = None
     sub_c1 = None
     sub_deg = None
+
+    print('HELICS config:', helicsConfig, flush=True)
     hFed = helics.helicsCreateValueFederateFromConfig(helicsConfig)
     fedName = helics.helicsFederateGetName(hFed)
     pubCount = helics.helicsFederateGetPublicationCount(hFed)
@@ -138,8 +140,7 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
             sub_unresp = sub
         if 'distribution_load' in target:
             sub_load = sub
-        target = helics.helicsSubscriptionGetTarget(sub)
-    print('Done HELICS subscriptions')
+    print('Done HELICS subscriptions', flush=True)
 
     helics.helicsFederateEnterExecutingMode(hFed)
 
@@ -269,7 +270,8 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
         gen[1, 1] = opf_gen[1, 1]
         gen[2, 1] = opf_gen[2, 1]
         gen[3, 1] = opf_gen[3, 1]
-        # during regular power flow, we use the actual CSV + feeder load, ignore dispatchable load and use actual
+        # during regular power flow, we use the actual CSV + feeder load,
+        # ignore dispatchable load and use actual
         bus[6, 2] = csv_load + feeder_load
         gen[4, 1] = 0  # opf_gen[4, 1]
         gen[4, 9] = 0

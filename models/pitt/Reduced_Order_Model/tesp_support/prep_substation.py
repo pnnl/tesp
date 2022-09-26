@@ -102,9 +102,9 @@ def ProcessGLM(fileroot):
 
     Reads fileroot.glm and writes:
 
-    - *fileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
-    - *fileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
-    - *[name_root]_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *[fileroot]_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
+    - *[fileroot]_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
+    - *[fileroot]_gridlabd.txt*, a GridLAB-D include file with FNCS publications and subscriptions
 
     Args:
         fileroot (str): path to and base file name for the GridLAB-D file, without an extension
@@ -285,7 +285,7 @@ def ProcessGLM(fileroot):
         print('    default: 0', file=yp)
     yp.close()
 
-    op = open(fileroot + '_FNCS_Config.txt', 'w')
+    op = open(fileroot + '_gridlabd.txt', 'w')
     print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
     print('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_B7";',
           file=op)
@@ -318,12 +318,6 @@ def ProcessGLM(fileroot):
 
 def prep_substation(gldfileroot, jsonfile=''):
     """ Process a base GridLAB-D file with supplemental JSON configuration data
-
-    Always reads gldfileroot.glm and writes:
-
-    - *gldfileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
-    - *gldfileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
-    - *gldfileroot_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
 
     If provided, this function also reads jsonfile as created by *tesp_config* and used by *tesp_case*.
     This supplemental data includes time-scheduled thermostat setpoints (NB: do not use the scheduled

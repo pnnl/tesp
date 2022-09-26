@@ -24,7 +24,7 @@ The directory structure for this example follows the structure:
 - *R1-12.47-1* folder contains:
 
   - *R1-12.47-1_processed.glm* - the populated prototypical feeder GridLAB-D model, obtained by running the *feederGenerator.py* script;
-  - *R1-12.47-1_HELICS_gld_msg.json* - the HELICS configuration file for the GridLAB-D model containing the subscription, publications, or the end points that allow the GridLAB-D federate to interact with other federates. In this particular case, several end points corresponding to particular loads in the system publish their current power demand and subscribe to the command on their connection status, that is either to stay *IN_SERVICE* or go *OUT_OF_SERVICE* when load needs to be dropped.
+  - *R1-12.47-1_gridlabd.json* - the HELICS configuration file for the GridLAB-D model containing the subscription, publications, or the end points that allow the GridLAB-D federate to interact with other federates. In this particular case, several end points corresponding to particular loads in the system publish their current power demand and subscribe to the command on their connection status, that is either to stay *IN_SERVICE* or go *OUT_OF_SERVICE* when load needs to be dropped.
   - *recorders.glm* - the recorder objects to save measurements in corresponding CSV files, at the level of each of the nodes communicating through HELICS.
   - Folders to store the results of the simulations in CSV format, that is the content of the files written using the recorder objects in GridLAB-D. These folders have been manually created to save and distinguish among the different simulated scenarios:
 

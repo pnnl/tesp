@@ -35,7 +35,7 @@ object house {
 //#ifdef USE_FNCS
 object fncs_msg {
   name gridlabd;
-  configure gridlabd_fncs_Config.txt;
+  configure gridlabd_gridlabd.txt;
   option "transport:hostname localhost, port 5570";
   aggregate_subscriptions true;
   aggregate_publications true;

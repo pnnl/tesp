@@ -150,7 +150,7 @@ object substation {
 object fncs_msg {
      name gld1;
      parent network_node;
-     configure TE_Challenge_FNCS_Config.txt;
+     configure TE_Challenge_gridlabd.txt;
      option "transport:hostname localhost, port 5570";
      aggregate_subscriptions true;
      aggregate_publications true;
@@ -160,7 +160,7 @@ object fncs_msg {
 #ifdef USE_HELICS
 object helics_msg {
   name gld1;
-  configure TE_Challenge_HELICS_gld_msg.json;
+  configure TE_Challenge_gridlabd.json;
 }
 #endif
 

@@ -165,7 +165,7 @@ def write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, dt):
             for prop in ['price', 'monthly_fee']:
                 gld.subs(sub_key + meter_name + "/" + prop, "double", meter_name, prop)
 
-    gld.write_file(fileroot + '_HELICS_gld_msg.json')
+    gld.write_file(fileroot + '_gridlabd.json')
 
 
 def write_ercot_tso_msg(numBuses):

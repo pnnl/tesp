@@ -112,11 +112,11 @@ def ProcessGLM(fileroot):
 
     Reads fileroot.glm and writes:
 
-    - *fileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
-    - *fileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
-    - *[name_root]_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
-    - *fileroot_HELICS_substation.json*, contains HELICS subscriptions for the psimple_auction and hvac agents
-    - *[name_root]_HELICS_gld_msg.json*, a GridLAB-D include file with HELICS publications and subscriptions
+    - *[fileroot]_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
+    - *[fileroot]_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
+    - *[fileroot]_gridlabd.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *[fileroot]_substation.json*, contains HELICS subscriptions for the psimple_auction and hvac agents
+    - *[fileroot]_gridlabd.json*, a GridLAB-D include file with HELICS publications and subscriptions
 
     Args:
         fileroot (str): path to and base file name for the GridLAB-D file, without an extension
@@ -328,7 +328,7 @@ def ProcessGLM(fileroot):
             dso.pubs_n(False, key + "/" + meter_name + "/bill_mode", "string")
             dso.pubs_n(False, key + "/" + meter_name + "/price", "double")
             dso.pubs_n(False, key + "/" + meter_name + "/monthly_fee", "double")
-    dso.write_file(fileroot + '_HELICS_substation.json')
+    dso.write_file(fileroot + '_substation.json')
 
     # write YAML file
     yamlfile = fileroot + '_substation.yaml'
@@ -394,11 +394,11 @@ def ProcessGLM(fileroot):
                                            'P_e_envelope': 0.08,
                                            'Lower_e_bound': 0.5}
 
-        wp = open(fileroot + '_FNCS_Weather_Config.json', 'w')
+        wp = open(fileroot + '_weather_f.json', 'w')
         json.dump(wconfig, wp, ensure_ascii=False, indent=2)
         wp.close()
 
-        wp = open(fileroot + '_HELICS_Weather_Config.json', 'w')
+        wp = open(fileroot + '_weather.json', 'w')
         wconfig['broker'] = 'HELICS'
         json.dump(wconfig, wp, ensure_ascii=False, indent=2)
         wp.close()
@@ -440,10 +440,10 @@ def ProcessGLM(fileroot):
             gld.subs(sub_key + meter_name + "/price", "double", meter_name, "price")
             gld.subs(sub_key + meter_name + "/monthly_fee", "double", meter_name, "monthly_fee")
     # TODO verify what should be done here to enforce minimum time step
-    gld.write_file(fileroot + '_HELICS_gld_msg.json')
+    gld.write_file(fileroot + '_gridlabd.json')
 
     # write the GridLAB-D publications and subscriptions for FNCS
-    op = open(fileroot + '_FNCS_Config.txt', 'w')
+    op = open(fileroot + '_gridlabd.txt', 'w')
     print('publish "commit:' + network_node + '.distribution_load -> distribution_load; 1000";', file=op)
     print('subscribe "precommit:' + network_node + '.positive_sequence_voltage <- pypower/three_phase_voltage_' + str(dso_substation_bus_id) + ';', file=op)
     if len(climate_name) > 0:
@@ -482,25 +482,18 @@ def ProcessGLM(fileroot):
 def prep_substation(gldfileroot, jsonfile='', bus_id=None):
     """ Process a base GridLAB-D file with supplemental JSON configuration data
 
-    Always reads gldfileroot.glm and writes:
-
-    - *gldfileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
-    - *gldfileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
-    - *gldfileroot_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
-    - *gldfileroot_Weather_Config.json*, contains configuration data for the weather agent
-
     If provided, this function also reads jsonfile as created by *tesp_config* and used by *tesp_case*.
-    This supplemental data includes time-scheduled thermostat setpoints (NB: do not use the scheduled
-    setpoint feature within GridLAB-D, as the first FNCS messages will erase those schedules during
+    This supplemental data includes time-scheduled thermostat set points (NB: do not use the scheduled
+    set point feature within GridLAB-D, as the first FNCS messages will erase those schedules during
     simulation). The supplemental data also includes time step and market period, the load scaling
     factor to PYPOWER, ramp bidding function parameters and the EnergyPlus connection point. If not provided,
     the default values from te30 and sgip1 examples will be used.  
 
     Args:
-        bus_id: substation bus identifier
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
         jsonfile (str): fully qualified path to an optional JSON configuration file 
                         (if not provided, an E+ connection to Eplus_load will be created)
+        bus_id: substation bus identifier
     """
     global dt, period, Eplus_Bus, Eplus_Load, Eplus_Meter, agent_participation
     global max_capacity_reference_bid_quantity, dso_substation_bus_id

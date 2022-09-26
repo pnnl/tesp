@@ -94,7 +94,7 @@ object substation {
 object fncs_msg {
   name gridlabdSimulator1;
   parent network_node;
-  configure TE_FNCS_Config.txt;
+  configure TE_gridlabd.txt;
   option "transport:hostname localhost, port 5570";
   aggregate_subscriptions true;
   aggregate_publications true;

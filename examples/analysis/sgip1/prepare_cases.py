@@ -26,9 +26,9 @@ shutil.copy('SGIP1e_agent_dict.json', 'SGIP1ex_agent_dict.json')
 
 cases = ['a', 'c', 'd', 'e']
 for idx in cases:
-    os.remove('SGIP1' + idx + '_FNCS_Config.txt')
+    os.remove('SGIP1' + idx + '_gridlabd.txt')
+    os.remove('SGIP1' + idx + '_gridlabd.json')
     os.remove('SGIP1' + idx + '_substation.yaml')
-    os.remove('SGIP1' + idx + '_FNCS_Weather_Config.json')
-    os.remove('SGIP1' + idx + '_HELICS_gld_msg.json')
-    os.remove('SGIP1' + idx + '_HELICS_substation.json')
-    os.remove('SGIP1' + idx + '_HELICS_Weather_Config.json')
+    os.remove('SGIP1' + idx + '_substation.json')
+    os.remove('SGIP1' + idx + '_weather.json')
+    os.remove('SGIP1' + idx + '_weather_f.json')

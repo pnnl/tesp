@@ -24,7 +24,7 @@ if sys.platform != 'win32':
     import resource
 
 
-def tso_pypower_loop_f(casefile, rootname, helicsConfig=None):
+def tso_pypower_loop_f(casefile, rootname):
     """ Public function to start PYPOWER solutions under control of FNCS
 
     The time step, maximum time, and other data must be set up in a JSON file.
@@ -208,7 +208,7 @@ def tso_pypower_loop_f(casefile, rootname, helicsConfig=None):
             opf_gen = deepcopy(res['gen'])
             lmp = opf_bus[6, 13]
             resp = -1.0 * opf_gen[4, 1]
-            fncs.publish('LMP_B7', 0.001 * lmp)  # publishing $/kwh
+            fncs.publish('LMP_7', 0.001 * lmp)  # publishing $/kwh
             #     print ('  OPF', ts, csv_load, '{:.3f}'.format(unresp), '{:.3f}'.format(resp),
             #            '{:.3f}'.format(feeder_load), '{:.3f}'.format(opf_bus[6,2]),
             #            '{:.3f}'.format(opf_gen[0,1]), '{:.3f}'.format(opf_gen[1,1]), '{:.3f}'.format(opf_gen[2,1]),
@@ -232,7 +232,8 @@ def tso_pypower_loop_f(casefile, rootname, helicsConfig=None):
         gen[1, 1] = opf_gen[1, 1]
         gen[2, 1] = opf_gen[2, 1]
         gen[3, 1] = opf_gen[3, 1]
-        # during regular power flow, we use the actual CSV + feeder load, ignore dispatchable load and use actual
+        # during regular power flow, we use the actual CSV + feeder load,
+        # ignore dispatchable load and use actual
         bus[6, 2] = csv_load + feeder_load
         gen[4, 1] = 0  # opf_gen[4, 1]
         gen[4, 9] = 0

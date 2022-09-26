@@ -599,4 +599,4 @@ def precool_loop(nhours, metrics_root, dict_root, response='PriceVoltage', helic
 
 #if __name__ == '__main__':
     # precool_loop('', '', '', '')
-    # precool_loop('', '', '', '', helicsConfig='Test_HELICS_substation.json')
+    # precool_loop('', '', '', '', helicsConfig='Test_substation.json')

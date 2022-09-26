@@ -1707,7 +1707,7 @@ def write_substation(op, name, phs, vnom, vll):
         else:
             print('  name gridlabdSimulator1;', file=op)
         print('  parent network_node;', file=op)
-        print('  configure', fncs_case + '_FNCS_Config.txt;', file=op)
+        print('  configure', fncs_case + '_gridlabd.txt;', file=op)
         print('  option "transport:hostname localhost, port 5570";', file=op)
         print('  aggregate_subscriptions true;', file=op)
         print('  aggregate_publications true;', file=op)

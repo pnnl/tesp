@@ -110,9 +110,9 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     Reads fileroot.glm and writes:
 
-    - *fileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
-    - *fileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
-    - *[name_root]_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *[gldfileroot]_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
+    - *[gldfileroot]_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
+    - *[gldfileroot]_gridlabd.txt*, a GridLAB-D include file with FNCS publications and subscriptions
 
     Args:
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
@@ -922,7 +922,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     yp.close()
 
     # write GridLAB-D FNCS configuration
-    op = open(gldfileroot + '_FNCS_Config.txt', 'w')
+    op = open(gldfileroot + '_gridlabd.txt', 'w')
     print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
     # JH removed as we do not currently have the TSO in the federation
     # print('subscribe "precommit:' + market_config['DSO']['NetworkName'] +
@@ -1018,7 +1018,7 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
 
     - *gldfileroot_agent_dict.json*, contains configuration data for the all control agents
     - *gldfileroot_substation.yaml*, contains FNCS subscriptions for the all control agents
-    - *gldfileroot_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *gldfileroot_gridlabd.txt*, a GridLAB-D include file with FNCS publications and subscriptions
 
     Futhermore reads either the jsonfile or config dictionary.
     This supplemental data includes time-scheduled thermostat setpoints (NB: do not use the scheduled
