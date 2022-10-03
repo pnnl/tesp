@@ -1,25 +1,25 @@
-name: tesp_monitor
+name: monitor
 time_delta: 300s
 broker: tcp://localhost:5570
 aggregate_sub: true
 values:
-  vpos7:
-    topic: pypower/three_phase_voltage_B7
+  TPV_7:
+    topic: pypower/three_phase_voltage_7
     default: 0
     type: double
     list: false
-  LMP7:
-    topic: pypower/LMP_B7
+  LMP_7:
+    topic: pypower/LMP_7
     default: 0
     type: double
     list: false
   clear_price:
-    topic: sub1/clear_price
+    topic: sub_7/clear_price
     default: 0
     type: double
     list: false
   distribution_load:
-    topic: gld1/distribution_load
+    topic: gld_7/distribution_load
     default: 0
     type: complex
     list: false
@@ -29,7 +29,7 @@ values:
     type: double
     list: false
   electric_demand_power:
-    topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
+    topic: eplus/WHOLE BUILDING Facility Total Electric Demand Power
     default: 0
     type: double
     list: false

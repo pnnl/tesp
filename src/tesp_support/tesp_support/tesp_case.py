@@ -531,9 +531,9 @@ values:
     # ====================================================================
     # FNCS shell scripts and chmod for Mac/Linux - need to specify python3
     try:
-        aucline = """python3 -c "import tesp_support.substation as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
-        ppline = """python3 -c "import tesp_support.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('""" + PPJsonFile + """','""" + casename + """')" """
-        weatherline = """python3 -c "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')" """
+        aucline = """"import tesp_support.substation as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
+        ppline = """"import tesp_support.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('""" + PPJsonFile + """','""" + casename + """')" """
+        weatherline = """"import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')" """
 
         shfile = casedir + '/run.sh'
         op = open(shfile, 'w')
@@ -551,27 +551,17 @@ values:
                 file=op)
         print('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile +
               ' &> ' + gld_federate + '_f.log &)', file=op)
-        print('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline +
+        print('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec python3 -c ' + aucline +
               ' &> ' + sub_federate + '_f.log &)', file=op)
         print('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && ' +
-              'export FNCS_LOG_STDOUT=yes && exec ' + ppline +
+              'export FNCS_LOG_STDOUT=yes && exec python3 -c ' + ppline +
               ' &> ' + pwr_federate + '_f.log &)', file=op)
         print('(export WEATHER_CONFIG=' + WeatherConfigFile +
-              ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + weatherline +
+              ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c ' + weatherline +
               ' &> weather_f.log &)', file=op)
         op.close()
         st = os.stat(shfile)
         os.chmod(shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-
-        # commands for launching Python federates
-        op = open(casedir + '/launch_auction_f.py', 'w')
-        print('import tesp_support.substation as tesp', file=op)
-        print('tesp.substation_loop(\'' + AgentDictFile + '\', \'' + casename + '\')', file=op)
-        op.close()
-        op = open(casedir + '/launch_pp_f.py', 'w')
-        print('import tesp_support.tso_PYPOWER_f as tesp', file=op)
-        print('tesp.tso_pypower_loop_f(\'' + PPJsonFile + '\', \'' + casename + '\')', file=op)
-        op.close()
 
         cmds = {'time_stop': seconds,
                 'yaml_delta': int(config['AgentPrep']['MarketClearingPeriod']),
@@ -601,18 +591,17 @@ values:
         cmd.append({'args': ['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile],
                     'env': [['FNCS_FATAL', 'YES']],
                     'log': gld_federate + '_f.log'})
-        cmd.append({'args': [pycall, 'launch_auction_f.py'],
+        cmd.append({'args': [pycall, '-c', aucline],
                     'env': [['FNCS_CONFIG_FILE', SubstationYamlFile],
                             ['FNCS_FATAL', 'YES'],
                             ['FNCS_LOG_STDOUT', 'yes']],
                     'log': sub_federate + '_f.log'})
-        cmd.append({'args': [pycall, 'launch_pp_f.py'],
+        cmd.append({'args': [pycall, '-c', ppline],
                     'env': [['FNCS_CONFIG_FILE', 'pypower.yaml'],
                             ['FNCS_FATAL', 'YES'],
                             ['FNCS_LOG_STDOUT', 'yes']],
                     'log': pwr_federate + '_f.log'})
-        cmd.append({'args': [pycall, '-c',
-                             'import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent(\'weather.dat\')'],
+        cmd.append({'args': [pycall, '-c', weatherline ],
                     'env': [['WEATHER_CONFIG', WeatherConfigFile],
                             ['FNCS_FATAL', 'YES']],
                     'log': 'weather_f.log'})
@@ -625,8 +614,8 @@ values:
         PypowerConfigFile = 'pypower.json'
         SubstationConfigFile = casename + '_substation.json'
         WeatherConfigFile = casename + '_weather.json'
-        aucline = """python3 -c "import tesp_support.substation as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """',helicsConfig='""" + SubstationConfigFile + """')" """
-        ppline = """python3 -c "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('""" + PPJsonFile + """','""" + casename + """',helicsConfig='""" + PypowerConfigFile + """')" """
+        aucline = """"import tesp_support.substation as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """',helicsConfig='""" + SubstationConfigFile + """')" """
+        ppline = """"import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('""" + PPJsonFile + """','""" + casename + """',helicsConfig='""" + PypowerConfigFile + """')" """
 
         shfile = casedir + '/runh.sh'
         op = open(shfile, 'w')
@@ -642,9 +631,9 @@ values:
             print('(exec helics_broker -f 4 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
         print('(exec gridlabd -D USE_HELICS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' &> ' +
               gld_federate + '.log &)', file=op)
-        print('(exec ' + aucline + ' &> ' + sub_federate + '.log &)', file=op)
-        print('(exec ' + ppline + ' &> ' + pwr_federate + '.log &)', file=op)
-        print('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec ' + weatherline + ' &> weather.log &)', file=op)
+        print('(exec python3 -c ' + aucline + ' &> ' + sub_federate + '.log &)', file=op)
+        print('(exec python3 -c ' + ppline + ' &> ' + pwr_federate + '.log &)', file=op)
+        print('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec python3 -c ' + weatherline + ' &> weather.log &)', file=op)
         op.close()
         st = os.stat(shfile)
         os.chmod(shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
@@ -652,15 +641,11 @@ values:
         # commands for launching Python federates
         op = open(casedir + '/launch_auction.py', 'w')
         print('import tesp_support.substation as tesp', file=op)
-        print(
-            'tesp.substation_loop(\'' + AgentDictFile + '\', \'' + casename + '\', helicsConfig=\'' + SubstationConfigFile + '\')',
-            file=op)
+        print('tesp.substation_loop(\'' + AgentDictFile + '\', \'' + casename + '\', helicsConfig=\'' + SubstationConfigFile + '\')', file=op)
         op.close()
         op = open(casedir + '/launch_pp.py', 'w')
         print('import tesp_support.tso_PYPOWER as tesp', file=op)
-        print(
-            'tesp.tso_pypower_loop(\'' + PPJsonFile + '\', \'' + casename + '\', helicsConfig=\'' + PypowerConfigFile + '\')',
-            file=op)
+        print('tesp.tso_pypower_loop(\'' + PPJsonFile + '\', \'' + casename + '\', helicsConfig=\'' + PypowerConfigFile + '\')', file=op)
         op.close()
 
         cmd = cmds['commands']
@@ -678,13 +663,13 @@ values:
 
         cmd.append({'args': ['gridlabd', '-D', 'USE_HELICS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile],
                     'log': gld_federate + '.log'})
-        cmd.append({'args': [pycall, 'launch_auction.py'],
+        cmd.append({'args': [pycall, '-c', aucline],
                     'log': sub_federate + '.log'})
-        cmd.append({'args': [pycall, 'launch_pp.py'],
+        cmd.append({'args': [pycall, '-c', ppline],
                     'log': pwr_federate + '.log'})
-        cmd.append({'args': [pycall, '-c', 'import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent(\'weather.dat\')'],
-                     'env': [['WEATHER_CONFIG', WeatherConfigFile]],
-                     'log': 'weather.log'})
+        cmd.append({'args': [pycall, '-c', weatherline],
+                    'env': [['WEATHER_CONFIG', WeatherConfigFile]],
+                    'log': 'weather.log'})
         op = open(casedir + '/monitor.json', 'w')
         json.dump(cmds, op, indent=2)
         op.close()

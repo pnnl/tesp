@@ -3,7 +3,7 @@ time_delta: 15s
 broker: tcp://localhost:5570
 values:
     SUBSTATION7:
-        topic: gld1/distribution_load
+        topic: gld_7/distribution_load
         default: 0
     UNRESPONSIVE_MW:
         topic: sub_7/unresponsive_mw
@@ -20,3 +20,4 @@ values:
     RESPONSIVE_DEG:
         topic: sub_7/responsive_deg
         default: 0
+

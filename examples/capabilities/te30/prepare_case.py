@@ -18,6 +18,6 @@ prep_substation('TE_Challenge', bus_id=7)
 
 base_idf = '../energyplus/SchoolBase.idf'
 ems_idf = '../energyplus/forSchoolBase/emsSchoolBase.idf'
-merge_idf(base_idf, ems_idf, '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', 12)
+merge_idf(base_idf, ems_idf, '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged_f.idf', 12)
 ems_idf = '../energyplus/forSchoolBase/emsSchoolBaseH.idf'
-merge_idf(base_idf, ems_idf, '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'MergedH.idf', 12)
+merge_idf(base_idf, ems_idf, '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', 12)
