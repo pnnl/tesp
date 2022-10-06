@@ -8,7 +8,7 @@ import sys
 import shutil
 import subprocess
 
-import tesp_support.api as tesp
+import tesp_support.tesp_runner as tesp
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -62,12 +62,16 @@ def EnergyPlus_test():
     tesp.start_test('EnergyPlus EMS/IDF examples')
     os.chdir('capabilities/energyplus')
     subprocess.Popen('./clean.sh', shell=True).wait()
-    #  subprocess.Popen('./run_baselines.sh', shell=True).wait()
-    #  subprocess.Popen('./make_all_ems.sh', shell=True).wait()
+    tesp.start_test('Baselines files')
+    subprocess.Popen('./run_baselines.sh', shell=True).wait()
     if b_helics:
+        tesp.start_test('Generated all EMS/IDF files - HELICS')
+        subprocess.Popen('./make_all_ems.sh True', shell=True).wait()
         tesp.run_test('runh.sh', 'EnergyPlus EMS - HELICS')
     #    tesp.run_test('batch_ems_case.sh', 'EnergyPlus Batch EMS')
     else:
+        tesp.start_test('Generated all EMS/IDF files - FNCS')
+        subprocess.Popen('./make_all_ems.sh False', shell=True).wait()
         tesp.run_test('run.sh', 'EnergyPlus IDF - FNCS')
         tesp.run_test('run2.sh', 'EnergyPlus EMS - FNCS')
     os.chdir(tesp_path)

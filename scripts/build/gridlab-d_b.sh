@@ -30,9 +30,10 @@ mkdir build
 cd build || exit
 cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}" \
       -DGLD_USE_HDF5=ON \
+      -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" \
       -DGLD_USE_HELICS=ON -DGLD_HELICS_DIR="${INSTDIR}" ..
 
-# Add to -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" if you need to use FNCS
+# Remove -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" if you do not need to use FNCS
 
 # Run the build system and install the application
 cmake --build . --target install

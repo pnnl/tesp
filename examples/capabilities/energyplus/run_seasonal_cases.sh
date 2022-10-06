@@ -3,8 +3,8 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: run_seasonal_cases.sh
 
-delclare -r EPLUS_PATH=$TESPDIR/data/energyplus
-delclare -r EPWFILE=$EPLUS_PATH/2A_USA_TX_HOUSTON.epw
+declare -r EPLUS_PATH=$TESPDIR/data/energyplus
+declare -r EPWFILE=$EPLUS_PATH/2A_USA_TX_HOUSTON.epw
 
 declare -r WINTER_START="2013-01-03 00:00:00"
 declare -r WINTER_END="2013-01-05 00:00:00"

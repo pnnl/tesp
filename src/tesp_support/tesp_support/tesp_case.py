@@ -531,9 +531,9 @@ values:
     # ====================================================================
     # FNCS shell scripts and chmod for Mac/Linux - need to specify python3
     try:
-        aucline = """"import tesp_support.substation as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
-        ppline = """"import tesp_support.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('""" + PPJsonFile + """','""" + casename + """')" """
-        weatherline = """"import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')" """
+        aucline = "import tesp_support.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "')"
+        ppline = "import tesp_support.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('" + PPJsonFile + "','" + casename + "')"
+        weatherline = "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')"
 
         shfile = casedir + '/run.sh'
         op = open(shfile, 'w')
@@ -551,14 +551,14 @@ values:
                 file=op)
         print('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile +
               ' &> ' + gld_federate + '_f.log &)', file=op)
-        print('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec python3 -c ' + aucline +
-              ' &> ' + sub_federate + '_f.log &)', file=op)
+        print('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec python3 -c "' + aucline +
+              '" &> ' + sub_federate + '_f.log &)', file=op)
         print('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && ' +
-              'export FNCS_LOG_STDOUT=yes && exec python3 -c ' + ppline +
-              ' &> ' + pwr_federate + '_f.log &)', file=op)
+              'export FNCS_LOG_STDOUT=yes && exec python3 -c "' + ppline +
+              '" &> ' + pwr_federate + '_f.log &)', file=op)
         print('(export WEATHER_CONFIG=' + WeatherConfigFile +
-              ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c ' + weatherline +
-              ' &> weather_f.log &)', file=op)
+              ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "' + weatherline +
+              '" &> weather_f.log &)', file=op)
         op.close()
         st = os.stat(shfile)
         os.chmod(shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
@@ -614,8 +614,8 @@ values:
         PypowerConfigFile = 'pypower.json'
         SubstationConfigFile = casename + '_substation.json'
         WeatherConfigFile = casename + '_weather.json'
-        aucline = """"import tesp_support.substation as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """',helicsConfig='""" + SubstationConfigFile + """')" """
-        ppline = """"import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('""" + PPJsonFile + """','""" + casename + """',helicsConfig='""" + PypowerConfigFile + """')" """
+        aucline = "import tesp_support.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "',helicsConfig='" + SubstationConfigFile + "')"
+        ppline = "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('" + PPJsonFile + "','" + casename + "',helicsConfig='" + PypowerConfigFile + "')"
 
         shfile = casedir + '/runh.sh'
         op = open(shfile, 'w')
@@ -631,9 +631,10 @@ values:
             print('(exec helics_broker -f 4 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
         print('(exec gridlabd -D USE_HELICS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' &> ' +
               gld_federate + '.log &)', file=op)
-        print('(exec python3 -c ' + aucline + ' &> ' + sub_federate + '.log &)', file=op)
-        print('(exec python3 -c ' + ppline + ' &> ' + pwr_federate + '.log &)', file=op)
-        print('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec python3 -c ' + weatherline + ' &> weather.log &)', file=op)
+        print('(exec python3 -c "' + aucline + '" &> ' + sub_federate + '.log &)', file=op)
+        print('(exec python3 -c "' + ppline + '" &> ' + pwr_federate + '.log &)', file=op)
+        print('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec python3 -c "' + weatherline +
+              '" &> weather.log &)', file=op)
         op.close()
         st = os.stat(shfile)
         os.chmod(shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)

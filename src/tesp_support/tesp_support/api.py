@@ -72,11 +72,11 @@ from .case_merge import merge_substation_msg
 from .make_ems import make_ems
 from .make_ems import merge_idf
 
-from .run_tesp_case import init_tests
-from .run_tesp_case import block_test
-from .run_tesp_case import start_test
-from .run_tesp_case import run_test
-from .run_tesp_case import report_tests
+from .tesp_runner import init_tests
+from .tesp_runner import block_test
+from .tesp_runner import start_test
+from .tesp_runner import run_test
+from .tesp_runner import report_tests
 
 from .tesp_config import show_tesp_config
 from .tesp_case import make_tesp_case

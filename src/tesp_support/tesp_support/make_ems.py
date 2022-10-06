@@ -578,6 +578,8 @@ def merge_idf(base, ems, StartTime, EndTime, target, StepsPerHour):
       ems (str): fully qualified EMS model file
       StartTime (str): Date-Time to start simulation, Y-m-d H:M:S
       EndTime (str): Date-Time to end simulation, Y-m-d H:M:S
+      target(str): fully qualified path for new model
+      StepsPerHour:
     """
 
     time_fmt = '%Y-%m-%d %H:%M:%S'
