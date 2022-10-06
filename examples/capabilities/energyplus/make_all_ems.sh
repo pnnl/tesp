@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: make_all_ems.sh
 

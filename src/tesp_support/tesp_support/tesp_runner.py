@@ -37,8 +37,8 @@ def block_test(call):
     print('--!>', flush=True)
 
 
-def start_test(casename=None):
-    print('==  Prepare: ', casename, flush=True)
+def start_test(case_name=None):
+    print('==  Prepare: ', case_name, flush=True)
 
 
 def process_line(line, local_vars):
@@ -51,14 +51,28 @@ def process_line(line, local_vars):
     return exports + foreground
 
 
-def run_test(file_name, casename=None):
+def exec_test(file_name, case_name=None):
+    t_start = time.time()
+    print('\n==  Run: ', case_name, flush=True)
+    subprocess.Popen(file_name, shell=True).wait()
+    t_end = time.time()
+    if b_reporting:
+        t_elapsed = t_end - t_start
+        if case_name is None:
+            case_name = file_name
+        reports.append({'case': case_name, 'elapsed': t_elapsed})
+        print('====  Time elapsed: {:12.6f}'.format(t_elapsed), flush=True)
+    print('==  Done: ', case_name, flush=True)
+
+
+def run_test(file_name, case_name=None):
     t_start = time.time()
     local_vars = []
     fp = open(file_name, 'r')
     p_list = []
     p_FNCS_broker = None
     p_HELICS_broker = None
-    print('\n==  Run: ', casename, flush=True)
+    print('\n==  Run: ', case_name, flush=True)
     for ln in fp:
         line = ln.rstrip('\n')
         if ('#!/bin/bash' in line) or (len(line) < 1):
@@ -96,11 +110,11 @@ def run_test(file_name, casename=None):
     t_end = time.time()
     if b_reporting:
         t_elapsed = t_end - t_start
-        if casename is None:
-            casename = file_name
-        reports.append({'case': casename, 'elapsed': t_elapsed})
+        if case_name is None:
+            case_name = file_name
+        reports.append({'case': case_name, 'elapsed': t_elapsed})
         print('====  Time elapsed: {:12.6f}'.format(t_elapsed), flush=True)
-    print('==  Done: ', casename, flush=True)
+    print('==  Done: ', case_name, flush=True)
 
 
 def report_tests():
