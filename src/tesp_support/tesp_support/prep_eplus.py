@@ -1,7 +1,6 @@
 # Copyright (C) 2020-2022 Battelle Memorial Institute
 # file: prep_eplus.py
 
-import sys
 import json
 import os
 import shutil
@@ -10,7 +9,9 @@ import math
 import copy
 import subprocess
 from datetime import datetime
-import tesp_support.make_ems as idf
+
+from .make_ems import merge_idf
+from .helpers import HelicsMsg
 
 
 def configure_eplus(caseConfig, template_dir):
@@ -89,7 +90,7 @@ def configure_eplus(caseConfig, template_dir):
             op.close()
 
             oname = '{:s}/{:s}.idf'.format(caseDir, fedRoot)
-            idf.merge_idf(bldg['IDF'], bldg['EMS'], caseConfig['StartDate'], caseConfig['EndDate'],
+            merge_idf(bldg['IDF'], bldg['EMS'], caseConfig['StartDate'], caseConfig['EndDate'],
                           oname, caseConfig['EpStepsPerHour'])
     return fedMeters, fedLoads, fedLoadNames
 
@@ -313,9 +314,9 @@ def prepare_bldg_dict(caseConfig):
     oname = '{:s}/BuildingDefinitions.json'.format(caseConfig['CaseDir'])
     print('dictionary for buildings to', oname)
 
-    dict = {}
+    diction = {}
     for row in caseConfig['Buildings']:
-        dict[row['ID']] = {'Name': row['Name'],
+        diction[row['ID']] = {'Name': row['Name'],
                            'Meter': row['Meter'],
                            'Vnom': row['Vnom'],
                            'XfKVA': row['XfKVA'],
@@ -323,7 +324,7 @@ def prepare_bldg_dict(caseConfig):
                            'Pbase': row['Pbase']}
 
     op = open(oname, 'w')
-    json.dump(dict, op, ensure_ascii=False, indent=2)
+    json.dump(diction, op, ensure_ascii=False, indent=2)
     op.close()
 
 
@@ -347,56 +348,48 @@ def prepare_glm_dict(caseConfig):
         meters[mtr_id] = {'feeder_id': feeder_id, 'phases': 'ABC', 'vll': vll, 'vln': vln, 'children': [mtr_load]}
 
     feeders[feeder_id] = {'house_count': 0, 'inverter_count': 0, 'base_feeder': caseConfig['BaseFeederName']}
-    dict = {'bulkpower_bus': caseConfig['BulkBusName'], 'FedName': 'gld1',
+    diction = {'bulkpower_bus': caseConfig['BulkBusName'],
+            'FedName': 'gld_1',
             'transformer_MVA': caseConfig['TransformerMVA'],
-            'feeders': feeders, 'billingmeters': meters, 'houses': {}, 'inverters': inverters, 'capacitors': {},
+            'feeders': feeders,
+            'billingmeters': meters,
+            'houses': {},
+            'inverters': inverters,
+            'capacitors': {},
             'regulators': {}}
 
     op = open(oname, 'w')
-    json.dump(dict, op, ensure_ascii=False, indent=2)
+    json.dump(diction, op, ensure_ascii=False, indent=2)
     op.close()
 
 
 def prepare_glm_helics(caseConfig, fedMeters, fedLoadNames):
-    oname = '{:s}/gld_{:s}.json'.format(caseConfig['CaseDir'], caseConfig['CaseName'])
-    print('HELICS pub/sub for GridLAB-D to', oname)
-    pubs = []
-    subs = []
-    pubs.append({'global': False, 'key': 'distribution_load', 'type': 'complex',
-                 'info': {'object': 'sourcebus', 'property': 'distribution_load'}})
+
+    gld = HelicsMsg('gld_1', int(caseConfig['GldStep']))
+    gld.pubs(False, 'distribution_load', 'complex', 'sourcebus', 'distribution_load')
     for bldg, meter in fedMeters.items():
         load = fedLoadNames[bldg]
         agFed = 'agent' + bldg
-        subs.append(
-            {'key': agFed + '/power_A', 'type': 'complex', 'info': {'object': load, 'property': 'constant_power_A'}})
-        subs.append(
-            {'key': agFed + '/power_B', 'type': 'complex', 'info': {'object': load, 'property': 'constant_power_B'}})
-        subs.append(
-            {'key': agFed + '/power_C', 'type': 'complex', 'info': {'object': load, 'property': 'constant_power_C'}})
-        subs.append({'key': agFed + '/bill_mode', 'type': 'string', 'info': {'object': meter, 'property': 'bill_mode'}})
-        subs.append({'key': agFed + '/price', 'type': 'double', 'info': {'object': meter, 'property': 'price'}})
-        subs.append(
-            {'key': agFed + '/monthly_fee', 'type': 'double', 'info': {'object': meter, 'property': 'monthly_fee'}})
+        gld.subs(agFed + '/power_A', 'complex', load, 'constant_power_A')
+        gld.subs(agFed + '/power_B', 'complex', load, 'constant_power_B')
+        gld.subs(agFed + '/power_C', 'complex', load, 'constant_power_C')
+        gld.subs(agFed + '/bill_mode', 'string', meter, 'bill_mode')
+        gld.subs(agFed + '/price', 'double', meter, 'price')
+        gld.subs(agFed + '/monthly_fee', 'double', meter, 'monthly_fee')
         for prop in ['measured_voltage_A']:
-            pubs.append({'global': False, 'key': meter + '/' + prop, 'type': 'complex',
-                         'info': {'object': meter, 'property': prop}})
-    msg = {'name': 'gld1',
-           'period': int(caseConfig['GldStep']),
-           'publications': pubs,
-           'subscriptions': subs}
-
-    op = open(oname, 'w', encoding='utf-8')
-    json.dump(msg, op, ensure_ascii=False, indent=2)
-    op.close()
+            gld.pubs(False, meter + '/' + prop, 'complex', meter, prop)
+    oname = '{:s}/gld_{:s}.json'.format(caseConfig['CaseDir'], caseConfig['CaseName'])
+    print('HELICS pub/sub for GridLAB-D to', oname)
+    gld.write_file(oname)
 
 
-brkTemplate = """(exec helics_broker -f {nFed} --name=mainbroker &> broker.log &)"""
-plyTemplate = """(exec helics_player --input=prices.txt --local --time_units=ns --stop {nSec}s &> player.log &)"""
-recTemplate = """(exec helics_recorder --input=helicsRecorder.json --timedelta 1s --period {period}s --stop {nSec}s &> tracer.log &)"""
-gldTemplate = """(exec gridlabd -D USE_HELICS {root}.glm &> gridlabd.log &)"""
-epTemplate = """(export HELICS_CONFIG_FILE={epcfg} && exec energyplus -w epWeather.epw -d {outdir} {idfname} &> {eplog} &)"""
-agjTemplate = """(exec eplus_agent_helics {agjcfg} &> {aglog} &)"""
-shedTemplate = """(exec python3 commshed.py {tmax} {period} {thresh} {kw_cap} &> commshed.log &)"""
+brkTemplate = "(exec helics_broker -f {nFed} --name=mainbroker &> broker.log &)"
+plyTemplate = "(exec helics_player --input=prices.txt --local --time_units=ns --stop {nSec}s &> player.log &)"
+recTemplate = "(exec helics_recorder --input=helicsRecorder.json --timedelta 1s --period {period}s --stop {nSec}s &> tracer.log &)"
+gldTemplate = "(exec gridlabd -D USE_HELICS {root}.glm &> gridlabd.log &)"
+epTemplate = "(export HELICS_CONFIG_FILE={epcfg} && exec energyplus -w epWeather.epw -d {outdir} {idfname} &> {eplog} &)"
+agjTemplate = "(exec eplus_agent_helics {agjcfg} &> {aglog} &)"
+shedTemplate = "(exec python3 commshed.py {tmax} {period} {thresh} {kw_cap} &> commshed.log &)"
 
 
 def prepare_run_script(caseConfig, fedMeters):
@@ -477,7 +470,7 @@ def make_gld_eplus_case(fname, bGlmReady=False):
     print(cmdline)
     pw1 = subprocess.Popen(cmdline, shell=True)
     pw1.wait()
-    cmdline = """python3 -c "import tesp_support.api as tesp;tesp.convert_tmy2_to_epw('""" + caseDir + '/epWeather' + """')" """
+    cmdline = """python3 -c "import tesp_support.TMYtoEPW as tesp;tesp.convert_tmy2_to_epw('""" + caseDir + '/epWeather' + """')" """
     print(cmdline)
     pw2 = subprocess.Popen(cmdline, shell=True)
     pw2.wait()

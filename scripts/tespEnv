@@ -1,9 +1,9 @@
+source $HOME/tesp/venv/bin/activate
 
 # TESP exports
-export TESPDIR=$HOME/tesp/repository/tesp
-export INSTDIR=$HOME/tesp/installed
+export INSTDIR=$HOME/tesp/tenv
 export REPODIR=$HOME/tesp/repository
-export WAREDIR=$HOME/tesp/software
+export TESPDIR=$HOME/tesp/repository/tesp
 export TESPBUILD=$TESPDIR/scripts/build
 export TESPHELPR=$TESPDIR/scripts/helpers
 
@@ -20,8 +20,7 @@ export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 export PYHELICS_INSTALL=$INSTDIR
 
 # PATH
-export PATH=$PATH:$JAVA_HOME
-export PATH=$PATH:$INSTDIR/bin
+export PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
 export PATH=$PATH:$INSTDIR/energyplus
 export PATH=$PATH:$INSTDIR/energyplus/PreProcess
 export PATH=$PATH:$INSTDIR/energyplus/PostProcess

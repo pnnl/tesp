@@ -1,4 +1,4 @@
-'''
+"""
 .. module:: fnss_ns3_MatrixTopoEx
 
 :platform: Unix, Windows
@@ -15,7 +15,7 @@
 .. seealso:: see this as well
 
 .. moduleauthor:: Laurentiu Marinovici
-'''
+"""
 
 __license__ = "BSD"
 __revision__ = " $Id: $ "
@@ -37,13 +37,13 @@ except ImportError:
 pp = pprint.PrettyPrinter(indent = 2)
 
 def main(argv):
-  '''
+  """
   This is the main function.
 
   Args:
     argv(str): just a fake argument for testing purposes
 
-  '''
+  """
   SimTime = 20
   flowName = "n-node-ppp.xml"
   cmd = ns.core.CommandLine()

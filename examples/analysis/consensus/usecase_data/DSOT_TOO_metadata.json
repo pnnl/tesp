@@ -1,0 +1,39 @@
+{
+  "miles_of_line" : {
+    "345_kV" : 0,
+    "138_KV" : 0,
+    "total" : 0
+  },
+  "maintenance_cost" : {
+    "fixed_cost" : 0,
+    "variable_cost" : {
+      "345_kV" : 0,
+      "138_KV" : 0
+    }
+  },
+  "labor_cost" : {
+    "annual_maintenance_hours_per_mile_of_line" : 0,
+    "hourly_rate" : {
+      "Rural" : 0,
+      "Suburban" : 0,
+      "Urban" : 0
+    }
+  },
+  "debt_service" : {
+    "interest_rate" : 0,
+    "loan_balance" : 0
+  },
+  "adminstration_costs" : {
+    "admin_hours_per_mile_of_line" : 0,
+    "hourly_rate" : {
+      "Rural" : 0,
+      "Suburban" : 0,
+      "Urban" : 0
+    }
+  },
+  "taxes" : {
+    "taxable_profit" : 0,
+    "deductions" : 0,
+    "depreciation" : 0
+  }
+}

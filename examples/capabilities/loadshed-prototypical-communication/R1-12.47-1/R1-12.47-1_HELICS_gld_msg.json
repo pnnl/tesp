@@ -1,0 +1,46 @@
+{
+  "name": "R1-12.47-1",
+  "coreType": "zmq",
+  "core_name": "R1-12.47-1-core",
+  "loglevel": "SUMMARY",
+  "period": "1s",
+  "wait_for_current_time_update": false,
+  "endpoints": [
+    {
+      "global": false,
+      "name": "R1_12_47_1_tn_15_mhse_1",
+      "destination": "R1-12.47-1-substation/R1_12_47_1_substation",
+      "type": "string",
+      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_15_mhse_1\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_15_mhse_1\",\"property\":\"service_status\"}}"
+    },
+    {
+      "global": false,
+      "name": "R1_12_47_1_tn_128_mhse_2",
+      "destination": "R1-12.47-1-substation/R1_12_47_1_substation",
+      "type": "string",
+      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_128_mhse_2\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_128_mhse_2\",\"property\":\"service_status\"}}"
+    },
+    {
+      "global": false,
+      "name": "R1_12_47_1_tn_459_mhse_4",
+      "destination": "R1-12.47-1-substation/R1_12_47_1_substation",
+      "type": "string",
+      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_459_mhse_4\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_459_mhse_4\",\"property\":\"service_status\"}}"
+    }
+    ,
+    {
+      "global": false,
+      "name": "R1_12_47_1_tn_564_mhse_4",
+      "destination": "R1-12.47-1-substation/R1_12_47_1_substation",
+      "type": "string",
+      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_564_mhse_4\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_564_mhse_4\",\"property\":\"service_status\"}}"
+    },
+    {
+      "global": false,
+      "name": "R1_12_47_1_tn_506_mhse_1",
+      "destination": "R1-12.47-1-substation/R1_12_47_1_substation",
+      "type": "string",
+      "info": "{\"publication_info\":{\"object\":\"R1_12_47_1_tn_506_mhse_1\",\"property\":\"measured_real_power\"},\"subscription_info\":{\"object\":\"R1_12_47_1_tn_506_mhse_1\",\"property\":\"service_status\"}}"
+    }
+  ]
+}

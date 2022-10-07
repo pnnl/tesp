@@ -57,10 +57,10 @@ tesp\_support.fncs module
    :undoc-members:
    :show-inheritance:
 
-tesp\_support.fncsPYPOWER module
+tesp\_support.tso_PYPOWER module
 --------------------------------
 
-.. automodule:: tesp_support.fncsPYPOWER
+.. automodule:: tesp_support.tso_PYPOWER
    :members:
    :undoc-members:
    :show-inheritance:
@@ -193,10 +193,10 @@ tesp\_support.process\_voltages module
    :undoc-members:
    :show-inheritance:
 
-tesp\_support.run\_test\_case module
+tesp\_support.run\_tesp\_case module
 ------------------------------------
 
-.. automodule:: tesp_support.run_test_case
+.. automodule:: tesp_support.run_tesp_case
    :members:
    :undoc-members:
    :show-inheritance:

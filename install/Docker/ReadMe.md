@@ -9,7 +9,7 @@ Updated 04/17/2019
 
 Currently, there are 2 Docker images containing the TESP, according to the co-simulation environment used, that is:
 - **laurmarinovici/tesp:fncs**, which uses [Framework for Network Co-Simulation (FNCS)](https://github.com/FNCS "FNCS") as the co-simulation environment, and contains
-  - [FNCS](https://github.com/FNCS/fncs.git, "https://github.com/FNCS/fncs.git"), _develop_ branch
+  - [FNCS](https://github.com/FNCS/fncs.git "https://github.com/FNCS/fncs.git"), _develop_ branch
   - [GridLAB-D](https://github.com/gridlab-d/gridlab-d.git "https://github.com/gridlab-d/gridlab-d.git"), _feature/1146_ branch
   - [Energy Plus](https://github.com/FNCS/EnergyPlus.git "https://github.com/FNCS/EnergyPlus.git"), _fncs-v8.3.0_ branch
   - [Energy Plus JSON](https://github.com/pnnl/tesp/tree/develop/src/energyplus "https://github.com/pnnl/tesp/tree/develop/src/energyplus")

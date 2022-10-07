@@ -1,8 +1,8 @@
 #!/bin/bash
 
 DOCKERFILE="Dockerfile"
-TES_REP="tesp-evolve-v1.0.2"
-TES_TAG=":20220321"
+TES_REP="tesp-v1.1.5"
+TES_TAG=":latest"
 CONTEXT="./"
 clear
 docker build --no-cache --rm --progress=plain \

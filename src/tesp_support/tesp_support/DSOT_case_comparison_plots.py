@@ -1,17 +1,14 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: DSOT_case_comparison_plots.py
 import os
-import pandas as pd
-import numpy as np
-from mpl_toolkits import mplot3d
+from datetime import datetime
+
 import matplotlib.pyplot as plt
-import h5py
-import json
+import numpy as np
+import pandas as pd
 import seaborn as sns
-from datetime import datetime, date, timedelta
-import math
-import copy
-import tesp_support.DSOT_plots
+
+from .DSOT_plots import load_json
 
 
 def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
@@ -74,7 +71,7 @@ def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
         var_df['Case'] = case
 
         var_daily_df = pd.Series.to_frame(var_df[variable].groupby(pd.Grouper(freq='D')).max()
-                                                  - var_df[variable].groupby(pd.Grouper(freq='D')).min())
+                                          - var_df[variable].groupby(pd.Grouper(freq='D')).min())
         var_daily_df[variable + ' STD'] = var_df[variable].groupby(pd.Grouper(freq='D')).std()
         var_daily_df['Month'] = var_daily_df.index.month
         var_daily_df.dropna(subset=[variable], inplace=True)
@@ -87,7 +84,7 @@ def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
             var_comparison_df = pd.concat([var_comparison_df, var_df])
             var_daily_comparison_df = pd.concat([var_daily_comparison_df, var_daily_df])
 
-# ==============  Plot box and whiskers ==========================
+    # ==============  Plot box and whiskers ==========================
     fig, axes = plt.subplots(3, 1, figsize=(11, 10), sharex=True)
     pal = ['violet'] + ['lightgreen'] + ["gold"] + ['skyblue']
 
@@ -111,7 +108,7 @@ def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
     axes[2].set_ylabel(units)
     axes[2].set_title('Standard Deviation of Daily ' + title_name + ' over the Year')
     axes[2].set_xlabel('Month')
-    axes[2].set_ylim(top=upper_limit/3, bottom=lower_limit)
+    axes[2].set_ylim(top=upper_limit / 3, bottom=lower_limit)
     handles, labels = axes[2].get_legend_handles_labels()
     axes[2].legend(handles=handles, labels=labels, framealpha=1)
 
@@ -120,7 +117,7 @@ def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
-# ============================
+    # ============================
 
     pal = ['violet'] + ['lightgreen']
     plt.clf()
@@ -150,7 +147,7 @@ def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
-#----- DAily Variation Curve
+    # ----- DAily Variation Curve
     plt.clf()
     sns.ecdfplot(data=var_daily_comparison_df, y=variable, hue="Case", palette=pal)
     plt.ylabel(units)
@@ -174,7 +171,8 @@ def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
         plt.text(0.4, 0.1, text, size=10, horizontalalignment='left',
                  verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
 
-    plot_filename = datetime.now().strftime('%Y%m%d') + 'Case_Comparison_Daily_Variation_' + file_name + '_Duration_Curve.png'
+    plot_filename = datetime.now().strftime(
+        '%Y%m%d') + 'Case_Comparison_Daily_Variation_' + file_name + '_Duration_Curve.png'
     file_path_fig = os.path.join(output_path, 'plots', plot_filename)
     plt.savefig(file_path_fig, bbox_inches='tight')
 
@@ -225,12 +223,11 @@ def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
 #                  verticalalignment='center', transform=ax.transAxes, bbox=dict(fc="white"))
 
 
-
 if __name__ == '__main__':
     pd.set_option('display.max_columns', 50)
 
     # ------------ Selection of DSO and Day  ---------------------------------
-    DSO_num = '2'   # Needs to be non-zero integer
+    DSO_num = '2'  # Needs to be non-zero integer
     day_num = '9'  # Needs to be non-zero integer
     # Set day range of interest (1 = day 1)
     day_range = range(2, 3)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
@@ -252,7 +249,7 @@ if __name__ == '__main__':
     case_config_file = config_path + '\\' + case_config_name
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
-    case_config = tesp_support.DSOT_plots.load_json(config_path, case_config_name)
+    case_config = load_json(config_path, case_config_name)
     metadata_file = case_config['dsoPopulationFile']
     dso_meta_file = metadata_path + '\\' + metadata_file
 
@@ -262,7 +259,7 @@ if __name__ == '__main__':
         os.makedirs(data_path + '\\plots')
 
     # ---------- Flags to turn on and off plot types etc
-    LoadExData = True # load example data frames of GLD and agent data
+    LoadExData = True  # load example data frames of GLD and agent data
 
     Cases = ['MR BAU', 'MR Batt']
     Data_paths = [base_case, batt_case]

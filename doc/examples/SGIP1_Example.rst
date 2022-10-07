@@ -29,10 +29,10 @@ The goal of this analysis are as follows:
     
 The software version of this study implemented in TESP is similar to but not identical to earlier versions used to produce results found in :cite:`Hammerstrom:2017ta` and :cite:`Huang:2018kt`. As such the specific values presented here may differ from those seen in the aforementioned publications.
 
+.. _SGIP1 value model:
 
 Valuation Model
 ---------------
-
 
 
 Use Case Diagram
@@ -323,6 +323,7 @@ Total CO2, SOx, NOx emissions (MT/day, kg/day, kg/day):
             }}}
 
 
+.. _SGIP1 analysis design model:
 
 Analysis Design Model
 ---------------------
@@ -404,7 +405,7 @@ The "Co-simulation" activity block in the top level diagram (see :numref:`fig_AD
 	Detailed model of the co-simulation process showing the dynamic data exchanges with "<<flow>>" arrows.
 
 
-Accounting table
+Accounting Table
 ................
 The "Accounting table" presentation block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a series of sub-diagrams shown below. Each line of the accounting table shown in :numref:`fig_value_model_metrics` is represented by a gray "presentation" block, showing the required inputs to produce that metric.
 
@@ -440,7 +441,7 @@ The "Accounting table" presentation block in the top level diagram (see :numref:
 
 Analysis Validation
 ...................
-The "Analysis validation" presentation block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a series of sub-diagrams shown below. These are metrics similar to those in the :ref:`Accounting Table` section but they are not necessarily defined by the value exchanges and thus fall outside the value model. These metrics are identified by the analysis designer in cooperation with analysis team as a whole and are used to validate the correct execution of the analysis.
+The "Analysis validation" presentation block in the top level diagram (see :numref:`fig_AD_top_level`) is defined in further detail in a series of sub-diagrams shown below. These are metrics similar to those in the `Accounting Table`_ section but they are not necessarily defined by the value exchanges and thus fall outside the value model. These metrics are identified by the analysis designer in cooperation with analysis team as a whole and are used to validate the correct execution of the analysis.
 
 
 .. figure:: ../media/SGIP1/AV_Bulk_Power_System.png
@@ -566,11 +567,11 @@ operate autonomously in load-following mode.
   +---------------+--------------+------------------------+--------------------+------------------+-----------------------+
 
 
-
+.. _SGIP1 simulation architecture model:
 
 Simulation Architecture Model
 -----------------------------
-The SGIP1 analysis, being a co-simulation, has a multiplicity of executables that are used to set-up the co-simulation, run the co-simulation, and process the data coming out of the co-simulation. The  :ref:`Analysis Design Model` provides hints at which tools are used and how they interact but is not focused on how the tools fit together but rather how they can be used to achieve the necessary analysis objectives. This section fleshes out some of those details so that users are better able to understand the analysis process without having to resort to looking at the scripts, configuration files, and executable source code to understand the execution flow of the analysis.
+The SGIP1 analysis, being a co-simulation, has a multiplicity of executables that are used to set-up the co-simulation, run the co-simulation, and process the data coming out of the co-simulation. The  `Analysis Design Model`_ provides hints at which tools are used and how they interact but is not focused on how the tools fit together but rather how they can be used to achieve the necessary analysis objectives. This section fleshes out some of those details so that users are better able to understand the analysis process without having to resort to looking at the scripts, configuration files, and executable source code to understand the execution flow of the analysis.
 
 
 Simulated Functionalities
@@ -612,7 +613,7 @@ Due to limitations in the load modeling provided by Energy+, some expected inter
 
 Software Execution
 ..................
-As is common in many analysis that utilize co-simulation, the SGIP1 analysis contains a relatively large number of executables, input, and output files. Though there are significant details in the :ref:`Analysis Design Model` showing the software components and some of the key data flows and interactions between them, it does not provide details of how the software is executed and interacts with each other. These details are provided below, focusing on the input and output files created and used by each executable.
+As is common in many analysis that utilize co-simulation, the SGIP1 analysis contains a relatively large number of executables, input, and output files. Though there are significant details in the `Analysis Design Model`_ showing the software components and some of the key data flows and interactions between them, it does not provide details of how the software is executed and interacts with each other. These details are provided below, focusing on the input and output files created and used by each executable.
 
 
 Software Architecture Overview
@@ -668,7 +669,7 @@ Figure :numref:`fig_SA_validation_plots` shows the inputs files generated by the
 
 createAccountingTable.py
 ,,,,,,,,,,,,,,,,,,,,,,,,
-Figure :numref:`fig_SA_createAccountingTable` shows the input metrics files to used to calculate the final accounting table output from the metrics identified by the :ref:`Valuation Model`.
+Figure :numref:`fig_SA_createAccountingTable` shows the input metrics files to used to calculate the final accounting table output from the metrics identified by the `Valuation Model`_.
 
 .. figure:: ../media/SGIP1/SA_createAccountingTable.png
 	:name: fig_SA_createAccountingTable

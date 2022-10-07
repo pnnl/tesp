@@ -1,6 +1,8 @@
 ..
     _ Copyright (C) 2021-2022 Battelle Memorial Institute
     _ file: Demonstrations_and_Examples.rst
+    
+.. _RunExamples:
 
 TESP Demonstrations and Examples
 ================================
@@ -18,6 +20,7 @@ TESP Capability Demonstrations
     :maxdepth: 2
     
     ./demonstrations/loadshed.rst
+    ./demonstrations/loadshed-prototypical-feeder-doc.rst
     ./demonstrations/pypower.rst
     ./demonstrations/weatherAgent.rst
     ./demonstrations/energyplus.rst

@@ -1,9 +1,9 @@
 {
   "caseType": {
-    "batteryCase": 0,
-    "flexLoadCase": 0,
-    "evCase": 0,
-    "pvCase": 1
+    "bt": 0,
+    "fl": 0,
+    "ev": 0,
+    "pv": 0
   },
   "Q_bid_forecast_correction": {
     "default": {
@@ -282,11 +282,10 @@
   "solarPPlayerFile": "5_minute_dist_power.csv",
   "solarQPlayerFile": "no_file",
   "solarAgentForecastFile": "8-node_dist_hourly_forecast_power.csv",
-  "supportPath": "../../../../data",
   "dataPath": "../data",
   "dsoAgentFile": "default_case_config.json",
   "dsoPopulationFile": "8-hi-metadata-lean.json",
-  "WeatherDataSourcePath": "../../../data/8-node data/DAT formatted files/",
+  "WeatherDataSourcePath": "../data/8-node data/DAT formatted files/",
   "hvacSetPoint": "hvac_setpt.json",
   "dsoQuadraticFile": "8_hi_DSO_quadratic_curves.json",
   "dsoCommBldgFile": "DSOT_commercial_metadata.json",
@@ -12464,7 +12463,7 @@
       1
     ]
   ],
-  "FNCS": [
+  "DSO": [
     [
       1,
       "Substation_1",
@@ -12652,7 +12651,7 @@
     "gencost": "An array for each generator cost [2, startup, shutdown, 3, c2, c1, c0]",
     "genFuel": "An array for each generator fuel attributes [fuel type, fuel name, id, uniton]",
     "branch": "An array for each branch [from bus id, to bus id, r, x, b, rateA, rateB, rateC, ratio, angle, status, angmin, angmax]",
-    "FNCS": "An array for each FNCS/gridlab instance [bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]",
+    "DSO": "An array for each substation instance [bus id, name, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]",
     "areas": "An array for each areas []",
     "UnitsOut": "An array for each units out[idx, time out[s], time back in[s]]",
     "BranchesOut": "An array for each branches out [idx, time out[s], time back in[s]]"

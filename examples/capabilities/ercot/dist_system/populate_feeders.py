@@ -3,33 +3,27 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: populate_feeders.py
 
-import json
-import tesp_support.feederGenerator as fg
-import os
-
-tesp_share = os.path.expandvars('$TESPDIR/data/')
+from tesp_support.feederGenerator import populate_feeder
 
 backbone_config = {'backbone_feeders': {
     'sim_R5-12.47-1': {'vll': 13800.0, 'vln': 7970.0, 'avg_house': 6500.0, 'avg_comm': 20000.0},
     'sim_R5-12.47-2': {'vll': 12470.0, 'vln': 7200.0, 'avg_house': 4500.0, 'avg_comm': 15000.0},
     'sim_R5-12.47-4': {'vll': 12470.0, 'vln': 7200.0, 'avg_house': 6000.0, 'avg_comm': 30000.0},
     'sim_R5-12.47-5': {'vll': 12470.0, 'vln': 7200.0, 'avg_house': 4500.0, 'avg_comm': 25000.0}},
-    'outpath': '../case8/',
-    'glmpath': tesp_share + 'feeders/',
-    'supportpath': tesp_share + 'schedules/',
-    'weatherpath': tesp_share + 'weather/'}
+    'work_path': '../case8/'}
 
-# inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
+# inverterModesBattery = ['GROUP_LOAD_FOLLOWING','LOAD_FOLLOWING','VOLT_VAR_FREQ_PWR',
+#                         'VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 # inverterModesPV = ['VOLT_VAR_FREQ_PWR','VOLT_WATT','VOLT_VAR','CONSTANT_PF','CONSTANT_PQ','NONE'];
 # billingModes = ['TIERED_TOU','TIERED_RTP','HOURLY','TIERED','UNIFORM','NONE'];
 # eplusVoltageChoices = ['208', '480'];
 
-case_config = {'SimulationConfig': {
-    'CaseName': 'Bus1',
-    'StartTime': '2013-07-01 00:00:00',
-    'EndTime': '2013-07-04 00:00:00',
-    'SourceDirectory': tesp_share + 'support',
-    'WorkingDirectory': '../case8'},
+case_config = {
+    'SimulationConfig': {
+        'StartTime': '2013-07-01 00:00:00',
+        'EndTime': '2013-07-04 00:00:00',
+        'WorkingDirectory': '../case8'
+    },
     'FeederGenerator': {
         'MetricsInterval': 300,
         'MinimumStep': 15,
@@ -49,7 +43,8 @@ case_config = {'SimulationConfig': {
         'Tier3Energy': 0,
         'Tier1Price': 0.117013,
         'Tier2Price': 0.122513,
-        'Tier3Price': 0},
+        'Tier3Price': 0
+    },
     'EplusConfiguration': {
         'BuildingChoice': 'SchoolDualController',
         'EMSFile': 'ems/emsSchoolDualController',
@@ -57,13 +52,18 @@ case_config = {'SimulationConfig': {
         'EnergyPlusServiceV': '480',
         'EnergyPlusXfmrKva': '150'
     },
-    'BackboneFiles': {'TaxonomyChoice': 'sim_R5-12.47-1'},
-    'WeatherPrep': {'DataSource': 'TX-Houston_Bush_Intercontinental.tmy3',
-                    'Altitude': 30,
-                    'TZmeridian': -6},
+    'BackboneFiles': {
+        'TaxonomyChoice': 'sim_R5-12.47-1'
+    },
+    'WeatherPrep': {
+        'DataSource': 'TX-Houston_Bush_Intercontinental.tmy3',
+        'Altitude': 30,
+        'TZmeridian': -6
+    },
     'PYPOWERConfiguration': {
         'TransformerBase': 12,
-        'TransmissionVoltage': 345}
+        'TransmissionVoltage': 345
+    }
 }
 
 bus_config = [
@@ -97,11 +97,12 @@ bus_config = [
 
 for i in range(len(bus_config)):
     print('** populating', bus_config[i]['feeder'], 'for bus', bus_config[i]['bus'], 'in', bus_config[i]['weather'])
+    case_config['SimulationConfig']['CaseName'] = 'Bus' + str(bus_config[i]['bus'])
+    case_config['PYPOWERConfiguration']['GLDBus'] = bus_config[i]['bus']
     case_config['BackboneFiles']['TaxonomyChoice'] = bus_config[i]['feeder']
     case_config['WeatherPrep']['DataSource'] = bus_config[i]['tmy3']
     case_config['WeatherPrep']['Latitude'] = bus_config[i]['lat']
     case_config['WeatherPrep']['Longitude'] = bus_config[i]['lon']
-    case_config['WeatherPrep']['AgentName'] = bus_config[i]['weather']
-    case_config['SimulationConfig']['CaseName'] = 'Bus' + str(bus_config[i]['bus'])
-    fg.populate_feeder(config=case_config, taxconfig=backbone_config)  # reduced-order feeders
-    # fg.populate_feeder (config=case_config)  # full-order feeders
+    case_config['WeatherPrep']['Name'] = bus_config[i]['weather']
+    populate_feeder(config=case_config, taxconfig=backbone_config)  # reduced-order feeders
+    # populate_feeder(config=case_config)  # full-order feeders

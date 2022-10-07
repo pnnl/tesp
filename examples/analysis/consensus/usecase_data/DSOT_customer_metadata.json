@@ -1,0 +1,66 @@
+{
+  "thermostat" : {
+    "purchase_price" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "installation_time" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "maintenance_time" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "maintenance_capital" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "installation_labor_rate" : 0,
+    "maintenance_labor_rate" : 0
+  },
+  "water_heater" : {
+    "purchase_price" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "installation_time" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "maintenance_time" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "maintenance_capital" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "maintenance_labor_rate" : 0,
+    "installation_labor_rate" : 0
+  },
+  "large_commercial_hvac" : {
+    "purchase_price" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "installation_time" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "maintenance_time" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "maintenance_capital" : {
+      "standard" : 0,
+      "smart" : 0
+    },
+    "installation_labor_rate" : 0,
+    "maintenance_labor_rate" : 0
+  },
+  "incentive_for_DER_participation" : 0,
+  "DSO_rebate" : 0,
+  "V1G_smart_controls_cost" : 0,
+  "V2G_smart_controls_cost" : 0
+}

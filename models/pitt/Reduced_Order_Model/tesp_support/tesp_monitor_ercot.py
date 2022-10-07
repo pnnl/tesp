@@ -29,15 +29,15 @@ except:
 import tesp_support.helpers as helpers
 import time
 
-import numpy as np;
-import matplotlib;
+import numpy as np
+import matplotlib
 
-matplotlib.use('TkAgg');
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk;
-from matplotlib.figure import Figure;
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
-import matplotlib.pyplot as plt;
+import matplotlib.pyplot as plt
 import yaml
 
 

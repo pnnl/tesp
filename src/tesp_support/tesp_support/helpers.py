@@ -26,9 +26,8 @@ def idf_int(val):
 
 def zoneMeterName(ldname):
     """ Enforces the meter naming convention for commercial zones
-
-    Commercial zones must be children of load objects. This routine
-    replaces "_load_" with "_meter".
+    The commercial zones must be children of load objects
+    This routine replaces "_load_" with "_meter".
 
     Args:
         ldname (str): the GridLAB-D name of a load, ends with _load_##
@@ -39,44 +38,19 @@ def zoneMeterName(ldname):
     return ldname.replace('_load_', '_meter_')
 
 
-# GridLAB-D name should not begin with a number, or contain '-' for FNCS
 def gld_strict_name(val):
     """Sanitizes a name for GridLAB-D publication to FNCS
+    GridLAB-D name should not begin with a number, or contain '-' for FNCS
 
     Args:
         val (str): the input name
 
     Returns:
-        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld_'
+        str: val with all '-' replaced by '_', and any leading digit replaced by 'gld\_'
     """
     if val[0].isdigit():
-        val = 'gld_' + val
+        val = "gld_" + val
     return val.replace('-', '_')
-
-
-def load_json_case(fname, FNCS=False):
-    """ Helper function to load PYPOWER case from a JSON file
-
-    Args:
-      fname (str): the JSON file to open
-
-    Returns:
-      dict: the loaded PYPOWER case structure
-    """
-    lp = open(fname, encoding='utf-8').read()
-    ppc = json.loads(lp)
-    ppc['bus'] = np.array(ppc['bus'])
-    ppc['gen'] = np.array(ppc['gen'])
-    ppc['branch'] = np.array(ppc['branch'])
-    ppc['areas'] = np.array(ppc['areas'])
-    ppc['gencost'] = np.array(ppc['gencost'])
-    if FNCS == True:
-        ppc['FNCS'] = np.array(ppc['FNCS'])
-    else:
-        ppc['DSO'] = np.array(ppc['DSO'])
-    ppc['UnitsOut'] = np.array(ppc['UnitsOut'])
-    ppc['BranchesOut'] = np.array(ppc['BranchesOut'])
-    return ppc
 
 
 class ClearingType(IntEnum):
@@ -91,8 +65,7 @@ class ClearingType(IntEnum):
 
 
 class curve:
-    """ Accumulates a set of price, quantity bids for later aggregation
-
+    """ Accumulates a set of price, quantity bids for later aggregation.
     The default order is descending by price.
 
     Attributes:
@@ -168,6 +141,51 @@ class curve:
                 self.count += 1
 
 
+class HelicsMsg(object):
+
+    def __init__(self, name, period):
+        # change logging to debug, warning, error
+        self._subs = []
+        self._pubs = []
+        self._cnfg = {"name": name,
+                      "period": period,
+                      "logging": "warning",
+                      }
+        pass
+
+    def write_file(self, _fn):
+        self.config("publications", self._pubs)
+        self.config("subscriptions", self._subs)
+        op = open(_fn, 'w', encoding='utf-8')
+        json.dump(self._cnfg, op, ensure_ascii=False, indent=2)
+        op.close()
+
+    def config(self, _n, _v):
+        self._cnfg[_n] = _v
+
+    def pubs(self, _g, _k, _t, _o, _p):
+        # for object and property is for internal code interface for gridlabd
+        self._pubs.append({"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}})
+
+    def pubs_n(self, _g, _k, _t):
+        self._pubs.append({"global": _g, "key": _k, "type": _t})
+
+    def pubs_e(self, _g, _k, _t, _u):
+        # for object and property is for internal code interface for eplus
+        self._pubs.append({"global": _g, "key": _k, "type": _t, "unit": _u})
+
+    def subs(self, _k, _t, _o, _p):
+        # for object and property is for internal code interface for gridlabd
+        self._subs.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
+
+    def subs_e(self, _r, _k, _t, _i):
+        # for object and property is for internal code interface for eplus
+        self._subs.append({"key": _k, "type": _t, "require": _r, "info": _i})
+
+    def subs_n(self, _k, _t):
+        self._subs.append({"key": _k, "type": _t})
+
+
 def parse_number(arg):
     """ Parse floating-point number from a FNCS message; must not have leading sign or exponential notation
 
@@ -221,6 +239,26 @@ def parse_magnitude_2(arg):
     return vals[0]
 
 
+def parse_helic_input(arg):
+    """Helper function to find the magnitude of a possibly complex number from Helics as a string
+
+    Args:
+      arg (str): The Helics value
+    """
+    try:
+
+        tok = arg.strip('[]')
+        vals = re.split(',', tok)
+        if len(vals) < 2:  # only a real part provided
+            vals.append('0')
+
+        vals[0] = float(vals[0])
+        return vals[0]
+    except:
+        print('parse_helic_input does not understand"' + arg + '"')
+        return 0
+
+
 def parse_magnitude(arg):
     """ Parse the magnitude of a possibly complex number from FNCS
 
@@ -256,8 +294,11 @@ def parse_magnitude(arg):
         b = complex(tok)
         return abs(b)  # b.real
     except:
-        print('parse_magnitude does not understand', arg)
-        return 0
+        try:
+            return parse_helic_input(arg)
+        except:
+            print('parse_magnitude does not understand' + arg)
+            return 0
 
 
 def parse_mva(arg):
@@ -316,7 +357,7 @@ def parse_kva(arg):  # this drops the sign of p and q
     Returns:
         float: the parsed kva value
     """
-    toks = list(filter(None, re.split('[+j-]', arg)))
+    toks = list(filter(None, re.split('[\+j-]', arg)))
     p = float(toks[0])
     q = float(toks[1])
     return 0.001 * math.sqrt(p * p + q * q)
@@ -417,32 +458,11 @@ def parse_kw(arg):
 
         return p
     except:
-        print('parse_kw does not understand', arg)
-        return 0
-
-
-def print_mod_load(bus, dso, model_load, msg, ts):
-    print(msg, 'at', ts)
-    print('bus, genidx, pbus, qbus, pcrv, qcrv, pgld, qgld, unresp, resp_max, c2, c1, c0, deg')
-    for row in dso:
-        busnum = int(row[0])
-        gld_scale = float(row[2])
-        load = model_load[busnum]
-        genidx = -load['genidx']
-        print('{:4d}'.format(busnum),
-              '{:4d}'.format(genidx),
-              '{:8.2f}'.format(bus[busnum - 1, 2]),
-              '{:8.2f}'.format(bus[busnum - 1, 3]),
-              '{:8.2f}'.format(load['pcrv']),
-              '{:8.2f}'.format(load['qcrv']),
-              '{:8.2f}'.format(load['p'] * gld_scale),
-              '{:8.2f}'.format(load['q'] * gld_scale),
-              '{:8.2f}'.format(load['unresp'] * gld_scale),
-              '{:8.2f}'.format(load['resp_max'] * gld_scale),
-              '{:8.5f}'.format(load['c2'] / gld_scale),
-              '{:8.5f}'.format(load['c1']),
-              '{:8.5f}'.format(load['c0']),
-              '{:3.1f}'.format(load['deg']))
+        try:
+            return parse_helic_input(arg)/1000.0
+        except:
+            print('parse_kw does not understand', arg)
+            return 0
 
 
 def aggregate_bid(crv):

@@ -8,5 +8,3 @@ values:
     HEAT_SETP_DELTA:
         topic: eplus_agent/heating_setpoint_delta
         default: 0
-
-

@@ -1,15 +1,12 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: dso_map.py
 
-import json
-import math
-import os
-import sys
-import xlrd
-import requests
 import csv
+import json
+
 import pandas as pd
-import numpy as np
+import requests
+import xlrd
 
 '''
 This script automatically creates the 200 bus meta data files.
@@ -74,18 +71,18 @@ The following DSO specific parameters are instantiated
 # ========   INPUT SETTINGS  ========================
 data_path = '../../../examples/analysis/dsot/data/'
 case_path = '../../../examples/analysis/dsot/code/'
-#case_path = '../../../examples/capabilities/ercot/case8/dsostub/'
-#case_path = '../../../examples/capabilities/ercot/case8/'
+# case_path = '../../../examples/capabilities/ercot/case8/dsostub/'
+# case_path = '../../../examples/capabilities/ercot/case8/'
 
 write_case_config = True  # Set true when wanting to update the QMax values in the system_case_config FNCS array
 find_county = False  # Set True if you need to use API to find county as a function of latitude and longitude
 write_industrials = False  # Set True if you want to write out the industrial load tape.
+
+
 # ========   END INPUT SETTINGS  ========================
 
 
-
 def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_Threshold):
-
     sheet_name = node + 'BusValues'
     if high_renewables_case:
         case_file = node + "-hi-metadata-" + feeder_mode
@@ -99,7 +96,7 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
     if write_industrials:
         dso_list = []
         indust_load_list = []
-    fncs_list = []
+    use_dso_list = []
 
     book = xlrd.open_workbook(data_path + 'bus_mapping.xlsx')
     sheet = book.sheet_by_name(sheet_name)
@@ -154,13 +151,13 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
                 total_customers = 1
                 res_customers = 1
             if write_industrials:
-                dso_list.append("Bus"+str(busid))
+                dso_list.append("Bus" + str(busid))
                 indust_load_list.append(round(indust_average_load, 1))
 
             if find_county:
                 # Find county by lat and longitude
                 # From https://geo.fcc.gov/api/census/
-                response = requests.get("https://geo.fcc.gov/api/census/area?lat="+str(latitude)+"&lon="+str(longitude)+"&format=json")
+                response = requests.get("https://geo.fcc.gov/api/census/area?lat=" + str(latitude) + "&lon=" + str(longitude) + "&format=json")
                 test = json.loads(response.content.decode("utf-8"))
                 county = test['results'][0]['county_name']
                 out.writerow([latitude, longitude, county])
@@ -242,9 +239,9 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
 
             elif feeder_mode == 'stub':
                 feeders = {"feeder1": {
-                            "name": "GC-12.47-1",
-                            "ercot": False
-                        }}
+                    "name": "GC-12.47-1",
+                    "ercot": False
+                }}
                 num_gld_homes = 0.1
 
             elif feeder_mode == 'skinny':
@@ -265,22 +262,21 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
                     num_gld_homes = 523
                 else:
                     feeders = {"feeder1": {
-                                "name": "GC-12.47-1",
-                                "ercot": False
-                            }}
+                        "name": "GC-12.47-1",
+                        "ercot": False
+                    }}
                     num_gld_homes = 0.1
 
-
             if write_case_config:
-                # [bus id, topic, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]
+                # [bus id, name, gld_scale, Pnom, Qnom, curve_scale, curve_skew, Pinit, Qinit]
                 if bus_simulated:
-                    fncs_list.append([busid, "Substation_"+str(busid),
-                                  (res_customers / num_gld_homes),
-                                  max_load * congestion_factor, 0, 0.5, 0, total_average_load, 0])
+                    use_dso_list.append([busid, "Substation_" + str(busid),
+                                         (res_customers / num_gld_homes),
+                                         max_load * congestion_factor, 0, 0.5, 0, total_average_load, 0])
                 else:
-                    fncs_list.append([busid, "Substation_"+str(busid),
-                                  (res_customers / num_gld_homes),
-                                  0, 0, 0.5, 0, total_average_load, 0])
+                    use_dso_list.append([busid, "Substation_" + str(busid),
+                                         (res_customers / num_gld_homes),
+                                         0, 0, 0.5, 0, total_average_load, 0])
 
             if DSO_Load_Threshold == 'File':
                 if bus_simulated:
@@ -293,7 +289,7 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
                 else:
                     dso_simulate = False
 
-            data["DSO_"+str(busid)] = {
+            data["DSO_" + str(busid)] = {
                 "bus_number": busid,
                 "used": dso_simulate,  # If true the DSO will be instantiated in prepare case and simulated
                 "name": busname,
@@ -307,7 +303,7 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
                 "ashrae_zone": ashrae_zone,
                 "blm_zone": blm_zone,
                 "peak_season": peakseason,
-                "substation": "Substation_"+str(busid),
+                "substation": "Substation_" + str(busid),
                 "random_seed": busid,
                 "feeders": feeders,
                 "RCI energy mix": {
@@ -320,7 +316,7 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
                 "comm_customers_per_bldg": 2.09,
                 "number_of_substations": 1,
                 "MVA_growth_rate": 0.01,
-                "weather_file": "weather_Bus_"+str(busid)+"_"+str(latitude)+"_"+str(longitude)+".dat",
+                "weather_file": "weather_Bus_" + str(busid) + "_" + str(latitude) + "_" + str(longitude) + ".dat",
                 "RCI customer count mix": {
                     "residential": round(res_customers / total_customers, 4),
                     "commercial": round(comm_customers / total_customers, 4),
@@ -339,19 +335,18 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
                 },
                 "DSO_system_energy_fraction": 0.11
             }
-        print("\n=== {0:d} DSOs Defined in Metadata File =====".format(len(data)-1))
+        print("\n=== {0:d} DSOs Defined in Metadata File =====".format(len(data) - 1))
 
     json_file.close()
     # write it in the original data file
     with open(data_path + case_file + '.json', 'w') as outfile:
         json.dump(data, outfile, indent=2)
 
-
     # write out FNCS array in system_config
     if write_case_config:
         with open(case_path + config_file + '.json') as caseconfig_file:
             case_data = json.load(caseconfig_file)
-            case_data['FNCS'] = fncs_list
+            case_data['DSO'] = use_dso_list
             for i in range(len(case_data['bus'])):
                 if len(case_data['bus'][i]) == 13:
                     case_data['bus'][i].append(0)
@@ -363,14 +358,14 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
     # write out industrial load file
     if write_industrials:
         days = 35
-        num_stamps = 35*24*12
-        time_stamps = [n*300 for n in range(num_stamps)]
+        num_stamps = 35 * 24 * 12
+        time_stamps = [n * 300 for n in range(num_stamps)]
         array = [indust_load_list for i in range(len(time_stamps))]
         indust_df = pd.DataFrame(array,
                                  index=time_stamps,
                                  columns=dso_list)
         indust_df.index.name = 'seconds'
-        indust_df.to_csv(data_path+'/200_indust_p.csv')
+        indust_df.to_csv(data_path + '/200_indust_p.csv')
 
 
 # def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_Threshold):
@@ -379,7 +374,7 @@ prepare_metadata('8', 10, 'lean', True, 0)
 # prepare_metadata('8', 10, 'stub', True, 0)
 prepare_metadata('8', 10, 'lean', False, 0)
 # prepare_metadata('8', 10, 'skinny', False, 0)
-#prepare_metadata('8', 10, 'test', False, 0)
+# prepare_metadata('8', 10, 'test', False, 0)
 # prepare_metadata('8', 10, 'stub', False, 0)
 # prepare_metadata('200', 202, 'lean', True, 1130)
 # prepare_metadata('200', 202, 'skinny', True, 300)

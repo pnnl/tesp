@@ -1,7 +1,11 @@
 #!/usr/bin/python3
+# Copyright (C) 2021-2022 Battelle Memorial Institute
+# file: editconfig
 
-# normal command line argument is 'case.json'
 import sys
-import tesp_support.api as tesp
+import tesp_support.tesp_case as tesp
 
-tesp.make_tesp_case(sys.argv[1])
+if len(sys.argv) > 0:
+    tesp.make_tesp_case(sys.argv[1])
+else:
+    print("Usage:\n  'makecase test.json' -> Create TESP case using a json configuration file")

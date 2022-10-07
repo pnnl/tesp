@@ -15,7 +15,6 @@ References:
   `Matplotlib Animation <https://matplotlib.org/api/animation_api.html>`_
 """
 import os
-import sys
 import json
 import yaml
 import subprocess
@@ -25,10 +24,7 @@ import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import messagebox
 
-try:
-    import tesp_support.fncs as fncs
-except:
-    pass
+import tesp_support.fncs as fncs
 from .helpers import parse_kw
 
 import matplotlib

@@ -149,7 +149,7 @@ int run_main(int argc, char **argv) {
       // Load profile for the "static" load at all the buses.
       // The number of profiles should be equal to exactly the amount of buses in the system. Careful, though!!!
       // Each profile needs to start from the value that exists initially in the MATPOWER model at the specific bus.
-      // Each profile consists of data for 24 hours every 5 minutes (288 values taken repeatedly every day)
+      // Each profile consists of data for 24-hours every 5 minutes (288 values taken repeatedly every day)
       double real_power_demand[nbrows][288], reactive_power_demand[nbrows][288];
       for (int i = 0; i < sizeof(real_power_demand)/sizeof(real_power_demand[0]); i++) {
         for (int j = 0; j < sizeof(real_power_demand[0])/sizeof(real_power_demand[0][0]); j++) {
@@ -581,7 +581,7 @@ int run_main(int argc, char **argv) {
         
         // Setting up the status of the generators, based on the current time
         // Turning some generators out-of-service between certain time preiods in the simulation 
-        // every day between 6 and 7 or 18 and 19 !!! WARNING !!! These hours are hard coded assuming we run more than 24 hours
+        // every day between 6 and 7 or 18 and 19 !!! WARNING !!! These hours are hard coded assuming we run more than 24-hours
         if ((curr_hours % 24 >= 6 && curr_hours % 24 < 7) || (curr_hours % 24 >= 18 && curr_hours % 24 < 19)){
           tBefore = ((float) clock() / CLOCKS_PER_SEC) * 1000;
           for (int off_ind = 0; off_ind < sizeof(offline_gen_ind)/sizeof(offline_gen_ind[0]); off_ind++){

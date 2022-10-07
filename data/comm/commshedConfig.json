@@ -13,7 +13,7 @@
   ],
   "subscriptions" : [
     {
-      "key" : "gld1/distribution_load",
+      "key" : "gld_1/distribution_load",
       "type" : "complex",
       "required" : false
     }

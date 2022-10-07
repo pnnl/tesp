@@ -126,7 +126,7 @@ def load_price_data(dir_path, market_type, dso_num, simdata):
     return prices_data
 
 def Wh_Energy_Purchases(data_path, dso_num, simdata=False, h1=5, h2=16, h3=20, place='Houston'):
-    '''
+    """
     Computes the total costs, total energy purchases and average price annually for bilateral, day-ahead and real-time
     markets from hourly and 5 min ERCOT energy and price data.
     :param ercot_path (str): path of the ERCOT energ and price data
@@ -136,7 +136,7 @@ def Wh_Energy_Purchases(data_path, dso_num, simdata=False, h1=5, h2=16, h3=20, p
      evening hours from h2+1 to h3, and night hours are from h3+1 to h1 the next day)
     :param place (str): location of DSO
     :return MarketPurchases (dict): real-time, day-ahead, and bilateral market purchases (annual cost, energy and average price)
-    '''
+    """
 
     '''
     Loads hourly ERCOT energy and price data. Computes minimum wholesale price and quantity for day, evening, and weekend to represent the fixed prices and energy

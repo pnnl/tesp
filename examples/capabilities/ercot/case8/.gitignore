@@ -1,5 +1,8 @@
 *metrics.json
 *dict.json
+*msg.json
+tso_h.json
+*substation.json
 *.xml
 *monitor.yaml
 *substation.yaml

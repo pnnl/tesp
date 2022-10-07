@@ -1286,7 +1286,7 @@ fprintf(fid,'#ifdef USE_FNCS\n');
 fprintf(fid,'object fncs_msg {\n');
 fprintf(fid,'  name gridlabdSimulator1;\n');
 fprintf(fid,'  parent network_node;\n');
-fprintf(fid,'  configure inv8500_FNCS_Config.txt;\n');
+fprintf(fid,'  configure inv8500_gridlabd.txt;\n');
 fprintf(fid,'  option "transport:hostname localhost, port 5570";\n');
 fprintf(fid,'}\n');
 fprintf(fid,'#endif\n\n');

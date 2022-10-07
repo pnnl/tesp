@@ -59,8 +59,6 @@ Transactive case
 
 .. image:: ../media/te30/te30_H1_Controllers.png
     :width: 800
-    
-    
 
 
 School (EnergyPlus)
@@ -118,7 +116,7 @@ Transactive case
     
     
 Residential Votlage (GridLAB-D)
-............................
+...............................
 Base case
 
 .. image:: ../media/te30/te30_H0_Voltages.png
@@ -130,28 +128,28 @@ Transactive case
     :width: 800
 
 
-
 File Listing
 ~~~~~~~~~~~~
 
 * *clean.sh* - script that removes output and temporary files
 * *DeDeprecate.py*
-* *gui.sh*
-* *helics_eplus_agent.json* - HELICS configuration file for the EnergyPlus agent
-* *helics_eplus.json* - HELICS configuration file for EnergyPlus
-* *launch_pp.py* - helper script that launches PYPOWER from tesp_monitor
-* *launch_substation.py* - helper script that launches the Python substation agents from tesp_monitor
+* *eplus.json* - HELICS configuration file for EnergyPlus
+* *eplus_agent.json* - HELICS configuration file for the EnergyPlus agent
+* *monitor.json* - Monitor configuration file
 * *NonGLDLoad.txt* - text file of non-responsive loads on transmission buses
 * *outputs_te.glm* - defines GridLAB-D data to record
 * *phase_A.player*
-* *plots.py* -  makes 5 pages of plots for a case: eg 'python plots.py TE_Challenge'
-* *prepare_case.py* -  sets up the dictionaries and GLD/Agent FNCS configurations for all cases
-* *pypowerConfig.json* - HELICS configuration file for PYPOWER
-* *README.md* - this file
+* *phase_B.player*
+* *phase_C.player*
+* *plots.py* - makes 5 pages of plots for a case: eg 'python plots.py TE_Challenge'
+* *prepare_case.py* - sets up the dictionaries and GLD/Agent FNCS configurations for all cases
+* *pypower.json* - HELICS configuration file for PYPOWER
+* *README.rst* - this file
 * *runh.sh* - script for the case with  market
 * *runh0.sh* - script for the case without transactive real-time energy market
+* *te30_pp.json* - PYPOWER bulk power system model definition
 * *TE_Challenge.glm* - GridLAB-D system definition
-* *te30_pp.json* - PYPOWER bulk power system modle definition
+* *TE_Challenge_monitor.json* - HELICS configuration for monitor
 
 Copyright (c) 2017-2022, Battelle Memorial Institute
 

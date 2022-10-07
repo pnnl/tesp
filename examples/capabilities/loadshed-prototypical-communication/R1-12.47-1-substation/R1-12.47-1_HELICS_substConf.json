@@ -1,0 +1,16 @@
+{
+  "name": "R1-12.47-1-substation",
+  "coreType": "zmq",
+  "core_name": "R1-12.47-1-substation-core",
+  "loglevel": "SUMMARY",
+  "period": "15s",
+  "wait_for_current_time_update": false,
+  "endpoints": [
+    {
+      "global": false,
+      "name": "R1_12_47_1_substation",
+      "type": "string",
+      "info": ""
+    }
+  ]
+}

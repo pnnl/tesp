@@ -64,7 +64,7 @@ def write_tesp_case (config, cfgfile):
     As the configuration process finishes, several files are written to *casedir*:
 
         * Casename.glm: the GridLAB-D model, copied and modified from the TESP support directory
-        * Casename_FNCS_Config.txt: FNCS subscriptions and publications, included by Casename.glm
+        * Casename_gridlabd.txt: FNCS subscriptions and publications, included by Casename.glm
         * Casename_agent_dict.json: metadata for the simple_auction and hvac agents
         * Casename_glm_dict.json: metadata for Casename.glm
         * Casename_pp.json: the PYPOWER model, copied and modified from the TESP support directory
@@ -357,7 +357,7 @@ values:
     ppcase['branch'] = ppcase['branch'].tolist()
     ppcase['areas'] = ppcase['areas'].tolist()
     ppcase['gencost'] = ppcase['gencost'].tolist()
-    ppcase['FNCS'] = ppcase['FNCS'].tolist()
+    ppcase['DSO'] = ppcase['DSO'].tolist()
     ppcase['UnitsOut'] = ppcase['UnitsOut'].tolist()
     ppcase['BranchesOut'] = ppcase['BranchesOut'].tolist()
 
@@ -377,8 +377,8 @@ values:
         ppcase['pf_dc'] = 1
     fncsBus = int (config['PYPOWERConfiguration']['GLDBus'])
     fncsScale = float (config['PYPOWERConfiguration']['GLDScale'])
-    ppcase['FNCS'][0][0] = fncsBus
-    ppcase['FNCS'][0][2] = fncsScale
+    ppcase['DSO'][0][0] = fncsBus
+    ppcase['DSO'][0][2] = fncsScale
     baseKV = float(config['PYPOWERConfiguration']['TransmissionVoltage'])
     for row in ppcase['bus']:
         if row[0] == fncsBus:
@@ -492,7 +492,7 @@ values:
     p3.wait()
 
     # write the command scripts for console and tesp_monitor execution
-    aucline = """python -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
+    aucline = """python -c "import tesp_support.substation as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
     ppline = """python -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
 
     # batch file for Windows

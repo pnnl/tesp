@@ -6,7 +6,7 @@ then
 
   archive_folder="."
   touch "./$1/run.sh"
-  python3 -c "import tesp_support.helpers_dsot_v1 as tesp; tesp.write_management_script('$archive_folder', '$1', '.', 0, 0)"
+  python3 -c "import tesp_support.helpers_dsot as tesp; tesp.write_management_script('$archive_folder', '$1', '.', 0, 0)"
 
   cd "$1" || exit
   rm -f "./*metrics.h5"
@@ -25,8 +25,8 @@ then
 echo "#!/bin/bash
 
 (exec helics_broker -f 7 --loglevel=warning --name=mainbroker &> broker.log &)
-(python3 -c \"import sys; sys.path.insert(1,'..'); import dsoStub; dsoStub.dso_loop('./case_config')\" &> dso.log &)
-(exec python3 -c \"import tesp_support.tso_psst as tesp;tesp.tso_loop('./case_config')\" &> ./tso.log &)
+(exec python3 -c \"import sys; sys.path.insert(1,'..');import dsoStub;dsoStub.dso_loop('./case_config')\" &> dso.log &)
+(exec python3 -c \"import tesp_support.tso_psst as tesp;tesp.tso_psst_loop('./case_config')\" &> ./tso.log &)
 (exec python3 -c \"import tesp_support.player as tesp;tesp.load_player_loop('./case_config', 'genMn')\" &> ./gen_player.log &)
 (exec python3 -c \"import tesp_support.player as tesp;tesp.load_player_loop('./case_config', 'genForecastHr')\" &> ./alt_player.log &)
 (exec python3 -c \"import tesp_support.player as tesp;tesp.load_player_loop('./case_config', 'indLoad')\" &> ./ind_player.log &)

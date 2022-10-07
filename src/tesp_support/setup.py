@@ -16,16 +16,16 @@ setup(
     url='https://github.com/pnnl/tesp',
     license='BSD',
     install_requires=[
-        'pandas>=1.1.4',
-        'numpy>=1.19.4',
-        'scipy>=1.5.4',
-        'matplotlib>=3.3.3',
-        'networkx>=2.5',
-        'PYPOWER>=5.1.5'
+        'pandas~=1.4.3',
+        'numpy~=1.21.6',
+        'scipy~=1.8.1',
+        'matplotlib~=3.5.3',
+        'networkx~=2.8.5',
+        'PYPOWER==5.1.5'
     ],
     packages=find_packages(),
     include_package_data=True,
-    python_requires='>=3.6.9',
+    python_requires='>=3.8',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -36,8 +36,8 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.7',
-        'Topic :: Scientific/Engineering',
+        'Programming Language :: Python :: 3.8',
+        'Topic :: Scientific/Engineering'
     ],
     zip_safe=False
 )

@@ -1,6 +1,6 @@
 /*
 ``matpowerintegrator'' represents the collection of functions necessary to implement the right communication
-between the distribution simulator/player (Gridlab-D) and the transmission player (MATPOWER)
+between the distribution simulator/player (GridLAB-D) and the transmission player (MATPOWER)
 ==========================================================================================
 Copyright (C) 2015-2022, Battelle Memorial Institute
 Written by Laurentiu Dan Marinovici, Pacific Northwest National Laboratory

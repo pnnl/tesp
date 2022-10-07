@@ -288,7 +288,7 @@ if retail:
             if GLD_metadata['billingmeters'][each]['tariff_class'] is None:
                 raise Exception('Tariff class was not successfully determined for meter ' + each)
 
-        # Place holder code to add whether a customer is participating or not.
+        # Placeholder code to add whether a customer is participating or not.
         # TODO: this should be done in prepare case and read in as part of GLD meter metadata.
         agent_file_name = 'Substation_' + str(dso_num) + '_agent_dict.json'
         agent_metadata = tesp_support.DSOT_plots.load_json(month_def[0][1] + agent_prefix + str(dso_num), agent_file_name)

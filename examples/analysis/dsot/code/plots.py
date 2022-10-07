@@ -2,8 +2,8 @@
 # run it from inside the metrics_root folder
 import sys
 import os
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import process_gld_dsot as pg
 # import tesp_support.process_inv as gp
 # import tesp_support.process_gld as gp

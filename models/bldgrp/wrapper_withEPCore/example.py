@@ -27,12 +27,12 @@ if __name__ == "__main__":
 	
 	# start simulation
 	model_time = LO_model1.startTime # startTime = startDay * 86400
-	curInputs = inputSettings;
-	while(model_time < LO_model1.stopTime):# stopTime = (startDay + duration) * 86400
+	curInputs = inputSettings
+	while model_time < LO_model1.stopTime:  # stopTime = (startDay + duration) * 86400
 
-                curInputs["intLightingSch"] = "1"; #provide the dynamic inputs here if DIFlag_intLightingSch is set to "Y"
+		curInputs["intLightingSch"] = "1"; #provide the dynamic inputs here if DIFlag_intLightingSch is set to "Y"
 
-		curInputs["basementThermostat"]="21"; #provide the dynamic inputs here if DIFlag_basementThermostat is set to "Y", default at 23C
+		curInputs["basementThermostat"]="21"  #provide the dynamic inputs here if DIFlag_basementThermostat is set to "Y", default at 23C
 		curOutputs = LO_model1.step(model_time, curInputs)
 		
 		plotting["totalBldgPower"].append(curOutputs["totalBldgPower"])

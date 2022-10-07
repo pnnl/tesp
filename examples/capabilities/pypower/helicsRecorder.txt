@@ -1,4 +1,4 @@
-pypower/LMP_B7
-pypower/three_phase_voltage_B7
+pypower/LMP_7
+pypower/three_phase_voltage_7
 player/distribution_load
 

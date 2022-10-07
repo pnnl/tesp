@@ -21,7 +21,7 @@
 #print (oldname, newname)
 
 # step 1
-import tesp_support.tesp_config as tesp
+import tesp_support.api as tesp
 tesp.show_tesp_config()
 
 # step 2
@@ -33,6 +33,6 @@ tesp.show_tesp_config()
 #tesp.make_monte_carlo_cases ('Demo.json')
 
 # step 4
-#import tesp_support.tesp_monitor as tesp
+#import tesp_support.api as tesp
 #tesp.show_tesp_monitor()
 

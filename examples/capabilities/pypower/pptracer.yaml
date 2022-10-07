@@ -3,10 +3,10 @@ time_delta: 60m
 broker: tcp://localhost:5570
 values:
     LMP7:
-        topic: pypower/LMP_B7
+        topic: pypower/LMP_7
         default: 0
     vpos7:
-        topic: pypower/three_phase_voltage_B7
+        topic: pypower/three_phase_voltage_7
         default: 0
     SUBSTATION7:
         topic: player/distribution_load

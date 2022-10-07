@@ -3,224 +3,74 @@
 
 import json
 import helics
-
 import logging as log
 
-from tesp_support.helpers import load_json_case
+import tesp_support.tso_helpers as tso
 from tesp_support.helpers import parse_mva
+from tesp_support.helpers import HelicsMsg
 
 
 def dso_make_stub(casename):
     log.info('Reading configuration...')
-    ppc = load_json_case(casename + '.json', True)
+    ppc = tso.load_json_case(casename + '.json')
     port = str(ppc['port'])
-    nd = ppc['FNCS'].shape[0]
+    nd = ppc['DSO'].shape[0]
 
     # write player helics config.json file for load and generator players
     players = ppc["players"]
     for idx in range(len(players)):
         player = ppc[players[idx]]
-        jsonfile = player[0] + '_player_h.json'
-        yp = open(jsonfile, 'w')
-        print('{', file=yp)
-        print('  "name": "' + player[0] + 'player",', file=yp)
-        print('  "period": 15.0,', file=yp)
-        print('  "publications": [', file=yp)
+
+        yp = HelicsMsg(player[0] + "player", 15)
         if player[8]:
             # load
-            comma = ","
             for i in range(nd):
                 bs = str(i + 1)
-                print('    {', file=yp)
-                print('      "global": false,', file=yp)
-                print('      "key": "' + player[0] + '_load_' + bs + '",', file=yp)
-                print('      "type": "string"', file=yp)
-                print('    },', file=yp)
-                print('    {', file=yp)
-                print('      "global": false,', file=yp)
-                print('      "key": "' + player[0] + "_ld_hist_" + bs + '",', file=yp)
-                print('      "type": "string"', file=yp)
-                if nd == i+1:
-                    comma = ""
-                print('    }' + comma, file=yp)
-            print('  ]', file=yp)
-            print('}', file=yp)
+                yp.pubs_n(False, player[0] + "_load_" + bs, "string")
+                yp.pubs_n(False, player[0] + "_ld_hist_" + bs, "string")
         else:
             # power
-            brace = False
             genFuel = ppc['genfuel']
             for i in range(len(genFuel)):
                 if genFuel[i][0] in ppc['renewables']:
                     idx = str(genFuel[i][2])
                     if player[6]:
-                        if brace:
-                            print('    },', file=yp)
-                        print('    {', file=yp)
-                        print('      "global": false,', file=yp)
-                        print('      "key": "' + player[0] + '_power_' + idx + '",', file=yp)
-                        print('      "type": "string"', file=yp)
-                        brace = True
+                        yp.pubs_n(False, player[0] + '_power_' + idx, "string")
                     if player[7]:
-                        if brace:
-                            print('    },', file=yp)
-                        print('    {', file=yp)
-                        print('      "global": false,', file=yp)
-                        print('      "key": "' + player[0] + '_pwr_hist_' + idx + '",', file=yp)
-                        print('      "type": "string"', file=yp)
-                        brace = True
-            print('    }', file=yp)
-            print('  ]', file=yp)
-            print('}', file=yp)
+                        yp.pubs_n(False, player[0] + '_pwr_hist_' + idx, "string")
+        yp.write_file(player[0] + '_player.json')
 
-        yp.close()
-
-    yp = open('dso_h.json', 'w')
-    print('{', file=yp)
-    print('  "name": "dsostub",', file=yp)
-    print('  "period": 15.0,', file=yp)
-    print('  "publications": [', file=yp)
-    comma = ","
+    yp = HelicsMsg("dsostub", 15)
     for i in range(nd):
         bs = str(i + 1)
-        print('    {', file=yp)
-        print('      "global": false,', file=yp)
-        print('      "key": "rt_bid_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "global": false,', file=yp)
-        print('      "key": "da_bid_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        if nd == i + 1:
-            comma = ""
-        print('    }' + comma, file=yp)
-    print('  ],', file=yp)
-    print('  "subscriptions": [', file=yp)
-    comma = ","
-    for i in range(nd):
-        bs = str(i + 1)
-        print('    {', file=yp)
-        print('      "name": "SUBSTATION_' + bs + '",', file=yp)
-        print('      "key": "refplayer/ref_load_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "SUBHISTORY_' + bs + '",', file=yp)
-        print('      "key": "refplayer/ref_ld_hist_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "IND_LOAD_' + bs + '",', file=yp)
-        print('      "key": "indplayer/ind_load_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "IND_LD_HIST_' + bs + '",', file=yp)
-        print('      "key": "indplayer/ind_ld_hist_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "LMP_DA_Bus_' + bs + '",', file=yp)
-        print('      "key": "pypower/lmp_da_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "LMP_RT_Bus_' + bs + '",', file=yp)
-        print('      "key": "pypower/lmp_rt_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "cleared_q_rt_' + bs + '",', file=yp)
-        print('      "key": "pypower/cleared_q_rt_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "cleared_q_da_' + bs + '",', file=yp)
-        print('      "key": "pypower/cleared_q_da_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "V_Bus_' + bs + '",', file=yp)
-        print('      "key": "pypower/three_phase_voltage_' + bs + '",', file=yp)
-        print('      "type": "double"', file=yp)
-        if nd == i + 1:
-            comma = ""
-        print('    }' + comma, file=yp)
-    print('  ]', file=yp)
-    print('}', file=yp)
-    yp.close()
+        yp.pubs_n(False, "rt_bid_" + bs, "string")
+        yp.pubs_n(False, "da_bid_" + bs, "string")
+        yp.subs_n("refplayer/ref_load_" + bs, "string")
+        yp.subs_n("refplayer/ref_ld_hist_" + bs, "string")
+        yp.subs_n("indplayer/ind_load_" + bs, "string")
+        yp.subs_n("indplayer/ind_ld_hist_" + bs, "string")
+        yp.subs_n("pypower/lmp_rt_" + bs, "string")
+        yp.subs_n("pypower/lmp_da_" + bs, "string")
+        yp.subs_n("pypower/cleared_q_rt_" + bs, "string")
+        yp.subs_n("pypower/cleared_q_da_" + bs, "string")
+        yp.subs_n("pypower/three_phase_voltage_" + bs, "double")
+    yp.write_file('dso_h.json')
 
-    yp = open('tso_h.json', 'w')
-    print('{', file=yp)
-    print('  "name": "pypower",', file=yp)
-    print('  "period": 15,', file=yp)
-    print('  "publications": [', file=yp)
-    comma = ","
+    yp = HelicsMsg("pypower", 15)
     for i in range(nd):
         bs = str(i + 1)
-        print('    {', file=yp)
-        print('      "global": false,', file=yp)
-        print('      "key": "lmp_rt_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "global": false,', file=yp)
-        print('      "key": "lmp_da_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "global": false,', file=yp)
-        print('      "key": "cleared_q_rt_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "global": false,', file=yp)
-        print('      "key": "cleared_q_da_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "global": false,', file=yp)
-        print('      "key": "three_phase_voltage_' + bs + '",', file=yp)
-        print('      "type": "double"', file=yp)
-        if nd == i + 1:
-            comma = ""
-        print('    }' + comma, file=yp)
-    print('  ],', file=yp)
+        yp.pubs_n(False, "lmp_rt_" + bs, "string")
+        yp.pubs_n(False, "lmp_da_" + bs, "string")
+        yp.pubs_n(False, "cleared_q_rt_" + bs, "string")
+        yp.pubs_n(False, "cleared_q_da_" + bs, "string")
+        yp.pubs_n(False, "three_phase_voltage_" + bs, "double")
+        yp.subs_n("dsostub/da_bid_" + bs, "string")
+        yp.subs_n("dsostub/rt_bid_" + bs, "string")
+        yp.subs_n("refplayer/ref_load_" + bs, "string")
+        yp.subs_n("refplayer/ref_ld_hist_" + bs, "string")
+        yp.subs_n("gldplayer/gld_load_" + bs, "string")
+        yp.subs_n("gldplayer/gld_ld_hist_" + bs, "string")
 
-    print('  "subscriptions": [', file=yp)
-    for i in range(nd):
-        bs = str(i + 1)
-        print('    {', file=yp)
-        print('      "name": "DA_BID_' + bs + '",', file=yp)
-        print('      "key": "dsostub/da_bid_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "RT_BID_' + bs + '",', file=yp)
-        print('      "key": "dsostub/rt_bid_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "REF_LOAD_' + bs + '",', file=yp)
-        print('      "key": "refplayer/ref_load_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "REF_LD_HIST_' + bs + '",', file=yp)
-        print('      "key": "refplayer/ref_ld_hist_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "GLD_LOAD_' + bs + '",', file=yp)
-        print('      "key": "gldplayer/gld_load_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        print('    },', file=yp)
-        print('    {', file=yp)
-        print('      "name": "GLD_LD_HIST_' + bs + '",', file=yp)
-        print('      "key": "gldplayer/gld_ld_hist_' + bs + '",', file=yp)
-        print('      "type": "string"', file=yp)
-        if nd != i + 1:
-            print('    },', file=yp)
     if ppc['genPower']:
         genFuel = ppc['genfuel']
         for i in range(len(genFuel)):
@@ -229,21 +79,10 @@ def dso_make_stub(casename):
                 for plyr in ["genMn", "genForecastHr"]:
                     player = ppc[plyr]
                     if player[6] and not player[8]:
-                        print('    },', file=yp)
-                        print('    {', file=yp)
-                        print('      "name": "' + player[0].upper() + '_POWER_' + idx + '",', file=yp)
-                        print('      "key": "' + player[0] + 'player/' + player[0] + '_power_' + idx + '",', file=yp)
-                        print('      "type": "string"', file=yp)
+                        yp.subs_n(player[0] + 'player/' + player[0] + '_power_' + idx, "string")
                     if player[7] and not player[8]:
-                        print('    },', file=yp)
-                        print('    {', file=yp)
-                        print('      "name": "' + player[0].upper() + '_PWR_HIST_' + idx + '",', file=yp)
-                        print('      "key": "' + player[0] + 'player/' + player[0] + '_pwr_hist_' + idx + '",', file=yp)
-                        print('      "type": "string"', file=yp)
-        print('    }' + comma, file=yp)
-    print('  ]', file=yp)
-    print('}', file=yp)
-    yp.close()
+                        yp.subs_n(player[0] + 'player/' + player[0] + '_pwr_hist_' + idx, "string")
+    yp.write_file('tso_h.json')
 
 
 def dso_loop(casename):
@@ -255,18 +94,18 @@ def dso_loop(casename):
     power_factor = 0.57  # roughly 30 deg
 
     logger = log.getLogger()
+    # logger.setLevel(log.INFO)
+    logger.setLevel(log.WARNING)
     # logger.setLevel(log.DEBUG)
-    logger.setLevel(log.INFO)
-    # logger.setLevel(log.WARNING)
 
     log.info('Reading configuration...')
-    ppc = load_json_case(casename + '.json', True)
+    ppc = tso.load_json_case(casename + '.json')
 
     tmax = int(ppc['Tmax'])
     dt = int(ppc['dt'])
     bWantMarket = ppc['priceSensLoad']
-    fncs_bus = ppc['FNCS']
-    nd = fncs_bus.shape[0]
+    dso_bus = ppc['DSO']
+    nd = dso_bus.shape[0]
     dsoList = [1, 2, 3, 4, 5, 6, 7, 8]
 
     gld_bus = {}  # key on bus number
@@ -290,10 +129,10 @@ def dso_loop(casename):
     helics.helicsFederateEnterExecutingMode(hFed)
 
     while ts <= tmax:
-        # see another example for helics integration at fncsPYPOWER.py
+        # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
-            key = helics.helicsSubscriptionGetKey(sub)
+            key = helics.helicsSubscriptionGetTarget(sub)
             topic = key.upper().split('/')[1]
             # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
             if helics.helicsInputIsUpdated(sub):
@@ -334,7 +173,7 @@ def dso_loop(casename):
         # the bid curve is also fixed
         # however, we will add some noise to the day-ahead bid
         if ts >= tnext_da:
-            for row in fncs_bus:
+            for row in dso_bus:
                 busnum = int(row[0])
                 if busnum in dsoList:
                     da_bid = {
@@ -362,7 +201,7 @@ def dso_loop(casename):
 
         # update the bid, and publish simulated load as unresponsive + cleared_responsive
         if ts >= tnext_rt:
-            for row in fncs_bus:
+            for row in dso_bus:
                 busnum = int(row[0])
                 if busnum in dsoList:
                     p = gld_bus[busnum]['p']  # + gld_bus[busnum]['p_i']
