@@ -42,4 +42,3 @@ pip3 list > "${TESPBUILD}/tesp_pypi.id"
 
 echo "Stamping TESP $ver for install"
 echo "$ver" > "${TESPBUILD}/version"
-git tag $ver

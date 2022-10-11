@@ -48,6 +48,14 @@ Version 1.0.1 (2021-04-23)
 * Remove deprecated solar and battery attributes
 * Update to HELICS 2.6.1
 
+Version 1.2.0 (2022-10-3)
+--------------------------
+
+* Added data.py to for shared data with TESP, recommended using TESP install
+* Added several APIs for plot GridLABD and EnergyPlus attributes
+* Added player server
+* Added DSOT agents and feeder generators
+* Update to HELICS 3.3.0
 
 
 
