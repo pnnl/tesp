@@ -8,7 +8,7 @@ of loads and resources. Current features include:
 
 * GridLAB-D_ for the distribution system and residential loads
 * EnergyPlus_ for large buildings
-* MATPOWER_ or PYPOWER_ or PSST_ for the bulk power systems
+* MATPOWER_ or PYPOWER_ for the bulk power systems
 * Bindings for transactive agents in Python_, Java or C++
 
 The goal of TESP_ is that researchers can focus their work
