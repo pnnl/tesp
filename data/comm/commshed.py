@@ -46,8 +46,7 @@ def helics_loop(tmax, market_period, thresh_kW, max_offset_kW):
         #     will become True if value changes later
         #  4) helicsInputLastUpdateTime is > 0 only after the other federate published its first value
         if (sub_load is not None) and helics.helicsInputIsUpdated(sub_load) and (ts >= next_market):
-            cval = helics.helicsInputGetComplex(sub_load)
-            gld_load = complex(cval[0], cval[1])
+            gld_load = helics.helicsInputGetComplex(sub_load)
             feeder_kW = gld_load.real / 1.0e3
             excess_kW = feeder_kW - thresh_kW
             excess_kW *= 0.25

@@ -458,7 +458,7 @@ class TespMonitorGUI:
           i (int): the animation frame number
         """
         # print ('.', end='', flush=True)
-        print('frame', i, 'of', self.nsteps, flush=True)
+        # print('frame', i, 'of', self.nsteps, flush=True)
 
         bRedraw = False
         while self.time_granted <= self.time_stop:  # time in seconds
@@ -492,8 +492,7 @@ class TespMonitorGUI:
                     v1 = helics.helicsInputGetDouble(self.sub_TEDP)
                 if helics.helicsInputIsUpdated(self.sub_dist_load):
                     cval = helics.helicsInputGetComplex(self.sub_dist_load)
-                    v3 = complex(cval[0], cval[1])
-                    v3 = v3.real / 1.0e3
+                    v3 = cval.real / 1.0e3
                     self.gld_load = v3
 
                 # expand the Y axis limits if necessary, keeping a 10% padding around the range

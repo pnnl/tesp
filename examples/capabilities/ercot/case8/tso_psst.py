@@ -1116,10 +1116,10 @@ def tso_psst_loop():
                     log.debug("at " + str(ts) + " " + topic + " " + str(gld_load[busnum]['deg']))
             # getting the latest inputs from GridLAB-D
                 elif 'DISTRIBUTION_LOAD' in topic:  # gld
-                    val = helics.helicsInputGetComplex(sub)  # TODO: helics needs to return complex instead of tuple
-                    gld_load[busnum]['p'] = val[0] / 100000.0  # MW
-                    gld_load[busnum]['q'] = val[1] / 100000.0  # MW
-                    log.debug("at " + str(ts) + " " + topic + " " + str(val))
+                    cval = helics.helicsInputGetComplex(sub)
+                    gld_load[busnum]['p'] = cval.real / 100000.0  # MW
+                    gld_load[busnum]['q'] = cval.imag / 100000.0  # MW
+                    log.debug("at " + str(ts) + " " + topic + " " + str(cval))
             # getting the latest inputs from DSO day Ahead
                 elif 'DA_BID_' in topic:
                     dso_bid = True

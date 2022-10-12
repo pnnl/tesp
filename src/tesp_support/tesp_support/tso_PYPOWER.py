@@ -176,12 +176,11 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
                 resp_deg = helics.helicsInputGetInteger(sub_deg)
             if helics.helicsInputIsUpdated(sub_max):
                 #        print (ts,'resp_max updated before', helics.helicsInputIsUpdated(sub_max))
-                resp_max = helics.helicsInputGetComplex(sub_max)[0] * load_scale  # TODO: pyhelics needs to return complex instead of tuple
+                resp_max = helics.helicsInputGetComplex(sub_max).real * load_scale
                 #        print (ts,'resp_max updated after', helics.helicsInputIsUpdated(sub_max))
                 new_bid = True
         if helics.helicsInputIsUpdated(sub_load):
-            cval = helics.helicsInputGetComplex(sub_load)  # TODO: pyhelics needs to return complex instead of tuple
-            gld_load = complex(cval[0], cval[1])
+            gld_load = helics.helicsInputGetComplex(sub_load)
             feeder_load = gld_load.real * load_scale / 1.0e6
         #      print ('HELICS inputs at', ts, feeder_load, load_scale, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid)
         #      print ('HELICS resp_max', ts, resp_max, helics.helicsInputIsValid(sub_max),
