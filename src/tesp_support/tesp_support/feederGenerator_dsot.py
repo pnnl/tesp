@@ -450,7 +450,7 @@ rgnPenResHeat = [0.2628, 0.0896, 0.2718, 0.3592, 0.3592]
 rgnPenElecCool = [0.4348, 0.7528, 0.5259, 0.9673, 0.9673]
 rgnOversizeFactor = [0.1, 0.2, 0.2, 0.3, 0.3]
 
-# Average heating and cooling setpoints
+# Average heating and cooling set points
 # index 0 for SF, Apt, MH
 # index 1 for histogram bins
 #  [histogram prob, nighttime average difference (+ indicates nightime is cooler), high bin value, low bin value]
@@ -638,6 +638,7 @@ c_p_pf = 0.97
 c_z_frac = 0.2
 c_i_frac = 0.4
 c_p_frac = 1.0 - c_z_frac - c_i_frac
+
 normalized_loadshape_scalar = 1.0
 cooling_COP = 3.0
 light_scalar_comm = 1.0
@@ -1587,7 +1588,7 @@ def write_small_loads(basenode, op, vnom):
     print('  to', mtrname + ';', file=op)
     print('  phases', phs + ';', file=op)
     print('  length 30;', file=op)
-    print('  configuration', triplex_configurations[0][0] + ';', file=op)
+    print('  configuration', name_prefix + triplex_configurations[0][0] + ';', file=op)
     print('}', file=op)
     print('object triplex_meter {', file=op)
     print('  name', mtrname + ';', file=op)
@@ -1610,8 +1611,8 @@ def write_small_loads(basenode, op, vnom):
     print('  voltage_1 ' + vstart + ';', file=op)
     print('  voltage_2 ' + vstart + ';', file=op)
     print('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
-    print('  power_12_real 10.0;', file=op)
-    print('  power_12_reac 8.0;', file=op)
+    print('  constant_power_12_real 10.0;', file=op)
+    print('  constant_power_12_reac 8.0;', file=op)
     print('}', file=op)
 
 

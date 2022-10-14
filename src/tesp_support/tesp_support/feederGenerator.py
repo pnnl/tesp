@@ -91,9 +91,9 @@ water_heater_percentage = 0.0  # if not provided in JSON config, use a regional 
 water_heater_participation = 0.5
 solar_inv_mode = 'CONSTANT_PF'
 
-weather_name = 'localWeather'
 latitude = 30.0
 longitude = -110.0
+weather_name = 'localWeather'
 tz_meridian = 0.0
 altitude = 0.0
 
@@ -843,7 +843,7 @@ def write_local_triplex_configurations(op):
     """Write a 4/0 AA triplex configuration
 
     Args:
-      op (file): an open GridLAB-D input file
+        op (file): an open GridLAB-D input file
     """
     for row in triplex_conductors:
         print('object triplex_line_conductor {', file=op)
@@ -918,7 +918,7 @@ def connect_ercot_houses(model, h, op, vln, vsec):
             npar = int(0.06 * nh + 0.5)
         else:
             npar = 1
-        #        print(key, bus, phs, nh, xfkva, npar)
+        # print (key, bus, phs, nh, xfkva, npar)
         # write the service transformer==>TN==>TPX==>TM for all houses
         kvat = npar * xfkva
         row = Find1PhaseXfmr(xfkva)
@@ -1001,7 +1001,7 @@ def connect_ercot_houses(model, h, op, vln, vsec):
 
 def connect_ercot_commercial(op):
     """For the reduced-order ERCOT feeders, add a billing meter to the commercial load points, except small ZIPLOADs
-    
+
     Args:
       op (file): an open GridLAB-D input file
     """
@@ -1259,9 +1259,9 @@ def write_small_loads(basenode, op, vnom):
     """Write loads that are too small for a house, onto a node
 
     Args:
-      basenode (str): GridLAB-D node name
-      op (file): open file to write to
-      vnom (float): nominal line-to-neutral voltage at basenode
+        basenode (str): GridLAB-D node name
+        op (file): open file to write to
+        vnom (float): nominal line-to-neutral voltage at basenode
     """
     kva = float(small_nodes[basenode][0])
     phs = small_nodes[basenode][1]
@@ -1289,7 +1289,7 @@ def write_small_loads(basenode, op, vnom):
     print('  to', mtrname + ';', file=op)
     print('  phases', phs + ';', file=op)
     print('  length 30;', file=op)
-    print('  configuration', triplex_configurations[0][0] + ';', file=op)
+    print('  configuration', name_prefix + triplex_configurations[0][0] + ';', file=op)
     print('}', file=op)
     print('object triplex_meter {', file=op)
     print('  name', mtrname + ';', file=op)
@@ -2724,7 +2724,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         if forERCOT:
             replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
-            #            connect_ercot_commercial (op)
+            # connect_ercot_commercial (op)
             identify_ercot_houses(model, h, 'load', 0.001 * avghouse, rgn)
             connect_ercot_houses(model, h, op, vln, 120.0)
             for key in house_nodes:
@@ -3049,7 +3049,8 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global transmissionVoltage, transmissionXfmrMVAbase, dso_substation_bus_id
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage
     global work_path, weather_file
-    global starttime, endtime, timestep, metrics_interval, electric_cooling_percentage
+    global starttime, endtime, timestep
+    global metrics_interval, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
     global case_name, name_prefix, forERCOT
     global house_nodes, small_nodes, comm_loads

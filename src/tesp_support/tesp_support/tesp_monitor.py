@@ -389,7 +389,7 @@ class TespMonitorGUI:
                 if bRedraw:
                     self.fig.canvas.draw()
             except:
-                print('exception frame', i, 'of', self.nsteps, flush=True)
+                # print('exception frame', i, 'of', self.nsteps, flush=True)
                 pass
 
             return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
@@ -480,16 +480,18 @@ class TespMonitorGUI:
                 v2lmp = 0.0
                 v3 = 0.0
 
-                if helics.helicsInputIsUpdated(self.sub_power_A):
-                    v1 = 3.0 * helics.helicsInputGetDouble(self.sub_power_A) / 1000.0
+                if self.sub_power_A:
+                    if helics.helicsInputIsUpdated(self.sub_power_A):
+                        v1 = 3.0 * helics.helicsInputGetDouble(self.sub_power_A) / 1000.0
                 if helics.helicsInputIsUpdated(self.sub_TPV_7):
                     v0 = helics.helicsInputGetDouble(self.sub_TPV_7) / 133000.0
                 if helics.helicsInputIsUpdated(self.sub_clear_price):
                     v2auc = helics.helicsInputGetDouble(self.sub_clear_price)
                 if helics.helicsInputIsUpdated(self.sub_LMP_7):
                     v2lmp = helics.helicsInputGetDouble(self.sub_LMP_7)
-                if helics.helicsInputIsUpdated(self.sub_TEDP):
-                    v1 = helics.helicsInputGetDouble(self.sub_TEDP)
+                if self.sub_TEDP:
+                    if helics.helicsInputIsUpdated(self.sub_TEDP):
+                        v1 = helics.helicsInputGetDouble(self.sub_TEDP)
                 if helics.helicsInputIsUpdated(self.sub_dist_load):
                     cval = helics.helicsInputGetComplex(self.sub_dist_load)
                     v3 = cval.real / 1.0e3
@@ -537,7 +539,7 @@ class TespMonitorGUI:
                 if bRedraw:
                     self.fig.canvas.draw()
             except:
-                print('exception frame', i, 'of', self.nsteps, flush=True)
+                # print('exception frame', i, 'of', self.nsteps, flush=True)
                 pass
 
             return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
