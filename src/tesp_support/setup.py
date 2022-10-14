@@ -6,13 +6,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='tesp_support',
-    version='1.0.2',
+    version='1.2.0',
     author='Trevor Hardy',
     author_email='trevor.hardy@PNNL.gov',
     description='Python support for the Transactive Energy Simulation Platform',
     long_description='\n\n'.join(
         open(f, 'rb').read().decode('utf-8')
         for f in ['README.rst', 'CHANGELOG.rst']),
+    long_description_content_type="text/x-rst",
     url='https://github.com/pnnl/tesp',
     license='BSD',
     install_requires=[
@@ -21,7 +22,9 @@ setup(
         'scipy~=1.8.1',
         'matplotlib~=3.5.3',
         'networkx~=2.8.5',
-        'PYPOWER==5.1.5'
+        'PYPOWER==5.1.5',
+        'pyutilib==5.8.0',
+        'Pyomo==5.6.8'
     ],
     packages=find_packages(),
     include_package_data=True,

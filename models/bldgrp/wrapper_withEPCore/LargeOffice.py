@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python3
 from pyfmi import load_fmu
 from pyfmi.master import Master
 

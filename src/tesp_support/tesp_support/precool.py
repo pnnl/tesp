@@ -355,7 +355,7 @@ def helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)
                     houseName = pair[0]
                     if pair[1] == 'V1':
                         cval = helics.helicsInputGetComplex(sub)
-                        precoolerObjs[houseName].set_voltage(complex(cval[0], cval[1]))
+                        precoolerObjs[houseName].set_voltage(cval)
                     elif pair[1] == 'Tair':
                         precoolerObjs[houseName].set_air_temp(val)
 

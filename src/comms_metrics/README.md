@@ -1002,11 +1002,11 @@ if __name__ == '__main__`:
 	print(stats_df)
 ```
 
-| feeder | radius | mse |
-|:--------:|:-------------:|:---------:| 
-| feeder1 | 100.0 |0.017425|
-| feeder1 | 200.0 |0.231688|
-| feeder1 | 300.0 |3.021774|
+| feeder  | radius |   mse    |
+|:-------:|:------:|:--------:|
+| feeder1 | 100.0  | 0.017425 |
+| feeder1 | 200.0  | 0.231688 |
+| feeder1 | 300.0  | 3.021774 |
 
 Again, each of the comparison methods calculate the mean squared error between the models and the real power distribution systems; we omit a description for each of the remaining methods because they're doing the same calculation, just on different metrics' results. More information is provided in the documentation string of each comparison method.
 
@@ -1044,8 +1044,8 @@ if __name__ == '__main__`:
 	print(stats_df)
 ```
 
-| feeder | mse |
-|:--------:|:---------:| 
+| feeder  |   mse    |
+|:-------:|:--------:|
 | feeder1 | 2.396914 |
 
 #### `compare_isolated_meters(models, how, radii)`
@@ -1083,11 +1083,11 @@ if __name__ == '__main__`:
 	print(stats_df)
 ```
 
-| feeder | radius | mse |
-|:--------:|:-------------:|:---------:| 
-| feeder1 | 100.0 |2.032204|
-| feeder1 | 200.0 |1.906663|
-| feeder1 | 300.0 |1.938369|
+| feeder  | radius |   mse    |
+|:-------:|:------:|:--------:|
+| feeder1 | 100.0  | 2.032204 |
+| feeder1 | 200.0  | 1.906663 |
+| feeder1 | 300.0  | 1.938369 |
 
 #### `compare_meter_continuity(models, how, radii)`
 ```
@@ -1124,9 +1124,9 @@ if __name__ == '__main__`:
 	print(stats_df)
 ```
 
-| feeder | mse |
-|:--------:|:---------:| 
-| feeder1 |0.000798|
+| feeder  |   mse    |
+|:-------:|:--------:|
+| feeder1 | 0.000798 |
 
 #### `compare_single_hop_count(models, how, radii)`
 ```
@@ -1163,11 +1163,11 @@ if __name__ == '__main__`:
 	print(stats_df)
 ```
 
-| feeder | radius | mse |
-|:--------:|:-------------:|:---------:| 
-| feeder1 | 100.0 |2.007354|
-| feeder1 | 200.0 |2.009119|
-| feeder1 | 300.0 |1.947478|
+| feeder  | radius |   mse    |
+|:-------:|:------:|:--------:|
+| feeder1 | 100.0  | 2.007354 |
+| feeder1 | 200.0  | 2.009119 |
+| feeder1 | 300.0  | 1.947478 |
 
 #### `compare_island_count(models, how, radii)`
 ```
@@ -1204,11 +1204,11 @@ if __name__ == '__main__`:
 	print(stats_df)
 ```
 
-| feeder | radius | mse |
-|:--------:|:-------------:|:---------:| 
-| feeder1 | 100.0 |1.840693|
-| feeder1 | 200.0 |2.007030|
-| feeder1 | 300.0 |2.004431|
+| feeder  | radius  |   mse    |
+|:-------:|:-------:|:--------:|
+| feeder1 |  100.0  | 1.840693 |
+| feeder1 |  200.0  | 2.007030 |
+| feeder1 |  300.0  | 2.004431 |
 
 That's `validation` in a nutshell!
 

@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python3
 # from pyfmi.master import Master
 # from pyfmi.common.io import ResultHandler,ResultHandlerMemory
 import numpy as np

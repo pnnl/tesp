@@ -110,7 +110,7 @@ cd tesp || exit
 echo "Install a virtual python environment to $HOME/tesp/venv"
 python3.8 -m pip install --upgrade pip
 python3.8 -m pip install virtualenv
-virtualenv venv --prompt TESP
+"${HOME}/.local/bin/virtualenv" venv --prompt TESP
 
 echo "Install executables environment to $HOME/tesp/tenv"
 mkdir -p tenv
@@ -132,7 +132,7 @@ echo
 echo ++++++++++++++ PSST
 # git clone https://github.com/ames-market/psst.git
 git clone -b master https://github.com/ames-market/AMES-V5.0.git
-"${TESPBUILD}"/patch.sh AMES-V5.0 AMES-V5.0
+"${TESPBUILD}/patch.sh" AMES-V5.0 AMES-V5.0
 
 if [[ $binaries == "develop" ]]; then
   echo
@@ -140,29 +140,29 @@ if [[ $binaries == "develop" ]]; then
   git clone -b feature/opendss https://github.com/FNCS/fncs.git
   #For dsot
   #git clone -b develop https://github.com/FNCS/fncs.git
-  "${TESPBUILD}"/patch.sh fncs fncs
+  "${TESPBUILD}/patch.sh" fncs fncs
 
   echo
   echo ++++++++++++++ HELICS
   git clone -b main https://github.com/GMLC-TDC/HELICS-src
-  "${TESPBUILD}"/patch.sh HELICS-src HELICS-src
+  "${TESPBUILD}/patch.sh" HELICS-src HELICS-src
 
   echo
   echo ++++++++++++++ GRIDLAB
   #develop - dec21 commit number for dsot
   #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
   git clone -b develop https://github.com/gridlab-d/gridlab-d.git
-  "${TESPBUILD}"/patch.sh gridlab-d gridlab-d
+  "${TESPBUILD}/patch.sh" gridlab-d gridlab-d
 
   echo
   echo ++++++++++++++ ENERGYPLUS
   git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
-  "${TESPBUILD}"/patch.sh EnergyPlus EnergyPlus
+  "${TESPBUILD}/patch.sh" EnergyPlus EnergyPlus
 
   echo
   echo ++++++++++++++ NS-3
   git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
-  "${TESPBUILD}"/patch.sh ns-3-dev ns-3-dev
+  "${TESPBUILD}/patch.sh" ns-3-dev ns-3-dev
 
   echo
   echo ++++++++++++++ HELICS-NS-3
@@ -170,13 +170,13 @@ if [[ $binaries == "develop" ]]; then
 
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
   cd ..
-  "${TESPBUILD}"/patch.sh ns-3-dev/contrib/helics helics-ns3
+  "${TESPBUILD}/patch.sh" ns-3-dev/contrib/helics helics-ns3
 
   echo
   echo ++++++++++++++ KLU SOLVER
   svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
 fi
 
-cd "$TESPDIR"/scripts || exit
+cd "${TESPDIR}/scripts" || exit
 # Compile all relevant executables
 ./tesp_c.sh $binaries
