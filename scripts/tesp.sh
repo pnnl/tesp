@@ -45,6 +45,9 @@ done
 # repo for git
 # sudo add-apt-repository ppa:git-core/ppa
 
+# repo for python
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+
 # build tools
 sudo apt-get update
 sudo apt-get -y upgrade
