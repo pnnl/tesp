@@ -7,10 +7,9 @@ __pycache__/
 *.json
 *.audit
 *.xml
-broker_trace.txt
-*FNCS_Config.txt
+*.txt
 *.mat
 *.xlsx
 *.idf
-*substation.yaml
-weather.dat
+*.yaml
+*.dat

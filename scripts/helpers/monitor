@@ -1,6 +1,16 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+# Copyright (C) 2021-2022 Battelle Memorial Institute
+# file: monitor
 
+import sys
 import tesp_support.tesp_monitor as tesp
 
-tesp.show_tesp_monitor()
-
+if len(sys.argv) > 1:
+    if 'FNCS' in sys.argv[1]:
+        tesp.show_tesp_monitor(HELICS=False)
+    else:
+        print("Usage: \n"
+              "    'monitor' -> blank argument runs the monitor for HELICS\n"
+              "    'monitor FNCS' -> argument runs the monitor for FNCS")
+else:
+    tesp.show_tesp_monitor(HELICS=True)

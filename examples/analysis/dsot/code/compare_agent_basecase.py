@@ -171,11 +171,11 @@ for ii in range(len(cases)):
             mask = (AVG_power.index >= '08-18-2016') & (AVG_power.index <= '08-20-2016')
             AVG_power = AVG_power.loc[mask]
 
-            plt.plot((AVG_power.resample('60min').mean()).index,(AVG_power.resample('60min').mean()).values, marker='x',label=labels[ii]);
+            plt.plot((AVG_power.resample('60min').mean()).index,(AVG_power.resample('60min').mean()).values, marker='x',label=labels[ii])
             print(AVG_power.sum())
-            plt.ylabel('hvac load (kW)');
-            plt.xlabel('time (hours)');
-            plt.grid(True);
+            plt.ylabel('hvac load (kW)')
+            plt.xlabel('time (hours)')
+            plt.grid(True)
             plt.title('home:{} slider:{}'.format(str(data_key[i]),houses[data_key[i]]))
         elif False:
             V_analis2 = 'air_temperature_avg'
@@ -196,12 +196,12 @@ for ihouse in houses.keys():
     print(ihouse, houses[ihouse])
     for ii in range(len(cases)):
         plt.plot(plot_data[cases[ii]][ihouse][0],plot_data[cases[ii]][ihouse][1], marker='x',
-                 label=labels[ii]);
+                 label=labels[ii])
         print(labels[ii])
         print(plot_data[cases[ii]][ihouse][1].sum())
-        plt.ylabel('hvac load (kW)');
-        plt.xlabel('time (hours)');
-        plt.grid(True);
+        plt.ylabel('hvac load (kW)')
+        plt.xlabel('time (hours)')
+        plt.grid(True)
         plt.title('home:{} slider:{}'.format(str(ihouse), houses[ihouse]))
     plt.legend()
     plt.show()

@@ -4,7 +4,7 @@
 """
 import datetime
 import json
-import prepare_case_dsot_v3 as prep_case
+import prepare_case_dsot_f as prep_case
 
 
 def generate_case(casename, port, pv=None, bt=None, fl=None, ev=None):

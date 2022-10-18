@@ -63,7 +63,6 @@ FROM ubuntu-base AS tesp-production
 ENV TESPDIR=${TESP_HOME}/tesp/repository/tesp
 ENV INSTDIR=${TESP_HOME}/tesp/installed
 ENV REPODIR=${TESP_HOME}/tesp/repository
-ENV WAREDIR=${TESP_HOME}/tesp/software
 ENV TESPBUILD=$TESPDIR/scripts/build
 ENV TESPHELPR=$TESPDIR/scripts/helpers
 
@@ -177,7 +176,9 @@ RUN git config --global user.name "${USER_NAME}" && \
   /bin/rm -r ${REPODIR}/ns-3-dev && \
   echo "Compiling and Installing Ipopt with ASL and Mumps..." && \
   ./ipopt_b.sh clean && \
-  /bin/rm -r ${WAREDIR} && \
+  /bin/rm -r ${REPODIR}/Ipopt && \
+  /bin/rm -r ${REPODIR}/ThirdParty-ASL && \
+  /bin/rm -r ${REPODIR}/ThirdParty-Mumps && \
   echo "Compiling and Installing TMY3toTMY2_ansi..." && \
   cd "${TESPDIR}/data/weather/TMY2EPW/source_code" && \
   gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi && \

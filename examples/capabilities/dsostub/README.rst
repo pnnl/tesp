@@ -12,7 +12,7 @@ Running the demonstration
 
 ::
 
-    ./runstub.sh dsostub_case
+    ./runstub.sh "dsostub_case"
     cd dsostub_case
     ./run.sh
     
@@ -24,4 +24,12 @@ File Directory:
 * *case_config.json*: configuration data co-simulation including bulk-power system definition, source data file references, and general configuration and metadata
 * *data*: folder containing time-series data used by various actors in the co-simulation
 * *dsoStub.py*: Minimal representation of the distribution system providing identical interface as other TESP examples but requires dramatically reduced computation load as compared to full modeling traditionally done in GridLAB-D.
-* *runstub.sh*: prepares co-simulation and launches it
+* *runstub.sh*: prepares co-simulation "dstostub_case" directory with
+    * *case_config.json*: copy of the configuration data co-simulation
+    * *[federates in the co-simulation].json*: related message diction
+    * *run.sh*: run the co-simulation
+    * *kill.sh*: shuts down the co-simulation
+    * *clean.sh*: clean the metric outputs a for another run
+    * *docker-run.sh*: example script to run a docker
+    * *monitor.sh*: example script to monitor a run and then start postprocessor
+    * *postprocess.sh*: example script to make and move a case directory

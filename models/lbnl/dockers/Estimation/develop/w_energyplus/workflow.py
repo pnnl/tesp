@@ -65,8 +65,8 @@ def get_energyplustofmu():
     if not os.path.exists(os.path.join(os.getcwd(),"eplustofmu")):
         print ("=========Cloning the EnergyPlusToFMU repository.\n")
         clo_dir = os.path.join(os.getcwd(), "eplustofmu")
-        Repo.clone_from("https://github.com/lbl-srg/EnergyPlusToFMU.git", \
-                            clo_dir, branch = "master", depth=1)
+        Repo.clone_from("https://github.com/lbl-srg/EnergyPlusToFMU.git",
+                        clo_dir, branch = "master", depth=1)
 
 #========================================================
 #==== Export the IDF file as an FMU ====

@@ -5,16 +5,14 @@
 @author: yint392
 """
 
-import pandas as pd
-import os
-from datetime import datetime
-from calendar import monthrange
-import math
 import itertools
-import tesp_support.DSO_rate_making
-import tesp_support.customer_CFS
-import tesp_support.dso_CFS
-import tesp_support.DSOT_plots
+import math
+import pandas as pd
+
+from .DSOT_plots import load_json
+from .DSO_rate_making import get_cust_bill
+from .customer_CFS import customer_CFS
+from .dso_CFS import dso_CFS
 
 # get rid of the burn-in days
 
@@ -22,7 +20,7 @@ import tesp_support.DSOT_plots
 # filenames = [f for f in os.listdir(dso_path) if f.endswith('.hdf5') and f.startswith('battery_agent') and '300' in f and '38' not in f]
 # filenames[0]
 
-################# old functions
+# old functions
 '''
 def get_correct_days(dso_path, filenames):
     sub_filenames = []
@@ -167,11 +165,11 @@ def TEAM(FteLev1=100.0, SalaryEsc1=1.3):
 # group = 'operator'
 
 def labor(group, metadata_general, metadata_dso, utility_type, NoSubstations):
-    labor_Lev1Fte = (metadata_general['labor'][group][group + '_labor_ratios']['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor'][group][group + '_labor_ratios']['constant'] +
                      metadata_general['labor'][group][group + '_labor_ratios']['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor'][group][group + '_labor_ratios']['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                             metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor'][group][group + '_labor_ratios']['per_substation'] * NoSubstations)
 
     FteTeam, CostRatio, LeaderRatio, LeaderLevel = TEAM(labor_Lev1Fte,
@@ -187,11 +185,11 @@ def labor(group, metadata_general, metadata_dso, utility_type, NoSubstations):
 
 
 def labor_transactive(group, metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag):
-    labor_Lev1Fte = (metadata_general['labor'][group][group + '_labor_ratios']['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor'][group][group + '_labor_ratios']['constant'] +
                      metadata_general['labor'][group][group + '_labor_ratios']['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor'][group][group + '_labor_ratios']['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                             metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor'][group][group + '_labor_ratios'][
                          'per_substation'] * NoSubstations) * TransactiveCaseFlag
 
@@ -213,7 +211,7 @@ def labor_increase(group, metadata_general, metadata_dso, utility_type, NoSubsta
                     metadata_general['labor'][group][group + '_labor_ratios']['per_customer'] * metadata_dso[
                         'number_of_customers'] / 1000 + \
                     (metadata_general['labor'][group][group + '_labor_ratios']['per_customer^1/2'] * (
-                                metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                            metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
                     metadata_general['labor'][group][group + '_labor_ratios']['per_substation'] * NoSubstations * \
                     (1 + metadata_general['labor'][group][group + '_labor_ratios'][
                         'transactive_increase'] * TransactiveCaseFlag)
@@ -236,11 +234,11 @@ def labor_increase(group, metadata_general, metadata_dso, utility_type, NoSubsta
 
 
 def labor_network_admin(group, hourly_rate, metadata_general, metadata_dso, utility_type, NoSubstations):
-    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] +
                      metadata_general['labor']['network_admin'][group]['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor']['network_admin'][group]['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                             metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor']['network_admin'][group]['per_substation'] * NoSubstations)
 
     FteTeam, CostRatio, LeaderRatio, LeaderLevel = TEAM(labor_Lev1Fte,
@@ -257,11 +255,11 @@ def labor_network_admin(group, hourly_rate, metadata_general, metadata_dso, util
 
 def labor_network_admin_transactive(group, hourly_rate, metadata_general, metadata_dso, utility_type, NoSubstations,
                                     TransactiveCaseFlag):
-    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] +
                      metadata_general['labor']['network_admin'][group]['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor']['network_admin'][group]['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                             metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor']['network_admin'][group][
                          'per_substation'] * NoSubstations) * TransactiveCaseFlag
 
@@ -281,11 +279,11 @@ def labor_network_admin_transactive(group, hourly_rate, metadata_general, metada
 
 def labor_network_admin_increase(group, hourly_rate, metadata_general, metadata_dso, utility_type, NoSubstations,
                                  TransactiveCaseFlag):
-    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] + \
+    labor_Lev1Fte = (metadata_general['labor']['network_admin'][group]['constant'] +
                      metadata_general['labor']['network_admin'][group]['per_customer'] * metadata_dso[
-                         'number_of_customers'] / 1000 + \
+                         'number_of_customers'] / 1000 +
                      (metadata_general['labor']['network_admin'][group]['per_customer^1/2'] * (
-                                 metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) + \
+                             metadata_dso['number_of_customers'] / 1000) ** (1 / 2)) +
                      metadata_general['labor']['network_admin'][group]['per_substation'] * NoSubstations)
 
     FteTeam, CostRatio, LeaderRatio, LeaderLevel = TEAM(labor_Lev1Fte,
@@ -308,18 +306,16 @@ def labor_network_admin_increase(group, hourly_rate, metadata_general, metadata_
 def get_customer_df(dso_range, case_path, metadata_path):
     customer_df = pd.DataFrame([])
     for dso_num in dso_range:
-        GLD_metadata = tesp_support.DSOT_plots.load_json(case_path, 'DSO' + str(dso_num) + '_Customer_Metadata.json')
+        GLD_metadata = load_json(case_path, 'DSO' + str(dso_num) + '_Customer_Metadata.json')
         cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
         cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
         for i in range(len(GLD_metadata['billingmeters'].keys())):
             customer = list(GLD_metadata['billingmeters'].keys())[i]
             if GLD_metadata['billingmeters'][customer]['tariff_class'] != 'industrial':
-                customer_bill = tesp_support.DSO_rate_making.get_cust_bill(customer, cust_bills, GLD_metadata)
+                customer_bill = get_cust_bill(customer, cust_bills, GLD_metadata)
                 customer_metadata = GLD_metadata['billingmeters'][customer]
-                Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = tesp_support.customer_CFS.customer_CFS(GLD_metadata,
-                                                                                                           metadata_path,
-                                                                                                           customer,
-                                                                                                           customer_bill)
+                Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = customer_CFS(
+                    GLD_metadata, metadata_path, customer, customer_bill)
                 customer_row = {
                     "Customer ID": 'DSO' + str(dso_num) + '_' + customer,
                     "dso": dso_num,
@@ -335,7 +331,7 @@ def get_customer_df(dso_range, case_path, metadata_path):
     return customer_df
 
 
-def get_mean_for_diff_groups(df, main_variables, variables_combs, cfs_start_position = 24):
+def get_mean_for_diff_groups(df, main_variables, variables_combs, cfs_start_position=24):
     customer_mean_df = pd.DataFrame([])
     customer_mean_df['all'] = df.iloc[:, cfs_start_position:].mean()
     for main_variable in main_variables:
@@ -369,23 +365,21 @@ def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
     Revenues_dict_list = []
     DSO_Cash_Flows_dict_list = []
     for dso_num in dso_range:
-        Market_Purchases = tesp_support.DSOT_plots.load_json(case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
-        Market_Purchases_base_case = tesp_support.DSOT_plots.load_json(base_case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
+        Market_Purchases = load_json(case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
+        Market_Purchases_base_case = load_json(base_case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
 
-        DSO_Cash_Flows = tesp_support.DSOT_plots.load_json(case_path, 'DSO' + str(dso_num) + '_Cash_Flows.json')
-        DSO_Revenues_and_Energy_Sales = tesp_support.DSOT_plots.load_json(case_path,
-                                                                          'DSO' + str(dso_num) + '_Revenues_and_Energy_Sales.json')
+        DSO_Cash_Flows = load_json(case_path, 'DSO' + str(dso_num) + '_Cash_Flows.json')
+        DSO_Revenues_and_Energy_Sales = load_json(case_path, 'DSO' + str(dso_num) + '_Revenues_and_Energy_Sales.json')
 
         DSO_peak_demand = Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate']
         DSO_base_case_peak_demand = Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate']
 
-
         CapitalCosts_dict, Expenses_dict, Revenues_dict, \
         DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
-            tesp_support.dso_CFS.dso_CFS(case_config, DSOmetadata, str(dso_num),
-                                         DSO_peak_demand, DSO_base_case_peak_demand,
-                                         DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, Market_Purchases,
-                                         Market_Purchases_base_case)
+            dso_CFS(case_config, DSOmetadata, str(dso_num),
+                    DSO_peak_demand, DSO_base_case_peak_demand,
+                    DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, Market_Purchases,
+                    Market_Purchases_base_case)
         CapitalCosts_dict_list.append(CapitalCosts_dict)
         Expenses_dict_list.append(Expenses_dict)
         Revenues_dict_list.append(Revenues_dict)
@@ -402,9 +396,9 @@ def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
             "DSO_peak_demand": Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate'],
             "DSO_base_case_peak_demand": Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate'],
             "energy_sold_MWh": DSO_Revenues_and_Energy_Sales['EnergySold'],
-            "energy_purchased_MWh":  Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']
-                                     + Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']
-                                     + Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy'],
+            "energy_purchased_MWh": Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']
+                                    + Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']
+                                    + Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy'],
             'EffectiveCostRetailEnergy': DSO_Revenues_and_Energy_Sales['EffectiveCostRetailEnergy']
         }
         DSO_col.update(DSO_Cash_Flows_composite)

@@ -41,10 +41,8 @@ object climate {
 object solar {
 	name solarGenerator;
 	weather exampleWeather;
-    generator_mode SUPPLY_DRIVEN;
-    generator_status ONLINE;
     panel_type SINGLE_CRYSTAL_SILICON;
-		orientation FIXED_AXIS; 
+	orientation FIXED_AXIS;
     efficiency 0.2;
     area 2500 sf;
 }
@@ -56,13 +54,14 @@ object house {
 #ifdef USE_FNCS
 object fncs_msg {
   name gridlabdweatheragent;
-  configure weather_FNCS_Config.txt;
+  configure weather_gridlabd.txt;
   option "transport:hostname localhost, port 5570";
 }
 #endif
 
 #ifdef USE_HELICS
 object helics_msg {
+  name gridlabdweatheragent;
   configure helics_gld.json;
 }
 #endif

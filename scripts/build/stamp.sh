@@ -5,8 +5,7 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-
-ver="v1.1.5"
+ver="v1.2.2"
 
 cd "${REPODIR}" || exit
 echo "Stamping commit ids for:"
@@ -42,4 +41,4 @@ pip3 list > "${TESPBUILD}/tesp_pypi.id"
 
 echo "Stamping TESP $ver for install"
 echo "$ver" > "${TESPBUILD}/version"
-#git tag $ver
+git tag $ver

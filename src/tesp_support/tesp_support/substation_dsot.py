@@ -3,7 +3,7 @@
 """Manages the Transactive Control scheme for DSO+T implementation version 1
 
 Public Functions:
-    :substation_loop: initializes and runs the agents
+    :dso_loop: initializes and runs the agents
 
 """
 import sys
@@ -30,7 +30,7 @@ try:
     import helics
 except ImportError:
     # helics = None
-    print('WARNING: unable to load helics module.', flush=True)
+    print('WARNING: unable to load HELICS module.', flush=True)
 
 if sys.platform != 'win32':
     import resource
@@ -38,6 +38,8 @@ if sys.platform != 'win32':
 
 def inner_substation_loop(metrics_root, with_market):
     """Helper function that initializes and runs the DSOT agents
+
+    Reads configfile. Writes *_metrics.json* upon completion.
 
     Args:
         metrics_root (str): base name of the case for input/output
@@ -172,7 +174,6 @@ def inner_substation_loop(metrics_root, with_market):
     forecast_obj.set_sch_year(current_time.year)
     # All schedules are served up through schedule_server.py
     # For reference all schedules paths  [support_path+'name'+'csv']
-    # support_path = '../../../../data/schedules/'
     # appliance_sch = ['responsive_loads', 'unresponsive_loads']
     # wh_sch = ['small_1', 'small_2', 'small_3', 'small_4', 'small_5', 'small_6',
     #           'large_1', 'large_2', 'large_3', 'large_4', 'large_5', 'large_6']
@@ -321,7 +322,9 @@ def inner_substation_loop(metrics_root, with_market):
         gld_row = config_glm['inverters'][key]
         battery_agent_objs[key] = BatteryDSOT(row, gld_row, key, 11, current_time, solver)
         # map topics
-        topic_map[key + '#SOC'] = [battery_agent_objs[key].set_battery_SOC]
+        # key is the name of inverter resource,
+        # but we need battery name, thus the replacement
+        topic_map[key.replace('ibat', 'bat') + '#SOC'] = [battery_agent_objs[key].set_battery_SOC]
     log.info('instantiated %s battery control agents' % (len(battery_keys)))
 
     # instantiate the ev controller objects and map their message inputs
@@ -331,7 +334,6 @@ def inner_substation_loop(metrics_root, with_market):
         row = config['ev'][key]
         gld_row = config_glm['ev'][row['houseName']]
         ev_agent_objs[key] = EVDSOT(row, gld_row, key, 11, current_time, solver)
-
         # map topics
         topic_map[key + '#SOC'] = [ev_agent_objs[key].set_ev_SOC]
     log.info('instantiated %s electric vehicle control agents' % (len(ev_keys)))
@@ -673,7 +675,7 @@ def inner_substation_loop(metrics_root, with_market):
     ames_lmp = False
     timing(proc[0], False)
 
-    log.info("Initialize HELICS tso federate")
+    log.info("Initialize HELICS dso federate")
     hFed = helics.helicsCreateValueFederateFromConfig("./" + metrics_root + ".json")
     fedName = helics.helicsFederateGetName(hFed)
     subCount = helics.helicsFederateGetInputCount(hFed)
@@ -889,9 +891,10 @@ def inner_substation_loop(metrics_root, with_market):
             #          str(min(retail_market_obj.curve_buyer_RT.quantities)) + " , " +
             #          str(max(retail_market_obj.curve_buyer_RT.quantities)))
 
-            retail_market_obj.curve_aggregator_RT(
-                'Buyer', [[load_base, retail_market_obj.U_pricecap_CA], [load_base, retail_market_obj.L_pricecap_CA]], 'uncontrollable load'
-            )
+            retail_market_obj.curve_aggregator_RT('Buyer',
+                                                  [[load_base, retail_market_obj.U_price_cap_CA],
+                                                   [load_base, retail_market_obj.L_price_cap_CA]],
+                                                  'uncontrollable load')
             # log.info("Real-time total bid min, max " +
             #          str(min(retail_market_obj.curve_buyer_RT.quantities)) + " , " +
             #          str(max(retail_market_obj.curve_buyer_RT.quantities)))
@@ -1023,7 +1026,7 @@ def inner_substation_loop(metrics_root, with_market):
             timing(proc[10], True)
             uncntrl_pv = []  # list to store uncontrolled pv generation
             if len(pv_agent_objs) > 0:
-                # lets get the next 48 hours solar forecast from DSO level tape as it is same for all pv agents
+                # lets get the next 48-hours solar forecast from DSO level tape as it is same for all pv agents
                 solar_f = forecast_obj.get_solar_forecast(forecast_start_time, dso_config['bus'])
                 for key, obj in pv_agent_objs.items():
                     site_id = site_da_meter.index(config_glm['inverters'][key]['billingmeter_id'])
@@ -1075,7 +1078,7 @@ def inner_substation_loop(metrics_root, with_market):
                 timing(p_age.__class__.__name__, False)
                 retail_market_obj.curve_aggregator_DA('Buyer', bid, p_age.name)
 
-            # colect angent only DA quantities and price
+            # collect agent only DA quantities and price
             # retail_market_obj.AMES_DA_agent_quantities=dict()
             # retail_market_obj.AMES_DA_agent_prices=dict()
             # for idx in range(retail_market_obj.windowLength):
@@ -1087,8 +1090,8 @@ def inner_substation_loop(metrics_root, with_market):
 
             # log.info("Max Hour 22 unscaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[22].quantities)))
             # log.info("Min Hour 22 unscaled flexible load " + str(min(retail_market_obj.curve_buyer_DA[22].quantities)))
-            # log.info("Max Hour 21 unscaled flexible load  " + str(min(retail_market_obj.curve_buyer_DA[21].quantities)))
-            # log.info("Max Hour 21 unscaled flexible load  " + str(max(retail_market_obj.curve_buyer_DA[21].quantities)))
+            # log.info("Max Hour 21 unscaled flexible load " + str(min(retail_market_obj.curve_buyer_DA[21].quantities)))
+            # log.info("Max Hour 21 unscaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[21].quantities)))
 
             # if retail_market_obj.basecase is not True:
             #     for idx in range(retail_market_obj.windowLength):
@@ -1100,10 +1103,10 @@ def inner_substation_loop(metrics_root, with_market):
             #         retail_market_obj.curve_buyer_DA[idx].quantities = retail_market_obj.curve_buyer_DA[idx].quantities * \
             #             (dso_market_obj.num_of_customers * dso_market_obj.customer_count_mix_residential / dso_market_obj.number_of_gld_homes)
             # log.info("Max Hour 10 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[10].quantities)))
-            # log.info("Max Hour 0 scaled flexible load  " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
+            # log.info("Max Hour 0 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
 
             # log.info("Max Hour 10 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[10].quantities)))
-            # log.info("Max Hour 0 scaled flexible load  " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
+            # log.info("Max Hour 0 scaled flexible load " + str(max(retail_market_obj.curve_buyer_DA[0].quantities)))
 
             # add the uncontrollable load
             uncontrollable_load_bid_da = [[[0], [0]]] * retail_market_obj.windowLength
@@ -1171,7 +1174,7 @@ def inner_substation_loop(metrics_root, with_market):
             #     load_base_unadjusted = forecast_load_error[0]
             #     load_base_hourly = forecast_load_error
             for idx in range(retail_market_obj.windowLength):
-                uncontrollable_load_bid_da[idx] = [[load_base_hourly[idx], retail_market_obj.pricecap],
+                uncontrollable_load_bid_da[idx] = [[load_base_hourly[idx], retail_market_obj.price_cap],
                                                    [load_base_hourly[idx], 0]]
 
             retail_market_obj.curve_aggregator_DA('Buyer', uncontrollable_load_bid_da, 'uncontrollable load')
@@ -1933,7 +1936,7 @@ def inner_substation_loop(metrics_root, with_market):
     timing(proc[17], True)
     collector.finalize_writing()
     timing(proc[17], False)
-    log.info('Finalizing HELICS tso federate')
+    log.info('finalizing HELICS dso federate')
     timing(proc[1], False)
     op = open('timing.csv', 'w')
     print(proc_time, sep=', ', file=op, flush=True)
@@ -1942,7 +1945,7 @@ def inner_substation_loop(metrics_root, with_market):
     helics.helicsFederateDestroy(hFed)
 
 
-def substation_loop(metrics_root, with_market):
+def dso_loop(metrics_root, with_market):
     """Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
@@ -1975,4 +1978,4 @@ def substation_loop(metrics_root, with_market):
             print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
 
 # for debugging
-# substation_loop('Substation_1', 1)
+# dso_loop('Substation_1', 1)

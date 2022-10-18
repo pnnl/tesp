@@ -9,19 +9,21 @@ import json
 
 import numpy as np
 
+from .helpers import HelicsMsg
 
-def prep_precool(nameroot, time_step=15):
+
+def prep_precool(name_root, time_step=15):
     """Sets up agent configurations for the NIST TE Challenge 2 example
 
-    Reads the GridLAB-D data from nameroot.glm; it should contain 
+    Reads the GridLAB-D data from name_root.glm; it should contain
     houses with thermal_integrity_level attributes. Writes:
 
-    - *nameroot_agent_dict.json*, contains configuration data for the precooler agents
-    - *nameroot_precool.yaml*, contains FNCS subscriptions for the precooler agents
-    - *nameroot_FNCS_Config.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *[name_root]_agent_dict.json*, contains configuration data for the precooler agents
+    - *[name_root]_precool.yaml*, contains FNCS subscriptions for the precooler agents
+    - *[name_root]_gridlabd.txt*, a GridLAB-D include file with FNCS publications and subscriptions
 
     Args:
-        nameroot (str): the name of the GridLAB-D file, without extension
+        name_root (str): the name of the GridLAB-D file, without extension
         time_step (int): time step period
     """
     # we want the same psuedo-random thermostat schedules each time, for repeatability
@@ -40,13 +42,16 @@ def prep_precool(nameroot, time_step=15):
     toffset_min = -1.9
     toffset_max = -2.1
 
-    gp = open(nameroot + '.glm', 'r')
-    dp = open(nameroot + '_agent_dict.json', 'w')
-    yp = open(nameroot + '_precool.yaml', 'w')
-    cp = open(nameroot + '_FNCS_Config.txt', 'w')
+    gld_federate = 'gld_1'
+    cool_federate = 'precool'
 
-    # write preambles
-    print('name: precool', file=yp)
+    # FNCS open and write preambles
+    gp = open(name_root + '.glm', 'r')
+    dp = open(name_root + '_agent_dict.json', 'w')
+    yp = open(name_root + '_precool.yaml', 'w')
+    cp = open(name_root + '_gridlabd.txt', 'w')
+
+    print('name: ' + cool_federate, file=yp)
     print('time_delta: ' + str(dt) + 's', file=yp)
     print('broker: tcp://localhost:5570', file=yp)
     print('aggregate_sub: true', file=yp)
@@ -56,6 +61,11 @@ def prep_precool(nameroot, time_step=15):
     print('    topic: player/price', file=yp)
     print('    default:', mean_price, file=yp)
 
+    # HELICS open and write preambles
+    gld = HelicsMsg(gld_federate, dt)
+    cool = HelicsMsg(cool_federate, dt)
+    cool.subs_n('player/price', "double")
+
     # find the house and meter names
     inHouses = False
     endedHouse = False
@@ -63,6 +73,7 @@ def prep_precool(nameroot, time_step=15):
     house_name = ''
     meter_name = ''
     houses = {}
+    pubSubMeters = set()
 
     for line in gp:
         lst = line.split()
@@ -99,24 +110,46 @@ def prep_precool(nameroot, time_step=15):
                                           'day_end_hour': float('{:.3f}'.format(day_end)),
                                           'deadband': float('{:.3f}'.format(deadband)),
                                           'vthresh': vthresh, 'toffset': toffset}
+                    # FNCS messages
                     print('  ' + house_name + '#V1:', file=yp)
-                    print('    topic: gld_1/' + meter_name + '/measured_voltage_1', file=yp)
+                    print('    topic: ' + gld_federate + '/' + meter_name + '/measured_voltage_1', file=yp)
                     print('    default: 120', file=yp)
                     print('  ' + house_name + '#Tair:', file=yp)
-                    print('    topic: gld_1/' + house_name + '/air_temperature', file=yp)
+                    print('    topic: ' + gld_federate + '/' + house_name + '/air_temperature', file=yp)
                     print('    default: 80', file=yp)
                     print('publish \"commit:' + meter_name + '.measured_voltage_1 -> ' + meter_name + '/measured_voltage_1\";', file=cp)
                     print('publish \"commit:' + house_name + '.air_temperature -> ' + house_name + '/air_temperature\";', file=cp)
                     print('subscribe \"precommit:' + house_name + '.cooling_setpoint <- precool/' + house_name + '_cooling_setpoint\";', file=cp)
                     print('subscribe \"precommit:' + house_name + '.heating_setpoint <- precool/' + house_name + '_heating_setpoint\";', file=cp)
                     print('subscribe \"precommit:' + house_name + '.thermostat_deadband <- precool/' + house_name + '_thermostat_deadband\";', file=cp)
+
+                    # HELICS messages
+                    cool.subs_n(gld_federate + '/' + house_name + '#Tair', "double")
+                    cool.pubs_n(False, house_name + "/cooling_setpoint", "double")
+                    cool.pubs_n(False, house_name + "/heating_setpoint", "double")
+                    cool.pubs_n(False, house_name + "/thermostat_deadband", "double")
+                    gld.pubs(False, house_name + "#Tair", "double", house_name, "air_temperature")
+                    gld.subs(cool_federate + "/" + house_name + "/cooling_setpoint", "double", house_name, "cooling_setpoint")
+                    gld.subs(cool_federate + "/" + house_name + "/heating_setpoint", "double", house_name, "heating_setpoint")
+                    gld.subs(cool_federate + "/" + house_name + "/thermostat_deadband", "double", house_name, "thermostat_deadband")
+                    if house_name+meter_name not in pubSubMeters:
+                        pubSubMeters.add(house_name+meter_name)
+                        cool.subs_n(gld_federate + "/" + house_name + "#V1", "complex")
+                        gld.pubs(False, house_name + "#V1", "complex", meter_name, "measured_voltage_1")
+
                     isELECTRIC = False
 
-    meta = {'houses': houses, 'period': period, 'dt': dt, 'mean': mean_price, 'stddev': std_dev_price,
-            'k_slope': k_slope}
+    meta = {
+        'houses': houses, 'period': period, 'dt': dt,
+        'mean': mean_price, 'stddev': std_dev_price,
+        'k_slope': k_slope
+    }
     print(json.dumps(meta), file=dp)
 
     dp.close()
     gp.close()
     yp.close()
     cp.close()
+
+    cool.write_file(name_root + '_precool.json')
+    gld.write_file(name_root + '_gridlabd.json')

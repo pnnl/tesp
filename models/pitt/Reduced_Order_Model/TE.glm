@@ -1,5 +1,5 @@
-clock{
-     timezone EST+5EDT;
+clock {
+  timezone EST+5EDT;
   timestamp '2018-05-28 00:00:00';
   stoptime '2018-06-03 00:00:00';
 }
@@ -15,8 +15,8 @@ module connection;
 module residential {
   implicit_enduses NONE;
 };
-#include "appliance_schedules.glm";
-#include "water_and_setpoint_schedule_v5.glm";
+#include "$TESPDIR/data/schedules/appliance_schedules.glm";
+#include "$TESPDIR/data/schedules/water_and_setpoint_schedule_v5.glm";
 #include "commercial_schedules.glm";
 #set minimum_timestep=15;
 #set relax_naming_rules=1;
@@ -28,17 +28,17 @@ object metrics_collector_writer {
 };
 object climate {
   name "RegionalWeather";
-  tmyfile "FL-Miami_Intl_Ap.tmy3";
+  tmyfile "$TESPDIR/data/weather/FL-Miami_Intl_Ap.tmy3";
   interpolate QUADRATIC;
 };
 #ifdef WANT_VI_DUMP
 object voltdump {
   filename Voltage_Dump_TE.csv;
-  mode polar;
+  mode POLAR;
 }
 object currdump {
   filename Current_Dump_TE.csv;
-  mode polar;
+  mode POLAR;
 }
 #endif
 
@@ -94,7 +94,7 @@ object substation {
 object fncs_msg {
   name gridlabdSimulator1;
   parent network_node;
-  configure TE_FNCS_Config.txt;
+  configure TE_gridlabd.txt;
   option "transport:hostname localhost, port 5570";
   aggregate_subscriptions true;
   aggregate_publications true;

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: plots.py
 
@@ -5,29 +6,32 @@
 import os
 import sys
 
-import tesp_support.process_agents as ap
-# import tesp_support.process_eplus as ep
-import tesp_support.process_gld as gp
-import tesp_support.process_houses as hp
-# import tesp_support.process_pypower as pp
-import tesp_support.process_voltages as vp
+
+import tesp_support.process_agents as tesp_a
+import tesp_support.process_gld as tesp_g
+import tesp_support.process_houses as tesp_h
+import tesp_support.process_voltages as tesp_v
+# import tesp_support.process_eplus as tesp_e
+# import tesp_support.process_pypower as tesp_p
 
 if __name__ == '__main__':
-    rootname = sys.argv[1]
+    name_root = sys.argv[1]
 
-    # pmetrics = pp.read_pypower_metrics(os.getcwd(), rootname)
-    # pp.plot_pypower(pmetrics)
+    # Comment out if don't you want power metrics plot
+    # pmetrics = tesp_p.read_pypower_metrics(os.getcwd(), name_root)
+    # tesp_p.plot_pypower(pmetrics)
 
-    if os.path.exists('auction_' + rootname + '_metrics.json'):
-        ametrics = ap.read_agent_metrics(os.getcwd(), rootname, f'{rootname}_agent_dict.json')
-        ap.plot_agents(ametrics)
+    if os.path.exists('auction_' + name_root + '_metrics.json'):
+        ametrics = tesp_a.read_agent_metrics(os.getcwd(), name_root, f'{name_root}_agent_dict.json')
+        tesp_a.plot_agents(ametrics)
 
-    gmetrics = gp.read_gld_metrics(os.getcwd(), rootname, f'{rootname}_glm_dict.json')
-    gp.plot_gld(gmetrics)
-    hp.plot_houses(gmetrics)
-    vp.plot_voltages(gmetrics)
+    gmetrics = tesp_g.read_gld_metrics(os.getcwd(), name_root, f'{name_root}_glm_dict.json')
+    tesp_g.plot_gld(gmetrics)
+    tesp_h.plot_houses(gmetrics)
+    tesp_v.plot_voltages(gmetrics)
 
-    # emetrics = ep.read_eplus_metrics(os.getcwd(), rootname)
-    # ep.plot_eplus(emetrics)
+    # Comment out if don't you want penerrrgyplus metrics plot
+    # emetrics = tesp_e.read_eplus_metrics(os.getcwd(), name_root)
+    # tesp_e.plot_eplus(emetrics)
 
-    # ip.process_inv (rootname, 'Test_Challenge_glm_dict.json')
+    # tesp.process_inv (name_root, 'Test_Challenge_glm_dict.json')

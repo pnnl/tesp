@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: prep_ercot_substation.py
+# file: prep_ercot_substation_f.py
 
 import json
 import math
@@ -242,7 +242,7 @@ def ProcessGLM(fileroot, weatherName):
         print('    default: 0', file=yp)
     yp.close()
 
-    op = open(fileroot + '_FNCS_Config.txt', 'w')
+    op = open(fileroot + '_gridlabd.txt', 'w')
     print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
     print('subscribe "precommit:network_node.positive_sequence_voltage <- pypower/three_phase_voltage_' + fileroot + '";', file=op)
     print('subscribe "precommit:localWeather.temperature <- ' + weatherName + '/temperature";', file=op)

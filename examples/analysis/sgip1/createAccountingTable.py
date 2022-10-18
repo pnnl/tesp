@@ -10,16 +10,8 @@
 import numpy as np
 import pandas as pd
 
-# the process_* modules have been copied to
-# this user's local dir for testing
-import process_pypower as pp
-import process_agents as pa
-import process_gld as gp
+import tesp_support.api as tesp
 
-# need to also test using
-# import tesp_support.process_pypower as pp
-# import tesp_support.process_gld as gp
-# import tesp_support.process_eplus as ep
 
 accounting_table = \
     pd.DataFrame(['Wholesale electricity purchases for test feeder (MWh/d)',
@@ -38,13 +30,13 @@ base_dir = '.'
 
 def calculate_metrics(dir, name):
     # Wholesale electricity purchases for test feeder (MWh/day)
-    gld_dict = gp.read_gld_metrics(dir, name)
+    gld_dict = tesp.read_gld_metrics(dir, name)
     time_diff = (gld_dict['hrs'][1] - gld_dict['hrs'][0])
     n_daily_obs = 24 / time_diff
     n_days = len(gld_dict['hrs']) / n_daily_obs
     substation_MWh = gld_dict['data_s'][:, :, gld_dict['idx_s']['SUB_POWER_IDX']] * time_diff / 1e6
     # instantaneous load, with ampFactor
-    pypower_dict = pp.read_pypower_metrics(dir, name)
+    pypower_dict = tesp.read_pypower_metrics(dir, name)
     # find bus number for test feeder -- the bus
     bus_no = pypower_dict['keys_b'][0]
     aF = pypower_dict['dso_b'][bus_no]['ampFactor']
@@ -78,7 +70,7 @@ def calculate_metrics(dir, name):
         # Average PV energy transacted (kWh/day)
         ave_PV_kWh_d = (gld_dict['solar_kw'].reshape(int(n_days), int(n_daily_obs)) * time_diff).mean(axis=1)
         # Average PV energy revenue ($/day)
-        auction_dict = pa.read_agent_metrics(dir, name)
+        auction_dict = tesp.read_agent_metrics(dir, name)
         ave_PV_revenue_d = ((auction_dict['data_a'][0, :, 0] *
                              gld_dict['solar_kw']).reshape(int(n_days), int(n_daily_obs)) * time_diff).sum(axis=1)
         # Average ES energy transacted (kWh/day)

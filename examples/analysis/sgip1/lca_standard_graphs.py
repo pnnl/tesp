@@ -5,14 +5,11 @@
 # @Last modified time: 2021-11-09T14:20:18-08:00
 
 
-
+import matplotlib.ticker as ticker
 import pandas as pd
-import numpy as np
 import seaborn as sns
-import pdb
 from matplotlib import pyplot as plt
 from matplotlib.patches import Patch
-import matplotlib.ticker as ticker
 
 
 def build_comparison_table(dfs, names, fillna=None, column_name='Scenarios'):
@@ -41,17 +38,19 @@ def build_comparison_table(dfs, names, fillna=None, column_name='Scenarios'):
 
     # Concatenate
     comp = pd.concat(dfs, sort=False)
-    #comp.sort_index(inplace=True)
+    # comp.sort_index(inplace=True)
     comp.set_index(column_name, append=True, inplace=True)
 
     if fillna is not None:
         comp.fillna(fillna, inplace=True)
 
     return comp
-#palette_def=('pastel', 'deep', 'dark')
+
+
+# palette_def=('pastel', 'deep', 'dark')
 def plot_grouped_stackedbars(df, ix_categories, ix_entities_compared, norm='max', err_pos=None, err_neg=None,
                              palette_def=('pastel', 'deep', 'dark'), width=0.3, figsize=(8, 4), xaxis_label='',
-                             yaxis_label='',saveplot='',format_dollars=False):
+                             yaxis_label='', saveplot='', format_dollars=False):
     """ Grouped stacked-bars for both comparison and contribution analysis
 
     This plot groups bars, representing the total scores of different entities
@@ -146,7 +145,8 @@ def plot_grouped_stackedbars(df, ix_categories, ix_entities_compared, norm='max'
 
     # Test that there are not too many entities compared.
     if len(df.index.get_level_values(ix_entities_compared).unique()) > 3:
-        print("Warning. Too many entities being compared. Please use `plot_grouped_stackedbars_wlargegroups()` instead.")
+        print(
+            "Warning. Too many entities being compared. Please use `plot_grouped_stackedbars_wlargegroups()` instead.")
         return None
 
     # Normalize
@@ -161,7 +161,7 @@ def plot_grouped_stackedbars(df, ix_categories, ix_entities_compared, norm='max'
     # Initializations. Creates two subplots, the first one (ax) for the actual figure, and the second (ax2) as dummy to
     # display the legend without this legend overlapping with the plot but still within the bounds of the figure.
     # width_ratios is dummy ratio to make second plot very small
-    fig, (ax, ax2) = plt.subplots(1, 2, gridspec_kw = {'width_ratios':[100, 1]},
+    fig, (ax, ax2) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [100, 1]},
                                   facecolor='white', figsize=figsize)
     # make dummy axis disapear
     ax2.get_yaxis().set_ticks([])
@@ -197,51 +197,50 @@ def plot_grouped_stackedbars(df, ix_categories, ix_entities_compared, norm='max'
 
         # Plot horizontal bar
         sub.plot.bar(ax=ax, stacked=True, position=i, width=width, zorder=-1,
-                      color=sns.color_palette(palettes[i]), edgecolor=edgecolor, label='_nolegend_')
+                     color=sns.color_palette(palettes[i]), edgecolor=edgecolor, label='_nolegend_')
 
         # Plot over this bar with a transparent bar, to add the confidence interval
         sub.sum(1).plot.bar(ax=ax, position=i, width=width, color=transparent, xerr=err, label='_nolegend_')
 
         if i == n_entities_compared - 1:
-
             # Generate the legend complement explaining about shading
-            #legend_elements = _generate_legend(all_entities)
+            # legend_elements = _generate_legend(all_entities)
 
             # Integrate in legend and plot legend
             handles, labels = ax.get_legend_handles_labels()
-            handles2 = handles[-len(all_contributions):] #+ legend_elements
-            order = [2,1,0]
-            plt.legend([handles[idx] for idx in order],[labels[idx] for idx in order])
+            handles2 = handles[-len(all_contributions):]  # + legend_elements
+            order = [2, 1, 0]
+            plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order])
 
             print(handles2)
     # Legend definition (hidden in first subplot, but displayed in second)
     ax.get_legend().remove()
-    ax2.legend(handles=[handles2[idx] for idx in order], loc='center left', bbox_to_anchor=(0, 0.5),prop={"size":16})
+    ax2.legend(handles=[handles2[idx] for idx in order], loc='center left', bbox_to_anchor=(0, 0.5), prop={"size": 16})
 
     # Axis title
-    #ax.xaxis.set_label_text(xaxis_label)
-    #ax.yaxis.set_label_text(yaxis_label)
+    # ax.xaxis.set_label_text(xaxis_label)
+    # ax.yaxis.set_label_text(yaxis_label)
 
     if format_dollars:
         formatter = ticker.FormatStrFormatter('$%1.2f')
         ax.yaxis.set_major_formatter(formatter)
     ax.grid(which='major', axis='y', linestyle='--', zorder=0)
-    ax.set_xlabel(xaxis_label,fontsize=16)
-    ax.set_ylabel(yaxis_label,fontsize=16)
+    ax.set_xlabel(xaxis_label, fontsize=16)
+    ax.set_ylabel(yaxis_label, fontsize=16)
     ax.tick_params(labelsize=14)
 
     # Rescale
     ax.autoscale()  # Important to not have the bars come right up to th edge of figure
-    fig.tight_layout() # Important to not have labels and legend extend beyond figure
+    fig.tight_layout()  # Important to not have labels and legend extend beyond figure
 
-    if len(saveplot)>0:
+    if len(saveplot) > 0:
         plt.savefig(saveplot)
 
     return ax, fig
 
 
 def plot_grouped_stackedbars_wlargegroups(df, ix_categories, ix_entities_compared, norm='max', orient='h',
-                                         palette_def=('pastel', 'deep', 'dark')):
+                                          palette_def=('pastel', 'deep', 'dark')):
     """ Grouped stacked-bars for both comparison and contribution analysis
 
     Group bars, representing the total scores of different compared entities
@@ -395,9 +394,9 @@ def plot_stochastic_comparison(scen1, scen2, name1, name2, palette='deep'):
 
     # Label and legend
     ax.set_ylabel('')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2),  ncol=2, fancybox=True)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=2, fancybox=True)
 
-    fig.tight_layout() # Important to not have labels and legend extend beyond figure
+    fig.tight_layout()  # Important to not have labels and legend extend beyond figure
     return ax, fig
 
 
@@ -653,7 +652,6 @@ def _generate_legend(entities):
                                   facecolor='white',
                                   label='dark colors: ' + entities[-1])]
     return legend_elements
-
 
 # It might be pertinent to define and lighten/darken colormaps ourselves:
 # https://scipy-cookbook.readthedocs.io/items/Matplotlib_ColormapTransformations.html

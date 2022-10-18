@@ -23,10 +23,10 @@ TESP simulators exchange the sets of messages shown in
 
 	Message Schemas for EnergyPlus and large-building agents
 
-These messages route through FNCS in a format like
+These messages route through HELICS in a format like
 “topic/keyword=value”. In :numref:`fig_msg_flows`, the “id” would refer to a specific
 feeder, house, market, or building, and it would be the message topic.
-Once published via FNCS, any other FNCS simulator can access the value
+Once published via HELICS, any other HELICS simulator can access the value
 by subscription. For example, PYPOWER publishes two values, the
 locational marginal price (LMP) at a substation bus and the positive
 sequence three-phase voltage at the bus. GridLAB-D subscribes to the
@@ -90,7 +90,7 @@ TESP for Agent Developers
 -------------------------
 
 The left-hand portion of :numref:`fig_composition` shows the main simulators running in 
-TESP and communicating over FNCS.  For the DSO+T study, PYPOWER will be 
+TESP and communicating over HELICS.  For the DSO+T study, PYPOWER will be
 upgraded to AMES and EnergyPlus will be upgraded to a Modelica-based 
 large-building simulator.  The large-building agent will also be updated.  
 The current large-building agent is written in C++.  It's functionality is 
@@ -98,10 +98,10 @@ to write metrics from EnergyPlus, and also to adjust a thermostat slider
 for the building.  However, it does not formulate bids for the building.  
 The right-hand portion of :numref:`fig_composition` shows the other transactive agents 
 implemented in Python.  These communicate directly via Python function 
-calls, i.e., not over FNCS.  There are several new agents to implement for 
+calls, i.e., not over HELICS.  There are several new agents to implement for
 the DSO+T study, and this process will require four main tasks: 
   
-1 - Define the message schema for information exchange with GridLAB-D, AMES or other FNCS federates. The SubstationAgent will actually manage the FNCS messages, i.e., the agent developer will not be writing FNCS interface code.
+1 - Define the message schema for information exchange with GridLAB-D, AMES or other HELICS federates. The SubstationAgent will actually manage the HELICS messages, i.e., the agent developer will not be writing HELICS interface code.
 
 2 - Design the agent initialization from metadata available in the GridLAB-D or other dictionaries, i.e., from the dictionary JSON files.
 
@@ -116,27 +116,27 @@ the DSO+T study, and this process will require four main tasks:
 
 :numref:`fig_sequence` the sequence of interactions between GridLAB-D, the 
 SubstationAgent (encapsulating HVAC controllers and a double-auction 
-market) and PYPOWER.  The message hops over FNCS each consume one time 
+market) and PYPOWER.  The message hops over HELICS each consume one time
 step.  The essential messages for market clearing are highlighted in red.  
-Therefore, it takes 3 FNCS time steps to complete a market clearing, from 
+Therefore, it takes 3 HELICS time steps to complete a market clearing, from
 the collection of house air temperatures to the adjustment of thermostat 
-setpoints.  Without the encapsulating SubstationAgent, two additional FNCS 
+setpoints.  Without the encapsulating SubstationAgent, two additional HELICS
 messages would be needed.  The first would occur between the self-messages 
 AgentBids and Aggregate, routed between separate HVACController and 
 Auction swimlanes.  The second would occur between ClearMarket and 
 AdjustSetpoints messages, also routed between separate Auction and 
-HVACController swimlanes.  This architecture would produce additional FNCS 
-message traffic, and also increase the market clearing latency from 3 FNCS 
-time steps to 5 FNCS time steps.  
+HVACController swimlanes.  This architecture would produce additional HELICS
+message traffic, and also increase the market clearing latency from 3 HELICS
+time steps to 5 HELICS time steps.
 
 Before and after each market clearing, GridLAB-D and PYPOWER will 
 typically exchange substation load and bus voltage values several times, 
-for each power flow (PF) solution.  These FNCS messages are indicated in 
+for each power flow (PF) solution.  These HELICS messages are indicated in
 black; they represent much less traffic than the market clearing messages.
   
 Some typical default time steps are:
   
-1 - 5 seconds, for FNCS, leading to a market clearing latency of 15 seconds
+1 - 5 seconds, for HELICS, leading to a market clearing latency of 15 seconds
   
 2 - 15 seconds, for GridLAB-D and PYPOWER's regular power flow (PF)
   
@@ -145,7 +145,7 @@ Some typical default time steps are:
 .. figure:: ../media/ClearingSequence.png
 	:name: fig_sequence
 
-	FNCS Message Hops around Market Clearing Time
+	HELICS Message Hops around Market Clearing Time
 	
 	
 .. _design_reference_metrics:
@@ -203,7 +203,7 @@ shown, but this is adjustable.
 The initial GridLAB-D metrics are detailed in five UML diagrams, so we
 begin the UML metric descriptions with PYPOWER, which is much simpler.
 During each simulation, PYPOWER will produce two JSON files, one for
-all of the generators and another for all of the FNCS interface buses to
+all of the generators and another for all of the HELICS interface buses to
 GridLAB-D. A third JSON file, called the dictionary, is produced before
 the simulation starts from the PYPOWER case input file. The dictionary
 serves as an aid to post-processing. :numref:`fig_met_pp` shows the schema for all
@@ -216,18 +216,18 @@ GridLAB-D feeder to represent many similar feeders connected to the same
 PYPOWER bus. Each generator has a bus number (more than one generator
 can be at a bus), power rating, cost function
 f(P) = c :sub:`0` + c :sub:`1` P + c :sub:`2` P :sup:`2`, startup cost, shutdown cost, and
-other descriptive information. Each FNCSBus has nominal P and Q that
+other descriptive information. Each DSOBus has nominal P and Q that
 PYPOWER can vary outside of GridLAB-D, plus the name of a GridLAB-D
 substation that provides additional load at the bus. In total, the PYPOWER dictionary contains four JSON objects;
 the *ampFactor*, the *baseMVA*, a dictionary (map) of Generators keyed
-on the generator id, and a dictionary (map) of FNCSBuses keyed on the
+on the generator id, and a dictionary (map) of DSOBuses keyed on the
 bus id. In PYPOWER, all id values are integers, but the other
 simulators use string ids.
 
 .. figure:: ../media/PYPOWERMetrics.png
 	:name: fig_met_pp
 
-	PYPOWER dictionary with generator and FNCS bus metrics
+	PYPOWER dictionary with generator and DSO bus metrics
 
 The GenMetrics file (center of :numref:`fig_met_pp`) includes the simulation
 starting date, time and time zone as *StartTime*, which should be the
@@ -260,7 +260,7 @@ an example of how to do this.
 
 Turning to more complicated GridLAB-D metrics, :numref:`fig_dict_gld` provides the
 dictionary. At the top level, it includes the substation transformer
-size and the PYPOWER substation name for FNCS connection. There are
+size and the PYPOWER substation name for HELICS connection. There are
 four dictionaries (maps) of component types, namely houses, inverters,
 billing meters and feeders. While real substations often have more than
 one feeder, in this model only one feeder dictionary will exist,
@@ -528,27 +528,27 @@ Developing Agents
 -----------------
 
 The existing auction and controller agents provide examples on how to 
-configure the message subscriptions, publish values, and link with FNCS at 
+configure the message subscriptions, publish values, and link with HELICS at
 runtime.  Section 1.4 describes the existing messages, but these 
 constitute a minimal set for Version 1.  It’s possible to define your own 
 messages between your own TEAgents, with significant freedom.  It’s also 
 possible to publish and subscribe, or “peek and poke”, any named object / 
 attribute in the GridLAB-D model, even those not called out in Section 
 1.4.  For example, if writing a waterheater controller, you should be able 
-to read its outlet temperature and write its tank setpoint via FNCS 
+to read its outlet temperature and write its tank setpoint via HELICS
 messages, without modifying GridLAB-D code.  You probably also want to 
 define metrics for your TEAgent, as in Section 1.5.  Your TEAgent will run 
-under supervision of a FNCS broker program.  This means you can request 
-time steps, but not dictate them.  The overall pattern of a FNCS-compliant 
+under supervision of a HELICS broker program.  This means you can request
+time steps, but not dictate them.  The overall pattern of a HELICS-compliant
 program will be: 
 
-1. Initialize FNCS and subscribe to messages, i.e. notify the broker.
+1. Initialize HELICS and subscribe to messages, i.e. notify the broker.
 
 2. Determine the desired simulation *stop\_time*, and any time step size
    (*delta\_t*) preferences. For example, a transactive market mechanism
    on 5-minute clearing intervals would like *delta\_t* of 300 seconds.
 
-3. Set *time\_granted* to zero; this will be under control of the FNCS
+3. Set *time\_granted* to zero; this will be under control of the HELICS
    broker.
 
 4. Initialize *time\_request*; this is usually *0 + delta\_t*, but it
@@ -557,17 +557,17 @@ program will be:
 
 5. While *time\_granted* < *stop\_time*:
 
-   a. Request the next *time\_request* from FNCS; your program then
+   a. Request the next *time\_request* from HELICS; your program then
       blocks.
 
-   b. FNCS returns *time\_granted*, which may be less than your
+   b. HELICS returns *time\_granted*, which may be less than your
       *time\_request.* For example, controllers might submit bids
       up to a second before the market interval closes, and you
       should keep track of these.
 
    c. Collect and process the messages you subscribed to. There may not be any if your time request has simply come up. On the other hand, you might receive bids or other information to store before  taking action on them.
 
-   d. Perform any supplemental processing, including publication of values through FNCS. For example, suppose 300 seconds have elapsed since the last market clearing. Your agent should settle all the bids, publish the clearing price (and other values), and set up for the next market interval.
+   d. Perform any supplemental processing, including publication of values through HELICS. For example, suppose 300 seconds have elapsed since the last market clearing. Your agent should settle all the bids, publish the clearing price (and other values), and set up for the next market interval.
 
    e. Determine the next *time\_request*, usually by adding *delta\_t*
       to the last one. However, if *time\_granted* has been coming
@@ -580,7 +580,7 @@ program will be:
 
 6. Write your JSON metrics file; Python has built-in support for this.
 
-7. Finalize FNCS for an orderly shutdown, i.e. notify the broker that
+7. Finalize HELICS for an orderly shutdown, i.e. notify the broker that
    you’re done.
 
 The main points are to realize that an overall “while loop” must be used

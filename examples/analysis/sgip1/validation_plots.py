@@ -22,9 +22,7 @@ from os import path
 
 import matplotlib.pyplot as plt
 
-import tesp_support.process_eplus as ep
-import tesp_support.process_gld as gp
-import tesp_support.process_pypower as pp
+import tesp_support.api as tesp
 
 # Setting up logging
 logger = logging.getLogger(__name__)
@@ -46,7 +44,7 @@ def load_pypower_data(data, case, data_path):
     diction = None
     found_data = False
     try:
-        diction = pp.read_pypower_metrics(data_path, f'SGIP1{case}')
+        diction = tesp.read_pypower_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load PYPOWER data for Case {case}.')
@@ -80,7 +78,7 @@ def load_gld_data(data, case, data_path):
     diction = None
     found_data = False
     try:
-        diction = gp.read_gld_metrics(data_path, f'SGIP1{case}')
+        diction = tesp.read_gld_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load GridLAB-D data for Case {case}.')
@@ -112,7 +110,7 @@ def load_energy_plus_data(data, case, data_path):
     diction = None
     found_data = False
     try:
-        diction = ep.read_eplus_metrics(data_path, f'SGIP1{case}', quiet=True)
+        diction = tesp.read_eplus_metrics(data_path, f'SGIP1{case}', quiet=True)
         found_data = True
     except:
         logger.error(f'\tUnable to load Energy+ data for Case {case}.')

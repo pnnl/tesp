@@ -2,9 +2,9 @@
 # file: pprun.py
 import pypower.api as pp
 
-import tesp_support.tso_helpers as tso
+import tesp_support.api as tesp
 
-ppc = tso.load_json_case('./Case1/ppcase.json')
+ppc = tesp.load_json_case('./Case1/ppcase.json')
 # print(ppc)
 
 ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'])
@@ -19,7 +19,7 @@ for row in ppc['BranchesOut']:
     print('branch', row[0], 'out from', row[1], 'to', row[2], flush=True)
 
 res = pp.runopf(ppc, ppopt_market)
-tso.summarize_opf(res)
+tesp.summarize_opf(res)
 
 rpf = pp.runpf(ppc, ppopt_regular)
-tso.summarize_opf(rpf[0])
+tesp.summarize_opf(rpf[0])

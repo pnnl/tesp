@@ -13,7 +13,8 @@ import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
 ######################################################start conf plot
-import matplotlib.pyplot as plt;
+import matplotlib.pyplot as plt
+
 plt.rcParams['figure.figsize'] = (4, 8)
 plt.rcParams['figure.dpi'] = 100
 SMALL_SIZE = 14
@@ -573,17 +574,17 @@ if __name__ == "__main__":
       
             plt.title('DA demand and supply curves for DSO ')
             plt.plot(supply_q[day_of_sim][hour_of_day], supply_p[day_of_sim][hour_of_day], label='wholesale node supply curve')
-            plt.plot((ret_q[day_of_sim * 24 + hour_of_day][0]), (ret_p[day_of_sim * 24 + hour_of_day][0]), label='DA Aggregated demand curve at retail level');
-            plt.plot(dso_q[day_of_sim * 24 + hour_of_day][0], dso_p[day_of_sim * 24 + hour_of_day][0], label='DA Aggregated demand curve at DSO level');
-            plt.ylabel('DSO price ($/kWh)');plt.xlabel('Quantity (kW)');plt.grid(True);plt.legend();plt.show()
+            plt.plot((ret_q[day_of_sim * 24 + hour_of_day][0]), (ret_p[day_of_sim * 24 + hour_of_day][0]), label='DA Aggregated demand curve at retail level')
+plt.plot(dso_q[day_of_sim * 24 + hour_of_day][0], dso_p[day_of_sim * 24 + hour_of_day][0], label='DA Aggregated demand curve at DSO level')
+plt.ylabel('DSO price ($/kWh)');plt.xlabel('Quantity (kW)');plt.grid(True);plt.legend();plt.show()
             print("Wholesale RT cleared price: ", dso_cleared_p[day_of_sim * 24 + hour_of_day])
             print("Wholesale RT cleared quantity: ", dso_cleared_q[day_of_sim * 24 + hour_of_day])
             print("Wholesale RT clear type: ", dso_cleared_type[day_of_sim * 24 + hour_of_day])
             
             plt.title('DA demand and supply curves for retail ')
-            plt.plot((ret_q[day_of_sim * 24 + hour_of_day][0]), (ret_p[day_of_sim * 24 + hour_of_day][0]), label='DA Aggregated demand curve');
-            plt.plot((ret_seller_q[day_of_sim * 24 + hour_of_day][0]), (ret_seller_p[day_of_sim * 24 + hour_of_day][0]), label='DA Substation supply curve');
-            plt.ylabel('Retail price ($/kWh)');plt.xlabel('Quantity (kW)');plt.grid(True);plt.legend();plt.show()
+            plt.plot((ret_q[day_of_sim * 24 + hour_of_day][0]), (ret_p[day_of_sim * 24 + hour_of_day][0]), label='DA Aggregated demand curve')
+plt.plot((ret_seller_q[day_of_sim * 24 + hour_of_day][0]), (ret_seller_p[day_of_sim * 24 + hour_of_day][0]), label='DA Substation supply curve')
+plt.ylabel('Retail price ($/kWh)');plt.xlabel('Quantity (kW)');plt.grid(True);plt.legend();plt.show()
             print("Retail cleared price:", ret_cleared_p[day_of_sim * 24 + hour_of_day])
             print("Retail cleared quantity:", ret_cleared_q[day_of_sim * 24 + hour_of_day])
             print("Retail clear type:", ret_cleared_type[day_of_sim * 24 + hour_of_day])
@@ -631,17 +632,17 @@ if __name__ == "__main__":
             
             plt.title('RT demand and supply curves for DSO')
             plt.plot(supply_q[day_of_sim][hour_of_day], supply_p[day_of_sim][hour_of_day], label='wholesale node supply curve')
-            plt.plot((ret_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), (ret_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), label='RT Aggregated demand curve at retail level');
-            plt.plot(dso_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1], dso_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1], label='RT Aggregated demand curve at DSO level');
-            plt.ylabel('DSO price ($/kWh)');plt.xlabel('Quantity (kW)');plt.grid(True);plt.legend();plt.show()
+            plt.plot((ret_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), (ret_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), label='RT Aggregated demand curve at retail level')
+plt.plot(dso_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1], dso_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1], label='RT Aggregated demand curve at DSO level')
+plt.ylabel('DSO price ($/kWh)');plt.xlabel('Quantity (kW)');plt.grid(True);plt.legend();plt.show()
             print("Wholesale RT cleared price: ", dso_cleared_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1])
             print("Wholesale RT cleared quantity: ", dso_cleared_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1])
             print("Wholesale RT clear type: ", dso_cleared_type[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1])
             
             plt.title('RT demand and supply curves for Retail ')
-            plt.plot((ret_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), (ret_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), label='RT Aggregated demand curve');
-            plt.plot((ret_seller_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), (ret_seller_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), label='RT Substation supply curve');
-            plt.ylabel('Retail price ($/kWh)');plt.xlabel('Quantity (kW)');plt.grid(True);plt.legend();plt.show()
+            plt.plot((ret_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), (ret_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), label='RT Aggregated demand curve')
+plt.plot((ret_seller_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), (ret_seller_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1]), label='RT Substation supply curve')
+plt.ylabel('Retail price ($/kWh)');plt.xlabel('Quantity (kW)');plt.grid(True);plt.legend();plt.show()
             print("Retail cleared price:", ret_cleared_p[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1])
             print("Retail cleared quantity:", ret_cleared_q[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1])
             print("Retail clear type:", ret_cleared_type[(day_of_sim + 1) * (hour_of_day + 1) * 12 - 1])
@@ -662,20 +663,20 @@ if __name__ == "__main__":
         for i in range(da_convergence_start,da_convergence_start+N_convergence_hours):
             convergency_max = make_convergency_test(data_s=Order[meta_I_ver[V_analis]['index']],t=i)
             reverse_hour = 47 - np.arange(0,len(convergency_max))
-            plt.plot(reverse_hour,convergency_max,marker=markers[M_in],label=str(i)+'-h',linewidth=1,markersize=5);
+            plt.plot(reverse_hour,convergency_max,marker=markers[M_in],label=str(i)+'-h',linewidth=1,markersize=5)
             # find the index of the prediction corresponding to 10 AM previous day
             temp = 48 - (14 + i % 24)
             ten_AM_ind.append(temp)
             # print(len(convergency_max))
             # ten_AM_price.append(convergency_max[temp])
-            plt.ylabel('retail price ($/kWh)');
+            plt.ylabel('retail price ($/kWh)')
             plt.xlabel('from time ahead to present (hours)')#;plt.title('hour 48 of t: '+str(i));plt.grid(True);plt.show()
             M_in = M_in + 1
         print(ten_AM_ind)
         # Marking 10 AM prices on each hour plot
         # plt.plot(47-np.array(ten_AM_ind),ten_AM_price, 'o', color='blue')
         plt.xlim(47, -2) # x-axis in decreasing order
-        plt.grid(True);plt.legend(bbox_to_anchor=(1.1, 1.00));
+        plt.grid(True);plt.legend(bbox_to_anchor=(1.1, 1.00))
         plt.show()
 
         first_h_df = pd.DataFrame(first_h)
@@ -686,8 +687,8 @@ if __name__ == "__main__":
         meta_I_ver, start_time, Order = get_data_multiple_days(V_file,days,pre_file,pos_file)
         V_analis = 'cleared_price_rt'
         first_h_rt = Order[meta_I_ver[V_analis]['index']]
-        plt.plot(np.array(range(len(first_h_df_rt)))/12, first_h_df_rt.values,label='DA');
-        plt.plot(np.array(range(len(first_h_rt)))/12,first_h_rt,label='RT');plt.legend();plt.ylabel('price ($/kWh)');plt.xlabel('time (hour)');plt.grid(True);
+        plt.plot(np.array(range(len(first_h_df_rt)))/12, first_h_df_rt.values,label='DA')
+        plt.plot(np.array(range(len(first_h_rt)))/12,first_h_rt,label='RT');plt.legend();plt.ylabel('price ($/kWh)');plt.xlabel('time (hour)');plt.grid(True)
         plt.show()
 
         # first_h_rt = pd.DataFrame(first_h_rt)
@@ -721,10 +722,10 @@ if __name__ == "__main__":
             plt.plot(sum(np.array(Order[meta_I_ver[V_analis]['index']][(days - 1) * 24])), label='waterheater load')
             V_analis = 'non_transactive_ev'
             plt.plot(sum(np.array(Order[meta_I_ver[V_analis]['index']][(days - 1) * 24])), label='ev load')
-            plt.legend();
-            plt.ylabel('load (kW)');
-            plt.xlabel('time (hour)');
-            plt.grid(True);
+            plt.legend()
+            plt.ylabel('load (kW)')
+            plt.xlabel('time (hour)')
+            plt.grid(True)
             plt.title('Estimated non-participating load profiles')
             plt.show()
 
@@ -740,17 +741,17 @@ if __name__ == "__main__":
             fr_err_avg = fr_err.mean()
             plt.plot(fr_load, label='load forecast')
             plt.plot(gd_load, label="gridlabd (true) load")
-            plt.legend();
-            plt.ylabel('load (kW)');
-            plt.xlabel('time (hour)');
-            plt.grid(True);
+            plt.legend()
+            plt.ylabel('load (kW)')
+            plt.xlabel('time (hour)')
+            plt.grid(True)
             plt.title('Non-participating forecast and true load; MAPE: {:.2f}'.format(fr_err_avg))
             plt.show()
 
             plt.plot(fr_err, marker='.')
-            plt.ylabel('absolute error (F-A)/A');
-            plt.xlabel('time (hour)');
-            plt.grid(True);
+            plt.ylabel('absolute error (F-A)/A')
+            plt.xlabel('time (hour)')
+            plt.grid(True)
             plt.title('Absolute Percentage Error of Non-participating load forecase; MAPE: {:.2f}'.format(fr_err_avg))
             plt.show()
 
@@ -769,14 +770,14 @@ if __name__ == "__main__":
                 # data_s_sum.append(i[0])
             for i in range(da_convergence_start, da_convergence_start + N_convergence_hours):
                 convergency_max = make_convergency_test(data_s=data_s_sum, t=i)
-                plt.plot(convergency_max, marker=markers[M_in], label=str(i) + '-h', linewidth=1, markersize=5);
-                plt.title('Total non participating load convergence');
-                plt.ylabel('load (kW)');
+                plt.plot(convergency_max, marker=markers[M_in], label=str(i) + '-h', linewidth=1, markersize=5)
+                plt.title('Total non participating load convergence')
+                plt.ylabel('load (kW)')
                 plt.xlabel(
                     'from time ahead to present (hours)')  # ;plt.title('hour 48 of t: '+str(i));plt.grid(True);plt.show()
                 M_in = M_in + 1
-            plt.grid(True);
-            plt.legend(bbox_to_anchor=(1.1, 1.00));
+            plt.grid(True)
+            plt.legend(bbox_to_anchor=(1.1, 1.00))
             plt.show()
 
             # M_in = 0
@@ -834,11 +835,11 @@ if __name__ == "__main__":
         to_kW = 1000
 
         plt.plot((orig_power.resample('60min').mean() / to_kW).values, label="base load profile")
-        plt.plot((sub_power.resample('60min').mean() / to_kW).values, label='with battery participation');
+        plt.plot((sub_power.resample('60min').mean() / to_kW).values, label='with battery participation')
         plt.plot((inv_power.resample('60min').mean() / to_kW).values, label='battery')
-        plt.ylabel('Aggregated power (kW)');
-        plt.xlabel('time (hours)');
-        plt.grid(True);
+        plt.ylabel('Aggregated power (kW)')
+        plt.xlabel('time (hours)')
+        plt.grid(True)
         plt.legend()
         plt.title("Impact of 40% battery participation on the substation load profile")
         # plt.show()
@@ -935,27 +936,27 @@ if __name__ == "__main__":
         # ax2 = ax1.twinx()
         i = 1
         opt_bid = da_bid_batt[i][meta_da['bid_four_point_rt_3']['index']]
-        ax1[0].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid');
+        ax1[0].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid')
         actual = rt_bid_batt[i][meta_rt['inverter_p_setpoint']['index']]
         ax1[0].plot(-(actual.resample('60min').mean() / 1000).values, label='actual power')
         ax1[0].set_ylabel('kW')
-        ax1[0].grid(True);
+        ax1[0].grid(True)
         ax1[0].set_title(
             "Optimal bid and actual kW by battery agent with slider setting {}".format(
-                batt_agent[meta_da['names'][i]]['slider_setting']));  # ax1.set_ylabel('(F)');
+                batt_agent[meta_da['names'][i]]['slider_setting']))  # ax1.set_ylabel('(F)');
         ax1[0].legend()
 
         i = 5
         opt_bid = da_bid_batt[i][meta_da['bid_four_point_rt_3']['index']]
-        ax1[1].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid');
+        ax1[1].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid')
         actual = rt_bid_batt[i][meta_rt['inverter_p_setpoint']['index']]
         ax1[1].plot(-(actual.resample('60min').mean() / 1000).values, label='actual power')
         ax1[1].set_ylabel('kW')
-        ax1[1].grid(True);
+        ax1[1].grid(True)
         ax1[1].set_title(
-            "Optimal bid and actual kW by battery agent with slider setting {}".format(batt_agent[meta_da['names'][i]]['slider_setting']));  # ax1.set_ylabel('(F)');
+            "Optimal bid and actual kW by battery agent with slider setting {}".format(batt_agent[meta_da['names'][i]]['slider_setting']))  # ax1.set_ylabel('(F)');
         ax1[1].legend()
-        plt.xlabel('time (hours)');
+        plt.xlabel('time (hours)')
         plt.show()
 
         # actual = np.zeros(24*days)
@@ -1092,30 +1093,30 @@ if __name__ == "__main__":
         to_kW = 1000
 
         plt.plot((sub_power_base.resample('60min').mean() / to_kW).values, label="ev base load profile")
-        plt.plot((sub_power.resample('60min').mean() / to_kW).values, label='with ev participation: V1G');
+        plt.plot((sub_power.resample('60min').mean() / to_kW).values, label='with ev participation: V1G')
         # plt.plot((sub_power_v2g.resample('60min').mean() / to_kW).values, label='with ev participation: V2G');
-        plt.plot((orig_power.resample('60min').mean() / to_kW).values, label='No ev load profile');
+        plt.plot((orig_power.resample('60min').mean() / to_kW).values, label='No ev load profile')
         # plt.plot((ev_power.resample('60min').mean() / to_kW).values, label='battery')
         # plt.plot((total_power.resample('60min').mean() / 1).values, label='house load')
-        plt.ylabel('Aggregated power (kW)');
-        plt.xlabel('time (hours)');
-        plt.grid(True);
+        plt.ylabel('Aggregated power (kW)')
+        plt.xlabel('time (hours)')
+        plt.grid(True)
         plt.legend()
         plt.title("Impact of 30% EV participation on the substation load profile")
         # plt.show()
 
         fig1, ax1 = plt.subplots(2, 1, sharex='col')
         ax1[0].set_title("Retail cleared prices and corresponding aggregated inverter power")
-        ax1[0].plot(np.array(range(len(ev_power)))/12, (ev_power / 1000).values);
+        ax1[0].plot(np.array(range(len(ev_power)))/12, (ev_power / 1000).values)
         ax1[0].plot([0, len(ev_power.resample('60min'))], [0, 0], 'k')
         ax1[0].set_ylabel('agregated ev power (kW)')
-        ax1[0].grid(True);
-        ax1[1].plot(first_h, label='DA');
+        ax1[0].grid(True)
+        ax1[1].plot(first_h, label='DA')
         ax1[1].plot(np.array(range(len(first_h_rt)))/12, first_h_rt, label='RT')
-        ax1[1].set_ylabel('Retail price ($/kWh)');
-        ax1[1].set_xlabel('time (hours)');
+        ax1[1].set_ylabel('Retail price ($/kWh)')
+        ax1[1].set_xlabel('time (hours)')
         plt.legend()
-        plt.grid(True);
+        plt.grid(True)
         plt.show()
 
         # fig1, ax1 = plt.subplots(2, 1, sharex='col')
@@ -1196,17 +1197,17 @@ if __name__ == "__main__":
         ev_name = 'R5_12_47_2_tn_130_ev_1'
         i = meta_da['names'].index(ev_name.replace('ev', 'hse'))
         opt_bid = da_bid_ev[i][meta_da['bid_four_point_rt_3']['index']]
-        ax1[0].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid');
+        ax1[0].plot((opt_bid.resample('60min').mean() / to_kW).values, label='optimal bid')
         actual = rt_bid_ev[i][meta_rt['ev_charge']['index']]
         ax1[0].plot((actual.resample('60min').mean() / 1000).values, label='actual setpoint')
         j = gld_ev_meta_S['names'].index(ev_name)
         ev_ind_power = ev_data_individual[j][gld_ev_meta_S['charge_rate_avg']['index']]
         ax1[0].plot((ev_ind_power.resample('60min').mean() / 1000).values,  label='gld consumption')
         ax1[0].set_ylabel('kW')
-        ax1[0].grid(True);
+        ax1[0].grid(True)
         ax1[0].set_title(
             "Optimal bid and actual kW by ev agent with slider setting {}".format(
-                ev_agent[meta_da['names'][i]]['slider_setting']));  # ax1.set_ylabel('(F)');
+                ev_agent[meta_da['names'][i]]['slider_setting']))  # ax1.set_ylabel('(F)');
         ax1[0].legend()
         soc_i = rt_bid_ev[i][meta_rt['battery_soc']['index']]
         ax1[1].plot((soc_i.resample('60min').last()).values)
@@ -1371,7 +1372,7 @@ if __name__ == "__main__":
         for i in range(14,15):#range(len(data_individual)):
             for ivar in range(len(V_analis)-1):
                 AVG_power = data_individual[i][meta_S[V_analis[ivar]]['index']]
-                ax1.plot((AVG_power/to_kW).values,marker='x',label=V_analis[ivar]);ax1.set_ylabel('(F)');plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i)+' - day {:.0f}'.format(iday));
+                ax1.plot((AVG_power/to_kW).values,marker='x',label=V_analis[ivar]);ax1.set_ylabel('(F)');plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i)+' - day {:.0f}'.format(iday))
             ax1.legend()
             AVG_power = data_individual[i][meta_S[V_analis[-1]]['index']]
             ax2.plot((AVG_power/to_kW).values,'-', color='k',label=V_analis[-1]);ax2.set_ylabel('price ($/kW)');plt.xlabel('time (hours)');plt.grid(True)
@@ -1389,7 +1390,7 @@ if __name__ == "__main__":
         for i in [14]:#range(len(data_individual)):
             for ivar in range(len(V_analis)-1):
                 AVG_power = data_individual[i][meta_S[V_analis[ivar]]['index']]
-                ax1.plot((AVG_power/to_kW).values,marker='x',label=V_analis[ivar]);ax1.set_ylabel('(F)');plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i));
+                ax1.plot((AVG_power/to_kW).values,marker='x',label=V_analis[ivar]);ax1.set_ylabel('(F)');plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i))
             ax1.legend()
             AVG_power = data_individual[i][meta_S[V_analis[-1]]['index']]
             ax2.plot((AVG_power/to_kW).values,'-', color='k',label=V_analis[-1]);ax2.set_ylabel('price ($/kW)');plt.xlabel('time (hours)');plt.grid(True)
@@ -1407,7 +1408,7 @@ if __name__ == "__main__":
         for i in [14]:#range(len(data_individual)):
             for ivar in range(len(V_analis)):
                 AVG_power = data_individual[i][meta_S[V_analis[ivar]]['index']]
-                ax1.plot((AVG_power.resample('60min').mean()/to_kW).values,marker='x',label=V_analis[ivar]);plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i));#ax1.set_ylabel('(F)');
+                ax1.plot((AVG_power.resample('60min').mean()/to_kW).values,marker='x',label=V_analis[ivar]);plt.xlabel('time (hours)');plt.grid(True);plt.title('home '+str(i))  #ax1.set_ylabel('(F)');
             ax1.legend()
             '''
             AVG_power = data_individual[i][meta_S[V_analis[-1]]['index']]
@@ -1541,12 +1542,12 @@ if __name__ == "__main__":
                  hse_name = meta_da['names'][idx[i]]
                  wh_name = hse_name.replace('hse', 'wh')
                  print(wh_name)
-                 setpoints = rt_bid_wh[idx[i]][meta_rt['upper_tank_setpoint']['index']];
-                 wd_rate = rt_bid_wh[idx[i]][meta_rt['Waterdraw_gld']['index']];
-                 consumption = rt_bid_wh[idx[i]][meta_rt['Energy_GLD']['index']];
-                 price = rt_bid_wh[idx[i]][meta_rt['bid_four_point_rt_4']['index']];
-                 quantity_rt = rt_bid_wh[idx[i]][meta_rt['bid_four_point_rt_3']['index']];
-                 SOHC = rt_bid_wh[idx[i]][meta_rt['SOHC_gld']['index']];
+                 setpoints = rt_bid_wh[idx[i]][meta_rt['upper_tank_setpoint']['index']]
+                 wd_rate = rt_bid_wh[idx[i]][meta_rt['Waterdraw_gld']['index']]
+                 consumption = rt_bid_wh[idx[i]][meta_rt['Energy_GLD']['index']]
+                 price = rt_bid_wh[idx[i]][meta_rt['bid_four_point_rt_4']['index']]
+                 quantity_rt = rt_bid_wh[idx[i]][meta_rt['bid_four_point_rt_3']['index']]
+                 SOHC = rt_bid_wh[idx[i]][meta_rt['SOHC_gld']['index']]
 
                  quantity_da = da_bid_wh[idx[i]][meta_da['bid_four_point_rt_3']['index']]
 
@@ -1635,10 +1636,10 @@ if __name__ == "__main__":
         plt.plot(res_hvac_load.resample('60min').mean().values, label="hvac residential load")
         plt.plot(res_wh_load.resample('60min').mean().values, label="wh residential load")
         plt.plot(res_zip_load.resample('60min').mean().values, label="ZIP residential load")
-        plt.legend();
-        plt.ylabel('load (kW)');
-        plt.xlabel('time (hour)');
-        plt.grid(True);
+        plt.legend()
+        plt.ylabel('load (kW)')
+        plt.xlabel('time (hour)')
+        plt.grid(True)
         plt.title('Residential Load Profile')
         plt.show()
 

@@ -28,8 +28,8 @@ module tape;
 module generators;
 
 // only the heating setpoint schedule is used here
-#include "${SCHED_PATH}/water_and_setpoint_schedule_v3.glm"
-#include "${SCHED_PATH}/appliance_schedules.glm"
+#include "${TESPDIR}/data/schedules/water_and_setpoint_schedule_v3.glm"
+#include "${TESPDIR}/data/schedules/appliance_schedules.glm"
 #include "outputs_te.glm"
 
 // summer
@@ -148,9 +148,9 @@ object substation {
 
 #ifdef USE_FNCS
 object fncs_msg {
-     name gld1;
+     name gld_7;
      parent network_node;
-     configure TE_Challenge_FNCS_Config.txt;
+     configure TE_Challenge_gridlabd.txt;
      option "transport:hostname localhost, port 5570";
      aggregate_subscriptions true;
      aggregate_publications true;
@@ -159,8 +159,8 @@ object fncs_msg {
 
 #ifdef USE_HELICS
 object helics_msg {
-  name gld1;
-  configure TE_Challenge_HELICS_gld_msg.json;
+  name gld_7;
+  configure TE_Challenge_gridlabd.json;
 }
 #endif
 

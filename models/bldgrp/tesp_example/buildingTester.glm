@@ -22,10 +22,8 @@ object climate {
 object solar {
 	name solarGenerator;
 	weather exampleWeather;
-    generator_mode SUPPLY_DRIVEN;
-    generator_status ONLINE;
     panel_type SINGLE_CRYSTAL_SILICON;
-		orientation FIXED_AXIS; 
+	orientation FIXED_AXIS;
     efficiency 0.2;
     area 2500 sf;
 }
@@ -37,7 +35,7 @@ object house {
 //#ifdef USE_FNCS
 object fncs_msg {
   name gridlabd;
-  configure gridlabd_fncs_Config.txt;
+  configure gridlabd_gridlabd.txt;
   option "transport:hostname localhost, port 5570";
   aggregate_subscriptions true;
   aggregate_publications true;

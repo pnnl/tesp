@@ -42,10 +42,10 @@ BUILD_JMODELICA=True
 BUILD_ESTIMATOR=True
 
 def print_output(process):
-    '''s
+    """
     This function prints the output of
     subprocess on the stdout.
-    '''
+    """
     while True:
         nextline = process.stdout.readline()
         if nextline == '' and process.poll() is not None:

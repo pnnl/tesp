@@ -18,8 +18,8 @@ docker images -q tesp_private:latest > docker_version
 REPO="tesp_private"
 LOCAL_TESP="$HOME/projects/dsot/code/tesp-private"
 WORKING_DIR="/data/tesp/examples/dsot_v3"
-#BASHCMD="pip install --user -e /data/tesp/src/tesp_support/; python3 prepare_case_dsot_v3.py"
-#BASHCMD="pip install --user -e /data/tesp/src/tesp_support/; python3 prepare_case_dsot_v3.py $1 $2 $3 $4 $5 $6"
+#BASHCMD="pip install --user -e /data/tesp/src/tesp_support/; python3 prepare_case_dsot_f.py"
+#BASHCMD="pip install --user -e /data/tesp/src/tesp_support/; python3 prepare_case_dsot_f.py $1 $2 $3 $4 $5 $6"
 BASHCMD="pip install --user -e /data/tesp/src/tesp_support/; python3 generate_case.py"
 
 docker run \

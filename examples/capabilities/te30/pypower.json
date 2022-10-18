@@ -1,0 +1,43 @@
+{
+  "name": "pypower",
+  "period": 15,
+  "logging": "warning",
+  "publications": [
+    {
+      "global": false,
+      "key": "three_phase_voltage_7",
+      "type": "double"
+    },
+    {
+      "global": false,
+      "key": "LMP_7",
+      "type": "double"
+    }
+  ],
+  "subscriptions": [
+    {
+      "key": "gld_7/distribution_load",
+      "type": "complex"
+    },
+    {
+      "key": "sub_7/unresponsive_mw",
+      "type": "double"
+    },
+    {
+      "key": "sub_7/responsive_max_mw",
+      "type": "double"
+    },
+    {
+      "key": "sub_7/responsive_c1",
+      "type": "double"
+    },
+    {
+      "key": "sub_7/responsive_c2",
+      "type": "double"
+    },
+    {
+      "key": "sub_7/responsive_deg",
+      "type": "integer"
+    }
+  ]
+}

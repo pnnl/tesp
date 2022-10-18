@@ -1,4 +1,4 @@
-#	Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: glm_dict_dsot.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
 """Functions to create metadata from a GridLAB-D input (GLM) file
@@ -65,17 +65,17 @@ def append_include_file(lines, fname):
         fp.close()
 
 
-def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
+def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
     """ Writes the JSON metadata file from a GLM file
 
-    This function reads *nameroot.glm* and writes *nameroot_glm_dict.json*
+    This function reads *name_root.glm* and writes *[name_root]_glm_dict.json*
     The GLM file should have some meters and triplex_meters with the
     bill_mode attribute defined, which identifies them as billing meters
     that parent houses and inverters. If this is not the case, ERCOT naming
     rules can be applied to identify billing meters.
 
     Args:
-        nameroot (str): path and file name of the GLM file, without the extension
+        name_root (str): path and file name of the GLM file, without the extension
         config (dict):
         ercot (boolean): request ERCOT billing meter naming. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
         te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
@@ -83,7 +83,7 @@ def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
 
     # first pass, collect first-level include files
     collected_lines = []
-    ip = open(nameroot + '.glm', 'r')
+    ip = open(name_root + '.glm', 'r')
     for line in ip:
         if '#include' in line:
             lst = line.split()
@@ -565,7 +565,7 @@ def glm_dict(nameroot, config=None, ercot=False):  # , te30=False):
                   'base_feeder': base_feeder, 'feeders': feeders,
                   'billingmeters': billingmeters, 'houses': houses, 'inverters': inverters, 'ev': ev,
                   'capacitors': capacitors, 'regulators': regulators, 'climate': climate}
-    op = open(nameroot + '_glm_dict.json', 'w')
+    op = open(name_root + '_glm_dict.json', 'w')
     json.dump(substation, op, ensure_ascii=False, indent=2)
     op.close()
 

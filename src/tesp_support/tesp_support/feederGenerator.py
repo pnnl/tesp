@@ -2,7 +2,7 @@
 # file: feederGenerator.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
-As this module populates the feeder backbone wiht houses and DER, it uses
+As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
 fuses, transformers and lines to serve the expected load. Transformers have
 a margin of 20% to avoid overloads, while fuses have a margin of 150% to
@@ -11,16 +11,14 @@ source file.
 
 There are two kinds of house populating methods implemented:
 
-    * :Feeders with Service Transfomers: This case applies to the full PNNL taxonomy feeders.
-    Do not specify the *taxchoice* argument to *populate_feeder*.
-    Each service transformer receiving houses will have a short service drop and a small number of houses attached.
-    * :Feeders without Service Transformers: This applies to the reduced-order ERCOT feeders.
-    To invoke this mode, specify the *taxchoice* argument to *populate_feeder*.
-    Each primary load to receive houses will have a large service transformer,
-    large service drop and large number of houses attached.
+* :Feeders with Service Transformers: This case applies to the full PNNL taxonomy feeders. Do not specify the *taxchoice* argument to *populate_feeder*.
+   Each service transformer receiving houses will have a short service drop and a small number of houses attached.
+
+* :Feeders without Service Transformers: This applies to the reduced-order ERCOT feeders. To invoke this mode, specify the *taxchoice* argument to *populate_feeder*.
+   Each primary load to receive houses will have a large service transformer, large service drop and large number of houses attached.
 
 References:
-    `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_
+    `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`
 
 Public Functions:
     :populate_feeder: processes one GridLAB-D input file
@@ -39,20 +37,14 @@ from math import ceil
 from math import floor
 from math import sqrt
 
-from .helpers import parse_kva
-from .helpers import gld_strict_name
-
-currDirName = os.path.dirname(__file__)
-tesp_share = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(currDirName))), 'data/') # os.path.expandvars('$TESPDIR/data/')
-feeders_path = tesp_share + 'feeders/'
-scheduled_path = tesp_share + 'schedules/'
-weather_path = tesp_share + 'weather/'
+from .data import feeders_path, weather_path
+from .helpers import parse_kva, gld_strict_name
 
 forERCOT = False
 port = 5570
 case_name = 'Tesp'
 name_prefix = ''
-work_path = os.path.join(currDirName, 'Dummy/') # './Dummy/'
+work_path = './Dummy/'
 dso_substation_bus_id = 1
 base_feeder_name = ''
 solar_path = ''
@@ -99,9 +91,9 @@ water_heater_percentage = 0.0  # if not provided in JSON config, use a regional 
 water_heater_participation = 0.5
 solar_inv_mode = 'CONSTANT_PF'
 
-weather_name = 'localWeather'
 latitude = 30.0
 longitude = -110.0
+weather_name = 'localWeather'
 tz_meridian = 0.0
 altitude = 0.0
 
@@ -111,6 +103,7 @@ max_discharge_rate = 5000
 inverter_efficiency = 0.97
 battery_capacity = 13500
 round_trip_efficiency = 0.86
+
 
 def write_solar_inv_settings(op):
     """Writes volt-var and volt-watt settings for solar inverters
@@ -172,7 +165,7 @@ def write_tariff(op):
             print('  third_tier_price', '{:.6f}'.format(tier3_price) + ';', file=op)
 
 
-inv_undersizing = 1.0
+inverter_undersizing = 1.0
 array_efficiency = 0.2
 rated_insolation = 1000.0
 
@@ -850,7 +843,7 @@ def write_local_triplex_configurations(op):
     """Write a 4/0 AA triplex configuration
 
     Args:
-      op (file): an open GridLAB-D input file
+        op (file): an open GridLAB-D input file
     """
     for row in triplex_conductors:
         print('object triplex_line_conductor {', file=op)
@@ -925,7 +918,7 @@ def connect_ercot_houses(model, h, op, vln, vsec):
             npar = int(0.06 * nh + 0.5)
         else:
             npar = 1
-        #        print(key, bus, phs, nh, xfkva, npar)
+        # print (key, bus, phs, nh, xfkva, npar)
         # write the service transformer==>TN==>TPX==>TM for all houses
         kvat = npar * xfkva
         row = Find1PhaseXfmr(xfkva)
@@ -1008,7 +1001,7 @@ def connect_ercot_houses(model, h, op, vln, vsec):
 
 def connect_ercot_commercial(op):
     """For the reduced-order ERCOT feeders, add a billing meter to the commercial load points, except small ZIPLOADs
-    
+
     Args:
       op (file): an open GridLAB-D input file
     """
@@ -1266,9 +1259,9 @@ def write_small_loads(basenode, op, vnom):
     """Write loads that are too small for a house, onto a node
 
     Args:
-      basenode (str): GridLAB-D node name
-      op (file): open file to write to
-      vnom (float): nominal line-to-neutral voltage at basenode
+        basenode (str): GridLAB-D node name
+        op (file): open file to write to
+        vnom (float): nominal line-to-neutral voltage at basenode
     """
     kva = float(small_nodes[basenode][0])
     phs = small_nodes[basenode][1]
@@ -1296,7 +1289,7 @@ def write_small_loads(basenode, op, vnom):
     print('  to', mtrname + ';', file=op)
     print('  phases', phs + ';', file=op)
     print('  length 30;', file=op)
-    print('  configuration', triplex_configurations[0][0] + ';', file=op)
+    print('  configuration', name_prefix + triplex_configurations[0][0] + ';', file=op)
     print('}', file=op)
     print('object triplex_meter {', file=op)
     print('  name', mtrname + ';', file=op)
@@ -1319,8 +1312,8 @@ def write_small_loads(basenode, op, vnom):
     print('  voltage_1 ' + vstart + ';', file=op)
     print('  voltage_2 ' + vstart + ';', file=op)
     print('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
-    print('  power_12_real 10.0;', file=op)
-    print('  power_12_reac 8.0;', file=op)
+    print('  constant_power_12_real 10.0;', file=op)
+    print('  constant_power_12_reac 8.0;', file=op)
     print('}', file=op)
 
 
@@ -1812,8 +1805,8 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
         print('  name', hsename + ';', file=op)
         print('  parent', hse_m_name + ';', file=op)
         print('  groupid', bldgTypeName[bldg] + ';', file=op)
-        # TODO: why thermal integrity level is not used ?
-        #  this sets the default house R* and other parameters
+        # why thermal integrity level is not used ?
+        # this sets the default house R* and other parameters
         print('  // thermal_integrity_level', tiName[ti] + ';', file=op)
         print('  schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
         print('  floor_area', '{:.0f}'.format(floor_area) + ';', file=op)
@@ -1982,7 +1975,7 @@ def write_houses(basenode, op, vnom, bIgnoreThermostatSchedule=True, bWriteServi
                     panel_area = 162
                 elif panel_area > 270:
                     panel_area = 270
-                inv_power = inv_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
+                inv_power = inverter_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
                 solar_count += 1
                 solar_kw += 0.001 * inv_power
                 print('object {:s} {{'.format(meter_class), file=op)
@@ -2072,9 +2065,9 @@ def write_substation(op, name, phs, vnom, vll):
     if len(case_name) > 0:
         print('#ifdef USE_FNCS', file=op)
         print('object fncs_msg {', file=op)
-        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)  # for full-order DSOT
+        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)
         print('  parent network_node;', file=op)
-        print('  configure', case_name + '_FNCS_Config.txt;', file=op)
+        print('  configure', case_name + '_gridlabd.txt;', file=op)
         print('  option "transport:hostname localhost, port ' + str(port) + '";', file=op)
         print('  aggregate_subscriptions true;', file=op)
         print('  aggregate_publications true;', file=op)
@@ -2083,8 +2076,8 @@ def write_substation(op, name, phs, vnom, vll):
         print('', file=op)
         print('#ifdef USE_HELICS', file=op)
         print('object helics_msg {', file=op)
-        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)  # for full-order DSOT
-        print('  configure', case_name + '_HELICS_gld_msg.json;', file=op)
+        print('  name gld_' + str(dso_substation_bus_id) + ';', file=op)
+        print('  configure', case_name + '_gridlabd.json;', file=op)
         print('}', file=op)
         print('#endif', file=op)
     print('object transformer_configuration {', file=op)
@@ -2568,7 +2561,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         print('object climate {', file=op)
         print('  name', str(weather_name) + ';', file=op)
-        print('  // tmyfile "' + weather_path + weather_file + '";', file=op)
+        print('  // tmyfile "' + weather_file + '";', file=op)
         print('  interpolate QUADRATIC;', file=op)
         print('  latitude', str(latitude) + ';', file=op)
         print('  longitude', str(longitude) + ';', file=op)
@@ -2618,11 +2611,11 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         print('#ifdef WANT_VI_DUMP', file=op)
         print('object voltdump {', file=op)
         print('  filename Voltage_Dump_' + outname + '.csv;', file=op)
-        # print('  mode polar;', file=op)
+        # print('  mode POLAR;', file=op)
         print('}', file=op)
         print('object currdump {', file=op)
         print('  filename Current_Dump_' + outname + '.csv;', file=op)
-        # print('  mode polar;', file=op)
+        # print('  mode POLAR;', file=op)
         print('}', file=op)
         print('#endif // &&& end of common section for combining TESP cases', file=op)
 
@@ -2731,7 +2724,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
         if forERCOT:
             replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
-            #            connect_ercot_commercial (op)
+            # connect_ercot_commercial (op)
             identify_ercot_houses(model, h, 'load', 0.001 * avghouse, rgn)
             connect_ercot_houses(model, h, op, vln, 120.0)
             for key in house_nodes:
@@ -3055,8 +3048,9 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global Eplus_Bus, Eplus_Volts, Eplus_kVA
     global transmissionVoltage, transmissionXfmrMVAbase, dso_substation_bus_id
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage
-    global work_path, feeders_path, weather_path, weather_file
-    global starttime, endtime, timestep, metrics_interval, electric_cooling_percentage
+    global work_path, weather_file
+    global starttime, endtime, timestep
+    global metrics_interval, electric_cooling_percentage
     global water_heater_percentage, water_heater_participation
     global case_name, name_prefix, forERCOT
     global house_nodes, small_nodes, comm_loads

@@ -7,15 +7,10 @@
 """
 # individual customer
 
-import os
-import pandas as pd
 import json
+import os
 
-# from tesp_support.Wh_Energy_Purchases import Wh_Energy_Purchases
-# from tesp_support.DSO_rate_making import get_cust_bill
-# from tesp_support.DSOT_plots import
-import tesp_support.dso_helper_functions
-
+from .dso_helper_functions import returnDictSum
 
 
 # This function calculates ...
@@ -23,12 +18,10 @@ import tesp_support.dso_helper_functions
 # outputs:
 
 
-
 def customer_CFS(GLD_metadata,
                  metadata_path,
                  customer,
                  customer_bill):
-
     with open(os.path.join(metadata_path, 'metadata-general.json')) as json_file:
         metadata_gen = json.load(json_file)
     metadata_general = metadata_gen["general"]
@@ -74,7 +67,7 @@ def customer_CFS(GLD_metadata,
         #     if Large_commercial_building in Building_type:
         #         Customer_class = 'large_commercial'
 
-        metadata_thermostat =  metadata_general['thermostat']
+        metadata_thermostat = metadata_general['thermostat']
         metadata_water_heater = metadata_general['water_heater']
         metadata_battery = metadata_general['battery']
         metadata_V1G = metadata_general['V1G']
@@ -96,10 +89,8 @@ def customer_CFS(GLD_metadata,
         Average_Hourly_Labor_Cost_plumber = metadata_general['labor']['plumber']['average_hourly_labor_cost']
         Average_Hourly_Labor_Cost_electrician = metadata_general['labor']['electrician']['average_hourly_labor_cost']
 
-
         Rated_Battery_Size = GLD_metadata['billingmeters'][customer]['battery_capacity']
         Rated_System_Size = GLD_metadata['billingmeters'][customer]['pv_capacity']
-
 
         Participant = 1 if wh_participating else 0
         WaterHeater = Participant * ACCF_WaterHeater * \
@@ -114,13 +105,12 @@ def customer_CFS(GLD_metadata,
 
         Participant = 1 if ev_participating else 0
         V1G = Participant * ACCF_V1G * \
-        (metadata_V1G['marginal_purchase_price'] + metadata_V1G['marginal_installation_time'] * \
-        Average_Hourly_Labor_Cost_electrician + metadata_V1G['marginal_installation_capital'])
+              (metadata_V1G['marginal_purchase_price'] + metadata_V1G['marginal_installation_time'] *
+               Average_Hourly_Labor_Cost_electrician + metadata_V1G['marginal_installation_capital'])
 
         V2G = Participant * ACCF_V2G * \
-        (metadata_V2G['marginal_purchase_price'] + metadata_V2G['marginal_installation_time'] * \
-         Average_Hourly_Labor_Cost_electrician + metadata_V2G['marginal_installation_capital'])
-
+              (metadata_V2G['marginal_purchase_price'] + metadata_V2G['marginal_installation_time'] *
+               Average_Hourly_Labor_Cost_electrician + metadata_V2G['marginal_installation_capital'])
 
         Participant = 1 if pv_participating else 0
         if Customer_class == 'residential':
@@ -167,8 +157,8 @@ def customer_CFS(GLD_metadata,
                 installed_price_per_kW = metadata_PV['installed_price_per_kW'][Customer_class]['>1000']
 
         PV_present = 1 if Rated_System_Size > 0 else 0
-        PV = Participant * ACCF_PV * ((installed_price_per_kW * Rated_System_Size)  + \
-             (PV_present * metadata_PV['operating_expenses'][Customer_class]))
+        PV = Participant * ACCF_PV * ((installed_price_per_kW * Rated_System_Size) +
+                                      (PV_present * metadata_PV['operating_expenses'][Customer_class]))
 
         if Customer_class == 'commercial':
             UnitaryHVAC = 0
@@ -186,18 +176,16 @@ def customer_CFS(GLD_metadata,
             ACCF_thermostat = metadata_general['ACCF'][Customer_class]['smart_thermostat_marginal'][Building_type.lower()]
             Participant = 1 if hvac_participating else 0
             UnitaryHVAC = Participant * Number_of_Zones * ACCF_thermostat * \
-                          (metadata_thermostat['marginal_purchase_price'] + \
-                           metadata_thermostat['marginal_installation_time_hrs'] * \
-                           Average_Hourly_Labor_Cost_maintenance_repair + metadata_thermostat[
-                               'marginal_installation_capital'])
+                          (metadata_thermostat['marginal_purchase_price'] +
+                           metadata_thermostat['marginal_installation_time_hrs'] *
+                           Average_Hourly_Labor_Cost_maintenance_repair +
+                           metadata_thermostat['marginal_installation_capital'])
 
-
-
-        Bills = customer_bill['BillsFix']['TotalFix']+ customer_bill['BillsTransactive']['TotalDyn']
+        Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
         # fed_corporate_income_tax = metadata['general']['fed_corporate_income_tax']
         # state_income_tax = metadata['general']['state_income_tax']
-        #Depreciation = 0 # Please retain this field in the Cusomter CFS but assign it a value of Zero for the DSO+T analsysis
-        #Deductions = Bills * metadata_general['tax_bill_deduction'][Customer_class][Building_type.lower()]
+        # Depreciation = 0 # Please retain this field in the Cusomter CFS but assign it a value of Zero for the DSO+T analsysis
+        # Deductions = Bills * metadata_general['tax_bill_deduction'][Customer_class][Building_type.lower()]
 
         IncomeAllocation = Bills
 
@@ -230,13 +218,13 @@ def customer_CFS(GLD_metadata,
             },
             'Revenues': {
                 'IncomeAllocation': IncomeAllocation,
-                #'Incentives': 0, # customer_metadata['incentive_for_DER_participation'],
+                # 'Incentives': 0, # customer_metadata['incentive_for_DER_participation'],
                 'PerformancePayments': 0,
-                'DSOShare': 0 # customer_metadata['DSO_rebate']
+                'DSOShare': 0  # customer_metadata['DSO_rebate']
             },
             'Taxes': {
-                #'Depreciation': Depreciation,
-                #'Deductions': Deductions,
+                # 'Depreciation': Depreciation,
+                # 'Deductions': Deductions,
                 'ElectricityExpense': ElectricityExpense,
                 'TaxCredits': TaxCredits
             },
@@ -247,17 +235,17 @@ def customer_CFS(GLD_metadata,
 
         Investment = UnitaryHVAC + WaterHeater + LgHVAC + Battery + V1G + V2G
         Capital = Investment + PV
-        Expenses = Bills # ?
-        Revenues = 0 # Incentives + DSOShare
+        Expenses = Bills  # ?
+        Revenues = 0  # Incentives + DSOShare
 
-        PurchasesFix = tesp_support.dso_helper_functions.returnDictSum(customer_bill['BillsFix']['PurchasesFix'])
+        PurchasesFix = returnDictSum(customer_bill['BillsFix']['PurchasesFix'])
         EnergyFix = customer_bill['BillsFix']['PurchasesFix']['EnergyFix']
         DemandCharges = customer_bill['BillsFix']['PurchasesFix']['DemandCharges']
         ConnChargesFix = customer_bill['BillsFix']['ConnChargesFix']
 
         BillsFix = customer_bill['BillsFix']['TotalFix']
 
-        PurchasesDyn = tesp_support.dso_helper_functions.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
+        PurchasesDyn = returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
         DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
         RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
         DistCharges = customer_bill['BillsTransactive']['DistCharges']
@@ -311,8 +299,8 @@ def customer_CFS(GLD_metadata,
 
         return Customer_Cash_Flows_dict, Customer_Cash_Flows_csv
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     '''
     dso_paths = ['D:/DSOT/20160807_5d_lean_batt_acd8c80b/DSO_1',
                  'D:/DSOT/20160807_5d_lean_batt_acd8c80b/DSO_2',
@@ -335,4 +323,3 @@ if __name__ == '__main__':
                                                                      metadata_path,
                                                                      customer,
                                                                      customer_bill)
-

@@ -22,7 +22,7 @@ Directory of input and script files:
 Directory of generated input files:
 
  - *Bus?.glm*; GridLAB-D inputs made from ../dist_system/populate_feeders.py
- - *Bus?_FNCS_Config.txt*; GridLAB-D publish and subscribe messages for FNCS, from prepare_case.py
+ - *Bus?_gridlabd.txt*; GridLAB-D publish and subscribe messages for FNCS, from prepare_case.py
  - *Bus?_agent_dict.json*, transactive thermostat metadata for post processing, from prepare_case.py
  - *Bus?_auction.yaml*; transactive thermostat configurations, from prepare_case.py
  - *Bus?_glm_dict.json*; GridLAB-D metadata for post processing, from prepare_case.py

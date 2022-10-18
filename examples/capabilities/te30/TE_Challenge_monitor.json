@@ -1,0 +1,32 @@
+{
+  "name": "monitor",
+  "period": 300,
+  "logging": "warning",
+  "publications": [],
+  "subscriptions": [
+    {
+      "key": "pypower/three_phase_voltage_7",
+      "type": "double"
+    },
+    {
+      "key": "pypower/LMP_7",
+      "type": "double"
+    },
+    {
+      "key": "sub_7/clear_price",
+      "type": "double"
+    },
+    {
+      "key": "gld_7/distribution_load",
+      "type": "complex"
+    },
+    {
+      "key": "eplus_agent/power_A",
+      "type": "double"
+    },
+    {
+      "key": "eplus/WHOLE BUILDING Facility Total Electric Demand Power",
+      "type": "double"
+    }
+  ]
+}

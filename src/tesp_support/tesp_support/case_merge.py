@@ -13,7 +13,8 @@ Public Functions:
 """
 import json
 import sys
-import tesp_support.helpers as helpers
+
+from .helpers import gld_strict_name
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -53,7 +54,7 @@ def merge_glm(target, sources, xfmva):
                 if inSubstation:
                     if '  configure' in line:
                         if not inHELICS:
-                            line = '  configure ' + target + '_FNCS_Config.txt;'
+                            line = '  configure ' + target + '_gridlabd.txt;'
                     elif '  power_rating' in line:
                         line = '  power_rating {:.2f};'.format(xfmva * 1e3)
                     elif '  base_power' in line:
@@ -65,7 +66,7 @@ def merge_glm(target, sources, xfmva):
                             firstHeadNode = thisHeadNode
                 if inHELICS:
                     if 'configure' in line:
-                        line = '  configure ' + target + '_HELICS_gld_msg.json;'
+                        line = '  configure ' + target + '_gridlabd.json;'
                         inHELICS = False
                 if inSubstation and ('object node' in line):
                     inSubstation = False
@@ -107,7 +108,7 @@ def merge_gld_msg(target, sources):
     subs = []
     pubs = []
     for fdr in sources:
-        lp = open(workdir + fdr + '_HELICS_gld_msg.json').read()
+        lp = open(workdir + fdr + '_gridlabd.json').read()
         cfg = json.loads(lp)
         diction["name"] = cfg["name"]
         diction["period"] = cfg["period"]
@@ -119,7 +120,7 @@ def merge_gld_msg(target, sources):
                 subs.append(sub)
     diction["publications"] = pubs
     diction["subscriptions"] = subs
-    dp = open(workdir + target + '_HELICS_gld_msg.json', 'w')
+    dp = open(workdir + target + '_gridlabd.json', 'w')
     json.dump(diction, dp, ensure_ascii=False, indent=2)
     dp.close()
 
@@ -131,7 +132,7 @@ def merge_substation_msg(target, sources):
     subs = []
     pubs = []
     for fdr in sources:
-        lp = open(workdir + fdr + '_HELICS_substation.json').read()
+        lp = open(workdir + fdr + '_substation.json').read()
         cfg = json.loads(lp)
         diction["name"] = cfg["name"]
         diction["period"] = cfg["period"]
@@ -143,7 +144,7 @@ def merge_substation_msg(target, sources):
                 subs.append(sub)
     diction["publications"] = pubs
     diction["subscriptions"] = subs
-    dp = open(workdir + target + '_HELICS_substation.json', 'w')
+    dp = open(workdir + target + '_substation.json', 'w')
     json.dump(diction, dp, ensure_ascii=False, indent=2)
     dp.close()
 
@@ -178,7 +179,7 @@ def merge_glm_dict(target, sources, xfmva):
 
         lp = open(workdir + fdr + '_glm_dict.json').read()
         cfg = json.loads(lp)
-        fdr_id = helpers.gld_strict_name(name_prefix + cfg['feeders']['network_node']['base_feeder'])
+        fdr_id = gld_strict_name(name_prefix + cfg['feeders']['network_node']['base_feeder'])
         print('created new feeder id', fdr_id, 'for', fdr)
         diction['feeders'][fdr_id] = {'house_count': cfg['feeders']['network_node']['house_count'],
                                       'inverter_count': cfg['feeders']['network_node']['inverter_count'],
@@ -254,10 +255,10 @@ def merge_fncs_config(target, sources):
     """
     print('combining', sources, 'txt files into', target)
     workdir = './' + target + '/'
-    op = open(workdir + target + '_FNCS_Config.txt', 'w')
+    op = open(workdir + target + '_gridlabd.txt', 'w')
     inFirstFile = True
     for fdr in sources:
-        with open(workdir + fdr + '_FNCS_Config.txt') as ip:
+        with open(workdir + fdr + '_gridlabd.txt') as ip:
             numLocalWeather = 0
             for line in ip:
                 if numLocalWeather >= 6 or inFirstFile:

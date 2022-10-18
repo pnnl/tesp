@@ -1,11 +1,11 @@
-'''
+"""
 .. module:: fnssTopology
 
 :platform: Unix, Windows
-:synopsis: 
+:synopsis:
 
 .. moduleauthor:: Laurentiu Marinovici
-'''
+"""
 # create topology and schedule using FNSS
 import fnss
 from fnss.util import geographical_distance
@@ -17,8 +17,8 @@ import pprint
 pp = pprint.PrettyPrinter(indent = 2)
 
 def buildFNSStopology():
-  '''
-  This function invokes Fast Network Simulation Setup (`FNSS <http://fnss.github.io>`_) to build a network topology. 
+  """
+  This function invokes Fast Network Simulation Setup (`FNSS <http://fnss.github.io>`_) to build a network topology.
 
   :param none: The function does not need an argument
   :returns: topo - FNSS topology in dictionary format
@@ -45,15 +45,15 @@ def buildFNSStopology():
     * uses the coordinates and FNSS :func:`geographical_distance` function to calculate distance between nodes and assigns these values as the lengths of the graph edges
     * sets random capacities to the graph edges using FNNS :func:`set_capacities_random_uniform` function
     * sets specific propagation delays using FNSS :func:`set_delays_geo_distance` function, based on the ropagation delay of light in an average optical fiber
-      
+
       >>> specificDelay = fnss.PROPAGATION_DELAY_FIBER
 
     * sets the weights to links proportionally to their delay using FNSS :func:`set_weights_delays`
     * sets the buffer sizes proportionally to the product of link bandwidth and average network RTT using FNSS :func:`set_buffer_sizes_bw_delay_prod`
-  
+
   .. note:: The function does assign applications and event schedules, but they are not used subsequently. At least not at this point.
 
-  '''
+  """
   #G = nx.DiGraph()
   nodeCoord = dict()
   distanceUnit = 'Km'
@@ -142,9 +142,9 @@ def buildFNSStopology():
   return topo
 
 def plotTopology(topo):
-  '''
+  """
   Plots the FNSS network topology usings :mod:`networkx`
-  '''
+  """
   #for idx in range(len(nodes1)):
   #  G.add_edge(nodes1[idx], nodes2[idx], weight = edgeWeights[idx])
   fig, axes = plt.subplots(1, 1, figsize = (12, 5))

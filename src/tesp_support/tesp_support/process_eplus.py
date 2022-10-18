@@ -11,19 +11,14 @@ import json
 import os
 
 import numpy as np
-
-try:
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-except:
-    pass
+import matplotlib.pyplot as plt
 
 # Setting up logging
 logger = logging.getLogger(__name__)
 
 
-def read_eplus_metrics(path, nameroot, quiet=False):
-    eplus_dict_path = os.path.join(path, f'eplus_{nameroot}_metrics.json')
+def read_eplus_metrics(path, name_root, quiet=False):
+    eplus_dict_path = os.path.join(path, f'eplus_{name_root}_metrics.json')
 
     # read the JSON file
     try:
@@ -40,7 +35,7 @@ def read_eplus_metrics(path, nameroot, quiet=False):
     load_scale = 1.0
     if 'LoadScale' in lst:
         load_scale = lst.pop('LoadScale')
-        print('LoadScale is', load_scale)
+    print('LoadScale is', load_scale)
     meta = lst.pop('Metadata')
     times = list(map(int, list(lst.keys())))
     times.sort()
@@ -206,17 +201,18 @@ def read_eplus_metrics(path, nameroot, quiet=False):
     np.clip(data[:, idx_e['HEATING_TEMPERATURE_IDX']], 0, 100, data[:, idx_e['HEATING_TEMPERATURE_IDX']])
     np.clip(data[:, idx_e['HEATING_SETPOINT_IDX']], 0, 100, data[:, idx_e['HEATING_SETPOINT_IDX']])
     np.clip(data[:, idx_e['HEATING_SCHEDULE_IDX']], 0, 100, data[:, idx_e['HEATING_SCHEDULE_IDX']])
-    dict = {}
-    dict['hrs'] = hrs
-    dict['data_e'] = data
-    dict['idx_e'] = idx_e
-    return dict
+
+    return {
+        'hrs': hrs,
+        'data_e': data,
+        'idx_e': idx_e
+    }
 
 
-def plot_eplus(dict, title=None, save_file=None, save_only=False):
-    hrs = dict['hrs']
-    data = dict['data_e']
-    idx_e = dict['idx_e']
+def plot_eplus(diction, title=None, save_file=None, save_only=False):
+    hrs = diction['hrs']
+    data = diction['data_e']
+    idx_e = diction['idx_e']
     ncols = 3
     bConsensus = False
 
@@ -314,10 +310,10 @@ def plot_eplus(dict, title=None, save_file=None, save_only=False):
         plt.show()
 
 
-def process_eplus(nameroot, title=None, save_file=None, save_only=False):
+def process_eplus(name_root, title=None, save_file=None, save_only=False):
     """ Plots the min and max line-neutral voltages for every billing meter
 
-    This function reads *eplus_nameroot_metrics.json* for both metadata and data.
+    This function reads *eplus_[name_root]_metrics.json* for both metadata and data.
     This must exist in the current working directory.
     One graph is generated with 3 subplots:
 
@@ -326,11 +322,11 @@ def process_eplus(nameroot, title=None, save_file=None, save_only=False):
     3. Price that the building controller responded to.
 
     Args:
-        nameroot (str): name of the TESP case, not necessarily the same as the EnergyPlus case, without the extension
+        name_root (str): name of the TESP case, not necessarily the same as the EnergyPlus case, without the extension
         title (str): supertitle for the page of plots.
         save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
         save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
     """
     path = os.getcwd()
-    dict = read_eplus_metrics(path, nameroot)
-    plot_eplus(dict, title, save_file, save_only)
+    diction = read_eplus_metrics(path, name_root)
+    plot_eplus(diction, title, save_file, save_only)

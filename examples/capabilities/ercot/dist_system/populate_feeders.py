@@ -1,13 +1,8 @@
-#!/usr/bin/python3
-
+#!/usr/bin/env python3
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: populate_feeders.py
 
-import json
-import tesp_support.feederGenerator as fg
-import os
-
-tesp_share = os.path.expandvars('$TESPDIR/data/')
+from tesp_support.feederGenerator import populate_feeder
 
 backbone_config = {'backbone_feeders': {
     'sim_R5-12.47-1': {'vll': 13800.0, 'vln': 7970.0, 'avg_house': 6500.0, 'avg_comm': 20000.0},
@@ -108,5 +103,5 @@ for i in range(len(bus_config)):
     case_config['WeatherPrep']['Latitude'] = bus_config[i]['lat']
     case_config['WeatherPrep']['Longitude'] = bus_config[i]['lon']
     case_config['WeatherPrep']['Name'] = bus_config[i]['weather']
-    fg.populate_feeder(config=case_config, taxconfig=backbone_config)  # reduced-order feeders
-    # fg.populate_feeder (config=case_config)  # full-order feeders
+    populate_feeder(config=case_config, taxconfig=backbone_config)  # reduced-order feeders
+    # populate_feeder(config=case_config)  # full-order feeders

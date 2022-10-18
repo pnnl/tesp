@@ -1,17 +1,19 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # usage 'python3 plots.py metrics_root [save_ext] [save_only]'
 
 import os
 import sys
 
-import tesp_support.process_agents as ap
-import tesp_support.process_eplus as ep
-import tesp_support.process_gld as gp
-import tesp_support.process_houses as hp
-import tesp_support.process_pypower as pp
-import tesp_support.process_voltages as vp
+from tesp_support.process_agents import read_agent_metrics, plot_agents
+from tesp_support.process_eplus import read_eplus_metrics, plot_eplus
+from tesp_support.process_gld import read_gld_metrics, plot_gld
+from tesp_support.process_houses import plot_houses
+from tesp_support.process_inv import read_inv_metrics, plot_inv
+from tesp_support.process_pypower import read_pypower_metrics, plot_pypower
+from tesp_support.process_voltages import plot_voltages
 
-rootname = sys.argv[1]
+
+name_root = sys.argv[1]
 save_ext = 'png'
 save_file = None
 save_only = False
@@ -22,32 +24,52 @@ if len(sys.argv) > 2:
         if ('T' in save_only_str) or ('t' in save_only_str) or ('1' in save_only_str):
             save_only = True
 
-if os.path.exists('bus_' + rootname + '_metrics.json'):
-    pmetrics = pp.read_pypower_metrics(os.getcwd(), rootname)
+if os.path.exists('model_dict.json') and \
+        os.path.exists('bus_' + name_root + '_metrics.json'):
+    _metrics = read_pypower_metrics(os.getcwd(), name_root)
     if save_ext is not None:
-        save_file = '{:s}_pp.{:s}'.format(rootname, save_ext)
-    pp.plot_pypower(pmetrics, save_file=save_file, save_only=save_only)
+        save_file = '{:s}_pp.{:s}'.format(name_root, save_ext)
+    plot_pypower(_metrics, save_file=save_file, save_only=save_only)
+else:
+    print("No bus model dictionary for the plotting")
 
-if os.path.exists('substation_' + rootname + '_metrics.json'):
-    gmetrics = gp.read_gld_metrics(os.getcwd(), rootname)
+if os.path.exists(name_root + '_glm_dict.json') and \
+        os.path.exists('substation_' + name_root + '_metrics.json'):
+    _metrics = read_gld_metrics(os.getcwd(), name_root)
     if save_ext is not None:
-        save_file = '{:s}_gld.{:s}'.format(rootname, save_ext)
-    gp.plot_gld(gmetrics, save_file=save_file, save_only=save_only)
-    if save_ext is not None:
-        save_file = '{:s}_hse.{:s}'.format(rootname, save_ext)
-    hp.plot_houses(gmetrics, save_file=save_file, save_only=save_only)
-    if save_ext is not None:
-        save_file = '{:s}_vlt.{:s}'.format(rootname, save_ext)
-    vp.plot_voltages(gmetrics, save_file=save_file, save_only=save_only)
+        save_file = '{:s}_gld.{:s}'.format(name_root, save_ext)
+    plot_gld(_metrics, save_file=save_file, save_only=save_only)
 
-if os.path.exists('auction_' + rootname + '_metrics.json'):
-    ametrics = ap.read_agent_metrics(os.getcwd(), rootname)
     if save_ext is not None:
-        save_file = '{:s}_ag.{:s}'.format(rootname, save_ext)
-    ap.plot_agents(ametrics, save_file=save_file, save_only=save_only)
+        save_file = '{:s}_hse.{:s}'.format(name_root, save_ext)
+    plot_houses(_metrics, save_file=save_file, save_only=save_only)
 
-if os.path.exists('eplus_' + rootname + '_metrics.json'):
-    emetrics = ep.read_eplus_metrics(os.getcwd(), rootname)
     if save_ext is not None:
-        save_file = '{:s}_ep.{:s}'.format(rootname, save_ext)
-    ep.plot_eplus(emetrics, save_file=save_file, save_only=save_only)
+        save_file = '{:s}_vlt.{:s}'.format(name_root, save_ext)
+    plot_voltages(_metrics, save_file=save_file, save_only=save_only)
+
+    if save_ext is not None:
+        save_file = '{:s}_hse.{:s}'.format(name_root, save_ext)
+    # Have to read metrics again, see process_inv.py to see why
+    _metrics = read_inv_metrics(os.getcwd(), name_root)
+    plot_inv(_metrics, save_file=save_file, save_only=save_only)
+
+else:
+    print("No glm dictionary for the plotting")
+
+if os.path.exists(name_root + '_agent_dict.json') and \
+        os.path.exists('auction_' + name_root + '_metrics.json'):
+    _metrics = read_agent_metrics(os.getcwd(), name_root)
+    if save_ext is not None:
+        save_file = '{:s}_ag.{:s}'.format(name_root, save_ext)
+    plot_agents(_metrics, save_file=save_file, save_only=save_only)
+else:
+    print("No agent dictionary for the plotting")
+
+if os.path.exists('eplus_' + name_root + '_metrics.json'):
+    _metrics = read_eplus_metrics(os.getcwd(), name_root)
+    if save_ext is not None:
+        save_file = '{:s}_ep.{:s}'.format(name_root, save_ext)
+    plot_eplus(_metrics, save_file=save_file, save_only=save_only)
+else:
+    print("No EnergyPlus dictionary for the plotting")

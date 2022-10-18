@@ -4,9 +4,9 @@
 #set profiler=1
 
 clock {
-	timezone PST+8PDT;
-	starttime '2013-07-01 00:00:00';
-	stoptime '2013-07-03 00:00:00';
+  timezone PST+8PDT;
+  starttime '2013-07-01 00:00:00';
+  stoptime '2013-07-03 00:00:00';
 };
 module powerflow {
   solver_method NR;
@@ -23,8 +23,11 @@ module reliability {
 module climate;
 
 object metrics_collector_writer {
-     interval 300;
-     filename ${METRICS_FILE}; // TE_Challenge_metrics.json
+  extension json;
+  alternate no;
+  interval 300;
+  interim 86400;
+  filename ${METRICS_FILE}; 
 };
 
 object climate {

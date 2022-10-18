@@ -105,7 +105,7 @@ def double_edge_swap(G, nswap=1, max_tries=100):
     return G
 
 
-def connected_double_edge_swap(G, xy, nswap=1, _window_threshold=3, distThresh=1000,max_tries=10000):
+def connected_double_edge_swap(G, xy, nswap=1, _window_threshold=3, distThresh=1000, max_tries=10000):
     """Attempts the specified number of double-edge swaps in the graph `G`.
 
     A double-edge swap removes two randomly chosen edges `(u, v)` and `(x,
@@ -184,7 +184,7 @@ def connected_double_edge_swap(G, xy, nswap=1, _window_threshold=3, distThresh=1
         if n > max_tries:
             print('Max tries attempted')
             break
-        #while n < nswap:
+        # while n < nswap:
         wcount = 0
         swapped = []
         # If the window is small, we just check each time whether the graph is
@@ -209,9 +209,9 @@ def connected_double_edge_swap(G, xy, nswap=1, _window_threshold=3, distThresh=1
                 # If the target nodes are the same, skip this pair.
                 if v == y:
                     continue
-                if ((xy[u][0]-xy[x][0])**2 + (xy[u][1]-xy[x][1])**2)**0.5>distThresh:
+                if ((xy[u][0] - xy[x][0]) ** 2 + (xy[u][1] - xy[x][1]) ** 2) ** 0.5 > distThresh:
                     continue
-                if ((xy[v][0]-xy[y][0])**2 + (xy[v][1]-xy[y][1])**2)**0.5>distThresh:
+                if ((xy[v][0] - xy[y][0]) ** 2 + (xy[v][1] - xy[y][1]) ** 2) ** 0.5 > distThresh:
                     continue
                 if x not in G[u] and y not in G[v]:
                     G.remove_edge(u, v)
@@ -241,7 +241,7 @@ def connected_double_edge_swap(G, xy, nswap=1, _window_threshold=3, distThresh=1
         # swaps will work. It's quicker to do all those swaps first and then
         # check if the graph remains connected.
         else:
-            #while wcount < window and n < nswap:
+            # while wcount < window and n < nswap:
             while wcount < window and swapcount < nswap:
                 # Pick two random edges without creating the edge list. Choose
                 # source nodes from the discrete degree distribution.
@@ -258,9 +258,9 @@ def connected_double_edge_swap(G, xy, nswap=1, _window_threshold=3, distThresh=1
                 # If the target nodes are the same, skip this pair.
                 if v == y:
                     continue
-                if ((xy[u][0]-xy[x][0])**2 + (xy[u][1]-xy[x][1])**2)**0.5>distThresh:
+                if ((xy[u][0] - xy[x][0]) ** 2 + (xy[u][1] - xy[x][1]) ** 2) ** 0.5 > distThresh:
                     continue
-                if ((xy[v][0]-xy[y][0])**2 + (xy[v][1]-xy[y][1])**2)**0.5>distThresh:
+                if ((xy[v][0] - xy[y][0]) ** 2 + (xy[v][1] - xy[y][1]) ** 2) ** 0.5 > distThresh:
                     continue
                 if x not in G[u] and y not in G[v]:
                     G.remove_edge(u, v)
