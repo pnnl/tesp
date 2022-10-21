@@ -1,6 +1,6 @@
 {
   "name": "loadshedCommNetwork",
-  "coretype": "zmq",
+  "coreType": "zmq",
   "log_level": "warning",
   "period": 0.000000001,
   "endpoints": [

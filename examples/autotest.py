@@ -39,6 +39,32 @@ def loadshed_test():
     os.chdir(tesp_path)
 
 
+def loadshed_cli_test():
+    tesp.start_test('Loadshed examples for HELICS CLI')
+    os.chdir('capabilities/loadshed-HELICS3-EPlus')
+    subprocess.Popen('clean', shell=True).wait()
+    subprocess.Popen('make clean', shell=True).wait()
+    subprocess.Popen('make', shell=True).wait()
+    tesp.run_test('run.sh', 'Loadshed - HELICS/EPlus')
+    # tesp.run_test('run_ns3.sh', 'Loadshed - HELICS/EPLUS/NS3')
+    os.chdir(tesp_path)
+
+
+def loadshed_proto_test():
+    tesp.start_test('Loadshed Prototypical Communication')
+    os.chdir('capabilities/loadshed-prototypical-communication')
+    subprocess.Popen('./clean.sh', shell=True).wait()
+    os.chdir('R1-12.47-1-communication')
+    subprocess.Popen('make clean', shell=True).wait()
+    subprocess.Popen('make', shell=True).wait()
+    os.chdir('../R1-12.47-1')
+    tesp.exec_test('gridlabd R1-12.47-1_processed.glm > gridlabd.log', 'Establishing baseline results')
+    os.chdir(tesp_path + '/capabilities/loadshed-prototypical-communication')
+    tesp.run_test('run.sh', 'Load shedding control without communication network')
+    tesp.run_test('run_ns3.sh', 'Load shedding control over communication network')
+    os.chdir(tesp_path)
+
+
 def houses_test():
     tesp.start_test('Houses example')
     os.chdir('capabilities/houses')
@@ -160,15 +186,17 @@ if __name__ == '__main__':
     tesp_path = os.path.expandvars('$TESPDIR/examples')
     os.chdir(tesp_path)
 
-    tesp.block_test(gld_player_test)
-    tesp.block_test(loadshed_test)
-    tesp.block_test(PYPOWER_test)
-    tesp.block_test(EnergyPlus_test)
-    tesp.block_test(weather_agent_test)
-    tesp.block_test(houses_test)
-    tesp.block_test(TE30_test)
-    tesp.block_test(combine_feeders_test)
-    tesp.block_test(make_comm_eplus_test)  # TODO May not be working correctly
-    tesp.block_test(make_comm_base_test)  # there are 3 different runs, takes ~5min each
+    # tesp.block_test(gld_player_test)
+    # tesp.block_test(loadshed_test)
+    tesp.block_test(loadshed_cli_test)
+    # tesp.block_test(loadshed_proto_test)
+    # tesp.block_test(PYPOWER_test)
+    # tesp.block_test(EnergyPlus_test)
+    # tesp.block_test(weather_agent_test)
+    # tesp.block_test(houses_test)
+    # tesp.block_test(TE30_test)
+    # tesp.block_test(combine_feeders_test)
+    # tesp.block_test(make_comm_eplus_test)  # TODO May not be working correctly
+    # tesp.block_test(make_comm_base_test)  # there are 3 different runs, takes ~5min each
 
     print(tesp.report_tests())

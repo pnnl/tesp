@@ -62,7 +62,7 @@ object meter {
 	name m675;
 	parent l675;
 	bill_mode UNIFORM;
-  nominal_voltage 2401.7771;
+    nominal_voltage 2401.7771;
 	object metrics_collector {
 		interval ${METRICS_INTERVAL};
 	};
@@ -71,7 +71,7 @@ object meter {
 	name m692;
 	parent l692;
 	bill_mode UNIFORM;
-  nominal_voltage 2401.7771;
+    nominal_voltage 2401.7771;
 	object metrics_collector {
 		interval ${METRICS_INTERVAL};
 	};

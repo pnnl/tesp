@@ -7,6 +7,10 @@ cd "$TESPDIR/examples/capabilities/loadshed" || exit
 make clean
 cd ../loadshedf || exit
 ./clean.sh
+cd ../loadshed-HELICS3-EPlus || exit
+clean.sh
+cd ../loadshed-prototypical-communication || exit
+./clean.sh
 cd ../gld_player_recorder || exit
 rm *.log
 rm *.csv
