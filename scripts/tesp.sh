@@ -169,10 +169,7 @@ if [[ $binaries == "develop" ]]; then
 
   echo
   echo ++++++++++++++ HELICS-NS-3
-  cd ns-3-dev || exit
-
-  git clone -b main https://github.com/GMLC-TDC/helics-ns3 contrib/helics
-  cd ..
+  git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
   "${TESPBUILD}/patch.sh" ns-3-dev/contrib/helics helics-ns3
 
   echo

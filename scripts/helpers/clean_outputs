@@ -12,8 +12,7 @@ clean.sh
 cd ../loadshed-prototypical-communication || exit
 ./clean.sh
 cd ../gld_player_recorder || exit
-rm *.log
-rm *.csv
+clean.sh
 cd ../houses || exit
 ./clean.sh
 cd ../energyplus || exit
@@ -31,7 +30,7 @@ cd ../dsostubf || exit
 cd ../ieee8500 || exit
 ./clean.sh
 cd PNNLteam || exit
- ./clean.sh
+./clean.sh
 cd ../../comm || exit
 rm -rf CombinedCase
 rm -rf Nocomm_Base
