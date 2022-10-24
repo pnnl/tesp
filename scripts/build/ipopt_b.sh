@@ -9,7 +9,7 @@ ASL_VERSION=2.0
 MUMPS_VERSION=2.1
 
 if [[ $1 == "clean" ]]; then
-  cd "${WAREDIR}" || exit
+  cd "${REPODIR}" || exit
   rm -rf Ipopt
   rm -rf ThirdParty-ASL
   rm -rf ThirdParty-Mumps
@@ -32,7 +32,7 @@ fi
 
 echo
 echo "===== Make coin-or's third party ASL ====="
-cd "${WAREDIR}/ThirdParty-ASL" || exit
+cd "${REPODIR}/ThirdParty-ASL" || exit
 sed -i "s:wgetcmd=\"wget\":wgetcmd=\"wget --no-check-certificate\":g" ./get.ASL
 ./get.ASL
 ./configure --prefix="${INSTDIR}"
@@ -41,7 +41,7 @@ make install
 
 echo
 echo "===== Make coin-or's third party Mumps ====="
-cd "${WAREDIR}/ThirdParty-Mumps" || exit
+cd "${REPODIR}/ThirdParty-Mumps" || exit
 sed -i "s:wgetcmd=\"wget\":wgetcmd=\"wget --no-check-certificate\":g" ./get.Mumps
 ./get.Mumps
 ./configure --prefix="${INSTDIR}"
@@ -50,7 +50,7 @@ make install
 
 echo
 echo "===== Make Ipopt ====="
-cd "${WAREDIR}/Ipopt" || exit
+cd "${REPODIR}/Ipopt" || exit
 ./configure --prefix="${INSTDIR}"
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 make test

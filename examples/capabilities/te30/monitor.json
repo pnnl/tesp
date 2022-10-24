@@ -1,0 +1,232 @@
+{
+  "time_stop": 172800,
+  "yaml_delta": 300,
+  "commands": [
+    {
+      "args": [
+        "helics_broker",
+        "-f",
+        "7",
+        "--loglevel=warning",
+        "--name=mainbroker"
+      ],
+      "log": "broker.log"
+    },
+    {
+      "args": [
+        "energyplus",
+        "-w",
+        "USA_AZ_Tucson.Intl.AP.722740_TMY3.epw",
+        "-d",
+        "output",
+        "-r",
+        "Merged.idf"
+      ],
+      "env": [
+        [
+          "HELICS_CONFIG_FILE",
+          "eplus.json"
+        ]
+      ],
+      "log": "eplus.log"
+    },
+    {
+      "args": [
+        "eplus_agent_helics",
+        "172800s",
+        "5m",
+        "SchoolDualController",
+        "eplus_TE_ChallengeH_metrics.json",
+        "0.02",
+        "25.0",
+        "4.0",
+        "4.0",
+        "eplus_agent.json"
+      ],
+      "log": "eplus_agent.log"
+    },
+    {
+      "args": [
+        "gridlabd",
+        "-D",
+        "USE_HELICS",
+        "-D",
+        "METRICS_FILE=TE_ChallengeH_metrics.json",
+        "TE_Challenge.glm"
+      ],
+      "log": "gld_7.log"
+    },
+    {
+      "args": [
+        "python3",
+        "-c",
+        "import tesp_support.substation as tesp;tesp.substation_loop('TE_Challenge_agent_dict.json','TE_ChallengeH',helicsConfig='TE_Challenge_substation.json')"
+      ],
+      "log": "sub_7.log"
+    },
+    {
+      "args": [
+        "python3",
+        "-c",
+        "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('te30_pp.json','TE_ChallengeH',helicsConfig='pypower.json')"
+      ],
+      "log": "pypower.log"
+    },
+    {
+      "args": [
+        "python3",
+        "-c",
+        "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')"
+      ],
+      "env": [
+        [
+          "WEATHER_CONFIG",
+          "TE_Challenge_weather.json"
+        ]
+      ],
+      "log": "weather.log"
+    }
+  ],
+  "helics_config": "TE_Challenge_monitor.json",
+  "commands_f": [
+    {
+      "args": [
+        "fncs_broker",
+        "7"
+      ],
+      "env": [
+        [
+          "FNCS_BROKER",
+          "tcp://*:5570"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ]
+      ],
+      "log": "broker_f.log"
+    },
+    {
+      "args": [
+        "energyplus",
+        "-w",
+        "USA_AZ_Tucson.Intl.AP.722740_TMY3.epw",
+        "-d",
+        "output",
+        "-r",
+        "Merged_f.idf"
+      ],
+      "env": [
+        [
+          "FNCS_CONFIG_FILE",
+          "eplus.yaml"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ]
+      ],
+      "log": "eplus_f.log"
+    },
+    {
+      "args": [
+        "eplus_agent",
+        "2d",
+        "5m",
+        "SchoolDualController",
+        "eplus_TE_Challenge_metrics.json"
+      ],
+      "env": [
+        [
+          "FNCS_CONFIG_FILE",
+          "eplus_agent.yaml"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ]
+      ],
+      "log": "eplus_agent_f.log"
+    },
+    {
+      "args": [
+        "gridlabd",
+        "-D",
+        "USE_FNCS",
+        "-D",
+        "METRICS_FILE=TE_Challenge_metrics.json",
+        "TE_Challenge.glm"
+      ],
+      "env": [
+        [
+          "FNCS_FATAL",
+          "YES"
+        ]
+      ],
+      "log": "gld_7_f.log"
+    },
+    {
+      "args": [
+        "python3",
+        "-c",
+        "import tesp_support.substation as tesp;tesp.substation_loop('TE_Challenge_agent_dict.json','TE_Challenge')"
+      ],
+      "env": [
+        [
+          "FNCS_CONFIG_FILE",
+          "TE_Challenge_substation.yaml"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
+        [
+          "FNCS_LOG_STDOUT",
+          "yes"
+        ]
+      ],
+      "log": "sub_7_f.log"
+    },
+    {
+      "args": [
+        "python3",
+        "-c",
+        "import tesp_support.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('te30_pp.json','TE_Challenge')"
+      ],
+      "env": [
+        [
+          "FNCS_CONFIG_FILE",
+          "pypower.yaml"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ],
+        [
+          "FNCS_LOG_STDOUT",
+          "yes"
+        ]
+      ],
+      "log": "pypower_f.log"
+    },
+    {
+      "args": [
+        "python3",
+        "-c",
+        "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')"
+      ],
+      "env": [
+        [
+          "WEATHER_CONFIG",
+          "TE_Challenge_weather_f.json"
+        ],
+        [
+          "FNCS_FATAL",
+          "YES"
+        ]
+      ],
+      "log": "weather_f.log"
+    }
+  ],
+  "fncs_config": "TE_Challenge_monitor.yaml"
+}

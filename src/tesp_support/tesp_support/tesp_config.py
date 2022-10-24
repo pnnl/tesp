@@ -11,13 +11,15 @@ References:
 import csv
 import json
 import os
-import sys
+
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import messagebox
 
 import numpy as np
+
+from .data import tesp_share, weather_path
 
 config = {'BackboneFiles': {},
           'FeederGenerator': {},
@@ -154,7 +156,8 @@ varsFD = [['Electric Cooling Penetration', 90, '%', 'FeederGenerator', 'Electric
           ['Solar Penetration', 0, '%', 'FeederGenerator', 'SolarPercentage'],
           ['Storage Penetration', 0, '%', 'FeederGenerator', 'StoragePercentage'],
           ['Solar Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'SolarInverterMode', 'inverterModesPV'],
-          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode', 'inverterModesBattery'],
+          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode',
+           'inverterModesBattery'],
           ['Billing Mode', 'TIERED', '', 'FeederGenerator', 'BillingMode', 'billingModes'],
           ['Monthly Fee', 13.0, '$', 'FeederGenerator', 'MonthlyFee'],
           ['Price', 0.102013, '$/kwh', 'FeederGenerator', 'Price'],
@@ -540,7 +543,7 @@ class TespConfigGUI:
         """
         weatherpath = self.path_ent.get()
         weatherfile = self.tmy3_ent.get()
-        fname = os.path.expandvars(os.path.expanduser(weatherpath + '/data/weather/' + weatherfile))
+        fname = weather_path + weatherfile
         if os.path.isfile(fname):
             fd = open(fname, 'r')
             rd = csv.reader(fd, delimiter=',', skipinitialspace=True)
@@ -607,9 +610,8 @@ class TespConfigGUI:
                 if col == 3 and use3:
                     val = float(w.get())
                     config['MonteCarloCase']['Samples3'][row - 5] = val
-        support_path = os.path.expandvars(os.path.expanduser(config['SimulationConfig']['SourceDirectory']))
-        if not os.path.exists(support_path):
-            if not messagebox.askyesno('Continue to Save?', 'TESP Support Directory: ' + support_path + ' not found.'):
+        if not os.path.exists(tesp_share):
+            if not messagebox.askyesno('Continue to Save?', 'TESP Support Directory: ' + tesp_share + ' not found.'):
                 return
         fname = filedialog.asksaveasfilename(initialdir='~/src/examples/te30',
                                              title='Save JSON Configuration to',
@@ -704,14 +706,7 @@ def show_tesp_config():
     """
     root = tk.Tk()
     root.title('Transactive Energy Simulation Platform: Case Configuration')
-    if 'tespdir' in os.environ:
-        tespdir = os.environ['tespdir']
-        if len(tespdir) > 0:
-            #   config['SimulationConfig']['SourceDirectory'] = tespdir
-            if sys.platform == 'win32':
-                varsTM[varsTMSupportDirIndex][1] = tespdir + '\data'
-            else:
-                varsTM[varsTMSupportDirIndex][1] = tespdir + '/data'
+    varsTM[varsTMSupportDirIndex][1] = tesp_share
     my_gui = TespConfigGUI(root)
     while True:
         try:

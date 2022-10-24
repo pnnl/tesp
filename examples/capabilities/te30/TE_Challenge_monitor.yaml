@@ -1,0 +1,36 @@
+name: monitor
+time_delta: 300s
+broker: tcp://localhost:5570
+aggregate_sub: true
+values:
+  TPV_7:
+    topic: pypower/three_phase_voltage_7
+    default: 0
+    type: double
+    list: false
+  LMP_7:
+    topic: pypower/LMP_7
+    default: 0
+    type: double
+    list: false
+  clear_price:
+    topic: sub_7/clear_price
+    default: 0
+    type: double
+    list: false
+  distribution_load:
+    topic: gld_7/distribution_load
+    default: 0
+    type: complex
+    list: false
+  power_A:
+    topic: eplus_agent/power_A
+    default: 0
+    type: double
+    list: false
+  electric_demand_power:
+    topic: eplus/WHOLE BUILDING Facility Total Electric Demand Power
+    default: 0
+    type: double
+    list: false
+

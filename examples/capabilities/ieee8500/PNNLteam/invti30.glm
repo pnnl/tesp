@@ -160,12 +160,20 @@ object substation {
 
 #ifdef USE_FNCS
 object fncs_msg {
-  name gridlabdSimulator1;
+  name gld_1;
   parent network_node;
-  configure inv30_FNCS_Config.txt;
+  configure invti30_gridlabd.txt;
   option "transport:hostname localhost, port 5570";
   aggregate_subscriptions true;
   aggregate_publications true;
+}
+#endif
+
+#ifdef USE_HELICS
+object helics_msg {
+  name gld_1;
+  parent network_node;
+  configure invti30_gridlabd.json;
 }
 #endif
 

@@ -1,19 +1,20 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: fncsPYPOWER.py
-""" PYPOWER solutions under control of FNCS or HELICS for te30 and dsot, sgip1 examples
+# file: tso_PYPOWER.py
+""" PYPOWER solutions under control of HELICS for te30 and dsot, sgip1 examples
 
 Public Functions:
     :pypower_loop: Initializes and runs the simulation.  
 """
 
-import json
 import sys
+import json
 import helics
 import numpy as np
 import pypower.api as pp
 from math import sqrt
 from copy import deepcopy
-import tesp_support.tso_helpers as tso
+
+from .tso_helpers import load_json_case, make_dictionary
 
 #import cProfile
 #import pstats
@@ -22,7 +23,7 @@ if sys.platform != 'win32':
     import resource
 
 
-def tso_pypower_loop(casefile, rootname, helicsConfig=None):
+def tso_pypower_loop(casefile, rootname, helicsConfig):
     """ Public function to start PYPOWER solutions under control of HELICS
 
     The time step, maximum time, and other data must be set up in a JSON file.
@@ -40,12 +41,12 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
       rootname (str): the root filename for metrics output, without extension
     """
 
-    ppc = tso.load_json_case(casefile)
+    ppc = load_json_case(casefile)
     StartTime = ppc['StartTime']
     tmax = int(ppc['Tmax'])
     period = int(ppc['Period'])
     dt = int(ppc['dt'])
-    tso.make_dictionary(ppc)
+    make_dictionary(ppc)
 
     bus_mp = open("bus_" + rootname + "_metrics.json", "w")
     gen_mp = open("gen_" + rootname + "_metrics.json", "w")
@@ -107,6 +108,8 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
     sub_c2 = None
     sub_c1 = None
     sub_deg = None
+
+    print('HELICS config:', helicsConfig, flush=True)
     hFed = helics.helicsCreateValueFederateFromConfig(helicsConfig)
     fedName = helics.helicsFederateGetName(hFed)
     pubCount = helics.helicsFederateGetPublicationCount(hFed)
@@ -137,19 +140,18 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
             sub_unresp = sub
         if 'distribution_load' in target:
             sub_load = sub
-        target = helics.helicsSubscriptionGetTarget(sub)
-    print('Done HELICS subscriptions')
+    print('Done HELICS subscriptions', flush=True)
 
     helics.helicsFederateEnterExecutingMode(hFed)
 
     # transactive load components
-    csv_load = 0  # from the file
-    unresp = 0  # unresponsive load estimate from the auction agent
-    resp = 0  # will be the responsive load as dispatched by OPF
-    resp_deg = 0  # RESPONSIVE_DEG from DSO
-    resp_c1 = 0  # RESPONSIVE_C1 from DSO
-    resp_c2 = 0  # RESPONSIVE_C2 from DSO
-    resp_max = 0  # RESPONSIVE_MAX_MW from DSO
+    csv_load = 0     # from the file
+    unresp = 0       # unresponsive load estimate from the auction agent
+    resp = 0         # will be the responsive load as dispatched by OPF
+    resp_deg = 0     # RESPONSIVE_DEG from DSO
+    resp_c1 = 0      # RESPONSIVE_C1 from DSO
+    resp_c2 = 0      # RESPONSIVE_C2 from DSO
+    resp_max = 0     # RESPONSIVE_MAX_MW from DSO
     feeder_load = 0  # amplified feeder MW
 
     while ts <= tmax:
@@ -174,12 +176,11 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
                 resp_deg = helics.helicsInputGetInteger(sub_deg)
             if helics.helicsInputIsUpdated(sub_max):
                 #        print (ts,'resp_max updated before', helics.helicsInputIsUpdated(sub_max))
-                resp_max = helics.helicsInputGetComplex(sub_max)[0] * load_scale  # TODO: pyhelics needs to return complex instead of tuple
+                resp_max = helics.helicsInputGetComplex(sub_max).real * load_scale
                 #        print (ts,'resp_max updated after', helics.helicsInputIsUpdated(sub_max))
                 new_bid = True
         if helics.helicsInputIsUpdated(sub_load):
-            cval = helics.helicsInputGetComplex(sub_load)  # TODO: pyhelics needs to return complex instead of tuple
-            gld_load = complex(cval[0], cval[1])
+            gld_load = helics.helicsInputGetComplex(sub_load)
             feeder_load = gld_load.real * load_scale / 1.0e6
         #      print ('HELICS inputs at', ts, feeder_load, load_scale, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid)
         #      print ('HELICS resp_max', ts, resp_max, helics.helicsInputIsValid(sub_max),
@@ -244,7 +245,7 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
             opf_gen = deepcopy(res['gen'])
             lmp = opf_bus[6, 13]
             resp = -1.0 * opf_gen[4, 1]
-            helics.helicsPublicationPublishDouble(pub_lmp, 0.001 * lmp)
+            helics.helicsPublicationPublishDouble(pub_lmp, 0.001 * lmp)  # publishing $/kwh
             #     print ('  OPF', ts, csv_load, '{:.3f}'.format(unresp), '{:.3f}'.format(resp),
             #            '{:.3f}'.format(feeder_load), '{:.3f}'.format(opf_bus[6,2]),
             #            '{:.3f}'.format(opf_gen[0,1]), '{:.3f}'.format(opf_gen[1,1]), '{:.3f}'.format(opf_gen[2,1]),
@@ -268,7 +269,8 @@ def tso_pypower_loop(casefile, rootname, helicsConfig=None):
         gen[1, 1] = opf_gen[1, 1]
         gen[2, 1] = opf_gen[2, 1]
         gen[3, 1] = opf_gen[3, 1]
-        # during regular power flow, we use the actual CSV + feeder load, ignore dispatchable load and use actual
+        # during regular power flow, we use the actual CSV + feeder load,
+        # ignore dispatchable load and use actual
         bus[6, 2] = csv_load + feeder_load
         gen[4, 1] = 0  # opf_gen[4, 1]
         gen[4, 9] = 0

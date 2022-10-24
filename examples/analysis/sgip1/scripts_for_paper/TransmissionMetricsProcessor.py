@@ -6,11 +6,11 @@
 
 
 
-import json;
-import sys;
-import numpy as np;
-import matplotlib as mpl;
-import matplotlib.pyplot as plt;
+import json
+import sys
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import xarray as xr
 
 class TransmissionMetricsProcessor:

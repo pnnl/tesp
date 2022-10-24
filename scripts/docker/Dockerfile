@@ -63,7 +63,6 @@ FROM ubuntu-base AS tesp-production
 ENV TESPDIR=${TESP_HOME}/tesp/repository/tesp
 ENV INSTDIR=${TESP_HOME}/tesp/installed
 ENV REPODIR=${TESP_HOME}/tesp/repository
-ENV WAREDIR=${TESP_HOME}/tesp/software
 ENV TESPBUILD=$TESPDIR/scripts/build
 ENV TESPHELPR=$TESPDIR/scripts/helpers
 
@@ -127,17 +126,14 @@ RUN git config --global user.name "${USER_NAME}" && \
   git clone https://gitlab.com/nsnam/ns-3-dev.git && \
   "${TESPBUILD}"/patch.sh ns-3-dev ns-3-dev && \
   echo "++++++++++++++ HELICS-NS-3" && \
-  cd ns-3-dev && \
-  git clone -b helics3-update-v2 https://github.com/GMLC-TDC/helics-ns3 contrib/helics && \
-  cd .. && \
+  git clone -b helics3-update-v2 https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics && \
   echo "++++++++++++++ KLU SOLVER" && \
   svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL && \
   cd ${TESPDIR}/scripts && \
   echo "++++++++++++++  Compiling and Installing TESP software is starting!  ++++++++++++++" && \
   # Install all pip libraries
   echo "Installing Python Libraries..." && \
-  echo "${USER_NAME}" | sudo -S -H pip3 install wheel colorama glm seaborn matplotlib networkx numpy pandas pulp xlrd pkgconfig && \
-  echo "${USER_NAME}" | sudo -S -H pip3 install pyutilib==5.8.0 pyomo==5.6.8 PYPOWER scikit-learn scipy tables h5py && \
+  echo "${USER_NAME}" | sudo -S -H pip3 install -r "${TESPDIR}/requirements.txt"  && \
   #develop tesp api
   echo "Installing Python TESP API..." && \
   cd "${TESPDIR}/src/tesp_support" && \
@@ -177,7 +173,9 @@ RUN git config --global user.name "${USER_NAME}" && \
   /bin/rm -r ${REPODIR}/ns-3-dev && \
   echo "Compiling and Installing Ipopt with ASL and Mumps..." && \
   ./ipopt_b.sh clean && \
-  /bin/rm -r ${WAREDIR} && \
+  /bin/rm -r ${REPODIR}/Ipopt && \
+  /bin/rm -r ${REPODIR}/ThirdParty-ASL && \
+  /bin/rm -r ${REPODIR}/ThirdParty-Mumps && \
   echo "Compiling and Installing TMY3toTMY2_ansi..." && \
   cd "${TESPDIR}/data/weather/TMY2EPW/source_code" && \
   gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi && \

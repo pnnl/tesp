@@ -1,0 +1,26 @@
+{
+  "45":
+  {
+    "R1_12_47_1_tn_15_mhse_1": "OUT_OF_SERVICE",
+    "R1_12_47_1_tn_564_mhse_4": "OUT_OF_SERVICE"
+  },
+  "90":
+  {
+    "R1_12_47_1_tn_128_mhse_2": "OUT_OF_SERVICE",
+    "R1_12_47_1_tn_506_mhse_1": "OUT_OF_SERVICE"
+  },
+  "135":
+  {
+    "R1_12_47_1_tn_15_mhse_1": "IN_SERVICE"
+  },
+  "180":
+  {
+    "R1_12_47_1_tn_459_mhse_4": "OUT_OF_SERVICE",
+    "R1_12_47_1_tn_506_mhse_1": "IN_SERVICE"
+  },
+  "255":
+  {
+    "R1_12_47_1_tn_459_mhse_4": "IN_SERVICE",
+    "R1_12_47_1_tn_564_mhse_4": "IN_SERVICE"
+  }
+}

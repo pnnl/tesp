@@ -1,21 +1,21 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: prepare_case.py
 
-import tesp_support.api as tesp
 import utilities
 import json
 from datetime import datetime
-import os
+
+from tesp_support.data import weather_path
+from tesp_support.glm_dict import glm_dict
+from tesp_support.TMY3toCSV import weathercsv
 
 _FNCS = False
-#_FNCS = True
+# _FNCS = True
 if _FNCS:
-    import prep_ercot_substation_f as prep
+    from prep_ercot_substation_f import prep_ercot_substation
 else:
-    import prep_ercot_substation as prep
+    from prep_ercot_substation import prep_ercot_substation
 
-
-tesp_share = os.path.expandvars('$TESPDIR/data/')
 
 # for reduced-order feeder models
 ercotFlag = True
@@ -24,14 +24,14 @@ ercotFlag = True
 
 te30Flag = False
 
-tesp.glm_dict('Bus1', ercot=ercotFlag, te30=te30Flag)
-tesp.glm_dict('Bus2', ercot=ercotFlag, te30=te30Flag)
-tesp.glm_dict('Bus3', ercot=ercotFlag, te30=te30Flag)
-tesp.glm_dict('Bus4', ercot=ercotFlag, te30=te30Flag)
-tesp.glm_dict('Bus5', ercot=ercotFlag, te30=te30Flag)
-tesp.glm_dict('Bus6', ercot=ercotFlag, te30=te30Flag)
-tesp.glm_dict('Bus7', ercot=ercotFlag, te30=te30Flag)
-tesp.glm_dict('Bus8', ercot=ercotFlag, te30=te30Flag)
+glm_dict('Bus1', ercot=ercotFlag, te30=te30Flag)
+glm_dict('Bus2', ercot=ercotFlag, te30=te30Flag)
+glm_dict('Bus3', ercot=ercotFlag, te30=te30Flag)
+glm_dict('Bus4', ercot=ercotFlag, te30=te30Flag)
+glm_dict('Bus5', ercot=ercotFlag, te30=te30Flag)
+glm_dict('Bus6', ercot=ercotFlag, te30=te30Flag)
+glm_dict('Bus7', ercot=ercotFlag, te30=te30Flag)
+glm_dict('Bus8', ercot=ercotFlag, te30=te30Flag)
 
 if _FNCS:
     broker = 'tcp://localhost:5570'
@@ -43,14 +43,14 @@ else:
     broker = 'HELICS'
     utilities.write_ercot_tso_msg(8)
 
-prep.prep_ercot_substation('Bus1', weatherName='weatherIAH')
-prep.prep_ercot_substation('Bus2', weatherName='weatherIAH')
-prep.prep_ercot_substation('Bus3', weatherName='weatherSPS')
-prep.prep_ercot_substation('Bus4', weatherName='weatherIAH')
-prep.prep_ercot_substation('Bus5', weatherName='weatherIAH')
-prep.prep_ercot_substation('Bus6', weatherName='weatherIAH')
-prep.prep_ercot_substation('Bus7', weatherName='weatherIAH')
-prep.prep_ercot_substation('Bus8', weatherName='weatherELP')
+prep_ercot_substation('Bus1', weatherName='weatherIAH')
+prep_ercot_substation('Bus2', weatherName='weatherIAH')
+prep_ercot_substation('Bus3', weatherName='weatherSPS')
+prep_ercot_substation('Bus4', weatherName='weatherIAH')
+prep_ercot_substation('Bus5', weatherName='weatherIAH')
+prep_ercot_substation('Bus6', weatherName='weatherIAH')
+prep_ercot_substation('Bus7', weatherName='weatherIAH')
+prep_ercot_substation('Bus8', weatherName='weatherELP')
 
 weather_agents = [
     {'weatherName': 'weatherIAH', 'tmy3': 'TX-Houston_Bush_Intercontinental.tmy3', 'lat': 30.000, 'lon': -95.367},
@@ -69,12 +69,12 @@ days = int(seconds / 86400)
 minutes = int(seconds / 60)
 hours = int(seconds / 3600)
 for i in range(len(weather_agents)):
-    tmy3file = tesp_share + 'weather/' + weather_agents[i]['tmy3']
+    tmy3file = weather_path + weather_agents[i]['tmy3']
     weatherName = weather_agents[i]['weatherName']
     csvfile = weatherName + '.dat'
     print(weatherName, tmy3file, csvfile)
     # convert TMY3 to CSV
-    tesp.weathercsv(tmy3file, csvfile, StartTime, EndTime, 2013)
+    weathercsv(tmy3file, csvfile, StartTime, EndTime, 2013)
     # write the weather agent's configuration file
     wconfig = {'name': weatherName,
                'StartTime': StartTime,

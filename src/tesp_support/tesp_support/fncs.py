@@ -26,7 +26,7 @@ References:
     `FNCS <https://github.com/FNCS/fncs/>`_
 
 Examples:
-    - under tesp_support, see substation.py, precool.py and fncsPYPOWER.py
+    - under tesp_support, see substation.py, precool.py and tso_PYPOWER_f.py
     - under examples, see loadshed/loadshed.py
 
 """

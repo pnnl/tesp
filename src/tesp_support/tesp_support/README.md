@@ -40,7 +40,6 @@ Suggested sequence of test cases for development:
 - *auction.py*; supervises one double-auction and multiple HVAC agents for a feeder; communicates via FNCS with GridLAB-D and PYPOWER/AMES
 - *feederGenerator.py*; from a PNNL taxonomy feeder as the backbone, populates it with houses, solar PV, batteries and smart inverters
 - *fncs.py*; the Python interface to FNCS, which is a C/C++ shared object library, or dynamic link library (Windows)
-- *fncsPYPOWER.py*; manages PYPOWER solutions for the te30 and sgip1 examples, based on a 9-bus textbook model. Note that the ERCOT cases use custom local versions of this code instead.
 - *glm_dict.py*; parses the GridLAB-D input (GLM) file and produces metafile data in JSON format, describing the houses, meters, DER, capacitors and regulators
 - *precool.py*; manages a set of house thermostats for NIST TE Challenge 2. There is no communication with a market. If the house experiences an overvoltage, the thermostat is turned down and locked for 4 hours, unless the house temperature violates comfort limits.
 - *prep_auction.py*; configures the agent metadata (JSON) and GridLAB-D FNCS subscriptions/publications for the double-auction, double-ramp simulations
@@ -56,6 +55,7 @@ Suggested sequence of test cases for development:
 - *tesp_case.py*; supervises the assembly of a TESP case with one feeder, one EnergyPlus building and one PYPOWER model. Reads the JSON file from tesp_config.py
 - *tesp_config.py*; a GUI for creating the JSON file used to configure a TESP case
 - *tesp_monitor.py*; a GUI for launching a TESP simulation, monitoring its progress, and terminating it early if necessary
+- *tso_PYPOWER.py*; manages PYPOWER solutions for the te30 and sgip1 examples, based on a 9-bus textbook model. Note that the ERCOT cases use custom local versions of this code instead.
 - *README.md*; this file
 - *weatherAgent.py*; the weather agent that reads from a .csv weather data file and publishes real-time weather data and hourly weather forecast. It needs a WeatherConfig.json config file, and the environment variable WEATHER_CONFIG needs to be set and point to the WeatherConfig.json config file. The example weather data file and WeatherConfig.json config file can be found in the tesp\examples\weatherAgent directory.
 

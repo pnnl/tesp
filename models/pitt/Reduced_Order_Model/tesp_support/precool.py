@@ -14,15 +14,17 @@ precooler agent.
 Public Functions:
     :precooler_loop: Initializes and runs the precooler agents.  
 """
-import string;
-import sys;
+import string
+import sys
+
 try:
-  import tesp_support.fncs as fncs;
+  import tesp_support.fncs as fncs
 except:
   pass
-import json;
-import math;
-import re;
+import json
+import math
+import re
+
 if sys.platform != 'win32':
   import resource
 

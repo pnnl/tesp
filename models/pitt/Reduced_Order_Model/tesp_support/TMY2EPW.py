@@ -4,7 +4,7 @@
 
 The input must be in TMY2 format. If only TMY3 files are available,
 see the TMY3toTMY2_ansi.c program distributed with TESP under the
-support/weather/TMY2EPW/source_code directory.
+[weather_path]weather/TMY2EPW/source_code directory.
 
 Public Functions:
     :convert_tmy2_to_epw: Converts TMY2 file to EPW.  

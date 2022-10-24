@@ -13,11 +13,11 @@ module powerflow{
 #ifdef WANT_VI_DUMP
 object voltdump {
   filename Voltage_Dump_R5-12-47-1.csv;
-//  mode polar;
+//  mode POLAR;
 }
 object currdump {
   filename Current_Dump_R5-12-47-1.csv;
-//  mode polar;
+//  mode POLAR;
 }
 #endif
 object transformer_configuration {

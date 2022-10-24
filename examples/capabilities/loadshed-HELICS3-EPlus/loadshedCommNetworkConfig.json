@@ -1,39 +1,43 @@
 {
-	"name": "loadshedCommNetwork",
-	"coretype": "zmq",
-	"core_name": "loadshedComm-core",
-	"period": "1ns",
-	"loglevel": "debug",
-	"endpoints": [
-		{
-			"name": "gridlabdSimulator1/sw_status",
-			"info": "1",
-			"global": false
-		},
-		{
-			"name": "loadshed/sw_status",
+  "name": "loadshedCommNetwork",
+  "coreType": "zmq",
+  "core_name": "loadshedComm-core",
+  "period": "1ns",
+  "loglevel": "debug",
+  "endpoints": [
+    {
+      "name": "gridlabdSimulator1/sw_status",
       "info": "1",
-			"global": false
-		}
-	],
-	"filters": [
-		{
-			"name": "gld_sw_status_filter",
-			"sourcetargets": ["gridlabdSimulator1/sw_status"],
-			"operation": "reroute",
-			"properties": {
-				"name": "newdestination",
-				"value": "loadshedCommNetwork/gridlabdSimulator1/sw_status"
-			}
-		},
-		{
-			"name": "loadshed_sw_status_filter",
-			"sourcetargets": ["loadshed/sw_status"],
-			"operation": "reroute",
-			"properties": {
-				"name": "newdestination",
-				"value": "loadshedCommNetwork/loadshed/sw_status"
-			}
-		}
-	]
+      "global": false
+    },
+    {
+      "name": "loadshed/sw_status",
+      "info": "1",
+      "global": false
+    }
+  ],
+  "filters": [
+    {
+      "name": "gld_sw_status_filter",
+      "sourcetargets": [
+        "gridlabdSimulator1/sw_status"
+      ],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "loadshedCommNetwork/gridlabdSimulator1/sw_status"
+      }
+    },
+    {
+      "name": "loadshed_sw_status_filter",
+      "sourcetargets": [
+        "loadshed/sw_status"
+      ],
+      "operation": "reroute",
+      "properties": {
+        "name": "newdestination",
+        "value": "loadshedCommNetwork/loadshed/sw_status"
+      }
+    }
+  ]
 }

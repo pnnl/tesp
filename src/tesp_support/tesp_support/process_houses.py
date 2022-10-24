@@ -11,37 +11,32 @@ import json
 import os
 
 import numpy as np
-
-try:
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-except:
-    pass
+import matplotlib.pyplot as plt
 
 # Setting up logging
 logger = logging.getLogger(__name__)
 
 
-def read_house_metrics(path, nameroot, dictname=''):
-    gld_dict_path = os.path.join(path, f'{nameroot}_glm_dict.json')
-    house_dict_path = os.path.join(path, f'house_{nameroot}_metrics.json')
+def read_houses_metrics(path, name_root, diction_name=''):
+    gld_dict_path = os.path.join(path, f'{name_root}_glm_dict.json')
+    house_dict_path = os.path.join(path, f'house_{name_root}_metrics.json')
     # first, read and print a dictionary of all the monitored GridLAB-D objects
-    if len(dictname) > 0:
+    if len(diction_name) > 0:
         try:
-            lp = open(dictname).read()
+            lp = open(diction_name).read()
         except:
-            logger.error(f'Unable to open house metrics file {dictname}')
+            logger.error(f'Unable to open house metrics file {diction_name}')
     else:
         try:
             lp = open(gld_dict_path).read()
         except:
             logger.error(f'Unable to open house metrics file {gld_dict_path}')
-    dict = json.loads(lp)
-    hse_keys = list(dict['houses'].keys())
+    diction = json.loads(lp)
+    hse_keys = list(diction['houses'].keys())
     hse_keys.sort()
     # print("\nHouse Dictionary:")
     # for key in hse_keys:
-    #   row = dict['houses'][key]
+    #   row = diction['houses'][key]
     # # print (key, "on", row['billingmeter_id'], "has", row['sqft'], "sqft", row['cooling'], "cooling", row['heating'], "heating", row['wh_gallons'], "gal WH")
     #   # row['feeder_id'] is also available
 
@@ -58,7 +53,6 @@ def read_house_metrics(path, nameroot, dictname=''):
     hrs /= denom
 
     #  print("\nHouse Metadata for", len(lst_h[time_key]), "objects")
-    data_h = None
     idx_h = {}
     for key, val in meta_h.items():
         # print (key, val['index'], val['units'])
@@ -95,7 +89,7 @@ def read_house_metrics(path, nameroot, dictname=''):
     data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
     print("\nConstructed", data_h.shape, "NumPy array for Houses")
     j = 0
-    for key in hse_keys:
+    for _ in hse_keys:
         i = 0
         for t in times:
             ary = lst_h[str(t)][hse_keys[j]]
@@ -103,25 +97,24 @@ def read_house_metrics(path, nameroot, dictname=''):
             i = i + 1
         j = j + 1
 
-    dict = {}
-    dict['hrs'] = hrs
-    dict['data_h'] = data_h
-    dict['keys_h'] = hse_keys
-    dict['idx_h'] = idx_h
+    return {
+        'hrs': hrs,
+        'data_h': data_h,
+        'keys_h': hse_keys,
+        'idx_h': idx_h
+    }
 
-    return dict
 
-
-def plot_houses(dict, save_file=None, save_only=False):
-    hrs = dict['hrs']
-    data_h = dict['data_h']
-    idx_h = dict['idx_h']
-    keys_h = dict['keys_h']
+def plot_houses(diction, save_file=None, save_only=False):
+    hrs = diction['hrs']
+    data_h = diction['data_h']
+    idx_h = diction['idx_h']
+    keys_h = diction['keys_h']
 
     # display a plot
     fig, ax = plt.subplots(2, 1, sharex='col')
     i = 0
-    for key in keys_h:
+    for _ in keys_h:
         ax[0].plot(hrs, data_h[i, :, idx_h['HSE_AIR_AVG_IDX']], color='blue')
         ax[1].plot(hrs, data_h[i, :, idx_h['HSE_HVAC_AVG_IDX']], color='red')
         i = i + 1
@@ -136,12 +129,12 @@ def plot_houses(dict, save_file=None, save_only=False):
         plt.show()
 
 
-def process_houses(nameroot, dictname='', save_file=None, save_only=True):
+def process_houses(name_root, diction_name='', save_file=None, save_only=True):
     """ Plots the temperature and HVAC power for every house
 
-    This function reads *substation_nameroot_metrics.json* and
-    *house_nameroot_metrics.json* for the data;
-    it reads *nameroot_glm_dict.json* for the metadata.
+    This function reads *substation_[name_root]_metrics.json* and
+    *house_[name_root]_metrics.json* for the data;
+    it reads *[name_root]_glm_dict.json* for the metadata.
     These must all exist in the current working directory.
     Makes one graph with 2 subplots:
 
@@ -149,11 +142,11 @@ def process_houses(nameroot, dictname='', save_file=None, save_only=True):
     2. Average HVAC power at every house
 
     Args:
-      nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
-      dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+      name_root (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
+      diction_name (str): metafile name (with json extension) for a different GLM dictionary, if it's not *[name_root]_glm_dict.json*. Defaults to empty.
       save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
       save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
     """
     path = os.getcwd()
-    dict = read_house_metrics(path, nameroot, dictname)
-    plot_houses(dict, save_file, save_only)
+    diction = read_houses_metrics(path, name_root, diction_name)
+    plot_houses(diction, save_file, save_only)

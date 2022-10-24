@@ -11,7 +11,7 @@ Launching the MATPOWER Optimal Power Flow solver
   - Files needed for deployment (for this case, at least, in order to be able to compile): start_MATPOWER.cpp, libopf.h, libopf.so, libmpoption.so, libmpoption.h, case9.m, matpowerintegrator.h, matpowerintegrator.c, and the newly added, librunpf.so, librunpf.h, librunopf.so, librunopf.h.
 Update: 07/02/2014
    Purpose: Modified the read load profile function in read_load_profile.cpp, to be able to read as many profiles as neccessary, depending on how many substations I have.
-            Basically, the load profile data comes into a file containing 288 values per row (every 5-minute data for 24 hours), and a number of rows greater than or equal to the number of substations.
+            Basically, the load profile data comes into a file containing 288 values per row (every 5-minute data for 24-hours), and a number of rows greater than or equal to the number of substations.
 Update: 07/02/2014
    Purpose: Modified the read load profile function in read_load_profile.cpp, to include some additional error information if the load fails. Also updated to include new logging features.
 */

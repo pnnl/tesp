@@ -1,15 +1,15 @@
 import json
 import logging as log
-import os
 
 import tesp_support.fncs as fncs
-import tesp_support.tso_helpers as tso
+
 from tesp_support.helpers import parse_mva
+from tesp_support.tso_helpers import load_json_case
 
 
 def dso_make_yaml(casename):
     log.info('Reading configuration...')
-    ppc = tso.load_json_case(casename + '.json')
+    ppc = load_json_case(casename + '.json')
     port = str(ppc['port'])
     nd = ppc['DSO'].shape[0]
 
@@ -116,7 +116,7 @@ def dso_loop(casename):
     # logger.setLevel(log.WARNING)
 
     log.info('Reading configuration...')
-    ppc = tso.load_json_case(casename + '.json')
+    ppc = load_json_case(casename + '.json')
 
     tmax = int(ppc['Tmax'])
     dt = int(ppc['dt'])

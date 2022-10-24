@@ -1,10 +1,9 @@
 #!/bin/bash
 
-rm *.log
-rm *.csv
-rm *.xml
-rm *metrics.json
-rm output/*
-rmdir output
-rm *.bnd
-rm out.txt
+rm -f *.log
+rm -f *.csv
+rm -f *.xml
+rm -f *.bnd
+rm -f out.txt
+rm -f *metrics.json
+rm -rf output

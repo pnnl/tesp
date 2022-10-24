@@ -2,7 +2,7 @@
 # file: schedule_client.py
 
 from multiprocessing.managers import BaseManager
-#import psutil  # 3rd party module for process info (not strictly required)
+# import psutil  # 3rd party module for process info (not strictly required)
 
 
 # Grab the shared proxy class.  All methods in that class will be available here

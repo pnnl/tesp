@@ -5,31 +5,29 @@
 
 Convert typical meteorological year version 3 (TMY3) data to
 comma separated values (CSV) for common use by TESP agents.
+
+Created on Tue Aug 14 10:05:06 2018
+@author: liub725
 """
-try:
-    import matplotlib.pyplot as plt
-except:
-    pass
 
 import io
+import warnings
 import dateutil
 
-try:
-    from urllib2 import urlopen, Request
-except ImportError:
-    from urllib.request import urlopen, Request
-
 import pandas as pd
-import warnings
+import matplotlib.pyplot as plt
+
+from urllib.request import urlopen, Request
+
 
 # DateOffset is not vectorized and will throw a nuisance warning
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
 def readtmy3(filename=None, coerce_year=None, recolumn=True):
-    '''
+    """
     Read a TMY3 file in to a pandas dataframe.
-    '''
+    """
 
     if filename is None:
         try:
@@ -263,11 +261,11 @@ def weathercsv_cloudy_day(start_time, end_time, outputfile):
 
 
 def _tests():
-    import os.path
-    tesp_share = os.path.expandvars('$TESPDIR/data/')
+    from .data import weather_path
+
     # create a csv file contain the weather data for the input time period from the input tmy3 file
-    weathercsv(tesp_share + 'weather/TX-Houston_Bush_Intercontinental.tmy3', 'weather.csv', '2000-01-01 00:00:00',
-               '2000-01-14 00:00:00', 2000)
+    weathercsv(weather_path + 'TX-Houston_Bush_Intercontinental.tmy3',
+               'weather.csv', '2000-01-01 00:00:00', '2000-01-14 00:00:00', 2000)
     # create a csv file for a cloudy day for the selected date
     weathercsv_cloudy_day('2000-01-01 00:00:00', '2000-01-02 00:00:00', 'cloudy_day.csv')
 

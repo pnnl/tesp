@@ -92,7 +92,7 @@ def hour_block_bid(h, h1, h2, p1, p2, q1, q2):  # p is price (c1), q is quantity
 def make_da_bid(row, bWantMarket):
     da_bid = {'unresp_mw': [], 'resp_max_mw': [], 'resp_c2': [], 'resp_c1': [], 'resp_deg': []}
     busnum = int(row[0])
-    gld_scale = float(row[2])  # divide published P, Q values by gld_scale, because fncsTSO.py multiplies by gld_scale
+    gld_scale = float(row[2])  # divide published P, Q values by gld_scale, because tso_psst_f.py multiplies by gld_scale
     Pnom = float(row[3])
     curve_scale = float(row[5])
     curve_skew = int(row[6])
@@ -181,11 +181,11 @@ while ts <= tmax:
         val = fncs.get_value(topic)
         if 'LMP_RT_Bus_' in topic:
             busnum = int(topic[11:])
-        # following is for fncsTSO.py, the AMES/PSST version
+        # following is for tso_psst_f.py, the AMES/PSST version
         #      gld_bus[busnum]['lmpRT'][] = float(val)
         elif 'LMP_DA_Bus_' in topic:
             busnum = int(topic[11:])
-        # following is for fncsTSO.py, the AMES/PSST version
+        # following is for tso_psst_f.py, the AMES/PSST version
         #      gld_bus[busnum]['lmpDA'][] = float(val)
         elif 'LMP' in topic:
             busnum = int(topic[3:])
@@ -219,8 +219,8 @@ while ts <= tmax:
     # update the RTM bid, and publish simulated load as unresponsive + cleared_responsive
     for row in dso_bus:
         busnum = int(row[0])
-        pubtopic = row[1]  # this is what fncsTSO.py receives it as
-        # divide published P, Q values by gld_scale, because fncsTSO.py multiplies by gld_scale
+        pubtopic = row[1]  # this is what tso_psst_f.py receives it as
+        # divide published P, Q values by gld_scale, because tso_psst_f.py multiplies by gld_scale
         gld_scale = float(row[2])
         Pnom = float(row[3])
         Qnom = float(row[4])

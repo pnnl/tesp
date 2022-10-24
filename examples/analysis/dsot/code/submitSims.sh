@@ -6,7 +6,8 @@ for dir in $1*
 do
   if [ -d "$dir" ]
   then
-    FILE=$dir/tso.yaml
+#    FILE=$dir/tso.yaml
+    FILE=$dir/tso_h.json
     if [ -f "$FILE" ]
     then
       echo "Submit simulation" $dir

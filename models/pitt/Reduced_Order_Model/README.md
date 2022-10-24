@@ -12,10 +12,11 @@
 
 ## To run a case from the GUI monitor:  
 
-1. change the number (between 1 to 1500) in launch_auction.py as the total house number
+1. change the number (between 1 and 1500) in launch_auction.py as the total house number
 2. invoke "gui" (Windows)
 3. from the GUI, click Open to open the file tesp_monitor.json from this directory
 4. from the GUI, click Start All to launch the simulations
 
 ## Simulation time  
-For simulation time reduction, simulations with the ARL require a GPU for the neural networks computation. However, it can still run very slow without a GPU. Use torch.cuda.get_device_name(0) to check if the GPU of a graphic card is being used by Pytorch
+For simulation time reduction, simulations with the ARL require a GPU for the neural network computation. 
+However, it can still run very slow without a GPU. Use torch.cuda.get_device_name(0) to check if the GPU of a graphic card is being used by Pytorch

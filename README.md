@@ -15,11 +15,14 @@ TESP runs natively on Linux and can be installed by following a simple process [
 
 Change log:
 
-- v0.1.2  Patch for tape shield / concentric neutral 
-          cables with separate neutral conductor.
-- v0.3.0  Refactored agent classes for DSO+T study
-- v0.9.5  HELICS, MATPOWER/MOST, ERCOT and E+ 9.3 examples
-- v1.0.0  Tested on Ubuntu 18.04 LTS and 20.04 LTS
-- v1.0.1  Updates to consensus mechanism, HELICS 2.6.1
-- v1.0.2  ns-3 has optimized build with logging enabled
-- v1.1    Updated installation method and documentation
+- v0.1.2  Patch for tape shield / concentric neutral cables with separate neutral conductor.
+- v0.3.0  Refactored agent classes for DSO+T study.
+- v0.9.5  HELICS, MATPOWER/MOST, ERCOT and E+ 9.3 examples.
+- v1.0.0  There are examples of the double-auction real-time market in real-time and day-ahead modes, and a transactive consensus mechanism for large buildings. The intended use case for TESP is to focus on the development and testing of transactive control agents, without having to build up a large system simulation infrastructure. There are sample agents provided in Python 3.6+, Java 11+, and C/C++.
+- v1.1.1  Updated installation method and documentation. Patches for SGIP1, consensus mechanism, standalone house generator. Updated examples from Helic2.8 to Helics3.0. Added DSO Stub case for agent testing.
+- v1.1.3  Updated some documentation and build patches.
+- v1.1.4  Updates to auto testing and minors bug fixes for Comm cases using HELICS3.0.
+- v1.1.5  Updates to auto testing and minors bug fixes for install and a better loadshed example.
+- v1.2.0  Updates to auto testing and minors bug fixes. Version changes for HELICS 3.3, GridLABD 5.0. Reorganize environment and updated documentation. Add more loadshed N3 examples.
+- v1.2.1  Fixed python shell files, fixed complex python to use helics complex.
+- v1.2.2  Fixed the installation for Ubuntu 22.04.

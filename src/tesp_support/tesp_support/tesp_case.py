@@ -18,13 +18,13 @@ import subprocess
 import sys
 from datetime import datetime
 
-import tesp_support.helpers as helpers
-import tesp_support.make_ems as idf
-import tesp_support.TMY2EPW as t2e
-import tesp_support.feederGenerator as fg
-import tesp_support.glm_dict as glm
-import tesp_support.prep_substation as ps
-
+from .TMYtoEPW import convert_tmy2_to_epw
+from .data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
+from .feederGenerator import populate_feeder
+from .glm_dict import glm_dict
+from .helpers import HelicsMsg
+from .make_ems import merge_idf
+from .prep_substation import prep_substation
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -66,12 +66,12 @@ def write_tesp_case(config, cfgfile, freshdir=True):
 
     As the configuration process finishes, several files are written to *casedir*:
 
-        * Casename.glm: the GridLAB-D model, copied and modified from the TESP support directory
-        * Casename_FNCS_Config.txt: FNCS subscriptions and publications, included by Casename.glm
-        * Casename_agent_dict.json: metadata for the simple_auction and hvac agents
-        * Casename_glm_dict.json: metadata for Casename.glm
-        * Casename_pp.json: the PYPOWER model, copied and modified from the TESP support directory
-        * Casename_substation.yaml: FNCS subscriptions and time step for the substation, which manages the simple_auction and hvac controllers
+        * casename.glm: the GridLAB-D model, copied and modified from the TESP support directory
+        * casename_gridlabd.txt: FNCS subscriptions and publications, included by casename.glm
+        * casename_agent_dict.json: metadata for the simple_auction and hvac agents
+        * casename_glm_dict.json: metadata for casename.glm
+        * casename_pp.json: the PYPOWER model, copied and modified from the TESP support directory
+        * casename_substation.yaml: FNCS subscriptions and time step for the substation, which manages the simple_auction and hvac controllers
         * NonGLDLoad.txt: non-responsive load data for the PYPOWER model buses, currently hard-wired for the 9-bus model. See the ERCOT case files for examples of expanded options.
         * SchoolDualController.idf: the EnergyPlus model, copied and modified from the TESP support directory 
         * WA-Yakima_Air_Terminal.epw: the selected weather file for EnergyPlus, others can be selected
@@ -88,30 +88,29 @@ def write_tesp_case(config, cfgfile, freshdir=True):
         * plots.py: helper script that will plot a selection of case outputs
         * pypower.yaml: FNCS subscriptions and time step for PYPOWER
         * run.sh: Linux/Mac OS X helper to launch the TESP simulation
-        * tesp_monitor.json: shell commands and other configuration data for the solution monitor GUI
+        * monitor.json: shell commands and other configuration data for the solution monitor GUI
+        * tesp_monitor.json: HELICS subscriptions and time step for the solution monitor GUI
         * tesp_monitor.yaml: FNCS subscriptions and time step for the solution monitor GUI
         * water_and_setpoint_schedule_v5.glm: non-responsive time schedules for GridLAB-D, invariant
         * weather.dat: CSV file of temperature, pressure, humidity, solar direct, solar diffuse and wind speed
+
+        * casename_gridlabd.txt: HELICS subscriptions and publications, included by casename.glm
+        * casename_substation.json: HELICS subscriptions and time step for the substation, which manages the simple_auction and hvac controllers
+        * eplus.json: HELICS subscriptions and time step for EnergyPlus
+        * eplus_agent.json: HELICS subscriptions and time step for the EnergyPlus agent
+        * pypower.json: HELICS subscriptions and time step for PYPOWER
 
     Args:
         config (dict): the complete case data structure
         cfgfile (str): the name of the JSON file that was read
         freshdir (boolean): flag to create the directory and base files anew
 
-    Todo:
-        * Write gui.sh, per the te30 examples
     """
-    tesp_share = os.path.expandvars('$TESPDIR/data/')
-    feeders_path = tesp_share + 'feeders/'
-    scheduled_path = tesp_share + 'schedules/'
-    weather_path = tesp_share + 'weather/'
-    eplusdir = tesp_share + 'energyplus/'
-    ppdir = os.path.expandvars('$TESPDIR/models/pypower/')
     print('feeder backbone files from', feeders_path)
     print('schedule files from', scheduled_path)
     print('weather files from', weather_path)
-    print('E+ files from', eplusdir)
-    print('pypower backbone files from', ppdir)
+    print('E+ files from', energyplus_path)
+    print('pypower backbone files from', pypower_path)
 
     casename = config['SimulationConfig']['CaseName']
     workdir = config['SimulationConfig']['WorkingDirectory']
@@ -145,8 +144,6 @@ def write_tesp_case(config, cfgfile, freshdir=True):
     EpStepsPerHour = int(config['EplusConfiguration']['StepsPerHour'])
     EpBuilding = config['EplusConfiguration']['BuildingChoice']
     EpEMS = config['EplusConfiguration']['EMSFile']
-    EpXfmrKva = config['EplusConfiguration']['EnergyPlusXfmrKva']
-    EpVolts = config['EplusConfiguration']['EnergyPlusServiceV']
     EpBus = config['EplusConfiguration']['EnergyPlusBus']
     EpMetricsKey = EpBuilding  # os.path.splitext (EpFile)[0]
     EpAgentStop = str(seconds) + 's'
@@ -158,12 +155,13 @@ def write_tesp_case(config, cfgfile, freshdir=True):
     AgentDictFile = casename + '_agent_dict.json'
     PPJsonFile = casename + '_pp.json'
     SubstationYamlFile = casename + '_substation.yaml'
-    WeatherConfigFile = casename + '_FNCS_Weather_Config.json'
+    WeatherConfigFile = casename + '_weather_f.json'
 
     weatherfile = weather_path + rootweather + '.tmy3'
-    eplusfile = eplusdir + EpBuilding + '.idf'
+    eplusfile = energyplus_path + EpBuilding + '.idf'
 
-    emsfile = eplusdir + EpEMS + '.idf'
+    # Want both files to be created
+    emsfile = energyplus_path + EpEMS + '.idf'
     if 'emsHELICS' in emsfile:
         emsfileFNCS = emsfile.replace('emsHELICS', 'emsFNCS')
     if 'emsFNCS' in emsfile:
@@ -171,17 +169,22 @@ def write_tesp_case(config, cfgfile, freshdir=True):
         emsfile = emsfile.replace('emsFNCS', 'emsHELICS')
 
     eplusout = casedir + '/Merged.idf'
-    eplusoutFNCS = casedir + '/MergedFNCS.idf'
+    eplusoutFNCS = casedir + '/Merged_f.idf'
 
-    ppfile = ppdir + config['BackboneFiles']['PYPOWERFile']
-    ppcsv = ppdir + config['PYPOWERConfiguration']['CSVLoadFile']
+    ppfile = pypower_path + config['BackboneFiles']['PYPOWERFile']
+    ppcsv = pypower_path + config['PYPOWERConfiguration']['CSVLoadFile']
     dso_substation_bus_id = int(config['PYPOWERConfiguration']['GLDBus'])
+
     gld_federate = "gld_" + str(dso_substation_bus_id)
     sub_federate = "sub_" + str(dso_substation_bus_id)
+    tso_federate = "pypower"
+    eplus_federate = "eplus"
+    agent_federate = "eplus_agent"
+    mtr_federate = "monitor"
 
     if freshdir:
         # process TMY3 ==> weather.dat
-        cmdline = pycall + ' -c "import tesp_support.api as tesp; tesp.weathercsv(' + "'" + \
+        cmdline = pycall + ' -c "import tesp_support.TMY3toCSV as tesp; tesp.weathercsv(' + "'" + \
                   weatherfile + "','" + casedir + '/weather.dat' + "','" + \
                   StartTime + "','" + EndTime + "'," + str(WeatherYear) + ')"'
         print(cmdline)
@@ -190,13 +193,14 @@ def write_tesp_case(config, cfgfile, freshdir=True):
         pw0.wait()
 
     #########################################
-    # set up EnergyPlus, if the user wants it
+    # set up EnergyPlus, if the user wants it.
+    # Only works for TE_Base.glm
     bUseEplus = False
     if len(EpBus) > 0:
         bUseEplus = True
 
-        idf.merge_idf(eplusfile, emsfile, StartTime, EndTime, eplusout, EpStepsPerHour)
-        idf.merge_idf(eplusfile, emsfileFNCS, StartTime, EndTime, eplusoutFNCS, EpStepsPerHour)
+        merge_idf(eplusfile, emsfile, StartTime, EndTime, eplusout, EpStepsPerHour)
+        merge_idf(eplusfile, emsfileFNCS, StartTime, EndTime, eplusoutFNCS, EpStepsPerHour)
 
         # process TMY3 ==> TMY2 ==> EPW
         cmdline = 'TMY3toTMY2_ansi ' + weatherfile + ' > ' + casedir + '/' + rootweather + '.tmy2'
@@ -205,23 +209,23 @@ def write_tesp_case(config, cfgfile, freshdir=True):
         pw1.wait()
 
         print("Converting " + casedir + '/' + rootweather)
-        t2e.convert_tmy2_to_epw(casedir + '/' + rootweather)
+        convert_tmy2_to_epw(casedir + '/' + rootweather)
 
-        # write the EnergyPlus YAML files
-        op = open(casedir + '/eplus.yaml', 'w')
-        print('name: eplus', file=op)
+        # write the EnergyPlus YAML files, only subscriptions for FNCS
+        op = open(casedir + '/' + eplus_federate + '.yaml', 'w')
+        print('name:', eplus_federate, file=op)
         print('time_delta:', str(EpStep) + 'm', file=op)
         print('broker: tcp://localhost:5570', file=op)
         print('values:', file=op)
         print('    COOL_SETP_DELTA:', file=op)
-        print('        topic: eplus_agent/cooling_setpoint_delta', file=op)
+        print('        topic:', agent_federate + '/cooling_setpoint_delta', file=op)
         print('        default: 0', file=op)
         print('    HEAT_SETP_DELTA:', file=op)
-        print('        topic: eplus_agent/heating_setpoint_delta', file=op)
+        print('        topic:', agent_federate + '/heating_setpoint_delta', file=op)
         print('        default: 0', file=op)
         op.close()
 
-        epjyamlstr = """name: eplus_agent
+        yamlstr = """name: """ + agent_federate + """
 time_delta: """ + str(EpAgentStep) + """
 broker: tcp://localhost:5570
 values:
@@ -283,14 +287,14 @@ values:
         topic: eplus/EMS OCCUPANT COUNT
         default: 0
 """
-        op = open(casedir + '/eplus_agent.yaml', 'w')
-        print(epjyamlstr, file=op)
+        op = open(casedir + '/' + agent_federate + '.yaml', 'w')
+        print(yamlstr, file=op)
         op.close()
 
-        eps = helpers.HelicsMsg("energyPlus", 60 * EpStep)
+        eps = HelicsMsg(eplus_federate, 60 * EpStep)
         # Subs
-        eps.subs_e(True, "eplus_agent/cooling_setpoint_delta", "double", "")
-        eps.subs_e(True, "eplus_agent/heating_setpoint_delta", "double", "")
+        eps.subs_e(True, agent_federate + "/cooling_setpoint_delta", "double", "")
+        eps.subs_e(True, agent_federate + "/heating_setpoint_delta", "double", "")
         # Pubs
         eps.pubs_e(False, "EMS Cooling Controlled Load", "double", "kWh")
         eps.pubs_e(False, "EMS Heating Controlled Load", "double", "kWh")
@@ -309,7 +313,7 @@ values:
         eps.pubs_e(False, "WHOLE BUILDING Facility Total Electric Demand Power", "double", "W")
         eps.pubs_e(False, "WHOLE BUILDING Facility Total HVAC Electric Demand Power", "double", "W")
         eps.pubs_e(False, "FACILITY Facility Thermal Comfort ASHRAE 55 " +
-                          "Simple Model Summer or Winter Clothes Not Comfortable Time", "double", "hour")
+                   "Simple Model Summer or Winter Clothes Not Comfortable Time", "double", "hour")
         eps.pubs_e(False, "Environment Site Outdoor Air Drybulb Temperature", "double", "degC")
         eps.pubs_e(False, "EMS HEATING SETPOINT", "double", "degC")
         eps.pubs_e(False, "EMS HEATING CURRENT", "double", "degC")
@@ -321,30 +325,32 @@ values:
         eps.pubs_e(False, "C1_NOM SCHEDULE VALUE", "double", "degC")
         eps.write_file(casedir + '/eplus.json')
 
-        epa = helpers.HelicsMsg("eplus_agent", 60 * EpStep)
+        epa = HelicsMsg(agent_federate, 60 * EpStep)
         epa.config("time_delta", 1)
         epa.config("uninterruptible", False)
         # Subs
         epa.subs_e(True, sub_federate + "/clear_price", "double", "kwhr_price")
-        epa.subs_e(True, "energyPlus/EMS Cooling Controlled Load", "double", "cooling_controlled_load")
-        epa.subs_e(True, "energyPlus/EMS Heating Controlled Load", "double", "heating_controlled_load")
-        epa.subs_e(True, "energyPlus/EMS Cooling Schedule Temperature", "double", "cooling_schedule_temperature")
-        epa.subs_e(True, "energyPlus/EMS Heating Schedule Temperature", "double", "heating_schedule_temperature")
-        epa.subs_e(True, "energyPlus/EMS Cooling Setpoint Temperature", "double", "cooling_setpoint_temperature")
-        epa.subs_e(True, "energyPlus/EMS Heating Setpoint Temperature", "double", "heating_setpoint_temperature")
-        epa.subs_e(True, "energyPlus/EMS Cooling Current Temperature", "double", "cooling_current_temperature")
-        epa.subs_e(True, "energyPlus/EMS Heating Current Temperature", "double", "heating_current_temperature")
-        epa.subs_e(True, "energyPlus/EMS Cooling Power State", "string", "cooling_power_state")
-        epa.subs_e(True, "energyPlus/EMS Heating Power State", "string", "heating_power_state")
-        epa.subs_e(True, "energyPlus/EMS Cooling Volume", "double", "cooling_volume")
-        epa.subs_e(True, "energyPlus/EMS Heating Volume", "double", "heating_volume")
-        epa.subs_e(True, "energyPlus/EMS Occupant Count", "int", "occupants_total")
-        epa.subs_e(True, "energyPlus/EMS Indoor Air Temperature", "double", "indoor_air")
-        epa.subs_e(True, "energyPlus/WHOLE BUILDING Facility Total Electric Demand Power", "double", "electric_demand_power")
-        epa.subs_e(True, "energyPlus/WHOLE BUILDING Facility Total HVAC Electric Demand Power", "double","hvac_demand_power")
-        epa.subs_e(True, "energyPlus/FACILITY Facility Thermal Comfort ASHRAE 55 "
-                                "Simple Model Summer or Winter Clothes Not Comfortable Time", "double", "ashrae_uncomfortable_hours")
-        epa.subs_e(True, "energyPlus/Environment Site Outdoor Air Drybulb Temperature", "double", "outdoor_air")
+        epa.subs_e(True, eplus_federate + "/EMS Cooling Controlled Load", "double", "cooling_controlled_load")
+        epa.subs_e(True, eplus_federate + "/EMS Heating Controlled Load", "double", "heating_controlled_load")
+        epa.subs_e(True, eplus_federate + "/EMS Cooling Schedule Temperature", "double", "cooling_schedule_temperature")
+        epa.subs_e(True, eplus_federate + "/EMS Heating Schedule Temperature", "double", "heating_schedule_temperature")
+        epa.subs_e(True, eplus_federate + "/EMS Cooling Setpoint Temperature", "double", "cooling_setpoint_temperature")
+        epa.subs_e(True, eplus_federate + "/EMS Heating Setpoint Temperature", "double", "heating_setpoint_temperature")
+        epa.subs_e(True, eplus_federate + "/EMS Cooling Current Temperature", "double", "cooling_current_temperature")
+        epa.subs_e(True, eplus_federate + "/EMS Heating Current Temperature", "double", "heating_current_temperature")
+        epa.subs_e(True, eplus_federate + "/EMS Cooling Power State", "string", "cooling_power_state")
+        epa.subs_e(True, eplus_federate + "/EMS Heating Power State", "string", "heating_power_state")
+        epa.subs_e(True, eplus_federate + "/EMS Cooling Volume", "double", "cooling_volume")
+        epa.subs_e(True, eplus_federate + "/EMS Heating Volume", "double", "heating_volume")
+        epa.subs_e(True, eplus_federate + "/EMS Occupant Count", "int", "occupants_total")
+        epa.subs_e(True, eplus_federate + "/EMS Indoor Air Temperature", "double", "indoor_air")
+        epa.subs_e(True, eplus_federate + "/WHOLE BUILDING Facility Total Electric Demand Power", "double",
+                   "electric_demand_power")
+        epa.subs_e(True, eplus_federate + "/WHOLE BUILDING Facility Total HVAC Electric Demand Power", "double",
+                   "hvac_demand_power")
+        epa.subs_e(True, eplus_federate + "/FACILITY Facility Thermal Comfort ASHRAE 55 Simple Model " +
+                   "Summer or Winter Clothes Not Comfortable Time", "double", "ashrae_uncomfortable_hours")
+        epa.subs_e(True, eplus_federate + "/Environment Site Outdoor Air Drybulb Temperature", "double", "outdoor_air")
         # Pubs
         epa.pubs_e(False, "power_A", "double", "W")
         epa.pubs_e(False, "power_B", "double", "W")
@@ -396,7 +402,8 @@ values:
         if row[0] == dso_substation_bus_id:
             row[9] = baseKV
 
-    if len(config['PYPOWERConfiguration']['UnitOutStart']) > 0 and len(config['PYPOWERConfiguration']['UnitOutEnd']) > 0:
+    if len(config['PYPOWERConfiguration']['UnitOutStart']) > 0 and len(
+            config['PYPOWERConfiguration']['UnitOutEnd']) > 0:
         dt3 = datetime.strptime(config['PYPOWERConfiguration']['UnitOutStart'], time_fmt)
         tout_start = int((dt3 - dt1).total_seconds())
         dt3 = datetime.strptime(config['PYPOWERConfiguration']['UnitOutEnd'], time_fmt)
@@ -405,7 +412,8 @@ values:
     else:
         ppcase['UnitsOut'] = []
 
-    if len(config['PYPOWERConfiguration']['BranchOutStart']) > 0 and len(config['PYPOWERConfiguration']['BranchOutEnd']) > 0:
+    if len(config['PYPOWERConfiguration']['BranchOutStart']) > 0 and len(
+            config['PYPOWERConfiguration']['BranchOutEnd']) > 0:
         dt3 = datetime.strptime(config['PYPOWERConfiguration']['BranchOutStart'], time_fmt)
         tout_start = int((dt3 - dt1).total_seconds())
         dt3 = datetime.strptime(config['PYPOWERConfiguration']['BranchOutEnd'], time_fmt)
@@ -422,7 +430,7 @@ values:
         shutil.copy(ppcsv, casedir)
 
         # write tso Power
-        ppyamlstr = """name: pypower
+        yamlstr = """name: """ + tso_federate + """
 time_delta: """ + str(config['PYPOWERConfiguration']['PFStep']) + """s
 broker: tcp://localhost:5570
 values:
@@ -446,10 +454,10 @@ values:
         default: 0
 """
         op = open(casedir + '/pypower.yaml', 'w')
-        print(ppyamlstr, file=op)
+        print(yamlstr, file=op)
         op.close()
 
-        ppc = helpers.HelicsMsg("pypower", int(config['PYPOWERConfiguration']['PFStep']))
+        ppc = HelicsMsg(tso_federate, int(config['PYPOWERConfiguration']['PFStep']))
         ppc.subs_n(gld_federate + "/distribution_load", "complex")
         ppc.subs_n(sub_federate + "/unresponsive_mw", "double")
         ppc.subs_n(sub_federate + "/responsive_max_mw", "double")
@@ -458,21 +466,21 @@ values:
         ppc.subs_n(sub_federate + "/responsive_deg", "integer")
         ppc.pubs_n(False, "three_phase_voltage_" + str(dso_substation_bus_id), "double")
         ppc.pubs_n(False, "LMP_" + str(dso_substation_bus_id), "double")
-        ppc.write_file(casedir + '/pypowerConfig.json')
+        ppc.write_file(casedir + '/pypower.json')
 
-    # write a YAML for the solution monitor
-    tespyamlstr = """name = tesp_monitor
-time_delta = """ + str(config['AgentPrep']['MarketClearingPeriod']) + """s
+        # write a YAML for the solution monitor
+        yamlstr = """name: """ + mtr_federate + """
+time_delta: """ + str(config['AgentPrep']['MarketClearingPeriod']) + """s
 broker: tcp://localhost:5570
 aggregate_sub: true
 values:
-  vpos""" + str(dso_substation_bus_id) + """:
-    topic: pypower/three_phase_voltage_""" + str(dso_substation_bus_id) + """
+  TPV_""" + str(dso_substation_bus_id) + """:
+    topic: """ + tso_federate + """/three_phase_voltage_""" + str(dso_substation_bus_id) + """
     default: 0
     type: double
     list: false
   LMP_""" + str(dso_substation_bus_id) + """:
-    topic: pypower/LMP_""" + str(dso_substation_bus_id) + """
+    topic: """ + tso_federate + """/LMP_""" + str(dso_substation_bus_id) + """
     default: 0
     type: double
     list: false
@@ -486,137 +494,181 @@ values:
     default: 0
     type: complex
     list: false
-  power_A:
-    topic: eplus_agent/power_A
+"""
+
+        if len(EpBus) > 0:
+            yamlstr = yamlstr + """  power_A:
+    topic: """ + agent_federate + """/power_A
     default: 0
     type: double
     list: false
   electric_demand_power:
-    topic: eplus/WHOLE BUILDING FACILITY TOTAL ELECTRIC DEMAND POWER
+    topic: """ + eplus_federate + """/WHOLE BUILDING Facility Total Electric Demand Power
     default: 0
     type: double
     list: false
 """
-    if freshdir:
-        op = open(casedir + '/tesp_monitor.yaml', 'w')
-        print(tespyamlstr, file=op)
+        op = open(casedir + '/' + casename + '_monitor.yaml', 'w')
+        print(yamlstr, file=op)
         op.close()
 
-    fg.populate_feeder(cfgfile)
+        ppc = HelicsMsg(mtr_federate, config['AgentPrep']['MarketClearingPeriod'])
+        ppc.subs_n(tso_federate + "/three_phase_voltage_" + str(dso_substation_bus_id), "double")
+        ppc.subs_n(tso_federate + "/LMP_" + str(dso_substation_bus_id), "double")
+        ppc.subs_n(sub_federate + "/clear_price", "double")
+        ppc.subs_n(gld_federate + "/distribution_load", "complex")
+        if len(EpBus) > 0:
+            ppc.subs_n(agent_federate + "/power_A", "double")
+            ppc.subs_n(eplus_federate + "/WHOLE BUILDING Facility Total Electric Demand Power", "double")
+        ppc.write_file(casedir + '/' + casename + '_monitor.json')
+
+    populate_feeder(cfgfile)
+    # glm file name without a .glm extension
     glmfile = casedir + '/' + casename
-    glm.glm_dict(glmfile)
-    ps.prep_substation(glmfile, cfgfile)
+    glm_dict(glmfile)
+    prep_substation(glmfile, cfgfile)
 
     if not freshdir:
         return
 
     # ====================================================================
     # FNCS shell scripts and chmod for Mac/Linux - need to specify python3
-    aucline = """python3 -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
-    ppline = """python3 -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
-    weatherline = """python3 -c "import tesp_support.api as tesp;tesp.startWeatherAgent('weather.dat')" """
+    try:
+        aucline = "import tesp_support.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "')"
+        ppline = "import tesp_support.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('" + PPJsonFile + "','" + casename + "')"
+        weatherline = "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')"
 
-    shfile = casedir + '/run.sh'
-    op = open(shfile, 'w')
-    if bUseEplus:
-        print('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> fncs_broker.log &)',
-              file=op)
-        print('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w '
-              + EpWeather + ' -d output MergedFNCS.idf &> fncs_eplus.log &)', file=op)
-        print('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent',
-              EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo,
-              '&> fncs_eplus_agent.log &)', file=op)
-    else:
-        print('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> fncs_broker.log &)',
-              file=op)
-    print('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile +
-          ' &> fncs_gld_1.log &)', file=op)
-    print('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec ' + aucline +
-          ' &> fncs_sub_1.log &)', file=op)
-    print('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && ' +
-          'export FNCS_LOG_STDOUT=yes && exec ' + ppline +
-          ' &> fncs_pypower.log &)', file=op)
-    print('(export WEATHER_CONFIG=' + WeatherConfigFile +
-          ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec ' + weatherline +
-          ' &> fncs_weather.log &)', file=op)
-    op.close()
-    st = os.stat(shfile)
-    os.chmod(shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        shfile = casedir + '/run.sh'
+        op = open(shfile, 'w')
+        if bUseEplus:
+            print(
+                '(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> broker_f.log &)',
+                file=op)
+            print('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w '
+                  + EpWeather + ' -d output Merged_f.idf &> ' + eplus_federate + '_f.log &)', file=op)
+            print('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent',
+                  EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo,
+                  '&> ' + agent_federate + '_f.log &)', file=op)
+        else:
+            print('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> broker_f.log &)',
+                file=op)
+        print('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile +
+              ' &> ' + gld_federate + '_f.log &)', file=op)
+        print('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec python3 -c "' + aucline +
+              '" &> ' + sub_federate + '_f.log &)', file=op)
+        print('(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && ' +
+              'export FNCS_LOG_STDOUT=yes && exec python3 -c "' + ppline +
+              '" &> ' + tso_federate + '_f.log &)', file=op)
+        print('(export WEATHER_CONFIG=' + WeatherConfigFile +
+              ' && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "' + weatherline +
+              '" &> weather_f.log &)', file=op)
+        op.close()
+        st = os.stat(shfile)
+        os.chmod(shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
+        cmds = {'time_stop': seconds,
+                'yaml_delta': int(config['AgentPrep']['MarketClearingPeriod']),
+                'commands': [],
+                'helics_config': casename + '_monitor.json',
+                'commands_f': [],
+                'fncs_config': casename + '_monitor.yaml'}
+
+        cmd = cmds['commands_f']
+        cmd.append({'args': ['fncs_broker', '5'],
+                    'env': [['FNCS_BROKER', 'tcp://*:5570'],
+                            ['FNCS_FATAL', 'YES']],
+                    'log': 'broker_f.log'})
+        if bUseEplus:
+            cmd[0]['args'][1] = '7'
+            cmd.append({'args': ['energyplus', '-w', EpWeather, '-d', 'output', 'Merged_f.idf'],
+                        'env': [['FNCS_CONFIG_FILE', 'eplus.yaml'],
+                                ['FNCS_FATAL', 'YES']],
+                        'log': eplus_federate + '_f.log'})
+            cmd.append({'args': ['eplus_agent', EpAgentStop, EpAgentStep,
+                                 EpMetricsKey, EpMetricsFile, str(EpRef),
+                                 str(EpRamp), str(EpLimHi), str(EpLimLo)],
+                        'env': [['FNCS_CONFIG_FILE', 'eplus_agent.yaml'],
+                                ['FNCS_FATAL', 'YES']],
+                        'log': agent_federate + '_f.log'})
+
+        cmd.append({'args': ['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile],
+                    'env': [['FNCS_FATAL', 'YES']],
+                    'log': gld_federate + '_f.log'})
+        cmd.append({'args': [pycall, '-c', aucline],
+                    'env': [['FNCS_CONFIG_FILE', SubstationYamlFile],
+                            ['FNCS_FATAL', 'YES'],
+                            ['FNCS_LOG_STDOUT', 'yes']],
+                    'log': sub_federate + '_f.log'})
+        cmd.append({'args': [pycall, '-c', ppline],
+                    'env': [['FNCS_CONFIG_FILE', 'pypower.yaml'],
+                            ['FNCS_FATAL', 'YES'],
+                            ['FNCS_LOG_STDOUT', 'yes']],
+                    'log': tso_federate + '_f.log'})
+        cmd.append({'args': [pycall, '-c', weatherline],
+                    'env': [['WEATHER_CONFIG', WeatherConfigFile],
+                            ['FNCS_FATAL', 'YES']],
+                    'log': 'weather_f.log'})
+    finally:
+        pass
 
     # ======================================================================
     # HELICS shell scripts and chmod for Mac/Linux - need to specify python3
-    PypowerConfigFile = 'pypowerConfig.json'
-    SubstationConfigFile = casename + '_HELICS_substation.json'
-    WeatherConfigFile = casename + '_HELICS_Weather_Config.json'
-    aucline = """python3 -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """',helicsConfig='""" + SubstationConfigFile + """')" """
-    ppline = """python3 -c "import tesp_support.api as tesp;tesp.tso_pypower_loop('""" + PPJsonFile + """','""" + casename + """',helicsConfig='""" + PypowerConfigFile + """')" """
+    try:  # HELICS
+        PypowerConfigFile = 'pypower.json'
+        SubstationConfigFile = casename + '_substation.json'
+        WeatherConfigFile = casename + '_weather.json'
+        aucline = "import tesp_support.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "',helicsConfig='" + SubstationConfigFile + "')"
+        ppline = "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('" + PPJsonFile + "','" + casename + "',helicsConfig='" + PypowerConfigFile + "')"
 
-    shfile = casedir + '/runh.sh'
-    op = open(shfile, 'w')
-    if bUseEplus:
-        print('(exec helics_broker -f 6 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
-        print('(export HELICS_CONFIG_FILE=eplus.json && exec energyplus -w ' + EpWeather +
-              ' -d output Merged.idf &> eplus.log &)', file=op)
-        # configure from the command line, but StartTime and load_scale not supported this way
-        print('(exec eplus_agent_helics',
-              EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo,
-              'eplus_agent.json &> eplus_agent.log &)', file=op)
-    else:
-        print('(exec helics_broker -f 4 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
-    print('(exec gridlabd -D USE_HELICS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' &> gld_1.log &)', file=op)
-    print('(exec ' + aucline + ' &> sub_1.log &)', file=op)
-    print('(exec ' + ppline + ' &> pypower.log &)', file=op)
-    print('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec ' + weatherline + ' &> weather.log &)', file=op)
-    op.close()
-    st = os.stat(shfile)
-    os.chmod(shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        shfile = casedir + '/runh.sh'
+        op = open(shfile, 'w')
+        if bUseEplus:
+            print('(exec helics_broker -f 6 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
+            print('(export HELICS_CONFIG_FILE=eplus.json && exec energyplus -w ' + EpWeather +
+                  ' -d output Merged.idf &> ' + eplus_federate + '.log &)', file=op)
+            # configure from the command line, but StartTime and load_scale not supported this way
+            print('(exec eplus_agent_helics',
+                  EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo,
+                  'eplus_agent.json &> ' + agent_federate + '.log &)', file=op)
+        else:
+            print('(exec helics_broker -f 4 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
+        print('(exec gridlabd -D USE_HELICS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' &> ' +
+              gld_federate + '.log &)', file=op)
+        print('(exec python3 -c "' + aucline + '" &> ' + sub_federate + '.log &)', file=op)
+        print('(exec python3 -c "' + ppline + '" &> ' + tso_federate + '.log &)', file=op)
+        print('(export WEATHER_CONFIG=' + WeatherConfigFile + ' && exec python3 -c "' + weatherline +
+              '" &> weather.log &)', file=op)
+        op.close()
+        st = os.stat(shfile)
+        os.chmod(shfile, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-    # commands for launching Python federates
-    op = open(casedir + '/launch_auction.py', 'w')
-    print('import tesp_support.api as tesp', file=op)
-    print('tesp.substation_loop(\'' + AgentDictFile + '\',\'' + casename + '\')', file=op)
-    op.close()
-    op = open(casedir + '/launch_pp.py', 'w')
-    print('import tesp_support.api as tesp', file=op)
-    print('tesp.pypower_loop(\'' + PPJsonFile + '\',\'' + casename + '\')', file=op)
-    op.close()
-    op = open(casedir + '/tesp_monitor.json', 'w')
-    cmds = {'time_stop': seconds,
-            'yaml_delta': int(config['AgentPrep']['MarketClearingPeriod']),
-            'commands': []}
-    if bUseEplus:
-        cmds['commands'].append({'args': ['fncs_broker', '6'],
-                                 'env': [['FNCS_BROKER', 'tcp://*:5570'], ['FNCS_FATAL', 'YES'],
-                                         ['FNCS_LOG_STDOUT', 'yes']],
-                                 'log': 'broker.log'})
-        cmds['commands'].append({'args': ['EnergyPlus', '-w', EpWeather, '-d', 'output', '-r', 'MergedFNCS.idf'],
-                                 'env': [['FNCS_CONFIG_FILE', 'eplus.yaml'], ['FNCS_FATAL', 'YES'],
-                                         ['FNCS_LOG_STDOUT', 'yes']],
-                                 'log': 'eplus.log'})
-        cmds['commands'].append({'args': ['eplus_agent', EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef,
-                                          EpRamp, EpLimHi, EpLimLo],
-                                 'env': [['FNCS_CONFIG_FILE', 'eplus_agent.yaml'], ['FNCS_FATAL', 'YES'],
-                                         ['FNCS_LOG_STDOUT', 'yes']],
-                                 'log': 'eplus_agent.log'})
-    else:
-        cmds['commands'].append({'args': ['fncs_broker', '6'],
-                                 'env': [['FNCS_BROKER', 'tcp://*:5570'], ['FNCS_FATAL', 'YES'],
-                                         ['FNCS_LOG_STDOUT', 'yes']],
-                                 'log': 'broker.log'})
-    cmds['commands'].append({'args': ['gridlabd', '-D', 'USE_FNCS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile],
-                             'env': [['FNCS_FATAL', 'YES'], ['FNCS_LOG_STDOUT', 'yes']],
-                             'log': 'gld_1.log'})
-    cmds['commands'].append({'args': [pycall, 'launch_auction.py'],
-                             'env': [['FNCS_CONFIG_FILE', SubstationYamlFile], ['FNCS_FATAL', 'YES'],
-                                     ['FNCS_LOG_STDOUT', 'yes']],
-                             'log': 'sub_1.log'})
-    cmds['commands'].append({'args': [pycall, 'launch_pp.py'],
-                             'env': [['FNCS_CONFIG_FILE', 'pypower.yaml'], ['FNCS_FATAL', 'YES'],
-                                     ['FNCS_LOG_STDOUT', 'yes']],
-                             'log': 'pypower.log'})
-    json.dump(cmds, op, indent=2)
-    op.close()
+        cmd = cmds['commands']
+        cmd.append({'args': ['helics_broker', '-f', '5', '--loglevel=warning', '--name=mainbroker'],
+                    'log': 'broker.log'})
+        if bUseEplus:
+            cmd[0]['args'][2] = '7'
+            cmd.append({'args': ['energyplus', '-w', EpWeather, '-d', 'output', 'Merged.idf'],
+                        'env': [['HELICS_CONFIG_FILE', 'eplus.json']],
+                        'log': eplus_federate + '.log'})
+            cmd.append({'args': ['eplus_agent_helics', EpAgentStop, EpAgentStep,
+                                 EpMetricsKey, EpMetricsFile, str(EpRef),
+                                 str(EpRamp), str(EpLimHi), str(EpLimLo), 'eplus_agent.json'],
+                        'log': agent_federate + '.log'})
+
+        cmd.append({'args': ['gridlabd', '-D', 'USE_HELICS', '-D', 'METRICS_FILE=' + GldMetricsFile, GldFile],
+                    'log': gld_federate + '.log'})
+        cmd.append({'args': [pycall, '-c', aucline],
+                    'log': sub_federate + '.log'})
+        cmd.append({'args': [pycall, '-c', ppline],
+                    'log': tso_federate + '.log'})
+        cmd.append({'args': [pycall, '-c', weatherline],
+                    'env': [['WEATHER_CONFIG', WeatherConfigFile]],
+                    'log': 'weather.log'})
+        op = open(casedir + '/monitor.json', 'w')
+        json.dump(cmds, op, indent=2)
+        op.close()
+    finally:
+        pass
 
 
 def make_tesp_case(cfgfile='test.json'):
@@ -709,3 +761,7 @@ def add_tesp_feeder(cfgfile):
     lp = open(cfgfile).read()
     config = json.loads(lp)
     write_tesp_case(config, cfgfile, freshdir=False)
+
+
+if __name__ == "__main__":
+    make_tesp_case('~/tesp/repository/tesp/examples/capabilities/ttest/test.json')

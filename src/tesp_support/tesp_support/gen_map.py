@@ -1,9 +1,7 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: gen_map.py
 import json
-import math
-import os
-import sys
+
 import xlrd
 
 '''
@@ -70,7 +68,8 @@ high_renew_wind_scaling = 2.00
 # ========   END INPUT SETTINGS  ========================
 
 
-def prepare_network(node, node_col, high_renewables_case, zero_pmin=False, zero_index=False, on_ehv=True, split_start_cost=False, high_ramp_rates=False, coal=True):
+def prepare_network(node, node_col, high_renewables_case, zero_pmin=False, zero_index=False, on_ehv=True,
+                    split_start_cost=False, high_ramp_rates=False, coal=True):
     if high_renewables_case:
         case_file = node + '_hi_system_case_config'
     else:
@@ -105,7 +104,7 @@ def prepare_network(node, node_col, high_renewables_case, zero_pmin=False, zero_
                 busNo = int(sheet.cell(irow, node_col).value)
 
             mvabase = sheet.cell(irow, 3).value
-            if zero_pmin:   # Mode to set pmin to zero as part of debugging
+            if zero_pmin:  # Mode to set pmin to zero as part of debugging
                 pmin = 0.0
             else:
                 pmin = sheet.cell(irow, 4).value
@@ -117,8 +116,8 @@ def prepare_network(node, node_col, high_renewables_case, zero_pmin=False, zero_
             Gentype = sheet.cell(irow, 10).value
             RampRate = sheet.cell(irow, 11).value
             if split_start_cost:
-                StartupCost = sheet.cell(irow, 12).value/2
-                ShutdownCost = sheet.cell(irow, 12).value/2
+                StartupCost = sheet.cell(irow, 12).value / 2
+                ShutdownCost = sheet.cell(irow, 12).value / 2
             else:
                 StartupCost = sheet.cell(irow, 12).value
                 ShutdownCost = 0
@@ -254,6 +253,7 @@ def prepare_network(node, node_col, high_renewables_case, zero_pmin=False, zero_
     with open(case_path + case_file + '.json', 'w') as outfile:
         json.dump(data, outfile, indent=2)
         outfile.close()
+
 
 # ------- prepare_network(
 #                 node,

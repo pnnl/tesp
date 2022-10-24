@@ -64,7 +64,7 @@ def write_tesp_case (config, cfgfile):
     As the configuration process finishes, several files are written to *casedir*:
 
         * Casename.glm: the GridLAB-D model, copied and modified from the TESP support directory
-        * Casename_FNCS_Config.txt: FNCS subscriptions and publications, included by Casename.glm
+        * Casename_gridlabd.txt: FNCS subscriptions and publications, included by Casename.glm
         * Casename_agent_dict.json: metadata for the simple_auction and hvac agents
         * Casename_glm_dict.json: metadata for Casename.glm
         * Casename_pp.json: the PYPOWER model, copied and modified from the TESP support directory
@@ -492,7 +492,7 @@ values:
     p3.wait()
 
     # write the command scripts for console and tesp_monitor execution
-    aucline = """python -c "import tesp_support.api as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
+    aucline = """python -c "import tesp_support.substation as tesp;tesp.substation_loop('""" + AgentDictFile + """','""" + casename + """')" """
     ppline = """python -c "import tesp_support.api as tesp;tesp.pypower_loop('""" + PPJsonFile + """','""" + casename + """')" """
 
     # batch file for Windows

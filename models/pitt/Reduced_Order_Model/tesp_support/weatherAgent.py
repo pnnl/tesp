@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 from datetime import timedelta
 try:
-  import tesp_support.fncs as fncs;
+  import tesp_support.fncs as fncs
 except:
   pass
 import random

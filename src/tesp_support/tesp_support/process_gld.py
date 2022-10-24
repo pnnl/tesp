@@ -11,55 +11,56 @@ import json
 import os
 
 import numpy as np
-
-try:
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-except:
-    pass
+import matplotlib.pyplot as plt
 
 # Setting up logging
 logger = logging.getLogger(__name__)
 
 
-def read_gld_metrics(path, nameroot, dictname=''):
-    glm_dict_path = os.path.join(path, f'{nameroot}_glm_dict.json')
-    sub_dict_path = os.path.join(path, f'substation_{nameroot}_metrics.json')
-    house_dict_path = os.path.join(path, f'house_{nameroot}_metrics.json')
-    bm_dict_path = os.path.join(path, f'billing_meter_{nameroot}_metrics.json')
-    inverter_dict_path = os.path.join(path, f'inverter_{nameroot}_metrics.json')
-    cap_dict_path = os.path.join(path, f'capacitor_{nameroot}_metrics.json')
-    reg_dict_path = os.path.join(path, f'regulator_{nameroot}_metrics.json')
+def read_gld_metrics(path, name_root, diction_name=''):
+    glm_dict_path = os.path.join(path, f'{name_root}_glm_dict.json')
+    sub_dict_path = os.path.join(path, f'substation_{name_root}_metrics.json')
+    house_dict_path = os.path.join(path, f'house_{name_root}_metrics.json')
+    bm_dict_path = os.path.join(path, f'billing_meter_{name_root}_metrics.json')
+    inv_dict_path = os.path.join(path, f'inverter_{name_root}_metrics.json')
+    cap_dict_path = os.path.join(path, f'capacitor_{name_root}_metrics.json')
+    reg_dict_path = os.path.join(path, f'regulator_{name_root}_metrics.json')
 
     # the feederGenerator now inserts metrics_collector objects on capacitors and regulators
     bCollectedRegCapMetrics = True
 
     # first, read and print a dictionary of all the monitored GridLAB-D objects
-    if len(dictname) > 0:
+    if len(diction_name) > 0:
         try:
-            lp = open(dictname).read()
+            lp = open(diction_name).read()
         except:
-            logger.error(f'Unable to open GridLAB-D metrics file {dictname}')
+            logger.error(f'Unable to open metrics diction file {diction_name}')
     else:
         try:
             lp = open(glm_dict_path).read()
         except:
-            logger.error(f'Unable to open GridLAB-D metrics file {glm_dict_path}')
-    dict = json.loads(lp)
-    fdr_keys = list(dict['feeders'].keys())
+            logger.error(f'Unable to open metrics diction file {glm_dict_path}')
+    diction = json.loads(lp)
+    fdr_keys = list(diction['feeders'].keys())
     fdr_keys.sort()
-    inv_keys = list(dict['inverters'].keys())
+    inv_keys = list(diction['inverters'].keys())
     inv_keys.sort()
-    hse_keys = list(dict['houses'].keys())
+    hse_keys = list(diction['houses'].keys())
     hse_keys.sort()
-    mtr_keys = list(dict['billingmeters'].keys())
+    mtr_keys = list(diction['billingmeters'].keys())
     mtr_keys.sort()
-    cap_keys = list(dict['capacitors'].keys())
+    cap_keys = list(diction['capacitors'].keys())
     cap_keys.sort()
-    reg_keys = list(dict['regulators'].keys())
+    reg_keys = list(diction['regulators'].keys())
     reg_keys.sort()
-    xfMVA = dict['transformer_MVA']
-    bulkBus = dict['bulkpower_bus']
+    # reg_keys = list(diction['evchargerdet'].keys())
+    # reg_keys.sort()
+    # reg_keys = list(diction['line'].keys())
+    # reg_keys.sort()
+    # reg_keys = list(diction['transformer'].keys())
+    # reg_keys.sort()
+    xfMVA = diction['transformer_MVA']
+    bulkBus = diction['bulkpower_bus']
 
     # parse the substation metrics file first; there should just be one entity per time sample
     # each metrics file should have matching time points
@@ -85,15 +86,14 @@ def read_gld_metrics(path, nameroot, dictname=''):
           bulkBus, 'with', xfMVA, 'MVA transformer')
     print('\nFeeder Dictionary:')
     for key in fdr_keys:
-        row = dict['feeders'][key]
+        row = diction['feeders'][key]
         print(key, 'has', row['house_count'], 'houses and', row['inverter_count'], 'inverters')
 
     # parse the substation metadata for 2 things of specific interest
-    #  print ('\nSubstation Metadata for', len(lst_s[time_key]), 'objects')
+    # print ('\nSubstation Metadata for', len(lst_s[time_key]), 'objects')
     idx_s = {}
-    data_s = None
     for key, val in meta_s.items():
-        #    print (key, val['index'], val['units'])
+        # print (key, val['index'], val['units'])
         if key == 'real_power_avg':
             idx_s['SUB_POWER_IDX'] = val['index']
             idx_s['SUB_POWER_UNITS'] = val['units']
@@ -126,17 +126,21 @@ def read_gld_metrics(path, nameroot, dictname=''):
     lst_h = json.loads(lp_h)
     lp_m = open(bm_dict_path).read()
     lst_m = json.loads(lp_m)
-    lp_i = open(inverter_dict_path).read()
+    lp_i = open(inv_dict_path).read()
     lst_i = json.loads(lp_i)
+    lp_c = open(cap_dict_path).read()
+    lst_c = json.loads(lp_c)
+    lp_r = open(reg_dict_path).read()
+    lst_r = json.loads(lp_r)
 
     # houses
     idx_h = {}
     data_h = None
     lst_h.pop('StartTime')
     meta_h = lst_h.pop('Metadata')
-    #  print('\nHouse Metadata for', len(lst_h[time_key]), 'objects')
+    # print('\nHouse Metadata for', len(lst_h[time_key]), 'objects')
     for key, val in meta_h.items():
-        #    print (key, val['index'], val['units'])
+        # print (key, val['index'], val['units'])
         if key == 'air_temperature_avg':
             idx_h['HSE_AIR_AVG_IDX'] = val['index']
             idx_h['HSE_AIR_AVG_UNITS'] = val['units']
@@ -165,13 +169,14 @@ def read_gld_metrics(path, nameroot, dictname=''):
             idx_h['HSE_WH_AVG_IDX'] = val['index']
             idx_h['HSE_WH_AVG_UNITS'] = val['units']
     if len(hse_keys) > 0:
-        # there may be some houses in the dictionary that we don't write metrics for, e.g., write_node_houses with default node_metrics_interval=None
+        # there may be some houses in the dictionary that we don't write metrics for,
+        # e.g., write_node_houses with default node_metrics_interval=None
         hse_keys = [x for x in hse_keys if x in lst_h[time_key]]
         print(len(hse_keys), 'houses left')
         data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
         print('\nConstructed', data_h.shape, 'NumPy array for Houses')
         j = 0
-        for key in hse_keys:
+        for _ in hse_keys:
             i = 0
             for t in times:
                 ary = lst_h[str(t)][hse_keys[j]]
@@ -192,7 +197,7 @@ def read_gld_metrics(path, nameroot, dictname=''):
         nBillingMeters = len(lst_m[time_key])
     #  print('\nBilling Meter Metadata for', nBillingMeters, 'objects')
     for key, val in meta_m.items():
-        #    print (key, val['index'], val['units'])
+        #    print(key, val['index'], val['units'])
         if key == 'voltage_max':
             idx_m['MTR_VOLT_MAX_IDX'] = val['index']
             idx_m['MTR_VOLT_MAX_UNITS'] = val['units']
@@ -252,13 +257,14 @@ def read_gld_metrics(path, nameroot, dictname=''):
             idx_m['MTR_REAL_POWER_MIN_IDX'] = val['index']
 
     if nBillingMeters > 0:
-        # there may be some meters in the dictionary that we don't write metrics for, e.g., write_node_houses with default node_metrics_interval=None
+        # there may be some meters in the dictionary that we don't write metrics for,
+        # e.g., write_node_houses with default node_metrics_interval=None
         mtr_keys = [x for x in mtr_keys if x in lst_m[time_key]]
         print(len(mtr_keys), 'meters left, expecting', nBillingMeters)
         data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
         print('\nConstructed', data_m.shape, 'NumPy array for Meters')
         j = 0
-        for key in mtr_keys:
+        for _ in mtr_keys:
             i = 0
             for t in times:
                 ary = lst_m[str(t)][mtr_keys[j]]
@@ -269,8 +275,8 @@ def read_gld_metrics(path, nameroot, dictname=''):
     # normalize the meter voltages to 100 percent
     j = 0
     for key in mtr_keys:
-        vln = dict['billingmeters'][key]['vln'] / 100.0
-        vll = dict['billingmeters'][key]['vll'] / 100.0
+        vln = diction['billingmeters'][key]['vln'] / 100.0
+        vll = diction['billingmeters'][key]['vll'] / 100.0
         data_m[j, :, idx_m['MTR_VOLT_MIN_IDX']] /= vln
         data_m[j, :, idx_m['MTR_VOLT_MAX_IDX']] /= vln
         data_m[j, :, idx_m['MTR_VOLT_AVG_IDX']] /= vln
@@ -285,7 +291,7 @@ def read_gld_metrics(path, nameroot, dictname=''):
     # assemble the total solar and battery inverter power
     solar_kw = np.zeros(len(times), dtype=np.float)
     battery_kw = np.zeros(len(times), dtype=np.float)
-    #  print ('\nInverter Metadata for', len(inv_keys), 'objects')
+    #  print('\nInverter Metadata for', len(inv_keys), 'objects')
     for key, val in meta_i.items():
         #    print (key, val['index'], val['units'])
         if key == 'real_power_avg':
@@ -298,7 +304,7 @@ def read_gld_metrics(path, nameroot, dictname=''):
         data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
         print('\nConstructed', data_i.shape, 'NumPy array for Inverters')
         j = 0
-        for key in inv_keys:
+        for _ in inv_keys:
             i = 0
             for t in times:
                 ary = lst_i[str(t)][inv_keys[j]]
@@ -307,18 +313,12 @@ def read_gld_metrics(path, nameroot, dictname=''):
             j = j + 1
         j = 0
         for key in inv_keys:
-            res = dict['inverters'][key]['resource']
+            res = diction['inverters'][key]['resource']
             if res == 'solar':
                 solar_kw += 0.001 * data_i[j, :, idx_i['INV_P_AVG_IDX']]
             elif res == 'battery':
                 battery_kw += 0.001 * data_i[j, :, idx_i['INV_P_AVG_IDX']]
             j = j + 1
-
-    # capacitors and regulators
-    lp_c = open(cap_dict_path).read()
-    lst_c = json.loads(lp_c)
-    lp_r = open(reg_dict_path).read()
-    lst_r = json.loads(lp_r)
 
     idx_c = {}
     data_c = None
@@ -333,7 +333,7 @@ def read_gld_metrics(path, nameroot, dictname=''):
         data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=np.float)
         print('\nConstructed', data_c.shape, 'NumPy array for Capacitors')
         j = 0
-        for key in cap_keys:
+        for _ in cap_keys:
             i = 0
             for t in times:
                 ary = lst_c[str(t)][cap_keys[j]]
@@ -355,7 +355,7 @@ def read_gld_metrics(path, nameroot, dictname=''):
         data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=np.float)
         print('\nConstructed', data_r.shape, 'NumPy array for Regulators')
         j = 0
-        for key in reg_keys:
+        for _ in reg_keys:
             i = 0
             for t in times:
                 ary = lst_r[str(t)][reg_keys[j]]
@@ -368,61 +368,64 @@ def read_gld_metrics(path, nameroot, dictname=''):
         print('Total meter bill =',
               '{:.3f}'.format(data_m[:, -1, idx_m['MTR_BILL_IDX']].sum()))
 
-    dict = {}
-    dict['hrs'] = hrs
-    dict['data_s'] = data_s
-    dict['data_m'] = data_m
-    dict['data_i'] = data_i
-    dict['data_h'] = data_h
-    dict['data_c'] = data_c
-    dict['data_r'] = data_r
-    dict['keys_s'] = fdr_keys
-    dict['keys_m'] = mtr_keys
-    dict['keys_i'] = inv_keys
-    dict['keys_h'] = hse_keys
-    dict['keys_c'] = cap_keys
-    dict['keys_r'] = reg_keys
-    dict['idx_s'] = idx_s
-    dict['idx_m'] = idx_m
-    dict['idx_i'] = idx_i
-    dict['idx_h'] = idx_h
-    dict['idx_c'] = idx_c
-    dict['idx_r'] = idx_r
-    dict['solar_kw'] = solar_kw
-    dict['battery_kw'] = battery_kw
-    dict['subname'] = sub_key
-    return dict
+    return {
+        'hrs': hrs,
+        'data_s': data_s,
+        'data_m': data_m,
+        'data_i': data_i,
+        'data_h': data_h,
+        'data_c': data_c,
+        'data_r': data_r,
+        'keys_s': fdr_keys,
+        'keys_m': mtr_keys,
+        'keys_i': inv_keys,
+        'keys_h': hse_keys,
+        'keys_c': cap_keys,
+        'keys_r': reg_keys,
+        'idx_s': idx_s,
+        'idx_m': idx_m,
+        'idx_i': idx_i,
+        'idx_h': idx_h,
+        'idx_c': idx_c,
+        'idx_r': idx_r,
+        'solar_kw': solar_kw,
+        'battery_kw': battery_kw,
+        'subname': sub_key
+    }
 
 
-def plot_gld(dict, save_file=None, save_only=False):
+def plot_gld(diction, save_file=None, save_only=False):
     # the feederGenerator now inserts metrics_collector objects on capacitors and regulators
     bCollectedRegCapMetrics = True
 
-    hrs = dict['hrs']
-    data_s = dict['data_s']
-    data_m = dict['data_m']
-    data_i = dict['data_i']
-    data_h = dict['data_h']
-    data_c = dict['data_c']
-    data_r = dict['data_r']
-    keys_s = dict['keys_s']
-    keys_m = dict['keys_m']
-    keys_i = dict['keys_i']
-    keys_h = dict['keys_h']
-    keys_c = dict['keys_c']
-    keys_r = dict['keys_r']
-    idx_s = dict['idx_s']
-    idx_m = dict['idx_m']
-    idx_i = dict['idx_i']
-    idx_h = dict['idx_h']
-    idx_c = dict['idx_c']
-    idx_r = dict['idx_r']
-    solar_kw = dict['solar_kw']
-    battery_kw = dict['battery_kw']
+    hrs = diction['hrs']
+    data_s = diction['data_s']
+    data_m = diction['data_m']
+    # data_i = diction['data_i']  # not used
+    data_h = diction['data_h']
+    data_c = diction['data_c']
+    data_r = diction['data_r']
+    # keys_s = diction['keys_s']  # not used
+    keys_m = diction['keys_m']
+    # keys_i = diction['keys_i']  # not used
+    keys_h = diction['keys_h']
+    keys_c = diction['keys_c']
+    keys_r = diction['keys_r']
+    idx_s = diction['idx_s']
+    idx_m = diction['idx_m']
+    # idx_i = diction['idx_i']  # not used
+    idx_h = diction['idx_h']
+    idx_c = diction['idx_c']
+    idx_r = diction['idx_r']
+    solar_kw = diction['solar_kw']
+    battery_kw = diction['battery_kw']
 
     # display a plot
     fig, ax = plt.subplots(2, 5, sharex='col')
 
+    total2 = None
+    hvac2 = None
+    wh2 = None
     if len(keys_h) > 0:
         total1 = (data_h[:, :, idx_h['HSE_TOTAL_AVG_IDX']]).squeeze()
         total2 = total1.sum(axis=0)
@@ -437,10 +440,10 @@ def plot_gld(dict, save_file=None, save_only=False):
         ax[0, 0].plot(hrs, hvac2, color='magenta', label='HVAC')
         ax[0, 0].plot(hrs, wh2, color='orange', label='WH')
     ax[0, 0].set_ylabel('kW')
-    ax[0, 0].set_title('Substation Real Power at ' + dict['subname'])
+    ax[0, 0].set_title('Real Power at\n ' + diction['subname'])
     ax[0, 0].legend(loc='best')
 
-    # vabase = dict['inverters'][inv_keys[0]]['rated_W']
+    # vabase = diction['inverters'][inv_keys[0]]['rated_W']
     # print ('Inverter base power =', vabase)
     # ax[0,1].plot(hrs, data_i[0,:,INV_P_AVG_IDX] / vabase, color='blue', label='Real')
     # ax[0,1].plot(hrs, data_i[0,:,INV_Q_AVG_IDX] / vabase, color='red', label='Reactive')
@@ -463,7 +466,7 @@ def plot_gld(dict, save_file=None, save_only=False):
         ax[0, 1].plot(hrs, min2, color='red', label='Min')
         ax[0, 1].plot(hrs, avg2, color='green', label='Avg')
         ax[0, 1].set_ylabel('degF')
-        ax[0, 1].set_title('Temperature over {:d} Houses'.format(len(keys_h)))
+        ax[0, 1].set_title('Temperature over\n {:d} Houses'.format(len(keys_h)))
         ax[0, 1].legend(loc='best')
     else:
         ax[0, 1].set_title('No Houses')
@@ -476,7 +479,7 @@ def plot_gld(dict, save_file=None, save_only=False):
             ax[1, 0].plot(hrs, vmax, color='blue', label='Max')
             ax[1, 0].plot(hrs, vmin, color='red', label='Min')
             ax[1, 0].plot(hrs, vavg, color='green', label='Avg')
-            ax[1, 0].set_title('Voltage over {:d} Meters'.format(len(keys_m)))
+            ax[1, 0].set_title('Voltage over\n {:d} Meters'.format(len(keys_m)))
             ax[1, 0].legend(loc='best')
         else:
             ax[1, 0].plot(hrs, data_m[0, :, idx_m['MTR_VOLT_AVG_IDX']], color='blue')
@@ -484,7 +487,7 @@ def plot_gld(dict, save_file=None, save_only=False):
         ax[1, 0].set_xlabel('Hours')
         ax[1, 0].set_ylabel('%')
     else:
-        ax[1, 0].set_title('No Billing Meter Voltages')
+        ax[1, 0].set_title('No Billing Meter\n Voltages')
 
     if len(keys_h) > 0:
         ax[1, 1].plot(hrs, data_h[0, :, idx_h['HSE_AIR_AVG_IDX']], color='blue', label='Mean')
@@ -494,7 +497,7 @@ def plot_gld(dict, save_file=None, save_only=False):
         ax[1, 1].plot(hrs, data_h[0, :, idx_h['HSE_AIR_SETH_IDX']], color='orange', label='SetH')
         ax[1, 1].set_xlabel('Hours')
         ax[1, 1].set_ylabel(idx_h['HSE_AIR_AVG_UNITS'])
-        ax[1, 1].set_title('House Air at ' + keys_h[0])
+        ax[1, 1].set_title('House Air at\n ' + keys_h[0])
         ax[1, 1].legend(loc='best')
     else:
         ax[1, 1].set_title('No Houses')
@@ -542,7 +545,7 @@ def plot_gld(dict, save_file=None, save_only=False):
         ax[0, 4].plot(hrs, (data_m[:, :, idx_m['MTR_BLO_COUNT_IDX']]).squeeze().sum(axis=0), color='magenta', label='Range B Lo')
         ax[0, 4].plot(hrs, (data_m[:, :, idx_m['MTR_OUT_COUNT_IDX']]).squeeze().sum(axis=0), color='red', label='No Voltage')
         ax[0, 4].set_ylabel('')
-        ax[0, 4].set_title('Voltage Violation Counts')
+        ax[0, 4].set_title('Voltage Violation\n Counts')
         ax[0, 4].legend(loc='best')
 
         ax[1, 4].plot(hrs, (data_m[:, :, idx_m['MTR_AHI_DURATION_IDX']]).squeeze().sum(axis=0), color='blue', label='Range A Hi')
@@ -552,7 +555,7 @@ def plot_gld(dict, save_file=None, save_only=False):
         ax[1, 4].plot(hrs, (data_m[:, :, idx_m['MTR_OUT_DURATION_IDX']]).squeeze().sum(axis=0), color='red', label='No Voltage')
         ax[1, 3].set_xlabel('Hours')
         ax[1, 4].set_ylabel('Seconds')
-        ax[1, 4].set_title('Voltage Violation Durations')
+        ax[1, 4].set_title('Voltage Violation\n Durations')
         ax[1, 4].legend(loc='best')
     elif len(keys_m) > 0:
         ax[0, 4].plot(hrs, data_m[0, :, idx_m['MTR_AHI_COUNT_IDX']], color='blue', label='Range A Hi')
@@ -561,7 +564,7 @@ def plot_gld(dict, save_file=None, save_only=False):
         ax[0, 4].plot(hrs, data_m[0, :, idx_m['MTR_BLO_COUNT_IDX']], color='magenta', label='Range B Lo')
         ax[0, 4].plot(hrs, data_m[0, :, idx_m['MTR_OUT_COUNT_IDX']], color='red', label='No Voltage')
         ax[0, 4].set_ylabel('')
-        ax[0, 4].set_title('Voltage Violation Counts at ' + keys_m[0])
+        ax[0, 4].set_title('Voltage Violation\n Counts at ' + keys_m[0])
         ax[0, 4].legend(loc='best')
 
         ax[1, 4].plot(hrs, data_m[0, :, idx_m['MTR_AHI_DURATION_IDX']], color='blue', label='Range A Hi')
@@ -569,9 +572,9 @@ def plot_gld(dict, save_file=None, save_only=False):
         ax[1, 4].plot(hrs, data_m[0, :, idx_m['MTR_ALO_DURATION_IDX']], color='green', label='Range A Lo')
         ax[1, 4].plot(hrs, data_m[0, :, idx_m['MTR_BLO_DURATION_IDX']], color='magenta', label='Range B Lo')
         ax[1, 4].plot(hrs, data_m[0, :, idx_m['MTR_OUT_DURATION_IDX']], color='red', label='No Voltage')
-        ax[1, 3].set_xlabel('Hours')
+        ax[1, 4].set_xlabel('Hours')
         ax[1, 4].set_ylabel('Seconds')
-        ax[1, 4].set_title('Voltage Violation Durations ' + keys_m[0])
+        ax[1, 4].set_title('Voltage Violation\n Durations ' + keys_m[0])
         ax[1, 4].legend(loc='best')
     else:
         ax[0, 4].set_title('No Voltage Monitoring')
@@ -583,13 +586,13 @@ def plot_gld(dict, save_file=None, save_only=False):
         plt.show()
 
 
-def process_gld(nameroot, dictname='', save_file=None, save_only=False):
-    ''' Plots a summary/sample of power, air temperature and voltage
+def process_gld(name_root, diction_name='', save_file=None, save_only=False):
+    """ Plots a summary/sample of power, air temperature and voltage
 
-    This function reads *substation_nameroot_metrics.json*,
-    *billing_meter_nameroot_metrics.json* and
-    *house_nameroot_metrics.json* for the data;
-    it reads *nameroot_glm_dict.json* for the metadata.
+    This function reads *substation_[name_root]_metrics.json*,
+    *billing_meter_[name_root]_metrics.json* and
+    *house_[name_root]_metrics.json* for the data;
+    it reads *[name_root]_glm_dict.json* for the metadata.
     These must all exist in the current working directory.
     Makes one graph with 4 subplots:
 
@@ -599,11 +602,11 @@ def process_gld(nameroot, dictname='', save_file=None, save_only=False):
     4. Min, Max and Average air temperature at the first house
 
     Args:
-      nameroot (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
-      dictname (str): metafile name (with json extension) for a different GLM dictionary, if it's not *nameroot_glm_dict.json*. Defaults to empty.
+      name_root (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
+      diction_name (str): metafile name (with json extension) for a different GLM dictionary, if it's not *[name_root]_glm_dict.json*. Defaults to empty.
       save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
       save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
-    '''
+    """
     path = os.getcwd()
-    dict = read_gld_metrics(path, nameroot, dictname)
-    plot_gld(dict, save_file, save_only)
+    diction = read_gld_metrics(path, name_root, diction_name)
+    plot_gld(diction, save_file, save_only)

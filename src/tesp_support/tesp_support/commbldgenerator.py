@@ -2,20 +2,15 @@
 # file: commbldgenerator.py
 
 import os
-import sys
 import json
 import math
 import numpy as np
 from datetime import datetime
-from os.path import dirname, abspath
 
 import matplotlib.pyplot as plt
 
 from .helpers import gld_strict_name
 import tesp_support.feederGenerator_dsot as res_FG
-
-
-sys.path.insert(0, dirname(abspath(__file__)))
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
@@ -415,15 +410,12 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('    power_factor 1.0;', file=op)
                 print('    object battery { // Tesla Powerwall 2', file=op)
                 print('      name', batname + ';', file=op)
-                print('      generator_status ONLINE;', file=op)
                 print('      use_internal_battery_model true;', file=op)
-                print('      generator_mode CONSTANT_PQ;', file=op)
                 print('      battery_type LI_ION;', file=op)
                 print('      nominal_voltage 480;', file=op)
                 print('      battery_capacity', '{:.2f}'.format(battery_capacity) + ';', file=op)
                 print('      round_trip_efficiency', '{:.2f}'.format(round_trip_efficiency) + ';', file=op)
                 print('      state_of_charge 0.50;', file=op)
-                print('      generator_mode SUPPLY_DRIVEN;', file=op)
                 print('    };', file=op)
                 if metrics_interval > 0 and "meter" in metrics:
                     print('    object metrics_collector {', file=op)
@@ -437,9 +429,9 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
             # If we assume 2500 sq. ft as avg area of a single family house, we can say:
             # one 350 W panel for every 175 sq. ft.
             num_panel = np.floor(bldg_size / 175)
-            inv_undersizing = 1.0
-            inv_power = num_panel * 350 * inv_undersizing
-            pv_scaling_factor = inv_power / (pv_rating_MW)
+            inverter_undersizing = 1.0
+            inv_power = num_panel * 350 * inverter_undersizing
+            pv_scaling_factor = inv_power / pv_rating_MW
 
             basenode = mtr
             sol_m_name = gld_strict_name(basenode + '_msol')

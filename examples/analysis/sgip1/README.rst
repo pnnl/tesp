@@ -18,7 +18,8 @@ From the `tesp/examples/analysis/sgip1/` folder do the following:
     ./runSGIP1a.sh
     python3 plots.py SGIP1a
     
-Depending on your hardware this is likely to take one to two hours to complete. These steps are repeatable for SGIP1b, SGIP1c, SGIP1d, SGIP1e, and SGIP1ex.
+Depending on your hardware this is likely to take one to two hours to complete.
+These steps are repeatable for SGIP1b, SGIP1c, SGIP1d, SGIP1e, and SGIP1ex.
 After running all six cases, the compare*.py scripts may be used to plot
 results from different cases on the same axes.
 

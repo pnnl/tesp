@@ -10,33 +10,33 @@ import numpy as np
 from process_input_data import process_data_norm
 
 class arl:
-    '''
+    """
     Aggregate responsive load (ARL) agent
     Attributes：
     	(1) house_number : The number of hvac to be aggragted
     	(2) Bid RNN
     	(3) Response RNN
-        
+
     Functions:
-    1) Formulate bid RNN     
-        Input：RNN input features (temp_rnn,schedule_rnn,limit_rnn,ramp_rnn,Hm_rnn,Ca_rnn,Cm_rnn,Ua_rnn) 
-        historical input features    
-        Output: bids 
-    
-    2) Response to the clearing price (adjust the aggregated load)       
-        Input：RNN input features (price_rnn,temp_rnn,schedule_rnn,limit_rnn,ramp_rnn,Hm_rnn,Ca_rnn,Cm_rnn,Ua_rnn,tint_rnn,sqft_rnn) 
-        Output: aggregate load 
-    
+    1) Formulate bid RNN
+        Input：RNN input features (temp_rnn,schedule_rnn,limit_rnn,ramp_rnn,Hm_rnn,Ca_rnn,Cm_rnn,Ua_rnn)
+        historical input features
+        Output: bids
+
+    2) Response to the clearing price (adjust the aggregated load)
+        Input：RNN input features (price_rnn,temp_rnn,schedule_rnn,limit_rnn,ramp_rnn,Hm_rnn,Ca_rnn,Cm_rnn,Ua_rnn,tint_rnn,sqft_rnn)
+        Output: aggregate load
+
     3) obtain clearing price
-    
+
     4) set aggregated load
-            
+
     Steps:
         arl agent formulated bid   submit to the auction
-        obtain a cleared price from market               
-        arl set the aggregated load 
-           
-    '''   
+        obtain a cleared price from market
+        arl set the aggregated load
+
+    """
 
     def __init__(self,house_num,rnn1,rnn2,aucObj,hn):
         """Initializes the class

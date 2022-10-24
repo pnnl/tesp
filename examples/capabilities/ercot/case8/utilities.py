@@ -78,7 +78,7 @@ def write_json_for_ercot_monitor(timeStop, timeDelta, numberOfFederates):
                             ['FNCS_LOG_STDOUT', 'YES']],
                     'log': 'Bus' + str(i + 1) + '.log'}
         gridlabds.append(gridlabd)
-    python = {'args': ['python', 'fncsTSO.py'],
+    python = {'args': ['python', 'tso_psst_f.py'],
               'env': [['FNCS_CONFIG_FILE', 'tso8.yaml'],
                       ['FNCS_FATAL', 'YES'],
                       ['FNCS_LOG_STDOUT', 'YES']],
@@ -165,7 +165,7 @@ def write_gridlabd_msg(fileroot, weatherName, aucSimName, controllers, dt):
             for prop in ['price', 'monthly_fee']:
                 gld.subs(sub_key + meter_name + "/" + prop, "double", meter_name, prop)
 
-    gld.write_file(fileroot + '_HELICS_gld_msg.json')
+    gld.write_file(fileroot + '_gridlabd.json')
 
 
 def write_ercot_tso_msg(numBuses):

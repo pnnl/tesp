@@ -145,14 +145,14 @@ def parse_DSO_metadata_Excel(dso_metadata_path_Excel,
 
 
 def read_load_file(load_path):
-    '''
+    """
 
     Args:
         load_path: Path to load file that is being read in
 
     Returns:
         load_data: list of lists with the headers and load data
-    '''
+    """
     # Read all load into memory since that is the common element that we
     #   are manipulating. Skipping last column as that is a cumulative
     #   value that needs to be manually calculated.
@@ -172,7 +172,7 @@ def read_load_file(load_path):
 
 
 def write_out_load_file(load_data, out_path):
-    '''
+    """
     Writes out load data to CSV file. Assumes a list of lists format.
 
     Args:
@@ -181,7 +181,7 @@ def write_out_load_file(load_data, out_path):
 
     Returns:
 
-    '''
+    """
     logger.info(f'Writing out new load profile{out_path}')
     out_fh = _open_file(out_path, 'w')
     for row in load_data:
@@ -426,7 +426,7 @@ def create_load_less_solar(input_load_filename, output_load_filename,
 
 def create_8_node_load_less_solar(dso_meta, load_dir,
                                     input_load_filename, output_load_filename):
-    '''
+    """
     Using information in the dso_meta dictionary, this function aggregates
     the 200-bus load-less-solar values into the 8-bus values. The resulting
     dataset is written out to file.
@@ -440,7 +440,7 @@ def create_8_node_load_less_solar(dso_meta, load_dir,
 
     Returns:
         (none)
-    '''
+    """
     load_path = os.path.join(load_dir, input_load_filename)
     load_data = read_load_file(load_path)
     out_path = os.path.join(load_dir, output_load_filename)
