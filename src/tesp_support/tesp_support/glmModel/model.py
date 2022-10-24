@@ -2,6 +2,7 @@
 import re
 import os.path
 import networkx as nx
+import json
 #This is defined in helpers.py need to import the file instead of declaring it here
 def gld_strict_name(val):
     """Sanitizes a name for GridLAB-D publication to FNCS
@@ -93,15 +94,22 @@ def obj(parent, model, line, itr, oidh, octr):
     oname = None
     params = {}
     incomments = []
+    objinlinecomments = dict()
+    inlinecomments = {}
+
     if parent is not None:
         params['parent'] = parent
     while not oend:
         #if re.match('\s*//', line):
-        if line.find("//") >= 0:
+        if line.find("//") == 0:
+            incomments.append(line)
+        elif line.find("//") > 0:
             subindex = line.find("//")
+            substring = line[subindex + 2:]
+            tline = line.strip()
+            tokens = tline.split(" ")
+            objinlinecomments[tokens[0]] = substring
 
-            substring = line[subindex:]
-            incomments.append(substring)
         m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
         if m:
             # found a parameter
@@ -146,7 +154,7 @@ def obj(parent, model, line, itr, oidh, octr):
     model[_type][oname] = {}
     for param in params:
         model[_type][oname][param] = params[param]
-    return line, octr, oname, incomments
+    return line, octr, oname, incomments, objinlinecomments
 
 #def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 def readBackboneModel(rootname,feederspath):
@@ -207,24 +215,20 @@ def readBackboneModel(rootname,feederspath):
         itr = iter(lines)
         outcomments = []
         incomments = []
+        inlinecomments = dict()
+        linecomments = dict()
         for line in itr:
-
-
-
-
             if re.match('\s*//', line):
                 outcomments.append(line)
             if re.search('object', line):
-                line, octr, oname, incomments = obj(None, model, line, itr, h, octr)
+                line, octr, oname, incomments, linecomments = obj(None, model, line, itr, h, octr)
                 if len(outcomments) > 0:
                     outsidecomments[oname] = outcomments
                 if len(incomments) > 0:
                     insidecomments[oname] = incomments
+                if len(linecomments) > 0:
+                    inlinecomments[oname] = linecomments
                 outcomments = []
-
-
-
-
         # apply the nameing prefix if necessary
         #if len(name_prefix) > 0:
                 #    for t in model:
@@ -264,9 +268,10 @@ def readBackboneModel(rootname,feederspath):
                         G.nodes()[o]['ndata'] = model[t][o]
                     else:
                         print('orphaned node', t, o)
-        return G, headlines, outsidecomments, insidecomments
+        return G, headlines, outsidecomments, insidecomments, inlinecomments
 #        sub_graphs = nx.connected_components(G)
 #        seg_loads = {}  # [name][kva, phases]
+
 
 class GLModel:
     in_file = ""
@@ -275,6 +280,7 @@ class GLModel:
     header_lines = []
     inside_comments = dict()
     outside_comments = dict()
+    inline_comments = dict()
 
 #    def __init__(self):
 #        network = nx()
@@ -284,15 +290,31 @@ class GLModel:
         self.in_file = filepath
         path_parts = os.path.split(filepath)
         readresults  = readBackboneModel(path_parts[1], path_parts[0])
-        # self.network = readBackboneModel(path_parts[1], path_parts[0])
         self.network = readresults[0]
         self.header_lines = readresults[1]
         self.outside_comments = readresults[2]
         self.inside_comments = readresults[3]
+        self.inline_comments = readresults[4]
+        return True
+
+    def write_glm_header(self, op):
+        for line in self.header_lines:
+            try:
+                print(line.rstrip(), file=op)
+            except:
+                print("unable to write to output file")
+                return False
         return True
 
     def write_glm(self, filepath):
         self_out_file = filepath
+        try:
+            op = open(filepath, "w+")
+        except:
+            print("Unable to open output file")
+            return False
+        self.write_glm_header(op)
+        op.close()
         return True
 
     def import_networkx_obj(self,inetwork):
