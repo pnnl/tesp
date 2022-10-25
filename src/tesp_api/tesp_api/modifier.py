@@ -4,6 +4,26 @@ import model
 from model import GLModel
 
 
+class glm_object:
+    item_list = list()
+
+    def _get(self):
+        return self.item_list
+
+    def _set(self, list):
+        self.item_list = list
+
+    def _add(self, item):
+        return self.item_list.append(item)
+
+    def _del(self, item):
+        return self.item_list.remove(item)
+
+    def _write(self):
+        return self.batteries
+
+
+
 class GLMModifier:
     batteries = list()
     billing_meters = list()
@@ -31,13 +51,13 @@ class GLMModifier:
     def _get_capacitors(self):
         return self.capacitors
 
-    def  _get_fuses(self):
+    def _get_fuses(self):
         return self.fuses
 
-    def  _get_houses(self):
+    def _get_houses(self):
         return self.houses
 
-    def  _get_lines(self):
+    def _get_lines(self):
         return self.lines
 
     def _get_loads(self):
@@ -94,13 +114,9 @@ class GLMModifier:
     def mod_model(self):
         return True
 
-
-
     def read_model(self, filepath):
         self.model.read_glm(filepath)
         return True
-
-
 
     def remove_batteries(self):
         return True
@@ -132,13 +148,8 @@ class GLMModifier:
     def resize_triplex_lines(self):
         return True
 
-
-
-
     def set_model(self):
         return True
-
-
 
     def set_simulation_times(self):
         return True

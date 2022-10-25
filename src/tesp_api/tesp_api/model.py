@@ -1,8 +1,10 @@
-
-import re
 import os.path
+import re
+
 import networkx as nx
-#This is defined in helpers.py need to import the file instead of declaring it here
+
+
+# This is defined in helpers.py need to import the file instead of declaring it here
 def gld_strict_name(val):
     """Sanitizes a name for GridLAB-D publication to FNCS
 
@@ -15,6 +17,7 @@ def gld_strict_name(val):
     if val[0].isdigit():
         val = 'gld_' + val
     return val.replace('-', '_')
+
 
 def is_edge_class(s):
     """Identify switch, fuse, recloser, regulator, transformer, overhead_line,
@@ -43,6 +46,7 @@ def is_edge_class(s):
     if s == 'triplex_line':
         return True
     return False
+
 
 def is_node_class(s):
     """Identify node, load, meter, triplex_node or triplex_meter instances
@@ -141,8 +145,9 @@ def obj(parent, model, line, itr, oidh, octr):
         model[_type][oname][param] = params[param]
     return line, octr
 
-#def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
-def readBackboneModel(rootname,feederspath):
+
+# def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
+def readBackboneModel(rootname, feederspath):
     """Parse one backbone feeder, usually but not necessarily one of the PNNL taxonomy feeders
 
     This function:
@@ -152,7 +157,7 @@ def readBackboneModel(rootname,feederspath):
     Args:
         rootname (str): the input (usually taxonomy) feeder model name
     """
-    #global base_feeder_name
+    # global base_feeder_name
 
     solar_count = 0
     solar_kw = 0
@@ -192,14 +197,14 @@ def readBackboneModel(rootname,feederspath):
             if re.search('object', line):
                 line, octr = obj(None, model, line, itr, h, octr)
         # apply the nameing prefix if necessary
-        #if len(name_prefix) > 0:
-                #    for t in model:
-                #for o in model[t]:
-                #    elem = model[t][o]
-                #    for tok in ['name', 'parent', 'from', 'to', 'configuration', 'spacing',
-                #                'conductor_1', 'conductor_2', 'conductor_N',
-                #                'conductor_A', 'conductor_B', 'conductor_C']:
-                #        if tok in elem:
+        # if len(name_prefix) > 0:
+        #    for t in model:
+        # for o in model[t]:
+        #    elem = model[t][o]
+        #    for tok in ['name', 'parent', 'from', 'to', 'configuration', 'spacing',
+        #                'conductor_1', 'conductor_2', 'conductor_N',
+        #                'conductor_A', 'conductor_B', 'conductor_C']:
+        #        if tok in elem:
         #            elem[tok] = name_prefix + elem[tok]
 
         #        log_model (model, h)
@@ -231,15 +236,15 @@ def readBackboneModel(rootname,feederspath):
                     else:
                         print('orphaned node', t, o)
         return G
+
+
 #        sub_graphs = nx.connected_components(G)
 #        seg_loads = {}  # [name][kva, phases]
 
 class GLModel:
     in_file = ""
     out_file = ""
-    network = nx()
-
-
+    # network = nx()
 
     def read_glm(self, filepath):
         self.in_file = filepath
@@ -251,9 +256,6 @@ class GLModel:
         self_out_file = filepath
         return True
 
-    def import_networkx_obj(self,inetwork):
+    def import_networkx_obj(self, inetwork):
         network = inetwork
         return True
-
-
-

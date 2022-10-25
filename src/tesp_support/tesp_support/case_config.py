@@ -2,8 +2,9 @@
 """
 
 import json
+import sqlite3
 
-from .data import entities_path
+from tesp_support.data import entities_path
 
 # 'module climate;'
 # 'module connection;'
@@ -11,17 +12,30 @@ from .data import entities_path
 # 'module residential'
 
 
+class Item:
+    def __init__(self, datatype, label, unit, item, value=None):
+        self.datatype = datatype
+        self.label = label
+        self.unit = unit
+        self.item = item
+        self.value = value
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        return self
+
+    def __repr__(self):
+        return str(self.value)
+
+
 class Entity:
-    def __init__(self, aname):
-        with open(entities_path + 'master_settings.json', 'r', encoding='utf-8') as json_file:
-            config = json.load(json_file)
-        for name in aname:
-            for row in config[name]:
-                setattr(self, row[4], row[1])
-                setattr(self, row[4] + '__l', row[0])
-                setattr(self, row[4] + '__u', row[2])
-                setattr(self, row[4] + '__e', row[3])
-                # setattr(self, row[4] + '__s', row[5])
+    def __init__(self, name, config):
+        self.name = name
+        for row in config:
+            tmp = Item(row[3], row[0], row[2], row[4], row[1])
+            setattr(self, row[4], tmp)
 
     def __enter__(self):
         return self
@@ -32,13 +46,40 @@ class Entity:
     def print(self):
         # print(vars(self))
         for field in self.__dict__:
-            if "__" not in field:
-                value = getattr(self, field)
-                print(field, "=", value)
+            val = self.__getattribute__(field)
+            if type(val) == Item:
+                print(field, "=", val)
         return ""
 
-    def print_obj(self):
-        return
+    def table(self, connection):
+        # cursor object
+        cursor_obj = connection.cursor()
+
+        # Drop the named table if already exists.
+        sql = """DROP TABLE IF EXISTS """ + self.name
+        cursor_obj.execute(sql)
+
+        # Creating table
+        sql = """CREATE TABLE """ + self.name + """ (
+                    label TEXT NOT NULL,
+                    unit TEXT,
+                    datatype TEXT NOT NULL,
+                    item TEXT NOT NULL,
+                    valu BLOB
+                );"""
+        cursor_obj.execute(sql)
+
+        for field in self.__dict__:
+            val = self.__getattribute__(field)
+            if type(val) == Item:
+                # print(field, "=", val.datatype)
+                # Inter record into table
+                record = (val.label, val.unit, val.datatype, val.item, val.value)
+                sql = """INSERT INTO """ + self.name + """(label, unit, datatype, item, valu) VALUES(?,?,?,?,?);"""
+                cursor_obj.execute(sql, record)
+                conn.commit()
+
+        return ""
 
 
 if __name__ == "__main__":
@@ -48,6 +89,16 @@ if __name__ == "__main__":
                 "EplusConfiguration", "PYPOWERConfiguration", "AgentPrep", "ThermostatSchedule"]
     # , 'house', 'inverter', 'battery', 'object solar', 'waterheater' ...]
 
-    for obj in entities:
-        mylist[obj] = Entity(entities)
-        mylist[obj].print()
+    try:
+        conn = sqlite3.connect(entities_path + 'test.db')
+        print("Opened database successfully")
+    except:
+        print("Database Sqlite3.db not formed.")
+
+    with open(entities_path + 'master_settings.json', 'r', encoding='utf-8') as json_file:
+        config = json.load(json_file)
+    for name in entities:
+        mylist[name] = Entity(name, config[name])
+        mylist[name].print()
+        mylist[name].table(conn)
+

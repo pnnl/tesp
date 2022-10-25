@@ -152,6 +152,10 @@ def obj(parent, model, line, itr, oidh, octr):
         # New object type
         model[_type] = {}
     model[_type][oname] = {}
+
+    # find entity
+    # params[param]
+
     for param in params:
         model[_type][oname][param] = params[param]
     return line, octr, oname, incomments, objinlinecomments
@@ -289,7 +293,7 @@ class GLModel:
         self.header_lines = []
         self.in_file = filepath
         path_parts = os.path.split(filepath)
-        readresults  = readBackboneModel(path_parts[1], path_parts[0])
+        readresults = readBackboneModel(path_parts[1], path_parts[0])
         self.network = readresults[0]
         self.header_lines = readresults[1]
         self.outside_comments = readresults[2]
