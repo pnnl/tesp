@@ -31,11 +31,12 @@ import json
 import os.path
 import re
 import sys
-import networkx as nx
-import numpy as np
 from math import ceil
 from math import floor
 from math import sqrt
+
+import networkx as nx
+import numpy as np
 
 from .data import feeders_path, weather_path
 from .helpers import parse_kva, gld_strict_name
@@ -1524,7 +1525,8 @@ def write_commercial_loads(rgn, key, op):
                     bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
                     bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
 
-                    bldg['zonename'] = gld_strict_name(key + '_bldg_' + str(jjj + 1) + '_floor_' + str(floor_lvl) + '_zone_' + str(zone))
+                    bldg['zonename'] = gld_strict_name(
+                        key + '_bldg_' + str(jjj + 1) + '_floor_' + str(floor_lvl) + '_zone_' + str(zone))
                     write_one_commercial_zone(bldg, op)
 
     elif comm_type == 'BIGBOX':
@@ -2466,7 +2468,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
                 else:
                     print(line, file=op)
 
-        # apply the nameing prefix if necessary
+        # apply the naming prefix if necessary
         if len(name_prefix) > 0:
             for t in model:
                 for o in model[t]:
@@ -3136,6 +3138,8 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
             if c[0] in rootname:
                 case_name = config['SimulationConfig']['CaseName']
                 ProcessTaxonomyFeeder(case_name, rootname, c[1], c[2], c[3], c[4])
+
+
 #                quit()
 
 
