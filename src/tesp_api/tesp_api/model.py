@@ -12,12 +12,12 @@ import sqlite3
 
 import networkx as nx
 
-from entity import Item
-from entity import Entity
 from data import entities_path
+from entity import Entity
 
 
 class GLModel:
+# it seems to public for all GLMODEL class
     in_file = ""
     out_file = ""
     network = nx.Graph()
@@ -31,20 +31,60 @@ class GLModel:
                   'overhead_line', 'underground_line', 'triplex_line']
     node_class = ['node', 'load', 'meter', 'triplex_node', 'triplex_meter']
 
+    """
+        backbone file must follow order below 
+            clock 
+            set [profile,
+            module ...
+            objects ...
+
+        Can be used any where    
+            #define and #ifdef are black boxes 
+            // are one line black boxes
+
+    # clock {
+    #   timezone EST + 5 EDT;
+    #   starttime '2000-01-01 0:00:00';
+    #   stoptime '2000-01-01 5:59:00';
+    # }
+
+    # set relax_naming_rules=1
+    # set profiler=1
+    # set minimum_timestep=1
+
+    # module climate;
+    # module connection;
+    # module generators;
+    # module residential;
+    # module tape;
+
+    # module powerflow {
+    #   solver_method NR;
+    #   line_capacitance true;
+    # }
+
+    # module reliability {
+    #   maximum_event_length 18000;
+    #   report_event_log true;
+    # }
+
+    """
+
     def __init__(self):
         # define objects that can be in a GLM file
         try:
-            conn = sqlite3.connect(entities_path + 'test.db')
+            self.conn = sqlite3.connect(entities_path + 'test.db')
             print("Opened database successfully")
         except:
+            self.conn = None
             print("Database Sqlite3.db not formed")
 
         with open(entities_path + 'glm_objects.json', 'r', encoding='utf-8') as json_file:
             self.objects = json.load(json_file)
 
         for name in self.objects:
-            entity = self.entities[name] = Entity(name, self.objects[name])
-            entity.instance = {}
+            self.entities[name] = Entity(name, self.objects[name])
+            self.entities[name].toSQLite(self.conn)
 
     def entitiesToJson(self):
         diction = {}
@@ -55,44 +95,44 @@ class GLModel:
     def instancesToGLM(self):
         diction = ""
         for name in self.entities:
-            instance = self.entities[name].instance
-            for obj_id in instance:
-                diction += "object " + name + " {\n"
-                for field in instance[obj_id]:
-                    diction += "  " + field + " " + instance[obj_id][field] + ";\n"
-                diction += "}\n"
+            diction += self.entities[name].instanceToGLM()
+        return diction
+
+    def instancesToSQLite(self):
+        for name in self.entities:
+            self.entities[name].instanceToSQLite(self.conn)
+        return
+
+    def entitiesToHelp(self):
+        diction = ""
+        for name in self.entities:
+            diction += self.entities[name].toHelp()
         return diction
 
     def set_instance(self, obj_name, obj_id, params):
-        try:
-            entity = self.entities[obj_name]
-            if type(entity) == Entity:
-                try:
-                    instance = entity.instance[obj_id]
-                except:
-                    if type(obj_id) == str:
-                        instance = entity.instance[obj_id] = {}
-                    else:
-                        print("Object id is not a string")
+        if type(obj_name) == str and type(obj_name) == str:
+            try:
+                entity = self.entities[obj_name]
+                return entity.set_instance(obj_id, params)
+            except:
+                print("Unrecognized object and id ->", obj_name, obj_id)
+                self.objects[obj_name] = {}
+                entity = self.entities[obj_name] = Entity(obj_name, self.objects[obj_name])
+                return entity.set_instance(obj_id, params)
+        else:
+            print("Object name and/or object id is not a string")
+        return None
 
-                for item_name in params:
-                    item = entity.find_item(item_name)
-                    if type(item) == Item:
-                        try:
-                            item_instance = instance[item_name]
-                        except:
-                            instance[item_name] = {}
-                    else:
-                        print("Unrecognized GRIDLABD object parameter ->", item_name)
-                        # add to dictionary datatype, label, unit, item, value
-                        entity.add_item("TEXT", item_name, "", item_name, "")
-                    instance[item_name] = params[item_name]
-                return instance
-            else:
-                # This should never happen
-                print("Unrecognized entity object ->", obj_name, "object type->", type(entity))
-        except:
-            print("Unrecognized GRIDLABD object ->", obj_name)
+    def get_instance(self, obj_name, obj_id):
+        if type(obj_name) == str and type(obj_name) == str:
+            try:
+                entity = self.entities[obj_name]
+                return entity.get_instance(obj_id)
+            except:
+                print("Unrecognized GRIDLABD object and id ->", obj_name, obj_id)
+        else:
+            print("Object name and/or object id is not a string")
+        return None
 
     @staticmethod
     def gld_strict_name(val):
@@ -240,11 +280,13 @@ class GLModel:
         model[_type][oname] = {}
 
         # find and set entity
+        # all incomment as object_comment type
+        # params["object_comment"] = incomments
+
         model[_type][oname] = self.set_instance(_type, oname, params)
         # model[_type][oname] = params
         return line, octr, oname, incomments, objinlinecomments
 
-    # def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
     def readBackboneModel(self, rootname, feederspath):
         """Parse one backbone feeder, usually but not necessarily one of the PNNL taxonomy feeders
 
@@ -264,17 +306,6 @@ class GLModel:
         base_feeder_name = self.gld_strict_name(rootname)
         fname = feederspath + '/' + rootname  # + '.glm'
         rootname = self.gld_strict_name(rootname)
-        rgn = 0
-        if 'R1' in rootname:
-            rgn = 1
-        elif 'R2' in rootname:
-            rgn = 2
-        elif 'R3' in rootname:
-            rgn = 3
-        elif 'R4' in rootname:
-            rgn = 4
-        elif 'R5' in rootname:
-            rgn = 5
         headlines = []
         insidecomments = dict()
         outsidecomments = dict()
@@ -307,6 +338,10 @@ class GLModel:
             for line in itr:
                 if re.match('\s*//', line):
                     outcomments.append(line)
+                if re.search('clock', line):
+                   clock = ""
+                if re.search('module', line):
+                   modules = ""
                 if re.search('object', line):
                     line, octr, oname, incomments, linecomments = self.obj(None, model, line, itr, h, octr)
                     if len(outcomments) > 0:
@@ -376,6 +411,7 @@ class GLModel:
             except:
                 print("unable to write to output file")
                 return False
+
         return True
 
     def write(self, filepath):

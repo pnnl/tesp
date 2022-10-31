@@ -18,8 +18,8 @@ from data import feeders_path
 if __name__ == '__main__':
     modelfile = GLModel()
     modobject = GLMModifier()
-    #tval = modelfile.read_glm(feeders_path + "R1-12.47-1.glm")
-    tval = modobject.read_model(feeders_path + "R1-12.47-1.glm")
+    tval = modelfile.read(feeders_path + "R1-12.47-1.glm")
+    #tval = modobject.read_model(feeders_path + "R1-12.47-1.glm")
 
     # for name in modelfile.entities:
     #     modelfile.entities[name].table_print()
@@ -30,3 +30,8 @@ if __name__ == '__main__':
     op.close()
 
     modelfile.write(entities_path + "test.glm")
+    modelfile.instancesToSQLite()
+    print(modelfile.entitiesToHelp())
+    print(modelfile.instancesToGLM())
+
+    print(modelfile.entitiesToJson())
