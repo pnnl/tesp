@@ -4,6 +4,9 @@
 import json
 import math
 
+from data import entities_path
+from entity import assign_defaults
+from entity import Entity
 from model import GLModel
 
 
@@ -20,19 +23,8 @@ class GLMModifier:
     modded_model = GLModel()
 
     def __init__(self):
+        assign_defaults(self, 'feeder_defaults.json')
         return
-
-    def initialize_config_dict(self, fgconfig):
-        if fgconfig is not None:
-            with open(fgconfig, 'r') as fgfile:
-                confile = fgfile.read()
-                self.config_data = json.loads(confile)
-                fgfile.close()
-            tval2 = self.config_data['feedergenerator']['constants']
-            self.config_data = tval2
-            cval1 = self.config_data['c_z_frac']['value']
-            cval2 = self.config_data['c_i_frac']['value']
-            self.c_p_frac = 1.0 - cval1 - cval2
 
     def get_objects(self, name):
         return self.model.entities[name]
@@ -56,7 +48,6 @@ class GLMModifier:
         return True
 
     def mod_model(self):
-        # self.initialize_config_dict("FeederGenerator.json")
         tlist = list(self.model.network.nodes.data())
         for basenode in tlist:
             print(basenode)

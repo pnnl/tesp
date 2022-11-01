@@ -10,6 +10,17 @@ import sqlite3
 from data import entities_path
 
 
+def assign_defaults(obj, file_name):
+    with open(entities_path + file_name, 'r', encoding='utf-8') as json_file:
+        config = json.load(json_file)
+        for attr in config:
+            # config format -> label=0, value=1, unit=2, datatype=3, item=4
+            # Item format -> datatype=3, label=0, unit=2, item=4, value=1
+            tmp = Item(str(type(config[attr])), attr, "", attr, config[attr])
+            setattr(obj, attr, tmp)
+    return
+
+
 class Item:
     def __init__(self, datatype, label, unit, item, value=None):
         self.datatype = datatype
@@ -27,15 +38,14 @@ class Item:
     def __repr__(self):
         return str(self.value)
 
-    def __str__(self):
-        return str(self.item)
+    # def __str__(self):
+    #     return str(self.item)
 
     def toJson(self):
         return [self.label, self.value, self.unit, self.datatype, self.item]
 
 
 class Entity:
-
     def __init__(self, entity, config):
         self.entity = entity
         self.instance = {}
@@ -44,6 +54,15 @@ class Entity:
             # Item format -> datatype=3, label=0, unit=2, item=4, value=1
             tmp = Item(attr[3], attr[0], attr[2], attr[4], attr[1])
             setattr(self, attr[4], tmp)
+
+    # def __init__(self, config):
+    #     self.entity = "static"
+    #     self.instance = None
+    #     for attr in config:
+    #         # config format -> label=0, value=1, unit=2, datatype=3, item=4
+    #         # Item format -> datatype=3, label=0, unit=2, item=4, value=1
+    #         tmp = Item(str(type(config[attr])), attr, "", attr, config[attr])
+    #         setattr(self, attr, tmp)
 
     def __enter__(self):
         return self
@@ -207,8 +226,7 @@ class Entity:
         return ""
 
 
-if __name__ == "__main__":
-
+def test1():
     mylist = {}
     # entity_names = ["SimulationConfig", "BackboneFiles",  "WeatherPrep", "FeederGenerator",
     #             "EplusConfiguration", "PYPOWERConfiguration", "AgentPrep", "ThermostatSchedule"]
@@ -220,11 +238,20 @@ if __name__ == "__main__":
     except:
         print("Database Sqlite3.db not formed")
 
-    with open(entities_path + 'glm_objects.json', 'r', encoding='utf-8') as json_file:
+    # this a config  -- file probably going to be static json
+    file_name = 'feeder_defaults.json'
+    # this a multiple config file dictionary list
+    # file_name = 'glm_objects.json'
+    with open(entities_path + file_name, 'r', encoding='utf-8') as json_file:
         entities = json.load(json_file)
 
-    for name in entities:
-        mylist[name] = Entity(name, entities[name])
-        mylist[name].toHelp()
-        mylist[name].instanceToSQLite(conn)
+    myEntity = Entity(entities)
+    print(myEntity.toHelp())
 
+    # for name in entities:
+    #     mylist[name] = Entity(name, entities[name])
+    #     mylist[name].toHelp()
+    #     mylist[name].instanceToSQLite(conn)
+
+if __name__ == "__main__":
+    test1()
