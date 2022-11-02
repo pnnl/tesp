@@ -6,7 +6,6 @@ import math
 
 from data import entities_path
 from entity import assign_defaults
-from entity import Entity
 from model import GLModel
 
 
@@ -16,13 +15,9 @@ class GLMModifier:
     #            secondary_transformers, solar_pvs, substation_transformers,
     #            switches, triplex_lines, triplex_loads, zip_loads, recorder]
 
-    config_data = {}
-    c_p_frac = 0.0
-
-    model = GLModel()
-    modded_model = GLModel()
-
     def __init__(self):
+        self.model = GLModel()
+        self.modded_model = GLModel()
         assign_defaults(self, 'feeder_defaults.json')
         return
 
