@@ -12,7 +12,6 @@ rm -f *_gridlabd.txt
 rm -f *_substation.yaml
 rm -f *_weather_f.json
 rm -f *.dat
-rm -f output/*
-rmdir output 2> /dev/null
+rm -rf output
 rm -f *.idf
 rm -f *.bnd
