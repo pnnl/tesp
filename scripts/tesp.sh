@@ -105,24 +105,23 @@ fi
 git config --global credential.helper store
 
 echo
-echo "Create directory structure for TESP"
+echo "Install directory structure for TESP into $HOME/tesp"
 cd "${HOME}" || exit
 mkdir -p tesp
 cd tesp || exit
 
-echo "Install a virtual python environment to $HOME/tesp/venv"
-python3.8 -m pip install --upgrade pip
-python3.8 -m pip install virtualenv
+echo "Install a virtual python environment into $HOME/tesp/venv"
+python3.8 -m pip install virtualenv > "tesp_venv.log" 2>&1
 "${HOME}/.local/bin/virtualenv" venv --prompt TESP
 
-echo "Install executables environment to $HOME/tesp/tenv"
+echo "Install executables environment into $HOME/tesp/tenv"
 mkdir -p tenv
 
-echo "Install repositories to $HOME/tesp/repository"
+echo "Install repositories into $HOME/tesp/repository"
 mkdir -p repository
 cd repository || exit
 echo
-echo "Download all relevant repositories..."
+echo "Cloning all relevant repositories..."
 
 echo
 echo ++++++++++++++ TESP

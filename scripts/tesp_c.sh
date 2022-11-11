@@ -13,7 +13,9 @@ echo
 
 # Install all pip libraries
 echo "Installing Python Libraries..."
-pip3 install -r "${TESPDIR}/requirements.txt" > "${TESPBUILD}/tesp_pypi.log" 2>&1
+which python > "${TESPBUILD}/tesp_pypi.log" 2>&1
+pip3 install --upgrade pip >> "${TESPBUILD}/tesp_pypi.log" 2>&1
+pip3 install -r "${TESPDIR}/requirements.txt" >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 
 #develop tesp api
 echo "Installing Python TESP API..."
