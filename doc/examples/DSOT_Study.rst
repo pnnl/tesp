@@ -135,16 +135,17 @@ Due to the scope and scale of the analysis, the DSO+T analysis typically takes s
 
 Start by downloading supporting data that is not stored in the repository due to its size and static nature. This will add a "data" folder alongside the existing "code" folder from the repository.
 .. code-block:: sh
-    cd tesp/repository/tesp/examples/analysis/dsot/code
-    ./dsotData.sh
+cd tesp/repository/tesp/examples/analysis/dsot/code
+./dsotData.sh
     
 Open up "8_system_case_config.json" and confirm/change the following parameters:
 .. code-block:: sh
-    "StartTime": "2016-08-01 00:00:00"
-    "EndTime": "2016-08-31 00:00:00"
-    "Tmax":<calculate number of seconds in above defined start time>
-    "caseName": <arbitrary name>
-    "dsoPopulationFile": "8-metadata-lean.json"
+"StartTime": "2016-08-01 00:00:00"
+"EndTime": "2016-08-31 00:00:00"
+"Tmax":<calculate number of seconds in above defined start time>
+"caseName": <arbitrary name>
+"dsoPopulationFile": "8-metadata-lean.json"
+
 - prepare_case_dsot.py - pre-defined cases are shown; these are the ones used for DSO+T -creates directory in "code"
 - postprocess.sh
 
