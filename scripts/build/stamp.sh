@@ -5,7 +5,7 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-ver="v1.2.2"
+ver="v1.2.3"
 
 cd "${REPODIR}" || exit
 echo "Stamping commit ids for:"
