@@ -7,18 +7,6 @@ export TESPDIR=$HOME/tesp/repository/tesp
 export TESPBUILD=$TESPDIR/scripts/build
 export TESPHELPR=$TESPDIR/scripts/helpers
 
-export GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
-export FNCS_INCLUDE_DIR=$INSTDIR/include
-export FNCS_LIBRARY=$INSTDIR/lib
-export CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
-
-# JAVA_HOME
-export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-
-# PYHELICS_INSTALL
-export PYHELICS_INSTALL=$INSTDIR
-
 # PATH
 export PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
 export PATH=$PATH:$INSTDIR/energyplus
@@ -26,11 +14,21 @@ export PATH=$PATH:$INSTDIR/energyplus/PreProcess
 export PATH=$PATH:$INSTDIR/energyplus/PostProcess
 export PATH=$PATH:$TESPHELPR
 
+# COMPILE exports
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+export PYHELICS_INSTALL=$INSTDIR
+export GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
+export CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
+export FNCS_INCLUDE_DIR=$INSTDIR/include
+export FNCS_LIBRARY=$INSTDIR/lib
+export LD_LIBRARY_PATH=$INSTDIR/lib
+export LD_RUN_PATH=$INSTDIR/lib
+
 # PSST environment variables
 export PSST_SOLVER=cbc
 # 'PSST_SOLVER path' -- one of "cbc", "ipopt", "/ibm/cplex/bin/x86-64_linux/cplexamp"
 export PSST_WARNING=ignore
 # 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
 
-# PROXY
+# PROXY export if needed
 # export HTTPS_PROXY=http://proxy01.pnl.gov:3128

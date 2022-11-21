@@ -62,9 +62,9 @@ def get_hourly_bus_loadPQ(bus_i, hour, LSEDataFixedDemand, power_factor=0.9):
     for load_id, load_rec in LSEDataFixedDemand.items():
         bus_i_idx = 1
         hour_rec_idx = hour + 2
-        if (load_rec[bus_i_idx] == bus_i):
+        if load_rec[bus_i_idx] == bus_i:
             loadP = load_rec[hour_rec_idx]
-            if (power_factor != 0.0):
+            if power_factor != 0.0:
                 loadQ = loadP * math.tan(math.acos(power_factor))
 
     return loadP, loadQ
@@ -84,13 +84,11 @@ def convertDataToMATPOWER(output_file, NodeData, output_bus_data, output_gen_dat
     % Number of buses where distribution networks are going to be connected to
     mpc.BusFNCSNum = 1;
     % Buses where distribution networks are going to be connected to
-    mpc.BusFNCS = [
-                   7];
+    mpc.BusFNCS = [ 7 ];
     % Number of distribution feeders (GridLAB-D instances)
     mpc.SubNumFNCS = 9;
     %% Substation names, and the transmission network bus where it is connected to
-    mpc.SubNameFNCS = [
-                    1   7 ];
+    mpc.SubNameFNCS = [ 1 7 ];
 
     %% ======================================================================
     %% For creating scenarios for visualization
@@ -98,8 +96,7 @@ def convertDataToMATPOWER(output_file, NodeData, output_bus_data, output_gen_dat
     % Number of generators that might be turned off-line
     mpc.offlineGenNum = 1;
     % Matrix contains the bus number of the corresponding off-line generators
-    mpc.offlineGenBus = [
-                      2 ];       
+    mpc.offlineGenBus = [ 2 ];       
 
     %% ======================================================================
     %% An amplification factor is used to simulate a higher load at the feeder end
@@ -210,19 +207,22 @@ def convertDataToPYPowerJSON(output_file, NodeData, output_bus_data, output_gen_
 # ***********************************************************************************************************************
 # =======================================================================================================================
 
-input_file = open(r'''C:\Qiuhua\FY2016_Project_Transactive_system\FY18\Task-1 Simulation\AMES\8BusTestCase5000.dat''', 'r')
+output_format = "MATPOWER"
+# output_format = "JSON"
 
-# Either MATPOWER, or JSON
-output_format = "JSON"  # "JSON"
-
+# case_name = "8BusTestCase10000"
 case_name = "8BusTestCase5000"
+# case_name = "8BusTestCase2000"
+# case_name = "8BusTestCase1000"
 
-if (output_format == 'MATPOWER'):
+input_file = open("../" + case_name + ".dat", 'r')
+
+if output_format == 'MATPOWER':
     case_name = "mpc_{}.m".format(case_name)
 else:
     case_name = "pp_{}.json".format(case_name)
 
-output_file = open(r'''C:\Qiuhua\FY2016_Project_Transactive_system\FY18\Task-1 Simulation\AMES\\''' + case_name, 'w')
+output_file = open(case_name, 'w')
 
 # specify the hour for outputting the case
 hour = 0
@@ -281,7 +281,7 @@ baseMVA = 100.0
 line_num = 0
 for line in input_file:
     line_num = line_num + 1
-    if (line[0:2] == "//"):
+    if line[0:2] == "//":
         # print("skip comment line, line #",line_num, line)
         continue
     elif "BASE_S" in line:
@@ -365,7 +365,7 @@ for gen_rec in GenDataRaw:
                                    "FCost": float(GenDataAry[3]), "a": float(GenDataAry[4]),
                                    "b": float(GenDataAry[5]), "capL": float(GenDataAry[6]),
                                    "capU": float(GenDataAry[7]), "InitMoney": float(GenDataAry[8])}
-    if (largest_gen_cap < float(GenDataAry[7])):
+    if largest_gen_cap < float(GenDataAry[7]):
         largest_gen_cap = float(GenDataAry[7])
         bus_with_largest_gen_cap = int(GenDataAry[2].strip())
 
@@ -391,9 +391,9 @@ bus_num_list = []
 
 for bra_id, bra_rec in BranchData.items():
     print(bra_rec["From"], bra_rec["To"])
-    if (bra_rec["From"] not in bus_num_list):
+    if bra_rec["From"] not in bus_num_list:
         bus_num_list.append(bra_rec["From"])
-    if (bra_rec["To"] not in bus_num_list):
+    if bra_rec["To"] not in bus_num_list:
         bus_num_list.append(bra_rec["To"])
 
 for i in bus_num_list:
@@ -402,7 +402,7 @@ for i in bus_num_list:
     bus_i = int(i)
     bus_type = 1
     # make the bus with largest gen cap as the reference(or swing) bus
-    if (bus_i == bus_with_largest_gen_cap):
+    if bus_i == bus_with_largest_gen_cap:
         bus_type = 3
     PD, QD = get_hourly_bus_loadPQ(i, hour, LSEDataFixedDemand, power_factor=0.90)
     GS = 0

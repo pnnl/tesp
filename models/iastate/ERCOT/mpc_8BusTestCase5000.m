@@ -8,13 +8,11 @@ function mpc = mpc_8BusTestCase5000
     % Number of buses where distribution networks are going to be connected to
     mpc.BusFNCSNum = 1;
     % Buses where distribution networks are going to be connected to
-    mpc.BusFNCS = [
-                   7];
+    mpc.BusFNCS = [ 7 ];
     % Number of distribution feeders (GridLAB-D instances)
     mpc.SubNumFNCS = 9;
     %% Substation names, and the transmission network bus where it is connected to
-    mpc.SubNameFNCS = [
-                    1   7 ];
+    mpc.SubNameFNCS = [ 1 7 ];
 
     %% ======================================================================
     %% For creating scenarios for visualization
@@ -22,8 +20,7 @@ function mpc = mpc_8BusTestCase5000
     % Number of generators that might be turned off-line
     mpc.offlineGenNum = 1;
     % Matrix contains the bus number of the corresponding off-line generators
-    mpc.offlineGenBus = [
-                      2 ];       
+    mpc.offlineGenBus = [ 2 ];       
 
     %% ======================================================================
     %% An amplification factor is used to simulate a higher load at the feeder end

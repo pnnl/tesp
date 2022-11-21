@@ -25,7 +25,8 @@
     {
       "global" : false,
       "key" : "bill_mode",
-      "type" : "string"
+      "type" : "string",
+      "unit" : ""
     },
     {
       "global" : false,
@@ -60,16 +61,16 @@
       "info" : "kwhr_price"
     },
     {
-      "key" : "energyPlus/EMS Heating Controlled Load", 
-      "type" : "double",
-      "required" : true,
-      "info" : "heating_controlled_load"
-    },
-    {
       "key" : "energyPlus/EMS Cooling Controlled Load",
       "type" : "double",
       "required" : true,
       "info" : "cooling_controlled_load"
+    },
+    {
+      "key" : "energyPlus/EMS Heating Controlled Load",
+      "type" : "double",
+      "required" : true,
+      "info" : "heating_controlled_load"
     },
     {
       "key" : "energyPlus/EMS Cooling Schedule Temperature",

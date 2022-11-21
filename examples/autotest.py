@@ -28,6 +28,8 @@ def loadshed_test():
     if b_helics:
         os.chdir('capabilities/loadshed')
         subprocess.Popen('./clean.sh', shell=True).wait()
+        subprocess.Popen('make clean > make.log', shell=True).wait()
+        subprocess.Popen('make >> make.log', shell=True).wait()
         tesp.run_test('runhpy.sh', 'Loadshed - HELICS ns-3')
         tesp.run_test('runhpy0.sh', 'Loadshed - HELICS Python')
         tesp.run_test('runhjava.sh', 'Loadshed - HELICS Java')
@@ -36,6 +38,32 @@ def loadshed_test():
         subprocess.Popen('./clean.sh', shell=True).wait()
         tesp.run_test('run.sh', 'Loadshed - FNCS Python')
         tesp.run_test('runjava.sh', 'Loadshed - FNCS Java')
+    os.chdir(tesp_path)
+
+
+def loadshed_cli_test():
+    tesp.start_test('Loadshed examples for HELICS CLI')
+    os.chdir('capabilities/loadshed-HELICS3-EPlus')
+    subprocess.Popen('./clean.sh', shell=True).wait()
+    subprocess.Popen('make clean > make.log', shell=True).wait()
+    subprocess.Popen('make >> make.log', shell=True).wait()
+    tesp.run_test('run.sh', 'Loadshed - HELICS/EPlus')
+    # tesp.run_test('run_ns3.sh', 'Loadshed - HELICS/EPLUS/NS3')
+    os.chdir(tesp_path)
+
+
+def loadshed_proto_test():
+    tesp.start_test('Loadshed Prototypical Communication')
+    os.chdir('capabilities/loadshed-prototypical-communication')
+    subprocess.Popen('./clean.sh', shell=True).wait()
+    os.chdir('R1-12.47-1-communication')
+    subprocess.Popen('make clean > make.log', shell=True).wait()
+    subprocess.Popen('make >> make.log', shell=True).wait()
+    os.chdir('../R1-12.47-1')
+    tesp.exec_test('gridlabd R1-12.47-1_processed.glm > gridlabd.log', 'Establishing baseline results')
+    os.chdir(tesp_path + '/capabilities/loadshed-prototypical-communication')
+    tesp.run_test('run.sh', 'Load shedding control without communication network')
+    tesp.run_test('run_ns3.sh', 'Load shedding control over communication network')
     os.chdir(tesp_path)
 
 
@@ -162,6 +190,8 @@ if __name__ == '__main__':
 
     tesp.block_test(gld_player_test)
     tesp.block_test(loadshed_test)
+    tesp.block_test(loadshed_cli_test)
+    tesp.block_test(loadshed_proto_test)
     tesp.block_test(PYPOWER_test)
     tesp.block_test(EnergyPlus_test)
     tesp.block_test(weather_agent_test)

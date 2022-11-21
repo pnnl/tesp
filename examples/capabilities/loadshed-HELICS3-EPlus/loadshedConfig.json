@@ -1,14 +1,13 @@
 {
-	"name": "loadshed",
-	"coreType": "zmq",
-	"core_name": "loadshed-core",
-  "loglevel": "debug",
-  "period" : "30s",
-	"endpoints": [
-		{
-			"global": false,
-			"name": "sw_status",
-			"destination": "gridlabdSimulator1/sw_status"
-		}
-	]
+  "name": "loadshed",
+  "coreType": "zmq",
+  "loglevel": "warning",
+  "period": 30.0,
+  "endpoints": [
+    {
+      "global": false,
+      "name": "sw_status",
+      "destination": "gridlabdSimulator1/sw_status"
+    }
+  ]
 }

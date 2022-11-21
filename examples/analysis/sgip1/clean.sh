@@ -10,6 +10,5 @@ rm -f *Weather_Config.json
 rm -f SGIP1*.yaml
 rm -f *.xml
 rm -f weather.dat
-rm -f output/*
-rmdir output 2> /dev/null
+rm -rf output
 rm -f *.bnd

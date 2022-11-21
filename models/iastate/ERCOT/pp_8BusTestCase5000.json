@@ -1,7 +1,6 @@
 {
   "version": "2",
   "baseMVA": 100.0,
-  "areas": [],
   "bus": [
     [
       1,

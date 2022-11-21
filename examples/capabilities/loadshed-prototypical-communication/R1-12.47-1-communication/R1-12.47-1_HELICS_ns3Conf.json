@@ -2,7 +2,7 @@
   "name": "R1-12.47-1-communication",
   "coreType": "zmq",
   "core_name": "R1-12.47-1-ns3-core",
-  "loglevel": "SUMMARY",
+  "loglevel": "warning",
   "period": "1ns",
   "wait_for_current_time_update": false,
   "endpoints": [

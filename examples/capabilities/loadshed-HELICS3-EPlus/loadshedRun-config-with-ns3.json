@@ -19,7 +19,8 @@
       "exec": "energyplus -w ../../../data/energyplus/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw -d output loadshedSchoolBase.idf",
       "host": "localhost",
       "name": "energyPlus_Federate",
-      "env": {"HELICS_CONFIG_FILE": "helics_eplus.json"
+      "env": {
+        "HELICS_CONFIG_FILE": "helics_eplus.json"
       }
     },
     {

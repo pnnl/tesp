@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 	Simulator::Stop(Seconds(simulationRunTime));
 	std::cout << "===== Run simulator .... =====" << std::endl;
 	Simulator::Run();
-  std::cout << "===== Destroy simulator. =====" << std::endl;
+    std::cout << "===== Destroy simulator. =====" << std::endl;
 	Simulator::Destroy();
 	return 0;
 }
