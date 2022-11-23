@@ -1,4 +1,4 @@
-source $HOME/tesp/venv/bin/activate
+. $HOME/tesp/venv/bin/activate
 
 # TESP exports
 export INSTDIR=$HOME/tesp/tenv
@@ -6,13 +6,6 @@ export REPODIR=$HOME/tesp/repository
 export TESPDIR=$HOME/tesp/repository/tesp
 export TESPBUILD=$TESPDIR/scripts/build
 export TESPHELPR=$TESPDIR/scripts/helpers
-
-# PATH
-export PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
-export PATH=$PATH:$INSTDIR/energyplus
-export PATH=$PATH:$INSTDIR/energyplus/PreProcess
-export PATH=$PATH:$INSTDIR/energyplus/PostProcess
-export PATH=$PATH:$TESPHELPR
 
 # COMPILE exports
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
@@ -23,6 +16,14 @@ export FNCS_INCLUDE_DIR=$INSTDIR/include
 export FNCS_LIBRARY=$INSTDIR/lib
 export LD_LIBRARY_PATH=$INSTDIR/lib
 export LD_RUN_PATH=$INSTDIR/lib
+
+# PATH
+export PATH=$INSTDIR/bin:$PATH
+export PATH=$JAVA_HOME:$PATH
+export PATH=$PATH:$INSTDIR/energyplus
+export PATH=$PATH:$INSTDIR/energyplus/PreProcess
+export PATH=$PATH:$INSTDIR/energyplus/PostProcess
+export PATH=$PATH:$TESPHELPR
 
 # PSST environment variables
 export PSST_SOLVER=cbc

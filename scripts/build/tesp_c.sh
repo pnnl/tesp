@@ -11,20 +11,16 @@ echo
 echo "++++++++++++++  Compiling and Installing TESP software is starting!  ++++++++++++++"
 echo
 
-# Install all pip libraries
 echo "Installing Python Libraries..."
 which python > "${TESPBUILD}/tesp_pypi.log" 2>&1
 pip3 install --upgrade pip >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 pip3 install -r "${TESPDIR}/requirements.txt" >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 
-#develop tesp api
 echo "Installing Python TESP API..."
 cd "${TESPDIR}/src/tesp_support" || exit
 pip3 install -e . > "${TESPBUILD}/tesp_api.log" 2>&1
 
-#develop psst api
 echo "Installing Python PSST..."
-#cd "${REPODIR}/psst" || exit
 cd "${REPODIR}/AMES-V5.0/psst" || exit
 pip3 install -e . > "${TESPBUILD}/AMES-V5.0.log" 2>&1
 
@@ -82,14 +78,17 @@ cd "${TESPBUILD}" || exit
 echo "Installing HELICS Python bindings..."
 ./HELICS-py.sh clean > HELICS-py.log 2>&1
 
-echo
-echo "Installation logs are found in ${TESPBUILD}"
-
-# creates the necessary links and cache to the most recent shared libraries found
+# Creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
 # and in the trusted directories (/lib and /usr/lib).
 sudo ldconfig
+echo
+echo "TESP installation logs are found in ${TESPBUILD}"
+echo "++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++"
 
 cd "${TESPBUILD}" || exit
 ./versions.sh
 
+echo
+echo "++++++++++++++  TESP has been installed! That's all folks!  ++++++++++++++"
+echo
