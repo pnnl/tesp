@@ -129,7 +129,7 @@ index 5ae4be2e7..16861a5d8 100644
 +////////////////////////////////////////////////////////////////
 +/// local global variables for function \c getepvariables
 +////////////////////////////////////////////////////////////////
-+char *  outputVarsName; ///< the string pointer to the parsed output variable names  
++char *  outputVarsName; ///< the string pointer to the parsed output variable names
 +char *  outputVarsType; ///< the string pointer to the parsed output variable types
 +int *   numOutputVars;  ///< the integer pointer to the number of output variables
 +char *  inputVars;      ///< the string pointer to the input variables
@@ -197,7 +197,7 @@ index 6879dcd77..a09b043c2 100644
 -int     numInputKeys;   ///< the number of input variable types
 -int     source;         ///< flag for function /c getepvariables 0=EnergyPlus, 1=Ptolemy
 -int const * strLen;     ///< the length of string parsed to this function
-+extern char *  outputVarsName; ///< the string pointer to the parsed output variable names  
++extern char *  outputVarsName; ///< the string pointer to the parsed output variable names
 +extern char *  outputVarsType; ///< the string pointer to the parsed output variable types
 +extern int *   numOutputVars;  ///< the integer pointer to the number of output variables
 +extern char *  inputVars;      ///< the string pointer to the input variables
