@@ -30,9 +30,6 @@ pip3 install -e . > "${TESPBUILD}/AMES-V5.0.log" 2>&1
 cd "${TESPBUILD}" || exit
 if [[ $1 == "develop" ]]; then
 
-  echo "Installing Python Sphinx for documentation..."
-  ./docs_b.sh clean > docs.log 2>&1
-
   echo "Compiling and Installing FNCS..."
   ./fncs_b.sh clean > fncs.log 2>&1
 
@@ -77,6 +74,9 @@ fi
 cd "${TESPBUILD}" || exit
 echo "Installing HELICS Python bindings..."
 ./HELICS-py.sh clean > HELICS-py.log 2>&1
+
+echo "Installing TESP documentation..."
+./docs_b.sh clean > docs.log 2>&1
 
 # Creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
