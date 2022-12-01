@@ -1,18 +1,19 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: setup.py
 
+import pathlib
 from setuptools import setup, find_packages
 
+version = open("version", 'r').readline().strip()
+long_description = '\n\n'.join(open(f, 'rb').read().decode('utf-8') for f in ['README.rst', 'CHANGELOG.rst'])
 
 setup(
     name='tesp_support',
-    version='1.2.2',
+    version=version,
     author='Trevor Hardy',
     author_email='trevor.hardy@PNNL.gov',
     description='Python support for the Transactive Energy Simulation Platform',
-    long_description='\n\n'.join(
-        open(f, 'rb').read().decode('utf-8')
-        for f in ['README.rst', 'CHANGELOG.rst']),
+    long_description=long_description,
     long_description_content_type="text/x-rst",
     url='https://github.com/pnnl/tesp',
     license='BSD',

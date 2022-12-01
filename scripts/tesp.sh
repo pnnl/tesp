@@ -82,7 +82,7 @@ sudo apt-get -y install unzip
 
 # Java support
 sudo apt-get -y install openjdk-11-jdk
-sudo ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
+sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
 
 # for HELICS and FNCS
 sudo apt-get -y install libzmq5-dev
@@ -159,7 +159,7 @@ echo ++++++++++++++ TESP
 git clone -b main https://github.com/pnnl/tesp.git
 echo "Copy TESP environment variables to $HOME/tespEnv for shell scripts"
 cp tesp/scripts/tespEnv "$HOME/"
-source "${HOME}/tespEnv"
+. "${HOME}/tespEnv"
 
 echo
 echo ++++++++++++++ PSST
@@ -207,6 +207,6 @@ if [[ $binaries == "develop" ]]; then
   svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
 fi
 
-cd "${TESPDIR}/scripts" || exit
 # Compile all relevant executables
+cd "${TESPBUILD}" || exit
 ./tesp_c.sh $binaries

@@ -3,7 +3,7 @@
     _ file: Consensus_Usecase.rst
 
 Consensus-based Transactive Communities - Example and Documents
-========================================
+===============================================================
 
 This section links to models and design documents for a Consensus-based Transactive Communities use-case
 that PNNL has been developing as part of the HELICS+ use-cases (4.1) in FY21. Most of this material will be incorporated

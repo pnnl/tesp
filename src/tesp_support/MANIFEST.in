@@ -1,4 +1,4 @@
 include *.cfg
-include *.ini
 include *.rst
+include version
 include LICENSE

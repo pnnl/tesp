@@ -1,0 +1,15 @@
+#!/bin/bash
+# Copyright (C) 2021-2022 Battelle Memorial Institute
+# file: test_helics_java.sh
+
+if [[ -z ${INSTDIR} ]]; then
+  . "${HOME}/tespEnv"
+fi
+
+JAVAPATH=${INSTDIR}/java
+
+cd "${TESPBUILD}"
+if ! [ -f "test_helics.class" ]; then
+  javac -classpath ".:$JAVAPATH/helics.jar" test_helics.java
+fi
+java -classpath ".:$JAVAPATH/helics.jar" -Djava.library.path="$JAVAPATH" test_helics
