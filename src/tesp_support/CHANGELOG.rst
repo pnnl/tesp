@@ -58,7 +58,7 @@ Version 1.2.0 (2022-10-3)
 * Added DSOT agents and feeder generators
 * Update to HELICS 3.3.0
 
-Version 1.2.3 (2022-10-3)
+Version 1.2.3 (2022-11-22)
 --------------------------
 * Fix the EngeryPlus to work with newer compiler and updated version number
 * Fix read the docs document warnings and fix clean shell script for energyplus
@@ -72,5 +72,10 @@ Version 1.2.3 (2022-10-3)
 * Fixed complex python to use helics complex type
 
 
-
-
+Version 1.2.4 (2022-12-1)
+--------------------------
+* Fix version number in tesp_support for PyPI distribution and read the docs
+* Fix the version.sh, move docmentaion to end of the install, fix warning in Consensus_Usecase.rst
+* Fix git patch warning for FNCS and EnergyPlus
+* GRIDLabD triplex_node no longer uses power_12_real and power12_reac, this has commented out for SGIP1*.glm files
+* Add pypi packaging to stamping process, refined docker build in scripts/docker, moved HELICS version checker to build
