@@ -130,11 +130,11 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     ip = open(glmname).read()
 
     gd = json.loads(ip)
-    gld_sim_name = gd['DSO']
+    gld_sim_name = gd['message_name']
 
     print('\tgldfileroot -> {0:s}\n\tsubstationfileroot -> {1:s}\n\tdirname -> {2:s}\n'
-          '\tbasename -> {3:s}\n\tglmname -> {4:s}\n\tgld_sim_name -> {5:s}\n\tsubstation_name -> {6:s}'.format(
-            gldfileroot, substationfileroot, dirname, basename, glmname, gld_sim_name, substation_name))
+          '\tbasename -> {3:s}\n\tglmname -> {4:s}\n\tgld_sim_name -> {5:s}\n\tsubstation_name -> {6:s}'.
+          format(gldfileroot, substationfileroot, dirname, basename, glmname, gld_sim_name, substation_name))
 
     # dictionaries with agents and counters
     markets = {}
@@ -582,7 +582,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
             if participating:
                 num_battery_agents += 1
 
-            battery_agents[inverter_name] = {'batteryName': inverter_name.replace('ibat', 'bat'),
+            battery_name = inverter_name.replace('ibat', 'bat')
+            battery_agents[inverter_name] = {'batteryName': battery_name,
                                              'meterName': meter_name,
                                              'capacity': val['bat_capacity'],
                                              'rating': val['rated_W'],
@@ -1022,7 +1023,7 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
 
     Futhermore reads either the jsonfile or config dictionary.
     This supplemental data includes time-scheduled thermostat setpoints (NB: do not use the scheduled
-    setpoint feature within GridLAB-D, as the first FNCS messages will erase those schedules during
+    setpoint feature within GridLAB-D, as the first messages will erase those schedules during
     simulation).
 
     Args:
@@ -1034,10 +1035,10 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
     """
     global case_config
     global hvac_setpt
-    
+
     global Q_forecast_g
     global Q_dso_key_g
-    
+
     Q_forecast_g = Q_forecast
     Q_dso_key_g = Q_dso_key
 
