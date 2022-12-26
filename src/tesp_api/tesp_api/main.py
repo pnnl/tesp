@@ -7,6 +7,7 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import json
 import sqlite3
+import time
 
 from entity import assign_defaults
 from entity import assign_item_defaults
@@ -23,7 +24,13 @@ class mytest:
         return
 
 
-def test1():
+def fredtest():
+    testMod = GLMModifier()
+    buildModeTest = testMod.bill_mode
+    testMod.model.read(feeders_path + "R1-12.47-1.glm")
+
+
+def _test1():
     mylist = {}
     # entity_names = ["SimulationConfig", "BackboneFiles",  "WeatherPrep", "FeederGenerator",
     #             "EplusConfiguration", "PYPOWERConfiguration", "AgentPrep", "ThermostatSchedule"]
@@ -37,6 +44,7 @@ def test1():
 
     # this a config  -- file probably going to be static json
     file_name = 'feeder_defaults.json'
+
     myEntity = mytest()
     assign_defaults(myEntity, file_name)
     name = 'rgnPenResHeat'
@@ -66,7 +74,7 @@ def test1():
             mylist[name].instanceToSQLite(conn)
 
 
-def test2():
+def _test2():
     # Test model.py
     model_file = GLModel()
     tval = model_file.read(feeders_path + "R1-12.47-1.glm")
@@ -82,18 +90,25 @@ def test2():
     op.close()
 
 
-def test3():
+def _test3():
+    st = time.time()
     modobject = GLMModifier()
 
     tval = modobject.read_model(feeders_path + "R1-12.47-1.glm")
+    et = time.time()
+    elapsed_time = et - st
 
+
+ #   st = time.time()
     for name in modobject.model.entities:
         print(modobject.model.entities[name].toHelp())
+    et = time.time()
+    elapsed_time = et - st
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     # test1()
-    test2()
-    test3()
-    
+    #test2()
+    fredtest()
+
