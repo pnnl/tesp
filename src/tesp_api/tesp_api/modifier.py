@@ -10,7 +10,7 @@ import numpy as np
 from data import entities_path
 from entity import assign_defaults
 from model import GLModel
-
+from entity import Entity
 
 class GLMModifier:
     # instances of entity values
@@ -789,6 +789,7 @@ class GLMModifier:
         print(total_office, 'offices,', total_bigbox, 'bigbox retail,', total_stripmall, 'strip malls,',
               total_zipload, 'ZIP loads')
         print(total_comm_zones, 'total commercial HVAC zones')
+        return total_commercial, total_office, total_bigbox, total_stripmall, total_zipload, total_comm_zones
 
     def identify_xfmr_houses(self, model, h, t, seg_loads, avgHouse, rgn):
         """For the full-order feeders, scan each service transformer to determine the number of houses it should have
@@ -851,6 +852,17 @@ class GLMModifier:
                 total_mh * self.bldgCoolingSetpoints[2][i][0] + 0.5)
         print('cooling bins target', self.cooling_bins)
         print('heating bins target', self.heating_bins)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -998,4 +1010,216 @@ class GLMModifier:
                               self.casefiles.avghouse,
                               self.casefiles.avgcommercial)
 
-        # def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
+    def connect_ercot_houses(self, model, h, op, vln, vsec):
+        """For the reduced-order ERCOT feeders, add houses and a large service transformer to the load points
+
+        Args:
+            model (dict): the parsed GridLAB-D model
+            h (dict): the object ID hash
+            op (file): an open GridLAB-D input file
+            vln (float): the primary line-to-neutral voltage
+            vsec (float): the secondary line-to-neutral voltage
+        """
+        for key in self.house_nodes:
+            #        bus = key[:-2]
+            bus = self.house_nodes[key][6]
+            phs = self.house_nodes[key][3]
+            nh = self.house_nodes[key][0]
+            xfkva = self.Find1PhaseXfmrKva(6.0 * nh)
+            if xfkva > 100.0:
+                npar = int(xfkva / 100.0 + 0.5)
+                xfkva = 100.0
+            elif xfkva <= 0.0:
+                xfkva = 100.0
+                npar = int(0.06 * nh + 0.5)
+            else:
+                npar = 1
+            #        print (key, bus, phs, nh, xfkva, npar)
+            # write the service transformer==>TN==>TPX==>TM for all houses
+            kvat = npar * xfkva
+            row = self.Find1PhaseXfmr(xfkva)
+
+#            self.entities['transformer_configuration'] = Entity('transformer_configuration', self.model.objects['transformer_configuration'])
+            tempEntity = Entity(key + '_xfconfig', self.model.objects['transformer_configuration'])
+#            print('object transformer_configuration {', file=op)
+            tempEntity.name = key + '_xfconfig'
+            #print('  name ' + key + '_xfconfig;', file=op)
+            tempEntity.power_rating = format(kvat, '.2f')
+#            print('  power_rating ' + format(kvat, '.2f') + ';', file=op)
+            if 'A' in phs:
+#                print('  powerA_rating ' + format(kvat, '.2f') + ';', file=op)
+                tempEntity.powerA_rating = format(kvat, '.2f')
+            elif 'B' in phs:
+#                print('  powerB_rating ' + format(kvat, '.2f') + ';', file=op)
+                tempEntity.powerB_rating = format(kvat, '.2f')
+            elif 'C' in phs:
+#                print('  powerC_rating ' + format(kvat, '.2f') + ';', file=op)
+                tempEntity.powerC_rating = format(kvat, '.2f')
+#            print('  install_type PADMOUNT;', file=op)
+            tempEntity.install_type = 'PADMOUNT'
+#            print('  connect_type SINGLE_PHASE_CENTER_TAPPED;', file=op)
+            tempEntity.connect_type = 'SINGLE_PHASE_CENTER_TAPPED'
+#            print('  primary_voltage ' + str(vln) + ';', file=op)
+            tempEntity.primary_voltage = str(vln) + ';'
+#            print('  secondary_voltage ' + format(vsec, '.1f') + ';', file=op)
+            tempEntity.secondary_voltage = format(vsec, '.1f')
+#            print('  resistance ' + format(row[1] * 0.5, '.5f') + ';', file=op)
+            tempEntity.resistance = format(row[1] * 0.5, '.5f')
+#            print('  resistance1 ' + format(row[1], '.5f') + ';', file=op)
+            tempEntity.resistance1 = format(row[1], '.5f')
+#            print('  resistance2 ' + format(row[1], '.5f') + ';', file=op)
+            tempEntity.resistance2 = format(row[1], '.5f')
+#            print('  reactance ' + format(row[2] * 0.8, '.5f') + ';', file=op)
+            tempEntity.reactance = format(row[2] * 0.8, '.5f')
+#            print('  reactance1 ' + format(row[2] * 0.4, '.5f') + ';', file=op)
+            tempEntity.reactance1 = format(row[2] * 0.4, '.5f')
+#            print('  reactance2 ' + format(row[2] * 0.4, '.5f') + ';', file=op)
+            tempEntity.reactance2 = format(row[2] * 0.4, '.5f')
+#            print('  shunt_resistance ' + format(1.0 / row[3], '.2f') + ';', file=op)
+            tempEntity.shunt_resistance = format(1.0 / row[3], '.2f')
+#            print('  shunt_reactance ' + format(1.0 / row[4], '.2f') + ';', file=op)
+            tempEntity.shunt_reactance = format(1.0 / row[4], '.2f')
+#            print('}', file=op)
+            self.entities[tempEntity.name] = tempEntity
+
+
+
+
+#            print('object transformer {', file=op)
+            tempEntity = Entity(key + '_xf', self.objects['transformer'])
+#            print('  name ' + key + '_xf;', file=op)
+            tempEntity.name = key + '_xf'
+#            print('  phases ' + phs + 'S;', file=op)
+            tempEntity.phases = phs + 'S'
+#            print('  from ' + bus + ';', file=op)
+            tempEntity.from = bus
+#            print('  to ' + key + '_tn;', file=op)
+            tempEntity.to = key + '_tn'
+#            print('  configuration ' + key + '_xfconfig;', file=op)
+            tempEntity.configuration = key + '_xfconfig'
+#            print('}', file=op)
+            self.entities[tempEntity.name] = tempEntity
+
+
+
+
+
+#            print('object triplex_line_configuration {', file=op)
+            tempEntity = Entity(key + '_tpxconfig', self.objects['triplex_line_configuration'])
+#            print('  name ' + key + '_tpxconfig;', file=op)
+            tempEntity.name = key + '_tpxconfig'
+#            zs = format(ConfigDict['tpxR11']['value'] / nh, '.5f') + '+' + format(ConfigDict['tpxX11']['value'] / nh,
+            zs = format(self.tpxR11 / nh, '.5f') + '+' + format(self.tpxX11 / nh, '.5f') + 'j;'
+            zm = format(self.tpxR12 / nh, '.5f') + '+' + format(self.tpxX12 / nh, '.5f') + 'j;'
+            amps = format(self.tpxAMP * nh, '.1f') + ';'
+#            print('  z11 ' + zs, file=op)
+            tempEntity.z11 = zs
+#            print('  z22 ' + zs, file=op)
+            tempEntity.z22 = zs
+#            print('  z12 ' + zm, file=op)
+            tempEntity.z12 = zm
+#            print('  z21 ' + zm, file=op)
+            tempEntity.z21 = zm
+#            print('  rating.summer.continuous ' + amps, file=op)
+            tempEntity.rating.summer.continuous = amps
+#            print('}', file=op)
+            self.entities[tempEntity.name] = tempEntity
+
+
+
+#            print('object triplex_line {', file=op)
+            tempEntity = Entity(key + '_tpx', self.objects['triplex_line'])
+#            print('  name ' + key + '_tpx;', file=op)
+            tempEntity.name = key + '_tpx'
+#            print('  phases ' + phs + 'S;', file=op)
+            tempEntity.phases = phs + 'S'
+#            print('  from ' + key + '_tn;', file=op)
+            tempEntity.from = key + '_tn'
+#            print('  to ' + key + '_mtr;', file=op)
+            tempEntity.to = key + '_mtr'
+#            print('  length 50;', file=op)
+            tempEntity.length = '50'
+#            print('  configuration ' + key + '_tpxconfig;', file=op)
+            tempEntity.configuration = key + '_tpxconfig'
+#            print('}', file=op)
+            self.entities[tempEntity.name] = tempEntity
+
+
+            if 'A' in phs:
+#                vstart = str(vsec) + '+0.0j;'
+                vstart = str(vsec) + '+0.0j'
+            elif 'B' in phs:
+#                vstart = format(-0.5 * vsec, '.2f') + format(-0.866025 * vsec, '.2f') + 'j;'
+                vstart = format(-0.5 * vsec, '.2f') + format(-0.866025 * vsec, '.2f') + 'j'
+            else:
+#                vstart = format(-0.5 * vsec, '.2f') + '+' + format(0.866025 * vsec, '.2f') + 'j;'
+                vstart = format(-0.5 * vsec, '.2f') + '+' + format(0.866025 * vsec, '.2f') + 'j'
+
+
+
+
+#            print('object triplex_node {', file=op)
+            tempEntity = Entity(key + '_tn', self.objects['triplex_node'])
+#            print('  name ' + key + '_tn;', file=op)
+            tempEntity.name = key + '_tn'
+#            print('  phases ' + phs + 'S;', file=op)
+            tempEntity.phases = phs + 'S'
+#            print('  voltage_1 ' + vstart, file=op)
+            tempEntity.voltage_1 = vstart
+#            print('  voltage_2 ' + vstart, file=op)
+            tempEntity.voltage_2 = vstart
+#            print('  voltage_N 0;', file=op)
+            tempEntity.voltage_N = '0'
+#            print('  nominal_voltage ' + format(vsec, '.1f') + ';', file=op)
+            tempEntity.nominal_voltage = format(vsec, '.1f')
+#            print('}', file=op)
+            self.entities[tempEntity.name] = tempEntity
+
+
+
+
+#            print('object triplex_meter {', file=op)
+            tempEntity = Entity(key + '_mtr', self.objects['triplex_meter'])
+#            print('  name ' + key + '_mtr;', file=op)
+            tempEntity.name = key + '_mtr'
+#            print('  phases ' + phs + 'S;', file=op)
+            tempEntity.phases = phs + 'S'
+#            print('  voltage_1 ' + vstart, file=op)
+            tempEntity.voltage_1 = vstart
+#            print('  voltage_2 ' + vstart, file=op)
+            tempEntity.voltage_2 = vstart
+#            print('  voltage_N 0;', file=op)
+            tempEntity.voltage_N = '0'
+#            print('  nominal_voltage ' + format(vsec, '.1f') + ';', file=op)
+            tempEntity.nominal_voltage = format(vsec, '.1f')
+
+
+            write_tariff(op)
+
+
+            if self.metrics_interval > 0:
+                print('  object metrics_collector {', file=op)
+                print('    interval', str(self.metrics_interval) + ';', file=op)
+                print('  };', file=op)
+            print('}', file=op)
+
+    def write_tariff (op):
+        """Writes tariff information to billing meters
+
+        Args:
+            op (file): an open GridLAB-D input file
+        """
+        print ('  bill_mode', ConfigDict['billing']['bill_mode']['value'] + ';', file=op)
+        print ('  price', '{:.4f}'.format (ConfigDict['billing']['kwh_price']['value']) + ';', file=op)
+        print ('  monthly_fee', '{:.2f}'.format (ConfigDict['billing']['monthly_fee']['value']) + ';', file=op)
+        print ('  bill_day 1;', file=op)
+        if 'TIERED' in ConfigDict['billing']['bill_mode']['value']:
+            if ConfigDict['billing']['tier1_energy']['value'] > 0.0:
+                print ('  first_tier_energy', '{:.1f}'.format (ConfigDict['billing']['tier1_energy']['value']) + ';', file=op)
+                print ('  first_tier_price', '{:.6f}'.format (ConfigDict['billing']['tier1_price']['value']) + ';', file=op)
+            if ConfigDict['billing']['tier2_energy']['value'] > 0.0:
+                print ('  second_tier_energy', '{:.1f}'.format (ConfigDict['billing']['tier2_energy']['value']) + ';', file=op)
+                print ('  second_tier_price', '{:.6f}'.format (ConfigDict['billing']['tier2_price']['value']) + ';', file=op)
+            if ConfigDict['billing']['tier3_energy']['value'] > 0.0:
+                print ('  third_tier_energy', '{:.1f}'.format (ConfigDict['billing']['tier3_energy']['value']) + ';', file=op)
+                print ('  third_tier_price', '{:.6f}'.format (ConfigDict['billing']['tier3_price']['value']) + ';', file=op)
