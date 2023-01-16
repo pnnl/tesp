@@ -130,10 +130,26 @@ class Entity:
             print("Object id is not a string")
         return None
 
+    def del_instance(self, obj_id):
+        if type(obj_id) == str:
+            try:
+                self.instance.remove(obj_id)
+            except:
+                pass
+        else:
+            print("Object id is not a string")
+        return None
+
     def add_item(self, datatype, label, unit, item, value=None):
         val = Item(datatype, label, unit, item, value)
         setattr(self, item, val)
         return self.__getattribute__(item)
+
+    def set_item(self, item, val):
+        #if self.find_item(item):
+        setattr(self, item, val)
+        return self.__getattribute__(item)
+        #return None
 
     def del_item(self, item):
         setattr(self, item, None)
@@ -197,13 +213,16 @@ class Entity:
         return diction
 
     def instanceToGLM(self):
-        diction = ""
+        diction1 = ""
+        diction2 = ""
         for obj_id in self.instance:
-            diction += "object " + self.entity + " {\n  name " + obj_id + ";\n"
-            for item in self.instance[obj_id]:
-                diction += "  " + item + " " + self.instance[obj_id][item] + ";\n"
-            diction += "}\n"
-        return diction
+            diction1 += "object " + self.entity + " {\n  name " + obj_id + ";\n"
+            #for i in range(len(self.instance[obj_id])):
+            for item in self.instance[obj_id].keys():
+                diction1 += "  " + item + " " + self.instance[obj_id][item] + ";\n"
+            diction1 += "}\n"
+        diction2 += diction1
+        return diction2
 
     def instanceToSQLite(self, connection):
         # cursor object

@@ -84,7 +84,7 @@ class GLModel:
 
         for name in self.objects:
             self.entities[name] = Entity(name, self.objects[name])
-            self.entities[name].toSQLite(self.conn)
+            #self.entities[name].toSQLite(self.conn)
 
     def entitiesToJson(self):
         diction = {}

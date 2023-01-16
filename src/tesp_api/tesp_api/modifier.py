@@ -6,7 +6,7 @@ import math
 import os
 import re
 import numpy as np
-
+import tesp_support.helpers
 from data import entities_path
 from entity import assign_defaults
 from model import GLModel
@@ -20,9 +20,9 @@ class GLMModifier:
 
     def __init__(self):
         self.model = GLModel()
-        self.modded_model = GLModel()
+        #self.modded_model = GLModel()
         self.mod_headers = []
-        self.extra_billing_meters = set()
+        #self.extra_billing_meters = set()
         assign_defaults(self, 'feeder_defaults.json')
         return
 
@@ -34,20 +34,18 @@ class GLMModifier:
     def get_object_id(self, name, object_id):
         return self.model.entities[name].entities[object_id]
 
-    def add_objects(self, name):
-        return True
+    def add_object(self, name, obj_id, params):
+        return self.get_objects(name).set_instance(obj_id, params)
 
-    def del_objects(self, name):
-        return True
+    def del_object(self, name, obj_id):
+        self.get_objects(name).del_instance(obj_id)
 
-    def add_objects_to(self, name):
-        return True
+    def add_object_item(self, name, obj_id, item_name, item_value):
+        return self.get_object(name).set_instance(obj_id).set_item(item_name, item_value)
 
-    def del_objects_from(self, name):
-        return True
 
-    def get_path_to_substation(self):
-        return True
+    def del_object_item(self, name, obj_id, item_name):
+        self.get_object(name).set_instance(obj_id).del_item(item_name)
 
     def mod_model(self):
         tlist = list(self.model.network.nodes.data())
@@ -73,11 +71,12 @@ class GLMModifier:
     def set_simulation_times(self):
         return True
 
-    def write_model(self):
+    def write_model(self, filepath):
+        op = open(filepath, "w", encoding='utf-8')
+        print(self.model.instancesToGLM(), op)
+        op.close()
         return True
 
-    def write_mod_model(self, filepath):
-        return True
 #************************************************************************************************************
     def create_kersting_quadriplex(self, kva):
         kerst_quad_dict = dict()
@@ -261,6 +260,7 @@ class GLMModifier:
             xfmr_config_dict['shunt_reactance'] = format(1.0 / row[4], '.2f')
         return xfmr_config_dict
 
+    # ************************************************************************************************************
     def Find3PhaseXfmr(self, kva):
         """Select a standard 3-phase transformer size, with data
 
@@ -278,6 +278,7 @@ class GLMModifier:
                 return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
         return self.Find3PhaseXfmrKva(kva), 0.01, 0.08, 0.005, 0.01
 
+    # ************************************************************************************************************
     def Find1PhaseXfmr(self, kva):
         """Select a standard 1-phase transformer size, with data
 
@@ -294,6 +295,7 @@ class GLMModifier:
                 return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
         return self.Find1PhaseXfmrKva(kva), 0.01, 0.06, 0.005, 0.01
 
+    # ************************************************************************************************************
     def Find1PhaseXfmrKva(self, kva):
         """Select a standard 1-phase transformer size, with some margin
 
@@ -315,6 +317,7 @@ class GLMModifier:
         n500 = int((kva + 250.0) / 500.0)
         return 500.0 * n500
 
+    # ************************************************************************************************************
     def Find3PhaseXfmrKva(self, kva):
         """Select a standard 3-phase transformer size, with some margin
 
@@ -335,6 +338,7 @@ class GLMModifier:
         n10 = int((kva + 5000.0) / 10000.0)
         return 500.0 * n10
 
+    # ************************************************************************************************************
     def union_of_phases(self, phs1, phs2):
         """Collect all phases on both sides of a connection
 
@@ -356,6 +360,7 @@ class GLMModifier:
             phs += 'S'
         return phs
 
+    # ************************************************************************************************************
     def accumulate_load_kva(self, data):
         """Add up the total kva in a load-bearing object instance
 
@@ -385,6 +390,7 @@ class GLMModifier:
             kva += self.parse_kva(data['power_12'])
         return kva
 
+    # ************************************************************************************************************
     def randomize_commercial_skew(self):
         #sk = ConfigDict['commercial_skew_std']['value'] * np.random.randn ()
         sk = self.commercial_skew_std;
@@ -398,6 +404,7 @@ class GLMModifier:
             sk = self.commercial_skew_max;
         return sk
 
+    # ************************************************************************************************************
     def is_edge_class(self, s):
         """Identify switch, fuse, recloser, regulator, transformer, overhead_line, underground_line and triplex_line instances
 
@@ -427,6 +434,7 @@ class GLMModifier:
             return True
         return False
 
+    # ************************************************************************************************************
     def is_node_class(self, s):
         """Identify node, load, meter, triplex_node or triplex_meter instances
 
@@ -448,6 +456,7 @@ class GLMModifier:
             return True
         return False
 
+    # ************************************************************************************************************
     def parse_kva_old(self, arg):
         """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
 
@@ -503,6 +512,7 @@ class GLMModifier:
 
         return math.sqrt(p * p + q * q)
 
+    # ************************************************************************************************************
     def parse_kva(self, cplx): # this drops the sign of p and q
         """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
 
@@ -517,6 +527,7 @@ class GLMModifier:
         q = float(toks[1])
         return 0.001 * math.sqrt(p*p + q*q)
 
+    # ************************************************************************************************************
     def selectResidentialBuilding(self, rgnTable,prob):
         """Writes volt-var and volt-watt settings for solar inverters
 
@@ -534,6 +545,7 @@ class GLMModifier:
         col = len(rgnTable[row]) - 1
         return row, col
 
+    # ************************************************************************************************************
     def buildingTypeLabel (self, rgn, bldg, ti):
         """Formatted name of region, building type name and thermal integrity level
 
@@ -544,6 +556,7 @@ class GLMModifier:
         """
         return self.rgnName[rgn - 1] + ': ' + self.bldgTypeName[bldg] + ': TI Level ' + str(ti + 1)
 
+    # ************************************************************************************************************
     def checkResidentialBuildingTable(self):
         """Verify that the regional building parameter histograms sum to one
         """
@@ -579,6 +592,7 @@ class GLMModifier:
                     self.conditionalHeatingBinProb[bldg][cBin][hBin] = \
                     self.bldgHeatingSetpoints[bldg][hBin][0] / denom
 
+    # ************************************************************************************************************
     def selectThermalProperties(self, bldgIdx, tiIdx):
         """Retrieve the building thermal properties for a given type and integrity level
 
@@ -594,6 +608,7 @@ class GLMModifier:
             tiProps = self.mobileHomeProperties[tiIdx]
         return tiProps
 
+    # ************************************************************************************************************
     def FindFuseLimit(self, amps):
         """ Find a Fuse size that's unlikely to melt during power flow
 
@@ -622,6 +637,7 @@ class GLMModifier:
                 return row
         return 999999
 
+    # ************************************************************************************************************
     def selectSetpointBins(self, bldg, rand):
         """Randomly choose a histogram row from the cooling and heating setpoints
         The random number for the heating setpoint row is generated internally.
@@ -652,6 +668,7 @@ class GLMModifier:
                self.bldgHeatingSetpoints[bldg][hBin]
 
     # look at primary loads, not the service transformers
+    # ************************************************************************************************************
     def identify_ercot_houses(self, model, h, t, avgHouse, rgn):
         """For the reduced-order ERCOT feeders, scan each primary load to determine the number of houses it should have
 
@@ -726,6 +743,7 @@ class GLMModifier:
         print('cooling bins target', self.cooling_bins)
         print('heating bins target', self.heating_bins)
 
+    # ************************************************************************************************************
     def replace_commercial_loads(self, model, h, t, avgBuilding):
         """For the full-order feeders, scan each load with load_class==C to determine the number of zones it should have
 
@@ -791,6 +809,7 @@ class GLMModifier:
         print(total_comm_zones, 'total commercial HVAC zones')
         return total_commercial, total_office, total_bigbox, total_stripmall, total_zipload, total_comm_zones
 
+    # ************************************************************************************************************
     def identify_xfmr_houses(self, model, h, t, seg_loads, avgHouse, rgn):
         """For the full-order feeders, scan each service transformer to determine the number of houses it should have
 
@@ -853,18 +872,7 @@ class GLMModifier:
         print('cooling bins target', self.cooling_bins)
         print('heating bins target', self.heating_bins)
 
-
-
-
-
-
-
-
-
-
-
-
-
+    # ************************************************************************************************************
 
     def populate_feeder(self, configfile=None, config=None, taxconfig=None):
         """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
@@ -982,6 +990,7 @@ class GLMModifier:
                     self.fncs_case = config['SimulationConfig']['CaseName']
                     self.ProcessTaxonomyFeeder(self.fncs_case, c[0], c[1], c[2], c[3], c[4])
 
+    # ************************************************************************************************************
     def populate_all_feeders(self):
         """Wrapper function that batch processes all taxonomy feeders in the casefiles table (see source file)
         """
@@ -1010,6 +1019,7 @@ class GLMModifier:
                               self.casefiles.avghouse,
                               self.casefiles.avgcommercial)
 
+    # ************************************************************************************************************
     def connect_ercot_houses(self, model, h, op, vln, vsec):
         """For the reduced-order ERCOT feeders, add houses and a large service transformer to the load points
 
@@ -1038,188 +1048,646 @@ class GLMModifier:
             # write the service transformer==>TN==>TPX==>TM for all houses
             kvat = npar * xfkva
             row = self.Find1PhaseXfmr(xfkva)
-
-#            self.entities['transformer_configuration'] = Entity('transformer_configuration', self.model.objects['transformer_configuration'])
             tempEntity = Entity(key + '_xfconfig', self.model.objects['transformer_configuration'])
-#            print('object transformer_configuration {', file=op)
             tempEntity.name = key + '_xfconfig'
-            #print('  name ' + key + '_xfconfig;', file=op)
             tempEntity.power_rating = format(kvat, '.2f')
-#            print('  power_rating ' + format(kvat, '.2f') + ';', file=op)
             if 'A' in phs:
-#                print('  powerA_rating ' + format(kvat, '.2f') + ';', file=op)
                 tempEntity.powerA_rating = format(kvat, '.2f')
             elif 'B' in phs:
-#                print('  powerB_rating ' + format(kvat, '.2f') + ';', file=op)
                 tempEntity.powerB_rating = format(kvat, '.2f')
             elif 'C' in phs:
-#                print('  powerC_rating ' + format(kvat, '.2f') + ';', file=op)
                 tempEntity.powerC_rating = format(kvat, '.2f')
-#            print('  install_type PADMOUNT;', file=op)
             tempEntity.install_type = 'PADMOUNT'
-#            print('  connect_type SINGLE_PHASE_CENTER_TAPPED;', file=op)
             tempEntity.connect_type = 'SINGLE_PHASE_CENTER_TAPPED'
-#            print('  primary_voltage ' + str(vln) + ';', file=op)
             tempEntity.primary_voltage = str(vln) + ';'
-#            print('  secondary_voltage ' + format(vsec, '.1f') + ';', file=op)
             tempEntity.secondary_voltage = format(vsec, '.1f')
-#            print('  resistance ' + format(row[1] * 0.5, '.5f') + ';', file=op)
             tempEntity.resistance = format(row[1] * 0.5, '.5f')
-#            print('  resistance1 ' + format(row[1], '.5f') + ';', file=op)
             tempEntity.resistance1 = format(row[1], '.5f')
-#            print('  resistance2 ' + format(row[1], '.5f') + ';', file=op)
             tempEntity.resistance2 = format(row[1], '.5f')
-#            print('  reactance ' + format(row[2] * 0.8, '.5f') + ';', file=op)
             tempEntity.reactance = format(row[2] * 0.8, '.5f')
-#            print('  reactance1 ' + format(row[2] * 0.4, '.5f') + ';', file=op)
             tempEntity.reactance1 = format(row[2] * 0.4, '.5f')
-#            print('  reactance2 ' + format(row[2] * 0.4, '.5f') + ';', file=op)
             tempEntity.reactance2 = format(row[2] * 0.4, '.5f')
-#            print('  shunt_resistance ' + format(1.0 / row[3], '.2f') + ';', file=op)
             tempEntity.shunt_resistance = format(1.0 / row[3], '.2f')
-#            print('  shunt_reactance ' + format(1.0 / row[4], '.2f') + ';', file=op)
             tempEntity.shunt_reactance = format(1.0 / row[4], '.2f')
-#            print('}', file=op)
             self.entities[tempEntity.name] = tempEntity
 
-
-
-
-#            print('object transformer {', file=op)
             tempEntity = Entity(key + '_xf', self.objects['transformer'])
-#            print('  name ' + key + '_xf;', file=op)
             tempEntity.name = key + '_xf'
-#            print('  phases ' + phs + 'S;', file=op)
             tempEntity.phases = phs + 'S'
-#            print('  from ' + bus + ';', file=op)
-            tempEntity.from = bus
-#            print('  to ' + key + '_tn;', file=op)
+            #tempEntity.from = bus
             tempEntity.to = key + '_tn'
-#            print('  configuration ' + key + '_xfconfig;', file=op)
             tempEntity.configuration = key + '_xfconfig'
-#            print('}', file=op)
             self.entities[tempEntity.name] = tempEntity
 
-
-
-
-
-#            print('object triplex_line_configuration {', file=op)
             tempEntity = Entity(key + '_tpxconfig', self.objects['triplex_line_configuration'])
-#            print('  name ' + key + '_tpxconfig;', file=op)
             tempEntity.name = key + '_tpxconfig'
-#            zs = format(ConfigDict['tpxR11']['value'] / nh, '.5f') + '+' + format(ConfigDict['tpxX11']['value'] / nh,
             zs = format(self.tpxR11 / nh, '.5f') + '+' + format(self.tpxX11 / nh, '.5f') + 'j;'
             zm = format(self.tpxR12 / nh, '.5f') + '+' + format(self.tpxX12 / nh, '.5f') + 'j;'
             amps = format(self.tpxAMP * nh, '.1f') + ';'
-#            print('  z11 ' + zs, file=op)
             tempEntity.z11 = zs
-#            print('  z22 ' + zs, file=op)
             tempEntity.z22 = zs
-#            print('  z12 ' + zm, file=op)
             tempEntity.z12 = zm
-#            print('  z21 ' + zm, file=op)
             tempEntity.z21 = zm
-#            print('  rating.summer.continuous ' + amps, file=op)
             tempEntity.rating.summer.continuous = amps
-#            print('}', file=op)
             self.entities[tempEntity.name] = tempEntity
 
-
-
-#            print('object triplex_line {', file=op)
             tempEntity = Entity(key + '_tpx', self.objects['triplex_line'])
-#            print('  name ' + key + '_tpx;', file=op)
             tempEntity.name = key + '_tpx'
-#            print('  phases ' + phs + 'S;', file=op)
             tempEntity.phases = phs + 'S'
-#            print('  from ' + key + '_tn;', file=op)
-            tempEntity.from = key + '_tn'
-#            print('  to ' + key + '_mtr;', file=op)
+            #tempEntity.from = key + '_tn'
             tempEntity.to = key + '_mtr'
-#            print('  length 50;', file=op)
             tempEntity.length = '50'
-#            print('  configuration ' + key + '_tpxconfig;', file=op)
             tempEntity.configuration = key + '_tpxconfig'
-#            print('}', file=op)
             self.entities[tempEntity.name] = tempEntity
-
 
             if 'A' in phs:
-#                vstart = str(vsec) + '+0.0j;'
                 vstart = str(vsec) + '+0.0j'
             elif 'B' in phs:
-#                vstart = format(-0.5 * vsec, '.2f') + format(-0.866025 * vsec, '.2f') + 'j;'
                 vstart = format(-0.5 * vsec, '.2f') + format(-0.866025 * vsec, '.2f') + 'j'
             else:
-#                vstart = format(-0.5 * vsec, '.2f') + '+' + format(0.866025 * vsec, '.2f') + 'j;'
                 vstart = format(-0.5 * vsec, '.2f') + '+' + format(0.866025 * vsec, '.2f') + 'j'
 
-
-
-
-#            print('object triplex_node {', file=op)
             tempEntity = Entity(key + '_tn', self.objects['triplex_node'])
-#            print('  name ' + key + '_tn;', file=op)
             tempEntity.name = key + '_tn'
-#            print('  phases ' + phs + 'S;', file=op)
             tempEntity.phases = phs + 'S'
-#            print('  voltage_1 ' + vstart, file=op)
             tempEntity.voltage_1 = vstart
-#            print('  voltage_2 ' + vstart, file=op)
             tempEntity.voltage_2 = vstart
-#            print('  voltage_N 0;', file=op)
             tempEntity.voltage_N = '0'
-#            print('  nominal_voltage ' + format(vsec, '.1f') + ';', file=op)
             tempEntity.nominal_voltage = format(vsec, '.1f')
-#            print('}', file=op)
             self.entities[tempEntity.name] = tempEntity
 
-
-
-
-#            print('object triplex_meter {', file=op)
             tempEntity = Entity(key + '_mtr', self.objects['triplex_meter'])
-#            print('  name ' + key + '_mtr;', file=op)
             tempEntity.name = key + '_mtr'
-#            print('  phases ' + phs + 'S;', file=op)
             tempEntity.phases = phs + 'S'
-#            print('  voltage_1 ' + vstart, file=op)
             tempEntity.voltage_1 = vstart
-#            print('  voltage_2 ' + vstart, file=op)
             tempEntity.voltage_2 = vstart
-#            print('  voltage_N 0;', file=op)
             tempEntity.voltage_N = '0'
-#            print('  nominal_voltage ' + format(vsec, '.1f') + ';', file=op)
             tempEntity.nominal_voltage = format(vsec, '.1f')
+            self.entities[tempEntity.name] = tempEntity
+#            write_tariff(op)
+#           if self.metrics_interval > 0:
+#                print('  object metrics_collector {', file=op)
+#                print('    interval', str(self.metrics_interval) + ';', file=op)
+#                print('  };', file=op)
+#           print('}', file=op)
 
-
-            write_tariff(op)
-
-
-            if self.metrics_interval > 0:
-                print('  object metrics_collector {', file=op)
-                print('    interval', str(self.metrics_interval) + ';', file=op)
-                print('  };', file=op)
-            print('}', file=op)
-
-    def write_tariff (op):
-        """Writes tariff information to billing meters
+    # ************************************************************************************************************
+    def write_local_triplex_configurations(self):
+        """Write a 4/0 AA triplex configuration
 
         Args:
-            op (file): an open GridLAB-D input file
+          op (file): an open GridLAB-D input file
         """
-        print ('  bill_mode', ConfigDict['billing']['bill_mode']['value'] + ';', file=op)
-        print ('  price', '{:.4f}'.format (ConfigDict['billing']['kwh_price']['value']) + ';', file=op)
-        print ('  monthly_fee', '{:.2f}'.format (ConfigDict['billing']['monthly_fee']['value']) + ';', file=op)
-        print ('  bill_day 1;', file=op)
-        if 'TIERED' in ConfigDict['billing']['bill_mode']['value']:
-            if ConfigDict['billing']['tier1_energy']['value'] > 0.0:
-                print ('  first_tier_energy', '{:.1f}'.format (ConfigDict['billing']['tier1_energy']['value']) + ';', file=op)
-                print ('  first_tier_price', '{:.6f}'.format (ConfigDict['billing']['tier1_price']['value']) + ';', file=op)
-            if ConfigDict['billing']['tier2_energy']['value'] > 0.0:
-                print ('  second_tier_energy', '{:.1f}'.format (ConfigDict['billing']['tier2_energy']['value']) + ';', file=op)
-                print ('  second_tier_price', '{:.6f}'.format (ConfigDict['billing']['tier2_price']['value']) + ';', file=op)
-            if ConfigDict['billing']['tier3_energy']['value'] > 0.0:
-                print ('  third_tier_energy', '{:.1f}'.format (ConfigDict['billing']['tier3_energy']['value']) + ';', file=op)
-                print ('  third_tier_price', '{:.6f}'.format (ConfigDict['billing']['tier3_price']['value']) + ';', file=op)
+        for row in ConfigDict['triplex_conductors']:
+            tempEntity = Entity(self.name_prefix + row, self.objects['triplex_line_conductor'])
+            tempEntity.name = self.name_prefix + row
+            tempEntity.resistance = str(self.triplex_conductors[row][0])
+            tempEntity.geometric_mean_radius = str(self.triplex_conductors[row][1])
+            rating_str = str(self.triplex_conductors[row][2])
+            tempEntity.rating.summer.continuous = rating_str
+            tempEntity.rating.summer.emergency = rating_str
+            tempEntity.rating.winter.continuous = rating_str
+            tempEntity.rating.winter.emergency = rating_str
+            self.entities[tempEntity.name] = tempEntity
+
+        for row in self.triplex_configurations:
+            tempEntity = Entity(self.name_prefix + row, self.objects['triplex_line_configuration'])
+            tempEntity.name = self.name_prefix + row
+            tempEntity.conductor_1 = self.name_prefix + self.triplex_configurations[row]['conductors'][0]
+            tempEntity.conductor_2 = self.name_prefix + self.triplex_configurations[row]['conductors'][1]
+            tempEntity.conductor_N = self.name_prefix + self.triplex_configurations[row]['conductors'][2]
+            tempEntity.insulation_thickness = str(self.triplex_configurations[row]['insulation'])
+            tempEntity.diameter = str(self.triplex_configurations[row]['diameter'])
+            self.entities[tempEntity.name] = tempEntity
+#************************************************************************************************************
+
+        # def generate_triplex_line(self, tpxname, basenode, mtrname, phs)
+        #     triplex_line_entity = Entity(tpxname, self.objects['triplex_line'])
+        #     setattr(triplex_line_entity, 'name', tpxname)
+        #     setattr(triplex_line_entity, 'from', basenode)
+        #     setattr(triplex_line_entity, 'to', mtrname)
+        #     setattr(triplex_line_entity, 'phases', phs)
+        #     setattr(triplex_line_entity, 'length', 30)
+        #     setattr(triplex_line_entity, 'configuration',self.name_prefix + list(self.triplex_configurations.keys())[0])
+        #     return triplex_line_entity
+
+
+#************************************************************************************************************
+    def another_house_guy(self):
+        params = []
+        get_
+
+def write_houses(self, basenode, vnom, bIgnoreThermostatSchedule=True, bWriteService=True, bTriplex=True, setpoint_offset=1.0):
+    """Put houses, along with solar panels and batteries, onto a node
+
+    Args:
+        basenode (str): GridLAB-D node name
+        op (file): open file to write to
+        vnom (float): nominal line-to-neutral voltage at basenode
+    """
+#    global ConfigDict
+
+    meter_class = 'triplex_meter'
+    node_class = 'triplex_node'
+    if bTriplex == False:
+        meter_class = 'meter'
+        node_class = 'node'
+
+    nhouse = int(self.house_nodes[basenode][0])
+    rgn = int(self.house_nodes[basenode][1])
+    lg_v_sm = float(self.house_nodes[basenode][2])
+    phs = self.house_nodes[basenode][3]
+    bldg = self.house_nodes[basenode][4]
+    ti = self.house_nodes[basenode][5]
+    rgnTable = self.rgnThermalPct[rgn-1]
+
+    if 'A' in phs:
+        vstart = str(vnom) + '+0.0j'
+    elif 'B' in phs:
+        vstart = format(-0.5*vnom,'.2f') + format(-0.866025*vnom,'.2f') + 'j'
+    else:
+        vstart = format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j'
+
+    if self.forERCOT == "True":
+        phs = phs + 'S'
+        tpxname = helpers.gld_strict_name (basenode + '_tpx')
+        mtrname = helpers.gld_strict_name (basenode + '_mtr')
+    elif bWriteService == True:
+#        print ('object {:s} {{'.format (node_class), file=op)
+        tempEntity = Entity(self.basenode, self.objects[format(node_class)])
+#        print ('  name', basenode + ';', file=op)
+        tempEntity.name = basenode
+#        print ('  phases', phs + ';', file=op)
+        tempEntity.phases = phs
+#        print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+        tempEntity.nominal_voltage = str(vnom)
+#        print ('  voltage_1 ' + vstart + ';', file=op)  # TODO: different attributes for regular node
+        tempEntity.voltage_1 = vstart
+#        print ('  voltage_2 ' + vstart + ';', file=op)
+        tempEntity.voltage_2 = vstart
+#        print ('}', file=op)
+        self.entities[tempEntity.name] = tempEntity
+    else:
+        mtrname = helpers.gld_strict_name (basenode + '_mtr')
+    for i in range(nhouse):
+        if (self.forERCOT == "False") and (bWriteService == True):
+            tpxname = helpers.gld_strict_name (basenode + '_tpx_' + str(i+1))
+            mtrname = helpers.gld_strict_name (basenode + '_mtr_' + str(i+1))
+            tempEntity = self.generate_Triplex_Line(tpxname, basenode, mtrname, phs)
+            self.entities[tempEntity.name] = tempEntity
+
+            #tempEntity = Entity(tpxname, self.objects['triplex_line'])
+            #tempEntity.name = tpxname
+            #tempEntity.from = basenode
+            #tempEntity.to = mtrname
+            #tempEntity.phases = phs
+            #tempEntity.length = 30
+            #tempEntity.configuration = self.name_prefix + list(self.triplex_configurations.keys())[0]
+
+
+
+
+#            print ('object triplex_meter {', file=op)
+            tempEntity = Entity(mtrname, self.objects['triplex_meter'])
+#            print ('  name', mtrname + ';', file=op)
+            tempEntity.name = mtrname
+#            print ('  phases', phs + ';', file=op)
+            tempEntity.phases = phs
+#            print ('  meter_power_consumption 1+7j;', file=op)
+            tempEntity.meter_power_consumption = '1+7j'
+#            write_tariff (op)
+#            print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+            tempEntity.nominal_voltage = str(vnom)
+#            print ('  voltage_1 ' + vstart + ';', file=op)
+            tempEntity.voltage_1 = vstart
+#            print ('  voltage_2 ' + vstart + ';', file=op)
+            tempEntity.voltage_2 = vstart
+
+
+# how to handle this as an entity
+            if self.metrics_interval > 0:
+                print ('  object metrics_collector {', file=op)
+                print ('    interval', str(ConfigDict['metrics_interval']['value']) + ';', file=op)
+                print ('  };', file=op)
+
+#            print ('}', file=op)
+            self.entities[tempEntity.name] = tempEntity
+
+        hsename = helpers.gld_strict_name (basenode + '_hse_' + str(i+1))
+        whname = helpers.gld_strict_name (basenode + '_wh_' + str(i+1))
+        solname = helpers.gld_strict_name (basenode + '_sol_' + str(i+1))
+        batname = helpers.gld_strict_name (basenode + '_bat_' + str(i+1))
+        sol_i_name = helpers.gld_strict_name (basenode + '_isol_' + str(i+1))
+        bat_i_name = helpers.gld_strict_name (basenode + '_ibat_' + str(i+1))
+        sol_m_name = helpers.gld_strict_name (basenode + '_msol_' + str(i+1))
+        bat_m_name = helpers.gld_strict_name (basenode + '_mbat_' + str(i+1))
+        if self.forERCOT == "True":
+          hse_m_name = mtrname
+        else:
+          hse_m_name = helpers.gld_strict_name (basenode + '_mhse_' + str(i+1))
+#          print ('object {:s} {{'.format (meter_class), file=op)
+          tempEntity = Entity(hse_m_name, self.objects['{:s} {{'.format (meter_class)])
+#          print ('  name', hse_m_name + ';', file=op)
+          tempEntity.name = hse_m_name
+#          print ('  parent', mtrname + ';', file=op)
+          tempEntity.parent = mtrname
+#          print ('  phases', phs + ';', file=op)
+          tempEntity.phases = phs
+#          print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+          tempEntity.nominal_voltage = str(vnom)
+#          print ('}', file=op)
+        self.entities[tempEntity.name] = tempEntity
+
+        fa_base = self.rgnFloorArea[rgn-1][bldg]
+        fa_rand = np.random.uniform (0, 1)
+        stories = 1
+        ceiling_height = 8
+        if bldg == 0: # SF homes
+            floor_area = fa_base + 0.5 * fa_base * fa_rand * (ti - 3) / 3;
+            if np.random.uniform (0, 1) > self.rgnOneStory[rgn-1]:
+                stories = 2
+            ceiling_height += np.random.randint (0, 2)
+        else: # apartment or MH
+            floor_area = fa_base + 0.5 * fa_base * (0.5 - fa_rand) # +/- 50%
+        floor_area = (1 + lg_v_sm) * floor_area # adjustment depends on whether nhouses rounded up or down
+        if floor_area > 4000:
+            floor_area = 3800 + fa_rand*200;
+        elif floor_area < 300:
+            floor_area = 300 + fa_rand*100;
+
+        scalar1 = 324.9/8907 * floor_area**0.442
+        scalar2 = 0.8 + 0.4 * np.random.uniform(0,1)
+        scalar3 = 0.8 + 0.4 * np.random.uniform(0,1)
+        resp_scalar = scalar1 * scalar2
+        unresp_scalar = scalar1 * scalar3
+
+        skew_value = self.residential_skew_std * np.random.randn ()
+        if skew_value < -self.residential_skew_max:
+            skew_value = -self.residential_skew_max
+        elif skew_value > self.residential_skew_max:
+            skew_value = self.residential_skew_max
+
+        oversize = self.rgnOversizeFactor[rgn-1] * (0.8 + 0.4 * np.random.uniform(0,1))
+        tiProps = self.selectThermalProperties (bldg, ti)
+        # Rceiling(roof), Rwall, Rfloor, WindowLayers, WindowGlass,Glazing,WindowFrame,Rdoor,AirInfil,COPhi,COPlo
+        Rroof = tiProps[0] * (0.8 + 0.4 * np.random.uniform(0,1))
+        Rwall = tiProps[1] * (0.8 + 0.4 * np.random.uniform(0,1))
+        Rfloor = tiProps[2] * (0.8 + 0.4 * np.random.uniform(0,1))
+        glazing_layers = int(tiProps[3])
+        glass_type = int(tiProps[4])
+        glazing_treatment = int(tiProps[5])
+        window_frame = int(tiProps[6])
+        Rdoor = tiProps[7] * (0.8 + 0.4 * np.random.uniform(0,1))
+        airchange = tiProps[8] * (0.8 + 0.4 * np.random.uniform(0,1))
+        init_temp = 68 + 4 * np.random.uniform(0,1)
+        mass_floor = 2.5 + 1.5 * np.random.uniform(0,1)
+        h_COP = c_COP = tiProps[10] + np.random.uniform(0,1) * (tiProps[9] - tiProps[10])
+
+#        print ('object house {', file=op)
+        tempEntity = Entity(hsename, self.objects['house'])
+#        print ('  name', hsename + ';', file=op)
+        tempEntity.name = hsename
+#        print ('  parent', hse_m_name + ';', file=op)
+        tempEntity.parent = hse_m_name
+#        print ('  groupid', ConfigDict['bldgTypeName']['value'][bldg] + ';', file=op)
+        tempEntity.groupid = self.bldgTypeName[bldg]
+#        print ('  // thermal_integrity_level', ConfigDict['thermal_integrity_level']['value'][ti] + ';', file=op)
+        tempEntity.thermal_integrity_level = self.thermal_integrity_level[ti]
+#        print ('  schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
+        tempEntity.schedule_skew = '{:.0f}'.format(skew_value)
+#        print ('  floor_area', '{:.0f}'.format(floor_area) + ';', file=op)
+        tempEntity.floor_area ='{:.0f}'.format(floor_area)
+#        print ('  number_of_stories', str(stories) + ';', file=op)
+        tempEntity.number_of_stories = str(stories)
+#        print ('  ceiling_height', str(ceiling_height) + ';', file=op)
+        tempEntity.ceiling_height = str(ceiling_height)
+#        print ('  over_sizing_factor', '{:.1f}'.format(oversize) + ';', file=op)
+        tempEntity.over_sizing_factor = '{:.1f}'.format(oversize)
+#        print ('  Rroof', '{:.2f}'.format(Rroof) + ';', file=op)
+        tempEntity.Rroof = '{:.2f}'.format(Rroof)
+#        print ('  Rwall', '{:.2f}'.format(Rwall) + ';', file=op)
+        tempEntity.Rwall = '{:.2f}'.format(Rwall)
+#        print ('  Rfloor', '{:.2f}'.format(Rfloor) + ';', file=op)
+        tempEntity.Rfloor = '{:.2f}'.format(Rfloor)
+#        print ('  glazing_layers', str (glazing_layers) + ';', file=op)
+        tempEntity.glazing_layers = str (glazing_layers)
+#        print ('  glass_type', str (glass_type) + ';', file=op)
+        tempEntity.glass_type = str (glass_type)
+#        print ('  glazing_treatment', str (glazing_treatment) + ';', file=op)
+        tempEntity.glazing_treatment = str (glazing_treatment)
+#        print ('  window_frame', str (window_frame) + ';', file=op)
+        tempEntity.window_frame = str (window_frame)
+#        print ('  Rdoors', '{:.2f}'.format(Rdoor) + ';', file=op)
+        tempEntity.Rdoors = '{:.2f}'.format(Rdoor)
+#        print ('  airchange_per_hour', '{:.2f}'.format(airchange) + ';', file=op)
+        tempEntity.airchange_per_hour = '{:.2f}'.format(airchange)
+#        print ('  cooling_COP', '{:.1f}'.format(c_COP) + ';', file=op)
+        tempEntity.cooling_COP = '{:.1f}'.format(c_COP)
+#        print ('  air_temperature', '{:.2f}'.format(init_temp) + ';', file=op)
+        tempEntity.air_temperature = '{:.2f}'.format(init_temp)
+#        print ('  mass_temperature', '{:.2f}'.format(init_temp) + ';', file=op)
+        tempEntity.mass_temperature = '{:.2f}'.format(init_temp)
+#        print ('  total_thermal_mass_per_floor_area', '{:.3f}'.format(mass_floor) + ';', file=op)
+        tempEntity.total_thermal_mass_per_floor_area = '{:.3f}'.format(mass_floor)
+#        print ('  breaker_amps 1000;', file=op)
+        tempEntity.breaker_amps = 1000
+#        print ('  hvac_breaker_rating 1000;', file=op)
+        tempEntity.hvac_breaker_rating = 1000
+        heat_rand = np.random.uniform(0,1)
+        cool_rand = np.random.uniform(0,1)
+        if heat_rand <= self.rgnPenGasHeat[rgn-1]:
+#            print ('  heating_system_type GAS;', file=op)
+            tempEntity.heating_system_type = 'GAS'
+            if cool_rand <= self.electric_cooling_percentage:
+#                print ('  cooling_system_type ELECTRIC;', file=op)
+                tempEntity.cooling_system_type = 'ELECTRIC'
+            else:
+#                print ('  cooling_system_type NONE;', file=op)
+                tempEntity.cooling_system_type = 'NONE'
+        elif heat_rand <= self.rgnPenGasHeat[rgn-1] + self.rgnPenHeatPump[rgn-1]:
+#            print ('  heating_system_type HEAT_PUMP;', file=op);
+            tempEntity.heating_system_type = 'HEAT_PUMP'
+#            print ('  heating_COP', '{:.1f}'.format(h_COP) + ';', file=op);
+            tempEntity.heating_COP = '{:.1f}'.format(h_COP)
+#            print ('  cooling_system_type ELECTRIC;', file=op);
+            tempEntity.cooling_system_type = 'ELECTRIC'
+#            print ('  auxiliary_strategy DEADBAND;', file=op);
+            tempEntity.auxiliary_strategy = 'DEADBAND'
+#            print ('  auxiliary_system_type ELECTRIC;', file=op);
+            tempEntity.auxiliary_system_type = 'ELECTRIC'
+#            print ('  motor_model BASIC;', file=op);
+            tempEntity.motor_model = 'BASIC'
+#            print ('  motor_efficiency AVERAGE;', file=op);
+            tempEntity.motor_efficiency = 'AVERAGE'
+        elif floor_area * ceiling_height > 12000.0: # electric heat not allowed on large homes
+#            print ('  heating_system_type GAS;', file=op)
+            tempEntity.heating_system_type = 'GAS'
+            if cool_rand <= self.electric_cooling_percentage:
+#                print ('  cooling_system_type ELECTRIC;', file=op)
+                tempEntity.cooling_system_type = 'ELECTRIC'
+            else:
+#                print ('  cooling_system_type NONE;', file=op)
+                tempEntity.cooling_system_type = 'NONE'
+        else:
+#            print ('  heating_system_type RESISTANCE;', file=op)
+            tempEntity.heating_system_type = 'RESISTANCE'
+            if cool_rand <= self.electric_cooling_percentage:
+#                print ('  cooling_system_type ELECTRIC;', file=op)
+                tempEntity.cooling_system_type = 'ELECTRIC'
+#                print ('  motor_model BASIC;', file=op);
+                tempEntity.motor_model = 'BASIC'
+#                print ('  motor_efficiency GOOD;', file=op);
+                tempEntity.motor_efficiency = 'GOOD'
+            else:
+#                print ('  cooling_system_type NONE;', file=op)
+                tempEntity.cooling_system_type = 'NONE'
+
+        cooling_sch = np.ceil(self.coolingScheduleNumber * np.random.uniform (0, 1))
+        heating_sch = np.ceil(self.heatingScheduleNumber * np.random.uniform (0, 1))
+        # [Bin Prob, NightTimeAvgDiff, HighBinSetting, LowBinSetting]
+        cooling_bin, heating_bin = self.selectSetpointBins (bldg, np.random.uniform (0,1))
+        # randomly choose setpoints within bins, and then widen the separation to account for deadband
+        cooling_set = cooling_bin[3] + np.random.uniform(0,1) * (cooling_bin[2] - cooling_bin[3]) + setpoint_offset
+        heating_set = heating_bin[3] + np.random.uniform(0,1) * (heating_bin[2] - heating_bin[3]) - setpoint_offset
+        cooling_diff = 2.0 * cooling_bin[1] * np.random.uniform(0,1)
+        heating_diff = 2.0 * heating_bin[1] * np.random.uniform(0,1)
+        cooling_scale = np.random.uniform(0.95, 1.05)
+        heating_scale = np.random.uniform(0.95, 1.05)
+        cooling_str = 'cooling{:.0f}*{:.4f}+{:.2f}'.format(cooling_sch, cooling_scale, cooling_diff)
+        heating_str = 'heating{:.0f}*{:.4f}+{:.2f}'.format(heating_sch, heating_scale, heating_diff)
+        # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
+        # we need more separation to assure no overlaps during transactive simulations
+        if bIgnoreThermostatSchedule == True:
+#          print ('  cooling_setpoint 80.0; // ', cooling_str + ';', file=op)
+          tempEntity.cooling_setpoint = 80.0
+#          print ('  heating_setpoint 60.0; // ', heating_str + ';', file=op)
+          tempEntity.heating_setpoint = 60.0
+        else:
+#          print ('  cooling_setpoint {:s};'.format (cooling_str), file=op)
+          tempEntity.cooling_setpoint = '{:s};'.format (cooling_str)
+#          print ('  heating_setpoint {:s};'.format (heating_str), file=op)
+          tempEntity.heating_setpoint = '{:s};'.format (heating_str)
+
+        # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
+
+
+# These ZIPload objects do not have names
+        print ('  object ZIPload { // responsive', file=op)
+        print ('    schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
+        print ('    base_power', 'responsive_loads*' + '{:.2f}'.format(resp_scalar) + ';', file=op)
+        print ('    heatgain_fraction', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['heatgain_fraction']['value']) + ';', file=op)
+        print ('    impedance_pf', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['impedance_pf']['value']) + ';', file=op)
+        print ('    current_pf', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['current_pf']['value']) + ';', file=op)
+        print ('    power_pf', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['power_pf']['value']) + ';', file=op)
+        print ('    impedance_fraction', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['impedance_fraction']['value']) + ';', file=op)
+        print ('    current_fraction', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['current_fraction']['value']) + ';', file=op)
+        print ('    power_fraction', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['power_fraction']['value']) + ';', file=op)
+        print ('  };', file=op)
+        print ('  object ZIPload { // unresponsive', file=op)
+        print ('    schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
+        print ('    base_power', 'unresponsive_loads*' + '{:.2f}'.format(unresp_scalar) + ';', file=op)
+        print ('    heatgain_fraction', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['heatgain_fraction']['value']) + ';', file=op)
+        print ('    impedance_pf', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['impedance_pf']['value']) + ';', file=op)
+        print ('    current_pf', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['current_pf']['value']) + ';', file=op)
+        print ('    power_pf', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['power_pf']['value']) + ';', file=op)
+        print ('    impedance_fraction', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['impedance_fraction']['value']) + ';', file=op)
+        print ('    current_fraction', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['current_fraction']['value']) + ';', file=op)
+        print ('    power_fraction', '{:.2f}'.format(ConfigDict['ZIPload_parameters'][0]['power_fraction']['value']) + ';', file=op)
+        print ('  };', file=op)
+
+
+
+        if np.random.uniform (0, 1) <= self.water_heater_percentage:
+          heat_element = 3.0 + 0.5 * np.random.randint (1,6);
+          tank_set = 110 + 16 * np.random.uniform (0, 1);
+          therm_dead = 4 + 4 * np.random.uniform (0, 1);
+          tank_UA = 2 + 2 * np.random.uniform (0, 1);
+          water_sch = np.ceil(self.waterHeaterScheduleNumber * np.random.uniform (0, 1))
+          water_var = 0.95 + np.random.uniform (0, 1) * 0.1 # +/-5% variability
+          wh_demand_type = 'large_'
+          sizeIncr = np.random.randint (0,3)  # MATLAB randi(imax) returns 1..imax
+          sizeProb = np.random.uniform (0, 1);
+          if sizeProb <= self.rgnWHSize[rgn-1][0]:
+              wh_size = 20 + sizeIncr * 5
+              wh_demand_type = 'small_'
+          elif sizeProb <= (self.rgnWHSize[rgn-1][0] + self.rgnWHSize[rgn-1][1]):
+              wh_size = 30 + sizeIncr * 10
+              if floor_area < 2000.0:
+                  wh_demand_type = 'small_'
+          else:
+              if floor_area < 2000.0:
+                  wh_size = 30 + sizeIncr * 10
+              else:
+                  wh_size = 50 + sizeIncr * 10
+          wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
+          wh_skew_value = 3 * self.residential_skew_std * np.random.randn ()
+          if wh_skew_value < -6 * self.residential_skew_max:
+              wh_skew_value = -6 * self.residential_skew_max
+          elif wh_skew_value > 6 * self.residential_skew_max:
+              wh_skew_value = 6 * self.residential_skew_max
+#          print ('  object waterheater {', file=op)
+          tempEntity2 = Entity(whname, self.objects['waterheater'])
+          #print ('    name', whname + ';', file=op)
+          tempEntity2.name = whname
+          #print ('    schedule_skew','{:.0f}'.format(wh_skew_value) + ';', file=op)
+          tempEntity2.schedule_skew = '{:.0f}'.format(wh_skew_value)
+          #print ('    heating_element_capacity','{:.1f}'.format(heat_element), 'kW;', file=op)
+          tempEntity2.heating_element_capacity = '{:.1f}'.format(heat_element), 'kW'
+          #print ('    thermostat_deadband','{:.1f}'.format(therm_dead) + ';', file=op)
+          tempEntity2.thermostat_deadband = '{:.1f}'.format(therm_dead)
+          #print ('    location INSIDE;', file=op)
+          tempEntity2.location = 'INSIDE'
+          #print ('    tank_diameter 1.5;', file=op)
+          tempEntity2.tank_diameter = 1.5
+          #print ('    tank_UA','{:.1f}'.format(tank_UA) + ';', file=op)
+          tempEntity2.tank_UA = '{:.1f}'.format(tank_UA)
+          #          print ('    water_demand', wh_demand_str + ';', file=op)
+          tempEntity2.water_demand = wh_demand_str
+          #          print ('    tank_volume','{:.0f}'.format(wh_size) + ';', file=op)
+          tempEntity2.tank_volume = '{:.0f}'.format(wh_size)
+          if np.random.uniform (0, 1) <= self.water_heater_participation:
+#              print ('    waterheater_model MULTILAYER;', file=op)
+              tempEntity2.waterheater_model = 'MULTILAYER'
+#              print ('    discrete_step_size 60.0;', file=op)
+              tempEntity2.discrete_step_size = 60.0
+#              print ('    lower_tank_setpoint','{:.1f}'.format(tank_set - 5.0) + ';', file=op)
+              tempEntity2.lower_tank_setpoint = '{:.1f}'.format(tank_set - 5.0)
+#              print ('    upper_tank_setpoint','{:.1f}'.format(tank_set + 5.0) + ';', file=op)
+              tempEntity2.upper_tank_setpoint = '{:.1f}'.format(tank_set + 5.0)
+#              print ('    T_mixing_valve','{:.1f}'.format(tank_set) + ';', file=op)
+              tempEntity2.T_mixing_valve = '{:.1f}'.format(tank_set)
+          else:
+#              print ('    tank_setpoint','{:.1f}'.format(tank_set) + ';', file=op)
+              tempEntity2.tank_setpoint = '{:.1f}'.format(tank_set)
+
+# How are inline objects going to be handled
+          if self.metrics_interval > 0:
+              print ('    object metrics_collector {', file=op)
+              print ('      interval', str(self.metrics_interval) + ';', file=op)
+              print ('    };', file=op)
+
+
+
+#          print ('  };', file=op)
+        self.entities[tempEntity2.name] = tempEntity2
+
+#How to handle inline objects
+        if self.metrics_interval > 0:
+            print ('  object metrics_collector {', file=op)
+            print ('    interval', str(self.metrics_interval) + ';', file=op)
+            print ('  };', file=op)
+        print ('}', file=op)
+        # if PV is allowed, then only single-family houses can buy it, and only the single-family houses with PV will also consider storage
+        # if PV is not allowed, then any single-family house may consider storage (if allowed)
+        # apartments and mobile homes may always consider storage, but not PV
+        bConsiderStorage = True
+        if bldg == 0:  # Single-family homes
+            if self.solar_percentage > 0.0:
+                bConsiderStorage = False
+            if np.random.uniform (0, 1) <= self.solar_percentage:  # some single-family houses have PV
+                bConsiderStorage = True
+                panel_area = 0.1 * floor_area
+                if panel_area < 162:
+                    panel_area = 162
+                elif panel_area > 270:
+                    panel_area = 270
+                inv_power = self.solar['inv_undersizing'] * (panel_area/10.7642) * self.solar['rated_insolation'] * self.solar['array_efficiency']
+                self.solar_count += 1
+                self.solar_kw += 0.001 * inv_power
+
+
+                #print ('object {:s} {{'.format (meter_class), file=op)
+                tempEntity2 = Entity(sol_m_name, self.objects['{:s} {{'.format (meter_class)])
+                #print ('  name', sol_m_name + ';', file=op)
+                tempEntity2.name = sol_m_name
+                #print ('  parent', mtrname + ';', file=op)
+                tempEntity2.parent = mtrname
+                #print ('  phases', phs + ';', file=op)
+                tempEntity2.phases = phs
+                #print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+                tempEntity2.nominal_voltage = str(vnom)
+                #print ('  object inverter {', file=op)
+                tempEntity3 = Entity(sol_i_name, self.objects['inverter'])
+                #print ('    name', sol_i_name + ';', file=op)
+                tempEntity3.name = sol_i_name
+                #print ('    phases', phs + ';', file=op)
+                tempEntity3.phases = phs
+                #print ('    generator_status ONLINE;', file=op)
+                tempEntity3.generator_status = 'ONLINE'
+                #print ('    inverter_type FOUR_QUADRANT;', file=op)
+                tempEntity3.inverter_type = 'FOUR_QUADRANT'
+                #print ('    inverter_efficiency 1;', file=op)
+                tempEntity3.inverter_efficiency = 1
+                #print ('    rated_power','{:.0f}'.format(inv_power) + ';', file=op)
+                tempEntity3.rated_power = '{:.0f}'.format(inv_power)
+                #print ('    power_factor 1.0;', file=op)
+                tempEntity3.power_factor = 1.0
+
+
+                write_solar_inv_settings (op)
+
+
+                #print ('    object solar {', file=op)
+                tempEntity4 = Entity(solname,self.objects['solar'])
+                #print ('      name', solname + ';', file=op)
+                tempEntity4.name = solname
+                #print ('      panel_type SINGLE_CRYSTAL_SILICON;', file=op)
+                tempEntity4.panel_type = 'SINGLE_CRYSTAL_SILICON'
+                #print ('      efficiency','{:.2f}'.format(ConfigDict['solar']['array_efficiency']['value']) + ';', file=op)
+                tempEntity4.efficiency = '{:.2f}'.format(self.solar['array_efficiency'])
+                #print ('      area','{:.2f}'.format(panel_area) + ';', file=op)
+                tempEntity4.area = '{:.2f}'.format(panel_area)
+                #print ('    };', file=op)
+                self.entities[tempEntity4.name] = tempEntity4
+                if self.metrics_interval > 0:
+                    print ('    object metrics_collector {', file=op)
+                    #print ('      interval', str(metrics_interval) + ';', file=op)
+                    print ('      interval', str(ConfigDict['metrics_interval']['value']) + ';', file=op)
+                    print ('    };', file=op)
+                print ('  };', file=op)
+                print ('}', file=op)
+        if bConsiderStorage:
+            if np.random.uniform (0, 1) <= ConfigDict['storage_percentage']['value']:
+                ConfigDict['battery_count']['value'] += 1
+                print ('object {:s} {{'.format (meter_class), file=op)
+#                print ('object triplex_meter {', file=op)
+                print ('  name', bat_m_name + ';', file=op)
+                print ('  parent', mtrname + ';', file=op)
+                print ('  phases', phs + ';', file=op)
+                print ('  nominal_voltage ' + str(vnom) + ';', file=op)
+                print ('  object inverter {', file=op)
+                print ('    name', bat_i_name + ';', file=op)
+                print ('    phases', phs + ';', file=op)
+                print ('    generator_status ONLINE;', file=op)
+                print ('    generator_mode CONSTANT_PQ;', file=op)
+                print ('    inverter_type FOUR_QUADRANT;', file=op)
+                print ('    four_quadrant_control_mode', ConfigDict['storage_inv_mode']['value'] + ';', file=op)
+                print ('    V_base ${INV_VBASE};', file=op)
+                print ('    charge_lockout_time 1;', file=op)
+                print ('    discharge_lockout_time 1;', file=op)
+                print ('    rated_power 5000;', file=op)
+                print ('    max_charge_rate 5000;', file=op)
+                print ('    max_discharge_rate 5000;', file=op)
+                print ('    sense_object', mtrname + ';', file=op)
+                print ('    charge_on_threshold -100;', file=op)
+                print ('    charge_off_threshold 0;', file=op)
+                print ('    discharge_off_threshold 2000;', file=op)
+                print ('    discharge_on_threshold 3000;', file=op)
+                print ('    inverter_efficiency 0.97;', file=op)
+                print ('    power_factor 1.0;', file=op)
+                print ('    object battery { // Tesla Powerwall 2', file=op)
+                print ('      name', batname + ';', file=op)
+                print ('      use_internal_battery_model true;', file=op)
+                print ('      battery_type LI_ION;', file=op)
+                print ('      nominal_voltage 480;', file=op)
+                print ('      battery_capacity 13500;', file=op)
+                print ('      round_trip_efficiency 0.86;', file=op)
+                print ('      state_of_charge 0.50;', file=op)
+                print ('    };', file=op)
+                if ConfigDict['metrics_interval']['value'] > 0:
+                    print ('    object metrics_collector {', file=op)
+                    print ('      interval', str(ConfigDict['metrics_interval']['value']) + ';', file=op)
+                    print ('    };', file=op)
+                print ('  };', file=op)
+                print ('}', file=op)
+
