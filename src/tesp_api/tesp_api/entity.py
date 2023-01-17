@@ -213,16 +213,14 @@ class Entity:
         return diction
 
     def instanceToGLM(self):
-        diction1 = ""
-        diction2 = ""
+        diction = ""
         for obj_id in self.instance:
-            diction1 += "object " + self.entity + " {\n  name " + obj_id + ";\n"
+            diction += "object " + self.entity + " {\n  name " + obj_id + ";\n"
             #for i in range(len(self.instance[obj_id])):
             for item in self.instance[obj_id].keys():
-                diction1 += "  " + item + " " + self.instance[obj_id][item] + ";\n"
-            diction1 += "}\n"
-        diction2 += diction1
-        return diction2
+                diction += "  " + item + " " + self.instance[obj_id][item] + ";\n"
+            diction += "}\n"
+        return diction
 
     def instanceToSQLite(self, connection):
         # cursor object

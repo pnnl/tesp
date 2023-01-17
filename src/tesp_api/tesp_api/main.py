@@ -36,22 +36,18 @@ def fredtest():
         meter_counter = meter_counter + 1
         meter_name = 'meter_' +str(meter_counter)
         meter = testMod.add_object('meter', meter_name, [])
-#        meter.set_item('parent', obj_id)
         meter['parent'] = obj_id
-
         #how much power is going to be needed
         #while kva < total_kva:
         house_meter_counter = house_meter_counter + 1
         #add parent meter for houses to follow
         house_meter_name = 'house_meter_' + str(house_meter_counter)
         meter = testMod.add_object('meter', house_meter_name, [])
-#        meter.set_item('parent', meter_name)
-        meter['parent'] =  meter_name
+        meter['parent'] = meter_name
         #add house
         house_counter = house_counter + 1
         house_name = 'house_' + str(house_counter)
         house = testMod.add_object('house', house_name, [])
-#        house.set_item('parent', house_meter_name)
         house['parent'] = house_meter_name
     testMod.write_model("test.glm")
 

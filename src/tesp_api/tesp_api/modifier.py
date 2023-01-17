@@ -72,9 +72,12 @@ class GLMModifier:
         return True
 
     def write_model(self, filepath):
-        op = open(filepath, "w", encoding='utf-8')
-        print(self.model.instancesToGLM(), op)
-        op.close()
+        # op = open(filepath, "w", encoding='utf-8')
+        # glm_out = self.model.instancesToGLM()
+        # print(glm_out, op)
+        # #print(self.model.instancesToGLM(), op)
+        # op.close()
+        self.model.write(filepath)
         return True
 
 #************************************************************************************************************
