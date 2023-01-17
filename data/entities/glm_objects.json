@@ -34,7 +34,8 @@
     ["Latitude", "", "", "REAL", "latitude"],
     ["Longitude", "", "", "REAL", "longitude"],
     ["Altitude", "", "", "REAL", "altitude"],
-    ["tz meridian", "", "", "TEXT", "tz_meridian"]
+    ["tz meridian", "", "", "TEXT", "tz_meridian"],
+    ["TMY file", "", "", "TEXT", "tmyfile", ""]
   ],
   "fncs_msg": [
     ["FNCS federate name", "", "", "TEXT", "name", ""],
@@ -51,7 +52,9 @@
   "metrics_collector": [],
   "metrics_collector_writer": [],
   "player": [
-    ["Player configure", "", "", "TEXT", "configure", ""]
+    ["Player configure", "", "", "TEXT", "configure", ""],
+    ["Player source data file", "", "", "TEXT", "file", ""],
+    ["Player loop count", "", "", "REAL", "loop", ""]
   ],
   "recorder": [
     ["Recorder name", "", "", "TEXT", "name", ""],
@@ -220,7 +223,8 @@
     ["Reactance 1", 0.00604, "", "REAL", "reactance1", ""],
     ["Reactance 2", 0.00604, "", "REAL", "reactance2", ""],
     ["Shunt resistance", 192.31, "", "REAL", "shunt_resistance", ""],
-    ["Shunt reactance", 51.81, "", "REAL", "shunt_reactance", ""]
+    ["Shunt reactance", 51.81, "", "REAL", "shunt_reactance", ""],
+    ["Impedance","", "", "COMPLEX", "impedance", ""]
   ],
   "overhead_line_conductor": [
     ["Overhead line conductor name", "", "object ID", "TEXT", "name", ""],
