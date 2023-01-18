@@ -193,7 +193,8 @@
     ["cap_nominal_voltage", 7200, "", "REAL", "cap_nominal_voltage", ""],
     ["nominal_voltage", 7200, "", "REAL", "nominal_voltage", ""]
   ],
-  "solar": [],
+  "solar": [
+  ],
   "waterheater": [
     ["Water heater name", "", "object ID", "TEXT", "name", ""],
     ["Schedule skew", 1.0, "", "REAL", "schedule_skew", ""],
@@ -379,13 +380,27 @@
     ["power_12", "", "", "COMPLEX", "power_12", ""]
   ],
   "node": [
-    ["Node name", "", "object ID", "TEXT", "name", ""],
-    ["Parent name", "", "object ID", "TEXT", "parent", ""],
+    ["Node name", "", "", "TEXT", "name", ""],
+    ["Parent name", "", "", "TEXT", "parent", ""],
     ["Phases used", "", "[ABCNS]", "TEXT", "phases", ""],
     ["Nominal voltage", 0, "", "REAL", "nominal_voltage", ""],
     ["Voltage A", "", "", "COMPLEX", "voltage_A", ""],
     ["Voltage B", "", "", "COMPLEX", "voltage_B", ""],
     ["Voltage C", "", "", "COMPLEX", "voltage_C", ""],
     ["bustype", "", "", "TEXT", "bustype", ""]
+  ],
+  "ZIPload": [
+  	["ZIPload name", "", "", "TEXT", "name", ""],
+    ["Parent name", "", "", "TEXT", "parent", ""],    
+    ["Schedule skew", "", "", "REAL", "schedule_skew", ""],
+    ["Base Power", "", "", "REAL", "base_power", ""],
+    ["Power fraction", "", "", "REAL", "power_fraction", ""],
+    ["Impedance fraction", "", "", "REAL", "impedance_fraction", ""],
+    ["Current fraction", "", "", "REAL", "current_fraction", ""],
+    ["Power factor for power fraction", "", "", "REAL", "power_pf", ""],
+    ["Power factor for impedance fraction", "", "", "REAL", "current_pf", ""],
+    ["Power factor for current fraction", "", "", "REAL", "current_pf", ""],
+    ["Heat gain factor", "", "", "REAL", "heat_fraction", ""]
+
   ]
 }

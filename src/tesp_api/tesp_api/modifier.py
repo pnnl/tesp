@@ -32,7 +32,7 @@ class GLMModifier:
         return self.model.entities[name]
 
     def get_object_id(self, name, object_id):
-        return self.model.entities[name].entities[object_id]
+        return self.model.entities[name].instance[object_id]
 
     def add_object(self, name, obj_id, params):
         return self.get_objects(name).set_instance(obj_id, params)

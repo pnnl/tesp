@@ -83,29 +83,35 @@ def _open_file(file_path, type='r'):
 
 
 def _auto_run(args):
-    testMod = GLMModifier()
+    glmMod = GLMModifier()
     feeder_path = os.path.join(feeders_path, "R1-12.47-1.glm")
-    testMod.model.read(feeder_path)
+    glmMod.model.read(feeder_path)
 
-    tp_meter_objs = testMod.get_objects('triplex_meter')
+    tp_meter_objs = glmMod.get_objects('triplex_meter')
     tp_meter_names = list(tp_meter_objs.instance.keys())
 
-    num_houses_to_add = 10
+    num_houses_to_add = 11
 
     for house_num in range(num_houses_to_add):
-        meter_name = f'house_meter_{house_num}'
-
-        billing_meter_name = f'{meter_name}_billing'
+        # Adding billing meter to existing triplex meters in an arbitrary manner
+        # This meter captures all energy usage for this customer
+        billing_meter_name = f'{tp_meter_names[house_num]}_billing'
         meter_params = {
             'name': billing_meter_name,
             'parent': tp_meter_names[house_num]
         }
+        billing_meter = glmMod.add_object('triplex_meter', billing_meter_name, meter_params)
 
-        # Adding house billing meter to existing triplex meters in an arbitrary manner
-        house_billing_meter = testMod.add_object('triplex_meter', meter_name, meter_params)
+        # Add a meter just to capture the house energy consumption
+        house_meter_name = f'{billing_meter_name}_house'
+        meter_params = {
+            'name': house_meter_name,
+            'parent': billing_meter_name
+        }
+        house_meter = glmMod.add_object('triplex_meter', house_meter_name, meter_params)
 
+        # Add house object as a child of the house meter
         house_name = f'house_{house_num}'
-
         # Ideally that these parameters for the house objects are not hard-coded like this. Good alternatives:
         #   - Make an external JSON that defines each house and reads them in
         #   - Use algorithms and data like RECS to define random values for each house. This is what feeder_generator
@@ -121,16 +127,54 @@ def _auto_run(args):
             'cooling_system_type': 'ELECTRIC',
             'heating_system_type': 'HEAT_PUMP',
             'cooling_COP': 4.5 + house_num
-
         }
-        house_obj = testMod.add_object('house', house_name, house_params)
+        house_obj = glmMod.add_object('house', house_name, house_params)
         # Can also modify the object parameters like this after the object has been created.
         house_obj['floor_area'] = 2469
-
         # You can get at object parameters after the object has been created
         cooling_COP = house_obj['cooling_COP']
+        print(f'Cooling COP for this house is {cooling_COP}.')
+
+        # Add specific loads to the house object as ZIP model
+        load_name = f'light_load_{house_num}'
+        # Again, hard-coding this in the file is not a good idea. Do as I say, not as I do.
+        ZIP_params = {
+            "name": load_name,
+            "parent": house_name,
+            "schedule_skew": -685,
+            "base_power":  1.8752,
+            "power_fraction": 0.600000,
+            "impedance_fraction": 0.400000,
+            "current_fraction": 0.000000,
+            "power_pf": 0.780,
+            "current_pf": 0.420,
+            "impedance_pf": 0.880,
+            "heat_fraction": 0.91
+        }
+        load_obj = glmMod.add_object('ZIPload', load_name, ZIP_params)
+
+        # Add separate solar meter to track the solar power generation specifically
+        solar_meter_name = f'{billing_meter_name}_solar'
+        meter_params = {
+            'name': house_meter_name,
+            'parent': billing_meter_name
+        }
+        solar_meter = glmMod.add_object('triplex_meter', solar_meter_name, meter_params)
+        solar_name = f'solar_{house_num}'
+        # solar_params = {
+        #
+        # }
+
         dummy = 0
-    testMod.write_model("trevor_test.glm")
+
+    # You can delete specific parameter definitions (effectively making them the default value defined in GridLAB-D)
+    #   as well as deleting entire object instances.
+    model_obj = glmMod.model.entities
+    house_to_edit = glmMod.get_object_id('house', house_name)
+    # if 'Rroof' in house_to_edit
+    # glmMod.delete_obj_item(house_name, house_to_edit, 'Rroof')
+
+    glmMod.write_model("trevor_test.glm")
 
 if __name__ == '__main__':
     # TDH: This slightly complex mess allows lower importance messages
