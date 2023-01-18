@@ -100,7 +100,16 @@ def _auto_run(args):
             'name': billing_meter_name,
             'parent': tp_meter_names[house_num]
         }
-        billing_meter = glmMod.add_object('triplex_meter', billing_meter_name, meter_params)
+
+        # Only adding print out for the first time through the loop so I don't flood the terminal.
+        if house_num == 0:
+            print('Demonstrating addition of an object (triplex_meter in this case) to GridLAB-D model.')
+            num_tp_meters = len(list(tp_meter_objs.instance.keys()))
+            print(f'\tNumber of triplex meters: {num_tp_meters}')
+            print(f'\tAdding triplex_meter {billing_meter_name} to model.')
+            billing_meter = glmMod.add_object('triplex_meter', billing_meter_name, meter_params)
+            num_tp_meters = len(list(tp_meter_objs.instance.keys()))
+            print(f'\tNumber of triplex meters: {num_tp_meters}')
 
         # Add a meter just to capture the house energy consumption
         house_meter_name = f'{billing_meter_name}_house'
@@ -116,6 +125,8 @@ def _auto_run(args):
         #   - Make an external JSON that defines each house and reads them in
         #   - Use algorithms and data like RECS to define random values for each house. This is what feeder_generator
         #       has historically done in the past.
+
+        # Defining these parameters in a silly way just so each one is unique.
         house_params = {
             'name': house_name,
             'parent': billing_meter_name,
@@ -130,10 +141,21 @@ def _auto_run(args):
         }
         house_obj = glmMod.add_object('house', house_name, house_params)
         # Can also modify the object parameters like this after the object has been created.
-        house_obj['floor_area'] = 2469
-        # You can get at object parameters after the object has been created
-        cooling_COP = house_obj['cooling_COP']
-        print(f'Cooling COP for this house is {cooling_COP}.')
+        if house_num == 0:
+            print('Demonstrating editing of object properties after adding them to the GridLAB-D model.')
+            if 'floor_area' in house_obj.keys():
+                print(f'\t"Redefining floor_area" in {house_name}.')
+                house_obj['floor_area'] = 2469
+            else:
+                print(f'\t"floor_area" not defined for house {house_name}, adding it now.')
+                house_obj['floor_area'] = 2469
+            print(f'\t"floor_area" now defined in model with value {house_obj["floor_area"]}.')
+
+            # You can get object parameters after the object has been created
+            if house_num == 0:
+                print('Demonstrating getting object parameters after they have been added to the GridLAB-D model.')
+                cooling_COP = house_obj['cooling_COP']
+                print(f'\tCooling COP for house {house_name} is {cooling_COP}.')
 
         # Add specific loads to the house object as ZIP model
         load_name = f'light_load_{house_num}'
@@ -169,10 +191,28 @@ def _auto_run(args):
 
     # You can delete specific parameter definitions (effectively making them the default value defined in GridLAB-D)
     #   as well as deleting entire object instances.
-    model_obj = glmMod.model.entities
-    house_to_edit = glmMod.get_object_id('house', house_name)
-    # if 'Rroof' in house_to_edit
-    # glmMod.delete_obj_item(house_name, house_to_edit, 'Rroof')
+    print('Demonstrating the deletion of a parameter from a GridLAB-D object in the model.')
+    house_to_edit = glmMod.get_object_id('house', house_name) # GLD object type, object name
+    if 'Rroof' in house_to_edit.keys():
+        print(f'\t"Rroof" for house {house_name} is {house_to_edit["Rroof"]}.')
+    else:
+        print(f'\t"Rroof" for house {house_name} is undefined.')
+    print(f'\tDeleting paramter Rroof from house {house_name}')
+    glmMod.del_object_item('house', house_name, 'Rroof')
+    if 'Rroof' in house_to_edit.keys():
+        print(f'\tCurrent "Rroof" is {house_to_edit["Rroof"]}')
+    else:
+        print(f'\t"Rroof" for house {house_name} is undefined.')
+
+    # You can also just remove an entire object instance from the model (if you know the GLD object type and its name)
+    print('Demonstrating the deletion of an entire object from GridLAB-D model.')
+    house_objs = tp_meter_objs = glmMod.get_objects('house')
+    num_houses = len(list(house_objs.instance.keys()))
+    print(f'\tNumber of houses: {num_houses}')
+    print(f'\tDeleting {house_name} from model.')
+    glmMod.del_object('house', house_name)
+    num_houses = len(list(house_objs.instance.keys()))
+    print(f'\tNumber of houses: {num_houses}')
 
     glmMod.write_model("trevor_test.glm")
 
