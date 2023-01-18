@@ -41,11 +41,11 @@ class GLMModifier:
         self.get_objects(name).del_instance(obj_id)
 
     def add_object_item(self, name, obj_id, item_name, item_value):
-        return self.get_object(name).set_instance(obj_id).set_item(item_name, item_value)
+        return self.get_objects(name).set_instance(obj_id).set_item(item_name, item_value)
 
 
     def del_object_item(self, name, obj_id, item_name):
-        self.get_object(name).set_instance(obj_id).del_item(item_name)
+        del self.get_objects(name).get_instance(obj_id)[item_name]
 
     def mod_model(self):
         tlist = list(self.model.network.nodes.data())

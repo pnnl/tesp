@@ -133,9 +133,9 @@ class Entity:
     def del_instance(self, obj_id):
         if type(obj_id) == str:
             try:
-                self.instance.remove(obj_id)
+                del self.instance[obj_id]
             except:
-                pass
+                print('Not able to delete instance.')
         else:
             print("Object id is not a string")
         return None
