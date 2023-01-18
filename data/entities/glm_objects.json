@@ -103,7 +103,13 @@
     ["Is heat on", "FALSE", "", "BOOLEAN", "is_heat_on", ""],
     ["Is cool on", "FALSE", "", "BOOLEAN", "is_cool_on", ""],
     ["Thermal storage present", "FALSE", "", "BOOLEAN", "thermal_storage_present", ""],
-    ["Thermal storage in use", "FALSE", "", "BOOLEAN", "thermal_storage_in_use", ""]
+    ["Thermal storage in use", "FALSE", "", "BOOLEAN", "thermal_storage_in_use", ""],
+    ["Rroof", "", "", "REAL", "Rroof", ""],
+    ["Rwall", "", "", "REAL", "Rwall", ""],
+    ["Rfloor", "", "", "REAL", "Rfloor", ""],
+    ["Rwindow", "", "", "REAL", "Rwindow", ""],
+    ["Air change per hour", "", "", "REAL", "air_change_per_hour", ""],
+    ["Cooling COP", "", "", "REAL", "cooling_COP", ""]
   ],
   "inverter": [
     ["Inverter type", "", "", "TEXT", "inverter_type", ""],
