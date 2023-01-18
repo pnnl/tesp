@@ -73,6 +73,8 @@
     ["Mode", "", "", "TEXT", "mode", ""]
   ],
   "house": [
+  	["House name", "", "", "TEXT", "name", ""],
+    ["Parent", "", "object ID", "TEXT", "parent", ""],
     ["Load", "", "", "REAL", "load", ""],
     ["Design internal gain density", 0.6, "W/sf", "REAL", "design_internal_gain_density", ""],
     ["Thermal integrity level", "", "", "TEXT", "thermal_integrity_level", ""],
@@ -398,7 +400,7 @@
     ["Impedance fraction", "", "", "REAL", "impedance_fraction", ""],
     ["Current fraction", "", "", "REAL", "current_fraction", ""],
     ["Power factor for power fraction", "", "", "REAL", "power_pf", ""],
-    ["Power factor for impedance fraction", "", "", "REAL", "current_pf", ""],
+    ["Power factor for impedance fraction", "", "", "REAL", "impedance_pf", ""],
     ["Power factor for current fraction", "", "", "REAL", "current_pf", ""],
     ["Heat gain factor", "", "", "REAL", "heat_fraction", ""]
 
