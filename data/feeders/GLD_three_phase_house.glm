@@ -1,0 +1,199 @@
+clock {
+     timezone EST+5EDT;
+     timestamp '2009-07-21 00:00:00';
+     stoptime '2009-07-25 00:00:00';
+}
+
+#set profiler=1;
+#set double_format=%+.12lg
+#set randomseed=10;
+#set relax_naming_rules=1;
+#set minimum_timestep=1;
+#include "water_and_setpoint_schedule_v3.glm";
+
+#include "appliance_schedules.glm";
+
+
+module tape;
+module climate;
+module generators;
+module residential {
+     implicit_enduses NONE;
+};
+module powerflow {
+     solver_method FBS;
+     NR_iteration_limit 100;
+};
+
+class player {
+      double value;
+}
+object player {
+    name phase_A_load;
+    file phase_A.player;
+    loop 1;
+}
+object player {
+    name phase_B_load;
+    file phase_B.player;
+    loop 1;
+}
+object player {
+    name phase_C_load;
+    file phase_C.player;
+    loop 1;
+}
+
+object climate {
+     name "CA-San_francisco";
+     tmyfile "OH-Columbus_Port_Columbus_Intl_A.tmy3";
+     interpolate QUADRATIC;
+};
+
+
+object transformer_configuration {
+      name substation_config;
+      connect_type WYE_WYE;
+      install_type PADMOUNT;
+      primary_voltage 7200 V;
+      secondary_voltage 7200 V;
+      power_rating 750;
+      powerA_rating 250;
+      powerB_rating 250;
+      powerC_rating 250;
+      impedance 0.0015+0.00675j;
+}
+
+object transformer_configuration {
+     name default_transformer_A;
+     connect_type SINGLE_PHASE_CENTER_TAPPED;
+     install_type PADMOUNT;
+     primary_voltage 7200 V;
+     secondary_voltage 124 V;
+     power_rating 250;
+     powerA_rating 250;
+     impedance 0.015+0.0675j;
+}
+
+object transformer_configuration {
+     name default_transformer_B;
+     connect_type SINGLE_PHASE_CENTER_TAPPED;
+     install_type PADMOUNT;
+     primary_voltage 7200 V;
+     secondary_voltage 124 V;
+     power_rating 250;
+     powerB_rating 250;
+     impedance 0.015+0.0675j;
+}
+
+object transformer_configuration {
+     name default_transformer_C;
+     connect_type SINGLE_PHASE_CENTER_TAPPED;
+     install_type PADMOUNT;
+     primary_voltage 7200 V;
+     secondary_voltage 124 V;
+     power_rating 250;
+     powerC_rating 250;
+     impedance 0.015+0.0675j;
+}
+
+object triplex_line_conductor {
+      name Name_1_0_AA_triplex;
+      resistance 0.57;
+      geometric_mean_radius 0.0111;
+}
+
+object triplex_line_configuration {
+      name TLCFG;
+      conductor_1 Name_1_0_AA_triplex;
+      conductor_2 Name_1_0_AA_triplex;
+      conductor_N Name_1_0_AA_triplex;
+      insulation_thickness 0.08;
+      diameter 0.368;
+}
+
+object meter {
+     bustype SWING;
+     name ROOT;
+     phases ABCN;
+     nominal_voltage 7200;
+}
+
+object recorder {
+	parent ROOT;
+	property measured_real_power, measured_reactive_power;
+	limit 100000000;
+	interval 3600;
+	file totalload_batt_GLD_Demo_50_nodes.csv;
+}
+
+object transformer {
+      phases ABCN;
+      groupid F1_Network_Trans;
+      name F1_Transformer1;
+      from ROOT;
+      to F1_transformer_meter;
+      configuration substation_config;
+}
+
+object meter {
+     name F1_transformer_meter;
+     phases ABCN;
+     nominal_voltage 7200;
+}
+
+//Optional load in case no houses are added
+object load {
+     name F1_unresp_load;
+     nominal_voltage 7200;
+     phases ABCN;
+     parent F1_transformer_meter;
+     constant_power_A_real phase_A_load.value*0.0167;
+     constant_power_B_real phase_B_load.value*0.0167;
+     constant_power_C_real phase_C_load.value*0.0167;
+};
+
+object transformer {
+     name F1_center_tap_transformer_A;
+     phases AS;
+     from F1_transformer_meter;
+     to F1_triplex_node_A;
+     configuration default_transformer_A;
+}
+
+object transformer {
+     name F1_center_tap_transformer_B;
+     phases BS;
+     from F1_transformer_meter;
+     to F1_triplex_node_B;
+     configuration default_transformer_B;
+}
+
+object transformer {
+     name F1_center_tap_transformer_C;
+     phases CS;
+     from F1_transformer_meter;
+     to F1_triplex_node_C;
+     configuration default_transformer_C;
+}
+
+
+// One triplex meter for each of the phases
+object triplex_meter {
+     name F1_triplex_node_A;
+     phases AS;
+     nominal_voltage 124.00;
+}
+
+object triplex_meter {
+     name F1_triplex_node_B;
+     phases BS;
+     nominal_voltage 124.00;
+}
+
+object triplex_meter {
+     name F1_triplex_node_C;
+     phases CS;
+     nominal_voltage 124.00;
+}
+
