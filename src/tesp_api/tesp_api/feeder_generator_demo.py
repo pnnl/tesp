@@ -88,8 +88,10 @@ def _auto_run(args):
     feeder_path = os.path.join(feeders_path, "R1-12.47-1.glm")
     glmMod.model.read(feeder_path)
 
-    tp_meter_objs = glmMod.get_objects('triplex_meter')
-    tp_meter_names = list(tp_meter_objs.instance.keys())
+    #tp_meter_objs = glmMod.get_objects('triplex_meter')
+    #tp_meter_names = list(tp_meter_objs.instance.keys())
+    tp_meter_names = glmMod.get_object_ids('triplex_meter')
+
 
     num_houses_to_add = 11
 
@@ -105,11 +107,13 @@ def _auto_run(args):
         # Only adding print out for the first time through the loop so I don't flood the terminal.
         if house_num == 0:
             print('Demonstrating addition of an object (triplex_meter in this case) to GridLAB-D model.')
-            num_tp_meters = len(list(tp_meter_objs.instance.keys()))
+            #num_tp_meters = len(list(tp_meter_objs.instance.keys()))
+            num_tp_meters = len(glmMod.get_object_ids('triplex_meter'))
             print(f'\tNumber of triplex meters: {num_tp_meters}')
             print(f'\tAdding triplex_meter {billing_meter_name} to model.')
             billing_meter = glmMod.add_object('triplex_meter', billing_meter_name, meter_params)
-            num_tp_meters = len(list(tp_meter_objs.instance.keys()))
+            #num_tp_meters = len(list(tp_meter_objs.instance.keys()))
+            num_tp_meters = len(glmMod.get_object_ids('triplex_meter'))
             print(f'\tNumber of triplex meters: {num_tp_meters}')
 
         # Add a meter just to capture the house energy consumption
@@ -207,12 +211,13 @@ def _auto_run(args):
 
     # You can also just remove an entire object instance from the model (if you know the GLD object type and its name)
     print('Demonstrating the deletion of an entire object from GridLAB-D model.')
-    house_objs = tp_meter_objs = glmMod.get_objects('house')
-    num_houses = len(list(house_objs.instance.keys()))
+    # house_objs = tp_meter_objs = glmMod.get_objects('house')
+    # num_houses = len(list(house_objs.instance.keys()))
+    num_houses = len(len(glmMod.get_object_ids('house')))
     print(f'\tNumber of houses: {num_houses}')
     print(f'\tDeleting {house_name} from model.')
     glmMod.del_object('house', house_name)
-    num_houses = len(list(house_objs.instance.keys()))
+    num_houses = len(glmMod.get_object_ids('house'))
     print(f'\tNumber of houses: {num_houses}')
 
 
@@ -220,9 +225,10 @@ def _auto_run(args):
     print('\nDemonstrating modification of a GridLAB-D parameter for all objects of a certain type.')
     print("In this case, we're upgrading the rating of the secondary/distribution transformers by 15%.")
     transformer_objs = glmMod.get_objects('transformer')
-    transformer_names = list(transformer_objs.instance.keys())
+    #transformer_names = list(glmMod.get_objects('transformer').instance.keys())
+    transformer_names = glmMod.get_object_ids('transformer')
     transformer_config_objs = glmMod.get_objects('transformer_configuration')
-    transformer_config_names = list(transformer_config_objs.instance.keys())
+
 
     print("\tFinding all the split-phase transformers as these are the ones we're targeting for upgrade.")
     print("\t(In GridLAB-D, the sizing information is stored in the transformer_configuration object.)")
@@ -244,7 +250,8 @@ def _auto_run(args):
     # Getting the networkx topology data as a networkx graph
     graph = glmMod.model.network
     gld_node_objs = glmMod.get_objects('node')
-    gld_node_names = list(gld_node_objs.instance.keys())
+    #gld_node_names = list(gld_node_objs.instance.keys())
+    gld_node_names = glmMod.get_object_ids('node')
 
     # Looking for swing bus which is, by convention, the head of the feeder.
     print(f'\nDemonstrating the use of networkx to find the feeder head and the closest fuse')
