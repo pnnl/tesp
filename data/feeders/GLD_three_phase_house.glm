@@ -196,4 +196,3 @@ object triplex_meter {
      phases CS;
      nominal_voltage 124.00;
 }
-
