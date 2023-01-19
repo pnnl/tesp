@@ -32,7 +32,7 @@ class GLMModifier:
         return self.model.entities[name]
 
     def get_object_id(self, name, object_id):
-        return self.model.entities[name].entities[object_id]
+        return self.model.entities[name].instance[object_id]
         
     def get_object_ids(self, name):
         return list(self.get_objects(name).instance.keys())
@@ -48,7 +48,7 @@ class GLMModifier:
 
 
     def del_object_item(self, name, obj_id, item_name):
-        self.get_object(name).set_instance(obj_id).del_item(item_name)
+        self.get_objects(name).del_item(obj_id, item_name)
 
     def mod_model(self):
         tlist = list(self.model.network.nodes.data())
