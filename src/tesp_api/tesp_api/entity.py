@@ -207,7 +207,7 @@ class Entity:
         for obj_id in self.instance:
             diction += "object " + self.entity + " {\n  name " + obj_id + ";\n"
             for item in self.instance[obj_id]:
-                diction += "  " + item + " " + self.instance[obj_id][item] + ";\n"
+                diction += "  " + item + " " + str(self.instance[obj_id][item]) + ";\n"
             diction += "}\n"
         return diction
 
@@ -217,7 +217,7 @@ class Entity:
             diction += "object " + self.entity + " {\n  name " + obj_id + ";\n"
             #for i in range(len(self.instance[obj_id])):
             for item in self.instance[obj_id].keys():
-                diction += "  " + item + " " + self.instance[obj_id][item] + ";\n"
+                diction += "  " + item + " " + str(self.instance[obj_id][item]) + ";\n"
             diction += "}\n"
         return diction
 
