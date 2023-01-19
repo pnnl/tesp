@@ -133,8 +133,9 @@ class Entity:
     def del_instance(self, obj_id):
         if type(obj_id) == str:
             try:
-                self.instance.remove(obj_id)
+                del self.instance[obj_id]
             except:
+                # TODO: Need to add error message
                 pass
         else:
             print("Object id is not a string")
@@ -151,11 +152,9 @@ class Entity:
         return self.__getattribute__(item)
         #return None
 
-    def del_item(self, item):
+    def del_item(self, obj_id, item):
         setattr(self, item, None)
-        # remove all instances
-        for obj_id in self.instance:
-            self.instance[obj_id][item] = None
+        del self.instance[obj_id][item]
         return None
 
     def toJson(self):
