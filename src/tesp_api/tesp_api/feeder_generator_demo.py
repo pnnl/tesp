@@ -99,8 +99,9 @@ def _auto_run(args):
         # Adding billing meter to existing triplex meters in an arbitrary manner
         # This meter captures all energy usage for this customer
         billing_meter_name = f'{tp_meter_names[house_num]}_billing'
+
+        # The API adds the name in call as the GLD object name. Don't need to specify it as a parameter.
         meter_params = {
-            'name': billing_meter_name,
             'parent': tp_meter_names[house_num]
         }
 
@@ -111,21 +112,28 @@ def _auto_run(args):
             num_tp_meters = len(glmMod.get_object_ids('triplex_meter'))
             print(f'\tNumber of triplex meters: {num_tp_meters}')
             print(f'\tAdding triplex_meter {billing_meter_name} to model.')
-            billing_meter = glmMod.add_object('triplex_meter', billing_meter_name, meter_params)
+        billing_meter = glmMod.add_object('triplex_meter', billing_meter_name, meter_params)
+        if house_num == 0:
             #num_tp_meters = len(list(tp_meter_objs.instance.keys()))
             num_tp_meters = len(glmMod.get_object_ids('triplex_meter'))
             print(f'\tNumber of triplex meters: {num_tp_meters}')
 
+
+
         # Add a meter just to capture the house energy consumption
         house_meter_name = f'{billing_meter_name}_house'
         meter_params = {
-            'name': house_meter_name,
             'parent': billing_meter_name
         }
         house_meter = glmMod.add_object('triplex_meter', house_meter_name, meter_params)
 
         # Add house object as a child of the house meter
         house_name = f'house_{house_num}'
+
+        # Saving this house name for use later on when we're deleting stuff.
+        if house_num == 0:
+            house_to_delete = house_name
+
         # Ideally that these parameters for the house objects are not hard-coded like this. Good alternatives:
         #   - Make an external JSON that defines each house and reads them in
         #   - Use algorithms and data like RECS to define random values for each house. This is what feeder_generator
@@ -133,7 +141,6 @@ def _auto_run(args):
 
         # Defining these parameters in a silly way just so each one is unique.
         house_params = {
-            'name': house_name,
             'parent': billing_meter_name,
             'Rroof': 33.69 + house_num,
             'Rwall': 17.71 + house_num,
@@ -166,7 +173,6 @@ def _auto_run(args):
         load_name = f'light_load_{house_num}'
         # Again, hard-coding this in the file is not a good idea. Do as I say, not as I do.
         ZIP_params = {
-            "name": load_name,
             "parent": house_name,
             "schedule_skew": -685,
             "base_power":  1.8752,
@@ -211,12 +217,12 @@ def _auto_run(args):
 
     # You can also just remove an entire object instance from the model (if you know the GLD object type and its name)
     print('Demonstrating the deletion of an entire object from GridLAB-D model.')
-    # house_objs = tp_meter_objs = glmMod.get_objects('house')
-    # num_houses = len(list(house_objs.instance.keys()))
-    num_houses = len(len(glmMod.get_object_ids('house')))
+    house_objs = tp_meter_objs = glmMod.get_objects('house')
+    num_houses = len(list(house_objs.instance.keys()))
+    num_houses = len(glmMod.get_object_ids('house'))
     print(f'\tNumber of houses: {num_houses}')
-    print(f'\tDeleting {house_name} from model.')
-    glmMod.del_object('house', house_name)
+    print(f'\tDeleting {house_to_delete} from model.')
+    glmMod.del_object('house', house_to_delete)
     num_houses = len(glmMod.get_object_ids('house'))
     print(f'\tNumber of houses: {num_houses}')
 
