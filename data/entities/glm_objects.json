@@ -70,7 +70,7 @@
     ["Mode", "", "", "TEXT", "mode", ""]
   ],
   "house": [
-  	["House name", "", "", "TEXT", "name", ""],
+    ["House name", "", "", "TEXT", "name", ""],
     ["Parent", "", "object ID", "TEXT", "parent", ""],
     ["Load", "", "", "REAL", "load", ""],
     ["Design internal gain density", 0.6, "W/sf", "REAL", "design_internal_gain_density", ""],
@@ -103,12 +103,14 @@
     ["Is cool on", "FALSE", "", "BOOLEAN", "is_cool_on", ""],
     ["Thermal storage present", "FALSE", "", "BOOLEAN", "thermal_storage_present", ""],
     ["Thermal storage in use", "FALSE", "", "BOOLEAN", "thermal_storage_in_use", ""],
-    ["Roof insulation value", "", "", "REAL", "Rroof", ""],
-    ["Wall insulation value", "", "", "REAL", "Rwall", ""],
-    ["Floor insulation value", "", "", "REAL", "Rfloor", ""],
-    ["Window insulation value", "", "", "REAL", "Rwindow", ""],
-    ["Indoor airchanges per hour", "", "", "REAL", "air_change_per_hour", ""],
-    ["Air conditioner cooling COP", "", "", "REAL", "cooling_COP", ""]
+    ["Roof R-value", "", "", "REAL", "Rroof", ""],
+    ["Wall R-value", "", "", "REAL", "Rwall", ""],
+    ["Floor R-value", "", "", "REAL", "Rfloor", ""],
+    ["Windows R-value", "", "", "REAL", "Rwindows", ""],
+    ["Number of air-changes per hour", "", "", "REAL", "airchange_per_hour", ""],
+    ["Heating performance coefficient", "", "", "REAL", "heating_COP", ""],
+    ["Cooling performance coefficient", "", "", "REAL", "cooling_COP", ""],
+    ["Home conditioned floor area,", "", "sf", "REAL", "floor_area", ""]
   ],
   "inverter": [
     ["Inverter type", "", "", "TEXT", "inverter_type", ""],
@@ -386,17 +388,17 @@
     ["Voltage C", "", "", "COMPLEX", "voltage_C", ""],
     ["bustype", "", "", "TEXT", "bustype", ""]
   ],
-    "ZIPload": [
-    ["ZIP load name", "", "object ID", "TEXT", "name", ""],
+  "ZIPload": [
+    ["ZIPload name", "", "object ID", "TEXT", "name", ""],
     ["Parent name", "", "object ID", "TEXT", "parent", ""],
-    ["Schedule skew", "", "[ABCNS]", "TEXT", "schedule_skew", ""],
-    ["Base power", "", "", "REAL", "base_power", ""],
-    ["Power fraction", "", "", "REAL", "power_fraction", ""],
-    ["Impedance fraction", "", "", "REAL", "impedance_fraction", ""],
+    ["Schedule skew", "", "", "REAL", "schedule_skew", ""],
     ["Current fraction", "", "", "REAL", "current_fraction", ""],
-    ["Power fraction power factor", "", "", "REAL", "power_pf", ""],
-    ["Impedance fraction power factor", "", "", "REAL", "impedance_pf", ""],
-    ["Current fraction power factor", "", "", "REAL", "current_pf", ""],
-    ["Fraction of power converted to heat", "", "", "TEXT", "heat_fraction", ""]
+    ["Impedance fraction", "", "", "REAL", "impedance_fraction", ""],
+    ["Power fraction", "", "", "REAL", "power_fraction", ""],
+    ["Base real power", "", "kW", "REAL", "base_power", ""],
+    ["PF constant power portion", "", "", "REAL", "power_pf", ""],
+    ["PF constant current portion", "", "", "REAL", "current_pf", ""],
+    ["PF constant impedance portion", "", "", "REAL", "impedance_pf", ""],
+    ["Fraction transferred as heat", "", "", "REAL", "heat_fraction", ""]
   ]
 }

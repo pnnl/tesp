@@ -1,4 +1,5 @@
-{ "SimulationConfig": [
+{
+  "SimulationConfig": [
     ["Start Time", "StartTime", "GLD Date/Time", "DATE", "StartTime"],
     ["End Time", "EndTime", "GLD Date/Time", "DATE", "EndTime"],
     ["Support Directory", "$TESPDIR", "Directory of TESP", "TEXT", "SourceDirectory"],

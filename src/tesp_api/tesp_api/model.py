@@ -12,7 +12,7 @@ import sqlite3
 
 import networkx as nx
 
-from data import entities_path
+from store import entities_path
 from entity import Entity
 
 

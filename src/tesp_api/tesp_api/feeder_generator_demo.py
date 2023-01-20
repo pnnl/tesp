@@ -24,11 +24,11 @@ import networkx as nx
 
 # Getting all the existing tesp_support stuff
 #   Assumes were in the tesp_api folder
-sys.path.append('../../tesp_support')
+# sys.path.append('../../tesp_support')
 
 # Setting a few environment variables so the imports work smoothly
 #   If you're working in a REAL TESP install you don't have to do this.
-os.environ['TESPDIR'] = '/Users/hard312/src/TSP/tesp'
+# os.environ['TESPDIR'] = '/Users/hard312/src/TSP/tesp'
 
 from entity import assign_defaults
 from entity import assign_item_defaults
@@ -36,8 +36,8 @@ from entity import Entity
 from model import GLModel
 from modifier import GLMModifier
 
-from data import entities_path
-from data import feeders_path
+from store import entities_path
+from store import feeders_path
 
 
 
@@ -90,7 +90,7 @@ def _auto_run(args):
 
     #tp_meter_objs = glmMod.get_objects('triplex_meter')
     #tp_meter_names = list(tp_meter_objs.instance.keys())
-    tp_meter_names = glmMod.get_object_ids('triplex_meter')
+    tp_meter_names = glmMod.get_object_names('triplex_meter')
 
 
     num_houses_to_add = 11
@@ -109,16 +109,14 @@ def _auto_run(args):
         if house_num == 0:
             print('Demonstrating addition of an object (triplex_meter in this case) to GridLAB-D model.')
             #num_tp_meters = len(list(tp_meter_objs.instance.keys()))
-            num_tp_meters = len(glmMod.get_object_ids('triplex_meter'))
+            num_tp_meters = len(glmMod.get_object_names('triplex_meter'))
             print(f'\tNumber of triplex meters: {num_tp_meters}')
             print(f'\tAdding triplex_meter {billing_meter_name} to model.')
         billing_meter = glmMod.add_object('triplex_meter', billing_meter_name, meter_params)
         if house_num == 0:
             #num_tp_meters = len(list(tp_meter_objs.instance.keys()))
-            num_tp_meters = len(glmMod.get_object_ids('triplex_meter'))
+            num_tp_meters = len(glmMod.get_object_names('triplex_meter'))
             print(f'\tNumber of triplex meters: {num_tp_meters}')
-
-
 
         # Add a meter just to capture the house energy consumption
         house_meter_name = f'{billing_meter_name}_house'
@@ -145,8 +143,8 @@ def _auto_run(args):
             'Rroof': 33.69 + house_num,
             'Rwall': 17.71 + house_num,
             'Rfloor': 17.02 + house_num,
-            'Rwindow': 1.8 + house_num,
-            'air_change_per_hour': 0.8 + house_num,
+            'Rwindows': 1.8 + house_num,
+            'airchange_per_hour': 0.8 + house_num,
             'cooling_system_type': 'ELECTRIC',
             'heating_system_type': 'HEAT_PUMP',
             'cooling_COP': 4.5 + house_num
@@ -189,7 +187,6 @@ def _auto_run(args):
         # Add separate solar meter to track the solar power generation specifically
         solar_meter_name = f'{billing_meter_name}_solar'
         meter_params = {
-            'name': house_meter_name,
             'parent': billing_meter_name
         }
         solar_meter = glmMod.add_object('triplex_meter', solar_meter_name, meter_params)
@@ -203,7 +200,7 @@ def _auto_run(args):
     # You can delete specific parameter definitions (effectively making them the default value defined in GridLAB-D)
     #   as well as deleting entire object instances.
     print('\nDemonstrating the deletion of a parameter from a GridLAB-D object in the model.')
-    house_to_edit = glmMod.get_object_id('house', house_name) # GLD object type, object name
+    house_to_edit = glmMod.get_object_name('house', house_name)  # GLD object type, object name
     if 'Rroof' in house_to_edit.keys():
         print(f'\t"Rroof" for house {house_name} is {house_to_edit["Rroof"]}.')
     else:
@@ -217,23 +214,23 @@ def _auto_run(args):
 
     # You can also just remove an entire object instance from the model (if you know the GLD object type and its name)
     print('Demonstrating the deletion of an entire object from GridLAB-D model.')
-    house_objs = tp_meter_objs = glmMod.get_objects('house')
-    num_houses = len(list(house_objs.instance.keys()))
-    num_houses = len(glmMod.get_object_ids('house'))
+    # house_objs = tp_meter_objs = glmMod.get_object('house')
+    # num_houses = len(list(house_objs.instance.keys()))
+    num_houses = len(glmMod.get_object_names('house'))
     print(f'\tNumber of houses: {num_houses}')
     print(f'\tDeleting {house_to_delete} from model.')
     glmMod.del_object('house', house_to_delete)
-    num_houses = len(glmMod.get_object_ids('house'))
+    num_houses = len(glmMod.get_object_names('house'))
     print(f'\tNumber of houses: {num_houses}')
 
 
     # Increase all the secondary/distribution transformer ratings by 15%
     print('\nDemonstrating modification of a GridLAB-D parameter for all objects of a certain type.')
     print("In this case, we're upgrading the rating of the secondary/distribution transformers by 15%.")
-    transformer_objs = glmMod.get_objects('transformer')
+    transformer_objs = glmMod.get_object('transformer')
     #transformer_names = list(glmMod.get_objects('transformer').instance.keys())
-    transformer_names = glmMod.get_object_ids('transformer')
-    transformer_config_objs = glmMod.get_objects('transformer_configuration')
+    transformer_names = glmMod.get_object_names('transformer')
+    transformer_config_objs = glmMod.get_object('transformer_configuration')
 
 
     print("\tFinding all the split-phase transformers as these are the ones we're targeting for upgrade.")
@@ -255,9 +252,9 @@ def _auto_run(args):
 
     # Getting the networkx topology data as a networkx graph
     graph = glmMod.model.network
-    gld_node_objs = glmMod.get_objects('node')
+    gld_node_objs = glmMod.get_object('node')
     #gld_node_names = list(gld_node_objs.instance.keys())
-    gld_node_names = glmMod.get_object_ids('node')
+    gld_node_names = glmMod.get_object_names('node')
 
     # Looking for swing bus which is, by convention, the head of the feeder.
     print(f'\nDemonstrating the use of networkx to find the feeder head and the closest fuse')
@@ -281,7 +278,7 @@ def _auto_run(args):
     #       And that's what you get for making assumptions.
     #       https://emac.berkeley.edu/gridlabd/taxonomy_graphs/R1-12.47-1.pdf )
     print(f'\tIncreasing fuse size by an arbitrary 10%')
-    fuse_obj = glmMod.get_object_id('fuse', feeder_head_fuse)
+    fuse_obj = glmMod.get_object_name('fuse', feeder_head_fuse)
     print(f'\t\tOld fuse current limit: {fuse_obj["current_limit"]}A')
     fuse_obj['current_limit'] = float(fuse_obj['current_limit']) * 1.1
     print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]}A')

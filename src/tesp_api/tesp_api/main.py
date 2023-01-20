@@ -7,7 +7,6 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import json
 import sqlite3
-import time
 
 from entity import assign_defaults
 from entity import assign_item_defaults
@@ -15,8 +14,8 @@ from entity import Entity
 from model import GLModel
 from modifier import GLMModifier
 
-from data import entities_path
-from data import feeders_path
+from store import entities_path
+from store import feeders_path
 
 
 class mytest:
@@ -65,8 +64,7 @@ def _test1():
         print("Database Sqlite3.db not formed")
 
     # this a config  -- file probably going to be static json
-    file_name = 'feeder_defaults.json'
-
+    file_name = entities_path + 'feeder_defaults.json'
     myEntity = mytest()
     assign_defaults(myEntity, file_name)
     name = 'rgnPenResHeat'
@@ -113,24 +111,17 @@ def _test2():
 
 
 def _test3():
-    st = time.time()
     modobject = GLMModifier()
 
     tval = modobject.read_model(feeders_path + "R1-12.47-1.glm")
-    et = time.time()
-    elapsed_time = et - st
 
-
- #   st = time.time()
     for name in modobject.model.entities:
         print(modobject.model.entities[name].toHelp())
-    et = time.time()
-    elapsed_time = et - st
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    # test1()
-    #test2()
+    # _test1()
+    # _test2()
+    # _test3()
     fredtest()
-

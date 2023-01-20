@@ -6,11 +6,13 @@ import math
 import os
 import re
 import numpy as np
+
 import tesp_support.helpers
-from data import entities_path
+from store import entities_path
 from entity import assign_defaults
 from model import GLModel
 from entity import Entity
+
 
 class GLMModifier:
     # instances of entity values
@@ -20,35 +22,42 @@ class GLMModifier:
 
     def __init__(self):
         self.model = GLModel()
-        #self.modded_model = GLModel()
         self.mod_headers = []
-        #self.extra_billing_meters = set()
-        assign_defaults(self, 'feeder_defaults.json')
+        assign_defaults(self, entities_path + 'feeder_defaults.json')
         return
 
+    def get_object(self, gld_type):
+        return self.model.entities[gld_type]
 
-
-    def get_objects(self, name):
-        return self.model.entities[name]
-
-    def get_object_id(self, name, object_id):
-        return self.model.entities[name].instance[object_id]
+    def get_object_name(self, gld_type, name):
+        return self.get_object(gld_type).instance[name]
         
-    def get_object_ids(self, name):
-        return list(self.get_objects(name).instance.keys())
+    def get_object_names(self, gld_type):
+        return list(self.get_object(gld_type).instance.keys())
 
-    def add_object(self, name, obj_id, params):
-        return self.get_objects(name).set_instance(obj_id, params)
+    def add_object(self, gld_type, name, params):
+        return self.get_object(gld_type).set_instance(name, params)
 
-    def del_object(self, name, obj_id):
-        self.get_objects(name).del_instance(obj_id)
+    def del_object(self, gld_type, name):
+        self.get_object(gld_type).del_instance(name)
+        for obj in self.model.entities:
+            myObj = self.model.entities[obj]
+            myArr = []
+            if myObj.find_item('parent'):
+                for myName in myObj.instance:
+                    instance = myObj.instance[myName]
+                    if 'parent' in instance.keys():
+                        if instance['parent'] == name:
+                            myArr.append(myName)
+            for myName in myArr:
+                myObj.del_instance(myName)
 
-    def add_object_item(self, name, obj_id, item_name, item_value):
-        return self.get_object(name).set_instance(obj_id).set_item(item_name, item_value)
 
+    def add_object_item(self, gld_type, name, item_name, item_value):
+        return self.get_object(gld_type).set_item(name, item_name, item_value)
 
-    def del_object_item(self, name, obj_id, item_name):
-        self.get_objects(name).del_item(obj_id, item_name)
+    def del_object_item(self, gld_type, name, item_name):
+        self.get_object(gld_type).del_item(name, item_name)
 
     def mod_model(self):
         tlist = list(self.model.network.nodes.data())

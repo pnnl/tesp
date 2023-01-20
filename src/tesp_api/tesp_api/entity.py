@@ -7,11 +7,11 @@
 import json
 import sqlite3
 
-from data import entities_path
+from store import entities_path
 
 
 def assign_defaults(obj, file_name):
-    with open(entities_path + file_name, 'r', encoding='utf-8') as json_file:
+    with open(file_name, 'r', encoding='utf-8') as json_file:
         config = json.load(json_file)
         for attr in config:
             setattr(obj, attr, config[attr])
@@ -19,8 +19,9 @@ def assign_defaults(obj, file_name):
 
 
 def assign_item_defaults(obj, file_name):
-    with open(entities_path + file_name, 'r', encoding='utf-8') as json_file:
+    with open(file_name, 'r', encoding='utf-8') as json_file:
         config = json.load(json_file)
+        # config format -> label, value, unit, datatype, item
         for attr in config:
             # Item format -> datatype, label, unit, item, value
             tmp = Item(str(type(config[attr])), attr, "", attr, config[attr])
@@ -29,12 +30,13 @@ def assign_item_defaults(obj, file_name):
 
 
 class Item:
-    def __init__(self, datatype, label, unit, item, value=None):
+    def __init__(self, datatype, label, unit, item, value=None, range_check=None):
         self.datatype = datatype
         self.label = label
         self.unit = unit
         self.item = item
         self.value = value
+        self.range_check = range_check
 
     def __enter__(self):
         return self
@@ -48,21 +50,41 @@ class Item:
     # def __str__(self):
     #     return str(self.item)
 
+    def toFrame(self):
+        return [self.label, self.value, self.unit, self.datatype, self.item, self.range_check]
+
     def toJson(self):
         return [self.label, self.value, self.unit, self.datatype, self.item]
+
+    def toJSON(self):
+        tmp = '{ ' + self.item + ': {' \
+              '"label": "' + self.label + ', ' \
+              '"unit": "' + self.unit + ', ' \
+              '"datatype": "' + self.datatype + ', ' \
+              '"value": '
+        if self.datatype in ["TEXT"]:
+            tmp = tmp + '"' + self.value + '"}'
+        else:  # self.datatype in ["REAL", "INTEGER"]:
+            tmp = tmp + self.value + '}'
+        return tmp
 
 
 class Entity:
     def __init__(self, entity, config):
+        self.item_cnt = 0
         self.entity = entity
         self.instance = {}
         try:
             if type(config[0]) is list:
                 for attr in config:
-                    # config format -> label=0, value=1, unit=2, datatype=3, item=4
-                    # Item format -> datatype=3, label=0, unit=2, item=4, value=1
-                    tmp = Item(attr[3], attr[0], attr[2], attr[4], attr[1])
+                    # config format -> label=0, value=1, unit=2, datatype=3, item=4, range
+                    # Item format -> datatype=3, label=0, unit=2, item=4, value=1, range
+                    if len(attr) > 5:
+                        tmp = Item(attr[3], attr[0], attr[2], attr[4], attr[1], attr[5])
+                    else:
+                        tmp = Item(attr[3], attr[0], attr[2], attr[4], attr[1])
                     setattr(self, attr[4], tmp)
+                self.item_cnt = len(config)
         except:
             pass
 
@@ -83,6 +105,9 @@ class Entity:
 
     def __str__(self):
         return str(self.entity)
+
+    def count(self):
+        return self.item_cnt
 
     def find_item(self, item):
         try:
@@ -144,18 +169,46 @@ class Entity:
     def add_item(self, datatype, label, unit, item, value=None):
         val = Item(datatype, label, unit, item, value)
         setattr(self, item, val)
+        self.item_cnt += 1
         return self.__getattribute__(item)
 
-    def set_item(self, item, val):
-        #if self.find_item(item):
-        setattr(self, item, val)
-        return self.__getattribute__(item)
-        #return None
+    # def set_item_default(self, item, val):
+    #     if self.find_item(item):
+    #         setattr(self, item, val)
+    #         return self.__getattribute__(item)
+    #     return None
+    #
+    # def del_item_default(self, item):
+    #     if self.find_item(item):
+    #         _item = self.__getattribute__(item)
+    #         if type(_item) == Item:
+    #             setattr(self, _item, None)
+    #             # remove all instances
+    #             for obj_id in self.instance:
+    #                 del self.instance[obj_id][_item]
+    #     return None
+
+    def set_item(self, obj_id, item, val):
+        if self.find_item(item):
+            _item = self.__getattribute__(item)
+            if type(_item) == Item:
+                self.instance[obj_id][item] = val
+        return None
 
     def del_item(self, obj_id, item):
-        setattr(self, item, None)
-        del self.instance[obj_id][item]
+        if self.find_item(item):
+            _item = self.__getattribute__(item)
+            if type(_item) == Item:
+                del self.instance[obj_id][item]
         return None
+
+    def toList(self):
+        diction = []
+        for attr in self.__dict__:
+            item = self.__getattribute__(attr)
+            if type(item) == Item:
+                diction.append(attr)
+        return diction
 
     def toJson(self):
         diction = []
@@ -206,8 +259,8 @@ class Entity:
         diction = ""
         for obj_id in self.instance:
             diction += "object " + self.entity + " {\n  name " + obj_id + ";\n"
-            for item in self.instance[obj_id]:
-                diction += "  " + item + " " + str(self.instance[obj_id][item]) + ";\n"
+            for item in self.instance[obj_id].keys():
+                diction += "  " + item + " " + self.instance[obj_id][item] + ";\n"
             diction += "}\n"
         return diction
 
@@ -215,10 +268,9 @@ class Entity:
         diction = ""
         for obj_id in self.instance:
             diction += "object " + self.entity + " {\n  name " + obj_id + ";\n"
-            #for i in range(len(self.instance[obj_id])):
             for item in self.instance[obj_id].keys():
                 diction += "  " + item + " " + str(self.instance[obj_id][item]) + ";\n"
-            diction += "}\n"
+            diction += "};\n"
         return diction
 
     def instanceToSQLite(self, connection):
@@ -242,7 +294,7 @@ class Entity:
             multi_row = "('"
             sql = "INSERT INTO " + self.entity + "_values(entity, item, valu) VALUES"
             for obj_id in self.instance:
-                for item in self.instance[obj_id]:
+                for item in self.instance[obj_id].keys():
                     sql += multi_row + obj_id + "', '" + item + "', '" + self.instance[obj_id][item] + "')"
                     multi_row = ", ('"
 
