@@ -65,7 +65,7 @@ class all_but_one_level(object):
         return logRecord.levelno != 11
 
 
-def write_experiment_management_script(master_file, case_path, system_config=None, substation_config=None, weather_config=None):
+def write_dsot_management_script_f(master_file, case_path, system_config=None, substation_config=None, weather_config=None):
     """ Write experiment management scripts from JSON configuration data
 
     Reads the simulation configuration file or dictionary and writes
@@ -338,7 +338,7 @@ docker run \\
         subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
         subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
 
-def write_experiment_management_script_with_microgrids(master_file, case_path, system_config=None, substation_config=None, weather_config=None):
+def write_dsot_management_script_f_with_microgrids(master_file, case_path, system_config=None, substation_config=None, weather_config=None):
     """ Write experiment management scripts from JSON configuration data
 
     Reads the simulation configuration file or dictionary and writes

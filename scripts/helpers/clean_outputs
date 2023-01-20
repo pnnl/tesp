@@ -1,57 +1,48 @@
 #!/bin/bash
 
-CWD=$(pwd)
+echo
+echo "  This script iterates the examples directory calling clean.sh in tha directory."
+echo "  A user can modify a particular directory clean.sh script if needed."
 
-cd "$TESPDIR/examples/capabilities/loadshed" || exit
-./clean.sh
-make clean
-cd ../loadshedf || exit
-./clean.sh
-cd ../loadshed-HELICS3-EPlus || exit
-clean.sh
-cd ../loadshed-prototypical-communication || exit
-./clean.sh
-cd ../gld_player_recorder || exit
-clean.sh
-cd ../houses || exit
-./clean.sh
-cd ../energyplus || exit
-./clean.sh
-cd ../te30 || exit
-./clean.sh
-cd ../pypower || exit
-./clean.sh
-cd ../weatherAgent || exit
-./clean.sh
-cd ../dsostub || exit
-./clean.sh
-cd ../dsostubf || exit
-./clean.sh
-cd ../ieee8500 || exit
-./clean.sh
-cd PNNLteam || exit
-./clean.sh
-cd ../../comm || exit
-rm -rf CombinedCase
-rm -rf Nocomm_Base
-rm -rf Eplus_Restaurant
-rm -rf SGIP1c
-rm -rf Eplus_Comm
-cd ../ercot/case8 || exit
-./clean.sh
-rm -f ./*.glm
-cd dsostub || exit
-./clean.sh
-cd ../../bulk_system || exit
-./clean.sh
-cd ../dist_system || exit
-./clean.sh
+while true; do
+    read -p "  Do you wish to clean all TESP examples? " yn
+    case $yn in
+        [Yy]* ) clean_me="clean"; break;;
+        [Nn]* ) clean_me="leave"; break;;
+        * ) echo "  Please answer [y]es or [n]o.";;
+    esac
+done
 
+if [[ $clean_me == "clean" ]]; then
+  CWD=$(pwd)
 
-cd "$TESPDIR/examples/analysis/sgip1" || exit
-#./clean.sh
-cd ../dsot/code || exit
-#./clean.sh
+  echo "  Cleaning TESP examples:"
+  cd "$TESPDIR/examples/capabilities" || exit
+  for dir in *
+  do
+    if [ -d "$dir" ]
+    then
+      FILE=$dir/clean.sh
+      if [ -f "$FILE" ]
+      then
+        echo "   /"$dir
+        cd $dir || exit
+        ./clean.sh
+        cd ..
+      fi
+    fi
+  done
 
+  echo "   /sgip1"
+  cd "$TESPDIR/examples/analysis/sgip1" || exit
+  ./clean.sh
+  echo "   /dsot/code"
+  cd ../dsot/code || exit
+  ./clean.sh
+  echo "  Done!"
 
-cd "$CWD" || exit
+  cd "$CWD" || exit
+else
+  echo "  Not cleaning TESP examples"
+fi
+

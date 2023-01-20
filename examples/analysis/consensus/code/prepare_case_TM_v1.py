@@ -466,11 +466,11 @@ def prepare_case(mastercase):
     #yp.close()
 
     # Also create the launch, kill and clean scripts for this case
-    helpers.write_experiment_management_script_with_microgrids(master_file=mastercase, case_path=caseName, system_config=sys_config,
+    helpers.write_dsot_management_script_f_with_microgrids(master_file=mastercase, case_path=caseName, system_config=sys_config,
                                                substation_config=substation_config, weather_config=weather_config)
 
 
-    # helpers.write_experiment_management_script(master_file=mastercase, case_path=caseName, system_config=sys_config,
+    # helpers.write_dsot_management_script_f(master_file=mastercase, case_path=caseName, system_config=sys_config,
     #                                            substation_config=substation_config, weather_config=weather_config)
 
     if debug_mode:

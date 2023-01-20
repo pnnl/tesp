@@ -44,7 +44,7 @@ def loadshed_test():
 def loadshed_cli_test():
     tesp.start_test('Loadshed examples for HELICS CLI')
     os.chdir('capabilities/loadshed-HELICS3-EPlus')
-    subprocess.Popen('clean', shell=True).wait()
+    subprocess.Popen('./clean.sh', shell=True).wait()
     subprocess.Popen('make clean > make.log', shell=True).wait()
     subprocess.Popen('make >> make.log', shell=True).wait()
     tesp.run_test('run.sh', 'Loadshed - HELICS/EPlus')

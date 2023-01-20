@@ -437,7 +437,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     yp.close()
 
     # Also create the launch, kill and clean scripts for this case
-    helpers.write_experiment_management_script(master_file="generate_case_config", case_path=caseName, system_config=sys_config,
+    helpers.write_dsot_management_script_f(master_file="generate_case_config", case_path=caseName, system_config=sys_config,
                                                substation_config=dso_config, weather_config=weather_config)
 
 
@@ -445,7 +445,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 6:
         prepare_case(int(sys.argv[1]), sys.argv[2], pv=int(sys.argv[3]), bt=int(sys.argv[4]), fl=int(sys.argv[5]), ev=int(sys.argv[6]))
     else:
-        prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
+        prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=0, ev=0)
         # prepare_case(8, "8_system_case_config", pv=0, bt=1, fl=0, ev=0)
         # prepare_case(8, "8_system_case_config", pv=0, bt=0, fl=1, ev=0)
         # prepare_case(8, "8_hi_system_case_config", pv=1, bt=0, fl=0, ev=0)

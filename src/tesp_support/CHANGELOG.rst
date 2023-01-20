@@ -43,6 +43,7 @@ Version 0.9.5 (2021-03-09)
 Version 1.0.1 (2021-04-23)
 --------------------------
 
+* No longer supports Windows
 * Updates to consensus mechanism
 * Balanced three-phase houses for housing generator
 * Remove deprecated solar and battery attributes
@@ -57,7 +58,24 @@ Version 1.2.0 (2022-10-3)
 * Added DSOT agents and feeder generators
 * Update to HELICS 3.3.0
 
+Version 1.2.3 (2022-11-22)
+--------------------------
+* Fix the EngeryPlus to work with newer compiler and updated version number
+* Fix read the docs document warnings and fix clean shell script for energyplus
+* Added Ubuntu apt install version dependencies for 18.04,20.04,22.04
+* Revised pip and venv for install script
+* Revised clean scripts, clean up models directory
+* Add loadshed* examples for auto test
+* Fixed the installation for Ubuntu 22.04
+* Fixed monitor.py and tesp_case.py when not using enegryplus,
+* Minor fix for feeders generator when using name_prefix
+* Fixed complex python to use helics complex type
 
 
-
-
+Version 1.2.4 (2022-12-1)
+--------------------------
+* Fix version number in tesp_support for PyPI distribution and read the docs
+* Fix the version.sh, move docmentaion to end of the install, fix warning in Consensus_Usecase.rst
+* Fix git patch warning for FNCS and EnergyPlus
+* GRIDLabD triplex_node no longer uses power_12_real and power12_reac, this has commented out for SGIP1*.glm files
+* Add pypi packaging to stamping process, refined docker build in scripts/docker, moved HELICS version checker to build

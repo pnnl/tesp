@@ -213,7 +213,7 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
     write_management_script(archive_folder, case_path, outPath, system_config['gldDebug'], 1)
 
 
-def write_experiment_management_script(master_file, case_path, system_config=None, substation_config=None,
+def write_dsot_management_script_f(master_file, case_path, system_config=None, substation_config=None,
                                        weather_config=None):
     """ Write experiment management scripts from JSON configuration data
 
@@ -354,6 +354,7 @@ def write_experiment_management_script(master_file, case_path, system_config=Non
                 if dyldPath is not None:
                     outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
 
+            outfile.write('mkdir -p PyomoTempFiles\n\n')
             outfile.write('# To run agents set with_market=1 else set with_market=0 \n')
             if system_config["market"]:
                 outfile.write('with_market=1\n\n')

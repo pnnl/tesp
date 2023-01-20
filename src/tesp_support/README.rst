@@ -36,8 +36,8 @@ Development Work Flow for tesp_support
 * When ready, edit the tesp_support version number and dependencies in setup.py
 * To deploy follow the instructions in the Python Packaging Guide:
     1. Create an account on PyPI if you haven't yet.
-    2. Create the source distribution and wheels for your package: python setup.py sdist bdist_wheel
-    3. Install twine (or make sure you have version 2.0 or newer): pip install twine
+    2. Install twine and build: pip install twine build
+    3. Create the source distribution, change to tesp_support directory execute: python3 -m build .
     4. Check your distribution files for errors: twine check dist/*
     5. (Optional) Upload to the PyPI test server first (note: separate user registration required): twine upload --repository-url https://test.pypi.org/legacy/ dist/*
     6. Upload to PyPI: twine upload dist/*

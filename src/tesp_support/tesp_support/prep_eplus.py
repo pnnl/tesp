@@ -453,11 +453,26 @@ def make_gld_eplus_case(fname, bGlmReady=False):
     prepare_glm_helics(caseConfig, fedMeters, fedLoadNames)
     prepare_run_script(caseConfig, fedMeters)
 
-    shutil.copy(support_dir + 'clean', '{:s}/{:s}'.format(caseDir, 'clean.sh'))
-    fp = open('{:s}/clean.sh'.format(caseDir), 'a')
+    fn = '{:s}/clean.sh'.format(caseDir)
+    fp = open(fn, 'w')
+    print("rm - f *.log", file=fp)
+    print("rm - f *.csv", file=fp)
+    print("rm - f *.out", file=fp)
+    print("rm - f *.xml", file=fp)
+    print("rm - f *.audit", file=fp)
+    print("rm - f", file=fp)
+    print("broker_trace.txt", file=fp)
+    print("rm - f * metrics.json", file=fp)
+    print("rm - f * dict.json", file=fp)
+    print("rm - f", file=fp)
+    print("out.txt", file=fp)
+
     for bldg in caseConfig['Buildings']:
         print('rm -rf out{:d}_{:s}'.format(bldg['ID'], bldg['Name']), file=fp)
     fp.close()
+    st = os.stat(fn)
+    os.chmod(fn, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
     shutil.copy(template_dir + 'commshed.py', caseDir)
     shutil.copy(template_dir + 'gplots.py', caseDir)
     shutil.copy(template_dir + 'eplots.py', caseDir)

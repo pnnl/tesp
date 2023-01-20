@@ -9,10 +9,10 @@ tesp\_support package
 Submodules
 ----------
 
-tesp\_support.TMY2EPW module
-----------------------------
+tesp\_support.TMYtoEPW module
+-----------------------------
 
-.. automodule:: tesp_support.TMY2EPW
+.. automodule:: tesp_support.TMYtoEPW
    :members:
    :undoc-members:
    :show-inheritance:
@@ -193,10 +193,10 @@ tesp\_support.process\_voltages module
    :undoc-members:
    :show-inheritance:
 
-tesp\_support.run\_tesp\_case module
-------------------------------------
+tesp\_support.tesp\_runner module
+---------------------------------
 
-.. automodule:: tesp_support.run_tesp_case
+.. automodule:: tesp_support.tesp_runner
    :members:
    :undoc-members:
    :show-inheritance:
