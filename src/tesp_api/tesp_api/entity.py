@@ -7,15 +7,13 @@
 import json
 import sqlite3
 
-from store import entities_path
-
 
 def assign_defaults(obj, file_name):
     with open(file_name, 'r', encoding='utf-8') as json_file:
         config = json.load(json_file)
         for attr in config:
             setattr(obj, attr, config[attr])
-    return
+    return config
 
 
 def assign_item_defaults(obj, file_name):
@@ -137,7 +135,7 @@ class Entity:
                 else:
                     print("Unrecognized object parameter ->", attr)
                     # add to dictionary datatype, label, unit, item, value
-                    self.add_item("TEXT", attr, "", attr, "")
+                    self.add_attr("TEXT", attr, "", attr, "")
                 instance[attr] = params[attr]
             return instance
         else:
@@ -166,11 +164,16 @@ class Entity:
             print("Object id is not a string")
         return None
 
-    def add_item(self, datatype, label, unit, item, value=None):
+    def add_attr(self, datatype, label, unit, item, value=None):
         val = Item(datatype, label, unit, item, value)
         setattr(self, item, val)
         self.item_cnt += 1
         return self.__getattribute__(item)
+
+    def del_attr(self, item):
+        if self.find_item(item):
+            delattr(self, item)
+        return None
 
     # def set_item_default(self, item, val):
     #     if self.find_item(item):
@@ -303,4 +306,3 @@ class Entity:
             connection.commit()
 
         return ""
-

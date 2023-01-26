@@ -206,7 +206,7 @@ def _auto_run(args):
     else:
         print(f'\t"Rroof" for house {house_name} is undefined.')
     print(f'\tDeleting paramter Rroof from house {house_name}')
-    glmMod.del_object_item('house', house_name, 'Rroof')
+    glmMod.del_object_attr('house', house_name, 'Rroof')
     if 'Rroof' in house_to_edit.keys():
         print(f'\tCurrent "Rroof" is {house_to_edit["Rroof"]}')
     else:
@@ -244,11 +244,11 @@ def _auto_run(args):
                 transformer_configs_to_upgrade.append(transformer_objs.instance[transformer]['configuration'])
     print(f'\tFound {len(transformer_configs_to_upgrade)} configurations that will be upgraded.')
 
-    for config in transformer_configs_to_upgrade:
-        old_rating = float(transformer_config_objs.instance[config]['power_rating'])
-        transformer_config_objs.instance[config]['power_rating'] = 1.15 * old_rating
-        upgraded_rating = str(round(transformer_config_objs.instance[config]["power_rating"],3))
-        print(f'\tUpgraded configuration {config} from {old_rating} to {upgraded_rating}')
+    # for config in transformer_configs_to_upgrade:
+    #     old_rating = float(transformer_config_objs.instance[config]['power_rating'])
+    #     transformer_config_objs.instance[config]['power_rating'] = 1.15 * old_rating
+    #     upgraded_rating = str(round(transformer_config_objs.instance[config]["power_rating"],3))
+    #     print(f'\tUpgraded configuration {config} from {old_rating} to {upgraded_rating}')
 
     # Getting the networkx topology data as a networkx graph
     graph = glmMod.model.network

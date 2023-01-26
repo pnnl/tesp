@@ -351,7 +351,7 @@ class GLModel:
                     if len(linecomments) > 0:
                         inlinecomments[oname] = linecomments
                     outcomments = []
-            # apply the nameing prefix if necessary
+            # apply the naming prefix if necessary
             # if len(name_prefix) > 0:
             #    for t in model:
             # for o in model[t]:

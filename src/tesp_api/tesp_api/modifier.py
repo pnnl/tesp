@@ -10,8 +10,8 @@ import numpy as np
 import tesp_support.helpers
 from store import entities_path
 from entity import assign_defaults
-from model import GLModel
 from entity import Entity
+from model import GLModel
 
 
 class GLMModifier:
@@ -52,11 +52,10 @@ class GLMModifier:
             for myName in myArr:
                 myObj.del_instance(myName)
 
-
-    def add_object_item(self, gld_type, name, item_name, item_value):
+    def add_object_attr(self, gld_type, name, item_name, item_value):
         return self.get_object(gld_type).set_item(name, item_name, item_value)
 
-    def del_object_item(self, gld_type, name, item_name):
+    def del_object_attr(self, gld_type, name, item_name):
         self.get_object(gld_type).del_item(name, item_name)
 
     def mod_model(self):
@@ -67,6 +66,15 @@ class GLMModifier:
 
     def read_model(self, filepath):
         self.model.read(filepath)
+        return True
+
+    def write_model(self, filepath):
+        # op = open(filepath, "w", encoding='utf-8')
+        # glm_out = self.model.instancesToGLM()
+        # print(glm_out, op)
+        # #print(self.model.instancesToGLM(), op)
+        # op.close()
+        self.model.write(filepath)
         return True
 
     # normal objects
@@ -83,14 +91,7 @@ class GLMModifier:
     def set_simulation_times(self):
         return True
 
-    def write_model(self, filepath):
-        # op = open(filepath, "w", encoding='utf-8')
-        # glm_out = self.model.instancesToGLM()
-        # print(glm_out, op)
-        # #print(self.model.instancesToGLM(), op)
-        # op.close()
-        self.model.write(filepath)
-        return True
+
 
 #************************************************************************************************************
     def create_kersting_quadriplex(self, kva):
