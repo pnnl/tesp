@@ -63,23 +63,16 @@ pp = pprint.PrettyPrinter(indent=4, )
 
 def _auto_run(args):
     glmMod = GLMModifier()
-    feeder_path = os.path.join(feeders_path, "R1-12.47-1.glm")
+    feeder_path = os.path.join(feeders_path, args.feeder_file)
     glmMod.model.read(feeder_path)
 
-    #tp_meter_objs = glmMod.get_objects('triplex_meter')
-    #tp_meter_names = list(tp_meter_objs.instance.keys())
     tp_meter_names = glmMod.get_object_names('triplex_meter')
-
-
     num_houses_to_add = 11
 
     for house_num in range(num_houses_to_add):
         # Adding billing meter to existing triplex meters in an arbitrary manner
         # This meter captures all energy usage for this customer
         billing_meter_name = f'{tp_meter_names[house_num]}_billing'
-
-
-        # The API adds the name in call as the GLD object name. Don't need to specify it as a parameter.
         meter_params = {
             'parent': tp_meter_names[house_num],
             'phases': glmMod.get_object('triplex_meter').instance[f'{tp_meter_names[house_num]}']['phases'],
@@ -104,6 +97,7 @@ def _auto_run(args):
             'phases': glmMod.get_object('triplex_meter').instance[billing_meter_name]['phases'],
             'nominal_voltage': glmMod.get_object('triplex_meter').instance[billing_meter_name]['nominal_voltage']
         }
+        # Returns a dictionary of the object we just added; in this case I don't do anything with that dictionary.
         house_meter = glmMod.add_object('triplex_meter', house_meter_name, meter_params)
 
         # Add house object as a child of the house meter
@@ -113,7 +107,7 @@ def _auto_run(args):
         if house_num == 0:
             house_to_delete = house_name
 
-        # Ideally that these parameters for the house objects are not hard-coded like this. Good alternatives:
+        # Ideally, these parameters for the house objects are not hard-coded like this. Good alternatives:
         #   - Make an external JSON that defines each house and reads them in
         #   - Use algorithms and data like RECS to define random values for each house. This is what feeder_generator
         #       has historically done in the past.
@@ -165,14 +159,15 @@ def _auto_run(args):
         }
         load_obj = glmMod.add_object('ZIPload', load_name, ZIP_params)
 
+        # NOT FULLY IMPLEMENTED (Let's say I did this on purpose as an "exercise for the reader".)
         # Add separate solar meter to track the solar power generation specifically
-        solar_meter_name = f'{tp_meter_names[house_num]}_solar'
-        meter_params = {
-            'parent': billing_meter_name,
-            'phases': glmMod.get_object('triplex_meter').instance[billing_meter_name]['phases'],
-            'nominal_voltage': glmMod.get_object('triplex_meter').instance[billing_meter_name]['nominal_voltage']
-
-        }
+        # solar_meter_name = f'{tp_meter_names[house_num]}_solar'
+        # meter_params = {
+        #     'parent': billing_meter_name,
+        #     'phases': glmMod.get_object('triplex_meter').instance[billing_meter_name]['phases'],
+        #     'nominal_voltage': glmMod.get_object('triplex_meter').instance[billing_meter_name]['nominal_voltage']
+        #
+        # }
         # solar_meter = glmMod.add_object('triplex_meter', solar_meter_name, meter_params)
         # solar_name = f'solar_{house_num}'
         # solar_params = {
@@ -180,7 +175,6 @@ def _auto_run(args):
         # }
 
     # You can delete specific parameter definitions (effectively making them the default value defined in GridLAB-D)
-    #   as well as deleting entire object instances.
     print('\nDemonstrating the deletion of a parameter from a GridLAB-D object in the model.')
     house_to_edit = glmMod.get_object_name('house', house_name)  # GLD object type, object name
     if 'Rroof' in house_to_edit.keys():
@@ -256,13 +250,13 @@ def _auto_run(args):
             upgraded_rating = str(round(transformer_config_objs.instance[config][rating_param],3))
             print(f'\tUpgraded configuration {config} from {old_rating} to {upgraded_rating}')
 
-    # Getting the networkx topology data as a networkx graph
-    graph = glmMod.model.network
+    # The model topology is stored as a networks graph, allowing you to do fancy manipulations of the model more easily.
     gld_node_objs = glmMod.get_object('node')
-    #gld_node_names = list(gld_node_objs.instance.keys())
     gld_node_names = glmMod.get_object_names('node')
 
-    # Looking for swing bus which is, by convention, the head of the feeder.
+    # Looking for swing bus which is, by convention, the head of the feeder. From there we're going to find the closest
+    #   fuse and upgrade its rating for arbitrary reasons
+    # Starting out just looking for the swing bus using the non-networkx APIs we've been using up to this point.
     print(f'\nDemonstrating the use of networkx to find the feeder head and the closest fuse')
     swing_bus = ''
     for gld_node_name in gld_node_names:
@@ -271,7 +265,9 @@ def _auto_run(args):
                 swing_bus = gld_node_name
     print(f'\tFound feeder head (swing bus) as node {swing_bus}')
 
-    # Find first fuse downstream of the feeder head. I'm guessing it is close-by so doing a breadth-first search
+    # Find first fuse downstream of the feeder head. I'm guessing it is close-by so doing a breadth-first search using
+    #   the networkx API and the topology graph of our GridLAB-D model
+    graph = glmMod.model.network
     for edge in nx.bfs_edges(graph, swing_bus):
         data = graph.get_edge_data(edge[0], edge[1])
         if data['eclass'] == 'fuse':
@@ -285,9 +281,9 @@ def _auto_run(args):
     #       https://emac.berkeley.edu/gridlabd/taxonomy_graphs/R1-12.47-1.pdf )
     print(f'\tIncreasing fuse size by an arbitrary 10%')
     fuse_obj = glmMod.get_object_name('fuse', feeder_head_fuse)
-    print(f'\t\tOld fuse current limit: {fuse_obj["current_limit"]}A')
+    print(f'\t\tOld fuse current limit: {fuse_obj["current_limit"]} A')
     fuse_obj['current_limit'] = float(fuse_obj['current_limit']) * 1.1
-    print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]}A')
+    print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]} A')
     dummy = 0
 
     # Unused code that works but doesn't show off the things I wanted to show off.
@@ -313,7 +309,7 @@ def _auto_run(args):
     #     dummy = 0
 
 
-    glmMod.write_model("trevor_test.glm")
+    glmMod.write_model(args.output_file)
 
 
 if __name__ == '__main__':
@@ -330,13 +326,18 @@ if __name__ == '__main__':
                         handlers=[fileHandle, streamHandle])
 
     parser = argparse.ArgumentParser(description='GridLAB-D Feeder Generator')
-    # TDH: Have to do a little bit of work to generate a good default
-    # path for the auto_run folder (where the development test data is
-    # held.
     script_path = os.path.dirname(os.path.realpath(__file__))
-    parser.add_argument('-f',
+    parser.add_argument('-p',
                         '--feeder_path',
                         nargs='?',
                         default='../../data/feeders')
+    parser.add_argument('-n',
+                        '--feeder_file',
+                        nargs='?',
+                        default='R1-12.47-1.glm')
+    parser.add_argument('-o',
+                        '--output_file',
+                        nargs='?',
+                        default='trevor_test.glm')
     args = parser.parse_args()
     _auto_run(args)
