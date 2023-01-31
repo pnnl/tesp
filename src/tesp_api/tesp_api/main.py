@@ -35,8 +35,8 @@ def test_resample():
 
 def fredtest():
     testMod = GLMModifier()
-    testMod.model.read(feeders_path + "R1-12.47-1.glm")
-    loads = testMod.get_objects('load')
+    testMod.model.read(feeders_path + "GLD_three_phase_house.glm")
+    loads = testMod.get_object('load')
     meter_counter = 0
     house_counter = 0
     house_meter_counter = 0

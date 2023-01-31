@@ -157,6 +157,8 @@ object load {
 };
 
 object transformer {
+//comment i1
+//comment i2
      name F1_center_tap_transformer_A;
      phases AS;
      from F1_transformer_meter;
@@ -165,6 +167,8 @@ object transformer {
 }
 
 object transformer {
+//comment i3
+//comment i4
      name F1_center_tap_transformer_B;
      phases BS;
      from F1_transformer_meter;
