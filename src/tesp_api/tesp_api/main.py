@@ -22,6 +22,16 @@ class mytest:
     def test(self):
         return
 
+def test_resample():
+    np.random.seed(0)
+    # create DataFrame with hourly index
+    df = pd.DataFrame(index=pd.date_range('2020-01-06', '2020-01-07', freq='h'))
+    # add column to show sales by hour
+    df['sales'] = np.random.randint(low=0, high=20, size=len(df.index))
+    df.to_csv("time_series_test1.csv")
+    minute_df = df['sales'].resample('10T').interpolate()
+    minute_df.to_csv("time_series_test1_1Minute.csv")
+
 
 def fredtest():
     testMod = GLMModifier()
@@ -125,3 +135,4 @@ if __name__ == '__main__':
     # _test2()
     # _test3()
     fredtest()
+    # test_resample()

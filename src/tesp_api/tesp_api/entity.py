@@ -267,6 +267,69 @@ class Entity:
             diction += "}\n"
         return diction
 
+    def getInsideComments(self, in_comments):
+        ent_keys = self.instance.keys()
+        if len(ent_keys) :
+            obj_name = list(ent_keys)[0]
+        else:
+            obj_name = ""
+        if obj_name in in_comments:
+            temp_comments = in_comments[obj_name]
+        else:
+            temp_comments = []
+        cmnt_string = ""
+        if len(temp_comments) > 0:
+            for cmnt in temp_comments:
+                cmnt_string += "  " + cmnt + "\n"
+        return cmnt_string
+
+    def getInlineComment (self, obj_id, item_id, line_comments):
+        if obj_id in line_comments:
+            obj_dict = line_comments[obj_id]
+            cmnt = ""
+            if item_id in obj_dict:
+                cmnt = obj_dict[item_id]
+                if cmnt != "":
+                    cmnt = " //" + cmnt
+            return cmnt
+        else:
+            return ""
+
+        temp_comment = line_comments[obj_id][item_id]
+        return temp_comment
+
+        # if len(ent_keys) > 0:
+        #     obj_name = list(ent_keys)[0]
+        # else:
+        #     obj_name = ""
+        # #            if name in self.outside_comments:
+        # if obj_name in self.outside_comments:
+        #     # out_comments = self.outside_comments[name]
+        #     out_comments = self.outside_comments[obj_name]
+        # else:
+        #     out_comments = {}
+        # for cmmnt in out_comments:
+        #     diction += cmmnt + "\n"
+
+    #instanceToGLM_Comments adds the comments pulled from the backbone glm file
+    #to the new modified glm file.
+    def instanceToGLM_Comments(self, in_comments, line_comments):
+        inside_comments = ""
+        inside_comments = self.getInsideComments(in_comments)
+        diction = ""
+        for obj_id in self.instance:
+            diction += "object " + self.entity + "{\n"  #+ " {\n  name " + obj_id + ";\n"
+            diction += self.getInsideComments(in_comments)
+            diction += "  name " + obj_id + ";\n"
+            #for i in range(len(self.instance[obj_id])):
+            for item in self.instance[obj_id].keys():
+                cmnt_string = self.getInlineComment(obj_id, item, line_comments)
+                diction += "  " + item + " " + self.instance[obj_id][item] + ";" + cmnt_string + "\n"
+            diction += "}\n"
+        return diction
+
+    #instanceToGLM does not include the comments pulled from the backbone glm file
+    #in to the new modified glm file.
     def instanceToGLM(self):
         diction = ""
         for obj_id in self.instance:

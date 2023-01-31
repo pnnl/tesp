@@ -95,7 +95,18 @@ class GLModel:
     def instancesToGLM(self):
         diction = ""
         for name in self.entities:
-            diction += self.entities[name].instanceToGLM()
+            ent_keys = self.entities[name].instance.keys()
+            if len(ent_keys) > 0:
+                obj_name = list(ent_keys)[0]
+            else:
+                obj_name = ""
+            if obj_name in self.outside_comments:
+                out_comments = self.outside_comments[obj_name]
+            else:
+                out_comments = {}
+            for cmmnt in out_comments:
+                diction += cmmnt + "\n"
+            diction += self.entities[name].instanceToGLM_Comments(self.inside_comments, self.inline_comments)
         return diction
 
     def instancesToSQLite(self):
@@ -227,8 +238,8 @@ class GLModel:
             params['parent'] = parent
         while not oend:
             # if re.match('\s*//', line):
-            if line.find("//") == 0:
-                incomments.append(line)
+            if line.strip().find("//") == 0:
+                incomments.append(line.strip())
             elif line.find("//") > 0:
                 subindex = line.find("//")
                 substring = line[subindex + 2:]
