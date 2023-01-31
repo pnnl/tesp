@@ -144,12 +144,15 @@ object meter {
 
 //Optional load in case no houses are added
 object load {
+     //Load comment 1
+     //Load comment 2
+     //Load comment 3
      name F1_unresp_load;
-     nominal_voltage 7200;
+     nominal_voltage 7200; //inline comment 1
      phases ABCN;
-     parent F1_transformer_meter;
+     parent F1_transformer_meter;//inline comment 2
      constant_power_A_real phase_A_load.value*0.0167;
-     constant_power_B_real phase_B_load.value*0.0167;
+     constant_power_B_real phase_B_load.value*0.0167;//inline comment 3
      constant_power_C_real phase_C_load.value*0.0167;
 };
 
