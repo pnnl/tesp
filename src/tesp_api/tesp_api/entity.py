@@ -324,7 +324,7 @@ class Entity:
             #for i in range(len(self.instance[obj_id])):
             for item in self.instance[obj_id].keys():
                 cmnt_string = self.getInlineComment(obj_id, item, line_comments)
-                diction += "  " + item + " " + self.instance[obj_id][item] + ";" + cmnt_string + "\n"
+                diction += "  " + item + " " + str(self.instance[obj_id][item]) + ";" + cmnt_string + "\n"
             diction += "}\n"
         return diction
 
