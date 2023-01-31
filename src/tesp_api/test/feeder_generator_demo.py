@@ -61,29 +61,6 @@ logging.Logger.data = data
 # Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4, )
 
-
-def _open_file(file_path, type='r'):
-    """Utilty function to open file with reasonable error handling.
-
-    Args:
-        file_path (str) - Path to the file to be opened
-
-        type (str) - Type of the open method. Default is read ('r')
-
-
-    Returns:
-        fh (file object) - File handle for the open file
-    """
-    try:
-        fh = open(file_path, type)
-    except IOError:
-       logger.error('Unable to open {}'.format(file_path))
-    else:
-        return fh
-
-
-
-
 def _auto_run(args):
     glmMod = GLMModifier()
     feeder_path = os.path.join(feeders_path, "R1-12.47-1.glm")
@@ -196,13 +173,11 @@ def _auto_run(args):
             'nominal_voltage': glmMod.get_object('triplex_meter').instance[billing_meter_name]['nominal_voltage']
 
         }
-        solar_meter = glmMod.add_object('triplex_meter', solar_meter_name, meter_params)
-        solar_name = f'solar_{house_num}'
+        # solar_meter = glmMod.add_object('triplex_meter', solar_meter_name, meter_params)
+        # solar_name = f'solar_{house_num}'
         # solar_params = {
         #
         # }
-
-        dummy = 0
 
     # You can delete specific parameter definitions (effectively making them the default value defined in GridLAB-D)
     #   as well as deleting entire object instances.
@@ -223,12 +198,17 @@ def _auto_run(args):
     #   To prevent electrical islands, this method also deletes all downstream objects associated through a
     #   parent-child relationship.
     print('Demonstrating the deletion of an entire object from GridLAB-D model.')
+    print('\tZIPload is child of house and will be automatically deleted as well.')
     num_houses = len(glmMod.get_object_names('house'))
     print(f'\tNumber of houses: {num_houses}')
+    num_zips = len(glmMod.get_object_names('ZIPload'))
+    print(f'\tNumber of ZIPloads: {num_zips}')
     print(f'\tDeleting {house_to_delete} from model.')
     glmMod.del_object('house', house_to_delete)
     num_houses = len(glmMod.get_object_names('house'))
     print(f'\tNumber of houses: {num_houses}')
+    num_zips = len(glmMod.get_object_names('ZIPload'))
+    print(f'\tNumber of ZIPloads: {num_zips}')
 
 
     # Increase all the secondary/distribution transformer ratings by 15%
@@ -354,7 +334,6 @@ if __name__ == '__main__':
     # path for the auto_run folder (where the development test data is
     # held.
     script_path = os.path.dirname(os.path.realpath(__file__))
-    auto_run_dir = os.path.join(script_path, 'auto_run')
     parser.add_argument('-f',
                         '--feeder_path',
                         nargs='?',
