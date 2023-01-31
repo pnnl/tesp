@@ -24,11 +24,12 @@ import networkx as nx
 
 # Getting all the existing tesp_support stuff
 #   Assumes were in the tesp_api folder
-# sys.path.append('../../tesp_support')
+sys.path.append('../../tesp_support')
+sys.path.append('../tesp_api')
 
 # Setting a few environment variables so the imports work smoothly
 #   If you're working in a REAL TESP install you don't have to do this.
-# os.environ['TESPDIR'] = '/Users/hard312/src/TSP/tesp'
+os.environ['TESPDIR'] = '/Users/hard312/src/TSP/tesp'
 
 from entity import assign_defaults
 from entity import assign_item_defaults
@@ -100,28 +101,31 @@ def _auto_run(args):
         # This meter captures all energy usage for this customer
         billing_meter_name = f'{tp_meter_names[house_num]}_billing'
 
+
         # The API adds the name in call as the GLD object name. Don't need to specify it as a parameter.
         meter_params = {
-            'parent': tp_meter_names[house_num]
+            'parent': tp_meter_names[house_num],
+            'phases': glmMod.get_object('triplex_meter').instance[f'{tp_meter_names[house_num]}']['phases'],
+            'nominal_voltage': glmMod.get_object('triplex_meter').instance[tp_meter_names[house_num]]['nominal_voltage']
         }
 
         # Only adding print out for the first time through the loop so I don't flood the terminal.
         if house_num == 0:
             print('Demonstrating addition of an object (triplex_meter in this case) to GridLAB-D model.')
-            #num_tp_meters = len(list(tp_meter_objs.instance.keys()))
             num_tp_meters = len(glmMod.get_object_names('triplex_meter'))
             print(f'\tNumber of triplex meters: {num_tp_meters}')
             print(f'\tAdding triplex_meter {billing_meter_name} to model.')
-        billing_meter = glmMod.add_object('triplex_meter', billing_meter_name, meter_params)
+        glmMod.add_object('triplex_meter', billing_meter_name, meter_params)
         if house_num == 0:
-            #num_tp_meters = len(list(tp_meter_objs.instance.keys()))
             num_tp_meters = len(glmMod.get_object_names('triplex_meter'))
             print(f'\tNumber of triplex meters: {num_tp_meters}')
 
         # Add a meter just to capture the house energy consumption
-        house_meter_name = f'{billing_meter_name}_house'
+        house_meter_name = f'{tp_meter_names[house_num]}_house'
         meter_params = {
-            'parent': billing_meter_name
+            'parent': billing_meter_name,
+            'phases': glmMod.get_object('triplex_meter').instance[billing_meter_name]['phases'],
+            'nominal_voltage': glmMod.get_object('triplex_meter').instance[billing_meter_name]['nominal_voltage']
         }
         house_meter = glmMod.add_object('triplex_meter', house_meter_name, meter_params)
 
@@ -139,7 +143,7 @@ def _auto_run(args):
 
         # Defining these parameters in a silly way just so each one is unique.
         house_params = {
-            'parent': billing_meter_name,
+            'parent': f'{tp_meter_names[house_num]}',
             'Rroof': 33.69 + house_num,
             'Rwall': 17.71 + house_num,
             'Rfloor': 17.02 + house_num,
@@ -185,9 +189,12 @@ def _auto_run(args):
         load_obj = glmMod.add_object('ZIPload', load_name, ZIP_params)
 
         # Add separate solar meter to track the solar power generation specifically
-        solar_meter_name = f'{billing_meter_name}_solar'
+        solar_meter_name = f'{tp_meter_names[house_num]}_solar'
         meter_params = {
-            'parent': billing_meter_name
+            'parent': billing_meter_name,
+            'phases': glmMod.get_object('triplex_meter').instance[billing_meter_name]['phases'],
+            'nominal_voltage': glmMod.get_object('triplex_meter').instance[billing_meter_name]['nominal_voltage']
+
         }
         solar_meter = glmMod.add_object('triplex_meter', solar_meter_name, meter_params)
         solar_name = f'solar_{house_num}'
@@ -213,9 +220,9 @@ def _auto_run(args):
         print(f'\t"Rroof" for house {house_name} is undefined.')
 
     # You can also just remove an entire object instance from the model (if you know the GLD object type and its name)
+    #   To prevent electrical islands, this method also deletes all downstream objects associated through a
+    #   parent-child relationship.
     print('Demonstrating the deletion of an entire object from GridLAB-D model.')
-    # house_objs = tp_meter_objs = glmMod.get_object('house')
-    # num_houses = len(list(house_objs.instance.keys()))
     num_houses = len(glmMod.get_object_names('house'))
     print(f'\tNumber of houses: {num_houses}')
     print(f'\tDeleting {house_to_delete} from model.')
@@ -228,27 +235,46 @@ def _auto_run(args):
     print('\nDemonstrating modification of a GridLAB-D parameter for all objects of a certain type.')
     print("In this case, we're upgrading the rating of the secondary/distribution transformers by 15%.")
     transformer_objs = glmMod.get_object('transformer')
-    #transformer_names = list(glmMod.get_objects('transformer').instance.keys())
     transformer_names = glmMod.get_object_names('transformer')
     transformer_config_objs = glmMod.get_object('transformer_configuration')
 
 
     print("\tFinding all the split-phase transformers as these are the ones we're targeting for upgrade.")
     print("\t(In GridLAB-D, the sizing information is stored in the transformer_configuration object.)")
-    transformer_configs_to_upgrade = []
+    transformer_configs_to_upgrade = {}
+    transformer_configs_to_upgrade['as'] = []
+    transformer_configs_to_upgrade['bs'] = []
+    transformer_configs_to_upgrade['cs'] = []
     for transformer in transformer_names:
         phases = transformer_objs.instance[transformer]['phases']
-        if phases.lower() in ['as', 'bs', 'cs']:
-            # This is a secondary/distribution transformer
-            if transformer_objs.instance[transformer]['configuration'] not in transformer_configs_to_upgrade:
-                transformer_configs_to_upgrade.append(transformer_objs.instance[transformer]['configuration'])
-    print(f'\tFound {len(transformer_configs_to_upgrade)} configurations that will be upgraded.')
+        if phases.lower() == 'as':
+            if transformer_objs.instance[transformer]['configuration'] not in transformer_configs_to_upgrade['as']:
+                transformer_configs_to_upgrade['as'].append(transformer_objs.instance[transformer]['configuration'])
+        elif phases.lower() == 'bs':
+            if transformer_objs.instance[transformer]['configuration'] not in transformer_configs_to_upgrade['bs']:
+                transformer_configs_to_upgrade['bs'].append(transformer_objs.instance[transformer]['configuration'])
+        elif phases.lower() == 'cs':
+            if transformer_objs.instance[transformer]['configuration'] not in transformer_configs_to_upgrade['cs']:
+                transformer_configs_to_upgrade['cs'].append(transformer_objs.instance[transformer]['configuration'])
+    print(f'\tFound {len(transformer_configs_to_upgrade["as"])} configurations with phase "AS" that will be upgraded.')
+    print(f'\tFound {len(transformer_configs_to_upgrade["bs"])} configurations with phase "BS" that will be upgraded.')
+    print(f'\tFound {len(transformer_configs_to_upgrade["cs"])} configurations with phase "CS" that will be upgraded.')
 
-    # for config in transformer_configs_to_upgrade:
-    #     old_rating = float(transformer_config_objs.instance[config]['power_rating'])
-    #     transformer_config_objs.instance[config]['power_rating'] = 1.15 * old_rating
-    #     upgraded_rating = str(round(transformer_config_objs.instance[config]["power_rating"],3))
-    #     print(f'\tUpgraded configuration {config} from {old_rating} to {upgraded_rating}')
+    for phase in transformer_configs_to_upgrade.keys():
+        if phase == 'as':
+            rating_param = 'powerA_rating'
+        elif phase == 'bs':
+            rating_param = 'powerB_rating'
+        elif phase == 'cs':
+            rating_param = 'powerC_rating'
+        for config in transformer_configs_to_upgrade[phase]:
+            old_rating = float(transformer_config_objs.instance[config][rating_param])
+            new_rating = 1.15 * old_rating
+            # Both the "power_rating" and "powerX_rating" are defined in the model, for some reason.
+            transformer_config_objs.instance[config][rating_param] = new_rating
+            transformer_config_objs.instance[config]['power_rating'] = new_rating
+            upgraded_rating = str(round(transformer_config_objs.instance[config][rating_param],3))
+            print(f'\tUpgraded configuration {config} from {old_rating} to {upgraded_rating}')
 
     # Getting the networkx topology data as a networkx graph
     graph = glmMod.model.network
