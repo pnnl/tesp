@@ -23,7 +23,7 @@ class GLMModifier:
     def __init__(self):
         self.model = GLModel()
         self.mod_headers = []
-        assign_defaults(self, entities_path + 'feeder_defaults.json')
+        assign_defaults(self, os.path.join(entities_path,'feeder_defaults.json'))
         return
 
     def get_object(self, gld_type):
@@ -1016,7 +1016,7 @@ class GLMModifier:
         #    batname = 'run_all.bat'
         # else:
         batname = 'run_all.sh'
-        op = open(self.outpath + batname, 'w')
+        op = open(os.path.join(self.outpath, batname), 'w')
         # for c in ConfigDict['casefiles']:
         # print('gridlabd -D WANT_VI_DUMP=1 -D METRICS_FILE=' + c[0] + '.json', c[0] + '.glm', file=op)
         # testingoutfilename = ConfigDict['casefiles']

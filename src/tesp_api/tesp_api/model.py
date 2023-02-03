@@ -73,13 +73,13 @@ class GLModel:
     def __init__(self):
         # define objects that can be in a GLM file
         try:
-            self.conn = sqlite3.connect(entities_path + 'test.db')
+            self.conn = sqlite3.connect(os.path.join(entities_path, 'test.db'))
             print("Opened database successfully")
         except:
             self.conn = None
             print("Database Sqlite3.db not formed")
 
-        with open(entities_path + 'glm_objects.json', 'r', encoding='utf-8') as json_file:
+        with open(os.path.join(entities_path, 'glm_objects.json'), 'r', encoding='utf-8') as json_file:
             self.objects = json.load(json_file)
 
         for name in self.objects:
@@ -315,7 +315,8 @@ class GLModel:
         ev_count = 0
 
         base_feeder_name = self.gld_strict_name(rootname)
-        fname = feederspath + '/' + rootname  # + '.glm'
+        # fname = feederspath + '/' + rootname  # + '.glm'
+        fname = os.path.join(feederspath, rootname)  # + '.glm'
         rootname = self.gld_strict_name(rootname)
         headlines = []
         insidecomments = dict()

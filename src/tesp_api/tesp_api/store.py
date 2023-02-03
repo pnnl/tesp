@@ -4,16 +4,16 @@
 """
 from os import path
 
-tesp_share = path.expandvars('$TESPDIR/data/')
-comm_path = tesp_share + 'comm/'
-entities_path = tesp_share + 'entities/'
-energyplus_path = tesp_share + 'energyplus/'
-feeders_path = tesp_share + 'feeders/'
-scheduled_path = tesp_share + 'schedules/'
-weather_path = tesp_share + 'weather/'
+tesp_share = point.join(path.expandvars('$TESPDIR'), 'data')
+comm_path = path.join(tesp_share,'comm')
+entities_path = path.join(tesp_share, 'entities')
+energyplus_path = path.join(tesp_share, 'energyplus')
+feeders_path = path.join(tesp_share, 'feeders')
+scheduled_path = path.join(tesp_share, 'schedules')
+weather_path = path.join(tesp_share, 'weather')
 
-tesp_model = path.expandvars('$TESPDIR/models/')
-pypower_path = tesp_model + 'pypower/'
+tesp_model = path.join(path.expandvars('$TESPDIR'), 'models')
+pypower_path = path.join(tesp_model, 'pypower')
 
 
 #  add empty json "file" store that holds
