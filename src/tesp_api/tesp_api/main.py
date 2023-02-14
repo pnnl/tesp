@@ -7,7 +7,8 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import json
 import sqlite3
-
+import pandas as pd
+import numpy as np
 from entity import assign_defaults
 from entity import assign_item_defaults
 from entity import Entity
@@ -22,15 +23,6 @@ class mytest:
     def test(self):
         return
 
-def test_resample():
-    np.random.seed(0)
-    # create DataFrame with hourly index
-    df = pd.DataFrame(index=pd.date_range('2020-01-06', '2020-01-07', freq='h'))
-    # add column to show sales by hour
-    df['sales'] = np.random.randint(low=0, high=20, size=len(df.index))
-    df.to_csv("time_series_test1.csv")
-    minute_df = df['sales'].resample('10T').interpolate()
-    minute_df.to_csv("time_series_test1_1Minute.csv")
 
 
 def fredtest():
@@ -128,11 +120,76 @@ def _test3():
     for name in modobject.model.entities:
         print(modobject.model.entities[name].toHelp())
 
+# Synchronizes a list of time series dataframes
+# Synchronization includes resampling the time series based
+# upon the synch_interval and interval_unit entered
+def synch_time_series(series_list, synch_interval, interval_unit):
+    synched_series = []
+
+    for df in series_list:
+        synched_df = df.resample(str(synch_interval) + interval_unit).interpolate()
+        synched_series.append(synched_df)
+    return synched_series
+
+# Gets the latest start time and the earliest time from a list
+# of time series
+def get_synch_date_range(time_series):
+    t_start = time_series[0].index[0]
+    t_end = time_series[0].index[len(time_series[0].index)-1]
+    for tserie in time_series:
+        if tserie.index[0] > t_start:
+            t_start = tserie.index[0]
+        if tserie.index[len(tserie.index) - 1] < t_end:
+            t_end = tserie.index[len(tserie.index) - 1]
+    return t_start, t_end
+
+# Clips the time series in the list to the same start and stop times
+def synch_series_lengths(time_series):
+    synched_series = []
+    synch_start, synch_end = get_synch_date_range(time_series)
+    for tseries in time_series:
+        synch_series = tseries.query('index > @synch_start and index < @synch_end')
+        synched_series.append(synch_series)
+    return synched_series
+
+
+#Sychronizes the length and time intervals of a list of time series dataframes
+def synch_series(time_series,synch_interval,interval_unit):
+    clipped_series = []
+    synched_series = []
+    sampled_series = []
+    clipped_series = synch_series_lengths(time_series)
+    synched_series = synch_time_series(clipped_series, 1, "T")
+    sampled_series = synch_time_series(clipped_series, synch_interval, interval_unit)
+    return sampled_series
+
+def debug_resample():
+    np.random.seed(0)
+    tseries = []
+    synched_series = []
+    start, end = '2000-01-01 22:00:00', '2001-01-01 22:35:00'
+    start1, end1 = '2000-01-01 22:05:00', '2001-01-01 22:40:00'
+    start2, end2 = '2000-01-01 22:10:00', '2001-01-01 22:45:00'
+    start3, end3 = '2000-01-01 22:15:00', '2001-01-01 22:30:00'
+    rng = pd.date_range(start, end, freq='1min')
+    ts = pd.DataFrame(np.random.randint(0, 20, size=(rng.size, 2)), columns=['temp', 'humidity'], index=rng)
+    rng = pd.date_range(start1, end1, freq='1min')
+    ts1 = pd.DataFrame(np.random.randint(0, 20, size=(rng.size, 2)), columns=['temp', 'humidity'], index=rng)
+    rng = pd.date_range(start2, end2, freq='1min')
+    ts2 = pd.DataFrame(np.random.randint(0, 20, size=(rng.size, 2)), columns=['temp', 'humidity'], index=rng)
+    rng = pd.date_range(start3, end3, freq='1min')
+    ts3 = pd.DataFrame(np.random.randint(0, 20, size=(rng.size, 2)), columns=['temp', 'humidity'], index=rng)
+    tseries.append(ts1)
+    tseries.append(ts2)
+    tseries.append(ts3)
+    tseries.append(ts)
+    synched_series = synch_series(tseries, 2, "T")
+    print(tseries[0])
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     # _test1()
     # _test2()
     # _test3()
-    fredtest()
-    # test_resample()
+    #fredtest()
+    debug_resample()
