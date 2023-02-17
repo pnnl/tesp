@@ -687,9 +687,14 @@ def tso_psst_loop(casename):
                       '{: .6f}'.format(zgenCost[ii][2]), file=fp)
                 # Set gen = powerT0 level
                 zgen[ii][1] = powerT0 * baseS
+                # if using gridpiq to gauge environmental emission concerns
+                if piq:
+                    pq.set_dispatch_data(zgenFuel[ii][0], hour, zgen[ii][1])
 
         print(' ;\n', file=fp)
         log.info("TSO Power " + str(P_avail))
+        if piq:
+            pq.set_max_load(P_avail)
 
         print('param: ID atBus EndPointSoc MaximumEnergy NominalRampDownInput NominalRampUpInput '
               'NominalRampDownOutput NominalRampUpOutput MaximumPowerInput MinimumPowerInput '
@@ -972,11 +977,20 @@ def tso_psst_loop(casename):
                 priceSensLoad = 1
 
             StartTime = ppc['StartTime']
+            EndTime = ppc['EndTime']
             tmax = int(ppc['Tmax'])
             period = int(ppc['Period'])
             dt = int(ppc['dt'])
             swing_bus = int(ppc['swing_bus'])
             noScale = ppc['noScale']
+
+            piq = False
+            piq_count = 0
+            if 'gridpiq' in ppc:
+                piq = ppc['gridPIQ']
+                if piq:
+                    import tesp_api.gridpiq as pq
+                    pq.set_datetime(StartTime, EndTime)
 
             ames = ppc['ames']
             solver = ppc['solver']
@@ -1412,6 +1426,9 @@ def tso_psst_loop(casename):
         if ts >= tnext_opf_ames and ames:
             opf = True
             if mn % 60 == 0:
+                if piq:
+                    pq.avg_dispatch_data(piq_count)
+                    piq_count = 0
                 hour = hour + 1
                 mn = 0
                 if hour == 24:
@@ -1584,6 +1601,7 @@ def tso_psst_loop(casename):
             print(line, sep=', ', file=op, flush=True)
 
             mn = mn + RTOPDur  # period // 60
+            piq_count += 1
             tnext_opf_ames += period
 
         # run OPF to establish the prices and economic dispatch - currently period = 300s
@@ -1795,6 +1813,10 @@ def tso_psst_loop(casename):
         ts = int(helics.helicsFederateRequestTime(hFed, min(ts + dt, tmax)))
 
     # ======================================================
+    if piq:
+        pq.avg_dispatch_data(piq_count)
+        pq.write_json()
+
     log.info('finalize metrics writing')
     collector.finalize_writing()
     log.info('closing files')

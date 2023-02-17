@@ -178,6 +178,7 @@
   "splitCase": true,
   "caseStartYear": 2016,
   "caseEndYear": 2016,
+  "gridPIQ": true,
   "ames": true,
   "solver": "cbc",
   "numCore": 12,

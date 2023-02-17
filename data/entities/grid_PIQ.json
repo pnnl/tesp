@@ -5,7 +5,7 @@
       "type": "custom",
       "parameters": {
         "grid_location": {
-          "data": "substation"   values here ?
+          "data": "substation"
         },
         "post_project_load": {
           "start_date": "2016-01-04 00:00",
@@ -16,22 +16,22 @@
           "data": []
         },
         "post_project_max_load": {
-          "data": 67979.31688,       ask or estimate, for all generator
+          "data": 0,
           "unit": "MW"
         }
       },
       "steps": [
-        "custom_load_upload",      are there value or they random from and part of the system?
+        "custom_load_upload",
         "grid_location"
       ]
     }
   ],
   "impacts": {
-    "emissions": "True"             no other impacts for TESP
+    "emissions": "True"
   },
   "context": {
     "parameters": {
-      "region_type": {              no other regions for TESP
+      "region_type": {
         "data": "avert-region"
       },
       "region_name": {
@@ -49,7 +49,7 @@
         "key": "avert_pre_project_load"
       },
       "pre_project_max_load": {
-        "data": 74070.6915,
+        "data": 0,
         "unit": "MW"
       },
       "emissions_calc_method": {
@@ -67,7 +67,7 @@
         }
       }
     },
-    "steps": [                  other steps defined    use stoplight studio
+    "steps": [
       "region_select",
       "pre_project_load",
       "pre_project_max_load",

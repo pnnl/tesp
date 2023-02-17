@@ -4,7 +4,7 @@
 """
 from os import path
 
-tesp_share = point.join(path.expandvars('$TESPDIR'), 'data')
+tesp_share = path.join(path.expandvars('$TESPDIR'), 'data')
 comm_path = path.join(tesp_share,'comm')
 entities_path = path.join(tesp_share, 'entities')
 energyplus_path = path.join(tesp_share, 'energyplus')

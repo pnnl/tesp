@@ -10,41 +10,127 @@ This script attempts to demonstrate the grid PIQ for new TESP API.
 """
 
 import json
-import math
-import os
-import re
-import numpy as np
 
-import tesp_support.helpers
 from store import entities_path
 from entity import assign_defaults
-from model import GLModel
-from entity import Entity
 
 
 # Identified avert regions
 # https://www.epa.gov/avert/avert-tutorial-getting-started-identify-your-avert-regions
 
-class gridPIQ:
+class GridPIQ:
     def __init__(self):
+        self.max_load = 0
+        self.Nuclear = []
+        self.Wind = []
+        self.Coal = []
+        self.Solar = []
+        self.NaturalGas = []
+        self.Petroleum = []
+        self.Zeros = []
+        self.Total = []
+
+        self.choices = {"Nuclear", "Solar", "Coal", "NaturalGas", "Petroleum"}
         self.config = assign_defaults(self, entities_path + 'grid_PIQ.json')
 
-    def set_dispatch_data(self, data):
-        return
-    
+    def reset_dispatch_data(self):
+        self.Zeros = []
+        self.Total = []
+        for kind in self.choices:
+            gen = self.__getattribute__(kind)
+            gen = []
+
+    def set_dispatch_data(self, kind, idx, data):
+        # kind is one of "Nuclear", "Wind", "Solar", "Coal", "NaturalGas", "Petroleum"
+        # idx starts at 0
+        if kind in self.choices:
+            gen = self.__getattribute__(kind)
+            length = len(gen)
+            if idx == length:
+                gen.append(data)
+            elif idx > length:
+                while length < idx:
+                    gen.append(0)
+                    length += 1
+                gen.append(data)
+            else:
+                gen[idx] += data
+
+    def avg_dispatch_data(self, count):
+        if count > 0:
+            for kind in self.choices:
+                gen = self.__getattribute__(kind)
+                gen /= count
+
+    def set_max_load(self, data):
+        if data > self.max_load:
+            self.max_load = data
+
     def set_datetime(self, start_datetime, end_datetime):
-        self.tech[0].post_project_load.start_date = start_datetime
-        self.tech[0].post_project_load.end_date = end_datetime
-        self.context.parameters.pre_project_load.start_date = start_datetime
-        self.context.parameters.pre_project_load.end_date = end_datetime
-        self["global"].parameters.analysis_start_date.data = start_datetime
-        self["global"].parameters.analysis_end_date.data = end_datetime
+        """
+
+        Args:
+            start_datetime:
+            end_datetime:
+
+        Returns:
+
+        """
+        self.tech[0]['parameters']['post_project_load']['start_date'] = start_datetime
+        self.tech[0]['parameters']['post_project_load']['end_date'] = end_datetime
+        self.context['parameters']['pre_project_load']['start_date'] = start_datetime
+        self.context['parameters']['pre_project_load']['end_date'] = end_datetime
+        self.context['parameters']['dispatch_data']['start_date'] = start_datetime
+        self.context['parameters']['dispatch_data']['end_date'] = end_datetime
+        gbl = self.__getattribute__('global')
+        gbl['parameters']['analysis_start_date']['data'] = start_datetime
+        gbl['parameters']['analysis_end_date']['data'] = end_datetime
 
     def write_json(self):
+
+        for kind in self.choices:
+            gen = self.__getattribute__(kind)
+            self.context['parameters']['dispatch_data']['data'][kind] = gen
+            for ii in range(len(gen)):
+                if ii == len(self.Total):
+                    self.Zeros.append(0)
+                    self.Total.append(gen[ii])
+                else:
+                    self.Total[ii] += gen[ii]
+
+        self.context['parameters']['pre_project_load']['data'] = self.Zeros
+        self.context['parameters']['pre_project_max_load']['data'] = 0
+
+        self.tech[0]['parameters']['post_project_load']['data'] = self.Total
+        self.tech[0]['parameters']['post_project_max_load']['data'] = self.max_load
+
         dictionary = {
             "tech": [self.tech[0]],
+            "impacts": self.impacts,
             "context": self.context,
-            "global": self["global"]
+            "global": self.__getattribute__('global')
         }
         with open("sample.json", "w") as outfile:
-            json.dump(dictionary, outfile)
+            json.dump(dictionary, outfile, indent=2)
+
+
+if __name__ == '__main__':
+
+    start_date = "2016-01-04 00:00"
+    end_date = "2016-01-04 23:00"
+    choices = ["Nuclear", "Solar", "Coal", "NaturalGas", "Petroleum"]
+    pchoices = [0.10, 0.10, 0.40, 0.30, 0.10]
+    data = [
+        44549.86877, 45016.21691, 47017.04049, 45582.91460, 46028.10423, 46489.12242, 46846.10710, 46890.73556,
+        46086.56812, 44254.71294, 42134.03615, 40375.42948, 39034.53516, 38206.21089, 37822.15485, 37919.82094,
+        38486.89171, 39637.39861, 41622.17184, 43177.01046, 43815.28902, 44178.21888, 42964.65054, 42026.75463
+    ]
+
+    pq = GridPIQ()
+    pq.set_datetime(start_date, end_date)
+    for i in range(len(choices)):
+        for j in range(len(data)):
+            pq.set_dispatch_data(choices[i], j, data[j]*pchoices[i])
+    pq.set_max_load(55678.4353)
+    pq.write_json()
+
