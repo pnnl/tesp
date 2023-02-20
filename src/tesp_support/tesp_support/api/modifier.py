@@ -8,10 +8,10 @@ import re
 import numpy as np
 
 import tesp_support.helpers
-from store import entities_path
-from entity import assign_defaults
-from entity import Entity
-from model import GLModel
+from tesp_support.api.store import entities_path
+from tesp_support.api.entity import assign_defaults
+from tesp_support.api.entity import Entity
+from tesp_support.api.model import GLModel
 
 
 class GLMModifier:

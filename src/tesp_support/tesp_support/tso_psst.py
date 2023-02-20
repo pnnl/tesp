@@ -989,7 +989,7 @@ def tso_psst_loop(casename):
             if 'gridpiq' in ppc:
                 piq = ppc['gridPIQ']
                 if piq:
-                    import tesp_api.gridpiq as pq
+                    import api.gridpiq as pq
                     pq.set_datetime(StartTime, EndTime)
 
             ames = ppc['ames']

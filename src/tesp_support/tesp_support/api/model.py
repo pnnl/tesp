@@ -12,8 +12,8 @@ import sqlite3
 
 import networkx as nx
 
-from store import entities_path
-from entity import Entity
+from tesp_support.api.store import entities_path
+from tesp_support.api.entity import Entity
 
 
 class GLModel:

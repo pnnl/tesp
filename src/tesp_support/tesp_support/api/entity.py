@@ -9,6 +9,15 @@ import sqlite3
 
 
 def assign_defaults(obj, file_name):
+    """
+
+    Args:
+        obj:
+        file_name:
+
+    Returns:
+
+    """
     with open(file_name, 'r', encoding='utf-8') as json_file:
         config = json.load(json_file)
         for attr in config:
@@ -17,6 +26,15 @@ def assign_defaults(obj, file_name):
 
 
 def assign_item_defaults(obj, file_name):
+    """
+
+    Args:
+        obj:
+        file_name:
+
+    Returns:
+
+    """
     with open(file_name, 'r', encoding='utf-8') as json_file:
         config = json.load(json_file)
         # config format -> label, value, unit, datatype, item
@@ -105,21 +123,43 @@ class Entity:
         return str(self.entity)
 
     def count(self):
+        """
+
+        Returns (int): The number of defined Items in the Entity
+
+        """
         return self.item_cnt
 
     def find_item(self, item):
+        """
+
+        Args:
+            item:
+
+        Returns (Item):
+
+        """
         try:
             return self.__getattribute__(item)
         except:
             return None
 
-    def set_instance(self, obj_id, params):
-        if type(obj_id) == str:
+    def set_instance(self, object_name, params):
+        """
+
+        Args:
+            object_name:
+            params:
+
+        Returns:
+
+        """
+        if type(object_name) == str:
             try:
-                instance = self.instance[obj_id]
+                instance = self.instance[object_name]
             except:
-                self.instance[obj_id] = {}
-                instance = self.instance[obj_id]
+                self.instance[object_name] = {}
+                instance = self.instance[object_name]
 
             for attr in params:
                 item = self.find_item(attr)
@@ -139,38 +179,74 @@ class Entity:
                 instance[attr] = params[attr]
             return instance
         else:
-            print("Object id is not a string")
+            print("object_name is not a string")
         return None
 
-    def get_instance(self, obj_id):
-        if type(obj_id) == str:
+    def get_instance(self, object_name):
+        """
+
+        Args:
+            object_name:
+
+        Returns:
+
+        """
+        if type(object_name) == str:
             try:
-                return self.instance[obj_id]
+                return self.instance[object_name]
             except:
-                self.instance[obj_id] = {}
-                return self.instance[obj_id]
+                self.instance[object_name] = {}
+                return self.instance[object_name]
         else:
-            print("Object id is not a string")
+            print("object name is not a string")
         return None
 
-    def del_instance(self, obj_id):
-        if type(obj_id) == str:
+    def del_instance(self, object_name):
+        """
+
+        Args:
+            object_name:
+
+        Returns:
+
+        """
+        if type(object_name) == str:
             try:
-                del self.instance[obj_id]
+                del self.instance[object_name]
             except:
                 # TODO: Need to add error message
                 pass
         else:
-            print("Object id is not a string")
+            print("object name is not a string")
         return None
 
     def add_attr(self, datatype, label, unit, item, value=None):
+        """
+
+        Args:
+            datatype:
+            label:
+            unit:
+            item:
+            value:
+
+        Returns:
+
+        """
         val = Item(datatype, label, unit, item, value)
         setattr(self, item, val)
         self.item_cnt += 1
         return self.__getattribute__(item)
 
     def del_attr(self, item):
+        """
+
+        Args:
+            item:
+
+        Returns:
+
+        """
         if self.find_item(item):
             delattr(self, item)
         return None
@@ -187,25 +263,49 @@ class Entity:
     #         if type(_item) == Item:
     #             setattr(self, _item, None)
     #             # remove all instances
-    #             for obj_id in self.instance:
-    #                 del self.instance[obj_id][_item]
+    #             for object_name in self.instance:
+    #                 del self.instance[object_name][_item]
     #     return None
 
-    def set_item(self, obj_id, item, val):
+    def set_item(self, object_name, item, val):
+        """
+
+        Args:
+            object_name:
+            item:
+            val:
+
+        Returns:
+
+        """
         if self.find_item(item):
             _item = self.__getattribute__(item)
             if type(_item) == Item:
-                self.instance[obj_id][item] = val
+                self.instance[object_name][item] = val
         return None
 
-    def del_item(self, obj_id, item):
+    def del_item(self, object_name, item):
+        """
+
+        Args:
+            object_name:
+            item:
+
+        Returns:
+
+        """
         if self.find_item(item):
             _item = self.__getattribute__(item)
             if type(_item) == Item:
-                del self.instance[obj_id][item]
+                del self.instance[object_name][item]
         return None
 
     def toList(self):
+        """
+
+        Returns:
+
+        """
         diction = []
         for attr in self.__dict__:
             item = self.__getattribute__(attr)
@@ -214,6 +314,11 @@ class Entity:
         return diction
 
     def toJson(self):
+        """
+
+        Returns:
+
+        """
         diction = []
         for attr in self.__dict__:
             item = self.__getattribute__(attr)
@@ -222,6 +327,11 @@ class Entity:
         return diction
 
     def toHelp(self):
+        """
+
+        Returns:
+
+        """
         diction = "\nEntity: " + self.entity
         for attr in self.__dict__:
             item = self.__getattribute__(attr)
@@ -230,6 +340,14 @@ class Entity:
         return diction
 
     def toSQLite(self, connection):
+        """
+
+        Args:
+            connection:
+
+        Returns:
+
+        """
         # cursor object
         cursor_obj = connection.cursor()
 
@@ -259,15 +377,29 @@ class Entity:
         return ""
 
     def instanceToJson(self):
+        """
+
+        Returns:
+
+        """
         diction = ""
-        for obj_id in self.instance:
-            diction += "object " + self.entity + " {\n  name " + obj_id + ";\n"
-            for item in self.instance[obj_id].keys():
-                diction += "  " + item + " " + self.instance[obj_id][item] + ";\n"
+        for object_name in self.instance:
+            diction += "object " + self.entity + " {\n  name " + object_name + ";\n"
+            for item in self.instance[object_name].keys():
+                diction += "  " + item + " " + self.instance[object_name][item] + ";\n"
             diction += "}\n"
         return diction
 
     def getInsideComments(self, object_name, in_comments):
+        """
+
+        Args:
+            object_name:
+            in_comments:
+
+        Returns:
+
+        """
         ent_keys = self.instance.keys()
         # if len(ent_keys):
         #     obj_name = list(ent_keys)[0]
@@ -283,9 +415,19 @@ class Entity:
                 cmnt_string += "  " + cmnt + "\n"
         return cmnt_string
 
-    def getInlineComment (self, obj_id, item_id, line_comments):
-        if obj_id in line_comments:
-            obj_dict = line_comments[obj_id]
+    def getInlineComment(self, object_name, item_id, line_comments):
+        """
+
+        Args:
+            object_name:
+            item_id:
+            line_comments:
+
+        Returns:
+
+        """
+        if object_name in line_comments:
+            obj_dict = line_comments[object_name]
             cmnt = ""
             if item_id in obj_dict:
                 cmnt = obj_dict[item_id]
@@ -295,48 +437,54 @@ class Entity:
         else:
             return ""
 
-        temp_comment = line_comments[obj_id][item_id]
-        return temp_comment
-
-        # if len(ent_keys) > 0:
-        #     obj_name = list(ent_keys)[0]
-        # else:
-        #     obj_name = ""
-        # #            if name in self.outside_comments:
-        # if obj_name in self.outside_comments:
-        #     # out_comments = self.outside_comments[name]
-        #     out_comments = self.outside_comments[obj_name]
-        # else:
-        #     out_comments = {}
-        # for cmmnt in out_comments:
-        #     diction += cmmnt + "\n"
-
-    #instanceToGLM_Comments adds the comments pulled from the backbone glm file
-    #to the new modified glm file.
     def instanceToGLM_Comments(self, in_comments, line_comments):
+        """
+        instanceToGLM_Comments adds the comments pulled from the backbone glm file
+        to the new modified glm file.
+
+        Args:
+            in_comments:
+            line_comments:
+
+        Returns:
+
+        """
         diction = ""
-        for obj_id in self.instance:
+        for object_name in self.instance:
             diction += "object " + self.entity + "{\n"
-            diction += self.getInsideComments(obj_id, in_comments)
-            diction += "  name " + obj_id + ";\n"
-            for item in self.instance[obj_id].keys():
-                cmnt_string = self.getInlineComment(obj_id, item, line_comments)
-                diction += "  " + item + " " + str(self.instance[obj_id][item]) + ";" + cmnt_string + "\n"
+            diction += self.getInsideComments(object_name, in_comments)
+            diction += "  name " + object_name + ";\n"
+            for item in self.instance[object_name].keys():
+                cmnt_string = self.getInlineComment(object_name, item, line_comments)
+                diction += "  " + item + " " + str(self.instance[object_name][item]) + ";" + cmnt_string + "\n"
             diction += "}\n"
         return diction
 
-    #instanceToGLM does not include the comments pulled from the backbone glm file
-    #in to the new modified glm file.
     def instanceToGLM(self):
+        """
+        instanceToGLM does not include the comments pulled from the backbone glm file
+        in to the new modified glm file.
+
+        Returns: (string) diction
+
+        """
         diction = ""
-        for obj_id in self.instance:
-            diction += "object " + self.entity + " {\n  name " + obj_id + ";\n"
-            for item in self.instance[obj_id].keys():
-                diction += "  " + item + " " + str(self.instance[obj_id][item]) + ";\n"
+        for object_name in self.instance:
+            diction += "object " + self.entity + " {\n  name " + object_name + ";\n"
+            for item in self.instance[object_name].keys():
+                diction += "  " + item + " " + str(self.instance[object_name][item]) + ";\n"
             diction += "};\n"
         return diction
 
     def instanceToSQLite(self, connection):
+        """
+
+        Args:
+            connection: A sqlite connection object
+
+        Returns:
+
+        """
         # cursor object
         cursor_obj = connection.cursor()
 
@@ -356,9 +504,9 @@ class Entity:
         if self.instance:
             multi_row = "('"
             sql = "INSERT INTO " + self.entity + "_values(entity, item, valu) VALUES"
-            for obj_id in self.instance:
-                for item in self.instance[obj_id].keys():
-                    sql += multi_row + obj_id + "', '" + item + "', '" + self.instance[obj_id][item] + "')"
+            for object_name in self.instance:
+                for item in self.instance[object_name].keys():
+                    sql += multi_row + object_name + "', '" + item + "', '" + self.instance[object_name][item] + "')"
                     multi_row = ", ('"
 
             sql += ";"

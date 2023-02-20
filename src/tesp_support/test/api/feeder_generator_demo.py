@@ -24,27 +24,19 @@ import networkx as nx
 
 # Getting all the existing tesp_support stuff
 #   Assumes were in the tesp_api folder
-sys.path.append('../../tesp_support')
-sys.path.append('../tesp_api')
+# sys.path.append('../../tesp_support')
+# sys.path.append('../tesp_api')
 
 # Setting a few environment variables so the imports work smoothly
 #   If you're working in a REAL TESP install you don't have to do this.
-os.environ['TESPDIR'] = '/Users/hard312/src/TSP/tesp'
+# os.environ['TESPDIR'] = '/Users/hard312/src/TSP/tesp'
 
-from entity import assign_defaults
-from entity import assign_item_defaults
-from entity import Entity
-from model import GLModel
-from modifier import GLMModifier
-
-from store import entities_path
-from store import feeders_path
-
+from tesp_support.api.modifier import GLMModifier
+from tesp_support.api.store import feeders_path
 
 
 # Setting up logging
 logger = logging.getLogger(__name__)
-
 pp = pprint.PrettyPrinter(indent=4)
 
 # Adding custom logging level "DATA" to use for putting
@@ -52,14 +44,19 @@ pp = pprint.PrettyPrinter(indent=4)
 #  and "NOTSET" in terms of priority.
 DATA_LEVEL_NUM = 5
 logging.addLevelName(DATA_LEVEL_NUM, "DATA")
+
+
 def data(self, message, *args, **kws):
     if self.isEnabledFor(DATA_LEVEL_NUM):
         self._log(DATA_LEVEL_NUM, message, args, **kws)
+
+
 logging.DATA = DATA_LEVEL_NUM
 logging.Logger.data = data
 
 # Setting up pretty printing, mostly for debugging.
 pp = pprint.PrettyPrinter(indent=4, )
+
 
 def _auto_run(args):
     glmMod = GLMModifier()

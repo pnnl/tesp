@@ -9,14 +9,14 @@ import json
 import sqlite3
 import pandas as pd
 import numpy as np
-from entity import assign_defaults
-from entity import assign_item_defaults
-from entity import Entity
-from model import GLModel
-from modifier import GLMModifier
 
-from store import entities_path
-from store import feeders_path
+from tesp_support.api.entity import assign_defaults
+from tesp_support.api.entity import assign_item_defaults
+from tesp_support.api.entity import Entity
+from tesp_support.api.model import GLModel
+from tesp_support.api.modifier import GLMModifier
+from tesp_support.api.store import entities_path
+from tesp_support.api.store import feeders_path
 
 
 class mytest:
@@ -24,10 +24,9 @@ class mytest:
         return
 
 
-
 def fredtest():
     testMod = GLMModifier()
-    testMod.model.read(feeders_path + "GLD_three_phase_house.glm")
+    testMod.model.read(feeders_path + "/GLD_three_phase_house.glm")
     loads = testMod.get_object('load')
     meter_counter = 0
     house_counter = 0
@@ -99,7 +98,7 @@ def _test1():
 def _test2():
     # Test model.py
     model_file = GLModel()
-    tval = model_file.read(feeders_path + "R1-12.47-1.glm")
+    tval = model_file.read(feeders_path + "/R1-12.47-1.glm")
     # Output json with new parameters
     model_file.write(entities_path + "test.glm")
     model_file.instancesToSQLite()
@@ -115,7 +114,7 @@ def _test2():
 def _test3():
     modobject = GLMModifier()
 
-    tval = modobject.read_model(feeders_path + "R1-12.47-1.glm")
+    tval = modobject.read_model(feeders_path + "/R1-12.47-1.glm")
 
     for name in modobject.model.entities:
         print(modobject.model.entities[name].toHelp())
@@ -188,8 +187,8 @@ def debug_resample():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    # _test1()
-    # _test2()
-    # _test3()
-    #fredtest()
+    _test1()
+    _test2()
+    _test3()
+    fredtest()
     debug_resample()

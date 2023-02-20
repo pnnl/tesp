@@ -11,8 +11,8 @@ This script attempts to demonstrate the grid PIQ for new TESP API.
 
 import json
 
-from store import entities_path
-from entity import assign_defaults
+from tesp_support.api.store import entities_path
+from tesp_support.api.entity import assign_defaults
 
 
 # Identified avert regions
