@@ -15,9 +15,9 @@ logger.setLevel(log.WARNING)
 debug = True
 
 
-def _base_avg_deviation(self, list1, list2):
+def _base_avg_deviation(list1, list2):
     """
-    Measures the average deviation. Coorilated
+    Measures the average deviation.
 
     Args:
         list1 (list):
@@ -37,7 +37,7 @@ def _base_avg_deviation(self, list1, list2):
     return None
 
 
-def avg_indoor_air_temp_deviation(self, start_date=None, end_date=None, input_list1=None, input2=None):
+def avg_indoor_air_temp_deviation(start_date=None, end_date=None, input_list1=None, input2=None):
     """
     Measures the average indoor air temperature deviation using the actual measurement(s) vs the set point(s).
 

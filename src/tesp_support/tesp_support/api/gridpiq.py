@@ -30,7 +30,7 @@ class GridPIQ:
         self.Zeros = []
         self.Total = []
 
-        self.choices = {"Nuclear", "Solar", "Coal", "NaturalGas", "Petroleum"}
+        self.choices = {"Nuclear", "Wind", "Coal", "Solar", "NaturalGas", "Petroleum"}
         self.config = assign_defaults(self, entities_path + 'grid_PIQ.json')
 
     def reset_dispatch_data(self):
@@ -41,20 +41,24 @@ class GridPIQ:
             gen = []
 
     def set_dispatch_data(self, kind, idx, data):
-        # kind is one of "Nuclear", "Wind", "Solar", "Coal", "NaturalGas", "Petroleum"
+        # kind is one of "Nuclear", "Wind", "Coal", "Solar", "NaturalGas", "Petroleum"
+        # or the lower case of it
         # idx starts at 0
-        if kind in self.choices:
-            gen = self.__getattribute__(kind)
-            length = len(gen)
-            if idx == length:
-                gen.append(data)
-            elif idx > length:
-                while length < idx:
-                    gen.append(0)
-                    length += 1
-                gen.append(data)
-            else:
-                gen[idx] += data
+        choice = ""
+        for choice in self.choices:
+            if kind.lower() in choice.lower():
+                gen = self.__getattribute__(choice)
+                length = len(gen)
+                if idx == length:
+                    gen.append(data)
+                elif idx > length:
+                    while length < idx:
+                        gen.append(0)
+                        length += 1
+                    gen.append(data)
+                else:
+                    gen[idx] += data
+                break
 
     def avg_dispatch_data(self, count):
         if count > 0:
@@ -90,7 +94,10 @@ class GridPIQ:
 
         for kind in self.choices:
             gen = self.__getattribute__(kind)
-            self.context['parameters']['dispatch_data']['data'][kind] = gen
+            if kind == 'NaturalGas':
+                self.context['parameters']['dispatch_data']['data']['Natural Gas'] = gen
+            else:
+                self.context['parameters']['dispatch_data']['data'][kind] = gen
             for ii in range(len(gen)):
                 if ii == len(self.Total):
                     self.Zeros.append(0)
@@ -118,8 +125,8 @@ if __name__ == '__main__':
 
     start_date = "2016-01-04 00:00"
     end_date = "2016-01-04 23:00"
-    choices = ["Nuclear", "Solar", "Coal", "NaturalGas", "Petroleum"]
-    pchoices = [0.10, 0.10, 0.40, 0.30, 0.10]
+    choices = ["Nuclear", "Wind", "Coal", "Solar", "NaturalGas", "Petroleum"]
+    pchoices = [0.10, 0.10, 0.40, 0.0, 0.30, 0.10]
     data = [
         44549.86877, 45016.21691, 47017.04049, 45582.91460, 46028.10423, 46489.12242, 46846.10710, 46890.73556,
         46086.56812, 44254.71294, 42134.03615, 40375.42948, 39034.53516, 38206.21089, 37822.15485, 37919.82094,
