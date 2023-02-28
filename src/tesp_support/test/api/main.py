@@ -32,19 +32,19 @@ def fredtest():
     house_counter = 0
     house_meter_counter = 0
     for obj_id in loads.instance:
-        #add meter for this load
+        # add meter for this load
         meter_counter = meter_counter + 1
-        meter_name = 'meter_' +str(meter_counter)
+        meter_name = 'meter_' + str(meter_counter)
         meter = testMod.add_object('meter', meter_name, [])
         meter['parent'] = obj_id
-        #how much power is going to be needed
-        #while kva < total_kva:
+        # how much power is going to be needed
+        # while kva < total_kva:
         house_meter_counter = house_meter_counter + 1
-        #add parent meter for houses to follow
+        # add parent meter for houses to follow
         house_meter_name = 'house_meter_' + str(house_meter_counter)
         meter = testMod.add_object('meter', house_meter_name, [])
         meter['parent'] = meter_name
-        #add house
+        # add house
         house_counter = house_counter + 1
         house_name = 'house_' + str(house_counter)
         house = testMod.add_object('house', house_name, [])
@@ -52,8 +52,7 @@ def fredtest():
     testMod.write_model("test.glm")
 
 
-def _test1():
-    mylist = {}
+def test1():
     # entity_names = ["SimulationConfig", "BackboneFiles",  "WeatherPrep", "FeederGenerator",
     #             "EplusConfiguration", "PYPOWERConfiguration", "AgentPrep", "ThermostatSchedule"]
     # entity_names = ['house', 'inverter', 'battery', 'object solar', 'waterheater']
@@ -92,17 +91,20 @@ def _test1():
         for name in entities:
             mylist[name] = Entity(name, entities[name])
             print(mylist[name].toHelp())
-            mylist[name].instanceToSQLite(conn)
+            mylist[name].toSQLite(conn)
+            # mylist[name].instanceToSQLite(conn)
+    conn.close()
 
 
-def _test2():
+def test2():
     # Test model.py
     model_file = GLModel()
-    tval = model_file.read(feeders_path + "/R1-12.47-1.glm")
+    tval = model_file.read(feeders_path + "R1-12.47-1.glm")
+    # tval = model_file.read(feeders_path + "GLD_three_phase_house.glm")
     # Output json with new parameters
     model_file.write(entities_path + "test.glm")
-    model_file.instancesToSQLite()
 
+    model_file.instancesToSQLite()
     print(model_file.entitiesToHelp())
     print(model_file.instancesToGLM())
 
@@ -111,13 +113,14 @@ def _test2():
     op.close()
 
 
-def _test3():
+def test3():
     modobject = GLMModifier()
 
-    tval = modobject.read_model(feeders_path + "/R1-12.47-1.glm")
+    tval = modobject.read_model(feeders_path + "R1-12.47-1.glm")
 
     for name in modobject.model.entities:
         print(modobject.model.entities[name].toHelp())
+
 
 # Synchronizes a list of time series dataframes
 # Synchronization includes resampling the time series based
@@ -129,6 +132,7 @@ def synch_time_series(series_list, synch_interval, interval_unit):
         synched_df = df.resample(str(synch_interval) + interval_unit).interpolate()
         synched_series.append(synched_df)
     return synched_series
+
 
 # Gets the latest start time and the earliest time from a list
 # of time series
@@ -142,6 +146,7 @@ def get_synch_date_range(time_series):
             t_end = tserie.index[len(tserie.index) - 1]
     return t_start, t_end
 
+
 # Clips the time series in the list to the same start and stop times
 def synch_series_lengths(time_series):
     synched_series = []
@@ -152,8 +157,8 @@ def synch_series_lengths(time_series):
     return synched_series
 
 
-#Sychronizes the length and time intervals of a list of time series dataframes
-def synch_series(time_series,synch_interval,interval_unit):
+# Sychronizes the length and time intervals of a list of time series dataframes
+def synch_series(time_series, synch_interval, interval_unit):
     clipped_series = []
     synched_series = []
     sampled_series = []
@@ -161,6 +166,7 @@ def synch_series(time_series,synch_interval,interval_unit):
     synched_series = synch_time_series(clipped_series, 1, "T")
     sampled_series = synch_time_series(clipped_series, synch_interval, interval_unit)
     return sampled_series
+
 
 def debug_resample():
     np.random.seed(0)
@@ -185,10 +191,11 @@ def debug_resample():
     synched_series = synch_series(tseries, 2, "T")
     print(tseries[0])
 
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    _test1()
-    _test2()
-    _test3()
+    test1()
+    test2()
+    test3()
     fredtest()
     debug_resample()

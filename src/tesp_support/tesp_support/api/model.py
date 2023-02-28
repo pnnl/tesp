@@ -17,15 +17,19 @@ from tesp_support.api.entity import Entity
 
 
 class GLModel:
-# it seems to public for all GLMODEL class
+    # it seems to public for all GLMODEL class
     in_file = ""
     out_file = ""
     network = nx.Graph()
     header_lines = []
+    set_lines = []
+    include_lines = []
     inside_comments = dict()
     outside_comments = dict()
     inline_comments = dict()
-    entities = {}
+    object_entities = {}
+    module_entities = {}
+    modules = None
     objects = None
     edge_class = ['switch', 'fuse', 'recloser', 'regulator', 'transformer',
                   'overhead_line', 'underground_line', 'triplex_line']
@@ -73,76 +77,230 @@ class GLModel:
     def __init__(self):
         # define objects that can be in a GLM file
         try:
-            self.conn = sqlite3.connect(os.path.join(entities_path, 'test.db'))
+            self.conn = sqlite3.connect(os.path.join(entities_path, 'testglm.db'))
             print("Opened database successfully")
         except:
             self.conn = None
             print("Database Sqlite3.db not formed")
 
+        with open(os.path.join(entities_path, 'glm_modules.json'), 'r', encoding='utf-8') as json_file:
+            self.modules = json.load(json_file)
         with open(os.path.join(entities_path, 'glm_objects.json'), 'r', encoding='utf-8') as json_file:
             self.objects = json.load(json_file)
 
+        for name in self.modules:
+            self.module_entities[name] = Entity(name, self.modules[name])
         for name in self.objects:
-            self.entities[name] = Entity(name, self.objects[name])
-            #self.entities[name].toSQLite(self.conn)
+            self.object_entities[name] = Entity(name, self.objects[name])
+            # self.object_entities[name].toSQLite(self.conn)
 
     def entitiesToJson(self):
         diction = {}
-        for name in self.entities:
-            diction[name] = self.entities[name].toJson()
+        for name in self.module_entities:
+            diction[name] = self.module_entities[name].toJson()
+        for name in self.object_entities:
+            diction[name] = self.object_entities[name].toJson()
+        return diction
+
+    def entitiesToHelp(self):
+        diction = ""
+        for name in self.module_entities:
+            diction += self.module_entities[name].toHelp()
+        for name in self.object_entities:
+            diction += self.object_entities[name].toHelp()
+        return diction
+
+    @staticmethod
+    def get_InsideComments(object_name, in_comments):
+        """
+
+        Args:
+            object_name:
+            in_comments:
+
+        Returns:
+
+        """
+        comments = ""
+        if object_name in in_comments:
+            temp_comments = in_comments[object_name]
+            if len(temp_comments) > 0:
+                for comment in temp_comments:
+                    comments += "  " + comment + "\n"
+        return comments
+
+    @staticmethod
+    def get_InlineComment(object_name, item_id, line_comments):
+        """
+
+        Args:
+            object_name:
+            item_id:
+            line_comments:
+
+        Returns:
+
+        """
+        comment = ""
+        if object_name in line_comments:
+            obj_dict = line_comments[object_name]
+            if item_id in obj_dict:
+                comment = obj_dict[item_id]
+                if comment != "":
+                    comment = " //" + comment
+        return comment
+
+    def get_diction(self, obj_entities, name, instanceTo):
+        diction = ""
+        ent_keys = obj_entities[name].instance.keys()
+        if len(ent_keys) > 0:
+            obj_name = list(ent_keys)[0]
+            if obj_name in self.outside_comments:
+                out_comments = self.outside_comments[obj_name]
+                for comment in out_comments:
+                    diction += comment + "\n"
+            diction += instanceTo(obj_entities[name], self.inside_comments, self.inline_comments)
+        return diction
+
+    def instanceToModule(self, module, in_comments, line_comments):
+        """
+        instanceToModule adds the comments pulled from the backbone glm file
+        to the new modified glm file.
+
+        Args:
+            module:
+            in_comments:
+            line_comments:
+
+        Returns:
+
+        """
+        diction = ""
+        if len(module.instance) > 0:
+            if module.entity in ["clock"]:
+                diction = module.entity
+            elif module.entity in ["player"]:
+                diction = "class " + module.entity
+            else:
+                diction = "module " + module.entity
+            keys = module.instance[module.entity].keys()
+            if len(keys) > 0:
+                diction += " {\n"
+                diction += self.get_InsideComments(module.entity, in_comments)
+                for item in module.instance[module.entity].keys():
+                    comments = self.get_InlineComment(module.entity, item, line_comments)
+                    diction += "  " + item + " " + str(module.instance[module.entity][item]) + ";" + comments + "\n"
+                diction += "}\n"
+            else:
+                diction += ";\n"
+        return diction
+
+    def instanceToObject(self, object, in_comments, line_comments):
+        """
+        instanceToObject adds the comments pulled from the backbone glm file
+        to the new modified glm file.
+
+        Args:
+            object:
+            in_comments:
+            line_comments:
+
+        Returns:
+
+        """
+        diction = ""
+        for object_name in object.instance:
+            diction += "object " + object.entity + " {\n"
+            diction += self.get_InsideComments(object_name, in_comments)
+            diction += "  name " + object_name + ";\n"
+            for item in object.instance[object_name].keys():
+                comments = self.get_InlineComment(object_name, item, line_comments)
+                diction += "  " + item + " " + str(object.instance[object_name][item]) + ";" + comments + "\n"
+            diction += "}\n\n"
         return diction
 
     def instancesToGLM(self):
         diction = ""
-        for name in self.entities:
-            ent_keys = self.entities[name].instance.keys()
-            if len(ent_keys) > 0:
-                obj_name = list(ent_keys)[0]
-            else:
-                obj_name = ""
-            if obj_name in self.outside_comments:
-                out_comments = self.outside_comments[obj_name]
-            else:
-                out_comments = {}
-            for cmmnt in out_comments:
-                diction += cmmnt + "\n"
-            diction += self.entities[name].instanceToGLM_Comments(self.inside_comments, self.inline_comments)
+
+        # Write the clock
+        if self.module_entities["clock"]:
+            diction += self.get_diction(self.module_entities, "clock", self.instanceToModule)
+        diction += "\n"
+
+        # Write the sets commands
+        for name in self.set_lines:
+            diction += name + "\n"
+        diction += "\n"
+
+        # Write the includes
+        for name in self.include_lines:
+            diction += name + "\n"
+        diction += "\n"
+
+        # Write the modules
+        for name in self.module_entities:
+            if name not in ["clock"]:
+                diction += self.get_diction(self.module_entities, name, self.instanceToModule)
+        diction += "\n"
+
+        # Write the objects
+        for name in self.object_entities:
+            diction += self.get_diction(self.object_entities, name, self.instanceToObject)
         return diction
 
     def instancesToSQLite(self):
-        for name in self.entities:
-            self.entities[name].instanceToSQLite(self.conn)
+        for name in self.object_entities:
+            self.object_entities[name].instanceToSQLite(self.conn)
         return
 
-    def entitiesToHelp(self):
-        diction = ""
-        for name in self.entities:
-            diction += self.entities[name].toHelp()
-        return diction
-
-    def set_instance(self, obj_name, obj_id, params):
-        if type(obj_name) == str and type(obj_name) == str:
+    def set_object_instance(self, obj_type, obj_name, params):
+        if type(obj_type) == str and type(obj_name) == str:
             try:
-                entity = self.entities[obj_name]
-                return entity.set_instance(obj_id, params)
+                entity = self.object_entities[obj_type]
+                return entity.set_instance(obj_name, params)
             except:
-                print("Unrecognized object and id ->", obj_name, obj_id)
-                self.objects[obj_name] = {}
-                entity = self.entities[obj_name] = Entity(obj_name, self.objects[obj_name])
-                return entity.set_instance(obj_id, params)
+                print("Unrecognized GRIDLABD object and id ->", obj_type, obj_name)
+                self.objects[obj_type] = {}
+                entity = self.object_entities[obj_type] = Entity(obj_type, self.objects[obj_type])
+                return entity.set_instance(obj_name, params)
         else:
-            print("Object name and/or object id is not a string")
+            print("GRIDLABD object type and/or object name is not a string")
         return None
 
-    def get_instance(self, obj_name, obj_id):
-        if type(obj_name) == str and type(obj_name) == str:
+    def get_object_instance(self, obj_type, obj_name):
+        if type(obj_type) == str and type(obj_type) == str:
             try:
-                entity = self.entities[obj_name]
-                return entity.get_instance(obj_id)
+                entity = self.object_entities[obj_type]
+                return entity.get_instance(obj_name)
             except:
-                print("Unrecognized GRIDLABD object and id ->", obj_name, obj_id)
+                print("Unrecognized GRIDLABD object and id ->", obj_type, obj_name)
         else:
-            print("Object name and/or object id is not a string")
+            print("GRIDLABD object name and/or object id is not a string")
+        return None
+
+    def set_module_instance(self, mod_type, params):
+        if type(mod_type) == str:
+            try:
+                entity = self.module_entities[mod_type]
+                return entity.set_instance(mod_type, params)
+            except:
+                print("Unrecognized GRIDLABD module ->", mod_type)
+                self.modules[mod_type] = {}
+                entity = self.module_entities[mod_type] = Entity(mod_type, self.modules[mod_type])
+                return entity.set_instance(mod_type, params)
+        else:
+            print("GRIDLABD module type is not a string")
+        return None
+
+    def get_module_instance(self, mod_type):
+        if type(mod_type) == str:
+            try:
+                entity = self.module_entities[mod_type]
+                return entity.get_instance(mod_type)
+            except:
+                print("Unrecognized GRIDLABD module ->", mod_type)
+        else:
+            print("GRIDLABD module is not a string")
         return None
 
     @staticmethod
@@ -202,6 +360,62 @@ class GLModel:
             return True
         return False
 
+    def module(self, mod, line, itr):
+        """Store a clock/module/class in the model structure
+
+        Args:
+            mod (str): glm type [date, class, module]
+            line (str): glm line containing the object definition
+            itr (iter): iterator over the list of lines
+
+        Returns:
+            str, int: the current line and updated octr
+        """
+
+        # Collect parameters
+        params = {}
+        # Collect comments
+        inside_comments = []
+        inline_comments = dict()
+
+        # Set the clock to date module
+        if mod in ["date"]:
+            line = mod + " " + line
+
+        # Identify the object type
+        if line.find(";") > 0:
+            m = re.search(mod + ' ([^;\s]+)[;\s]', line, re.IGNORECASE)
+            _type = m.group(1)
+            self.set_module_instance(_type, params)
+            return inside_comments, inline_comments
+
+        if line.find("{") > 0:
+            m = re.search(mod + ' ([^{\s]+)[{\s]', line, re.IGNORECASE)
+            _type = m.group(1)
+
+        done = False
+        line = next(itr).strip()
+        while not done:
+            # find a comment
+            pos = line.find("//")
+            if pos == 0:
+                inside_comments.append(line)
+            elif pos > 0:
+                tokens = line.split(" ")
+                inline_comments[tokens[0]] = line[pos + 2:]
+
+            # find a parameter
+            m = re.match('\s*(\S+) ([^;]+);', line)
+            if m:
+                params[m.group(1)] = m.group(2)
+            if re.search('}', line):
+                done = 1
+            else:
+                line = next(itr).strip()
+
+        self.set_module_instance(_type, params)
+        return inside_comments, inline_comments
+
     def obj(self, parent, model, line, itr, oidh, octr):
         """Store an object in the model structure
 
@@ -225,34 +439,35 @@ class GLModel:
         n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
         if n:
             oid = n.group(1)
+        # else:
+        #     print("ERROR: Name defined for object " + _type)
+            # quit()
+
         line = next(itr)
         # Collect parameters
         oend = 0
         oname = None
         params = {}
-        incomments = []
-        objinlinecomments = dict()
-        inlinecomments = {}
+        inside_comments = []
+        inline_comments = dict()
 
         if parent is not None:
             params['parent'] = parent
         while not oend:
-            # if re.match('\s*//', line):
-            if line.strip().find("//") == 0:
-                incomments.append(line.strip())
-            elif line.find("//") > 0:
-                subindex = line.find("//")
-                substring = line[subindex + 2:]
-                tline = line.strip()
-                tokens = tline.split(" ")
-                objinlinecomments[tokens[0]] = substring
+            pos = line.find("//")
+            if pos == 0:
+                inside_comments.append(line.strip())
+            elif pos > 0:
+                substring = line[pos + 2:]
+                tokens = line.split(" ")
+                inline_comments[tokens[0]] = substring
 
+            intobj = 0
             m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
             if m:
                 # found a parameter
                 param = m.group(1)
                 val = m.group(2)
-                intobj = 0
                 if param == 'name':
                     oname = self.gld_strict_name(name_prefix + val)
                 elif param == 'object':
@@ -290,13 +505,9 @@ class GLModel:
             model[_type] = {}
         model[_type][oname] = {}
 
-        # find and set entity
-        # all incomment as object_comment type
-        # params["object_comment"] = incomments
-
-        model[_type][oname] = self.set_instance(_type, oname, params)
-        # model[_type][oname] = params
-        return line, octr, oname, incomments, objinlinecomments
+        # find and set entity instance
+        model[_type][oname] = self.set_object_instance(_type, oname, params)
+        return line, octr, oname, inside_comments, inline_comments
 
     def readBackboneModel(self, rootname, feederspath):
         """Parse one backbone feeder, usually but not necessarily one of the PNNL taxonomy feeders
@@ -306,63 +517,56 @@ class GLModel:
 
         Args:
             rootname (str): the input (usually taxonomy) feeder model name
+            feederspath (str):
         """
         # global base_feeder_name
-
-        solar_count = 0
-        solar_kw = 0
-        battery_count = 0
-        ev_count = 0
-
-        base_feeder_name = self.gld_strict_name(rootname)
-        # fname = feederspath + '/' + rootname  # + '.glm'
         fname = os.path.join(feederspath, rootname)  # + '.glm'
         rootname = self.gld_strict_name(rootname)
-        headlines = []
-        insidecomments = dict()
-        outsidecomments = dict()
+
+        octr = 0
+        model = {}
+        h = {}  # OID hash
+        lines = []
+        self.set_lines = []
+        self.include_lines = []
+        outsidecomments = []
+        outside_comments = dict()
+        inside_comments = dict()
+        inline_comments = dict()
         if os.path.isfile(fname):
             ip = open(fname, 'r')
-            lines = []
-            line = ip.readline()
-            headlines = []
-            while line.find("};") < 0:
-                headlines.append(line)
-                line = ip.readline()
-            headlines.append(line)
             line = ip.readline()
             while line != '':
-                # while re.match('\s*//', line) or re.match('\s+$', line):
                 while re.match('\s+$', line):
                     # skip white space
                     line = ip.readline()
-                lines.append(line.rstrip())
+                lines.append(line.strip())
                 line = ip.readline()
             ip.close()
-            octr = 0
-            model = {}
-            h = {}  # OID hash
+
             itr = iter(lines)
-            outcomments = []
-            incomments = []
-            inlinecomments = dict()
-            linecomments = dict()
             for line in itr:
                 if re.match('\s*//', line):
-                    outcomments.append(line)
+                    outsidecomments.append(line)
+                if re.search('#set', line):
+                    self.set_lines.append(line)
+                if re.search('#include', line):
+                    self.include_lines.append(line)
                 if re.search('clock', line):
-                   clock = ""
+                    insidecomments, linecomments = self.module("date", line, itr)
+                if re.search('class', line):
+                    insidecomments, linecomments = self.module("class", line, itr)
                 if re.search('module', line):
-                   modules = ""
+                    insidecomments, linecomments = self.module("module", line, itr)
                 if re.search('object', line):
-                    line, octr, oname, incomments, linecomments = self.obj(None, model, line, itr, h, octr)
-                    if len(outcomments) > 0:
-                        outsidecomments[oname] = outcomments
-                    if len(incomments) > 0:
-                        insidecomments[oname] = incomments
-                    if len(linecomments) > 0:
-                        inlinecomments[oname] = linecomments
-                    outcomments = []
+                    line, octr, oname, insidecomments, inlinecomments = self.obj(None, model, line, itr, h, octr)
+                    if len(outsidecomments) > 0:
+                        outside_comments[oname] = outsidecomments
+                    if len(insidecomments) > 0:
+                        inside_comments[oname] = insidecomments
+                    if len(inlinecomments) > 0:
+                        inline_comments[oname] = inlinecomments
+                    outsidecomments = []
             # apply the naming prefix if necessary
             # if len(name_prefix) > 0:
             #    for t in model:
@@ -402,7 +606,7 @@ class GLModel:
                             G.nodes()[o]['ndata'] = model[t][o]
                         else:
                             print('orphaned node', t, o)
-            return G, headlines, outsidecomments, insidecomments, inlinecomments
+            return G, outside_comments, inside_comments, inline_comments
 
     def read(self, filepath):
         self.header_lines = []
@@ -410,37 +614,20 @@ class GLModel:
         path_parts = os.path.split(filepath)
         readresults = self.readBackboneModel(path_parts[1], path_parts[0])
         self.network = readresults[0]
-        self.header_lines = readresults[1]
-        self.outside_comments = readresults[2]
-        self.inside_comments = readresults[3]
-        self.inline_comments = readresults[4]
+        self.outside_comments = readresults[1]
+        self.inside_comments = readresults[2]
+        self.inline_comments = readresults[3]
         return self.network
 
-    def write_header(self, op):
-        for line in self.header_lines:
-            try:
-                print(line.rstrip(), file=op)
-            except:
-                print("unable to write to output file")
-                return False
-
-        return True
-
     def write(self, filepath):
-        self_out_file = filepath
         try:
             op = open(filepath, "w+")
         except:
             print("Unable to open output file")
             return False
-        self.write_header(op)
 
         # we can write using instance objects
         print(self.instancesToGLM(), file=op)
 
         op.close()
-        return True
-
-    def import_networkx_obj(self, inetwork):
-        network = inetwork
         return True

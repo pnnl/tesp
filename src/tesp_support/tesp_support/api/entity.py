@@ -170,16 +170,16 @@ class Entity:
                         if type(attr) == str:
                             instance[attr] = {}
                         else:
-                            print("Attribute id is not a string")
+                            print("Attribute id is not a string in", self.entity, "named", object_name)
                             continue
                 else:
-                    print("Unrecognized object parameter ->", attr)
+                    print("Unrecognized parameter", attr, "in", self.entity, "named", object_name)
                     # add to dictionary datatype, label, unit, item, value
                     self.add_attr("TEXT", attr, "", attr, "")
                 instance[attr] = params[attr]
             return instance
         else:
-            print("object_name is not a string")
+            print("object_name is not a string in", self.entity)
         return None
 
     def get_instance(self, object_name):
@@ -198,7 +198,7 @@ class Entity:
                 self.instance[object_name] = {}
                 return self.instance[object_name]
         else:
-            print("object name is not a string")
+            print("object name is not a string in", self.entity)
         return None
 
     def del_instance(self, object_name):
@@ -217,7 +217,7 @@ class Entity:
                 # TODO: Need to add error message
                 pass
         else:
-            print("object name is not a string")
+            print("object name is not a string in", self.entity)
         return None
 
     def add_attr(self, datatype, label, unit, item, value=None):
@@ -388,92 +388,6 @@ class Entity:
             for item in self.instance[object_name].keys():
                 diction += "  " + item + " " + self.instance[object_name][item] + ";\n"
             diction += "}\n"
-        return diction
-
-    def getInsideComments(self, object_name, in_comments):
-        """
-
-        Args:
-            object_name:
-            in_comments:
-
-        Returns:
-
-        """
-        ent_keys = self.instance.keys()
-        # if len(ent_keys):
-        #     obj_name = list(ent_keys)[0]
-        # else:
-        #     obj_name = ""
-        if object_name in in_comments:
-            temp_comments = in_comments[object_name]
-        else:
-            temp_comments = []
-        cmnt_string = ""
-        if len(temp_comments) > 0:
-            for cmnt in temp_comments:
-                cmnt_string += "  " + cmnt + "\n"
-        return cmnt_string
-
-    def getInlineComment(self, object_name, item_id, line_comments):
-        """
-
-        Args:
-            object_name:
-            item_id:
-            line_comments:
-
-        Returns:
-
-        """
-        if object_name in line_comments:
-            obj_dict = line_comments[object_name]
-            cmnt = ""
-            if item_id in obj_dict:
-                cmnt = obj_dict[item_id]
-                if cmnt != "":
-                    cmnt = " //" + cmnt
-            return cmnt
-        else:
-            return ""
-
-    def instanceToGLM_Comments(self, in_comments, line_comments):
-        """
-        instanceToGLM_Comments adds the comments pulled from the backbone glm file
-        to the new modified glm file.
-
-        Args:
-            in_comments:
-            line_comments:
-
-        Returns:
-
-        """
-        diction = ""
-        for object_name in self.instance:
-            diction += "object " + self.entity + "{\n"
-            diction += self.getInsideComments(object_name, in_comments)
-            diction += "  name " + object_name + ";\n"
-            for item in self.instance[object_name].keys():
-                cmnt_string = self.getInlineComment(object_name, item, line_comments)
-                diction += "  " + item + " " + str(self.instance[object_name][item]) + ";" + cmnt_string + "\n"
-            diction += "}\n"
-        return diction
-
-    def instanceToGLM(self):
-        """
-        instanceToGLM does not include the comments pulled from the backbone glm file
-        in to the new modified glm file.
-
-        Returns: (string) diction
-
-        """
-        diction = ""
-        for object_name in self.instance:
-            diction += "object " + self.entity + " {\n  name " + object_name + ";\n"
-            for item in self.instance[object_name].keys():
-                diction += "  " + item + " " + str(self.instance[object_name][item]) + ";\n"
-            diction += "};\n"
         return diction
 
     def instanceToSQLite(self, connection):

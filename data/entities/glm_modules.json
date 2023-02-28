@@ -1,0 +1,28 @@
+{
+  "clock": [
+    ["timezone", "", "", "TEXT", "timezone",""],
+    ["timestamp", "", "", "TEXT", "timestamp",""],
+    ["stoptime", "", "", "TEXT", "stoptime",""]
+  ],
+  "tape": [],
+  "climate": [],
+  "connection": [],
+  "generators": [],
+  "powerflow": [
+    ["solver_method", "FBS", "NR|FBS", "TEXT", "solver_method",""],
+    ["NR_iteration_limit", 100, "", "INTEGER", "NR_iteration_limit",""],
+    ["line_capacitance", "TRUE", "", "BOOLEAN", "line_capacitance",""]
+  ],
+  "reliability": [
+    ["maximum_event_length", 18000, "", "INTEGER", "maximum_event_length",""],
+    ["report_event_log", "TRUE", "", "BOOLEAN", "report_event_log",""]
+  ],
+  "residential": [
+    ["implicit_enduses", "NONE", "", "TEXT", "implicit_enduses",""]
+  ],
+  "player": [
+    ["double", "", "", "TEXT", "double",""],
+    ["integer", "", "", "TEXT", "integer",""],
+    ["string", "", "", "TEXT", "string",""]
+  ]
+}

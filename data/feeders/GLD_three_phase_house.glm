@@ -5,14 +5,12 @@ clock {
 }
 
 #set profiler=1;
-#set double_format=%+.12lg
+#set double_format=%+.12lg;
 #set randomseed=10;
 #set relax_naming_rules=1;
 #set minimum_timestep=1;
 #include "water_and_setpoint_schedule_v3.glm";
-
 #include "appliance_schedules.glm";
-
 
 module tape;
 module climate;
@@ -24,7 +22,6 @@ module powerflow {
      solver_method FBS;
      NR_iteration_limit 100;
 };
-
 class player {
       double value;
 }

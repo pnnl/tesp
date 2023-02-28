@@ -10,17 +10,15 @@ This script attempts to demonstrate the usage of the new TESP API to modify Grid
 @author: hard312
 """
 
-
-
-
-import json
 import argparse
 import logging
 import pprint
-import sys
 import os
 import sys
 import networkx as nx
+
+from tesp_support.api.modifier import GLMModifier
+from tesp_support.api.store import feeders_path
 
 # Getting all the existing tesp_support stuff
 #   Assumes were in the tesp_api folder
@@ -30,9 +28,6 @@ import networkx as nx
 # Setting a few environment variables so the imports work smoothly
 #   If you're working in a REAL TESP install you don't have to do this.
 # os.environ['TESPDIR'] = '/Users/hard312/src/TSP/tesp'
-
-from tesp_support.api.modifier import GLMModifier
-from tesp_support.api.store import feeders_path
 
 
 # Setting up logging
@@ -63,6 +58,8 @@ def _auto_run(args):
     feeder_path = os.path.join(feeders_path, args.feeder_file)
     glmMod.model.read(feeder_path)
 
+    glmMod.add_module('residential', [])
+
     tp_meter_names = glmMod.get_object_names('triplex_meter')
     num_houses_to_add = 11
 
@@ -76,7 +73,7 @@ def _auto_run(args):
             'nominal_voltage': glmMod.get_object('triplex_meter').instance[tp_meter_names[house_num]]['nominal_voltage']
         }
 
-        # Only adding print out for the first time through the loop so I don't flood the terminal.
+        # Only adding print out for the first time through the loop, so I don't flood the terminal.
         if house_num == 0:
             print('Demonstrating addition of an object (triplex_meter in this case) to GridLAB-D model.')
             num_tp_meters = len(glmMod.get_object_names('triplex_meter'))
@@ -94,7 +91,8 @@ def _auto_run(args):
             'phases': glmMod.get_object('triplex_meter').instance[billing_meter_name]['phases'],
             'nominal_voltage': glmMod.get_object('triplex_meter').instance[billing_meter_name]['nominal_voltage']
         }
-        # Returns a dictionary of the object we just added; in this case I don't do anything with that dictionary.
+        # Returns a dictionary of the object we just added;
+        # in this case I don't do anything with that dictionary.
         house_meter = glmMod.add_object('triplex_meter', house_meter_name, meter_params)
 
         # Add house object as a child of the house meter
@@ -173,7 +171,7 @@ def _auto_run(args):
 
     # You can delete specific parameter definitions (effectively making them the default value defined in GridLAB-D)
     print('\nDemonstrating the deletion of a parameter from a GridLAB-D object in the model.')
-    house_to_edit = glmMod.get_object_name('house', house_name)  # GLD object type, object name
+    house_to_edit = glmMod.get_object_named_instance('house', house_name)  # GLD object type, object name
     if 'Rroof' in house_to_edit.keys():
         print(f'\t"Rroof" for house {house_name} is {house_to_edit["Rroof"]}.')
     else:
@@ -201,7 +199,6 @@ def _auto_run(args):
     num_zips = len(glmMod.get_object_names('ZIPload'))
     print(f'\tNumber of ZIPloads: {num_zips}')
 
-
     # Increase all the secondary/distribution transformer ratings by 15%
     print('\nDemonstrating modification of a GridLAB-D parameter for all objects of a certain type.')
     print("In this case, we're upgrading the rating of the secondary/distribution transformers by 15%.")
@@ -209,13 +206,9 @@ def _auto_run(args):
     transformer_names = glmMod.get_object_names('transformer')
     transformer_config_objs = glmMod.get_object('transformer_configuration')
 
-
     print("\tFinding all the split-phase transformers as these are the ones we're targeting for upgrade.")
     print("\t(In GridLAB-D, the sizing information is stored in the transformer_configuration object.)")
-    transformer_configs_to_upgrade = {}
-    transformer_configs_to_upgrade['as'] = []
-    transformer_configs_to_upgrade['bs'] = []
-    transformer_configs_to_upgrade['cs'] = []
+    transformer_configs_to_upgrade = {'as': [], 'bs': [], 'cs': []}
     for transformer in transformer_names:
         phases = transformer_objs.instance[transformer]['phases']
         if phases.lower() == 'as':
@@ -244,7 +237,7 @@ def _auto_run(args):
             # Both the "power_rating" and "powerX_rating" are defined in the model, for some reason.
             transformer_config_objs.instance[config][rating_param] = new_rating
             transformer_config_objs.instance[config]['power_rating'] = new_rating
-            upgraded_rating = str(round(transformer_config_objs.instance[config][rating_param],3))
+            upgraded_rating = str(round(transformer_config_objs.instance[config][rating_param], 3))
             print(f'\tUpgraded configuration {config} from {old_rating} to {upgraded_rating}')
 
     # The model topology is stored as a networks graph, allowing you to do fancy manipulations of the model more easily.
@@ -257,7 +250,7 @@ def _auto_run(args):
     print(f'\nDemonstrating the use of networkx to find the feeder head and the closest fuse')
     swing_bus = ''
     for gld_node_name in gld_node_names:
-        if 'bustype' in gld_node_objs.instance[gld_node_name].keys(): # Not every bus has the "bustype" parameter
+        if 'bustype' in gld_node_objs.instance[gld_node_name].keys():  # Not every bus has the "bustype" parameter
             if gld_node_objs.instance[gld_node_name]['bustype'].lower() == 'swing':
                 swing_bus = gld_node_name
     print(f'\tFound feeder head (swing bus) as node {swing_bus}')
@@ -266,9 +259,9 @@ def _auto_run(args):
     #   the networkx API and the topology graph of our GridLAB-D model
     graph = glmMod.model.network
     for edge in nx.bfs_edges(graph, swing_bus):
-        data = graph.get_edge_data(edge[0], edge[1])
-        if data['eclass'] == 'fuse':
-            feeder_head_fuse = data['ename']
+        edge_data = graph.get_edge_data(edge[0], edge[1])
+        if edge_data['eclass'] == 'fuse':
+            feeder_head_fuse = edge_data['ename']
             break
     print(f'\tUsing networkx traversal algorithms, found the closest fuse as {feeder_head_fuse}.')
 
@@ -277,11 +270,10 @@ def _auto_run(args):
     #       And that's what you get for making assumptions.
     #       https://emac.berkeley.edu/gridlabd/taxonomy_graphs/R1-12.47-1.pdf )
     print(f'\tIncreasing fuse size by an arbitrary 10%')
-    fuse_obj = glmMod.get_object_name('fuse', feeder_head_fuse)
+    fuse_obj = glmMod.get_object_named_instance('fuse', feeder_head_fuse)
     print(f'\t\tOld fuse current limit: {fuse_obj["current_limit"]} A')
     fuse_obj['current_limit'] = float(fuse_obj['current_limit']) * 1.1
     print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]} A')
-    dummy = 0
 
     # Unused code that works but doesn't show off the things I wanted to show off.
     # for gld_node in gld_node_names:
@@ -289,7 +281,8 @@ def _auto_run(args):
     #     for neighbor in neighbors:
     #         print(neighbor)
     #     print("\n")
-    # Look for largest transformer configuration in the model under the assumption that its for the substation transformer
+    # Look for largest transformer configuration in the model
+    # under the assumption that it's for the substation transformer
     # (Turns out, this is a bad assumption.)
     # max_transformer_power = 0
     # max_transformer_name = ''
@@ -304,7 +297,6 @@ def _auto_run(args):
     #     print(node)
     #     print(pp.pformat(nodedata))
     #     dummy = 0
-
 
     glmMod.write_model(args.output_file)
 
@@ -336,5 +328,5 @@ if __name__ == '__main__':
                         '--output_file',
                         nargs='?',
                         default='trevor_test.glm')
-    args = parser.parse_args()
-    _auto_run(args)
+    _args = parser.parse_args()
+    _auto_run(_args)
