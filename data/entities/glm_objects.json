@@ -1,6 +1,7 @@
 {
   "battery": [],
   "climate": [
+    ["Weather name", "", "Object name", "TEXT", "name",""],
     ["Weather name", "", "", "TEXT", "weather_name",""],
     ["Weather path", "", "", "TEXT", "weather_path",""],
     ["Weather file", "", "", "TEXT", "weather_file",""],
@@ -13,10 +14,10 @@
     ["tz meridian", "", "", "TEXT", "tz_meridian",""]
   ],
   "capacitor": [
-    ["Capacitor name", "", "object ID", "TEXT", "name", ""],
+    ["Capacitor name", "", "Object name", "TEXT", "name", ""],
     ["Used phases", "", "[ABCNS]", "TEXT", "phases", ""],
     ["Parent phase", "", "[]", "TEXT", "pt_phase", ""],
-    ["Parent", "", "object ID", "TEXT", "parent", ""],
+    ["Parent", "", "Object name", "TEXT", "parent", ""],
     ["Used phases connected", "", "[ABC]", "TEXT", "phases_connected", ""],
     ["Control", "VOLT", "", "TEXT", "control", ""],
     ["Voltage_set_high", 7300, "", "REAL", "voltage_set_high", ""],
@@ -33,9 +34,16 @@
     ["cap_nominal_voltage", 7200, "", "REAL", "cap_nominal_voltage", ""],
     ["nominal_voltage", 7200, "", "REAL", "nominal_voltage", ""]
   ],
-  "currdump": [],
+  "currdump": [
+    ["Group", "", "", "TEXT", "group", ""],
+    ["Run time", "", "", "TEXT", "runtime", ""],
+    ["File name", "", "", "TEXT", "filename", ""],
+    ["Run count", 0, "", "INTEGER", "runcount", ""],
+    ["Mode", "", "[RECT|POLAR]", "TEXT", "mode", ""]
+  ],
   "fncs_msg": [
-    ["FNCS federate name", "", "", "TEXT", "name", ""],
+    ["FNCS federate name", "", "Object name", "TEXT", "name", ""],
+    ["Parent", "", "Object name", "TEXT", "parent", ""],
     ["Option", "transport:hostname localhost, port 5570", "", "TEXT", "option", ""],
     ["Message type", "", "", "TEXT", "message_type", ""],
     ["Configure message file", "", "", "TEXT", "configure", ""],
@@ -43,12 +51,14 @@
     ["Aggregate publications", "true", "[true|false]", "TEXT", "aggregate_publications", ""]
   ],
   "helics_msg": [
-    ["HELICS federate name", "", "", "TEXT", "name", ""],
+    ["HELICS federate name", "", "Object name", "TEXT", "name", ""],
+    ["Parent", "", "Object name", "TEXT", "parent", ""],
     ["Configure message File", "", "", "TEXT", "configure", ""]
   ],
   "house": [
-    ["House name", "", "", "TEXT", "name", ""],
-    ["Parent", "", "object ID", "TEXT", "parent", ""],
+    ["House name", "", "Object name", "TEXT", "name", ""],
+    ["Parent name", "", "Object name", "TEXT", "parent", ""],
+    ["Group ID", "", "Group ID", "TEXT", "groupid", ""],
     ["Load", "", "", "REAL", "load", ""],
     ["Design internal gain density", 0.6, "W/sf", "REAL", "design_internal_gain_density", ""],
     ["Thermal integrity level", "", "", "TEXT", "thermal_integrity_level", ""],
@@ -87,9 +97,40 @@
     ["Number of air-changes per hour", "", "", "REAL", "airchange_per_hour", ""],
     ["Heating performance coefficient", "", "", "REAL", "heating_COP", ""],
     ["Cooling performance coefficient", "", "", "REAL", "cooling_COP", ""],
-    ["Home conditioned floor area,", "", "sf", "REAL", "floor_area", ""]
+    ["Home conditioned floor area", "", "sf", "REAL", "floor_area", ""],
+    ["schedule_skew", "", "", "REAL", "schedule_skew", ""],
+    ["number_of_stories", "", "", "INTEGER", "number_of_stories", ""],
+    ["ceiling_height", "", "", "REAL", "ceiling_height", ""],
+    ["over_sizing_factor", "", "", "REAL", "over_sizing_factor", ""],
+    ["Rdoors", "", "", "REAL", "Rdoors", ""],
+    ["air_temperature", "", "", "REAL", "air_temperature", ""],
+    ["mass_temperature", "", "", "REAL", "mass_temperature", ""],
+    ["total_thermal_mass_per_floor_area", "", "", "REAL", "total_thermal_mass_per_floor_area", ""],
+    ["mass_solar_gain_fraction", "", "", "REAL", "mass_solar_gain_fraction", ""],
+    ["mass_internal_gain_fraction", "", "", "REAL", "mass_internal_gain_fraction", ""],
+    ["aspect_ratio", "", "", "REAL", "aspect_ratio", ""],
+    ["exterior_wall_fraction", "", "", "REAL", "exterior_wall_fraction", ""],
+    ["exterior_floor_fraction", "", "", "REAL", "exterior_floor_fraction", ""],
+    ["exterior_ceiling_fraction", "", "", "REAL", "exterior_ceiling_fraction", ""],
+    ["window_exterior_transmission_coefficient", "", "", "REAL", "window_exterior_transmission_coefficient", ""],
+    ["window_wall_ratio", "", "", "REAL", "window_wall_ratio", ""],
+    ["breaker_amps", "", "", "REAL", "breaker_amps", ""],
+    ["base_power", "", "", "REAL", "base_power", ""],
+    ["heatgain_fraction", "", "", "REAL", "heatgain_fraction", ""],
+    ["impedance_pf", "", "", "REAL", "impedance_pf", ""],
+    ["current_pf", "", "", "REAL", "current_pf", ""],
+    ["power_pf", "", "", "REAL", "power_pf", ""],
+    ["impedance_fraction", "", "", "REAL", "impedance_fraction", ""],
+    ["current_fraction", "", "", "REAL", "current_fraction", ""],
+    ["power_fraction", "", "", "REAL", "power_fraction", ""],
+    ["auxiliary_strategy", "", "", "REAL", "auxiliary_strategy", ""],
+    ["design_internal_gains", "", "", "REAL", "design_internal_gains", ""],
+    ["number_of_doors", "", "", "INTEGER", "number_of_doors", ""],
+    ["interior_exterior_wall_ratio", "", "", "REAL", "interior_exterior_wall_ratio", ""],
+    ["window_shading", "", "", "REAL", "window_shading", ""]
   ],
   "inverter": [
+    ["Inverter name", "", "Object name", "TEXT", "name", ""],
     ["Inverter type", "", "", "TEXT", "inverter_type", ""],
     ["Generator status", "", "", "TEXT", "generator_status", ""],
     ["Generator mode", "", "", "TEXT", "generator_mode", ""],
@@ -150,15 +191,15 @@
     ["Phases", "", "[ABCNS]", "TEXT", "phases", ""]
    ],
   "line_configuration": [
-    ["Line configuration name", "", "object ID", "TEXT", "name", ""],
-    ["Conductor_A", "", "object ID", "TEXT", "conductor_A", ""],
-    ["Conductor_B", "", "object ID", "TEXT", "conductor_B", ""],
-    ["Conductor_C", "", "object ID", "TEXT", "conductor_C", ""],
-    ["Conductor_N", "", "object ID", "TEXT", "conductor_N", ""],
+    ["Line config name", "", "Object name", "TEXT", "name", ""],
+    ["Conductor_A", "", "Object name", "TEXT", "conductor_A", ""],
+    ["Conductor_B", "", "Object name", "TEXT", "conductor_B", ""],
+    ["Conductor_C", "", "Object name", "TEXT", "conductor_C", ""],
+    ["Conductor_N", "", "Object name", "TEXT", "conductor_N", ""],
     ["Spacing", "", "underground_line_spacing", "TEXT", "spacing", ""]
   ],
   "line_spacing": [
-    ["Line spacing name", "", "object ID", "TEXT", "name", ""],
+    ["Line spacing name", "", "Object name", "TEXT", "name", ""],
     ["distance_AB", 0, "in", "REAL", "distance_AB", ""],
     ["distance_BC", 0, "in", "REAL", "distance_BC", ""],
     ["distance_AC", 0, "in", "REAL", "distance_AC", ""],
@@ -167,8 +208,9 @@
     ["distance_CN", 0, "in", "REAL", "distance_CN", ""]
   ],
   "load": [
-    ["Load name", "", "object ID", "TEXT", "name", ""],
-    ["Parent name", "", "object ID", "TEXT", "parent", ""],
+    ["Load name", "", "Object name", "TEXT", "name", ""],
+    ["Parent name", "", "Object name", "TEXT", "parent", ""],
+    ["Group ID", "", "Group ID", "TEXT", "groupid", ""],
     ["Phases used", "", "[ABCNS]", "TEXT", "phases", ""],
     ["load_class", "", "[ABCNS]", "TEXT", "load_class", ""],
     ["Constant power A", "", "", "COMPLEX", "constant_power_A", ""],
@@ -180,27 +222,82 @@
     ["Nominal voltage", 0, "", "REAL", "nominal_voltage", ""],
     ["Voltage A", "", "", "COMPLEX", "voltage_A", ""],
     ["Voltage B", "", "", "COMPLEX", "voltage_B", ""],
-    ["Voltage C", "", "", "COMPLEX", "voltage_C", ""]
+    ["Voltage C", "", "", "COMPLEX", "voltage_C", ""],
+    ["impedance_fraction_A,", "", "", "REAL", "impedance_fraction_A", ""],
+    ["current_fraction_A,", "", "", "REAL", "current_fraction_A", ""],
+    ["power_fraction_A,", "", "", "REAL", "power_fraction_A", ""],
+    ["impedance_pf_A,", "", "", "REAL", "impedance_pf_A", ""],
+    ["current_pf_A,", "", "", "REAL", "current_pf_A", ""],
+    ["power_pf_A,", "", "", "REAL", "power_pf_A", ""],
+    ["base_power_A,", "", "", "REAL", "base_power_A", ""],
+    ["impedance_fraction_B,", "", "", "REAL", "impedance_fraction_B", ""],
+    ["current_fraction_B,", "", "", "REAL", "current_fraction_B", ""],
+    ["power_fraction_B,", "", "", "REAL", "power_fraction_B", ""],
+    ["impedance_pf_B,", "", "", "REAL", "impedance_pf_B", ""],
+    ["current_pf_B,", "", "", "REAL", "current_pf_B", ""],
+    ["power_pf_B,", "", "", "REAL", "power_pf_B", ""],
+    ["base_power_B,", "", "", "REAL", "base_power_B", ""],
+    ["impedance_fraction_C,", "", "", "REAL", "impedance_fraction_C", ""],
+    ["current_fraction_C,", "", "", "REAL", "current_fraction_C", ""],
+    ["power_fraction_C,", "", "", "REAL", "power_fraction_C", ""],
+    ["impedance_pf_C,", "", "", "REAL", "impedance_pf_C", ""],
+    ["current_pf_C,", "", "", "REAL", "current_pf_C", ""],
+    ["power_pf_C,", "", "", "REAL", "power_pf_C", ""],
+    ["base_power_C,", "", "", "REAL", "base_power_C", ""]
   ],
   "fuse": [
+    ["Fuse name", "", "Object name", "TEXT", "name", ""],
     ["phases", "", "[ABCNS]", "TEXT", "phases", ""],
-    ["from", "", "object ID", "TEXT", "from", ""],
-    ["to", "", "object ID", "TEXT", "to", ""],
+    ["from", "", "Object name", "TEXT", "from", ""],
+    ["to", "", "Object name", "TEXT", "to", ""],
     ["current_limit", "", "", "TEXT", "current_limit", ""],
     ["status", "", "", "TEXT", "status", ""],
     ["mean_replacement_time", "", "", "TEXT", "mean_replacement_time", ""]
   ],
+  "fault_check": [
+	["Fault check name", "", "Object name", "TEXT", "name"],
+    ["Fault check parent", "", "Object name", "TEXT", "parent", ""],
+	["Check mode", "" , "ONCHANGE|", "TEXT", "check_mode"],
+	["Strictly radial", "", "true|false", "BOOLEAN", "strictly_radial"],
+	["Grid association", "", "true|false", "BOOLEAN", "grid_association"],
+	["Output filename", "", "", "TEXT", "output_filename"],
+	["Full output file", "", "true|false", "BOOLEAN", "full_output_file"]
+  ],
   "meter": [
-    ["Meter name", "", "object ID", "TEXT", "name", ""],
+    ["Meter name", "", "Object name", "TEXT", "name", ""],
+    ["Meter parent", "", "Object name", "TEXT", "parent", ""],
+    ["Group ID", "", "Group ID", "TEXT", "groupid", ""],
     ["Meter bustype", "", "[SWING|]", "TEXT", "bustype", ""],
     ["phases", "", "[ABCNS]", "TEXT", "phases", ""],
-    ["nominal_voltage", "0", "", "REAL", "nominal_voltage", ""]
+    ["nominal_voltage", "0", "", "REAL", "nominal_voltage", ""], 
+    ["bill_mode", "", "", "TEXT", "bill_mode", ""],
+    ["price", "", "$", "REAL", "price", ""],
+    ["monthly_fee", "", "$", "REAL", "monthly_fee", ""],
+    ["bill_day", "", "", "INTEGER", "bill_day", ""],
+    ["first_tier_energy", "", "kWh", "REAL", "first_tier_energy", ""],
+    ["first_tier_price", "", "$/kWh", "REAL", "first_tier_price", ""],
+    ["second_tier_energy", "", "kWh", "REAL", "second_tier_energy", ""],
+    ["second_tier_price", "", "$/kWh", "REAL", "second_tier_price", ""],
+    ["voltage_A", "", "Volts", "COMPLEX", "voltage_A", ""],
+    ["voltage_B", "", "Volts", "COMPLEX", "voltage_B", ""],
+    ["voltage_C", "", "Volts", "COMPLEX", "voltage_C", ""]
   ],
-  "metrics_collector": [],
-  "metrics_collector_writer": [],
+  "metrics_collector": [
+    ["Collector name", "", "Object name", "TEXT", "name", ""],
+    ["Parent name", "", "Object name", "TEXT", "parent", ""],
+    ["Interval", 300, "s", "INTEGER", "interval", ""]
+  ],
+  "metrics_collector_writer": [
+    ["Writer name", "", "Object name", "TEXT", "name", ""],
+    ["Interval", 300, "s", "INTEGER", "interval", ""],
+    ["Interim writes", 7200, ",s", "INTEGER", "interim", ""],
+    ["Filename to write", "", "", "TEXT", "filename", ""],
+    ["Alternate format", "no", "[yes|no]", "TEXT", "alternate", ""],
+    ["Extension format", "h5", "[json|h5]", "TEXT", "extension", ""]
+  ],
   "node": [
-    ["Node name", "", "object ID", "TEXT", "name", ""],
-    ["Parent name", "", "object ID", "TEXT", "parent", ""],
+    ["Node name", "", "Object name", "TEXT", "name", ""],
+    ["Parent name", "", "Object name", "TEXT", "parent", ""],
     ["Phases used", "", "[ABCNS]", "TEXT", "phases", ""],
     ["Nominal voltage", 0, "", "REAL", "nominal_voltage", ""],
     ["Voltage A", "", "", "COMPLEX", "voltage_A", ""],
@@ -209,41 +306,64 @@
     ["bustype", "", "", "TEXT", "bustype", ""]
   ],
   "overhead_line": [
-    ["Overhead line name", "", "object ID", "TEXT", "name", ""],
+    ["Overhead line name", "", "Object name", "TEXT", "name", ""],
     ["Used phases", "", "[ABCNS]", "TEXT", "phases", ""],
-    ["From object ID", "", "object ID", "TEXT", "from", ""],
-    ["To object ID", "", "object ID", "TEXT", "to", ""],
+    ["From Object name", "", "Object name", "TEXT", "from", ""],
+    ["To Object name", "", "Object name", "TEXT", "to", ""],
     ["Length", 0, "ft", "REAL", "length", ""],
-    ["Configuration", "", "object ID", "TEXT", "configuration", ""]
+    ["Configuration", "", "Object name", "TEXT", "configuration", ""]
   ],
   "overhead_line_conductor": [
-    ["Overhead line conductor name", "", "object ID", "TEXT", "name", ""],
+    ["Overhead line conductor name", "", "Object name", "TEXT", "name", ""],
     ["rating.summer.continuous", 256.0, "", "REAL", "rating.summer.continuous", ""],
     ["geometric_mean_radius", 0.012, "ft", "TEXT", "geometric_mean_radius", ""],
     ["resistance", 0.166, "", "REAL", "resistance", ""]
   ],
+  "overhead_line_configuration": [
+    ["overhead line config name", "", "Object name", "TEXT", "name", ""]
+  ],
   "player": [
-    ["Player name", "", "object ID", "TEXT", "name", ""],
+    ["Player name", "", "Object name", "TEXT", "name", ""],
+    ["Parent", "", "Object name", "TEXT", "parent", ""],
     ["Player configure", "", "", "TEXT", "configure", ""],
     ["Player file", "", "", "TEXT", "file", ""],
+    ["Property", "", "comma separated property name for parent", "TEXT", "property", ""],
+    ["Flags", "", "DELTAMODE|", "TEXT", "flags", ""],
     ["loop","", "", "INTEGER", "loop", ""]
   ],
   "recorder": [
-    ["Recorder name", "", "", "TEXT", "name", ""],
-    ["Parent", "", "object ID", "TEXT", "parent", ""],
+    ["Recorder name", "", "Object name", "TEXT", "name", ""],
+    ["Parent", "", "Object name", "TEXT", "parent", ""],
+    ["Recoder File", "", "", "TEXT", "file", ""],
     ["Property", "", "comma separated property name for parent", "TEXT", "property", ""],
-    ["File", "", "", "TEXT", "file", ""],
+    ["Flags", "", "DELTAMODE|", "TEXT", "flags", ""],
     ["Interval", 3600, "s", "INTEGER", "interval", ""],
     ["Limit", 1000, "", "INTEGER", "limit", ""]
   ],
-  "regulator": [
-    ["Regulators name", "", "object ID", "TEXT", "name", ""],
+  "recloser": [
+    ["Recorder name", "", "Object name", "TEXT", "name", ""],
     ["Phases used", "", "[ABCNS]", "TEXT", "phases", ""],
-    ["From object ID", "", "object ID", "TEXT", "from", ""],
-    ["To object ID", "", "object ID", "TEXT", "to", ""],
-    ["Configuration", "", "object ID", "TEXT", "configuration", ""]
+    ["From Object name", "", "Object name", "TEXT", "from", ""],
+    ["To Object name", "", "Object name", "TEXT", "to", ""],
+    ["status", "", "", "TEXT", "status", ""],
+    ["operating_mode", "", "", "TEXT", "operating_mode", ""],
+    ["phase_A_state", "", "[CLOSED|OPEN]", "TEXT", "phase_A_state", ""],
+    ["phase_B_state", "", "[CLOSED|OPEN]", "TEXT", "phase_B_state", ""],
+    ["phase_C_state", "", "[CLOSED|OPEN]", "TEXT", "phase_C_state", ""],
+    ["retry_time", "", "s", "REAL", "retry_time", ""],
+    ["max_number_of_tries", "", "", "INTEGER", "max_number_of_tries", ""],
+    ["number_of_tries", "", "", "INTEGER", "number_of_tries", ""],
+    ["Configuration", "", "Object name", "TEXT", "configuration", ""]
+  ],
+  "regulator": [
+    ["Regulators name", "", "Object name", "TEXT", "name", ""],
+    ["Phases used", "", "[ABCNS]", "TEXT", "phases", ""],
+    ["From Object name", "", "Object name", "TEXT", "from", ""],
+    ["To Object name", "", "Object name", "TEXT", "to", ""],
+    ["Configuration", "", "Object name", "TEXT", "configuration", ""]
   ],
   "regulator_configuration": [
+    ["Regulator config name", "", "Object name", "TEXT", "name", ""],
     ["Control", "", "", "TEXT", "Control"],
     ["band_center", "", "", "TEXT", "band_center"],
     ["band_width", "", "", "TEXT", "band_width"],
@@ -257,49 +377,64 @@
     ["tap_pos_C", "", "", "TEXT", "tap_pos_C"]
   ],
   "solar": [],
-  "substation": [],
+  "substation": [
+    ["Substation name", "", "Object name", "TEXT", "name", ""],
+    ["Group Id", "", "Group ID", "TEXT", "groupid", ""],
+    ["bustype", "", "", "TEXT", "bustype", ""],
+    ["nominal_voltage", "", "", "REAL", "nominal_voltage", ""],
+    ["positive_sequence_voltage", "", "", "REAL", "positive_sequence_voltage", ""],
+    ["base_power", "", "", "REAL", "base_power", ""],
+    ["power_convergence_value", "", "Volts", "COMPLEX", "power_convergence_value", ""],
+    ["phases", "", "", "TEXT", "phases", ""]
+  ],
   "switch": [
+    ["Switch name", "", "Object name", "TEXT", "name", ""],
     ["phases", "", "[ABCNS]", "TEXT", "phases", ""],
-    ["from", "", "object ID", "TEXT", "from", ""],
-    ["to", "", "object ID", "TEXT", "to", ""],
+    ["from", "", "Object name", "TEXT", "from", ""],
+    ["to", "", "Object name", "TEXT", "to", ""],
     ["status", "", "", "TEXT", "status", ""]
   ],
   "transformer": [
-    ["Transformer name", "", "object ID", "TEXT", "name", ""],
-    ["Transformer group ID", "", "object ID", "TEXT", "groupid", ""],
+    ["Transformer name", "", "Object name", "TEXT", "name", ""],
+    ["Group ID", "", "Group ID", "TEXT", "groupid", ""],
     ["Used phases", "", "[ABCNS]", "TEXT", "phases", ""],
-    ["From object ID", "", "object ID", "TEXT", "from", ""],
-    ["To object ID", "", "object ID", "TEXT", "to", ""],
-    ["Configuration", "", "object ID", "TEXT", "configuration", ""]
+    ["From Object name", "", "Object name", "TEXT", "from", ""],
+    ["To Object name", "", "Object name", "TEXT", "to", ""],
+    ["Configuration", "", "Object name", "TEXT", "configuration", ""]
   ],
   "transformer_configuration": [
-    ["Transformer name", "", "object ID", "TEXT", "name", ""],
+    ["Transformer config name", "", "Object name", "TEXT", "name", ""],
     ["Power rating", 25.0, "", "REAL", "power_rating", ""],
     ["PowerA rating", 0.0, "", "REAL", "powerA_rating", ""],
     ["PowerB rating", 0.0, "", "REAL", "powerB_rating", ""],
     ["PowerC rating", 25.0, "", "REAL", "powerC_rating", ""],
     ["Install type", "POLETOP", "", "TEXT", "install_type", ""],
     ["Connect type", "SINGLE_PHASE_CENTER_TAPPED", "", "TEXT", "connect_type", ""],
+    ["Impedance", "", "", "COMPLEX", "impedance", ""],
+    ["Impedance1", "", "", "COMPLEX", "impedance1", ""],
+    ["Impedance2", "", "", "COMPLEX", "impedance2", ""],
     ["Primary voltage", 7200.0, "", "REAL", "primary_voltage", ""],
     ["Secondary voltage", 120.0, "", "REAL", "secondary_voltage", 1,""],
     ["Resistance", 0.008, "", "REAL", "resistance", ""],
-    ["Resistance 1", 0.016, "", "REAL", "resistance1", ""],
-    ["Resistance 2", 0.016, "", "REAL", "resistance2", ""],
     ["Reactance", 0.01208, "", "REAL", "reactance", ""],
-    ["Reactance 1", 0.00604, "", "REAL", "reactance1", ""],
-    ["Reactance 2", 0.00604, "", "REAL", "reactance2", ""],
+    ["Resistance1", "", "", "REAL", "resistance1", ""],
+    ["Reactance1", "", "", "REAL", "reactance1", ""],
+    ["Resistance2", "", "", "REAL", "resistance2", ""],
+    ["Reactance2", "", "", "REAL", "reactance2", ""],
+    ["Shunt Impedance", 51.81, "", "COMPLEX", "shunt_impedance", ""],
     ["Shunt resistance", 192.31, "", "REAL", "shunt_resistance", ""],
     ["Shunt reactance", 51.81, "", "REAL", "shunt_reactance", ""]
   ],
   "triplex_line": [
-    ["Triplex line name", "", "object ID", "TEXT", "name", ""],
+    ["Triplex line name", "", "Object name", "TEXT", "name", ""],
     ["Used phases", "", "[ABCNS]", "TEXT", "phases", ""],
-    ["From object ID", "", "object ID", "TEXT", "from", ""],
-    ["To object ID", "", "object ID", "TEXT", "to", ""],
+    ["From Object name", "", "Object name", "TEXT", "from", ""],
+    ["To Object name", "", "Object name", "TEXT", "to", ""],
     ["Length", 0, "ft", "REAL", "length", ""],
-    ["Configuration", "", "object ID", "TEXT", "configuration", ""]
+    ["Configuration", "", "Object name", "TEXT", "configuration", ""]
   ],
   "triplex_line_conductor": [
+    ["Triplex line conductor name", "", "Object name", "TEXT", "name", ""],
     ["resistance", "", "", "REAL", "resistance"],
     ["geometric_mean_radius", "", "", "REAL", "geometric_mean_radius"],
     ["rating.summer.continuous", "", "", "TEXT", "rating.summer.continuous"],
@@ -308,26 +443,46 @@
     ["rating.winter.emergency", "", "", "TEXT", "rating.winter.emergency"]
   ],
   "triplex_line_configuration": [
+    ["Triplex line config name", "", "Object name", "TEXT", "name", ""],
     ["conductor_1", "", "", "TEXT", "conductor_1"],
     ["conductor_2", "", "", "TEXT", "conductor_2"],
     ["conductor_N", "", "", "TEXT", "conductor_N"],
     ["insulation_thickness", "", "", "REAL", "insulation_thickness"],
     ["diameter", "", "", "REAL", "diameter"]
   ],
-  "triplex_load": [],
-  "triplex_meter": [
-    ["Triplex meter name", "", "object ID", "TEXT", "name", ""],
-    ["Parent name", "", "object ID", "TEXT", "parent", ""],
+  "triplex_load": [
+    ["Triplex load name", "", "Object name", "TEXT", "name", ""],
+    ["Parent name", "", "Object name", "TEXT", "parent", ""],
     ["Phases used", "", "[ABCNS]", "TEXT", "phases", ""],
     ["Nominal voltage", 0, "", "REAL", "nominal_voltage", ""],
     ["Voltage 1", "", "", "COMPLEX", "voltage_1", ""],
     ["Voltage 2", "", "", "COMPLEX", "voltage_2", ""],
     ["Voltage 3", "", "", "COMPLEX", "voltage_3", ""],
-    ["power_12", "", "", "COMPLEX", "power_12", ""]
+    ["constant_power_12_real", "", "", "REAL", "constant_power_12_real", ""],
+    ["constant_power_12_reac", "", "", "REAL", "constant_power_12_reac", ""]
+  ],
+  "triplex_meter": [
+    ["Triplex meter name", "", "Object name", "TEXT", "name", ""],
+    ["Parent name", "", "Object name", "TEXT", "parent", ""],
+    ["Phases used", "", "[ABCNS]", "TEXT", "phases", ""],
+    ["Nominal voltage", 0, "", "REAL", "nominal_voltage", ""],
+    ["bill_mode", "", "", "TEXT", "bill_mode", ""],
+    ["price", "", "$", "REAL", "price", ""],
+    ["monthly_fee", "", "$", "REAL", "monthly_fee", ""],
+    ["bill_day", "", "", "INTEGER", "bill_day", ""],
+    ["first_tier_energy", "", "kWh", "REAL", "first_tier_energy", ""],
+    ["first_tier_price", "", "$/kWh", "REAL", "first_tier_price", ""],
+    ["second_tier_energy", "", "kWh", "REAL", "second_tier_energy", ""],
+    ["second_tier_price", "", "$/kWh", "REAL", "second_tier_price", ""],
+    ["Voltage 1", "", "", "COMPLEX", "voltage_1", ""],
+    ["Voltage 2", "", "", "COMPLEX", "voltage_2", ""],
+    ["Voltage 3", "", "", "COMPLEX", "voltage_3", ""],
+    ["power_12", "", "", "COMPLEX", "power_12", ""],
+    ["meter_power_consumption", 0, "", "COMPLEX", "meter_power_consumption", ""]
   ],
   "triplex_node": [
-    ["Triplex node name", "", "object ID", "TEXT", "name", ""],
-    ["Parent name", "", "object ID", "TEXT", "parent", ""],
+    ["Triplex node name", "", "Object name", "TEXT", "name", ""],
+    ["Parent name", "", "Object name", "TEXT", "parent", ""],
     ["Phases used", "", "[ABCNS]", "TEXT", "phases", ""],
     ["Nominal voltage", 0, "", "REAL", "nominal_voltage", ""],
     ["Voltage 1", "", "", "COMPLEX", "voltage_1", ""],
@@ -362,45 +517,60 @@
     ["Weekend Night Set Hi", 74.0, "degF", "REAL", "WeekendNightSetHi"]
   ],
   "underground_line": [
-    ["Underground line name", "", "object ID", "TEXT", "name", ""],
+    ["Underground line name", "", "Object name", "TEXT", "name", ""],
     ["Used phases", "", "[ABCNS]", "TEXT", "phases", ""],
-    ["From object ID", "", "object ID", "TEXT", "from", ""],
-    ["To object ID", "", "object ID", "TEXT", "to", ""],
+    ["From Object name", "", "Object name", "TEXT", "from", ""],
+    ["To Object name", "", "Object name", "TEXT", "to", ""],
     ["Length", 0, "ft", "REAL", "length", ""],
-    ["Configuration", "", "object ID", "TEXT", "configuration", ""]
+    ["Configuration", "", "Object name", "TEXT", "configuration", ""]
   ],
   "underground_line_conductor": [
+    ["Underground line conductor name", "", "Object name", "TEXT", "name", ""],
     ["rating.summer.continuous", "", "", "TEXT", "rating.summer.continuous"],
     ["outer_diameter", "", "", "REAL", "outer_diameter"],
-    ["conductor_gmr", "", "", "TEXT", "conductor_gmr"],
+    ["conductor_gmr", "", "", "REAL", "conductor_gmr"],
     ["conductor_diameter", "", "", "REAL", "conductor_diameter"],
     ["conductor_resistance", "", "", "REAL", "conductor_resistance"],
-    ["neutral_gmr", "", "", "TEXT", "neutral_gmr"],
+    ["neutral_gmr", "", "", "REAL", "neutral_gmr"],
     ["neutral_resistance", "", "", "REAL", "neutral_resistance"],
     ["neutral_diameter", "", "", "REAL", "neutral_diameter"],
     ["neutral_strands", "", "", "INTEGER", "neutral_strands"],
-    ["insulation_relative_permitivitty", "", "", "TEXT", "insulation_relative_permitivitty"]
+    ["insulation_relative_permitivitty", "", "", "TEXT", "insulation_relative_permitivitty"],
+    ["shield_gmr", "", "", "REAL", "shield_gmr"],
+    ["shield_diameter", "", "", "REAL", "shield_diameter"],
+    ["shield_thickness", "", "", "REAL", "shield_thickness"],
+    ["shield_resistance", "", "", "REAL", "shield_resistance"]
+  ],
+  "underground_line_configuration": [
+    ["underground line config name", "", "Object name", "TEXT", "name", ""]
   ],
   "waterheater": [
-    ["Water heater name", "", "object ID", "TEXT", "name", ""],
+    ["Water heater name", "", "Object name", "TEXT", "name", ""],
+    ["Parent water heater name", "", "Object name", "TEXT", "parent", ""],
     ["Schedule skew", 1.0, "", "REAL", "schedule_skew", ""],
     ["Heating element capacity", 1.0, "kW", "REAL", "heating_element_capacity", ""],
     ["Thermostat deadband", 1.0, "", "REAL", "thermostat_deadband", ""],
     ["Tank diameter", 1.5, "", "REAL", "tank_diameter", ""],
     ["Tank UA", "", "", "TEXT", "tank_UA", ""],
     ["Water demand", 0, "", "REAL", "water_demand", ""],
-    ["Tank volume", 0, "", "REAL", "tank_volume", ""]
+    ["Tank volume", 0, "", "REAL", "tank_volume", ""],
+    ["location", "", "[INSIDE|]", "TEXT", "location", ""],
+    ["waterheater_model", "", "[MULTILAYER|]", "TEXT", "waterheater_model", ""],
+    ["discrete_step_size", "", "", "REAL", "discrete_step_size", ""],
+    ["lower_tank_setpoint", "", "", "REAL", "lower_tank_setpoint", ""],
+    ["upper_tank_setpoint", "", "", "REAL", "upper_tank_setpoint", ""],
+    ["T_mixing_valve", 0, "", "REAL", "T_mixing_valve", ""]
   ],
   "voltdump": [
     ["Group", "", "", "TEXT", "group", ""],
     ["Run time", "", "", "TEXT", "runtime", ""],
     ["File name", "", "", "TEXT", "filename", ""],
     ["Run count", 0, "", "INTEGER", "runcount", ""],
-    ["Mode", "", "", "TEXT", "mode", ""]
+    ["Mode", "", "[RECT|POLAR]", "TEXT", "mode", ""]
   ],
   "ZIPload": [
-    ["ZIPload name", "", "object ID", "TEXT", "name", ""],
-    ["Parent name", "", "object ID", "TEXT", "parent", ""],
+    ["ZIP load name", "", "Object name", "TEXT", "name", ""],
+    ["Parent name", "", "Object name", "TEXT", "parent", ""],
     ["Schedule skew", "", "", "REAL", "schedule_skew", ""],
     ["Current fraction", "", "", "REAL", "current_fraction", ""],
     ["Impedance fraction", "", "", "REAL", "impedance_fraction", ""],
@@ -409,6 +579,7 @@
     ["PF constant power portion", "", "", "REAL", "power_pf", ""],
     ["PF constant current portion", "", "", "REAL", "current_pf", ""],
     ["PF constant impedance portion", "", "", "REAL", "impedance_pf", ""],
-    ["Fraction transferred as heat", "", "", "REAL", "heat_fraction", ""]
+    ["Fraction transferred as heat", "", "", "REAL", "heat_fraction", ""],
+    ["Heat gain fraction", "", "", "REAL", "heatgain_fraction", ""]
   ]
 }

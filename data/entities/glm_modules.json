@@ -1,21 +1,30 @@
 {
   "clock": [
-    ["timezone", "", "", "TEXT", "timezone",""],
-    ["timestamp", "", "", "TEXT", "timestamp",""],
-    ["stoptime", "", "", "TEXT", "stoptime",""]
+    ["Time zone", "", "", "TEXT", "timezone",""],
+    ["Start time", "", "", "TEXT", "timestamp",""],
+    ["Start time", "", "", "TEXT", "starttime",""],
+    ["Stop time", "", "", "TEXT", "stoptime",""]
   ],
   "tape": [],
   "climate": [],
   "connection": [],
-  "generators": [],
+  "generators": [
+    ["Enable sub-second models", "", "true|false", "BOOLEAN", "enable_subsecond_models", ""],
+    ["Delta mode timestep", "", "ms", "INTEGER", "deltamode_timestep", ""]
+  ],
   "powerflow": [
+    ["lu_solver", "KLU", "KLU|?", "TEXT", "lu_solver",""],
     ["solver_method", "FBS", "NR|FBS", "TEXT", "solver_method",""],
     ["NR_iteration_limit", 100, "", "INTEGER", "NR_iteration_limit",""],
-    ["line_capacitance", "TRUE", "", "BOOLEAN", "line_capacitance",""]
+    ["line_capacitance", "TRUE", "", "BOOLEAN", "line_capacitance",""],
+    ["default_maximum_voltage_error", "1e-6", "", "REAL", "default_maximum_voltage_error",""],
+    ["Enable sub-second models", "", "true|false", "BOOLEAN", "enable_subsecond_models", ""],
+    ["All powerflow delta mode", "", "true|false", "BOOLEAN", "all_powerflow_delta", ""],
+    ["Delta mode timestep", "", "ms", "INTEGER", "deltamode_timestep", ""]
   ],
   "reliability": [
-    ["maximum_event_length", 18000, "", "INTEGER", "maximum_event_length",""],
-    ["report_event_log", "TRUE", "", "BOOLEAN", "report_event_log",""]
+    ["Maximum event length", 18000, "", "INTEGER", "maximum_event_length",""],
+    ["Report event log", "TRUE", "", "BOOLEAN", "report_event_log",""]
   ],
   "residential": [
     ["implicit_enduses", "NONE", "", "TEXT", "implicit_enduses",""]

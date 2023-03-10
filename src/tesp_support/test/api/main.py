@@ -24,7 +24,7 @@ class mytest:
         return
 
 
-def fredtest():
+def test0():
     testMod = GLMModifier()
     testMod.model.read(feeders_path + "/GLD_three_phase_house.glm")
     loads = testMod.get_object('load')
@@ -49,7 +49,7 @@ def fredtest():
         house_name = 'house_' + str(house_counter)
         house = testMod.add_object('house', house_name, [])
         house['parent'] = house_meter_name
-    testMod.write_model("test.glm")
+    testMod.write_model("test0.glm")
 
 
 def test1():
@@ -118,8 +118,18 @@ def test3():
 
     tval = modobject.read_model(feeders_path + "R1-12.47-1.glm")
 
-    for name in modobject.model.entities:
-        print(modobject.model.entities[name].toHelp())
+    for name in modobject.model.module_entities:
+        print(modobject.model.module_entities[name].toHelp())
+    for name in modobject.model.object_entities:
+        print(modobject.model.object_entities[name].toHelp())
+
+
+def test4():
+    testMod = GLMModifier()
+    f = "dsot_test.glm"
+    f = "testing.glm"
+    testMod.model.read(f)
+    testMod.write_model("test4.glm")
 
 
 # Synchronizes a list of time series dataframes
@@ -194,8 +204,8 @@ def debug_resample():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    test0()
     test1()
     test2()
     test3()
-    fredtest()
     debug_resample()
