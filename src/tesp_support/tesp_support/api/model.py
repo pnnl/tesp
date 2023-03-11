@@ -410,6 +410,11 @@ class GLModel:
             m = re.search(mod + ' ([^{\s]+)[{\s]', line, re.IGNORECASE)
             _type = m.group(1)
 
+        pos = line.find("//")
+        if pos > 0:
+            substring = line[pos + 2:].strip()
+            inside__comments.append(substring)
+
         done = False
         line = next(itr).strip()
         while not done:
@@ -471,7 +476,6 @@ class GLModel:
         #     print("ERROR: Name defined for object " + _type)
             # quit()
 
-        line = next(itr)
 
         # Collect parameters
         octr += 1
@@ -479,11 +483,18 @@ class GLModel:
         name_prefix = ''
         params = {}
         comments = []
+        obj__comments = []
         inside__comments = []
         inside_comments = dict()
         inline_comments = dict()
         done = False
 
+        pos = line.find("//")
+        if pos > 0:
+            substring = line[pos + 2:].strip()
+            obj__comments.append(substring)
+
+        line = next(itr)
         if len(parent):
             params['parent'] = parent
         while not done:
@@ -509,6 +520,9 @@ class GLModel:
                 val = m.group(2)
                 if param == 'name':
                     name = self.gld_strict_name(name_prefix + val)
+                    if len(obj__comments) > 0:
+                        inside_comments['name'] = obj__comments
+                        obj__comments = []
                 elif param == 'object':
                     # found a nested object
                     intobj += 1
@@ -606,7 +620,14 @@ class GLModel:
             itr = iter(lines)
             for line in itr:
                 if re.match('\s*//', line):
-                    outside_comments.append(line)
+                    if re.search('#set', line):
+                        self.set_lines.append(line)
+                    elif re.search('#include', line):
+                        self.include_lines.append(line)
+                    elif re.search('#define', line):
+                        self.define_lines.append(line)
+                    else:
+                        outside_comments.append(line)
                 elif re.search('#set', line):
                     self.set_lines.append(line)
                 elif re.search('#include', line):
