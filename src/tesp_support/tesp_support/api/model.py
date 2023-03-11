@@ -27,7 +27,7 @@ class GLModel:
     module_entities = {}
     network = nx.Graph()
     set_lines = []
-    defeine_lines = []
+    define_lines = []
     include_lines = []
     inside_comments = dict()
     outside_comments = dict()
@@ -111,79 +111,67 @@ class GLModel:
             diction += self.object_entities[name].toHelp()
         return diction
 
-    @staticmethod
-    def get_InsideComments(object_name, item_id, inside_comments):
+    def get_InsideComments(self, object_name, item_id):
         """
 
         Args:
             object_name:
             item_id:
-            inside_comments:
 
         Returns:
 
         """
         comments = ""
-        # if object_name in in_comments:
-        #     temp_comments = in_comments[object_name]
-        #     if len(temp_comments) > 0:
-        #         for comment in temp_comments:
-        #             comments += "  //" + comment + "\n"
-        if object_name in inside_comments:
-            obj_dict = inside_comments[object_name]
+        if object_name in self.inside_comments:
+            obj_dict = self.inside_comments[object_name]
             if item_id in obj_dict:
                 temp_comments = obj_dict[item_id]
                 for comment in temp_comments:
-                    comments += "  //" + comment + "\n"
+                    comments += "  // " + comment + "\n"
         return comments
 
-    @staticmethod
-    def get_InlineComment(object_name, item_id, inline_comments):
+    def get_InlineComment(self, object_name, item_id):
         """
 
         Args:
             object_name:
             item_id:
-            inline_comments:
 
         Returns:
 
         """
         comment = ""
-        if object_name in inline_comments:
-            obj_dict = inline_comments[object_name]
+        if object_name in self.inline_comments:
+            obj_dict = self.inline_comments[object_name]
             if item_id in obj_dict:
                 comment = obj_dict[item_id]
                 if comment != "":
-                    comment = "  //" + comment
+                    comment = "  // " + comment
         return comment
 
     def get_diction(self, obj_entities, name, instanceTo):
         diction = ""
         ent_keys = obj_entities[name].instance.keys()
         if len(ent_keys) > 0:
-            obj_name = list(ent_keys)[0]
-            if obj_name in self.outside_comments:
-                out_comments = self.outside_comments[obj_name]
-                for comment in out_comments:
-                    diction += comment + "\n"
-            diction += instanceTo(obj_entities[name], self.inside_comments, self.inline_comments)
+            diction += instanceTo(obj_entities[name])
         return diction
 
-    def instanceToModule(self, module, in_comments, line_comments):
+    def instanceToModule(self, module):
         """
         instanceToModule adds the comments pulled from the backbone glm file
         to the new modified glm file.
 
         Args:
             module:
-            in_comments:
-            line_comments:
 
         Returns:
 
         """
         diction = ""
+        if module.entity in self.outside_comments:
+            out_comments = self.outside_comments[module.entity]
+            for comment in out_comments:
+                diction += comment + "\n"
         if len(module.instance) > 0:
             if module.entity in ["clock"]:
                 diction = module.entity
@@ -194,40 +182,42 @@ class GLModel:
             keys = module.instance[module.entity].keys()
             if len(keys) > 0:
                 diction += " {\n"
-                diction += self.get_InsideComments(module.entity, 'name', in_comments)
+                diction += self.get_InsideComments(module.entity, 'name')
                 for item in module.instance[module.entity].keys():
-                    diction += self.get_InsideComments(module.entity, item, in_comments)
-                    comments = self.get_InlineComment(module.entity, item, line_comments)
+                    diction += self.get_InsideComments(module.entity, item)
+                    comments = self.get_InlineComment(module.entity, item)
                     diction += "  " + item + " " + str(module.instance[module.entity][item]) + ";" + comments + "\n"
-                diction += self.get_InsideComments(module.entity, "__last__", in_comments)
+                diction += self.get_InsideComments(module.entity, "__last__")
                 diction += "}\n"
             else:
                 diction += ";\n"
         return diction
 
-    def instanceToObject(self, object, in_comments, line_comments):
+    def instanceToObject(self, object):
         """
         instanceToObject adds the comments pulled from the backbone glm file
         to the new modified glm file.
 
         Args:
             object:
-            in_comments:
-            line_comments:
 
         Returns:
 
         """
         diction = ""
         for object_name in object.instance:
+            if object_name in self.outside_comments:
+                out_comments = self.outside_comments[object_name]
+                for comment in out_comments:
+                    diction += comment + "\n"
             diction += "object " + object.entity + " {\n"
-            diction += self.get_InsideComments(object_name, "name", in_comments)
+            diction += self.get_InsideComments(object_name, "name")
             diction += "  name " + object_name + ";\n"
             for item in object.instance[object_name].keys():
-                diction += self.get_InsideComments(object_name, item, in_comments)
-                comments = self.get_InlineComment(object_name, item, line_comments)
+                diction += self.get_InsideComments(object_name, item)
+                comments = self.get_InlineComment(object_name, item)
                 diction += "  " + item + " " + str(object.instance[object_name][item]) + ";" + comments + "\n"
-            diction += self.get_InsideComments(object_name, "__last__", in_comments)
+            diction += self.get_InsideComments(object_name, "__last__")
             diction += "}\n\n"
         return diction
 
@@ -433,7 +423,6 @@ class GLModel:
                 substring = line[pos + 2:].strip()
                 tokens = line.split(" ")
                 inline_comments[tokens[0]] = substring
-                line = ";"
 
             # find a parameter
             m = re.match('\s*(\S+) ([^;]+);', line)
@@ -452,7 +441,7 @@ class GLModel:
         if len(inside__comments) > 0:
             inside_comments['__last__'] = inside__comments
         if len(inside__comments) > 0:
-            self.inside_comments[_type] = inside__comments
+            self.inside_comments[_type] = inside_comments
         if len(inline_comments) > 0:
             self.inline_comments[_type] = inline_comments
         return _type
@@ -511,7 +500,6 @@ class GLModel:
                     line = "object " + tokens[1] + " {"
                 else:
                     inline_comments[tokens[0]] = substring
-                    line = ";"
 
             intobj = 0
             m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
@@ -610,7 +598,8 @@ class GLModel:
                 # skip white space lines
                 while re.match('\s+$', line):
                     line = ip.readline()
-                lines.append(line.strip())
+                line = line.strip()
+                lines.append(line.replace("\t", " "))
                 line = ip.readline()
             ip.close()
 

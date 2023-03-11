@@ -97,6 +97,8 @@
     ["Number of air-changes per hour", "", "", "REAL", "airchange_per_hour", ""],
     ["Heating performance coefficient", "", "", "REAL", "heating_COP", ""],
     ["Cooling performance coefficient", "", "", "REAL", "cooling_COP", ""],
+    ["Heating set point", "", "", "REAL", "heating_setpoint", ""],
+    ["Cooling set point", "", "", "REAL", "cooling_setpoint", ""],
     ["Home conditioned floor area", "", "sf", "REAL", "floor_area", ""],
     ["schedule_skew", "", "", "REAL", "schedule_skew", ""],
     ["number_of_stories", "", "", "INTEGER", "number_of_stories", ""],
