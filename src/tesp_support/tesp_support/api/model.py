@@ -149,74 +149,76 @@ class GLModel:
                     comment = "  // " + comment
         return comment
 
-    def get_diction(self, obj_entities, name, instanceTo):
+    @staticmethod
+    def get_diction(obj_entities, name, instanceTo):
         diction = ""
         ent_keys = obj_entities[name].instance.keys()
         if len(ent_keys) > 0:
             diction += instanceTo(obj_entities[name])
         return diction
 
-    def instanceToModule(self, module):
+    def instanceToModule(self, i_module):
         """
         instanceToModule adds the comments pulled from the backbone glm file
         to the new modified glm file.
 
         Args:
-            module:
+            i_module:
 
         Returns:
 
         """
+        name = i_module.entity
         diction = ""
-        if module.entity in self.outside_comments:
-            out_comments = self.outside_comments[module.entity]
+        if name in self.outside_comments:
+            out_comments = self.outside_comments[i_module.entity]
             for comment in out_comments:
                 diction += comment + "\n"
-        if len(module.instance) > 0:
-            if module.entity in ["clock"]:
-                diction = module.entity
-            elif module.entity in ["player"]:
-                diction = "class " + module.entity
+        if len(i_module.instance) > 0:
+            if name in ["clock"]:
+                diction = name
+            elif name in ["player"]:
+                diction = "class " + name
             else:
-                diction = "module " + module.entity
-            keys = module.instance[module.entity].keys()
+                diction = "module " + name
+            keys = i_module.instance[name].keys()
             if len(keys) > 0:
                 diction += " {\n"
-                diction += self.get_InsideComments(module.entity, 'name')
-                for item in module.instance[module.entity].keys():
-                    diction += self.get_InsideComments(module.entity, item)
-                    comments = self.get_InlineComment(module.entity, item)
-                    diction += "  " + item + " " + str(module.instance[module.entity][item]) + ";" + comments + "\n"
-                diction += self.get_InsideComments(module.entity, "__last__")
+                diction += self.get_InsideComments(name, 'name')
+                for item in i_module.instance[name].keys():
+                    diction += self.get_InsideComments(name, item)
+                    comments = self.get_InlineComment(name, item)
+                    diction += "  " + item + " " + str(i_module.instance[name][item]) + ";" + comments + "\n"
+                diction += self.get_InsideComments(name, "__last__")
                 diction += "}\n"
             else:
                 diction += ";\n"
         return diction
 
-    def instanceToObject(self, object):
+    def instanceToObject(self, i_object):
         """
         instanceToObject adds the comments pulled from the backbone glm file
         to the new modified glm file.
 
         Args:
-            object:
+            i_object:
 
         Returns:
 
         """
         diction = ""
-        for object_name in object.instance:
+        for object_name in i_object.instance:
             if object_name in self.outside_comments:
                 out_comments = self.outside_comments[object_name]
                 for comment in out_comments:
                     diction += comment + "\n"
-            diction += "object " + object.entity + " {\n"
+            diction += "object " + i_object.entity + " {\n"
             diction += self.get_InsideComments(object_name, "name")
             diction += "  name " + object_name + ";\n"
-            for item in object.instance[object_name].keys():
+            for item in i_object.instance[object_name].keys():
                 diction += self.get_InsideComments(object_name, item)
                 comments = self.get_InlineComment(object_name, item)
-                diction += "  " + item + " " + str(object.instance[object_name][item]) + ";" + comments + "\n"
+                diction += "  " + item + " " + str(i_object.instance[object_name][item]) + ";" + comments + "\n"
             diction += self.get_InsideComments(object_name, "__last__")
             diction += "}\n\n"
         return diction
@@ -376,7 +378,7 @@ class GLModel:
             return True
         return False
 
-    def module(self, mod, line, itr):
+    def glm_module(self, mod, line, itr):
         """Store a clock/module/class in the model structure
 
         Args:
@@ -391,7 +393,7 @@ class GLModel:
         # Collect parameters
         params = {}
         # Collect comments
-        inside__comments = []
+        comments = []
         inside_comments = dict()
         inline_comments = dict()
 
@@ -413,7 +415,7 @@ class GLModel:
         pos = line.find("//")
         if pos > 0:
             substring = line[pos + 2:].strip()
-            inside__comments.append(substring)
+            comments.append(substring)
 
         done = False
         line = next(itr).strip()
@@ -422,7 +424,7 @@ class GLModel:
             pos = line.find("//")
             if pos == 0:
                 substring = line[pos + 2:].strip()
-                inside__comments.append(substring)
+                comments.append(substring)
                 line = ";"
             elif pos > 0:
                 substring = line[pos + 2:].strip()
@@ -433,9 +435,9 @@ class GLModel:
             m = re.match('\s*(\S+) ([^;]+);', line)
             if m:
                 params[m.group(1)] = m.group(2)
-                if len(inside__comments) > 0:
-                    inside_comments[m.group(1)] = inside__comments
-                    inside__comments = []
+                if len(comments) > 0:
+                    inside_comments[m.group(1)] = comments
+                    comments = []
             if re.search('}', line):
                 done = 1
             else:
@@ -443,15 +445,15 @@ class GLModel:
 
         self.set_module_instance(_type, params)
 
-        if len(inside__comments) > 0:
-            inside_comments['__last__'] = inside__comments
-        if len(inside__comments) > 0:
+        if len(comments) > 0:
+            inside_comments['__last__'] = comments
+        if len(inside_comments) > 0:
             self.inside_comments[_type] = inside_comments
         if len(inline_comments) > 0:
             self.inline_comments[_type] = inline_comments
         return _type
 
-    def obj(self, parent, model, line, itr, oidh, octr):
+    def glm_object(self, parent, model, line, itr, oidh, octr):
         """Store an object in the model structure
 
         Args:
@@ -476,15 +478,13 @@ class GLModel:
         #     print("ERROR: Name defined for object " + _type)
             # quit()
 
-
         # Collect parameters
         octr += 1
         name = None
         name_prefix = ''
         params = {}
         comments = []
-        obj__comments = []
-        inside__comments = []
+        object_comments = []
         inside_comments = dict()
         inline_comments = dict()
         done = False
@@ -492,7 +492,7 @@ class GLModel:
         pos = line.find("//")
         if pos > 0:
             substring = line[pos + 2:].strip()
-            obj__comments.append(substring)
+            object_comments.append(substring)
 
         line = next(itr)
         if len(parent):
@@ -501,15 +501,12 @@ class GLModel:
             pos = line.find("//")
             if pos == 0:
                 substring = line[pos + 2:].strip()
-                inside__comments.append(substring)
+                comments.append(substring)
                 line = ";"
             elif pos > 0:
                 substring = line[pos + 2:].strip()
                 tokens = line.split(" ")
-                if tokens[0].lower() == 'object':
-                    comments = substring
-                    line = "object " + tokens[1] + " {"
-                else:
+                if tokens[0].lower() != 'object':
                     inline_comments[tokens[0]] = substring
 
             intobj = 0
@@ -520,36 +517,27 @@ class GLModel:
                 val = m.group(2)
                 if param == 'name':
                     name = self.gld_strict_name(name_prefix + val)
-                    if len(obj__comments) > 0:
-                        inside_comments['name'] = obj__comments
-                        obj__comments = []
+                    if len(object_comments) > 0:
+                        inside_comments['name'] = object_comments
+                        object_comments = []
                 elif param == 'object':
                     # found a nested object
                     intobj += 1
                     if name is None:
                         print('ERROR: nested object defined before parent name')
                         quit()
-                    line, octr, lname = self.obj(name, model, line, itr, oidh, octr)
-                    if len(comments):
-                        if lname not in self.inside_comments:
-                            self.inside_comments[lname] = {}
-                            self.inside_comments[lname]['name'] = []
-                        if 'name' in self.inside_comments[lname]:
-                            self.inside_comments[lname]['name'].append(comments)
-                        else:
-                            self.inside_comments[lname]['name'] = comments
-                        comments = ""
+                    line, octr, lname = self.glm_object(name, model, line, itr, oidh, octr)
                 else:
                     if val == "$":
-                        # found $ directive
+                        # found $ command
                         pos = line.find("{")
                         pos1 = line.find(";")
-                        params[param] = val + line[pos:pos1]
-                        line = ";"
-                    params[param] = val
-                    if len(inside__comments) > 0:
-                        inside_comments[param] = inside__comments
-                        inside__comments = []
+                        val = val + line[pos:pos1]
+                        line = ""
+                    params[param] = val.strip()
+                    if len(comments) > 0:
+                        inside_comments[param] = comments
+                        comments = []
 
             if re.search('}', line):
                 if intobj:
@@ -562,6 +550,9 @@ class GLModel:
         # If undefined, use a default name
         if name is None:
             name = name_prefix + 'ID_' + str(octr)
+            if len(object_comments) > 0:
+                inside_comments['name'] = object_comments
+                object_comments = []
         oidh[name] = name
         # Hash an object identifier to the object name
         if n:
@@ -574,8 +565,8 @@ class GLModel:
         model[_type][name] = {}
         model[_type][name] = self.set_object_instance(_type, name, params)
 
-        if len(inside__comments) > 0:
-            inside_comments['__last__'] = inside__comments
+        if len(comments) > 0:
+            inside_comments['__last__'] = comments
         if len(inside_comments) > 0:
             self.inside_comments[name] = inside_comments
         if len(inline_comments) > 0:
@@ -635,15 +626,15 @@ class GLModel:
                 elif re.search('#define', line):
                     self.define_lines.append(line)
                 elif re.search('clock', line):
-                    name = self.module("date", line, itr)
+                    name = self.glm_module("date", line, itr)
                 elif re.search('class', line):
-                    name = self.module("class", line, itr)
+                    name = self.glm_module("class", line, itr)
                 elif re.search('module', line):
-                    name = self.module("module", line, itr)
+                    name = self.glm_module("module", line, itr)
                 elif re.search('object', line):
-                    line, octr, name = self.obj("", model, line, itr, h, octr)
+                    line, octr, name = self.glm_object("", model, line, itr, h, octr)
                 else:
-                    print('Unparsed line\n', line)
+                    print('Un-parsed line\n', line)
 
                 if name != "":
                     if len(outside_comments) > 0:

@@ -126,8 +126,9 @@ def test3():
 
 def test4():
     testMod = GLMModifier()
-    f = "dsot_test.glm"
-    # f = "testing.glm"
+    # f = "dsot_test.glm"
+    f = "testing.glm"
+    # f = "../../../../examples/capabilities/loadshed/loadshed.glm"
     testMod.model.read(f)
     testMod.write_model("test4.glm")
 
