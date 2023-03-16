@@ -66,7 +66,9 @@ class GridPIQ:
         if count > 0:
             for kind in self.choices:
                 gen = self.__getattribute__(kind)
-                gen /= count
+                idx = len(gen) - 1
+                if idx > -1:
+                    gen[idx] = gen[idx] / count
 
     def set_max_load(self, data):
         if data > self.max_load:
@@ -138,9 +140,12 @@ def test():
 
     pq = GridPIQ()
     pq.set_datetime(start_date, end_date)
-    for i in range(len(choices)):
-        for j in range(len(data)):
+    for j in range(len(data)):
+        for i in range(len(choices)):
             pq.set_dispatch_data(choices[i], j, data[j]*percent[i])
+            for k in range(8):
+                pq.set_dispatch_data(choices[i], j, data[j]*percent[i])
+        pq.avg_dispatch_data(9)
     pq.set_max_load(55678.4353)
     pq.write_json()
 

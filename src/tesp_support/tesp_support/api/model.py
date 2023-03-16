@@ -271,31 +271,6 @@ class GLModel:
             self.object_entities[name].instanceToSQLite(self.conn)
         return
 
-    def set_object_instance(self, obj_type, obj_name, params):
-        if type(obj_type) == str and type(obj_name) == str:
-            try:
-                entity = self.object_entities[obj_type]
-                return entity.set_instance(obj_name, params)
-            except:
-                print("Unrecognized GRIDLABD object and id ->", obj_type, obj_name)
-                self.objects[obj_type] = {}
-                entity = self.object_entities[obj_type] = Entity(obj_type, self.objects[obj_type])
-                return entity.set_instance(obj_name, params)
-        else:
-            print("GRIDLABD object type and/or object name is not a string")
-        return None
-
-    def get_object_instance(self, obj_type, obj_name):
-        if type(obj_type) == str and type(obj_type) == str:
-            try:
-                entity = self.object_entities[obj_type]
-                return entity.get_instance(obj_name)
-            except:
-                print("Unrecognized GRIDLABD object and id ->", obj_type, obj_name)
-        else:
-            print("GRIDLABD object name and/or object id is not a string")
-        return None
-
     def set_module_instance(self, mod_type, params):
         if type(mod_type) == str:
             try:
@@ -319,6 +294,31 @@ class GLModel:
                 print("Unrecognized GRIDLABD module ->", mod_type)
         else:
             print("GRIDLABD module is not a string")
+        return None
+
+    def set_object_instance(self, obj_type, obj_name, params):
+        if type(obj_type) == str and type(obj_name) == str:
+            try:
+                entity = self.object_entities[obj_type]
+                return entity.set_instance(obj_name, params)
+            except:
+                print("Unrecognized GRIDLABD object and id ->", obj_type, obj_name)
+                self.objects[obj_type] = {}
+                entity = self.object_entities[obj_type] = Entity(obj_type, self.objects[obj_type])
+                return entity.set_instance(obj_name, params)
+        else:
+            print("GRIDLABD object type and/or object name is not a string")
+        return None
+
+    def get_object_instance(self, obj_type, obj_name):
+        if type(obj_type) == str and type(obj_type) == str:
+            try:
+                entity = self.object_entities[obj_type]
+                return entity.get_instance(obj_name)
+            except:
+                print("Unrecognized GRIDLABD object and id ->", obj_type, obj_name)
+        else:
+            print("GRIDLABD object name and/or object id is not a string")
         return None
 
     @staticmethod
@@ -483,6 +483,7 @@ class GLModel:
         name = None
         name_prefix = ''
         params = {}
+        # Collect comments
         comments = []
         object_comments = []
         inside_comments = dict()
@@ -512,10 +513,10 @@ class GLModel:
             intobj = 0
             m = re.match('\s*(\S+) ([^;{]+)[;{]', line)
             if m:
-                # found a parameter
                 param = m.group(1)
                 val = m.group(2)
                 if param == 'name':
+                    # found a parameter name
                     name = self.gld_strict_name(name_prefix + val)
                     if len(object_comments) > 0:
                         inside_comments['name'] = object_comments
@@ -528,6 +529,7 @@ class GLModel:
                         quit()
                     line, octr, lname = self.glm_object(name, model, line, itr, oidh, octr)
                 else:
+                    # found a parameter val
                     if val == "$":
                         # found $ command
                         pos = line.find("{")
@@ -547,21 +549,19 @@ class GLModel:
                     done = True
             else:
                 line = next(itr)
-        # If undefined, use a default name
+        # if undefined, use a default name
         if name is None:
-            name = name_prefix + 'ID_' + str(octr)
+            name = name_prefix + _type + "_" + str(octr)
             if len(object_comments) > 0:
                 inside_comments['name'] = object_comments
-                object_comments = []
         oidh[name] = name
-        # Hash an object identifier to the object name
+        # hash an object identifier to the object name
         if n:
             oidh[oid] = name
-        # Add the object to the model
+        # add the new object type to the model
         if _type not in model:
-            # New object type
             model[_type] = {}
-        # find and set object entity instance
+        # add name and set object entity instance to model type
         model[_type][name] = {}
         model[_type][name] = self.set_object_instance(_type, name, params)
 

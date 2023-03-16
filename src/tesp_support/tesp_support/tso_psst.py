@@ -986,10 +986,11 @@ def tso_psst_loop(casename):
 
             piq = False
             piq_count = 0
-            if 'gridpiq' in ppc:
+            if 'gridPIQ' in ppc:
                 piq = ppc['gridPIQ']
                 if piq:
-                    import api.gridpiq as pq
+                    from tesp_support.api.gridpiq import GridPIQ
+                    pq = GridPIQ()
                     pq.set_datetime(StartTime, EndTime)
 
             ames = ppc['ames']
