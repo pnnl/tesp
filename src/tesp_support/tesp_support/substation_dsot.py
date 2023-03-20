@@ -47,7 +47,13 @@ def inner_substation_loop(metrics_root, with_market):
     """
 
     def publish(name, val):
-        pub = helics.helicsFederateGetPublication(hFed, name)
+        try:
+            pub = cache_pub[name]
+        except:
+            cache_pub[name] = helics.helicsFederateGetPublication(hFed, name)
+            pub = cache_pub[name]
+
+        # pub = helics.helicsFederateGetPublication(hFed, name)
         if type(val) is str:
             helics.helicsPublicationPublishString(pub, val)
         elif type(val) is float or type(val) is np.float64:
@@ -675,6 +681,7 @@ def inner_substation_loop(metrics_root, with_market):
     ames_lmp = False
     timing(proc[0], False)
 
+    cache_pub = {}
     log.info("Initialize HELICS dso federate")
     hFed = helics.helicsCreateValueFederateFromConfig("./" + metrics_root + ".json")
     fedName = helics.helicsFederateGetName(hFed)
