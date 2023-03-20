@@ -47,7 +47,7 @@ done
 # repo for git
 # sudo add-apt-repository ppa:git-core/ppa
 
-# Some support depends linux version
+# Some support depends on linux version
 lv=( $(cat /etc/issue) )
 lv=( ${lv[1]//./ } )
 if [[ ${lv[0]} -eq 18 ]]; then

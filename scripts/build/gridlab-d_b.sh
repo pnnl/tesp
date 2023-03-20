@@ -28,7 +28,7 @@ fi
 
 mkdir build
 cd build || exit
-cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}" \
+cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}" -DCMAKE_BUILD_TYPE=Release \
       -DGLD_USE_HDF5=ON \
       -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" \
       -DGLD_USE_HELICS=ON -DGLD_HELICS_DIR="${INSTDIR}" ..
@@ -36,7 +36,7 @@ cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}" \
 # Remove -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" if you do not need to use FNCS
 
 # Run the build system and install the application
-cmake --build . --target install
+cmake --build . -j $(grep -c "^processor" /proc/cpuinfo) --target install
 
 # To validate the build
 #gridlabd.sh -t 0 --validate
