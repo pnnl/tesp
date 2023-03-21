@@ -52,7 +52,6 @@ def inner_substation_loop(metrics_root, with_market):
         except:
             cache_pub[name] = helics.helicsFederateGetPublication(hFed, name)
             pub = cache_pub[name]
-
         # pub = helics.helicsFederateGetPublication(hFed, name)
         if type(val) is str:
             helics.helicsPublicationPublishString(pub, val)
