@@ -297,6 +297,23 @@
     ["Alternate format", "no", "[yes|no]", "TEXT", "alternate", ""],
     ["Extension format", "h5", "[json|h5]", "TEXT", "extension", ""]
   ],
+  "multi_recorder": [
+    ["Recoder name", "", "Object name", "TEXT", "name", ""],
+    ["Interval", "", "s", "INTEGER", "interval", ""],
+    ["Property name(s)", "", "comma separated property names", "TEXT", "property", ""],
+    ["Trigger", "", "", "TEXT", "trigger", ""],
+    ["Recorder to file", "", "", "TEXT", "file", ""],
+    ["Mode", "", "", "TEXT", "mode", ""],
+    ["Multi file", "", "", "TEXT", "multifile", ""],
+    ["Limit", "", "", "INTEGER", "limit", ""],
+    ["Plot commands", "", "", "TEXT", "plotcommands", ""],
+    ["Xdata", "", "", "TEXT", "xdata", ""],
+    ["Columns", "", "", "TEXT", "columns", ""],
+    ["Format", "", "", "TEXT", "format", ""],
+    ["Output", 0, "{SVG=6, PNG=5, PDF=4, JPG=3, GIF=2, EPS=1, SCREEN=0}", "INTEGER", "output", ""],
+    ["Header units", 0, "{NONE=2, ALL=1, DEFAULT=0}", "INTEGER", "header_units", ""],
+    ["Line units", 0, "{NONE=2, ALL=1, DEFAULT=0}", "INTEGER", "line_units", ""]
+  ],
   "node": [
     ["Node name", "", "Object name", "TEXT", "name", ""],
     ["Parent name", "", "Object name", "TEXT", "parent", ""],
@@ -326,21 +343,31 @@
   ],
   "player": [
     ["Player name", "", "Object name", "TEXT", "name", ""],
-    ["Parent", "", "Object name", "TEXT", "parent", ""],
-    ["Player configure", "", "", "TEXT", "configure", ""],
-    ["Player file", "", "", "TEXT", "file", ""],
     ["Property", "", "comma separated property name for parent", "TEXT", "property", ""],
-    ["Flags", "", "DELTAMODE|", "TEXT", "flags", ""],
-    ["loop","", "", "INTEGER", "loop", ""]
+    ["Player file", "", "", "TEXT", "file", ""],
+    ["File type", "", "", "TEXT", "filetype", ""],
+    ["Mode", "", "", "TEXT", "mode", ""],
+    ["Loop","", "", "INTEGER", "loop", ""],
+    ["All events delta","", "", "INTEGER", "all_events_delta", ""]
   ],
   "recorder": [
-    ["Recorder name", "", "Object name", "TEXT", "name", ""],
-    ["Parent", "", "Object name", "TEXT", "parent", ""],
-    ["Recoder File", "", "", "TEXT", "file", ""],
-    ["Property", "", "comma separated property name for parent", "TEXT", "property", ""],
-    ["Flags", "", "DELTAMODE|", "TEXT", "flags", ""],
-    ["Interval", 3600, "s", "INTEGER", "interval", ""],
-    ["Limit", 1000, "", "INTEGER", "limit", ""]
+    ["Recoder name", "", "Object name", "TEXT", "name", ""],
+    ["Property names(s)", "", "comma separated property names", "TEXT", "property", ""],
+    ["Trigger", "", "", "TEXT", "trigger", ""],
+    ["Recorder to file", "", "", "TEXT", "file", ""],
+    ["Mode", "", "", "TEXT", "mode", ""],
+    ["Multi file", "", "", "TEXT", "multifile", ""],
+    ["Limit", "", "", "INTEGER", "limit", ""],
+    ["Plot commands", "", "", "TEXT", "plotcommands", ""],
+    ["Xdata", "", "", "TEXT", "xdata", ""],
+    ["Columns", "", "", "TEXT", "columns", ""],
+    ["Flush", "", "", "INTEGER", "flush", ""],
+    ["Format", "", "", "BOOLEAN", "format", ""],
+    ["Interval", "", "s", "INTEGER", "interval", ""],
+    ["Output", 0, "{SVG=6, PNG=5, PDF=4, JPG=3, GIF=2, EPS=1, SCREEN=0}", "INTEGER", "output", ""],
+    ["Header units", 0, "{NONE=2, ALL=1, DEFAULT=0}", "INTEGER", "header_units", ""],
+    ["Line units", 0, "{NONE=2, ALL=1, DEFAULT=0}", "INTEGER", "line_units", ""],
+    ["Flags", "", "[DELTAMODE|]", "TEXT", "flags", ""]
   ],
   "recloser": [
     ["Recorder name", "", "Object name", "TEXT", "name", ""],
