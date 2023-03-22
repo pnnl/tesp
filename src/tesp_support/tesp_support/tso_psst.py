@@ -689,7 +689,7 @@ def tso_psst_loop(casename):
                 zgen[ii][1] = powerT0 * baseS
                 # if using gridpiq to gauge environmental emission concerns
                 if piq:
-                    pq.set_dispatch_data(zgenFuel[ii][0], hour, zgen[ii][1])
+                    pq.set_dispatch_data(zgenFuel[ii][0], piq_hour, zgen[ii][1])
 
         print(' ;\n', file=fp)
         log.info("TSO Power " + str(P_avail))
@@ -985,6 +985,7 @@ def tso_psst_loop(casename):
             noScale = ppc['noScale']
 
             piq = False
+            piq_hour = 0
             piq_count = 0
             if 'gridPIQ' in ppc:
                 piq = ppc['gridPIQ']
@@ -1430,6 +1431,7 @@ def tso_psst_loop(casename):
                 if piq:
                     pq.avg_dispatch_data(piq_count)
                     piq_count = 0
+                    piq_hour = piq_hour + 1
                 hour = hour + 1
                 mn = 0
                 if hour == 24:

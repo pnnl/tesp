@@ -971,6 +971,7 @@ def tso_psst_loop_f(casename):
                 priceSensLoad = 1
 
             StartTime = ppc['StartTime']
+            EndTime = ppc['EndTime']
             tmax = int(ppc['Tmax'])
             period = int(ppc['Period'])
             dt = int(ppc['dt'])
@@ -978,6 +979,7 @@ def tso_psst_loop_f(casename):
             noScale = ppc['noScale']
 
             piq = False
+            piq_hour = 0
             piq_count = 0
             if 'gridPIQ' in ppc:
                 piq = ppc['gridPIQ']
@@ -1409,6 +1411,7 @@ def tso_psst_loop_f(casename):
                 if piq:
                     pq.avg_dispatch_data(piq_count)
                     piq_count = 0
+                    piq_hour = piq_hour + 1
                 hour = hour + 1
                 mn = 0
                 if hour == 24:

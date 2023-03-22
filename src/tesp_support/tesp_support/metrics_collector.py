@@ -301,7 +301,7 @@ def to_hdf(metrics_store, start_time, num_writes_counter):
         # else:  # if try works, go here
         #     keys_to_index.append(key)
         # delete df before trying to construct next one and reassign to df, since I'm not sure when the old df will be cleared
-
+        del df
 
 def finalize_hdf(metrics_store):
     filename = '{}_metrics.h5'.format(metrics_store.file_string)

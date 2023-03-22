@@ -11,6 +11,7 @@ import time
 import json
 import logging as log
 import numpy as np
+import resource
 from datetime import datetime, timedelta
 from copy import deepcopy
 from joblib import Parallel, delayed
@@ -46,6 +47,11 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         metrics_root (str): base name of the case for input/output
         with_market (bool): flag that determines if we run with markets
     """
+    def using(point=""):
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        return '''%s: usertime=%s systime=%s mem=%s mb
+               ''' % (point, usage[0], usage[1],
+                      usage[2] / 1024.0)
 
     def worker(arg):
         timing(arg.__class__.__name__, True)
@@ -668,6 +674,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     timing(proc[1], True)
     while time_granted < simulation_duration:
+        print(using("after1"), flush=True)
         # determine the next FNCS time
         timing(proc[16], True)
         next_time =\
@@ -1055,6 +1062,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 bid = p_age.formulate_bid_da()
                 timing(p_age.__class__.__name__, False)
                 retail_market_obj.curve_aggregator_DA('Buyer', bid, p_age.name)
+            del results
 
             # collect agent only DA quantities and price
             # retail_market_obj.AMES_DA_agent_quantities=dict()
@@ -1886,6 +1894,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                     timing(proc[17], False)
 
             tnext_retail_adjust_rt += retail_period_rt
+        print(using("after2"), flush=True)
 
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ Write metrics -------------------------------------------------
@@ -1906,6 +1915,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             print(proc_time, sep=', ', file=op, flush=True)
             print(wall_time, sep=', ', file=op, flush=True)
             op.close()
+        print(using("after3"), flush=True)
 
     log.info('finalizing metrics writing')
     #     # timing(arg.__class__.__name__, True)
