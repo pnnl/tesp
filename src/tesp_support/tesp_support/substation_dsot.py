@@ -687,6 +687,7 @@ def inner_substation_loop(metrics_root, with_market):
     timing(proc[0], False)
 
     cache_pub = {}
+    cache_sub = {}
     log.info("Initialize HELICS dso federate")
     hFed = helics.helicsCreateValueFederateFromConfig("./" + metrics_root + ".json")
     fedName = helics.helicsFederateGetName(hFed)
@@ -751,7 +752,12 @@ def inner_substation_loop(metrics_root, with_market):
             obj.set_time(hour_of_day, minute_of_hour)
 
         for t in range(subCount):
-            sub = helics.helicsFederateGetInputByIndex(hFed, t)
+            try:
+                sub = cache_sub[t]
+            except:
+                cache_sub[t] = helics.helicsFederateGetInputByIndex(hFed, t)
+                sub = cache_sub[t]
+            # sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
             topic = key.split('/')[1]
             # log.info("HELICS subscription index: " + str(t) + ", key: " + key)
