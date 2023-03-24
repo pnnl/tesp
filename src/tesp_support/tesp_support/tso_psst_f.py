@@ -272,11 +272,14 @@ def tso_psst_loop_f(casename):
             fncs.publish('lmp_rt_' + str(ii + 1), json.dumps(RT_LMPs[ii]))  # publishing $/kwh
             bus[ii, 13] = RT_LMPs[ii][0]
         for ii in range(numGen):
+            # if using gridpiq to gauge environmental emission concerns
+            if piq:
+                pq.set_dispatch_data(genFuel[ii][0], piq_hour, gen[ii][1])
             if genFuel[ii][0] not in renewables:
                 name = "GenCo" + str(ii + 1)
                 gen[ii, 1] = dispatch[name][0]
             # else:
-                # dispatch for renewables i.e curtail
+                # dispatch for renewables i.e. curtail
                 # gen[ii, 1] this was set in rt_curtail_renewables()
 
         # log.debug("RT line power")
@@ -681,9 +684,6 @@ def tso_psst_loop_f(casename):
                       '{: .6f}'.format(zgenCost[ii][2]), file=fp)
                 # Set gen = powerT0 level
                 zgen[ii][1] = powerT0 * baseS
-                # if using gridpiq to gauge environmental emission concerns
-                if piq:
-                    pq.set_dispatch_data(zgenFuel[ii][0], hour, zgen[ii][1])
 
         print(' ;\n', file=fp)
         log.info("TSO Power " + str(P_avail))
@@ -932,8 +932,8 @@ def tso_psst_loop_f(casename):
             ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
             logger = log.getLogger()
-            # logger.setLevel(log.INFO)
-            logger.setLevel(log.WARNING)
+            logger.setLevel(log.INFO)
+            # logger.setLevel(log.WARNING)
             # logger.setLevel(log.DEBUG)
             log.info('starting tso loop...')
 

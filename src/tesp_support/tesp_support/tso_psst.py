@@ -276,11 +276,14 @@ def tso_psst_loop(casename):
             helics.helicsPublicationPublishString(pub, json.dumps(RT_LMPs[ii]))
             bus[ii, 13] = RT_LMPs[ii][0]
         for ii in range(numGen):
+            # if using gridpiq to gauge environmental emission concerns
+            if piq:
+                pq.set_dispatch_data(genFuel[ii][0], piq_hour, gen[ii][1])
             if genFuel[ii][0] not in renewables:
                 name = "GenCo" + str(ii + 1)
                 gen[ii, 1] = dispatch[name][0]
             # else:
-                # dispatch for renewables i.e curtail
+                # dispatch for renewables i.e. curtail
                 # gen[ii, 1] this was set in rt_curtail_renewables()
 
         # log.debug("RT line power")
@@ -687,9 +690,6 @@ def tso_psst_loop(casename):
                       '{: .6f}'.format(zgenCost[ii][2]), file=fp)
                 # Set gen = powerT0 level
                 zgen[ii][1] = powerT0 * baseS
-                # if using gridpiq to gauge environmental emission concerns
-                if piq:
-                    pq.set_dispatch_data(zgenFuel[ii][0], piq_hour, zgen[ii][1])
 
         print(' ;\n', file=fp)
         log.info("TSO Power " + str(P_avail))
@@ -938,8 +938,8 @@ def tso_psst_loop(casename):
             ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
             logger = log.getLogger()
-            # logger.setLevel(log.INFO)
-            logger.setLevel(log.WARNING)
+            logger.setLevel(log.INFO)
+            # logger.setLevel(log.WARNING)
             # logger.setLevel(log.DEBUG)
             log.info('starting tso loop...')
 
@@ -1282,6 +1282,7 @@ def tso_psst_loop(casename):
     finally:
         log.info('Finished initializing the program')
 
+    cache_sub = {}
     log.info("Initialize HELICS tso federate")
     hFed = helics.helicsCreateValueFederateFromConfig("./tso_h.json")
     fedName = helics.helicsFederateGetName(hFed)
@@ -1340,7 +1341,12 @@ def tso_psst_loop(casename):
         # start by getting the latest inputs from GridLAB-D and the auction
         # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
-            sub = helics.helicsFederateGetInputByIndex(hFed, t)
+            try:
+                sub = cache_sub[t]
+            except:
+                cache_sub[t] = helics.helicsFederateGetInputByIndex(hFed, t)
+                sub = cache_sub[t]
+            # sub = helics.helicsFederateGetInputByIndex(hFed, t)
             key = helics.helicsSubscriptionGetTarget(sub)
             log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
             topic = key.upper().split('/')[1]
