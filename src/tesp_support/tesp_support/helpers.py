@@ -121,10 +121,12 @@ class curve:
         else:
             value_insert_flag = 0
             for i in range(0, self.count):
-                # If the price is larger than the compared curve section price, price inserted before that section of the curve
+                # If the price is larger than the compared curve section price,
+                # price inserted before that section of the curve
                 if price >= self.price[i]:
                     if i == 0:
-                        # If the price is larger than that of all the curve sections, insert at the beginning of the curve
+                        # If the price is larger than that of all the curve sections,
+                        # insert at the beginning of the curve
                         self.price.insert(0, price)
                         self.quantity.insert(0, quantity)
                     else:
@@ -204,8 +206,10 @@ def parse_number(arg):
 # strip out extra white space, units (deg, degF, V, MW, MVA, KW, KVA) and ;
 def parse_magnitude_1(arg):
     """ Parse the magnitude of a possibly complex number from FNCS
+
     Args:
         arg (str): the FNCS string value
+
     Returns:
         float: the parsed number, or 0 if parsing fails
     """
@@ -287,6 +291,7 @@ def parse_magnitude(arg):
                 if nsign == 3:
                     kpos = i
                     break
+
             vals = [tok[:kpos], tok[kpos:]]
             vals = [float(v) for v in vals]
             return vals[0]

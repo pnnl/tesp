@@ -33,6 +33,22 @@ def make_generator_plants(ppc, renewables):
 
 def tso_psst_loop(casename):
 
+    def getSub(subIndex):
+        try:
+            _sub = cache_sub[subIndex]
+        except:
+            cache_sub[subIndex] = helics.helicsFederateGetInputByIndex(hFed, subIndex)
+            _sub = cache_sub[subIndex]
+        return _sub
+
+    def getPub(pubkey):
+        try:
+            _pub = cache_pub[pubkey]
+        except:
+            cache_pub[pubkey] = helics.helicsFederateGetPublication(hFed, pubkey)
+            _pub = cache_pub[pubkey]
+        return _pub
+
     def scucDAM(data):
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
         if day > -1:
@@ -98,7 +114,7 @@ def tso_psst_loop(casename):
                 exit()
 
         for ii in range(dsoBus.shape[0]):
-            pub = helics.helicsFederateGetPublication(hFed, 'lmp_da_' + str(ii + 1))
+            pub = getPub('lmp_da_' + str(ii + 1))
             helics.helicsPublicationPublishString(pub, json.dumps(DA_LMPs[ii]))
             row = DA_LMPs[ii]
             da_lmp_store.append_data(
@@ -170,7 +186,7 @@ def tso_psst_loop(casename):
                     if row[z] is None:
                         row[z] = 0
                     row[z] = (unRespMW[ii][z] + (row[z] / gld_scale * baseS)) * gld_scale
-                pub = helics.helicsFederateGetPublication(hFed, 'cleared_q_da_' + str(bus_num))
+                pub = getPub('cleared_q_da_' + str(bus_num))
                 helics.helicsPublicationPublishString(pub, json.dumps(row))
                 da_q_store.append_data(
                     ts,
@@ -190,7 +206,7 @@ def tso_psst_loop(casename):
                         row.append((respMaxMW[ii][z] + unRespMW[ii][z]) * gld_scale)
                     else:
                         row.append(gld_load[bus_num]['pcrv'])
-                pub = helics.helicsFederateGetPublication(hFed, 'cleared_q_da_' + str(bus_num))
+                pub = getPub('cleared_q_da_' + str(bus_num))
                 helics.helicsPublicationPublishString(pub, json.dumps(row))
                 da_q_store.append_data(
                     ts,
@@ -272,7 +288,7 @@ def tso_psst_loop(casename):
 
         # set the lmps and generator dispatch and publish
         for ii in range(bus.shape[0]):
-            pub = helics.helicsFederateGetPublication(hFed, 'lmp_rt_' + str(ii + 1))  # publishing $/kwh
+            pub = getPub('lmp_rt_' + str(ii + 1))  # publishing $/kwh
             helics.helicsPublicationPublishString(pub, json.dumps(RT_LMPs[ii]))
             bus[ii, 13] = RT_LMPs[ii][0]
         for ii in range(numGen):
@@ -329,7 +345,7 @@ def tso_psst_loop(casename):
                     if row[z] is None:
                         row[z] = 0
                     row[z] = (ld + (row[z] / gld_scale * baseS)) * gld_scale
-                pub = helics.helicsFederateGetPublication(hFed, 'cleared_q_rt_' + str(bus_num))
+                pub = getPub('cleared_q_rt_' + str(bus_num))
                 helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
                 # log.debug('Bus ' + str(ii+1) + ' cleared - [fixed, flex] ' + '[' + str(gld_load[ii+1]['unresp']) + ', ' + str(row[0] - gld_load[ii+1]['unresp']) + ']')
                 rt_q_store.append_data(
@@ -352,7 +368,7 @@ def tso_psst_loop(casename):
                 row = []
                 for z in range(TAU):
                    row.append(ld)
-                pub = helics.helicsFederateGetPublication(hFed, 'cleared_q_rt_' + str(bus_num))
+                pub = getPub('cleared_q_rt_' + str(bus_num))
                 helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
                 rt_q_store.append_data(
                     ts,
@@ -693,8 +709,6 @@ def tso_psst_loop(casename):
 
         print(' ;\n', file=fp)
         log.info("TSO Power " + str(P_avail))
-        if piq:
-            pq.set_max_load(P_avail)
 
         print('param: ID atBus EndPointSoc MaximumEnergy NominalRampDownInput NominalRampUpInput '
               'NominalRampDownOutput NominalRampUpOutput MaximumPowerInput MinimumPowerInput '
@@ -1283,6 +1297,7 @@ def tso_psst_loop(casename):
         log.info('Finished initializing the program')
 
     cache_sub = {}
+    cache_pub = {}
     log.info("Initialize HELICS tso federate")
     hFed = helics.helicsCreateValueFederateFromConfig("./tso_h.json")
     fedName = helics.helicsFederateGetName(hFed)
@@ -1341,12 +1356,7 @@ def tso_psst_loop(casename):
         # start by getting the latest inputs from GridLAB-D and the auction
         # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
-            try:
-                sub = cache_sub[t]
-            except:
-                cache_sub[t] = helics.helicsFederateGetInputByIndex(hFed, t)
-                sub = cache_sub[t]
-            # sub = helics.helicsFederateGetInputByIndex(hFed, t)
+            sub = getSub(t)
             key = helics.helicsSubscriptionGetTarget(sub)
             log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
             topic = key.upper().split('/')[1]
@@ -1722,7 +1732,7 @@ def tso_psst_loop(casename):
             row = rBus[busidx].tolist()
             # publish the bus VLN for GridLAB-D
             bus_vln = 1000.0 * row[7] * row[9] / math.sqrt(3.0)
-            pub = helics.helicsFederateGetPublication(hFed, 'three_phase_voltage_' + busnum)
+            pub = getPub('three_phase_voltage_' + busnum)
             helics.helicsPublicationPublishDouble(pub, bus_vln)
 
             # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints

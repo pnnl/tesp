@@ -687,8 +687,6 @@ def tso_psst_loop_f(casename):
 
         print(' ;\n', file=fp)
         log.info("TSO Power " + str(P_avail))
-        if piq:
-            pq.set_max_load(P_avail)
 
         print('param: ID atBus EndPointSoc MaximumEnergy NominalRampDownInput NominalRampUpInput '
               'NominalRampDownOutput NominalRampUpOutput MaximumPowerInput MinimumPowerInput '

@@ -10,6 +10,7 @@ This script attempts to demonstrate the grid PIQ for new TESP API.
 """
 
 import json
+import datetime
 
 from tesp_support.api.store import entities_path
 from tesp_support.api.entity import assign_defaults
@@ -84,15 +85,21 @@ class GridPIQ:
         Returns:
 
         """
-        self.tech[0]['parameters']['post_project_load']['start_date'] = start_datetime
-        self.tech[0]['parameters']['post_project_load']['end_date'] = end_datetime
-        self.context['parameters']['pre_project_load']['start_date'] = start_datetime
-        self.context['parameters']['pre_project_load']['end_date'] = end_datetime
-        self.context['parameters']['dispatch_data']['start_date'] = start_datetime
-        self.context['parameters']['dispatch_data']['end_date'] = end_datetime
+        s = datetime.datetime.strptime(start_datetime, '%Y-%m-%d %H:%M:%S')
+        e = datetime.datetime.strptime(end_datetime, '%Y-%m-%d %H:%M:%S')
+
+        start_ = f'{s:%Y-%m-%d %H:%M}'
+        end_ = f'{e:%Y-%m-%d %H:%M}'
+
+        self.tech[0]['parameters']['post_project_load']['start_date'] = start_
+        self.tech[0]['parameters']['post_project_load']['end_date'] = end_
+        self.context['parameters']['pre_project_load']['start_date'] = start_
+        self.context['parameters']['pre_project_load']['end_date'] = end_
+        self.context['parameters']['dispatch_data']['start_date'] = start_
+        self.context['parameters']['dispatch_data']['end_date'] = end_
         gbl = self.__getattribute__('global')
-        gbl['parameters']['analysis_start_date']['data'] = start_datetime
-        gbl['parameters']['analysis_end_date']['data'] = end_datetime
+        gbl['parameters']['analysis_start_date']['data'] = start_
+        gbl['parameters']['analysis_end_date']['data'] = end_
 
     def write_json(self):
         """
@@ -100,16 +107,21 @@ class GridPIQ:
         """
         for kind in self.choices:
             gen = self.__getattribute__(kind)
-            if kind == 'NaturalGas':
-                self.context['parameters']['dispatch_data']['data']['Natural Gas'] = gen
-            else:
-                self.context['parameters']['dispatch_data']['data'][kind] = gen
-            for ii in range(len(gen)):
-                if ii == len(self.Total):
-                    self.Zeros.append(0)
-                    self.Total.append(gen[ii])
+            if len(gen) > 0:
+                if kind == 'NaturalGas':
+                    self.context['parameters']['dispatch_data']['data']['Natural Gas'] = gen
                 else:
-                    self.Total[ii] += gen[ii]
+                    self.context['parameters']['dispatch_data']['data'][kind] = gen
+                for ii in range(len(gen)):
+                    if ii == len(self.Total):
+                        self.Zeros.append(0)
+                        self.Total.append(gen[ii])
+                    else:
+                        self.Total[ii] += gen[ii]
+
+        self.max_load = 0
+        for ii in range(len(gen)):
+            self.set_max_load(self.Total[ii])
 
         self.context['parameters']['pre_project_load']['data'] = self.Zeros
         self.context['parameters']['pre_project_max_load']['data'] = 0
@@ -128,8 +140,8 @@ class GridPIQ:
 
 
 def test():
-    start_date = "2016-01-04 00:00"
-    end_date = "2016-01-04 23:00"
+    start_date = "2016-01-04 00:00:00"
+    end_date = "2016-01-04 23:00:00"
     choices = ["Nuclear", "Wind", "Coal", "Solar", "NaturalGas", "Petroleum"]
     percent = [0.10, 0.10, 0.40, 0.0, 0.30, 0.10]
     data = [
@@ -142,9 +154,10 @@ def test():
     pq.set_datetime(start_date, end_date)
     for j in range(len(data)):
         for i in range(len(choices)):
-            pq.set_dispatch_data(choices[i], j, data[j]*percent[i])
-            for k in range(8):
+            if i != 3:
                 pq.set_dispatch_data(choices[i], j, data[j]*percent[i])
+                for k in range(8):
+                    pq.set_dispatch_data(choices[i], j, data[j]*percent[i])
         pq.avg_dispatch_data(9)
     pq.set_max_load(55678.4353)
     pq.write_json()
