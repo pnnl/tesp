@@ -273,7 +273,7 @@ def tso_psst_loop_f(casename):
             bus[ii, 13] = RT_LMPs[ii][0]
         for ii in range(numGen):
             # if using gridpiq to gauge environmental emission concerns
-            if piq:
+            if piq and day > 1:
                 pq.set_dispatch_data(genFuel[ii][0], piq_hour, gen[ii][1])
             if genFuel[ii][0] not in renewables:
                 name = "GenCo" + str(ii + 1)
@@ -984,7 +984,7 @@ def tso_psst_loop_f(casename):
                 if piq:
                     from tesp_support.api.gridpiq import GridPIQ
                     pq = GridPIQ()
-                    pq.set_datetime(StartTime, EndTime)
+                    pq.set_datetime(StartTime, EndTime, 24, 1)
 
             ames = ppc['ames']
             solver = ppc['solver']
@@ -1406,8 +1406,9 @@ def tso_psst_loop_f(casename):
         if ts >= tnext_opf_ames and ames:
             opf = True
             if mn % 60 == 0:
-                if piq:
+                if piq and day > 1:
                     pq.avg_dispatch_data(piq_count)
+                    # could ues da_sum for pre_project_load in PIQ
                     piq_count = 0
                     piq_hour = piq_hour + 1
                 hour = hour + 1

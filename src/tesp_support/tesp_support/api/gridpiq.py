@@ -10,7 +10,7 @@ This script attempts to demonstrate the grid PIQ for new TESP API.
 """
 
 import json
-import datetime
+from datetime import datetime, timedelta
 
 from tesp_support.api.store import entities_path
 from tesp_support.api.entity import assign_defaults
@@ -75,19 +75,20 @@ class GridPIQ:
         if data > self.max_load:
             self.max_load = data
 
-    def set_datetime(self, start_datetime, end_datetime):
+    def set_datetime(self, start_datetime, end_datetime, s_offset, e_offset):
         """
 
         Args:
             start_datetime:
             end_datetime:
+            s_offset: in hours
+            e_offset: in hours
 
         Returns:
 
         """
-        s = datetime.datetime.strptime(start_datetime, '%Y-%m-%d %H:%M:%S')
-        e = datetime.datetime.strptime(end_datetime, '%Y-%m-%d %H:%M:%S')
-
+        s = datetime.strptime(start_datetime, '%Y-%m-%d %H:%M:%S') + timedelta(hours=s_offset)
+        e = datetime.strptime(end_datetime, '%Y-%m-%d %H:%M:%S') + timedelta(hours=e_offset)
         start_ = f'{s:%Y-%m-%d %H:%M}'
         end_ = f'{e:%Y-%m-%d %H:%M}'
 
@@ -108,16 +109,21 @@ class GridPIQ:
         for kind in self.choices:
             gen = self.__getattribute__(kind)
             if len(gen) > 0:
+                for ii in range(len(gen)):
+                    if ii == len(self.Total):
+                        self.Zeros.append(1)
+                        self.Total.append(gen[ii])
+                    else:
+                        self.Total[ii] += gen[ii]
+        for kind in self.choices:
+            gen = self.__getattribute__(kind)
+            if len(gen) > 0:
+                for ii in range(len(gen)):
+                    gen[ii] = gen[ii] / self.Total[ii]
                 if kind == 'NaturalGas':
                     self.context['parameters']['dispatch_data']['data']['Natural Gas'] = gen
                 else:
                     self.context['parameters']['dispatch_data']['data'][kind] = gen
-                for ii in range(len(gen)):
-                    if ii == len(self.Total):
-                        self.Zeros.append(0)
-                        self.Total.append(gen[ii])
-                    else:
-                        self.Total[ii] += gen[ii]
 
         self.max_load = 0
         for ii in range(len(gen)):
@@ -140,8 +146,8 @@ class GridPIQ:
 
 
 def test():
-    start_date = "2016-01-04 00:00:00"
-    end_date = "2016-01-04 23:00:00"
+    start_date = "2016-01-03 00:00:00"
+    end_date = "2016-01-05 00:00:00"
     choices = ["Nuclear", "Wind", "Coal", "Solar", "NaturalGas", "Petroleum"]
     percent = [0.10, 0.10, 0.40, 0.0, 0.30, 0.10]
     data = [
@@ -151,7 +157,7 @@ def test():
     ]
 
     pq = GridPIQ()
-    pq.set_datetime(start_date, end_date)
+    pq.set_datetime(start_date, end_date, 24, -1)
     for j in range(len(data)):
         for i in range(len(choices)):
             if i != 3:
