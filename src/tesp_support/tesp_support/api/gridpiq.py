@@ -130,7 +130,7 @@ class GridPIQ:
             self.set_max_load(self.Total[ii])
 
         self.context['parameters']['pre_project_load']['data'] = self.Zeros
-        self.context['parameters']['pre_project_max_load']['data'] = 0
+        self.context['parameters']['pre_project_max_load']['data'] = 1
 
         self.tech[0]['parameters']['post_project_load']['data'] = self.Total
         self.tech[0]['parameters']['post_project_max_load']['data'] = self.max_load

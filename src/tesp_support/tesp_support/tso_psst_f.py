@@ -984,7 +984,7 @@ def tso_psst_loop_f(casename):
                 if piq:
                     from tesp_support.api.gridpiq import GridPIQ
                     pq = GridPIQ()
-                    pq.set_datetime(StartTime, EndTime, 24, 1)
+                    pq.set_datetime(StartTime, EndTime, 24, 0)
 
             ames = ppc['ames']
             solver = ppc['solver']
