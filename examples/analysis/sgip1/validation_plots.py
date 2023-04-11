@@ -22,7 +22,7 @@ from os import path
 
 import matplotlib.pyplot as plt
 
-import tesp_support.api as tesp
+import tesp_support.tesp_api as tesp
 
 # Setting up logging
 logger = logging.getLogger(__name__)

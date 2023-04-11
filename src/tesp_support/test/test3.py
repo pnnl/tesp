@@ -2,6 +2,6 @@
 # file: test3.py
 
 # step 3
-import tesp_support.api as tesp
+import tesp_support.tesp_case as tesp
 tesp.make_tesp_case ('Demo.json')
 

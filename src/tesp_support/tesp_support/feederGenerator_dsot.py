@@ -40,7 +40,7 @@ import numpy as np
 import pandas as pd
 from math import sqrt
 
-from .data import feeders_path, weather_path
+from tesp_support.api.data import feeders_path, weather_path
 from .helpers import parse_kva, gld_strict_name
 from .helpers_dsot import random_norm_trunc
 import tesp_support.commbldgenerator as comm_FG
@@ -1860,9 +1860,6 @@ def write_houses(basenode, op, vnom):
         print('  name', hsename + ';', file=op)
         print('  parent', hse_m_name + ';', file=op)
         print('  groupid', bldgTypeName[bldg] + ';', file=op)
-        # why thermal integrity level is not used ?
-        # this sets the default house R* and other parameters
-        print('  // thermal_integrity_level', tiName[ti] + ';', file=op)
         print('  schedule_skew', '{:.0f}'.format(skew_value) + ';', file=op)
         print('  floor_area', '{:.0f}'.format(floor_area) + ';', file=op)
         print('  number_of_stories', str(stories) + ';', file=op)

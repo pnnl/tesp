@@ -250,10 +250,10 @@ class WaterHeaterDSOT:
         self.QTY_agent = []
         self.SOHC_agent = [0 for i in range(self.windowLength)]
         
-        ### Sanity checks:
+        # Sanity checks:
         Tcold_lower = 40
         Tcold_upper = 80
-        if Tcold_lower <= self.Tcold and Tcold_upper >= self.Tcold:
+        if Tcold_lower <= self.Tcold <= Tcold_upper:
             # log.info('Tcold is within the bounds.')
             pass
         else:
@@ -261,7 +261,7 @@ class WaterHeaterDSOT:
         
         Tambient_lower = 60
         Tambient_upper = 85
-        if Tambient_lower <= self.Tambient and Tambient_upper >= self.Tambient:
+        if Tambient_lower <= self.Tambient <= Tambient_upper:
             # log.info('Tambient is within the bounds.')
             pass
         else:
@@ -269,7 +269,7 @@ class WaterHeaterDSOT:
         
         Tdesired_lower = 105
         Tdesired_upper = 120
-        if Tdesired_lower <= self.Tdesired and Tdesired_upper >= self.Tdesired:
+        if Tdesired_lower <= self.Tdesired <= Tdesired_upper:
             # log.info('Tdesired is within the bounds.')
             pass
         else:
@@ -277,7 +277,7 @@ class WaterHeaterDSOT:
         
         Tmax_lower = 110
         Tmax_upper = 140
-        if Tmax_lower <= self.Tmax and Tmax_upper >= self.Tmax:
+        if Tmax_lower <= self.Tmax <= Tmax_upper:
             # log.info('Tmax is withint the bounds.')
             pass
         else:
@@ -285,7 +285,7 @@ class WaterHeaterDSOT:
         
         Tmin_lower = 100
         Tmin_upper = 120
-        if Tmin_lower <= self.Tmin and Tmin_upper >= self.Tmin:
+        if Tmin_lower <= self.Tmin <= Tmin_upper:
             # log.info('Tmin is within the bounds.')
             pass
         else:
@@ -293,7 +293,7 @@ class WaterHeaterDSOT:
         
         SOHC_lower = 0
         SOHC_upper = 100
-        if SOHC_lower <= self.SOHC_desired and SOHC_upper >= self.SOHC_desired:
+        if SOHC_lower <= self.SOHC_desired <= SOHC_upper:
             # log.info('SOHC_desired is within the bounds.')
             pass
         else:
@@ -301,7 +301,7 @@ class WaterHeaterDSOT:
         
         volume_lower = 0
         volume_upper = 100
-        if volume_lower < self.volume and volume_upper > self.volume:
+        if volume_lower < self.volume < volume_upper:
             # log.info('volume is within the bounds.')
             pass
         else:
@@ -309,7 +309,7 @@ class WaterHeaterDSOT:
         
         diameter_lower = 0  # TODO: update with better/feasible bounds
         diameter_upper = 100  # TODO: update with better/feasible bounds
-        if diameter_lower < self.diameter and diameter_upper > self.diameter:
+        if diameter_lower < self.diameter < diameter_upper:
             # log.info('diameter is within the bounds.')
             pass
         else:
@@ -317,7 +317,7 @@ class WaterHeaterDSOT:
         
         Phw_lower = 1.5
         Phw_upper = 10
-        if Phw_lower < self.Phw and Phw_upper > self.Phw:
+        if Phw_lower < self.Phw < Phw_upper:
             # log.info('Phw is within the bounds.')
             pass
         else:
@@ -328,7 +328,6 @@ class WaterHeaterDSOT:
             pass
         else:
             log.log(model_diag_level, '{} {} -- ProfitMargin_intercept is {}, negative value'.format(self.name, 'init', self.ProfitMargin_intercept))
-        
         
         if 0 <= self.ProfitMargin_slope:
             # log.info('ProfitMargin_slope is greater than or equal to 0.')
@@ -433,7 +432,7 @@ class WaterHeaterDSOT:
     #             self.his_wd_rate[-2] = self.estimate_wd_rate_5min()
     # =============================================================================
 
-    def estimate_wd_rate_5min(self):  ##this function is not being used in new water heater model
+    def estimate_wd_rate_5min(self):  # this function is not being used in new water heater model
         """ Function used to estimate the water_draw flow rate in the previous 5 mins, called by update_WH_his every 5 mins
 
         """
@@ -449,9 +448,9 @@ class WaterHeaterDSOT:
         Heat_loss_waterdraw = Heat_gain - Heat_loss_ambient + Delta_heat  ##changed recently
         estimated_wd_rate = Heat_loss_waterdraw / (((self.his_T_upper[-1] + self.his_T_upper[
             -2]) / 2 - self.Tcold) * self.Cp * self.Rho * 5 / self.GALperFt3)
-        if (estimated_wd_rate < 0):  ### changed to cap water draw
+        if estimated_wd_rate < 0:  # changed to cap water draw
             estimated_wd_rate = 0
-        if (estimated_wd_rate > 6):  # changed to cap water draw
+        if estimated_wd_rate > 6:  # changed to cap water draw
             estimated_wd_rate = 6
 
         return estimated_wd_rate
@@ -479,7 +478,7 @@ class WaterHeaterDSOT:
         #         (int(self.length_memory / self.hourto5min), self.hourto5min))
         #     schedule_hour = np.mean(schedule_5min, axis=1).tolist()
         #     self.f_DA_schedule = deepcopy(schedule_hour)
-        #self.f_DA_schedule = np.array(deepcopy(forecasted_waterdraw_array['data']))
+        # self.f_DA_schedule = np.array(deepcopy(forecasted_waterdraw_array['data']))
         self.f_DA_schedule = np.array(deepcopy(forecasted_waterdraw_array))
         # print(self.name)
         # print(list(self.f_DA_schedule))
@@ -492,15 +491,13 @@ class WaterHeaterDSOT:
         Returns
         BID (float) (windowLength X 4 X 2): DA bids to be send to the retail DA market
         """
-        #this part runs optimization without multiprocessing
+        # this part runs optimization without multiprocessing
         # Quantity = self.DA_optimal_quantities()
 
         Quantity = deepcopy(self.optimized_Quantity)
 
         P = self.P
         Q = self.Q
-        #previous hour quantity
-        # self.previous_Q=self.bid_da[0][1][Q]
 
         TIME = range(self.windowLength)
 
@@ -552,6 +549,7 @@ class WaterHeaterDSOT:
 
         self.RT_minute_count_interpolation = float(0.0)
         return self.bid_da
+
     def get_uncntrl_wh_load(self):
         """
         This simulates the waterheater model without
@@ -574,6 +572,7 @@ class WaterHeaterDSOT:
         return Q
             # 0 = (self.co0_hour + self.co1_hour * (m.E_upper[t - 1] + m.E_bottom[t - 1] - Qdraw) + self.co2_hour * (
             #         self.SOHC_desired / 100)) * 100
+
     def obj_rule(self, m):
         #return sum(
         #    (1 - self.weight_comfort) * (self.f_DA_price[t]) * (m.E_upper[t] + m.E_bottom[t]) + (self.weight_comfort) *
@@ -586,6 +585,7 @@ class WaterHeaterDSOT:
             + (0.3*(self.SOHC_desired - m.SOHC[t])/100 * (self.SOHC_desired - m.SOHC[t])/100)
             + (0.001 * ((m.E_upper[t] + m.E_bottom[t])/self.Phw * (m.E_upper[t] + m.E_bottom[t])/self.Phw)) for t in self.TIME)
         # there was a minus sign in the last term, it should be positive and the SOHC was only enter once, which was making the Agents consume to get SOHC_max
+
     def con_rule_ine1(self, m, t):
         # for t in self.TIME:
         return (m.E_bottom[t] + m.E_upper[t]) <= self.Phw
@@ -640,7 +640,6 @@ class WaterHeaterDSOT:
         self.delta_SOHC_model_hour()
 
         # Decision variables
-        # wh_R5_12_47_3_tn_1008_hse_1
         model = pyo.ConcreteModel()
         model.E_bottom = pyo.Var(self.TIME, bounds=(0, self.Phw))#, initialize=self.Phw)
         model.E_upper = pyo.Var(self.TIME, bounds=(0, self.Phw))#, initialize=self.Phw)
@@ -769,17 +768,17 @@ class WaterHeaterDSOT:
         # Updating the upper and lower bounds of bidding quantity based on the current status of water tanker
 
         if self.SOHC < self.SOHC_min:  ##checks if the temperature is below what AGENT has minimum
-            Q_max = self.Phw #/ self.hourto5min
-            Q_min = self.Phw #/ self.hourto5min
+            Q_max = self.Phw  # / self.hourto5min
+            Q_min = self.Phw  # / self.hourto5min
             self.RT_SOHC_max = self.SOHC_max
             self.RT_SOHC_min = self.SOHC_max
-#            print("##############Water heater temperature below SOHC minimum")
-        elif  self.SOHC > self.SOHC_max: ##checks if the temperature is above what AGENT has maximum
+            # print("##############Water heater temperature below SOHC minimum")
+        elif self.SOHC > self.SOHC_max: ##checks if the temperature is above what AGENT has maximum
             Q_max = 0
             Q_min = 0
             self.RT_SOHC_max = self.SOHC_min
             self.RT_SOHC_min = self.SOHC_min
-#            print("##############Water heater temperature above SOHC maximum") ## happens often as upper temp in EWH goes higher than expected
+            # print("##############Water heater temperature above SOHC maximum") ## happens often as upper temp in EWH goes higher than expected
         else:
             # Decides maximum  bidding quantity
             Qdraw_5min = self.Rho * self.Cp * self.f_DA_schedule[0] * 5 * (self.Tdesired - self.Tcold) / (
@@ -787,25 +786,25 @@ class WaterHeaterDSOT:
             delta_SOHC_max = (self.co0_5min + self.co1_5min * ((self.Phw / self.hourto5min) - Qdraw_5min) + self.co2_5min * (
                 self.SOHC / 100))*100
 
-            if (self.SOHC + delta_SOHC_max < self.SOHC_max)  :    ##scenario 3 coded
-                Q_max = self.Phw #/ self.hourto5min
+            if self.SOHC + delta_SOHC_max < self.SOHC_max:  # scenario 3 coded
+                Q_max = self.Phw  # / self.hourto5min
                 self.RT_SOHC_max = self.SOHC + delta_SOHC_max
             else:
                 # temp_Qmax = (((self.SOHC_max - self.SOHC)/100 - self.co0_5min + self.co1_5min *Qdraw_5min -self.co2_5min * (self.SOHC/100)) / self.co1_5min)
                 # if this is the inverse of the above equation of delta_SOHC, then self.hourto5min is missing in it.
                 temp_Qmax = self.hourto5min*(((self.SOHC_max - self.SOHC)/100 - self.co0_5min + self.co1_5min *Qdraw_5min -self.co2_5min * (self.SOHC/100)) / self.co1_5min)
 
-                if  temp_Qmax < (self.Phw):# / self.hourto5min): #scenario 2 where max of two is taken
+                if temp_Qmax < self.Phw:  # / self.hourto5min:  # scenario 2 where max of two is taken
                     Q_max = temp_Qmax
-#                    print("@@@@@@@@@@@@@@@@@@@@@@ RT Q_max is changed other than rating", Q_max)
+                    # print("@@@@@@@@@@@@@@@@@@@@@@ RT Q_max is changed other than rating", Q_max)
                 else:
                     Q_max = self.Phw #/ self.hourto5min
                 self.RT_SOHC_max = self.SOHC_max
 
-            #Decides minimum bidding quantity
+            # Decides minimum bidding quantity
             delta_SOHC_min = (self.co0_5min + self.co1_5min * (-Qdraw_5min) + self.co2_5min * (self.SOHC / 100))*100
-            #print("Qdraw_5min, SOHC at that 5min , delta_SOHC_max ,delta_SOHC_min ", Qdraw_5min, self.SOHC, delta_SOHC_max, delta_SOHC_min)
-            if self.SOHC + delta_SOHC_min > self.SOHC_min:  #scenario 5 coded
+            # print("Qdraw_5min, SOHC at that 5min , delta_SOHC_max ,delta_SOHC_min ", Qdraw_5min, self.SOHC, delta_SOHC_max, delta_SOHC_min)
+            if self.SOHC + delta_SOHC_min > self.SOHC_min:  # scenario 5 coded
                 Q_min = 0
                 self.RT_SOHC_min = self.SOHC + delta_SOHC_min
             else:
@@ -813,11 +812,11 @@ class WaterHeaterDSOT:
                 # if this is the inverse of the above equation of delta_SOHC, then self.hourto5min is missing in it.
                 temp_Qmin = self.hourto5min*(((self.SOHC_min - self.SOHC)/100 - self.co0_5min + self.co1_5min *Qdraw_5min -self.co2_5min * (self.SOHC/100)) / self.co1_5min)
 
-                if  temp_Qmin < (self.Phw):#) / self.hourto5min): #scenario 4
+                if temp_Qmin < self.Phw:  # / self.hourto5min: #scenario 4
                     Q_min = temp_Qmin
                     print("@@@@@@@@@@@@@@@@@@@@@@RT Q_min is changed other than rating", Q_min)
                 else:
-                    Q_min = self.Phw #/ self.hourto5min
+                    Q_min = self.Phw  # / self.hourto5min
                 self.RT_SOHC_min = self.SOHC_min
         # print(self.name)
         # print("*********************DA QUANTITY USED", self.bid_da[0][1][0])
@@ -830,10 +829,10 @@ class WaterHeaterDSOT:
 
             CurveSlope = (delta_DA_price / (0 - self.Phw) * (1 + self.ProfitMargin_slope / 100))
             yIntercept = self.DA_cleared_prices[0] - CurveSlope * self.bid_da[0][1][0] #/ 12   ## DA quantity and forecasted DA price used for Real-time
-            #print("RT y-intercept", yIntercept )
+            # print("RT y-intercept", yIntercept)
             # print("RT curveslope", CurveSlope)
             if (self.bid_da[0][1][0] <= Q_max) and (self.bid_da[0][1][0] > Q_min):
-                ##start interpolation
+                # start interpolation
                 if self.interpolation:
                     if self.RT_minute_count_interpolation == 0.0:
                         self.delta_Q = deepcopy((self.bid_da[0][1][Q]-self.previous_Q_RT))
@@ -851,7 +850,7 @@ class WaterHeaterDSOT:
                     BID[1][P] = Qopt_DA * CurveSlope + yIntercept
                     BID[2][P] = Qopt_DA * CurveSlope + yIntercept
                     BID[3][P] = Q_max * CurveSlope + yIntercept
-                ##end interpolation
+                # end interpolation
                 else:
                     BID[0][Q] = Q_min
                     BID[1][Q] = self.bid_da[0][1][0]
@@ -895,7 +894,6 @@ class WaterHeaterDSOT:
             BID[2][P] = min(self.f_DA_price)
             BID[3][P] = min(self.f_DA_price)
 
-
         for i in range(4):
             if BID[i][Q] > self.Phw:
                 BID[i][Q] = self.Phw
@@ -936,7 +934,7 @@ class WaterHeaterDSOT:
         self.RT_minute_count_interpolation = self.RT_minute_count_interpolation + 5.0
         return self.bid_rt
 
-    def inform_bid_da(self, DAprices): ##this object is never called
+    def inform_bid_da(self, DAprices):  # this object is never called
         """ Updated the DA_cleared_prices and DA_cleared_quantities attributes when informed by retail market agent
 
         Args:
@@ -993,7 +991,7 @@ class WaterHeaterDSOT:
             Setpoint_bottom_SOHC = self.RT_SOHC_min
             self.Setpoint_upper = (Setpoint_upper_SOHC / 100 * (self.Tdesired - self.Tcold)) + self.Tcold
             self.Setpoint_bottom = (Setpoint_bottom_SOHC / 100 * (self.Tdesired - self.Tcold)) + self.Tcold
-        else: ## scenario for all other cases and converts bid directly to temperature setpoints for GLD
+        else:  # scenario for all other cases and converts bid directly to temperature setpoints for GLD
             Setpoint_upper_SOHC = (self.RT_SOHC_min + (self.RT_cleared_quantity- self.RT_Q_min) * (
                     self.RT_SOHC_max - self.RT_SOHC_min) / (self.RT_Q_max - self.RT_Q_min))
             Setpoint_bottom_SOHC = (self.RT_SOHC_min + (self.RT_cleared_quantity  - self.RT_Q_min) * (
@@ -1001,7 +999,7 @@ class WaterHeaterDSOT:
             self.Setpoint_upper = (Setpoint_upper_SOHC / 100 * (self.Tdesired - self.Tcold)) + self.Tcold
             self.Setpoint_bottom = (Setpoint_bottom_SOHC / 100 * (self.Tdesired - self.Tcold)) + self.Tcold
 
-        # # ##########3for validation purpose , forcing the DA value in RT.
+        ############for validation purpose , forcing the DA value in RT.
         # Setpoint_upper_SOHC = (self.SOHC_min + ((self.bid_da[0][1][0]) - 0) * (
         #         (self.SOHC_max - self.SOHC_min) / (self.Phw- 0)))
         # Setpoint_bottom_SOHC = (self.SOHC_min + ((self.bid_da[0][1][0]) - 0) * (
@@ -1014,13 +1012,13 @@ class WaterHeaterDSOT:
         # self.Setpoint_bottom = ((self.SOHC_agent[0]/100) * (self.Tdesired - self.Tcold)) + self.Tcold
         # print("Calculated temp setpoints", self.Setpoint_upper, self.Setpoint_bottom)
 
-        if (self.Setpoint_upper >= self.Tmax): #check of Maximum temperature from agent
+        if self.Setpoint_upper >= self.Tmax:  # check of Maximum temperature from agent
             self.Setpoint_upper = self.Tmax
             self.Setpoint_bottom = self.Tmax
         else:
             pass
 
-        if (self.Setpoint_upper <= self.Tmin): #check of Minimum temperature from the Agent
+        if self.Setpoint_upper <= self.Tmin:  # check of Minimum temperature from the Agent
             self.Setpoint_upper = self.Tmin
             self.Setpoint_bottom = self.Tmin
         else:
@@ -1196,6 +1194,7 @@ class WaterHeaterDSOT:
             sim_time (str): Current time in the simulation; should be human-readable
         """
         self.Tambient = parse_number(fncs_str)
+
     def test_function(self):
         """ Test function with the only purpose of returning the name of the object
 
@@ -1236,6 +1235,7 @@ class WaterHeaterDSOT:
 
         return cleared_da_quantity
 
+
 if __name__ == "__main__":
     def testing():
         wh_properties = {
@@ -1264,7 +1264,7 @@ if __name__ == "__main__":
         # hlprs.enable_logging('DEBUG', model_diag_level)
         sim_time = '2019-11-20 07:47:00'
         
-        EWH = WaterHeaterDSOT(wh_dict, wh_properties, 'abc', 11, sim_time,'ipopt') # add model_diag_level, and sim_time
+        EWH = WaterHeaterDSOT(wh_dict, wh_properties, 'abc', 11, sim_time, 'ipopt')  # add model_diag_level, and sim_time
         his_data = np.genfromtxt('mocked_historical_data_WH.csv', delimiter=',', skip_header=1)
         T_bottom = his_data[:, 0]
         T_upper = his_data[:, 1]

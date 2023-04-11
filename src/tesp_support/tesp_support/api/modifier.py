@@ -3,7 +3,8 @@
 
 import os
 
-from tesp_support.api.store import entities_path
+from tesp_support.api.data import entities_path
+from tesp_support.api.data import tesp_test
 from tesp_support.api.entity import assign_defaults
 from tesp_support.api.model import GLModel
 
@@ -109,3 +110,46 @@ class GLMModifier:
 
     def set_simulation_times(self):
         return True
+
+
+def test1():
+    testMod = GLMModifier()
+    f = "dsot_test.glm"
+    # f = "testing.glm"
+    # f = "../../../../examples/capabilities/loadshed/loadshed.glm"
+    testMod.model.read(f)
+    testMod.write_model("test4.glm")
+
+
+def test2():
+    testMod = GLMModifier()
+    testMod.model.readBackboneModel("GLD_three_phase_house.glm")
+    loads = testMod.get_object('load')
+    meter_counter = 0
+    house_counter = 0
+    house_meter_counter = 0
+    for obj_id in loads.instance:
+        # add meter for this load
+        meter_counter = meter_counter + 1
+        meter_name = 'meter_' + str(meter_counter)
+        meter = testMod.add_object('meter', meter_name, [])
+        meter['parent'] = obj_id
+        # how much power is going to be needed
+        # while kva < total_kva:
+        house_meter_counter = house_meter_counter + 1
+        # add parent meter for houses to follow
+        house_meter_name = 'house_meter_' + str(house_meter_counter)
+        meter = testMod.add_object('meter', house_meter_name, [])
+        meter['parent'] = meter_name
+        # add house
+        house_counter = house_counter + 1
+        house_name = 'house_' + str(house_counter)
+        house = testMod.add_object('house', house_name, [])
+        house['parent'] = house_meter_name
+    testMod.write_model(tesp_test + "test0.glm")
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    test1()
+    test2()

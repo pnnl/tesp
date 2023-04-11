@@ -11,7 +11,6 @@ import time
 import json
 import logging as log
 import numpy as np
-import resource
 from datetime import datetime, timedelta
 from copy import deepcopy
 from joblib import Parallel, delayed
@@ -22,8 +21,8 @@ from .water_heater_dsot import WaterHeaterDSOT
 from .ev_dsot import EVDSOT
 from .pv_dsot import PVDSOT
 from .battery_dsot import BatteryDSOT
-from .dso_market_dsot import DSOMarketDSOT
-from .retail_market_dsot import RetailMarketDSOT
+from .dsot.dso_market_dsot import DSOMarketDSOT
+from tesp_support.dsot.retail_market_dsot import RetailMarketDSOT
 from .forecasting_dsot import Forecasting
 from .metrics_collector import MetricsStore, MetricsCollector
 

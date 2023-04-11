@@ -12,7 +12,7 @@ import numpy as np
 import pypower.api as pp
 import scipy.interpolate as ip
 
-import tesp_support.api as tesp
+import tesp_support.tesp_api as tesp
 import tesp_support.fncs as fncs
 import tesp_support.tso_helpers as tso
 from tesp_support.helpers import parse_mva

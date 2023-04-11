@@ -250,9 +250,6 @@ class BatteryDSOT:
 
         P = self.P
         Q = self.Q
-        # previous hour quantity
-        # self.previous_Q_DA = self.bid_da[0][1][Q]
-
         TIME = range(0, self.windowLength)
         CurveSlope = [0] * len(TIME)
         yIntercept = [-1] * len(TIME)

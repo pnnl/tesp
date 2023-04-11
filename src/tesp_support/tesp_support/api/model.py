@@ -12,7 +12,9 @@ import sqlite3
 
 import networkx as nx
 
-from tesp_support.api.store import entities_path
+from tesp_support.api.data import feeders_path
+from tesp_support.api.data import entities_path
+from tesp_support.api.data import tesp_test
 from tesp_support.api.entity import Entity
 
 
@@ -21,6 +23,7 @@ class GLModel:
     in_file = ""
     out_file = ""
     model = {}
+    conn = None
     modules = None
     objects = None
     object_entities = {}
@@ -76,24 +79,17 @@ class GLModel:
     """
 
     def __init__(self):
-        # define objects that can be in a GLM file
-        try:
-            self.conn = sqlite3.connect(os.path.join(entities_path, 'testglm.db'))
-            print("Opened database successfully")
-        except:
-            self.conn = None
-            print("Database Sqlite3.db not formed")
-
+        # define modules that can be in a GLM file
         with open(os.path.join(entities_path, 'glm_modules.json'), 'r', encoding='utf-8') as json_file:
             self.modules = json.load(json_file)
+            for name in self.modules:
+                self.module_entities[name] = Entity(name, self.modules[name])
+
+        # define objects that can be in a GLM file
         with open(os.path.join(entities_path, 'glm_objects.json'), 'r', encoding='utf-8') as json_file:
             self.objects = json.load(json_file)
-
-        for name in self.modules:
-            self.module_entities[name] = Entity(name, self.modules[name])
-        for name in self.objects:
-            self.object_entities[name] = Entity(name, self.objects[name])
-            # self.object_entities[name].toSQLite(self.conn)
+            for name in self.objects:
+                self.object_entities[name] = Entity(name, self.objects[name])
 
     def entitiesToJson(self):
         diction = {}
@@ -111,6 +107,25 @@ class GLModel:
             diction += self.object_entities[name].toHelp()
         return diction
 
+    def entitiesToSQLite(self, filename):
+        if os.path.isfile(filename):
+            try:
+                self.conn = sqlite3.connect(filename)
+                print("Opened database successfully")
+            except:
+                self.conn = None
+                print("Database Sqlite3.db not formed")
+                return False
+
+            for name in self.module_entities:
+                self.module_entities[name].toSQLite(self.conn)
+            for name in self.object_entities:
+                self.object_entities[name].toSQLite(self.conn)
+            self.conn.close()
+            self.conn = None
+            return True
+        return False
+
     def get_InsideComments(self, object_name, item_id):
         """
 
@@ -119,6 +134,7 @@ class GLModel:
             item_id:
 
         Returns:
+            str: contain the lines that makes up the comment
 
         """
         comments = ""
@@ -138,6 +154,7 @@ class GLModel:
             item_id:
 
         Returns:
+            str: contain the line that makes up item and the comment
 
         """
         comment = ""
@@ -159,13 +176,14 @@ class GLModel:
 
     def instanceToModule(self, i_module):
         """
-        instanceToModule adds the comments pulled from the backbone glm file
-        to the new modified glm file.
+        instanceToModule adds the comments pulled from the glm file
+        to the new/modified glm file.
 
         Args:
             i_module:
 
         Returns:
+            str: contains the lines that make up the module
 
         """
         name = i_module.entity
@@ -197,13 +215,14 @@ class GLModel:
 
     def instanceToObject(self, i_object):
         """
-        instanceToObject adds the comments pulled from the backbone glm file
-        to the new modified glm file.
+        instanceToObject adds the comments pulled from the glm file
+        to the new/modified glm file.
 
         Args:
             i_object:
 
         Returns:
+            str: contains the lines that make up the object
 
         """
         diction = ""
@@ -234,23 +253,27 @@ class GLModel:
         # Write the sets commands
         for name in self.set_lines:
             diction += name + "\n"
-        diction += "\n"
+        if len(self.set_lines):
+            diction += "\n"
 
         # Write the define commands
         for name in self.define_lines:
             diction += name + "\n"
-        diction += "\n"
+        if len(self.define_lines):
+            diction += "\n"
 
         # Write the includes
         for name in self.include_lines:
             diction += name + "\n"
-        diction += "\n"
+        if len(self.include_lines):
+            diction += "\n"
 
         # Write the modules
         for name in self.module_entities:
             if name not in ["clock"]:
                 diction += self.get_diction(self.module_entities, name, self.instanceToModule)
-        diction += "\n"
+        if len(self.module_entities):
+            diction += "\n"
 
         # Write the objects
         for name in self.object_entities:
@@ -266,10 +289,24 @@ class GLModel:
 
         return diction
 
-    def instancesToSQLite(self):
-        for name in self.object_entities:
-            self.object_entities[name].instanceToSQLite(self.conn)
-        return
+    def instancesToSQLite(self, filename):
+        if os.path.isfile(filename):
+            try:
+                self.conn = sqlite3.connect(filename)
+                print("Opened database successfully")
+            except:
+                self.conn = None
+                print("Database Sqlite3.db not formed")
+                return False
+
+            for name in self.module_entities:
+                self.module_entities[name].instanceToSQLite(self.conn)
+            for name in self.object_entities:
+                self.object_entities[name].instanceToSQLite(self.conn)
+            self.conn.close()
+            self.conn = None
+            return True
+        return False
 
     def set_module_instance(self, mod_type, params):
         if type(mod_type) == str:
@@ -387,7 +424,7 @@ class GLModel:
             itr (iter): iterator over the list of lines
 
         Returns:
-            str, int: the current line and updated octr
+            str: the module type
         """
 
         # Collect parameters
@@ -453,7 +490,7 @@ class GLModel:
             self.inline_comments[_type] = inline_comments
         return _type
 
-    def glm_object(self, parent, model, line, itr, oidh, octr):
+    def glm_object(self, parent, model, line, itr, oidh, counter):
         """Store an object in the model structure
 
         Args:
@@ -462,10 +499,10 @@ class GLModel:
             line (str): glm line containing the object definition
             itr (iter): iterator over the list of lines
             oidh (dict): hash of object id's to object names
-            octr (int): object counter
+            counter (int): object counter
 
         Returns:
-            str, int: the current line and updated octr
+            str, int, str: the current line, counter, name
         """
         # Identify the object type
         m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
@@ -479,7 +516,7 @@ class GLModel:
             # quit()
 
         # Collect parameters
-        octr += 1
+        counter += 1
         name = None
         name_prefix = ''
         params = {}
@@ -527,7 +564,7 @@ class GLModel:
                     if name is None:
                         print('ERROR: nested object defined before parent name')
                         quit()
-                    line, octr, lname = self.glm_object(name, model, line, itr, oidh, octr)
+                    line, counter, lname = self.glm_object(name, model, line, itr, oidh, counter)
                 else:
                     # found a parameter val
                     if val == "$":
@@ -551,7 +588,7 @@ class GLModel:
                 line = next(itr)
         # if undefined, use a default name
         if name is None:
-            name = name_prefix + _type + "_" + str(octr)
+            name = name_prefix + _type + "_" + str(counter)
             if len(object_comments) > 0:
                 inside_comments['name'] = object_comments
         oidh[name] = name
@@ -571,24 +608,18 @@ class GLModel:
             self.inside_comments[name] = inside_comments
         if len(inline_comments) > 0:
             self.inline_comments[name] = inline_comments
-        return line, octr, name
+        return line, counter, name
 
-    def readBackboneModel(self, rootname, feederspath):
-        """Parse one backbone feeder, usually but not necessarily one of the PNNL taxonomy feeders
-
-        This function:
-                * reads and parses the backbone model from *rootname.glm*
+    def readModel(self, filename):
+        """Reads and parses the model from filename,
+        usually but not necessarily one of the PNNL taxonomy feeders
 
         Args:
-            rootname (str): the input (usually taxonomy) feeder model name
-            feederspath (str):
+            filename (str): fully qualified model path/name
         """
-        # global base_feeder_name
-        fname = os.path.join(feederspath, rootname)  # + '.glm'
-        rootname = self.gld_strict_name(rootname)
 
         name = ""
-        octr = 0
+        counter = 0
         h = {}  # OID hash
         lines = []
         model = {}
@@ -596,21 +627,23 @@ class GLModel:
         self.define_lines = []
         self.include_lines = []
         outside_comments = []
-        if os.path.isfile(fname):
-            ip = open(fname, 'r')
+        if os.path.isfile(filename):
+            ip = open(filename, 'r')
             line = ip.readline()
             while line != '':
+                line = line.replace("\t", " ")
                 # skip white space lines
                 while re.match('\s+$', line):
                     line = ip.readline()
                 line = line.strip()
-                lines.append(line.replace("\t", " "))
+                if len(line) > 0:
+                    lines.append(line)
                 line = ip.readline()
             ip.close()
 
             itr = iter(lines)
             for line in itr:
-                if re.match('\s*//', line):
+                if re.match('^//', line):
                     if re.search('#set', line):
                         self.set_lines.append(line)
                     elif re.search('#include', line):
@@ -632,28 +665,15 @@ class GLModel:
                 elif re.search('module', line):
                     name = self.glm_module("module", line, itr)
                 elif re.search('object', line):
-                    line, octr, name = self.glm_object("", model, line, itr, h, octr)
+                    line, counter, name = self.glm_object("", model, line, itr, h, counter)
                 else:
-                    print('Un-parsed line\n', line)
+                    print('Un-parsed line "' + line + '"')
 
                 if name != "":
                     if len(outside_comments) > 0:
                         self.outside_comments[name] = outside_comments
                     outside_comments = []
                     name = ""
-
-            # apply the naming prefix if necessary
-            # if len(name_prefix) > 0:
-            #    for t in model:
-            # for o in model[t]:
-            #    elem = model[t][o]
-            #    for tok in ['name', 'parent', 'from', 'to', 'configuration', 'spacing',
-            #                'conductor_1', 'conductor_2', 'conductor_N',
-            #                'conductor_A', 'conductor_B', 'conductor_C']:
-            #        if tok in elem:
-            #            elem[tok] = name_prefix + elem[tok]
-
-            #        log_model (model, h)
 
             # construct a graph of the model, starting with known links
             G = nx.Graph()
@@ -672,7 +692,7 @@ class GLModel:
                             p = self.gld_strict_name(model[t][o]['parent'])
                             G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
-            # now we backfill node attributes
+            # now we back-fill the node attributes
             for t in model:
                 if self.is_node_class(t):
                     for o in model[t]:
@@ -682,14 +702,28 @@ class GLModel:
                         else:
                             print('orphaned node', t, o)
             return model, G
+        else:
+            print('File name not found')
+            return None
 
-    def read(self, filepath):
-        self.in_file = filepath
-        path_parts = os.path.split(filepath)
-        results = self.readBackboneModel(path_parts[1], path_parts[0])
-        self.model = results[0]
-        self.network = results[1]
-        return self.network
+    def readBackboneModel(self, root_name):
+        filename = feeders_path + root_name
+        results = self.readModel(filename)
+        if results:
+            self.in_file = filename
+            self.model = results[0]
+            self.network = results[1]
+            return self.network
+        return None
+
+    def read(self, filename):
+        results = self.readModel(filename)
+        if results:
+            self.in_file = filename
+            self.model = results[0]
+            self.network = results[1]
+            return self.network
+        return None
 
     def write(self, filepath):
         try:
@@ -700,6 +734,41 @@ class GLModel:
 
         # we can write using instance objects
         print(self.instancesToGLM(), file=op)
-
         op.close()
         return True
+
+
+def test1():
+    # Test model.py
+    model_file = GLModel()
+    tval = model_file.readBackboneModel("R1-12.47-1.glm")
+    # tval = model_file.read(feeders_path + "GLD_three_phase_house.glm")
+    # Output json with new parameters
+    model_file.write(tesp_test + "test.glm")
+
+    model_file = GLModel()
+    tval = model_file.readModel(tesp_test + "test.glm")
+    model_file.write(tesp_test + "test1.glm")
+
+    model_file.instancesToSQLite(tesp_test + 'testglm.db')
+    print(model_file.entitiesToHelp())
+    print(model_file.instancesToGLM())
+
+    op = open(tesp_test + 'glm_objects2.json', 'w', encoding='utf-8')
+    json.dump(model_file.entitiesToJson(), op, ensure_ascii=False, indent=2)
+    op.close()
+
+
+def test2():
+    testMod = GLModel()
+    tval = testMod.read(feeders_path + "R1-12.47-1.glm")
+    for name in testMod.module_entities:
+        print(testMod.module_entities[name].toHelp())
+    for name in testMod.object_entities:
+        print(testMod.object_entities[name].toHelp())
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    test1()
+    test2()

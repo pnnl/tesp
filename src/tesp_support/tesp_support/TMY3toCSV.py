@@ -261,7 +261,7 @@ def weathercsv_cloudy_day(start_time, end_time, outputfile):
 
 
 def _tests():
-    from .data import weather_path
+    from tesp_support.api.data import weather_path
 
     # create a csv file contain the weather data for the input time period from the input tmy3 file
     weathercsv(weather_path + 'TX-Houston_Bush_Intercontinental.tmy3',

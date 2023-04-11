@@ -364,9 +364,9 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
             # TODO: Review battery results to see if one battery per 10000 sq ft. is appropriate.
             num_batt = math.floor(bldg_size / 10000) + 1
             battery_capacity = num_batt * res_FG.get_dist(batt_metadata['capacity(kWh)']['mean'],
-                                                       batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
+                                                          batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
             max_charge_rate = res_FG.get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
-                                            batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
+                                              batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
             max_discharge_rate = max_charge_rate
             inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
             charging_loss = res_FG.get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
@@ -402,10 +402,10 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 print('    max_charge_rate', '{:.2f}'.format(max_charge_rate) + ';', file=op)
                 print('    max_discharge_rate', '{:.2f}'.format(max_discharge_rate) + ';', file=op)
                 print('    sense_object', mtr + ';', file=op)
-                # print ('    charge_on_threshold -100;', file=op)
-                # print ('    charge_off_threshold 0;', file=op)
-                # print ('    discharge_off_threshold 2000;', file=op)
-                # print ('    discharge_on_threshold 3000;', file=op)
+                # print('    charge_on_threshold -100;', file=op)
+                # print('    charge_off_threshold 0;', file=op)
+                # print('    discharge_off_threshold 2000;', file=op)
+                # print('    discharge_on_threshold 3000;', file=op)
                 print('    inverter_efficiency', '{:.2f}'.format(inverter_efficiency) + ';', file=op)
                 print('    power_factor 1.0;', file=op)
                 print('    object battery { // Tesla Powerwall 2', file=op)
@@ -606,7 +606,7 @@ def find_envelope_prop(prop, age, env_data, climate):
 
 
 def normalize_dict_prob(name, dict):
-    """Ensures that the probably distribution of values in a dictionary effectively sums to one
+    """Ensures that the probability distribution of values in a dictionary effectively sums to one
         Args:
         dict: dictionary of elements and associated non-cumulative probabilities
     """
@@ -693,7 +693,7 @@ def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
     print('  number_of_doors {:.0f};'.format(bldg['no_of_doors']), file=op)
     print('  aspect_ratio {:.2f};'.format(bldg['aspect_ratio']), file=op)
     print('  total_thermal_mass_per_floor_area {:1.2f};'.format(bldg['thermal_mass_per_floor_area']), file=op)
-    # print ('  interior_surface_heat_transfer_coeff {:1.2f};'.format(bldg['surface_heat_trans_coeff']), file=op)
+    # print('  interior_surface_heat_transfer_coeff {:1.2f};'.format(bldg['surface_heat_trans_coeff']), file=op)
     print('  interior_exterior_wall_ratio {:.2f};'.format(bldg['interior_exterior_wall_ratio']), file=op)
     print('  exterior_floor_fraction {:.3f};'.format(bldg['exterior_floor_fraction']), file=op)
     print('  exterior_ceiling_fraction {:.3f};'.format(bldg['exterior_ceiling_fraction']), file=op)
@@ -702,10 +702,10 @@ def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
     print('  Rfloor {:.2f};'.format(bldg['Rfloor']), file=op)
     print('  Rdoors {:2.1f};'.format(bldg['Rdoors']), file=op)
     print('  exterior_wall_fraction {:.2f};'.format(bldg['exterior_wall_fraction']), file=op)
-    # print ('  glazing_layers {:s};'.format(bldg['glazing_layers']), file=op)
-    # print ('  glass_type {:s};'.format(bldg['glass_type']), file=op)
-    # print ('  glazing_treatment {:s};'.format(bldg['glazing_treatment']), file=op)
-    # print ('  window_frame {:s};'.format(bldg['window_frame']), file=op)
+    # print('  glazing_layers {:s};'.format(bldg['glazing_layers']), file=op)
+    # print('  glass_type {:s};'.format(bldg['glass_type']), file=op)
+    # print('  glazing_treatment {:s};'.format(bldg['glazing_treatment']), file=op)
+    # print('  window_frame {:s};'.format(bldg['window_frame']), file=op)
     print('  Rwindows {:.2f};'.format(bldg['Rwindows']), file=op)
     #  GLD uses the term window_sharing to assign 'glazing_shgc'
     print('  window_shading {:.2f};'.format(bldg['glazing_shgc']), file=op)
@@ -776,7 +776,7 @@ def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
     print('  };', file=op)
     if bldg['adj_refrig'] != 0:
         print('  object ZIPload { // large refrigeration electrical load', file=op)
-        # print ('    schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
+        # print('    schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
         # TODO: set to 0.01 to avoid a divide by zero issue in the agent code.  Should be set to zero after that is fixed.
         print('    heatgain_fraction 0.01;', file=op)
         print('    power_fraction {:.2f};'.format(bldg['c_p_frac']), file=op)
@@ -845,8 +845,8 @@ if __name__ == '__main__':
             'Rwindows', 'glazing_shgc', 'int_gains']
     # vars = ['start_time_weekdays', 'duration_weekdays', 'end_time_weekdays', 'start_time_sat', 'duration_sat',
     #         'end_time_sat', 'start_time_sun', 'duration_sun', 'end_time_sun']
-    outputs = ['total', 'office', 'warehouse_storage', 'big_box', 'strip_mall', 'education',
-               'food_service', 'healthcare_inpatient', 'food_sales', 'lodging', 'low_occupancy']
+    outputs = ['total', 'office', 'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service',
+                'food_sales', 'healthcare_inpatient', 'lodging', 'low_occupancy']
 
     dist = {}
 

@@ -38,7 +38,7 @@ from math import sqrt
 import networkx as nx
 import numpy as np
 
-from .data import feeders_path, weather_path
+from tesp_support.api.data import feeders_path, weather_path
 from .helpers import parse_kva, gld_strict_name
 
 forERCOT = False

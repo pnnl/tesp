@@ -1929,8 +1929,7 @@ class HVACDSOT:  # TODO: update class name
                 return m.temp_room[0] == self.eps * self.temp_room_init + (1 - self.eps) * (
                         self.temperature_forecast[0] + (
                         (self.heating_cop_adj[0] * 1.02 * m.quan_hvac[0] * 3412.1416331279 / self.latent_factor[0] +
-                         self.internalgain_forecast[0] +
-                         self.solargain_forecast[0] *
+                         self.internalgain_forecast[0] + self.solargain_forecast[0] *
                          self.solar_heatgain_factor) / self.UA))  # Initial SOHC state
             else:
                 # update SOHC

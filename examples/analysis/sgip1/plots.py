@@ -1,6 +1,6 @@
 # usage 'python plots metrics_root'
 import sys
-import tesp_support.api as tesp
+import tesp_support.tesp_api as tesp
 
 rootname = sys.argv[1]
 

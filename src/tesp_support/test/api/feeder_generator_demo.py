@@ -18,7 +18,7 @@ import sys
 import networkx as nx
 
 from tesp_support.api.modifier import GLMModifier
-from tesp_support.api.store import feeders_path
+from tesp_support.api.data import feeders_path
 
 # Getting all the existing tesp_support stuff
 #   Assumes were in the tesp_api folder

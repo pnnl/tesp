@@ -5,7 +5,7 @@
 import os
 import sys
 
-import tesp_support.api as tesp
+import tesp_support.tesp_api as tesp
 
 name_root = sys.argv[1]
 

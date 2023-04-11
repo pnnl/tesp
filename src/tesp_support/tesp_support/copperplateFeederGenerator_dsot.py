@@ -38,7 +38,7 @@ import numpy as np
 import pandas as pd
 from math import sqrt
 
-from .data import feeders_path, weather_path
+from tesp_support.api.data import feeders_path, weather_path
 from .helpers import parse_kva, gld_strict_name
 from .commbldgenerator import define_comm_loads, create_comm_zones
 
@@ -878,7 +878,7 @@ def connect_ercot_houses(model, h, op, vln, vsec):
             npar = int(0.06 * nh + 0.5)
         else:
             npar = 1
-        # print (key, bus, phs, nh, xfkva, npar)
+        # print(key, bus, phs, nh, xfkva, npar)
         # write the service transformer==>TN==>TPX==>TM for all houses
         kvat = npar * xfkva
         row = Find1PhaseXfmr(xfkva)
@@ -1188,7 +1188,7 @@ def replace_commercial_loads(model, h, t, avgBuilding):
                         # my_exec(code)
                         # eval(compile(code, '<string>', 'exec'))
 
-                        del (comm_bldgs_pop[select_bldg])
+                        del comm_bldgs_pop[select_bldg]
                     else:
                         if nzones > 0:
                             print('Commercial building could not be found for ', '{:.2f}'.format(kva), ' KVA load')
@@ -1216,8 +1216,8 @@ def replace_commercial_loads(model, h, t, avgBuilding):
     remain_comm_kva = 0
     for bldg in comm_bldgs_pop:
         remain_comm_kva += comm_bldgs_pop[bldg][1] * sqft_kva_ratio
-    print(len(comm_bldgs_pop), 'commercial buildings (approximately', int(remain_comm_kva),
-          'kVA) still to be assigned.')
+    print(len(comm_bldgs_pop), 'commercial buildings',
+          '(approximately', int(remain_comm_kva), 'kVA) still to be assigned.')
 
 
 def identify_xfmr_houses(model, h, t, seg_loads, avgHouse, rgn):
@@ -1978,8 +1978,8 @@ def populate_feeder(config=None):
     dso_type = config['SimulationConfig']['DSO_type']
     res_bldg_metadata = config['BuildingPrep']['ResBldgMetaData']
     batt_metadata = config['BuildingPrep']['BattMetaData']
-    electric_cooling_percentage = res_bldg_metadata[
-        'air_conditioning']  # if not provided in JSON config, use a regional default
+    # if not provided in JSON config, use a regional default
+    electric_cooling_percentage = res_bldg_metadata['air_conditioning']
     ashrae_zone = config['BuildingPrep']['ASHRAEZone']
     comm_bldg_metadata = config['BuildingPrep']['CommBldgMetaData']
     comm_bldgs_pop = config['BuildingPrep']['CommBldgPopulation']

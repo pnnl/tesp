@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOCKERFILE="Dockerfile"
-TES_REP="tesp-$($TESPDIR/scripts/version)"
+TES_REP="tesp-$(cat $TESPDIR/scripts/version)"
 TES_TAG=":latest"
 CONTEXT="./"
 clear

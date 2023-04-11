@@ -17,7 +17,7 @@ import networkx as nx
 import numpy as np
 from numpy.linalg import inv
 
-from tesp_support.data import feeders_path
+from tesp_support.api.data import feeders_path
 
 '''
 switch line 68 to line 69 for feeder #16 #17 #19 #20

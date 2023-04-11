@@ -5,26 +5,20 @@
 Public Functions:
     None
 """
-import tesp_support.helpers_dsot_v1 as helpers
-#import prep_substation_dsot_v3 as prep
-import prep_microgrid_agent_v1 as prep
-import tesp_support.glm_dict_TM as gd
-# TODO: these import statements don't exactly work since the two modules recursively import each other, so rework
-# import tesp_support.commbldgenerator as cbg
-# import tesp_support.feederGenerator_dsot_v1 as fg
-# this is the workaround, grab the function explicitly from the package/module tree
-import numpy as np
-import tesp_support.commbldgenerator
-import tesp_support.feederGenerator_dsot_v1
-import tesp_support.copperplateFeederGenerator_dsot_v1
-import tesp_support.TMY3toCSV as tmy3_to_csv
-import tesp_support.api as tesp
-from datetime import datetime
-from datetime import timedelta
-import shutil
-import os, sys
+
 import json
+import os
 import shutil
+
+import numpy as np
+
+import prep_microgrid_agent_v1 as prep
+import tesp_support.commbldgenerator
+import tesp_support.copperplateFeederGenerator_dsot
+import tesp_support.consensus.feederGenerator_dsot
+import tesp_support.consensus.glm_dict_TM as gd
+import tesp_support.consensus.helpers_dsot as helpers
+import tesp_support.consensus.case_merge as tesp
 
 
 def prepare_case(mastercase):
@@ -47,12 +41,12 @@ def prepare_case(mastercase):
     elif 'HELICS' in sys_config:
         helics_flag = bool(True)
         helics_config = sys_config['HELICS']
-    #gen = sys_config['gen']
-    #genFuel = sys_config['genfuel']
+    # gen = sys_config['gen']
+    # genFuel = sys_config['genfuel']
     data_Path = sys_config['dataPath']
     out_Path = sys_config['outputPath']
 
-    # We need to load in default agent data
+    # loading default agent data
     with open(os.path.join(data_Path, sys_config['dsoAgentFile']), 'r', encoding='utf-8') as json_file:
         def_config = json.load(json_file)
 
@@ -66,10 +60,9 @@ def prepare_case(mastercase):
     sim['StartTime'] = start_time
     sim['EndTime'] = end_time
     sim['OutputPath'] = sys_config['caseName']  # currently only used for the experiment management scripts
-    sim['SourceDirectory'] = '../../../../data'   # SourceDirectory is not used
+    sim['SourceDirectory'] = '../../../../data'  # SourceDirectory is not used
 
-    # We need to load in building and DSO metadata
-    # TODO: This can be combined with an overall integration with the DOS metadata json file.
+    # loading building and DSO metadata
     with open(os.path.join(data_Path, sys_config['dsoPopulationFile']), 'r', encoding='utf-8') as json_file:
         dso_config = json.load(json_file)
     # loading residential metadata
@@ -91,15 +84,21 @@ def prepare_case(mastercase):
     case_config = def_config
     case_config['SimulationConfig']['simplifiedFeeders'] = sys_config['simplifiedFeeders']
 
-    # # record aggregated hvac_setpoint_data from survey: In this implementation individual house setpoint schedule may not
-    # # make sense but aggregated behavior will do.
+    # loading hvac set point metadata
+    # record aggregated hvac_setpoint_data from survey:
+    # In this implementation individual house set point schedule may not
+    # make sense but aggregated behavior will do.
     with open(os.path.join(data_Path, sys_config['hvacSetPoint']), 'r', encoding='utf-8') as json_file:
         hvac_setpt = json.load(json_file)
 
-    #print(json.dumps(substation_config, sort_keys = True, indent = 2))
-    #print(json.dumps(weather_config, sort_keys = True, indent = 2))
-    #print(json.dumps(case_config, sort_keys = True, indent = 2))
-    #print(json.dumps(hvac_setpt, sort_keys = True, indent = 2))
+    # print(json.dumps(substation_config, sort_keys = True, indent = 2))
+    # print(json.dumps(weather_config, sort_keys = True, indent = 2))
+    # print(json.dumps(case_config, sort_keys = True, indent = 2))
+    # print(json.dumps(res_config, sort_keys = True, indent = 2))
+    # print(json.dumps(comm_config, sort_keys = True, indent = 2))
+    # print(json.dumps(batt_config, sort_keys = True, indent = 2))
+    # print(json.dumps(ev_model_config, sort_keys = True, indent = 2))
+    # print(json.dumps(hvac_setpt, sort_keys = True, indent = 2))
 
     # We need to create the experiment folder. If it already exists we delete it and then create it
     if caseName != "" and caseName != ".." and caseName != ".":
@@ -111,7 +110,7 @@ def prepare_case(mastercase):
         print('Case name is blank or Case name is "." or ".." and could cause file deletion')
         exit(1)
 
-    # We need to create the experiment folder. If it already exists we delete it and then create it
+    # We need to create the experiment out folder. If it already exists, we delete it and then create it
     if out_Path != "" and out_Path != ".." and out_Path != ".":
         if os.path.isdir(out_Path):
             print("experiment folder already exists, deleting and moving on...")
@@ -119,35 +118,6 @@ def prepare_case(mastercase):
         os.makedirs(out_Path)
     else:
         out_Path = caseName
-
-
-    # # write load_player yaml
-    # yamlfile = caseName + '/wind_player.yaml'
-    # yp = open(yamlfile, 'w')
-    # print('name: windplayer', file=yp)
-    # print('time_delta: 15s', file=yp)
-    # print('broker: tcp://localhost:' + port, file=yp)
-    # print('aggregate_sub: true', file=yp)
-    # print('aggregate_pub: true', file=yp)
-    # yp.close()
-    #
-    # # write load_player yaml
-    # yamlfile = caseName + '/load_player.yaml'
-    # yp = open(yamlfile, 'w')
-    # print('name: loadplayer', file=yp)
-    # print('time_delta: 15s', file=yp)
-    # print('broker: tcp://localhost:' + port, file=yp)
-    # print('aggregate_sub: true', file=yp)
-    # print('aggregate_pub: true', file=yp)
-    # yp.close()
-
-    # write tso yaml beginning
-    # yamlfile = caseName + '/tso.yaml'
-    # yp = open(yamlfile, 'w')
-    # print('name: pypower', file=yp)
-    # print('time_delta: 15s', file=yp)
-    # print('broker: tcp://localhost:' + port, file=yp)
-    # print('values:', file=yp)
 
     # ======================= Laurentiu Marinovici - 12/13/2019 =======================
     # This is the part to initialize pieces for the copperplate feeder addition
@@ -187,8 +157,6 @@ def prepare_case(mastercase):
         case_config['SimulationConfig']['DSO'] = dso_key
         case_config['SimulationConfig']['DSO_type'] = dso_val['utility_type']
 
-
-
         for i in range(len(helics_config)):
             if bus == str(helics_config[i][0]):
                 val = helics_config[i]
@@ -205,15 +173,19 @@ def prepare_case(mastercase):
         # TODO: This needs to refer to the DSO weather data file name so there is a different weather file for each DSO.
         # substation_weather = dso_val['name'] # dso_val['weather']
         weather_agent_name = 'weather_' + dso_val['substation']
-        case_config['WeatherPrep']['WeatherChoice'] = str.upper(os.path.splitext(dso_val['weather_file'])[1][1:])# weather_config[substation_weather]['type']
+        case_config['WeatherPrep']['WeatherChoice'] = str.upper(
+            os.path.splitext(dso_val['weather_file'])[1][1:])  # weather_config[substation_weather]['type']
         case_config['WeatherPrep']['Name'] = weather_agent_name
         # TODO: (Laurentiu Marinovici 11/07/2019) the path to where the weather data files are stored might change, so be careful with this hardcoded path
         case_config['WeatherPrep']['DataSourcePath'] = '../../../../data/weather/ERCOT_8_node_data/DAT formatted files/'
-        case_config['WeatherPrep']['DataSource'] = dso_val['weather_file'] # weather_config[substation_weather]['source']
+        case_config['WeatherPrep']['DataSource'] = dso_val[
+            'weather_file']  # weather_config[substation_weather]['source']
         # TODO: (Laurentiu Marinovici 11/07/2019) check if the weather file name is going to stay as currently is incorporating
         # the location latitude and longitude; otherwise, a better way to provide these 2 measurements should be set
-        case_config['WeatherPrep']['Latitude'] = dso_val['latitude'] # dso_val['weather_file'].split('_')[3] # weather_config[substation_weather]['latitude']
-        case_config['WeatherPrep']['Longitude'] = dso_val['longitude'] # dso_val['weather_file'].split('_')[4] # weather_config[substation_weather]['longitude']
+        case_config['WeatherPrep']['Latitude'] = dso_val[
+            'latitude']  # dso_val['weather_file'].split('_')[3] # weather_config[substation_weather]['latitude']
+        case_config['WeatherPrep']['Longitude'] = dso_val[
+            'longitude']  # dso_val['weather_file'].split('_')[4] # weather_config[substation_weather]['longitude']
         case_config['WeatherPrep']['TimeZoneOffset'] = dso_val['time_zone_offset']
 
         weather_config.update({ \
@@ -229,17 +201,11 @@ def prepare_case(mastercase):
             os.makedirs(caseName + '/' + weather_agent_name)
         except:
             pass
-        # (Laurentiu Marinovici 11/07/2019) -- NO NEED FOR THESE FOR DSO+T AS WE HAVE .dat files
-        # translate TMY3 weather file to a common TESP weather data format
-        # weather_file = case_config['SimulationConfig']['SourceDirectory'] + '/weather/' + \
-        #                weather_config[substation_weather]['source']
-        # TODO: should import window length from weather config
-        # end_time_w_forecast = datetime.strftime(datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')+timedelta(days=2), '%Y-%m-%d %H:%M:%S')
-        # tmy3_to_csv.weathercsv(weather_file, caseName + '/' + weather_agent_name + '/weather.dat', start_time, end_time_w_forecast,
-        #                    datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S').year)
+
         # (Laurentiu Marinovici 11/07/2019) but now, we are going to copy the .dat file from its location into the weather agent folder
-        shutil.copy(os.path.join(os.path.abspath(case_config['WeatherPrep']['DataSourcePath']), dso_val['weather_file']), \
-                    os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat'))
+        shutil.copy(
+            os.path.join(os.path.abspath(case_config['WeatherPrep']['DataSourcePath']), dso_val['weather_file']),
+            os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat'))
 
         # We need to generate the total population of commercial buildings by type and size
         num_res_customers = dso_val['number_of_gld_homes']
@@ -249,9 +215,10 @@ def prepare_case(mastercase):
         case_config['BuildingPrep']['BattMetaData'] = batt_config
 
         num_comm_customers = round(num_res_customers * dso_val['RCI customer count mix']['commercial'] / \
-                             dso_val['RCI customer count mix']['residential'])
+                                   dso_val['RCI customer count mix']['residential'])
         num_comm_bldgs = num_comm_customers / dso_config['general']['comm_customers_per_bldg']
-        comm_bldgs_pop = tesp_support.commbldgenerator.define_comm_bldg(comm_config, dso_val['utility_type'], num_comm_bldgs)
+        comm_bldgs_pop = tesp_support.commbldgenerator.define_comm_bldg(comm_config, dso_val['utility_type'],
+                                                                                  num_comm_bldgs)
 
         case_config['BuildingPrep']['ASHRAEZone'] = dso_val['ashrae_zone']
         case_config['BuildingPrep']['CommBldgMetaData'] = comm_config
@@ -262,9 +229,10 @@ def prepare_case(mastercase):
             len(case_config['BuildingPrep']['CommBldgPopulation'].keys())))
 
         # write out a configuration for each substation
-        # WARNING!!!!! some fields in case_config are changed, yet not saved to the file, in the subsequent part that
-        # processes each feeder; the reason is the way the code was written for feeder generator when only one feeder was
-        # expected
+        # WARNING!!!!! some fields in case_config are changed, yet not saved to the file,
+        # in the subsequent part that processes each feeder;
+        # the reason is the way the code was written for feeder generator
+        # when only one feeder was expected
         with open(caseName + '/case_config_' + str(dso_val['bus_number']) + '.json', 'w') as outfile:
             json.dump(case_config, outfile, ensure_ascii=False, indent=2)
         feeders = dso_val['feeders']
@@ -281,10 +249,11 @@ def prepare_case(mastercase):
             case_config['SimulationConfig']['OutputPath'] = caseName + '/' + feed_key
             case_config['SimulationConfig']['CaseName'] = feed_key
             case_config['BackboneFiles']['TaxonomyChoice'] = feed_val['name']
-            tesp_support.feederGenerator_dsot_v1.populate_feeder(fncs_flag, helics_flag, config=case_config)
+            tesp_support.consensus.feederGenerator_dsot.populate_feeder(fncs_flag, helics_flag, config=case_config)
 
             # Then we want to create a JSON dictionary with the Feeder information
-            gd.glm_dict_with_microgrids(caseName + '/' + feed_key + '/' + feed_key, config=case_config, ercot=case_config['SimulationConfig']['simplifiedFeeders'])
+            gd.glm_dict_with_microgrids(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
+                                        ercot=case_config['SimulationConfig']['simplifiedFeeders'])
 
             for microgrid_key in dso_val['microgrids']:
                 shutil.move(caseName + '/' + feed_key + '/' + feed_key + '_' + microgrid_key + '_glm_dict.json',
@@ -295,14 +264,12 @@ def prepare_case(mastercase):
 
             # Next we create the agent dictionary along with the substation YAML file
             prep.prep_substation_with_microgrids(caseName + '/' + feed_key + '/' + feed_key,
-                                     caseName + '/' + dso_key + '/' + feed_key,
-                                     caseName + '/' + weather_agent_name + '/',
-                                     feedercnt,
-                                     dso_key,
-                                     config=case_config,
-                                     hvacSetpt=hvac_setpt)
-
-
+                                                 caseName + '/' + dso_key + '/' + feed_key,
+                                                 caseName + '/' + weather_agent_name + '/',
+                                                 feedercnt,
+                                                 dso_key,
+                                                 config=case_config,
+                                                 hvacSetpt=hvac_setpt)
 
             feedercnt += 1
             print("=== DONE WITH FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
@@ -321,9 +288,10 @@ def prepare_case(mastercase):
                 case_config['SimulationConfig']['CaseName'] = feed_key
                 case_config['BackboneFiles']['TaxonomyChoice'] = copperplate_feeder_name
                 case_config['BackboneFiles']['CopperplateFeederFile'] = copperplate_feeder_file
-                tesp_support.copperplateFeederGenerator_dsot_v1.populate_feeder(config=case_config)
+                tesp_support.consensus.copperplateFeederGenerator_dsot.populate_feeder(config=case_config)
 
-                gd.glm_dict(caseName + '/' + feed_key + '/' + feed_key, config=case_config, ercot = case_config['SimulationConfig']['simplifiedFeeders'])
+                gd.glm_dict(caseName + '/' + feed_key + '/' + feed_key, config=case_config,
+                            ercot=case_config['SimulationConfig']['simplifiedFeeders'])
                 shutil.move(
                     caseName + '/' + feed_key + '/' + feed_key + '_glm_dict.json',
                     caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
@@ -339,43 +307,56 @@ def prepare_case(mastercase):
                 print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
         # ======================================================================================
-
         print("\n=== MERGING THE FEEDERS UNDER ONE SUBSTATION =====")
         os.makedirs(caseName + "/" + substation_config[dso_key]['substation'])
-        tesp.merge_glm(os.path.abspath(caseName + '/' + substation_config[dso_key]['substation'] + '/' + substation_config[dso_key]['substation'] + '.glm'), list(substation_config[dso_key]['feeders'].keys()), 20)
+        tesp.merge_glm(os.path.abspath(
+            caseName + '/' + substation_config[dso_key]['substation'] + '/' + substation_config[dso_key][
+                'substation'] + '.glm'), list(substation_config[dso_key]['feeders'].keys()), 20)
 
         print("\n=== MERGING THE FNCS\HELICS CONFIGURATION FILES UNDER THE SUBSTATION FNCS CONFIGURATION =====")
         if helics_flag:
-            tesp.merge_fncs_config(os.path.abspath(caseName + '/' + substation_config[dso_key]['substation'] + '/' + substation_config[dso_key]['substation'] + '_HELICS_Config.json'), dso_key, list(substation_config[dso_key]['feeders'].keys()))
+            tesp.merge_fncs_config(os.path.abspath(
+                caseName + '/' + substation_config[dso_key]['substation'] + '/' + substation_config[dso_key][
+                    'substation'] + '_HELICS_Config.json'), dso_key, list(substation_config[dso_key]['feeders'].keys()))
         elif fncs_flag:
-            tesp.merge_fncs_config(os.path.abspath(caseName + '/' + substation_config[dso_key]['substation'] + '/' + substation_config[dso_key]['substation'] + '_FNCS_Config.txt'), dso_key, list(substation_config[dso_key]['feeders'].keys()))
+            tesp.merge_fncs_config(os.path.abspath(
+                caseName + '/' + substation_config[dso_key]['substation'] + '/' + substation_config[dso_key][
+                    'substation'] + '_FNCS_Config.txt'), dso_key, list(substation_config[dso_key]['feeders'].keys()))
 
         print("\n=== MERGING THE FEEDERS GLM DICTIONARIES =====")
-        tesp.merge_glm_dict(os.path.abspath(caseName + '/' + dso_key + '/' + substation_config[dso_key]['substation'] + '_glm_dict.json'), list(substation_config[dso_key]['feeders'].keys()), 20)
-
+        tesp.merge_glm_dict(os.path.abspath(
+            caseName + '/' + dso_key + '/' + substation_config[dso_key]['substation'] + '_glm_dict.json'),
+                            list(substation_config[dso_key]['feeders'].keys()), 20)
 
         for microgrid_key in dso_val['microgrids']:
 
             print("\n=== MERGING THE FEEDERS GLM DICTIONARIES =====")
-            tesp.merge_glm_dict(os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '_glm_dict.json'),
-                                list(key + '_' + microgrid_key for key in substation_config[dso_key]['feeders']), 20)
+            tesp.merge_glm_dict(
+                os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '_glm_dict.json'),
+                list(key + '_' + microgrid_key for key in substation_config[dso_key]['feeders']), 20)
 
             print("\n=== MERGING THE MICROGRID AGENT DICTIONARIES =====")
-            tesp.merge_agent_dict(os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '_agent_dict.json'),
-                                  list(key + '_' + microgrid_key for key in substation_config[dso_key]['feeders']))
+            tesp.merge_agent_dict(
+                os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '_agent_dict.json'),
+                list(key + '_' + microgrid_key for key in substation_config[dso_key]['feeders']))
 
             print("\n=== MERGING THE MICROGRID YAML =====")
             if helics_flag:
-                tesp.merge_substation_yaml(os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '.json'),
+                tesp.merge_substation_yaml(
+                    os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '.json'),
                     list(key + '_' + microgrid_key for key in substation_config[dso_key]['feeders']))
             elif fncs_flag:
-                tesp.merge_substation_yaml(os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '.yaml'),
+                tesp.merge_substation_yaml(
+                    os.path.abspath(caseName + '/' + microgrid_key + '/' + microgrid_key + '.yaml'),
                     list(key + '_' + microgrid_key for key in substation_config[dso_key]['feeders']))
 
             # for dso_key, dso_val in substation_config.items():
-            filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + microgrid_key)) if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + microgrid_key), name)) and 'feeder' in name]
+            filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + microgrid_key)) if
+                             os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + microgrid_key),
+                                                         name)) and 'feeder' in name]
             print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, microgrid_key))
-            [os.remove(os.path.join(os.path.abspath(caseName + '/' + microgrid_key), fileName)) for fileName in filesToDelete]
+            [os.remove(os.path.join(os.path.abspath(caseName + '/' + microgrid_key), fileName)) for fileName in
+             filesToDelete]
 
         for gen_key in dso_val['generators']:
 
@@ -386,89 +367,52 @@ def prepare_case(mastercase):
             print("\n=== MERGING THE MICROGRID YAML =====")
             if helics_flag:
                 tesp.merge_substation_yaml(os.path.abspath(caseName + '/' + gen_key + '/' + gen_key + '.json'),
-                    list(key + '_' + gen_key for key in substation_config[dso_key]['feeders']))
+                                           list(key + '_' + gen_key for key in substation_config[dso_key]['feeders']))
             elif fncs_flag:
                 tesp.merge_substation_yaml(os.path.abspath(caseName + '/' + gen_key + '/' + gen_key + '.yaml'),
-                    list(key + '_' + gen_key for key in substation_config[dso_key]['feeders']))
+                                           list(key + '_' + gen_key for key in substation_config[dso_key]['feeders']))
 
             # for dso_key, dso_val in substation_config.items():
-            filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + gen_key)) if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + gen_key), name)) and 'feeder' in name]
+            filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + gen_key)) if os.path.isfile(
+                os.path.join(os.path.abspath(caseName + '/' + gen_key), name)) and 'feeder' in name]
             print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, gen_key))
             [os.remove(os.path.join(os.path.abspath(caseName + '/' + gen_key), fileName)) for fileName in filesToDelete]
 
         print("\n=== MERGING THE SUBSTATION AGENT DICTIONARIES =====")
-        tesp.merge_agent_dict(os.path.abspath(caseName + '/' + dso_key + '/' + substation_config[dso_key]['substation'] + '_agent_dict.json'),
+        tesp.merge_agent_dict(os.path.abspath(
+            caseName + '/' + dso_key + '/' + substation_config[dso_key]['substation'] + '_agent_dict.json'),
                               list(substation_config[dso_key]['feeders'].keys()))
 
         print("\n=== MERGING THE SUBSTATION YAML =====")
         if helics_flag:
-            tesp.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + substation_config[dso_key]['substation'] + '.json'), list(substation_config[dso_key]['feeders'].keys()))
+            tesp.merge_substation_yaml(
+                os.path.abspath(caseName + '/' + dso_key + '/' + substation_config[dso_key]['substation'] + '.json'),
+                list(substation_config[dso_key]['feeders'].keys()))
         elif fncs_flag:
-            tesp.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + substation_config[dso_key]['substation'] + '.yaml'), list(substation_config[dso_key]['feeders'].keys()))
-
-        # substation_name = val[1]
-        # # write the tso connections for this substation
-        # print('  SUBSTATION_' + bus + ':', file=yp)
-        # print('    topic: gridlabd' + substation_name + '/distribution_load', file=yp)
-        # print('    default: 0', file=yp)
-        # print('  IND_LOAD_' + bus + ':', file=yp)
-        # print('    topic: loadplayer/ind_load_' + bus, file=yp)
-        # print('    default: 0', file=yp)
-        # print('  REF_LOAD_' + bus + ':', file=yp)
-        # print('    topic: loadplayer/ref_load_' + bus, file=yp)
-        # print('    default: 0', file=yp)
-        # print('  REF_LD_HIST_' + bus + ':', file=yp)
-        # print('    topic: loadplayer/ref_load_history_' + bus, file=yp)
-        # print('    default: 0', file=yp)
-        # print('  UNRESPONSIVE_MW_' + bus + ':', file=yp)
-        # print('    topic: ' + substation_name + '/unresponsive_mw', file=yp)
-        # print('    default: 0', file=yp)
-        # print('  RESPONSIVE_MAX_MW_' + bus + ':', file=yp)
-        # print('    topic: ' + substation_name + '/responsive_max_mw', file=yp)
-        # print('    default: 0', file=yp)
-        # print('  RESPONSIVE_C2_' + bus + ':', file=yp)
-        # print('    topic: ' + substation_name + '/responsive_c2', file=yp)
-        # print('    default: 0', file=yp)
-        # print('  RESPONSIVE_C1_' + bus + ':', file=yp)
-        # print('    topic: ' + substation_name + '/responsive_c1', file=yp)
-        # print('    default: 0', file=yp)
-        # print('  RESPONSIVE_C0_' + bus + ':', file=yp)
-        # print('    topic: ' + substation_name + '/responsive_c0', file=yp)
-        # print('    default: 0', file=yp)
-        # print('  RESPONSIVE_DEG_' + bus + ':', file=yp)
-        # print('    topic: ' + substation_name + '/responsive_deg', file=yp)
-        # print('    default: 0', file=yp)
-        # print('  DA_BID_' + bus + ':', file=yp)
-        # print('    topic: ' + substation_name + '/da_bid', file=yp)
-        # print('    default: 0', file=yp)
-
-        # for i in range(len(gen)):
-        #     if int(bus) == gen[i][0]:
-        #         if 'wind' in genFuel[i][0]:
-        #             idx = str(genFuel[i][2])
-        #             print('  WIND_POWER_' + idx + ':', file=yp)
-        #             print('    topic: ' + 'windplayer/wind_power_' + idx, file=yp)
-        #             print('    default: 0', file=yp)
-        #             print('  WIND_PWR_HISTORY_' + idx + ':', file=yp)
-        #             print('    topic: ' + 'windplayer/wind_power_history_' + idx, file=yp)
-        #             print('    default: 0', file=yp)
+            tesp.merge_substation_yaml(
+                os.path.abspath(caseName + '/' + dso_key + '/' + substation_config[dso_key]['substation'] + '.yaml'),
+                list(substation_config[dso_key]['feeders'].keys()))
 
         # cleaning after feeders had been merged
-        foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName)) if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
+        foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName))
+                           if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
         print("=== Removing the following folders: {0}. ===".format(foldersToDelete))
         [shutil.rmtree(os.path.join(os.path.abspath(caseName), folder)) for folder in foldersToDelete]
 
-        # # for dso_key, dso_val in substation_config.items():
-        filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key)) if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
+        # for dso_key, dso_val in substation_config.items():
+        filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key))
+                         if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
         print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, dso_key))
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
-    #yp.close()
+    # yp.close()
 
     # Also create the launch, kill and clean scripts for this case
-    helpers.write_dsot_management_script_f_with_microgrids(master_file=mastercase, case_path=caseName, system_config=sys_config,
-                                               substation_config=substation_config, weather_config=weather_config)
-
+    helpers.write_dsot_management_script_f_with_microgrids(master_file=mastercase,
+                                                           case_path=caseName,
+                                                           system_config=sys_config,
+                                                           substation_config=substation_config,
+                                                           weather_config=weather_config)
 
     # helpers.write_dsot_management_script_f(master_file=mastercase, case_path=caseName, system_config=sys_config,
     #                                            substation_config=substation_config, weather_config=weather_config)
@@ -476,20 +420,24 @@ def prepare_case(mastercase):
     if debug_mode:
         for key in substation_config:
             folderPath = os.path.join(os.getcwd(), caseName, key)
-            #shutil.copy(r'consensus.py', folderPath)
-            shutil.copy(r'tesp_support/consensus_substation.py', folderPath)
-            shutil.copy(r'tesp_support/DSO_Agent_Helics_v1.py', folderPath)
-            for microgrid_key in  substation_config[key]['microgrids']:
+            # shutil.copy(r'consensus.py', folderPath)
+            shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/consensus_substation.py', folderPath)
+            shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/DSO_Agent_Helics.py', folderPath)
+            for microgrid_key in substation_config[key]['microgrids']:
                 folderPath_mg = os.path.join(os.getcwd(), caseName, microgrid_key)
-                shutil.copy(r'tesp_support/Microgrid_Agent_Helics_v1.py', folderPath_mg)
-                shutil.copy(r'tesp_support/consensus_microgrid.py', folderPath_mg)
-            for dg_key in  substation_config[key]['generators']:
+                shutil.copy(
+                    r'../../../../src/tesp_support/tesp_support/consensus/Microgrid_Agent_Helics.py', folderPath_mg)
+                shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/consensus_microgrid.py',
+                            folderPath_mg)
+            for dg_key in substation_config[key]['generators']:
                 folderPath_dg = os.path.join(os.getcwd(), caseName, dg_key)
-                shutil.copy(r'tesp_support/DG_Agent_Helics_v1.py', folderPath_dg)
-                shutil.copy(r'tesp_support/consensus_generator.py', folderPath_dg)
+                shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/DG_Agent_Helics.py', folderPath_dg)
+                shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/consensus_generator.py',
+                            folderPath_dg)
 
         folderPath = os.path.join(os.getcwd(), caseName, weather_agent_name)
-        shutil.copy(r'tesp_support/weatherAgent_Helics.py', folderPath)
+        shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/weatherAgent_Helics.py', folderPath)
+
 
 if __name__ == "__main__":
     prepare_case("system_case_config_TM")

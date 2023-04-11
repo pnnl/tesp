@@ -29,6 +29,7 @@ setup(
     ],
     packages=find_packages(),
     include_package_data=True,
+    data_files=[],
     python_requires='>=3.8',
     classifiers=[
         'Development Status :: 4 - Beta',

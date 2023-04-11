@@ -9,9 +9,9 @@ import json
 import numpy as np
 import os
 import math
-# from scipy.stats import truncnorm
+
 from datetime import datetime
-from tesp_support.helpers import random_norm_trunc as random_norm_trunc
+from tesp_support.helpers_dsot import random_norm_trunc
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -132,26 +132,24 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
         gld_sim_name = gld['HELICS']
         # write GridLAB-D HELICS configuration
         json_file_name_GLD = gldfileroot + '_HELICS_Config.json'
-        config_gld = {}
-        config_gld['name'] = gld_sim_name
-        config_gld['loglevel'] = 7
-        config_gld['coreType'] = str('zmq')
-        config_gld['timeDelta'] = 0.001
-        config_gld['uninterruptible'] = bool(True)
-        config_gld['publications'] = []
-        config_gld['subscriptions'] = []
+        config_gld = {'name': gld_sim_name,
+                      'loglevel': "warning",
+                      'coreType': str('zmq'),
+                      'timeDelta': 0.001,
+                      'uninterruptible': bool(True),
+                      'publications': [],
+                      'subscriptions': []}
 
         # write DSO HELICS configuration
         json_file_name_Sub = substationfileroot + '.json'
-        config_Sub = {}
-        config_Sub['name'] = substation_name
-        config_Sub['loglevel'] = 7
-        config_Sub['coreType'] = str('zmq')
-        config_Sub['timeDelta'] = 0.001
-        config_Sub['uninterruptible'] = bool(True)
-        config_Sub['publications'] = []
-        config_Sub['subscriptions'] = []
-        config_Sub['endpoints'] = []
+        config_Sub = {'name': substation_name,
+                      'loglevel': "warning",
+                      'coreType': str('zmq'),
+                      'timeDelta': 0.001,
+                      'uninterruptible': bool(True),
+                      'publications': [],
+                      'subscriptions': [],
+                      'endpoints': []}
 
     else:
         # write GridLAB-D FNCS configuration
@@ -168,7 +166,7 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
 
             config_DG[dg_name] = {}
             config_DG[dg_name]['name'] = dg_name
-            config_DG[dg_name]['loglevel'] = 7
+            config_DG[dg_name]['loglevel'] = "warning"
             config_DG[dg_name]['coreType'] = str('zmq')
             config_DG[dg_name]['timeDelta'] = 0.001
             config_DG[dg_name]['uninterruptible'] = bool(True)
@@ -746,16 +744,15 @@ def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot
             #json_file_name_Sub = substationfileroot + '.json'
             json_file_name_MG = microgrid_file_root + '.json'
             if feedercnt == 1:
-                config_MG = {}
-                config_MG['name'] = microgrid_name
-                config_MG['loglevel'] = 7
-                config_MG['coreType'] = str('zmq')
-                config_MG['timeDelta'] = 0.001
-                config_MG['uninterruptible'] = bool(True)
-                config_MG['publications'] = []
-                config_MG['subscriptions'] = []
-                config_MG['endpoints'] = []
-                config_MG['filters'] = []
+                config_MG = {'name': microgrid_name,
+                             'loglevel': "warning",
+                             'coreType': str('zmq'),
+                             'timeDelta': 0.001,
+                             'uninterruptible': bool(True),
+                             'publications': [],
+                             'subscriptions': [],
+                             'endpoints': [],
+                             'filters': []}
 
                 config_MG['subscriptions'].append({'required': bool(True),
                                                'info': str('gld_load'),

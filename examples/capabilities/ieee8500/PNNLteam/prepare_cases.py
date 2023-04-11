@@ -1,7 +1,7 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: prepare_cases.py
 
-import tesp_support.api as tesp
+import tesp_support.tesp_api as tesp
 
 tesp.glm_dict('inv30', te30=True)
 tesp.prep_precool('inv30')

@@ -2,6 +2,6 @@
 # file: test1.py
 
 # step 1
-import tesp_support.api as tesp
+import tesp_support.tesp_case as tesp
 tesp.show_tesp_config()
 

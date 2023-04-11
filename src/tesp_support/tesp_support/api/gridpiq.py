@@ -12,7 +12,8 @@ This script attempts to demonstrate the grid PIQ for new TESP API.
 import json
 from datetime import datetime, timedelta
 
-from tesp_support.api.store import entities_path
+from tesp_support.api.data import entities_path
+from tesp_support.api.data import tesp_test
 from tesp_support.api.entity import assign_defaults
 
 
@@ -102,7 +103,7 @@ class GridPIQ:
         gbl['parameters']['analysis_start_date']['data'] = start_
         gbl['parameters']['analysis_end_date']['data'] = end_
 
-    def write_json(self):
+    def toJson(self):
         """
 
         """
@@ -141,8 +142,11 @@ class GridPIQ:
             "context": self.context,
             "global": self.__getattribute__('global')
         }
-        with open("sample.json", "w") as outfile:
-            json.dump(dictionary, outfile, indent=2)
+        return dictionary
+
+    def write(self, filename):
+        with open(filename, "w") as outfile:
+            json.dump(self.toJson(), outfile, indent=2)
 
 
 def test():
@@ -166,7 +170,7 @@ def test():
                     pq.set_dispatch_data(choices[i], j, data[j]*percent[i])
         pq.avg_dispatch_data(9)
     pq.set_max_load(55678.4353)
-    pq.write_json()
+    pq.write(tesp_test + "gridPIQ.json")
 
 
 if __name__ == '__main__':

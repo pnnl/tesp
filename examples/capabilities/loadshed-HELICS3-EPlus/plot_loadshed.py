@@ -6,7 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-import tesp_support.api as tesp
+import tesp_support.tesp_api as tesp
 
 outputFolder = './'
 # first, read and print a dictionary of all the monitored GridLAB-D objects

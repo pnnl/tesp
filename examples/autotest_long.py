@@ -7,7 +7,7 @@ import os
 import sys
 import subprocess
 
-import tesp_support.api as tesp
+import tesp_support.tesp_api as tesp
 
 if sys.platform == 'win32':
     pycall = 'python'

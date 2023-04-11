@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IMAGE_NAME="tesp-$($TESPDIR/scripts/version):latest"
+IMAGE_NAME="tesp-$(cat $TESPDIR/scripts/version):latest"
 DOCKER_NAME="tesp-docker"
 
 docker run -it --rm \

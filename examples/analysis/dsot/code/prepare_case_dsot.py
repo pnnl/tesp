@@ -403,20 +403,25 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         HelicsMsg.dso.write_file(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
 
         # cleaning after feeders had been merged
-        foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName)) if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
+        foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName))
+                           if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
         print("=== Removing the following folders: {0}. ===".format(foldersToDelete))
         [shutil.rmtree(os.path.join(os.path.abspath(caseName), folder)) for folder in foldersToDelete]
 
         # for dso_key, dso_val in substation_config.items():
-        filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key)) if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
+        filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key))
+                         if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
         print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, dso_key))
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
     tso.write_file(caseName + '/tso_h.json')
 
     # Also create the launch, kill and clean scripts for this case
-    helpers.write_dsot_management_script(master_file="generate_case_config", case_path=caseName, system_config=sys_config,
-                                               substation_config=dso_config, weather_config=weather_config)
+    helpers.write_dsot_management_script(master_file="generate_case_config",
+                                         case_path=caseName,
+                                         system_config=sys_config,
+                                         substation_config=dso_config,
+                                         weather_config=weather_config)
 
 
 if __name__ == "__main__":

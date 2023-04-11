@@ -7,6 +7,9 @@
 import json
 import sqlite3
 
+from tesp_support.api.data import entities_path
+from tesp_support.api.data import tesp_test
+
 
 def assign_defaults(obj, file_name):
     """
@@ -416,15 +419,75 @@ class Entity:
         cursor_obj.execute(sql)
 
         if self.instance:
-            multi_row = "('"
+            multi_row = " ('"
+            # print(self.entity)
             sql = "INSERT INTO " + self.entity + "_values(entity, item, valu) VALUES"
-            for object_name in self.instance:
-                for item in self.instance[object_name].keys():
-                    sql += multi_row + object_name + "', '" + item + "', '" + self.instance[object_name][item] + "')"
-                    multi_row = ", ('"
+            for name in self.instance:
+                if len(self.instance[name].keys()) > 0:
+                    for item in self.instance[name].keys():
+                        sql += multi_row + name + "', '" + item + "', '" + self.instance[name][item] + "')"
+                        multi_row = ", ('"
+                    sql = sql.replace("''", "'")
+                else:
+                    sql += " ('', '', '')"
 
             sql += ";"
+            # print(sql, flush=True)
             cursor_obj.execute(sql)
             connection.commit()
 
         return ""
+
+
+def test():
+
+    class mytest:
+        def test(self):
+            return
+
+    # entity_names = ["SimulationConfig", "BackboneFiles",  "WeatherPrep", "FeederGenerator",
+    #             "EplusConfiguration", "PYPOWERConfiguration", "AgentPrep", "ThermostatSchedule"]
+    # entity_names = ['house', 'inverter', 'battery', 'object solar', 'waterheater']
+
+    try:
+        conn = sqlite3.connect(tesp_test + 'test.db')
+        print("Opened database successfully")
+    except:
+        print("Database Sqlite3.db not formed")
+
+    # this a config  -- file probably going to be static json
+    file_name = entities_path + 'feeder_defaults.json'
+    myEntity = mytest()
+    assign_defaults(myEntity, file_name)
+    name = 'rgnPenResHeat'
+    print(name)
+    print(type(myEntity.__getattribute__(name)))
+    print(myEntity.__getattribute__(name))
+
+    # this a config  -- file probably going to be static
+    myEntity = mytest()
+    assign_item_defaults(myEntity, file_name)
+    print(myEntity.rgnPenResHeat.datatype)
+    print(myEntity.rgnPenResHeat.item)
+    print(myEntity.rgnPenResHeat)
+    print(myEntity.rgnPenResHeat.value)
+
+    # Better to use Entity as subclass like substation for metrics
+    # Better to use Entity as object models for editing and persistence like glm_model,
+
+    # this a multiple config file a using dictionary list persistence
+    file_name = 'glm_objects.json'
+    with open(entities_path + file_name, 'r', encoding='utf-8') as json_file:
+        entities = json.load(json_file)
+        mylist = {}
+        for name in entities:
+            mylist[name] = Entity(name, entities[name])
+            print(mylist[name].toHelp())
+            mylist[name].toSQLite(conn)
+            # mylist[name].instanceToSQLite(conn)
+    conn.close()
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    test()

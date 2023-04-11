@@ -38,6 +38,17 @@ if sys.platform != 'win32':
 
 
 def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConfig):
+    """Helper function that initializes and runs the agents
+
+    Reads configfile. Writes *auction_metrics_root_metrics.json* and
+    *controller_metrics_root_metrics.json* upon completion.
+
+    Args:
+        configfile (str): fully qualified path to the JSON agent configuration file
+        metrics_root (str): base name of the case for metrics output
+        hour_stop (float): number of hours to simulation
+        flag (str): WithMarket or NoMarket to use the simple_auction, or not
+    """
     print('starting HELICS substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
     print('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,' +
           'SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,' +
@@ -139,8 +150,9 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
             pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/price')
             pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/monthly_fee')
 
-    helics.helicsFederateEnterExecutingMode(hFed)
+    # ==================== Time step looping under FNCS ===========================
 
+    helics.helicsFederateEnterExecutingMode(hFed)
     aucObj.initAuction()
     LMP = aucObj.mean
     refload = 0.0
@@ -342,7 +354,8 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
         dt_now = dt_now + timedelta(seconds=time_delta)
         day_of_week = dt_now.weekday()
         hour_of_day = dt_now.hour
-        #        print ('  ', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week, flush=True)
+        # print ('STEP', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week,
+        # tnext_bid, tnext_agg, tnext_opf, tnext_clear, tnext_adjust, flush=True)
         # update the data from FNCS messages
         events = fncs.get_events()
         for topic in events:
@@ -374,6 +387,7 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
                 fncs.publish(obj.name + '/thermostat_deadband', obj.deadband)
                 fncs.publish(obj.name + '/heating_setpoint', '60.0')
             bSetDefaults = False
+            # print('  SET DEFAULTS', flush=True)
 
         if time_granted >= tnext_bid:
             aucObj.clear_bids()
@@ -386,6 +400,7 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
                         aucObj.collect_bid(bid)
                     controller_metrics[time_key][obj.name] = [bid[0], bid[1]]
             tnext_bid += period
+            # print('  COLLECT BIDS', flush=True)
 
         if time_granted >= tnext_agg:
             aucObj.aggregate_bids()
@@ -395,6 +410,7 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
             fncs.publish('responsive_c1', aucObj.agg_c1)
             fncs.publish('responsive_deg', aucObj.agg_deg)
             tnext_agg += period
+            # print('  AGGREGATE BIDS', flush=True)
 
         if time_granted >= tnext_clear:
             if bWantMarket:
@@ -408,7 +424,7 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
                 aucObj.name: [aucObj.clearing_price, aucObj.clearing_type, aucObj.consumerSurplus,
                               aucObj.averageConsumerSurplus, aucObj.supplierSurplus]}
             tnext_clear += period
-        #            print ('garbage collecting at', time_granted, 'finds', gc.collect(), 'unreachable objects', flush=True)
+            # print('  CLEARED MARKET', flush=True)
 
         if time_granted >= tnext_adjust:
             if bWantMarket:
@@ -417,6 +433,7 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
                     if obj.bid_accepted():
                         fncs.publish(obj.name + '/cooling_setpoint', obj.setpoint)
             tnext_adjust += period
+            # print('  ADJUSTED', flush=True)
 
     # ==================== Finalize the metrics output ===========================
 
@@ -427,7 +444,6 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
     print(json.dumps(controller_metrics), file=controller_op)
     auction_op.close()
     controller_op.close()
-
     print('finalizing FNCS', flush=True)
     fncs.finalize()
 

@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 
 from .TMYtoEPW import convert_tmy2_to_epw
-from .data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
+from tesp_support.api.data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
 from .feederGenerator import populate_feeder
 from .glm_dict import glm_dict
 from .helpers import HelicsMsg
@@ -62,7 +62,7 @@ def write_tesp_case(config, cfgfile, freshdir=True):
         * tesp.TMY3toCSV, which converts the TMY3 file to CSV for the weather agent
         * tesp.populate_feeder, which populates the user-selected taxonomy feeder with houses and DER
         * tesp.glm_dict, which creates metadata for the populated feeder
-        * tesp.prep_substation, which creates metadata and FNCS configurations for the substation agents
+        * tesp.prep_substation, which creates metadata and FNCS/HELICS configurations for the substation agents
 
     As the configuration process finishes, several files are written to *casedir*:
 

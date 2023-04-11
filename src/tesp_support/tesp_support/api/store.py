@@ -2,29 +2,21 @@
 # file: data.py
 """ Path and Data functions for use within tesp_support, including new agents.
 """
+import os
+import re
 import csv
 import json
 import h5py
 import sqlite3
 import pandas as pd
 import numpy as np
+import zipfile as zf
 
-from os import path
-
-tesp_share = path.join(path.expandvars('$TESPDIR'), 'data', '')
-comm_path = path.join(tesp_share, 'comm', '')
-entities_path = path.join(tesp_share, 'entities', '')
-energyplus_path = path.join(tesp_share, 'energyplus', '')
-feeders_path = path.join(tesp_share, 'feeders', '')
-scheduled_path = path.join(tesp_share, 'schedules', '')
-weather_path = path.join(tesp_share, 'weather', '')
-
-tesp_model = path.join(path.expandvars('$TESPDIR'), 'models', '')
-pypower_path = path.join(tesp_model, 'pypower', '')
-
+from tesp_support.api.data import tesp_share
+from tesp_support.api.data import tesp_test
 
 #  add empty json "file" store that holds
-#  the files and schemas for each file in that store
+#  the directory and schemas classes for each file store
 #
 # {
 #   "store": [
@@ -33,21 +25,128 @@ pypower_path = path.join(tesp_model, 'pypower', '')
 #       "name": <identifier>,
 #       "filetype": <sql, hdf5, csv>
 #       "description": <intent and description of the data file>,
+#       "source": <>
 #       "schema": [
 #         {
 #           "name": <identifier>,
 #           "columns": [<identifier>, ...],
 #           "date": <column identifier> | [<'%Y-%m-%d %H:%M:%S'>, <interval(using pandas freq names)>],
 #            other attribute as needed
-#         }
-#       ]
+#         },
+#         {...}
+#       ],
+#     },
+#     {
+#       "path": <full qualified path>',
+#       "name": <identifier>,
+#       "filetype": <dir>
+#       "description": <intent and description of the data file>,
+#       "source": <>
+#       "files": [<identifier>, ...}],
+#       "directory": [
+#         {
+#           "name": <identifier>,
+#           "recurse": <boolean>,
+#           "include": [<identifier>, ...],
+#         },
+#         {...}
+#       ],
 #     },
 #     {...}
 #   ]
 # }
 
 
+class Directory:
+    file = ""
+    name = ""
+    description = None
+    ext = "dir"
+
+    def __init__(self, file, description=None):
+        """
+
+        Args:
+            file:
+            description:
+        """
+        if os.path.isdir(file):
+            root = os.path.split(file)
+            if root[1] == "":
+                root = os.path.split(root[0])
+            self.file = file
+            self.name = root[1]
+        else:
+            raise Exception("Sorry, can not read " + file)
+
+        if description is not None:
+            self.description = description
+
+        self.recurse = {}
+        self.include = {}
+        return
+
+    def set_includeDir(self, path, recurse=False):
+        if os.path.isdir(os.path.join(self.file, path)):
+            self.recurse[path] = recurse
+            self.include[path] = []
+            return path
+        return ""
+
+    def set_includeFile(self, path, mask):
+        if os.path.isdir(os.path.join(self.file, path)):
+            self.include[path].append(mask)
+            return True
+        return False
+
+    def get_includeDirs(self):
+        directories = []
+        for path in self.include:
+            directories.append = path
+        return directories
+
+    def get_includeFiles(self, path):
+        if path in self.include:
+            return self.include[path]
+        return None
+
+    def zip(self, zipfile):
+        for path in self.include:
+            zipfile.write(os.path.join(self.file, path), arcname=os.path.join("", path))
+            for dir_name, sub_dirs, files in os.walk(os.path.join(self.file, path)):
+                if len(self.include[path]) > 0:
+                    for mask in self.include[path]:
+                        for filename in files:
+                            if re.match(mask, filename):
+                                name = os.path.join(dir_name, filename)
+                                zipfile.write(name, arcname=os.path.join(dir_name.replace(self.file, ""), filename))
+                else:
+                    for filename in files:
+                        name = os.path.join(dir_name, filename)
+                        zipfile.write(name, arcname=os.path.join(dir_name.replace(self.file, ""), filename))
+                if self.recurse[path]:
+                    for directory in sub_dirs:
+                        name = os.path.join(dir_name, directory)
+                        zipfile.write(name, arcname=os.path.join(dir_name.replace(self.file, ""), directory))
+                else:
+                    break
+
+    def toJSON(self):
+        diction = {"path": self.file,
+                   "name": self.name,
+                   "filetype": self.ext,
+                   "description": self.description,
+                   "directory": []}
+        for path in self.include:
+            sub_dir = {"name": path,
+                       "recurse": self.recurse[path],
+                       "include": self.include[path]}
+            diction["directory"].append(sub_dir)
+        return diction
+
+
 class Schema:
+
     def __init__(self, file, name=None, description=None):
         """
 
@@ -56,24 +155,21 @@ class Schema:
             name:
             description:
         """
-        ext = ""
-        if path.isfile(file):
-            root = path.split(file)
-            ext = path.splitext(root[1])
+        if os.path.isfile(file):
+            root = os.path.split(file)
+            ext = os.path.splitext(root[1])
             if ext[1] not in [".csv", ".json", ".db", ".hdf5"]:
-                raise Exception("Sorry, can not read file type")
+                raise Exception("Sorry, can not read file type " + ext)
         else:
-            raise Exception("Sorry, can not read file")
+            raise Exception("Sorry, can not read " + file)
 
         self.file = file
         self.name = name
         self.ext = ext[1]
-        self.description = ""
         if name is not None:
             self.name = ext[0]
         if description is not None:
             self.description = description
-
         self.tables = None
         self.columns = {}
         self.dates = {}
@@ -104,7 +200,6 @@ class Schema:
     def get_columns(self, table):
         if table in self.tables:
             if table not in self.columns:
-                self.columns[table] = []
                 if self.ext == ".csv":
                     with open(self.file, newline='') as csvfile:
                         reader = csv.DictReader(csvfile)
@@ -115,6 +210,7 @@ class Schema:
                     sql_query = """SELECT * FROM '""" + table + """';"""
                     cursor = con.cursor()
                     data = cursor.execute(sql_query)
+                    self.columns[table] = []
                     for column in data.description:
                         self.columns[table].append(column[0])
                     con.close()
@@ -128,8 +224,6 @@ class Schema:
         if table in self.tables:
             if table in self.columns:
                 if name in self.columns[table]:
-                    if table not in self.dates:
-                        self.dates[table] = []
                     self.dates[table] = name
                     return True
         return False
@@ -137,8 +231,6 @@ class Schema:
     # using pandas offset freq alias, H, S, D
     def set_date_byrow(self, table, start, interval):
         if table in self.tables:
-            if table not in self.dates:
-                self.dates[table] = []
             self.dates[table] = [start, interval]
             return True
         return False
@@ -161,8 +253,6 @@ class Schema:
     # │ pd.read_csv(..., thousands='.', decimal=',')          │ Numeric data is in European format (eg., 1.234,56) │
     # └───────────────────────────────────────────────────────┴────────────────────────────────────────────────────┘
     def get_series_data(self, table, start, end, usecols=None, index_col=None):
-
-        dt = None
         if table in self.dates:
             dt = self.dates[table]
         else:
@@ -216,11 +306,47 @@ class Store:
         self.read()
         return
 
-    def add_file(self, file, name="", description=""):
+    def add_path(self, path, description=""):
+        for directory in self.store:
+            if type(directory) == Directory:
+                if path in directory.file:
+                    return directory
+        directory = Directory(path, description)
+        self.add_directory(directory)
+        return directory
+
+    def add_directory(self, directory):
+        if type(directory) == Directory:
+            self.store.append(directory)
+        return
+
+    def del_directory(self, name):
+        for i, directory in enumerate(self.store):
+            if type(directory) == Directory:
+                if directory['name'] == name:
+                    del self.store[i]
+        return
+
+    def get_directory(self, name):
+        if name is None:
+            desc = []
+            for directory in self.store:
+                if type(directory) == Directory:
+                    desc.append([directory['name'], directory['description']])
+            return desc
+        else:
+            for i, directory in enumerate(self.store):
+                if type(directory) == Directory:
+                    if directory['name'] == name:
+                        return self.store[i]
+        return None
+
+    def add_file(self, path, name="", description=""):
         for schema in self.store:
-            if file in schema.file:
-                return schema
-        schema = Schema(file, name, description)
+            if type(schema) == Schema:
+                if path in schema.file:
+                    return schema
+        schema = Schema(path, name, description)
         self.add_schema(schema)
         return schema
 
@@ -230,15 +356,24 @@ class Store:
         return
 
     def del_schema(self, name):
-        for i, msg in enumerate(self.store):
-            if msg['name'] == name:
-                del self.store[i]
+        for i, schema in enumerate(self.store):
+            if type(schema) == Schema:
+                if schema['name'] == name:
+                    del self.store[i]
         return
 
-    def get_schema(self, name):
-        for i, msg in enumerate(self.store):
-            if msg['name'] == name:
-                return self.store[i]
+    def get_schema(self, name=None):
+        if name is None:
+            desc = []
+            for schema in self.store:
+                if type(schema) == Schema:
+                    desc.append([schema['name'], schema['ext'], schema['description']])
+            return desc
+        else:
+            for schema in self.store:
+                if type(schema) == Schema:
+                    if schema['name'] == name:
+                        return schema
         return None
 
     def write(self):
@@ -252,28 +387,51 @@ class Store:
         return
 
     def read(self):
-        with open(self.file, 'r', encoding='utf-8') as json_file:
-            file = json.load(json_file)
-            for tmp in file["store"]:
-                scheme = self.add_file(tmp["path"], tmp["name"], tmp["description"])
-                scheme.tables = []
-                for table in tmp["schema"]:
-                    name = table["name"]
-                    scheme.tables.append(name)
-                    scheme.columns[name] = []
-                    if "columns" in table:
-                        for column in table["columns"]:
-                            scheme.columns[name].append(column)
-                    scheme.dates[name] = []
-                    if "date" in table:
-                        scheme.dates[name] = table["date"]
-            return
+        if os.path.isfile(self.file):
+            with open(self.file, 'r', encoding='utf-8') as json_file:
+                file = json.load(json_file)
+                for tmp in file["store"]:
+                    if tmp["filetype"] == "dir":
+                        try:
+                            directory = self.add_path(tmp["path"], tmp["description"])
+                            directory.recurse = {}
+                            directory.include = {}
+                            for table in tmp["directory"]:
+                                name = table["name"]
+                                if "include" in table:
+                                    directory.recurse[name] = table["recurse"]
+                                    directory.include[name] = table["include"]
+                        except:
+                            pass
+                    else:
+                        try:
+                            scheme = self.add_file(tmp["path"], tmp["name"], tmp["description"])
+                            scheme.tables = []
+                            for table in tmp["schema"]:
+                                name = table["name"]
+                                scheme.tables.append(name)
+                                if "columns" in table:
+                                    scheme.columns[name] = table["columns"]
+                                if "date" in table:
+                                    scheme.dates[name] = table["date"]
+                        except:
+                            pass
+
+    def zip(self, target):
+        theZipFile = zf.ZipFile(target, 'w')
+        for file in self.store:
+            if type(file) == Directory:
+                file.zip(theZipFile)
+        theZipFile.close()
+
+    def unzip(self):
+        return
 
 
-# Synchronizes a list of time series dataframes
-# Synchronization includes resampling the time series based
-# upon the synch_interval and interval_unit entered
 def synch_time_series(series_list, synch_interval, interval_unit):
+    # Synchronizes a list of time series dataframes
+    # Synchronization includes resampling the time series based
+    # upon the synch_interval and interval_unit entered
     synched_series = []
 
     for df in series_list:
@@ -282,8 +440,8 @@ def synch_time_series(series_list, synch_interval, interval_unit):
     return synched_series
 
 
-# Gets the latest start time and the earliest time from a list of time series
 def get_synch_date_range(time_series):
+    # Gets the latest start time and the earliest time from a list of time series
     t_start = time_series[0].index[0]
     t_end = time_series[0].index[len(time_series[0].index)-1]
     for tserie in time_series:
@@ -294,8 +452,8 @@ def get_synch_date_range(time_series):
     return t_start, t_end
 
 
-# Clips the time series in the list to the same start and stop times
 def synch_series_lengths(time_series):
+    # Clips the time series in the list to the same start and stop times
     synched_series = []
     synch_start, synch_end = get_synch_date_range(time_series)
     for tseries in time_series:
@@ -304,8 +462,8 @@ def synch_series_lengths(time_series):
     return synched_series
 
 
-# Sychronizes the length and time intervals of a list of time series dataframes
 def synch_series(time_series, synch_interval, interval_unit):
+    # Sychronizes the length and time intervals of a list of time series dataframes
     clipped_series = []
     synched_series = []
     sampled_series = []
@@ -340,8 +498,8 @@ def test_debug_resample():
 
 
 def test_csv():
-    my_store = Store(entities_path + 'store.json')
-    my_file = my_store.add_file(entities_path + 'test.csv', "test_csv", "My test csv file")
+    my_store = Store(tesp_test + 'store.json')
+    my_file = my_store.add_file(tesp_test + 'test.csv', "test_csv", "My test csv file")
     tables = my_file.get_tables()
     print(tables)
     columns = my_file.get_columns(tables[0])
@@ -350,8 +508,8 @@ def test_csv():
 
 
 def test_sqlite():
-    my_store = Store(entities_path + 'store.json')
-    my_file = my_store.add_file(entities_path + 'test.db', "test_db", "My test sqlite file")
+    my_store = Store(tesp_test + 'store.json')
+    my_file = my_store.add_file(tesp_test + 'test.db', "test_db", "My test sqlite file")
     tables = my_file.get_tables()
     print(tables)
     columns = my_file.get_columns(tables[0])
@@ -359,9 +517,32 @@ def test_sqlite():
     my_store.write()
 
 
+def test_change_gencost():
+    file = os.path.join(os.path.expandvars('$TESPDIR'), 'examples/analysis/dsot/code/system_case_config.json')
+    price = {
+        "Steam Coal": 61.1,
+        "Combined Cycle": 28.9,
+        "Combustion Engine": 38.9,
+        "Combustion Turbine": 38.9,
+        "Steam Turbine": 38.9
+    }
+    with open(file, 'r', encoding='utf-8') as json_file:
+        in_file = json.load(json_file)
+        row = 0
+        for tmp in in_file["genfuel"]:
+            fuel = tmp[1]
+            for name in price:
+                if name in fuel:
+                    in_file["gencost"][row][6] = price[name]
+            row = row + 1
+
+    with open(file, "w", encoding='utf-8') as outfile:
+        json.dump(in_file, outfile, indent=2)
+
+
 def test_read():
-    my_store = Store(entities_path + 'store.json')
-    my_file = my_store.add_file(entities_path + 'test.csv', "test_csv", "My test csv file")
+    my_store = Store(tesp_test + 'store.json')
+    my_file = my_store.add_file(tesp_test + 'test.csv', "test_csv", "My test csv file")
     tables = my_file.get_tables()
     print(tables)
     columns = my_file.get_columns(tables[0])
@@ -371,24 +552,32 @@ def test_read():
     my_file.set_date_bycol(tables[0], columns[0])
     my_store.write()
     data = my_file.get_series_data(tables[0], '2016-01-01 00:00', '2017-01-01 00:00')
-    tseries = []
-    tseries.append(data)
+    tseries = [data]
     print(get_synch_date_range(tseries))
 
     my_file.set_date_byrow(tables[0], '2016-01-01 00:00', 'H')
     my_store.write()
     data = my_file.get_series_data(tables[0], '2016-01-01 00:00', '2017-01-01 00:00',
                                    usecols=[columns[1], columns[2], columns[3]])
-    tseries = []
-    tseries.append(data)
+    tseries = [data]
     print(get_synch_date_range(tseries))
 
 
+def test_dir():
+    my_store = Store(tesp_test + 'store.json')
+    my_file = my_store.add_path(tesp_share, "My data directory")
+    my_file.set_includeDir("energyplus")
+    sub = my_file.set_includeDir("feeders", True)
+    my_file.set_includeFile(sub, "IEE*")
+    my_file.set_includeFile(sub, "comm*")
+    my_file.set_includeFile(sub, ".gitignore")
+    my_store.write()
+    my_store.zip(tesp_test + 'store.zip')
 
 
 if __name__ == "__main__":
+    test_debug_resample()
     test_csv()
     test_sqlite()
-
-
-
+    test_read()
+    test_dir()
