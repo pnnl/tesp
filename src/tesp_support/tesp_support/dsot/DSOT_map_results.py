@@ -196,7 +196,8 @@ def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case
                 branch_id = 'nan'
                 for branch in case_config_data['branch']:
                     if branch[0] > 200:
-                        # Since there is not a simple mapping from EHV to HV buses need to use branches to find connection.
+                        # Since there is not a simple mapping from EHV to HV buses
+                        # need to use branches to find connection.
                         for branch2 in case_config_data['branch']:
                             if branch2[0] == branch[0] and branch2[1] < 201:
                                 node1 = branch2[1]
@@ -207,7 +208,8 @@ def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case
                     else:
                         node1 = branch[0]
                     if branch[1] > 200:
-                        # Since there is not a simple mapping from EHV to HV buses need to use branches to find connection.
+                        # Since there is not a simple mapping from EHV to HV buses
+                        # need to use branches to find connection.
                         for branch2 in case_config_data['branch']:
                             if branch2[0] == branch[1] and branch2[1] < 201:
                                 node2 = branch2[1]

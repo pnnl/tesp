@@ -13,14 +13,13 @@ import json
 from datetime import datetime, timedelta
 
 from tesp_support.api.data import entities_path
-from tesp_support.api.data import tesp_test
 from tesp_support.api.entity import assign_defaults
 
 
-# Identified avert regions
-# https://www.epa.gov/avert/avert-tutorial-getting-started-identify-your-avert-regions
-
 class GridPIQ:
+    # Identified avert regions
+    # https://www.epa.gov/avert/avert-tutorial-getting-started-identify-your-avert-regions
+
     def __init__(self):
         self.impacts = None
         self.context = {}
@@ -150,6 +149,8 @@ class GridPIQ:
 
 
 def test():
+    from tesp_support.api.data import tesp_test
+
     start_date = "2016-01-03 00:00:00"
     end_date = "2016-01-05 00:00:00"
     choices = ["Nuclear", "Wind", "Coal", "Solar", "NaturalGas", "Petroleum"]
@@ -170,7 +171,7 @@ def test():
                     pq.set_dispatch_data(choices[i], j, data[j]*percent[i])
         pq.avg_dispatch_data(9)
     pq.set_max_load(55678.4353)
-    pq.write(tesp_test + "gridPIQ.json")
+    pq.write(tesp_test + "api/gridPIQ.json")
 
 
 if __name__ == '__main__':

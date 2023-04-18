@@ -5,7 +5,7 @@ sys.path.insert(0, dirname(abspath(__file__)))
 from datetime import datetime
 
 import tesp_support.dsot.DSOT_plots
-import tesp_support.dsot.DSO_rate_making
+import tesp_support.dsot.dso_rate_making
 
 ''' This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:

@@ -3,47 +3,44 @@
 Created on Fri Nov  8 15:31:39 2019
 
 @author: liubo
-"""
 
-"""
-Need a replay buffer class
-use batch normlization
+Need a replay buffer class use batch normalization
 """
 
 import os
+
+import numpy as np
 import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import numpy as np
 
-  
+
 class OUNoise(object):
     def __init__(self, mu=0, theta=0.15, max_sigma=0.15, min_sigma=0.001, decay_period=10000):
-        self.mu           = mu
-        self.theta        = theta
-        self.sigma        = max_sigma
-        self.max_sigma    = max_sigma
-        self.min_sigma    = min_sigma
+        self.mu = mu
+        self.theta = theta
+        self.sigma = max_sigma
+        self.max_sigma = max_sigma
+        self.min_sigma = min_sigma
         self.decay_period = decay_period
-        self.action_dim   = 1
+        self.action_dim = 1
         self.reset()
-        
+
     def reset(self):
         self.state = np.ones(self.action_dim) * self.mu
-        
+
     def evolve_state(self):
-        x  = self.state
+        x = self.state
         dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(self.action_dim)
         self.state = x + dx
         return self.state
-    
-    def get_noise(self,t):
+
+    def get_noise(self, t):
         ou_state = self.evolve_state()
         self.sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * min(1.0, t / self.decay_period)
-        return  ou_state    
-    
-    
+        return ou_state
+
 
 class OUActionNoise(object):
     def __init__(self, mu, sigma=0.5, theta=.2, dt=0.5, x0=None):
@@ -76,7 +73,8 @@ class ReplayBuffer(object):
         self.new_state_memory = np.zeros((self.mem_size, *input_shape))
         self.action_memory = np.zeros((self.mem_size, n_actions))
         self.reward_memory = np.zeros(self.mem_size)
-      #  self.terminal_memory = np.zeros(self.mem_size, dtype=np.float32)
+
+    #  self.terminal_memory = np.zeros(self.mem_size, dtype=np.float32)
 
     def store_transition(self, state, action, reward, state_):
         index = self.mem_cntr % self.mem_size
@@ -84,7 +82,7 @@ class ReplayBuffer(object):
         self.new_state_memory[index] = state_
         self.action_memory[index] = action
         self.reward_memory[index] = reward
-       # self.terminal_memory[index] = 1 
+        # self.terminal_memory[index] = 1
         self.mem_cntr += 1
 
     def sample_buffer(self, batch_size):
@@ -96,14 +94,14 @@ class ReplayBuffer(object):
         actions = self.action_memory[batch]
         rewards = self.reward_memory[batch]
         states_ = self.new_state_memory[batch]
-       # terminal = self.terminal_memory[batch]
+        # terminal = self.terminal_memory[batch]
 
         return states, actions, rewards, states_
 
 
 class CriticNetwork(nn.Module):
     def __init__(self, beta, input_dims, fc1_dims, fc2_dims, n_actions, name,
-                 chkpt_dir='temp\ddpg'):
+                 chkpt_dir='temp/ddpg'):
         super(CriticNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -163,8 +161,8 @@ class CriticNetwork(nn.Module):
 
 
 class ActorNetwork(nn.Module):
-    def __init__(self, alpha, input_dims, fc1_dims, fc2_dims, n_actions,name,
-                 chkpt_dir='temp\ddpg'):
+    def __init__(self, alpha, input_dims, fc1_dims, fc2_dims, n_actions, name,
+                 chkpt_dir='temp/ddpg'):
         super(ActorNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -190,7 +188,7 @@ class ActorNetwork(nn.Module):
 
         # f3 = 0.004
         f3 = 0.003
-        self.mu = nn.Linear(self.fc2_dims, self.n_actions)  # n_actions=1 for tempetura
+        self.mu = nn.Linear(self.fc2_dims, self.n_actions)  # n_actions=1 for temperature
         T.nn.init.uniform_(self.mu.weight.data, -f3, f3)
         T.nn.init.uniform_(self.mu.bias.data, -f3, f3)
         # self.mu.weight.data.uniform_(-f3, f3)
@@ -202,8 +200,8 @@ class ActorNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, state):
-        state=T.tensor(state,dtype=T.float).to(self.device)
-        state=state.view(-1,int(self.input_dims[0]))
+        state = T.tensor(state, dtype=T.float).to(self.device)
+        state = state.view(-1, int(self.input_dims[0]))
         x = self.fc1(state)
         x = self.bn1(x)
         x = F.relu(x)
@@ -222,12 +220,13 @@ class ActorNetwork(nn.Module):
         print('... loading checkpoint ...')
         self.load_state_dict(T.load(self.checkpoint_file))
 
+
 # 0.92   batch size
 class Agent(object):
-#    def __init__(self, alpha, beta, input_dims, tau, gamma=0.90,
-#                 n_actions=1, max_size=1440, layer1_size=90,
-#                 layer2_size=60, batch_size=64):
-    
+    #    def __init__(self, alpha, beta, input_dims, tau, gamma=0.90,
+    #                 n_actions=1, max_size=1440, layer1_size=90,
+    #                 layer2_size=60, batch_size=64):
+
     # reward test
     def __init__(self, alpha, beta, input_dims, tau, gamma=0.95,
                  n_actions=1, max_size=10000, layer1_size=90,
@@ -259,9 +258,9 @@ class Agent(object):
         self.actor.eval()
         observation = T.tensor(observation, dtype=T.float).to(self.actor.device)
         mu = self.actor.forward(observation).to(self.actor.device)
-#        mu_prime = mu + T.tensor(self.noise(),
-#                                 dtype=T.float).to(self.actor.device)
-        mu_prime = mu #no noise
+        #        mu_prime = mu + T.tensor(self.noise(),
+        #                                 dtype=T.float).to(self.actor.device)
+        mu_prime = mu  # no noise
         self.actor.train()
         return mu_prime.cpu().detach().numpy()
 
@@ -275,7 +274,7 @@ class Agent(object):
             self.memory.sample_buffer(self.batch_size)
 
         reward = T.tensor(reward, dtype=T.float).to(self.critic.device)
-     #   done = T.tensor(done).to(self.critic.device)
+        #   done = T.tensor(done).to(self.critic.device)
         new_state = T.tensor(new_state, dtype=T.float).to(self.critic.device)
         action = T.tensor(action, dtype=T.float).to(self.critic.device)
         state = T.tensor(state, dtype=T.float).to(self.critic.device)
@@ -335,28 +334,24 @@ class Agent(object):
                                      (1 - tau) * target_actor_dict[name].clone()
         self.target_actor.load_state_dict(actor_state_dict)
 
-
-
-
     def check_actor_params(self):
         current_actor_params = self.actor.named_parameters()
         current_actor_dict = dict(current_actor_params)
-#        original_actor_dict = dict(self.original_actor.named_parameters())
-#        original_critic_dict = dict(self.original_critic.named_parameters())
+        #        original_actor_dict = dict(self.original_actor.named_parameters())
+        #        original_critic_dict = dict(self.original_critic.named_parameters())
         current_critic_params = self.critic.named_parameters()
         current_critic_dict = dict(current_critic_params)
         print('Checking Actor parameters')
 
         for param in current_actor_dict:
-            print(param,  current_actor_dict[param])
+            print(param, current_actor_dict[param])
         print('Checking critic parameters')
         for param in current_critic_dict:
-            print(param,  current_critic_dict[param])
+            print(param, current_critic_dict[param])
         input()
+
     def save_models(self):
         T.save(self.actor, 'act')
         T.save(self.critic, 'crit')
         T.save(self.target_actor, 'target_act')
         T.save(self.target_critic, 'target_crit')
-        
-

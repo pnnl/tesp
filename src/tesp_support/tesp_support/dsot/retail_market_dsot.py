@@ -31,7 +31,7 @@ from copy import deepcopy
 
 import numpy as np
 
-import tesp_support.helpers_dsot as helpers
+from tesp_support.helpers_dsot import curve, get_intersect, ClearingType, resample_curve, resample_curve_for_price_only
 
 
 class RetailMarketDSOT:
@@ -172,9 +172,9 @@ class RetailMarketDSOT:
         self.cleared_quantity_RT_unscaled = None
 
         self.cleared_quantity_RT_for_AMES = None
-        self.curve_buyer_RT_for_AMES = helpers.curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
-        self.curve_buyer_RT = helpers.curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
-        self.curve_seller_RT = helpers.curve(self.price_cap, self.num_samples)
+        self.curve_buyer_RT_for_AMES = curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
+        self.curve_buyer_RT = curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
+        self.curve_seller_RT = curve(self.price_cap, self.num_samples)
 
     def clean_bids_DA(self):
         """Initialize the day-ahead market
@@ -188,10 +188,10 @@ class RetailMarketDSOT:
         self.cleared_quantity_DA_unscaled = []
 
         for i in range(self.windowLength):
-            self.curve_buyer_DA[i] = helpers.curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
+            self.curve_buyer_DA[i] = curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
 
         for i in range(self.windowLength):
-            self.curve_seller_DA[i] = helpers.curve(self.price_cap, self.num_samples)
+            self.curve_seller_DA[i] = curve(self.price_cap, self.num_samples)
 
     def curve_aggregator_RT(self, identity, bid_RT, name):
         """Function used to collect the RT bid and update the accumulated buyer or seller curve 
@@ -247,10 +247,10 @@ class RetailMarketDSOT:
             temp = curve_buyer.quantities[0]
             if temp < 0.0:
                 log.info("Warning quantities submitted to retail are negative." +
-                         "The returns are helpers.ClearingType.UNCONGESTED, " +
+                         "The returns are ClearingType.UNCONGESTED, " +
                          "price set to 0, first quantity of the curve, " +
                          "and congestion price is set to 0. BAU case.")
-                return helpers.ClearingType.UNCONGESTED, 0.0, temp, 0.0
+                return ClearingType.UNCONGESTED, 0.0, temp, 0.0
             # log.info("Uncontrollable true, temp:" + str(temp) +
             #          " min: " + str(min(curve_seller.quantities)) +
             #          " max: " + str(max(curve_seller.quantities)))
@@ -267,11 +267,11 @@ class RetailMarketDSOT:
                     elif curve_seller.quantities[idx] == cleared_quantity:
                         cleared_price = curve_seller.prices[idx]
                 # if cleared_quantity > self.Q_max:
-                #     clear_type = helpers.ClearingType.CONGESTED
+                #     clear_type = ClearingType.CONGESTED
                 # else:
-                #     clear_type = helpers.ClearingType.UNCONGESTED
+                #     clear_type = ClearingType.UNCONGESTED
                 if cleared_quantity > self.Q_max:
-                    clear_type = helpers.ClearingType.CONGESTED
+                    clear_type = ClearingType.CONGESTED
                     uncongested_price = curve_seller.prices[0]
                     # uncongested_price = cleared_price - (cleared_quantity-Q_max) * self.FeederCongPrice
                     if uncongested_price < 0:
@@ -284,34 +284,34 @@ class RetailMarketDSOT:
                         congestion_surcharge = self.price_cap
                         log.info("congestion surcharge is beyond price cap, scale is too high!")
                 else:
-                    clear_type = helpers.ClearingType.UNCONGESTED
+                    clear_type = ClearingType.UNCONGESTED
                     congestion_surcharge = 0.0
                 return clear_type, cleared_price, cleared_quantity, congestion_surcharge
             else:
                 log.info("dso quantities: " + str(curve_buyer.quantities))
                 log.info("ERROR retail min: " + str(min(curve_seller.quantities)) +
                          ", max: " + str(max(curve_seller.quantities)))
-                return helpers.ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
+                return ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
         else:
             max_q = min(max(curve_seller.quantities), max(curve_buyer.quantities))
             min_q = max(min(curve_seller.quantities), min(curve_buyer.quantities))
             # log.info("Uncontrollable false, min: " + str(min_q) + "  max: " + str(max_q))
             if max_q < min_q:
                 log.info("ERROR retail min_q: " + str(min_q) + ", max_q:" + str(max_q))
-                return helpers.ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
+                return ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
 
-            # x,buyer_prices,seller_prices=helpers.resample_curve_for_market(curve_buyer.quantities, curve_buyer.prices,curve_seller.quantities, curve_seller.prices)
+            # x,buyer_prices,seller_prices=resample_curve_for_market(curve_buyer.quantities, curve_buyer.prices,curve_seller.quantities, curve_seller.prices)
             # buyer_quantities=x
             # seller_quantities=x
-            # buyer_quantities, buyer_prices = helpers.resample_curve(curve_buyer.quantities, curve_buyer.prices,
+            # buyer_quantities, buyer_prices = resample_curve(curve_buyer.quantities, curve_buyer.prices,
             #                                                        min_q, max_q, self.num_samples)
-            # seller_quantities, seller_prices = helpers.resample_curve(curve_seller.quantities, curve_seller.prices,
+            # seller_quantities, seller_prices = resample_curve(curve_seller.quantities, curve_seller.prices,
             #                                                          min_q, max_q, self.num_samples)
             buyer_prices = curve_buyer.prices
             buyer_quantities = curve_buyer.quantities
             seller_quantities = buyer_quantities
             # log.info("curve_seller.prices: "+str(curve_seller.prices))
-            seller_prices = helpers.resample_curve_for_price_only(buyer_quantities,
+            seller_prices = resample_curve_for_price_only(buyer_quantities,
                                                                   curve_seller.quantities,
                                                                   curve_seller.prices)
             # seller_prices[0]=0.0
@@ -325,15 +325,15 @@ class RetailMarketDSOT:
                         p2 = (buyer_quantities[idx + 1], buyer_prices[idx + 1])
                         p3 = (seller_quantities[idx] - 0.1, seller_prices[idx])
                         p4 = (seller_quantities[idx + 1] + 0.1, seller_prices[idx + 1])
-                        cleared_price, cleared_quantity = helpers.get_intersect(p1, p2, p3, p4)
+                        cleared_price, cleared_quantity = get_intersect(p1, p2, p3, p4)
                     else:
                         p1 = (buyer_quantities[idx], buyer_prices[idx])
                         p2 = (buyer_quantities[idx + 1], buyer_prices[idx + 1])
                         p3 = (seller_quantities[idx], seller_prices[idx])
                         p4 = (seller_quantities[idx + 1], seller_prices[idx + 1])
-                        cleared_price, cleared_quantity = helpers.get_intersect(p1, p2, p3, p4)
+                        cleared_price, cleared_quantity = get_intersect(p1, p2, p3, p4)
                     if cleared_quantity > self.Q_max:
-                        clear_type = helpers.ClearingType.CONGESTED
+                        clear_type = ClearingType.CONGESTED
                         # uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
                         uncongested_price = curve_seller.prices[0]
                         if uncongested_price < 0:
@@ -343,7 +343,7 @@ class RetailMarketDSOT:
                             congestion_surcharge = self.price_cap
                             log.info("congestion surcharge is beyond price cap, scale is too high!")
                     else:
-                        clear_type = helpers.ClearingType.UNCONGESTED
+                        clear_type = ClearingType.UNCONGESTED
                         congestion_surcharge = 0.0
                     return clear_type, cleared_price, cleared_quantity, congestion_surcharge
 
@@ -356,22 +356,22 @@ class RetailMarketDSOT:
                 if max_q == max(curve_seller.quantities):
                     cleared_price = buyer_prices[-1]
                     cleared_quantity = buyer_quantities[-1]
-                    clear_type = helpers.ClearingType.CONGESTED
+                    clear_type = ClearingType.CONGESTED
                 elif max_q == max(curve_buyer.quantities):
                     cleared_price = seller_prices[-1]
                     cleared_quantity = seller_quantities[-1]
-                    clear_type = helpers.ClearingType.UNCONGESTED
+                    clear_type = ClearingType.UNCONGESTED
             else:
                 if min_q == min(curve_seller.quantities):
                     cleared_price = buyer_prices[0]
                     cleared_quantity = buyer_quantities[0]
-                    clear_type = helpers.ClearingType.UNCONGESTED
+                    clear_type = ClearingType.UNCONGESTED
                 elif min_q == min(curve_buyer.quantities):
                     cleared_price = seller_prices[0]
                     cleared_quantity = seller_quantities[0]
-                    clear_type = helpers.ClearingType.UNCONGESTED
+                    clear_type = ClearingType.UNCONGESTED
             if cleared_quantity > Q_max:
-                clear_type = helpers.ClearingType.CONGESTED
+                clear_type = ClearingType.CONGESTED
                 uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
                 if uncongested_price < 0:
                     uncongested_price = 0
@@ -506,7 +506,7 @@ class RetailMarketDSOT:
             preprocessed_curve (curve): preprocessed demand curve
         
         """
-        preprocessed_curve = helpers.curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
+        preprocessed_curve = curve([self.U_price_cap_CA, self.L_price_cap_CA], self.num_samples)
         preprocessed_curve.prices = deepcopy(substation_demand_curve.prices)
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
         for i in range(self.num_samples):
@@ -983,7 +983,7 @@ def test():
     old_Q = market.curve_buyer_DA[hr].quantities
     old_P = market.curve_buyer_DA[hr].prices
     #    old_P = old_P/1.25
-    new_Q, new_P = helpers.resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
+    new_Q, new_P = resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
 
     new_P = np.array(new_P)
 
@@ -1025,7 +1025,7 @@ def test():
 #    #no bids
 #    old_Q = market.curve_buyer_DA[1].quantities
 #    old_P = market.curve_buyer_DA[1].prices
-#    new_Q, new_P = helpers.resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
+#    new_Q, new_P = resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
 
 
 if __name__ == "__main__":

@@ -25,8 +25,7 @@ import pyomo.environ as pyo
 import pyomo.opt as opt
 import logging as log
 
-from .helpers import parse_number
-from .helpers_dsot import get_run_solver
+from tesp_support.helpers import parse_number, get_run_solver
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
@@ -1236,8 +1235,7 @@ class WaterHeaterDSOT:
         return cleared_da_quantity
 
 
-if __name__ == "__main__":
-    def testing():
+def test():
         wh_properties = {
             'wh_gallons': 54.99  # gal
         }
@@ -1257,11 +1255,11 @@ if __name__ == "__main__":
             'slider_setting': 0.0
         }
         
-        ### Uncomment for testing logging functionality.
-        ### Supply these values (into WaterHeaterDSOT) when using the water
-        ### heater agent in the simulation.
+        # ## Uncomment for testing logging functionality.
+        # ## Supply these values (into WaterHeaterDSOT) when using the water
+        # ## heater agent in the simulation.
         # model_diag_level = 11
-        # hlprs.enable_logging('DEBUG', model_diag_level)
+        # helpers.enable_logging('DEBUG', model_diag_level)
         sim_time = '2019-11-20 07:47:00'
         
         EWH = WaterHeaterDSOT(wh_dict, wh_properties, 'abc', 11, sim_time, 'ipopt')  # add model_diag_level, and sim_time
@@ -1309,4 +1307,5 @@ if __name__ == "__main__":
         print(EWH.formulate_bid_rt())
 
 
-    testing()
+if __name__ == "__main__":
+    test()

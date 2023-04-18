@@ -1,11 +1,12 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: prepare_cases.py
 
-import tesp_support.tesp_api as tesp
+import tesp_support.glm_dict as gd
+import tesp_support.prep_precool as pp
 
-tesp.glm_dict('inv30', te30=True)
-tesp.prep_precool('inv30')
-tesp.glm_dict('invti30', te30=True)
-tesp.prep_precool('invti30')
-tesp.glm_dict('inv8500')
-tesp.prep_precool('inv8500', 15)
+gd.glm_dict('inv30', te30=True)
+pp.prep_precool('inv30')
+gd.glm_dict('invti30', te30=True)
+pp.prep_precool('invti30')
+gd.glm_dict('inv8500')
+pp.prep_precool('inv8500', 15)

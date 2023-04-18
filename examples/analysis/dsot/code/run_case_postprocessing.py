@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from joblib import Parallel, delayed
 
 import tesp_support.dsot.DSOT_plots as pt
-import tesp_support.dsot.DSO_rate_making as rm
+import tesp_support.dsot.dso_rate_making as rm
 
 ''' This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:

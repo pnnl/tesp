@@ -1,107 +1,191 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: helpers_dsot.py
-""" Utility functions for use within tesp_support, including new agents. This is DSO+T specific helper functions
+""" Utility functions for use within tesp_support, including new agents.
+This is DSO+T specific helper functions
 """
-import logging
-import os
+
 import platform
 import subprocess
+from os import getcwd, path, environ
 from copy import deepcopy
 from enum import IntEnum
 
 import numpy as np
-from scipy.stats import truncnorm
 
 from .helpers import HelicsMsg
 
 
-def get_run_solver(name, pyo, model, solver):
-    # prefer cplex over ipopt (for production runs)
-    try:
-        solver = pyo.SolverFactory(solver)
-    except Exception as e:  # could be better/more specific
-        print('Name {}\n Warning ' + solver + ' not present; got exception {}'.format(name, e))
-        exit()
-    results = solver.solve(model, tee=False)
-    # TODO better solver handling
-    #    if results.solver.status != SolverStatus.ok:
-    #    print("The " + name + " solver status of: {}".format(results.solver.status))
-    # exit()
-    #    if results.solver.termination_condition != TerminationCondition.optimal:
-    #    print("The " + name + " termination condition of: {}".format(results.solver.termination_condition))
-    # exit()
-    return results
+def write_mircogrids_management_script(master_file, case_path, system_config=None, substation_config=None,
+                                       weather_config=None):
+    """ Write experiment management scripts from JSON configuration data,
+    linux ans helics only
 
+    Reads the simulation configuration file or dictionary and writes
 
-def random_norm_trunc(dist_array):
-    if 'standard_deviation' in dist_array:
-        dist_array['std'] = dist_array['standard_deviation']
-    return truncnorm.rvs((dist_array['min'] - dist_array['mean']) / dist_array['std'],
-                         (dist_array['max'] - dist_array['mean']) / dist_array['std'],
-                         loc=dist_array['mean'], scale=dist_array['std'], size=1)[0]
-    # return np.random.uniform(dist_array['min'], dist_array['max'])
+    - run.{sh, bat}, simple run script to launch experiment
+    - kill.{sh, bat}, simple run script to kill experiment
+    - clean.{sh, bat}, simple run script to clean generated output files from the experiment
 
-
-def enable_logging(level, model_diag_level):
-    """ Enable logging for process
-
-        Args:
-            level (str): the logging level you want set for the process
-            model_diag_level (int): initial value used to filter logging files
+    Args:
+        master_file (str): name of the master file to the experiment case
+        case_path (str): path to the experiment case
+        system_config (dict): configuration of the system for the experiment case
+        substation_config (dict): configuration of the substations in the experiment case
+        weather_config (dict): configuration of the climates being used
     """
 
-    # Setting up main/standard debugging output
-    logger = logging.getLogger()
-    # logger.setLevel(logging.DEBUG)
-    logger.setLevel(logging.INFO)
-    main_fh = logging.FileHandler('main_log.txt', mode='w')
-    if level == 'DEBUG':
-        main_fh.setLevel(logging.DEBUG)
-    elif level == 'INFO':
-        main_fh.setLevel(logging.INFO)
-    elif level == 'WARNING':
-        main_fh.setLevel(logging.WARNING)
-    elif level == 'ERROR':
-        main_fh.setLevel(logging.ERROR)
-    elif level == 'CRITICAL':
-        main_fh.setLevel(logging.CRITICAL)
-    else:
-        print('WARNING: unknown logging level specified, reverting to default INFO level')
-        main_fh.setLevel(logging.INFO)
-    main_format = logging.Formatter('%(levelname)s: %(module)s: %(lineno)d: %(message)s')
-    main_fh.setFormatter(main_format)
-    main_fh.addFilter(all_but_one_level(model_diag_level))
-    logger.addHandler(main_fh)
+    out_folder = './' + case_path
+    outPath = system_config['outputPath']
+    if outPath == "":
+        outPath = "."
+    dsoNum = len(substation_config.keys())  # the market agents/federates
+    substNum = dsoNum  # the GridLAB-D federates
+    weatherAgNum = len(weather_config.keys())  # the weather agents/federates
+    dbgOptions = ['', 'gdb -x ../../gdbinit --args ', 'valgrind --track-origins=yes ']
+    dbg = dbgOptions[system_config['gldDebug']]
 
-    # Setting up model diagnostics logging output
-    model_diag_fh = logging.FileHandler('model_diagnostics.txt', mode='w')
-    model_diag_fh.setLevel(model_diag_level)
-    model_diag_format = logging.Formatter('%(levelname)s: %(module)s: %(lineno)d: %(message)s')
-    model_diag_fh.setFormatter(model_diag_format)
-    model_diag_fh.addFilter(one_level_only(model_diag_level))
-    logger.addHandler(model_diag_fh)
+    with open(out_folder + '/run.sh', 'w') as outfile:
+        outfile.write('# !/bin/bash\n\n')
 
+        outfile.write('with_market=1\n')
+        outfile.write('if [ "$1" = "base" ]\n')
+        outfile.write('then\n')
+        outfile.write('  with_market=0\n')
+        outfile.write('fi\n\n')
 
-class one_level_only(object):
-    def __init__(self, level):
-        self.__level = level
+        # ## Monish Edits: Adding a PythonPath to point towards TESP_support directories
+        tesp_path = getcwd() + ''
+        outfile.write('export PYTHONPATH=%s:$PYTHONPATH;\n' % tesp_path)
 
-    def filter(self, logRecord):
-        return logRecord.levelno <= self.__level
+        outfile.write(
+            '(helics_broker -t="zmq" --federates=%s --name=mainbroker --loglevel=warning &> %s/broker.log &)\n'
+            % (str(len(substation_config) * 2 + sum(
+                [len(substation_config[dso]['microgrids']) for dso in substation_config]) + sum(
+                [len(substation_config[dso]['generators']) for dso in substation_config]) + len(
+                weather_config)), outPath))
 
+        for w_key, w_val in weather_config.items():
+            outfile.write('cd %s\n' % w_key)
+            outfile.write('(export WEATHER_CONFIG=weather_Config.json '
+                          '&& exec python3 -c "import tesp_support.consensus.weather_agent as tesp;'
+                          'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
+                          % (outPath, w_key))
+            outfile.write('cd ..\n')
 
-class all_but_one_level(object):
-    def __init__(self, level):
-        self.__level = level
+        for sub_key, sub_val in substation_config.items():
+            outfile.write('cd %s\n' % sub_val['substation'])
+            outfile.write(
+                '(%sgridlabd -D USE_HELICS -D METRICS_FILE="%s/%s_metrics_" %s.glm &> %s/%s_gridlabd.log &)\n'
+                % (dbg, outPath, sub_val['substation'], sub_val['substation'], outPath, sub_val['substation']))
+            outfile.write('cd ..\n')
 
-    @staticmethod
-    def filter(logRecord):
-        return logRecord.levelno != 11
+            outfile.write('cd %s\n' % sub_key)
+            outfile.write('(exec python3 -c "import tesp_support.consensus.dso_agent as DSO_agent;'
+                          'DSO_agent.substation_loop(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
+                          '%s/%s_substation.log &)\n'
+                          % (sub_val['substation'], sub_val['substation'], outPath, sub_key))
+            outfile.write('cd ..\n')
+
+            for microgrid_key in sub_val['microgrids']:
+                outfile.write('cd %s\n' % microgrid_key)
+                outfile.write('(exec python3 -c "import tesp_support.consensus.microgrid_agent as MG_agent;'
+                              'MG_agent.substation_loop(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
+                              '%s/%s_substation.log &)\n'
+                              % (microgrid_key, microgrid_key, outPath, microgrid_key))
+                outfile.write('cd ..\n')
+
+            for dg_key in sub_val['generators']:
+                outfile.write('cd %s\n' % dg_key)
+                outfile.write('(exec python3 -c "import tesp_support.consensus.dg_agent as DG_agent;'
+                              'DG_agent.substation_loop(\'%s_agent_dict.json\',\'%s\',$with_market)" &> '
+                              '%s/%s_substation.log &)\n'
+                              % (dg_key, dg_key, outPath, dg_key))
+                outfile.write('cd ..\n')
+
+    with open(out_folder + '/monitor.sh', 'w') as outfile:
+        outfile.write('# !/bin/bash\n\n')
+        outfile.write("""
+# first add header, simultaneously creating/overwriting the file
+top -w 512 cbn 1 | grep "PID" | egrep -v "top|grep" > stats.log 
+# then, in background, run top in batch mode (this will not stop as is, unless in docker)
+top -w 512 cbd 60 | egrep -v "top|Tasks|Cpu|Mem|Swap|PID|^$" >> stats.log & 
+
+# manually run every so often a check to see if we can quit this script (i.e. once sim is over, mostly for docker)
+while sleep 120; do
+  echo "still running at $(TZ='America/Los_Angeles' date)"
+  ps aux | grep python | grep -q -v grep | grep -q -v schedule
+  PROCESS_1_STATUS=$?
+  ps aux | grep gridlabd | grep -q -v grep
+  PROCESS_2_STATUS=$?
+  ps aux | grep fncs_broker | grep -q -v grep
+  PROCESS_3_STATUS=$?
+  # If the greps above find anything, they exit with 0 status
+  # If all are not 0, then we are done with the main background processes, so the container can end
+  if [ $PROCESS_1_STATUS -ne 0 ] && [ $PROCESS_2_STATUS -ne 0 ] && [ $PROCESS_3_STATUS -ne 0 ]; then
+    echo "All processes (python, gridlabd, fncs_broker) have exited, so we are done."
+    # TODO: kill top manually?
+    # TODO: then, massage stats.log into slightly easier-to-read TSV with: sed -i 's/./&"/68;s/$/"/;$d' stats.log
+    #  which wraps the commands in quotes and removes the last line which could be cut off
+    exit 1
+  fi
+done                    
+"""
+                      )
+    with open(out_folder + '/docker-run.sh', 'w') as outfile:
+        gdb_extra = "" if system_config['gldDebug'] == 0 else \
+            """
+                   --cap-add=SYS_PTRACE \\
+                   --security-opt seccomp=unconfined\\"""
+        outfile.write("""
+REPO="tesp_private"
+LOCAL_TESP="$HOME/projects/dsot/code/tesp-private"
+WORKING_DIR="/data/tesp/examples/dsot_v3/%s"
+
+docker run \\
+       -e LOCAL_USER_ID="$(id -u)" \\
+       -itd \\
+       --rm \\
+       --network=none \\%s
+       --mount type=bind,source="$LOCAL_TESP/examples",destination="/data/tesp/examples" \\
+       --mount type=bind,source="$LOCAL_TESP/support",destination="/data/tesp/support" \\
+       --mount type=bind,source="$LOCAL_TESP/ercot",destination="/data/tesp/ercot" \\
+       --mount type=bind,source="$LOCAL_TESP/src",destination="/data/tesp/src" \\
+       -w=${WORKING_DIR} \\
+       $REPO:latest \\
+       /bin/bash -c "pip install --user -e /data/tesp/src/tesp_support/; ./clean.sh; ./run.sh; ./monitor.sh"
+        """ % (path.basename(out_folder), gdb_extra))
+
+    with open(out_folder + '/kill.sh', 'w') as outfile:
+        if 'HELICS' in system_config.keys():
+            outfile.write('pkill -9 helics_broker\n')
+        if 'FNCS' in system_config.keys():
+            outfile.write('pkill -9 fncs_broker\n')
+        outfile.write('pkill -9 python\n')
+        outfile.write('pkill -9 gridlab\n')
+
+    with open(out_folder + '/clean.sh', 'w') as outfile:
+        outfile.write('cd ' + outPath + '\n')
+        outfile.write('find . -name \\*.log -type f -delete\n')
+        outfile.write('find . -name \\*.csv -type f -delete\n')
+        # outfile.write('find . -name \\*.out -type f -delete\n')
+        # outfile.write('find . -name \\*metrics*.json* -type f -delete\n')
+        # outfile.write('find . -name \\*metrics*.h5 -type f -delete\n')
+        # outfile.write('find . -name \\*model_dict.json -type f -delete\n')
+        outfile.write('find . -name \\*diagnostics.txt -type f -delete\n')
+        outfile.write('find . -name \\*log.txt -type f -delete\n')
+        outfile.write('cd -\n')
+
+    subprocess.run(['chmod', '+x', out_folder + '/run.sh'])
+    subprocess.run(['chmod', '+x', out_folder + '/monitor.sh'])
+    subprocess.run(['chmod', '+x', out_folder + '/kill.sh'])
+    subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
+    subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
 
 
 def write_dsot_management_script(master_file, case_path, system_config=None, substation_config=None,
                                  weather_config=None):
-    """ Write experiment management scripts from JSON configuration data
+    """ Write experiment management scripts from JSON configuration data,
+    linux and helics only
 
     Reads the simulation configuration file or dictionary and writes
 
@@ -150,7 +234,7 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
         outfile.write('#!/bin/bash\n\n')
         if platform.system() == 'Darwin':
             # this is needed if you are not comfortable disabling System Integrity Protection
-            dyldPath = os.environ.get('DYLD_LIBRARY_PATH')
+            dyldPath = environ.get('DYLD_LIBRARY_PATH')
             if dyldPath is not None:
                 outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
 
@@ -174,7 +258,7 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
         for w_key, w_val in weather_config.items():
             outfile.write('cd %s\n' % w_key)
             outfile.write('(export WEATHER_CONFIG=weather_Config.json '
-                          '&& exec python3 -c "import tesp_support.weatherAgent as tesp;'
+                          '&& exec python3 -c "import tesp_support.weather_agent as tesp;'
                           'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
                           % (outPath, w_key))
             outfile.write('cd ..\n')
@@ -214,8 +298,9 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
 
 
 def write_dsot_management_script_f(master_file, case_path, system_config=None, substation_config=None,
-                                       weather_config=None):
-    """ Write experiment management scripts from JSON configuration data
+                                   weather_config=None):
+    """ Write experiment management scripts from JSON configuration data,
+    windows and linux, fncs only
 
     Reads the simulation configuration file or dictionary and writes
 
@@ -288,7 +373,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             for w_key, w_val in weather_config.items():
                 outfile.write('set FNCS_CONFIG_FILE=%s.zpl\n' % w_key)
                 outfile.write('cd %s\n' % w_key)
-                outfile.write('start /b cmd /c python -c "import tesp_support.weatherAgent as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.weather_agent as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" ^> %s\\%s_weather.log 2^>^&1\n'
                               % (outPath, w_key))
                 outfile.write('cd ..\n')
@@ -350,7 +435,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             outfile.write('export FNCS_LOG_LEVEL=INFO\n')
             if platform.system() == 'Darwin':
                 # this is needed if you are not comfortable disabling System Integrity Protection
-                dyldPath = os.environ.get('DYLD_LIBRARY_PATH')
+                dyldPath = environ.get('DYLD_LIBRARY_PATH')
                 if dyldPath is not None:
                     outfile.write('export DYLD_LIBRARY_PATH=%s\n\n' % dyldPath)
 
@@ -375,7 +460,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             for w_key, w_val in weather_config.items():
                 outfile.write('cd %s\n' % w_key)
                 outfile.write('(export FNCS_CONFIG_FILE=%s.zpl && export WEATHER_CONFIG=weather_Config.json '
-                              '&& exec python3 -c "import tesp_support.weatherAgent as tesp;'
+                              '&& exec python3 -c "import tesp_support.weather_agent as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
                               % (w_key, outPath, w_key))
                 outfile.write('cd ..\n')
@@ -480,7 +565,7 @@ docker run \\
        $REPO:latest \\
        /bin/bash -c "export PSST_SOLVER=/opt/ibm/cplex/bin/x86-64_linux/cplexamp; \\
        pip install --user -e /data/tesp/src/tesp_support/; ./clean.sh; ./run.sh; ./monitor.sh"
-        """ % (os.path.basename(out_folder), archive_folder, gdb_extra, archive_folder))
+        """ % (path.basename(out_folder), archive_folder, gdb_extra, archive_folder))
 
     with open(out_folder + '/postprocess.sh', 'w') as outfile:
         if run_post == 1:
@@ -514,10 +599,10 @@ docker run \\
 
     subprocess.run(['chmod', '+x', out_folder + '/run.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/monitor.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/kill.sh'])
-    subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/docker-run.sh'])
     subprocess.run(['chmod', '+x', out_folder + '/postprocess.sh'])
+    subprocess.run(['chmod', '+x', out_folder + '/kill.sh'])
+    subprocess.run(['chmod', '+x', out_folder + '/clean.sh'])
 
 
 def write_players_msg(case_path, sys_config, dt):

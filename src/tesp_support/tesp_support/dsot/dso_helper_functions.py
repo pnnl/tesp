@@ -9,10 +9,10 @@ import itertools
 import math
 import pandas as pd
 
-from tesp_support.dsot.DSOT_plots import load_json
-from tesp_support.dsot.DSO_rate_making import get_cust_bill
-from tesp_support.customer_CFS import customer_CFS
-from tesp_support.dsot.dso_CFS import dso_CFS
+from .DSOT_plots import load_json
+from .dso_rate_making import get_cust_bill
+from tesp_support.dsot.customer_CFS import customer_CFS
+from .dso_CFS import dso_CFS
 
 # get rid of the burn-in days
 

@@ -535,8 +535,6 @@ class TespMonitorGUI:
         self.plot3.fig.canvas.draw()
 
 
-#    fncs.finalize()
-
 def show_tesp_monitor():
     """Creates and displays the monitor GUI
     """

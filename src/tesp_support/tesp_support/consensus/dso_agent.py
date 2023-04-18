@@ -12,22 +12,16 @@ import sys
 import time
 from datetime import datetime, timedelta
 
-# import solve_RT_DA_consensus as consenus
 import helics as h
 import numpy as np
 from joblib import Parallel
 
-import consensus_substation as consensus
-import tesp_support.consensus.helpers_dsot as helpers_dsot
+import tesp_support.consensus.consensus_substation as consensus
 from tesp_support.consensus.dso_market_dsot import DSOMarketDSOT
 from tesp_support.consensus.retail_market_dsot import RetailMarketDSOT
+from tesp_support.helpers import enable_logging
 from tesp_support.metrics_collector import MetricsStore, MetricsCollector
 
-try:
-    import tesp_support.fncs as fncs
-except ImportError:
-    fncs = None
-    print('WARNING: unable to load FNCS module.', flush=True)
 if sys.platform != 'win32':
     import resource
 
@@ -43,19 +37,19 @@ def register_federate(json_filename):
     pubkeys_count = h.helicsFederateGetPublicationCount(fed)
     subkeys_count = h.helicsFederateGetInputCount(fed)
     endkeys_count = h.helicsFederateGetEndpointCount(fed)
-    ######################   Reference to Publications and Subscription form index  #############################
+    # ####################   Reference to Publications and Subscription form index  #############################
     pubid = {}
     subid = {}
     endid = {}
     for i in range(0, pubkeys_count):
         pubid["m{}".format(i)] = h.helicsFederateGetPublicationByIndex(fed, i)
         pub_type = h.helicsPublicationGetType(pubid["m{}".format(i)])
-        pub_key = h.helicsPublicationGetKey(pubid["m{}".format(i)])
+        pub_key = h.helicsPublicationGetName(pubid["m{}".format(i)])
         print('Registered Publication ---> {} - Type {}'.format(pub_key, pub_type))
     for i in range(0, subkeys_count):
         subid["m{}".format(i)] = h.helicsFederateGetInputByIndex(fed, i)
         status = h.helicsInputSetDefaultString(subid["m{}".format(i)], 'default')
-        sub_key = h.helicsSubscriptionGetKey(subid["m{}".format(i)])
+        sub_key = h.helicsSubscriptionGetTarget(subid["m{}".format(i)])
         print('Registered Subscription ---> {}'.format(sub_key))
     for i in range(0, endkeys_count):
         endid["m{}".format(i)] = h.helicsFederateGetEndpointByIndex(fed, i)
@@ -66,11 +60,7 @@ def register_federate(json_filename):
 
 
 def destroy_federate(fed):
-    h.helicsFederateFinalize(fed)
-
-    # while h.helicsBrokerIsConnected(broker):
-    #     time.sleep(1)
-
+    h.helicsFederateDisconnect(fed)
     h.helicsFederateFree(fed)
     h.helicsCloseLibrary()
 
@@ -132,7 +122,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     # enable logging
     level = config['LogLevel']
-    helpers_dsot.enable_logging(level, 11)
+    enable_logging(level, 11)
 
     log.info('starting substation loop...')
     log.info('config file -> ' + configfile)
@@ -175,7 +165,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             # might need to play around with the curve a,b,c here but for now let's run with the defaults
             dso_market_obj.update_wholesale_node_curve()
 
-            # map FNCS topics
+            # map topics
             topic_map['gld_load'] = [dso_market_obj.set_total_load]
             if with_market:
                 topic_map['ind_rt_load'] = [dso_market_obj.set_ind_load]
@@ -332,9 +322,6 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         #         collector=collector,
         #     )
 
-    # initialize FNCS
-    # fncs.initialize()
-
     # initialize HELICS
     fed, fed_name = register_federate(metrics_root + '.json')
     status = h.helicsFederateEnterInitializingMode(fed)
@@ -410,21 +397,16 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     #     dso_market_obj.generators[key]['cleared_quantity_RT'] = 0
 
     while time_granted < simulation_duration:
-        # determine the next FNCS time
+        # determine the next HELICS time
         timing(proc[10], True)
         if with_market:
-
             next_fncs_time = int(
                 min([tnext_dso_bid_da, tnext_dso_bid_rt, tnext_dso_clear_da, tnext_dso_clear_rt, tnext_retail_adjust_rt,
                      simulation_duration]))
-
-            # fncs.update_time_delta(next_fncs_time - time_granted)
-            # time_granted = fncs.time_request(next_fncs_time)
             while time_granted < next_fncs_time:
                 time_granted = h.helicsFederateRequestTime(fed, next_fncs_time)
         else:
             time_granted = h.helicsFederateRequestTime(fed, simulation_duration)
-            # time_granted = fncs.time_request(simulation_duration)  # without markets we will run in event-driven mode
 
         time_delta = time_granted - time_last
         time_last = time_granted
@@ -448,7 +430,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         # ------------------------------------ DSO clearing --------------------------------------------------
         # ----------------------------------------------------------------------------------------------------
         if time_granted >= tnext_dso_bid_rt:
-            log.info("-- dso real-time bidding--")
+            log.info("-- dso real-time bidding --")
             dso_market_obj.cleared_q_rt = dso_market_obj.trial_cleared_quantity_RT
             dso_market_obj.clean_bids_RT()
             # ----------------------------------------------------------------------------------------------------
@@ -456,8 +438,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             # ----------------------------------------------------------------------------------------------------
             log.info("-- dso real-time market --")
             time_to_complete_market_RT = time_granted + 15
-            dso_market_obj, time_granted = consensus.Consenus_dist_RT(dso_market_obj, fed, hour_of_day, time_granted,
-                                                                      time_to_complete_market_RT)
+            dso_market_obj, time_granted = consensus.Consenus_dist_RT(dso_market_obj, fed, hour_of_day,
+                                                                      time_granted, time_to_complete_market_RT)
             tnext_dso_bid_rt += retail_period_rt
 
         if time_granted >= tnext_dso_bid_da:
@@ -557,7 +539,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         # ----------------------------------------------------------------------------------------------------
         if time_granted >= tnext_retail_adjust_rt and with_market:
             log.info("-- real-time adjusting --")
-            #### Publish using HELICS ####
+            # ### Publish using HELICS ####
             pub_count = h.helicsFederateGetPublicationCount(fed)
             # Sending cleared values to all the GridLAB-D DGs via HELICS.
             # if pub_count>0:
@@ -594,21 +576,16 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             op.close()
 
     log.info('finalizing metrics writing')
-    #     # timing(arg.__class__.__name__, True)
-    #     # worker_results = arg.DA_optimal_quantities()
-    #     # timing(arg.__class__.__name__, False)
     timing('finalize_writing', True)
     collector.finalize_writing()
     timing('finalize_writing', False)
     log.info('finalizing HELICS')
-    # log.info('finalizing FNCS')
     timing(proc[1], False)
     op = open('timing.csv', 'w')
     print(proc_time, sep=', ', file=op, flush=True)
     print(wall_time, sep=', ', file=op, flush=True)
     op.close()
     destroy_federate(fed)
-    # fncs.finalize()
 
 
 def substation_loop(configfile, metrics_root, with_market=True):
@@ -642,4 +619,4 @@ def substation_loop(configfile, metrics_root, with_market=True):
 
 
 # for debugging
-substation_loop('Substation_agent_dict.json', 'Substation', True)
+# substation_loop('Substation_agent_dict.json', 'Substation', True)

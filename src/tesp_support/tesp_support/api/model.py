@@ -14,7 +14,6 @@ import networkx as nx
 
 from tesp_support.api.data import feeders_path
 from tesp_support.api.data import entities_path
-from tesp_support.api.data import tesp_test
 from tesp_support.api.entity import Entity
 
 
@@ -739,22 +738,24 @@ class GLModel:
 
 
 def test1():
+    from tesp_support.api.data import tesp_test
+
     # Test model.py
     model_file = GLModel()
     tval = model_file.readBackboneModel("R1-12.47-1.glm")
     # tval = model_file.read(feeders_path + "GLD_three_phase_house.glm")
     # Output json with new parameters
-    model_file.write(tesp_test + "test.glm")
+    model_file.write(tesp_test + "api/R1-12.47-1_out.glm")
 
     model_file = GLModel()
-    tval = model_file.readModel(tesp_test + "test.glm")
-    model_file.write(tesp_test + "test1.glm")
+    tval = model_file.readModel(tesp_test + "api/model_in.glm")
+    model_file.write(tesp_test + "api/model_out.glm")
 
-    model_file.instancesToSQLite(tesp_test + 'testglm.db')
+    model_file.instancesToSQLite(tesp_test + 'api/model_out.db')
     print(model_file.entitiesToHelp())
     print(model_file.instancesToGLM())
 
-    op = open(tesp_test + 'glm_objects2.json', 'w', encoding='utf-8')
+    op = open(tesp_test + 'api/model_out.json', 'w', encoding='utf-8')
     json.dump(model_file.entitiesToJson(), op, ensure_ascii=False, indent=2)
     op.close()
 

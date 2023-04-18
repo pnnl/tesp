@@ -28,9 +28,8 @@ from math import isnan
 import numpy as np
 import pyomo.environ as pyo
 
-import tesp_support.feederGenerator_dsot as fg
-from .helpers import parse_number
-from .helpers_dsot import get_run_solver
+import tesp_support.dsot.feeder_generator_dsot as fg
+from tesp_support.helpers import parse_number, get_run_solver
 
 logger = log.getLogger()
 

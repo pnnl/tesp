@@ -27,8 +27,7 @@ from math import isnan
 import numpy as np
 import pyomo.environ as pyo
 
-from tesp_support.helpers import parse_number
-from tesp_support.helpers_dsot import get_run_solver
+from tesp_support.helpers import parse_number, get_run_solver
 
 logger = log.getLogger()
 
@@ -380,7 +379,25 @@ class BatteryDSOT:
         P = self.P
         Q = self.Q
         BID = deepcopy(self.bid_da[0])
-        ## identify error start
+        # start interpolation
+        if self.interpolation:
+            CurveSlope = ((max(self.f_DA) - min(self.f_DA)) / (-self.Rd - self.Rc)) / self.slider
+            yIntercept = self.f_DA[0] - CurveSlope * BID[1][Q]
+            if self.RT_minute_count_interpolation == 0.0:
+                self.delta_Q = deepcopy((self.bid_da[0][1][Q] - self.previous_Q_RT))
+            if self.RT_minute_count_interpolation == 30.0:
+                self.delta_Q = deepcopy((self.bid_da[1][1][Q] - self.previous_Q_RT) * 0.5)
+            Qopt_DA = self.previous_Q_RT + self.delta_Q * (5.0 / 30.0)
+            # Qopt_DA = self.bid_da[0][1][Q]*(self.RT_minute_count_interpolation/60.0) + self.previous_Q_DA*(1-self.RT_minute_count_interpolation/60.0)
+            self.previous_Q_RT = Qopt_DA
+            BID[1][Q] = Qopt_DA
+            BID[2][Q] = Qopt_DA
+            BID[0][P] = -self.Rd * CurveSlope + yIntercept + self.batteryLifeDegFactor * (1 + self.profit_margin)
+            BID[1][P] = Qopt_DA * CurveSlope + yIntercept + self.batteryLifeDegFactor * (1 + self.profit_margin)
+            BID[2][P] = Qopt_DA * CurveSlope + yIntercept - self.batteryLifeDegFactor * (1 + self.profit_margin)
+            BID[3][P] = self.Rc * CurveSlope + yIntercept - self.batteryLifeDegFactor * (1 + self.profit_margin)
+        # end interpolation
+        # identify error start
         state = 0
         t = self.period
         t = t / (60 * 60)  # hour
@@ -401,11 +418,11 @@ class BatteryDSOT:
             realTimeBid = BID
         else:  # fixing error
             if state == 1:  # fixing error type 1
-                x = self.Cmax * self.soc_upper_res - self.Cinit
+                x = max(0.0, self.Cmax * self.soc_upper_res - self.Cinit)
                 x = x / t  # to W
                 realTimeBid = self.RT_fix_four_points_range(BID, BID[0][Q], x)
             if state == 2:  # fixing error type 2
-                x = self.Cmin - self.Cinit
+                x = min(0.0, self.Cmin - self.Cinit)
                 x = x / t  # to W
                 realTimeBid = self.RT_fix_four_points_range(BID, x, BID[3][Q])
         # fix 4 point error if exixtent end
@@ -423,6 +440,7 @@ class BatteryDSOT:
                                                       realTimeBid[1][Q] + excursion)
         self.bid_rt = deepcopy(E_realTimeBid)
 
+        self.RT_minute_count_interpolation = self.RT_minute_count_interpolation + 5.0
         return self.bid_rt
 
     def RT_fix_four_points_range(self, BID, Ql, Qu):
@@ -473,9 +491,8 @@ class BatteryDSOT:
                     elif BID[n][Q] < Ql:
                         BIDr[n][Q] = Ql
             if sum(flag) == 0:
-                print('Battery Error --> RT_fix_four_points_range function should not have been called')
-                print(Ql)
-                print(Qu)
+                # when flags are set to zero the fix function has passed the test
+                pass
             else:
                 BIDr[0][P] = m * BIDr[0][Q] + b0
                 BIDr[1][P] = m * BIDr[1][Q] + b0
@@ -630,37 +647,80 @@ def test():
     # Uncomment for testing logging functionality.
     # Supply these values when using the battery agent in the simulation.
     # model_diag_level = 11
-    # hlprs.enable_logging('DEBUG', model_diag_level)
+    # helpers.enable_logging('DEBUG', model_diag_level)
     sim_time = '2019-11-20 07:47:00'
 
-    B_obj1 = BatteryDSOT(agent, glm, 'test', 11, sim_time)  # make object; add model_diag_level and sim_time
-    B_obj1.set_price_forecast(price_DA.tolist())
-    quantity = B_obj1.DA_optimal_quantities()
-    B_obj1.optimized_Quantity = quantity
-    BIDS = B_obj1.formulate_bid_da()
-    print("--- %s seconds ---" % (time.time() - start_time))
-    #    B = B_obj1.RT_fix_four_points_range(BID,0.2920860000000012,5.0)
-    #    A = B_obj1.RT_fix_four_points_range(B,0.2920860000000012,0.2920860000000012)
-    #    B_obj2 = BatteryDSOT(agent,glm,'test')# make object
+    B_obj1 = BatteryDSOT(agent, glm, 'test', 11, sim_time, 'ipopt')  # make object; add model_diag_level and sim_time
+    # print(B_obj1.optimized_Quantity)
+    Q = B_obj1.Q
 
-    B_obj1.Cinit = agent['capacity'] / 1000 * 0.99
-    rtbid = B_obj1.formulate_bid_rt()
-    price_forecast = B_obj1.f_DA
-    BIDS_of_agent = B_obj1.bid_da
-    # B_obj.Cinit = B_obj.batteryCapacity * 0.5#B_obj.set_battery_SOC()
-    BID = [[-5.0, 6.0], [0.0, 5.0], [0.0, 4.0], [5.0, 3.0]]
-    fixed = B_obj1.RT_fix_four_points_range(BID, 0.0, 10.0)
-    print(fixed)
-    fixed = B_obj1.RT_fix_four_points_range(BID, -float('inf'), 0.0)
-    print(fixed)
-    fixed = B_obj1.RT_fix_four_points_range(BID, 0.0, float('inf'))
-    print(fixed)
-    fixed = B_obj1.RT_fix_four_points_range(BID, 0.5, 0.5)
-    print(fixed)
-    getQ = B_obj1.from_P_to_Q_battery(BID, 10)
-    print(getQ)
-    getQ = B_obj1.from_P_to_Q_battery(fixed, 10)
-    print(getQ)
+    Q_true_time_RT = list()
+    Q_true_time_DA = list()
+    first_run = True
+    for hour in range(24):
+        print('')
+        if first_run:
+            first_run = False
+            B_obj1.set_price_forecast(price_DA.tolist())
+            quantity = B_obj1.DA_optimal_quantities()
+        else:
+            price_DA = np.roll(price_DA, -1)
+            quantity = np.roll(quantity, -1)
+
+        B_obj1.set_price_forecast(price_DA.tolist())
+        B_obj1.optimized_Quantity = quantity
+
+        bid_DA = B_obj1.formulate_bid_da()
+        print(bid_DA[0][1][Q])
+        print('')
+
+        for i in range(12):
+            bid_RT = B_obj1.formulate_bid_rt()
+            print(bid_RT[1][Q])
+            Q_true_time_RT.append(bid_RT[1][Q])
+            Q_true_time_DA.append(bid_DA[0][1][Q])
+
+    plt.rcParams['figure.figsize'] = (8, 5)
+    plt.rcParams['figure.dpi'] = 500
+    plt.rcParams['axes.grid'] = True
+    plt.plot(Q_true_time_RT, label='RT')
+    plt.plot(Q_true_time_DA, label='DA')
+    for i in range(0, 25 * 12, 12):
+        plt.axvline(i, color='red', linewidth=0.3)
+    plt.legend()
+    plt.ylabel('Quantity (kW)')
+    plt.xlabel('Time (minuts)')
+    plt.show()
+
+    # sum(Q_true_time_RT)
+    # sum(Q_true_time_DA)
+
+
+#     B_obj1.optimized_Quantity = quantity
+#     BIDS = B_obj1.formulate_bid_da()
+#     print("--- %s seconds ---" % (time.time() - start_time))
+# #    B = B_obj1.RT_fix_four_points_range(BID,0.2920860000000012,5.0)
+# #    A = B_obj1.RT_fix_four_points_range(B,0.2920860000000012,0.2920860000000012)
+# #    B_obj2 = BatteryDSOT(agent,glm,'test')# make object
+
+#     B_obj1.Cinit = agent['capacity']/1000*0.99
+#     rtbid = B_obj1.formulate_bid_rt()
+#     price_forecast = B_obj1.f_DA
+#     BIDS_of_agent = B_obj1.bid_da
+#     #B_obj.Cinit = B_obj.batteryCapacity * 0.5#B_obj.set_battery_SOC()
+#     BID = [[-5.0,6.0],[0.0,5.0],[0.0,4.0],[5.0,3.0]]
+#     fixed = B_obj1.RT_fix_four_points_range(BID,0.0,10.0)
+#     print(fixed)
+#     fixed = B_obj1.RT_fix_four_points_range(BID,-float('inf'),0.0)
+#     print(fixed)
+#     fixed = B_obj1.RT_fix_four_points_range(BID,0.0,float('inf'))
+#     print(fixed)
+#     fixed = B_obj1.RT_fix_four_points_range(BID,0.5,0.5)
+#     print(fixed)
+#     getQ = B_obj1.from_P_to_Q_battery(BID,10)
+#     print(getQ)
+#     getQ = B_obj1.from_P_to_Q_battery(fixed,10)
+#     print(getQ)
 
 
 if __name__ == "__main__":

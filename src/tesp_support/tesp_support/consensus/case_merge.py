@@ -9,12 +9,11 @@ Public Functions:
     :merge_substation_yaml: combines the substation agent FNCS publish/subscribe files
     :merge_fncs_config: combines GridLAB-D FNCS publish/subscribe files
 """
-import sys
 import json
-import tesp_support.helpers as helpers
+import sys
 from os import path
 
-# import colorama
+from tesp_support.helpers import gld_strict_name
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -28,7 +27,7 @@ def merge_glm(target, sources, xfmva):
     Args:
         target (str): the path to the target GLM file, including the name of the file
         sources (list): list of feeder names in the target directory to merge
-        xfmva:
+        xfmva (int):
     """
     print('combining', sources, 'glm files into', target)
     workdir = path.split(path.dirname(target))[0]
@@ -36,7 +35,7 @@ def merge_glm(target, sources, xfmva):
     inFirstFile = True
     firstHeadNode = ''
     finishedFirstSubstation = False
-# configuration, spacing and conductor names are not unique between feeders
+    # configuration, spacing and conductor names are not unique between feeders
     for fdr in sources:
         with open(workdir + '/' + fdr + '/' + fdr + '.glm') as ip:
             numEndif = 0
@@ -50,7 +49,8 @@ def merge_glm(target, sources, xfmva):
                         line = '  filename Voltage_Dump_' + path.splitext(path.basename(target))[0] + '.csv;'
                     if 'filename Current_Dump' in line:
                         line = '  filename Current_Dump_' + path.splitext(path.basename(target))[0] + '.csv;'
-                    if ('object ' in line) and (('configuration' in line) or ('conductor' in line) or ('spacing' in line)):
+                    if ('object ' in line) and (
+                            ('configuration' in line) or ('conductor' in line) or ('spacing' in line)):
                         inConfig = True
                     if inConfig and inSubstation:
                         if ' name ' in line:
@@ -68,16 +68,12 @@ def merge_glm(target, sources, xfmva):
                             line = '  ' + toks[0] + ' ' + fdr + '_' + name + ';'
                     if '#ifdef USE_FNCS' in line:
                         inSubstation = True
-                        helics_flag = bool(False)
-                    if '#ifdef USE_HELICS' in line:
-                        inSubstation = True
-                        helics_flag = bool(True)
                     if inSubstation:
                         if ' configure ' in line:
-                            if helics_flag:
-                                line = '  configure ' + path.splitext(path.basename(target))[0] + '_HELICS_Config.json;'
+                            if '.txt' in line:
+                                line = '  configure ' + path.splitext(path.basename(target))[0] + '_gridlabd.txt;'
                             else:
-                                line = '  configure ' + path.splitext(path.basename(target))[0] + '_FNCS_Config.txt;'
+                                line = '  configure ' + path.splitext(path.basename(target))[0] + '.json;'
                         elif ' power_rating ' in line:
                             line = '  power_rating {:.2f};'.format(xfmva * 1e3)
                         elif ' base_power ' in line:
@@ -105,7 +101,7 @@ def merge_glm(target, sources, xfmva):
                         print(line.rstrip(), file=op)
                 if '#endif' in line:
                     numEndif += 1
-        inFirstFile = False 
+        inFirstFile = False
     op.close()
 
 
@@ -120,28 +116,27 @@ def merge_glm_dict(target, sources, xfmva):
     Args:
         target (str): the path to the target JSON file, including the name of the file
         sources (list): list of feeder names in the target directory to merge
-        xfmva:
+        xfmva (int):
     """
     print('combining', sources, 'GridLAB-D json files into', target)
     diction = {'bulkpower_bus': 'TBD',
-               'FNCS': '',
-               'HELICS': '',
-               'transformer_MVA': xfmva,
+               'message_name': '',
+               'climate': {},
                'feeders': {},
+               'transformer_MVA': xfmva,
                'billingmeters': {},
                'houses': {},
                'inverters': {},
                'capacitors': {},
                'regulators': {},
-               'climate': {}}
+               'ev': {}}
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_glm_dict.json').read()
         cfg = json.loads(lp)
-        fdr_id = helpers.gld_strict_name(cfg['base_feeder'])
+        fdr_id = gld_strict_name(cfg['base_feeder'])
         if sources.index(fdr) == 0:
             diction['bulkpower_bus'] = cfg['bulkpower_bus']
-            diction['FNCS'] = cfg['FNCS']
-            diction['HELICS'] = cfg['HELICS']
+            diction['message_name'] = cfg['message_name']
             diction['climate'] = cfg['climate']
         diction['feeders'][fdr_id] = {'house_count': cfg['feeders']['network_node']['house_count'],
                                       'inverter_count': cfg['feeders']['network_node']['inverter_count']}
@@ -163,13 +158,22 @@ def merge_agent_dict(target, sources):
         sources (list): list of feeder names in the target directory to merge
     """
     print('combining', sources, 'agent json files into', target)
-    diction = {'markets': {}, 'hvacs': {}, 'batteries': {}, 'water_heaters': {},
-               'size': {}, 'generators': {}, 'site_agent': {}, 'StartTime': "", 'EndTime': "", 'LogLevel': ""}
+    diction = {'markets': {},
+               'hvacs': {},
+               'batteries': {},
+               'water_heaters': {},
+               'size': {},
+               'generators': {},
+               'site_agent': {},
+               'StartTime': "",
+               'EndTime': "",
+               'LogLevel': ""}
     for fdr in sources:
         lp = open(path.dirname(target) + '/' + fdr + '_agent_dict.json').read()
         cfg = json.loads(lp)
         for key in cfg.keys():
-            if key in ["StartTime", "EndTime", "LogLevel", "size", "solver", "Metrics", "MetricsType", "MetricsInterval"]:
+            if key in ["StartTime", "EndTime", "LogLevel", "size", "solver",
+                       "Metrics", "MetricsType", "MetricsInterval"]:
                 diction[key] = cfg[key]
             else:
                 diction[key].update(cfg[key])
@@ -185,26 +189,17 @@ def merge_substation_yaml(target, sources):
         target (str): the path to the target YAML file, including the name of the file
         sources (list): list of feeder names in the target directory to merge
     """
-    print('combining', sources, 'yaml/json files into', target)
-#    workdir = path.split(path.dirname(target))[0]
+    print('combining', sources, 'yaml files into', target)
     op = open(target, 'w')
-#    inFirstFile = True
     for fdr in sources:
         if 'json' in target:
             with open(path.dirname(target) + '/' + fdr + '.json') as ip:
-                #            numListFalse = 0
                 for line in ip:
                     print(line.rstrip(), file=op)
         elif 'yaml' in target:
             with open(path.dirname(target) + '/' + fdr + '.yaml') as ip:
-                # numListFalse = 0
                 for line in ip:
                     print(line.rstrip(), file=op)
-                    # if numListFalse >= 8 or inFirstFile == True:   # original was numListFalse >= 2, so we were getting duplicates in the YAML file for the substation
-                    #     print (line.rstrip(), file=op)
-                    # if 'list: false' in line:
-                    #     numListFalse += 1
-#        inFirstFile = False
     op.close()
 
 
@@ -213,6 +208,7 @@ def merge_fncs_config(target, dso, sources):
 
     Args:
         target (str): the path to the target TXT file, including the name of the file
+        dso:
         sources (list): list of feeder names in the target directory to merge
     """
     print('combining', sources, 'txt files into', target)
@@ -221,23 +217,14 @@ def merge_fncs_config(target, dso, sources):
     # as all feeders under the same substation should be in the same climate zone
     dictFile = open(workdir + '/' + dso + '/' + sources[0] + '_glm_dict.json').read()
     gd = json.loads(dictFile)
-#    substClimate = gd['climate']['name']
     op = open(target, 'w')
-#    inFirstFile = True
     for fdr in sources:
-        if len(gd['HELICS']) > 1:
-            with open(workdir + '/' + fdr + '/' + fdr + '_HELICS_Config.json') as ip:
-                #            numLocalWeather = 0
+        if len(gd['message_name']) > 1:
+            with open(workdir + '/' + fdr + '/' + fdr + '.json') as ip:
                 for line in ip:
                     print(line.rstrip(), file=op)
         else:
-            with open(workdir + '/' + fdr + '/' + fdr + '_FNCS_Config.txt') as ip:
-                # numLocalWeather = 0
+            with open(workdir + '/' + fdr + '/' + fdr + '.txt') as ip:
                 for line in ip:
                     print(line.rstrip(), file=op)
-    #                if numLocalWeather >= 6 or inFirstFile == True:
-    #                    print (line.rstrip(), file=op)
-    #                if substClimate in line:
-    #                    numLocalWeather += 1
-    #        inFirstFile = False
     op.close()

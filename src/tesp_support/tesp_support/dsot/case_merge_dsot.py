@@ -13,7 +13,7 @@ import json
 import sys
 from os import path
 
-from .helpers import gld_strict_name
+from tesp_support.helpers import gld_strict_name
 
 if sys.platform == 'win32':
     pycall = 'python'

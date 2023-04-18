@@ -27,7 +27,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from .helpers import parse_kw, parse_magnitude
-from .hvac import hvac
+from .hvac_agent import hvac
 from .simple_auction import simple_auction
 
 # import gc

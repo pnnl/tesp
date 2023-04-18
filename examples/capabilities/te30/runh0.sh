@@ -10,6 +10,6 @@
 (exec gridlabd -D USE_HELICS -D METRICS_FILE=TE_ChallengeH0_metrics.json TE_Challenge.glm &> gridlabd0.log &)
 (exec python3 -c "import tesp_support.substation as tesp;tesp.substation_loop('TE_Challenge_agent_dict.json','TE_ChallengeH0',helicsConfig='TE_Challenge_substation.json',flag='NoMarket')" &> substation0.log &)
 (exec python3 -c "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('te30_pp.json','TE_ChallengeH0',helicsConfig='pypower.json')" &> pypower0.log &)
-(export WEATHER_CONFIG=TE_Challenge_weather.json && exec python3 -c "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather0.log &)
+(export WEATHER_CONFIG=TE_Challenge_weather.json && exec python3 -c "import tesp_support.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather0.log &)
 
 #(exec helics_recorder rec.json --stop 5 &> rec.log &)

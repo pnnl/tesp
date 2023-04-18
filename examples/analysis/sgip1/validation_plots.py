@@ -22,7 +22,9 @@ from os import path
 
 import matplotlib.pyplot as plt
 
-import tesp_support.tesp_api as tesp
+import tesp_support.process_pypower as pp
+import tesp_support.process_gld as pg
+import tesp_support.process_eplus as pe
 
 # Setting up logging
 logger = logging.getLogger(__name__)
@@ -44,7 +46,7 @@ def load_pypower_data(data, case, data_path):
     diction = None
     found_data = False
     try:
-        diction = tesp.read_pypower_metrics(data_path, f'SGIP1{case}')
+        diction = pp.read_pypower_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load PYPOWER data for Case {case}.')
@@ -78,7 +80,7 @@ def load_gld_data(data, case, data_path):
     diction = None
     found_data = False
     try:
-        diction = tesp.read_gld_metrics(data_path, f'SGIP1{case}')
+        diction = pg.read_gld_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load GridLAB-D data for Case {case}.')
@@ -110,7 +112,7 @@ def load_energy_plus_data(data, case, data_path):
     diction = None
     found_data = False
     try:
-        diction = tesp.read_eplus_metrics(data_path, f'SGIP1{case}', quiet=True)
+        diction = pe.read_eplus_metrics(data_path, f'SGIP1{case}', quiet=True)
         found_data = True
     except:
         logger.error(f'\tUnable to load Energy+ data for Case {case}.')
@@ -904,7 +906,7 @@ if __name__ == '__main__':
     # to be sent to the log file and ERROR messages to additionally
     # be sent to the console as well. Thus, when bad things happen
     # the user will get an error message in both places which,
-    # hopefully, will aid in trouble-shooting.
+    # hopefully, will aid in troubleshooting.
     fileHandle = logging.FileHandler("SGIP_validation.log", mode='w')
     fileHandle.setLevel(logging.DEBUG)
     streamHandle = logging.StreamHandler(sys.stdout)

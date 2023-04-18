@@ -27,7 +27,8 @@ from tesp_support.api.data import feeders_path
 
 # Setting a few environment variables so the imports work smoothly
 #   If you're working in a REAL TESP install you don't have to do this.
-# os.environ['TESPDIR'] = '/Users/hard312/src/TSP/tesp'
+
+
 
 
 # Setting up logging
@@ -301,7 +302,7 @@ def _auto_run(args):
     glmMod.write_model(args.output_file)
 
 
-if __name__ == '__main__':
+def test():
     # TDH: This slightly complex mess allows lower importance messages
     # to be sent to the log file and ERROR messages to additionally
     # be sent to the console as well. Thus, when bad things happen
@@ -330,3 +331,7 @@ if __name__ == '__main__':
                         default='trevor_test.glm')
     _args = parser.parse_args()
     _auto_run(_args)
+
+
+if __name__ == '__main__':
+    test()

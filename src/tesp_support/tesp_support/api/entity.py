@@ -7,10 +7,6 @@
 import json
 import sqlite3
 
-from tesp_support.api.data import entities_path
-from tesp_support.api.data import tesp_test
-
-
 def assign_defaults(obj, file_name):
     """
 
@@ -441,6 +437,9 @@ class Entity:
 
 def test():
 
+    from tesp_support.api.data import entities_path
+    from tesp_support.api.data import tesp_test
+
     class mytest:
         def test(self):
             return
@@ -450,7 +449,7 @@ def test():
     # entity_names = ['house', 'inverter', 'battery', 'object solar', 'waterheater']
 
     try:
-        conn = sqlite3.connect(tesp_test + 'test.db')
+        conn = sqlite3.connect(tesp_test + 'api/test.db')
         print("Opened database successfully")
     except:
         print("Database Sqlite3.db not formed")

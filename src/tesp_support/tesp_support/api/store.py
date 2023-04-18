@@ -12,9 +12,6 @@ import pandas as pd
 import numpy as np
 import zipfile as zf
 
-from tesp_support.api.data import tesp_share
-from tesp_support.api.data import tesp_test
-
 #  add empty json "file" store that holds
 #  the directory and schemas classes for each file store
 #
@@ -498,8 +495,10 @@ def test_debug_resample():
 
 
 def test_csv():
-    my_store = Store(tesp_test + 'store.json')
-    my_file = my_store.add_file(tesp_test + 'test.csv', "test_csv", "My test csv file")
+    from tesp_support.api.data import tesp_test
+
+    my_store = Store(tesp_test + 'api/store.json')
+    my_file = my_store.add_file(tesp_test + 'api/test.csv', "test_csv", "My test csv file")
     tables = my_file.get_tables()
     print(tables)
     columns = my_file.get_columns(tables[0])
@@ -508,8 +507,10 @@ def test_csv():
 
 
 def test_sqlite():
-    my_store = Store(tesp_test + 'store.json')
-    my_file = my_store.add_file(tesp_test + 'test.db', "test_db", "My test sqlite file")
+    from tesp_support.api.data import tesp_test
+
+    my_store = Store(tesp_test + 'api/store.json')
+    my_file = my_store.add_file(tesp_test + 'api/test.db', "test_db", "My test sqlite file")
     tables = my_file.get_tables()
     print(tables)
     columns = my_file.get_columns(tables[0])
@@ -541,8 +542,10 @@ def test_change_gencost():
 
 
 def test_read():
-    my_store = Store(tesp_test + 'store.json')
-    my_file = my_store.add_file(tesp_test + 'test.csv', "test_csv", "My test csv file")
+    from tesp_support.api.data import tesp_test
+
+    my_store = Store(tesp_test + 'api/store.json')
+    my_file = my_store.add_file(tesp_test + 'api/test.csv', "test_csv", "My test csv file")
     tables = my_file.get_tables()
     print(tables)
     columns = my_file.get_columns(tables[0])
@@ -564,7 +567,10 @@ def test_read():
 
 
 def test_dir():
-    my_store = Store(tesp_test + 'store.json')
+    from tesp_support.api.data import tesp_share
+    from tesp_support.api.data import tesp_test
+
+    my_store = Store(tesp_test + 'api/store.json')
     my_file = my_store.add_path(tesp_share, "My data directory")
     my_file.set_includeDir("energyplus")
     sub = my_file.set_includeDir("feeders", True)
@@ -572,7 +578,7 @@ def test_dir():
     my_file.set_includeFile(sub, "comm*")
     my_file.set_includeFile(sub, ".gitignore")
     my_store.write()
-    my_store.zip(tesp_test + 'store.zip')
+    my_store.zip(tesp_test + 'api/store.zip')
 
 
 if __name__ == "__main__":

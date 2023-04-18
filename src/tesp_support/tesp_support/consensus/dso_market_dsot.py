@@ -15,8 +15,8 @@ from copy import deepcopy
 
 import numpy as np
 
-import tesp_support.consensus.helpers_dsot as helpers
-import tesp_support.helpers as helpers_tesp
+from tesp_support.helpers import parse_kw
+from tesp_support.helpers_dsot import curve, get_intersect, ClearingType, resample_curve
 
 
 class DSOMarketDSOT:
@@ -124,7 +124,7 @@ class DSOMarketDSOT:
         for day in range(7):
             self.curve_ws_node[day] = dict()
             for hour in range(24):
-                self.curve_ws_node[day][hour] = helpers.curve(self.price_cap, self.num_samples)
+                self.curve_ws_node[day][hour] = curve(self.price_cap, self.num_samples)
                 self.curve_ws_node[day][hour].quantities = np.linspace(0, self.DSO_Q_max, self.num_samples)
                 self.curve_ws_node[day][hour].prices = \
                     np.array([self.curve_a[day][hour] * quantity * quantity +
@@ -138,8 +138,8 @@ class DSOMarketDSOT:
         self.trial_cleared_quantity_RT = 0.0
         self.curve_DSO_RT = None
         self.trial_clear_type_RT = None
-        self.curve_DSO_RT = helpers.curve(self.price_cap, self.num_samples)
-        
+        self.curve_DSO_RT = curve(self.price_cap, self.num_samples)
+
     def clean_bids_DA(self):
         """ Initialize the day-ahead wholesale node trial clearing
         """
@@ -148,7 +148,7 @@ class DSOMarketDSOT:
         self.curve_DSO_DA = dict()
         self.trial_clear_type_DA = [None] * self.windowLength
         for idx in range(self.windowLength):
-            self.curve_DSO_DA[idx] = helpers.curve(self.price_cap, self.num_samples)
+            self.curve_DSO_DA[idx] = curve(self.price_cap, self.num_samples)
 
     def curve_aggregator_DSO_RT(self, demand_curve_RT, Q_max):
         """ Function used to aggregate the substation-level RT demand curves into a DSO-level RT demand curve
@@ -197,7 +197,7 @@ class DSOMarketDSOT:
             preprocessed_curve (curve): preprocessed demand curve
 
         """
-        preprocessed_curve = helpers.curve(self.price_cap, self.num_samples)
+        preprocessed_curve = curve(self.price_cap, self.num_samples)
         preprocessed_curve.prices = deepcopy(substation_demand_curve.prices)
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
         for i in range(self.num_samples):
@@ -284,22 +284,22 @@ class DSOMarketDSOT:
                         cleared_price = curve_ws_node.prices[idx - 1]
                     elif curve_ws_node.quantities[idx] == cleared_quantity:
                         cleared_price = curve_ws_node.prices[idx]
-                clear_type = helpers.ClearingType.UNCONGESTED
+                clear_type = ClearingType.UNCONGESTED
                 if cleared_price > self.price_cap:
                     cleared_price = self.price_cap
                 return cleared_price, cleared_quantity, clear_type
             else:
-                return float('inf'), float('inf'), helpers.ClearingType.FAILURE
+                return float('inf'), float('inf'), ClearingType.FAILURE
         else:
 
             max_q = min(max(curve_ws_node.quantities), max(curve_DSO.quantities))
             min_q = max(min(curve_ws_node.quantities), min(curve_DSO.quantities))
             if max_q <= min_q:
-                return float('inf'), float('inf'), helpers.ClearingType.FAILURE
+                return float('inf'), float('inf'), ClearingType.FAILURE
 
-            buyer_quantities, buyer_prices = helpers.resample_curve(curve_DSO.quantities, curve_DSO.prices,
+            buyer_quantities, buyer_prices = resample_curve(curve_DSO.quantities, curve_DSO.prices,
                                                                  min_q, max_q, self.num_samples)
-            seller_quantities, seller_prices = helpers.resample_curve(curve_ws_node.quantities, curve_ws_node.prices,
+            seller_quantities, seller_prices = resample_curve(curve_ws_node.quantities, curve_ws_node.prices,
                                                                    min_q, max_q, self.num_samples)
             for idx in range(len(buyer_quantities)-1):
                 if buyer_prices[idx] > seller_prices[idx] and buyer_prices[idx+1] < seller_prices[idx+1]:
@@ -307,33 +307,33 @@ class DSOMarketDSOT:
                     p2 = (buyer_quantities[idx + 1], buyer_prices[idx + 1])
                     p3 = (seller_quantities[idx], seller_prices[idx])
                     p4 = (seller_quantities[idx + 1], seller_prices[idx + 1])
-                    Pwclear, cleared_quantity = helpers.get_intersect(p1, p2, p3, p4)
+                    Pwclear, cleared_quantity = get_intersect(p1, p2, p3, p4)
                     if cleared_quantity > self.DSO_Q_max:
-                        trial_clear_type = helpers.ClearingType.CONGESTED
+                        trial_clear_type = ClearingType.CONGESTED
                     else:
-                        trial_clear_type = helpers.ClearingType.UNCONGESTED
+                        trial_clear_type = ClearingType.UNCONGESTED
                     return Pwclear, cleared_quantity, trial_clear_type
 
             if buyer_prices[0] > seller_prices[0]:
                 if max_q == max(curve_ws_node.quantities):
                     Pwclear = buyer_prices[-1]
                     cleared_quantity = buyer_quantities[-1]
-                    trial_clear_type = helpers.ClearingType.CONGESTED
+                    trial_clear_type = ClearingType.CONGESTED
                 elif max_q == max(curve_DSO.quantities):
                     Pwclear = seller_prices[-1]
                     cleared_quantity = seller_quantities[-1]
-                    trial_clear_type = helpers.ClearingType.UNCONGESTED
+                    trial_clear_type = ClearingType.UNCONGESTED
             else:
                 if min_q == min(curve_ws_node.quantities):
                     Pwclear = buyer_prices[0]
                     cleared_quantity = buyer_quantities[0]
-                    trial_clear_type = helpers.ClearingType.UNCONGESTED
+                    trial_clear_type = ClearingType.UNCONGESTED
                 elif min_q == min(curve_DSO.quantities):
                     Pwclear = seller_prices[0]
                     cleared_quantity = seller_quantities[0]
-                    trial_clear_type = helpers.ClearingType.UNCONGESTED
+                    trial_clear_type = ClearingType.UNCONGESTED
             return Pwclear, cleared_quantity, trial_clear_type
-        
+
     def substation_supply_curve_RT(self, retail_obj):
         """ Function used to generate the RT supply curve for each substation
 
@@ -359,7 +359,7 @@ class DSOMarketDSOT:
         maxPuLoading = retail_obj.maxPuLoading
         TOC_dict = retail_obj.TOC_dict
         Prclear_RT = self.retail_rate(self.Pwclear_RT)
-        supply_curve_RT = helpers.curve(self.retail_rate(self.price_cap), self.num_samples) # price_cap of the supply_curve has to be the retail price_cap 
+        supply_curve_RT = curve(self.retail_rate(self.price_cap), self.num_samples) # price_cap of the supply_curve has to be the retail price_cap
  
         if self.transformer_degradation == True:
             supply_curve_RT.quantities, supply_curve_RT.prices = self.supply_curve(Prclear_RT, FeederCongCapacity, FeederPkDemandCapacity, self.num_samples, Q_max_retail, maxPuLoading, TOC_dict)
@@ -406,7 +406,7 @@ class DSOMarketDSOT:
         supply_curve_DA = dict()
         for idx in range(self.windowLength):
             Prclear_DA[idx] = self.retail_rate(self.Pwclear_DA[idx])
-            supply_curve_DA[idx] = helpers.curve(self.retail_rate(self.price_cap), self.num_samples) # price_cap of the supply_curve has to be the retail price_cap 
+            supply_curve_DA[idx] = curve(self.retail_rate(self.price_cap), self.num_samples) # price_cap of the supply_curve has to be the retail price_cap
         
         if self.transformer_degradation == True: 
             for idx in range(self.windowLength):     
@@ -581,7 +581,7 @@ class DSOMarketDSOT:
             Args:
                 ref_load (str): total load of substation
         """
-        val = helpers_tesp.parse_kw(ref_load)
+        val = parse_kw(ref_load)
         self.total_load = val
 
     def set_total_load(self, total_load):
@@ -590,7 +590,7 @@ class DSOMarketDSOT:
             Args:
                 total_load (str): total load of substation
         """
-        val = helpers_tesp.parse_kw(total_load)
+        val = parse_kw(total_load)
         self.total_load = val
 
     def set_ind_load(self, industrial_load):
@@ -599,7 +599,7 @@ class DSOMarketDSOT:
         Args:
             industrial_load (str): industrial load of substation
         """
-        val = helpers_tesp.parse_kw(industrial_load)
+        val = parse_kw(industrial_load)
         self.ind_load = val
 
     def set_ind_load_da(self, industrial_load_da):

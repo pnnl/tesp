@@ -13,4 +13,4 @@ declare -r EPWFILE=$EPLUS_PATH/USA_AZ_Tucson.Intl.AP.722740_TMY3.epw
 (exec gridlabd -D SCHED_PATH=$SCHED_PATH -D USE_HELICS -D METRICS_FILE=SGIP1a_metrics.json SGIP1b.glm &> gridlabd1a.log &)
 (exec python3 -c "import tesp_support.substation as tesp;tesp.substation_loop('SGIP1b_agent_dict.json', 'SGIP1a',flag='NoMarket', helicsConfig='SGIP1b_substation.json')" &> substation1a.log &)
 (exec python3 -c "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('sgip1_pp.json','SGIP1a','pypowerConfig.json')" &> pypower1a.log &)
-(export WEATHER_CONFIG=SGIP1b_weather.json && exec python3 -c "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather1a.log &)
+(export WEATHER_CONFIG=SGIP1b_weather.json && exec python3 -c "import tesp_support.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather1a.log &)

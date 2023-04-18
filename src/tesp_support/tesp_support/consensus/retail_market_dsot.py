@@ -31,23 +31,23 @@ from copy import deepcopy
 
 import numpy as np
 
-import tesp_support.consensus.helpers_dsot as helpers
+from tesp_support.helpers_dsot import curve, get_intersect, ClearingType, resample_curve
 
 
 class RetailMarketDSOT:
     """This agent manages the retail market operating
 
     Args:
-        
+        retail_dict:
+        key:
+
+    Attributes:
         name (str): name of the retail market agent
-        pricecap (float): the maximun price that is allowed in the market, in $/kWh
-        num_samples (int): the number of sampling points, describles how precisely the curve is sampled
+        price_cap (float): the maximum price that is allowed in the market, in $/kWh
+        num_samples (int): the number of sampling points, describes how precisely the curve is sampled
         windowLength (int): length of the planning horizon for the DA market, in hours
         Q_max (float): capacity of the substation, in kWh
         maxPuLoading (float): rate of the maxPuLoading for transformer
-        
-    Attributes:
-        
         curve_buyer_RT (curve): aggregated buyer curve, updated after receiving each RT buyer bid
         curve_seller_RT (curve): aggregated seller curve, updated after receiving each RT seller bid
         curve_buyer_DA (dict of curves): 48 aggregated buyer curves, updated after receiving each DA buyer bid
@@ -60,28 +60,30 @@ class RetailMarketDSOT:
         cleared_quantity_DA (list): list of cleared quantity at each hour
         site_responsive_DA (list): Site_Day_Ahead quantity which is responsive
         site unresponsive DA (list): Site Day Ahead quantity which is unresponsive
-        TOC_dict (dict): parameters related to transformer lifetime cost calculation, including
-        OperatingPeriod (int): operating period, in minute
-        timeStep (int): timestep, in minute
-        Tamb (float): ambient temperature, in deg C
-        delta_T_TO_init (int): initial delta temperature of top oil, in deg C
-        delta_T_W_init (int): initial delta temperature of winding, in deg C
-        BP (float): intial cost of transformer, in $
-        toc_A (float): cost per watt for no-load losses, in $/W
-        toc_B (float): cost per watt for load losses, in $/W
-        Base_Year (float): expected lifespan of transformer, in year
-        P_Rated (float): capacity, in W
-        NLL_rate (float): no load loss rate, in %
-        LL_rate (float): load loss rate, in %
-        Sec_V (float): secondary voltage level, in volt
-        TOU_TOR (float): oil time constant, in minute
-        TOU_GR (float): winding time constant, in minute
-        Oil_n (float): Oil exponent n
-        Wind_m (float): Winding exponent m
-        delta_T_TOR (float): top oil temperature rise, in deg C
-        delta_T_ave_wind_R (float): average winding temperature rise over ambient temperature, in deg C
         AMES_RT (list X 5): Smooth Quadratics
         AMES_DA ((list X 5) X windowLength): Smooth Quadratics
+
+        TOC_dict (dict): parameters related to transformer lifetime cost calculation, including
+            OperatingPeriod (int): operating period, in minute
+            timeStep (int): timestep, in minute
+            Tamb (float): ambient temperature, in deg C
+            delta_T_TO_init (int): initial delta temperature of top oil, in deg C
+            delta_T_W_init (int): initial delta temperature of winding, in deg C
+            BP (float): initial cost of transformer, in $
+            toc_A (float): cost per watt for no-load losses, in $/W
+            toc_B (float): cost per watt for load losses, in $/W
+            Base_Year (float): expected lifespan of transformer, in year
+            P_Rated (float): capacity, in W
+            NLL_rate (float): no load loss rate, in %
+            LL_rate (float): load loss rate, in %
+            Sec_V (float): secondary voltage level, in volt
+            TOU_TOR (float): oil time constant, in minute
+            TOU_GR (float): winding time constant, in minute
+            Oil_n (float): Oil exponent n
+            Wind_m (float): Winding exponent m
+            delta_T_TOR (float): top oil temperature rise, in deg C
+            delta_T_ave_wind_R (float): average winding temperature rise over ambient temperature, in deg C
+
     """
 
     def __init__(self, retail_dict, key):
@@ -155,8 +157,8 @@ class RetailMarketDSOT:
         self.curve_seller_RT = None
         self.congestion_surcharge_RT = None
 
-        self.curve_buyer_RT = helpers.curve(self.price_cap, self.num_samples)
-        self.curve_seller_RT = helpers.curve(self.price_cap, self.num_samples)
+        self.curve_buyer_RT = curve(self.price_cap, self.num_samples)
+        self.curve_seller_RT = curve(self.price_cap, self.num_samples)
 
     def clean_bids_DA(self):
         """Initialize the day-ahead market
@@ -169,10 +171,10 @@ class RetailMarketDSOT:
         self.curve_seller_DA = dict()
 
         for i in range(self.windowLength):
-            self.curve_buyer_DA[i] = helpers.curve(self.price_cap, self.num_samples)
+            self.curve_buyer_DA[i] = curve(self.price_cap, self.num_samples)
 
         for i in range(self.windowLength):
-            self.curve_seller_DA[i] = helpers.curve(self.price_cap, self.num_samples)
+            self.curve_seller_DA[i] = curve(self.price_cap, self.num_samples)
 
     def curve_aggregator_RT(self, identity, bid_RT, name):
         """Function used to collect the RT bid and update the accumulated buyer or seller curve 
@@ -238,11 +240,11 @@ class RetailMarketDSOT:
                     elif curve_seller.quantities[idx] == cleared_quantity:
                         cleared_price = curve_seller.prices[idx]
                 # if cleared_quantity > self.Q_max:
-                #     clear_type = helpers.ClearingType.CONGESTED
+                #     clear_type = ClearingType.CONGESTED
                 # else:
-                #     clear_type = helpers.ClearingType.UNCONGESTED
+                #     clear_type = ClearingType.UNCONGESTED
                 if cleared_quantity > self.Q_max:
-                    clear_type = helpers.ClearingType.CONGESTED
+                    clear_type = ClearingType.CONGESTED
                     uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
                     if uncongested_price < 0:
                         uncongested_price = 0
@@ -251,25 +253,25 @@ class RetailMarketDSOT:
                         congestion_surcharge = self.price_cap
                         log.info("congestion surcharge is beyond price cap, scale is too high!")
                 else:
-                    clear_type = helpers.ClearingType.UNCONGESTED
+                    clear_type = ClearingType.UNCONGESTED
                     congestion_surcharge = 0.0
                 return clear_type, cleared_price, cleared_quantity, congestion_surcharge
             else:
                 log.info("dso quantities: " + str(curve_buyer.quantities))
                 log.info("ERROR retail min: " + str(min(curve_seller.quantities)) +
                          ", max: " + str(max(curve_seller.quantities)))
-                return helpers.ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
+                return ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
         else:
             max_q = min(max(curve_seller.quantities), max(curve_buyer.quantities))
             min_q = max(min(curve_seller.quantities), min(curve_buyer.quantities))
             # log.info("Uncontrollable false, min: " + str(min_q) + "  max: " + str(max_q))
             if max_q < min_q:
                 log.info("ERROR retail min_q: " + str(min_q) + ", max_q:" + str(max_q))
-                return helpers.ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
+                return ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
 
-            buyer_quantities, buyer_prices = helpers.resample_curve(curve_buyer.quantities, curve_buyer.prices,
+            buyer_quantities, buyer_prices = resample_curve(curve_buyer.quantities, curve_buyer.prices,
                                                                     min_q, max_q, self.num_samples)
-            seller_quantities, seller_prices = helpers.resample_curve(curve_seller.quantities, curve_seller.prices,
+            seller_quantities, seller_prices = resample_curve(curve_seller.quantities, curve_seller.prices,
                                                                       min_q, max_q, self.num_samples)
             for idx in range(len(buyer_quantities) - 1):
                 if buyer_prices[idx] > seller_prices[idx] and buyer_prices[idx + 1] < seller_prices[idx + 1]:
@@ -277,13 +279,13 @@ class RetailMarketDSOT:
                     p2 = (buyer_quantities[idx + 1], buyer_prices[idx + 1])
                     p3 = (seller_quantities[idx], seller_prices[idx])
                     p4 = (seller_quantities[idx + 1], seller_prices[idx + 1])
-                    cleared_price, cleared_quantity = helpers.get_intersect(p1, p2, p3, p4)
+                    cleared_price, cleared_quantity = get_intersect(p1, p2, p3, p4)
                     if cleared_quantity > self.Q_max:
-                        clear_type = helpers.ClearingType.CONGESTED
+                        clear_type = ClearingType.CONGESTED
                     else:
-                        clear_type = helpers.ClearingType.UNCONGESTED
+                        clear_type = ClearingType.UNCONGESTED
                     if cleared_quantity > Q_max:
-                        clear_type = helpers.ClearingType.CONGESTED
+                        clear_type = ClearingType.CONGESTED
                         uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
                         if uncongested_price < 0:
                             uncongested_price = 0
@@ -304,22 +306,22 @@ class RetailMarketDSOT:
                 if max_q == max(curve_seller.quantities):
                     cleared_price = buyer_prices[-1]
                     cleared_quantity = buyer_quantities[-1]
-                    clear_type = helpers.ClearingType.CONGESTED
+                    clear_type = ClearingType.CONGESTED
                 elif max_q == max(curve_buyer.quantities):
                     cleared_price = seller_prices[-1]
                     cleared_quantity = seller_quantities[-1]
-                    clear_type = helpers.ClearingType.UNCONGESTED
+                    clear_type = ClearingType.UNCONGESTED
             else:
                 if min_q == min(curve_seller.quantities):
                     cleared_price = buyer_prices[0]
                     cleared_quantity = buyer_quantities[0]
-                    clear_type = helpers.ClearingType.UNCONGESTED
+                    clear_type = ClearingType.UNCONGESTED
                 elif min_q == min(curve_buyer.quantities):
                     cleared_price = seller_prices[0]
                     cleared_quantity = seller_quantities[0]
-                    clear_type = helpers.ClearingType.UNCONGESTED
+                    clear_type = ClearingType.UNCONGESTED
             if cleared_quantity > Q_max:
-                clear_type = helpers.ClearingType.CONGESTED
+                clear_type = ClearingType.CONGESTED
                 uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
                 if uncongested_price < 0:
                     uncongested_price = 0
@@ -445,7 +447,7 @@ class RetailMarketDSOT:
             preprocessed_curve (curve): preprocessed demand curve
         
         """
-        preprocessed_curve = helpers.curve(self.price_cap, self.num_samples)
+        preprocessed_curve = curve(self.price_cap, self.num_samples)
         preprocessed_curve.prices = deepcopy(substation_demand_curve.prices)
         preprocessed_curve.quantities = deepcopy(substation_demand_curve.quantities)
         for i in range(self.num_samples):
@@ -491,10 +493,9 @@ class RetailMarketDSOT:
                 resp_c0 (float): constant coefficient
                 resp_deg (int): equal to "2" to represent the current order in the list
         """
-        #        log.info("runing convert_2_AMES_quadratic_BID")
         # All substation quantities are in kW, converting them to MW and $/MWh to be used for AMES
         curve.quantities = curve.quantities / 1000
-        Q_cleared = Q_cleared / 1000.0
+        Q_cleared = Q_cleared / 1000
         curve.prices = curve.prices * 1000
         price_forecast = price_forecast * 1000
         try:
@@ -514,7 +515,7 @@ class RetailMarketDSOT:
                 P_range = np.array([])
             else:
                 benefit = curve.quantities * price_forecast  # we have to make benefit function curve, not the $/MWh bid.
-                new_Q, new_benefit = helpers.resample_curve(curve.quantities, benefit, unresp_mw, resp_max_mw,
+                new_Q, new_benefit = resample_curve(curve.quantities, benefit, unresp_mw, resp_max_mw,
                                                             self.num_samples)
                 new_benefit = np.array(new_benefit)
                 inde = np.where((new_Q > (unresp_mw)) & (new_Q < resp_max_mw))
@@ -571,8 +572,7 @@ class RetailMarketDSOT:
         # bid.append(resp_deg)
         bid.append(unresp_mw)
         bid.append(resp_max_mw - unresp_mw)
-        bid.append(z[
-                       0])  # c2  ---> f in the manual, -negative sign makes it strictly concave with which the check has been added above
+        bid.append(z[0])  # c2  ---> f in the manual, -negative sign makes it strictly concave with which the check has been added above
         bid.append(z[1])  # c1 ----> e in the manual
         bid.append(z[2])  # c0 ----> d in the manual
         bid.append(resp_deg)
@@ -674,6 +674,7 @@ def test():
     """ Testing AMES
     """
     import matplotlib.pyplot as plt
+
     agent = {"unit": "kW", "pricecap": 1.0, "num_samples": 100, "windowLength": 48, "Q_max": 3310000,
              "maxPuLoading": 1.5, "period_da": 3600, "period_rt": 300, "OperatingPeriod": 1440, "timeStep": 1,
              "Tamb": 30, "delta_T_TO_init": 25, "delta_T_W_init": 25, "BP": 100000, "toc_A": 1, "toc_B": 1,
@@ -951,13 +952,12 @@ def test():
 
     unresp_mw = np.amin(market.curve_buyer_DA[hr].quantities)
     resp_max_mw = np.amax(market.curve_buyer_DA[hr].quantities)
-    resp_deg = 2
 
     #    #with bids
     old_Q = market.curve_buyer_DA[hr].quantities
     old_P = market.curve_buyer_DA[hr].prices
     #    old_P = old_P/1.25
-    new_Q, new_P = helpers.resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
+    new_Q, new_P = resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
 
     new_P = np.array(new_P)
 
@@ -966,7 +966,7 @@ def test():
     P_range = (new_P[inde]) / 1.25  # to DSO level
     Benefit_range = Q_range * P_range
 
-    #    print("For the plot to be acurate a line must be uncommented in convert_2_AMES_quadratic_BID function")
+    #    print("For the plot to be accurate a line must be uncommented in convert_2_AMES_quadratic_BID function")
     y = list()
     y2 = list()
 
@@ -983,7 +983,7 @@ def test():
     ax[0].plot(new_Q / 1000, 1000 * new_P / 1.25, label='New Aggregate demand curve', marker='x')
     ax[0].plot(old_Q / 1000, 1000 * old_P / 1.25, label='Old Aggregate demand curve', marker='x')
     ax[0].set_ylabel('Price ($/MWh)')
-    ax[0].set_xlabel('Qantity (MWh)')
+    ax[0].set_xlabel('Quantity (MWh)')
     ax[0].legend()
     ax[1].plot(Q_range, y, label='Fitted for AMES - with Strict Concavity - e - f.P =' + str(
         market.AMES_DA[hr][3] - market.AMES_DA[hr][2] * market.AMES_DA[hr][1]) + ' >= 0')
@@ -1000,7 +1000,7 @@ def test():
 #    #no bids
 #    old_Q = market.curve_buyer_DA[1].quantities
 #    old_P = market.curve_buyer_DA[1].prices
-#    new_Q, new_P = helpers.resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
+#    new_Q, new_P = resample_curve(old_Q, old_P, unresp_mw, resp_max_mw, market.num_samples)
 
 
 if __name__ == "__main__":

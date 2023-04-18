@@ -141,7 +141,7 @@ class DSOMarketDSOT:
         self.last_bid_c0 = 0.0
 
     def update_wholesale_node_curve(self):
-        """ Update the wholesale node curves according to the most updated curve coefficients, 
+        """ Update the wholesale node curves according to the most updated curve coefficients,
         may be updated every day
 
         """
@@ -604,7 +604,7 @@ class DSOMarketDSOT:
 
     def supply_curve(self, Prclear, FeederCongCapacity, FeederPkDemandCapacity, num_samples, Q_max, maxPuLoading,
                      TOC_dict):
-        """ An internal shared function called by substation_supply_curve_RT and substation_supply_curve_DA functions 
+        """ An internal shared function called by substation_supply_curve_RT and substation_supply_curve_DA functions
         to generate the supply curve when considering the transformer degradation
 
         Args:

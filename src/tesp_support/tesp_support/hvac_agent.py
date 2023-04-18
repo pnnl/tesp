@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: hvac.py
+# file: hvac_agent.py
 """Class that controls the responsive thermostat for one house.
 
 Implements the ramp bidding method, with HVAC power as the
@@ -7,15 +7,14 @@ bid quantity, and thermostat setting changes as the response
 mechanism.
 """
 
-from .helpers import parse_magnitude
-from .helpers import parse_number
+from .helpers import parse_magnitude, parse_number
 
 
 class hvac:
     """This agent manages thermostat setpoint and bidding for a house
 
     Args:
-        dict (dict): dictionary row for this agent from the JSON configuration file
+        hvac_dict (dict): dictionary row for this agent from the JSON configuration file
         key (str): name of this agent, also key for its dictionary row
         aucObj (simple_auction): the auction this agent bids into
 
@@ -56,32 +55,32 @@ class hvac:
         cleared_price (float): the cleared market price in $/kwh
     """
 
-    def __init__(self, dict, key, aucObj):
+    def __init__(self, hvac_dict, key, aucObj):
         """Initializes the class
         """
         self.name = key
-        self.control_mode = dict['control_mode']
-        self.houseName = dict['houseName']
-        self.meterName = dict['meterName']
-        self.period = float(dict['period'])
-        self.wakeup_start = float(dict['wakeup_start'])
-        self.daylight_start = float(dict['daylight_start'])
-        self.evening_start = float(dict['evening_start'])
-        self.night_start = float(dict['night_start'])
-        self.wakeup_set = float(dict['wakeup_set'])
-        self.daylight_set = float(dict['daylight_set'])
-        self.evening_set = float(dict['evening_set'])
-        self.night_set = float(dict['night_set'])
-        self.weekend_day_start = float(dict['weekend_day_start'])
-        self.weekend_day_set = float(dict['weekend_day_set'])
-        self.weekend_night_start = float(dict['weekend_night_start'])
-        self.weekend_night_set = float(dict['weekend_night_set'])
-        self.deadband = float(dict['deadband'])
-        self.offset_limit = float(dict['offset_limit'])
-        self.ramp = float(dict['ramp'])
-        self.price_cap = float(dict['price_cap'])
-        self.bid_delay = float(dict['bid_delay'])
-        self.use_predictive_bidding = float(dict['use_predictive_bidding'])
+        self.control_mode = hvac_dict['control_mode']
+        self.houseName = hvac_dict['houseName']
+        self.meterName = hvac_dict['meterName']
+        self.period = float(hvac_dict['period'])
+        self.wakeup_start = float(hvac_dict['wakeup_start'])
+        self.daylight_start = float(hvac_dict['daylight_start'])
+        self.evening_start = float(hvac_dict['evening_start'])
+        self.night_start = float(hvac_dict['night_start'])
+        self.wakeup_set = float(hvac_dict['wakeup_set'])
+        self.daylight_set = float(hvac_dict['daylight_set'])
+        self.evening_set = float(hvac_dict['evening_set'])
+        self.night_set = float(hvac_dict['night_set'])
+        self.weekend_day_start = float(hvac_dict['weekend_day_start'])
+        self.weekend_day_set = float(hvac_dict['weekend_day_set'])
+        self.weekend_night_start = float(hvac_dict['weekend_night_start'])
+        self.weekend_night_set = float(hvac_dict['weekend_night_set'])
+        self.deadband = float(hvac_dict['deadband'])
+        self.offset_limit = float(hvac_dict['offset_limit'])
+        self.ramp = float(hvac_dict['ramp'])
+        self.price_cap = float(hvac_dict['price_cap'])
+        self.bid_delay = float(hvac_dict['bid_delay'])
+        self.use_pre_dictive_bidding = float(hvac_dict['use_predictive_bidding'])
 
         self.std_dev = aucObj.std_dev
         self.mean = aucObj.clearing_price
@@ -155,7 +154,7 @@ class hvac:
             dow (int): the day of the week, zero being Monday
 
         Returns:
-            Boolean: True if the setting changed, Falso if not
+            Boolean: True if the setting changed, False if not
         """
         if dow > 4:  # a weekend
             val = self.weekend_night_set

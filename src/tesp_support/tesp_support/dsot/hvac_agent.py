@@ -1,22 +1,24 @@
-# Copyright (C) 2017-2019 Battelle Memorial Institute
-# file: hvac_dsot_v1.py
+# Copyright (C) 2017-2022 Battelle Memorial Institute
+# file: hvac_dsot.py
 """Class that ...
 
 TODO: update the purpose of this Agent
 
 """
-import math
-import numpy as np
-import tesp_support.helpers as helpers
 import logging as log
-from scipy import linalg
-import pulp
+import math
+from datetime import datetime, timedelta
 from math import cos as cos
 from math import sin as sin
-import pytz
+
+import numpy as np
+import pulp
 import pyomo.environ as pyo
-import pyomo.opt as opt
-from datetime import datetime, timedelta
+import pytz
+from scipy import linalg
+
+from tesp_support.helpers import parse_number, parse_magnitude, get_run_solver
+
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
@@ -55,6 +57,22 @@ class HVACDSOT:  # TODO: update class name
         self.night_start = float(hvac_dict['night_start'])
         self.weekend_day_start = float(hvac_dict['weekend_day_start'])
         self.weekend_night_start = float(hvac_dict['weekend_night_start'])
+
+        # default temperatures in Fahrenheit
+        # Todo This should be set in defaults in hvac_dict?
+        self.T_lower_limit = 50
+        self.T_upper_limit = 100
+
+        self.cooling_setpoint_lower = 65
+        self.cooling_setpoint_upper = 85
+        self.heating_setpoint_lower = 60
+        self.heating_setpoint_upper = 85
+
+        self.basepoint_cooling = 85.0
+        self.basepoint_heating = 55.0
+        self.cooling_setpoint = 85.0
+        self.heating_setpoint = 55.0
+
         self.wakeup_set_cool = float(hvac_dict['wakeup_set_cool'])
         self.daylight_set_cool = float(hvac_dict['daylight_set_cool'])
         self.evening_set_cool = float(hvac_dict['evening_set_cool'])
@@ -80,7 +98,6 @@ class HVACDSOT:  # TODO: update class name
         self.range_low_limit = float(hvac_dict['range_low_limit'])
 
         self.slider = float(hvac_dict['slider_setting'])
-        # self.participating = hvac_dict['house_participating']
         self.cooling_participating = hvac_dict['cooling_participating']
         self.heating_participating = hvac_dict['heating_participating']
         self.participating = self.cooling_participating or self.heating_participating
@@ -107,7 +124,9 @@ class HVACDSOT:  # TODO: update class name
         self.temp_min_heat_da = 0.0
 
         self.price_forecast = [0 for _ in range(48)]  # np.random.rand(1)[0]
+        # self.price_forecast_DA = [0 for _ in range(48)]  # np.random.rand(1)[0]
         self.price_forecast_0 = 0
+        self.price_forecast_0_new = 0
         self.price_std_dev = 0.0
         self.price_delta = 0.0
         self.price_mean = 0.0
@@ -120,11 +139,17 @@ class HVACDSOT:  # TODO: update class name
         self.humidity_forecast = [0.5 for _ in range(48)]
         self.solargain_forecast = [0.0 for _ in range(48)]
         self.internalgain_forecast = [0.0 for _ in range(48)]
+        self.forecast_ziploads = [0.0 for _ in range(48)]
+
+        # it is important to initialize following two variables of length less than 48
+        # so that in very first run, they can be populated by actual forecast
+        self.full_internalgain_forecast = [0]
+        self.full_forecast_ziploads = [0]
 
         self.air_temp = 72.0
         self.mass_temp = 72.0
         self.hvac_kw = 100.0
-        self.wh_kw = 1.0
+        self.wh_kw = 0.0
         self.house_kw = 5.0
         self.mtr_v = 120.0
         self.hvac_on = False
@@ -132,6 +157,8 @@ class HVACDSOT:  # TODO: update class name
         self.minute = 0
         self.hour = 0
         self.day = 0
+        self.Qopt_da_prev = 0
+        self.temp_da_prev = 75.0
         self.DA_once_flag = False
         self.air_temp_agent = 72.0
         self.bid_rt_price = 0.0
@@ -141,16 +168,29 @@ class HVACDSOT:  # TODO: update class name
         self.Qa_OFF = 0.0
         self.Qm = 0.0
         self.Qs = 0.0
+
+        # interpolation
+        self.interpolation = bool(True)
+        self.RT_minute_count_interpolation = float(0.0)
+        self.previous_Q_DA = float(0.0)
+        self.previous_T_DA = float(0.0)
+        self.delta_Q = float(0.0)
+        self.delta_T = float(0.0)
+
+        self.A_ETP = np.zeros([2, 2])
+        self.AEI = np.zeros([2, 2])
+        self.B_ETP_ON = np.zeros([2, 1])
+        self.B_ETP_OFF = np.zeros([2, 1])
+
         self.bid_quantity = 0.0
-        self.basepoint_cooling = 75.0
-        self.basepoint_heating = 65.0
-        self.cooling_setpoint = 75.0
-        self.heating_setpoint = 65.0
+        self.bid_quantity_rt = 0.0
+
         self.thermostat_mode = 'OFF'  # can be 'Cooling' or 'Heating'
         self.cleared_price = 0.0
         self.bid_rt = [[0., 0.], [0., 0.], [0., 0.], [0., 0.]]
         self.bid_da = [[[0., 0.], [0., 0.], [0., 0.], [0., 0.]]] * 48
-
+        self.quantity_curve = [0 for _ in range(10)]
+        self.temp_curve = [0]
         # ETP model parameters
         self.sqft = float(house_properties['sqft'])
         self.stories = float(house_properties['stories'])
@@ -251,13 +291,12 @@ class HVACDSOT:  # TODO: update class name
         self.calc_thermostat_settings(model_diag_level, sim_time)
         self.calc_etp_model()
 
-        self.temp_room = [78.0 for _ in range(48)]
-        # self.temp_out_48hour = [90.0 for _ in range(48)]
-        self.temp_desired_48hour_cool = [75.0 for _ in range(self.windowLength)]
-        self.temp_desired_48hour_heat = [70.0 for _ in range(self.windowLength)]
-        self.temp_room_init = 78.0
-        self.temp_room_previous_cool = 68.0
-        self.temp_room_previous_heat = 65.0
+        self.temp_room = [78.0 for _ in range(self.windowLength)]
+        self.temp_desired_48hour_cool = [85.0 for _ in range(self.windowLength)]
+        self.temp_desired_48hour_heat = [55.0 for _ in range(self.windowLength)]
+        self.temp_room_init = 72.0
+        self.temp_room_previous_cool = 85.0
+        self.temp_room_previous_heat = 55.0
         self.temp_outside_init = 80.0
         self.eps = 0.
         self.COP = 0.
@@ -447,26 +486,26 @@ class HVACDSOT:  # TODO: update class name
             # update minimum cooling and maximum heating temperatures
             mid_point = (self.basepoint_cooling + self.basepoint_heating) / 2.0
             self.basepoint_cooling = mid_point + self.deadband / 2.0 + 0.5
-            basepoint_cooling_lower = 65
-            basepoint_cooling_upper = 85
-            if basepoint_cooling_lower < self.basepoint_cooling < basepoint_cooling_upper:
-                # log.info('basepoint_cooling is within the bounds.')
-                pass
-            else:
-                log.log(model_diag_level,
-                        '{} {} -- basepoint_cooling is {}, outside of nominal range of {} to {}'
-                        .format(self.name, sim_time, self.basepoint_cooling, basepoint_cooling_lower, basepoint_cooling_upper))
+            # basepoint_cooling_lower = 65
+            # basepoint_cooling_upper = 85
+            # if basepoint_cooling_lower < self.basepoint_cooling < basepoint_cooling_upper:
+            #     # log.info('basepoint_cooling is within the bounds.')
+            #     pass
+            # else:
+            #     log.log(model_diag_level,
+            #             '{} {} -- basepoint_cooling is {}, outside of nominal range of {} to {}'
+            #             .format(self.name, sim_time, self.basepoint_cooling, basepoint_cooling_lower, basepoint_cooling_upper))
 
             self.basepoint_heating = mid_point - self.deadband / 2.0 - 0.5
-            basepoint_heating_lower = 60
-            basepoint_heating_upper = 85
-            if basepoint_heating_lower < self.basepoint_heating < basepoint_heating_upper:
-                # log.info('basepoint_heating is within the bounds.')
-                pass
-            else:
-                log.log(model_diag_level,
-                        '{} {} -- basepoint_heating is {}, outside of nominal range of {} to {}'
-                        .format(self.name, sim_time, self.basepoint_heating, basepoint_heating_lower, basepoint_heating_upper))
+            # basepoint_heating_lower = 60
+            # basepoint_heating_upper = 85
+            # if basepoint_heating_lower < self.basepoint_heating < basepoint_heating_upper:
+            #     # log.info('basepoint_heating is within the bounds.')
+            #     pass
+            # else:
+            #     log.log(model_diag_level,
+            #             '{} {} -- basepoint_heating is {}, outside of nominal range of {} to {}'
+            #             .format(self.name, sim_time, self.basepoint_heating, basepoint_heating_lower, basepoint_heating_upper))
         # print("self.basepoint_cooling "+str(self.basepoint_cooling))
         # print("self.basepoint_heating "+str(self.basepoint_heating))
 
@@ -798,20 +837,39 @@ class HVACDSOT:  # TODO: update class name
         # A3 has solargain_factor of 40.548
         self.solargain_forecast = solargain_array
 
+    def store_full_internalgain_forecast(self, forecast_internalgain):
+        """
+        Args:
+            forecast_internalgain: internal gain forecast to store for future
+
+        Returns: sets the variable so that it can be used later hours as well
+        """
+        self.full_internalgain_forecast = forecast_internalgain
+
+    def store_full_zipload_forecast(self, forecast_ziploads):
+        """
+        Args:
+            forecast_ziploads: internal gain forecast to store for future
+
+        Returns: sets the variable so that it can be used later hours as well
+        """
+        self.full_forecast_ziploads = forecast_ziploads
+
     def set_internalgain_forecast(self, internalgain_array):
         """ Set the 48-hour internalgain forecast
         Args:
             internalgain_array: internalgain_forecast ([float x 48]): forecasted internalgain in BTu/h
         """
-        # if self.name == 'Houses_A_hse_13':
-        #     self.internalgain_forecast = internalgain_array[1]
-        # elif self.name == 'Houses_A_hse_15':
-        #     self.internalgain_forecast = internalgain_array[2]
-        # elif self.name == 'Houses_A_hse_49':
-        #     self.internalgain_forecast = internalgain_array[3]
-        # else:
-        #     self.internalgain_forecast = internalgain_array[0]
         self.internalgain_forecast = internalgain_array
+
+    def set_zipload_forecast(self, forecast_ziploads):
+        """
+        Set the 48-hour zipload forecast
+        Args:
+            forecast_ziploads: array of zipload forecast
+        Returns: nothing, sets the property
+        """
+        self.forecast_ziploads = forecast_ziploads
 
     def set_temperature(self, fncs_str):
         """ Sets the outside temperature attribute
@@ -819,7 +877,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with outdoor temperature in F
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = parse_number(fncs_str)
         self.outside_air_temperature = val
 
     def set_humidity(self, fncs_str):
@@ -828,7 +886,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with humidity
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = parse_number(fncs_str)
         if val > 0.0:
             self.humidity = val
 
@@ -838,7 +896,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with solar irradiance
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = parse_number(fncs_str)
         if val >= 0.0:
             self.solar_direct = val
 
@@ -848,7 +906,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with solar irradiance
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = parse_number(fncs_str)
         if val >= 0.0:
             self.solar_diffuse = val
 
@@ -946,10 +1004,7 @@ class HVACDSOT:  # TODO: update class name
         Returns:
             Boolean: True if the thermostat setting changes, False if not.
         """
-        cooling_setpoint_lower = 65
-        cooling_setpoint_upper = 85
-        heating_setpoint_lower = 60
-        heating_setpoint_upper = 85
+        # self.cleared_price = self.price_forecast_0
         if self.thermostat_mode == 'Cooling':
             basepoint_tmp = self.basepoint_cooling
         elif self.thermostat_mode == 'Heating':
@@ -957,45 +1012,106 @@ class HVACDSOT:  # TODO: update class name
         else:
             basepoint_tmp = 70.0  # default value that is ok for both operating points
         # using price forecast [0] instead of mean
+        price_curve = [self.bid_rt[0][1], self.bid_rt[1][1], self.bid_rt[2][1], self.bid_rt[3][1]]
+        quantity_curve = [self.bid_rt[0][0], self.bid_rt[1][0], self.bid_rt[2][0], self.bid_rt[3][0]]
+
+        if price_curve[1] <= self.cleared_price <= price_curve[0]:
+            if price_curve[1] != price_curve[0]:
+                a = (quantity_curve[1] - quantity_curve[0]) / (price_curve[1] - price_curve[0])
+            else:
+                a = 0
+            b = quantity_curve[0] - a * price_curve[0]
+            self.bid_quantity = a * self.cleared_price + b
+        elif price_curve[1] >= self.cleared_price >= price_curve[2]:
+            if price_curve[2] != price_curve[1]:
+                a = (quantity_curve[2] - quantity_curve[1]) / (price_curve[2] - price_curve[1])
+            else:
+                a = 0
+            b = quantity_curve[1] - a * price_curve[1]
+            self.bid_quantity = a * self.cleared_price + b
+            # self.bid_quantity = quantity_curve[1]
+        elif price_curve[2] >= self.cleared_price >= price_curve[3]:
+            if price_curve[3] != price_curve[2]:
+                a = (quantity_curve[3] - quantity_curve[2]) / (price_curve[3] - price_curve[2])
+            else:
+                a = 0
+            b = quantity_curve[2] - a * price_curve[2]
+            self.bid_quantity = a * self.cleared_price + b
+        elif self.cleared_price > price_curve[0]:
+            self.bid_quantity = quantity_curve[0]  # assuming this is minimum
+        elif self.cleared_price < price_curve[3]:
+            self.bid_quantity = quantity_curve[3]  # assuming this is maximum
+        else:
+            self.bid_quantity = 0
+            print("something went wrong with clear price")
+
         if self.price_std_dev > 0.0:
             if self.thermostat_mode == 'Cooling':
                 ramp_high_tmp = self.ramp_high_cool
                 ramp_low_tmp = self.ramp_low_cool
+                setpoint_tmp = self.cooling_setpoint
             elif self.thermostat_mode == 'Heating':
                 ramp_high_tmp = self.ramp_high_heat
                 ramp_low_tmp = self.ramp_low_heat
+                setpoint_tmp = self.heating_setpoint
             else:
                 ramp_high_tmp = 10000000000000.0
                 ramp_low_tmp = 10000000000000.0
                 log.log(model_diag_level, '{} {} -- thermostat mode not defined.'.format(self.name, sim_time))
-            # TODO: this is the debate whether to use priceforecast (self.price_forecast[0]) of price mean (self.price_mean)
-            use_DA_curve = True
-            if use_DA_curve:
+            use_RT_curve = True
+            use_DA_curve = False
+            use_leg_clearing = False
+            use_DA_temp = False
+            if use_RT_curve:
+                if max(self.quantity_curve) == 0:
+                    self.bid_quantity = 0.0
+                    if self.thermostat_mode == "Cooling":
+                        setpoint_tmp = self.temp_max_cool  # self.cooling_setpoint
+                    else:
+                        setpoint_tmp = self.temp_min_heat
+                elif self.bid_quantity >= max(self.quantity_curve):
+                    if self.thermostat_mode == "Cooling":
+                        setpoint_tmp = min(self.temp_curve)
+                    else:
+                        setpoint_tmp = max(self.temp_curve)
+                else:
+                    for ipt in range(len(self.temp_curve) - 1):
+                        if self.quantity_curve[ipt] <= self.bid_quantity <= self.quantity_curve[ipt + 1]:
+                            if self.quantity_curve[ipt + 1] != self.quantity_curve[ipt]:
+                                a = (self.temp_curve[ipt + 1] - self.temp_curve[ipt]) / \
+                                    (self.quantity_curve[ipt + 1] - self.quantity_curve[ipt])
+                            else:
+                                a = 0
+                            b = self.temp_curve[ipt] - a * self.quantity_curve[ipt]
+                            setpoint_tmp = a * self.bid_quantity + b
+                            break
+
+                # The following is code was for debugging and not being used, so it was comment out
+                # LF = 1 + 0.1 + self.latent_load_fraction / (1 + math.exp(4 - 10 * self.humidity))
+                # eps_rt = math.exp(-self.UA / (self.CM + self.CA) * 1.0 / 12.0)
+                # setpoint_tmp_DA = eps_rt * self.air_temp + (1 - eps_rt) * (self.outside_air_temperature + (
+                #         (-self.cooling_COP * 0.98 * self.bid_quantity * 3412.1416331279 / LF +
+                #          self.Qi + self.solar_gain * self.solar_heatgain_factor) / self.UA))
+            elif use_DA_curve:
                 if self.thermostat_mode == "Cooling":
                     if self.cleared_price > self.price_forecast_0:
-                        # setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * self.range_high_cool / \
-                        #               (ramp_high_tmp * self.price_std_dev)
-                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * (self.range_high_cool) / \
-                                       (self.price_delta)
+                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * \
+                                       self.range_high_cool / self.price_delta
                     elif self.cleared_price < self.price_forecast_0:
-                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * self.range_low_cool / \
-                                      (ramp_low_tmp * self.price_std_dev)
-                        # setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * (self.range_low_cool) / \
-                        #                (self.price_delta)
+                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * \
+                                       self.range_low_cool / self.price_delta
                     else:
-                        # self.setpoint = self.basepoint_cooling
                         setpoint_tmp = self.temp_room[0]
                 else:
                     if self.cleared_price > self.price_forecast_0:
-                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) \
-                                       * self.range_high_heat / self.price_delta
+                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * \
+                                       self.range_high_heat / self.price_delta
                     elif self.cleared_price < self.price_forecast_0:
-                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) \
-                                       * self.range_low_heat / self.price_delta
+                        setpoint_tmp = self.temp_room[0] + (self.cleared_price - self.price_forecast_0) * \
+                                       self.range_low_heat / self.price_delta
                     else:
-                        # self.setpoint = self.basepoint_cooling
                         setpoint_tmp = self.temp_room[0]
-            else:
+            elif use_leg_clearing:
                 if self.cleared_price > self.price_mean:
                     setpoint_tmp = basepoint_tmp + (self.cleared_price - self.price_mean) * self.range_high_cool / \
                                    (ramp_high_tmp * self.price_std_dev)
@@ -1003,50 +1119,15 @@ class HVACDSOT:  # TODO: update class name
                     setpoint_tmp = basepoint_tmp + (self.cleared_price - self.price_mean) * self.range_low_cool / \
                                    (ramp_low_tmp * self.price_std_dev)
                 else:
-                    # self.setpoint = self.basepoint_cooling
                     setpoint_tmp = basepoint_tmp
-                #log.log(model_diag_level, '{} {} -- thermostat mode not defined.'.format(self.name, sim_time))
-            # if self.cleared_price > self.price_forecast[0]:
-            #     setpoint_tmp = basepoint_tmp + (self.cleared_price - self.price_forecast[0]) * self.range_high / \
-            #                    (ramp_high_tmp * self.price_std_dev)
-            # elif self.cleared_price < self.price_forecast[0]:
-            #     setpoint_tmp = basepoint_tmp + (self.cleared_price - self.price_forecast[0]) * self.range_low / \
-            #                    (ramp_low_tmp * self.price_std_dev)
-            # else:
-            #     # self.setpoint = self.basepoint_cooling
-            #     setpoint_tmp = basepoint_tmp
+            elif use_DA_temp:
+                setpoint_tmp = self.temp_room[0]
+                self.bid_quantity = self.bid_quantity_rt  # this one is interpolated
+            else:
+                setpoint_tmp = basepoint_tmp
 
-            setpoint_rt = setpoint_tmp
-            use_DA_temp = False
-            if use_DA_temp:
-                setpoint_tmp = self.temp_room[0]  # self.temp_room_previous#
-                if self.thermostat_mode == 'Cooling':
-                    self.cooling_setpoint = setpoint_tmp
-                else:
-                    self.heating_setpoint = setpoint_tmp
-                if 65 < self.cooling_setpoint < 85:
-                    # log.info('cooling_setpoint is within the bounds.')
-                    pass
-                else:
-                    log.log(model_diag_level, '{} {} -- cooling_setpoint ({}) is out of bounds.'
-                            .format(self.name, sim_time, self.cooling_setpoint ))
-                if self.heating_setpoint + self.deadband / 2.0 >= self.cooling_setpoint - self.deadband / 2.0:
-                    # push heating_setpoint down
-                    self.heating_setpoint = self.cooling_setpoint - self.deadband - 0.5  # for safety
-                    if 60 < self.heating_setpoint < 85:
-                        # log.info('heating_setpoint is within the bounds.')
-                        pass
-                    else:
-                        log.log(model_diag_level, '{} {} -- heating_setpoint ({}) is out of bounds.'
-                                .format(self.name, sim_time, self.heating_setpoint))
-
-            # ensure that setpoint is within user comfort band
-            # if self.setpoint > self.basepoint_cooling + abs(self.range_high):
-            #    self.setpoint = self.basepoint_cooling + abs(self.range_high)
-            # elif self.setpoint < self.basepoint_cooling - abs(self.range_low):
-            #    self.setpoint = self.basepoint_cooling - abs(self.range_low)
             if self.thermostat_mode == "Cooling":
-                if setpoint_tmp > basepoint_tmp + abs(self.range_high_cool):
+                if setpoint_tmp > basepoint_tmp + abs(self.range_high_cool):  # TODO: and self.hvac_on!=True:
                     setpoint_tmp = basepoint_tmp + abs(self.range_high_cool)
                 elif setpoint_tmp < basepoint_tmp - abs(self.range_low_cool):
                     setpoint_tmp = basepoint_tmp - abs(self.range_low_cool)
@@ -1056,80 +1137,86 @@ class HVACDSOT:  # TODO: update class name
                 elif setpoint_tmp < basepoint_tmp - abs(self.range_low_heat):
                     setpoint_tmp = basepoint_tmp - abs(self.range_low_heat)
 
-            # else:
-            #    "Do nothing"
-            # return True
             returnflag = True
         else:
-            # self.setpoint = self.basepoint_cooling
             setpoint_tmp = basepoint_tmp
-            setpoint_rt = setpoint_tmp
-            ramp_high_tmp = 0.0
-            ramp_low_tmp = 0.0
-            # return False
             returnflag = False
 
         if self.thermostat_mode == 'Cooling':
-            # print("temp mod: " + str(self.basepoint_cooling) + " -> " + str(self.cooling_setpoint))
             self.cooling_setpoint = setpoint_tmp
-            if cooling_setpoint_lower < self.cooling_setpoint < cooling_setpoint_upper:
-                # log.info('cooling_setpoint is within the bounds.')
+            if self.cooling_setpoint_lower < self.cooling_setpoint < self.cooling_setpoint_upper:
                 pass
             else:
                 log.log(model_diag_level,
                         '{} {} -- cooling_setpoint ({}), outside of nominal range {} to {}'
-                        .format(self.name, sim_time, self.cooling_setpoint, cooling_setpoint_lower, cooling_setpoint_upper))
-        elif self.thermostat_mode == 'Heating':
-            # print("temp mod: " + str(self.basepoint_heating) + " -> " + str(self.heating_setpoint))
+                        .format(self.name, sim_time, self.cooling_setpoint, self.cooling_setpoint_lower,
+                                self.cooling_setpoint_upper))
+        else:
             self.heating_setpoint = setpoint_tmp
-            if heating_setpoint_lower < self.heating_setpoint < heating_setpoint_upper:
-                # log.info('heating_setpoint is within the bounds.')
+            if self.heating_setpoint_lower < self.heating_setpoint < self.heating_setpoint_upper:
                 pass
             else:
                 log.log(model_diag_level,
                         '{} {} -- heating_setpoint ({}), outside of nominal range of {} to {}'
-                        .format(self.name, sim_time, self.heating_setpoint, heating_setpoint_lower, heating_setpoint_upper))
-
-        price_curve = [self.bid_rt[0][1], self.bid_rt[1][1], self.bid_rt[2][1], self.bid_rt[3][1]]
-        quantity_curve = [self.bid_rt[0][0], self.bid_rt[1][0], self.bid_rt[2][0], self.bid_rt[3][0]]
-        if price_curve[1] <= self.cleared_price <= price_curve[0]:
-            a = (quantity_curve[1] - quantity_curve[0])/(price_curve[1] - price_curve[0])
-            b = quantity_curve[1] - a * price_curve[1]
-            self.bid_quantity = a * self.cleared_price + b
-        elif price_curve[1] >= self.cleared_price >= price_curve[2]:
-            #a = (quantity_curve[2] - quantity_curve[1]) / (price_curve[2] - price_curve[1])
-            #b = quantity_curve[1] - a * price_curve[1]
-            #self.bid_quantity = a * self.cleared_price + b
-            self.bid_quantity = quantity_curve[1]
-        elif price_curve[2] >= self.cleared_price >= price_curve[3]:
-            a = (quantity_curve[3] - quantity_curve[2]) /(price_curve[3] - price_curve[2])
-            b = quantity_curve[2] - a * price_curve[2]
-            self.bid_quantity = a * self.cleared_price + b
-        elif self.cleared_price > price_curve[0]:
-            self.bid_quantity = 0  # assuming this is minimum
-        elif self.cleared_price < price_curve[3]:
-            self.bid_quantity = self.hvac_kw  # assuming this is maximum
-        else:
-            self.bid_quantity = 0
-            print("something went wrong with clear price")
+                        .format(self.name, sim_time, self.heating_setpoint, self.heating_setpoint_lower,
+                                self.heating_setpoint_upper))
 
         if self.heating_setpoint + self.deadband / 2.0 >= self.cooling_setpoint - self.deadband / 2.0:
             if self.thermostat_mode == 'Heating':
                 # push cooling_setpoint up
                 self.cooling_setpoint = self.heating_setpoint + self.deadband
-            else:  # self.thermostat_mode == 'Cooling' or 'OFF':
+            else:
                 # push heating_setpoint down
                 self.heating_setpoint = self.cooling_setpoint - self.deadband
 
-        # print("RT quantities",self.name,sim_time)
-        # print("setpoint_rt,self.temp_room[0],self.cleared_price,self.price_forecast[0],self.price_forecast_0,self.price_std_dev")
-        # print(setpoint_rt,self.temp_room[0],self.cleared_price,self.price_forecast[0],self.price_forecast_0,self.price_std_dev,self.price_delta)
-        # print("self.ramp_high_cool,self.ramp_low_cool,self.range_high_cool,self.range_low_cool")
-        # print(ramp_high_tmp,ramp_low_tmp,self.range_high_cool,self.range_low_cool)
-        # print("Thermostat mode ", "cooling_setpoint","heating_setpoint")
-        # print(self.thermostat_mode,self.cooling_setpoint,self.heating_setpoint)
+        # this is needed to update temp mass based on cleared setpoint
+        # update agent air temp for debugging
+        T = (self.bid_delay + self.period) / 3600.0
+        time = np.linspace(0, T, num=10)
+        x = np.zeros([2, 1])
+        x[0] = self.air_temp
+        x[1] = self.mass_temp
+        hvac_on_tmp = self.hvac_on
+        for itime in range(1, len(time)):
+            eAET = linalg.expm(self.A_ETP * T / 10.0)
+            AIET = np.dot(self.AEI, eAET)
+            AEx = np.dot(self.A_ETP, x)
+            if hvac_on_tmp:
+                AxB = AEx + self.B_ETP_ON
+                AIB = np.dot(self.AEI, self.B_ETP_ON)
+                AExB = np.dot(AIET, AxB)
+                x = AExB - AIB
+                # temp[itime] = xn[0]
+                # self.mass_temp = xn[1]
+                # check if HVAC changes status
+                # temp_curve_tmp[itime] = x[0][0]
+                # Q_max = time[itime] * self.hvac_kw / T
+                if (x[0][0] < self.cooling_setpoint - self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
+                        (x[0][0] > self.heating_setpoint + self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
+                    hvac_on_tmp = False
+            else:
+                AxB = AEx + self.B_ETP_OFF
+                AIB = np.dot(self.AEI, self.B_ETP_OFF)
+                AExB = np.dot(AIET, AxB)
+                x = AExB - AIB  # + self.deadband/2.0
+                # temp[itime] = x[0]
+                # self.mass_temp = x[1]
+                # temp_curve_tmp[itime] = x[0][0]
+                # Q_min = (T - time[itime]) * self.hvac_kw / T
+                if (x[0][0] > self.cooling_setpoint + self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
+                        (x[0][0] < self.heating_setpoint - self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
+                    hvac_on_tmp = True
+            # temp[itime] = x[0][0]  # this should be updated for each itime
 
+        self.air_temp_agent = x[0][0]  # this gets updated at the end
+        self.mass_temp = x[1][0]  # this gets updated at the end
 
+        # if self.name == "R4_12_47_1_tn_9_hse_1":
+        #     print("RT clearing",self.name,sim_time,self.hvac_on,self.hvac_kw)
+        #     print("temp",setpoint_tmp,self.temp_room[0],self.temp_curve)
+        #     print("quan",self.bid_quantity,self.Qopt_da_prev,self.quantity_curve)
+        #     print("price",self.cleared_price,self.price_forecast_0)
+        #     print("bid",self.bid_rt)
         return returnflag
 
     def change_solargain(self, moh, hod, dow):
@@ -1150,7 +1237,6 @@ class HVACDSOT:  # TODO: update class name
         self.day = dow
 
         self.solar_heatgain = 0.0  # we need to record the value first without error here
-        # self.solar_heatgain = solar_gain[int(hod)*60+int(moh)] / 40.548 # bringing solar gain to nominal for the use in different homes
 
     def change_basepoint(self, moh, hod, dow, model_diag_level, sim_time):
         """ Updates the time-scheduled thermostat setting
@@ -1210,7 +1296,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = parse_number(fncs_str)
         if val > 0.0:
             self.house_kw = val
 
@@ -1220,7 +1306,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = parse_number(fncs_str)
         if val > 0.0:
             self.hvac_kw = val
 
@@ -1230,7 +1316,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with load in kW
         """
-        val = helpers.parse_fncs_number(fncs_str)
+        val = parse_number(fncs_str)
         if val >= 0.0:
             self.wh_kw = val
 
@@ -1251,24 +1337,29 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with temperature in degrees Fahrenheit
             model_diag_level (int): Specific level for logging errors; set to 11
-            sim_time (str): Current time in the simulation; should be human readable
+            sim_time (str): Current time in the simulation; should be human-readable
         """
-        self.air_temp = helpers.parse_fncs_number(fncs_str)
-        if 60 < self.air_temp < 90:
-            # log.info('air_temp is within the bounds.')
+        T_air = parse_number(fncs_str)
+        if self.T_lower_limit < T_air < self.T_upper_limit:
             pass
         else:
+            # No more than 20deg swing in an hour
+            if self.air_temp - 20 < T_air < self.air_temp + 20:
+                T_air = self.air_temp
+                log.log(model_diag_level,
+                        '{} Severe Warning temp {}: 20 degree swing, setting to last temperature'
+                        .format(self.name, T_air))
             log.log(model_diag_level,
-                    '{} {} -- air_temp ({}) is out of bounds.'
-                    .format(self.name, sim_time, self.air_temp))
-        # TODO: This is a correction within the hour for the DA prediction of thermostat mode - hard-coded for testing
-        # using heating as default
-        if self.air_temp >= (self.temp_min_cool + self.temp_max_heat)/2.0:  # self.deadband / 2.0:
+                    '{} {} -- air_temp ({}) is out of bounds, outside of nominal range of {} to {}.'
+                    .format(self.name, sim_time, self.air_temp, self.T_lower_limit, self.T_upper_limit))
+        self.air_temp = T_air
+
+        # This is a correction within the hour for the DA prediction of thermostat mode using heating as default
+        if self.air_temp >= (self.temp_min_cool + self.temp_max_heat) / 2.0:
+            # if self.air_temp >= self.temp_min_cool + self.deadband / 2.0:
             self.thermostat_mode = 'Cooling'
-        else:  # self.air_temp <= self.temp_max_heat + self.deadband / 2.0:
+        else:
             self.thermostat_mode = 'Heating'
-        #else:
-        #    self.thermostat_mode = 'OFF'
 
     def set_voltage(self, fncs_str):
         """ Sets the mtr_v attribute
@@ -1276,7 +1367,7 @@ class HVACDSOT:  # TODO: update class name
         Args:
             fncs_str (str): FNCS message with meter line-neutral voltage
         """
-        self.mtr_v = helpers.parse_fncs_magnitude(fncs_str)
+        self.mtr_v = parse_magnitude(fncs_str)
 
     def formulate_bid_rt(self, model_diag_level, sim_time):
         """ Bid to run the air conditioner through the next period for real-time
@@ -1288,9 +1379,8 @@ class HVACDSOT:  # TODO: update class name
         Returns:
             [[float, float], [float, float], [float, float], [float, float]]: [bid price $/kwh, bid quantity kW] x 4
         """
-        # print("heat_type " + str(self.heating_system_type))
-        # print("Heating " + str(self.thermostat_mode))
         if self.heating_system_type != 'HEAT_PUMP' and self.thermostat_mode == 'Heating':
+            self.cooling_setpoint = self.temp_min_cool
             self.bid_rt = [[0, 0], [0, 0], [0, 0], [0, 0]]
             return self.bid_rt
 
@@ -1301,23 +1391,6 @@ class HVACDSOT:  # TODO: update class name
         heating_capacity_adj = self.design_heating_capacity * (
                 self.heating_capacity_K0 + self.heating_capacity_K1 * self.outside_air_temperature
                 + self.heating_capacity_K2 * self.outside_air_temperature * self.outside_air_temperature)
-
-        # TODO: I don't think this is needed
-        if self.outside_air_temperature < self.cooling_COP_limit:
-            self.cooling_cop_adj_rt = self.cooling_COP / (
-                        self.cooling_COP_K0 + self.cooling_COP_K1 * self.cooling_COP_limit)
-        else:
-            self.cooling_cop_adj_rt = self.cooling_COP / (
-                        self.cooling_COP_K0 + self.cooling_COP_K1 * self.outside_air_temperature)
-
-        if self.outside_air_temperature > self.heating_COP_limit:
-            self.heating_cop_adj_rt = self.heating_COP / (
-                        self.heating_COP_K0 + self.heating_COP_K1 * self.heating_COP_limit)
-        else:
-            self.heating_cop_adj_rt = self.heating_COP / (self.heating_COP_K0
-                                                       + self.heating_COP_K1 * self.outside_air_temperature
-                                                       + self.heating_COP_K2 * self.outside_air_temperature * self.outside_air_temperature
-                                                       + self.heating_COP_K3 * self.outside_air_temperature * self.outside_air_temperature * self.outside_air_temperature)
 
         # TODO: need to check if this is needed anymore
         if self.thermostat_mode == 'Heating':
@@ -1336,14 +1409,9 @@ class HVACDSOT:  # TODO: update class name
 
         # estimating the HVAC consumption based on the last reported from GLD
         Qi = (self.house_kw - abs(Qh_org) - self.wh_kw) * 3412.1416331279
+        if Qi <= 0.0:
+            Qi = 0.0
 
-        # Qi = kW_meter_GLD - Qh - Qwh
-        # Qi = Qi(t-1) + (Qi(t-1)-Qi(t-2))*dt
-
-        # Qs = self.solar_heatgain_factor * (self.solar_direct + self.solar_diffuse)
-        # Qs = sum( (Aw_o*SHGF_o) * Solar_Irradiance_o)
-
-        #Qs = self.solar_heatgain * self.solar_heatgain_factor
         Qs = self.solar_gain * self.solar_heatgain_factor
 
         T = (self.bid_delay + self.period) / 3600.0  # 300
@@ -1358,182 +1426,201 @@ class HVACDSOT:  # TODO: update class name
         self.Qa_OFF = Qa_OFF
         self.Qm = QM
         self.Qs = Qs
-        x = np.zeros([2, 1])
-        x[0] = self.air_temp
-        x[1] = self.mass_temp
-        A_ETP = np.zeros([2, 2])
-        B_ETP_ON = np.zeros([2, 1])
-        B_ETP_OFF = np.zeros([2, 1])
+        # x = np.zeros([2, 1])
+        # x[0] = self.air_temp
+        # x[1] = self.mass_temp
+        # self.A_ETP = np.zeros([2, 2])
+        # self.B_ETP_ON = np.zeros([2, 1])
+        # self.B_ETP_OFF = np.zeros([2, 1])
 
         if self.CA != 0.0:
-            A_ETP[0][0] = -1.0 * (self.UA + self.HM) / self.CA
-            A_ETP[0][1] = self.HM / self.CA
-            B_ETP_ON[0] = (self.UA * self.outside_air_temperature / self.CA) + (Qa_ON / self.CA)
-            B_ETP_OFF[0] = (self.UA * self.outside_air_temperature / self.CA) + (Qa_OFF / self.CA)
+            self.A_ETP[0][0] = -1.0 * (self.UA + self.HM) / self.CA
+            self.A_ETP[0][1] = self.HM / self.CA
+            self.B_ETP_ON[0] = (self.UA * self.outside_air_temperature / self.CA) + (Qa_ON / self.CA)
+            self.B_ETP_OFF[0] = (self.UA * self.outside_air_temperature / self.CA) + (Qa_OFF / self.CA)
 
         if self.CM != 0.0:
-            A_ETP[1][0] = self.HM / self.CM
-            A_ETP[1][1] = -1.0 * self.HM / self.CM
-            B_ETP_ON[1] = QM / self.CM
-            B_ETP_OFF[1] = QM / self.CM
+            self.A_ETP[1][0] = self.HM / self.CM
+            self.A_ETP[1][1] = -1.0 * self.HM / self.CM
+            self.B_ETP_ON[1] = QM / self.CM
+            self.B_ETP_OFF[1] = QM / self.CM
 
+        self.AEI = np.linalg.inv(self.A_ETP)
 
-        AEI = np.linalg.inv(A_ETP)
-        # if self.name == "R5_12_47_2_tn_2_hse_1":
-        #     print(self.name)
-        #     print("HVAC STAT " + str(self.hvac_on))
-        #     print("Ther mode ",self.thermostat_mode)
-        # log.debug("outdoor temp " + str(self.outside_air_temperature))
+        # interpolating the DA quantities into RT
+        if self.interpolation:
+            if self.RT_minute_count_interpolation == 0.0:
+                self.delta_Q = (self.bid_da[0][1][0] - self.previous_Q_DA)
+                self.delta_T = (self.temp_room[0] - self.previous_T_DA)
+            if self.RT_minute_count_interpolation == 30.0:
+                self.delta_Q = (self.bid_da[1][1][0] - self.previous_Q_DA) * 0.5
+                self.delta_T = (self.temp_room[1] - self.previous_T_DA) * 0.5
+            Qopt_DA = self.previous_Q_DA + self.delta_Q * (5.0 / 30.0)
+            Topt_DA = self.previous_T_DA + self.delta_T * (5.0 / 30.0)
+            self.previous_Q_DA = Qopt_DA
+            self.previous_T_DA = Topt_DA
+        else:
+            Qopt_DA = self.bid_da[0][1][0]
+            Topt_DA = self.temp_room[0]
 
-        # if we are enforcing DA bid, use DA bid quantity and temperature (in price clear)
-        Qopt_DA = self.bid_da[0][1][0]
-        topt = self.temp_room[0]
-        #Q1 = Qopt_DA - 0.2/2.0 * Qopt_DA#self.hvac_kw
-        #Q2 = Qopt_DA + 0.2/2.0 * Qopt_DA#self.hvac_kw
-        #topt = Qopt_DA / self.hvac_kw * T
-        #t1 = Q1 / self.hvac_kw * T
-        #t2 = Q2 / self.hvac_kw * T
-        #dt = (t2-t1)/2.0
+        time = np.linspace(0, T, num=10)  # [0,topt-dt, topt, topt+dt]
+        # TODO: this needs to be more generic, like a function of slider
+        npt = 5
+        self.temp_curve = [0 for i in range(npt)]
+        for itemp in range(npt):
+            # self.temp_curve = [self.temp_room[0]-1.0*self.slider,self.temp_room[0]-0.5*self.slider,self.temp_room[0],self.temp_room[0]+0.5*self.slider,self.temp_room[0]+1.0*self.slider]
+            self.temp_curve[itemp] = Topt_DA + (itemp - 2) / 4.0 * self.slider
+        # for it in range(5):
+        #     if ((Tset_array[it] > self.temp_max_cool or Tset_array[it] < self.temp_min_cool) and self.thermostat_mode == "Cooling") or \
+        #         ((Tset_array[it] > self.temp_max_heat or Tset_array[it] < self.temp_min_heat) and self.thermostat_mode == "Heating"):
+        #         Tset_array.pop(it)
+        self.quantity_curve = [0 for i in self.temp_curve]
+        # if self.name == "R4_12_47_1_tn_9_hse_1":
+        #     print("RT bidding",self.name,sim_time,self.hvac_on,self.hvac_kw,self.thermostat_mode)
+        #     print(self.minute, self.temp_room[0], self.temp_da_prev, Topt_DA)
+        #     print(self.UA,self.HM,self.CA,self.CM)
+        #     print(self.outside_air_temperature,self.air_temp,self.mass_temp)
+        #     print(Qs,Qi,QM,Qa_OFF,Qa_ON)
 
-        time = np.linspace(0,T,num=10) #[0,topt-dt, topt, topt+dt]
-        # temp_curve_tmp = [0 for i in range(len(time))]
-        # quan_curve_tmp = [0 for i in range(len(time))]
-        # temp = [0 for i in range(len(time))]
-        # temp_mass = [0 for i in range(len(time))]
+        for itemp in range(len(self.temp_curve)):
+            x = np.zeros([2, 1])
+            x[0] = self.air_temp
+            x[1] = self.mass_temp
+            Q_max = self.hvac_kw
+            Q_min = 0.0
 
-        x = np.zeros([2, 1])
-        x[0] = self.air_temp
-        x[1] = self.mass_temp
-        Q_max = self.hvac_kw
-        Q_min = 0.0
-        # TODO: I need to have 3 runs for the model
-        # 1 - find the projection of the temperatures for the next 5 minutes - temp mass
-        # 2 - find the bid when HVAC is ON
-        # 3 - find the bid when HVAC is OFF
-        RT_debug = True
-        if RT_debug:
-            for itime in range(0, len(time)):
-                eAET = linalg.expm(A_ETP * T / 10.0)
-                AIET = np.dot(AEI, eAET)
-                AEx = np.dot(A_ETP, x)
-                if self.hvac_on:
-                    AxB = AEx + B_ETP_ON
-                    AIB = np.dot(AEI, B_ETP_ON)
+            # self.temp_curve[0] = self.air_temp
+            if (self.thermostat_mode == "Cooling" and self.hvac_on) or (self.thermostat_mode != "Cooling" and not self.hvac_on):
+                self.temp_curve[0] = self.air_temp + self.deadband / 2.0
+            elif (self.thermostat_mode != "Cooling" and self.hvac_on) or (self.thermostat_mode == "Cooling" and not self.hvac_on):
+                self.temp_curve[0] = self.air_temp - self.deadband / 2.0
+            hvac_on_tmp = self.hvac_on
+            last_T_off = 0
+            last_T_on = 0
+            Q_total = 0
+            # TODO: I need to have 3 runs for the model
+            # 1 - determine ETP curve for temp vs. quan for RT clearing
+            # 2 - find the bid when HVAC is ON
+            # 3 - find the bid when HVAC is OFF
+            for itime in range(1, len(time)):
+                # this is based on the assumption that only one status change happens in 5-min period
+                eAET = linalg.expm(self.A_ETP * T / 10.0)
+                AIET = np.dot(self.AEI, eAET)
+                AEx = np.dot(self.A_ETP, x)
+                if hvac_on_tmp:
+                    AxB = AEx + self.B_ETP_ON
+                    AIB = np.dot(self.AEI, self.B_ETP_ON)
                     AExB = np.dot(AIET, AxB)
                     x = AExB - AIB
-                    # temp[itime] = xn[0]
-                    # self.mass_temp = xn[1]
-                    # check if HVAC changes status
-                    # temp_curve_tmp[itime] = x[0][0]
-                    # quan_curve_tmp[itime] = time[itime] * self.hvac_kw / T
-                    #Q_max = time[itime] * self.hvac_kw / T
-                    if (x[0][0] < self.cooling_setpoint - self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
-                            (x[0][0] > self.heating_setpoint + self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
-                        self.hvac_on = False
+                    # if self.thermostat_mode == "Cooling":
+                    #     # self.temp_curve[0] = self.air_temp + self.deadband / 2.0
+                    #     self.temp_curve[itime] = x[0][0] + self.deadband/2.0
+                    # else:
+                    #     # self.temp_curve[0] = self.air_temp - self.deadband / 2.0
+                    #     self.temp_curve[itime] = x[0][0] - self.deadband / 2.0
+                    # last_T_on = time[itime]
+                    Q_total += 1 / 10 * self.hvac_kw
+                    # self.quantity_curve[itime] = (time[itime]-last_T_off) * self.hvac_kw / T
+                    if (x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
+                            (x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
+                        hvac_on_tmp = False
                 else:
-                    AxB = AEx + B_ETP_OFF
-                    AIB = np.dot(AEI, B_ETP_OFF)
+                    AxB = AEx + self.B_ETP_OFF
+                    AIB = np.dot(self.AEI, self.B_ETP_OFF)
                     AExB = np.dot(AIET, AxB)
-                    x = AExB - AIB  # + self.deadband/2.0
-                    # temp[itime] = x[0]
-                    # self.mass_temp = x[1]
-                    # temp_curve_tmp[itime] = x[0][0]
-                    # quan_curve_tmp[itime] = 0
-                    #Q_min = (T - time[itime]) * self.hvac_kw / T
-                    if (x[0][0] > self.cooling_setpoint + self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
-                            (x[0][
-                                 0] < self.heating_setpoint - self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
-                        self.hvac_on = True
+                    x = AExB - AIB
+                    # if self.thermostat_mode == "Cooling":
+                    #     # self.temp_curve[0] = self.air_temp - self.deadband / 2.0
+                    #     self.temp_curve[itime] = x[0][0] - self.deadband/2.0
+                    # else:
+                    #     # self.temp_curve[0] = self.air_temp + self.deadband / 2.0
+                    #     self.temp_curve[itime] = x[0][0] + self.deadband / 2.0
+                    # self.quantity_curve[itime] = last_T_on * self.hvac_kw / T
+                    # last_T_off = time[itime]
+                    if (x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
+                            (x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
+                        hvac_on_tmp = True
+                # self.temp_curve[itime] = x[0][0]
+                # if self.thermostat_mode == "Cooling":
+                #     # self.temp_curve[0] = self.air_temp + self.deadband / 2.0
+                #     self.temp_curve[itime] = x[0][0] - self.deadband / 2.0
+                # else:
+                #     # self.temp_curve[0] = self.air_temp - self.deadband / 2.0
+                #     self.temp_curve[itime] = x[0][0] + self.deadband / 2.0
 
-                # temp[itime] = x[0][0]  # this should be updated for each itime
-                # temp_mass[itime] = x[1][0]
-            self.air_temp_agent = x[0][0] # this gets updated at the end
-            self.mass_temp = x[1][0] # this gets updated at the end
-            # if self.name == "R5_12_47_2_tn_2_hse_1":
-            #     print(self.name)
-            #     print("HVAC STAT " + str(self.hvac_on))
-            #     print("GLD temp ", self.air_temp)
-            #     print("agent temp ", self.air_temp_agent)
-            #     print("agent mass ",self.mass_temp)
-        elif True:
-            # for self.hvac_on==True
-            x = np.zeros([2, 1])
-            x[0] = self.air_temp
-            x[1] = self.mass_temp
-            for itime in range(0,len(time)):
-                # eAET = np.exp(A_ETP*itime)
-                # find the trajectory of each point from x_org
-                #eAET = linalg.expm(A_ETP * time[itime])  # T/ 100.0)
-                eAET = linalg.expm(A_ETP * T/ len(time))
-                AIET = np.dot(AEI, eAET)
-                AEx = np.dot(A_ETP, x)
+            self.quantity_curve[itemp] = Q_total
 
-                #if self.hvac_on:
-                AxB = AEx + B_ETP_ON
-                AIB = np.dot(AEI, B_ETP_ON)
-                AExB = np.dot(AIET, AxB)
-                x = AExB - AIB  # - self.deadband/2.0
-                # temp[itime] = xn[0]
-                # self.mass_temp = xn[1]
-                # check if HVAC changes status
-                # temp_curve_tmp[itime] = x[0][0]
-                # quan_curve_tmp[itime] = time[itime] * self.hvac_kw / T
-                Q_max = time[itime] * self.hvac_kw / T
-                if (x[0][0] < self.temp_min_cool - self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
-                        (x[0][0] > self.temp_max_heat + self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
-                    #self.hvac_on = False
-                    break
+        # # for self.hvac_on==True
+        # x = np.zeros([2, 1])
+        # x[0] = self.air_temp
+        # x[1] = self.mass_temp
+        # for itime in range(1,len(time)):
+        #     # find the trajectory of each point from x_org
+        #     eAET = linalg.expm(A_ETP * T/ len(time))
+        #     AIET = np.dot(AEI, eAET)
+        #     AEx = np.dot(A_ETP, x)
+        #
+        #     #if self.hvac_on:
+        #     AxB = AEx + B_ETP_ON
+        #     AIB = np.dot(AEI, B_ETP_ON)
+        #     AExB = np.dot(AIET, AxB)
+        #     x = AExB - AIB
+        #     Q_max = time[itime] * self.hvac_kw / T
+        #     if (x[0][0] < self.temp_min_cool - self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
+        #             (x[0][0] > self.temp_max_heat + self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
+        #         break
+        #
+        # # for self.hvac_on==False
+        # x = np.zeros([2, 1])
+        # x[0] = self.air_temp
+        # x[1] = self.mass_temp
+        # for itime in range(1, len(time)):
+        #     # find the trajectory of each point from x_org
+        #     eAET = linalg.expm(A_ETP * T / len(time))
+        #     AIET = np.dot(AEI, eAET)
+        #     AEx = np.dot(A_ETP, x)
+        #
+        #     AxB = AEx + B_ETP_OFF
+        #     AIB = np.dot(AEI, B_ETP_OFF)
+        #     AExB = np.dot(AIET, AxB)
+        #     x = AExB - AIB
+        #     Q_min = (T-time[itime])*self.hvac_kw / T
+        #
+        #     if (x[0][0] > self.temp_max_cool + self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
+        #             (x[0][0] < self.temp_min_heat - self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
+        #         break
 
-                # temp[itime] = x[0][0]  # this should be updated for each itime
-                # temp_mass[itime] = x[1][0]
-
-            # for self.hvac_on==False
-            x = np.zeros([2, 1])
-            x[0] = self.air_temp
-            x[1] = self.mass_temp
-            for itime in range(0, len(time)):
-                # eAET = np.exp(A_ETP*itime)
-                # find the trajectory of each point from x_org
-                # eAET = linalg.expm(A_ETP * time[itime])  # T/ 100.0)
-                eAET = linalg.expm(A_ETP * T / len(time))
-                AIET = np.dot(AEI, eAET)
-                AEx = np.dot(A_ETP, x)
-
-                #else:
-                AxB = AEx + B_ETP_OFF
-                AIB = np.dot(AEI, B_ETP_OFF)
-                AExB = np.dot(AIET, AxB)
-                x = AExB - AIB  # + self.deadband/2.0
-                # temp[itime] = x[0]
-                # self.mass_temp = x[1]
-                # temp_curve_tmp[itime] = x[0][0]
-                # quan_curve_tmp[itime] = 0
-                Q_min = (T-time[itime])*self.hvac_kw / T
-
-                if (x[0][0] > self.temp_max_cool + self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
-                        (x[0][0] < self.temp_min_heat - self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
-                    #self.hvac_on = True
-                    break
-
-                # self.air_temp_agent = x[0][0]
-                # self.mass_temp = x[1][0]  # this should be updated at T only
+        # # TODO: for testing - using RT quan curve to find Qmin and Qmax
+        Q_min = min(self.quantity_curve)
+        Q_max = max(self.quantity_curve)
 
         delta_DA_price = max(self.price_forecast) - min(self.price_forecast)
+        # if self.slider!=0:
+        #     self.ProfitMargin_slope = delta_DA_price/(Q_min-Q_max)/self.slider # 0  # hvac_dict['ProfitMargin_slope']
+        # else:
+        #     self.ProfitMargin_slope = 9999 # just a large value to prevent errors when slider=0
+        #
+        self.price_forecast_0_new = self.price_forecast[0]
+        # delta_DA_price = max(self.price_forecast_DA) - min(self.price_forecast_DA)
         BID = [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
         P = 1
         Q = 0
+        # Qopt_DA = self.bid_da[0][1][0]*min_adj/60.0 + self.Qopt_da_prev*(1-min_adj/60.0)
+        # Qopt_DA = self.bid_da[0][1][0]
+        # self.bid_quantity_rt = Qopt_DA
+        # topt = self.temp_room[0]
         if Q_min != Q_max:
-            CurveSlope = delta_DA_price / (Q_min - Q_max) * (1 + self.ProfitMargin_slope / 100)
-            yIntercept = self.price_forecast[0] - CurveSlope * self.bid_da[0][1][0]# / 12
-            if self.bid_da[0][1][0] < Q_max and self.bid_da[0][1][0] > Q_min:
+            CurveSlope = (delta_DA_price / (0 - self.hvac_kw) * (1 + self.ProfitMargin_slope / 100))
+            yIntercept = self.price_forecast_0 - CurveSlope * Qopt_DA
+            if Q_max > Qopt_DA > Q_min:
                 BID[0][Q] = Q_min
-                BID[1][Q] = self.bid_da[0][1][0]
-                BID[2][Q] = self.bid_da[0][1][0]
+                BID[1][Q] = Qopt_DA
+                BID[2][Q] = Qopt_DA
                 BID[3][Q] = Q_max
 
                 BID[0][P] = Q_min * CurveSlope + yIntercept + (self.ProfitMargin_intercept / 100) * delta_DA_price
-                BID[1][P] = self.bid_da[0][1][0] * CurveSlope + yIntercept + (self.ProfitMargin_intercept / 100) * delta_DA_price
-                BID[2][P] = self.bid_da[0][1][0] * CurveSlope + yIntercept - (self.ProfitMargin_intercept / 100) * delta_DA_price
+                BID[1][P] = Qopt_DA * CurveSlope + yIntercept + (self.ProfitMargin_intercept / 100) * delta_DA_price
+                BID[2][P] = Qopt_DA * CurveSlope + yIntercept - (self.ProfitMargin_intercept / 100) * delta_DA_price
                 BID[3][P] = Q_max * CurveSlope + yIntercept - (self.ProfitMargin_intercept / 100) * delta_DA_price
             else:
                 BID[0][Q] = Q_min
@@ -1572,31 +1659,13 @@ class HVACDSOT:  # TODO: update class name
             print("Error in calculation of Q_max", Q_max)
 
         self.bid_rt = BID
-
+        self.RT_minute_count_interpolation = self.RT_minute_count_interpolation + 5.0
         return self.bid_rt
 
     def get_uncntrl_hvac_load(self, moh, hod, dow):
         self.DA_model_parameters(moh, hod, dow)
-        if self.thermostat_mode == 'Cooling':
-            temp_room = self.temp_desired_48hour_cool
-            cop_adj = (-np.array(self.cooling_cop_adj)).tolist()
-        else:
-            cop_adj = self.heating_cop_adj
-            temp_room = self.temp_desired_48hour_heat
-        # else:
-        #     raise ValueError("thermostate mode must be set to either Cooling or Heating")
         Quantity = []
-        # print(self.name, "******")
-        # print("mode: ",self.thermostat_mode)
-        # print("temp_room: ", temp_room)
-        # print("temperature_forecast: ", self.temperature_forecast)
-        # print("eps: ", self.eps)
-        # print("internalgain_forecast: ", self.internalgain_forecast)
-        # print("solargain_forecast: ", self.solargain_forecast)
-        # print("solar_heatgain_factor: ", self.solar_heatgain_factor)
-        # print("latent_factor: ", self.latent_factor)
-        # print("cop_adj: ", cop_adj)
-        # print("temp_room_init: ", self.temp_room_init)
+
         for t in self.TIME:
             # estimate required quantity for cooling
             temp_room = self.temp_desired_48hour_cool
@@ -1642,6 +1711,9 @@ class HVACDSOT:  # TODO: update class name
             BID (float) (windowLength X 4 X 2): DA bids to be sent to the retail DA market
         """
 
+        # save the previous bid quantity for interpolation use
+        self.Qopt_da_prev = self.bid_da[0][1][0]
+        self.price_forecast_0 = self.price_forecast[0]
         BID = [[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] for _ in self.TIME]
         if self.heating_system_type != 'HEAT_PUMP' and self.thermostat_mode == 'Heating':
             self.bid_da = BID
@@ -1689,6 +1761,7 @@ class HVACDSOT:  # TODO: update class name
                     BID[t][i][P] = 0
 
         self.bid_da = BID
+        self.RT_minute_count_interpolation = float(0.0)
 
         return self.bid_da
 
@@ -1751,15 +1824,14 @@ class HVACDSOT:  # TODO: update class name
         self.dow = dow3
         # temp_desired_48hour
         self.temp_delta = self.temp_max_48hour - self.temp_min_48hour
-        self.price_forecast_0 = self.price_forecast[0] # to be used in RT clearing
-        # using DA parameters to figure out the schedule forecast
+        # self.price_forecast_0 = self.price_forecast[0] # to be used in RT clearing
+
         for itime in range(self.windowLength):
             hod4 = hod3 + moh3 / 60 + itime + 1 / 60  # to take into account the 60 sec shift
             val_cool, val_heat = self.get_scheduled_setpt(moh3, hod4, dow3)
             # update temp limits
             self.update_temp_limits_da(val_cool, val_heat)
 
-            # self.basepoint_cooling = val_cool
             # making sure the desired temperature falls between min and max temp values
             # these values are used to adjust the basepoint and vice-versa
             if val_cool > self.temp_max_cool_da:
@@ -1771,19 +1843,7 @@ class HVACDSOT:  # TODO: update class name
             if val_heat < self.temp_min_heat_da:
                 val_heat = self.temp_min_heat_da
             self.temp_desired_48hour_cool[itime] = val_cool
-            # # self.basepoint_heating = val_heat
             self.temp_desired_48hour_heat[itime] = val_heat
-            # # print("new DA schedule")
-        # print (self.temp_desired_48hour_heat)
-
-        #TODO: might need to look ahead at the temperature forecast and decide a mode of operation
-        #print("temperature forecast average ", np.mean(self.temperature_forecast))
-        '''
-        if np.mean(self.temperature_forecast) >= 72.5:
-            self.thermostat_mode = 'Cooling'
-        else:
-            self.thermostat_mode = 'Heating'
-        '''
 
         voltage_adj = 1  # voltage adjustment factor due to voltage dependent ZIP load
 
@@ -1791,102 +1851,68 @@ class HVACDSOT:  # TODO: update class name
             self.latent_factor[t] = ((1 + 0.1 + self.latent_load_fraction / (
                     1 + math.exp(4 - 10 * self.humidity_forecast[t]))) * voltage_adj)
 
-            if self.thermostat_mode =='Cooling':
-                # use adjusted COP for each step
-                if self.temperature_forecast[t] < self.cooling_COP_limit:
-                    self.cooling_cop_adj[t] = self.cooling_COP / (
-                            self.cooling_COP_K0 + self.cooling_COP_K1 * self.cooling_COP_limit)
-                else:
-                    self.cooling_cop_adj[t] = self.cooling_COP / (
-                            self.cooling_COP_K0 + self.cooling_COP_K1 * self.temperature_forecast[t])
-            else:  # if self.thermostat_mode == 'Heating':
-                # use adjusted COP for each step
-                if self.temperature_forecast[t] < self.heating_COP_limit:
-                    # self.heating_cop_adj[t] = self.heating_COP / (
-                    #         self.heating_COP_K0 + self.heating_COP_K1 * self.heating_COP_limit)
-                    self.heating_cop_adj[t] = self.heating_COP / (
-                                self.heating_COP_K0 + self.heating_COP_K1 * self.heating_COP_limit +
-                                self.heating_COP_K2 * self.heating_COP_limit**2 +
-                                self.heating_COP_K3 * self.heating_COP_limit**3)
-                else:
-                    # self.heating_cop_adj[t] = self.heating_COP / (
-                    #         self.heating_COP_K0 + self.heating_COP_K1 * self.temperature_forecast[t])
-                    self.heating_cop_adj[t] = self.heating_COP / (
-                            self.heating_COP_K0 + self.heating_COP_K1 * self.temperature_forecast[t] +
-                            self.heating_COP_K2 * self.temperature_forecast[t] ** 2 +
-                            self.heating_COP_K3 * self.temperature_forecast[t] ** 3)
+            # update cooling_cop_adj
+            # use adjusted COP for each step
+            if self.temperature_forecast[t] < self.cooling_COP_limit:
+                self.cooling_cop_adj[t] = self.cooling_COP / (
+                        self.cooling_COP_K0 + self.cooling_COP_K1 * self.cooling_COP_limit)
+            else:
+                self.cooling_cop_adj[t] = self.cooling_COP / (
+                        self.cooling_COP_K0 + self.cooling_COP_K1 * self.temperature_forecast[t])
 
-        self.temp_room_init = self.air_temp
-        # if self.thermostat_mode == 'Cooling':
-        #     self.temp_room_init = self.temp_desired_48hour_cool[0]
-        # else:
-        #     self.temp_room_init = self.temp_desired_48hour_heat[0]
-        # self.temp_outside_init = self.outside_air_temperature
+            # update heating_cop_adj
+            # use adjusted COP for each step
+            if self.temperature_forecast[t] < self.heating_COP_limit:
+                self.heating_cop_adj[t] = self.heating_COP / (
+                        self.heating_COP_K0 + self.heating_COP_K1 * self.heating_COP_limit +
+                        self.heating_COP_K2 * self.heating_COP_limit ** 2 +
+                        self.heating_COP_K3 * self.heating_COP_limit ** 3)
+            else:
+                self.heating_cop_adj[t] = self.heating_COP / (
+                        self.heating_COP_K0 + self.heating_COP_K1 * self.temperature_forecast[t] +
+                        self.heating_COP_K2 * self.temperature_forecast[t] ** 2 +
+                        self.heating_COP_K3 * self.temperature_forecast[t] ** 3)
+
+        # temp_room_init = self.air_temp
+        self.temp_da_prev = self.temp_room[0]
+        if self.thermostat_mode == "Cooling":
+            self.temp_room_init = self.cooling_setpoint
+        else:
+            self.temp_room_init = self.heating_setpoint
+
+        # if self.name == "R4_12_47_1_tn_9_hse_1":
+        #     print("DA quantities",self.dow,self.hod,self.moh)
+        #     print("price",self.price_forecast)
+        #     print("Qint",self.internalgain_forecast)
+        #     print("Qsol",self.solargain_forecast)
+        #     print("Temp forecast",self.temperature_forecast)
+        #     print("Latent factor",self.latent_factor)
+        #     print("cool COP",self.cooling_cop_adj)
+        #     print("self.UA,self.eps,temp_room_init,self.solar_heatgain_factor")
+        #     print(self.UA,self.eps,self.temp_room_init,self.solar_heatgain_factor)
+        #     print(self.eps)
 
         return True
 
     def obj_rule(self, m):
-        # 15 - x (50*4^2+50*7^2+50*10^2) -> x = 0.002
         if self.thermostat_mode == 'Cooling':
-            # Alternative-5: Bishnu
-            # if self.hvac_kw != 0 and self.price_delta!=0 and (self.range_low_limit+self.range_high_limit)!=0:
-            #     return sum(self.slider*(self.price_forecast[t]-np.min(self.price_forecast))/self.price_delta * m.quan_hvac[t]/self.hvac_kw
-            #                + (1-self.slider)* ((m.temp_room[t] - self.temp_desired_48hour_cool[t])/(self.range_low_limit+self.range_high_limit))**2
-            #                + 0.01 * self.slider * (m.quan_hvac[t] / self.hvac_kw * m.quan_hvac[t] / self.hvac_kw)
-            #                                    for t in self.TIME)
-            # ALternative - 6
-            # if self.hvac_kw != 0 and self.ramp_high_cool!=0 and (self.range_low_limit+self.range_high_limit)!=0 and self.price_std_dev!=0:
-            #     return sum(self.slider * (self.price_forecast[t] - np.min(self.price_forecast)) / (self.price_std_dev) * m.quan_hvac[t] / self.hvac_kw
-            #                + (1 - self.slider) * ((self.temp_desired_48hour_cool[t] - m.temp_room[t]) / (self.range_high_limit+self.range_low_limit)) ** 2 /self.ramp_high_limit
-            #                + 0.001 * self.slider * (m.quan_hvac[t] / self.hvac_kw * m.quan_hvac[t] / self.hvac_kw)
-            #                for t in self.TIME)
-            # Alternative-7: Bishnu-mod
-            if self.hvac_kw != 0 and self.price_delta!=0 and (self.range_low_limit+self.range_high_limit)!=0:
-                return sum(self.slider*(self.price_forecast[t]-np.min(self.price_forecast))/self.price_delta * m.quan_hvac[t]/self.hvac_kw
-                           + 0.1* ((m.temp_room[t] - self.temp_desired_48hour_cool[t])/(self.range_low_limit+self.range_high_limit))**2
-                           + 0.001 * self.slider * (m.quan_hvac[t] / self.hvac_kw * m.quan_hvac[t] / self.hvac_kw)
-                                               for t in self.TIME)
-                # if self.hvac_kw != 0 and self.price_mean!=0 and self.range_low!=0 and self.range_high!=0 and self.price_delta!=0:
-                #     return sum((self.price_forecast[t]/self.price_mean * m.quan_hvac[t]/self.hvac_kw*self.slider) + (
-                #             (1-self.slider) * (m.temp_room[t] - self.temp_desired_48hour_cool[t]) / self.range_high) +
-                #             (3/5*(1-self.slider) * (self.temp_desired_48hour_cool[t] - m.temp_room[t]) / self.range_low )
-                #                         + 0.01*self.slider*(m.quan_hvac[t]/self.hvac_kw * m.quan_hvac[t]/self.hvac_kw)# obj = 10-20
-                #                for t in self.TIME)
-                # return sum((self.price_forecast[t] * m.quan_hvac[t] / self.hvac_kw * self.slider) + (
-                #         (1 - self.slider) * (
-                #             m.temp_room[t] - self.temp_desired_48hour_cool[t]) / self.range_high * self.price_std_dev) +
-                #            (3 / 5 * (1 - self.slider) * (self.temp_desired_48hour_cool[t] - m.temp_room[
-                #                t]) / self.range_low * self.price_std_dev)
-                #            + 0.001 * self.slider * (m.quan_hvac[t] / self.hvac_kw * m.quan_hvac[t] / self.hvac_kw)
-                #            # obj = 10-20
-                #            for t in self.TIME)
-            else:
-                return 0
-        else:  # self.thermostat_mode == 'Heating':
-            if self.hvac_kw != 0 and self.price_delta != 0 and (self.range_low_limit + self.range_high_limit) != 0:
-                return sum(self.slider * (self.price_forecast[t] - np.min(self.price_forecast)) / self.price_delta *
-                           m.quan_hvac[t] / self.hvac_kw
-                           + 0.1 * ((m.temp_room[t] - self.temp_desired_48hour_heat[t]) / (
-                            self.range_low_limit + self.range_high_limit)) ** 2
-                           + 0.001 * self.slider * (m.quan_hvac[t] / self.hvac_kw * m.quan_hvac[t] / self.hvac_kw)
-                           for t in self.TIME)
-            # return sum((self.price_forecast[t] * m.quan_hvac[t] * self.slider)*20 + (
-            #         ((-2 * self.range_high * (1 - self.slider) * self.price_std_dev) / self.temp_delta) * (
-            #         m.temp_room[t] - self.temp_desired_48hour_heat[t])) + (
-            #                    ((-2 * self.range_low * (1 - self.slider) * self.price_std_dev) / self.temp_delta) * (
-            #                    self.temp_desired_48hour_heat[t] - m.temp_room[t])) + 0.001 *self.slider* (m.quan_hvac[t] * m.quan_hvac[t])
-            #            # obj = 10-20
-            #            for t in self.TIME)
-            else:
-                return 0
-        #else:
-        #    log.log('Thermostat mode is not defined.')
+            temp = self.temp_desired_48hour_cool
+        else:
+            temp = self.temp_desired_48hour_heat
+        if self.hvac_kw != 0 and self.price_delta != 0 and (self.range_low_limit + self.range_high_limit) != 0:
+            return sum(self.slider * (self.price_forecast[t] - np.min(self.price_forecast))
+                       / self.price_delta * m.quan_hvac[t] / self.hvac_kw
+                       + 0.1 * ((m.temp_room[t] - temp[t]) / (self.range_low_limit + self.range_high_limit)) ** 2
+                       + 0.001 * self.slider * (m.quan_hvac[t] / self.hvac_kw * m.quan_hvac[t] / self.hvac_kw)
+                       for t in self.TIME)
+        else:
+            return 0
 
     def con_rule_eq1(self, m, t):  # initialize SOHC state
         if self.thermostat_mode == 'Cooling':
             if t == 0:
                 return m.temp_room[0] == self.eps * self.temp_room_init + (1 - self.eps) * (
-                        self.temp_outside_init + (
+                        self.temperature_forecast[0] + (
                         (-self.cooling_cop_adj[0] * 0.98 * m.quan_hvac[0] * 3412.1416331279 / self.latent_factor[0] +
                          self.internalgain_forecast[0] +
                          self.solargain_forecast[0] * self.solar_heatgain_factor) / self.UA))  # Initial SOHC state
@@ -1900,7 +1926,7 @@ class HVACDSOT:  # TODO: update class name
         else:
             if t == 0:
                 return m.temp_room[0] == self.eps * self.temp_room_init + (1 - self.eps) * (
-                        self.temp_outside_init + (
+                        self.temperature_forecast[0] + (
                         (self.heating_cop_adj[0] * 1.02 * m.quan_hvac[0] * 3412.1416331279 / self.latent_factor[0] +
                          self.internalgain_forecast[0] + self.solargain_forecast[0] *
                          self.solar_heatgain_factor) / self.UA))  # Initial SOHC state
@@ -1950,15 +1976,7 @@ class HVACDSOT:  # TODO: update class name
             # Constraints
             model.con1 = pyo.Constraint(self.TIME, rule=self.con_rule_eq1)
             # Solve
-            results = helpers.get_run_solver("hvac_" + self.name, pyo, model, self.solver)
-
-            if False:#self.hvac_kw != 0 and self.price_mean != 0 and self.range_low_cool != 0 and self.range_high != 0 and self.price_delta != 0:
-                print("optimization quantities", self.name)
-                print(sum((self.price_forecast[t]/self.price_mean * pyo.value(model.quan_hvac[t])/self.hvac_kw * self.slider) * 20 for t in self.TIME))
-                print(sum((1 * (1 - self.slider)*(pyo.value(model.temp_room[t]) - self.temp_desired_48hour_cool[t])/ self.range_high_cool) for t in self.TIME))
-                print(sum((3/5 * (1 - self.slider) *(self.temp_desired_48hour_cool[t] - pyo.value(model.temp_room[t])) / self.range_low_cool) for t in self.TIME))
-                print(sum(0.01 * self.slider * (pyo.value(model.quan_hvac[t])/self.hvac_kw * pyo.value(model.quan_hvac[t])/self.hvac_kw) for t in self.TIME))
-
+            results = get_run_solver("hvac_" + self.name, pyo, model, self.solver)
             Quantity = [0 for _ in self.TIME]
             temp_room = [0 for _ in self.TIME]
             TOL = 0.00001  # Tolerance for checking bid
@@ -1966,31 +1984,6 @@ class HVACDSOT:  # TODO: update class name
                 temp_room[t] = pyo.value(model.temp_room[t])
                 # if self.temp_room[t] > TOL:
                 Quantity[t] = pyo.value(model.quan_hvac[t])
-
-            if False:#False and self.name == "R5_12_47_2_tn_3_hse_5":
-                print(self.name)#"R5_12_47_2_tn_3_hse_5")
-                print("DA Quantity")
-                print(Quantity)
-                print("room_temp")
-                print(self.temp_room)
-                print("self.temperature_forecast")
-                print(self.temperature_forecast)
-                print("self.price_forecast")
-                print(self.price_forecast)
-                print("self.internalgain_forecast")
-                print(self.internalgain_forecast)
-                print("self.solargain_forecast")
-                print(self.solargain_forecast)
-                print("self.slider,self.range_high_cool,self.range_low_cool,self.temp_delta,self.price_std_dev")
-                print(self.slider, self.range_high_cool,self.range_low_cool,self.temp_delta,self.price_std_dev)
-                print("self.temp_desired_48hour_cool")
-                print(self.temp_desired_48hour_cool)
-                print("self.eps,self.temp_room_init,self.temp_outside_init,self.solar_heatgain_factor,self.UA")
-                print(self.eps,self.temp_room_init,self.temp_outside_init,self.solar_heatgain_factor,self.UA,self.CA,self.CM,self.HM)
-                print("self.cooling_cop_adj")
-                print(self.cooling_cop_adj)
-                print("self.latent_factor")
-                print(self.latent_factor)
 
         else:  # for linear optimizer
             prob = pulp.LpProblem("QuantityBid", pulp.LpMinimize)
@@ -2013,8 +2006,7 @@ class HVACDSOT:  # TODO: update class name
                                            self.temp_desired_48hour_cool[t] - temp_room[t])) for t in self.TIME)
             else:
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, -self.hvac_kw, 0)
-                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME, self.temp_min_heat,
-                                                  self.temp_max_heat)
+                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME, self.temp_min_heat, self.temp_max_heat)
                 prob += pulp.lpSum((self.price_forecast[t] * quan_hvac[t]) + (
                         ((-2 * self.range_high_heat * self.price_std_dev) / self.temp_delta) * (
                         temp_room[t] - self.temp_desired_48hour_heat[t])) + (
@@ -2193,11 +2185,11 @@ def test():
         "heating_participating": False
     }
 
-    ### Uncomment for testing logging functionality.
-    ### Supply these values (into WaterHeaterDSOT) when using the water
-    ### heater agent in the simulation.
+    # ## Uncomment for testing logging functionality.
+    # ## Supply these values (into WaterHeaterDSOT) when using the water
+    # ## heater agent in the simulation.
     # model_diag_level = 11
-    # hlprs.enable_logging('DEBUG', model_diag_level)
+    # helpers.enable_logging('DEBUG', model_diag_level)
     start_time = '2016-08-12 05:59:00'
     time_format = '%Y-%m-%d %H:%M:%S'
     sim_time = datetime.strptime(start_time, time_format)

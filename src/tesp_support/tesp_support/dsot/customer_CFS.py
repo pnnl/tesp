@@ -10,7 +10,7 @@
 import json
 import os
 
-from .dsot.dso_helper_functions import returnDictSum
+from tesp_support.dsot.dso_helper_functions import returnDictSum
 
 
 # This function calculates ...

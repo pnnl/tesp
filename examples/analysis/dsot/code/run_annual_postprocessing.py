@@ -5,10 +5,10 @@ from os.path import dirname, abspath, isdir
 
 import pandas as pd
 
-import tesp_support.Wh_Energy_Purchases as ep
+import tesp_support.dsot.Wh_Energy_Purchases as ep
 import tesp_support.dsot.DSOT_plots as pt
-import tesp_support.dsot.DSO_quadratic_curves as qc
-import tesp_support.dsot.DSO_rate_making as rm
+import tesp_support.dsot.dso_quadratic_curves as qc
+import tesp_support.dsot.dso_rate_making as rm
 import tesp_support.dsot.dso_helper_functions as hf
 
 ''' This script runs key postprocessing functions that warrant execution after every simulation run.  

@@ -36,19 +36,19 @@ def register_federate(json_filename):
     for i in range(0, pubkeys_count):
         pubid["m{}".format(i)] = h.helicsFederateGetPublicationByIndex(fed, i)
         pub_type = h.helicsPublicationGetType(pubid["m{}".format(i)])
-        pub_key = h.helicsPublicationGetKey(pubid["m{}".format(i)])
+        pub_key = h.helicsPublicationGetName(pubid["m{}".format(i)])
         print('Registered Publication ---> {} - Type {}'.format(pub_key, pub_type))
     for i in range(0, subkeys_count):
         subid["m{}".format(i)] = h.helicsFederateGetInputByIndex(fed, i)
         status = h.helicsInputSetDefaultString(subid["m{}".format(i)], 'default')
-        sub_key = h.helicsSubscriptionGetKey(subid["m{}".format(i)])
+        sub_key = h.helicsSubscriptionGetTarget(subid["m{}".format(i)])
         print('Registered Subscription ---> {}'.format(sub_key))
 
     return fed, federate_name
 
 
 def destroy_federate(fed):
-    h.helicsFederateFinalize(fed)
+    h.helicsFederateDisconnect(fed)
     h.helicsFederateFree(fed)
     h.helicsCloseLibrary()
 

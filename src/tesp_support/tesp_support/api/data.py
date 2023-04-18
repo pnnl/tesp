@@ -4,6 +4,7 @@
 """
 from os import path
 
+
 tesp_share = path.expandvars('$TESPDIR/data/')
 comm_path = tesp_share + 'comm/'
 entities_path = tesp_share + 'entities/'

@@ -542,7 +542,7 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                 if bldg in mtr['building_type']:
                     mtr['tariff_class'] = 'residential'
         except KeyError as keyErr:
-            #	print('I got a KeyError. Reason - {0}. See: {1}'.format(str(keyErr), format_exc())) # sys.exc_info()[2].tb_)
+            # print('I got a KeyError. Reason - {0}. See: {1}'.format(str(keyErr), format_exc())) # sys.exc_info()[2].tb_)
             pass
         # except:
         #	print('Cannot find id {0} from {1} in the list of billing meters.'.format(val['billingmeter_id'], key))

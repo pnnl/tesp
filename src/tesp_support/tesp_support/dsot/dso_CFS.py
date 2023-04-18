@@ -8,7 +8,8 @@
 # but each folder is monthly data
 
 import numpy as np
-import tesp_support.dsot.dso_helper_functions as tesp
+
+import tesp_support.dsot.dso_helper_functions as dso_helper
 
 
 # This dso_CFS function calculates cash flow statement ...
@@ -25,9 +26,6 @@ import tesp_support.dsot.dso_helper_functions as tesp
 # under each month, the dso and substation paths should be the same
 
 
-
-
-
 def dso_CFS(case_config,
             DSOmetadata,
             dso_num,
@@ -37,7 +35,6 @@ def dso_CFS(case_config,
             DSO_Revenues_and_Energy_Sales,
             Market_Purchases,
             Market_Purchases_base_case):
-
     ### reading json data
     # with open(os.path.join(metadata_path, '8-node-metadata.json')) as json_file:
     #    metadata_8_node = json.load(json_file)
@@ -67,8 +64,10 @@ def dso_CFS(case_config,
     metadata_general = metadata_gen["general"]
     metadata_dso = metadata_8_node[dso_name.upper()]
     utility_type = metadata_dso["utility_type"]
-    ACCF_distribution_infrastructure = metadata_general['ACCF']['grid_assets']['distribution_owner'][utility_type]['distribution_infrastructure']
-    ACCF_controls_and_software = metadata_general['ACCF']['grid_assets']['distribution_owner'][utility_type]['controls_and_software']
+    ACCF_distribution_infrastructure = metadata_general['ACCF']['grid_assets']['distribution_owner'][utility_type][
+        'distribution_infrastructure']
+    ACCF_controls_and_software = metadata_general['ACCF']['grid_assets']['distribution_owner'][utility_type][
+        'controls_and_software']
 
     substation_costs = metadata_general['substation_costs']
 
@@ -83,95 +82,105 @@ def dso_CFS(case_config,
     sasfd = substation_costs['service_area_share_fully_developed'][utility_type]
     years_greenfield = substation_costs['years_greenfield']
 
-    GreenfieldGrowthLocalSub = ((pddn_f / pddn_u )**(1 / years_greenfield)) - 1
+    GreenfieldGrowthLocalSub = ((pddn_f / pddn_u) ** (1 / years_greenfield)) - 1
 
-    CapacityMarginBrown = 1 - 1 / ((1+substation_costs['brownfield_growth_rate_dso_total'][utility_type]) **
+    CapacityMarginBrown = 1 - 1 / ((1 + substation_costs['brownfield_growth_rate_dso_total'][utility_type]) **
                                    substation_costs['years_sub_design_life'])
 
-    CapacityMarginGreen = 1 - ( (1 - CapacityMarginBrown)  *  pddn_u  /  pddn_f )
+    CapacityMarginGreen = 1 - ((1 - CapacityMarginBrown) * pddn_u / pddn_f)
 
-    PeakDemandDensityNormGreen = (pddn_f -  pddn_u ) / np.log( pddn_f / pddn_u )
+    PeakDemandDensityNormGreen = (pddn_f - pddn_u) / np.log(pddn_f / pddn_u)
 
-    ShareGreenfield = ( substation_costs['greenfield_growth_rate_dso_total'][utility_type]  /  ( GreenfieldGrowthLocalSub * PeakDemandDensityNormGreen )  *
-                        ((pddn_u * (1-sasfd)) + (pddn_f * sasfd))) / \
-          (   1  +  ( substation_costs['greenfield_growth_rate_dso_total'][utility_type]  /  ( GreenfieldGrowthLocalSub * PeakDemandDensityNormGreen ) *
-                      (pddn_u - PeakDemandDensityNormGreen)))
+    ShareGreenfield = (substation_costs['greenfield_growth_rate_dso_total'][utility_type] / (
+                GreenfieldGrowthLocalSub * PeakDemandDensityNormGreen) *
+                       ((pddn_u * (1 - sasfd)) + (pddn_f * sasfd))) / \
+                      (1 + (substation_costs['greenfield_growth_rate_dso_total'][utility_type] / (
+                                  GreenfieldGrowthLocalSub * PeakDemandDensityNormGreen) *
+                            (pddn_u - PeakDemandDensityNormGreen)))
 
-    ShareUndeveloped = 1  -  ShareGreenfield  -  sasfd
+    ShareUndeveloped = 1 - ShareGreenfield - sasfd
 
     if TransactiveCaseFlag:
         FracPeakDemandReduction = (DSO_base_case_peak_demand - DSO_peak_demand) / DSO_base_case_peak_demand
     else:
         FracPeakDemandReduction = 0
 
-    SubFleetCapacityFactorBrown = (( 1 - CapacityMarginBrown )  -  ( 1 / (1- FracPeakDemandReduction) ) )  / \
-                                  (np.log( 1 - FracPeakDemandReduction )  +  np.log( 1 - CapacityMarginBrown ))
+    SubFleetCapacityFactorBrown = ((1 - CapacityMarginBrown) - (1 / (1 - FracPeakDemandReduction))) / \
+                                  (np.log(1 - FracPeakDemandReduction) + np.log(1 - CapacityMarginBrown))
 
-    SubFleetCapacityFactorGreen = (   ( 1 - CapacityMarginBrown )  *  ( 1  - (pddn_u/ pddn_f)   ))      / \
-                     (   ( 1 - FracPeakDemandReduction )  *   np.log( pddn_f / pddn_u )   )
+    SubFleetCapacityFactorGreen = ((1 - CapacityMarginBrown) * (1 - (pddn_u / pddn_f))) / \
+                                  ((1 - FracPeakDemandReduction) * np.log(pddn_f / pddn_u))
 
-    PeakDemandDensityTotal = (   pddn_u *  ShareUndeveloped   )  + \
-    (   PeakDemandDensityNormGreen * ShareGreenfield   )  + (  pddn_f * sasfd  )
+    PeakDemandDensityTotal = (pddn_u * ShareUndeveloped) + \
+                             (PeakDemandDensityNormGreen * ShareGreenfield) + (pddn_f * sasfd)
 
-    SubExistCapacityDeveloped = DSO_base_case_peak_demand * pddn_f * sasfd /  \
-                          ( SubFleetCapacityFactorBrown * power_factor_peak * PeakDemandDensityTotal )
+    SubExistCapacityDeveloped = DSO_base_case_peak_demand * pddn_f * sasfd / \
+                                (SubFleetCapacityFactorBrown * power_factor_peak * PeakDemandDensityTotal)
 
-    SubExistCapacityGreenfield = DSO_base_case_peak_demand * PeakDemandDensityNormGreen * ShareGreenfield /  \
-                                 ( SubFleetCapacityFactorGreen * power_factor_peak * PeakDemandDensityTotal )
+    SubExistCapacityGreenfield = DSO_base_case_peak_demand * PeakDemandDensityNormGreen * ShareGreenfield / \
+                                 (SubFleetCapacityFactorGreen * power_factor_peak * PeakDemandDensityTotal)
     SubExistCapacityUndeveloped = DSO_base_case_peak_demand * pddn_u * ShareUndeveloped / \
-                   ( SubFleetCapacityFactorBrown * power_factor_peak * PeakDemandDensityTotal )
+                                  (SubFleetCapacityFactorBrown * power_factor_peak * PeakDemandDensityTotal)
 
-    NoSubstations = SubExistCapacityUndeveloped * power_factor_peak / substation_costs['substation_capacity_avg']['undeveloped'] + \
-    SubExistCapacityGreenfield * power_factor_peak / substation_costs['substation_capacity_avg']['greenfield'] + \
-    SubExistCapacityDeveloped * power_factor_peak / substation_costs['substation_capacity_avg']['fully-developed']
+    NoSubstations = SubExistCapacityUndeveloped * power_factor_peak / substation_costs['substation_capacity_avg'][
+        'undeveloped'] + \
+                    SubExistCapacityGreenfield * power_factor_peak / substation_costs['substation_capacity_avg'][
+                        'greenfield'] + \
+                    SubExistCapacityDeveloped * power_factor_peak / substation_costs['substation_capacity_avg'][
+                        'fully-developed']
 
-    SubConstructAnnualCapacity = ((max(0, substation_costs['brownfield_growth_rate_dso_total'][utility_type]) + 1/years_greenfield) * (pddn_f - pddn_u) *
-                                  ShareGreenfield * (DSO_base_case_peak_demand / power_factor_peak )) / (PeakDemandDensityTotal * (1 - CapacityMarginBrown))
+    SubConstructAnnualCapacity = ((max(0, substation_costs['brownfield_growth_rate_dso_total'][
+        utility_type]) + 1 / years_greenfield) * (pddn_f - pddn_u) *
+                                  ShareGreenfield * (DSO_base_case_peak_demand / power_factor_peak)) / (
+                                             PeakDemandDensityTotal * (1 - CapacityMarginBrown))
 
-    SubUpAnnualCapacity = (max(0, substation_costs['brownfield_growth_rate_dso_total'][utility_type]) * SubExistCapacityUndeveloped ) + \
-    (max(0, substation_costs['brownfield_growth_rate_dso_total'][utility_type]) * SubExistCapacityDeveloped )
+    SubUpAnnualCapacity = (max(0, substation_costs['brownfield_growth_rate_dso_total'][
+        utility_type]) * SubExistCapacityUndeveloped) + \
+                          (max(0, substation_costs['brownfield_growth_rate_dso_total'][
+                              utility_type]) * SubExistCapacityDeveloped)
 
-    SubExistCostPerKva = (frac_exist_sub_built_new  *  substation_new_cost_per_kVA   +
-                          (1 - frac_exist_sub_built_new)  *  substation_upgrade_cost_per_kVA)
+    SubExistCostPerKva = (frac_exist_sub_built_new * substation_new_cost_per_kVA +
+                          (1 - frac_exist_sub_built_new) * substation_upgrade_cost_per_kVA)
 
-    SubsExistCapitalCost = ( SubExistCapacityUndeveloped + SubExistCapacityGreenfield + SubExistCapacityDeveloped ) * \
+    SubsExistCapitalCost = (SubExistCapacityUndeveloped + SubExistCapacityGreenfield + SubExistCapacityDeveloped) * \
                            SubExistCostPerKva * 1000 / 1000
-    SubsAddedAnnualCapitalCost = (SubConstructAnnualCapacity * substation_new_cost_per_kVA + SubUpAnnualCapacity * substation_upgrade_cost_per_kVA) * 1000 / 1000
+    SubsAddedAnnualCapitalCost = (
+                                             SubConstructAnnualCapacity * substation_new_cost_per_kVA + SubUpAnnualCapacity * substation_upgrade_cost_per_kVA) * 1000 / 1000
 
     Substations = (SubsExistCapitalCost + SubsAddedAnnualCapitalCost) * ACCF_distribution_infrastructure
 
     Feeders = metadata_general["feeder_capital_cost_per_MVA"][utility_type] * DSO_base_case_peak_demand / \
-    power_factor_peak * ACCF_distribution_infrastructure * \
-    (1 + substation_costs['greenfield_growth_rate_dso_total'][utility_type] +
-      substation_costs['brownfield_growth_rate_dso_total'][utility_type]) / 1000
+              power_factor_peak * ACCF_distribution_infrastructure * \
+              (1 + substation_costs['greenfield_growth_rate_dso_total'][utility_type] +
+               substation_costs['brownfield_growth_rate_dso_total'][utility_type]) / 1000
 
     number_of_customers = metadata_dso['number_of_customers']
 
     meter_cost = lambda type: metadata_8_node["general"]['meter_cost'][type] * number_of_customers * \
                               metadata_dso['RCI customer count mix'][type]
 
-    Meters = (meter_cost('residential') + meter_cost('commercial')+ meter_cost('industrial')) * \
-    ACCF_distribution_infrastructure * \
-    (1 + substation_costs['greenfield_growth_rate_dso_total'][utility_type] +
-     metadata_general['brownfield_growth_new_meters_frac'] *
-     substation_costs['brownfield_growth_rate_dso_total'][utility_type]) / 1000
-
+    Meters = (meter_cost('residential') + meter_cost('commercial') + meter_cost('industrial')) * \
+             ACCF_distribution_infrastructure * \
+             (1 + substation_costs['greenfield_growth_rate_dso_total'][utility_type] +
+              metadata_general['brownfield_growth_new_meters_frac'] *
+              substation_costs['brownfield_growth_rate_dso_total'][utility_type]) / 1000
 
     MktHdw = (NoSubstations + 1) * \
-    (metadata_general['market_operations']['hardware']['per_substation']
-         +  (metadata_general['market_operations']['hardware']['per_customer'] * number_of_customers / 1000 / NoSubstations) ) * \
-    ACCF_controls_and_software * TransactiveCaseFlag / 1000
+             (metadata_general['market_operations']['hardware']['per_substation']
+              + (metadata_general['market_operations']['hardware'][
+                     'per_customer'] * number_of_customers / 1000 / NoSubstations)) * \
+             ACCF_controls_and_software * TransactiveCaseFlag / 1000
 
     market_operations_software = metadata_general['market_operations']['software']
 
     MktSoft = (market_operations_software['constant'] +
-    market_operations_software['per_customer'] * number_of_customers / 1000 +
-    (market_operations_software['per_customer^1/2']  * (number_of_customers / 1000) ** (1/2)) +
-    NoSubstations * market_operations_software['per_substation'] ) * \
-    ACCF_controls_and_software * TransactiveCaseFlag / 1000
+               market_operations_software['per_customer'] * number_of_customers / 1000 +
+               (market_operations_software['per_customer^1/2'] * (number_of_customers / 1000) ** (1 / 2)) +
+               NoSubstations * market_operations_software['per_substation']) * \
+              ACCF_controls_and_software * TransactiveCaseFlag / 1000
 
-
-    AmiNetwork = metadata_general['AMI_DER_network'][utility_type] * number_of_customers * ACCF_controls_and_software / 1000
+    AmiNetwork = metadata_general['AMI_DER_network'][
+                     utility_type] * number_of_customers * ACCF_controls_and_software / 1000
     DER_network_transactive_increase = metadata_general['DER_network_transactive_increase']
     DerNetwork = AmiNetwork * TransactiveCaseFlag * DER_network_transactive_increase
 
@@ -180,11 +189,12 @@ def dso_CFS(case_config,
 
     DaNetwork = Upfront_DA_Network_Capital_Costs * ACCF_controls_and_software * number_of_customers / 1000
 
-
     software = lambda type: (metadata_general['software'][type]['constant'] +
-    number_of_customers * metadata_general['software'][type]['per_customer'] / 1000 +
-    (number_of_customers * (metadata_general['software'][type]['per_customer^1/2']  / 1000) ** (1/2)) +
-    (NoSubstations * metadata_general['software'][type]['per_substation']) ) * ACCF_controls_and_software / 1000
+                             number_of_customers * metadata_general['software'][type]['per_customer'] / 1000 +
+                             (number_of_customers * (metadata_general['software'][type]['per_customer^1/2'] / 1000) ** (
+                                         1 / 2)) +
+                             (NoSubstations * metadata_general['software'][type][
+                                 'per_substation'])) * ACCF_controls_and_software / 1000
 
     DmsSoft = software('DMS_software')
     OmsSoft = software('OMS_software')
@@ -201,134 +211,130 @@ def dso_CFS(case_config,
                                         Market_Purchases_base_case['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy'] + \
                                         Market_Purchases_base_case['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy']
 
-    WhDAQPurchases = Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy'] # Day-ahead energy volume
-    WhRTQPurchases = Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy'] # Real-time energy volume
-    WhBLQPurchases = Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy'] # Bilateral energy volume
+    WhDAQPurchases = Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']  # Day-ahead energy volume
+    WhRTQPurchases = Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']  # Real-time energy volume
+    WhBLQPurchases = Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy']  # Bilateral energy volume
 
     EnergyQuantityPurchased = WhDAQPurchases + WhRTQPurchases + WhBLQPurchases
 
-    WhDAPurchases = Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDACosts'] # Day-ahead energy cost
-    WhRTPurchases = Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTCosts'] # Real-time energy cost
-    WhBLPurchases = Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLCosts'] # Bilateral energy cost
+    WhDAPurchases = Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDACosts']  # Day-ahead energy cost
+    WhRTPurchases = Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTCosts']  # Real-time energy cost
+    WhBLPurchases = Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLCosts']  # Bilateral energy cost
 
     EnergyPurchased = WhDAPurchases + WhRTPurchases + WhBLPurchases
 
     transmission_access_fee_per_MWh = metadata_general['transmission_access_fee_per_MWh']
-    TransCharges = transmission_access_fee_per_MWh * EnergyQuantityPurchased_base_case  / 1000 + \
-                   (DSO_peak_demand - DSO_base_case_peak_demand) * 1000 * metadata_general['transmission_capital_cost_per_kW']/1000 * \
+    TransCharges = transmission_access_fee_per_MWh * EnergyQuantityPurchased_base_case / 1000 + \
+                   (DSO_peak_demand - DSO_base_case_peak_demand) * 1000 * metadata_general[
+                       'transmission_capital_cost_per_kW'] / 1000 * \
                    metadata_general['ACCF']['grid_assets']['transmission_owner']['transmission_infrastructure'] * \
                    metadata_general['transmission_capital_benefit_factor']
 
-
     WhReserves = EnergyQuantityPurchased * \
-                 ( ( system_case_config['reserveUp'] - metadata_general['reserve']['regulation_fraction'] ) *
-                   ( metadata_general['reserve']['spinning_reserve_cost'] + metadata_general['reserve']['non_spinning_reserve_cost']) +
-                   metadata_general['reserve']['regulation_fraction'] * metadata_general['reserve']['regulation_cost'] ) /1000
+                 ((system_case_config['reserveUp'] - metadata_general['reserve']['regulation_fraction']) *
+                  (metadata_general['reserve']['spinning_reserve_cost'] + metadata_general['reserve'][
+                      'non_spinning_reserve_cost']) +
+                  metadata_general['reserve']['regulation_fraction'] * metadata_general['reserve'][
+                      'regulation_cost']) / 1000
 
     # 0 for now
     WhLosses = Market_Purchases['OtherWholesale']['WhLosses']
 
     iso_energy_fee = metadata_general['iso_energy_fee']
-    WhISO = iso_energy_fee * EnergyQuantityPurchased_base_case  / 1000
+    WhISO = iso_energy_fee * EnergyQuantityPurchased_base_case / 1000
 
-
-
-
-    RetailDAEnergy = tesp.returnDictSum(DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailDAEnergy'])
-    RetailRTEnergy = tesp.returnDictSum(DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailRTEnergy'])
-    TransactFees = metadata_general['dso_transaction_fee_per_KWh']  *  ( RetailDAEnergy + RetailRTEnergy ) /1000 * 1000
-
-
+    RetailDAEnergy = dso_helper.returnDictSum(
+        DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailDAEnergy'])
+    RetailRTEnergy = dso_helper.returnDictSum(
+        DSO_Revenues_and_Energy_Sales['RetailSales']['TransactiveSales']['RetailRTEnergy'])
+    TransactFees = metadata_general['dso_transaction_fee_per_KWh'] * (RetailDAEnergy + RetailRTEnergy) / 1000 * 1000
 
     EnergySold = DSO_Revenues_and_Energy_Sales['EnergySold']
-    O_and_M_Materials  =  metadata_general['O&M_material_cost_per_kWh'] * EnergySold * 1000 / 1000
-
+    O_and_M_Materials = metadata_general['O&M_material_cost_per_kWh'] * EnergySold * 1000 / 1000
 
     # labor
 
     if TransactiveCaseFlag:
         MktOpsLev1Fte, MktOpsFte, MktOpsLev1Cost, MktOpsLeaderRatio, MktOpsLabor, MktOpsLeaderLevel = \
-            tesp.labor_transactive('market_operations', metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
+            dso_helper.labor_transactive('market_operations', metadata_general, metadata_dso, utility_type,
+                                         NoSubstations, TransactiveCaseFlag)
         DerRecruiterLev1Fte, DerRecruiterFte, DerRecruiterLev1Cost, DerRecruiterLeaderRatio, AssetR_R, DerRecruiterLeaderLevel = \
-            tesp.labor_transactive('DER_recruiter', metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
+            dso_helper.labor_transactive('DER_recruiter', metadata_general, metadata_dso, utility_type, NoSubstations,
+                                         TransactiveCaseFlag)
 
         DerNetLev1Fte, DerNetFte, DerNetLev1Cost, DerNetLeaderRatio, CustNetworkLabor, DerNetworkLeaderLevel = \
-            tesp.labor_network_admin_transactive('DER_network_labor_ratios',
-                                                                              'network_admin_hourly_rate',
-                                                                              metadata_general,
-                                                                              metadata_dso, utility_type, NoSubstations,
-                                                                              TransactiveCaseFlag)
+            dso_helper.labor_network_admin_transactive('DER_network_labor_ratios',
+                                                       'network_admin_hourly_rate',
+                                                       metadata_general,
+                                                       metadata_dso, utility_type, NoSubstations,
+                                                       TransactiveCaseFlag)
 
         DerCyberLev1Fte, DerCyberFte, DerCyberLev1Cost, DerCyberLeaderRatio, CustCyberLabor, DerCyberLeaderLevel = \
-            tesp.labor_network_admin_transactive('DER_cyber_labor_ratios',
-                                                                              'cyber_analyst_hourly_rate',
-                                                                              metadata_general,
-                                                                              metadata_dso, utility_type, NoSubstations,
-                                                                              TransactiveCaseFlag)
+            dso_helper.labor_network_admin_transactive('DER_cyber_labor_ratios',
+                                                       'cyber_analyst_hourly_rate',
+                                                       metadata_general,
+                                                       metadata_dso, utility_type, NoSubstations,
+                                                       TransactiveCaseFlag)
     else:
-        MktOpsLev1Fte, MktOpsFte, MktOpsLev1Cost, MktOpsLeaderRatio, MktOpsLabor, MktOpsLeaderLevel = 0,0,0,0,0,0
-        DerRecruiterLev1Fte, DerRecruiterFte, DerRecruiterLev1Cost, DerRecruiterLeaderRatio, AssetR_R, DerRecruiterLeaderLevel = 0,0,0,0,0,0
-        DerNetLev1Fte, DerNetFte, DerNetLev1Cost, DerNetLeaderRatio, CustNetworkLabor, DerNetworkLeaderLevel = 0,0,0,0,0,0
-        DerCyberLev1Fte, DerCyberFte, DerCyberLev1Cost, DerCyberLeaderRatio, CustCyberLabor, DerCyberLeaderLevel = 0,0,0,0,0,0
+        MktOpsLev1Fte, MktOpsFte, MktOpsLev1Cost, MktOpsLeaderRatio, MktOpsLabor, MktOpsLeaderLevel = 0, 0, 0, 0, 0, 0
+        DerRecruiterLev1Fte, DerRecruiterFte, DerRecruiterLev1Cost, DerRecruiterLeaderRatio, AssetR_R, DerRecruiterLeaderLevel = 0, 0, 0, 0, 0, 0
+        DerNetLev1Fte, DerNetFte, DerNetLev1Cost, DerNetLeaderRatio, CustNetworkLabor, DerNetworkLeaderLevel = 0, 0, 0, 0, 0, 0
+        DerCyberLev1Fte, DerCyberFte, DerCyberLev1Cost, DerCyberLeaderRatio, CustCyberLabor, DerCyberLeaderLevel = 0, 0, 0, 0, 0, 0
 
     CustomerServiceAgentLev1Fte, CustomerServiceAgentFte, CustomerServiceAgentLev1Cost, \
-    CustomerServiceAgentLeaderRatio, CustomerServiceAgent, CustomerServiceAgentLeaderLevel = \
-        tesp.labor('customer_service_agent', metadata_general, metadata_dso, utility_type, NoSubstations)
+        CustomerServiceAgentLeaderRatio, CustomerServiceAgent, CustomerServiceAgentLeaderLevel = \
+        dso_helper.labor('customer_service_agent', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     LinemenLev1Fte, LinemenFte, LinemenLev1Cost, LinemenLeaderRatio, Linemen, LinemenLeaderLevel = \
-        tesp.labor('linemen', metadata_general, metadata_dso, utility_type, NoSubstations)
+        dso_helper.labor('linemen', metadata_general, metadata_dso, utility_type, NoSubstations)
     OperatorLev1Fte, OperatorFte, OperatorLev1Cost, OperatorLeaderRatio, Operators, OperatorLeaderLevel = \
-        tesp.labor('operator', metadata_general, metadata_dso, utility_type, NoSubstations)
-    PlanningLev1Fte, PlanningFte, PlanningLev1Cost ,PlanningLeaderRatio, Planning, PlanningLeaderLevel = \
-        tesp.labor('planning', metadata_general, metadata_dso, utility_type, NoSubstations)
+        dso_helper.labor('operator', metadata_general, metadata_dso, utility_type, NoSubstations)
+    PlanningLev1Fte, PlanningFte, PlanningLev1Cost, PlanningLeaderRatio, Planning, PlanningLeaderLevel = \
+        dso_helper.labor('planning', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     MeteringLev1Fte, MeteringFte, MeteringLev1Cost, MeteringLeaderRatio, Metering, MeteringLeaderLevel = \
-        tesp.labor('metering', metadata_general, metadata_dso, utility_type, NoSubstations)
+        dso_helper.labor('metering', metadata_general, metadata_dso, utility_type, NoSubstations)
 
-    DmsNetLev1Fte, DmsNetFte, DmsNetLev1Cost ,DmsNetLeaderRatio, DmsNetworkLabor, DmsNetLeaderLevel = \
-        tesp.labor_network_admin('DMS_network_labor_ratios', 'network_admin_hourly_rate',
-                            metadata_general, metadata_dso, utility_type, NoSubstations)
+    DmsNetLev1Fte, DmsNetFte, DmsNetLev1Cost, DmsNetLeaderRatio, DmsNetworkLabor, DmsNetLeaderLevel = \
+        dso_helper.labor_network_admin('DMS_network_labor_ratios', 'network_admin_hourly_rate',
+                                       metadata_general, metadata_dso, utility_type, NoSubstations)
     DmsCyberLev1Fte, DmsCyberFte, DmsCyberLev1Cost, DmsCyberLeaderRatio, DmsCyberLabor, DmsCyberLeaderLevel = \
-        tesp.labor_network_admin('DMS_cyber_labor_ratios', 'cyber_analyst_hourly_rate',
-              metadata_general, metadata_dso, utility_type, NoSubstations)
+        dso_helper.labor_network_admin('DMS_cyber_labor_ratios', 'cyber_analyst_hourly_rate',
+                                       metadata_general, metadata_dso, utility_type, NoSubstations)
 
     BusinessNetworkTotalLabor = DmsNetworkLabor + DmsCyberLabor
     BusinessNetworkFte = DmsNetFte + DmsCyberFte
 
     LegalLev1Fte, LegalFte, LawyerLev1Cost, LawyerLeaderRatio, LegalLabor, LawyerLeaderLevel = \
-        tesp.labor('corporate_lawyer', metadata_general, metadata_dso, utility_type, NoSubstations)
+        dso_helper.labor('corporate_lawyer', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     HRLev1Fte, HRFte, HRLev1Cost, HRLeaderRatio, HRLabor, HRLeaderLevel = \
-        tesp.labor('human_resources', metadata_general, metadata_dso, utility_type, NoSubstations)
+        dso_helper.labor('human_resources', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     AccountingLev1Fte, AccountingFte, AccountingLev1Cost, AccountingLeaderRatio, AccountingLabor, AccountingLeaderLevel = \
-        tesp.labor('accounting', metadata_general, metadata_dso, utility_type, NoSubstations)
+        dso_helper.labor('accounting', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     EconomicsLev1Fte, EconomicsFte, EconomicsLev1Cost, EconomicsLeaderRatio, EconomicsLabor, EconomicsLeaderLevel = \
-        tesp.labor('economist', metadata_general, metadata_dso, utility_type, NoSubstations)
-
-
+        dso_helper.labor('economist', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     BillingLev1Fte, BillingFte, BillingLev1Cost, BillingLeaderRatio, Billing, BillingLeaderLevel = \
-        tesp.labor_increase('billing', metadata_general, metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
+        dso_helper.labor_increase('billing', metadata_general, metadata_dso, utility_type, NoSubstations,
+                                  TransactiveCaseFlag)
 
     AmiCyberLev1Fte, AmiCyberFte, AmiCyberLev1Cost, AmiCyberLeaderRatio, AmiCyberLabor, AmiCyberLeaderLevel = \
-        tesp.labor_network_admin_increase('AMI_cyber_labor_ratios', 'cyber_analyst_hourly_rate', metadata_general,
-                                     metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
+        dso_helper.labor_network_admin_increase('AMI_cyber_labor_ratios', 'cyber_analyst_hourly_rate', metadata_general,
+                                                metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
 
     AmiNetLev1Fte, AmiNetFte, AmiNetLev1Cost, AmiNetLeaderRatio, AmiNetworkLabor, AmiNetworkLeaderLevel = \
-        tesp.labor_network_admin_increase('AMI_network_labor_ratios', 'network_admin_hourly_rate', metadata_general,
-                                     metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
-
-
-
+        dso_helper.labor_network_admin_increase('AMI_network_labor_ratios', 'network_admin_hourly_rate',
+                                                metadata_general,
+                                                metadata_dso, utility_type, NoSubstations, TransactiveCaseFlag)
 
     AdminLev1Fte, AdminFte, AdminLev1Cost, AdminLeaderRatio, AdminLabor, AdminLeaderLevel = \
-        tesp.labor('admin', metadata_general, metadata_dso, utility_type, NoSubstations)
+        dso_helper.labor('admin', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     PRLev1Fte, PRFte, PRLev1Cost, PRLeaderRatio, PRLabor, PRLeaderLevel = \
-        tesp.labor('public_relations', metadata_general, metadata_dso, utility_type, NoSubstations)
-
+        dso_helper.labor('public_relations', metadata_general, metadata_dso, utility_type, NoSubstations)
 
     team_salary_escalation_1 = metadata_general['labor']['team_salary_escalation_1']
     CroLevel = CustomerServiceAgentLeaderLevel
@@ -343,34 +349,33 @@ def dso_CFS(case_config,
     CloLevel = LawyerLeaderLevel
     CloCost = LawyerLeaderRatio * LawyerLev1Cost
 
-    if (AmiNetFte + AmiCyberFte + DerNetFte + DerCyberFte + DmsNetFte + DmsCyberFte) <=5:
+    if (AmiNetFte + AmiCyberFte + DerNetFte + DerCyberFte + DmsNetFte + DmsCyberFte) <= 5:
         CioLevel = 0
         CioCost = 0
     else:
         CioLevel = max(AmiNetworkLeaderLevel, AmiCyberLeaderLevel, DerNetworkLeaderLevel, DerCyberLeaderLevel,
-                       DmsNetLeaderLevel, DmsCyberLeaderLevel ) +  1
-        CioCost = max(AmiNetLeaderRatio * (team_salary_escalation_1**AmiNetworkLeaderLevel) * AmiNetLev1Cost,
-                      AmiCyberLeaderRatio * (team_salary_escalation_1**AmiCyberLeaderLevel) * AmiCyberLev1Cost,
-                      DerNetLeaderRatio * (team_salary_escalation_1**DerNetworkLeaderLevel) * DerNetLev1Cost,
-                      DerCyberLeaderRatio * (team_salary_escalation_1**DerCyberLeaderLevel) * DerCyberLev1Cost,
-                      DmsNetLeaderRatio * (team_salary_escalation_1**DmsNetLeaderLevel) * DmsNetLev1Cost,
-                      DmsCyberLeaderRatio * (team_salary_escalation_1**DmsCyberLeaderLevel) * DmsCyberLev1Cost)
+                       DmsNetLeaderLevel, DmsCyberLeaderLevel) + 1
+        CioCost = max(AmiNetLeaderRatio * (team_salary_escalation_1 ** AmiNetworkLeaderLevel) * AmiNetLev1Cost,
+                      AmiCyberLeaderRatio * (team_salary_escalation_1 ** AmiCyberLeaderLevel) * AmiCyberLev1Cost,
+                      DerNetLeaderRatio * (team_salary_escalation_1 ** DerNetworkLeaderLevel) * DerNetLev1Cost,
+                      DerCyberLeaderRatio * (team_salary_escalation_1 ** DerCyberLeaderLevel) * DerCyberLev1Cost,
+                      DmsNetLeaderRatio * (team_salary_escalation_1 ** DmsNetLeaderLevel) * DmsNetLev1Cost,
+                      DmsCyberLeaderRatio * (team_salary_escalation_1 ** DmsCyberLeaderLevel) * DmsCyberLev1Cost)
 
-    if AccountingFte  +  EconomicsFte <= 5:
+    if AccountingFte + EconomicsFte <= 5:
         CfoLevel = 0
         CfoCost = 0
     else:
-        CfoLevel = max(AccountingLeaderLevel, EconomicsLeaderLevel) +  1
-        CfoCost = max(AccountingLeaderRatio * (team_salary_escalation_1**AccountingLeaderLevel) * AccountingLev1Cost,
-                      EconomicsLeaderRatio * (team_salary_escalation_1**EconomicsLeaderLevel) * EconomicsLev1Cost)
+        CfoLevel = max(AccountingLeaderLevel, EconomicsLeaderLevel) + 1
+        CfoCost = max(AccountingLeaderRatio * (team_salary_escalation_1 ** AccountingLeaderLevel) * AccountingLev1Cost,
+                      EconomicsLeaderRatio * (team_salary_escalation_1 ** EconomicsLeaderLevel) * EconomicsLev1Cost)
 
-    CeoCost = max(CfoCost * (team_salary_escalation_1**CfoLevel),
-                  CloCost * (team_salary_escalation_1**CloLevel),
-                  ChoCost * (team_salary_escalation_1**ChoLevel),
-                  CioCost * (team_salary_escalation_1**CioLevel),
-                  CooCost * (team_salary_escalation_1**CooLevel),
-                  CroCost * (team_salary_escalation_1**CroLevel))
-
+    CeoCost = max(CfoCost * (team_salary_escalation_1 ** CfoLevel),
+                  CloCost * (team_salary_escalation_1 ** CloLevel),
+                  ChoCost * (team_salary_escalation_1 ** ChoLevel),
+                  CioCost * (team_salary_escalation_1 ** CioLevel),
+                  CooCost * (team_salary_escalation_1 ** CooLevel),
+                  CroCost * (team_salary_escalation_1 ** CroLevel))
 
     Admin = (CeoCost + CfoCost + CloCost + ChoCost + CioCost) / 1000 + LegalLabor + HRLabor + \
             AccountingLabor + EconomicsLabor + PRLabor + AdminLabor + BusinessNetworkTotalLabor
@@ -383,24 +388,22 @@ def dso_CFS(case_config,
     industrial_workspace_costs = metadata_general['workspace_costs']['industrial_workspace_costs'][utility_type]
     office_workspace_costs = metadata_general['workspace_costs']['office_workspace_costs'][utility_type]
     Space = LinemenLev1Fte * linemen_sqft_employee * industrial_workspace_costs / 1000 + \
-            (LinemenFte - LinemenLev1Fte +  MktOpsFte +  CustomerServiceAgentFte +  DerRecruiterFte +
-             BillingFte +  AmiNetFte +  AmiCyberFte +  DerNetFte +  DerCyberFte +
+            (LinemenFte - LinemenLev1Fte + MktOpsFte + CustomerServiceAgentFte + DerRecruiterFte +
+             BillingFte + AmiNetFte + AmiCyberFte + DerNetFte + DerCyberFte +
              OperatorFte + PlanningFte + AdminFte + DmsNetFte + DmsCyberFte + BusinessNetworkFte + LegalFte +
              HRFte + AccountingFte + EconomicsFte + PRFte + 1 + CioLevel_bool + CfoLevel_bool) * \
             office_sqft_employee * office_workspace_costs / 1000
 
-
     DOtoMO = 0
-    RSPtoMO = 0 #MktSoft + MktHdw + MktOpsLabor
-
+    RSPtoMO = 0  # MktSoft + MktHdw + MktOpsLabor
 
     CapitalExpenses_dict = {
-            'DistPlant': {
+        'DistPlant': {
             'Substations': Substations,
             'Feeders': Feeders,
             'Meters': Meters
-            },
-            'InfoTech': {
+        },
+        'InfoTech': {
             'MktSoftHdw': {'MktSoft': MktSoft,
                            'MktHdw': MktHdw
                            },
@@ -413,8 +416,8 @@ def dso_CFS(case_config,
             'OmsSoft': OmsSoft,
             'CisSoft': CisSoft,
             'BillingSoft': BillingSoft
-            }
         }
+    }
 
     MOtoDO = 0
     MOtoRSP = 0
@@ -434,71 +437,69 @@ def dso_CFS(case_config,
         }
     }
 
+    RSPtoDO = 0  # dso_helper.returnDictSum(Revenues_dict) - (MktSoft + MktHdw + MktOpsLabor)
 
-    RSPtoDO = 0 #tesp.returnDictSum(Revenues_dict) - (MktSoft + MktHdw + MktOpsLabor)
-
-    #Revenues = tesp.returnDictSum(Revenues_dict)
-    #TaxesRevenues = Revenues * metadata_general['effective_income_tax_rate'][utility_type]
-
+    # Revenues = dso_helper.returnDictSum(Revenues_dict)
+    # TaxesRevenues = Revenues * metadata_general['effective_income_tax_rate'][utility_type]
 
     # a separate function?
     OperatingExpenses_dict = {'PeakCapacity': PeakCapacity,
-                     'TransCharges': TransCharges,
-                     'WhEnergyPurchases': {
-                         'WhDAPurchases': WhDAPurchases,
-                         'WhRTPurchases': WhRTPurchases,
-                         'WhBLPurchases': WhBLPurchases
-                     },
-                     'OtherWholesale': {
-                         'WhReserves': WhReserves,
-                         'WhLosses': WhLosses,
-                         'WhISO': WhISO
-                     },
-                     'O&mMaterials': O_and_M_Materials,
-                     'O&mLabor': {
-                         'Linemen': Linemen,
-                         'Operators': Operators,
-                         'Planning': Planning,
-                         'Metering': Metering
-                     },
-                     'MktOpsLabor': MktOpsLabor,
-                     'AmiCustOps': {
-                         'AmiOps': {
-                             'AmiNetworkLabor': AmiNetworkLabor,
-                             'AmiCyberLabor': AmiCyberLabor
-                         },
-                         'CustOps': {
-                             'CustNetworkLabor': CustNetworkLabor,
-                             'CustCyberLabor': CustCyberLabor
-                         },
-                         'DmsOps': {
-                             'DmsNetworkLabor': DmsNetworkLabor,
-                             'DmsCyberLabor': DmsCyberLabor
-                         }
-                     },
-                     'RetailOps': {
-                         'CustomerService': CustomerServiceAgent,
-                         'AssetR&R': AssetR_R,
-                         'Billing': Billing
-                     },
-                     'Admin': Admin,
-                     'Space': Space,
-                     'TransFrom': {
-                         'TransFromDO':
-                             {'DOtoMO': DOtoMO},
-                         'TransFromRSP':
-                             {'RSPtoMO': RSPtoMO,
-                              'RSPtoDO': RSPtoDO}
-                     }
-                     }
+                              'TransCharges': TransCharges,
+                              'WhEnergyPurchases': {
+                                  'WhDAPurchases': WhDAPurchases,
+                                  'WhRTPurchases': WhRTPurchases,
+                                  'WhBLPurchases': WhBLPurchases
+                              },
+                              'OtherWholesale': {
+                                  'WhReserves': WhReserves,
+                                  'WhLosses': WhLosses,
+                                  'WhISO': WhISO
+                              },
+                              'O&mMaterials': O_and_M_Materials,
+                              'O&mLabor': {
+                                  'Linemen': Linemen,
+                                  'Operators': Operators,
+                                  'Planning': Planning,
+                                  'Metering': Metering
+                              },
+                              'MktOpsLabor': MktOpsLabor,
+                              'AmiCustOps': {
+                                  'AmiOps': {
+                                      'AmiNetworkLabor': AmiNetworkLabor,
+                                      'AmiCyberLabor': AmiCyberLabor
+                                  },
+                                  'CustOps': {
+                                      'CustNetworkLabor': CustNetworkLabor,
+                                      'CustCyberLabor': CustCyberLabor
+                                  },
+                                  'DmsOps': {
+                                      'DmsNetworkLabor': DmsNetworkLabor,
+                                      'DmsCyberLabor': DmsCyberLabor
+                                  }
+                              },
+                              'RetailOps': {
+                                  'CustomerService': CustomerServiceAgent,
+                                  'AssetR&R': AssetR_R,
+                                  'Billing': Billing
+                              },
+                              'Admin': Admin,
+                              'Space': Space,
+                              'TransFrom': {
+                                  'TransFromDO':
+                                      {'DOtoMO': DOtoMO},
+                                  'TransFromRSP':
+                                      {'RSPtoMO': RSPtoMO,
+                                       'RSPtoDO': RSPtoDO}
+                              }
+                              }
 
-    OperatingExpenses = tesp.returnDictSum(OperatingExpenses_dict)
-    #TaxExpDeduct = Expenses * metadata_general['effective_income_tax_rate'][utility_type]
-    #Taxes = TaxesRevenues + TaxExpDeduct
+    OperatingExpenses = dso_helper.returnDictSum(OperatingExpenses_dict)
+    # TaxExpDeduct = Expenses * metadata_general['effective_income_tax_rate'][utility_type]
+    # Taxes = TaxesRevenues + TaxExpDeduct
 
-    NetIncome = tesp.returnDictSum(Revenues_dict) - \
-                tesp.returnDictSum(CapitalExpenses_dict) - \
-                tesp.returnDictSum(OperatingExpenses_dict)
+    NetIncome = dso_helper.returnDictSum(Revenues_dict) - \
+                dso_helper.returnDictSum(CapitalExpenses_dict) - \
+                dso_helper.returnDictSum(OperatingExpenses_dict)
 
     DSO_Cash_Flows_dict = {
         'CapitalExpenses': CapitalExpenses_dict,
@@ -511,7 +512,7 @@ def dso_CFS(case_config,
 
     DistPlant = Substations + Feeders + Meters
 
-    MktSoftHdw =  MktSoft + MktHdw
+    MktSoftHdw = MktSoft + MktHdw
     AmiDerNetwork = AmiNetwork + DerNetwork
     InfoTech = MktSoftHdw + AmiDerNetwork + DaNetwork + DmsSoft + OmsSoft + CisSoft + BillingSoft
 
@@ -538,15 +539,14 @@ def dso_CFS(case_config,
     TransTo = TransToMO + TransToDO
 
     OperatingExpenses = PeakCapacity + TransCharges + WhEnergyPurchases + OtherWholesale + O_and_M_Materials + \
-               O_M_Labor + MktOpsLabor + AmiCustOps + \
-               DmsOps + RetailOps + Admin + Space #+ TransFrom
+                        O_M_Labor + MktOpsLabor + AmiCustOps + \
+                        DmsOps + RetailOps + Admin + Space  # + TransFrom
 
-
-    FixedSales = tesp.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales'])
-    TransactiveSales = tesp.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales'])
+    FixedSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['FixedSales'])
+    TransactiveSales = dso_helper.returnDictSum(DSO_Cash_Flows['Revenues']['RetailSales']['TransactiveSales'])
     RetailSales = FixedSales + TransactiveSales
 
-    Revenues = RetailSales # + TransactFees +
+    Revenues = RetailSales  # + TransactFees +
 
     DSO_Cash_Flows_composite = {
         'CapitalExpenses': CapitalExpenses,
@@ -648,15 +648,12 @@ def dso_CFS(case_config,
             'WhLosses': WhLosses
         },
         'EnergyPurchased': EnergyPurchased,
-        'EffectiveCostWholesaleEnergy': 0 # (PeakCapacity + TransCharges + WhEnergyPurchases + OtherWholesale) / EnergyPurchased
+        'EffectiveCostWholesaleEnergy': 0
+        # (PeakCapacity + TransCharges + WhEnergyPurchases + OtherWholesale) / EnergyPurchased
     }
 
-
     return CapitalExpenses_dict, OperatingExpenses_dict, Revenues_dict, \
-           DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite
-
-
-
+        DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite
 
 
 if __name__ == '__main__':
@@ -665,12 +662,12 @@ if __name__ == '__main__':
     # dso_names = ['dso_1', 'dso_2', 'dso_3']
 
     # meta_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/metadata'
-    meta_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/tesp-private/examples/analysis/dsot/data'
+    meta_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/dso_helper-private/examples/analysis/dsot/data'
 
     dso_paths = ['D:\\DSOT\\Base_858c4e40\\2016_02\\DSO_1']
     Substation_paths = ['D:\\DSOT\\Base_858c4e40\\2016_02\\Substation_1']
 
-    system_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/tesp-private/examples/dsot_v3'
+    system_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/dso_helper-private/examples/dsot_v3'
 
     path_to_write = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/test_save_files'
     save_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/test_save_files'
@@ -685,8 +682,9 @@ if __name__ == '__main__':
     transactive = True
     # path_to_write
     # save_path
-    '''
+
     CapitalExpenses_dict, OperatingExpenses_dict, Revenues_dict, \
-    DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
+        DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
         dso_CFS(config_path, DSOmetadata, dso_num, DSO_base_case_peak_demand,
                 DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales)
+'''

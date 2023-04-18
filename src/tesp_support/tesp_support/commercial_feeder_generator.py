@@ -10,7 +10,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 from .helpers import gld_strict_name
-import tesp_support.feederGenerator_dsot as res_FG
+import tesp_support.dsot.feeder_generator_dsot as res_FG
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
@@ -675,9 +675,11 @@ def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
     """Write one pre-configured commercial zone as a house
 
     Args:
-      bldg: dictionary of GridLAB-D house and zipload attributes
-      op (file): open file to write to
-      mode (str): if in 'test' mode will not write out parent info.
+       bldg: dictionary of GridLAB-D house and zipload attributes
+       op (file): open file to write to
+       metrics (list):
+       metrics_interval (int):
+       mode (str): if in 'test' mode will not write out parent info.
     """
     print('object house {', file=op)
     print('  name', bldg['zonename'] + ';', file=op)
@@ -794,12 +796,8 @@ def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
     print('}', file=op)
 
 
-# ----------------------   MAIN  ------------------------
-
-
-if __name__ == '__main__':
-
-    metadata_path = 'C:\\Users\\reev057\\PycharmProjects\TESP\src\examples\dsot_v1\\analysis_metadata'
+def test():
+    metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v1/analysis_metadata'
     with open(os.path.join(metadata_path, 'DSOT_commercial_metadata.json')) as json_file:
         comm_bldg_data = json.load(json_file)
 
@@ -839,14 +837,14 @@ if __name__ == '__main__':
         create_comm_zones(comm_zones[i], comm_loads, key, op, 'test')
 
     #   PLOT OUTPUT AND SAVE PLOTS TO FILE
-    plot_path = 'C:\\Users\\reev057\\OneDrive - PNNL\\Documents\\GMLC\\DSO+T\\building distribution'
+    plot_path = 'C:/Users/reev057/OneDrive - PNNL/Documents/GMLC/DSO+T/building distribution'
     vars = ['age', 'os_rand', 'COP_A', 'airchange_per_hour', 'floor_area', 'ceiling_height', 'window_wall_ratio',
             'aspect_ratio', 'Rroof', 'Rwall', 'thermal_mass_per_floor_area', 'window_exterior_transmission_coefficient',
             'Rwindows', 'glazing_shgc', 'int_gains']
     # vars = ['start_time_weekdays', 'duration_weekdays', 'end_time_weekdays', 'start_time_sat', 'duration_sat',
     #         'end_time_sat', 'start_time_sun', 'duration_sun', 'end_time_sun']
     outputs = ['total', 'office', 'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service',
-                'food_sales', 'healthcare_inpatient', 'lodging', 'low_occupancy']
+               'food_sales', 'healthcare_inpatient', 'lodging', 'low_occupancy']
 
     dist = {}
 
@@ -887,3 +885,7 @@ if __name__ == '__main__':
         fig.savefig(file_path_fig, bbox_inches='tight')
 
     print(comm_bldg)
+
+
+if __name__ == '__main__':
+    test()

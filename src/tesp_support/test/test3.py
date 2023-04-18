@@ -1,7 +1,6 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: test3.py
 
-# step 3
-import tesp_support.tesp_case as tesp
-tesp.make_tesp_case ('Demo.json')
+import tesp_support.tesp_case as tc
 
+tc.make_tesp_case('Demo.json')

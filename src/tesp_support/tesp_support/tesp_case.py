@@ -20,7 +20,7 @@ from datetime import datetime
 
 from .TMYtoEPW import convert_tmy2_to_epw
 from tesp_support.api.data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
-from .feederGenerator import populate_feeder
+from .feeder_generator import populate_feeder
 from .glm_dict import glm_dict
 from .helpers import HelicsMsg
 from .make_ems import merge_idf
@@ -536,7 +536,7 @@ values:
     try:
         aucline = "import tesp_support.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "')"
         ppline = "import tesp_support.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('" + PPJsonFile + "','" + casename + "')"
-        weatherline = "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')"
+        weatherline = "import tesp_support.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')"
 
         shfile = casedir + '/run.sh'
         op = open(shfile, 'w')

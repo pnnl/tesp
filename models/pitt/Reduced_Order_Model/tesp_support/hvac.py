@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
-# file: hvac.py
+# file: hvac_agent.py
 """Class that controls the responsive thermostat for one house.
 
 Implements the ramp bidding method, with HVAC power as the

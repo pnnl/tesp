@@ -18,8 +18,8 @@ import numpy as np
 import pandas as pd
 import pytz
 
-from .hvac_dsot import HVACDSOT
-from .schedule_client import *
+from tesp_support.dsot.hvac_agent import HVACDSOT
+from tesp_support.schedule_client import *
 
 
 class Forecasting:

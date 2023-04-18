@@ -3,11 +3,11 @@
 """Classes for NIST TE Challenge 2 example
 
 The precool_loop class manages time stepping and FNCS messages
-for the precooler agents, which adjust thermostat setpoints in 
-response to time-of-use rates and overvoltages. The precooler agents
+for the precooler agents, which adjust thermostat set points in
+response to time-of-use rates and over voltages. The precooler agents
 also estimate house equivalent thermal parameter (ETP) models based
-on total floor area, number of stories, number of exterior doors and
-and estiamted thermal integrity level. This ETP estimate serves as
+on total floor area, number of stories, number of exterior doors
+and estimated thermal integrity level. This ETP estimate serves as
 an example for other agent developers; it's not actually used by the
 precooler agent.
 
@@ -33,8 +33,7 @@ import math
 if sys.platform != 'win32':
     import resource
 
-from .helpers import parse_number
-from .helpers import parse_magnitude_2
+from .helpers import parse_number, parse_magnitude_2
 
 thermalIntegrity = {
     'VERY_LITTLE':
@@ -559,7 +558,6 @@ def precool_loop(nhours, metrics_root, dict_root, response='PriceVoltage', helic
     logger.setLevel(log.INFO)
     # logger.setLevel(log.WARNING)
     # logger.setLevel(log.DEBUG)
-
 
     if helicsConfig is not None:
         helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)

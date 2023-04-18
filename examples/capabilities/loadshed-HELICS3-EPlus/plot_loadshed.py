@@ -1,4 +1,6 @@
-# file: plot_loadshed.py
+# Copyright (C) 2021-2022 Battelle Memorial Institute
+# file: plots.py
+
 import json
 import os
 import sys
@@ -6,7 +8,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-import tesp_support.tesp_api as tesp
+import tesp_support.prep_eplus as pe
 
 outputFolder = './'
 # first, read and print a dictionary of all the monitored GridLAB-D objects
@@ -128,7 +130,7 @@ ax[1].set_title("Real Power at Substation")
 ax[1].legend(loc='best')
 ax[1].set_xlabel("Hours")
 
-emetrics = tesp.read_eplus_metrics(os.getcwd(), 'agent')
-tesp.plot_eplus(emetrics)
+emetrics = pe.read_eplus_metrics(os.getcwd(), 'agent')
+pe.plot_eplus(emetrics)
 
 plt.show()

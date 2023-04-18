@@ -1,5 +1,5 @@
-#	Copyright (C) 2017-2019 Battelle Memorial Institute
-# file: glm_dict.py
+# Copyright (C) 2017-2022 Battelle Memorial Institute
+# file: glm_dict_TM.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
 """Functions to create metadata from a GridLAB-D input (GLM) file
 
@@ -13,6 +13,7 @@ Public Functions:
 
 """
 
+import os
 import json
 import math
 
@@ -20,14 +21,14 @@ import math
 def ercotMeterName(objname):
     """ Enforces the meter naming convention for ERCOT
 
-	Replaces anything after the last _ with *mtr*.
+    Replaces anything after the last _ with *mtr*.
 
-	Args:
-	    objname (str): the GridLAB-D name of a house or inverter
+    Args:
+        objname (str): the GridLAB-D name of a house or inverter
 
-	Returns:
-		str: The GridLAB-D name of upstream meter
-	"""
+    Returns:
+        str: The GridLAB-D name of upstream meter
+    """
     k = objname.rfind('_')
     root1 = objname[:k]
     k = root1.rfind('_')
@@ -36,7 +37,7 @@ def ercotMeterName(objname):
 
 def ti_enumeration_string(tok):
     """ if thermal_integrity_level is an integer, convert to a string for the metadata
-	"""
+    """
     if tok == '0':
         return 'VERY_LITTLE'
     if tok == '1':
@@ -56,55 +57,49 @@ def ti_enumeration_string(tok):
     return tok
 
 
-def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=False):
+def append_include_file(lines, fname):
+    if os.path.isfile(fname):
+        fp = open(fname, 'r')
+        for line in fp:
+            lines.append(line)
+        fp.close()
+
+
+def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=False):
     """ Writes the JSON metadata file from a GLM file
 
-    This function reads *nameroot.glm* and writes *nameroot_glm_dict.json*
+    This function reads *name_root.glm* and writes *[name_root]_glm_dict.json*
     The GLM file should have some meters and triplex_meters with the
     bill_mode attribute defined, which identifies them as billing meters
     that parent houses and inverters. If this is not the case, ERCOT naming
     rules can be applied to identify billing meters.
 
     Args:
-        nameroot (str): path and file name of the GLM file, without the extension
+        name_root (str): path and file name of the GLM file, without the extension
         config (dict):
         ercot (boolean): request ERCOT billing meter naming. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
         te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
     """
 
-    # Laurentiu Marinovici 01/28/2020
-    # Commenting out the if ercot part, as config does not even have a feeder key anyway
-    # if ercot:
-    #    ip = open(config['feeder'] + '.glm', 'r')
-    # else:
-    ip = open(nameroot + '.glm', 'r')
-    op = open(nameroot + '_glm_dict.json', 'w')
+    # first pass, collect first-level include files
+    collected_lines = []
+    ip = open(name_root + '.glm', 'r')
+    for line in ip:
+        if '#include' in line:
+            lst = line.split()
+            if len(lst) > 1:
+                incfile = os.path.expandvars(lst[1].strip('\"'))
+                append_include_file(collected_lines, incfile)
+        else:
+            collected_lines.append(line)
+    ip.close()
 
-    FNCSmsgName = ''
-    HELICSmsgName = ''
+    # second pass, look for the substation
     feeder_id = 'feeder'
-    name = ''
-    if config is not None:
-        bulkpowerBus = config['SimulationConfig']['BulkpowerBus']
-    else:
-        bulkpowerBus = 'TBD'
     base_feeder = ''
     substationTransformerMVA = 12
-    houses = {}
-    waterheaters = {}
-    ziploads = {}
-    billingmeters = {}
-    inverters = {}
-    feeders = {}
-    capacitors = {}
-    regulators = {}
-    climateName = ''
-    climateInterpolate = ''
-    climateLatitude = ''
-    climateLongitude = ''
-
     inSwing = False
-    for line in ip:
+    for line in collected_lines:
         lst = line.split()
         if len(lst) > 1:
             if lst[1] == 'substation':
@@ -123,27 +118,45 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                     inSwing = False
                     break
 
-    ip.seek(0, 0)
+    # third pass, process the other objects
+    message_name = ''
+    if config is not None:
+        bulkpowerBus = config['SimulationConfig']['BulkpowerBus']
+    else:
+        bulkpowerBus = 'TBD'
+    name = ''
+    houses = {}
+    waterheaters = {}
+    ziploads = {}
+    billingmeters = {}
+    inverters = {}
+    ev = {}
+    feeders = {}
+    capacitors = {}
+    regulators = {}
+    climateName = ''
+    climateInterpolate = ''
+    climateLatitude = ''
+    climateLongitude = ''
+
     inHouses = False
     inWaterHeaters = False
     inZIPload = False
     inTriplexMeters = False
     inMeters = False
     inInverters = False
+    inEV = False
     hasBattery = False
     hasSolar = False
     inCapacitors = False
     inRegulators = False
-    inFNCSmsg = False
-    inHELICSmsg = False
+    inMessage = False
     inClimate = False
-    for line in ip:
+    for line in collected_lines:
         lst = line.split()
         if len(lst) > 1:  # terminates with a } or };
             if lst[1] == 'fncs_msg':
-                inFNCSmsg = True
-            if lst[1] == 'helics_msg':
-                inHELICSmsg = True
+                inMessage = True
             if lst[1] == 'climate':
                 inClimate = True
             if lst[1] == 'house':
@@ -168,15 +181,10 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                 cooling_COP = 3.5
                 total_thermal_mass_per_floor_area = 2
                 house_class = 'SINGLE_FAMILY'
-            if inFNCSmsg:
+            if inMessage:
                 if lst[0] == 'name':
-                    FNCSmsgName = lst[1].strip(';')
-                    inFNCSmsg = False
-            ######  Helics Msg Name ######
-            if inHELICSmsg:
-                if lst[0] == 'name':
-                    HELICSmsgName = lst[1].strip(';')
-                    inHELICSmsg = False
+                    message_name = lst[1].strip(';')
+                    inMessage = False
             if inClimate:
                 if lst[0] == 'name':
                     climateName = lst[1].strip(';')
@@ -215,6 +223,8 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                 inWaterHeaters = True
             if lst[1] == 'ZIPload':
                 inZIPload = True
+            if lst[1] == 'evcharger_det':
+                inEV = True
             if inCapacitors:
                 if lst[0] == 'name':
                     lastCapacitor = lst[1].strip(';')
@@ -229,6 +239,9 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                 if lst[0] == 'name' and lastInverter == '':
                     lastInverter = lst[1].strip(';')
                 if lst[1] == 'solar':
+                    hasSolar = True
+                    hasBattery = False
+                if lst[1] == 'sol_inverter;':
                     hasSolar = True
                     hasBattery = False
                 elif lst[1] == 'battery':
@@ -248,6 +261,48 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                     soc = float(lst[1].strip(' ').strip(';')) * 1.0
                 if lst[0] == 'battery_capacity':
                     capacity = float(lst[1].strip(' ').strip(';')) * 1.0
+            if inEV:
+                if lst[0] == 'name':
+                    ev_name = lst[1].strip(';')
+                if lst[0] == 'parent':
+                    ev_parent = lst[1].strip(';')
+                if lst[0] == 'battery_SOC':
+                    ev_init_soc = float(lst[1].strip(';'))
+                if lst[0] == 'work_charging_available':
+                    ev_work_charging = (lst[1].strip(';'))
+                if lst[0] == 'travel_distance':
+                    ev_daily_miles = float(lst[1].strip(';'))
+                if lst[0] == 'arrival_at_work':
+                    ev_arr_work = int(lst[1].strip(';'))
+                if lst[0] == 'arrival_at_home':
+                    ev_arr_home = int(lst[1].strip(';'))
+                if lst[0] == 'duration_at_work':
+                    ev_dur_work = float(lst[1].strip(';'))
+                if lst[0] == 'duration_at_home':
+                    ev_dur_home = float(lst[1].strip(';'))
+                if lst[0] == 'maximum_charge_rate':
+                    ev_max_charge = float(lst[1].strip(';'))
+                if lst[0] == 'mileage_efficiency':
+                    ev_mileage = float(lst[1].strip(';'))
+                if lst[0] == 'mileage_classification':
+                    ev_range = float(lst[1].strip(';'))
+                if lst[0] == 'charging_efficiency':
+                    ev_charg_eff = float(lst[1].strip(';'))
+                    ev[lastHouse] = {'name': ev_name,
+                                     'feeder_id': feeder_id,
+                                     'billingmeter_id': lastBillingMeter,
+                                     'parent': ev_parent,
+                                     'work_charging': ev_work_charging,
+                                     'battery_SOC': ev_init_soc,
+                                     'max_charge': ev_max_charge,
+                                     'daily_miles': ev_daily_miles,
+                                     'arrival_work': ev_arr_work,
+                                     'arrival_home': ev_arr_home,
+                                     'work_duration': ev_dur_work,
+                                     'home_duration': ev_dur_home,
+                                     'miles_per_kwh': ev_mileage,
+                                     'range_miles': ev_range,
+                                     'efficiency': ev_charg_eff}
             if inHouses:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')
@@ -394,7 +449,7 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                 if lst[0] == 'parent':
                     lastMeterParent = lst[1].strip(';')
                 if lst[0] == 'bill_mode':
-                    # if te30 == True:
+                    # if te30:
                     #    if 'flatrate' not in name:
                     #        billingmeters[name] = {'feeder_id': feeder_id, 'phases': phases, 'vll': vll, 'vln': vln,
                     #                               'children': [], 'building_type': 'UNKNOWN',
@@ -429,8 +484,6 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                 inverters[lastInverter] = {'feeder_id': feeder_id,
                                            'billingmeter_id': lastBillingMeter,
                                            'rated_W': rating,
-                                           'charge_rating_W': max_charge_rating,
-                                           'discharge_rating_W': max_discharge_rating,
                                            'resource': 'solar',
                                            'inv_eta': inv_eta}
             elif hasBattery:
@@ -456,7 +509,7 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
             inInverters = False
             inCapacitors = False
             inRegulators = False
-            inFNCSmsg = False
+            inMessage = False
 
     for key, val in houses.items():
         if key in waterheaters:
@@ -474,7 +527,8 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
             val['zip_power_fraction'] = ziploads[key]['power_fraction']
             val['zip_power_pf'] = ziploads[key]['power_pf']
 
-        # Laurentiu Dan Marinovici 2019/10/22 - turned out that the commercial buildings do not have a bill_mode field in their GLM objects,
+        # Laurentiu Dan Marinovici 2019/10/22 -
+        # turned out that the commercial buildings do not have a bill_mode field in their GLM objects,
         # which led to not have them added to the billing meters fields
         try:
             mtr = billingmeters[val['billingmeter_id']]
@@ -488,7 +542,7 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                 if bldg in mtr['building_type']:
                     mtr['tariff_class'] = 'residential'
         except KeyError as keyErr:
-            #	print('I got a KeyError. Reason - {0}. See: {1}'.format(str(keyErr), format_exc())) # sys.exc_info()[2].tb_)
+            # print('I got a KeyError. Reason - {0}. See: {1}'.format(str(keyErr), format_exc())) # sys.exc_info()[2].tb_)
             pass
         # except:
         #	print('Cannot find id {0} from {1} in the list of billing meters.'.format(val['billingmeter_id'], key))
@@ -496,6 +550,9 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
         #	pass
 
     for key, val in inverters.items():
+        mtr = billingmeters[val['billingmeter_id']]
+        mtr['children'].append(key)
+    for key, val in ev.items():
         mtr = billingmeters[val['billingmeter_id']]
         mtr['children'].append(key)
 
@@ -510,7 +567,7 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
     microgrid_info = config['SimulationConfig']['dso']['DSO']['microgrids']
     billingmeters_counter = 0
     for key in microgrid_info:
-        op_MG = open(nameroot + '_' + key + '_glm_dict.json', 'w')
+        op_MG = open(name_root + '_' + key + '_glm_dict.json', 'w')
         microgrid_info[key]['number_billingmeters'] = []
         microgrid_info[key]['billingmeters_info'] = {}
         microgrid_info[key]['house_info'] = {}
@@ -543,7 +600,7 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                     microgrid_info[key]['inverter_info'][child_key] = {}
                     microgrid_info[key]['inverter_info'][child_key] = inverters[child_key]
 
-        Microgrid = {'bulkpower_bus': bulkpowerBus, 'FNCS': FNCSmsgName, 'HELICS': HELICSmsgName,
+        Microgrid = {'bulkpower_bus': bulkpowerBus,  'message_name': message_name,
                      'transformer_MVA': substationTransformerMVA,
                      'base_feeder': base_feeder, 'feeders': feeders,
                      'microgrids': dict((k, microgrid_info[key][k]) for k in ('name', 'ercot', 'number_billingmeters')),
@@ -552,12 +609,15 @@ def glm_dict_with_microgrids(nameroot, config=None, ercot=False):  # , te30=Fals
                      'capacitors': capacitors, 'regulators': regulators, 'climate': climate}
         print(json.dumps(Microgrid), file=op_MG)
 
-    substation = {'bulkpower_bus': bulkpowerBus, 'FNCS': FNCSmsgName, 'HELICS': HELICSmsgName,
+    substation = {'bulkpower_bus': bulkpowerBus, 'message_name': message_name,
                   'transformer_MVA': substationTransformerMVA,
                   'base_feeder': base_feeder, 'feeders': feeders,
-                  'billingmeters': billingmeters, 'houses': houses, 'inverters': inverters,
+                  'billingmeters': billingmeters, 'houses': houses, 'inverters': inverters, 'ev': ev,
                   'capacitors': capacitors, 'regulators': regulators, 'climate': climate}
-    print(json.dumps(substation), file=op)
-
-    ip.close()
+    op = open(name_root + '_glm_dict.json', 'w')
+    json.dump(substation, op, ensure_ascii=False, indent=2)
     op.close()
+
+
+if __name__ == "__main__":
+    glm_dict_with_microgrids("Test")

@@ -4,7 +4,6 @@
 import os
 
 from tesp_support.api.data import entities_path
-from tesp_support.api.data import tesp_test
 from tesp_support.api.entity import assign_defaults
 from tesp_support.api.model import GLModel
 
@@ -113,15 +112,25 @@ class GLMModifier:
 
 
 def test1():
+    from tesp_support.api.data import tesp_test
+
     testMod = GLMModifier()
-    f = "dsot_test.glm"
-    # f = "testing.glm"
-    # f = "../../../../examples/capabilities/loadshed/loadshed.glm"
+    testMod.model.read(tesp_test + "api/dsot_in.glm")
+    testMod.write_model(tesp_test + "api/dsot_out.glm")
+
+    testMod = GLMModifier()
+    testMod.model.read(tesp_test + "api/testing_in.glm")
+    testMod.write_model(tesp_test + "api/testing_out.glm")
+
+    testMod = GLMModifier()
+    f = "../../../../examples/capabilities/loadshed/loadshed.glm"
     testMod.model.read(f)
-    testMod.write_model("test4.glm")
+    testMod.write_model(tesp_test + "api/loadshed_out.glm")
 
 
 def test2():
+    from tesp_support.api.data import tesp_test
+
     testMod = GLMModifier()
     testMod.model.readBackboneModel("GLD_three_phase_house.glm")
     loads = testMod.get_object('load')
@@ -146,7 +155,7 @@ def test2():
         house_name = 'house_' + str(house_counter)
         house = testMod.add_object('house', house_name, [])
         house['parent'] = house_meter_name
-    testMod.write_model(tesp_test + "test0.glm")
+    testMod.write_model(tesp_test + "api/modifier_test2.glm")
 
 
 # Press the green button in the gutter to run the script.

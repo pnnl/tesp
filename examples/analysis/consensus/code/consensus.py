@@ -34,7 +34,7 @@ def consensus_RT(P, Q, PD, PG_initial, Ramp_rates, is_Ramp=False):
     N_agents = P.shape[1]  # number of agents
     D = construct_Laplacian(N_agents)
     ###########################################################################
-    # ################### Initialize dual variable \lambda #####################
+    # ################## Initialize dual variable \lambda #####################
     ###########################################################################
     lambda_initial = np.zeros(N_agents)
     for i in range(N_agents):
@@ -55,7 +55,7 @@ def consensus_RT(P, Q, PD, PG_initial, Ramp_rates, is_Ramp=False):
     DeltaP[:, 0] = PD - np.sum(PG[:, 0])
 
     ###########################################################################
-    # ###################### Starting Consensus Algorthm #######################
+    # ##################### Starting Consensus Algorthm #######################
     ###########################################################################
     # Select node 1 as the leader
     kk = 0
