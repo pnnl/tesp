@@ -4,10 +4,12 @@ import numpy as np
 
 def get_node_ids(time_series, id_column_name):
     """
-
-    :param time_series:
-    :param id_column_name:
-    :return:
+    Function queries a list of unique values from a time series dataframe based  upon a column id entered by the user
+    Args:
+        time_series: (dataframe) time series dataframe that contains the values to be queried
+        id_column_name: (string) name of the dataframe column where the values are located
+    Returns:
+    object: (List) list object containing the unique values found in the time series dataframe
     """
     feeder_ids = pd.unique(time_series[id_column_name])
     return feeder_ids
@@ -15,35 +17,28 @@ def get_node_ids(time_series, id_column_name):
 
 def get_node_data(time_series, node_id, id_column_name):
     """
-
-    :param time_series:
-    :param node_id:
-    :param id_column_name:
-    :return:
+    function queries the time series dataframe for the data set identified by the entered node id
+    Args:
+        time_series: (dataframe) time series dataframe contains the node data to be queried
+        node_id: (string) the id of the node that is to be used in the query
+        id_column_name: (string) name of the time series dataframe column that contains the node ids
+            to be queried against
+    Returns:
+        object: (dataframe) time series dataframe containing data specific to a single node id
     """
     node_data = time_series.query('@id_column_name == @node_id')
     return node_data
 
 
-def clip_time_series(time_series, start_date, end_date):
+def get_time_series_average(time_series, start_date, duration):
     """
-
-    :param time_series:
-    :param start_date:
-    :param end_date:
-    :return:
-    """
-    averaging_time_series = time_series.query('index >= @start_date and index <= @end_date')
-    return averaging_time_series
-
-
-def get_time_series_average(time_series, start_date, duration, time_interval):
-    """
-    :param time_series:
-    :param start_date:
-    :param duration:
-    :param time_interval:
-    :return:
+    function calculates the average of each data column in the dataframe
+    Args:
+        time_series: (dataframe) time series dataframe containing the data to be averaged
+        start_date: (string) the starting date and time that should be used in the calculation of the averages
+        duration: (integer) the duration in hours that the averages should be calculated
+    Returns:
+        object: (dataframe) dataframe containing the average value for each column in the input dataframe
     """
     begin_date = pd.to_datetime(start_date)
     end_date = begin_date + pd.offsets.Hour(duration)
@@ -53,10 +48,12 @@ def get_time_series_average(time_series, start_date, duration, time_interval):
 
 def get_avg_column_value(time_series, val_index):
     """
-    VM_Substation Reactive Power Demand
-    :param time_series:
-    :param val_index:
-    :return:
+
+    Args:
+        time_series: (dataframe) time series dataframe containing the data to be averaged
+        val_index: (string) name of the column that contains the data to be averaged
+    Returns:
+        object: (float) calculated average value for the column identified in the function arguments
     """
     avg_results = time_series.mean()
     return avg_results[val_index]
@@ -64,13 +61,12 @@ def get_avg_column_value(time_series, val_index):
 
 def get_max_column_value(time_series, val_index):
     """
-    VM_Substation Reactive Power Demand
-    VM_Substation Peak Real Power Demand
-    VM_maximum customer voltages
-    VM_Maximum Communication Packet Size
-    :param time_series:
-    :param val_index:
-    :return:
+    Function searches a designated column in the time series dataframe and returns the maximum value found in the column
+    Args:
+        time_series: (dataframe) time series dataframe containing the data to be searched for a maximum value
+        val_index: (string) name of the column where the data is located to calculate the maximum value
+    Returns:
+        object: (float) the maximum data value found in the designated column
     """
     max_results = time_series.max()
     return max_results[val_index]
@@ -78,22 +74,25 @@ def get_max_column_value(time_series, val_index):
 
 def get_min_column_value(time_series, val_index):
     """
-    VM_Minimum Market Price
-    VM_Minimum customer voltages
-
-    :param time_series:
-    :param val_index:
-    :return:
+    Function searches a designated column in the time series dataframe and returns the minimum value found in the column
+    Args:
+        time_series: (dataframe) time series dataframe containing the data to be searched for a minimum value
+        val_index: (string) name of the column where the data is located to calculate the minimum value
+    Returns:
+        object: (dataframe) the minimum data value found in the designated column
     """
     min_results = time_series.min()
     return min_results[val_index]
 
+
 def get_avg_data_value(time_series, column_id):
     """
-
-    :param time_series:
-    :param val_index:
-    :return:
+    Function calculates the average of a column in the time series dataframe and returns the average value of the column
+    Args:
+        time_series: (dataframe) time series dataframe containing the data to be averaged
+        column_id: (string) name of the data column for which the average is to be calculated
+    Returns:
+        object: (float) calculated average for the identified dataframe column
     """
     avg_results = time_series.mean()
     return avg_results[column_id]
@@ -101,11 +100,13 @@ def get_avg_data_value(time_series, column_id):
 
 def get_accuracy_ratio(input_df, actual_index, simulated_index):
     """
-    VM_Mean Absolute Percentage (Load) Error
-    :param input_df:
-    :param actual_index:
-    :param simulated_index:
-    :return:
+    function calculates the ratio of simulated data to actual data
+    Args:
+        input_df: (dataframe) time series dataframe containing data columns for actual and simulated values
+        actual_index: (string) column id where the actual data is located
+        simulated_index: (string) column id where the simulated data is located
+    Returns:
+        object: (dataframe) time series dataframe containing the calculated ratio values
     """
     df = input_df
     df['ratio'] = 100 * df[simulated_index] / df[actual_index]
@@ -114,11 +115,15 @@ def get_accuracy_ratio(input_df, actual_index, simulated_index):
 
 def adjust_date_time(start_date, offset_type, offset_val):
     """
-
-    :param start_date:
-    :param offset_type:
-    :param offset_val:
-    :return:
+    function returns a date time object that is calculated by adding the offset_val to the entered
+    start date
+        start_date: (datetime) the start date time
+        offset_type: (string) defines what interval of time is to be used. The following
+        identifiers can be used
+        "years", "months", "days", "hours", "minutes", "seconds", "nanoseconds"
+        offset_val: (integer) the number of time intervals that are to be added to start_time
+    Returns:
+        object: (datetime) the modified date time
     """
     new_date = start_date
     if offset_type == "years":
@@ -140,23 +145,30 @@ def adjust_date_time(start_date, offset_type, offset_val):
 
 def get_time_series_max_value_under(time_series, column_id, compare_value):
     """
-    VM_Transmission Under-Voltage Violation
-    :param time_series:
-    :param column_id:
-    :param compare_value:
+    function calculates the maximum value out of the number of values in a dataframe column that are less than
+    a comparison value
+    Args:
+        time_series: (dataframe) time series dataframe containing the data to be compared
+        column_id: (string) the name of the column in the dataframe where the data is located
+        compare_value: (string) the value the data is to be compared with
+    Returns:
+        object: (integer) the maximum of the values that are less than the compare value
     """
     vals_under_compare = time_series.loc[time_series[column_id] < compare_value]
     _max_value = vals_under_compare.max()[column_id]
     return _max_value
 
 
-
-def get_time_series_max_value_over(time_series,column_id,compare_value):
+def get_time_series_max_value_over(time_series, column_id, compare_value):
     """
-    VM_Transmission Over-Voltage Violation
-    :param time_series:
-    :param column_id:
-    :param compare_value:
+    function calculates the maximum value out of the number of values in a dataframe column that are greater than
+    a comparison value
+    Args:
+        time_series: (dataframe) time series dataframe containing the data to be compared
+        column_id: (string) the name of the column in the dataframe where the data is located
+        compare_value: (string) the value the data is to be compared with
+    Returns:
+        object: (integer) the maximum of the values that are greater than the compare value
     """
     _max_value = 0.0
     for _ts_row in time_series:
@@ -167,12 +179,12 @@ def get_time_series_max_value_over(time_series,column_id,compare_value):
 
 def get_column_total_value(time_series, column_id):
     """
-    VM_Wind Energy Production
-    VM_Total Wind Real Power
-    Total PV Real Power
-    VM_Total PV Reactive Power
-    :param time_series:
-    :param column_id:
+    function returns the sum of the values in a dataframe column
+    Args:
+        time_series: (dataframe) the time series dataframe which contains the data to be summed
+        column_id: (string) name of the column containing the values to be summed
+    Returns:
+        object: (float) the sum of the values contained in the identified dataframe column
     """
     _total_value = 0.0
     summed_df = time_series.sum()
@@ -181,26 +193,32 @@ def get_column_total_value(time_series, column_id):
 
 def get_time_series_difference_values(time_series, column_id, time_series2, column_id2):
     """
-    VM_Unserved Electric Load
-    VM_Total Wind Reactive Power
-    VM_Total System Losses
-    VM_System Energy Losses
-
-    :param time_series:
-    :param column_id:
-    :param compare_value:
+    function calculates the difference between data in a column of a dataframe with the data in
+    a column of a second dataframe
+    Args:
+        time_series: (dataframe) time series dataframe containing a data set to be used in the calculation
+        column_id: (string) name of the column where the data to be used is located
+        time_series2: (dataframe) time series dataframe containing a data set to be used in the calculation
+        column_id2: (string) name of the column where the data to be used is located
+    Returns:
+        object: (float) the total value difference calculated as time_series2 - time_series1
     """
     _total_value = 0.0
     summed_df_1 = time_series.sum(axis=1)
     summed_df_2 = time_series2.sum(axis=1)
     return summed_df_2[column_id2] - summed_df_1[column_id]
 
+
 def check_dataframe_synchronization(data_frame_1, data_frame_2):
     """
-
-    :param data_frame_1:
-    :param data_frame_2:
-    :return:
+    Function checks that two time series dataframes are synchronized by comparing size, starting time,
+    and ending time of the data sets. If they are synchronized, the returns "Synchronized". If they are
+    not, then the function will return an error message dependent upon what test failed.
+        data_frame_1: (dataframe) time series dataframe
+        data_frame_2: (dataframe) time series dataframe
+    Returns:
+        object: (string) returns a "Synchronized" message if the two dataframes are synchronized. If they
+        are not, the function returns an error message
     """
     if len(data_frame_1.index) != len(data_frame_2.index):
         return "Dataframes have unequal number of rows"
@@ -213,9 +231,19 @@ def check_dataframe_synchronization(data_frame_1, data_frame_2):
 
 
 def create_testing_dataframe(start_date, end_date, col_names, time_interval):
+    """
+    Function creates a testing dataframe containing random values
+    Args:
+        start_date: (string) the starting date of the time series
+        end_date: (string) then ending date of the time series
+        col_names: (list<string>) the names to be used as the column headers in the resultant dataframe
+        time_interval: (integer) frequency of time intervals. These designations are the same as
+        the designations used to define a pandas date_range e.g. "T", "5T", "H", "12H",...
+    Returns:
+        object: (dataframe) time series dataframe containing random data values over
+            the course of the defined time range
+    """
     np.random.seed(0)
     rng = pd.date_range(start_date, end_date, freq=time_interval)
     df = pd.DataFrame(np.random.randint(0, 20, size=(rng.size, len(col_names))), columns=col_names, index=rng)
     return df
-
-
