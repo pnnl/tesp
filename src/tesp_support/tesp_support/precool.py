@@ -56,7 +56,8 @@ thermalIntegrity = {
 
 
 class precooler:
-    """This agent manages the house thermostat for time-of-use and overvoltage responses.
+    """
+    This agent manages the house thermostat for time-of-use and overvoltage responses.
 
     References:
       `NIST TE Modeling and Simulation Challenge <https://www.nist.gov/engineering-laboratory/smart-grid/hot-topics/transactive-energy-modeling-and-simulation-challenge>`_

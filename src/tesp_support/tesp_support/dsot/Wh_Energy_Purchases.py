@@ -10,7 +10,7 @@ import pandas as pd
 
 def load_hourly_data(dir_path, dso_num, simdata):
     """Utility to open hourly ERCOT csv file. The entire date range for the data (e.g. 1 year) is considered
-    Arguments:
+    Args:
         dir_path: directory path of ercot data
         dso_num: dso number (1-8)
         simdata: If True will seek simulation data.  If false will use 2016 ERCOT data.
@@ -43,7 +43,7 @@ def load_hourly_data(dir_path, dso_num, simdata):
 
 def load_realtime_data(dir_path, dso_num, simdata):
     """Utility to open 5 min ERCOT csv file. The entire date range for the data (e.g. 1 year) is considered
-    Arguments:
+    Args:
         dir_path: directory path of ercot data
         dso_num: dso number (1-8)
         simdata: If True will seek simulation data.  If false will use 2016 ERCOT data.
@@ -82,7 +82,7 @@ def load_realtime_data(dir_path, dso_num, simdata):
 
 def load_price_data(dir_path, market_type, dso_num, simdata, place):
     """Utility to open 5 min ERCOT csv file. The entire date range for the data (e.g. 1 year) is considered
-    Arguments:
+    Args:
         dir_path: directory path of ercot data
         market_type:
         dso_num: dso number (1-8)
@@ -130,15 +130,14 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
     """
     Computes the total costs, total energy purchases and average price annually for bilateral, day-ahead and real-time
     markets from hourly and 5 min ERCOT energy and price data.
-    Arguments:
+    Args:
         dir_path (str): path of the ERCOT energ and price data
         dso_num (int): dso number (1-8)
         simdata (bool): If True will seek simulation data.  If false will use 2016 ERCOT data.
         h1 (int): hours specified to define day
         h2 (int): hours specified to define evening
-        h3 (int): hours specified to define night
-            respectively (e.g. weekday hours h1 to h2, evening hours from h2+1 to h3,
-            and night hours are from h3+1 to h1 the next day)
+        h3 (int): hours specified to define night respectively
+        (e.g. weekday hours h1 to h2, evening hours from h2+1 to h3, and night hours are from h3+1 to h1 the next day)
         place (str): location of DSO
 
     Returns:

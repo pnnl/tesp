@@ -1915,7 +1915,8 @@ def log_model(model, h):
 
 
 def accumulate_load_kva(data):
-    """Add up the total kva in a load-bearing object instance
+    """
+    Add up the total kva in a load-bearing object instance
 
     Considers constant_power_A/B/C/1/2/12 and power_1/2/12 attributes
 

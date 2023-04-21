@@ -38,11 +38,12 @@ def show_resource_consumption():
 
 
 def startWeatherAgent(file):
-    """the weather agent publishes weather data as configured by the json file
+    """The weather agent publishes weather data as configured by the json file
 
-    :param file: string
-        the weather data file
-    :return: nothing
+    Args:
+        file (str): the weather data file
+    Returns:
+        None
     """
     # read the weather data file, arguments to mimic deprecated from_csv function
     weatherData = pd.read_csv(file, index_col=0, parse_dates=True)
@@ -246,13 +247,13 @@ def usage():
 def convertTimeToSeconds(time):
     """Convert time string with unit to integer in seconds
 
-    It only parse unit in day, hour, minute and second.
-    It will not recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
+    Parses the unit in day, hour, minute and second. It will not recognize week, month, year, millisecond,
+    microsecond or nanosecond, they can be added if needed.
 
-    :param time: str
-        time with unit
-    :return: int
-        represent the input time in second
+    Args:
+        time (str): time with unit
+    Returns:
+        int: represent the input time in second
     """
     unit = ''.join(filter(str.isalpha, time))
     timeNum = int(''.join(filter(str.isdigit, time)))
@@ -271,13 +272,13 @@ def convertTimeToSeconds(time):
 def deltaTimeToResmapleFreq(time):
     """Convert time unit to a resampling frequency that can be recognized by pandas.DataFrame.resample()
 
-    It only parses unit in day, hour, minute and second.
-    It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
+    Parses unit in day, hour, minute and second. It won't recognize week, month, year, millisecond,
+    microsecond or nanosecond, they can be added if needed.
 
-    :param time: str
-        time with unit
-    :return: str
-        time with resample frequency
+    Args:
+        time (str): time with unit
+    Returns:
+        str: time with resample frequency
     """
     unit = ''.join(filter(str.isalpha, time))
     timeNum = int(''.join(filter(str.isdigit, time)))
@@ -294,15 +295,15 @@ def deltaTimeToResmapleFreq(time):
 
 
 def findDeltaTimeMultiplier(time):
-    """find the multiplier to convert delta_time to seconds
+    """Find the multiplier to convert delta_time to seconds
 
-    It only parses unit in day, hour, minute and second.
-    It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
+    Parses unit in day, hour, minute and second. It won't recognize week, month, year, millisecond,
+    microsecond or nanosecond, they can be added if needed.
 
-    :param time: str
-        time with unit
-    :return: int
-        the multiplier to convert delta_time to seconds
+    Args:
+        time (str): time with unit
+    Returns:
+        int: the multiplier to convert delta_time to seconds
     """
     unit = ''.join(filter(str.isalpha, time))
     timeNum = int(''.join(filter(str.isdigit, time)))
@@ -335,7 +336,8 @@ element "0" is the next hour and so forth.
 
 
 class weather_forecast:
-    """This object includes the error to a weather variable
+    """
+    This object includes the error to a weather variable
 
     Args:
         variable (str): Type of weather variable being forecasted
@@ -370,7 +372,8 @@ class weather_forecast:
         self.Lower_e_bound = W_dict[variable]["Lower_e_bound"]
 
     def get_truncated_normal(self, EL, EH):
-        """Truncated normal distribution
+        """
+    Truncated normal distribution
         """
         mean = (EL + EH) / 2
         sd = (abs(EL) + abs(EH)) / 4  # 95% of values are within bounds remaining is truncated

@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2019 Battelle Memorial Institute
-# file: substation_dsot_v1.py
+# file: dg_agent.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
 
 Public Functions:
@@ -16,9 +16,9 @@ import helics as h
 import numpy as np
 from joblib import Parallel
 
-import tesp_support.consensus.consensus_generator as consensus
-from tesp_support.consensus.dso_market_dsot import DSOMarketDSOT
-from tesp_support.consensus.retail_market_dsot import RetailMarketDSOT
+import tesp_support.consensus.generator as consensus
+from .dso_market import DSOMarket
+from .retail_market import RetailMarket
 from tesp_support.helpers import enable_logging
 from tesp_support.metrics_collector import MetricsStore, MetricsCollector
 
@@ -155,7 +155,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         if 'DSO' in key:
             dso_config = config['markets'][key]
             dso_name = key
-            dso_market_obj = DSOMarketDSOT(dso_config, dso_name)
+            dso_market_obj = DSOMarket(dso_config, dso_name)
 
             # check the unit of the market
             dso_unit = config['markets'][key]['unit']
@@ -182,7 +182,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
         if 'Retail' in key:
             retail_config = config['markets'][key]
             retail_name = key
-            retail_market_obj = RetailMarketDSOT(retail_config, retail_name)
+            retail_market_obj = RetailMarket(retail_config, retail_name)
             if with_market == 0:
                 retail_market_obj.basecase = True
             else:

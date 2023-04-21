@@ -7,9 +7,10 @@ hostname > hostname
 
 WORKING_DIR="/data/tesp/examples/analysis/dsot/code"
 ARCHIVE_DIR="/mnt/simdata/done"
+USER_ID=oste814
 
 docker run \
-       -e LOCAL_USER_ID="$(id -u oste814)" \
+       -e LOCAL_USER_ID="$(id -u $USER_ID)" \
        -it \
        --rm \
        --network=none \

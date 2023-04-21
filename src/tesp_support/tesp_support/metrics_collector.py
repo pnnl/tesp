@@ -6,20 +6,23 @@ import collections
 import itertools
 import json
 import logging
-import numpy as np
 import os.path
+
+import numpy as np
 import pandas as pd
 
 
 class MetricsTable(object):
     def __init__(self, columns, units):
-        assert len(columns) == len(units), 'len(columns) = {} should be equal to len(units) = {}'.format(len(columns), len(units))
+        assert len(columns) == len(units), 'len(columns) = {} should be equal to len(units) = {}'.format(len(columns),
+                                                                                                         len(units))
         self.columns = columns
         self.units = units
         self.data = list()
 
     def append_data(self, data):
-        assert len(data) == len(self.columns), 'len(data) = {} should be equal to len(columns) = {}'.format(len(data), len(self.columns))
+        assert len(data) == len(self.columns), 'len(data) = {} should be equal to len(columns) = {}'.format(len(data),
+                                                                                                            len(self.columns))
         self.data.append(data)
 
     def clear(self):
@@ -34,7 +37,10 @@ class MetricsTable(object):
         logging.debug('columns {}'.format(self.columns))
         logging.debug('units {}'.format(self.units))
         logging.debug('len(data) {}'.format(len(self.data)))
-        assert len(times) == len(uids) == len(self.data), 'len(times) = {} should be equal to len(uids) = {}, and len(self.data) = {}'.format(len(times), len(uids), len(self.data))
+        assert len(times) == len(uids) == len(
+            self.data), 'len(times) = {} should be equal to len(uids) = {}, and len(self.data) = {}'.format(len(times),
+                                                                                                            len(uids),
+                                                                                                            len(self.data))
         # assumes we never have > 5 dimensions, and if <, then zip takes min of both lists
         ijs_columns = ['i', 'j', 'k', 'l', 'm'][:len(shape)]
         idx_columns = ['time', 'uid'] + ijs_columns
@@ -44,9 +50,13 @@ class MetricsTable(object):
                 logging.debug('data.shape {}'.format(data.shape))
                 logging.debug('data (after asarray) {}'.format(data))
                 assert len(data.shape) >= 2, 'len(data.shape) = {} should be >= 2'.format(len(data.shape))
-                assert len(data.shape[2:]) == len(shape), 'len(data.shape[2:]) = {} should be == len(shape) = {}'.format(len(data.shape[2:]), len(shape))
+                assert len(data.shape[2:]) == len(
+                    shape), 'len(data.shape[2:]) = {} should be == len(shape) = {}'.format(len(data.shape[2:]),
+                                                                                           len(shape))
                 if data.shape[2:] != shape:
-                    logging.warning('file = {}, shape = {} (formed from units) should equal data.shape[2:] = {} (taking this as shape now)'.format(filename, shape, data.shape[2:]))
+                    logging.warning(
+                        'file = {}, shape = {} (formed from units) should equal data.shape[2:] = {} (taking this as shape now)'.format(
+                            filename, shape, data.shape[2:]))
                     shape = data.shape[2:]
                 # these are current rows and cols to be expanded based on higher dimension values in 'data' entries
                 num_rows, num_cols = data.shape[:2]
@@ -65,7 +75,7 @@ class MetricsTable(object):
         except AssertionError as e:
             logging.error('got error: {}, setting df to be empty!'.format(e))
             df = pd.DataFrame(columns=np.concatenate([idx_columns, self.columns]))
-        return df.set_index(['time'])#, 'uid'])#.set_index(idx_columns)
+        return df.set_index(['time'])  # , 'uid'])#.set_index(idx_columns)
 
     # TODO: enable forming similar units dataframe?
 
@@ -81,13 +91,14 @@ class MetricsStore(object):
         file_string (str): the file path (barring extension) which will be appended with "_metrics.{h5, json}"
         collector (MetricsCollector): a common store for these metrics, to ease writing out all metrics/tables
     """
+
     def __init__(self, name_units_pairs, file_string, collector):
         """
-
-        :param name_unit_pairs (list of pairs): an ordered list of (name, units) pairs, where name is
-        the name of a column and units is the units (possibly non-scalar) of that column-name (if non-scalar, we expand)
-        :param file_string (str): the file path (barring extension) which will be appended with "_metrics.{h5, json}"
-        :param collector (MetricsCollectorBase): a common store for these metrics, to ease writing out all metrics/tables
+        Args:
+            name_units_pairs (list of pairs): an ordered list of (name, units) pairs, where name is
+            the name of a column and units is the units (possibly non-scalar) of that column-name (if non-scalar, we expand)
+            file_string (str): the file path (barring extension) which will be appended with "_metrics.{h5, json}"
+            collector (MetricsCollectorBase): a common store for these metrics, to ease writing out all metrics/tables
         """
         # Note: this new format doesn't allow for extra metadata info to be stored/sent here, which I believe I saw in earlier json metadata outputs
         self.time_uid_pairs = list()
@@ -104,20 +115,23 @@ class MetricsStore(object):
         # TODO: decide if we want to assert if file_string shouldn't already exist (I don't think so, we may want to append after this metadata dict is wiped every 1-day or so)
         self.file_string = file_string
         collector.register_metrics_store(self)
-        self.shape_to_tables = {s: MetricsTable(columns=shape_to_cols[s], units=shape_to_units[s]) for s in shape_to_cols.keys()}
+        self.shape_to_tables = {s: MetricsTable(columns=shape_to_cols[s], units=shape_to_units[s]) for s in
+                                shape_to_cols.keys()}
 
     def append_data(self, time, uid, *args):
         """
         Appends a single (time, uid) pair's metrics to appropriate tables (depends on shape of each arg)
 
-        :param time (str or int): time in seconds after start of simulation
-        :param uid (str or int or ?): unique identifier of an object (e.g. a name)
-        :param args (list): an list of length/order equal to name_units_pairs seen when constructing this store
+            time (str or int): time in seconds after start of simulation
+            uid (str or int or ?): unique identifier of an object (e.g. a name)
+            args (list): an list of length/order equal to name_units_pairs seen when constructing this store
         """
         self.time_uid_pairs.append([time, uid])
         # bin columns by shape, then update corresponding subtables
         dct = collections.defaultdict(list)
-        assert len(args) == len(self.index_to_shapes), 'len(args) = {} should be equal to len(index_to_shape) = {}'.format(len(args), len(self.index_to_shapes))
+        assert len(args) == len(
+            self.index_to_shapes), 'len(args) = {} should be equal to len(index_to_shape) = {}'.format(len(args),
+                                                                                                       len(self.index_to_shapes))
         for s, v in zip(self.index_to_shapes, args):
             dct[s].append(deepish_copy(v))
         for s, vs in dct.items():
@@ -140,6 +154,7 @@ class MetricsCollector(object):
         metrics_stores (list): list of MetricsStores holding/growing data
 
     """
+
     def __init__(self, start_time='1970-01-01 00:00:00'):
         self.start_time = pd.Timestamp(start_time)
         self.metrics_stores = list()
@@ -147,17 +162,18 @@ class MetricsCollector(object):
     @classmethod
     def factory(cls, start_time='1970-01-01 00:00:00', write_hdf5=False):
         """
-
-        :param start_time (str): start time of simulation in datetime string format
-        :param write_hdf5 (bool): flag to determine if we write to .h5 (if True) or .json (if False; defaults to this)
-        :return: MetricsCollectorHDF or Base instance, depending on write_hdf5 flag
+        Args:
+            start_time (str): start time of simulation in datetime string format
+            write_hdf5 (bool): flag to determine if we write to .h5 (if True) or .json (if False; defaults to this)
+        Returns:
+            MetricsCollector: MetricsCollectorHDF or Base instance, depending on write_hdf5 flag
         """
         return MetricsCollectorHDF(start_time) if write_hdf5 else MetricsCollector(start_time)
 
     def register_metrics_store(self, metrics_store):
         """
-
-        :param: metrics_store (MetricsStore): A store to be appended to our ongoing list
+        Args:
+            metrics_store (MetricsStore): A store to be appended to our ongoing list
         """
         logging.debug('registering metrics store with file_string {}'.format(metrics_store.file_string))
         self.metrics_stores.append(metrics_store)
@@ -196,9 +212,10 @@ class MetricsCollectorHDF(MetricsCollector):
 def deepish_copy(obj):
     """
     Faster approach to deepcopy, for an object of the simple python types.
-
-    :param obj (?): original object to copy
-    :return copy of obj
+    Args:
+        obj: original object to copy
+    Returns:
+        object: copy of obj
     """
     if hasattr(obj, 'copy'):
         return obj.copy()  # dicts, sets
@@ -211,18 +228,18 @@ def deepish_copy(obj):
 
 def to_json(metrics_store, start_time):
     """
-     This function writes the metric data to JSON files (and clears the data)
-
-     :param metrics_store (MetricsStore): a store containing metrics tables to dump to file
-     :param start_time (pd.Timestamp): start time of simulation times
-     :param clear (bool): flag to clear (True; default) the data pointed to, or not (False)
-     """
+    This function writes the metric data to JSON files (and clears the data)
+    Args:
+        metrics_store (MetricsStore): a store containing metrics tables to dump to file
+        start_time (pd.Timestamp): start time of simulation times
+    """
     i = 0
     while os.path.isfile('{}{}_metrics.json'.format(metrics_store.file_string, i)):
         i += 1
     filename = '{}{}_metrics.json'.format(metrics_store.file_string, i)
     logging.debug('writing out metrics store to json {}'.format(filename))
-    _, tables = zip(*sorted(metrics_store.shape_to_tables.items())) if len(metrics_store.shape_to_tables) > 0 else (None, [])
+    _, tables = zip(*sorted(metrics_store.shape_to_tables.items())) if len(metrics_store.shape_to_tables) > 0 else (
+    None, [])
     # collect data
     dct = collections.defaultdict(dict)
     for row in zip(metrics_store.time_uid_pairs, *[t.data for t in tables]):
@@ -245,13 +262,9 @@ def to_hdf(metrics_store, start_time, num_writes_counter):
     This function writes the metric data to HDF5 files (and clears the data)
 
     Args:
-        filename (str): the filename to dump data to
-        metric_data (dict): metrics data dictionary to dump
-        cnt (int): interval counter
-        mode (str): 'a' append to possibly already existing file (make sure to wipe clean if rerunning scripts)
-                    'w' to write a clean new file
-        append (bool): True if you want to append to a potentially already existing table of same key
-                       (only works with mode='a'?). False if you want a clean new table
+        metrics_store (MetricsStore): a store containing metrics tables to dump to file
+        start_time (pd.Timestamp): start time of simulation times
+        num_writes_counter (int): interval counter
     """
 
     filename = '{}_metrics.h5'.format(metrics_store.file_string)
@@ -278,19 +291,26 @@ def to_hdf(metrics_store, start_time, num_writes_counter):
         #  More efficiently we could append to a file each day which would require changes to the call such that the
         #  write mode is not always 'w'.
         logging.debug('-----df examination----')
-        logging.debug('len(shape) = {}, shape {}, df.shape {}, shapelen_counter[len(shape)] {}'.format(num_dims, shape, df.shape, shapelen_counters[num_dims]))
+        logging.debug(
+            'len(shape) = {}, shape {}, df.shape {}, shapelen_counter[len(shape)] {}'.format(num_dims, shape, df.shape,
+                                                                                             shapelen_counters[
+                                                                                                 num_dims]))
         logging.debug('df.head() {}'.format(df.head()))
         # logging.debug('df.info() {}'.format(df.info()))
-        extra = ['', 'a', 'b', 'c', 'd'][shapelen_counters[num_dims]]  # appends a letter to key if more than one shape of same len appears for that shape len
+        extra = ['', 'a', 'b', 'c', 'd'][shapelen_counters[
+            num_dims]]  # appends a letter to key if more than one shape of same len appears for that shape len
         shapelen_counters[num_dims] += 1
-        key = 'metrics_df{}{}'.format(num_dims, extra)  # why not just append to same growing table (by eliminating num_writes_counter)
+        key = 'metrics_df{}{}'.format(num_dims,
+                                      extra)  # why not just append to same growing table (by eliminating num_writes_counter)
         if df.shape[0] > 0:
             try:
                 df.to_hdf(filename,
                           key=key,
-                          mode='w' if num_local_writes_counter == num_writes_counter == 0 else 'a',  # overwrite possibly already existing file only at onset of sim
+                          mode='w' if num_local_writes_counter == num_writes_counter == 0 else 'a',
+                          # overwrite possibly already existing file only at onset of sim
                           append=True,  # enabling appending to each possibly existing table (setting up for chunking)
-                          format='table',  #use 'table' (slower i/o) if indexing and want subsets of data retrievable (not indexing here, perhaps in post-processing
+                          format='table',
+                          # use 'table' (slower i/o) if indexing and want subsets of data retrievable (not indexing here, perhaps in post-processing
                           data_columns=['time'],
                           complevel=9,  # compress on the fly (can't do at end!)
                           index=False)  # don't index here (can only do so with 'table') since we may chunk first, then index (possibly in post-processing even)
@@ -303,6 +323,7 @@ def to_hdf(metrics_store, start_time, num_writes_counter):
         # delete df before trying to construct next one and reassign to df, since I'm not sure when the old df will be cleared
         del df
 
+
 def finalize_hdf(metrics_store):
     filename = '{}_metrics.h5'.format(metrics_store.file_string)
     # TODO: decide if we want to index (past time/uid?) and if we want such high levels of compression or indexing opt
@@ -312,13 +333,12 @@ def finalize_hdf(metrics_store):
         with pd.HDFStore(filename, 'r+', complevel=9) as ostore:
             for key in ostore:
                 if 'metrics_df' in key:
-                    ostore.create_table_index(key, columns=['time'], optlevel=9, kind='full')  # 9 is highest; testing with low index?
+                    ostore.create_table_index(key, columns=['time'], optlevel=9,
+                                              kind='full')  # 9 is highest; testing with low index?
                     logging.debug('successfully indexed key {}'.format(key))
     else:
         logging.warning('No file {} to try and compress at end of sim, passing!'.format(filename))
     # can now access with a simple pd.read_hdf(filename, key, where='time >= pd.Timestamp(...) and uid in [uid1, ...]')
-
-
 
 # TODO: move these timeit-enabling functions?
 # def setup_factory(n_times, n_uids, n_stores, write_hdf5):

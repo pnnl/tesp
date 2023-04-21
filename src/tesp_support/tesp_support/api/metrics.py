@@ -35,15 +35,3 @@ def _base_avg_deviation(list1, list2):
             _avg += list1[_i] - list2[_i]
         return _avg / len(list1)
     return None
-
-
-def avg_indoor_air_temp_deviation(start_date=None, end_date=None, input_list1=None, input2=None):
-    """
-    Measures the average indoor air temperature deviation using the actual measurement(s) vs the set point(s).
-
-    Input lengths must be the same
-
-    """
-    # if type():
-
-    return None

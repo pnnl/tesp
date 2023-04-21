@@ -298,7 +298,8 @@ class TespMonitorGUI:
         return vmin, vmax
 
     def update_plots_f(self, i):
-        """This function is called by Matplotlib for each animation frame
+        """
+    This function is called by Matplotlib for each animation frame
 
         Each time called, collect FNCS messages until the next time to plot
         has been reached. Then update the plot quantities and return the
@@ -446,7 +447,8 @@ class TespMonitorGUI:
         self.fig.canvas.draw()
 
     def update_plots(self, i):
-        """This function is called by Matplotlib for each animation frame
+        """
+    This function is called by Matplotlib for each animation frame
 
         Each time called, collect HELICS messages until the next time to plot
         has been reached. Then update the plot quantities and return the

@@ -12,9 +12,9 @@ import sqlite3
 
 import networkx as nx
 
-from tesp_support.api.data import feeders_path
-from tesp_support.api.data import entities_path
-from tesp_support.api.entity import Entity
+from .data import feeders_path
+from .data import entities_path
+from .entity import Entity
 
 
 class GLModel:
@@ -359,17 +359,18 @@ class GLModel:
 
     @staticmethod
     def gld_strict_name(val):
-        """Sanitizes a name for GridLAB-D publication to FNCS
+        """
+        Sanitizes a name for GridLAB-D publication to FNCS
 
         Args:
             val (str): the input name
 
         Returns:
-            str: val with all '-' replaced by '_', and any leading digit replaced by 'gld_'
+            str: val with all "-" replaced by "_", and any leading digit replaced by "gld__"
         """
         if val[0].isdigit():
-            val = 'gld_' + val
-        return val.replace('-', '_')
+            val = "gld_" + val
+        return val.replace("-", "_")
 
     @staticmethod
     def get_region(s):
@@ -738,7 +739,7 @@ class GLModel:
 
 
 def test1():
-    from tesp_support.api.data import tesp_test
+    from .data import tesp_test
 
     # Test model.py
     model_file = GLModel()

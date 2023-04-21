@@ -2,28 +2,33 @@
 
 This weather agent needs an WEATHER_CONFIG environment variable to be set, which is a json file.
 """
-import sys, os
-import pandas as pd
 import json
+import os
+import sys
 from datetime import datetime
 from datetime import timedelta
+
+import pandas as pd
+
 try:
-  import tesp_support.fncs as fncs
+    import tesp_support.fncs as fncs
 except:
-  pass
+    pass
 import random
 import numpy
 from scipy.stats import truncnorm
 
-def startWeatherAgent(file):
-    """the weather agent publishes weather data as configured by the json file
 
-    :param file: string
-        the weather data file
-    :return: nothing
+def startWeatherAgent(file):
+    """The weather agent publishes weather data as configured by the json file
+
+    Args:
+        file (str): the weather data file
+    Returns:
+        None
     """
-    weatherData = pd.DataFrame.from_csv(file) # read the weather data file
-    config = os.environ['WEATHER_CONFIG'] # read the weather config json file
+    weatherData = pd.DataFrame.from_csv(file)  # read the weather data file
+    config = os.environ['WEATHER_CONFIG']  # read the weather config json file
     if os.path.isfile(config):
         with open(config, 'r') as stream:
             try:
@@ -33,7 +38,7 @@ def startWeatherAgent(file):
                 timeStop = conf['time_stop']
                 StartTime = conf['StartTime']
                 timeFormat = '%Y-%m-%d %H:%M:%S'
-                dtStart = datetime.strptime (StartTime, timeFormat)
+                dtStart = datetime.strptime(StartTime, timeFormat)
                 timeDeltaStr = conf['time_delta']
                 forecast = conf['Forecast']
                 addErrorToForecast = conf['AddErrorToForecast']
@@ -47,7 +52,7 @@ def startWeatherAgent(file):
         print('could not open FNCS_CONFIG_FILE for fncs')
         sys.exit()
 
-    # convert some of the time in config file to seconds
+    # convert some time values in config file to seconds
     try:
         publishTimeAhead = convertTimeToSeconds(publishTimeAhead)
     except Exception as ex:
@@ -68,9 +73,10 @@ def startWeatherAgent(file):
     except Exception as ex:
         print("Error in time_stop", ex)
 
-    #write fncs.zpl file here
+    # write fncs.zpl file here
     zpl = open("fncs.zpl", "w")
-    print("name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds, timeStopInSeconds, broker), file=zpl)
+    print("name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(agentName, timeDeltaInSeconds,
+                                                                             timeStopInSeconds, broker), file=zpl)
     zpl.close()
     print('fncs.zpl file generated', flush=True)
     # this config str won't work for fncs initialization.
@@ -79,10 +85,13 @@ def startWeatherAgent(file):
     # when doing resample(), use timeDeltaInSeconds to make it uniform
     # the reason for that is due to some of the units that we use for fncs, such as 'min',
     # is not recognized by the resample() function
-    weatherData2 = weatherData.resample(rule=str(timeDeltaInSeconds)+"s",closed='left').first()
+    weatherData2 = weatherData.resample(rule=str(timeDeltaInSeconds) + "s", closed='left').first()
     weatherData2 = weatherData2.interpolate(method='quadratic')
+
     # find weather data on the hour for the hourly forecast
-    hourlyWeatherData=weatherData.loc[(weatherData.index.minute == 0) & (weatherData.index.second == 0) & (weatherData.index.microsecond == 0) & (weatherData.index.nanosecond == 0)]
+    hourlyWeatherData = weatherData.loc[
+        (weatherData.index.minute == 0) & (weatherData.index.second == 0) & (weatherData.index.microsecond == 0) & (
+                    weatherData.index.nanosecond == 0)]
     # make sure time_stop and time_delta have the same unit by converting them to the uniform unit first
 
     # try:
@@ -112,12 +121,12 @@ def startWeatherAgent(file):
     timeNeedToPublishForecast = [0]
     # real time need to publish
     numberOfRealtimeBroadcast = timeStopInSeconds // timeDeltaInSeconds + 1
-    for i in range(1,numberOfRealtimeBroadcast):
+    for i in range(1, numberOfRealtimeBroadcast):
         timeNeedToPublishRealtime.append(i * timeDeltaInSeconds)
     if forecast == 1:
         # time need to publish forecast, which is on the hour
         numberOfForecast = timeStopInSeconds // 3600 + 1
-        for i in range(1,numberOfForecast):
+        for i in range(1, numberOfForecast):
             timeNeedToPublishForecast.append(i * 3600)
         # combine real time and forecast time
         timeNeedToBePublished = list(set([0] + timeNeedToPublishRealtime + timeNeedToPublishForecast))
@@ -156,27 +165,29 @@ def startWeatherAgent(file):
         if timeNeedToBePublished[i] in timeNeedToPublishRealtime:
             # find the data by the time point and publish them
             row = weatherData2.loc[dtStart + timedelta(seconds=timeNeedToBePublished[i])]
-            print('publishing at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i]))
-                  + ' for weather at ' + str(dtStart + timedelta(seconds=timeNeedToBePublished[i])), flush=True)
+            # print('publishing at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i])) +
+            #       ' for weather at ' + str(dtStart + timedelta(seconds=timeNeedToBePublished[i])), flush=True)
             for key, value in row.iteritems():
                 fncs.publish(key, value)
         # if forecasting needed and the time is on the hour
         if forecast == 1 and timeNeedToBePublished[i] in timeNeedToPublishForecast:
-            print('forecasting at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i])) + ' for weather starting from '
-                  + str(dtStart + timedelta(seconds=timeNeedToBePublished[i])), flush=True)
+            print('forecasting at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i])) +
+                  ' for weather starting from ' + str(dtStart + timedelta(seconds=timeNeedToBePublished[i])),
+                  flush=True)
             forecastStart = dtStart + timedelta(seconds=timeNeedToBePublished[i])
             forecastEnd = dtStart + timedelta(seconds=forecastLength) + timedelta(seconds=timeNeedToBePublished[i])
             # find the data by forecast starting and ending time, should be multiple data point for each weather factor
-            rows = hourlyWeatherData.loc[(hourlyWeatherData.index >= forecastStart) & (hourlyWeatherData.index < forecastEnd)]
+            rows = hourlyWeatherData.loc[
+                (hourlyWeatherData.index >= forecastStart) & (hourlyWeatherData.index < forecastEnd)]
             for col in rows.columns:
                 data = rows[col].values
                 times = rows.index
-                # if user wants to add error to the forecasted data to mimick weather forecast
+                # if user wants to add error to the forecasted data to mimic weather forecast
                 if addErrorToForecast == 1:
                     WF_obj = weather_forecast(col, forecastPeriod * 2, forecastParameters)  # make object
                     data = WF_obj.make_forecast(data, len(data))
                 wd = dict()
-                # convert data to a dictionary with time as the key so it can be published as json string
+                # convert data to a dictionary with time as the key, so it can be published as json string
                 for v in range(len(data)):
                     wd[str(times[v])] = str(data[v])
                 fncs.publish(col + '/forecast', json.dumps(wd))
@@ -212,79 +223,87 @@ def startWeatherAgent(file):
     print('finalizing FNCS', flush=True)
     fncs.finalize()
 
+
 def usage():
     print("usage: python weatherAgent.py <input weather file full path>")
+
 
 def convertTimeToSeconds(time):
     """Convert time string with unit to integer in seconds
 
-    It only parse unit in day, hour, minute and second.
-    It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
-    :param time: str
-        time with unit
-    :return: int
-        represent the input time in second
+    Parses the unit in day, hour, minute and second. It will not recognize week, month, year, millisecond,
+    microsecond or nanosecond, they can be added if needed.
+
+    Args:
+        time (str): time with unit
+    Returns:
+        int: represent the input time in second
     """
     unit = ''.join(filter(str.isalpha, time))
     timeNum = int(''.join(filter(str.isdigit, time)))
-    if ("d" == unit or "day" == unit or "days" == unit):
+    if "d" == unit or "day" == unit or "days" == unit:
         return 24 * 60 * 60 * timeNum
-    elif ("h" == unit or "hour" == unit or "hours" == unit):
+    elif "h" == unit or "hour" == unit or "hours" == unit:
         return 60 * 60 * timeNum
-    elif ("m" == unit or "min" == unit or "minute" == unit or "minutes" == unit):
+    elif "m" == unit or "min" == unit or "minute" == unit or "minutes" == unit:
         return 60 * timeNum
-    elif ("s" == unit or "sec" == unit or "second" == unit or "seconds" == unit):
+    elif "s" == unit or "sec" == unit or "second" == unit or "seconds" == unit:
         return timeNum
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
 
+
 def deltaTimeToResmapleFreq(time):
     """Convert time unit to a resampling frequency that can be recognized by pandas.DataFrame.resample()
 
-    It only parse unit in day, hour, minute and second.
-    It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
-    :param time: str
-        time with unit
-    :return: str
-        time with resample frequency
+    Parses unit in day, hour, minute and second. It won't recognize week, month, year, millisecond,
+    microsecond or nanosecond, they can be added if needed.
+
+    Args:
+        time (str): time with unit
+    Returns:
+        str: time with resample frequency
     """
     unit = ''.join(filter(str.isalpha, time))
     timeNum = int(''.join(filter(str.isdigit, time)))
-    if ("d" == unit or "day" == unit or "days" == unit):
+    if "d" == unit or "day" == unit or "days" == unit:
         return str(timeNum) + "d"
-    elif ("h" == unit or "hour" == unit or "hours" == unit):
+    elif "h" == unit or "hour" == unit or "hours" == unit:
         return str(timeNum) + "h"
-    elif ("m" == unit or "min" == unit or "minute" == unit or "minutes" == unit):
+    elif "m" == unit or "min" == unit or "minute" == unit or "minutes" == unit:
         return str(timeNum) + "T"
-    elif ("s" == unit or "sec" == unit or "second" == unit or "seconds" == unit):
+    elif "s" == unit or "sec" == unit or "second" == unit or "seconds" == unit:
         return str(timeNum) + "s"
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
 
-def findDeltaTimeMultiplier(time):
-    """find the multiplier to convert delta_time to seconds
 
-    It only parse unit in day, hour, minute and second.
-    It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
-    :param time: str
-        time with unit
-    :return: int
-        the multiplier to convert delta_time to seconds
+def findDeltaTimeMultiplier(time):
+    """Find the multiplier to convert delta_time to seconds
+
+    Parses unit in day, hour, minute and second. It won't recognize week, month, year, millisecond,
+    microsecond or nanosecond, they can be added if needed.
+
+    Args:
+        time (str): time with unit
+    Returns:
+        int: the multiplier to convert delta_time to seconds
     """
     unit = ''.join(filter(str.isalpha, time))
     timeNum = int(''.join(filter(str.isdigit, time)))
-    if ("d" == unit or "day" == unit or "days" == unit):
+    if "d" == unit or "day" == unit or "days" == unit:
         return 24 * 60 * 60
-    elif ("h" == unit or "hour" == unit or "hours" == unit):
+    elif "h" == unit or "hour" == unit or "hours" == unit:
         return 60 * 60
-    elif ("m" == unit or "min" == unit or "minute" == unit or "minutes" == unit):
+    elif "m" == unit or "min" == unit or "minute" == unit or "minutes" == unit:
         return 60
-    elif ("s" == unit or "sec" == unit or "second" == unit or "seconds" == unit):
+    elif "s" == unit or "sec" == unit or "second" == unit or "seconds" == unit:
         return 1
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
 
-"""Class that includes error to the know Weather data 
+
+"""Class that includes error to the known Weather data 
 
 Implements the range of values the errors are randomly selected. The range is time
 dependent, i.e., the next hour range of errors are smaller than other error ranges.
@@ -298,8 +317,11 @@ All the variables utilize in the class are time dependent. Thus, arrays where
 element "0" is the next hour and so forth.   
 
 """
+
+
 class weather_forecast:
-    """This object includes the error to a weather variable
+    """
+    This object includes the error to a weather variable
 
     Args:
         variable (str): Type of weather variable being forecasted
@@ -334,13 +356,14 @@ class weather_forecast:
         self.Lower_e_bound = W_dict[variable]["Lower_e_bound"]
 
     def get_truncated_normal(self, EL, EH):
-        """Truncated normal distribution
         """
-        mean=(EL+EH)/2
-        sd=(abs(EL)+abs(EH))/4 #95% of values are within bounds remaining is truncated
+    Truncated normal distribution
+        """
+        mean = (EL + EH) / 2
+        sd = (abs(EL) + abs(EH)) / 4  # 95% of values are within bounds remaining is truncated
         a = (EL - mean) / sd
         b = (EH - mean) / sd
-        sample = truncnorm.rvs(a,b,loc=mean,scale=sd,size=1)[0]
+        sample = truncnorm.rvs(a, b, loc=mean, scale=sd, size=1)[0]
         return sample
 
     def make_forecast(self, weather, t=0):
@@ -386,6 +409,7 @@ class weather_forecast:
 
         weather_f = error + weather
         return weather_f
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:

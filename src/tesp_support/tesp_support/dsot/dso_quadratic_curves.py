@@ -15,7 +15,8 @@ logger = log.getLogger()
 
 
 class DSO_LMPs_vs_Q:
-    """This object creats the quadractive curves witht historical data from the base case
+    """
+    This object creats the quadractive curves witht historical data from the base case
     
     Args:
         config_path (str): path to file directory

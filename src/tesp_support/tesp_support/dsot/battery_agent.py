@@ -6,19 +6,17 @@ Implements the optimum schedule of charging and discharging DA; generate the bid
 for DA and RT; monitor and supervisory control of GridLAB-D environment element.
 
 The function call order for this agent is:
-    initialize
-    
-    set_price_forecast(forecasted_price)
-    
-    Repeats at every hour:
-        formulate_bid_da(){return BID}
-        set_price_forecast(forecasted_price)
-        Repeats at every 5 min:
-            set_battery_SOC(msg_str){updates C_init}
-            formulate_bid_rt(){return BID}
-            inform_bid(price){update RTprice}
-            bid_accepted(){update inv_P_setpoint and GridLAB-D P_out if needed}
+    * initialize()
 
+    Repeats at every hour
+        * formulate_bid_da() {return BID}
+        * set_price_forecast(forecasted_price)
+
+    Repeats at every 5 mins
+        * set_battery_SOC(msg_str) {updates C_init}
+        * formulate_bid_rt() {return BID}
+        * inform_bid(price) {update RTprice}
+        * bid_accepted() {update inv_P_setpoint and GridLAB-D P_out if needed}
 """
 import logging as log
 from copy import deepcopy
@@ -33,15 +31,20 @@ logger = log.getLogger()
 
 
 class BatteryDSOT:
-    """This agent manages the battery/inverter
+    """
+    This agent manages the battery/inverter
 
     Args:
         # TODO: update inputs for this agent
+        battery_dict (dict):
+        inv_properties (dict):
+        key (str):
         model_diag_level (int): Specific level for logging errors; set it to 11
         sim_time (str): Current time in the simulation; should be human-readable
+        solver (str):
 
     Attributes:
-        #initialize from Args:
+        # initialize from Args:
         name (str): name of this agent
         Rc (float): rated charging power in kW for the battery
         Rd (float): rated discharging power in kW for the battery
@@ -55,7 +58,7 @@ class BatteryDSOT:
         windowLength (int): length of day ahead optimization period in hours (e.g. 48-hours)
         dayAheadCapacity (float): % of battery capacity reserved for day ahead bidding
 
-        #no initialization required
+        # no initialization required
         bidSpread (int): this can be used to spread out bids in multiple hours. When set to 1 hour (recommended), it’s effect is none
         P (int): location of P in bids
         Q (int): location of Q in bids
@@ -73,8 +76,6 @@ class BatteryDSOT:
         prev_clr_Quantity (float) (1 X Window Length): cleared quantities (kWh) from previous market iteration for all hours
         prev_clr_Price (float) (1 X windowLength): cleared prices ($/kWh) from previous market iteration
         BindingObjFunc (boolean): if True, then optimization considers cleared price, quantities from previous iteration in the objective function
-
-
     """
 
     def __init__(self, battery_dict, inv_properties, key, model_diag_level, sim_time, solver):
@@ -610,7 +611,8 @@ class BatteryDSOT:
 
 
 def test():
-    """Testing
+    """
+    Testing
     
     Makes a single battery agent and run DA 
     """

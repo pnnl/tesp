@@ -106,7 +106,8 @@ def double_edge_swap(G, nswap=1, max_tries=100):
 
 
 def connected_double_edge_swap(G, xy, nswap=1, _window_threshold=3, distThresh=1000, max_tries=10000):
-    """Attempts the specified number of double-edge swaps in the graph `G`.
+    """
+    Attempts the specified number of double-edge swaps in the graph `G`.
 
     A double-edge swap removes two randomly chosen edges `(u, v)` and `(x,
     y)` and creates the new edges `(u, x)` and `(v, y)`::

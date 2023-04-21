@@ -425,52 +425,9 @@ class Store:
         return
 
 
-def synch_time_series(series_list, synch_interval, interval_unit):
-    # Synchronizes a list of time series dataframes
-    # Synchronization includes resampling the time series based
-    # upon the synch_interval and interval_unit entered
-    synched_series = []
-
-    for df in series_list:
-        synched_df = df.resample(str(synch_interval) + interval_unit).interpolate()
-        synched_series.append(synched_df)
-    return synched_series
-
-
-def get_synch_date_range(time_series):
-    # Gets the latest start time and the earliest time from a list of time series
-    t_start = time_series[0].index[0]
-    t_end = time_series[0].index[len(time_series[0].index)-1]
-    for tserie in time_series:
-        if tserie.index[0] > t_start:
-            t_start = tserie.index[0]
-        if tserie.index[len(tserie.index) - 1] < t_end:
-            t_end = tserie.index[len(tserie.index) - 1]
-    return t_start, t_end
-
-
-def synch_series_lengths(time_series):
-    # Clips the time series in the list to the same start and stop times
-    synched_series = []
-    synch_start, synch_end = get_synch_date_range(time_series)
-    for tseries in time_series:
-        synch_series = tseries.query('index > @synch_start and index < @synch_end')
-        synched_series.append(synch_series)
-    return synched_series
-
-
-def synch_series(time_series, synch_interval, interval_unit):
-    # Sychronizes the length and time intervals of a list of time series dataframes
-    clipped_series = []
-    synched_series = []
-    sampled_series = []
-    clipped_series = synch_series_lengths(time_series)
-    synched_series = synch_time_series(clipped_series, 1, "T")
-    sampled_series = synch_time_series(clipped_series, synch_interval, interval_unit)
-    return sampled_series
-
-
 def test_debug_resample():
+    from .metrics_api import synch_series
+
     np.random.seed(0)
     tseries = []
     synched_series = []
@@ -495,7 +452,7 @@ def test_debug_resample():
 
 
 def test_csv():
-    from tesp_support.api.data import tesp_test
+    from .data import tesp_test
 
     my_store = Store(tesp_test + 'api/store.json')
     my_file = my_store.add_file(tesp_test + 'api/test.csv', "test_csv", "My test csv file")
@@ -507,7 +464,7 @@ def test_csv():
 
 
 def test_sqlite():
-    from tesp_support.api.data import tesp_test
+    from .data import tesp_test
 
     my_store = Store(tesp_test + 'api/store.json')
     my_file = my_store.add_file(tesp_test + 'api/test.db', "test_db", "My test sqlite file")
@@ -518,31 +475,9 @@ def test_sqlite():
     my_store.write()
 
 
-def test_change_gencost():
-    file = os.path.join(os.path.expandvars('$TESPDIR'), 'examples/analysis/dsot/code/system_case_config.json')
-    price = {
-        "Steam Coal": 61.1,
-        "Combined Cycle": 28.9,
-        "Combustion Engine": 38.9,
-        "Combustion Turbine": 38.9,
-        "Steam Turbine": 38.9
-    }
-    with open(file, 'r', encoding='utf-8') as json_file:
-        in_file = json.load(json_file)
-        row = 0
-        for tmp in in_file["genfuel"]:
-            fuel = tmp[1]
-            for name in price:
-                if name in fuel:
-                    in_file["gencost"][row][6] = price[name]
-            row = row + 1
-
-    with open(file, "w", encoding='utf-8') as outfile:
-        json.dump(in_file, outfile, indent=2)
-
-
 def test_read():
-    from tesp_support.api.data import tesp_test
+    from .data import tesp_test
+    from .metrics_api import get_synch_date_range
 
     my_store = Store(tesp_test + 'api/store.json')
     my_file = my_store.add_file(tesp_test + 'api/test.csv', "test_csv", "My test csv file")
@@ -567,8 +502,8 @@ def test_read():
 
 
 def test_dir():
-    from tesp_support.api.data import tesp_share
-    from tesp_support.api.data import tesp_test
+    from .data import tesp_share
+    from .data import tesp_test
 
     my_store = Store(tesp_test + 'api/store.json')
     my_file = my_store.add_path(tesp_share, "My data directory")
@@ -579,6 +514,29 @@ def test_dir():
     my_file.set_includeFile(sub, ".gitignore")
     my_store.write()
     my_store.zip(tesp_test + 'api/store.zip')
+
+
+def test_change_gencost():
+    file = os.path.join(os.path.expandvars('$TESPDIR'), 'examples/analysis/dsot/code/system_case_config.json')
+    price = {
+        "Steam Coal": 61.1,
+        "Combined Cycle": 28.9,
+        "Combustion Engine": 38.9,
+        "Combustion Turbine": 38.9,
+        "Steam Turbine": 38.9
+    }
+    with open(file, 'r', encoding='utf-8') as json_file:
+        in_file = json.load(json_file)
+        row = 0
+        for tmp in in_file["genfuel"]:
+            fuel = tmp[1]
+            for name in price:
+                if name in fuel:
+                    in_file["gencost"][row][6] = price[name]
+            row = row + 1
+
+    with open(file, "w", encoding='utf-8') as outfile:
+        json.dump(in_file, outfile, indent=2)
 
 
 if __name__ == "__main__":

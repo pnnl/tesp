@@ -3,7 +3,8 @@ import math
 
 
 def processLSEDataFixedDemandData(LSEDataFixedDemandDataRaw):
-    """This function processes LSEDataFixedDemand Data
+    """
+    This function processes LSEDataFixedDemand Data
     """
 
     _LSEDataFixedDemand = {}
@@ -29,7 +30,8 @@ def processLSEDataFixedDemandData(LSEDataFixedDemandDataRaw):
 
 
 def processLSEDataPriceSensitiveDemand(LSEDataPriceSensitiveDemandRaw):
-    """This function processes LSEDataPriceSensitiveDemand Data
+    """
+    This function processes LSEDataPriceSensitiveDemand Data
     """
 
     temp_LSEDataPriceSensitiveDemand = {}

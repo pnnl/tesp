@@ -362,7 +362,8 @@ def add_new_house_infrastructure(house_stats, new_house_stats_key,
 
 def add_triplex_line(mod_glm_dict, new_house_exp_node, house_stats,
                      new_house_name_parts, new_house_stats_key):
-    """Adds a triplex line following the customary format for houses."""
+    """
+    Adds a triplex line following the customary format for houses."""
     key = len(mod_glm_dict)+1
     mod_glm_dict[key] = {}
     mod_glm_dict[key]['object'] = 'triplex_line'
@@ -379,7 +380,8 @@ def add_triplex_line(mod_glm_dict, new_house_exp_node, house_stats,
 
 
 def add_triplex_meter(mod_glm_dict, new_house_name_parts, meter_num):
-    """Adds the triplex meters following the customary form."""
+    """
+    Adds the triplex meters following the customary form."""
     # Finding parallel house meters to steal paramter values from
     parallel_meter_num = int(new_house_name_parts['number']) - 1
     if meter_num == 1:
@@ -849,7 +851,8 @@ def add_ZIPLoad(mod_glm_dict, new_house_name_parts, parent_house_key,
 
 def add_pool_pump(mod_glm_dict, new_house_name_parts, parent_house_key,
                   ZIPload_params):
-    """Adds a pool pump as an explicit child of the house object."""
+    """
+    Adds a pool pump as an explicit child of the house object."""
     key = len(mod_glm_dict) + 1
     mod_glm_dict[key] = {}
 
@@ -888,7 +891,8 @@ def add_pool_pump(mod_glm_dict, new_house_name_parts, parent_house_key,
 
 def add_water_heater(mod_glm_dict, new_house_name_parts, parent_house_key,
                      new_house_params):
-    """Adds a water heater as an explicit child of the house object."""
+    """
+    Adds a water heater as an explicit child of the house object."""
     key = len(mod_glm_dict) + 1
     mod_glm_dict[key] = {}
 

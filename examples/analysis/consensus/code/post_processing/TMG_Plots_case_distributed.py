@@ -124,7 +124,7 @@ def get_gridlabd_outputs(case, day_num):
 def DSO_price_qunatity_rt(data_path, folder_prefix, object_name, day_num):
     """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
-    Arguments:
+    Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
@@ -147,7 +147,7 @@ def DSO_price_qunatity_rt(data_path, folder_prefix, object_name, day_num):
 def retail_price_qunatity_rt(data_path, folder_prefix, object_name, day_num):
     """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
-    Arguments:
+    Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
@@ -171,7 +171,7 @@ def retail_price_qunatity_rt(data_path, folder_prefix, object_name, day_num):
 def dso_price_qunatity_da(data_path, folder_prefix, object_name, day_num):
     """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
-    Arguments:
+    Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
@@ -197,7 +197,7 @@ def dso_price_qunatity_da(data_path, folder_prefix, object_name, day_num):
 # def dso_MG_price_qunatity_rt(data_path, folder_prefix, MG_num, day_num):
 #     """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
 #     datetime when the energy will be consumed.
-#     Arguments:
+#     Args:
 #         dir_path (str): path of parent directory where DSO folders live
 #         folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
 #         dso_num (str): number of the DSO folder to be opened
@@ -218,7 +218,7 @@ def dso_price_qunatity_da(data_path, folder_prefix, object_name, day_num):
 def hvac_quantity_price_rt(data_path, folder_prefix, object_name, day_num):
     """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
-    Arguments:
+    Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
@@ -245,7 +245,7 @@ def hvac_quantity_price_rt(data_path, folder_prefix, object_name, day_num):
 def water_heater_quantity_price_rt(data_path, folder_prefix, object_name, day_num):
     """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
-    Arguments:
+    Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened

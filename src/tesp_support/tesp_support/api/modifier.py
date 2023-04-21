@@ -3,9 +3,9 @@
 
 import os
 
-from tesp_support.api.data import entities_path
-from tesp_support.api.entity import assign_defaults
-from tesp_support.api.model import GLModel
+from .data import entities_path
+from .entity import assign_defaults
+from .model import GLModel
 
 
 class GLMModifier:
@@ -112,7 +112,7 @@ class GLMModifier:
 
 
 def test1():
-    from tesp_support.api.data import tesp_test
+    from .data import tesp_test
 
     testMod = GLMModifier()
     testMod.model.read(tesp_test + "api/dsot_in.glm")
@@ -129,7 +129,7 @@ def test1():
 
 
 def test2():
-    from tesp_support.api.data import tesp_test
+    from .data import tesp_test
 
     testMod = GLMModifier()
     testMod.model.readBackboneModel("GLD_three_phase_house.glm")

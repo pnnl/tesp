@@ -46,7 +46,8 @@ logger = logging.getLogger(__name__)
 
 
 class MeterNetwork:
-    """This class creates a NetworkX representation of the
+    """
+    This class creates a NetworkX representation of the
     system of power distribution system meters.
 
     This class has the ability to read in information about
@@ -61,13 +62,15 @@ class MeterNetwork:
     """
 
     def __init__(self):
-        """This initializes the class."""
+        """
+    This initializes the class."""
         logger.info(
             '++++++++++ A MeterNetwork object has been created ++++++++++')
 
     @classmethod
     def from_excel(self, excel_file, sheet, columns):
-        """This function turns an Excel file into a NetworkX
+        """
+    This function turns an Excel file into a NetworkX
         representation of the meter system.
 
         Args:
@@ -139,7 +142,8 @@ class MeterNetwork:
 
     @classmethod
     def from_csv(self, csv_file, columns):
-        """This function turns a CSV file into a NetworkX
+        """
+    This function turns a CSV file into a NetworkX
         representation of the meter system.
 
         Args:
@@ -205,7 +209,8 @@ class MeterNetwork:
 
     @classmethod
     def from_json(self, json_file, key_list, position_labels):
-        """This function turns a JSON file into a NetworkX
+        """
+    This function turns a JSON file into a NetworkX
         representation of the meter system.
 
         Args:
@@ -272,7 +277,8 @@ class MeterNetwork:
 
     @classmethod
     def make_dataframe(self):
-        """This function turns the meter graph into a pandas
+        """
+    This function turns the meter graph into a pandas
         dataframe. This allows for ease and the ability to
         perform metrics calculations and validation of the
         system as a whole.
@@ -314,7 +320,8 @@ class MeterNetwork:
     @classmethod
     def plot_graph(self, nodes, node_args, edges, edge_args, plot_positions,
                    opts_dict, output_dir, save_plot=True):
-        """This function creates a visual representation
+        """
+    This function creates a visual representation
         of the meter system using Holoviews NetworkX
         drawing capabilities.
 

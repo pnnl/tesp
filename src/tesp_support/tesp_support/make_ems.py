@@ -571,7 +571,8 @@ def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf', w
 
 
 def merge_idf(base, ems, StartTime, EndTime, target, StepsPerHour):
-    """Assembles a base EnergyPlus building model with EMS and simulation period
+    """
+    Assembles a base EnergyPlus building model with EMS and simulation period
 
     Args:
       base (str): fully qualified base IDF model

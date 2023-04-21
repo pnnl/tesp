@@ -12,12 +12,14 @@ import json
 import shutil
 import datetime
 import numpy as np
-import tesp_support.helpers_dsot as helpers
-import tesp_support.dsot.case_merge_dsot as cm
-import tesp_support.dsot.glm_dict_dsot as gd
-import tesp_support.commercial_feeder_generator as com_FG
-import tesp_support.dsot.feeder_generator_dsot as res_FG
-import tesp_support.copperplate_feeder_generator as cp_FG
+
+import tesp_support.dsot.helpers_dsot as helpers
+import tesp_support.commercial_feeder_glm as com_FG
+import tesp_support.copperplate_feeder_glm as cp_FG
+
+import tesp_support.dsot.case_merge as cm
+import tesp_support.dsot.glm_dictionary as gd
+import tesp_support.dsot.residential_feeder_glm as res_FG
 import prep_substation_dsot_f as prep
 
 

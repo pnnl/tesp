@@ -567,7 +567,8 @@ class TespConfigGUI:
     self.SizeMonteCarloFrame (self.f7)
 
   def UpdateMonteCarloFrame(self):
-    """Transfer data from the Monte Carlo page into the case configuration
+    """
+    Transfer data from the Monte Carlo page into the case configuration
     """
     numCases = int (self.f7.children['rows'].get())
     config['MonteCarloCase']['Variable1'] = self.f7.children['cb1'].get()

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: TMY3toCSV.py
-"""TMY3toCSV
+"""
+TMY3toCSV
 
 Convert typical meteorological year version 3 (TMY3) data to
 comma separated values (CSV) for common use by TESP agents.
@@ -99,6 +100,7 @@ def readtmy3(filename=None, coerce_year=None, recolumn=True):
 def _interactive_load():
     import Tkinter
     from tkFileDialog import askopenfilename
+
     Tkinter.Tk().withdraw()  # Start interactive file input
     return askopenfilename()
 
@@ -125,16 +127,10 @@ def _parsedate(ymd, hour, year=None):
 def _recolumn(tmy3_dataframe):
     """
     Rename the columns of the TMY3 DataFrame.
-
-    Parameters
-    ----------
-    tmy3_dataframe : DataFrame
-    inplace : bool
-        passed to DataFrame.rename()
-
-    Returns
-    -------
-    Recolumned DataFrame.
+    Args:
+        tmy3_dataframe (dataframe)
+    Returns:
+        dataframe: Recolumned DataFrame.
     """
     raw_columns = 'ETR (W/m^2),ETRN (W/m^2),GHI (W/m^2),GHI source,GHI uncert (%),DNI (W/m^2),DNI source,DNI uncert (%),DHI (W/m^2),DHI source,DHI uncert (%),GH illum (lx),GH illum source,Global illum uncert (%),DN illum (lx),DN illum source,DN illum uncert (%),DH illum (lx),DH illum source,DH illum uncert (%),Zenith lum (cd/m^2),Zenith lum source,Zenith lum uncert (%),TotCld (tenths),TotCld source,TotCld uncert (code),OpqCld (tenths),OpqCld source,OpqCld uncert (code),Dry-bulb (C),Dry-bulb source,Dry-bulb uncert (code),Dew-point (C),Dew-point source,Dew-point uncert (code),RHum (%),RHum source,RHum uncert (code),Pressure (mbar),Pressure source,Pressure uncert (code),Wdir (degrees),Wdir source,Wdir uncert (code),Wspd (m/s),Wspd source,Wspd uncert (code),Hvis (m),Hvis source,Hvis uncert (code),CeilHgt (m),CeilHgt source,CeilHgt uncert (code),Pwat (cm),Pwat source,Pwat uncert (code),AOD (unitless),AOD source,AOD uncert (code),Alb (unitless),Alb source,Alb uncert (code),Lprecip depth (mm),Lprecip quantity (hr),Lprecip source,Lprecip uncert (code),PresWth (METAR code),PresWth source,PresWth uncert (code)'
 
@@ -163,19 +159,16 @@ def _recolumn(tmy3_dataframe):
 
 
 def weathercsv(tmyfile, outputfile, start_time, end_time, year_):
-    """Converts TMY3 weather data to CSV in the requested time range
-
-    :param tmyfile: string
-        the input TMY3 data file
-    :param outputfile: string
-        the output CSV data file
-    :param start_time: string
-        the starting date and time of interest, like `2013-07-01 00:00:00`
-    :param end_time: string
-        the ending date and time of interest, like `2013-07-08 00:00:00`
-    :param year: integer
-        the year of interest
-    :return: nothing
+    """
+    Converts TMY3 weather data to CSV in the requested time range
+    Args:
+        tmyfile (str): the input TMY3 data file
+        outputfile (str): the output CSV data file
+        start_time (str): the starting date and time of interest, like `2013-07-01 00:00:00`
+        end_time (str): the ending date and time of interest, like `2013-07-08 00:00:00`
+        year_ (int): the year of interest
+    Returns:
+        None
     """
     global dts
     global result2
@@ -261,7 +254,7 @@ def weathercsv_cloudy_day(start_time, end_time, outputfile):
 
 
 def _tests():
-    from tesp_support.api.data import weather_path
+    from .api.data import weather_path
 
     # create a csv file contain the weather data for the input time period from the input tmy3 file
     weathercsv(weather_path + 'TX-Houston_Bush_Intercontinental.tmy3',

@@ -12,8 +12,8 @@ This script attempts to demonstrate the grid PIQ for new TESP API.
 import json
 from datetime import datetime, timedelta
 
-from tesp_support.api.data import entities_path
-from tesp_support.api.entity import assign_defaults
+from .data import entities_path
+from .entity import assign_defaults
 
 
 class GridPIQ:
@@ -149,7 +149,7 @@ class GridPIQ:
 
 
 def test():
-    from tesp_support.api.data import tesp_test
+    from .data import tesp_test
 
     start_date = "2016-01-03 00:00:00"
     end_date = "2016-01-05 00:00:00"

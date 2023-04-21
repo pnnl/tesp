@@ -437,8 +437,8 @@ class Entity:
 
 def test():
 
-    from tesp_support.api.data import entities_path
-    from tesp_support.api.data import tesp_test
+    from .data import entities_path
+    from .data import tesp_test
 
     class mytest:
         def test(self):

@@ -3,7 +3,7 @@ import shutil
 
 from tesp_support.api.data import weather_path
 from tesp_support.TMY3toCSV import weathercsv
-from tesp_support.glm_dict import glm_dict
+from tesp_support.glm_dictionary import glm_dict
 from tesp_support.prep_substation import prep_substation
 
 tmy_file = weather_path + 'AZ-Tucson_International_Ap.tmy3'

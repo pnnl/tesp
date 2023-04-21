@@ -9,11 +9,6 @@ import itertools
 import math
 import pandas as pd
 
-from .DSOT_plots import load_json
-from .dso_rate_making import get_cust_bill
-from tesp_support.dsot.customer_CFS import customer_CFS
-from .dso_CFS import dso_CFS
-
 # get rid of the burn-in days
 
 # filenames the list of filenames of h5 files that you want, for example
@@ -303,34 +298,6 @@ def labor_network_admin_increase(group, hourly_rate, metadata_general, metadata_
     return labor_Lev1Fte, labor_Fte, Lev1_labor_cost, LeaderRatio, labor_cost, LeaderLevel
 
 
-def get_customer_df(dso_range, case_path, metadata_path):
-    customer_df = pd.DataFrame([])
-    for dso_num in dso_range:
-        GLD_metadata = load_json(case_path, 'DSO' + str(dso_num) + '_Customer_Metadata.json')
-        cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
-        cust_bills = pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
-        for i in range(len(GLD_metadata['billingmeters'].keys())):
-            customer = list(GLD_metadata['billingmeters'].keys())[i]
-            if GLD_metadata['billingmeters'][customer]['tariff_class'] != 'industrial':
-                customer_bill = get_cust_bill(customer, cust_bills, GLD_metadata)
-                customer_metadata = GLD_metadata['billingmeters'][customer]
-                Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = customer_CFS(
-                    GLD_metadata, metadata_path, customer, customer_bill)
-                customer_row = {
-                    "Customer ID": 'DSO' + str(dso_num) + '_' + customer,
-                    "dso": dso_num,
-                    "meter ID": customer
-                }
-                customer_row.update(customer_metadata)
-                customer_row.update(Customer_Cash_Flows_csv)
-                customer_row = pd.DataFrame(customer_row.items())
-                customer_row = customer_row.transpose()
-                customer_row.columns = customer_row.iloc[0]
-                customer_row = customer_row.drop(customer_row.index[[0]])
-                customer_df = customer_df.append(customer_row)
-    return customer_df
-
-
 def get_mean_for_diff_groups(df, main_variables, variables_combs, cfs_start_position=24):
     customer_mean_df = pd.DataFrame([])
     customer_mean_df['all'] = df.iloc[:, cfs_start_position:].mean()
@@ -358,50 +325,3 @@ def get_mean_for_diff_groups(df, main_variables, variables_combs, cfs_start_posi
     return customer_mean_df
 
 
-def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
-    DSO_df = pd.DataFrame([])
-    CapitalCosts_dict_list = []
-    Expenses_dict_list = []
-    Revenues_dict_list = []
-    DSO_Cash_Flows_dict_list = []
-    for dso_num in dso_range:
-        Market_Purchases = load_json(case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
-        Market_Purchases_base_case = load_json(base_case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
-
-        DSO_Cash_Flows = load_json(case_path, 'DSO' + str(dso_num) + '_Cash_Flows.json')
-        DSO_Revenues_and_Energy_Sales = load_json(case_path, 'DSO' + str(dso_num) + '_Revenues_and_Energy_Sales.json')
-
-        DSO_peak_demand = Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate']
-        DSO_base_case_peak_demand = Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate']
-
-        CapitalCosts_dict, Expenses_dict, Revenues_dict, \
-        DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
-            dso_CFS(case_config, DSOmetadata, str(dso_num),
-                    DSO_peak_demand, DSO_base_case_peak_demand,
-                    DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, Market_Purchases,
-                    Market_Purchases_base_case)
-        CapitalCosts_dict_list.append(CapitalCosts_dict)
-        Expenses_dict_list.append(Expenses_dict)
-        Revenues_dict_list.append(Revenues_dict)
-        DSO_Cash_Flows_dict_list.append(DSO_Cash_Flows_dict)
-        DSO_col = {
-            "name": DSOmetadata['DSO_' + str(dso_num)]["name"],
-            "utility_type": DSOmetadata['DSO_' + str(dso_num)]["utility_type"],
-            "ownership_type": DSOmetadata['DSO_' + str(dso_num)]["ownership_type"],
-            "climate_zone": DSOmetadata['DSO_' + str(dso_num)]["climate_zone"],
-            "ASHRAE_zone": DSOmetadata['DSO_' + str(dso_num)]["ashrae_zone"],
-            "peak_season": DSOmetadata['DSO_' + str(dso_num)]["peak_season"],
-            "number_of_customers": DSOmetadata['DSO_' + str(dso_num)]["number_of_customers"],
-            "scaling_factor": DSOmetadata['DSO_' + str(dso_num)]["scaling_factor"],
-            "DSO_peak_demand": Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate'],
-            "DSO_base_case_peak_demand": Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate'],
-            "energy_sold_MWh": DSO_Revenues_and_Energy_Sales['EnergySold'],
-            "energy_purchased_MWh": Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']
-                                    + Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']
-                                    + Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy'],
-            'EffectiveCostRetailEnergy': DSO_Revenues_and_Energy_Sales['EffectiveCostRetailEnergy']
-        }
-        DSO_col.update(DSO_Cash_Flows_composite)
-        DSO_col = pd.Series(DSO_col)
-        DSO_df['DSO_' + str(dso_num)] = DSO_col
-    return DSO_df, CapitalCosts_dict_list, Expenses_dict_list, Revenues_dict_list, DSO_Cash_Flows_dict_list

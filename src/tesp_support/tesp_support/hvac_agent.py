@@ -11,7 +11,8 @@ from .helpers import parse_magnitude, parse_number
 
 
 class hvac:
-    """This agent manages thermostat setpoint and bidding for a house
+    """
+    This agent manages thermostat setpoint and bidding for a house
 
     Args:
         hvac_dict (dict): dictionary row for this agent from the JSON configuration file

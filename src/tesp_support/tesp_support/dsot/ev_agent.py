@@ -6,18 +6,23 @@ Implements the optimum schedule of charging and discharging DA; generate the bid
 for DA and RT; monitor and supervisory control of GridLAB-D environment element.
 
 The function call order for this agent is:
-    initialize
+    initialize()
     
     set_price_forecast(forecasted_price)
     
     Repeats at every hour:
-        formulate_bid_da(){return BID}
+        formulate_bid_da() {return BID}
+
         set_price_forecast(forecasted_price)
-        Repeats at every 5 min:
-            set_battery_SOC(msg_str){updates C_init}
-            formulate_bid_rt(){return BID}
-            inform_bid(price){update RTprice}
-            bid_accepted(){update inv_P_setpoint and GridLAB-D P_out if needed}
+
+    Repeats at every 5 min:
+        set_battery_SOC(msg_str) {updates C_init}
+
+        formulate_bid_rt() {return BID}
+
+        inform_bid(price) {update RTprice}
+
+        bid_accepted() {update inv_P_setpoint and GridLAB-D P_out if needed}
 
 """
 import logging as log
@@ -28,14 +33,15 @@ from math import isnan
 import numpy as np
 import pyomo.environ as pyo
 
-import tesp_support.dsot.feeder_generator_dsot as fg
 from tesp_support.helpers import parse_number, get_run_solver
+from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, add_hhmm_secs
 
 logger = log.getLogger()
 
 
 class EVDSOT:
-    """This agent manages the electric vehicle (ev)
+    """
+    This agent manages the electric vehicle (ev)
 
     Args:
         TODO: update inputs for this agent
@@ -111,7 +117,7 @@ class EVDSOT:
         self.arrival_home = float(ev_dict['arrival_home'])  # HHMM
         self.work_duration = float(ev_dict['work_duration'])  # seconds
         self.home_duration = float(ev_dict['home_duration'])  # seconds
-        self.leaving_home = fg.add_hhmm_secs(self.arrival_home, self.home_duration)  # HHMM
+        self.leaving_home = add_hhmm_secs(self.arrival_home, self.home_duration)  # HHMM
         self.slider = float(ev_dict['slider_setting'])
         self.boundary_cond = ev_dict['boundary_cond']
         # calculate boundary condition for minimum charge before leaving home
@@ -406,7 +412,7 @@ class EVDSOT:
         for i in self.TIME:
             cur_hour = sim_time.hour + i
             # let's get seconds from midnight
-            cur_secs = fg.get_secs_from_HHMM(round((cur_hour % 24) * 100))
+            cur_secs = get_secs_from_hhmm(round((cur_hour % 24) * 100))
             # if the car is at home for full hour (3600 seconds), then consider it a transactive hour, otherwise not
             if self.get_car_home_duration(cur_secs, 3600) == 3600:
                 self.trans_hours.append(i)
@@ -689,11 +695,13 @@ class EVDSOT:
     def is_car_home(self, cur_secs):
         """
         return boolean if car is at home at cur_secs
-        :param cur_secs: current time in seconds
-        :return: True or False
+        Args:
+            cur_secs: current time in seconds
+        Return:
+            True or False
         """
-        arr_sec = fg.get_secs_from_HHMM(self.arrival_home)
-        leav_sec = fg.get_secs_from_HHMM(self.leaving_home)
+        arr_sec = get_secs_from_hhmm(self.arrival_home)
+        leav_sec = get_secs_from_hhmm(self.leaving_home)
         if arr_sec > leav_sec:  # overnight at home (midnight crossing)
             if cur_secs >= arr_sec or cur_secs < leav_sec:
                 return True
@@ -710,12 +718,14 @@ class EVDSOT:
     def is_car_leaving_home(self, cur_secs, interval):
         """
         tells if car is leaving from home during the given 'interval' seconds starting from cur_secs
-        :param cur_secs: (seconds) current (starting) time with reference of midnight as 0
-        :param interval: (seconds) duration in which status needs to be estimated
-        :return: True or False
+        Args:
+            cur_secs: (seconds) current (starting) time with reference of midnight as 0
+            interval: (seconds) duration in which status needs to be estimated
+        Returns:
+            True or False
         """
-        interval_beg_hhmm = fg.get_HHMM_from_secs(cur_secs)
-        interval_end_hhmm = fg.add_hhmm_secs(interval_beg_hhmm, interval)
+        interval_beg_hhmm = get_hhmm_from_secs(cur_secs)
+        interval_end_hhmm = add_hhmm_secs(interval_beg_hhmm, interval)
         if interval_beg_hhmm < interval_end_hhmm:
             if interval_beg_hhmm <= self.leaving_home < interval_end_hhmm:
                 return True
@@ -727,20 +737,22 @@ class EVDSOT:
     def get_car_home_duration(self, cur_secs, interval):
         """
         return the duration of car at home during the given 'interval' seconds starting from cur_secs
-        :param cur_secs: (seconds) current (starting) time with reference of midnight as 0
-        :param interval: (seconds) duration in which status needs to be estimated
-        :return: duration in seconds for which car is at home in given interval
+        Args:
+            cur_secs: (seconds) current (starting) time with reference of midnight as 0
+            interval: (seconds) duration in which status needs to be estimated
+        Returns:
+            duration in seconds for which car is at home in given interval
         """
-        interval_beg_hhmm = fg.get_HHMM_from_secs(cur_secs)
-        interval_end_hhmm = fg.add_hhmm_secs(interval_beg_hhmm, interval)
-        arr_sec = fg.get_secs_from_HHMM(self.arrival_home)
-        leav_sec = fg.get_secs_from_HHMM(self.leaving_home)
+        interval_beg_hhmm = get_hhmm_from_secs(cur_secs)
+        interval_end_hhmm = add_hhmm_secs(interval_beg_hhmm, interval)
+        arr_sec = get_secs_from_hhmm(self.arrival_home)
+        leav_sec = get_secs_from_hhmm(self.leaving_home)
         if self.is_car_home(cur_secs):  # car at home in the beginning of interval
-            rem_home_sec = fg.get_duration(interval_beg_hhmm,
+            rem_home_sec = get_duration(interval_beg_hhmm,
                                            self.leaving_home)  # how long car will be home
             duration = min(interval, rem_home_sec)  # if remaining duration is more than interval, return interval
         elif cur_secs + interval > arr_sec:  # if car is coming home during this interval
-            rem_home_sec = fg.get_duration(self.arrival_home, interval_end_hhmm)  # how long car will be home
+            rem_home_sec = get_duration(self.arrival_home, interval_end_hhmm)  # how long car will be home
             duration = min(self.home_duration, rem_home_sec)
         else:  # car is not home at all during this interval
             duration = 0
@@ -753,7 +765,7 @@ class EVDSOT:
         """
         sim_time = sim_time + timedelta(0, 60)  # adjust for 60 seconds shift
         # let's get seconds from midnight
-        cur_secs = fg.get_secs_from_HHMM(round(sim_time.hour * 100 + sim_time.minute))
+        cur_secs = get_secs_from_hhmm(round(sim_time.hour * 100 + sim_time.minute))
         Quantity = []
         dt = 1  # delta time is 1 hour here
         cur_cap_pr = self.Cinit
@@ -823,7 +835,8 @@ class EVDSOT:
 
 
 def test():
-    """Testing
+    """
+    Testing
     
     Makes a single battery agent and run DA 
     """

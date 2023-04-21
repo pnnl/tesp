@@ -1,4 +1,5 @@
-"""This file assists visual debugging analyses and standard plots
+"""
+    This file assists visual debugging analyses and standard plots
 
     Develop only for json output 
         
@@ -46,7 +47,8 @@ class MarkerCollorsJSONpython:
 #        da  = ['BurlyWood','Tan','RosyBrown','DarkGoldenrod','Peru','Chocolate','SlateGray','Black']
 
 class marketJSONpython:
-    """This object will read and organize the output 300 and 3600 json market python files
+    """
+    This object will read and organize the output 300 and 3600 json market python files
     
     Args:
         days (int) (2 X 1): start day end day
@@ -117,7 +119,8 @@ class marketJSONpython:
         return list([meta_I_ver, start_time, Order])
 
 class DERsJSON:
-    """This object will read and organize the output 300 and 3600 json DER python files
+    """
+    This object will read and organize the output 300 and 3600 json DER python files
     
     Args:
         days (int) (2 X 1): start day end day
@@ -695,7 +698,8 @@ def HVAC(obj_Market,obj_DER_PYT_hvac,obj_DER_GLD_house,obj_Color):
     
     
 if __name__ == "__main__":
-    """All the data will be loaded first for the requested days
+    """
+	All the data will be loaded first for the requested days
     """
     pre_file_out ='TE_test/dso_1/'
     pre_file_out = 'TMG_helics_3_agent/MG_Agent_1/'

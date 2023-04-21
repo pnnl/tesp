@@ -216,8 +216,8 @@ def plot_eplus(diction, title=None, save_file=None, save_only=False):
     ncols = 3
     bConsensus = False
 
-    if ('OFFER_KW_IDX' in idx_e) and ('OFFER_CLEARED_KW_IDX' in idx_e) and ('OFFER_CLEARED_DEGF_IDX' in idx_e) and (
-            'OFFER_CLEARED_PRICE_IDX' in idx_e):
+    if (('OFFER_KW_IDX' in idx_e) and ('OFFER_CLEARED_KW_IDX' in idx_e) and
+            ('OFFER_CLEARED_DEGF_IDX' in idx_e) and ('OFFER_CLEARED_PRICE_IDX' in idx_e)):
         bConsensus = True
         ncols += 1
 

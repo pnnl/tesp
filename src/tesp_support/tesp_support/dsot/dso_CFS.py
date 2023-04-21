@@ -12,6 +12,54 @@ import numpy as np
 import tesp_support.dsot.dso_helper_functions as dso_helper
 
 
+def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
+    DSO_df = dso_helper.pd.DataFrame([])
+    CapitalCosts_dict_list = []
+    Expenses_dict_list = []
+    Revenues_dict_list = []
+    DSO_Cash_Flows_dict_list = []
+    for dso_num in dso_range:
+        Market_Purchases = dso_helper.load_json(case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
+        Market_Purchases_base_case = dso_helper.load_json(base_case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
+
+        DSO_Cash_Flows = dso_helper.load_json(case_path, 'DSO' + str(dso_num) + '_Cash_Flows.json')
+        DSO_Revenues_and_Energy_Sales = dso_helper.load_json(case_path, 'DSO' + str(dso_num) + '_Revenues_and_Energy_Sales.json')
+
+        DSO_peak_demand = Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate']
+        DSO_base_case_peak_demand = Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate']
+
+        CapitalCosts_dict, Expenses_dict, Revenues_dict, \
+        DSO_Cash_Flows_dict, DSO_Wholesale_Energy_Purchase_Summary, DSO_Cash_Flows_composite = \
+            dso_CFS(case_config, DSOmetadata, str(dso_num),
+                    DSO_peak_demand, DSO_base_case_peak_demand,
+                    DSO_Cash_Flows, DSO_Revenues_and_Energy_Sales, Market_Purchases,
+                    Market_Purchases_base_case)
+        CapitalCosts_dict_list.append(CapitalCosts_dict)
+        Expenses_dict_list.append(Expenses_dict)
+        Revenues_dict_list.append(Revenues_dict)
+        DSO_Cash_Flows_dict_list.append(DSO_Cash_Flows_dict)
+        DSO_col = {
+            "name": DSOmetadata['DSO_' + str(dso_num)]["name"],
+            "utility_type": DSOmetadata['DSO_' + str(dso_num)]["utility_type"],
+            "ownership_type": DSOmetadata['DSO_' + str(dso_num)]["ownership_type"],
+            "climate_zone": DSOmetadata['DSO_' + str(dso_num)]["climate_zone"],
+            "ASHRAE_zone": DSOmetadata['DSO_' + str(dso_num)]["ashrae_zone"],
+            "peak_season": DSOmetadata['DSO_' + str(dso_num)]["peak_season"],
+            "number_of_customers": DSOmetadata['DSO_' + str(dso_num)]["number_of_customers"],
+            "scaling_factor": DSOmetadata['DSO_' + str(dso_num)]["scaling_factor"],
+            "DSO_peak_demand": Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate'],
+            "DSO_base_case_peak_demand": Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate'],
+            "energy_sold_MWh": DSO_Revenues_and_Energy_Sales['EnergySold'],
+            "energy_purchased_MWh": Market_Purchases['WhEnergyPurchases']['WhDAPurchases']['WhDAEnergy']
+                                    + Market_Purchases['WhEnergyPurchases']['WhRTPurchases']['WhRTEnergy']
+                                    + Market_Purchases['WhEnergyPurchases']['WhBLPurchases']['WhBLEnergy'],
+            'EffectiveCostRetailEnergy': DSO_Revenues_and_Energy_Sales['EffectiveCostRetailEnergy']
+        }
+        DSO_col.update(DSO_Cash_Flows_composite)
+        DSO_col = dso_helper.pd.Series(DSO_col)
+        DSO_df['DSO_' + str(dso_num)] = DSO_col
+    return DSO_df, CapitalCosts_dict_list, Expenses_dict_list, Revenues_dict_list, DSO_Cash_Flows_dict_list
+
 # This dso_CFS function calculates cash flow statement ...
 
 # inputs:

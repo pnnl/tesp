@@ -56,9 +56,10 @@ def destroy_federate(fed):
 def startWeatherAgent(file):
     """the weather agent publishes weather data as configured by the json file
 
-    :param file: string
-        the weather data file
-    :return: nothing
+    Args:
+        file (str): the weather data file
+    Returns:
+        (none)
     """
     # read the weather data file, arguments to mimic deprecated from_csv function
     weatherData = pd.read_csv(file, index_col=0, parse_dates=True)
@@ -341,10 +342,10 @@ def convertTimeToSeconds(time):
     It only parse unit in day, hour, minute and second.
     It will not recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
 
-    :param time: str
-        time with unit
-    :return: int
-        represent the input time in second
+    Args:
+        time (str): time with unit
+    Returns:
+        (int) represent the input time in second
     """
     unit = ''.join(filter(str.isalpha, time))
     timeNum = int(''.join(filter(str.isdigit, time)))
@@ -366,10 +367,10 @@ def deltaTimeToResmapleFreq(time):
     It only parse unit in day, hour, minute and second.
     It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
 
-    :param time: str
-        time with unit
-    :return: str
-        time with resample frequency
+    Args:
+        time (str): time with unit
+    Returns:
+        (str) time with resample frequency
     """
     unit = ''.join(filter(str.isalpha, time))
     timeNum = int(''.join(filter(str.isdigit, time)))
@@ -391,10 +392,10 @@ def findDeltaTimeMultiplier(time):
     It only parse unit in day, hour, minute and second.
     It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
 
-    :param time: str
-        time with unit
-    :return: int
-        the multiplier to convert delta_time to seconds
+    Args:
+        time (str): time with unit
+    Return:
+        (int) the multiplier to convert delta_time to seconds
     """
     unit = ''.join(filter(str.isalpha, time))
     timeNum = int(''.join(filter(str.isdigit, time)))
@@ -427,7 +428,8 @@ element "0" is the next hour and so forth.
 
 
 class weather_forecast:
-    """This object includes the error to a weather variable
+    """
+    This object includes the error to a weather variable
 
     Args:
         variable (str): Type of weather variable being forecasted
@@ -462,7 +464,8 @@ class weather_forecast:
         self.Lower_e_bound = W_dict[variable]["Lower_e_bound"]
 
     def get_truncated_normal(self, EL, EH):
-        """Truncated normal distribution
+        """
+    Truncated normal distribution
         """
         mean = (EL + EH) / 2
         sd = (abs(EL) + abs(EH)) / 4  # 95% of values are within bounds remaining is truncated

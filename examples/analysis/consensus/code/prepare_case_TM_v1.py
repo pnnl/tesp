@@ -7,18 +7,17 @@ Public Functions:
 """
 
 import os
-import sys
 import json
 import shutil
 import datetime
 import numpy as np
 
 import prep_microgrid_agent_v1 as prep
-import tesp_support.helpers_dsot as helpers
-import tesp_support.commercial_feeder_generator as com_FG
-import tesp_support.copperplate_feeder_generator as cp_FG
-import tesp_support.consensus.feederGenerator_dsot as res_FG
-import tesp_support.consensus.glm_dict_TM as gd
+import tesp_support.dsot.helpers_dsot as helpers
+import tesp_support.commercial_feeder_glm as com_FG
+import tesp_support.copperplate_feeder_glm as cp_FG
+import tesp_support.consensus.residential_feeder_glm as res_FG
+import tesp_support.consensus.glm_dictionary as gd
 import tesp_support.consensus.case_merge as cm
 
 
@@ -400,18 +399,18 @@ def prepare_case(mastercase):
     if debug_mode:
         for key in substation_config:
             folderPath = os.path.join(os.getcwd(), caseName, key)
-            shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/consensus_substation.py', folderPath)
+            shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/substation.py', folderPath)
             shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/dso_agent.py', folderPath)
             for microgrid_key in substation_config[key]['microgrids']:
                 folderPath_mg = os.path.join(os.getcwd(), caseName, microgrid_key)
                 shutil.copy(
                     r'../../../../src/tesp_support/tesp_support/consensus/microgrid_agent.py', folderPath_mg)
-                shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/consensus_microgrid.py',
+                shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/microgrid.py',
                             folderPath_mg)
             for dg_key in substation_config[key]['generators']:
                 folderPath_dg = os.path.join(os.getcwd(), caseName, dg_key)
                 shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/dg_agent.py', folderPath_dg)
-                shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/consensus_generator.py',
+                shutil.copy(r'../../../../src/tesp_support/tesp_support/consensus/generator.py',
                             folderPath_dg)
 
         folderPath = os.path.join(os.getcwd(), caseName, weather_agent_name)

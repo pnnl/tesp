@@ -68,19 +68,6 @@ The following DSO specific parameters are instantiated
 
 '''
 
-# ========   INPUT SETTINGS  ========================
-data_path = '../../../../examples/analysis/dsot/data/'
-case_path = '../../../../examples/analysis/dsot/code/'
-# case_path = '../../../examples/capabilities/ercot/case8/dsostub/'
-# case_path = '../../../examples/capabilities/ercot/case8/'
-
-write_case_config = True  # Set true when wanting to update the QMax values in the system_case_config FNCS array
-find_county = False  # Set True if you need to use API to find county as a function of latitude and longitude
-write_industrials = False  # Set True if you want to write out the industrial load tape.
-
-
-# ========   END INPUT SETTINGS  ========================
-
 
 def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_Threshold):
     sheet_name = node + 'BusValues'
@@ -368,21 +355,33 @@ def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_
         indust_df.to_csv(data_path + '/200_indust_p.csv')
 
 
-# def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_Threshold):
-prepare_metadata('8', 10, 'lean', True, 0)
-# prepare_metadata('8', 10, 'skinny', True, 0)
-# prepare_metadata('8', 10, 'stub', True, 0)
-prepare_metadata('8', 10, 'lean', False, 0)
-# prepare_metadata('8', 10, 'skinny', False, 0)
-# prepare_metadata('8', 10, 'test', False, 0)
-# prepare_metadata('8', 10, 'stub', False, 0)
+if __name__ == '__main__':
+    # ========   INPUT SETTINGS  ========================
+    data_path = '../../../../examples/analysis/dsot/data/'
+    case_path = '../../../../examples/analysis/dsot/code/'
+    # case_path = '../../../examples/capabilities/ercot/case8/dsostub/'
+    # case_path = '../../../examples/capabilities/ercot/case8/'
 
-# prepare_metadata('200', 202, 'lean', True, 1130)
-# prepare_metadata('200', 202, 'skinny', True, 300)
-# prepare_metadata('200', 202, 'stub', True, 300)
-# prepare_metadata('200', 202, 'lean', False, 1130)
-# prepare_metadata('200', 202, 'test', False, 1130)
-prepare_metadata('200', 202, 'lean', False, 'File')
-prepare_metadata('200', 202, 'lean', True, 'File')
-# prepare_metadata('200', 202, 'skinny', False, 300)
-# prepare_metadata('200', 202, 'stub', False, 300)
+    write_case_config = True  # Set true when wanting to update the QMax values in the system_case_config FNCS array
+    find_county = False  # Set True if you need to use API to find county as a function of latitude and longitude
+    write_industrials = False  # Set True if you want to write out the industrial load tape.
+    # ========   END INPUT SETTINGS  ========================
+
+    # def prepare_metadata(node, end_row, feeder_mode, high_renewables_case, DSO_Load_Threshold):
+    prepare_metadata('8', 10, 'lean', True, 0)
+    # prepare_metadata('8', 10, 'skinny', True, 0)
+    # prepare_metadata('8', 10, 'stub', True, 0)
+    prepare_metadata('8', 10, 'lean', False, 0)
+    # prepare_metadata('8', 10, 'skinny', False, 0)
+    # prepare_metadata('8', 10, 'test', False, 0)
+    # prepare_metadata('8', 10, 'stub', False, 0)
+
+    # prepare_metadata('200', 202, 'lean', True, 1130)
+    # prepare_metadata('200', 202, 'skinny', True, 300)
+    # prepare_metadata('200', 202, 'stub', True, 300)
+    # prepare_metadata('200', 202, 'lean', False, 1130)
+    # prepare_metadata('200', 202, 'test', False, 1130)
+    prepare_metadata('200', 202, 'lean', False, 'File')
+    prepare_metadata('200', 202, 'lean', True, 'File')
+    # prepare_metadata('200', 202, 'skinny', False, 300)
+    # prepare_metadata('200', 202, 'stub', False, 300)

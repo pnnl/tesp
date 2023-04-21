@@ -14,7 +14,7 @@ import pandas as pd
 
 sys.path.insert(0, dirname(abspath(__file__)))
 
-from .DSOT_plots import load_da_retail_price, customer_meta_data, load_json, load_agent_data, \
+from .plots import load_da_retail_price, customer_meta_data, load_json, load_agent_data, \
     load_system_data, get_date, tic, toc, load_retail_data, load_ames_data, load_gen_data, load_indust_data
 
 
@@ -22,7 +22,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
     """Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
     Also collects information on day ahead and real time quantities consumed by transactive customers.
     Creates summation of these statistics by customer class.
-    Arguments:
+    Args:
         metadata (dict): metadata structure for the DSO to be analyzed
         dir_path (str): directory path for the case to be analyzed
         folder_prefix (str): prefix of GLD folder name (e.g. '\TE_base_s')
@@ -276,7 +276,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
 
 def annual_energy(month_list, folder_prefix, dso_num, metadata):
     """Creates a dataframe of monthly energy consumption values and annual sum based on monthly h5 files.
-    Arguments:
+    Args:
         month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
         folder_prefix (str): prefix of GLD folder name (e.g. '/TE_base_s')
         dso_num (str): number of the DSO folder to be opened
@@ -327,7 +327,7 @@ def annual_energy(month_list, folder_prefix, dso_num, metadata):
 
 def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num, SF, ind_cust):
     """Calculate the customer bill using summary meter data and fixed tariff structure.
-    Arguments:
+    Args:
         metadata (dict): metadata structure for the DSO to be analyzed
         meter_df (dataframe): monthly and total energy consumption and peak power by house (meter)
         trans_df:
@@ -587,7 +587,7 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
 
 # def calc_te_bill(metadata, meter_df, tariff):
     # """Calculate the customer bill using realtime meter and agent bid data and transactive tariff structure.
-    # Arguments:
+    # Args:
     #     metadata (dict): metadata structure for the DSO to be analyzed
     #     meter_df (dataframe): monthly and total energy consumption and peak power by house (meter)
     #     tariff (dict): dictionary of fixed tariff structure
@@ -657,7 +657,7 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
 def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scaling_factor, num_indust_cust):
     """Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
     ensure revenue matches expenses.  Saves meter and bill dataframes to an hdf5 file.
-    Arguments:
+    Args:
         case (str): directory path for the case to be analyzed
         dso_num (str): number of the DSO folder to be opened
         metadata:
@@ -866,7 +866,7 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
 
 def get_cust_bill(cust, bill_df, bill_metadata):
     """ Populates dictionary of individual customer's annual bill.
-    Arguments:
+    Args:
         cust (str): customer name (meter name from GLD dictionary)
         bill_df (dataframe): dataframe of annual and monthly customer bills
         bill_metadata (dict): dictionary of GLD metadata including tarrif and building type for each meter

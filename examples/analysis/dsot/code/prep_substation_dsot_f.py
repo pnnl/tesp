@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: prep_substation_dsot.py
+# file: prep_substation_dsot_f.py
 """ Sets up the FNCS and agent configurations for DSOT ercot case 8 example
 
 Public Functions:
@@ -1012,7 +1012,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     op.close()
 
 
-def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt, config=None, hvacSetpt=None, jsonfile='',Q_forecast=None,Q_dso_key=None):
+def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
+                    config=None, hvacSetpt=None, jsonfile='', Q_forecast=None, Q_dso_key=None):
     """ Process a base GridLAB-D file with supplemental JSON configuration data
 
     Always reads gldfileroot.glm and writes:

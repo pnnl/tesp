@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 
 
 class PVDSOT:
-    """This agent manages the PV solar
+    """
+    This agent manages the PV solar
 
     Args:
         pv_dict (diction): dictionary to populate attributes

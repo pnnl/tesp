@@ -315,7 +315,8 @@ class TespMonitorGUI:
         print('FNCS finalized')
 
     def update_plots(self, i):
-        """This function is called by Matplotlib for each animation frame
+        """
+    This function is called by Matplotlib for each animation frame
 
         Each time called, collect FNCS messages until the next time to plot
         has been reached. Then update the plot quantities and return the

@@ -925,7 +925,7 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
 
     - *gldfileroot_agent_dict.json*, contains configuration data for the all control agents
     - *gldfileroot_substation.json*, contains HELICS subscriptions for the all control agents
-    - *gldfileroot_substation.json*, a GridLAB-D include file with HELICS publications and subscriptions
+    - *gldfileroot_gridlabd.json*, a GridLAB-D include file with HELICS publications and subscriptions
 
     Futhermore reads either the jsonfile or config dictionary.
     This supplemental data includes time-scheduled thermostat setpoints (NB: do not use the scheduled

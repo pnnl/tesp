@@ -25,7 +25,8 @@ log.getLogger('pyomo.core').setLevel(log.ERROR)
 
 
 class HVACDSOT:  # TODO: update class name
-    """This agent ...
+    """
+    This agent ...
 
     # TODO: update the purpose of this Agent
 
@@ -1767,9 +1768,10 @@ class HVACDSOT:  # TODO: update class name
 
     def get_scheduled_setpt(self, moh3, hod4, dow3):
         """
-        :param moh3: (int): the minute of the hour from 0 to 59
-        :param hod4: (int): the hour of the day, from 0 to 23
-        :param dow3: (int): the day of the week, zero being Monday
+        Args:
+            moh3: (int): the minute of the hour from 0 to 59
+            hod4: (int): the hour of the day, from 0 to 23
+            dow3: (int): the day of the week, zero being Monday
         """
 
         if 23 < hod4 < 48:
@@ -2093,7 +2095,8 @@ class HVACDSOT:  # TODO: update class name
 
 
 def test():
-    """Testing
+    """
+    Testing
 
     Makes a single hvac agent and run DA 
     """

@@ -42,29 +42,31 @@ def loadshed_test():
 
 
 def loadshed_cli_test():
-    tr.start_test('Loadshed examples for HELICS CLI')
-    os.chdir('capabilities/loadshed-HELICS3-EPlus')
-    subprocess.Popen('./clean.sh', shell=True).wait()
-    subprocess.Popen('make clean > make.log', shell=True).wait()
-    subprocess.Popen('make >> make.log', shell=True).wait()
-    tr.run_test('run.sh', 'Loadshed - HELICS/EPlus')
-    # tr.run_test('run_ns3.sh', 'Loadshed - HELICS/EPLUS/NS3')
-    os.chdir(tesp_path)
+    if b_helics:
+        tr.start_test('Loadshed examples for HELICS CLI')
+        os.chdir('capabilities/loadshed-HELICS3-EPlus')
+        subprocess.Popen('./clean.sh', shell=True).wait()
+        subprocess.Popen('make clean > make.log', shell=True).wait()
+        subprocess.Popen('make >> make.log', shell=True).wait()
+        tr.run_test('run.sh', 'Loadshed - HELICS/EPlus')
+        # tr.run_test('run_ns3.sh', 'Loadshed - HELICS/EPLUS/NS3')
+        os.chdir(tesp_path)
 
 
 def loadshed_proto_test():
-    tr.start_test('Loadshed Prototypical Communication')
-    os.chdir('capabilities/loadshed-prototypical-communication')
-    subprocess.Popen('./clean.sh', shell=True).wait()
-    os.chdir('R1-12.47-1-communication')
-    subprocess.Popen('make clean > make.log', shell=True).wait()
-    subprocess.Popen('make >> make.log', shell=True).wait()
-    os.chdir('../R1-12.47-1')
-    tr.exec_test('gridlabd R1-12.47-1_processed.glm > gridlabd.log', 'Establishing baseline results')
-    os.chdir(tesp_path + '/capabilities/loadshed-prototypical-communication')
-    tr.run_test('run.sh', 'Load shedding control without communication network')
-    tr.run_test('run_ns3.sh', 'Load shedding control over communication network')
-    os.chdir(tesp_path)
+    if b_helics:
+        tr.start_test('Loadshed Prototypical Communication')
+        os.chdir('capabilities/loadshed-prototypical-communication')
+        subprocess.Popen('./clean.sh', shell=True).wait()
+        os.chdir('R1-12.47-1-communication')
+        subprocess.Popen('make clean > make.log', shell=True).wait()
+        subprocess.Popen('make >> make.log', shell=True).wait()
+        os.chdir('../R1-12.47-1')
+        tr.exec_test('gridlabd R1-12.47-1_processed.glm > gridlabd.log', 'Establishing baseline results')
+        os.chdir(tesp_path + '/capabilities/loadshed-prototypical-communication')
+        tr.run_test('run.sh', 'Load shedding control without communication network')
+        tr.run_test('run_ns3.sh', 'Load shedding control over communication network')
+        os.chdir(tesp_path)
 
 
 def houses_test():
@@ -156,12 +158,13 @@ def make_comm_base_test():
 
 
 def make_comm_eplus_test():
-    tr.start_test('Eplus with Communication Network example')
-    os.chdir('capabilities/comm')
-    subprocess.Popen(pycall + ' make_comm_eplus.py', shell=True).wait()
-    os.chdir('Eplus_Comm')
-    tr.run_test('run.sh', 'Eplus w/Comm - HELICS')
-    os.chdir(tesp_path)
+    if b_helics:
+        tr.start_test('Eplus with Communication Network example')
+        os.chdir('capabilities/comm')
+        subprocess.Popen(pycall + ' make_comm_eplus.py', shell=True).wait()
+        os.chdir('Eplus_Comm')
+        tr.run_test('run.sh', 'Eplus w/Comm - HELICS')
+        os.chdir(tesp_path)
 
 
 def combine_feeders_test():

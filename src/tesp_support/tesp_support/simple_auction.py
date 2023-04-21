@@ -26,7 +26,8 @@ from .helpers import ClearingType, curve, aggregate_bid
 
 # Class definition
 class simple_auction:
-    """This class implements a simplified version of the double-auction market embedded in GridLAB-D.
+    """
+    This class implements a simplified version of the double-auction market embedded in GridLAB-D.
 
     References:
         `Market Module Overview - Auction <http://gridlab-d.shoutwiki.com/wiki/Market_Auction>`_
@@ -174,7 +175,8 @@ class simple_auction:
         self.unresp += quantity
 
     def aggregate_bids(self):
-        """Aggregates the unresponsive load and responsive load bids for submission to the bulk system market
+        """
+    Aggregates the unresponsive load and responsive load bids for submission to the bulk system market
         """
         if self.unresp > 0:
             self.curve_buyer.add_to_curve(self.price_cap, self.unresp, True)

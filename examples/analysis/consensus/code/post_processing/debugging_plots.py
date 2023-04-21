@@ -1,4 +1,5 @@
-"""This file assists visual debugging analyses
+"""
+    This file assists visual debugging analyses
 
     Develop only for debugging purposes 
         

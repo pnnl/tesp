@@ -32,9 +32,10 @@ from pathlib import Path
 
 import openpyxl as xl
 
-spec = importlib.util.spec_from_file_location("PSMv3toDAT", "../PSMv3toDAT.py")
-PSM = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(PSM)
+import tesp_support.PSMv3toDAT as PSM
+# spec = importlib.util.spec_from_file_location("PSMv3toDAT", "../PSMv3toDAT.py")
+# PSM = importlib.util.module_from_spec(spec)
+# spec.loader.exec_module(PSM)
 
 # Setting up logging
 logger = logging.getLogger(__name__)
@@ -65,7 +66,8 @@ def _open_file(file_path, typ='r'):
 
 
 def parse_DSO_location(dso_metadata_path, worksheet_name):
-    """This function parses the DSO metadata which is contained in an
+    """
+    This function parses the DSO metadata which is contained in an
     Excel spreadsheet
 
 
@@ -82,7 +84,7 @@ def parse_DSO_location(dso_metadata_path, worksheet_name):
     """
 
     # openpyxl doesn't use file handles so, I just use my function to
-    #   make sure the file is really there and then close it up to allo
+    #   make sure the file is really there and then close it up to allow
     #   openpyxl to be able to grab it and do its thing.
     dso_fh = _open_file(dso_metadata_path)
     dso_fh.close()
@@ -122,7 +124,8 @@ def parse_DSO_location(dso_metadata_path, worksheet_name):
 
 
 def download_nsrdb_data(dso_meta, output_path):
-    """This function queries the NSRDB database over the web and pulls
+    """
+    This function queries the NSRDB database over the web and pulls
         down the solar data down calls PSMv3toDAT to convert them to
         appropriate format.
 

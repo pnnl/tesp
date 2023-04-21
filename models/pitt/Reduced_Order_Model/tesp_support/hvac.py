@@ -10,7 +10,8 @@ import math
 import tesp_support.helpers as helpers
 
 class hvac:
-    """This agent manages thermostat setpoint and bidding for a house
+    """
+    This agent manages thermostat setpoint and bidding for a house
 
     Args:
         dict (dict): dictionary row for this agent from the JSON configuration file

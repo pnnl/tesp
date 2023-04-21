@@ -2,20 +2,20 @@
 # file: water_heater_dsot.py
 """Class that controls the Water Heater DER
 
-Implements the optimum schedule of heating element operation given DA price forecast; generate the bids
-for DA and RT; monitor and supervisory control of GridLAB-D environment element.
- with the implementation of new SOHC model and new delta_SOHC model
+Implements the optimum schedule of heating element operation given DA price forecast; generate the bids for DA and RT;
+monitor and supervisory control of GridLAB-D environment element with the implementation of new SOHC model and new delta_SOHC model
+
 The function call order for this agent is:
-    initialize
+    * initialize
 
     Repeats at every hour:
-        DA_forecasted_price(forecasted_price)
-        DA_forecasted_schedule(forecasted_schedule)
-        formulate_bid_da()
+        * DA_forecasted_price(forecasted_price)
+        * DA_forecasted_schedule(forecasted_schedule)
+        * formulate_bid_da()
 
-        Repeats at every 5 min:
-            formulate_bid_rt()
-            bid_accepted()
+    Repeats at every 5 min:
+        * formulate_bid_rt()
+        * bid_accepted()
 
 """
 import math
@@ -32,7 +32,8 @@ log.getLogger('pyomo.core').setLevel(log.ERROR)
 
 
 class WaterHeaterDSOT:
-    """This agent manage the operation of water heater
+    """
+    This agent manage the operation of water heater
 
     Args:
         volume (float): volume of the tank, in gal

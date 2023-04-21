@@ -10,7 +10,35 @@
 import json
 import os
 
-from tesp_support.dsot.dso_helper_functions import returnDictSum
+import tesp_support.dsot.dso_helper_functions as dso_helper
+
+
+def get_customer_df(dso_range, case_path, metadata_path):
+    customer_df = dso_helper.pd.DataFrame([])
+    for dso_num in dso_range:
+        GLD_metadata = dso_helper.load_json(case_path, 'DSO' + str(dso_num) + '_Customer_Metadata.json')
+        cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
+        cust_bills = dso_helper.pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
+        for i in range(len(GLD_metadata['billingmeters'].keys())):
+            customer = list(GLD_metadata['billingmeters'].keys())[i]
+            if GLD_metadata['billingmeters'][customer]['tariff_class'] != 'industrial':
+                customer_bill = dso_helper.get_cust_bill(customer, cust_bills, GLD_metadata)
+                customer_metadata = GLD_metadata['billingmeters'][customer]
+                Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = customer_CFS(
+                    GLD_metadata, metadata_path, customer, customer_bill)
+                customer_row = {
+                    "Customer ID": 'DSO' + str(dso_num) + '_' + customer,
+                    "dso": dso_num,
+                    "meter ID": customer
+                }
+                customer_row.update(customer_metadata)
+                customer_row.update(Customer_Cash_Flows_csv)
+                customer_row = dso_helper.pd.DataFrame(customer_row.items())
+                customer_row = customer_row.transpose()
+                customer_row.columns = customer_row.iloc[0]
+                customer_row = customer_row.drop(customer_row.index[[0]])
+                customer_df = customer_df.append(customer_row)
+    return customer_df
 
 
 # This function calculates ...
@@ -238,14 +266,14 @@ def customer_CFS(GLD_metadata,
         Expenses = Bills  # ?
         Revenues = 0  # Incentives + DSOShare
 
-        PurchasesFix = returnDictSum(customer_bill['BillsFix']['PurchasesFix'])
+        PurchasesFix = dso_helper.returnDictSum(customer_bill['BillsFix']['PurchasesFix'])
         EnergyFix = customer_bill['BillsFix']['PurchasesFix']['EnergyFix']
         DemandCharges = customer_bill['BillsFix']['PurchasesFix']['DemandCharges']
         ConnChargesFix = customer_bill['BillsFix']['ConnChargesFix']
 
         BillsFix = customer_bill['BillsFix']['TotalFix']
 
-        PurchasesDyn = returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
+        PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
         DAEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['DAEnergy']
         RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
         DistCharges = customer_bill['BillsTransactive']['DistCharges']
@@ -319,7 +347,7 @@ if __name__ == '__main__':
     save_path = 'C:/Users/yint392/OneDrive - PNNL/Documents/DSO/test_save_files'
     '''
 
-    Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = customer_CFS(GLD_metadata,
-                                                                     metadata_path,
-                                                                     customer,
-                                                                     customer_bill)
+    # Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = customer_CFS(GLD_metadata,
+    #                                                                  metadata_path,
+    #                                                                  customer,
+    #                                                                  customer_bill)

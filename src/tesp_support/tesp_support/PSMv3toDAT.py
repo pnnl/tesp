@@ -60,7 +60,7 @@ def weatherdat(psmv3csvfile, bus_str, location_str):
 
 
 if __name__ == '__main__':
-    from tesp_support.api.data import weather_path
+    from .api.data import weather_path
 
     # loop to read and convert weather data files downloaded from NREL PSM v3
     # dictionary of csv weather datafile names corresponding to each bus

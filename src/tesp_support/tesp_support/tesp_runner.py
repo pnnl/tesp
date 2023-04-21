@@ -1,10 +1,11 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: run_test_case.py
-"""Auto test runner for TESP run* cases
+"""
+Auto test runner for TESP run* cases
 Runs a test case based on pre-existing shell script file.
 
 If FNCS or HELICS broker exist the test waits for
- the broker process to finish before function returns.
+the broker process to finish before function returns.
 
 This code has limited functionality as the 'run*' scripts
 for the examples are written in a very specified way.
