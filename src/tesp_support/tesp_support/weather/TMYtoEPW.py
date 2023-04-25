@@ -17,7 +17,7 @@ import numpy as np
 
 
 def removeZero(x):
-    """ helper function to strip leading '0' from a string
+    """Helper function to strip leading '0' from a string
     """
     if x[0] == '0':
         x = x[1:]
@@ -102,7 +102,7 @@ abbreviations = [
 
 
 def convert_tmy2_to_epw(in_file_root, out_file_root=None):
-    """ Converts TMY2 to EPW
+    """Converts TMY2 to EPW
 
     Reads in_file_root.tmy2 and writes in_file_root.epw
 
@@ -212,8 +212,9 @@ def convert_tmy2_to_epw(in_file_root, out_file_root=None):
         temp = temp + ',' + str(ExtDirNorRad)
         OpaSkyCov = float(lines[i][63:65])
         #    temp=temp+','+str(OpaSkyCov)
-        skyemi = (0.787 + 0.764 * np.log((dewpoi + 273.0) / 273.0)) * (
-                    1 + 0.0224 * OpaSkyCov + 0.0035 * OpaSkyCov * OpaSkyCov + 0.00028 * OpaSkyCov * OpaSkyCov * OpaSkyCov)
+        skyemi = (.787 + 0.764 * np.log((dewpoi + 273.0) / 273.0)) * (
+                 1 + 0.0224 * OpaSkyCov + 0.0035 * OpaSkyCov * OpaSkyCov
+                 + 0.00028 * OpaSkyCov * OpaSkyCov * OpaSkyCov)
         HorzIRSky = skyemi * 5.6697 / 100000000 * (
                     (drybulb + 273) * (drybulb + 273) * (drybulb + 273) * (drybulb + 273))
         #     if i==1:
@@ -281,7 +282,7 @@ def convert_tmy2_to_epw(in_file_root, out_file_root=None):
 
 
 def convert_tmy3_to_epw(in_file_root, out_file_root=None):
-    """ Converts TMY3 to EPW
+    """Converts TMY3 to EPW
 
     Reads in_file_root.tmy3 and writes out_file_root.epw
 

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019-2023 Battelle Memorial Institute
-"""
+# Copyright (C) 2019-2022 Battelle Memorial Institute
+# file: gridpiq.py
+"""This script attempts to demonstrate the grid PIQ for new TESP API.
+
 Created on Mon Jan 23 14:05:08 2023
-
-This script attempts to demonstrate the grid PIQ for new TESP API.
-
 @author: d3j331 - Mitch Pelton
 """
 

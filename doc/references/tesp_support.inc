@@ -9,30 +9,6 @@ tesp\_support package
 Submodules
 ----------
 
-tesp\_support.PSMv3toDAT module
--------------------------------
-
-.. automodule:: tesp_support.PSMv3toDAT
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-tesp\_support.TMY3toCSV module
-------------------------------
-
-.. automodule:: tesp_support.TMY3toCSV
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-tesp\_support.TMYtoEPW module
------------------------------
-
-.. automodule:: tesp_support.TMYtoEPW
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 tesp\_support.\_\_init\_\_ module
 ---------------------------------
 
@@ -385,25 +361,6 @@ tesp\_support.wind\_gen\_year module
    :undoc-members:
    :show-inheritance:
 
-tesp\_support.weather\_download package
-=======================================
-
-.. automodule:: tesp_support.weather_download
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Submodules
-----------
-
-tesp\_support.weather\_download.PSM\_download module
-----------------------------------------------------
-
-.. automodule:: tesp_support.weather_download.PSM_download
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 tesp\_support.consensus package
 ===============================
 
@@ -527,6 +484,57 @@ tesp\_support.consensus.weather\_agent module
    :undoc-members:
    :show-inheritance:
 
+tesp\_support.weather package
+=============================
+
+.. automodule:: tesp_support.weather
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+tesp\_support.weather.PSM\_download module
+------------------------------------------
+
+.. automodule:: tesp_support.weather.PSM_download
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.weather.PSMv3toDAT module
+---------------------------------------
+
+.. automodule:: tesp_support.weather.PSMv3toDAT
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.weather.TMY3toCSV module
+--------------------------------------
+
+.. automodule:: tesp_support.weather.TMY3toCSV
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.weather.TMYtoEPW module
+-------------------------------------
+
+.. automodule:: tesp_support.weather.TMYtoEPW
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.weather.\_\_init\_\_ module
+-----------------------------------------
+
+.. automodule:: tesp_support.weather.__init__
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tesp\_support.sgip1 package
 ===========================
 
@@ -625,14 +633,6 @@ tesp\_support.api.gridpiq module
 --------------------------------
 
 .. automodule:: tesp_support.api.gridpiq
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-tesp\_support.api.metrics module
---------------------------------
-
-.. automodule:: tesp_support.api.metrics
    :members:
    :undoc-members:
    :show-inheritance:

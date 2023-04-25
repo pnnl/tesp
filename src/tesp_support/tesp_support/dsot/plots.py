@@ -150,7 +150,7 @@ def load_gen_data(dir_path, gen_name, day_range):
     """Utility to open h5 files for agent data.
     Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter' etc)
     Returns:
@@ -389,7 +389,7 @@ def load_da_retail_price(dir_path, folder_prefix, dso_num, day_num, retail=True)
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
     Returns:
         retail_da_data_df : dataframe of cleared DA retail price
@@ -426,7 +426,7 @@ def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
     """Utility to open h5 files for agent data.
     Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter' etc)
     Returns:
@@ -475,7 +475,7 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
     """Utility to open h5 files for agent data.
     Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter' etc)
     Returns:
@@ -547,7 +547,7 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
     """Utility to open GLD created h5 files for systems' data.
     Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         system_name (str): name of system data to load (e.g. 'house', 'substation', 'inverter' etc)
     Returns:
@@ -657,7 +657,7 @@ def load_weather_data(dir_path, folder_prefix, dso_num, day_num):
     """Utility to open weather dat files and find day of data
     Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\\DSO_')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\\DSO_')
         dso_num (str): number of the DSO folder to be opened
         day_num (str): simulation day number (1 = first day of simulation)
     Returns:

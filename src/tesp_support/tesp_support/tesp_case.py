@@ -18,7 +18,7 @@ import subprocess
 import sys
 from datetime import datetime
 
-from .TMYtoEPW import convert_tmy2_to_epw
+from tesp_support.weather.TMYtoEPW import convert_tmy2_to_epw
 from .api.data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
 from .resdential_feeder_glm import populate_feeder
 from .glm_dictionary import glm_dict

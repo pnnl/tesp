@@ -7,7 +7,7 @@ from datetime import datetime
 
 from tesp_support.api.data import weather_path
 from tesp_support.glm_dictionary import glm_dict
-from tesp_support.TMY3toCSV import weathercsv
+from tesp_support.weather.TMY3toCSV import weathercsv
 
 _FNCS = False
 # _FNCS = True

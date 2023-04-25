@@ -1,19 +1,18 @@
 # Copyright (C) 2019-2022 Battelle Memorial Institute
 # file: entity.py
-
 """
 """
 
 import json
 import sqlite3
 
+
 def assign_defaults(obj, file_name):
     """
 
     Args:
         obj:
-        file_name:
-
+        file_name (str):
     Returns:
 
     """
@@ -29,8 +28,7 @@ def assign_item_defaults(obj, file_name):
 
     Args:
         obj:
-        file_name:
-
+        file_name (str):
     Returns:
 
     """
@@ -124,19 +122,18 @@ class Entity:
     def count(self):
         """
 
-        Returns (int): The number of defined Items in the Entity
-
+        Returns:
+             int: The number of defined Items in the Entity
         """
         return self.item_cnt
 
     def find_item(self, item):
-        """
+        """Find the Item from the Entity
 
         Args:
-            item:
-
-        Returns (Item):
-
+            item (str): name of the attribute in the entity
+        Returns:
+             Item:
         """
         try:
             return self.__getattribute__(item)
@@ -144,14 +141,13 @@ class Entity:
             return None
 
     def set_instance(self, object_name, params):
-        """
+        """Set the Entity instance the given set of parameters
 
         Args:
-            object_name:
-            params:
-
+            object_name (str): the name of the entity
+            params (list<list>): list of the attribute parameters
         Returns:
-
+            Entity instance: an object with name and values
         """
         if type(object_name) == str:
             try:
@@ -182,13 +178,12 @@ class Entity:
         return None
 
     def get_instance(self, object_name):
-        """
+        """Get the entity instance
 
         Args:
-            object_name:
-
+            object_name (str): the name of the Entity
         Returns:
-
+            Entity instance: an object with name and values or None when object_name is invalid
         """
         if type(object_name) == str:
             try:
@@ -201,13 +196,12 @@ class Entity:
         return None
 
     def del_instance(self, object_name):
-        """
+        """Delete the Entity instance
 
         Args:
-            object_name:
-
+            object_name (str): the name of the Entity
         Returns:
-
+            None
         """
         if type(object_name) == str:
             try:
@@ -220,17 +214,16 @@ class Entity:
         return None
 
     def add_attr(self, datatype, label, unit, item, value=None):
-        """
+        """Add the Item attribute to the Entity
 
         Args:
-            datatype:
-            label:
-            unit:
-            item:
-            value:
-
+            datatype (str): Describes the datatype of the attribute
+            label (str): Describes the attribute
+            unit (str): The unit name of the attribute
+            item (str): The name of the attribute
+            value (any): The value of the item
         Returns:
-
+            Item:
         """
         val = Item(datatype, label, unit, item, value)
         setattr(self, item, val)
@@ -238,13 +231,12 @@ class Entity:
         return self.__getattribute__(item)
 
     def del_attr(self, item):
-        """
+        """Delete the Item from the Entity
 
         Args:
-            item:
-
+            item (str): name of the attribute in the Entity
         Returns:
-
+            None:
         """
         if self.find_item(item):
             delattr(self, item)
@@ -267,15 +259,14 @@ class Entity:
     #     return None
 
     def set_item(self, object_name, item, val):
-        """
+        """Set the value of the instance for the Item and Entity
 
         Args:
-            object_name:
-            item:
-            val:
-
+            object_name (str): the name of the Entity
+            item (str): name of the Item
+            val (any): value of the item
         Returns:
-
+            None
         """
         if self.find_item(item):
             _item = self.__getattribute__(item)
@@ -284,14 +275,13 @@ class Entity:
         return None
 
     def del_item(self, object_name, item):
-        """
+        """Delete the value of the instance from the Item and Entity
 
         Args:
-            object_name:
-            item:
-
+            object_name (str): the name of the Entity
+            item (str): name of the Item
         Returns:
-
+            None
         """
         if self.find_item(item):
             _item = self.__getattribute__(item)
@@ -300,10 +290,10 @@ class Entity:
         return None
 
     def toList(self):
-        """
+        """List the Item(s) in the Entity
 
         Returns:
-
+            dict: list of Items in the Entity
         """
         diction = []
         for attr in self.__dict__:
@@ -313,10 +303,10 @@ class Entity:
         return diction
 
     def toJson(self):
-        """
+        """List the Item(s) in the Entity in json string format
 
         Returns:
-
+            str: JSON string of the Items in the Entity
         """
         diction = []
         for attr in self.__dict__:
@@ -326,10 +316,10 @@ class Entity:
         return diction
 
     def toHelp(self):
-        """
+        """List the Item(s) in the Entity in help format,listing datatype, label, name, default value
 
         Returns:
-
+            str: format list of the Items in the Entity
         """
         diction = "\nEntity: " + self.entity
         for attr in self.__dict__:
@@ -339,13 +329,12 @@ class Entity:
         return diction
 
     def toSQLite(self, connection):
-        """
+        """Create a sqlite table to store the Item(s) in the Entity with datatype, label, name, unit, default value
 
         Args:
-            connection:
-
+            connection (Connection): A valid sqlite connection object
         Returns:
-
+            None
         """
         # cursor object
         cursor_obj = connection.cursor()
@@ -373,13 +362,12 @@ class Entity:
                 sql = """INSERT INTO """ + self.entity + """(label, unit, datatype, item, valu) VALUES(?,?,?,?,?);"""
                 cursor_obj.execute(sql, record)
                 connection.commit()
-        return ""
 
     def instanceToJson(self):
-        """
+        """Instance list the Item(s) in the Entity to JSON
 
         Returns:
-
+            str: JSON string of the instance of Item(s) in the Entity
         """
         diction = ""
         for object_name in self.instance:
@@ -390,13 +378,12 @@ class Entity:
         return diction
 
     def instanceToSQLite(self, connection):
-        """
+        """Instance list the Item(s) in the Entity to SQLite
 
         Args:
-            connection: A sqlite connection object
-
+            connection: A valid sqlite connection object
         Returns:
-
+            None
         """
         # cursor object
         cursor_obj = connection.cursor()
@@ -431,8 +418,6 @@ class Entity:
             # print(sql, flush=True)
             cursor_obj.execute(sql)
             connection.commit()
-
-        return ""
 
 
 def test():

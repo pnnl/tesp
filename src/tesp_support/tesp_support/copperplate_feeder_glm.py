@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: copperplateFeederGenerator_dsot.py
+# file: copperplate_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
 As this module populates the feeder backbone with houses and DER, it uses
@@ -10,13 +10,16 @@ avoid overloads. These can be changed by editing tables and variables in the
 source file.
 
 There are two kinds of house populating methods implemented:
-    * :Feeders with Service Transfomers: This case applies to the full PNNL taxonomy feeders.
-        Do not specify the *taxchoice* argument to *populate_feeder*.
-        Each service transformer receiving houses will have a short service drop and a small number of houses attached.
-    * :Feeders without Service Transformers: This applies to the reduced-order ERCOT feeders.
-        To invoke this mode, specify the *taxchoice* argument to *populate_feeder*.
-        Each primary load to receive houses will have a large service transformer,
-        large service drop and large number of houses attached.
+
+* Feeders with Service Transformers:
+    This case applies to the full PNNL taxonomy feeders. Do not specify the *taxchoice* argument to *populate_feeder*.
+    Each service transformer receiving houses will have a short service drop and a small number of houses attached.
+
+* Feeders without Service Transformers:
+    This applies to the reduced-order ERCOT feeders. To invoke this mode,
+    specify the *taxchoice* argument to *populate_feeder*.
+    Each primary load to receive houses will have a large service transformer,
+    large service drop and large number of houses attached.
 
 References:
     `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_

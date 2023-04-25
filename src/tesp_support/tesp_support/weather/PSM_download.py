@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: PSM_download.py
+# Created 4/28/2020
 """
-Created on Tuesday APR 28 2:15:55 2020
 
 Simple script to download PSM weather files and convert them to DSO+T
 DAT files.
@@ -23,7 +23,6 @@ not completely stand-alone.
 """
 
 import argparse
-import importlib.util
 import logging
 import os
 import pprint
@@ -32,7 +31,7 @@ from pathlib import Path
 
 import openpyxl as xl
 
-import tesp_support.PSMv3toDAT as PSM
+import tesp_support.weather.PSMv3toDAT as PSM
 # spec = importlib.util.spec_from_file_location("PSMv3toDAT", "../PSMv3toDAT.py")
 # PSM = importlib.util.module_from_spec(spec)
 # spec.loader.exec_module(PSM)

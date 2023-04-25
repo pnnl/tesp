@@ -7,23 +7,23 @@ import numpy as np
 
 
 def get_secs_from_hhmm(time):
-    """
-    Convert HHMM to seconds
+    """Convert HHMM to seconds
+
     Args:
-        time: HHMM
+        time (float): HHMM
     Returns:
-        seconds
+        int: seconds
     """
     return np.floor(time / 100) * 3600 + (time % 100) * 60
 
 
 def get_hhmm_from_secs(time):
-    """
-    Convert seconds to HHMM
+    """Convert seconds to HHMM
+
     Args:
-        time: seconds
+        time (int): seconds
     Returns:
-        HHMM
+        int: HHMM
     """
     time = 60 * round(time / 60)
     ret = int(np.floor(time / 3600) * 100 + np.round((time % 3600) / 60))
@@ -33,11 +33,11 @@ def get_hhmm_from_secs(time):
 
 
 def subtract_hhmm_secs(hhmm, secs):
-    """
-    Subtract hhmm time - secs duration
+    """Subtract hhmm time - secs duration
+
     Args:
-        hhmm: HHMM format time
-        secs: seconds
+        hhmm (float): HHMM format time
+        secs (int): seconds
     Returns:
         arrival time in HHMM
     """
@@ -48,11 +48,11 @@ def subtract_hhmm_secs(hhmm, secs):
 
 
 def add_hhmm_secs(hhmm, secs):
-    """
-    Add hhmm time + seconds duraction
+    """Add hhmm time + seconds duration
+
     Args:
-        hhmm: HHMM
-        secs: seconds
+        hhmm (float): HHMM
+        secs (int): seconds
     Returns:
         hhmm+secs in hhmm format
     """
@@ -63,13 +63,13 @@ def add_hhmm_secs(hhmm, secs):
 
 
 def get_duration(arrival, leave):
-    """
-    Convert arrival and leaving time to duration
+    """Convert arrival and leaving time to duration
+
     Args:
-        arrival: integer in HHMM format
-        leave:  integer in HHMM format
+        arrival (float): in HHMM format
+        leave (float): in HHMM format
     Returns:
-        duration in seconds
+        int: duration in seconds
     """
     arr_secs = np.floor(arrival / 100) * 3600 + (arrival % 100) * 60
     leave_secs = np.floor(leave / 100) * 3600 + (leave % 100) * 60
@@ -80,12 +80,12 @@ def get_duration(arrival, leave):
 
 
 def is_hhmm_valid(time):
-    """
-    Check if HHMM is a valid number
+    """Check if HHMM is a valid number
+
     Args:
-        time: HHMM format
+        time (float): HHMM format
     Returns:
-        true or false
+        bool: true if valid or false if not
     """
     hr = np.floor(time / 100)
     mn = time % 100
@@ -95,13 +95,13 @@ def is_hhmm_valid(time):
 
 
 def get_dist(mean, var):
-    """
-    Get a random number from a distribution given mean and %variability
+    """Get a random number from a distribution given mean and %variability
+
     Args:
-        mean: mean of distribution
-        var: % variability
+        mean (float): mean of distribution
+        var (float): % variability
     Returns:
-        one random entry from distribution
+        float: one random entry from distribution
     """
     dev = (1 - var / 100) + np.random.uniform(0, 1) * var / 100 * 2
     return mean * dev

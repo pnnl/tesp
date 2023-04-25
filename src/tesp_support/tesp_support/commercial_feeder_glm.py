@@ -1,5 +1,5 @@
 # Copyright (C) 2019-2022 Battelle Memorial Institute
-# file: commbldgenerator.py
+# file: commercial_feeder_glm.py
 
 import os
 import json
@@ -219,8 +219,9 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
 
 def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percentage, ev_metadata, ev_percentage,
                       solar_percentage, pv_rating_MW, solar_Q_player, case_type, metrics, metrics_interval, mode=None):
-    """For large buildings, breaks building up into multiple zones.  For all buildings sends definition dictionary to
-        function that writes out building definition to GLD file format.
+    """For large buildings, breaks building up into multiple zones.
+
+    For all buildings sends definition dictionary to function that writes out building definition to GLD file format.
 
     Args:
         bldg (dict): dictionary of building parameters for the building to be processed.

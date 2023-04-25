@@ -1,12 +1,11 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: PSMv3toDAT.py
-
-# Written by Ebony Mayhorn
-# 8/7/2019
-# This code reads in PSM v3 csv files obtained from  https://maps.nrel.gov/nsrdb-viewer/
-# The csv file include 6 columns for the following in addition to date and time information:
-# temperature, humidity, DNI, DHI, pressure and wind_speed
-
+# Created 8/7/2019
+# @author: Ebony Mayhorn
+"""This code reads in PSM v3 csv files obtained from  https://maps.nrel.gov/nsrdb-viewer/
+The csv file include 6 columns for the following in addition to date and time information:
+temperature, humidity, DNI, DHI, pressure and wind_speed
+"""
 import os
 
 import pandas as pd
@@ -60,7 +59,7 @@ def weatherdat(psmv3csvfile, bus_str, location_str):
 
 
 if __name__ == '__main__':
-    from .api.data import weather_path
+    from tesp_support.api.data import weather_path
 
     # loop to read and convert weather data files downloaded from NREL PSM v3
     # dictionary of csv weather datafile names corresponding to each bus

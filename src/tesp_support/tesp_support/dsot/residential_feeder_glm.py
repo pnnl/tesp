@@ -12,13 +12,12 @@ source file.
 There are two kinds of house populating methods implemented:
 
 * Feeders with Service Transformers:
-    This case applies to the full PNNL taxonomy feeders.
-    Do not specify the *taxchoice* argument to *populate_feeder*.
+    This case applies to the full PNNL taxonomy feeders. Do not specify the *taxchoice* argument to *populate_feeder*.
     Each service transformer receiving houses will have a short service drop and a small number of houses attached.
 
 * Feeders without Service Transformers:
-    This applies to the reduced-order ERCOT feeders.
-    To invoke this mode, specify the *taxchoice* argument to *populate_feeder*.
+    This applies to the reduced-order ERCOT feeders. To invoke this mode,
+    pecify the *taxchoice* argument to *populate_feeder*.
     Each primary load to receive houses will have a large service transformer,
     large service drop and large number of houses attached.
 
