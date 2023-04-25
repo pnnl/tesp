@@ -8,6 +8,7 @@ import tesp_support.api.metrics_base_api as bc
 
 
 def synch_time_series(series_list, synch_interval, interval_unit):
+<<<<<<< Updated upstream
     """Function resamples the time steps of the dataframes contained in the input data frame list
     to match the time intervals specified in the inputs
 
@@ -18,6 +19,24 @@ def synch_time_series(series_list, synch_interval, interval_unit):
             include the following options "nanoseconds", "seconds", "minutes", "hours", "days", "months", "years"
     Returns:
         list<dataframe>: pandas dataframe time series containing the resampled columns of data
+=======
+    """Function resamples the time steps of the dataframes contained
+        in the input data frame list to match the time intervals specified in
+        the inputs
+
+    Args:
+        series_list (List<dataframe>):  List containing a set of pandas
+            dataframes each representing a time series
+        synch_interval (integer): the size of the time step which should be
+            used to resample the dataframe
+        interval_unit (string): the measurement unit of the interval to be
+            sampled. The options for this function include the following
+            options "nanoseconds","seconds","minutes","hours","days","months",
+            "years"
+    Returns:
+        List<dataframe>: pandas dataframe time series containing the resampled
+            columns of data
+>>>>>>> Stashed changes
     """
     synchronized_series = []
     for df in series_list:
@@ -28,6 +47,7 @@ def synch_time_series(series_list, synch_interval, interval_unit):
 
 
 def get_synch_date_range(time_series):
+<<<<<<< Updated upstream
     """Function returns the latest starting date/time and the earliest ending date/time
     of the time series data frames in the time series list
 
@@ -35,6 +55,17 @@ def get_synch_date_range(time_series):
         time_series (list<dataframe>): List containing a set of pandas dataframes each representing a time series
     Returns:
         datetime, datetime: the latest start and the earliest end times found in the list of data frames
+=======
+    """Function returns the latest starting date/time and the earliest ending
+    date/time of the time series data frames in the time series list
+
+    Args:
+        time_series (List<dataframe>): List containing a set of pandas
+            dataframes each representing a time series
+    Returns:
+        [datetime,datetime]:  the latest start and the earliest end times found
+            in the list of data frames
+>>>>>>> Stashed changes
     """
     t_start = time_series[0].index.min()
     t_end = time_series[0].index.max()
@@ -47,6 +78,7 @@ def get_synch_date_range(time_series):
 
 
 def synch_series_lengths(time_series):
+<<<<<<< Updated upstream
     """ Function clips each of the time series in the time_series list so
     that each time series data frame has the same start and ending times
 
@@ -54,6 +86,16 @@ def synch_series_lengths(time_series):
         time_series (list<dataframe>): List containing a set of pandas dataframes each representing a time series
     Returns:
         list<dataframe>: a list containing the clipped time series data frames
+=======
+    """Function clips each of the time series in the time_series list so
+    that each time series data frame has the same start and ending times
+
+    Args:
+        time_series (List<dataframe>): List containing a set of pandas
+            dataframes each representing a time series
+    Returns:
+        List<dataframe>: a list containing the clipped time series data frames
+>>>>>>> Stashed changes
     """
     synchronized_series = []
     synch_start, synch_end = get_synch_date_range(time_series)
@@ -64,6 +106,7 @@ def synch_series_lengths(time_series):
 
 
 def synch_series(time_series, synch_interval, interval_unit):
+<<<<<<< Updated upstream
     """Function synchronizes all the time series data frames in the time_series list, so they
     all have the same start and ending times and the same number of times based upon a shared
     sampling interval
@@ -74,6 +117,21 @@ def synch_series(time_series, synch_interval, interval_unit):
         interval_unit (str): the unit of the time interval the time series is to be sampled "T", "H", "S"
     Returns:
         list<dataframe>: time series dataframe containing the resampled data of the original
+=======
+    """Function synchronizes all the time series data frames in the time_series
+    list, so they all have the same start and ending times and the same
+    number of times based upon a shared sampling interval
+
+    Args:
+        time_series (List<dataframe>): time series dataframe
+        synch_interval (integer): the size of the time intervals to be used in
+            the time series
+        interval_unit (string): the unit of the time interval the time series
+            is to be sampled "T", "H", "S"
+    Returns:
+        List<dataframe>: time series dataframe containing the resampled data of
+            the original
+>>>>>>> Stashed changes
     """
     synchronized_series = synch_time_series(time_series, 1, "T")
     clipped_series = synch_series_lengths(synchronized_series)
@@ -82,6 +140,7 @@ def synch_series(time_series, synch_interval, interval_unit):
 
 
 def get_avg_customer_demand(time_series, start_date, val_col_id):
+<<<<<<< Updated upstream
     """Metric defined in VM_Average Customer Demand.docx
 
     This function calculates the average of customer demand based on 8,760 hours of the year
@@ -90,6 +149,19 @@ def get_avg_customer_demand(time_series, start_date, val_col_id):
         time_series (dataframe): time series dataframe representing a time series containing customer demand records
         start_date: (datetime) the start date and time that should be used in the calculation
         val_col_id (str): id of the dataframe column which contains the customer demand data values
+=======
+    """Function calculates the average of customer demand based on 8,760 hours
+    of the year
+    Metric defined in VM_Average Customer Demand.docx
+
+    Args:
+        time_series (dataframe): time series dataframe representing a time
+            series containing customer demand records
+        start_date (datetime): the start date and time that should be used in
+            the calculation
+        val_col_id (string): id of the dataframe column which contains the
+            customer demand data values
+>>>>>>> Stashed changes
     Returns:
         double: the calculated yearly average customer demand
     """
@@ -104,6 +176,7 @@ def get_avg_customer_demand(time_series, start_date, val_col_id):
 
 
 def get_under_voltage_count(time_series, val_col_id, minimum_value):
+<<<<<<< Updated upstream
     """Metric defined in VM_Count of Transmission Under-Voltage Violation Events.docx
 
     Function calculates number of under-voltage violations during the year
@@ -114,6 +187,21 @@ def get_under_voltage_count(time_series, val_col_id, minimum_value):
         minimum_value (float): The value that is to be used to compare transmission values against
     Returns:
         dataframe: time series dataframe containing a column with the under voltage counts
+=======
+    """Function calculates number of under-voltage violations during the year
+    Metric defined in VM_Count of Transmission Under-Voltage Violation Events.docx
+
+    Args:
+        time_series (dataframe): dataframe containing a time series of
+            transmission values
+        val_col_id (string): the id of the dataframe column where the
+            transmission values are located
+        minimum_value (float): the value that is to be used to compare
+            transmission values against
+    Returns:
+        dataframe:time series dataframe containing a column with the under
+            voltage counts
+>>>>>>> Stashed changes
     """
     st_time = time_series.index[0]
     ts_end_time = time_series.index[-1]
@@ -132,6 +220,7 @@ def get_under_voltage_count(time_series, val_col_id, minimum_value):
 
 
 def get_valuation(time_series, start_date, column_index):
+<<<<<<< Updated upstream
     """Metric defined in document VM_Distribution of PV real power generation by hour.docx
 
     Args:
@@ -142,6 +231,23 @@ def get_valuation(time_series, start_date, column_index):
         dataframe, double, double: function returns a tuple containing the dataframe containing the valuation
         values as a time series, a double representing the 14th percentile of the values, and a double representing
         the 86th percentile of the values
+=======
+    """Function calculates the average power generated by solar photovoltaic
+    (PV) power generators aggregated by hour of day.
+    Metric defined in document VM_Distribution of PV real power generation by hour.docx
+
+    Args:
+        time_series (dataframe): dataframe containing the timeseries the data
+            to be used in the calculation of the valuations
+        start_date (datetime): the starting date when the calculations
+            will be started
+        column_index (string): the dataframe column id that is used to
+        identify the location of the values in the dataframe
+    Returns:
+        dataframe, float, float : function returns a tuple containing the dataframe containing the valuation
+            values as a time series, a float representing the 14th percentile of the values,
+            and a float representing the 86th percentile of the values
+>>>>>>> Stashed changes
     """
     time_indexes = []
     time_values = []
@@ -165,6 +271,7 @@ def get_valuation(time_series, start_date, column_index):
 
 
 def get_pv_aep_valuation(solar_irradiation, pv_system_area, pv_system_efficiency):
+<<<<<<< Updated upstream
     """Metric defined in the document VM_PV Annual Energy Production.docx
 
     Function calculates and estimate of the total annual power output from a PV system in the units of kWh
@@ -175,11 +282,24 @@ def get_pv_aep_valuation(solar_irradiation, pv_system_area, pv_system_efficiency
         pv_system_efficiency: (double) PV System Efficiency
     Returns:
         double: the product of the three input values
+=======
+    """Function calculates and estimate of the total annual power output from a
+     PV system in the units of kWh
+    Metric defined in the document VM_PV Annual Energy Production.docx
+
+    Args:
+        solar_irradiation (float): total solar irradiation incident on PV surface in the units of kWh/sq.m.
+        pv_system_area (float): PV System Area
+        pv_system_efficiency (double): PV System Efficiency
+    Returns:
+        float : the product of the three input values
+>>>>>>> Stashed changes
     """
     return solar_irradiation * pv_system_area * pv_system_efficiency
 
 
 def actual_der_vs_projected_ratio(actual_der, actual_col_name, projected_col_name, projected_der=None):
+<<<<<<< Updated upstream
     """Metric defined in the document VM_Actual Benefits_Predicted Benefits.docx
 
     This function calculates the accuracy of the predictive model, by comparing predicted results with actual results
@@ -190,6 +310,21 @@ def actual_der_vs_projected_ratio(actual_der, actual_col_name, projected_col_nam
         projected_col_name (str): id of the dataframe column that contains the projected DER benefit values
         projected_der (dataframe): time series dataframe that contains the projected benefits from DER,
             as observed ex post.
+=======
+    """This function calculates the accuracy of the predictive model, by
+    comparing predicted results with actual results
+    Metric defined in the document VM_Actual Benefits_Predicted Benefits.docx
+
+    Args:
+        actual_der (dataframe): time series dataframe that contains the total
+            benefits from DER, as observed ex post.
+        actual_col_name (string): id of the dataframe column that contains the
+            actual DER benefit values
+        projected_col_name (string): id of the dataframe column that contains
+            the projected DER benefit values
+        projected_der (dataframe): time series dataframe that contains the
+            projected benefits from DER, as observed ex post.
+>>>>>>> Stashed changes
     Returns:
         dataframe: time series dataframe that contains the calculated ratios
     """
@@ -217,6 +352,7 @@ def actual_der_vs_projected_ratio(actual_der, actual_col_name, projected_col_nam
         return df
 
 
+<<<<<<< Updated upstream
 def get_average_air_temp_deviation(actual_df, actual_col_name, set_point_col_name, set_points_df=None):
     """Metric defined in document VM_Average Indoor Air Temp Deviation.docx
 
@@ -232,33 +368,60 @@ def get_average_air_temp_deviation(actual_df, actual_col_name, set_point_col_nam
     Returns:
         double: the average of the calculated differences between the average of actual
         indoor temperature deviation from set point over one year.
+=======
+def get_average_air_temp_deviation(actual_df, actual_col_name, set_points_df, set_point_col_name, start_date_time):
+    """Function calculates per device average deviation from desired indoor
+    temperature set point in a year for each DSO
+    Metric defined in document VM_Average Indoor Air Temp Deviation.docx
+
+    Args:
+        actual_df (dataframe): per-device average deviation from desired air
+            temperature set point
+        actual_col_name (string): dataframe column id for the location of
+            actual temperatures
+        set_point_col_name (string): dataframe column id for the location of
+            set point data
+        set_points_df (dataframe): time series data frame containing the set
+            points data.
+        start_date_time (string): the starting date and time when the
+            calculations should take place
+    Returns:
+        float: returns the mean, median, minimum, and maximum of the calculated
+            differences between the average of actual indoor temperature
+            deviation from set point over one year.
+>>>>>>> Stashed changes
     """
     avg_df = []
-    if set_points_df is not None:
-        if len(actual_df.index) != len(set_points_df.index):
-            log_msg.log(log_msg.ERROR, "dataframes are not synchronized")
-            return None
-        if actual_df.index[0] != set_points_df.index[0]:
-            log_msg.log(log_msg.ERROR, "dataframes are not synchronized")
-            return None
-        if actual_df.index[-1] != set_points_df.index[-1]:
-            log_msg.log(log_msg.ERROR, "dataframes are not synchronized")
-            return None
-        i = 0
-        calc_times = []
-        calc_diffs = []
-        while i < len(actual_df.index):
-            calc_times.append(actual_df.index.loc[i])
-            calc_diffs.append(actual_df.iloc[i][actual_col_name] - set_points_df.iloc[i][set_point_col_name])
-        df = pd.DataFrame(list(zip(calc_diffs)), columns=['difference'], index=calc_times)
-        avg_df = df.mean()
-        return avg_df["difference"]
-    else:
-        actual_df["difference"] = actual_df[actual_col_name] - actual_df[set_point_col_name]
-        avg_df = actual_df.mean()
-        return avg_df["difference"]
+    start_date = pd.to_datetime(start_date_time)
+    end_time = bc.adjust_date_time(start_date, "years", 1)
+    if bc.check_dataframe_synchronization(actual_df, set_points_df) != "Synchronized":
+        return None
+    actual_calc_dataframe = actual_df.query('index >= @start_date and index <= @end_time')
+    set_point_calc_dataframe = set_points_df.query('index >= @start_date and index <= @end_time')
+    if not bc.check_for_full_year_data(actual_calc_dataframe):
+        return None
+    if not bc.check_for_full_year_data(set_point_calc_dataframe):
+        return None
+    if not bc.check_for_5_minute_data(actual_calc_dataframe):
+        return None
+    if not bc.check_for_5_minute_data(set_point_calc_dataframe):
+        return None
+    i = 0
+    calc_times = []
+    calc_diffs = []
+    while i < len(actual_df.index):
+        calc_times.append(actual_df.index[i])
+        calc_diffs.append(actual_df.iloc[i][actual_col_name] - set_points_df.iloc[i][set_point_col_name])
+        i += 1
+    df = pd.DataFrame(list(zip(calc_diffs)), columns=['difference'], index=calc_times)
+    avg_df = df.mean()
+    median_df = df.median()
+    min_df = df.min()
+    max_df = df.max()
+    return avg_df["difference"], median_df["difference"], min_df["difference"], max_df["difference"]
 
 
+<<<<<<< Updated upstream
 def get_transmission_voltage_magnitude(time_series, column_id, start_date, duration):
     """Metric defined in document VM_Transmission Voltage Magnitude.docx
 
@@ -273,6 +436,65 @@ def get_transmission_voltage_magnitude(time_series, column_id, start_date, durat
         calculations should take place
     Returns:
         dataframe: the calculated hourly min, max, and average values in a time series dataframe
+=======
+def get_unserved_electric_load(supply_df, supply_col_id, demand_df, demand_col_id, start_date_time):
+    """Function calculates the demand that was not met by supply during the
+    course of 8760 hours
+    Metric defined in document VM_Unserved Electric Load.docx
+
+    Args:
+        supply_df (dataframe): hourly supply data per year
+        supply_col_id (string): name of the dataframe column where the supply
+            data is located
+        demand_df (dataframe): hourly demand data per year
+        demand_col_id (string): name of the dataframe column where the demand
+            data is located
+        start_date_time (string): the starting date and time when the
+            calculation should start
+    Returns:
+        dataframe: time series dataframe containing the calculated unserved
+        load data
+    """
+    start_date = pd.to_datetime(start_date_time)
+    end_time = bc.adjust_date_time(start_date, "years", 1)
+    if bc.check_dataframe_synchronization(supply_df, demand_df) != "Synchronized":
+        return None
+    if not bc.check_for_hourly_data(supply_df):
+        return None
+    if not bc.check_for_hourly_data(demand_df):
+        return None
+    supply_calc_dataframe = supply_df.query('index >= @start_date and index <= @end_time')
+    demand_calc_dataframe = demand_df.query('index >= @start_date and index <= @end_time')
+    i = 0
+    calc_times = []
+    calc_unserved = []
+    while i < len(supply_calc_dataframe.index):
+        calc_times.append(supply_calc_dataframe.index[i])
+        calc_unserved.append(supply_calc_dataframe.iloc[i][supply_col_id] -
+                             demand_calc_dataframe.iloc[i][demand_col_id])
+        i += 1
+    df = pd.DataFrame(list(zip(calc_unserved)), columns=["unserved"], index=calc_times)
+    return df
+
+
+def get_transmission_voltage_magnitude(time_series, column_id, start_date, duration):
+    """Function calculates the hourly min, max, and avg values from the
+    five-minute data contained in the time_series dataframe
+    Metric defined in document VM_Transmission Voltage Magnitude.docx
+
+    Args:
+        time_series (dataframe): time series dataframe containing the
+            five-minute data
+        column_id (string): the name of the dataframe column with contains the
+            transmission voltage data
+        start_date (datetime): the starting date and time when the calculations
+            should take place
+        duration (int): the duration in hours to calculate the ending date and
+            time when the calculations should take place
+    Returns:
+        dataframe: the calculated hourly min, max, and average values in a time
+            series dataframe
+>>>>>>> Stashed changes
     """
     col_names = ["min", "max", "avg"]
     calc_times = []
@@ -296,6 +518,7 @@ def get_transmission_voltage_magnitude(time_series, column_id, start_date, durat
 
 
 def get_feeder_energy_losses(feeder_gen_df, gen_column_id, feeder_load_df, load_column_id, start_date_time, duration):
+<<<<<<< Updated upstream
     """Metric defined in document VM_Feeder Energy Losses.docx
 
     Function calculates the impact of trans-active energy systems on feeder energy losses. Data records in the
@@ -311,6 +534,27 @@ def get_feeder_energy_losses(feeder_gen_df, gen_column_id, feeder_load_df, load_
         duration (int): the duration of time in hours that the calculations are to be performed
     Returns:
         dataframe: a dataframe object containing the generation, load, and losses data
+=======
+    """Function calculates the impact of trans-active energy systems on feeder
+    energy losses. Data records in the time series entered as input must be
+    recorded at five minute intervals
+    Metric defined in document VM_Feeder Energy Losses.docx
+
+    Args:
+        feeder_gen_df (dataframe): data frame containing the 5-min average
+            total generation from bulk power system and DERs
+        gen_column_id (string): name of the column in the feeder generation
+            dataframe where the generation data is located
+        feeder_load_df (dataframe): data frame containing the 5-min average
+            total load
+        load_column_id (string): name of the column in the feeder load
+            dataframe where the load data is located
+        start_date_time (string): calculation start date and time
+        duration (int): the duration of time in hours that the calculations
+            are to be performed
+    Returns:
+        dataframe: a dataframe containing the generation, load, and losses data
+>>>>>>> Stashed changes
     """
     calc_times = []
     calc_losses = []
@@ -341,6 +585,7 @@ def get_feeder_energy_losses(feeder_gen_df, gen_column_id, feeder_load_df, load_
 
 
 def get_peak_demand(time_series, column_id):
+<<<<<<< Updated upstream
     """This metric is defined in document VM_PeakDemand or PeakSupply.docx
 
     This function calculates the highest hourly electricity demand (MW) in the year of data contained in the dataframe
@@ -350,6 +595,20 @@ def get_peak_demand(time_series, column_id):
         column_id (str): name of the dataframe column where the demand data is located
     Returns:
         float: maximum value identified in the dataframe column identified by column_id
+=======
+    """This function calculates the highest hourly electricity demand (MW) in
+    the year of data contained in the dataframe
+    This metric is defined in document VM_PeakDemand or PeakSupply.docx
+
+    Args:
+        time_series (dataframe): time series dataframe that contains the
+            demand values over the course of a year
+        column_id (string): name of the dataframe column where the demand
+            data is located
+    Returns:
+         float: maximum value identified in the dataframe column identified
+            by column_id
+>>>>>>> Stashed changes
     """
     if len(time_series.index) < 8760:
         log_msg.log(log_msg.ERROR, "dataframe does not have 8761 rows")
@@ -358,6 +617,7 @@ def get_peak_demand(time_series, column_id):
 
 
 def get_peak_supply(time_series, column_id):
+<<<<<<< Updated upstream
     """This metric is defined in document VM_PeakDemand or PeakSupply.docx
 
     This function calculates the highest hourly electricity supply (MW) in the year of data contained in the dataframe
@@ -367,6 +627,20 @@ def get_peak_supply(time_series, column_id):
         column_id (str): name of the dataframe column where the supply data is located
     Returns:
         float: maximum value identified in the dataframe column identified by column_id
+=======
+    """This function calculates the highest hourly electricity supply (MW) in
+    the year of data contained in the dataframe
+    This metric is defined in document VM_PeakDemand or PeakSupply.docx
+
+    Args:
+        time_series (dataframe): time series dataframe that contains the supply
+            values over the course of a year
+        column_id (string): name of the dataframe column where the supply data
+            is located
+    Returns:
+        float: maximum value identified in the dataframe column identified by
+            column_id
+>>>>>>> Stashed changes
     """
     if len(time_series.index) < 8760:
         log_msg.log(log_msg.ERROR, "dataframe does not have 8761 rows")
@@ -375,6 +649,7 @@ def get_peak_supply(time_series, column_id):
 
 
 def get_max_under_voltage(time_series, column_id, threshold_val, start_date_time, duration):
+<<<<<<< Updated upstream
     """Metric is defined in document VM_Max Under-Voltage Violations.docx
 
     Function calculates the maximum over-voltage deviation reported each hour in the feeder voltage data
@@ -387,6 +662,25 @@ def get_max_under_voltage(time_series, column_id, threshold_val, start_date_time
         duration (int): the duration of time in hours that the calculations are to be performed
     Returns:
         dataframe: time series dataframe containing the calculated hourly over voltage maximum values
+=======
+    """Function calculates the maximum over-voltage deviation reported each
+    hour in the feeder voltage data
+    Metric is defined in document VM_Max Under-Voltage Violations.docx
+
+    Args:
+        time_series (dataframe): time series dataframe containing feeder
+            voltage data in 5 minute intervals
+        column_id (string): the name of the dataframe column where the voltage
+            data is located
+        threshold_val (float): the maximum threshold data that is used to
+            compare against the voltage data
+        start_date_time (string): calculation start date and time
+        duration (integer): the duration of time in hours that the calculations
+            are to be performed
+    Returns:
+        dataframe: time series dataframe containing the calculated hourly over
+            voltage maximum values
+>>>>>>> Stashed changes
     """
     st_time = pd.to_datetime(start_date_time)
     ts_end_time = bc.adjust_date_time(st_time, "hours", duration)
@@ -405,6 +699,7 @@ def get_max_under_voltage(time_series, column_id, threshold_val, start_date_time
 
 
 def get_max_over_voltage(time_series, column_id, threshold_val, start_date_time, duration):
+<<<<<<< Updated upstream
     """Metric is defined in document VM_Max Over-Voltage Violations.docx
 
     Function calculates the maximum over-voltage deviation reported each hour in the feeder voltage data
@@ -417,6 +712,25 @@ def get_max_over_voltage(time_series, column_id, threshold_val, start_date_time,
         duration (int): the duration of time in hours that the calculations are to be performed
     Returns:
         dataframe: time series dataframe containing the calculated hourly over voltage maximum values
+=======
+    """Function calculates the maximum over-voltage deviation reported each
+    hour in the feeder voltage data
+    Metric is defined in document VM_Max Over-Voltage Violations.docx
+
+    Args:
+        time_series (dataframe): time series dataframe containing feeder
+            voltage data in 5 minute intervals
+        column_id (string): the name of the dataframe column where the voltage
+            data is located
+        threshold_val (float): the maximum threshold data that is used to
+            compare against the voltage data
+        start_date_time (string): calculation start date and time
+        duration (int): the duration of time in hours that the calculations
+            are to be performed
+    Returns:
+        dataframe: time series dataframe containing the calculated hourly over
+            voltage maximum values
+>>>>>>> Stashed changes
     """
     st_time = pd.to_datetime(start_date_time)
     ts_end_time = bc.adjust_date_time(st_time, "hours", duration)
@@ -436,6 +750,7 @@ def get_max_over_voltage(time_series, column_id, threshold_val, start_date_time,
 
 
 def get_indoor_air_temp_deviation(time_series, column_id, set_point, start_date_time, duration):
+<<<<<<< Updated upstream
     """Metric is defined in document VM_Max Indoor Air Temp Deviation.docx
 
     Function calculates the maximum actual indoor temperature deviation from set point over one year.
@@ -449,6 +764,28 @@ def get_indoor_air_temp_deviation(time_series, column_id, set_point, start_date_
     Returns:
         dataframe: time series dataframe containing the maximum deviations calculated hourly
         from the input data
+=======
+    """Function calculates the maximum actual indoor temperature deviation from set point over one year.
+    Metric is defined in document VM_Max Indoor Air Temp Deviation.docx
+
+    Args:
+        time_series (dataframe): time series dataframe that contains 5 minute
+            max deviation data for a year
+        column_id (string): the name of the dataframe column where the
+            deviation data is located
+        set_point (float): The set point value that is to be used in the
+            calculation
+        start_date_time (string): the date and time that the calculations are
+            to start
+        duration (float): the time duration in hours for which the calculations
+            should be performed
+        start_date_time (string): calculation start date and time
+        duration (integer): the duration of time in hours that the calculations
+            are to be performed
+    Returns:
+        dataframe: time series dataframe containing the maximum deviations
+            calculated hourly from the input data
+>>>>>>> Stashed changes
     """
     st_time = pd.to_datetime(start_date_time)
     ts_end_time = bc.adjust_date_time(st_time, "hours", duration)
@@ -547,6 +884,7 @@ def get_hot_water_deficit(water_temperatures, water_column_id, desired_temperatu
     Calculates device energy deficit from desired hot water temperature set point in a year
 
     Args:
+<<<<<<< Updated upstream
         water_temperatures (dataframe): per device 5-min average hot water actual temperature
         water_column_id (str): name of the dataframe column where the temperature data is located
         desired_temperatures (dataframe): per device 5-min average hot water temperature set point
@@ -556,6 +894,17 @@ def get_hot_water_deficit(water_temperatures, water_column_id, desired_temperatu
         delta_t (float): time difference
         start_date_time (str): the date and time that the calculations are to start at
         duration (int): the length of time which the calculations should be executed
+=======
+        water_temperatures:(dataframe) per device 5-min average hot water actual temperature
+        water_column_id: (string) name of the dataframe column where the temperature data is located
+        desired_temperatures:(dataframe)per device 5-min average hot water temperature set point
+        desired_column_id:(string) name of the dataframe column where the set point temperature data is located
+        flow_rates:(dataframe) per device 5-min average hot water flow rate
+        flow_column_id:(string) name of the dataframe column where the flow rate data is located
+        delta_t:(float) time difference
+        start_date_time: (string) the date and time that the calculations are to start at
+        duration: (float) the length of time which the calculations should be executed
+>>>>>>> Stashed changes
     Returns:
         dataframe: time series dataframe containing the calculated deficit data
     """
@@ -1060,6 +1409,7 @@ def get_wind_energy_production(time_series, prod_col_id, start_date_time, durati
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
     df = pd.DataFrame(list(zip(calc_production)), index=calc_times)
     return df
+<<<<<<< Updated upstream
 
 
 def get_unserved_electric_load(supply_df, supply_col_id, demand_df, demand_col_id):
@@ -1088,3 +1438,5 @@ def get_unserved_electric_load(supply_df, supply_col_id, demand_df, demand_col_i
         i += 1
     df = pd.DataFrame(list(zip(calc_unserved)), index=calc_times)
     return df
+=======
+>>>>>>> Stashed changes

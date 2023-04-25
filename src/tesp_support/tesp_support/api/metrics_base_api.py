@@ -3,6 +3,7 @@
 
 import pandas as pd
 import numpy as np
+import logging as log_msg
 
 
 def get_node_ids(time_series, id_column_name):
@@ -144,6 +145,32 @@ def adjust_date_time(start_date, offset_type, offset_val):
         return start_date + pd.DateOffset(nanoseconds=offset_val)
     return new_date
 
+def check_for_full_year_data(time_series):
+    date_diff = time_series.index[-1] - time_series.index[0]
+    date_diff = date_diff / np.timedelta64(1, 'Y')
+    if round(date_diff, 2) != 1:
+        log_msg.log(log_msg.ERROR, "actual dataframe does not contain a years worth of records")
+        return False
+    return True
+
+
+def check_for_hourly_data(time_series):
+    date_diff = time_series.index[1] - time_series.index[0]
+    date_diff = date_diff / np.timedelta64(1, 'h')
+    if round(date_diff, 2) != 1:
+        log_msg.log(log_msg.ERROR, "actual dataframe does not contain hourly records")
+        return False
+    return True
+
+
+def check_for_5_minute_data(time_series):
+    date_diff = time_series.index[1] - time_series.index[0]
+    date_diff = pd.Timedelta(date_diff).seconds / 60.0
+    if round(date_diff, 2) != 5:
+        log_msg.log(log_msg.ERROR, "time series dataframe does not contain 5-minute data")
+        return False
+    return True
+
 
 def get_time_series_max_value_under(time_series, column_id, compare_value):
     """Function calculates the maximum value out of the number of values in a dataframe column that are less than
@@ -224,10 +251,13 @@ def check_dataframe_synchronization(data_frame_1, data_frame_2):
         the function returns an error message
     """
     if len(data_frame_1.index) != len(data_frame_2.index):
+        log_msg.log(log_msg.ERROR, "Dataframes have unequal number of rows")
         return "Dataframes have unequal number of rows"
     elif data_frame_1.index[0] != data_frame_2.index[0]:
+        log_msg.log(log_msg.ERROR, "Starting indices of dataframes are not equal")
         return "Starting indices of dataframes are not equal"
     elif data_frame_1.index[-1] != data_frame_2.index[-1]:
+        log_msg.log(log_msg.ERROR, "Starting indices of dataframes are not equal")
         return "Ending indices of dataframes are not equal"
     else:
         return "Synchronized"
