@@ -234,29 +234,73 @@ def get_average_air_temp_deviation(actual_df, actual_col_name, set_point_col_nam
         indoor temperature deviation from set point over one year.
     """
     avg_df = []
-    if set_points_df is not None:
-        if len(actual_df.index) != len(set_points_df.index):
-            log_msg.log(log_msg.ERROR, "dataframes are not synchronized")
-            return None
-        if actual_df.index[0] != set_points_df.index[0]:
-            log_msg.log(log_msg.ERROR, "dataframes are not synchronized")
-            return None
-        if actual_df.index[-1] != set_points_df.index[-1]:
-            log_msg.log(log_msg.ERROR, "dataframes are not synchronized")
-            return None
-        i = 0
-        calc_times = []
-        calc_diffs = []
-        while i < len(actual_df.index):
-            calc_times.append(actual_df.index.loc[i])
-            calc_diffs.append(actual_df.iloc[i][actual_col_name] - set_points_df.iloc[i][set_point_col_name])
-        df = pd.DataFrame(list(zip(calc_diffs)), columns=['difference'], index=calc_times)
-        avg_df = df.mean()
-        return avg_df["difference"]
-    else:
-        actual_df["difference"] = actual_df[actual_col_name] - actual_df[set_point_col_name]
-        avg_df = actual_df.mean()
-        return avg_df["difference"]
+    start_date = pd.to_datetime(start_date_time)
+    end_time = bc.adjust_date_time(start_date, "years", 1)
+    if bc.check_dataframe_synchronization(actual_df, set_points_df) != "Synchronized":
+        return None
+    actual_calc_dataframe = actual_df.query('index >= @start_date and index <= @end_time')
+    set_point_calc_dataframe = set_points_df.query('index >= @start_date and index <= @end_time')
+    if not bc.check_for_full_year_data(actual_calc_dataframe):
+        return None
+    if not bc.check_for_full_year_data(set_point_calc_dataframe):
+        return None
+    if not bc.check_for_5_minute_data(actual_calc_dataframe):
+        return None
+    if not bc.check_for_5_minute_data(set_point_calc_dataframe):
+        return None
+    i = 0
+    calc_times = []
+    calc_diffs = []
+    while i < len(actual_df.index):
+        calc_times.append(actual_df.index[i])
+        calc_diffs.append(actual_df.iloc[i][actual_col_name] - set_points_df.iloc[i][set_point_col_name])
+        i += 1
+    df = pd.DataFrame(list(zip(calc_diffs)), columns=['difference'], index=calc_times)
+    avg_df = df.mean()
+    median_df = df.median()
+    min_df = df.min()
+    max_df = df.max()
+    return avg_df["difference"], median_df["difference"], min_df["difference"], max_df["difference"]
+
+
+def get_unserved_electric_load(supply_df, supply_col_id, demand_df, demand_col_id, start_date_time):
+    """Function calculates the demand that was not met by supply during the
+    course of 8760 hours
+    Metric defined in document VM_Unserved Electric Load.docx
+
+    Args:
+        supply_df (dataframe): hourly supply data per year
+        supply_col_id (string): name of the dataframe column where the supply
+            data is located
+        demand_df (dataframe): hourly demand data per year
+        demand_col_id (string): name of the dataframe column where the demand
+            data is located
+        start_date_time (string): the starting date and time when the
+            calculation should start
+    Returns:
+        dataframe: time series dataframe containing the calculated unserved
+        load data
+    """
+    start_date = pd.to_datetime(start_date_time)
+    end_time = bc.adjust_date_time(start_date, "years", 1)
+    if bc.check_dataframe_synchronization(supply_df, demand_df) != "Synchronized":
+        return None
+    if not bc.check_for_hourly_data(supply_df):
+        return None
+    if not bc.check_for_hourly_data(demand_df):
+        return None
+    supply_calc_dataframe = supply_df.query('index >= @start_date and index <= @end_time')
+    demand_calc_dataframe = demand_df.query('index >= @start_date and index <= @end_time')
+    i = 0
+    calc_times = []
+    calc_unserved = []
+    while i < len(supply_calc_dataframe.index):
+        calc_times.append(supply_calc_dataframe.index[i])
+        calc_unserved.append(supply_calc_dataframe.iloc[i][supply_col_id] -
+                             demand_calc_dataframe.iloc[i][demand_col_id])
+        i += 1
+    df = pd.DataFrame(list(zip(calc_unserved)), columns=["unserved"], index=calc_times)
+    return df
 
 
 def get_transmission_voltage_magnitude(time_series, column_id, start_date, duration):
@@ -1059,32 +1103,4 @@ def get_wind_energy_production(time_series, prod_col_id, start_date_time, durati
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
     df = pd.DataFrame(list(zip(calc_production)), index=calc_times)
-    return df
-
-
-def get_unserved_electric_load(supply_df, supply_col_id, demand_df, demand_col_id):
-    """Metric defined in document VM_Unserved Electric Load.docx
-
-    Function calculates the demand that was not met by supply during the course of 8760 hours
-
-    Args:
-        supply_df (dataframe): hourly supply data per year
-        supply_col_id (str): name of the dataframe column where the supply data is located
-        demand_df (dataframe): hourly demand data per year
-        demand_col_id (str): name of the dataframe column where the demand data is located
-    Returns:
-        dataframe: time series dataframe containing the calculated unserved load data
-    """
-    check_string = bc.check_dataframe_synchronization(supply_df, demand_df)
-    if check_string != "Synchronized":
-        log_msg.log(log_msg.ERROR, check_string)
-        return None
-    i = 0
-    calc_times = []
-    calc_unserved = []
-    while i < len(supply_df.index):
-        calc_times.append(supply_df.index.loc[i])
-        calc_unserved.append(supply_df.loc[i][supply_col_id] - demand_df.loc[i][demand_col_id])
-        i += 1
-    df = pd.DataFrame(list(zip(calc_unserved)), index=calc_times)
     return df
