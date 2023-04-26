@@ -51,7 +51,7 @@ def get_time_series_average(time_series, start_date, duration):
 
 
 def get_avg_column_value(time_series, val_index):
-    """
+    """Function calculates the mean average of a column of data in the time series dataframe
 
     Args:
         time_series (dataframe): time series dataframe containing the data to be averaged
@@ -146,6 +146,14 @@ def adjust_date_time(start_date, offset_type, offset_val):
     return new_date
 
 def check_for_full_year_data(time_series):
+    """Function checks if the input time series dataframe contains a full year's worth of data
+
+    Args:
+        time_series (dataframe): time series dataframe containing a year's worth of data
+
+    Returns:
+        bool: returns True if the time series contains a full year's worth of data
+    """
     date_diff = time_series.index[-1] - time_series.index[0]
     date_diff = date_diff / np.timedelta64(1, 'Y')
     if round(date_diff, 2) != 1:
@@ -155,6 +163,14 @@ def check_for_full_year_data(time_series):
 
 
 def check_for_hourly_data(time_series):
+    """Function checks if the data in the time series is hourly
+
+    Args:
+        time_series (dataframe): time series dataframe containing hourly data
+
+    Returns:
+        bool: True if the data in the dataframe is hourly and False if it is not hourly
+    """
     date_diff = time_series.index[1] - time_series.index[0]
     date_diff = date_diff / np.timedelta64(1, 'h')
     if round(date_diff, 2) != 1:
@@ -164,6 +180,14 @@ def check_for_hourly_data(time_series):
 
 
 def check_for_5_minute_data(time_series):
+    """Function checks if the data in the time series is 5-minute intervals
+
+    Args:
+        time_series (dataframe): time series dataframe containing 5-minute data records
+
+    Returns:
+        bool: True if the data in the dataframe is 5-minute and False if it is not
+    """
     date_diff = time_series.index[1] - time_series.index[0]
     date_diff = pd.Timedelta(date_diff).seconds / 60.0
     if round(date_diff, 2) != 5:
