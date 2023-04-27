@@ -417,8 +417,6 @@ class simple_auction:
         Args:
             tnext_clear (int): next clearing time in FNCS seconds, should be <= time_granted, for the log file only
             time_granted (int): the current time in FNCS seconds, for the log file only
-        Returns:
-            None
         """
         numberOfUnrespBuyerAboveClearingPrice = 0
         numberOfResponsiveBuyerAboveClearingPrice = 0

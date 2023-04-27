@@ -24,8 +24,6 @@ def startWeatherAgent(file):
 
     Args:
         file (str): the weather data file
-    Returns:
-        None
     """
     weatherData = pd.DataFrame.from_csv(file)  # read the weather data file
     config = os.environ['WEATHER_CONFIG']  # read the weather config json file

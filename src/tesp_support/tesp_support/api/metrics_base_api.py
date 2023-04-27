@@ -145,14 +145,14 @@ def adjust_date_time(start_date, offset_type, offset_val):
         return start_date + pd.DateOffset(nanoseconds=offset_val)
     return new_date
 
+
 def check_for_full_year_data(time_series):
     """Function checks if the input time series dataframe contains a full year's worth of data
 
     Args:
         time_series (dataframe): time series dataframe containing a year's worth of data
-
     Returns:
-        bool: returns True if the time series contains a full year's worth of data
+        bool: True if the time series contains a full year's worth of data
     """
     date_diff = time_series.index[-1] - time_series.index[0]
     date_diff = date_diff / np.timedelta64(1, 'Y')
@@ -167,7 +167,6 @@ def check_for_hourly_data(time_series):
 
     Args:
         time_series (dataframe): time series dataframe containing hourly data
-
     Returns:
         bool: True if the data in the dataframe is hourly and False if it is not hourly
     """
@@ -184,7 +183,6 @@ def check_for_5_minute_data(time_series):
 
     Args:
         time_series (dataframe): time series dataframe containing 5-minute data records
-
     Returns:
         bool: True if the data in the dataframe is 5-minute and False if it is not
     """
@@ -271,8 +269,8 @@ def check_dataframe_synchronization(data_frame_1, data_frame_2):
         data_frame_1 (dataframe): time series dataframe
         data_frame_2 (dataframe): time series dataframe
     Returns:
-        str: returns a "Synchronized" message if the two dataframes are synchronized. If they are not,
-        the function returns an error message
+        str: a "Synchronized" message if the two dataframes are synchronized,
+        if not, the function returns an error message
     """
     if len(data_frame_1.index) != len(data_frame_2.index):
         log_msg.log(log_msg.ERROR, "Dataframes have unequal number of rows")
@@ -297,8 +295,7 @@ def create_testing_dataframe(start_date, end_date, col_names, time_interval):
         time_interval (int): frequency of time intervals. These designations are the same as
             the designations used to define a pandas date_range e.g. "T", "5T", "H", "12H",...
     Returns:
-        dataframe: time series dataframe containing random data values over
-        the course of the defined time range
+        dataframe: time series dataframe containing random data values over the course of the defined time range
     """
     np.random.seed(0)
     rng = pd.date_range(start_date, end_date, freq=time_interval)

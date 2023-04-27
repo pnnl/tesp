@@ -158,14 +158,12 @@ def load_data(data_path):
 
 
 def plot_gen_comparison(data, save_path):
-    """
-    SGIP1(a) output of individual generators vs time. Expect to see dramatic
+    """SGIP1(a) output of individual generators vs time. Expect to see dramatic
     change in dispatch on day 2 as a generator goes out.
+
     Args:
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
-    Returns:
-        None
     """
 
     if 'a' in data.keys():
@@ -209,16 +207,13 @@ def plot_gen_comparison(data, save_path):
 
 
 def plot_transactive_bus_LMP(data, save_path):
-    """
-    SGIP1(a) and (b) LMP for transactive bus vs time. Expect to see price
+    """SGIP1(a) and (b) LMP for transactive bus vs time. Expect to see price
     spike on second day as generator goes out; should have lower prices for
-    the transactive case (b)
+    the transactive case (b) Bus 7 is the only bus for which data is recorded.
 
-    Bus 7 is the only bus for which data is recorded.    Args:
+    Args:
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
-    Returns:
-        None
     """
 
     if 'a' in data.keys() and 'b' in data.keys():
@@ -277,16 +272,13 @@ def plot_transactive_bus_LMP(data, save_path):
 
 
 def plot_transactive_feeder_load(data, save_path):
-    """
-    SGIP1(a), and (b) total feeder load vs time. (a) is base and (b) is
+    """SGIP1(a), and (b) total feeder load vs time. (a) is base and (b) is
     transactive. Expect (b) to show peak-shaving, snapback, and
-    valley-filling where (a) does not.
+    valley-filling where (a) does not. Bus 7 is the only bus for which data is recorded.
 
-    Bus 7 is the only bus for which data is recorded.    Args:
+    Args:
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
-    Returns:
-        None
     """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'pypower' in data['a'].keys() and 'pypower' in data['b'].keys():
@@ -351,16 +343,14 @@ def plot_transactive_feeder_load(data, save_path):
 
 
 def plot_transactive_feeder_load_solar(data, save_path):
-    """
-    SGIP1a, b, c, d, e transactive total feeder load vs time. (a) is base
+    """SGIP1a, b, c, d, e transactive total feeder load vs time. (a) is base
     and (b)-(e) are transactive with increasing amounts of solar and energy
     storage systems. Expect to see decreasing daytime loads with increasing
     solar penetration ((b) to (e)).
+
     Args:
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
-    Returns:
-        None
     """
     if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
             'e' in data.keys():
@@ -450,16 +440,15 @@ def plot_transactive_feeder_load_solar(data, save_path):
 
 
 def plot_avg_indoor_air_temperature(data, save_path):
-    """
-    SGIP1(a) and (b) all residential customer average indoor temperature
-    vs time. SGIP1(a) is base and (b) is transactive. Expect to see
+    """SGIP1(a) and (b) all residential customer average indoor temperature vs time.
+
+    SGIP1(a) is base and (b) is transactive. Expect to see
     constant temperatures for (a) and higher temperatures for (b) on the
     second day with the generator outage while (a) is unaffected.
+
     Args:
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
-    Returns:
-        None
     """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'gld' in data['a'].keys() and 'gld' in data['b'].keys() and \
@@ -546,14 +535,12 @@ def plot_avg_indoor_air_temperature(data, save_path):
 
 
 def plot_solar_output(data, save_path):
-    """
-    SGIP1b-e total solar PV output vs time. Expect to see increasing total
+    """SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
+
     Args:
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
-    Returns:
-        None
     """
 
     if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
@@ -638,15 +625,13 @@ def plot_solar_output(data, save_path):
 
 
 def plot_ES_output(data, save_path):
-    """
-    SGIP1(a) and (b) Energy+ average indoor cooling temperature vs time.
-    Expect to case (b) to show higher temperatures as it is
-    price-responsive.
+    """SGIP1(a) and (b) Energy+ average indoor cooling temperature vs time.
+
+    Expect to case (b) to show higher temperatures as it is price-responsive.
+
     Args:
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
-    Returns:
-        None
     """
     if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
             'e' in data.keys():
@@ -731,14 +716,12 @@ def plot_ES_output(data, save_path):
 
 
 def plot_energy_plus_indoor_temperature(data, save_path):
-    """
-    SGIP1b-e total solar PV output vs time. Expect to see increasing total
+    """SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
+
     Args:
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
-    Returns:
-        None
     """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys() and \
@@ -816,14 +799,12 @@ def plot_energy_plus_indoor_temperature(data, save_path):
 
 
 def plot_energy_plus_prices(data, save_path):
-    """
-    SGIP1b-e total solar PV output vs time. Expect to see increasing total
+    """SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
+
     Args:
         data (dict): dictionary with necessary data for creating plot
         save_path (str): directory path for file
-    Returns:
-        None
     """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys():

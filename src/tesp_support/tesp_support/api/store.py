@@ -55,10 +55,6 @@ import zipfile as zf
 
 
 class Directory:
-    file = ""
-    name = ""
-    description = None
-    ext = "dir"
 
     def __init__(self, file, description=None):
         """
@@ -67,6 +63,8 @@ class Directory:
             file:
             description:
         """
+        self.ext = "dir"
+        self.description = None
         if os.path.isdir(file):
             root = os.path.split(file)
             if root[1] == "":

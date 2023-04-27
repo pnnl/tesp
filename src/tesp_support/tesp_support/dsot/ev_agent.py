@@ -11,18 +11,14 @@ The function call order for this agent is:
     set_price_forecast(forecasted_price)
     
     Repeats at every hour:
-        formulate_bid_da() {return BID}
-
-        set_price_forecast(forecasted_price)
+        * formulate_bid_da() {return BID}
+        * set_price_forecast(forecasted_price)
 
     Repeats at every 5 min:
-        set_battery_SOC(msg_str) {updates C_init}
-
-        formulate_bid_rt() {return BID}
-
-        inform_bid(price) {update RTprice}
-
-        bid_accepted() {update inv_P_setpoint and GridLAB-D P_out if needed}
+        * set_battery_SOC(msg_str) {updates C_init}
+        * formulate_bid_rt() {return BID}
+        * inform_bid(price) {update RTprice}
+        * bid_accepted() {update inv_P_setpoint and GridLAB-D P_out if needed}
 
 """
 import logging as log
@@ -40,17 +36,20 @@ logger = log.getLogger()
 
 
 class EVDSOT:
+    # TODO: update inputs for this agent
     """
     This agent manages the electric vehicle (ev)
 
     Args:
-        TODO: update inputs for this agent
-
+        ev_dict (dict):
+        inv_properties (dict):
+        key (str):
         model_diag_level (int): Specific level for logging errors; set it to 11
         sim_time (str): Current time in the simulation; should be human-readable
+        solver (str):
 
-    Attributes: #TODO: update attributes for this agent
-        #initialize from Args:
+    Attributes:
+        Initialize from Args
         name (str): name of this agent
         Rc (float): rated charging power in kW for the battery
         Rd (float): rated discharging power in kW for the battery
@@ -64,7 +63,7 @@ class EVDSOT:
         windowLength (int): length of day ahead optimization period in hours (e.g. 48-hours)
         dayAheadCapacity (float): % of battery capacity reserved for day ahead bidding
 
-        #no initialization required
+        No initialization required
         bidSpread (int): this can be used to spread out bids in multiple hours. When set to 1 hour (recommended), it’s effect is none
         P (int): location of P in bids
         Q (int): location of Q in bids
@@ -82,15 +81,9 @@ class EVDSOT:
         prev_clr_Quantity (float) (1 X Window Length): cleared quantities (kWh) from previous market iteration for all hours
         prev_clr_Price (float) (1 X windowLength): cleared prices ($/kWh) from previous market iteration
         BindingObjFunc (boolean): if True, then optimization considers cleared price, quantities from previous iteration in the objective function
-
-
     """
 
     def __init__(self, ev_dict, inv_properties, key, model_diag_level, sim_time, solver):
-        # TODO: update inputs for class
-        """Initializes the class
-        """
-        # TODO: update attributes of class
         # initialize from Args:
         self.name = key
         self.houseName = ev_dict['houseName']
@@ -221,13 +214,12 @@ class EVDSOT:
         #             format(self.name, 'init'))
 
     def test_function(self):
-        """ Test function with the only purpose of returning the name of the object
-
+        """Test function with the only purpose of returning the name of the object
         """
         return self.name
 
     def inform_bid(self, price):
-        """ Set the cleared_price attribute
+        """Set the cleared_price attribute
 
         Args:
             price (float): cleared price in $/kWh
@@ -235,7 +227,7 @@ class EVDSOT:
         self.RTprice = price
 
     def bid_accepted(self, current_time):
-        """ Update the P and Q settings if the last bid was accepted
+        """Update the P and Q settings if the last bid was accepted
 
         Returns:
             Boolean: True if the inverter settings changed, False if not.
@@ -244,7 +236,7 @@ class EVDSOT:
         return self.RT_flag
 
     def set_price_forecast(self, forecasted_price):
-        """ Set the f_DA attribute
+        """Set the f_DA attribute
 
         Args:
             forecasted_price (float x 48): cleared price in $/kWh
@@ -252,7 +244,7 @@ class EVDSOT:
         self.f_DA = deepcopy(forecasted_price)
 
     def DA_cleared_price(self, price):
-        """ Set the DA_cleared_price attribute
+        """Set the DA_cleared_price attribute
 
         Args:
             price (float): cleared price in $/kWh
@@ -270,13 +262,13 @@ class EVDSOT:
         self.prev_clr_Quantity.append(0.0)
 
     def formulate_bid_da(self):
-        """ Formulate 4 points of P and Q bids for the DA market
+        """Formulate 4 points of P and Q bids for the DA market
 
         Function calls "DA_optimal_quantities" to obtain the optimal quantities
         for the DA market. With the quantities, the 4 point bids are formulated.
 
         Before returning the BID the function resets "RT_state_maintain_flag"
-        wich if RT_state_maintain is TRUE the battery will be forced to keep its
+        which, if RT_state_maintain is TRUE, the battery will be forced to keep its
         state (i.e., charging or discharging).
 
         Returns:
@@ -426,7 +418,7 @@ class EVDSOT:
         # print('updating home depart hours:', self.home_depart_hours)
 
     def DA_optimal_quantities(self):
-        """ Generates Day Ahead optimized quantities for EV
+        """Generates Day Ahead optimized quantities for EV
 
         Returns:
             Quantity (float) (1 x windowLength): Optimal quantity from optimization for all hours of the window specified by windowLength
@@ -485,7 +477,7 @@ class EVDSOT:
         return Quantity  # , soc
 
     def formulate_bid_rt(self):
-        """ Formulates RT bid
+        """Formulates RT bid
 
         Uses the last 4 point bid from DA market and consider current state
         of charge of the ev. Will change points to change points for feasible
@@ -572,7 +564,7 @@ class EVDSOT:
         return self.bid_rt
 
     def RT_fix_four_points_range(self, BID, Ql, Qu):
-        """ Verify feasible range of RT bid
+        """Verify feasible range of RT bid
 
         Args:
             BID (float) ((1,2)X4): 4 point bid
@@ -632,7 +624,7 @@ class EVDSOT:
         return BIDr
 
     def RT_gridlabd_set_P(self, model_diag_level, sim_time):
-        """ Update variables for ev output "inverter"
+        """Update variables for ev output "inverter"
 
         Args:
             model_diag_level (int): Specific level for logging errors; set it to 11
@@ -673,7 +665,7 @@ class EVDSOT:
                     format(self.name, sim_time, -self.inv_P_setpoint, self.Rc))
 
     def set_ev_SOC(self, msg_str, model_diag_level, sim_time):
-        """ Set the ev state of charge
+        """Set the ev state of charge
 
         Updates the self.Cinit of the battery
 
@@ -681,7 +673,6 @@ class EVDSOT:
              msg_str (str): message with ev SOC in percentage
              model_diag_level (int): Specific level for logging errors; set it to 11
              sim_time (str): Current time in the simulation; should be human-readable
-
         """
         val = parse_number(msg_str)
         self.Cinit = self.evCapacity / 100 * val
@@ -693,12 +684,12 @@ class EVDSOT:
                     format(self.name, sim_time, self.Cinit, self.Cmin, self.Cmax))
 
     def is_car_home(self, cur_secs):
-        """
-        return boolean if car is at home at cur_secs
+        """Is the Car is at home
+
         Args:
             cur_secs: current time in seconds
         Return:
-            True or False
+            bool: if car is at home at cur_secs is True or otherwise False
         """
         arr_sec = get_secs_from_hhmm(self.arrival_home)
         leav_sec = get_secs_from_hhmm(self.leaving_home)
@@ -716,13 +707,14 @@ class EVDSOT:
             raise UserWarning('Something is wrong! home arrival and leaving time are same')
 
     def is_car_leaving_home(self, cur_secs, interval):
-        """
-        tells if car is leaving from home during the given 'interval' seconds starting from cur_secs
+        """Tells if car is leaving from home during the given 'interval'
+
         Args:
             cur_secs: (seconds) current (starting) time with reference of midnight as 0
             interval: (seconds) duration in which status needs to be estimated
         Returns:
-            True or False
+            bool: if car is leaving from home during the given 'interval'
+                seconds starting from cur_secs is True or otherwise False
         """
         interval_beg_hhmm = get_hhmm_from_secs(cur_secs)
         interval_end_hhmm = add_hhmm_secs(interval_beg_hhmm, interval)
@@ -735,8 +727,8 @@ class EVDSOT:
         return False
 
     def get_car_home_duration(self, cur_secs, interval):
-        """
-        return the duration of car at home during the given 'interval' seconds starting from cur_secs
+        """return the duration of car at home during the given 'interval' seconds starting from cur_secs
+
         Args:
             cur_secs: (seconds) current (starting) time with reference of midnight as 0
             interval: (seconds) duration in which status needs to be estimated
@@ -759,9 +751,12 @@ class EVDSOT:
         return duration
 
     def get_uncntrl_ev_load(self, sim_time):
-        """
-        returns 48-hour forecast of ev load in base case w/o optimization
-        :return:
+        """Function returns 48-hour forecast of ev load in base case w/o optimization
+
+        Args:
+            sim_time (datetime):
+        Returns:
+            list: 48-hour forecast of ev load in base case w/o optimization
         """
         sim_time = sim_time + timedelta(0, 60)  # adjust for 60 seconds shift
         # let's get seconds from midnight
@@ -785,14 +780,13 @@ class EVDSOT:
         return Quantity
 
     def from_P_to_Q_ev(self, BID, PRICE):
-        """ Convert the 4 point bids to a quantity with the known price
+        """Convert the 4 point bids to a quantity with the known price
 
         Args:
             BID (float) ((1,2)X4): 4 point bid
             PRICE (float): cleared price in $/kWh
-
         Returns:
-            _quantity (float): active power (-) charging (+) discharging
+            float:  _quantity -> active power (-) charging (+) discharging
         """
         P = self.P
         Q = self.Q

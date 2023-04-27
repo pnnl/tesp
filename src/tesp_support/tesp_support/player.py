@@ -8,6 +8,25 @@ import helics
 import numpy as np
 
 
+def make_player(data_path):
+    """
+
+    Args:
+        name (str): name of the player
+        prefix (str): the prefix for the file `prefix_player.json` name and the federate `prefix_player` name
+        vals_rows (int): number of rows in the file
+        power_factor (float): power factor a load file, 0 for generator file
+        dt_load_collector (int): interval between rows
+        date_time_str (str): date and time "YYYY-MM-DD HH:MM:SS"
+        data_path (str): the data file to be published
+        output (bool): If true the player outputs data given at the dt_load_collector interval
+        output_hist (bool): If true the player outputs data history
+        load (bool): If true this a load player, else a generator player
+    Returns:
+        dict:
+    """
+
+
 def load_player_loop(casename, keyName):
     print('Loading settings from json file ' + casename, flush=True)
     with open(casename + '.json', 'r', encoding='utf-8') as lp:

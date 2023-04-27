@@ -119,7 +119,7 @@ def test1():
     testMod.write_model(tesp_test + "api/dsot_out.glm")
 
     testMod = GLMModifier()
-    testMod.model.read(tesp_test + "api/testing_in.glm")
+    testMod.model.read(tesp_test + "api/testing.glm")
     testMod.write_model(tesp_test + "api/testing_out.glm")
 
     testMod = GLMModifier()

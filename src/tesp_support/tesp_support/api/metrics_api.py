@@ -82,14 +82,13 @@ def synch_series(time_series, synch_interval, interval_unit):
 
 
 def get_avg_customer_demand(time_series, start_date, val_col_id):
-    """This function calculates the average of customer demand based on 8,760 hours
-     of the year
+    """This function calculates the average of customer demand based on 8,760 hours of the year
 
     Metric defined in VM_Average Customer Demand.docx
 
     Args:
         time_series (dataframe): time series dataframe representing a time series containing customer demand records
-        start_date: (datetime) the start date and time that should be used in the calculation
+        start_date (datetime): the start date and time that should be used in the calculation
         val_col_id (str): id of the dataframe column which contains the customer demand data values
     Returns:
         float: the calculated yearly average customer demand
@@ -140,7 +139,7 @@ def get_valuation(time_series, start_date, column_index):
 
     Args:
         time_series (dataframe): dataframe containing the timeseries data to be used to calculate the valuations
-        start_date: (datetime) the starting date when the calculations will be started
+        start_date (datetime): the starting date when the calculations will be started
         column_index (str): the dataframe column id that is used to identify the location of the values in the dataframe
     Returns:
         dataframe, float, float: function returns a tuple containing the dataframe containing the valuation
@@ -228,8 +227,8 @@ def get_average_air_temp_deviation(actual_df, actual_col_name, set_point_col_nam
 
     Args:
         actual_df (dataframe): per-device average deviation from desired air temperature set point
-        actual_col_name  (str): dataframe column id for the location of actual temperatures
-        set_point_col_name  (str): dataframe column id for the location of set point data
+        actual_col_name (str): dataframe column id for the location of actual temperatures
+        set_point_col_name (str): dataframe column id for the location of set point data
         set_points_df (dataframe): time series data frame containing the set points data.
         start_date_time (str): the starting date and time when the calculation should start
 
@@ -268,23 +267,18 @@ def get_average_air_temp_deviation(actual_df, actual_col_name, set_point_col_nam
 
 
 def get_unserved_electric_load(supply_df, supply_col_id, demand_df, demand_col_id, start_date_time):
-    """Function calculates the demand that was not met by supply during the
-    course of 8760 hours
+    """Function calculates the demand that was not met by supply during the course of 8760 hours
 
     Metric defined in document VM_Unserved Electric Load.docx
 
     Args:
         supply_df (dataframe): hourly supply data per year
-        supply_col_id (str): name of the dataframe column where the supply
-            data is located
+        supply_col_id (str): name of the dataframe column where the supply data is located
         demand_df (dataframe): hourly demand data per year
-        demand_col_id (str): name of the dataframe column where the demand
-            data is located
-        start_date_time (str): the starting date and time when the
-            calculation should start
+        demand_col_id (str): name of the dataframe column where the demand data is located
+        start_date_time (str): the starting date and time when the calculation should start
     Returns:
-        dataframe: time series dataframe containing the calculated unserved
-        load data
+        dataframe: time series dataframe containing the calculated unserved load data
     """
     start_date = pd.to_datetime(start_date_time)
     end_time = bc.adjust_date_time(start_date, "years", 1)
@@ -317,9 +311,9 @@ def get_transmission_voltage_magnitude(time_series, column_id, start_date, durat
     Args:
         time_series (dataframe): time series dataframe containing the five-minute data
         column_id (str): the name of the dataframe column with contains the transmission voltage data
-        start_date: (datetime) the starting date and time when the calculations should take place
+        start_date (datetime): the starting date and time when the calculations should take place
         duration (int): the duration in hours to calculate the ending date and time when the
-        calculations should take place
+            calculations should take place
     Returns:
         dataframe: the calculated hourly min, max, and average values in a time series dataframe
     """
@@ -345,10 +339,10 @@ def get_transmission_voltage_magnitude(time_series, column_id, start_date, durat
 
 
 def get_feeder_energy_losses(feeder_gen_df, gen_column_id, feeder_load_df, load_column_id, start_date_time, duration):
-    """Metric defined in document VM_Feeder Energy Losses.docx
+    """Function calculates the impact of trans-active energy systems on feeder energy losses.
+    Data records in the time series entered as input must be recorded at five minute intervals
 
-    Function calculates the impact of trans-active energy systems on feeder energy losses. Data records in the
-    time series entered as input must be recorded at five minute intervals
+    Metric defined in document VM_Feeder Energy Losses.docx
 
     Args:
         feeder_gen_df (dataframe): data frame containing the 5-min average total generation
@@ -390,8 +384,8 @@ def get_feeder_energy_losses(feeder_gen_df, gen_column_id, feeder_load_df, load_
 
 
 def get_peak_demand(time_series, column_id):
-    """This function calculates the highest hourly electricity demand (MW) in the year of data contained in the
-        dataframe
+    """This function calculates the highest hourly electricity demand (MW) in the year of
+    data contained in the dataframe
 
     This metric is defined in document VM_PeakDemand or PeakSupply.docx
 
@@ -408,8 +402,8 @@ def get_peak_demand(time_series, column_id):
 
 
 def get_peak_supply(time_series, column_id):
-    """This function calculates the highest hourly electricity supply (MW) in the year of data contained in the
-        dataframe
+    """This function calculates the highest hourly electricity supply (MW) in the year of
+    data contained in the dataframe
 
     This metric is defined in document VM_PeakDemand or PeakSupply.docx
 
@@ -829,8 +823,7 @@ def get_reactive_power_demand(time_series, max_col_id, avg_col_id):
         max_col_id (str): name of the dataframe column containing the 5-minute maximum data
         avg_col_id (str): name of the dataframe column containing the 5-minute average data
     Returns:
-        dataframe: time series dataframe containing the hourly maximum and average values calculated
-        by the function
+        dataframe: time series dataframe containing the hourly maximum and average values calculated by the function
     """
     st_time = time_series.index[0]
     ts_end_time = time_series.index[-1]

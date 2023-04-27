@@ -2,8 +2,9 @@
 # file: PSMv3toDAT.py
 # Created 8/7/2019
 # @author: Ebony Mayhorn
-"""This code reads in PSM v3 csv files obtained from  https://maps.nrel.gov/nsrdb-viewer/
-The csv file include 6 columns for the following in addition to date and time information:
+"""This code reads in PSM v3 csv files obtained from https://maps.nrel.gov/nsrdb-viewer/.
+
+The csv file includes 6 columns for the following, in addition to date and time information:
 temperature, humidity, DNI, DHI, pressure and wind_speed
 """
 import os
@@ -12,8 +13,16 @@ import pandas as pd
 
 
 def weatherdat(psmv3csvfile, bus_str, location_str):
-    """ Takes a weather csv file name obtained from NREL PSM v3, reads the file, converts the data to the desired units,
-    and outputs dat file with the desired format """
+    """Takes a weather csv file name obtained from NREL PSM v3 and does a conversion.
+
+    The function reads the file, converts the data to the desired units,
+    and outputs dat file with the desired format
+
+    Args:
+        psmv3csvfile (str): name of the file to be converted, without ext '.csv'
+        bus_str (str): id of the bus
+        location_str (str):
+    """
     # reads in weather file
     weather_df = pd.read_csv(psmv3csvfile + '.csv', header=2)
     # renames the columns as desired

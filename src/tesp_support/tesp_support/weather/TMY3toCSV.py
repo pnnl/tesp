@@ -141,7 +141,29 @@ def _recolumn(tmy3_dataframe):
     Returns:
         dataframe: Recolumned DataFrame.
     """
-    raw_columns = 'ETR (W/m^2),ETRN (W/m^2),GHI (W/m^2),GHI source,GHI uncert (%),DNI (W/m^2),DNI source,DNI uncert (%),DHI (W/m^2),DHI source,DHI uncert (%),GH illum (lx),GH illum source,Global illum uncert (%),DN illum (lx),DN illum source,DN illum uncert (%),DH illum (lx),DH illum source,DH illum uncert (%),Zenith lum (cd/m^2),Zenith lum source,Zenith lum uncert (%),TotCld (tenths),TotCld source,TotCld uncert (code),OpqCld (tenths),OpqCld source,OpqCld uncert (code),Dry-bulb (C),Dry-bulb source,Dry-bulb uncert (code),Dew-point (C),Dew-point source,Dew-point uncert (code),RHum (%),RHum source,RHum uncert (code),Pressure (mbar),Pressure source,Pressure uncert (code),Wdir (degrees),Wdir source,Wdir uncert (code),Wspd (m/s),Wspd source,Wspd uncert (code),Hvis (m),Hvis source,Hvis uncert (code),CeilHgt (m),CeilHgt source,CeilHgt uncert (code),Pwat (cm),Pwat source,Pwat uncert (code),AOD (unitless),AOD source,AOD uncert (code),Alb (unitless),Alb source,Alb uncert (code),Lprecip depth (mm),Lprecip quantity (hr),Lprecip source,Lprecip uncert (code),PresWth (METAR code),PresWth source,PresWth uncert (code)'
+    raw_columns = 'ETR (W/m^2),ETRN (W/m^2),' \
+                  'GHI (W/m^2),GHI source,GHI uncert (%),' \
+                  'DNI (W/m^2),DNI source,DNI uncert (%),' \
+                  'DHI (W/m^2),DHI source,DHI uncert (%),' \
+                  'GH illum (lx),GH illum source,Global illum uncert (%),' \
+                  'DN illum (lx),DN illum source,DN illum uncert (%),' \
+                  'DH illum (lx),DH illum source,DH illum uncert (%),' \
+                  'Zenith lum (cd/m^2),Zenith lum source,Zenith lum uncert (%),' \
+                  'TotCld (tenths),TotCld source,TotCld uncert (code),' \
+                  'OpqCld (tenths),OpqCld source,OpqCld uncert (code),' \
+                  'Dry-bulb (C),Dry-bulb source,Dry-bulb uncert (code),' \
+                  'Dew-point (C),Dew-point source,Dew-point uncert (code),' \
+                  'RHum (%),RHum source,RHum uncert (code),' \
+                  'Pressure (mbar),Pressure source,Pressure uncert (code),' \
+                  'Wdir (degrees),Wdir source,Wdir uncert (code),' \
+                  'Wspd (m/s),Wspd source,Wspd uncert (code),' \
+                  'Hvis (m),Hvis source,Hvis uncert (code),' \
+                  'CeilHgt (m),CeilHgt source,CeilHgt uncert (code),' \
+                  'Pwat (cm),Pwat source,Pwat uncert (code),' \
+                  'AOD (unitless),AOD source,AOD uncert (code),' \
+                  'Alb (unitless),Alb source,Alb uncert (code),' \
+                  'Lprecip depth (mm),Lprecip quantity (hr),Lprecip source,Lprecip uncert (code),' \
+                  'PresWth (METAR code),PresWth source,PresWth uncert (code)'
 
     new_columns = [
         'ETR', 'ETRN', 'GHI', 'GHISource', 'GHIUncertainty',
@@ -176,8 +198,6 @@ def weathercsv(tmyfile, output_file, start_time, end_time, year):
         start_time (str): the starting date and time of interest, like `2013-07-01 00:00:00`
         end_time (str): the ending date and time of interest, like `2013-07-08 00:00:00`
         year (int): the year of interest
-    Returns:
-        None
     """
     global dts
     global result2
@@ -221,8 +241,6 @@ def weathercsv_cloudy_day(start_time, end_time, output_file):
         start_time (str): the starting date and time of interest, like `2013-07-01 00:00:00`
         end_time (str): the ending date and time of interest, like `2013-07-08 00:00:00`
         output_file (str): the output CSV data file
-    Returns:
-        None
     """
 
     day_weather = result2.loc[start_time:end_time, :]

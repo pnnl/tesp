@@ -1,5 +1,15 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: Wh_Energy_Purchases.py
+"""Utilities to open and read load
+
+Todo: files should be passed in for 'load*' functions
+
+Public Functions:
+    :load_hourly_data: Utility to open csv file for hourly load data
+    :load_realtime_data: Utility to open csv file 5 min load data
+    :load_price_data: Utility to open csv file LMP data
+    :Wh_Energy_Purchases: Computes the total costs, total energy purchases and average price annually
+"""
 import datetime
 import json
 import os
@@ -9,15 +19,17 @@ import pandas as pd
 
 
 def load_hourly_data(dir_path, dso_num, simdata):
-    """Utility to open hourly ERCOT csv file. The entire date range for the data (e.g. 1 year) is considered
-    Args:
-        dir_path: directory path of ercot data
-        dso_num: dso number (1-8)
-        simdata: If True will seek simulation data.  If false will use 2016 ERCOT data.
+    """Utility to open hourly ERCOT csv file.
 
+    The entire date range for the data (e.g. 1 year) is considered
+
+    Args:
+        dir_path (str): directory path of data
+        dso_num (int): dso number
+        simdata (bool): If True will seek simulation data.  If false will use 2016 ERCOT data.
     Returns:
-        data_df : dataframe of ERCOT data for dso specified
-        """
+        dataframe: dataframe of ERCOT data for dso specified
+    """
     if simdata:
         os.chdir(dir_path)
         data_df = pd.read_csv('Annual_DA_LMP_Load_data.csv')
@@ -42,15 +54,17 @@ def load_hourly_data(dir_path, dso_num, simdata):
 
 
 def load_realtime_data(dir_path, dso_num, simdata):
-    """Utility to open 5 min ERCOT csv file. The entire date range for the data (e.g. 1 year) is considered
-    Args:
-        dir_path: directory path of ercot data
-        dso_num: dso number (1-8)
-        simdata: If True will seek simulation data.  If false will use 2016 ERCOT data.
+    """Utility to open 5 min ERCOT csv file.
 
+    The entire date range for the data (e.g. 1 year) is considered
+
+    Args:
+        dir_path (str): directory path of data
+        dso_num (int): dso number
+        simdata (bool): If True will seek simulation data.  If false will use 2016 ERCOT data.
     Returns:
-        data_df : 15 min dataframe of ERCOT data for specified dso
-        """
+        dataframe: 15 min dataframe of ERCOT data for specified dso
+    """
     if simdata:
         os.chdir(dir_path)
         data_df = pd.read_csv('Annual_RT_LMP_Load_data.csv')
@@ -81,17 +95,19 @@ def load_realtime_data(dir_path, dso_num, simdata):
 
 
 def load_price_data(dir_path, market_type, dso_num, simdata, place):
-    """Utility to open 5 min ERCOT csv file. The entire date range for the data (e.g. 1 year) is considered
-    Args:
-        dir_path: directory path of ercot data
-        market_type:
-        dso_num: dso number (1-8)
-        simdata: If True will seek simulation data.  If false will use 2016 ERCOT data.
-        place (str): location of DSO
+    """Utility to open 5 min ERCOT csv file.
 
+    The entire date range for the data (e.g. 1 year) is considered
+
+    Args:
+        dir_path (str): directory path of data
+        market_type (str): string telling the market type ('DA','RT')
+        dso_num (int): dso number
+        simdata (bool): If True will seek simulation data.  If false will use 2016 ERCOT data.
+        place (str): location of DSO
     Returns:
         prices_data :
-        """
+    """
     if simdata:
         os.chdir(dir_path)
         col = 'Bus' + '{}'.format(dso_num) + ' $_mwh'
@@ -127,29 +143,25 @@ def load_price_data(dir_path, market_type, dso_num, simdata, place):
 
 
 def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, place='Houston'):
-    """
-    Computes the total costs, total energy purchases and average price annually for bilateral, day-ahead and real-time
-    markets from hourly and 5 min ERCOT energy and price data.
+    """Computes the total costs, total energy purchases and average price annually for bilateral,
+    day-ahead and real-time markets from hourly and 5 min ERCOT energy and price data.
+
+    * Loads hourly ERCOT energy and price data.
+    * Computes minimum wholesale price and quantity for day, evening, and weekend to represent the fixed prices and energy quantities for the bilateral market.
+    * Total annual average price, total cost and total energy purchases from the bilateral market are then computed.
+
     Args:
         dir_path (str): path of the ERCOT energ and price data
         dso_num (int): dso number (1-8)
-        simdata (bool): If True will seek simulation data.  If false will use 2016 ERCOT data.
+        simdata (bool): If True will seek simulation data. If false will use 2016 ERCOT data.
         h1 (int): hours specified to define day
         h2 (int): hours specified to define evening
         h3 (int): hours specified to define night respectively
-        (e.g. weekday hours h1 to h2, evening hours from h2+1 to h3, and night hours are from h3+1 to h1 the next day)
+            (e.g. weekday hours h1 to h2, evening hours from h2+1 to h3, and night hours are from h3+1 to h1 the next day)
         place (str): location of DSO
-
     Returns:
-        MarketPurchases (dict): real-time, day-ahead, and bilateral market purchases (annual cost, energy and average price)
+        dict: real-time, day-ahead, and bilateral market purchases (annual cost, energy and average price)
     """
-
-    '''
-    Loads hourly ERCOT energy and price data. 
-    Computes minimum wholesale price and quantity for day, evening, 
-    and weekend to represent the fixed prices and energy quantities for the bilateral market.
-    Total annual average price, total cost and total energy purchases from the bilateral market are then computed.
-    '''
     if simdata:
         price_name = 'Bus{} $_mwh'.format(dso_num)
     else:
@@ -221,10 +233,8 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
     WhBLPurchases = WhBLPurchasesMonthly.sum()
     WhBLPrice = WhBLPriceMonthly.mean()
 
-    '''
-    Uses hourly ERCOT energy and price data to represent DA wholesale data. Annual average price, total costs and total 
-    energy purchases are computed for DA wholesale market.   
-    '''
+    # Uses hourly ERCOT energy and price data to represent DA wholesale data.
+    # Annual average price, total costs and total energy purchases are computed for DA wholesale market.
     DA_MW_data = bilateral_MW_data  # same data used for bilateral computations
     # DA_MW_data.rename(columns={'Bus{}'.format(dso_num):'Day-ahead (MWh)'}, inplace=True)
     # subtracts hourly bilateral quantities from total hourly load to get hourly Day-ahead quantities
@@ -243,10 +253,8 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
     WhDAPurchases = WhDAPurchasesMonthly.sum()
     WhDAPrice = WhDAPriceMonthly.mean()
 
-    '''
-    Gets 15 min ERCOT energy and price data to represent real-time spot market data. Annual average price, total costs 
-    and total energy purchases are computed for DA wholesale market.   
-    '''
+    # Gets 15 min ERCOT energy and price data to represent real-time spot market data. Annual average price,
+    # total costs and total energy purchases are computed for DA wholesale market.
     RT_MW_data = load_realtime_data(dir_path, dso_num, simdata)
     RT_MW_data['month'] = RT_MW_data['date_time'].dt.month
 
@@ -256,10 +264,8 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
     # TODO: Update to interpolate DA data to 5 or 15 minute data minute for simulation case
     RT_hourly_MWh_data = RT_MW_data[' Bus{}'.format(dso_num)].resample('H').mean()  # MWh
 
-    '''
-      Annual Peak capacity is computed from hourly real-time load data 
-      which is equivalent to real bilateral + Day ahead +_real-time energy purchases.
-      '''
+    # Annual Peak capacity is computed from hourly real-time load data
+    # which is equivalent to real bilateral + Day ahead +_real-time energy purchases.
     # TODO: This hourly mean is likely reducing the peak load from the 5 minute value.
     WholesalePeakLoadRate = max(RT_MW_data[' Bus{}'.format(dso_num)])
 
@@ -282,9 +288,7 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
     WhRTPurchases = WhRTPurchasesMonthly.sum()
     WhRTPrice = WhRTPriceMonthly.mean()
 
-    '''
-    Creates a dataframe for all monthly energy purchase data and outputs to a csv file
-    '''
+    # Creates a dataframe for all monthly energy purchase data and outputs to a csv file
     Monthly_Purchases = pd.concat([WhBLEnergyMonthly, WhDAEnergyMonthly, WhRTEnergyMonthly,
                                    WhBLPurchasesMonthly, WhDAPurchasesMonthly, WhRTPurchasesMonthly,
                                    WhBLPriceMonthly, WhDAPriceMonthly, WhRTPriceMonthly], axis=1)

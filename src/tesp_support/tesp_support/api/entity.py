@@ -8,13 +8,13 @@ import sqlite3
 
 
 def assign_defaults(obj, file_name):
-    """
+    """Utilities that opens a JSON file and assigns the attributes to the specified object
 
     Args:
-        obj:
-        file_name (str):
+        obj (object): any object like module or class
+        file_name (str): a JSON file fully qualified path and name
     Returns:
-
+        dict: a dictionary of the JSON that has been loaded
     """
     with open(file_name, 'r', encoding='utf-8') as json_file:
         config = json.load(json_file)
@@ -24,13 +24,13 @@ def assign_defaults(obj, file_name):
 
 
 def assign_item_defaults(obj, file_name):
-    """
+    """Utilities that opens a JSON file and assigns the attributes Item to the specified object
 
     Args:
-        obj:
-        file_name (str):
+        obj (object): any object like module or class
+        file_name (str): a JSON file fully qualified path and name
     Returns:
-
+        dict: a dictionary of the JSON that has been loaded
     """
     with open(file_name, 'r', encoding='utf-8') as json_file:
         config = json.load(json_file)
@@ -39,7 +39,7 @@ def assign_item_defaults(obj, file_name):
             # Item format -> datatype, label, unit, item, value
             tmp = Item(str(type(config[attr])), attr, "", attr, config[attr])
             setattr(obj, attr, tmp)
-    return
+    return config
 
 
 class Item:
@@ -64,12 +64,27 @@ class Item:
     #     return str(self.item)
 
     def toFrame(self):
+        """List the attribute in the Items
+
+        Returns:
+            dist: with label, value, unit, datatype, name, range_check
+        """
         return [self.label, self.value, self.unit, self.datatype, self.item, self.range_check]
 
     def toJson(self):
+        """List the attribute in the Items
+
+        Returns:
+            dist: with label, value, unit, datatype, name
+        """
         return [self.label, self.value, self.unit, self.datatype, self.item]
 
     def toJSON(self):
+        """Stringify the attribute in the Items to JSON
+
+        Returns:
+            str: JSON string with label, unit, datatype, value
+        """
         tmp = '{ ' + self.item + ': {' \
               '"label": "' + self.label + ', ' \
               '"unit": "' + self.unit + ', ' \
@@ -144,7 +159,7 @@ class Entity:
         """Set the Entity instance the given set of parameters
 
         Args:
-            object_name (str): the name of the entity
+            object_name (str): the name of the instance
             params (list<list>): list of the attribute parameters
         Returns:
             Entity instance: an object with name and values
@@ -178,10 +193,10 @@ class Entity:
         return None
 
     def get_instance(self, object_name):
-        """Get the entity instance
+        """Get the Entity instance
 
         Args:
-            object_name (str): the name of the Entity
+            object_name (str): the name of the instance
         Returns:
             Entity instance: an object with name and values or None when object_name is invalid
         """
@@ -199,9 +214,7 @@ class Entity:
         """Delete the Entity instance
 
         Args:
-            object_name (str): the name of the Entity
-        Returns:
-            None
+            object_name (str): the name of the instance
         """
         if type(object_name) == str:
             try:
@@ -211,7 +224,6 @@ class Entity:
                 pass
         else:
             print("object name is not a string in", self.entity)
-        return None
 
     def add_attr(self, datatype, label, unit, item, value=None):
         """Add the Item attribute to the Entity
@@ -235,12 +247,9 @@ class Entity:
 
         Args:
             item (str): name of the attribute in the Entity
-        Returns:
-            None:
         """
         if self.find_item(item):
             delattr(self, item)
-        return None
 
     # def set_item_default(self, item, val):
     #     if self.find_item(item):
@@ -259,35 +268,33 @@ class Entity:
     #     return None
 
     def set_item(self, object_name, item, val):
-        """Set the value of the instance for the Item and Entity
+        """Set the value of the Entity instance for the Item
 
         Args:
-            object_name (str): the name of the Entity
+            object_name (str): the name of the instance
             item (str): name of the Item
             val (any): value of the item
         Returns:
-            None
+            any: the value or None when the value has not been set
         """
         if self.find_item(item):
             _item = self.__getattribute__(item)
             if type(_item) == Item:
                 self.instance[object_name][item] = val
+                return self.instance[object_name][item]
         return None
 
     def del_item(self, object_name, item):
-        """Delete the value of the instance from the Item and Entity
+        """Delete the value of the Entity instance from the Item
 
         Args:
-            object_name (str): the name of the Entity
+            object_name (str): the name of the instance
             item (str): name of the Item
-        Returns:
-            None
         """
         if self.find_item(item):
             _item = self.__getattribute__(item)
             if type(_item) == Item:
                 del self.instance[object_name][item]
-        return None
 
     def toList(self):
         """List the Item(s) in the Entity
@@ -316,7 +323,8 @@ class Entity:
         return diction
 
     def toHelp(self):
-        """List the Item(s) in the Entity in help format,listing datatype, label, name, default value
+        """List the Item(s) in the Entity in help format
+        with datatype, label, name, default value
 
         Returns:
             str: format list of the Items in the Entity
@@ -329,12 +337,11 @@ class Entity:
         return diction
 
     def toSQLite(self, connection):
-        """Create a sqlite table to store the Item(s) in the Entity with datatype, label, name, unit, default value
+        """Create a sqlite table to store the Item(s) in the Entity
+         with datatype, label, name, unit, default value
 
         Args:
             connection (Connection): A valid sqlite connection object
-        Returns:
-            None
         """
         # cursor object
         cursor_obj = connection.cursor()
@@ -364,10 +371,10 @@ class Entity:
                 connection.commit()
 
     def instanceToJson(self):
-        """Instance list the Item(s) in the Entity to JSON
+        """Stringify the instance(s) in the Entity to JSON
 
         Returns:
-            str: JSON string of the instance of Item(s) in the Entity
+            str: JSON string of the instance(s) in the Entity
         """
         diction = ""
         for object_name in self.instance:
@@ -378,12 +385,10 @@ class Entity:
         return diction
 
     def instanceToSQLite(self, connection):
-        """Instance list the Item(s) in the Entity to SQLite
+        """Commit the instance(s) in the Entity to SQLite
 
         Args:
             connection: A valid sqlite connection object
-        Returns:
-            None
         """
         # cursor object
         cursor_obj = connection.cursor()

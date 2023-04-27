@@ -10,8 +10,7 @@ from datetime import datetime, timedelta
 
 
 class PVDSOT:
-    """
-    This agent manages the PV solar
+    """This agent manages the PV solar
 
     Args:
         pv_dict (diction): dictionary to populate attributes
@@ -21,19 +20,18 @@ class PVDSOT:
         sim_time (str): Current time in the simulation; should be human-readable
 
     Attributes:
-        #initialize from Args:
+        Initialize from Args
         name (str): name of this agent
         participating (bool): participating from pv_dict dictionary
-        rating (): rating from pv_dict dictionary
-        scaling_factor (): scaling_factor from pv_dict dictionary
+        rating (float): rating from pv_dict dictionary
+        scaling_factor (float): scaling_factor from pv_dict dictionary
         slider (float): slider_setting from pv_dict dictionary
         windowLength (int): 48 always for now
         TIME (list): range(0, self.windowLength)
     """
 
     def __init__(self, pv_dict, inv_properties, key, model_diag_level, sim_time):
-        """Initializes the class
-        """
+        # Initializes the class
         self.name = key
         self.participating = pv_dict['participating']
         self.rating = pv_dict['rating']
@@ -49,8 +47,7 @@ class PVDSOT:
 
 
 def test():
-    """
-    Makes a single pv agent and run DA
+    """Makes a single pv agent and run DA
     """
     import pandas as pd
     from tesp_support.api.data import tesp_test

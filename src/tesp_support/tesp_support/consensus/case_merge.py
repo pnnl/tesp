@@ -208,7 +208,7 @@ def merge_fncs_config(target, dso, sources):
 
     Args:
         target (str): the path to the target TXT file, including the name of the file
-        dso:
+        dso (str): dso id
         sources (list): list of feeder names in the target directory to merge
     """
     print('combining', sources, 'txt files into', target)

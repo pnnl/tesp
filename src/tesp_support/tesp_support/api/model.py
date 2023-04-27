@@ -1,8 +1,6 @@
 # Copyright (C) 2019-2022 Battelle Memorial Institute
 # file: glm_model.py
 """GridLAB-D model I/O for TESP api
-
-Public Functions:
 """
 
 import json
@@ -39,42 +37,15 @@ class GLModel:
     node_class = ['node', 'load', 'meter', 'triplex_node', 'triplex_meter']
 
     """
-        backbone file must follow order below 
+        backbone file should follow order below 
             clock 
             set [profile,
             module ...
             objects ...
 
         Can be used any where    
-            #define and #ifdef are black boxes 
-            // are one line black boxes
-
-    # clock {
-    #   timezone EST + 5 EDT;
-    #   starttime '2000-01-01 0:00:00';
-    #   stoptime '2000-01-01 5:59:00';
-    # }
-
-    # set relax_naming_rules=1
-    # set profiler=1
-    # set minimum_timestep=1
-
-    # module climate;
-    # module connection;
-    # module generators;
-    # module residential;
-    # module tape;
-
-    # module powerflow {
-    #   solver_method NR;
-    #   line_capacitance true;
-    # }
-
-    # module reliability {
-    #   maximum_event_length 18000;
-    #   report_event_log true;
-    # }
-
+            #define -> are one line black boxes
+            #ifdef / #endif -> are black boxes 
     """
 
     def __init__(self):
@@ -131,10 +102,8 @@ class GLModel:
         Args:
             object_name:
             item_id:
-
         Returns:
             str: contain the lines that makes up the comment
-
         """
         comments = ""
         if object_name in self.inside_comments:
@@ -151,10 +120,8 @@ class GLModel:
         Args:
             object_name:
             item_id:
-
         Returns:
             str: contain the line that makes up item and the comment
-
         """
         comment = ""
         if object_name in self.inline_comments:
@@ -174,16 +141,12 @@ class GLModel:
         return diction
 
     def instanceToModule(self, i_module):
-        """
-        instanceToModule adds the comments pulled from the glm file
-        to the new/modified glm file.
+        """Adds the comments pulled from the glm file to the new/modified glm file.
 
         Args:
             i_module:
-
         Returns:
             str: contains the lines that make up the module
-
         """
         name = i_module.entity
         diction = ""
@@ -213,16 +176,12 @@ class GLModel:
         return diction
 
     def instanceToObject(self, i_object):
-        """
-        instanceToObject adds the comments pulled from the glm file
-        to the new/modified glm file.
+        """Adds the comments pulled from the glm file to the new/modified glm file.
 
         Args:
             i_object:
-
         Returns:
             str: contains the lines that make up the object
-
         """
         diction = ""
         for object_name in i_object.instance:
@@ -313,7 +272,7 @@ class GLModel:
                 entity = self.module_entities[mod_type]
                 return entity.set_instance(mod_type, params)
             except:
-                print("Unrecognized GRIDLABD module ->", mod_type)
+                print("Unrecognized GRIDLABD module:", mod_type)
                 self.modules[mod_type] = {}
                 entity = self.module_entities[mod_type] = Entity(mod_type, self.modules[mod_type])
                 return entity.set_instance(mod_type, params)
@@ -327,7 +286,7 @@ class GLModel:
                 entity = self.module_entities[mod_type]
                 return entity.get_instance(mod_type)
             except:
-                print("Unrecognized GRIDLABD module ->", mod_type)
+                print("Unrecognized GRIDLABD module:", mod_type)
         else:
             print("GRIDLABD module is not a string")
         return None
@@ -338,7 +297,7 @@ class GLModel:
                 entity = self.object_entities[obj_type]
                 return entity.set_instance(obj_name, params)
             except:
-                print("Unrecognized GRIDLABD object and id ->", obj_type, obj_name)
+                print("Unrecognized GRIDLABD object and id:", obj_type, obj_name)
                 self.objects[obj_type] = {}
                 entity = self.object_entities[obj_type] = Entity(obj_type, self.objects[obj_type])
                 return entity.set_instance(obj_name, params)
@@ -352,21 +311,19 @@ class GLModel:
                 entity = self.object_entities[obj_type]
                 return entity.get_instance(obj_name)
             except:
-                print("Unrecognized GRIDLABD object and id ->", obj_type, obj_name)
+                print("Unrecognized GRIDLABD object and id:", obj_type, obj_name)
         else:
             print("GRIDLABD object name and/or object id is not a string")
         return None
 
     @staticmethod
     def gld_strict_name(val):
-        """
-        Sanitizes a name for GridLAB-D publication to FNCS
+        """Sanitizes a name for GridLAB-D publication to FNCS
 
         Args:
             val (str): the input name
-
         Returns:
-            str: val with all "-" replaced by "_", and any leading digit replaced by "gld__"
+            str: val with all `-` replaced by `_` and any leading digit replaced by `gld_`
         """
         if val[0].isdigit():
             val = "gld_" + val
@@ -395,7 +352,7 @@ class GLModel:
         Args:
             s (str): the GridLAB-D class name
         Returns:
-            Boolean: True if an edge class, False otherwise
+            bool: True if an edge class, False otherwise
         """
         if s in self.edge_class:
             return True
@@ -409,7 +366,7 @@ class GLModel:
         Args:
             s (str): the GridLAB-D class name
         Returns:
-            Boolean: True if a node class, False otherwise
+            bool: True if a node class, False otherwise
         """
         if s in self.node_class:
             return True
@@ -422,12 +379,12 @@ class GLModel:
             mod (str): glm type [date, class, module]
             line (str): glm line containing the object definition
             itr (iter): iterator over the list of lines
-
         Returns:
             str: the module type
         """
 
         # Collect parameters
+        _type = ""
         params = {}
         # Collect comments
         comments = []
@@ -500,11 +457,11 @@ class GLModel:
             itr (iter): iterator over the list of lines
             oidh (dict): hash of object id's to object names
             counter (int): object counter
-
         Returns:
             str, int, str: the current line, counter, name
         """
         # Identify the object type
+        oid = ""
         m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
         _type = m.group(1)
         # If the object has an id number, store it
@@ -611,8 +568,7 @@ class GLModel:
         return line, counter, name
 
     def readModel(self, filename):
-        """Reads and parses the model from filename,
-        usually but not necessarily one of the PNNL taxonomy feeders
+        """Reads and parses the model from filename, usually but not necessarily one of the PNNL taxonomy feeders
 
         Args:
             filename (str): fully qualified model path/name
@@ -749,7 +705,7 @@ def test1():
     model_file.write(tesp_test + "api/R1-12.47-1_out.glm")
 
     model_file = GLModel()
-    tval = model_file.readModel(tesp_test + "api/model_in.glm")
+    tval = model_file.readModel(tesp_test + "api/testing.glm")
     model_file.write(tesp_test + "api/model_out.glm")
 
     model_file.instancesToSQLite(tesp_test + 'api/model_out.db')

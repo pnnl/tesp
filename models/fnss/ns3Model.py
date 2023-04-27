@@ -27,12 +27,7 @@ except ImportError:
 
 
 def buildNS3model(topo):
-    """
-    The function builds an ns-3 model based on an FNSS topology.
-    Args:
-        topo: FNSS topology in dictionary format
-    Returns:
-        None
+    """The function builds an ns-3 model based on an FNSS topology.
 
     The function is structured as follows:
 
@@ -49,9 +44,10 @@ def buildNS3model(topo):
       * allocate node positions for mobility and netanim
       * create CBR flows based on adjacency matrix
 
+    Args:
+        topo: FNSS topology in dictionary format
     """
     # ---------- Simulation Variables ------------------------------------------
-
     # Change the variables and file names only in this block!
     portNum = 9
     SinkStartTime = 1.0001

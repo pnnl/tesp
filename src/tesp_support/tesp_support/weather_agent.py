@@ -42,8 +42,6 @@ def startWeatherAgent(file):
 
     Args:
         file (str): the weather data file
-    Returns:
-        None
     """
     # read the weather data file, arguments to mimic deprecated from_csv function
     weatherData = pd.read_csv(file, index_col=0, parse_dates=True)

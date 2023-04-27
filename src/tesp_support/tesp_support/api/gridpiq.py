@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # Copyright (C) 2019-2022 Battelle Memorial Institute
 # file: gridpiq.py
+# Created on 1/23/2023
+# @author: d3j331 - Mitch Pelton
 """This script attempts to demonstrate the grid PIQ for new TESP API.
-
-Created on Mon Jan 23 14:05:08 2023
-@author: d3j331 - Mitch Pelton
 """
 
 import json
@@ -36,6 +35,9 @@ class GridPIQ:
         self.config = assign_defaults(self, entities_path + 'grid_PIQ.json')
 
     def reset_dispatch_data(self):
+        """
+
+        """
         self.Zeros = []
         self.Total = []
         for kind in self.choices:
@@ -43,6 +45,13 @@ class GridPIQ:
             gen = []
 
     def set_dispatch_data(self, kind, idx, data):
+        """
+
+        Args:
+            kind:
+            idx:
+            data:
+        """
         # kind is one of "Nuclear", "Wind", "Coal", "Solar", "NaturalGas", "Petroleum"
         # or the lower case of it
         # idx starts at 0
@@ -62,6 +71,11 @@ class GridPIQ:
                 break
 
     def avg_dispatch_data(self, count):
+        """
+
+        Args:
+            count (int):
+        """
         if count > 0:
             for kind in self.choices:
                 gen = self.__getattribute__(kind)
@@ -70,6 +84,11 @@ class GridPIQ:
                     gen[idx] = gen[idx] / count
 
     def set_max_load(self, data):
+        """
+
+        Args:
+            data (float):
+        """
         if data > self.max_load:
             self.max_load = data
 
@@ -77,13 +96,10 @@ class GridPIQ:
         """
 
         Args:
-            start_datetime:
-            end_datetime:
-            s_offset: in hours
-            e_offset: in hours
-
-        Returns:
-
+            start_datetime (str): the start date and time with the format '%Y-%m-%d %H:%M:%S'
+            end_datetime (str): the end date and time with the format '%Y-%m-%d %H:%M:%S'
+            s_offset (int): in hours
+            e_offset (int): in hours
         """
         s = datetime.strptime(start_datetime, '%Y-%m-%d %H:%M:%S') + timedelta(hours=s_offset)
         e = datetime.strptime(end_datetime, '%Y-%m-%d %H:%M:%S') + timedelta(hours=e_offset)
@@ -103,6 +119,8 @@ class GridPIQ:
     def toJson(self):
         """
 
+        Returns:
+            dict:
         """
         for kind in self.choices:
             gen = self.__getattribute__(kind)

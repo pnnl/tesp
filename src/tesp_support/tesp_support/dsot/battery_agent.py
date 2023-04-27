@@ -31,11 +31,11 @@ logger = log.getLogger()
 
 
 class BatteryDSOT:
+    # TODO: update inputs for this agent
     """
     This agent manages the battery/inverter
 
     Args:
-        # TODO: update inputs for this agent
         battery_dict (dict):
         inv_properties (dict):
         key (str):
@@ -44,7 +44,7 @@ class BatteryDSOT:
         solver (str):
 
     Attributes:
-        # initialize from Args:
+        Initialize from Args
         name (str): name of this agent
         Rc (float): rated charging power in kW for the battery
         Rd (float): rated discharging power in kW for the battery
@@ -58,7 +58,7 @@ class BatteryDSOT:
         windowLength (int): length of day ahead optimization period in hours (e.g. 48-hours)
         dayAheadCapacity (float): % of battery capacity reserved for day ahead bidding
 
-        # no initialization required
+        No initialization required
         bidSpread (int): this can be used to spread out bids in multiple hours. When set to 1 hour (recommended), it’s effect is none
         P (int): location of P in bids
         Q (int): location of Q in bids
@@ -79,10 +79,6 @@ class BatteryDSOT:
     """
 
     def __init__(self, battery_dict, inv_properties, key, model_diag_level, sim_time, solver):
-        # TODO: update inputs for class
-        """Initializes the class
-        """
-        # TODO: update attributes of class
         # initialize from Args:
         self.name = key
         self.solver = solver
@@ -184,13 +180,12 @@ class BatteryDSOT:
                     format(self.name, 'init'))
 
     def test_function(self):
-        """ Test function with the only purpose of returning the name of the object
-
+        """Test function with the only purpose of returning the name of the object
         """
         return self.name
 
     def inform_bid(self, price):
-        """ Set the cleared_price attribute
+        """Set the cleared_price attribute
 
         Args:
             price (float): cleared price in $/kWh
@@ -198,7 +193,7 @@ class BatteryDSOT:
         self.RTprice = price
 
     def bid_accepted(self, current_time):
-        """ Update the P and Q settings if the last bid was accepted
+        """Update the P and Q settings if the last bid was accepted
 
         Returns:
             Boolean: True if the inverter settings changed, False if not.
@@ -207,7 +202,7 @@ class BatteryDSOT:
         return self.RT_flag
 
     def set_price_forecast(self, forecasted_price):
-        """ Set the f_DA attribute
+        """Set the f_DA attribute
 
         Args:
             forecasted_price (float x 48): cleared price in $/kWh
@@ -215,7 +210,7 @@ class BatteryDSOT:
         self.f_DA = deepcopy(forecasted_price)
 
     def DA_cleared_price(self, price):
-        """ Set the DA_cleared_price attribute
+        """Set the DA_cleared_price attribute
 
         Args:
             price (float): cleared price in $/kWh
@@ -233,7 +228,7 @@ class BatteryDSOT:
         self.prev_clr_Quantity.append(0.0)
 
     def formulate_bid_da(self):
-        """ Formulate 4 points of P and Q bids for the DA market
+        """Formulate 4 points of P and Q bids for the DA market
 
         Function calls "DA_optimal_quantities" to obtain the optimal quantities
         for the DA market. With the quantities, the 4 point bids are formulated.
@@ -326,7 +321,7 @@ class BatteryDSOT:
             return m.C[i] == m.C[i - 1] - m.E_stor_out[i] + m.E_stor_in[i]
 
     def DA_optimal_quantities(self):
-        """ Generates Day Ahead optimized quantities for Battery
+        """Generates Day Ahead optimized quantities for Battery
           
         Returns:
             Quantity (float) (1 x windowLength): Optimal quantity from optimization for all hours of the window specified by windowLength
@@ -367,7 +362,7 @@ class BatteryDSOT:
         return Quantity
 
     def formulate_bid_rt(self):
-        """ Formulates RT bid
+        """Formulates RT bid
 
         Uses the last 4 point bid from DA market and consider current state
         of charge of the battery. Will change points to change points for feasible
@@ -445,7 +440,7 @@ class BatteryDSOT:
         return self.bid_rt
 
     def RT_fix_four_points_range(self, BID, Ql, Qu):
-        """ Verify feasible range of RT bid
+        """Verify feasible range of RT bid
 
         Args:
             BID (float) ((1,2)X4): 4 point bid
@@ -505,7 +500,7 @@ class BatteryDSOT:
         return BIDr
 
     def RT_gridlabd_set_P(self, model_diag_level, sim_time):
-        """ Update variables for battery output "inverter"
+        """Update variables for battery output "inverter"
 
         Args:
             model_diag_level (int): Specific level for logging errors; set it to 11
@@ -541,7 +536,7 @@ class BatteryDSOT:
                     format(self.name, sim_time, -self.inv_P_setpoint, self.Rc))
 
     def set_battery_SOC(self, msg_str, model_diag_level, sim_time):
-        """ Set the battery state of charge
+        """Set the battery state of charge
 
         Updates the self.Cinit of the battery
 
@@ -549,7 +544,6 @@ class BatteryDSOT:
              msg_str (str): message with battery SOC in pu
              model_diag_level (int): Specific level for logging errors; set it to 11
              sim_time (str): Current time in the simulation; should be human-readable
-
         """
         val = parse_number(msg_str)
         self.Cinit = self.batteryCapacity * val
@@ -611,10 +605,7 @@ class BatteryDSOT:
 
 
 def test():
-    """
-    Testing
-    
-    Makes a single battery agent and run DA 
+    """Makes a single battery agent and run DA
     """
     import time
     import matplotlib.pyplot as plt

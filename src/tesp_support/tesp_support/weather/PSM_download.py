@@ -3,10 +3,8 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: PSM_download.py
 # Created 4/28/2020
-"""
-
-Simple script to download PSM weather files and convert them to DSO+T
-DAT files.
+# @author: hard312 (Trevor Hardy)
+"""Simple script to download PSM weather files and convert them to DAT files.
 
 In the name of expediency, this script contains two functions that were
 copy and pasted from dsot_solar.py. I wish that those functions had been
@@ -17,9 +15,6 @@ is just creating input files and is not a part of the co-sim runtime.
 The script does make use of PSMvstoDAT.py as a function, though. I had to
 make minor edits to that function as it was slightly non-abstracted and
 not completely stand-alone.
-
-
-@author: hard312 (Trevor Hardy)
 """
 
 import argparse
@@ -32,6 +27,7 @@ from pathlib import Path
 import openpyxl as xl
 
 import tesp_support.weather.PSMv3toDAT as PSM
+
 # spec = importlib.util.spec_from_file_location("PSMv3toDAT", "../PSMv3toDAT.py")
 # PSM = importlib.util.module_from_spec(spec)
 # spec.loader.exec_module(PSM)
@@ -65,21 +61,13 @@ def _open_file(file_path, typ='r'):
 
 
 def parse_DSO_location(dso_metadata_path, worksheet_name):
-    """
-    This function parses the DSO metadata which is contained in an
-    Excel spreadsheet
-
+    """This function parses the DSO metadata which is contained in an Excel spreadsheet
 
     Args:
-        dso_metadata_path (str) - Path to the Excel file containing the
-        metadata to be parsed.
-
-        worksheet_name (str) - Name of the worksheet in the Excel file
-        containing the metadata
-
+        dso_metadata_path (str): Path to the Excel file containing the  metadata to be parsed.
+        worksheet_name (str): Name of the worksheet in the Excel file containing the metadata
     Returns:
-        dso_meta (list of dicts) - One dictionary per DSO with appropriate
-        metadata captured.
+        list<dict>: One dictionary per DSO with appropriate metadata captured.
     """
 
     # openpyxl doesn't use file handles so, I just use my function to
@@ -123,23 +111,14 @@ def parse_DSO_location(dso_metadata_path, worksheet_name):
 
 
 def download_nsrdb_data(dso_meta, output_path):
+    """This function queries the NSRDB database over the web and pulls down and does a conversion.
+
+    Function pulls down the solar data down calls PSMv3toDAT to convert them to appropriate format.
+
+    Args:
+        dso_meta (list): List of dicts with metadata associated with each DSO, specifically the site information
+        output_path (str) - Location to write out solar data from the NSRDB.
     """
-    This function queries the NSRDB database over the web and pulls
-        down the solar data down calls PSMv3toDAT to convert them to
-        appropriate format.
-
-
-        Args:
-            dso_meta (list) - List of dicts with metadata associated with
-            each DSO, specifically the site information
-
-            output_path (str) - Location to write out solar data from the
-            NSRDB.
-
-
-        Returns:
-            (none)
-        """
 
     # Change directory to parent file location of output path to enable
     #   the use of PSMv3toDAT.py.
@@ -204,27 +183,19 @@ def download_nsrdb_data(dso_meta, output_path):
 
 
 def _auto_run(args):
-    """
-    This function executes when the script is called as a stand-alone
-    executable.
+    """This function executes when the script is called as a stand-alone executable.
 
     Args:
-        '-a' or '--auto_run_dir' - Path of the auto_run folder
-        that contains examples of the files used in this script. Used
-        for development purposes as well as models/examples/documentation
-        of the format and contents expected in said files
-
-        '-d' or '--dso_metadata' - Path to .xlsx file with all DSO
-        metadata file is part of the DSO+T planning/documentation
-        dataset and should not need to be manually created or edited.
-
-        '-n' or '--nsrdb_path' - Location to save downloaded solar files
-
-        '-x' or '--dso_metadata_worksheet_name' - Name of worksheet in
-        file specified by dso_metdata that contains the location metadata.
-
-    Returns:
-        (none)
+        '-a' or '--auto_run_dir': Path of the auto_run folder
+            that contains examples of the files used in this script. Used
+            for development purposes as well as models/examples/documentation
+            of the format and contents expected in said files
+        '-d' or '--dso_metadata': Path to .xlsx file with all DSO
+            metadata file is part of the DSO+T planning/documentation
+            dataset and should not need to be manually created or edited.
+        '-n' or '--nsrdb_path': Location to save downloaded solar files
+        '-x' or '--dso_metadata_worksheet_name': Name of worksheet in
+            file specified by dso_metdata that contains the location metadata.
     """
 
     # Must parse solar metadata file first as it contains the name of the
