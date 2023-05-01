@@ -54,7 +54,7 @@ class Mode(Enum):
 
 
 def _open_file(file_path, type='r'):
-    """Utilty function to open file with reasonable error handling.
+    """ Utilty function to open file with reasonable error handling.
 
 
     Args:

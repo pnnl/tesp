@@ -16,12 +16,12 @@ import stat
 import shutil
 from datetime import datetime
 
+
 def idf_int(val):
-    """Helper function to format integers for the EnergyPlus IDF input data file
+    """ Helper function to format integers for the EnergyPlus IDF input data file
 
     Args:
         val (int): the integer to format
-
     Returns:
         str: the integer in string format, padded with a comma and zero or one blanks, in order to fill three spaces
     """
@@ -30,8 +30,9 @@ def idf_int(val):
         return sval + ', '
     return sval + ','
 
+
 def write_tesp_case (config, cfgfile):
-    """Writes the TESP case from data structure to JSON file
+    """ Writes the TESP case from data structure to JSON file
 
     This function assumes one GridLAB-D, one EnergyPlus, one PYPOWER
     and one substation_loop federate will participate in the TESP simulation.
@@ -584,7 +585,7 @@ values:
     op.close()
 
 def make_tesp_case (cfgfile = 'test.json'):
-    """Wrapper function for a single TESP case configuration.
+    """ Wrapper function for a single TESP case configuration.
 
     This function opens the JSON file, and calls *write_tesp_case*
 
@@ -596,7 +597,7 @@ def make_tesp_case (cfgfile = 'test.json'):
     write_tesp_case (config, cfgfile)
 
 def modify_mc_config (config, mcvar, band, sample):
-    """Helper function that modifies the Monte Carlo configuration for a specific sample, i.e., shot
+    """ Helper function that modifies the Monte Carlo configuration for a specific sample, i.e., shot
 
     For variables that have a band associated, the agent preparation code will apply
     additional randomization. This applies to thermostat ramps, offset limits, and
@@ -620,7 +621,7 @@ def modify_mc_config (config, mcvar, band, sample):
         config['ThermostatSchedule']['WeekdayEveningSetHi'] = sample + 0.5 * band
 
 def make_monte_carlo_cases (cfgfile = 'test.json'):
-    """Writes up to 20 TESP simulation case setups to a directory for Monte Carlo simulations
+    """ Writes up to 20 TESP simulation case setups to a directory for Monte Carlo simulations
 
     Latin hypercube sampling is recommended; sample values may be specified via *tesp_config*
 

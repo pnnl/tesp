@@ -9,12 +9,12 @@ from datetime import datetime
 
 import matplotlib.pyplot as plt
 
-from .helpers import gld_strict_name
+from tesp_support.api.helpers import gld_strict_name
 import tesp_support.dsot.residential_feeder_glm as res_FG
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
-    """Randomly selects a set number of buildings by type and size (sq. ft.)
+    """ Randomly selects a set number of buildings by type and size (sq. ft.)
 
     Args:
         bldg_metadata: dictionary of DSO+T specific building parameter data
@@ -37,7 +37,7 @@ def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
 
 
 def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
-    """Determines building parameters based on building type, dso type, and (ASHRAE) climate zone
+    """ Determines building parameters based on building type, dso type, and (ASHRAE) climate zone
 
     Args:
         bldg_type (str): class of building (e.g. 'strip_mall', etc)
@@ -219,7 +219,7 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
 
 def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percentage, ev_metadata, ev_percentage,
                       solar_percentage, pv_rating_MW, solar_Q_player, case_type, metrics, metrics_interval, mode=None):
-    """For large buildings, breaks building up into multiple zones.
+    """ For large buildings, breaks building up into multiple zones.
 
     For all buildings sends definition dictionary to function that writes out building definition to GLD file format.
 
@@ -573,7 +573,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
 
 
 def find_envelope_prop(prop, age, env_data, climate):
-    """Returns the envelope value for a given type of property based on the age and (ASHRAE) climate zone of the
+    """ Returns the envelope value for a given type of property based on the age and (ASHRAE) climate zone of the
         building
 
     Args:
@@ -620,7 +620,7 @@ def find_envelope_prop(prop, age, env_data, climate):
 
 
 def normalize_dict_prob(name, dict):
-    """Ensures that the probability distribution of values in a dictionary effectively sums to one
+    """ Ensures that the probability distribution of values in a dictionary effectively sums to one
 
     Args:
         name: name of dictionary to normalize
@@ -640,7 +640,7 @@ def normalize_dict_prob(name, dict):
 
 
 def rand_bin_select(dict, prob):
-    """Returns the element (bin) in a dictionary given a certain probability
+    """ Returns the element (bin) in a dictionary given a certain probability
 
     Args:
         dict: dictionary of elements and associated non-cumulative probabilities
@@ -656,7 +656,7 @@ def rand_bin_select(dict, prob):
 
 
 def sub_bin_select(bin, type, prob):
-    """Returns a scalar value within a bin range based on a uniform probability within that bin range
+    """ Returns a scalar value within a bin range based on a uniform probability within that bin range
 
     Args:
         bin: name of bin
@@ -690,7 +690,7 @@ def sub_bin_select(bin, type, prob):
 
 
 def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
-    """Write one pre-configured commercial zone as a house
+    """ Write one pre-configured commercial zone as a house
 
     Args:
        bldg: dictionary of GridLAB-D house and zipload attributes

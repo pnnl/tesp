@@ -19,7 +19,7 @@ import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import messagebox
 
-from .helpers import parse_kw
+from tesp_support.api.parse_helpers import parse_kw
 
 import matplotlib
 
@@ -38,7 +38,7 @@ fncs = None
 
 
 class TespMonitorGUI:
-    """Manages a GUI with 4 plotted variables, and buttons to stop TESP
+    """ Manages a GUI with 4 plotted variables, and buttons to stop TESP
 
     The GUI reads a JSON file with scripted shell commands to launch
     other FNCS federates, and a YAML file with FNCS subscriptions to update
@@ -194,7 +194,7 @@ class TespMonitorGUI:
         self.canvas.get_tk_widget().grid(row=1, columnspan=5, sticky=tk.W + tk.E + tk.N + tk.S)
 
     def on_closing(self):
-        """Verify whether the user wants to stop TESP simulations before exiting the monitor
+        """ Verify whether the user wants to stop TESP simulations before exiting the monitor
 
         This monitor is itself a FNCS federate, so it can not be shut down without shutting
         down all other FNCS federates in the TESP simulation.
@@ -203,7 +203,7 @@ class TespMonitorGUI:
             self.Quit()
 
     def Quit(self):
-        """Shuts down this monitor, and also shuts down FNCS/HELICS if active
+        """ Shuts down this monitor, and also shuts down FNCS/HELICS if active
         """
         if self.bFNCSactive or self.bHELICSactive:
             self.kill_all()
@@ -212,7 +212,7 @@ class TespMonitorGUI:
         self.root.destroy()
 
     def OpenConfig(self):
-        """Read the JSON configuration file for this monitor, and initialize the plot axes
+        """ Read the JSON configuration file for this monitor, and initialize the plot axes
         """
         fname = filedialog.askopenfilename(initialdir='.',
                                            initialfile=self.filename,
@@ -241,7 +241,7 @@ class TespMonitorGUI:
             self.launch_all_f()
 
     def kill_all(self):
-        """Shut down all FNCS/HELICS federates in TESP, except for this monitor
+        """ Shut down all FNCS/HELICS federates in TESP, except for this monitor
         """
         self.root.update()
         for proc in self.pids:
@@ -279,7 +279,7 @@ class TespMonitorGUI:
         print("Process successfully terminated", flush=True)
 
     def expand_limits(self, v, vmin, vmax):
-        """Whenever a variable meets a vertical axis limit, expand the limits with 10% padding above and below
+        """ Whenever a variable meets a vertical axis limit, expand the limits with 10% padding above and below
 
         Args:
           v (float): the out of range value
@@ -402,7 +402,7 @@ class TespMonitorGUI:
         return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
 
     def launch_all_f(self):
-        """Launches the simulators, initializes FNCS and starts the animated plots
+        """ Launches the simulators, initializes FNCS and starts the animated plots
         """
         self.root.update()
 
@@ -553,7 +553,7 @@ class TespMonitorGUI:
         return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld
 
     def launch_all(self):
-        """Launches the simulators, initializes HELICS and starts the animated plots
+        """ Launches the simulators, initializes HELICS and starts the animated plots
         """
         self.root.update()
 
@@ -627,13 +627,13 @@ class TespMonitorGUI:
 
 
 def show_tesp_monitor(HELICS=True):
-    """Creates and displays the monitor GUI
+    """ Creates and displays the monitor GUI
     """
     global helics, fncs
     if HELICS:
-        import helics as helics
+        pass
     else:
-        import tesp_support.fncs as fncs
+        pass
 
     root = tk.Tk()
     root.title('Transactive Energy Simulation Platform: Solution Monitor')

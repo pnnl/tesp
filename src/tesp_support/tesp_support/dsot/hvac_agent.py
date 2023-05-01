@@ -17,8 +17,8 @@ import pyomo.environ as pyo
 import pytz
 from scipy import linalg
 
-from tesp_support.helpers import parse_number, parse_magnitude, get_run_solver
-
+from tesp_support.api.helpers import get_run_solver
+from tesp_support.api.parse_helpers import parse_number, parse_magnitude
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
@@ -42,7 +42,7 @@ class HVACDSOT:  # TODO: update class name
 
     def __init__(self, hvac_dict, house_properties, key, model_diag_level, sim_time, solver):
         # TODO: update inputs for class
-        """Initializes the class
+        """ Initializes the class
         """
         # TODO: update attributes of class
         self.name = key

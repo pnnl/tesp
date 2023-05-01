@@ -35,11 +35,11 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 ######################################################end conf plot
 class MarkerCollorsJSONpython:
-    """Object contains the markers, colors, and lines 
+    """ Object contains the markers, colors, and lines
     """
 
     def __init__(self):
-        """Create the variables
+        """ Create the variables
         """
         self.lines = ['-', '--', '-.', ':']
         self.Marker = ['.', 'o', 'v', '^', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'x',
@@ -74,7 +74,7 @@ class marketJSONpython:
     """
 
     def __init__(self, days, pre_file, pos_file):
-        """Initializes the class
+        """ Initializes the class
         """
         self.startDAY = int(days[0])
         self.endDAY = int(days[1])
@@ -91,12 +91,12 @@ class marketJSONpython:
         self.RET300 = self.get_market_data(3)
 
     def get_market_data(self, index):
-        """Read a defined number of days
+        """ Read a defined number of days
     
         Args:
             index (int): position in the list of the name 
     
-        Return:
+        Returns:
             list
                 meta_I_ver (dic): Metadata of .json file
                 start_time (str): Start time of the simulation
@@ -149,7 +149,7 @@ class DERsJSON:
     """
 
     def __init__(self, days, pre_file, pos_file, GLD):
-        """Initializes the class
+        """ Initializes the class
         """
         self.startDAY = int(days[0])
         self.endDAY = int(days[1])
@@ -164,9 +164,9 @@ class DERsJSON:
             self.DER_1h = self.get_DER_data(NaMe='_TE_Base_s1_3600_')
 
     def get_DER_data(self, NaMe=''):
-        """Read a defined number of days
+        """ Read a defined number of days
     
-        Return:
+        Returns:
             list
                 meta_I_ver (dic): Metadata of .json file
                 start_time (str): Start time of the simulation
@@ -303,13 +303,13 @@ class DERsJSON:
 
 ########################################################## Function
 def get_first_h(data_s):
-    """Gets the first hour of DA prices (DSO and retail)
+    """ Gets the first hour of DA prices (DSO and retail)
 
     Args:
         t (int): selects the number of DA run
         data_s (list of list 48 float): clear DA prices
 
-    Return:
+    Returns:
         max_delta (int): worse hour in t
     """
     price = list()
@@ -322,14 +322,14 @@ def get_first_h(data_s):
 
 
 def make_convergency_test(t, data_s, tf=47):
-    """Price convergency development
+    """ Price convergency development
 
     Args:
         t (int): selects the number of DA run
         data_s (list of list 48 float): clear DA prices
         tf (int): selects hour to track the development
 
-    Return:
+    Returns:
         price (list): price convergency development
     """
     index = [tf - y for y in range(tf + 1)]
@@ -346,7 +346,7 @@ def make_convergency_test(t, data_s, tf=47):
 
 ########################################################## Plots
 def Markets(obj_Market, obj_Color):
-    """Plot DSO and Retail markets
+    """ Plot DSO and Retail markets
     
     Args:
         obj_Market (obj): contain market info
@@ -388,7 +388,7 @@ def Markets(obj_Market, obj_Color):
 
 
 def DSOplots(obj_Market, obj_Color):
-    """Plot DSO market
+    """ Plot DSO market
     
     Args:
         obj_Market (obj): contain market info
@@ -418,7 +418,7 @@ def DSOplots(obj_Market, obj_Color):
 
 
 def RETplots(obj_Market, obj_Color):
-    """Plot Retail market
+    """ Plot Retail market
     
     Args:
         obj_Market (obj): contain market info
@@ -448,7 +448,7 @@ def RETplots(obj_Market, obj_Color):
 
 
 def Inverter(obj_Market, obj_DER_PYT_battery, obj_DER_GLD_inverter, obj_Color):
-    """Inverter plots
+    """ Inverter plots
     
     Args:
         obj_Market (obj): contain market info
@@ -589,7 +589,7 @@ def Inverter(obj_Market, obj_DER_PYT_battery, obj_DER_GLD_inverter, obj_Color):
 
 
 def Water_Heater(obj_Market, obj_DER_PYT_water, obj_DER_GLD_house, obj_Color):
-    """Water heater plots
+    """ Water heater plots
     
     Args:
         obj_Market (obj): contain market info
@@ -693,7 +693,7 @@ def Water_Heater(obj_Market, obj_DER_PYT_water, obj_DER_GLD_house, obj_Color):
 
 
 def HVAC(obj_Market, obj_DER_PYT_hvac, obj_DER_GLD_house, obj_Color):
-    """HVAC plots
+    """ HVAC plots
     
     Args:
         obj_Market (obj): contain market info

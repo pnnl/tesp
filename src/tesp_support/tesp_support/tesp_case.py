@@ -22,8 +22,8 @@ from tesp_support.weather.TMYtoEPW import convert_tmy2_to_epw
 from .api.data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
 from .resdential_feeder_glm import populate_feeder
 from .glm_dictionary import glm_dict
-from .helpers import HelicsMsg
-from .make_ems import merge_idf
+from tesp_support.api.helpers import HelicsMsg
+from tesp_support.api.make_ems import merge_idf
 from .prep_substation import prep_substation
 
 if sys.platform == 'win32':
@@ -33,7 +33,7 @@ else:
 
 
 def write_tesp_case(config, cfgfile, freshdir=True):
-    """Writes the TESP case from data structure to JSON file
+    """ Writes the TESP case from data structure to JSON file
 
     This function assumes one GridLAB-D, one EnergyPlus, one PYPOWER
     and one substation_loop federate will participate in the TESP simulation.
@@ -535,7 +535,7 @@ values:
     # FNCS shell scripts and chmod for Mac/Linux - need to specify python3
     try:
         aucline = "import tesp_support.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "')"
-        ppline = "import tesp_support.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('" + PPJsonFile + "','" + casename + "')"
+        ppline = "import tesp_support.api.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('" + PPJsonFile + "','" + casename + "')"
         weatherline = "import tesp_support.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')"
 
         shfile = casedir + '/run.sh'
@@ -618,7 +618,7 @@ values:
         SubstationConfigFile = casename + '_substation.json'
         WeatherConfigFile = casename + '_weather.json'
         aucline = "import tesp_support.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "',helicsConfig='" + SubstationConfigFile + "')"
-        ppline = "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('" + PPJsonFile + "','" + casename + "',helicsConfig='" + PypowerConfigFile + "')"
+        ppline = "import tesp_support.api.tso_PYPOWER as tesp;tesp.tso_pypower_loop('" + PPJsonFile + "','" + casename + "',helicsConfig='" + PypowerConfigFile + "')"
 
         shfile = casedir + '/runh.sh'
         op = open(shfile, 'w')
@@ -672,7 +672,7 @@ values:
 
 
 def make_tesp_case(cfgfile='test.json'):
-    """Wrapper function for a single TESP case configuration.
+    """ Wrapper function for a single TESP case configuration.
 
     This function opens the JSON file, and calls *write_tesp_case*
 
@@ -685,7 +685,7 @@ def make_tesp_case(cfgfile='test.json'):
 
 
 def modify_mc_config(config, mcvar, band, sample):
-    """Helper function that modifies the Monte Carlo configuration for a specific sample, i.e., shot
+    """ Helper function that modifies the Monte Carlo configuration for a specific sample, i.e., shot
 
     For variables that have a band associated, the agent preparation code will apply
     additional randomization. This applies to thermostat ramps, offset limits, and
@@ -710,7 +710,7 @@ def modify_mc_config(config, mcvar, band, sample):
 
 
 def make_monte_carlo_cases(cfgfile='test.json'):
-    """Writes up to 20 TESP simulation case setups to a directory for Monte Carlo simulations
+    """ Writes up to 20 TESP simulation case setups to a directory for Monte Carlo simulations
 
     Latin hypercube sampling is recommended; sample values may be specified via *tesp_config*
 
@@ -748,7 +748,7 @@ def make_monte_carlo_cases(cfgfile='test.json'):
 
 
 def add_tesp_feeder(cfgfile):
-    """Wrapper function to start a single TESP case configuration.
+    """ Wrapper function to start a single TESP case configuration.
 
     This function opens the JSON file, and calls *write_tesp_case* for just the
     GridLAB-D files. The subdirectory *targetdir* doesn't have to match the 

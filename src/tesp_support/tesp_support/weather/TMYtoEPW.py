@@ -17,7 +17,7 @@ import numpy as np
 
 
 def removeZero(x):
-    """Helper function to strip leading '0' from a string
+    """ Helper function to strip leading '0' from a string
     """
     if x[0] == '0':
         x = x[1:]
@@ -102,7 +102,7 @@ abbreviations = [
 
 
 def convert_tmy2_to_epw(in_file_root, out_file_root=None):
-    """Converts TMY2 to EPW
+    """ Converts TMY2 to EPW
 
     Reads in_file_root.tmy2 and writes in_file_root.epw
 
@@ -282,7 +282,7 @@ def convert_tmy2_to_epw(in_file_root, out_file_root=None):
 
 
 def convert_tmy3_to_epw(in_file_root, out_file_root=None):
-    """Converts TMY3 to EPW
+    """ Converts TMY3 to EPW
 
     Reads in_file_root.tmy3 and writes out_file_root.epw
 

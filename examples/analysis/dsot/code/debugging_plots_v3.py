@@ -38,14 +38,14 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 # ####################################################end conf plot
 
 def get_metrics_full_multiple_KEY_Mdays_H(file_name, pre_file, pos_file):
-    """Reads .json files with multiple Keys
+    """ Reads .json files with multiple Keys
 
     Args:
         file_name (str): name of json file to be read
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
 
-    Return:
+    Returns:
         meta_I_ver (dict): with Key of the variable containing the index and units
         start_time (str): start time of simulation
         all_homes_I_ver (list of DataFrame): min, mean, max, and the sum of the variables of all the Keys (i.e., "agent")
@@ -156,14 +156,14 @@ def get_metrics_full_multiple_KEY_Mdays_H(file_name, pre_file, pos_file):
 
 
 def get_metrics_full_multiple_KEY_Mdays(file_name, pre_file, pos_file):
-    """Reads .json files with multiple Keys
+    """ Reads .json files with multiple Keys
 
     Args:
         file_name (str): name of json file to be read
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
 
-    Return:
+    Returns:
         meta_I_ver (dict): with Key of the variable containing the index and units
         start_time (str): start time of simulation
         all_homes_I_ver (list of DataFrame): min, mean, max, and the sum of the variables of all the Keys (i.e., "agent")
@@ -271,14 +271,14 @@ def get_metrics_full_multiple_KEY_Mdays(file_name, pre_file, pos_file):
 
 
 def get_metrics_full_multiple_KEY_Mdays_wh(file_name, pre_file, pos_file):
-    """Reads .json files with multiple Keys
+    """ Reads .json files with multiple Keys
 
     Args:
         file_name (str): name of json file to be read
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
 
-    Return:
+    Returns:
         meta_I_ver (dict): with Key of the variable containing the index and units
         start_time (str): start time of simulation
         all_homes_I_ver (list of DataFrame): min, mean, max, and the sum of the variables of all the Keys (i.e., "agent")
@@ -384,14 +384,14 @@ def get_metrics_full_multiple_KEY_Mdays_wh(file_name, pre_file, pos_file):
 
 
 def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
-    """Reads .json files with multiple Keys
+    """ Reads .json files with multiple Keys
 
     Args:
         file_name (str): name of json file to be read
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
 
-    Return:
+    Returns:
         meta_I_ver (dict): with Key of the variable containing the index and units
         start_time (str): start time of simulation
         all_homes_I_ver (list of DataFrame): min, mean, max, and the sum of the variables of all the Keys (i.e., "agent")
@@ -484,14 +484,14 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
 
 
 def make_convergency_test(t, data_s, tf=47):
-    """Price convergency development
+    """ Price convergency development
 
     Args:
         t (int): selects the number of DA run
         data_s (list of list 48 float): clear DA prices
         tf (int): selects hour to track the development
 
-    Return:
+    Returns:
         price (list): price convergency development
     """
     index = [tf - y for y in range(tf + 1)]
@@ -509,13 +509,13 @@ def make_convergency_test(t, data_s, tf=47):
 
 
 def get_first_h(data_s):
-    """Gets the first hour of DA prices (DSO and retail)
+    """ Gets the first hour of DA prices (DSO and retail)
 
     Args:
         t (int): selects the number of DA run
         data_s (list of list 48 float): clear DA prices
 
-    Return:
+    Returns:
         max_delta (int): worse hour in t
     """
     price = list()
@@ -528,7 +528,7 @@ def get_first_h(data_s):
 
 
 def get_data_multiple_days(V_analis, days, pre_file, pos_file):
-    """Read a defined number of days
+    """ Read a defined number of days
 
     Args:
         V_analis (str): a portion of the file name
@@ -536,7 +536,7 @@ def get_data_multiple_days(V_analis, days, pre_file, pos_file):
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
 
-    Return:
+    Returns:
         meta_I_ver (dic): Metadata of .json file
         start_time (str): Start time of the simulation
         Order (list of Metadata): list of matadata in proper time order
@@ -579,7 +579,7 @@ def get_data_multiple_days(V_analis, days, pre_file, pos_file):
 
 
 def get_data_multiple_days_10AM(V_analis, days, pre_file, pos_file):
-    """Read a defined number of days
+    """ Read a defined number of days
 
     Args:
         V_analis (str): a portion of the file name
@@ -587,7 +587,7 @@ def get_data_multiple_days_10AM(V_analis, days, pre_file, pos_file):
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
 
-    Return:
+    Returns:
         meta_I_ver (dic): Metadata of .json file
         start_time (str): Start time of the simulation
         Order (list of Metadata): list of matadata in proper time order
@@ -630,7 +630,7 @@ def get_data_multiple_days_10AM(V_analis, days, pre_file, pos_file):
 
 
 def get_data_dso_bids_da(V_analis, days, pre_file, pos_file):
-    """Read a defined number of days
+    """ Read a defined number of days
 
     Args:
         V_analis (str): a portion of the file name
@@ -638,7 +638,7 @@ def get_data_dso_bids_da(V_analis, days, pre_file, pos_file):
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
 
-    Return:
+    Returns:
         meta_I_ver (dic): Metadata of .json file
         start_time (str): Start time of the simulation
         Order (list of Metadata): list of matadata in proper time order
@@ -681,14 +681,14 @@ def get_data_dso_bids_da(V_analis, days, pre_file, pos_file):
 
 
 def get_substation_data(file_name, pre_file, pos_file, to_hour=True):
-    """Reads .json files with multiple Keys
+    """ Reads .json files with multiple Keys
 
     Args:
         file_name (str): name of json file to be read
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
 
-    Return:
+    Returns:
         meta_I_ver (dict): with Key of the variable containing the index and units
         start_time (str): start time of simulation
         all_homes_I_ver (list of DataFrame): min, mean, max, and the sum of the variables of all the Keys (i.e., "agent")

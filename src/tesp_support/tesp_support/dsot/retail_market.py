@@ -91,7 +91,7 @@ class RetailMarket:
     """
 
     def __init__(self, retail_dict, key):
-        """Initializes the class
+        """ Initializes the class
         """
         self.name = key
         self.basecase = retail_dict['basecase']
@@ -162,7 +162,7 @@ class RetailMarket:
         # self.AMES_DA_agent_prices = None
 
     def clean_bids_RT(self):
-        """Initialize the real-time market  
+        """ Initialize the real-time market
         """
         self.clear_type_RT = None
         self.cleared_price_RT = None
@@ -178,7 +178,7 @@ class RetailMarket:
         self.curve_seller_RT = Curve(self.price_cap, self.num_samples)
 
     def clean_bids_DA(self):
-        """Initialize the day-ahead market
+        """ Initialize the day-ahead market
         """
         self.clear_type_DA = []
         self.cleared_price_DA = []
@@ -195,7 +195,7 @@ class RetailMarket:
             self.curve_seller_DA[i] = Curve(self.price_cap, self.num_samples)
 
     def curve_aggregator_RT(self, identity, bid_RT, name):
-        """Function used to collect the RT bid and update the accumulated buyer or seller curve 
+        """ Function used to collect the RT bid and update the accumulated buyer or seller curve 
         
         Args:
             identity (str): identifies whether the bid is collected from a "Buyer" or "Seller"
@@ -209,7 +209,7 @@ class RetailMarket:
             self.curve_seller_RT.curve_aggregator(identity, bid_RT)
 
     def curve_aggregator_DA(self, identity, bid_DA, name):
-        """Function used to collect the DA bid and update the accumulated buyer or seller curve  
+        """ Function used to collect the DA bid and update the accumulated buyer or seller curve  
         
         Args:
             identity (str): identifies whether the bid is collected from a "Buyer" or "Seller"
@@ -225,7 +225,7 @@ class RetailMarket:
                 self.curve_seller_DA[i].curve_aggregator(identity, bid_DA[i])
 
     def clear_market(self, curve_buyer, curve_seller, transformer_degradation, Q_max):
-        """Shared function called by both clear_market_RT and clear_market_DA functions 
+        """ Shared function called by both clear_market_RT and clear_market_DA functions
         to find the intersection between supply curve and demand curve
         
         Args:
@@ -385,7 +385,7 @@ class RetailMarket:
             return clear_type, cleared_price, cleared_quantity, congestion_surcharge
 
     def clear_market_RT(self, transformer_degradation, Q_max):
-        """Function used for clearing the RT market
+        """ Function used for clearing the RT market
         
         Three steps of work are fullfilled in this function: First the buyer curve is fitted polynomial;
         Second clear_market function is called for calculating the cleared price and cleared quantity for the whole market; 
@@ -398,7 +398,7 @@ class RetailMarket:
             self.clear_market(self.curve_buyer_RT, self.curve_seller_RT, transformer_degradation, Q_max)
 
     def clear_market_DA(self, transformer_degradation, Q_max):
-        """Function used for clearing the DA market
+        """ Function used for clearing the DA market
         
         Three steps of work are fullfilled in a loop in this function: First the buyer curve at each hour is fitted polynomial;
         Second clear_market function is called for calculating the cleared price and cleared quantity for the whole market at each hour; 
@@ -503,7 +503,7 @@ class RetailMarket:
             substation_demand_curve (Curve): substation demand curve to be preprocessed
             Q_max (float): maximum capacity of the substation, in kW
             
-        Return:
+        Returns:
             preprocessed_curve (curve): preprocessed demand curve
         
         """
@@ -531,7 +531,7 @@ class RetailMarket:
         Args:
             Pr (float): retail price, in $/kWh
                 
-        Return: 
+        Returns:
             Pw (float): wholesale price, in $/kWh
         """
         Pw = deepcopy(Pr / 1.25)
@@ -545,7 +545,7 @@ class RetailMarket:
             price_forecast: locally forecast price at the substation level
             Q_cleared: locally cleared quantity at the substation
             c_type (str): 'DA' for day-ahead and 'RT' for real-time
-        Return:
+        Returns:
             quadratic_bid (list): f(Q)=resp_c2*Q^2+C1*Q+C0
                 unresp_mw (float): minimum demand MW
                 resp_max_mw (float): maximum demand MW
@@ -619,7 +619,7 @@ class RetailMarket:
     #         price_cleared (float): Price cleared in $/kWh at the instance (if we are going to bid directly in ISO, then this is LMP forecast, or else, it is retail price forecast
     #         industrial_load (float): The most updated (closer to real-time) industrial load in kW at that instant
     #
-    #     Return:
+    #     Returns:
     #         bid_rt (1,2)X4): 4 point industrial load bid
     #     """
     #
@@ -651,7 +651,7 @@ class RetailMarket:
     #         price_forecast: forecasted price in $/kWh at the instance (if we are going to bid directly in ISO, then this is LMP forecast, or else, it is retail price forecast
     #         industrial_load_forecast: forecast quantity of industrial load in kW at that instant
     #
-    #     Return:
+    #     Returns:
     #         bid_da (float) (1 x windowLength): Bid quantity from optimization for all hours of the window specified by windowLength
     #     """
     #     TIME = range(0, self.windowLength)
@@ -684,7 +684,7 @@ class RetailMarket:
     #     return self.industrial_bid_da
     #
     def process_site_da_quantities(self, forecast_load, name, status):
-        """Function stores the day-ahead quantities, primarily for HVAC at the moment, it utilizes
+        """ Function stores the day-ahead quantities, primarily for HVAC at the moment, it utilizes
 
         arguments in:
         unresponsive loads (1x 48) dataframe

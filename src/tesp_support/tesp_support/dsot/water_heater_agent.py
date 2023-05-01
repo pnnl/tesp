@@ -22,10 +22,10 @@ import math
 import numpy as np
 from copy import deepcopy
 import pyomo.environ as pyo
-import pyomo.opt as opt
 import logging as log
 
-from tesp_support.helpers import parse_number, get_run_solver
+from tesp_support.api.helpers import get_run_solver
+from tesp_support.api.parse_helpers import parse_number
 
 logger = log.getLogger()
 log.getLogger('pyomo.core').setLevel(log.ERROR)
@@ -111,7 +111,7 @@ class WaterHeaterDSOT:
     """
 
     def __init__(self, wh_dict, wh_properties, key, model_diag_level, sim_time, solver):
-        """Initializes the class
+        """ Initializes the class
         """
         self.name = key
         self.solver = solver
@@ -551,9 +551,10 @@ class WaterHeaterDSOT:
         return self.bid_da
 
     def get_uncntrl_wh_load(self):
-        """
-        This simulates the waterheater model without
-        :return: 48-hours forecast of non transactive waterheater kw consumption without optimization (agent participation)
+        """ This simulates the waterheater model without
+
+        Returns:
+            list: 48-hours forecast of non transactive waterheater kw consumption without optimization (agent participation)
         """
         self.delta_SOHC_model_hour()
         Q = []
@@ -684,7 +685,7 @@ class WaterHeaterDSOT:
         return Quantity
 
     def delta_SOHC_model_hour(self):
-        """Function used to fit the hourly delta_SOHC estimation model, where hourly delta_SOHC is assumed to be a function of wd_rate E_upper and E_bottom values with one-hour interval
+        """ Function used to fit the hourly delta_SOHC estimation model, where hourly delta_SOHC is assumed to be a function of wd_rate E_upper and E_bottom values with one-hour interval
 
         """
         # his_SOHC_hour = np.mean(np.array(self.his_SOHC).reshape(-1, self.hourto5min), axis=1).tolist()
@@ -711,7 +712,7 @@ class WaterHeaterDSOT:
         # print(self.co2_hour, "Co2h")
 
     def delta_SOHC_model_5min(self):
-        """Function used to fit the 5min delta_SOHC estimation model, where 5min delta_SOHC is assumed to be a function of wd_rate E_upper and E_bottom values with 5min interval
+        """ Function used to fit the 5min delta_SOHC estimation model, where 5min delta_SOHC is assumed to be a function of wd_rate E_upper and E_bottom values with 5min interval
 
         """
 

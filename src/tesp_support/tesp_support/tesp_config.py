@@ -232,7 +232,7 @@ varsTS = [['Weekday Wakeup Start Lo', 5.0, 'hour of day', 'ThermostatSchedule', 
 
 
 class TespConfigGUI:
-    """Manages a seven-page GUI for case configuration
+    """ Manages a seven-page GUI for case configuration
 
     The GUI opens and saves a JSON file in the format used by *tesp.tesp_config*
 
@@ -314,7 +314,7 @@ class TespConfigGUI:
         self.nb.add(self.f7, text='Sampling', underline=0, padding=2)
 
     def AttachFrame(self, tag, vars):
-        """Creates a GUI page and loads it with data
+        """ Creates a GUI page and loads it with data
 
         Label, Combobox and Entry (i.e. edit) controls are automatically created for each row of data
 
@@ -349,7 +349,7 @@ class TespConfigGUI:
         return f
 
     def ReloadFrame(self, f, vars):
-        """Helper function to recreate the GUI page controls and load them with values
+        """ Helper function to recreate the GUI page controls and load them with values
 
         Args:
           f (Frame): the GUI page to reload
@@ -361,7 +361,7 @@ class TespConfigGUI:
             ent.insert(0, vars[i][1])
 
     def mcSample(self, var):
-        """Return an appropriate random value for each Monte Carlo variable choice
+        """ Return an appropriate random value for each Monte Carlo variable choice
 
         Args:
           var (str): one of ElectricCoolingParticipation, ThermostatRampMid, ThermostatOffsetLimitMid, WeekdayEveningStartMid or WeekdayEveningSetMid
@@ -380,7 +380,7 @@ class TespConfigGUI:
             return '{:.3f}'.format(np.random.uniform(0, 1))
 
     def mcBand(self, var):
-        """Find the band size corresponding to each Monte Carlo variable choice
+        """ Find the band size corresponding to each Monte Carlo variable choice
 
         Args:
           var (str): one of ElectricCoolingParticipation, ThermostatRampMid, ThermostatOffsetLimitMid, WeekdayEveningStartMid or WeekdayEveningSetMid
@@ -399,7 +399,7 @@ class TespConfigGUI:
             return 0.0
 
     def SizeMonteCarlo(self, n):
-        """Initializes the Monte Carlo data structures with variable choices and samples
+        """ Initializes the Monte Carlo data structures with variable choices and samples
 
         Args:
           n (int): the number of Monte Carlo shots
@@ -420,7 +420,7 @@ class TespConfigGUI:
             config['MonteCarloCase']['Samples3'][i] = self.mcSample(var3)
 
     def InitializeMonteCarlo(self, n):
-        """Makes default variable choices and then initializes the Monte Carlo GUI page
+        """ Makes default variable choices and then initializes the Monte Carlo GUI page
 
         Args:
           n (int): the number of Monte Carlo shots
@@ -432,7 +432,7 @@ class TespConfigGUI:
 
     # row 0 for dropdowns, 1 for update controls, 2 for column headers, 3 for range edits
     def SizeMonteCarloFrame(self, f):
-        """Update the Monte Carlo page to match the number of shots and variables
+        """ Update the Monte Carlo page to match the number of shots and variables
 
         Args:
           f (Frame): the Monte Carlo GUI page
@@ -506,7 +506,7 @@ class TespConfigGUI:
             w3.grid(row=i + 2 + startRow, column=3, sticky=tk.NSEW)
 
     def ReadFrame(self, f, vars):
-        """Helper function that reads values from gridded GUI controls into the local case configuration
+        """ Helper function that reads values from gridded GUI controls into the local case configuration
 
         Args:
           f (Frame): the GUI page to read
@@ -539,7 +539,7 @@ class TespConfigGUI:
         ctl.insert(0, val)
 
     def ReadLatLong(self):
-        """Updates the Latitude and Longitude from TMY3 file
+        """ Updates the Latitude and Longitude from TMY3 file
         """
         weatherpath = self.path_ent.get()
         weatherfile = self.tmy3_ent.get()
@@ -564,7 +564,7 @@ class TespConfigGUI:
             print(fname, 'not found')
 
     def SaveConfig(self):
-        """Updates the local case configuration from the GUI, queries user for a file name, and then saves case configuration to that file
+        """ Updates the local case configuration from the GUI, queries user for a file name, and then saves case configuration to that file
         """
         self.ReadFrame(self.f1, varsTM)
         self.ReadFrame(self.f2, varsFD)
@@ -622,7 +622,7 @@ class TespConfigGUI:
             op.close()
 
     def JsonToSection(self, jsn, vars):
-        """Helper function that transfers a JSON file segment into GUI data structures
+        """ Helper function that transfers a JSON file segment into GUI data structures
 
         Args:
           jsn (dict): the loaded JSON file
@@ -635,7 +635,7 @@ class TespConfigGUI:
             config[section][attribute] = jsn[section][attribute]
 
     def OpenConfig(self):
-        """Opens a JSON case configuration; transfers its data to the GUI
+        """ Opens a JSON case configuration; transfers its data to the GUI
         """
         fname = filedialog.askopenfilename(initialdir='~/src/examples/te30',
                                            title='Open JSON Configuration',
@@ -703,7 +703,7 @@ class TespConfigGUI:
 
 
 def show_tesp_config():
-    """Runs the GUI. Reads and writes JSON case configuration files.
+    """ Runs the GUI. Reads and writes JSON case configuration files.
     """
     root = tk.Tk()
     root.title('Transactive Energy Simulation Platform: Case Configuration')

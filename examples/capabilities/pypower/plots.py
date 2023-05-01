@@ -4,7 +4,7 @@
 
 import sys
 
-import tesp_support.process_pypower as pp
+import tesp_support.api.process_pypower as pp
 
 root = 'ppcase'
 title = None

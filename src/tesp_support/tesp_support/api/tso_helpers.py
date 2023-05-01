@@ -3,12 +3,12 @@
 """ Helpers for PYPOWER, PSST, MOST solutions
 
 Public Functions:
-    print_matrix
-    print_keyed_matrix
-    load_json_case
-    print_mod_load
-    summarize_opf
-    make_dictionary
+    print_matrix,
+    print_keyed_matrix,
+    load_json_case,
+    print_mod_load,
+    summarize_opf,
+    make_dictionary,
     dist_slack
 """
 
@@ -59,7 +59,6 @@ def load_json_case(fname):
 
     Args:
       fname (str): the JSON file to open
-
     Returns:
       dict: the loaded PYPOWER case structure
     """
@@ -136,7 +135,7 @@ def make_dictionary(mpc):
         additions to DSO, and Pnom==>Pmin for generators
 
     Args:
-      mpc (dict): PYPOWER case file structure
+        mpc (dict): PYPOWER case file structure based on matpower
     """
     dsoBuses = {}
     generators = {}

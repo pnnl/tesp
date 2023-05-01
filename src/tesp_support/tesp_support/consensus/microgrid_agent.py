@@ -19,8 +19,8 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from tesp_support.helpers import enable_logging
-from tesp_support.metrics_collector import MetricsStore, MetricsCollector
+from tesp_support.api.helpers import enable_logging
+from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
 
 from tesp_support.dsot.hvac_agent import HVACDSOT
 from tesp_support.dsot.battery_agent import BatteryDSOT
@@ -83,7 +83,7 @@ def worker(arg):
 
 
 def inner_substation_loop(configfile, metrics_root, with_market):
-    """Helper function that initializes and runs the DSOT agents
+    """ Helper function that initializes and runs the DSOT agents
 
     TODO: This needs to be updated
     Reads configfile. Writes *auction_metrics_root_metrics.json* and
@@ -1617,7 +1617,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
 
 def substation_loop(configfile, metrics_root, with_market=True):
-    """Wrapper for *inner_substation_loop*
+    """ Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
     for non-Windows platforms.

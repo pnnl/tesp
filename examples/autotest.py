@@ -8,7 +8,7 @@ import sys
 import shutil
 import subprocess
 
-import tesp_support.tesp_runner as tr
+import tesp_support.api.tesp_runner as tr
 
 if sys.platform == 'win32':
     pycall = 'python'

@@ -2,9 +2,9 @@ import json
 import logging as log
 import os
 
-import tesp_support.fncs as fncs
-import tesp_support.tso_helpers as tso
-from tesp_support.helpers import parse_mva
+import tesp_support.api.fncs as fncs
+import tesp_support.api.tso_helpers as tso
+from tesp_support.api.parse_helpers import parse_mva
 
 
 def dso_make_yaml(casename):

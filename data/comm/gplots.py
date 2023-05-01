@@ -8,7 +8,7 @@ import sys
 
 import matplotlib.pyplot as plt
 
-import tesp_support.process_gld as gp
+import tesp_support.api.process_gld as gp
 
 name_root = sys.argv[1]
 

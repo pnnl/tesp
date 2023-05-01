@@ -10,9 +10,9 @@
 import numpy as np
 import pandas as pd
 
-import tesp_support.process_gld as pg
+import tesp_support.api.process_gld as pg
 import tesp_support.process_agents as pa
-import tesp_support.process_pypower as pp
+import tesp_support.api.process_pypower as pp
 
 
 accounting_table = \

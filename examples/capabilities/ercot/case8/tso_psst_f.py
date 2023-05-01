@@ -11,9 +11,9 @@ from copy import deepcopy
 import psst.cli as pst
 import pandas as pd
 
-import tesp_support.fncs as fncs
-import tesp_support.tso_helpers as tso
-from tesp_support.helpers import parse_mva
+import tesp_support.api.fncs as fncs
+import tesp_support.api.tso_helpers as tso
+from tesp_support.api.parse_helpers import parse_mva
 
 casename = 'ercot_8'
 ames_DAM_case_file = './../DAMReferenceModel.dat'

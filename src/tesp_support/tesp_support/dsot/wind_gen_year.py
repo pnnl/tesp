@@ -18,7 +18,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from .tso_helpers import load_json_case
+from tesp_support.api.tso_helpers import load_json_case
 
 
 def make_wind_plants(ppc):
@@ -95,7 +95,7 @@ def test():
     resolution = 300  # seconds
     # casename = '../../../examples/analysis/dsot/code/system_case_config_new'
     casename = '../../../examples/analysis/dsot/code/system_case_config'
-    output_Path = '../../../examples/analysis/dsot/data/'
+    output_Path = '../../../../examples/analysis/dsot/data/'
 
     ppc = load_json_case(casename + ".json")
     # initialize for variable wind

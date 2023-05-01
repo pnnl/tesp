@@ -5,7 +5,7 @@ import json
 
 import numpy as np
 
-import tesp_support.fncs as fncs
+import tesp_support.api.fncs as fncs
 
 
 def load_player_loop_f(casename, keyName):

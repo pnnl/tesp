@@ -1,5 +1,5 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
-# file: tso_psst.py
+# file: tso_psst_f.py
 
 import os
 import math
@@ -9,11 +9,11 @@ import numpy as np
 import pandas as pd
 import pypower.api as pp
 import psst.cli as pst
-import helics
+import tesp_support.api.fncs as fncs
 from copy import deepcopy
 from datetime import datetime
 
-from .helpers import parse_mva
+from tesp_support.api.parse_helpers import parse_mva
 from .tso_helpers import load_json_case, make_dictionary, dist_slack
 from .metrics_collector import MetricsStore, MetricsCollector
 
@@ -31,23 +31,7 @@ def make_generator_plants(ppc, renewables):
     return plants
 
 
-def tso_psst_loop(casename):
-
-    def getSub(subIndex):
-        try:
-            _sub = cache_sub[subIndex]
-        except:
-            cache_sub[subIndex] = helics.helicsFederateGetInputByIndex(hFed, subIndex)
-            _sub = cache_sub[subIndex]
-        return _sub
-
-    def getPub(pubkey):
-        try:
-            _pub = cache_pub[pubkey]
-        except:
-            cache_pub[pubkey] = helics.helicsFederateGetPublication(hFed, pubkey)
-            _pub = cache_pub[pubkey]
-        return _pub
+def tso_psst_loop_f(casename):
 
     def scucDAM(data):
         c, ZonalDataComplete, priceSenLoadData = pst.read_model(data.strip("'"))
@@ -114,8 +98,7 @@ def tso_psst_loop(casename):
                 exit()
 
         for ii in range(dsoBus.shape[0]):
-            pub = getPub('lmp_da_' + str(ii + 1))
-            helics.helicsPublicationPublishString(pub, json.dumps(DA_LMPs[ii]))
+            fncs.publish('lmp_da_' + str(ii + 1), json.dumps(DA_LMPs[ii]))
             row = DA_LMPs[ii]
             da_lmp_store.append_data(
                 ts,
@@ -186,8 +169,7 @@ def tso_psst_loop(casename):
                     if row[z] is None:
                         row[z] = 0
                     row[z] = (unRespMW[ii][z] + (row[z] / gld_scale * baseS)) * gld_scale
-                pub = getPub('cleared_q_da_' + str(bus_num))
-                helics.helicsPublicationPublishString(pub, json.dumps(row))
+                fncs.publish('cleared_q_da_' + str(bus_num), json.dumps(row))
                 da_q_store.append_data(
                     ts,
                     'da_q{}'.format(str(ii+1)),
@@ -206,8 +188,7 @@ def tso_psst_loop(casename):
                         row.append((respMaxMW[ii][z] + unRespMW[ii][z]) * gld_scale)
                     else:
                         row.append(gld_load[bus_num]['pcrv'])
-                pub = getPub('cleared_q_da_' + str(bus_num))
-                helics.helicsPublicationPublishString(pub, json.dumps(row))
+                fncs.publish('cleared_q_da_' + str(bus_num), json.dumps(row))
                 da_q_store.append_data(
                     ts,
                     'da_q{}'.format(str(bus_num)),
@@ -288,8 +269,7 @@ def tso_psst_loop(casename):
 
         # set the lmps and generator dispatch and publish
         for ii in range(bus.shape[0]):
-            pub = getPub('lmp_rt_' + str(ii + 1))  # publishing $/kwh
-            helics.helicsPublicationPublishString(pub, json.dumps(RT_LMPs[ii]))
+            fncs.publish('lmp_rt_' + str(ii + 1), json.dumps(RT_LMPs[ii]))  # publishing $/kwh
             bus[ii, 13] = RT_LMPs[ii][0]
         for ii in range(numGen):
             # if using gridpiq to gauge environmental emission concerns
@@ -345,8 +325,7 @@ def tso_psst_loop(casename):
                     if row[z] is None:
                         row[z] = 0
                     row[z] = (ld + (row[z] / gld_scale * baseS)) * gld_scale
-                pub = getPub('cleared_q_rt_' + str(bus_num))
-                helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
+                fncs.publish('cleared_q_rt_' + str(bus_num), json.dumps(row[0]))
                 # log.debug('Bus ' + str(ii+1) + ' cleared - [fixed, flex] ' + '[' + str(gld_load[ii+1]['unresp']) + ', ' + str(row[0] - gld_load[ii+1]['unresp']) + ']')
                 rt_q_store.append_data(
                     ts,
@@ -367,9 +346,8 @@ def tso_psst_loop(casename):
 
                 row = []
                 for z in range(TAU):
-                   row.append(ld)
-                pub = getPub('cleared_q_rt_' + str(bus_num))
-                helics.helicsPublicationPublishString(pub, json.dumps(row[0]))
+                    row.append(ld)
+                fncs.publish('cleared_q_rt_' + str(bus_num), json.dumps(row[0]))
                 rt_q_store.append_data(
                     ts,
                     'rt_q{}'.format(str(bus_num)),
@@ -1296,18 +1274,7 @@ def tso_psst_loop(casename):
     finally:
         log.info('Finished initializing the program')
 
-    cache_sub = {}
-    cache_pub = {}
-    log.info("Initialize HELICS tso federate")
-    hFed = helics.helicsCreateValueFederateFromConfig("./tso_h.json")
-    fedName = helics.helicsFederateGetName(hFed)
-    subCount = helics.helicsFederateGetInputCount(hFed)
-    pubCount = helics.helicsFederateGetPublicationCount(hFed)
-    log.info('Federate name: ' + fedName)
-    log.info('Subscription count: ' + str(subCount))
-    log.info('Publications count: ' + str(pubCount))
-    log.info('Starting HELICS tso federate')
-    helics.helicsFederateEnterExecutingMode(hFed)
+    fncs.initialize()
 
     # Set column header for output files
     line = "seconds, OPFconverged, TotalLoad, TotalGen, SwingGen"
@@ -1354,83 +1321,78 @@ def tso_psst_loop(casename):
     new_event = False
     while ts <= tmax:
         # start by getting the latest inputs from GridLAB-D and the auction
-        # see another example for helics integration at tso_PYPOWER.py
-        for t in range(subCount):
-            sub = getSub(t)
-            key = helics.helicsSubscriptionGetTarget(sub)
-            log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
-            topic = key.upper().split('/')[1]
-            if helics.helicsInputIsUpdated(sub):
-                new_event = True
-                val = helics.helicsInputGetString(sub)
+        events = fncs.get_events()
+        for topic in events:
+            new_event = True
+            val = fncs.get_value(topic)
+            log.debug("at " + str(ts) + " " + topic + " " + val)
+        # running from load_player - wind/solar generator
+            if 'GEN_POWER_' in topic or 'ALT_POWER_' in topic:
+                if ppc['genPower']:
+                    gen_id = int(topic[10:])
+                    p = float(val)
+                    for i in range(numGen):
+                        if genFuel[i][2] == gen_id:
+                            if gen[i, 8] < p:
+                                gen[i, 8] = p
+                            if gen[i, 9] > p:
+                                gen[i, 9] = p
+                            gen[i, 1] = p
                 log.debug("at " + str(ts) + " " + topic + " " + val)
-            # running from load_player - wind/solar generator
-                if 'GEN_POWER_' in topic or 'ALT_POWER_' in topic:
-                    if ppc['genPower']:
-                        gen_id = int(topic[10:])
-                        p = float(val)
-                        for i in range(numGen):
-                            if genFuel[i][2] == gen_id:
-                                if gen[i, 8] < p:
-                                    gen[i, 8] = p
-                                if gen[i, 9] > p:
-                                    gen[i, 9] = p
-                                gen[i, 1] = p
-                    log.debug("at " + str(ts) + " " + topic + " " + val)
-                elif 'GEN_PWR_HIST_' in topic or 'ALT_PWR_HIST_' in topic:
-                    if ppc['genPower']:
-                        gen_id = topic[13:]
-                        generator_plants[gen_id][2] = json.loads(val)
-                    log.debug("at " + str(ts) + " " + topic + " " + val)
-            # getting the latest inputs from DSO day ahead and real time
-                elif 'DA_BID_' in topic:
-                    dso_bid = True
-                    busnum = int(topic[7:]) - 1
-                    da_bid = json.loads(val)
-                    # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[hours_in_a_day]
-                    last_unRespMW[busnum] = deepcopy(unRespMW[busnum])
-                    last_respMaxMW[busnum] = deepcopy(respMaxMW[busnum])
-                    unRespMW[busnum] = da_bid['unresp_mw']     # fix load
-                    respMaxMW[busnum] = da_bid['resp_max_mw']  # slmax
-                    respC2[busnum] = da_bid['resp_c2']
-                    respC1[busnum] = da_bid['resp_c1']
-                    respC0[busnum] = da_bid['resp_c0']
-                    resp_deg[busnum] = da_bid['resp_deg']
-                    log.debug("at " + str(ts) + " " + topic + " " + str(da_bid))
-                elif 'RT_BID_' in topic:
-                    dso_bid = True
-                    busnum = int(topic[7:])
-                    rt_bid = json.loads(val)
-                    # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg;
-                    gld_load[busnum]['unresp'] = rt_bid['unresp_mw']      # fix load
-                    gld_load[busnum]['resp_max'] = rt_bid['resp_max_mw']  # slmax
-                    gld_load[busnum]['c2'] = rt_bid['resp_c2']
-                    gld_load[busnum]['c1'] = rt_bid['resp_c1']
-                    gld_load[busnum]['c0'] = rt_bid['resp_c0']
-                    gld_load[busnum]['deg'] = rt_bid['resp_deg']
-                    log.debug("at " + str(ts) + " " + topic + " " + str(rt_bid))
-            # running from load_player - taped bus load
-                elif 'GLD_LOAD_' in topic:
-                    busnum = int(topic[9:])
-                    p, q = parse_mva(val)
-                    gld_load[busnum]['p'] = p     # MW
-                    gld_load[busnum]['q'] = q     # MW
-                    log.debug("at " + str(ts) + " " + topic + " " + val)
-                elif 'GLD_LD_HIST_' in topic:
-                    busnum = int(topic[12:])
-                    gld_load_hist[busnum] = json.loads(val)
-                    log.debug("at " + str(ts) + " " + topic + " " + val)
-            # running from load_player - taped ref bus load
-                elif 'REF_LOAD_' in topic:
-                    busnum = int(topic[9:])
-                    p, q = parse_mva(val)
-                    gld_load[busnum]['p_r'] = p  # MW
-                    gld_load[busnum]['q_r'] = q  # MW
-                    log.debug("at " + str(ts) + " " + topic + " " + val)
-                elif 'REF_LD_HIST_' in topic:
-                    busnum = int(topic[12:])
-                    ref_load_hist[busnum] = json.loads(val)
-                    log.debug("at " + str(ts) + " " + topic + " " + val)
+            elif 'GEN_PWR_HIST_' in topic or 'ALT_PWR_HIST_' in topic:
+                if ppc['genPower']:
+                    gen_id = topic[13:]
+                    generator_plants[gen_id][2] = json.loads(val)
+                log.debug("at " + str(ts) + " " + topic + " " + val)
+        # getting the latest inputs from DSO day ahead and real time
+            elif 'DA_BID_' in topic:
+                dso_bid = True
+                busnum = int(topic[7:]) - 1
+                da_bid = json.loads(val)
+                # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg; each array[hours_in_a_day]
+                last_unRespMW[busnum] = deepcopy(unRespMW[busnum])
+                last_respMaxMW[busnum] = deepcopy(respMaxMW[busnum])
+                unRespMW[busnum] = da_bid['unresp_mw']     # fix load
+                respMaxMW[busnum] = da_bid['resp_max_mw']  # slmax
+                respC2[busnum] = da_bid['resp_c2']
+                respC1[busnum] = da_bid['resp_c1']
+                respC0[busnum] = da_bid['resp_c0']
+                resp_deg[busnum] = da_bid['resp_deg']
+                log.debug("at " + str(ts) + " " + topic + " " + str(da_bid))
+            elif 'RT_BID_' in topic:
+                dso_bid = True
+                busnum = int(topic[7:])
+                rt_bid = json.loads(val)
+                # keys unresp_mw, resp_max_mw, resp_c2, resp_c1, resp_deg;
+                gld_load[busnum]['unresp'] = rt_bid['unresp_mw']      # fix load
+                gld_load[busnum]['resp_max'] = rt_bid['resp_max_mw']  # slmax
+                gld_load[busnum]['c2'] = rt_bid['resp_c2']
+                gld_load[busnum]['c1'] = rt_bid['resp_c1']
+                gld_load[busnum]['c0'] = rt_bid['resp_c0']
+                gld_load[busnum]['deg'] = rt_bid['resp_deg']
+                log.debug("at " + str(ts) + " " + topic + " " + str(rt_bid))
+        # running from load_player - taped bus load
+            elif 'GLD_LOAD_' in topic:
+                busnum = int(topic[9:])
+                p, q = parse_mva(val)
+                gld_load[busnum]['p'] = p     # MW
+                gld_load[busnum]['q'] = q     # MW
+                log.debug("at " + str(ts) + " " + topic + " " + val)
+            elif 'GLD_LD_HIST_' in topic:
+                busnum = int(topic[12:])
+                gld_load_hist[busnum] = json.loads(val)
+                log.debug("at " + str(ts) + " " + topic + " " + val)
+        # running from load_player - taped ref bus load
+            elif 'REF_LOAD_' in topic:
+                busnum = int(topic[9:])
+                p, q = parse_mva(val)
+                gld_load[busnum]['p_r'] = p  # MW
+                gld_load[busnum]['q_r'] = q  # MW
+                log.debug("at " + str(ts) + " " + topic + " " + val)
+            elif 'REF_LD_HIST_' in topic:
+                busnum = int(topic[12:])
+                ref_load_hist[busnum] = json.loads(val)
+                log.debug("at " + str(ts) + " " + topic + " " + val)
 
         if new_event:
             log.info("at " + str(ts))
@@ -1733,8 +1695,14 @@ def tso_psst_loop(casename):
             row = rBus[busidx].tolist()
             # publish the bus VLN for GridLAB-D
             bus_vln = 1000.0 * row[7] * row[9] / math.sqrt(3.0)
-            pub = getPub('three_phase_voltage_' + busnum)
-            helics.helicsPublicationPublishDouble(pub, bus_vln)
+            fncs.publish('three_phase_voltage_' + busnum, bus_vln)
+
+            # publish the bus LMP [$/kwh] ?for GridLAB-D
+            # if ames:
+            #     lmp = float(bus[busidx, 13]) * 0.001
+            # else:
+            #     lmp = float(opf_bus[busidx, 13]) * 0.001
+            # fncs.publish('LMP_Bus' + busnum, str(lmp))  # publishing $/kwh
 
             # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
             PD = row[2]  # + resp # TODO, if more than one FNCS bus, track scaled_resp separately
@@ -1830,7 +1798,7 @@ def tso_psst_loop(casename):
         if ts >= tmax:
             log.info('breaking out at ' + str(ts))
             break
-        ts = int(helics.helicsFederateRequestTime(hFed, min(ts + dt, tmax)))
+        ts = fncs.time_request(min(ts + dt, tmax))
 
     # ======================================================
     if piq:
@@ -1842,9 +1810,9 @@ def tso_psst_loop(casename):
     log.info('closing files')
     op.close()
     vp.close()
-    log.info('finalizing HELICS tso federate')
-    helics.helicsFederateDestroy(hFed)
+    log.info('finalizing FNCS tso federate')
+    fncs.finalize()
 
 
 if __name__ == "__main__":
-    tso_psst_loop('./generate_case_config')
+    tso_psst_loop_f('./generate_case_config')

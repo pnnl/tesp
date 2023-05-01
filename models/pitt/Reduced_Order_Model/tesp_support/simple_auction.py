@@ -11,7 +11,7 @@ Todo:
     * Distribute marginal quantities and fractions; these are not currently applied to HVACs
 
 """
-import tesp_support.helpers as helpers
+import tesp_support.api.helpers as helpers
 
 
 # Class definition
@@ -96,7 +96,7 @@ class simple_auction:
         self.unrespSupplierSurplus = 0.0
 
     def set_refload(self, kw):
-        """Sets the refload attribute
+        """ Sets the refload attribute
 
         Args:
             kw (float): GridLAB-D substation load in kw
@@ -104,7 +104,7 @@ class simple_auction:
         self.refload = kw
 
     def set_lmp(self, lmp):
-        """Sets the lmp attribute
+        """ Sets the lmp attribute
 
         Args:
             lmp (float): locational marginal price from the bulk system market
@@ -112,24 +112,24 @@ class simple_auction:
         self.lmp = lmp
 
     def initAuction(self):
-        """Sets the clearing_price and lmp to the mean price
+        """ Sets the clearing_price and lmp to the mean price
         """
         self.clearing_price = self.lmp = self.mean
 
     def update_statistics(self):
-        """Update price history statistics - not implemented
+        """ Update price history statistics - not implemented
         """
         sample_need = 0
 
     def clear_bids(self):
-        """Re-initializes curve_buyer and curve_seller, sets the unresponsive load estimate to the total substation load.
+        """ Re-initializes curve_buyer and curve_seller, sets the unresponsive load estimate to the total substation load.
         """
         self.curve_buyer = helpers.curve()
         self.curve_seller = helpers.curve()
         self.unresp = self.refload
 
     def collect_bid(self, bid):
-        """Gather HVAC bids into curve_buyer
+        """ Gather HVAC bids into curve_buyer
 
         Also adjusts the unresponsive load estimate, by subtracting the HVAC power
         if the HVAC is on.
@@ -161,7 +161,7 @@ class simple_auction:
             self.curve_buyer)
 
     def clear_market(self, tnext_clear=0, time_granted=0):
-        """Solves for the market clearing price and quantity
+        """ Solves for the market clearing price and quantity
 
         Uses the current contents of curve_seller and curve_buyer.
         Updates clearing_price, clearing_quantity, clearing_type,
@@ -406,7 +406,7 @@ class simple_auction:
         #        self.unrespSupplierSurplus, sep=',', flush=True)
 
     def surplusCalculation(self, tnext_clear=0, time_granted=0):
-        """Calculates consumer surplus (and its average) and supplier surplus.
+        """ Calculates consumer surplus (and its average) and supplier surplus.
 
         This function goes through all the bids higher than clearing price from buyers to calculate consumer surplus,
         and also accumulates the quantities that will be cleared while doing so. Of the cleared quantities,

@@ -14,11 +14,10 @@ precooler agent.
 Public Functions:
     :precooler_loop: Initializes and runs the precooler agents.  
 """
-import string
 import sys
 
 try:
-  import tesp_support.fncs as fncs
+  import tesp_support.api.fncs as fncs
 except:
   pass
 import json
@@ -29,7 +28,7 @@ if sys.platform != 'win32':
   import resource
 
 def parse_fncs_magnitude (arg):
-  """Helper function to find the magnitude of a possibly complex number from FNCS
+  """ Helper function to find the magnitude of a possibly complex number from FNCS
 
   Args:
     arg (str): The FNCS value
@@ -186,7 +185,7 @@ class precooler:
     self.make_etp_model()
 
   def set_air_temp (self,str):
-    """Set the air_temp member variable
+    """ Set the air_temp member variable
 
     Args:
         str (str): FNCS message with temperature in degrees Fahrenheit
@@ -202,7 +201,7 @@ class precooler:
     self.mtr_v = parse_fncs_magnitude (str)
 
   def check_setpoint_change (self, hour_of_day, price, time_seconds):
-    """Update the setpoint for time of day and price
+    """ Update the setpoint for time of day and price
 
     Args:
         hour_of_day (float): the current time of day, 0..24
@@ -238,7 +237,7 @@ class precooler:
     return False
 
   def get_temperature_deviation(self):
-    """For metrics, find the difference between air temperature and time-scheduled (preferred) setpoint
+    """ For metrics, find the difference between air temperature and time-scheduled (preferred) setpoint
 
     Returns:
         float: absolute value of deviation
@@ -246,7 +245,7 @@ class precooler:
     return abs (self.air_temp - self.basepoint)
 
 def precool_loop (nhours, metrics_root):
-  """Function that supervises FNCS messages and time stepping for precooler agents
+  """ Function that supervises FNCS messages and time stepping for precooler agents
 
   Opens metrics_root_agent_dict.json and metrics_root_glm_dict.json for configuration.
   Writes precool_metrics_root.json at completion.

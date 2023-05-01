@@ -141,7 +141,7 @@ class GLModel:
         return diction
 
     def instanceToModule(self, i_module):
-        """Adds the comments pulled from the glm file to the new/modified glm file.
+        """ Adds the comments pulled from the glm file to the new/modified glm file.
 
         Args:
             i_module:
@@ -176,7 +176,7 @@ class GLModel:
         return diction
 
     def instanceToObject(self, i_object):
-        """Adds the comments pulled from the glm file to the new/modified glm file.
+        """ Adds the comments pulled from the glm file to the new/modified glm file.
 
         Args:
             i_object:
@@ -318,7 +318,7 @@ class GLModel:
 
     @staticmethod
     def gld_strict_name(val):
-        """Sanitizes a name for GridLAB-D publication to FNCS
+        """ Sanitizes a name for GridLAB-D publication to FNCS
 
         Args:
             val (str): the input name
@@ -345,7 +345,7 @@ class GLModel:
         return region
 
     def is_edge_class(self, s):
-        """Edge class is networkx terminology. In GridLAB-D, we will represent those edges with
+        """ Edge class is networkx terminology. In GridLAB-D, we will represent those edges with
         [switch, fuse, recloser, regulator, transformer, overhead_line,
         underground_line and triplex_line] instances
 
@@ -373,7 +373,7 @@ class GLModel:
         return False
 
     def glm_module(self, mod, line, itr):
-        """Store a clock/module/class in the model structure
+        """ Store a clock/module/class in the model structure
 
         Args:
             mod (str): glm type [date, class, module]
@@ -448,7 +448,7 @@ class GLModel:
         return _type
 
     def glm_object(self, parent, model, line, itr, oidh, counter):
-        """Store an object in the model structure
+        """ Store an object in the model structure
 
         Args:
             parent (str): name of parent object (used for nested object defs)
@@ -568,7 +568,7 @@ class GLModel:
         return line, counter, name
 
     def readModel(self, filename):
-        """Reads and parses the model from filename, usually but not necessarily one of the PNNL taxonomy feeders
+        """ Reads and parses the model from filename, usually but not necessarily one of the PNNL taxonomy feeders
 
         Args:
             filename (str): fully qualified model path/name
@@ -694,7 +694,7 @@ class GLModel:
         return True
 
 
-def test1():
+def _test1():
     from .data import tesp_test
 
     # Test model.py
@@ -717,7 +717,7 @@ def test1():
     op.close()
 
 
-def test2():
+def _test2():
     testMod = GLModel()
     tval = testMod.read(feeders_path + "R1-12.47-1.glm")
     for name in testMod.module_entities:
@@ -728,5 +728,5 @@ def test2():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    test1()
-    test2()
+    _test1()
+    _test2()

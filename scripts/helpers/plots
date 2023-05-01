@@ -5,12 +5,12 @@ import os
 import sys
 
 from tesp_support.process_agents import read_agent_metrics, plot_agents
-from tesp_support.process_eplus import read_eplus_metrics, plot_eplus
-from tesp_support.process_gld import read_gld_metrics, plot_gld
-from tesp_support.process_houses import plot_houses
-from tesp_support.process_inv import read_inv_metrics, plot_inv
-from tesp_support.process_pypower import read_pypower_metrics, plot_pypower
-from tesp_support.process_voltages import plot_voltages
+from tesp_support.api.process_eplus import read_eplus_metrics, plot_eplus
+from tesp_support.api.process_gld import read_gld_metrics, plot_gld
+from tesp_support.api.process_houses import plot_houses
+from tesp_support.api.process_inv import read_inv_metrics, plot_inv
+from tesp_support.api.process_pypower import read_pypower_metrics, plot_pypower
+from tesp_support.api.process_voltages import plot_voltages
 
 
 name_root = sys.argv[1]

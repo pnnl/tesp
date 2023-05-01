@@ -27,7 +27,7 @@ except ImportError:
 
 
 def buildNS3model(topo):
-    """The function builds an ns-3 model based on an FNSS topology.
+    """ The function builds an ns-3 model based on an FNSS topology.
 
     The function is structured as follows:
 

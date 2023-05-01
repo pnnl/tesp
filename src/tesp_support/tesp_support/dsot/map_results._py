@@ -18,7 +18,7 @@ from .plots import load_json, load_ames_data, load_gen_data
 
 def bulk_system_map_plot(dataPath, configPath, shapePath, case_config_path, case_config_name, day_range, hour,
                          contour_index, ercot200, realtime, showplot=False, plotdata=True, dispatchgenonly=True):
-    """Creates a comparison of change in energy consumption and anemities for all customers:
+    """ Creates a comparison of change in energy consumption and anemities for all customers:
         case_data (str): path location for reference case with annual energy and amenity data
         comp_data (str): path location for comparison case with annual energy and amenity data
         case_path (str): path location for reference case with simulation metadata for agents/GLD etc.

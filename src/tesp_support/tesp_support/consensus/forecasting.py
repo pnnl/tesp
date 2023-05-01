@@ -20,7 +20,7 @@ import pandas as pd
 import pytz
 
 
-# from tesp_support.schedule_client import *
+# from tesp_support.api.schedule_client import *
 
 class Forecasting:
     """
@@ -37,7 +37,7 @@ class Forecasting:
 
     # def __init__(self, port):
     def __init__(self):
-        """Initializes the class
+        """ Initializes the class
         TODO: update __init__
         """
         """
@@ -106,7 +106,7 @@ class Forecasting:
 
     @staticmethod
     def initialize_schedule_dataframe(start_time, end_time):
-        """Initialize the data frame for one year
+        """ Initialize the data frame for one year
 
         Args:
             start_time (datetime, str) : time in str format - DD/MM/YYY HH:MT:SS
@@ -131,7 +131,7 @@ class Forecasting:
         return sch_df
 
     def make_dataframe_schedule(self, filename, schedule_name):
-        """Reads .glm files with multiple schedule names and makes dataframe for a year for given schedule name
+        """ Reads .glm files with multiple schedule names and makes dataframe for a year for given schedule name
 
         Args:
             filename (str): name of glm file to be loaded
@@ -326,7 +326,7 @@ class Forecasting:
         self.solar_direct_forecast = [float(solar_direct_forecast[key]) for key in solar_direct_forecast.keys()]
 
     def get_substation_unresponsive_load_forecast(self, peak_load=7500.0):
-        """Get substation unresponsive load forecast
+        """ Get substation unresponsive load forecast
 
         TODO: Update to model that make use of the base case run files
         TODO: Get weather forecast from weather agent
@@ -334,7 +334,7 @@ class Forecasting:
         Args:
             peak_load (float): peak load in kWh
 
-        Return:
+        Returns:
             base_run_load (float x 48): forecast of next 48-hours unresponsive load
         """
         if self.NOerrors:
@@ -462,14 +462,14 @@ class Forecasting:
         return waterdraw_sch
 
     def set_retail_price_forecast(self, DA_SW_prices):
-        """Set substation price forecast
+        """ Set substation price forecast
 
         Nonsummable diminishing.
 
         Args:
             DA_SW_prices (float x 48): cleared price in $/kWh from the last shifting window run
 
-        Return:
+        Returns:
             forecasted_price (float x 48): forecasted prices in $/kWh for the next 48-hours
         """
         temp = deepcopy(DA_SW_prices)
@@ -489,12 +489,12 @@ class Forecasting:
             self.retail_price_forecast = deepcopy(temp)
 
     def get_substation_unresponsive_industrial_load_forecast(self, peak_load=3500.0):
-        """Get substation unresponsive industrial load forecast
+        """ Get substation unresponsive industrial load forecast
 
          Args:
             peak_load (float): peak load in kWh
 
-        Return:
+        Returns:
             base_run_load (float x 48): forecast of next 48-hours unresponsive load
         """
         if self.NOerrors:

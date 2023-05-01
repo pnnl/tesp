@@ -13,7 +13,7 @@ import pandas as pd
 
 
 def weatherdat(psmv3csvfile, bus_str, location_str):
-    """Takes a weather csv file name obtained from NREL PSM v3 and does a conversion.
+    """ Takes a weather csv file name obtained from NREL PSM v3 and does a conversion.
 
     The function reads the file, converts the data to the desired units,
     and outputs dat file with the desired format

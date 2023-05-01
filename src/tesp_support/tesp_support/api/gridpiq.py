@@ -164,7 +164,7 @@ class GridPIQ:
             json.dump(self.toJson(), outfile, indent=2)
 
 
-def test():
+def _test():
     from .data import tesp_test
 
     start_date = "2016-01-03 00:00:00"
@@ -191,4 +191,4 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    _test()

@@ -11,14 +11,14 @@ import math
 
 
 def load_json(dir_path, file_name):
-    """Utility to open Json files."""
+    """ Utility to open Json files."""
     with open(os.path.join(dir_path, file_name)) as json_file:
         data = json.load(json_file)
     return data
 
 
 def get_date(dir_path, dso, day):
-    """Utility to return start time (datetime format) of simulation day (str) in question"""
+    """ Utility to return start time (datetime format) of simulation day (str) in question"""
     # Determine first day of simulation and the date of the day requested
     dso = '1'
     case_config = load_json(dir_path, 'case_config_' + dso + '.json')
@@ -28,7 +28,7 @@ def get_date(dir_path, dso, day):
 
 
 def retail_price_qunatity_rt(data_path, folder_prefix, MG_num, day_num):
-    """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -49,7 +49,7 @@ def retail_price_qunatity_rt(data_path, folder_prefix, MG_num, day_num):
 
 
 def DSO_price_qunatity_rt(data_path, folder_prefix, day_num):
-    """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -70,7 +70,7 @@ def DSO_price_qunatity_rt(data_path, folder_prefix, day_num):
 
 
 def hvac_quantity_price_rt(data_path, folder_prefix, MG_num, day_num):
-    """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -97,7 +97,7 @@ def hvac_quantity_price_rt(data_path, folder_prefix, MG_num, day_num):
 
 
 def water_heater_quantity_price_rt(data_path, folder_prefix, MG_num, day_num):
-    """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live

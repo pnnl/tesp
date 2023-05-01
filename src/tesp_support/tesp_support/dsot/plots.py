@@ -44,7 +44,7 @@ def tic():
 
 
 def load_json(dir_path, file_name):
-    """Utility to open Json files."""
+    """ Utility to open Json files."""
     name = os.path.join(dir_path, file_name)
     try:
         cache = cache_output[name]
@@ -56,7 +56,7 @@ def load_json(dir_path, file_name):
 
 
 def get_date(dir_path, dso, day):
-    """Utility to return start time (datetime format) of simulation day (str) in question"""
+    """ Utility to return start time (datetime format) of simulation day (str) in question"""
     # Determine first day of simulation and the date of the day requested
     case_config = load_json(dir_path, 'case_config_' + dso + '.json')
     sim_start = datetime.strptime(case_config['SimulationConfig']['StartTime'], '%Y-%m-%d %H:%M:%S')
@@ -65,7 +65,7 @@ def get_date(dir_path, dso, day):
 
 
 def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
-    """Update GLM dictionary with information from agent dictionary needed for customer billing.
+    """ Update GLM dictionary with information from agent dictionary needed for customer billing.
     Args:
         glm_meta (dict): dictionary of GridLAB-D information
         agent_meta (dict): dictionary of transactive agent information
@@ -147,7 +147,7 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
 
 
 def load_gen_data(dir_path, gen_name, day_range):
-    """Utility to open h5 files for agent data.
+    """ Utility to open h5 files for agent data.
     Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
@@ -258,7 +258,7 @@ def load_gen_data(dir_path, gen_name, day_range):
 
 
 def load_ames_data(dir_path, day_range):
-    """Utility to open AMES csv file.
+    """ Utility to open AMES csv file.
     Args:
         dir_path (str): path of directory where AMES data lives
         day_range (range): range of simulation days for data to be returned
@@ -296,7 +296,7 @@ def load_ames_data(dir_path, day_range):
 
 
 def load_ercot_data(metadata_file, sim_start, day_range):
-    """Utility to open AMES csv file.
+    """ Utility to open AMES csv file.
     Args:
         dir_path (str): path of directory where the case config files lives
         sim_start (datetime): start time of the simulation (from generate_case_config.json)
@@ -329,7 +329,7 @@ def load_ercot_data(metadata_file, sim_start, day_range):
 
 
 def load_indust_data(indust_file, day_range):
-    """Utility to open industrial load csv file.
+    """ Utility to open industrial load csv file.
     Args:
         indust_file (str): path and filename where the industrial csv load lives
         day_range (range): range of simulation days for data to be returned
@@ -360,7 +360,7 @@ def load_indust_data(indust_file, day_range):
 
 
 def load_ercot_fuel_mix(metadata_path, dir_path, day_range):
-    """Utility to open AMES csv file.
+    """ Utility to open AMES csv file.
     Args:
         dir_path (str): path of directory where AMES data lives
         day_range (range): range of simulation days for data to be returned
@@ -385,7 +385,7 @@ def load_ercot_fuel_mix(metadata_path, dir_path, day_range):
 
 
 def load_da_retail_price(dir_path, folder_prefix, dso_num, day_num, retail=True):
-    """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -423,7 +423,7 @@ def load_da_retail_price(dir_path, folder_prefix, dso_num, day_num, retail=True)
 
 
 def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
-    """Utility to open h5 files for agent data.
+    """ Utility to open h5 files for agent data.
     Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
@@ -472,7 +472,7 @@ def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
 
 
 def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
-    """Utility to open h5 files for agent data.
+    """ Utility to open h5 files for agent data.
     Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
@@ -544,7 +544,7 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
 
 
 def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
-    """Utility to open GLD created h5 files for systems' data.
+    """ Utility to open GLD created h5 files for systems' data.
     Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
@@ -583,7 +583,7 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
 
 
 def get_house_schedules(agent_metadata, gld_metadata, house_name):
-    """Utility to get schedules directly from the agent dictionary.  This allows evaluation of schedules prior to agent
+    """ Utility to get schedules directly from the agent dictionary.  This allows evaluation of schedules prior to agent
     control.
     Args:
         agent_metadata (dict): dictionary of agent metadata
@@ -654,7 +654,7 @@ def get_house_schedules(agent_metadata, gld_metadata, house_name):
 
 
 def load_weather_data(dir_path, folder_prefix, dso_num, day_num):
-    """Utility to open weather dat files and find day of data
+    """ Utility to open weather dat files and find day of data
     Args:
         dir_path (str): path of parent directory where DSO folders live
         folder_prefix (str): prefix of DSO folder name (e.g. '\\DSO_')
@@ -1760,7 +1760,7 @@ def dso_comparison_plot(dso_range, system, subsystem, variable, day, case, agent
 
 
 def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
-    """For a specified dso range and day this function will load in the required data, plot standard market price and
+    """ For a specified dso range and day this function will load in the required data, plot standard market price and
     quantity values all for DSOs and save the plots to file.
     Args:
         dso_range (range): the DSO range that the data should be plotted for
@@ -2206,7 +2206,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
 
 
 def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot = False):
-    """For a specified dso range and list of month path information this function will load in the required data,
+    """ For a specified dso range and list of month path information this function will load in the required data,
     and summarize DSO loads for all months, plot comparisons, and find Qmax.
     Args:
         dso_range (range): the DSO range that the data should be plotted for
@@ -2401,7 +2401,7 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot = False
 
 
 def dso_lmp_stats(month_list, output_path, renew_forecast_file):
-    """For a specified dso range and list of month path information this function will load in the required data,
+    """ For a specified dso range and list of month path information this function will load in the required data,
     and summarize DSO LMPs versus loads for all months, and plot comparisons.
     Args:
         month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
@@ -2467,7 +2467,7 @@ def dso_lmp_stats(month_list, output_path, renew_forecast_file):
 
 
 def plot_lmp_stats(data_path, output_path, dso_num, month_index = 8):
-    """Will plot LMPS by month, duration, and versus netloads loads (for select month), and save to file.
+    """ Will plot LMPS by month, duration, and versus netloads loads (for select month), and save to file.
     Args:
         data_path (str): location of the data files to be used.
         output_path (str): path of the location where output (plots, csv) should be saved
@@ -3964,7 +3964,7 @@ def metadata_dist_plots(system, sys_class, variable, dso_range, case, data_path,
 
 
 def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
-    """Determines the loss of amenity metrics (aka unmet hours) for HVAC and WH.
+    """ Determines the loss of amenity metrics (aka unmet hours) for HVAC and WH.
     Args:
         gld_metadata (dict): gld metadata structure for the DSO to be analyzed
         dir_path (str): directory path for the case to be analyzed
@@ -4086,7 +4086,7 @@ def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
 
 
 def annual_amenity(metadata, month_list, folder_prefix, dso_num):
-    """Creates a dataframe of monthly energy consumption values and annual sum based on monthly h5 files.
+    """ Creates a dataframe of monthly energy consumption values and annual sum based on monthly h5 files.
     Args:
         month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
         folder_prefix (str): prefix of GLD folder name (e.g. '\TE_base_s')
@@ -4372,7 +4372,7 @@ def limit_check(log_list, dso_num, system, variable, day_range, case, agent_pref
 
 
 def house_check(dso_range, sourceCase, targetCase, houseProperties):
-    """Main function of the module.
+    """ Main function of the module.
 
       Parameters
       ----------

@@ -14,12 +14,12 @@ Todo:
 import sys
 
 try:
-    import tesp_support.fncs as fncs
+    import tesp_support.api.fncs as fncs
 except:
     pass
 import tesp_support.simple_auction as auction
 import tesp_support.hvac_agent as hvac
-import tesp_support.helpers as helpers
+import tesp_support.api.helpers as helpers
 import json
 from datetime import datetime
 from datetime import timedelta
@@ -42,7 +42,7 @@ if sys.platform != 'win32':
 
 
 def inner_substation_loop(configfile, metrics_root, hour_stop=1667, flag='WithMarket'):
-    """Helper function that initializes and runs the agents
+    """ Helper function that initializes and runs the agents
 
     Reads configfile. Writes *auction_metrics_root_metrics.json* and
     *controller_metrics_root_metrics.json* upon completion.
@@ -407,7 +407,7 @@ def inner_substation_loop(configfile, metrics_root, hour_stop=1667, flag='WithMa
 
 
 def substation_loop(configfile, metrics_root, hour_stop=1667, flag='WithMarket'):
-    """Wrapper for *inner_substation_loop*
+    """ Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
     for non-Windows platforms.

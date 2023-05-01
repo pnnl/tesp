@@ -112,7 +112,7 @@ def ProcessGLM(glmFile):
 
 
 def is_node_class(s):
-    """Identify node, load, meter, triplex_node or triplex_meter instances
+    """ Identify node, load, meter, triplex_node or triplex_meter instances
 
     Args:
         s (str): the GridLAB-D class name
@@ -127,7 +127,7 @@ def is_node_class(s):
 
 
 def is_edge_class(s):
-    """Identify switch, fuse, recloser, regulator, transformer, overhead_line, underground_line and triplex_line instances
+    """ Identify switch, fuse, recloser, regulator, transformer, overhead_line, underground_line and triplex_line instances
 
     Edge class is networkx terminology. In GridLAB-D, edge classes are called links.
 
@@ -144,7 +144,7 @@ def is_edge_class(s):
 
 
 def obj(parent, model, line, itr, oidh, octr):
-    """Store an object in the model structure
+    """ Store an object in the model structure
 
     Args:
         parent (str): name of parent object (used for nested object defs)

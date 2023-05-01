@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 
 class EvaluateSystem:
-    """Evaluates the power distribution system model.
+    """ Evaluates the power distribution system model.
 
     This class provides all the metrics for evaluating the
     overall communication abilities of a power distribution
@@ -88,7 +88,7 @@ class EvaluateSystem:
     """
 
     def __init__(self, dataframe, meters, pos_x, pos_y, unit):
-        """This initializes the class."""
+        """ This initializes the class."""
         self.dataframe = dataframe
         # Checking to make sure the input data has
         # all the important data for the metric
@@ -128,7 +128,7 @@ class EvaluateSystem:
         self.composite_score = None
 
     def _modify_dataframe(self):
-        """This funciton modifies the dataframe to speed up the
+        """ This funciton modifies the dataframe to speed up the
         get_distances function.
 
         It goes through all the permutations of abstact connections between
@@ -219,7 +219,7 @@ class EvaluateSystem:
                     unit))
 
     def get_distances(self):
-        """This function calculates the distances between all
+        """ This function calculates the distances between all
         the meters in the system and saves the result as a
         dataframe to be used for further analysis.
 
@@ -278,7 +278,7 @@ class EvaluateSystem:
         return distance_dataframe
 
     def meter_density(self, meter, radius):
-        """This function returns the number of meters within
+        """ This function returns the number of meters within
         a distance of x from the meter in question.
 
         For example, suppose we have a model of 10 meters
@@ -319,7 +319,7 @@ class EvaluateSystem:
         return total_meters
 
     def meter_range(self, meter):
-        """This function returns the radius, x, of the circle
+        """ This function returns the radius, x, of the circle
         centered on a given meter encompasses all meters.
 
         For example, suppose we have a model of 10 meters
@@ -353,7 +353,7 @@ class EvaluateSystem:
         return radius
 
     def isolated_meter_count(self, radius):
-        """This function returns how many meters have no other
+        """ This function returns how many meters have no other
         meters within x distance of them.
 
         For example, suppose we have a model of 10 meters
@@ -400,7 +400,7 @@ class EvaluateSystem:
         return isolated_count
 
     def meter_continuity(self, radius):
-        """This function aims to see if any two meters can communicate
+        """ This function aims to see if any two meters can communicate
         with each other, either directly or indirectly, within
         a certain distance.
 
@@ -460,7 +460,7 @@ class EvaluateSystem:
         return continuity
 
     def single_hop_count(self, radius, y):
-        """This function returns the number of meters with y
+        """ This function returns the number of meters with y
         meters within x distance of them.
 
         For example, suppose we have a model of 10 meters
@@ -516,7 +516,7 @@ class EvaluateSystem:
         return single_hop_count
 
     def island_count(self, radius):
-        """This function returns the number of islands
+        """ This function returns the number of islands
         in the model.
 
         An island is a group of meters that is not connected
@@ -563,7 +563,7 @@ class EvaluateSystem:
         return island_count
 
     def all_densities(self, radii):
-        """Calculates all densities for all meters for
+        """ Calculates all densities for all meters for
         all radii.
 
         This function performs the same counting as
@@ -621,7 +621,7 @@ class EvaluateSystem:
         return dens
 
     def all_ranges(self):
-        """Calculates all the meter ranges for all meters
+        """ Calculates all the meter ranges for all meters
         as the center of each circle.
 
         This function performs the same calculation as
@@ -660,7 +660,7 @@ class EvaluateSystem:
         return ranges
 
     def all_isolates(self, radii):
-        """Calculates isolated meter count for all meters for
+        """ Calculates isolated meter count for all meters for
         all radii.
 
         This function does the same counting as the
@@ -698,7 +698,7 @@ class EvaluateSystem:
         return iso
 
     def all_continuous(self, radii):
-        """Calculates continuous count for all meters for
+        """ Calculates continuous count for all meters for
         all radii.
 
         This function does the same as the meter_continuity
@@ -739,7 +739,7 @@ class EvaluateSystem:
         return conts
 
     def all_single_hops(self, radii):
-        """Calculates single hop count for all meters for all
+        """ Calculates single hop count for all meters for all
         radii.
 
         This function does the same counting as the
@@ -809,7 +809,7 @@ class EvaluateSystem:
         return shc
 
     def all_islands(self, radii):
-        """This function calculates the number of islands in
+        """ This function calculates the number of islands in
         the model with connections between meters being less
         than or equal to the given radii.
 
@@ -846,7 +846,7 @@ class EvaluateSystem:
         return islands
 
     def evaluate_system(self, radii):
-        """This function performs all metrics for a given system
+        """ This function performs all metrics for a given system
         and returns a weighted, overall score.
 
         The purpose of this function is to create an overall
@@ -1066,7 +1066,7 @@ class EvaluateSystem:
 
 
 class Results:
-    """This class collects and saves the results from more
+    """ This class collects and saves the results from more
     than one power distribution system evaluation.
 
     For our analysis, we not only care about the communication
@@ -1076,13 +1076,13 @@ class Results:
     """
 
     def __init__(self):
-        """This initializes the class."""
+        """ This initializes the class."""
         logger.info(
             '########### Created a Results object for saving data ###########')
         self.systems = []
 
     def add(self, system):
-        """This function adds the systems to the Results class.
+        """ This function adds the systems to the Results class.
 
         Since each system that gets added is an object, all
         of its attributes are saved (and added) as well.
@@ -1100,7 +1100,7 @@ class Results:
         self.systems.append(system)
 
     def save(self, output_path, output_name):
-        """This function saves all the results as an hdf5 file.
+        """ This function saves all the results as an hdf5 file.
 
         Args:
             output_path (path) - The path to send the results file.
@@ -1150,7 +1150,7 @@ class Results:
 
 
 class Compare:
-    """This class performs the statistical comparison between
+    """ This class performs the statistical comparison between
     the given model(s) and the real data.
 
     The overall goal of this package is to evaluate how well the
@@ -1166,7 +1166,7 @@ class Compare:
     """
 
     def __init__(self):
-        """This initializes the class"""
+        """ This initializes the class"""
         self.real_density = None
         self.real_range = None
         self.real_isolated = None
@@ -1176,7 +1176,7 @@ class Compare:
         self.real_scores = None
 
     def load_data(self):
-        """This function loads the real data from file.
+        """ This function loads the real data from file.
         It will be used for comparing the model(s)
         """
         head, tail = os.path.split(os.getcwd())
@@ -1309,7 +1309,7 @@ class Compare:
             [grb_scores, santa_fe_scores], axis=0, ignore_index=True)
 
     def compare_meter_density(self, models, how, radii):
-        """This function compares the meter density distributions
+        """ This function compares the meter density distributions
         between the real data and the model(s).
 
         To compare the modelled data to the real data, we
@@ -1482,7 +1482,7 @@ class Compare:
         return stats_df
 
     def compare_meter_range(self, models, how):
-        """This function compares the meter range distributions
+        """ This function compares the meter range distributions
         between the real data and the model(s).
 
         To compare the modelled data to the real data, we
@@ -1635,7 +1635,7 @@ class Compare:
         return stats_df
 
     def compare_isolated_meters(self, models, how, radii):
-        """This function compares the isolated mater counts
+        """ This function compares the isolated mater counts
         between the real data and the model(s).
 
         To compare the modelled data to the real data, we
@@ -1809,7 +1809,7 @@ class Compare:
         return stats_df
 
     def compare_meter_continuity(self, models, how, radii):
-        """This function compares the continuity of meters
+        """ This function compares the continuity of meters
         between the real data and the model(s).
 
         To compare the modelled data to the real data, we
@@ -1931,7 +1931,7 @@ class Compare:
         return stats_df
 
     def compare_single_hop_count(self, models, how, radii):
-        """This function compares the single hop count of
+        """ This function compares the single hop count of
         meters between real and modelled data.
 
         To compare the modelled data to the real data, we
@@ -2112,7 +2112,7 @@ class Compare:
         return stats_df
 
     def compare_island_count(self, models, how, radii):
-        """This function compares the island count of
+        """ This function compares the island count of
         meters between real and modelled data.
 
         To compare the modelled data to the real data, we

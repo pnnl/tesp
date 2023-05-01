@@ -28,7 +28,7 @@ min_load_size = 10.0
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
 def gld_strict_name(val):
-    """Sanitizes a name for GridLAB-D publication to FNCS
+    """ Sanitizes a name for GridLAB-D publication to FNCS
 
     Args:
         val (str): the input name

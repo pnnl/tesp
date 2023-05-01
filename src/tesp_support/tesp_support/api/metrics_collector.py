@@ -179,7 +179,7 @@ class MetricsCollector(object):
         self.metrics_stores.append(metrics_store)
 
     def write_metrics(self):
-        """Write all known metrics to disk (.json) and reset data within each metric."""
+        """ Write all known metrics to disk (.json) and reset data within each metric."""
         logging.debug('writing metrics (to json, in serial)')
         # TODO: look into 'ray' package?: https://towardsdatascience.com/10x-faster-parallel-python-without-python-multiprocessing-e5017c93cce1
         for m in self.metrics_stores:
@@ -196,7 +196,7 @@ class MetricsCollectorHDF(MetricsCollector):
         self.num_writes_counter = 0
 
     def write_metrics(self):
-        """Write all known metrics to disk (.h5)."""
+        """ Write all known metrics to disk (.h5)."""
         logging.debug('writing metrics (to h5, in serial)')
         # TODO: look into 'ray' package?: https://towardsdatascience.com/10x-faster-parallel-python-without-python-multiprocessing-e5017c93cce1
         for m in self.metrics_stores:

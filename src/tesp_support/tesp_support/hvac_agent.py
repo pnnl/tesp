@@ -7,7 +7,7 @@ bid quantity, and thermostat setting changes as the response
 mechanism.
 """
 
-from .helpers import parse_magnitude, parse_number
+from tesp_support.api.parse_helpers import parse_number, parse_magnitude
 
 
 class hvac:
@@ -57,7 +57,7 @@ class hvac:
     """
 
     def __init__(self, hvac_dict, key, aucObj):
-        """Initializes the class
+        """ Initializes the class
         """
         self.name = key
         self.control_mode = hvac_dict['control_mode']

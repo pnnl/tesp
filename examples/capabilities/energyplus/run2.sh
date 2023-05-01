@@ -6,11 +6,11 @@
 declare -r EPLUS_PATH=$TESPDIR/data/energyplus
 declare -r TMY_PATH=$TESPDIR/data/weather
 
-#python3 -c "import tesp_support.make_ems as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf', '12')"
-#python3 -c "import tesp_support.make_ems as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', '12')"
+#python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf', '12')"
+#python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', '12')"
 
-#python3 -c "import tesp_support.make_ems as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf', '12')"
-python3 -c "import tesp_support.make_ems as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', '12')"
+#python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf', '12')"
+python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', '12')"
 
 TMY3toTMY2_ansi $TMY_PATH/TX-Houston_Bush_Intercontinental.tmy3 > Test.tmy2
 python3 -c "import tesp_support.TMYtoEPW as tesp;tesp.convert_tmy2_to_epw('Test')"

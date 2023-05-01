@@ -12,10 +12,10 @@ import numpy as np
 import pypower.api as pp
 import scipy.interpolate as ip
 
-import tesp_support.fncs as fncs
+import tesp_support.api.fncs as fncs
 import tesp_support.parse_msout as pm
-import tesp_support.tso_helpers as th
-from tesp_support.helpers import parse_mva
+import tesp_support.api.tso_helpers as th
+from tesp_support.api.parse_helpers import parse_mva
 
 casename = 'ercot_8'
 

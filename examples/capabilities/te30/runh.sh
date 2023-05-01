@@ -9,5 +9,5 @@
 (exec eplus_agent_helics 172800s 300s SchoolDualController eplus_TE_ChallengeH_metrics.json 0.02 25 4 4 eplus_agent.json &> eplus_agent.log &)
 (exec gridlabd -D USE_HELICS -D METRICS_FILE=TE_ChallengeH_metrics.json TE_Challenge.glm &> gridlabd.log &)
 (exec python3 -c "import tesp_support.substation as tesp;tesp.substation_loop('TE_Challenge_agent_dict.json','TE_ChallengeH',helicsConfig='TE_Challenge_substation.json')" &> substation.log &)
-(exec python3 -c "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('te30_pp.json','TE_ChallengeH',helicsConfig='pypower.json')" &> pypower.log &)
+(exec python3 -c "import tesp_support.api.tso_PYPOWER as tesp;tesp.tso_pypower_loop('te30_pp.json','TE_ChallengeH',helicsConfig='pypower.json')" &> pypower.log &)
 (export WEATHER_CONFIG=TE_Challenge_weather.json && exec python3 -c "import tesp_support.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather.log &)

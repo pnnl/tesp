@@ -35,7 +35,7 @@ class DSO_LMPs_vs_Q:
     """
 
     def __init__(self, config_path='LMP_DATA', file_name='/Annual_DA_LMP_Load_data.csv'):
-        """Initialize the object
+        """ Initialize the object
         """
         self.config_path = config_path
         data_da = pd.read_csv(config_path + file_name, skiprows=0)  # Read data
@@ -49,7 +49,7 @@ class DSO_LMPs_vs_Q:
         self.coeficients_weekend = None
 
     def organize_remuve_outliers(self, data_da):
-        """Orginize and remuve outliers from dataframe of multiple DSO
+        """ Orginize and remuve outliers from dataframe of multiple DSO
         
         Args:
             data_da (dataframe): contaings historical data from DA LMPs with associated quantities 
@@ -86,7 +86,7 @@ class DSO_LMPs_vs_Q:
         return df_dsos_lml_q, lmps, q_lmps
 
     def fit_model(self, i, p_time):
-        """Fit a quadractive curve utilizing sklearn
+        """ Fit a quadractive curve utilizing sklearn
         
         Args:
             i (int): DSO identifier 
@@ -102,7 +102,7 @@ class DSO_LMPs_vs_Q:
         return df_dsos_lml_q
 
     def multiple_fit_calls(self):
-        """Calls the fit model for each cenario
+        """ Calls the fit model for each cenario
         
         The cenarios are hour of day and day type (i.e., weekday and weekends)
         
@@ -122,7 +122,7 @@ class DSO_LMPs_vs_Q:
         return coeficients_weekday, coeficients_weekend
 
     def c_to_DSO_m(self, DSO, C):
-        """Convert coefficients to DSO market
+        """ Convert coefficients to DSO market
         
         Args:
             DSO (int): DSO identifier  
@@ -135,7 +135,7 @@ class DSO_LMPs_vs_Q:
         return curve_c
 
     def make_json_out(self):
-        """Save the fitted curve to json
+        """ Save the fitted curve to json
         """
         data = {}
         for DSO in range(len(self.lmps_names)):

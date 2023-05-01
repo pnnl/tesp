@@ -68,7 +68,7 @@
       "args": [
         "python3",
         "-c",
-        "import tesp_support.tso_PYPOWER as tesp;tesp.tso_pypower_loop('te30_pp.json','TE_ChallengeH',helicsConfig='pypower.json')"
+        "import tesp_support.api.tso_PYPOWER as tesp;tesp.tso_pypower_loop('te30_pp.json','TE_ChallengeH',helicsConfig='pypower.json')"
       ],
       "log": "pypower.log"
     },
@@ -191,7 +191,7 @@
       "args": [
         "python3",
         "-c",
-        "import tesp_support.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('te30_pp.json','TE_Challenge')"
+        "import tesp_support.api.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('te30_pp.json','TE_Challenge')"
       ],
       "env": [
         [

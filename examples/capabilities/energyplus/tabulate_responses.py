@@ -4,7 +4,7 @@
 
 import os
 
-import tesp_support.process_eplus as te
+import tesp_support.api.process_eplus as te
 
 bldgs = ['FullServiceRestaurant',
          'Hospital',

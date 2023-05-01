@@ -22,9 +22,9 @@ from os import path
 
 import matplotlib.pyplot as plt
 
-import tesp_support.process_pypower as pp
-import tesp_support.process_gld as pg
-import tesp_support.process_eplus as pe
+import tesp_support.api.process_pypower as pp
+import tesp_support.api.process_gld as pg
+import tesp_support.api.process_eplus as pe
 
 # Setting up logging
 logger = logging.getLogger(__name__)
@@ -158,7 +158,7 @@ def load_data(data_path):
 
 
 def plot_gen_comparison(data, save_path):
-    """SGIP1(a) output of individual generators vs time. Expect to see dramatic
+    """ SGIP1(a) output of individual generators vs time. Expect to see dramatic
     change in dispatch on day 2 as a generator goes out.
 
     Args:
@@ -207,7 +207,7 @@ def plot_gen_comparison(data, save_path):
 
 
 def plot_transactive_bus_LMP(data, save_path):
-    """SGIP1(a) and (b) LMP for transactive bus vs time. Expect to see price
+    """ SGIP1(a) and (b) LMP for transactive bus vs time. Expect to see price
     spike on second day as generator goes out; should have lower prices for
     the transactive case (b) Bus 7 is the only bus for which data is recorded.
 
@@ -272,7 +272,7 @@ def plot_transactive_bus_LMP(data, save_path):
 
 
 def plot_transactive_feeder_load(data, save_path):
-    """SGIP1(a), and (b) total feeder load vs time. (a) is base and (b) is
+    """ SGIP1(a), and (b) total feeder load vs time. (a) is base and (b) is
     transactive. Expect (b) to show peak-shaving, snapback, and
     valley-filling where (a) does not. Bus 7 is the only bus for which data is recorded.
 
@@ -343,7 +343,7 @@ def plot_transactive_feeder_load(data, save_path):
 
 
 def plot_transactive_feeder_load_solar(data, save_path):
-    """SGIP1a, b, c, d, e transactive total feeder load vs time. (a) is base
+    """ SGIP1a, b, c, d, e transactive total feeder load vs time. (a) is base
     and (b)-(e) are transactive with increasing amounts of solar and energy
     storage systems. Expect to see decreasing daytime loads with increasing
     solar penetration ((b) to (e)).
@@ -440,7 +440,7 @@ def plot_transactive_feeder_load_solar(data, save_path):
 
 
 def plot_avg_indoor_air_temperature(data, save_path):
-    """SGIP1(a) and (b) all residential customer average indoor temperature vs time.
+    """ SGIP1(a) and (b) all residential customer average indoor temperature vs time.
 
     SGIP1(a) is base and (b) is transactive. Expect to see
     constant temperatures for (a) and higher temperatures for (b) on the
@@ -535,7 +535,7 @@ def plot_avg_indoor_air_temperature(data, save_path):
 
 
 def plot_solar_output(data, save_path):
-    """SGIP1b-e total solar PV output vs time. Expect to see increasing total
+    """ SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
 
     Args:
@@ -625,7 +625,7 @@ def plot_solar_output(data, save_path):
 
 
 def plot_ES_output(data, save_path):
-    """SGIP1(a) and (b) Energy+ average indoor cooling temperature vs time.
+    """ SGIP1(a) and (b) Energy+ average indoor cooling temperature vs time.
 
     Expect to case (b) to show higher temperatures as it is price-responsive.
 
@@ -716,7 +716,7 @@ def plot_ES_output(data, save_path):
 
 
 def plot_energy_plus_indoor_temperature(data, save_path):
-    """SGIP1b-e total solar PV output vs time. Expect to see increasing total
+    """ SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
 
     Args:
@@ -799,7 +799,7 @@ def plot_energy_plus_indoor_temperature(data, save_path):
 
 
 def plot_energy_plus_prices(data, save_path):
-    """SGIP1b-e total solar PV output vs time. Expect to see increasing total
+    """ SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
 
     Args:

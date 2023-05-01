@@ -90,7 +90,7 @@ def truncate(f, n=3):
 
 
 def _open_file(file_path, file_type='r'):
-    """Utilty function to open file with reasonable error handling.
+    """ Utilty function to open file with reasonable error handling.
 
     Args:
         file_path (str) - Path to the file to be opened

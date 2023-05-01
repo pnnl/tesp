@@ -40,7 +40,7 @@ pp = pprint.PrettyPrinter(indent=4, )
 
 
 def _open_file(file_path, typ='r'):
-    """Utilty function to open file with reasonable error handling.
+    """ Utilty function to open file with reasonable error handling.
 
 
     Args:
@@ -61,7 +61,7 @@ def _open_file(file_path, typ='r'):
 
 
 def parse_DSO_location(dso_metadata_path, worksheet_name):
-    """This function parses the DSO metadata which is contained in an Excel spreadsheet
+    """ This function parses the DSO metadata which is contained in an Excel spreadsheet
 
     Args:
         dso_metadata_path (str): Path to the Excel file containing the  metadata to be parsed.
@@ -111,7 +111,7 @@ def parse_DSO_location(dso_metadata_path, worksheet_name):
 
 
 def download_nsrdb_data(dso_meta, output_path):
-    """This function queries the NSRDB database over the web and pulls down and does a conversion.
+    """ This function queries the NSRDB database over the web and pulls down and does a conversion.
 
     Function pulls down the solar data down calls PSMv3toDAT to convert them to appropriate format.
 
@@ -183,7 +183,7 @@ def download_nsrdb_data(dso_meta, output_path):
 
 
 def _auto_run(args):
-    """This function executes when the script is called as a stand-alone executable.
+    """ This function executes when the script is called as a stand-alone executable.
 
     Args:
         '-a' or '--auto_run_dir': Path of the auto_run folder

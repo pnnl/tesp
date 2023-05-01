@@ -6,14 +6,14 @@ import pandas as pd
 
 
 def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
-    """Reads .json files with multiple Keys
+    """ Reads .json files with multiple Keys
 
     Args:
         file_name (str): name of json file to be read
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
 
-    Return:
+    Returns:
         meta_I_ver (dict): with Key of the variable containing the index and units
         start_time (str): start time of simulation
         all_homes_I_ver (list of DataFrame): min, mean, max, and the sum of the variables of all the Keys (i.e., "agent")

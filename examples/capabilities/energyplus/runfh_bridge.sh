@@ -6,8 +6,8 @@
 declare -r EPLUS_PATH=$TESPDIR/data/energyplus
 declare -r EPWFILE=$EPLUS_PATH/USA_IN_Indianapolis.Intl.AP.724380_TMY3.epw
 
-#python3 -c "import tesp_support.make_ems as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','emsFullServiceRestaurant.idf', '2013-08-01 00:00:00', '2013-08-03 00:00:00', 'Merged.idf', '12')"
-python3 -c "import tesp_support.make_ems as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-08-01 00:00:00', '2013-08-03 00:00:00', 'Merged.idf', '12')"
+#python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','emsFullServiceRestaurant.idf', '2013-08-01 00:00:00', '2013-08-03 00:00:00', 'Merged.idf', '12')"
+python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-08-01 00:00:00', '2013-08-03 00:00:00', 'Merged.idf', '12')"
 
 # FNCS federation is energyplus with agent, and a recorder
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 3 &> fncs_broker.log &)

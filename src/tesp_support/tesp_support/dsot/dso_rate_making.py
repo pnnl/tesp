@@ -19,7 +19,7 @@ from .plots import load_da_retail_price, customer_meta_data, load_json, load_age
 
 
 def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_data_path):
-    """Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
+    """ Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
     Also collects information on day ahead and real time quantities consumed by transactive customers.
     Creates summation of these statistics by customer class.
     Args:
@@ -275,7 +275,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
 
 
 def annual_energy(month_list, folder_prefix, dso_num, metadata):
-    """Creates a dataframe of monthly energy consumption values and annual sum based on monthly h5 files.
+    """ Creates a dataframe of monthly energy consumption values and annual sum based on monthly h5 files.
     Args:
         month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
         folder_prefix (str): prefix of GLD folder name (e.g. '/TE_base_s')
@@ -326,7 +326,7 @@ def annual_energy(month_list, folder_prefix, dso_num, metadata):
 
 
 def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num, SF, ind_cust):
-    """Calculate the customer bill using summary meter data and fixed tariff structure.
+    """ Calculate the customer bill using summary meter data and fixed tariff structure.
     Args:
         metadata (dict): metadata structure for the DSO to be analyzed
         meter_df (dataframe): monthly and total energy consumption and peak power by house (meter)
@@ -586,7 +586,7 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
 
 
 # def calc_te_bill(metadata, meter_df, tariff):
-    # """Calculate the customer bill using realtime meter and agent bid data and transactive tariff structure.
+    # """ Calculate the customer bill using realtime meter and agent bid data and transactive tariff structure.
     # Args:
     #     metadata (dict): metadata structure for the DSO to be analyzed
     #     meter_df (dataframe): monthly and total energy consumption and peak power by house (meter)
@@ -655,7 +655,7 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
 
 
 def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scaling_factor, num_indust_cust):
-    """Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
+    """ Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
     ensure revenue matches expenses.  Saves meter and bill dataframes to an hdf5 file.
     Args:
         case (str): directory path for the case to be analyzed

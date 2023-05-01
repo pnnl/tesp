@@ -14,7 +14,7 @@ Public Functions:
 import json
 import sys
 
-from .helpers import gld_strict_name
+from tesp_support.api.helpers import gld_strict_name
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -23,7 +23,7 @@ else:
 
 
 def merge_glm(target, sources, xfmva):
-    """Combines GridLAB-D input files into target/target.glm. The source files must already exist.
+    """ Combines GridLAB-D input files into target/target.glm. The source files must already exist.
   
     Args:
         target (str): the directory and root case name
@@ -150,7 +150,7 @@ def merge_substation_msg(target, sources):
 
 
 def merge_glm_dict(target, sources, xfmva):
-    """Combines GridLAB-D metadata files into target/target.json. The source files must already exist.
+    """ Combines GridLAB-D metadata files into target/target.json. The source files must already exist.
   
     Each constituent feeder has a new ID constructed from the NamePrefix + original base_feeder,
     then every child object on that feeder will have its feeder_id, originally network_node, 
@@ -195,7 +195,7 @@ def merge_glm_dict(target, sources, xfmva):
 
 
 def merge_agent_dict(target, sources, xfmva):
-    """Combines the substation agent configuration files into target/target.json. The source files must already exist.
+    """ Combines the substation agent configuration files into target/target.json. The source files must already exist.
   
     Args:
         target (str): the directory and root case name
@@ -224,7 +224,7 @@ def merge_agent_dict(target, sources, xfmva):
 
 
 def merge_substation_yaml(target, sources):
-    """Combines GridLAB-D input files into target/target.yaml. The source files must already exist.
+    """ Combines GridLAB-D input files into target/target.yaml. The source files must already exist.
   
     Args:
         target (str): the directory and root case name
@@ -247,7 +247,7 @@ def merge_substation_yaml(target, sources):
 
 
 def merge_fncs_config(target, sources):
-    """Combines GridLAB-D input files into target/target.txt. The source feeders must already exist.
+    """ Combines GridLAB-D input files into target/target.txt. The source feeders must already exist.
   
     Args:
         target (str): the directory and root case name

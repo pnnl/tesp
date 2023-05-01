@@ -2,7 +2,7 @@
 # file: pprun.py
 import pypower.api as pp
 
-import tesp_support.tso_helpers as th
+import tesp_support.api.tso_helpers as th
 
 ppc = th.load_json_case('./Case1/ppcase.json')
 # print(ppc)

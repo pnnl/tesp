@@ -16,7 +16,7 @@ import json
 import numpy as np
 from datetime import datetime
 
-from .helpers import zoneMeterName, HelicsMsg
+from tesp_support.api.helpers import zoneMeterName, HelicsMsg
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -108,7 +108,7 @@ longitude = -110.0
 
 #####################################################
 def ProcessGLM(fileroot):
-    """Helper function that processes one GridLAB-D file
+    """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
 

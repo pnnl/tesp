@@ -4,7 +4,7 @@
 
 import sys
 
-import tesp_support.fncs as fncs
+import tesp_support.api.fncs as fncs
 
 if sys.platform != 'win32':
     import resource

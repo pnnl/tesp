@@ -13,7 +13,7 @@ import shutil
 import datetime
 import numpy as np
 
-from tesp_support.helpers import HelicsMsg
+from tesp_support.api.helpers import HelicsMsg
 import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.commercial_feeder_glm as com_FG
 import tesp_support.copperplate_feeder_glm as cp_FG

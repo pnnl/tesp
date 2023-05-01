@@ -1,6 +1,6 @@
 
 import pypower.api as pp
-import tesp_support.tso_helpers as tso
+import tesp_support.api.tso_helpers as tso
 
 ppc = tso.load_json_case('pp_8BusTestCase5000.json')
 

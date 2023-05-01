@@ -1,10 +1,10 @@
 import json
 import logging as log
 
-import tesp_support.fncs as fncs
+import tesp_support.api.fncs as fncs
 
-from tesp_support.helpers import parse_mva
-from tesp_support.tso_helpers import load_json_case
+from tesp_support.api.parse_helpers import parse_mva
+from tesp_support.api.tso_helpers import load_json_case
 
 
 def dso_make_yaml(casename):

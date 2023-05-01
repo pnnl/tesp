@@ -7,7 +7,7 @@ import logging as log_msg
 
 
 def get_node_ids(time_series, id_column_name):
-    """Function queries a list of unique values from a time series dataframe based upon a column id entered by the user
+    """ Function queries a list of unique values from a time series dataframe based upon a column id entered by the user
 
     Args:
         time_series (dataframe): time series dataframe that contains the values to be queried
@@ -20,7 +20,7 @@ def get_node_ids(time_series, id_column_name):
 
 
 def get_node_data(time_series, node_id, id_column_name):
-    """Function queries the time series dataframe for the data set identified by the entered node id
+    """ Function queries the time series dataframe for the data set identified by the entered node id
 
     Args:
         time_series (dataframe): time series dataframe contains the node data to be queried
@@ -35,7 +35,7 @@ def get_node_data(time_series, node_id, id_column_name):
 
 
 def get_time_series_average(time_series, start_date, duration):
-    """Function calculates the average of each data column in the dataframe
+    """ Function calculates the average of each data column in the dataframe
 
     Args:
         time_series (dataframe): time series dataframe containing the data to be averaged
@@ -51,7 +51,7 @@ def get_time_series_average(time_series, start_date, duration):
 
 
 def get_avg_column_value(time_series, val_index):
-    """Function calculates the mean average of a column of data in the time series dataframe
+    """ Function calculates the mean average of a column of data in the time series dataframe
 
     Args:
         time_series (dataframe): time series dataframe containing the data to be averaged
@@ -64,7 +64,7 @@ def get_avg_column_value(time_series, val_index):
 
 
 def get_max_column_value(time_series, val_index):
-    """Function searches a designated column in the time series dataframe and returns the maximum value found in the column
+    """ Function searches a designated column in the time series dataframe and returns the maximum value found in the column
 
     Args:
         time_series (dataframe): time series dataframe containing the data to be searched for a maximum value
@@ -77,7 +77,7 @@ def get_max_column_value(time_series, val_index):
 
 
 def get_min_column_value(time_series, val_index):
-    """Function searches a designated column in the time series dataframe and returns the minimum value found in the column
+    """ Function searches a designated column in the time series dataframe and returns the minimum value found in the column
 
     Args:
         time_series (dataframe): time series dataframe containing the data to be searched for a minimum value
@@ -90,7 +90,7 @@ def get_min_column_value(time_series, val_index):
 
 
 def get_avg_data_value(time_series, column_id):
-    """Function calculates the average of a column in the time series dataframe and returns the average value of the column
+    """ Function calculates the average of a column in the time series dataframe and returns the average value of the column
 
     Args:
         time_series (dataframe): time series dataframe containing the data to be averaged
@@ -103,7 +103,7 @@ def get_avg_data_value(time_series, column_id):
 
 
 def get_accuracy_ratio(input_df, actual_index, simulated_index):
-    """Function calculates the ratio of simulated data to actual data
+    """ Function calculates the ratio of simulated data to actual data
 
     Args:
         input_df (dataframe): time series dataframe containing data columns for actual and simulated values
@@ -118,7 +118,7 @@ def get_accuracy_ratio(input_df, actual_index, simulated_index):
 
 
 def adjust_date_time(start_date, offset_type, offset_val):
-    """Function returns a date time object that is calculated by adding the offset_val to the entered start date
+    """ Function returns a date time object that is calculated by adding the offset_val to the entered start date
 
     Args:
         start_date: (datetime) the start date time
@@ -147,7 +147,7 @@ def adjust_date_time(start_date, offset_type, offset_val):
 
 
 def check_for_full_year_data(time_series):
-    """Function checks if the input time series dataframe contains a full year's worth of data
+    """ Function checks if the input time series dataframe contains a full year's worth of data
 
     Args:
         time_series (dataframe): time series dataframe containing a year's worth of data
@@ -163,7 +163,7 @@ def check_for_full_year_data(time_series):
 
 
 def check_for_hourly_data(time_series):
-    """Function checks if the data in the time series is hourly
+    """ Function checks if the data in the time series is hourly
 
     Args:
         time_series (dataframe): time series dataframe containing hourly data
@@ -179,7 +179,7 @@ def check_for_hourly_data(time_series):
 
 
 def check_for_5_minute_data(time_series):
-    """Function checks if the data in the time series is 5-minute intervals
+    """ Function checks if the data in the time series is 5-minute intervals
 
     Args:
         time_series (dataframe): time series dataframe containing 5-minute data records
@@ -195,7 +195,7 @@ def check_for_5_minute_data(time_series):
 
 
 def get_time_series_max_value_under(time_series, column_id, compare_value):
-    """Function calculates the maximum value out of the number of values in a dataframe column that are less than
+    """ Function calculates the maximum value out of the number of values in a dataframe column that are less than
     a comparison value
 
     Args:
@@ -211,7 +211,7 @@ def get_time_series_max_value_under(time_series, column_id, compare_value):
 
 
 def get_time_series_max_value_over(time_series, column_id, compare_value):
-    """Function calculates the maximum value out of the number of values in a dataframe column that are greater than
+    """ Function calculates the maximum value out of the number of values in a dataframe column that are greater than
     a comparison value
 
     Args:
@@ -229,7 +229,7 @@ def get_time_series_max_value_over(time_series, column_id, compare_value):
 
 
 def get_column_total_value(time_series, column_id):
-    """Function returns the sum of the values in a dataframe column
+    """ Function returns the sum of the values in a dataframe column
 
     Args:
         time_series (dataframe): the time series dataframe which contains the data to be summed
@@ -243,7 +243,7 @@ def get_column_total_value(time_series, column_id):
 
 
 def get_time_series_difference_values(time_series, column_id, time_series2, column_id2):
-    """Function calculates the difference between data in a column of a dataframe with the data in
+    """ Function calculates the difference between data in a column of a dataframe with the data in
     a column of a second dataframe
 
     Args:
@@ -261,7 +261,7 @@ def get_time_series_difference_values(time_series, column_id, time_series2, colu
 
 
 def check_dataframe_synchronization(data_frame_1, data_frame_2):
-    """Function checks that two time series dataframes are synchronized by comparing size, starting time,
+    """ Function checks that two time series dataframes are synchronized by comparing size, starting time,
     and ending time of the data sets. If they are synchronized, the returns "Synchronized". If they are not,
     then the function will return an error message dependent upon what test failed.
 
@@ -286,7 +286,7 @@ def check_dataframe_synchronization(data_frame_1, data_frame_2):
 
 
 def create_testing_dataframe(start_date, end_date, col_names, time_interval):
-    """Function creates a testing dataframe containing random values
+    """ Function creates a testing dataframe containing random values
 
     Args:
         start_date (str): the starting date of the time series

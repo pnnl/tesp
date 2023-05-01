@@ -79,7 +79,7 @@ def label_nodes(data, total_value):
 
 
 def load_CFS_data(results_path, dso_range, update_data, scale, labelvals):
-    """Initiates and updates Sankey diagram data structure for Cash Flow Sheet data.
+    """ Initiates and updates Sankey diagram data structure for Cash Flow Sheet data.
     Args:
         results_path (str): directory path for the case to be analyzed.  Should be run after annual post-processing
         dso_range (range): range of DSOs to be included in data analysis
@@ -244,7 +244,7 @@ def load_CFS_data(results_path, dso_range, update_data, scale, labelvals):
 
 
 def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, labelvals, metadata_file):
-    """Initiates and updates Sankey diagram data structure for Cash Flow Sheet data.
+    """ Initiates and updates Sankey diagram data structure for Cash Flow Sheet data.
     Args:
         results_path (str): directory path for the case to be analyzed.  Should be run after annual post-processing
         comp_path (str): directory path for the baseline (business-as-usual) case.
@@ -352,7 +352,7 @@ def load_CFS_delta_data(results_path, comp_path, dso_range, update_data, scale, 
 
 
 def load_energy_data(results_path, dso_range, update_data, scale, labelvals):
-    """Initiates and updates Sankey diagram data structure for simulation energy data.
+    """ Initiates and updates Sankey diagram data structure for simulation energy data.
     Args:
         results_path (str): directory path for the case to be analyzed.  Should be run after annual post-processing
         dso_range (range): range of DSOs to be included in data analysis

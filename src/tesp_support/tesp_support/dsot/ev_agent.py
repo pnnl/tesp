@@ -29,7 +29,8 @@ from math import isnan
 import numpy as np
 import pyomo.environ as pyo
 
-from tesp_support.helpers import parse_number, get_run_solver
+from tesp_support.api.helpers import get_run_solver
+from tesp_support.api.parse_helpers import parse_number
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, add_hhmm_secs
 
 logger = log.getLogger()
@@ -214,12 +215,12 @@ class EVDSOT:
         #             format(self.name, 'init'))
 
     def test_function(self):
-        """Test function with the only purpose of returning the name of the object
+        """ Test function with the only purpose of returning the name of the object
         """
         return self.name
 
     def inform_bid(self, price):
-        """Set the cleared_price attribute
+        """ Set the cleared_price attribute
 
         Args:
             price (float): cleared price in $/kWh
@@ -227,7 +228,7 @@ class EVDSOT:
         self.RTprice = price
 
     def bid_accepted(self, current_time):
-        """Update the P and Q settings if the last bid was accepted
+        """ Update the P and Q settings if the last bid was accepted
 
         Returns:
             Boolean: True if the inverter settings changed, False if not.
@@ -236,7 +237,7 @@ class EVDSOT:
         return self.RT_flag
 
     def set_price_forecast(self, forecasted_price):
-        """Set the f_DA attribute
+        """ Set the f_DA attribute
 
         Args:
             forecasted_price (float x 48): cleared price in $/kWh
@@ -244,7 +245,7 @@ class EVDSOT:
         self.f_DA = deepcopy(forecasted_price)
 
     def DA_cleared_price(self, price):
-        """Set the DA_cleared_price attribute
+        """ Set the DA_cleared_price attribute
 
         Args:
             price (float): cleared price in $/kWh
@@ -262,7 +263,7 @@ class EVDSOT:
         self.prev_clr_Quantity.append(0.0)
 
     def formulate_bid_da(self):
-        """Formulate 4 points of P and Q bids for the DA market
+        """ Formulate 4 points of P and Q bids for the DA market
 
         Function calls "DA_optimal_quantities" to obtain the optimal quantities
         for the DA market. With the quantities, the 4 point bids are formulated.
@@ -418,7 +419,7 @@ class EVDSOT:
         # print('updating home depart hours:', self.home_depart_hours)
 
     def DA_optimal_quantities(self):
-        """Generates Day Ahead optimized quantities for EV
+        """ Generates Day Ahead optimized quantities for EV
 
         Returns:
             Quantity (float) (1 x windowLength): Optimal quantity from optimization for all hours of the window specified by windowLength
@@ -477,7 +478,7 @@ class EVDSOT:
         return Quantity  # , soc
 
     def formulate_bid_rt(self):
-        """Formulates RT bid
+        """ Formulates RT bid
 
         Uses the last 4 point bid from DA market and consider current state
         of charge of the ev. Will change points to change points for feasible
@@ -564,7 +565,7 @@ class EVDSOT:
         return self.bid_rt
 
     def RT_fix_four_points_range(self, BID, Ql, Qu):
-        """Verify feasible range of RT bid
+        """ Verify feasible range of RT bid
 
         Args:
             BID (float) ((1,2)X4): 4 point bid
@@ -624,7 +625,7 @@ class EVDSOT:
         return BIDr
 
     def RT_gridlabd_set_P(self, model_diag_level, sim_time):
-        """Update variables for ev output "inverter"
+        """ Update variables for ev output "inverter"
 
         Args:
             model_diag_level (int): Specific level for logging errors; set it to 11
@@ -665,7 +666,7 @@ class EVDSOT:
                     format(self.name, sim_time, -self.inv_P_setpoint, self.Rc))
 
     def set_ev_SOC(self, msg_str, model_diag_level, sim_time):
-        """Set the ev state of charge
+        """ Set the ev state of charge
 
         Updates the self.Cinit of the battery
 
@@ -684,11 +685,11 @@ class EVDSOT:
                     format(self.name, sim_time, self.Cinit, self.Cmin, self.Cmax))
 
     def is_car_home(self, cur_secs):
-        """Is the Car is at home
+        """ Is the Car is at home
 
         Args:
             cur_secs: current time in seconds
-        Return:
+        Returns:
             bool: if car is at home at cur_secs is True or otherwise False
         """
         arr_sec = get_secs_from_hhmm(self.arrival_home)
@@ -707,7 +708,7 @@ class EVDSOT:
             raise UserWarning('Something is wrong! home arrival and leaving time are same')
 
     def is_car_leaving_home(self, cur_secs, interval):
-        """Tells if car is leaving from home during the given 'interval'
+        """ Tells if car is leaving from home during the given 'interval'
 
         Args:
             cur_secs: (seconds) current (starting) time with reference of midnight as 0
@@ -727,7 +728,7 @@ class EVDSOT:
         return False
 
     def get_car_home_duration(self, cur_secs, interval):
-        """return the duration of car at home during the given 'interval' seconds starting from cur_secs
+        """ Return the duration of car at home during the given 'interval' seconds starting from cur_secs
 
         Args:
             cur_secs: (seconds) current (starting) time with reference of midnight as 0
@@ -751,7 +752,7 @@ class EVDSOT:
         return duration
 
     def get_uncntrl_ev_load(self, sim_time):
-        """Function returns 48-hour forecast of ev load in base case w/o optimization
+        """ Function returns 48-hour forecast of ev load in base case w/o optimization
 
         Args:
             sim_time (datetime):
@@ -780,7 +781,7 @@ class EVDSOT:
         return Quantity
 
     def from_P_to_Q_ev(self, BID, PRICE):
-        """Convert the 4 point bids to a quantity with the known price
+        """ Convert the 4 point bids to a quantity with the known price
 
         Args:
             BID (float) ((1,2)X4): 4 point bid

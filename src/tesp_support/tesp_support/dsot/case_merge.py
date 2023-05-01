@@ -13,7 +13,7 @@ import json
 import sys
 from os import path
 
-from tesp_support.helpers import gld_strict_name
+from tesp_support.api.helpers import gld_strict_name
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -22,7 +22,7 @@ else:
 
 
 def merge_glm(target, sources, xfmva):
-    """Combines GridLAB-D input files into "target". The source files must already exist.
+    """ Combines GridLAB-D input files into "target". The source files must already exist.
 
     Args:
         target (str): the path to the target GLM file, including the name of the file
@@ -109,7 +109,7 @@ def merge_glm(target, sources, xfmva):
 
 
 def merge_glm_dict(target, sources, xfmva):
-    """Combines GridLAB-D metadata files into "target". The source files must already exist.
+    """ Combines GridLAB-D metadata files into "target". The source files must already exist.
 
     The output JSON won't have a top-level base_feeder attribute. Instead,
     the base_feeder from each source file will become a feeder key in the
@@ -155,7 +155,7 @@ def merge_glm_dict(target, sources, xfmva):
 
 
 def merge_agent_dict(target, sources):
-    """Combines the substation agent configuration files into "target". The source files must already exist.
+    """ Combines the substation agent configuration files into "target". The source files must already exist.
 
     Args:
         target (str): the path to the target JSON file, including the name of the file
@@ -187,7 +187,7 @@ def merge_agent_dict(target, sources):
 
 
 def merge_substation_yaml(target, sources):
-    """Combines GridLAB-D input files into "target". The source files must already exist.
+    """ Combines GridLAB-D input files into "target". The source files must already exist.
 
     Args:
         target (str): the path to the target YAML file, including the name of the file
@@ -203,7 +203,7 @@ def merge_substation_yaml(target, sources):
 
 
 def merge_fncs_config(target, sources):
-    """Combines GridLAB-D input files into "target". The source feeders must already exist.
+    """ Combines GridLAB-D input files into "target". The source feeders must already exist.
 
     Args:
         target (str): the path to the target TXT file, including the name of the file

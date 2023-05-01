@@ -11,7 +11,7 @@ import numpy as np
 
 
 def prep_precool(name_root):
-    """Sets up agent configurations for the NIST TE Challenge 2 example
+    """ Sets up agent configurations for the NIST TE Challenge 2 example
 
     Reads the GridLAB-D data from name_root.glm; it should contain
     houses with thermal_integrity_level attributes. Writes:

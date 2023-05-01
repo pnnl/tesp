@@ -111,7 +111,7 @@ class GLMModifier:
         return True
 
 
-def test1():
+def _test1():
     from .data import tesp_test
 
     testMod = GLMModifier()
@@ -128,7 +128,7 @@ def test1():
     testMod.write_model(tesp_test + "api/loadshed_out.glm")
 
 
-def test2():
+def _test2():
     from .data import tesp_test
 
     testMod = GLMModifier()
@@ -160,5 +160,5 @@ def test2():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    test1()
-    test2()
+    _test1()
+    _test2()

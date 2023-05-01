@@ -14,7 +14,7 @@ import scipy.interpolate as ip
 from copy import deepcopy
 from datetime import datetime
 
-import tesp_support.tso_helpers as tso
+import tesp_support.api.tso_helpers as tso
 
 
 casename = 'ercot_8'

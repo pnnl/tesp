@@ -5,9 +5,9 @@ import json
 import helics
 import logging as log
 
-import tesp_support.tso_helpers as tso
-from tesp_support.helpers import parse_mva
-from tesp_support.helpers import HelicsMsg
+import tesp_support.api.tso_helpers as tso
+from tesp_support.api.parse_helpers import parse_mva
+from tesp_support.api.helpers import HelicsMsg
 
 
 def dso_make_stub(casename):

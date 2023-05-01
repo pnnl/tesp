@@ -9,11 +9,11 @@ import json
 
 import numpy as np
 
-from .helpers import HelicsMsg
+from tesp_support.api.helpers import HelicsMsg
 
 
 def prep_precool(name_root, time_step=15):
-    """Sets up agent configurations for the NIST TE Challenge 2 example
+    """ Sets up agent configurations for the NIST TE Challenge 2 example
 
     Reads the GridLAB-D data from name_root.glm; it should contain
     houses with thermal_integrity_level attributes. Writes:

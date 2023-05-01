@@ -19,7 +19,7 @@ import pandas as pd
 
 
 def load_hourly_data(dir_path, dso_num, simdata):
-    """Utility to open hourly ERCOT csv file.
+    """ Utility to open hourly ERCOT csv file.
 
     The entire date range for the data (e.g. 1 year) is considered
 
@@ -54,7 +54,7 @@ def load_hourly_data(dir_path, dso_num, simdata):
 
 
 def load_realtime_data(dir_path, dso_num, simdata):
-    """Utility to open 5 min ERCOT csv file.
+    """ Utility to open 5 min ERCOT csv file.
 
     The entire date range for the data (e.g. 1 year) is considered
 
@@ -95,7 +95,7 @@ def load_realtime_data(dir_path, dso_num, simdata):
 
 
 def load_price_data(dir_path, market_type, dso_num, simdata, place):
-    """Utility to open 5 min ERCOT csv file.
+    """ Utility to open 5 min ERCOT csv file.
 
     The entire date range for the data (e.g. 1 year) is considered
 
@@ -143,7 +143,7 @@ def load_price_data(dir_path, market_type, dso_num, simdata, place):
 
 
 def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, place='Houston'):
-    """Computes the total costs, total energy purchases and average price annually for bilateral,
+    """ Computes the total costs, total energy purchases and average price annually for bilateral,
     day-ahead and real-time markets from hourly and 5 min ERCOT energy and price data.
 
     * Loads hourly ERCOT energy and price data.

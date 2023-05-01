@@ -423,7 +423,7 @@ class Store:
         return
 
 
-def test_debug_resample():
+def _test_debug_resample():
     from .metrics_api import synch_series
 
     np.random.seed(0)
@@ -449,7 +449,7 @@ def test_debug_resample():
     print(tseries[0])
 
 
-def test_csv():
+def _test_csv():
     from .data import tesp_test
 
     my_store = Store(tesp_test + 'api/store.json')
@@ -461,7 +461,7 @@ def test_csv():
     my_store.write()
 
 
-def test_sqlite():
+def _test_sqlite():
     from .data import tesp_test
 
     my_store = Store(tesp_test + 'api/store.json')
@@ -473,7 +473,7 @@ def test_sqlite():
     my_store.write()
 
 
-def test_read():
+def _test_read():
     from .data import tesp_test
     from .metrics_api import get_synch_date_range
 
@@ -499,7 +499,7 @@ def test_read():
     print(get_synch_date_range(tseries))
 
 
-def test_dir():
+def _test_dir():
     from .data import tesp_share
     from .data import tesp_test
 
@@ -514,7 +514,7 @@ def test_dir():
     my_store.zip(tesp_test + 'api/store.zip')
 
 
-def test_change_gencost():
+def _test_change_gencost():
     file = os.path.join(os.path.expandvars('$TESPDIR'), 'examples/analysis/dsot/code/system_case_config.json')
     price = {
         "Steam Coal": 61.1,
@@ -538,8 +538,8 @@ def test_change_gencost():
 
 
 if __name__ == "__main__":
-    test_debug_resample()
-    test_csv()
-    test_sqlite()
-    test_read()
-    test_dir()
+    _test_debug_resample()
+    _test_csv()
+    _test_sqlite()
+    _test_read()
+    _test_dir()

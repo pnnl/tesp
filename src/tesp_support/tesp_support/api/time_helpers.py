@@ -7,7 +7,7 @@ import numpy as np
 
 
 def get_secs_from_hhmm(time):
-    """Convert HHMM to seconds
+    """ Convert HHMM to seconds
 
     Args:
         time (float): HHMM
@@ -18,7 +18,7 @@ def get_secs_from_hhmm(time):
 
 
 def get_hhmm_from_secs(time):
-    """Convert seconds to HHMM
+    """ Convert seconds to HHMM
 
     Args:
         time (int): seconds
@@ -33,7 +33,7 @@ def get_hhmm_from_secs(time):
 
 
 def subtract_hhmm_secs(hhmm, secs):
-    """Subtract hhmm time - secs duration
+    """ Subtract hhmm time - secs duration
 
     Args:
         hhmm (float): HHMM format time
@@ -48,7 +48,7 @@ def subtract_hhmm_secs(hhmm, secs):
 
 
 def add_hhmm_secs(hhmm, secs):
-    """Add hhmm time + seconds duration
+    """ Add hhmm time + seconds duration
 
     Args:
         hhmm (float): HHMM
@@ -63,7 +63,7 @@ def add_hhmm_secs(hhmm, secs):
 
 
 def get_duration(arrival, leave):
-    """Convert arrival and leaving time to duration
+    """ Convert arrival and leaving time to duration
 
     Args:
         arrival (float): in HHMM format
@@ -80,7 +80,7 @@ def get_duration(arrival, leave):
 
 
 def is_hhmm_valid(time):
-    """Check if HHMM is a valid number
+    """ Check if HHMM is a valid number
 
     Args:
         time (float): HHMM format
@@ -95,7 +95,7 @@ def is_hhmm_valid(time):
 
 
 def get_dist(mean, var):
-    """Get a random number from a distribution given mean and %variability
+    """ Get a random number from a distribution given mean and %variability
 
     Args:
         mean (float): mean of distribution

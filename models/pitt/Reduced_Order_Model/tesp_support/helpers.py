@@ -202,7 +202,7 @@ def parse_kw(arg):
         return 0
 
 def aggregate_bid (crv):
-    """aggregates the buyer curve into a quadratic or straight-line fit with zero intercept
+    """ Aggregates the buyer curve into a quadratic or straight-line fit with zero intercept
 
     Args:
         crv (curve): the accumulated buyer bids

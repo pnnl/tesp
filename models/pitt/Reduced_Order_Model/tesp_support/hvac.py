@@ -6,8 +6,7 @@ Implements the ramp bidding method, with HVAC power as the
 bid quantity, and thermostat setting changes as the response
 mechanism.
 """
-import math
-import tesp_support.helpers as helpers
+import tesp_support.api.helpers as helpers
 
 class hvac:
     """
@@ -55,7 +54,7 @@ class hvac:
         cleared_price (float): the cleared market price in $/kwh
     """
     def __init__(self,dict,key,aucObj):
-        """Initializes the class
+        """ Initializes the class
         """
         self.name = key
         self.control_mode = dict['control_mode']

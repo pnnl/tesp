@@ -6,8 +6,8 @@ import matplotlib as mpl;
 import matplotlib.pyplot as plt;
 import process_gld_dsot as pg
 import numpy as np;
-# import tesp_support.process_inv as gp
-# import tesp_support.process_gld as gp
+# import tesp_support.api.process_inv as gp
+# import tesp_support.api.process_gld as gp
 
 rootname = sys.argv[1]
 

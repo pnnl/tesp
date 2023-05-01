@@ -16,7 +16,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from tesp_support.helpers import parse_kw
+from tesp_support.api.parse_helpers import parse_kw
 from tesp_support.dsot.helpers_dsot import Curve, get_intersect, ClearingType
 
 
@@ -221,7 +221,7 @@ class DSOMarket:
             substation_demand_curve (Curve): substation demand curve to be preprocessed
             Q_max (float): maximum capacity of the substation, in kW
 
-        Return:
+        Returns:
             preprocessed_curve (curve): preprocessed demand curve
 
         """
@@ -242,7 +242,7 @@ class DSOMarket:
         Args:
             Pw (float): wholesale price, in $/kWh
 
-        Return:
+        Returns:
             Pr (float): retail price, in $/kWh
         """
         Pr = deepcopy(Pw * self.scale + self.distribution_charge_rate)
@@ -254,7 +254,7 @@ class DSOMarket:
         Args:
             Pr (float): retail price, in $/kWh
 
-        Return:
+        Returns:
             Pw (float): wholesale price, in $/kWh
         """
         Pw = deepcopy((Pr - self.distribution_charge_rate) / self.scale)
@@ -322,7 +322,7 @@ class DSOMarket:
             day (int): day of the week
             hour (int): hour of the day
 
-        Return:
+        Returns:
             P (list of float): prices for the quantities
         """
         P = [self.curve_a[day][hour] * quantity * quantity +
@@ -340,7 +340,7 @@ class DSOMarket:
             day: 
             hour: 
 
-        Return:
+        Returns:
             Pwclear (float): cleared price, in $/kWh
             cleared_quantity(float): cleared quantity, in kWh
             trial_clear_type (int): clear type
@@ -484,7 +484,7 @@ class DSOMarket:
             maxPuLoading (float): maximum pu loading factor
             TOC_dict (dict): configuration parameters for transformer
 
-        Return:
+        Returns:
             supply_curve_RT (curve): substation supply curve for real-time market clearing
         """
 
@@ -558,7 +558,7 @@ class DSOMarket:
             maxPuLoading (float): maximum pu loading factor
             TOC_dict (dict): configuration parameters for transformer
 
-        Return:
+        Returns:
             supply_curve_DA (list): a collection of substation supply curves for day-ahead market clearing
         """
         FeederCongCapacity = retail_obj.FeederCongCapacity
@@ -621,7 +621,7 @@ class DSOMarket:
             FeederCongPrice (float): feeder congestion price, in $/kWh
             FeederPkDemandPrice (float): feeder peak demand price, in $/kWh
 
-        Return:
+        Returns:
             SupplyQuantities (list): quantity sampling of the supply curve, in kWh
             SupplyPrices (list): prices sampling of the supply curve, in $/kWh
         """
@@ -665,7 +665,7 @@ class DSOMarket:
             num_samples (int): number of sampling points
             TOC_dict (dict): configuration parameters for transformer
 
-        Return:
+        Returns:
             DollarsForPlot (list): price axis of unit owning cost, in $/kWh
             LoadsForPlot (list): quantity axis of unit owing cost, in kWh
         """

@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from copy import deepcopy
 from joblib import Parallel, delayed
 
-from tesp_support.helpers import enable_logging
+from tesp_support.api.helpers import enable_logging
 from .hvac_agent import HVACDSOT
 from .water_heater_agent import WaterHeaterDSOT
 from .ev_agent import EVDSOT
@@ -24,10 +24,10 @@ from .battery_agent import BatteryDSOT
 from .dso_market import DSOMarket
 from .retail_market import RetailMarket
 from .forecasting import Forecasting
-from tesp_support.metrics_collector import MetricsStore, MetricsCollector
+from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
 
 try:
-    import tesp_support.fncs as fncs
+    import tesp_support.api.fncs as fncs
 except ImportError:
     fncs = None
     print('WARNING: unable to load FNCS module.', flush=True)
@@ -37,7 +37,7 @@ if sys.platform != 'win32':
 
 
 def inner_substation_loop(configfile, metrics_root, with_market):
-    """Helper function that initializes and runs the DSOT agents
+    """ Helper function that initializes and runs the DSOT agents
 
     Reads configfile. Writes *_metrics.json* upon completion.
 
@@ -1933,7 +1933,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
 
 def dso_loop_f(configfile, metrics_root, with_market):
-    """Wrapper for *inner_substation_loop*
+    """ Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
     for non-Windows platforms.

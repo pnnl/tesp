@@ -3,7 +3,7 @@
 
 import os
 import json
-import tesp_support.helpers as helpers
+import tesp_support.api.helpers as helpers
 
 yamlFile = 'Ercot_monitor.yaml'
 jsonFile = 'tesp_monitor_ercot.json'

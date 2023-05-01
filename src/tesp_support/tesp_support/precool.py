@@ -23,7 +23,7 @@ try:
 except:
     pass
 try:
-    import tesp_support.fncs as fncs
+    import tesp_support.api.fncs as fncs
 except:
     pass
 
@@ -33,7 +33,7 @@ import math
 if sys.platform != 'win32':
     import resource
 
-from .helpers import parse_number, parse_magnitude_2
+from tesp_support.api.parse_helpers import parse_number, parse_magnitude_2
 
 thermalIntegrity = {
     'VERY_LITTLE':
@@ -187,7 +187,7 @@ class precooler:
         self.make_etp_model()
 
     def set_air_temp(self, val):
-        """Set the air_temp member variable
+        """ Set the air_temp member variable
 
         Args:
             val (str): FNCS/HELICS message with temperature in degrees Fahrenheit
@@ -211,7 +211,7 @@ class precooler:
         self.mtr_v = abs(val)
 
     def check_setpoint_change(self, hour_of_day, price, time_seconds):
-        """Update the setpoint for time of day and price
+        """ Update the setpoint for time of day and price
 
         Args:
             hour_of_day (float): the current time of day, 0..24
@@ -249,7 +249,7 @@ class precooler:
         return False
 
     def get_temperature_deviation(self):
-        """For metrics, find the difference between air temperature and time-scheduled (preferred) setpoint
+        """ For metrics, find the difference between air temperature and time-scheduled (preferred) setpoint
 
         Returns:
             float: absolute value of deviation
@@ -258,7 +258,7 @@ class precooler:
 
 
 def helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig):
-    """Function that supervises FNCS messages and time stepping for precooler agents
+    """ Function that supervises FNCS messages and time stepping for precooler agents
 
     Opens metrics_root_agent_dict.json and metrics_root_glm_dict.json for configuration.
     Writes precool_metrics_root.json at completion.
@@ -416,7 +416,7 @@ def helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)
 
 
 def fncs_precool_loop(nhours, metrics_root, dict_root, response):
-    """Function that supervises FNCS messages and time stepping for precooler agents
+    """ Function that supervises FNCS messages and time stepping for precooler agents
 
     Opens metrics_root_agent_dict.json and metrics_root_glm_dict.json for configuration.
     Writes precool_metrics_root.json at completion.
@@ -550,7 +550,7 @@ def fncs_precool_loop(nhours, metrics_root, dict_root, response):
 
 
 def precool_loop(nhours, metrics_root, dict_root, response='PriceVoltage', helicsConfig=None):
-    """Wrapper for *inner_substation_loop*
+    """ Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
     for non-Windows platforms.

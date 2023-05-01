@@ -19,14 +19,14 @@ try:
 except:
     pass
 try:
-    import tesp_support.fncs as fncs
+    import tesp_support.api.fncs as fncs
 except:
     pass
 
 from datetime import datetime
 from datetime import timedelta
 
-from .helpers import parse_kw, parse_magnitude
+from tesp_support.api.parse_helpers import parse_magnitude, parse_kw
 from .hvac_agent import hvac
 from .simple_auction import simple_auction
 
@@ -38,7 +38,7 @@ if sys.platform != 'win32':
 
 
 def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConfig):
-    """Helper function that initializes and runs the agents
+    """ Helper function that initializes and runs the agents
 
     Reads configfile. Writes *auction_metrics_root_metrics.json* and
     *controller_metrics_root_metrics.json* upon completion.
@@ -265,7 +265,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
 
 
 def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
-    """Helper function that initializes and runs the agents
+    """ Helper function that initializes and runs the agents
 
     Reads configfile. Writes *auction_metrics_root_metrics.json* and
     *controller_metrics_root_metrics.json* upon completion.
@@ -449,7 +449,7 @@ def fncs_substation_loop(configfile, metrics_root, hour_stop, flag):
 
 
 def substation_loop(configfile, metrics_root, hour_stop=48, flag='WithMarket', helicsConfig=None):
-    """Wrapper for *inner_substation_loop*
+    """ Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
     for non-Windows platforms.

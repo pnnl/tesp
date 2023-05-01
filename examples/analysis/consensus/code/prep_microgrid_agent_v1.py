@@ -11,7 +11,7 @@ import os
 import math
 
 from datetime import datetime
-from tesp_support.helpers import random_norm_trunc
+from tesp_support.api.helpers import random_norm_trunc
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -105,7 +105,7 @@ def select_setpt_night(wakeup_set, daylight_set, mode):
 
 
 def process_glm_with_microgrids(gldfileroot, substationfileroot, weatherfileroot, feedercnt, dso_key):
-    """Helper function that processes one GridLAB-D file
+    """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
 

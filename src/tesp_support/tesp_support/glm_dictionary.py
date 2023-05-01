@@ -17,7 +17,7 @@ import os
 import json
 from math import sqrt
 
-from .helpers import zoneMeterName
+from tesp_support.api.helpers import zoneMeterName
 
 
 def ercotMeterName(objname):

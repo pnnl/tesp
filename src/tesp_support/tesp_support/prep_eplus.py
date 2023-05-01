@@ -10,8 +10,8 @@ import copy
 import subprocess
 from datetime import datetime
 
-from .make_ems import merge_idf
-from .helpers import HelicsMsg
+from tesp_support.api.make_ems import merge_idf
+from tesp_support.api.helpers import HelicsMsg
 
 
 def configure_eplus(caseConfig, template_dir):

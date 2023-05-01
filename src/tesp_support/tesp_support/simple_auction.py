@@ -21,7 +21,7 @@ I think we should refactor this so that these assumptions are not so
 tightly integrated with the formulation.
 
 """
-from .helpers import ClearingType, curve, aggregate_bid
+from tesp_support.api.helpers import ClearingType, curve, aggregate_bid
 
 
 # Class definition
@@ -108,7 +108,7 @@ class simple_auction:
         self.unresponsive_sell = self.responsive_sell = self.unresponsive_buy = self.responsive_buy = 0
 
     def set_refload(self, kw):
-        """Sets the refload attribute
+        """ Sets the refload attribute
 
         Args:
             kw (float): GridLAB-D substation load in kw
@@ -116,7 +116,7 @@ class simple_auction:
         self.refload = kw
 
     def set_lmp(self, lmp):
-        """Sets the lmp attribute
+        """ Sets the lmp attribute
 
         Args:
             lmp (float): locational marginal price from the bulk system market
@@ -124,26 +124,26 @@ class simple_auction:
         self.lmp = lmp
 
     def initAuction(self):
-        """Sets the clearing_price and lmp to the mean price
+        """ Sets the clearing_price and lmp to the mean price
 
         2021-10-29 TDH: TODO - Any reason we can't put this in constructor?
         """
         self.clearing_price = self.lmp = self.mean
 
     def update_statistics(self):
-        """Update price history statistics - not implemented
+        """ Update price history statistics - not implemented
         """
         sample_need = 0
 
     def clear_bids(self):
-        """Re-initializes curve_buyer and curve_seller, sets the unresponsive load estimate to the total substation load.
+        """ Re-initializes curve_buyer and curve_seller, sets the unresponsive load estimate to the total substation load.
         """
         self.curve_buyer = curve()
         self.curve_seller = curve()
         self.unresp = self.refload
 
     def supplier_bid(self, bid):
-        """Gather supplier bids into curve_seller
+        """ Gather supplier bids into curve_seller
 
         Use this to enter curves in step-wise blocks.
 
@@ -155,7 +155,7 @@ class simple_auction:
         self.curve_seller.add_to_curve(price, quantity, False)
 
     def collect_bid(self, bid):
-        """Gather HVAC bids into curve_buyer
+        """ Gather HVAC bids into curve_buyer
 
         Also adjusts the unresponsive load estimate, by subtracting the HVAC power
         if the HVAC is on.
@@ -194,7 +194,7 @@ class simple_auction:
         self.agg_unresp, self.agg_resp_max, self.agg_deg, self.agg_c2, self.agg_c1 = aggregate_bid(self.curve_buyer)
 
     def clear_market(self, tnext_clear=0, time_granted=0):
-        """Solves for the market clearing price and quantity
+        """ Solves for the market clearing price and quantity
 
         Uses the current contents of curve_seller and curve_buyer.
         Updates clearing_price, clearing_quantity, clearing_type,
@@ -441,7 +441,7 @@ class simple_auction:
         #        self.unrespSupplierSurplus, sep=',', flush=True)
 
     def surplusCalculation(self, tnext_clear=0, time_granted=0):
-        """Calculates consumer surplus (and its average) and supplier surplus.
+        """ Calculates consumer surplus (and its average) and supplier surplus.
 
         This function goes through all the bids higher than clearing price from buyers to calculate consumer surplus,
         and also accumulates the quantities that will be cleared while doing so. Of the cleared quantities,

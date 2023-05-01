@@ -11,12 +11,25 @@ import re
 import sys
 from datetime import datetime
 
-from .helpers import idf_int
-
 if sys.platform == 'win32':
     pycall = 'python'
 else:
     pycall = 'python3'
+
+
+def idf_int(val):
+    """ Helper function to format integers for the EnergyPlus IDF input data file
+
+    Args:
+      val (int): the integer to format
+
+    Returns:
+       str: the integer in string format, padded with a comma and zero or one blanks, in order to fill three spaces
+    """
+    sval = str(val)
+    if len(sval) < 2:
+        return sval + ', '
+    return sval + ','
 
 
 def valid_var(name):
@@ -555,7 +568,7 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
 
 
 def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf', write_summary=False, bHELICS=False):
-    """Creates the EMS for an EnergyPlus building model
+    """ Creates the EMS for an EnergyPlus building model
 
     Args:
       target (str): desired output file in PWD, default ems.idf

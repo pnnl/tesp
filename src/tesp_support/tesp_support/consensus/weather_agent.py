@@ -11,7 +11,7 @@ from datetime import timedelta
 import pandas as pd
 
 try:
-    import tesp_support.fncs as fncs
+    import tesp_support.api.fncs as fncs
 except:
     pass
 import random
@@ -54,7 +54,7 @@ def destroy_federate(fed):
 
 
 def startWeatherAgent(file):
-    """the weather agent publishes weather data as configured by the json file
+    """ The weather agent publishes weather data as configured by the json file
 
     Args:
         file (str): the weather data file
@@ -337,7 +337,7 @@ def usage():
 
 
 def convertTimeToSeconds(time):
-    """Convert time string with unit to integer in seconds
+    """ Convert time string with unit to integer in seconds
 
     It only parse unit in day, hour, minute and second.
     It will not recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
@@ -362,7 +362,7 @@ def convertTimeToSeconds(time):
 
 
 def deltaTimeToResmapleFreq(time):
-    """Convert time unit to a resampling frequency that can be recognized by pandas.DataFrame.resample()
+    """ Convert time unit to a resampling frequency that can be recognized by pandas.DataFrame.resample()
 
     It only parse unit in day, hour, minute and second.
     It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
@@ -387,14 +387,14 @@ def deltaTimeToResmapleFreq(time):
 
 
 def findDeltaTimeMultiplier(time):
-    """find the multiplier to convert delta_time to seconds
+    """ Find the multiplier to convert delta_time to seconds
 
     It only parse unit in day, hour, minute and second.
     It won't recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
 
     Args:
         time (str): time with unit
-    Return:
+    Returns:
         (int) the multiplier to convert delta_time to seconds
     """
     unit = ''.join(filter(str.isalpha, time))
@@ -449,7 +449,7 @@ class weather_forecast:
     """
 
     def __init__(self, variable, period, W_dict):
-        """Initializes the class
+        """ Initializes the class
         """
         self.weather_variable = variable
         self.Period_bias = period
@@ -477,7 +477,7 @@ class weather_forecast:
         return sample
 
     def make_forecast(self, weather, t=0):
-        """Include error to a known weather variable
+        """ Include error to a known weather variable
 
         Args:
             weather (float) (1 x desired number of hours ahead): known weather variable

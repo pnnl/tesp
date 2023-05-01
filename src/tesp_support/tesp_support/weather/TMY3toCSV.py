@@ -28,7 +28,7 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
 def readtmy3(filename=None, coerce_year=None, recolumn=True):
-    """Read a TMY3 file in to a pandas dataframe.
+    """ Read a TMY3 file in to a pandas dataframe.
 
     Args:
         filename (object):
@@ -134,7 +134,7 @@ def _parsedate(ymd, hour, year=None):
 
 
 def _recolumn(tmy3_dataframe):
-    """Rename the columns of the TMY3 DataFrame.
+    """ Rename the columns of the TMY3 DataFrame.
 
     Args:
         tmy3_dataframe (dataframe):
@@ -190,7 +190,7 @@ def _recolumn(tmy3_dataframe):
 
 
 def weathercsv(tmyfile, output_file, start_time, end_time, year):
-    """Converts TMY3 weather data to CSV in the requested time range
+    """ Converts TMY3 weather data to CSV in the requested time range
 
     Args:
         tmyfile (str): the input TMY3 data file
@@ -235,7 +235,7 @@ def weathercsv(tmyfile, output_file, start_time, end_time, year):
 
 
 def weathercsv_cloudy_day(start_time, end_time, output_file):
-    """Converts weather data to cloudy days CSV in the requested time range
+    """ Converts weather data to cloudy days CSV in the requested time range
 
     Args:
         start_time (str): the starting date and time of interest, like `2013-07-01 00:00:00`
