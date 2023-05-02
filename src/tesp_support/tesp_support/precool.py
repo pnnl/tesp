@@ -94,7 +94,7 @@ class precooler:
       basepoint (float): the preferred time-scheduled thermostat setpoint in deg F
       setpoint (float): the thermostat setpoint, including price response, in deg F
       lastchange (float): time of day in seconds when the setpoint was last changed
-      precooling (Boolean): True if the house is precooling, False if not
+      precooling (bool): True if the house is precooling, False if not
       ti (int): thermal integrity level, as enumerated for GridLAB-D, from gldrow
       sqft (float: total floor area in square feet, from gldrow
       stories (int): number of stories, from gldrow
@@ -217,9 +217,8 @@ class precooler:
             hour_of_day (float): the current time of day, 0..24
             price (float): the current price in $/kwh
             time_seconds (long long): the current FNCS time in seconds
-
         Returns:
-            Boolean: True if the setpoint changed, False if not
+            bool: True if the setpoint changed, False if not
         """
         # time-scheduled changes to the basepoint
         if self.day_start_hour <= hour_of_day <= self.day_end_hour:

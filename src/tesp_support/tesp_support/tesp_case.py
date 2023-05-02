@@ -18,13 +18,13 @@ import subprocess
 import sys
 from datetime import datetime
 
-from tesp_support.weather.TMYtoEPW import convert_tmy2_to_epw
-from .api.data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
-from .resdential_feeder_glm import populate_feeder
-from .glm_dictionary import glm_dict
+from tesp_support.api.data import feeders_path, scheduled_path, weather_path, energyplus_path, pypower_path
 from tesp_support.api.helpers import HelicsMsg
 from tesp_support.api.make_ems import merge_idf
+from tesp_support.weather.TMYtoEPW import convert_tmy2_to_epw
+from .glm_dictionary import glm_dict
 from .prep_substation import prep_substation
+from .resdential_feeder_glm import populate_feeder
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -103,7 +103,7 @@ def write_tesp_case(config, cfgfile, freshdir=True):
     Args:
         config (dict): the complete case data structure
         cfgfile (str): the name of the JSON file that was read
-        freshdir (boolean): flag to create the directory and base files anew
+        freshdir (bool): flag to create the directory and base files anew
 
     """
     print('feeder backbone files from', feeders_path)
@@ -184,7 +184,7 @@ def write_tesp_case(config, cfgfile, freshdir=True):
 
     if freshdir:
         # process TMY3 ==> weather.dat
-        cmdline = pycall + ' -c "import tesp_support.TMY3toCSV as tesp; tesp.weathercsv(' + "'" + \
+        cmdline = pycall + ' -c "import tesp_support.weather.TMY3toCSV as tesp; tesp.weathercsv(' + "'" + \
                   weatherfile + "','" + casedir + '/weather.dat' + "','" + \
                   StartTime + "','" + EndTime + "'," + str(WeatherYear) + ')"'
         print(cmdline)
@@ -195,8 +195,10 @@ def write_tesp_case(config, cfgfile, freshdir=True):
     #########################################
     # set up EnergyPlus, if the user wants it.
     # Only works for TE_Base.glm
+    pid_count = "4"
     bUseEplus = False
     if len(EpBus) > 0:
+        pid_count = "6"
         bUseEplus = True
 
         merge_idf(eplusfile, emsfile, StartTime, EndTime, eplusout, EpStepsPerHour)
@@ -540,18 +542,14 @@ values:
 
         shfile = casedir + '/run.sh'
         op = open(shfile, 'w')
+        print('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker '
+              + pid_count + ' &> broker_f.log &)', file=op)
         if bUseEplus:
-            print(
-                '(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 6 &> broker_f.log &)',
-                file=op)
             print('(export FNCS_CONFIG_FILE=eplus.yaml && export FNCS_FATAL=YES && exec energyplus -w '
                   + EpWeather + ' -d output Merged_f.idf &> ' + eplus_federate + '_f.log &)', file=op)
             print('(export FNCS_CONFIG_FILE=eplus_agent.yaml && export FNCS_FATAL=YES && exec eplus_agent',
                   EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo,
                   '&> ' + agent_federate + '_f.log &)', file=op)
-        else:
-            print('(export FNCS_BROKER="tcp://*:5570" && export FNCS_FATAL=YES && exec fncs_broker 4 &> broker_f.log &)',
-                file=op)
         print('(export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile +
               ' &> ' + gld_federate + '_f.log &)', file=op)
         print('(export FNCS_CONFIG_FILE=' + SubstationYamlFile + ' && export FNCS_FATAL=YES && exec python3 -c "' + aucline +
@@ -622,16 +620,14 @@ values:
 
         shfile = casedir + '/runh.sh'
         op = open(shfile, 'w')
+        print('(exec helics_broker -f ' + pid_count + ' --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
         if bUseEplus:
-            print('(exec helics_broker -f 6 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
             print('(export HELICS_CONFIG_FILE=eplus.json && exec energyplus -w ' + EpWeather +
                   ' -d output Merged.idf &> ' + eplus_federate + '.log &)', file=op)
             # configure from the command line, but StartTime and load_scale not supported this way
             print('(exec eplus_agent_helics',
                   EpAgentStop, EpAgentStep, EpMetricsKey, EpMetricsFile, EpRef, EpRamp, EpLimHi, EpLimLo,
                   'eplus_agent.json &> ' + agent_federate + '.log &)', file=op)
-        else:
-            print('(exec helics_broker -f 4 --loglevel=warning --name=mainbroker &> broker.log &)', file=op)
         print('(exec gridlabd -D USE_HELICS -D METRICS_FILE=' + GldMetricsFile + ' ' + GldFile + ' &> ' +
               gld_federate + '.log &)', file=op)
         print('(exec python3 -c "' + aucline + '" &> ' + sub_federate + '.log &)', file=op)

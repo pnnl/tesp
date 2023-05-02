@@ -61,9 +61,9 @@ class RetailMarket:
         cleared_quantity_DA (list): list of cleared quantity at each hour
         site unresponsive DA (list): Site Day Ahead quantity which is unresponsive
         AMES_RT (list X 5): Smooth Quadratics
-        AMES_DA ((list X 5) X windowLength): Smooth Quadratics
-        basecase (boolean) If true no agent market, false agent market
-        load_flexibility (boolean) If true load is bid in to the market, false all load is unresponsive
+        AMES_DA ((list X 5): X windowLength): Smooth Quadratics
+        basecase (bool): If true no agent market, false agent market
+        load_flexibility (bool): If true load is bid in to the market, false all load is unresponsive
         U_price_cap_CA (float): Upper price range for curve aggregator (CA)
         L_price_cap_CA (float): Lower price range for curve aggregator (CA)
 
@@ -231,7 +231,7 @@ class RetailMarket:
         Args:
             curve_buyer (Curve): aggregated buyer curve
             curve_seller (Curve): aggregated seller curve
-            transformer_degradation (boolean): equals to 1 if transformer_degradation is considered in the supply curve
+            transformer_degradation (bool): equals to 1 if transformer_degradation is considered in the supply curve
             Q_max (float): substation capacity, in kWh
             
         Outputs:

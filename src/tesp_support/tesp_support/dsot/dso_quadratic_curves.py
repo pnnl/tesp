@@ -90,7 +90,7 @@ class DSO_LMPs_vs_Q:
         
         Args:
             i (int): DSO identifier 
-            p_time (np array boolean): True for samples utilized in fiiting the quadractic curve 
+            p_time (np array bool): True for samples utilized in fiiting the quadractic curve 
         
         Returns:
             df_dsos_lml_q (array): [['1', 'x', 'x^2']] quadractic curve coeficients 

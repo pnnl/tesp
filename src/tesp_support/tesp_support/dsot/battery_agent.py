@@ -68,15 +68,15 @@ class BatteryDSOT:
         ProfitMargin_intercept (float): specified in % to generate a small dead band (i.e., change in price does not affect quantity). Set to 0 to disable
         pm_hi (float): Highest possible profit margin in %
         pm_lo (float): Lowest possible profit margin in %
-        RT_state_maintain (boolean): true if battery must maintain charging or discharging state for 1 hour
+        RT_state_maintain (bool): true if battery must maintain charging or discharging state for 1 hour
         RT_state_maintain_flag (int): (0) not define at current hour (-1) charging (+1) discharging
-        RT_flag (boolean): if True, has to update GridLAB-D
+        RT_flag (bool): if True, has to update GridLAB-D
         inv_P_setpoint (float): next GridLAB-D inverter power output
         optimized_Quantity (float) (1 X Window Length): Optimized quantity
         #not used if not biding DA
         prev_clr_Quantity (float) (1 X Window Length): cleared quantities (kWh) from previous market iteration for all hours
         prev_clr_Price (float) (1 X windowLength): cleared prices ($/kWh) from previous market iteration
-        BindingObjFunc (boolean): if True, then optimization considers cleared price, quantities from previous iteration in the objective function
+        BindingObjFunc (bool): if True, then optimization considers cleared price, quantities from previous iteration in the objective function
     """
 
     def __init__(self, battery_dict, inv_properties, key, model_diag_level, sim_time, solver):
@@ -197,7 +197,7 @@ class BatteryDSOT:
         """ Update the P and Q settings if the last bid was accepted
 
         Returns:
-            Boolean: True if the inverter settings changed, False if not.
+            bool: True if the inverter settings changed, False if not.
         """
         self.RT_gridlabd_set_P(11, current_time)
         return self.RT_flag

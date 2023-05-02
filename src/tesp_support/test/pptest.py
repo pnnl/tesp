@@ -1,13 +1,13 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: pptest.py
 
+import importlib.util
 import json
-import os
 import shutil
 from datetime import datetime
+from os import path, makedirs
 
-
-ppdir = os.path.expandvars('$TESPDIR/models/pypower/')
+ppdir = path.expandvars('$TESPDIR/models/pypower/')
 
 cfgfile = 'test.json'
 lp = open(cfgfile).read()
@@ -22,9 +22,9 @@ workdir = config['SimulationConfig']['WorkingDirectory']
 casedir = workdir + casename
 print('case files written to', casedir)
 
-if os.path.exists(casedir):
+if path.exists(casedir):
     shutil.rmtree(casedir)
-os.makedirs(casedir)
+makedirs(casedir)
 
 StartTime = config['SimulationConfig']['StartTime']
 EndTime = config['SimulationConfig']['EndTime']
@@ -35,10 +35,8 @@ seconds = int((dt2 - dt1).total_seconds())
 days = seconds / 86400
 print(days, seconds)
 
-###################################
+# ##################################
 # dynamically import the base PYPOWER case
-import importlib.util
-
 spec = importlib.util.spec_from_file_location('ppbasecase', ppfile)
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)

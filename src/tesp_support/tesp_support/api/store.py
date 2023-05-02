@@ -43,7 +43,7 @@ import zipfile as zf
 #       "directory": [
 #         {
 #           "name": <identifier>,
-#           "recurse": <boolean>,
+#           "recurse": <bool>,
 #           "include": [<identifier>, ...],
 #         },
 #         {...}

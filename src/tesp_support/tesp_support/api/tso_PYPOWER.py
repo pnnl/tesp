@@ -16,8 +16,8 @@ from copy import deepcopy
 
 from .tso_helpers import load_json_case, make_dictionary
 
-#import cProfile
-#import pstats
+# import cProfile
+# import pstats
 
 if sys.platform != 'win32':
     import resource
@@ -39,6 +39,7 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
     Args:
       casefile (str): the configuring JSON file name, without extension
       rootname (str): the root filename for metrics output, without extension
+      helicsConfig (str):
     """
 
     ppc = load_json_case(casefile)

@@ -639,7 +639,7 @@ def process_inv(name_root, diction_name='', title=None, save_file=None, save_onl
       diction_name (str): metafile name (with json extension) for a different GLM dictionary, if it's not *[name_root]_glm_dict.json*. Defaults to empty.
       title (str):
       save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
-      save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
+      save_only (bool): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
     """
 
     path = os.getcwd()

@@ -6,14 +6,14 @@
 declare -r EPLUS_PATH=$TESPDIR/data/energyplus
 declare -r TMY_PATH=$TESPDIR/data/weather
 
-#python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf', '12')"
-#python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', '12')"
+#python3 -c "import tesp_support.api.make_ems as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf', '12')"
+#python3 -c "import tesp_support.api.make_ems as tesp;tesp.merge_idf('$EPLUS_PATH/FullServiceRestaurant.idf','$EPLUS_PATH/ems/emsFullServiceRestaurant.idf', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', '12')"
 
-#python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf', '12')"
-python3 -c "import tesp_support.api.proces as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', '12')"
+#python3 -c "import tesp_support.api.make_ems as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-01-03 00:00:00', '2013-01-05 00:00:00', 'Merged.idf', '12')"
+python3 -c "import tesp_support.api.make_ems as tesp;tesp.merge_idf('SchoolBase.idf','./forSchoolBase/emsSchoolBase.idf', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 'Merged.idf', '12')"
 
 TMY3toTMY2_ansi $TMY_PATH/TX-Houston_Bush_Intercontinental.tmy3 > Test.tmy2
-python3 -c "import tesp_support.TMYtoEPW as tesp;tesp.convert_tmy2_to_epw('Test')"
+python3 -c "import tesp_support.weather.TMYtoEPW as tesp;tesp.convert_tmy2_to_epw('Test')"
 
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 4 &> broker.log &)
 (export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=eplus.yaml && exec energyplus -w Test.epw -d output Merged.idf &> eplus.log &)

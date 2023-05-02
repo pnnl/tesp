@@ -655,9 +655,8 @@ def is_node_class(s):
 
     Args:
         s (str): the GridLAB-D class name
-
     Returns:
-        Boolean: True if a node class, False otherwise
+        bool: True if a node class, False otherwise
     """
     if s == 'node':
         return True
@@ -680,9 +679,8 @@ def is_edge_class(s):
 
     Args:
         s (str): the GridLAB-D class name
-
     Returns:
-        Boolean: True if an edge class, False otherwise
+        bool: True if an edge class, False otherwise
     """
     if s == 'switch':
         return True
@@ -2890,7 +2888,7 @@ def write_node_house_configs(fp, xfkva, xfkvll, xfkvln, phs, want_inverter=False
         xfkvll (float): line-to-line voltage [kV] on the primary. The secondary voltage will be 208 three-phase
         xfkvln (float): line-to-neutral voltage [kV] on the primary. The secondary voltage will be 120/240 for split secondary
         phs (str): either 'ABC' for three-phase, or concatenation of 'A', 'B', and/or 'C' with 'S' for single-phase to triplex
-        want_inverter (boolean): True to write the IEEE 1547-2018 smarter inverter function setpoints
+        want_inverter (bool): True to write the IEEE 1547-2018 smarter inverter function setpoints
     """
     if want_inverter:
         print('#define INVERTER_MODE=CONSTANT_PF', file=fp)
@@ -2950,7 +2948,7 @@ def write_node_houses(fp, node, region, xfkva, phs, nh=None, loadkw=None, house_
         solar_fraction (float): fraction of houses to have rooftop solar panels
         storage_fraction (float): fraction of houses with solar panels that also have residential storage systems
         node_metrics_interval (int): if not None, the metrics collection interval in seconds for houses, meters, solar and storage at this node
-        random_seed (boolean): if True, reseed each function call. Default value False provides repeatability of output.
+        random_seed (bool): if True, reseed each function call. Default value False provides repeatability of output.
     """
     global house_nodes, storage_percentage, solar_percentage, electric_cooling_percentage, metrics_interval
     house_nodes = {}

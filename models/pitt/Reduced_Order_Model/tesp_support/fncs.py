@@ -192,7 +192,7 @@ def is_initialized():
     """ Determine whether the FNCS library has been initialized
 
     Returns:
-        Boolean: True if initialized, False if not.
+        bool: True if initialized, False if not.
     """
     return 1 == _is_initialized()
 

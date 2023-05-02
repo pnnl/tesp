@@ -57,7 +57,7 @@ class curve:
         Args:
             price (float): the bid price, should be $/kWhr
             quantity (float): the bid quantity, should be kW
-            is_on (Boolean): True if the load is currently on, False if not
+            is_on (bool): True if the load is currently on, False if not
         """
         if quantity == 0:
             return

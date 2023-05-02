@@ -1003,7 +1003,7 @@ class HVACDSOT:  # TODO: update class name
             sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
-            Boolean: True if the thermostat setting changes, False if not.
+            bool: True if the thermostat setting changes, False if not.
         """
         # self.cleared_price = self.price_forecast_0
         if self.thermostat_mode == 'Cooling':
@@ -1250,7 +1250,7 @@ class HVACDSOT:  # TODO: update class name
             sim_time (str): Current time in the simulation; should be human-readable
 
         Returns:
-            Boolean: True if the setting changed, False if not
+            bool: True if the setting changed, False if not
         """
         hod = hod + moh / 60
 

@@ -49,7 +49,7 @@ class hvac:
         air_temp (float): current air temperature of the house in deg F
         hvac_kw (float): most recent non-zero HVAC power in kW, this will be the bid quantity
         mtr_v (float): current line-neutral voltage at the triplex meter
-        hvac_on (Boolean): True if the house HVAC is currently running
+        hvac_on (bool): True if the house HVAC is currently running
         basepoint (float): the preferred time-scheduled thermostat setpoint in deg F
         setpoint (float): the thermostat setpoint, including price response, in deg F
         bid_price (float): the current bid price in $/kwh
@@ -113,7 +113,7 @@ class hvac:
         then the thermostat could be turned up.p
 
         Returns:
-            Boolean: True if the thermostat setting changes, False if not.
+            bool: True if the thermostat setting changes, False if not.
         """
         if self.control_mode == 'CN_RAMP' and self.std_dev > 0.0:
             offset = (self.cleared_price - self.mean) * self.Trange / self.ramp / self.std_dev
@@ -129,7 +129,7 @@ class hvac:
         """ Bid to run the air conditioner through the next period
         
         Returns:
-            [float, float, Boolean]: bid price in $/kwh, bid quantity in kW and current HVAC on state, or None if not bidding 
+            [float, float, bool]: bid price in $/kwh, bid quantity in kW and current HVAC on state, or None if not bidding
         """
 
         # print (' = formulating bid for {:s} kw={:.2f} on={:d} T={:.2f} Base={:.2f} mu={:.5f} ramp={:.3f} std={:.5f} Trange={:.2f} mode={:s}'.format (self.name,
@@ -155,7 +155,7 @@ class hvac:
             dow (int): the day of the week, zero being Monday
 
         Returns:
-            Boolean: True if the setting changed, False if not
+            bool: True if the setting changed, False if not
         """
         if dow > 4:  # a weekend
             val = self.weekend_night_set

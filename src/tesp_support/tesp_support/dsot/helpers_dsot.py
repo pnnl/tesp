@@ -658,7 +658,7 @@ class Curve:
     Attributes:
         prices ([float]): array of prices, in $/kWh
         quantities ([float]): array of quantities, in kW
-        uncontrollable_only (boolean): equals to 1 when there is only uncontrollable load demand bids in the market
+        uncontrollable_only (bool): equals to 1 when there is only uncontrollable load demand bids in the market
 
     """
 

@@ -49,7 +49,7 @@ class WaterHeaterDSOT:
         weight_comfort (float): weight of the user comfort in the DA quantity optimization objective, falls into range [0, 1]
         ProfitMargin_intercept (float): specified in % and used to modify slope of bid curve. Set to 0 to disable
         ProfitMargin_slope (float): specified in % to generate a small dead band (i.e., change in price does not affect quantity). Set to 0 to disable
-        Participating (boolean): equals to 1 when participate in the price-responsive biddings
+        Participating (bool): equals to 1 when participate in the price-responsive biddings
         price_cap (float): the maximum price that is allowed in the retail market, in $/kWh
         model_diag_level (int): Specific level for logging errors; set it to 11
         sim_time (str): Current time in the simulation; should be human-readable
@@ -965,9 +965,8 @@ class WaterHeaterDSOT:
         Args:
             model_diag_level (int): Specific level for logging errors; set it to 11
             sim_time (str): Current time in the simulation; should be human-readable
-
         Returns:
-           Boolean: True if the thermostat setting changes, False if not.
+           bool: True if the thermostat setting changes, False if not.
         """
         upper_previous = deepcopy(self.Setpoint_upper)
         bottom_previous = deepcopy(self.Setpoint_bottom)

@@ -75,11 +75,10 @@ def truncate(f, n=3):
     number of decimals. The default value is three decimals.
 
     Args:
-        f (string/float) - Value to be truncated
-        n (int) - Number of decimal places to truncate to
-
+        f (string/float): Value to be truncated
+        n (int): Number of decimal places to truncate to
     Returns:
-        truc_val (string/float) - Truncated value of f
+        truc_val (string/float): Truncated value of f
     """
     s = '{}'.format(f)
     if 'e' in s or 'E' in s:
@@ -93,11 +92,10 @@ def _open_file(file_path, file_type='r'):
     """ Utilty function to open file with reasonable error handling.
 
     Args:
-        file_path (str) - Path to the file to be opened
-        file_type (str) - Type of the open method. Default is read ('r')
-
+        file_path (str): Path to the file to be opened
+        file_type (str): Type of the open method. Default is read ('r')
     Returns:
-        fh (file object) - File handle for the open file
+        fh (file object): File handle for the open file
     """
     try:
         fh = open(file_path, file_type)
@@ -112,11 +110,9 @@ def parse_solar_metadata(solar_metadata_path):
     This function parses the solar metadata JSON.
 
     Args:
-        solar_metadata_path (str) - Path to the JSON file containing the
-        metadata to be parsed.
-
+        solar_metadata_path (str): Path to the JSON file containing the metadata to be parsed.
     Returns:
-        solar_dict (dicts) - Dictionary form of the data in the JSON file
+        solar_dict (dicts): Dictionary form of the data in the JSON file
     """
 
     solar_fh = _open_file(solar_metadata_path)
@@ -132,16 +128,11 @@ def _create_200_node_csv_file_and_headers(filename, output_path):
     is stored as a table (rows for each timestamp, columns for each of
     the 200 buses).
 
-
         Args:
-            filename (str) - name of output file
-
-            output_path (str) - Path to location where output file will
-            be written
-
-
+            filename (str): name of output file
+            output_path (str): Path to location where output file will be written
         Returns:
-            dsot_fh (File object) - File handle for output file
+            dsot_fh (File object): File handle for output file
         """
     outpath = os.path.join(output_path, filename)
     dsot_fh = _open_file(outpath, 'w')
@@ -176,12 +167,10 @@ def _add_extra_days_to_hourly(profile):
         The added data is a replication of the first few days of Jan
         (for the days before Jan 1) and Feb 28th (for Leap Day).
 
-
         Args:
-            profile (list) - hourly profile values
-
+            profile (list): hourly profile values
         Returns:
-            profile (list) - Augmented hourly profile values
+            profile (list): Augmented hourly profile values
         """
 
     if len(profile) == 8760:
@@ -224,15 +213,14 @@ def _add_extra_days_to_hourly(profile):
 
 def parse_DSO_metadata_Excel(dso_metadata_path, worksheet_name):
     """
-    (DEPRECATED) - Metadata is now stored in JSON file. See parse_DSO_metadata_Excel_JSON.
+    (DEPRECATED): Metadata is now stored in JSON file. See parse_DSO_metadata_Excel_JSON.
     This function parses the DSO metadata which is contained in an Excel spreadsheet
 
     Args:
-        dso_metadata_path (str) - Path to the Excel file containing the metadata to be parsed.
-        worksheet_name (str) - Name of the worksheet in the Excel file containing the metadata
-
+        dso_metadata_path (str): Path to the Excel file containing the metadata to be parsed.
+        worksheet_name (str): Name of the worksheet in the Excel file containing the metadata
     Returns:
-        dso_meta (list of dicts) - One dictionary per DSO with appropriate metadata captured.
+        dso_meta (list of dicts): One dictionary per DSO with appropriate metadata captured.
     """
 
     # openpyxl doesn't use file handles, so I just use my function to
@@ -315,12 +303,11 @@ def parse_DSO_metadata_Excel_JSON(dso_metadata_path_Excel, worksheet_name, dso_m
     ...
 
     Args:
-        dso_metadata_path_Excel (str) - Path to the Excel file containing the metadata to be parsed.
-        worksheet_name (str) - Name of the worksheet in the Excel file containing the metadata.
-        dso_metadata_path_JSON (str) - Path to the JSON file containing the metadata to be parsed.
-
+        dso_metadata_path_Excel (str): Path to the Excel file containing the metadata to be parsed.
+        worksheet_name (str): Name of the worksheet in the Excel file containing the metadata.
+        dso_metadata_path_JSON (str): Path to the JSON file containing the metadata to be parsed.
     Returns:
-        dso_meta (list of dicts) - One dictionary per DSO with appropriate metadata captured.
+        dso_meta (list of dicts): One dictionary per DSO with appropriate metadata captured.
     """
     # openpyxl doesn't use file handles, so I just use my function to
     #   make sure the file is really there and then close it up to allo
@@ -379,9 +366,6 @@ def build_dso_solar_folders(dso_meta, output_path):
     Args:
         dso_meta: metadata dictionary containing the DSO name
         output_path: string specifying output path of data
-
-    Returns:
-        (none)
     """
     for dso in dso_meta:
         dir_name = 'DSO_' + str(dso['200-bus'])
@@ -405,18 +389,12 @@ def add_locations(dso_meta, solar_meta, nsrdb_path):
     metadata file and is also added to the solar site list. This is the
     location that will be used for any utility-scale solar generation.
 
-
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO
-
-        solar_meta (dict) - Metadata related to the solar parameters
-
-        nsrdb_path(str) - Path to the directory with the NSRDB data
-
-
+        dso_meta (list): List of dicts with metadata associated with each DSO
+        solar_meta (dict): Metadata related to the solar parameters
+        nsrdb_path(str): Path to the directory with the NSRDB data
     Returns:
-        dso_meta (list of dicts) - One dictionary per DSO with appropriate
+        dso_meta (list of dicts): One dictionary per DSO with appropriate
         metadata captured. Each dictionary has an added item,
         "distributed locations" which is a dict of parameters for the
         distributed solar generation
@@ -529,14 +507,8 @@ def generate_KML(dso_meta, output_file):
     into Google Earth to visualize the solar locations.
 
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO
-
-        output_file (str) - Location to write output KML
-
-
-    Returns:
-        (none)
+        dso_meta (list): List of dicts with metadata associated with each DSO
+        output_file (str): Location to write output KML
     """
 
     kml_fh = open(output_file, 'w')
@@ -609,21 +581,14 @@ def download_nsrdb_data(dso_meta, solar_meta, output_path):
     This function queries the NSRDB database over the web and pulls
     down the solar data down and stores it in a Pandas dataframe.
 
-
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO, specifically the site information
-
-        solar_meta (list) - List of metadata related to the solar
-        parameters
-
-        output_path (str) - Location to write out solar data from the
-        NSRDB so that we don't have to re-query the database for data
-        we already have.
-
-
+        dso_meta (list): List of dicts with metadata associated with
+            each DSO, specifically the site information
+        solar_meta (list): List of metadata related to the solar parameters
+        output_path (str): Location to write out solar data from the NSRDB
+            so that we don't have to re-query the database for data we already have.
     Returns:
-        dso_meta (list) - List of dicts with metadata associated with
+        dso_meta (list): List of dicts with metadata associated with
         each DSO, updated to include NSRDB-specific information such as
         the abreviated lats and longs from the downloaded solar data as
         well as a path to each downloaded file and a boolean indicating
@@ -760,16 +725,12 @@ def calc_solarPV_power(dso_meta, output_path):
     at a 1 MW.
 
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO, specifically the solar PV information per site
-
-        output_path (str) - Location to write out solar PV power data
-
-
+        dso_meta (list): List of dicts with metadata associated with each DSO,
+            specifically the solar PV information per site
+        output_path (str): Location to write out solar PV power data
     Returns:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO, updated to include power profiles for each site in the
-        DSO.
+        dso_meta (list): List of dicts with metadata associated with
+        each DSO, updated to include power profiles for each site in the DSO.
     """
     for idx, dso in enumerate(dso_meta):
         power_profiles = []
@@ -838,11 +799,8 @@ def write_power_profile(output_path, power_data):
     have used the standard CSV library instead.
 
     Args:
-        power_data (list) - List of power values
-        output_path (str) - Path to the location of file to write.
-
-    Returns:
-        (none)
+        power_data (list): List of power values
+        output_path (str): Path to the location of file to write.
     """
     power_fh = open(output_path, 'w')
     for power in power_data:
@@ -859,12 +817,10 @@ def calc_dso_solar_fraction(dso_meta):
     PV for all of ERCOT is pre-defined by another analysis.)
 
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO, specifically the average annual load of each DSO
-
-
+        dso_meta (list): List of dicts with metadata associated with each DSO,
+            specifically the average annual load of each DSO
     Returns:
-        dso_meta (list) - List of dicts with metadata associated with
+        dso_meta (list): List of dicts with metadata associated with
         each DSO, updated to include load fractions for each DSO.
     """
     total_load = 0
@@ -888,17 +844,13 @@ def aggregate_scale_solar_pv_profiles(dso_meta, solar_meta, output_path):
     their relative ratios between utility-scale and dsitributed.
 
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO, specifically with the load fraction needed to scale
-        the solar PV power profiles as well as the profiles themselves
-
-        solar_meta (dict) - User-specified solar metadata
-
-        output_path (str) - Path to the solar PV power profiles for
-        all DSOs.
-
+        dso_meta (list): List of dicts with metadata associated with each DSO,
+            pecifically with the load fraction needed to scale
+            the solar PV power profiles as well as the profiles themselves
+        solar_meta (dict): User-specified solar metadata
+        output_path (str): Path to the solar PV power profiles for all DSOs.
     Returns:
-        dso_meta (list) - List of dicts with metadata associated with
+        dso_meta (list): List of dicts with metadata associated with
         each DSO, updated to include the scaled and aggregated
         utility-scale and dsitributed solar profiles.
     """
@@ -988,17 +940,13 @@ def aggregate_to_8_nodes(dso_meta, output_path):
     list. They don't have all the same metadata as the original 200-node
     DSOs.
 
-
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO, specifically 200-node DSO solar profiles
-
-        output_path (str) - Location to write out aggregated solar
+        dso_meta (list): List of dicts with metadata associated with each DSO,
+            specifically 200-node DSO solar profiles
+        output_path (str): Location to write out aggregated solar
         profile data.
-
-
     Returns:
-        dso_meta (list) - List of dicts with metadata associated with
+        dso_meta (list): List of dicts with metadata associated with
         each DSO, updated to include aggregated solar profile data and
         output file location.
     """
@@ -1105,18 +1053,12 @@ def _calc_hours(month, start_day, num_days):
     be accessed by index.
 
     Args:
-        month (int) - 1 to 12, indicating which month of the year to graph
-
-        start_day (int) - 1 to 31 (depending on the month) day of the month
-        to start graphing
-
-        num_days (int) - Number of days in data to graph.
-
-
+        month (int): 1 to 12, indicating which month of the year to graph
+        start_day (int): 1 to 31 (depending on the month) day of the month to start graphing
+        num_days (int): Number of days in data to graph.
     Returns:
-        first_hour (int) - First hour (index) to be graphed
-
-        last_hour (int) - Last hour (index) to be graphed
+        first_hour (int): First hour (index) to be graphed
+        last_hour (int): Last hour (index) to be graphed
     """
     days_in_months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
     first_hour = sum(days_in_months[:month]) * 24
@@ -1133,14 +1075,9 @@ def create_graphs(dso_meta, type):
     Graph image files are saved alongside solar profile files.
 
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO, specifically the distributed and utility scale solar
-        power profiles.
-
-        type (str) - Keyword indicating the type of graph to create
-
-    Returns:
-        (none)
+        dso_meta (list): List of dicts with metadata associated with each DSO,
+            specifically the distributed and utility scale solar power profiles.
+        type (str): Keyword indicating the type of graph to create
     """
     timestamps = np.arange('2016-01-01 00:00', '2016-12-31 23:00',
                            dtype='datetime64[h]')
@@ -1233,24 +1170,15 @@ def forecast_cleanup(dso_meta, idx, error, profile, forecast_profile):
     list. They don't have all the same metadata as the original 200-node
     DSOs.
 
-
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO
-
-        idx (int) - Index for dso_meta to indicate which DSO needs to
-        be cleaned up.
-
-        error (list) - List of values containing the synthesized error
-        signal
-
-        forecast_profile (list) - List of values containing the forecast
-        profile with forecast errors added (sometimes causing problems
-        that this function cleans up).
-
-
+        dso_meta (list): List of dicts with metadata associated with each DSO
+        idx (int): Index for dso_meta to indicate which DSO needs to be cleaned up.
+        error (list): List of values containing the synthesized error signal
+        forecast_profile (list): List of values containing the forecast
+            profile with forecast errors added (sometimes causing problems
+            that this function cleans up).
     Returns:
-        forecast_profile (list) - List of values containing the forecast
+        forecast_profile (list): List of values containing the forecast
         profile after cleaning.
     """
 
@@ -1281,15 +1209,13 @@ def create_hourly_solar_forecast(dso_meta, dso_type, rng_seed):
     parameter.
 
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO including the current utility dso power profiles.
-
-        dso_type (int) - Used to indicate whether to create forecast
-        files for the 8-node or 200-node utility power profiles. Valid
-        values are "8" or "200".
-
+        dso_meta (list): List of dicts with metadata associated with
+            each DSO including the current utility dso power profiles.
+        dso_type (int): Used to indicate whether to create forecast
+            files for the 8-node or 200-node utility power profiles.
+            Valid values are "8" or "200".
     Returns:
-        dso-Meta (list) - List of dicts with DSO data including the
+        dso-Meta (list): List of dicts with DSO data including the
         synthesized forecast profiles.
     """
 
@@ -1491,13 +1417,11 @@ def create_GLD_files(dso_meta):
     ones that are needed by the distribution system simulator to be used
     to implement distributed (rooftop) generation in the DSO.
 
-
     Args:
-        dso_meta (list) - List of dicts with metadata associated with
-        each DSO including the current distributed power profiles.
-
+        dso_meta (list): List of dicts with metadata associated with
+            each DSO including the current distributed power profiles.
     Returns:
-        dso-Meta (list) - List of dicts with DSO data including the
+        dso-Meta (list): List of dicts with DSO data including the
         location of the interpolated values. Decided not to save these
         inside the dictionary themselves due to their size and the fact
         that I don't anticipate needing to reuse them.
@@ -1578,13 +1502,9 @@ def create_dsot_utility_solar_file(dso_meta, output_path):
     RT market.
 
     Args:
-    dso_meta (list) - List of dicts with metadata associated with
-    each DSO including the utility-scale solar PV power profiles.
-
-    output_path (str) - Path to directory where file will be written
-
-    Returns:
-    (none)
+        dso_meta (list): List of dicts with metadata associated with
+            each DSO including the utility-scale solar PV power profiles.
+        output_path (str): Path to directory where file will be written
     """
 
     dsot_fh = _create_200_node_csv_file_and_headers(
@@ -1712,6 +1632,7 @@ def log_metdata(dso_meta):
 def generate_forecast_metrics(dso_meta, output_path):
     """
     Calculates the RMSE associated with each solar forecast file and write it out to file.
+
     Args:
         dso_meta:
         output_path:

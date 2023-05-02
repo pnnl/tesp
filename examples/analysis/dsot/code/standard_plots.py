@@ -145,7 +145,7 @@ class DERsJSON:
         days (int) (2 X 1): start day end day
         pre_file (str): pre-portion of the path to file
         pos_file (str): extension of the file
-        GLD (boolean): if from GLD
+        GLD (bool): if from GLD
     """
 
     def __init__(self, days, pre_file, pos_file, GLD):

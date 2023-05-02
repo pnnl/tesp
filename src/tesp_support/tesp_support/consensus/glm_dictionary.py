@@ -77,8 +77,8 @@ def glm_dict_with_microgrids(name_root, config=None, ercot=False):  # , te30=Fal
     Args:
         name_root (str): path and file name of the GLM file, without the extension
         config (dict):
-        ercot (boolean): request ERCOT billing meter naming. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
-        te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
+        ercot (bool): request ERCOT billing meter naming. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
+        te30 (bool): request hierarchical meter handling in the 30-house test harness. Defaults to false. --- THIS NEEDS TO LEAVE THIS PLACE
     """
 
     # first pass, collect first-level include files

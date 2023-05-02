@@ -214,7 +214,7 @@ class RetailMarket:
         Args:
             curve_buyer (Curve): aggregated buyer curve
             curve_seller (Curve): aggregated seller curve
-            transformer_degradation (boolean): equals to 1 if transformer_degradation is considered in the supply curve
+            transformer_degradation (bool): equals to 1 if transformer_degradation is considered in the supply curve
             Q_max (float): substation capacity, in kWh
             
         Outputs:

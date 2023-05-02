@@ -686,9 +686,8 @@ def is_node_class(s):
 
     Args:
         s (str): the GridLAB-D class name
-
     Returns:
-        Boolean: True if a node class, False otherwise
+        bool: True if a node class, False otherwise
     """
     if s == 'node':
         return True
@@ -711,9 +710,8 @@ def is_edge_class(s):
 
     Args:
         s (str): the GridLAB-D class name
-
     Returns:
-        Boolean: True if an edge class, False otherwise
+        bool: True if an edge class, False otherwise
     """
     if s == 'switch':
         return True

@@ -3481,7 +3481,7 @@ def generation_statistics(dir_path, config_dir, config_file, day_range, use_gen_
         config_dir (str): path locating the case config file
         config_file (str): name of the case config file
         day_range (range): range of starting day and ending day of plot
-        use_gen_data (boolean): if True uses dispatched generator performance from PyPower.  If False uses dispatched
+        use_gen_data (bool): if True uses dispatched generator performance from PyPower.  If False uses dispatched
         AMES performance
     Returns:
         saves plots to file
@@ -3636,7 +3636,7 @@ def transmission_statistics(metadata_file_path, case_config_path, data_path, day
         case_config_path (str): path and file name locating the system case config json file
         data_path (str): path to the folder containing the simulation results
         day_range (range): range of starting day and ending day of data to include
-        sim_results (boolean): if True loads in simuation results.  If false skips simulation results.
+        sim_results (bool): if True loads in simuation results.  If false skips simulation results.
     Returns:
         saves csv statistics to files
         """

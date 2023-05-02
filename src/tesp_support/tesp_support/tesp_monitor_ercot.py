@@ -58,7 +58,7 @@ class TespMonitorGUI:
         scrollbar (Scrollbar):
         frameInCanvas (Frame):
         canvas (FigureCanvasTkAgg): a TCL Tk canvas that can host Matplotlib
-        bFNCSactive (Boolean): True if a TESP simulation is running with other FNCS federates, False if not
+        bFNCSactive (bool): True if a TESP simulation is running with other FNCS federates, False if not
     """
     def __init__(self, master):
         self.root = master

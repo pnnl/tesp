@@ -13,16 +13,9 @@ Public Functions:
 """
 
 import os
-# import sys
 import json
 import numpy as np
 from copy import deepcopy
-
-#import cProfile
-#import pstats
-
-# if sys.platform != 'win32':
-#     import resource
 
 
 def print_matrix(lbl, A, fmt='{:8.4f}'):
@@ -122,12 +115,12 @@ def summarize_opf(mpc):
                      float(row[13]), float(row[14]), float(row[15]), float(row[16])))
 
     print('gen # bus       Pg       Qg   MU_PMAX   MU_PMIN   MU_QMAX   MU_QMIN')
-    idx = 1
+    idx = 0
     for row in gen:
+        idx += 1
         print('{:4d} {:4d} {:8.2f} {:8.2f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}'.
               format(idx, int(row[0]), float(row[1]), float(row[2]), float(row[21]),
                      float(row[22]), float(row[23]), float(row[24])))
-        ++idx
 
 
 def make_dictionary(mpc):
@@ -194,13 +187,21 @@ def make_dictionary(mpc):
         branchesout.append({'branch': int(branches[i, 0]), 'tout': int(branches[i, 1]), 'tin': int(branches[i, 2])})
 
     dp = open(os.path.join(output_Path, 'model_dict.json'), 'w')
-    ppdict = {'baseMVA': mpc['baseMVA'], 'dsoBuses': dsoBuses, 'generators': generators,
-              'UnitsOut': unitsout, 'BranchesOut': branchesout}
-    print(json.dumps(ppdict), file=dp, flush=True)
+    dictionary = {'baseMVA': mpc['baseMVA'], 'dsoBuses': dsoBuses, 'generators': generators,
+                  'UnitsOut': unitsout, 'BranchesOut': branchesout}
+    print(json.dumps(dictionary), file=dp, flush=True)
     dp.close()
 
 
 def dist_slack(mpc, prev_load):
+    """
+
+    Args:
+        mpc:
+        prev_load:
+    Returns:
+        list:
+    """
     # this section will calculate the delta power from previous cycle using the prev_load
     # if previous load is equal to 0 we assume this is the first run and will
     # calculate delta power based on the difference between real power and real generation
@@ -301,7 +302,8 @@ def dist_slack(mpc, prev_load):
             if (mpc['genfuel'][i][0] == "coal") & (mpc['gen'][i, 7] == 1):
                 coal_idx.append(i)
                 if mpc['gen'][i, 16] <= 0:
-                    mpc['gen'][i, 16] = 5 / 100 * mpc['gen'][i, 8]  # ramp_rate (%) * PG_max (MW) / 100  -> (MW)
+                    # ramp_rate (%) * PG_max (MW) / 100  -> (MW)
+                    mpc['gen'][i, 16] = 5 / 100 * mpc['gen'][i, 8]
                 governor_capacity = governor_capacity + mpc['gen'][i, 8]
         gov_R = np.array([])
         gov_idx = []
@@ -325,15 +327,19 @@ def dist_slack(mpc, prev_load):
         max_flag = 0
         down_ramp_flag = 0
         min_flag = 0
-        gen_update[index[i]] = mpc['gen'][index[i], 1] + mpc['gen'][index[i], 8] * del_f / gov_R[I[i]]  # P (MW) + del_P (MW)
+        # P (MW) + del_P (MW)
+        gen_update[index[i]] = mpc['gen'][index[i], 1] + mpc['gen'][index[i], 8] * del_f / gov_R[I[i]]
 
         # .........................For Increasing Loads.............................
         # Checking Ramp Rates
-        if mpc['gen'][index[i], 8] * del_f / gov_R[I[i]] > ramping_capacity[index[i]]:  # if del_P (MW) > del_P_max (MW)
+        # if del_P (MW) > del_P_max (MW)
+        if mpc['gen'][index[i], 8] * del_f / gov_R[I[i]] > ramping_capacity[index[i]]:
             up_ramp_flag = 1
-            gen_update[index[i]] = mpc['gen'][index[i], 1] + ramping_capacity[index[i]]  # P (MW) + del_P_max (MW)
+            # P (MW) + del_P_max (MW)
+            gen_update[index[i]] = mpc['gen'][index[i], 1] + ramping_capacity[index[i]]
             del_P_new = del_P_new - ramping_capacity[index[i]]
-            governor_capacity = governor_capacity - mpc['gen'][index[i], 8] * .05 / gov_R[I[i]]  # total capacity (MW) - del_P_max MW) * del_P (pu) -> (MW)
+            # total capacity (MW) - del_P_max MW) * del_P (pu) -> (MW)
+            governor_capacity = governor_capacity - mpc['gen'][index[i], 8] * .05 / gov_R[I[i]]
 
         # Checking generation max Limits
         if gen_update[index[i]] > mpc['gen'][index[i], 8]:  # PG > PG_max (MW)
@@ -341,7 +347,8 @@ def dist_slack(mpc, prev_load):
             # both the limits are reached
             if (up_ramp_flag == 1) & (max_flag == 1):
                 gen_update[index[i]] = mpc['gen'][index[i], 8]
-                del_P_new = del_P_new - (mpc['gen'][index[i], 8] - mpc['gen'][index[i], 1]) + ramping_capacity[index[i]]
+                del_P_new = del_P_new - (mpc['gen'][index[i], 8] -
+                                         mpc['gen'][index[i], 1]) + ramping_capacity[index[i]]
                 # Total_capacity already taken off in the ramp stage
                 # only generation capacity limit is reached
             else:
@@ -358,12 +365,13 @@ def dist_slack(mpc, prev_load):
             governor_capacity = governor_capacity - mpc['gen'][index[i], 8] * .05 / gov_R[I[i]]
 
         # Checking generation min Limits
-        if gen_update[index[i]] < mpc['gen'][index[i], 9]:
+        if gen_update[index[i]] < mpc['gen'][index[i], 9]:  # PG > PG_min (MW)
             min_flag = 1
             # both the limits are reached
             if (down_ramp_flag == 1) & (min_flag == 1):
                 gen_update[index[i]] = mpc['gen'][index[i], 9]
-                del_P_new = del_P_new - (mpc['gen'][index[i], 9] - mpc['gen'][index[i], 1]) + (-1 * ramping_capacity[index[i]])
+                del_P_new = del_P_new - (mpc['gen'][index[i], 9] -
+                                         mpc['gen'][index[i], 1]) + (-1 * ramping_capacity[index[i]])
             # Total_capacity already taken off in the ramp stage
             # only generation capacity limit is reached
             else:
@@ -379,5 +387,3 @@ def dist_slack(mpc, prev_load):
 
     # updating the generators gen_update
     return gen_update
-
-

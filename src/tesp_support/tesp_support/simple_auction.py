@@ -161,7 +161,7 @@ class simple_auction:
         if the HVAC is on.
 
         Args:
-            bid ([float, float, Boolean]): price in $/kwh, quantity in kW and the HVAC on state
+            bid ([float, float, bool]): price in $/kwh, quantity in kW and the HVAC on state
         """
         price = bid[0]
         quantity = bid[1]

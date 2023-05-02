@@ -220,8 +220,8 @@ def process_agents(name_root, diction_name='', save_file=None, save_only=False, 
         name_root (str): name of the TESP case, not necessarily the same as the GLM case, without the extension
         diction_name (str): metafile name (with json extension) for a different GLM dictionary, if it's not *[name_root]_glm_dict.json*. Defaults to empty.
         save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
-        save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
-        print_dictionary (Boolean): set True to print dictionary.
+        save_only (bool): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
+        print_dictionary (bool): set True to print dictionary.
     """
     path = os.getcwd()
     diction = read_agent_metrics(path, name_root, diction_name, print_dictionary)

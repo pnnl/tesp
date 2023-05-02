@@ -982,7 +982,7 @@ def tso_psst_loop_f(casename):
             if 'gridPIQ' in ppc:
                 piq = ppc['gridPIQ']
                 if piq:
-                    from .api.gridpiq import GridPIQ
+                    from gridpiq import GridPIQ
                     pq = GridPIQ()
                     pq.set_datetime(StartTime, EndTime, 24, 0)
 
@@ -1104,7 +1104,7 @@ def tso_psst_loop_f(casename):
                 collector=collector,
             )
         finally:
-            log.info('metrics collection started')
+            log.info('Metrics collection started')
         try:
             # set day_of_year
             s = datetime.strptime(ppc['StartTime'], '%Y-%m-%d %H:%M:%S')

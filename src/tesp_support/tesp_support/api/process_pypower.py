@@ -235,7 +235,7 @@ def process_pypower(name_root, title=None, save_file=None, save_only=True):
         name_root (str): file name of the TESP case, not necessarily the same as the PYPOWER case, w/out the JSON extension
         title (str): supertitle for the page of plots.
         save_file (str): name of a file to save plot, should include the *png* or *pdf* extension to determine type.
-        save_only (Boolean): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
+        save_only (bool): set True with *save_file* to skip the display of the plot. Otherwise, script waits for user keypress.
     """
     path = os.getcwd()
     diction = read_pypower_metrics(path, name_root)

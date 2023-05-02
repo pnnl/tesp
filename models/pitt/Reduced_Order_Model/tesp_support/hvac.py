@@ -47,7 +47,7 @@ class hvac:
         air_temp (float): current air temperature of the house in deg F
         hvac_kw (float): most recent non-zero HVAC power in kW, this will be the bid quantity
         mtr_v (float): current line-neutral voltage at the triplex meter
-        hvac_on (Boolean): True if the house HVAC is currently running
+        hvac_on (bool): True if the house HVAC is currently running
         basepoint (float): the preferred time-scheduled thermostat setpoint in deg F
         setpoint (float): the thermostat setpoint, including price response, in deg F
         bid_price (float): the current bid price in $/kwh
@@ -114,7 +114,7 @@ class hvac:
         then the thermostat could be turned up.p
 
         Returns:
-            Boolean: True if the thermostat setting changes, False if not.
+            bool: True if the thermostat setting changes, False if not.
         """
         if self.control_mode == 'CN_RAMP' and self.std_dev > 0.0:
             offset = (self.cleared_price - self.mean) * self.Trange / self.ramp / self.std_dev
@@ -150,9 +150,8 @@ class hvac:
         Args:
             hod (float): the hour of the day, from 0 to 24
             dow (int): the day of the week, zero being Monday
-
         Returns:
-            Boolean: True if the setting changed, Falso if not
+            bool: True if the setting changed, Falso if not
         """
         if dow > 4: # a weekend
             val = self.weekend_night_set
@@ -177,9 +176,8 @@ class hvac:
         Args:
             hod (float): the hour of the day, from 0 to 24
             dow (int): the day of the week, zero being Monday
-
         Returns:
-            Boolean: True if the setting changed, Falso if not
+            bool: True if the setting changed, Falso if not
         """
         if dow > 4: # a weekend
             val = self.weekend_night_set

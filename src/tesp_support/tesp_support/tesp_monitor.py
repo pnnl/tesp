@@ -86,8 +86,8 @@ class TespMonitorGUI:
       fig (Figure): animated Matplotlib figure hosted on the GUI
       ax (Axes): set of 4 xy axes to plot on
       canvas (FigureCanvasTkAgg): a TCL Tk canvas that can host Matplotlib
-      bFNCSactive (Boolean): True if a TESP simulation is running with other FNCS federates, False if not
-      bHELICSactive (Boolean): True if a HELICS simulation is running with other HELICS federates, False if not
+      bFNCSactive (bool): True if a TESP simulation is running with other FNCS federates, False if not
+      bHELICSactive (bool): True if a HELICS simulation is running with other HELICS federates, False if not
     """
 
     def __init__(self, master, HELICS=True):

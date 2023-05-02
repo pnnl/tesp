@@ -34,7 +34,7 @@ class DSOMarket:
         num_samples (int): the number of sampling points, describes how precisely the curve is sampled
         windowLength (int): length of the planning horizon for the DA market, in hours
         DSO_Q_max (float): maximum limit of the DSO load capacity, in kWh
-        transformer_degradation (boolean): flag variable, equals to 1 when transformer degradation effect is taken into account
+        transformer_degradation (bool): flag variable, equals to 1 when transformer degradation effect is taken into account
         curve_a (array): array of second order coefficients for the wholesale node curve, indexed by day_of_sim and hour_of_day
         curve_b (array): array of first order coefficients of the wholesale node curve, indexed by day_of_sim and hour_of_day
         curve_c (array): array of intercepts of the wholesale node curve, indexed by day_of_sim and hour_of_day

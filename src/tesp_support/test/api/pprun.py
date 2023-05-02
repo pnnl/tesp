@@ -1,10 +1,14 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: pprun.py
+from os import path
+
 import pypower.api as pp
 
 import tesp_support.api.tso_helpers as th
 
-ppc = th.load_json_case('./Case1/ppcase.json')
+
+dirpath = path.expandvars('$TESPDIR/examples/capabilities/pypower/')
+ppc = th.load_json_case(dirpath + '/ppcase.json')
 # print(ppc)
 
 ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'])
