@@ -41,7 +41,8 @@ class simple_auction:
         std_dev (float): the historical standard deviation of the price, in $/kwh, from diction
         mean (float): the historical mean price in $/kwh, from diction
         price_cap (float): the maximum allowed market clearing price, in $/kwh, from diction
-        max_capacity_reference_bid_quantity (float): this market's maximum capacity, likely defined by a physical limitation in the circuit(s) being managed.
+        max_capacity_reference_bid_quantity (float): this market's maximum capacity,
+            likely defined by a physical limitation in the circuit(s) being managed.
         statistic_mode (int): always 1, not used, from diction
         stat_mode (str): always ST_CURR, not used, from diction
         stat_interval (str): always 86400 seconds, for one day, not used, from diction
@@ -49,15 +50,18 @@ class simple_auction:
         stat_value (str): always zero, not used, from diction
         curve_buyer (curve): data structure to accumulate buyer bids
         curve_seller (curve): data structure to accumulate seller bids
-        refload (float): the latest substation load from GridLAB-D. This is initially assumed to be all unresponsive and using the load state parameter when adding demand bids (which are generally price_responsive) all loads that bid and are on are removed from the assumed unresponsive load value
+        refload (float): the latest substation load from GridLAB-D. This is initially assumed to be all unresponsive
+            and using the load state parameter when adding demand bids (which are generally price_responsive)
+            all loads that bid and are on are removed from the assumed unresponsive load value
         lmp (float): the latest locational marginal price from the bulk system market
         unresp (float): unresponsive load, i.e., total substation load less the bidding, running HVACs
         agg_unresp (float): aggregated unresponsive load, i.e., total substation load less the bidding, running HVACs
         agg_resp_max (float): total load of the bidding HVACs
-        agg_deg (int): degree of the aggregate bid curve polynomial, should be 0 (zero or one bids), 1 (2 bids) or 2 (more bids)
+        agg_deg (int): degree of the aggregate bid curve polynomial,
+            should be 0 (zero or one bids), 1 (2 bids) or 2 (more bids)
         agg_c2 (float): second-order coefficient of the aggregate bid curve
         agg_c1 (float): first-order coefficient of the aggregate bid curve
-        clearing_type (helpers.ClearingType): describes the solution type or boundary case for the latest market clearing
+        clearing_type (ClearingType): describes the solution type or boundary case for the latest market clearing
         clearing_quantity (float): quantity at the last market clearing
         clearing_price (float): price at the last market clearing
         marginal_quantity (float): quantity of a partially accepted bid
@@ -133,10 +137,11 @@ class simple_auction:
     def update_statistics(self):
         """ Update price history statistics - not implemented
         """
-        sample_need = 0
+        pass
 
     def clear_bids(self):
-        """ Re-initializes curve_buyer and curve_seller, sets the unresponsive load estimate to the total substation load.
+        """ Re-initializes curve_buyer and curve_seller,
+        sets the unresponsive load estimate to the total substation load.
         """
         self.curve_buyer = curve()
         self.curve_seller = curve()
@@ -308,7 +313,6 @@ class simple_auction:
                         self.clearing_type = ClearingType.PRICE
 
                 # If ClearingType.PRICE, calculate the clearing price here
-                dHigh = dLow = 0
                 if self.clearing_type == ClearingType.PRICE:
                     avg = (a + b) / 2.0
                     # Calculating clearing price limits:   
@@ -444,8 +448,8 @@ class simple_auction:
         """ Calculates consumer surplus (and its average) and supplier surplus.
 
         This function goes through all the bids higher than clearing price from buyers to calculate consumer surplus,
-        and also accumulates the quantities that will be cleared while doing so. Of the cleared quantities,
-        the quantity for unresponsive loads are also collected. Then go through each seller to calculate supplier surplus.
+        and also accumulates the quantities that will be cleared while doing so. Of the cleared quantities, the
+        quantity for unresponsive loads are also collected. Then go through each seller to calculate supplier surplus.
         Part of the supplier surplus corresponds to unresponsive load are excluded and calculated separately.
 
         Args:
@@ -634,7 +638,7 @@ def _auto_run():
         [3, 250]
     ]
 
-    ######## Demonstration simple double-auction implementation ########
+    # ####### Demonstration simple double-auction implementation ########
     aucObj = simple_auction(market_config, market_name)
     aucObj.initAuction()
     # Set wholesale LMP passed into this retail market

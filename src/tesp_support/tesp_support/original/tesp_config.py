@@ -19,7 +19,7 @@ from tkinter import messagebox
 
 import numpy as np
 
-from .api.data import tesp_share, weather_path
+from tesp_support.api.data import tesp_share, weather_path
 
 config = {'BackboneFiles': {},
           'FeederGenerator': {},

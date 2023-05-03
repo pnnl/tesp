@@ -32,7 +32,7 @@ def read_pypower_metrics(path, name_root):
     bus_keys.sort()
     print('\n\nFile', m_dict_path, 'has baseMVA', baseMVA)
     print('\nGenerator Dictionary:')
-    print('Unit Bus Type Pnom Pmax Costs[Start Stop C2 C1 C0]')
+    print('Unit Bus Type Pmin Pmax Costs[Start Stop C2 C1 C0]')
     for key in gen_keys:
         row = diction['generators'][key]
         print(key, row['bus'], row['bustype'], row['Pmin'], row['Pmax'],

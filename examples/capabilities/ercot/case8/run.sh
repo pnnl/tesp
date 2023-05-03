@@ -6,9 +6,9 @@
 mkdir -p PyomoTempFiles
 
 (export FNCS_BROKER="tcp://*:5570" && exec fncs_broker 12 &> broker.log &)
-(export WEATHER_CONFIG=weatherIAH.json && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.weather_agent as tesp;tesp.startWeatherAgent('weatherIAH.dat')"  &> weatherIAH.log &)
-(export WEATHER_CONFIG=weatherSPS.json && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.weather_agent as tesp;tesp.startWeatherAgent('weatherSPS.dat')"  &> weatherSPS.log &)
-(export WEATHER_CONFIG=weatherELP.json && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.weather_agent as tesp;tesp.startWeatherAgent('weatherELP.dat')"  &> weatherELP.log &)
+(export WEATHER_CONFIG=weatherIAH.json && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.api.weather_agent as tesp;tesp.startWeatherAgent('weatherIAH.dat')"  &> weatherIAH.log &)
+(export WEATHER_CONFIG=weatherSPS.json && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.api.weather_agent as tesp;tesp.startWeatherAgent('weatherSPS.dat')"  &> weatherSPS.log &)
+(export WEATHER_CONFIG=weatherELP.json && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.api.weather_agent as tesp;tesp.startWeatherAgent('weatherELP.dat')"  &> weatherELP.log &)
 (export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=Bus1_metrics.json Bus1.glm &> Bus1.log &)
 (export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=Bus2_metrics.json Bus2.glm &> Bus2.log &)
 (export FNCS_FATAL=YES && exec gridlabd -D USE_FNCS -D METRICS_FILE=Bus3_metrics.json Bus3.glm &> Bus3.log &)

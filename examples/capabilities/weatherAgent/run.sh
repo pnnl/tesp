@@ -15,4 +15,4 @@ gridlabd -D TMY3_PATH="$TMY_PATH" weatherTester.glm > gridlabd_tmy3.log
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 3 &> broker.log &)
 (export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec gridlabd -D USE_FNCS weatherTester.glm &> gridlabd_fncs.log &)
 (export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && export FNCS_CONFIG_FILE=tracer.yaml && exec fncs_tracer 1d tracer.out &> tracer.log &)
-(export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && export WEATHER_CONFIG=WeatherConfig.json && exec python3 -c "import tesp_support.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather.log &)
+(export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && export WEATHER_CONFIG=WeatherConfig.json && exec python3 -c "import tesp_support.api.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather.log &)

@@ -6,7 +6,7 @@ then
 
   archive_folder="."
   touch "./$1/run.sh"
-  python3 -c "import tesp_support.helpers_dsot as tesp; tesp.write_management_script('$archive_folder', '$1', '.', 0, 0)"
+  python3 -c "import tesp_support.dsot.helpers_dsot as tesp; tesp.write_management_script('$archive_folder', '$1', '.', 0, 0)"
 
   cd "$1" || exit
   rm -f "./*metrics.h5"

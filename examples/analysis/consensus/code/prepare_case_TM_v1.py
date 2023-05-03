@@ -14,8 +14,8 @@ import numpy as np
 
 import prep_microgrid_agent_v1 as prep
 import tesp_support.dsot.helpers_dsot as helpers
-import tesp_support.commercial_feeder_glm as com_FG
-import tesp_support.copperplate_feeder_glm as cp_FG
+import tesp_support.original.commercial_feeder_glm as com_FG
+import tesp_support.original.copperplate_feeder_glm as cp_FG
 import tesp_support.consensus.residential_feeder_glm as res_FG
 import tesp_support.consensus.glm_dictionary as gd
 import tesp_support.consensus.case_merge as cm

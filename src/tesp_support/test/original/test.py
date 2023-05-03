@@ -21,17 +21,17 @@
 # print (oldname, newname)
 
 # step 1
-import tesp_support.tesp_config as tc
+import tesp_support.original.tesp_config as tc
 tc.show_tesp_config()
 
 # step 2
-# import tesp_support.tesp_case as tc
+# import tesp_support.original.tesp_case as tc
 # tc.make_tesp_case('Demo.json')
 
 # step 3
-# import tesp_support.tesp_case as tc
+# import tesp_support.original.tesp_case as tc
 # tc.make_monte_carlo_cases('Demo.json')
 
 # step 4
-# import tesp_support.tesp_monitor as tm
+# import tesp_support.original.tesp_monitor as tm
 # tm.show_tesp_monitor()

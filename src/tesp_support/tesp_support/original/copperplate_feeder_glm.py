@@ -40,9 +40,9 @@ import numpy as np
 import pandas as pd
 from math import sqrt
 
-from .api.data import feeders_path, weather_path
+from tesp_support.api.data import feeders_path, weather_path
 from tesp_support.api.helpers import gld_strict_name
-from .api.parse_helpers import parse_kva
+from tesp_support.api.parse_helpers import parse_kva
 from .commercial_feeder_glm import define_comm_loads, create_comm_zones
 
 transmissionVoltage = 138000.0

@@ -166,6 +166,6 @@ done
 #export FNCS_CONFIG_FILE=${agentCONFfile} && \
 #export FNCS_FATAL=YES && \
 #cd ${SCEN_ROOT} && \
-#python -c "import tesp_support.substation as tesp;tesp.substation_loop('${agentDICTfile}','${scenarioName}',flag='${scenarioType}')" > ${agentOutFile} 2>&1 &
+#python -c "import tesp_support.original.substation as tesp;tesp.substation_loop('${agentDICTfile}','${scenarioName}',flag='${scenarioType}')" > ${agentOutFile} 2>&1 &
 
 exit 0

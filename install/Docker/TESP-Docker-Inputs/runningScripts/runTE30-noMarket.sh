@@ -200,7 +200,7 @@ export FNCS_LOG_LEVEL=$agentLOGlevel && \
 export FNCS_CONFIG_FILE=${agentCONFfile} && \
 export FNCS_FATAL=YES && \
 cd ${SCEN_ROOT} && \
-python -c "import tesp_support.substation as tesp;tesp.substation_loop('${agentDICTfile}','${scenarioName}_${scenarioType}',flag='${scenarioType}')" &> ${agentOutFile} &
+python -c "import tesp_support.original.substation as tesp;tesp.substation_loop('${agentDICTfile}','${scenarioName}_${scenarioType}',flag='${scenarioType}')" &> ${agentOutFile} &
 
 # ================================================ starting Energy Plus ============================================================
 if test -e $epOutFile

@@ -17,8 +17,8 @@ try:
     import tesp_support.api.fncs as fncs
 except:
     pass
-import tesp_support.simple_auction as auction
-import tesp_support.hvac_agent as hvac
+import tesp_support.original.simple_auction as auction
+import tesp_support.original.hvac_agent as hvac
 import tesp_support.api.helpers as helpers
 import json
 from datetime import datetime

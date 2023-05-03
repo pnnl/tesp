@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import tesp_support.parse_msout as pm
+import tesp_support.original.parse_msout as pm
 
 f, nb, ng, nl, ns, nt, nj_max, Pg, Pd, Pf, u, lamP = pm.read_most_solution('msout.txt')
 print('f={:.2f} nb={:d} ng={:d} nl={:d} ns={:d} nt={:d} nj_max={:d}'.format(f, nb, ng, nl, ns, nt, nj_max))

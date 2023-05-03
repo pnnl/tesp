@@ -6,7 +6,7 @@ try:
   import tesp_support.api.fncs as fncs
 except:
   pass
-import tesp_support.simple_auction as auction
+import tesp_support.original.simple_auction as auction
 #import tesp_support.hvac as hvac
 import tesp_support.api.helpers as helpers
 import json

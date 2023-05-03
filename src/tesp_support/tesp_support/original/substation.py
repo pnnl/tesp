@@ -48,6 +48,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
         metrics_root (str): base name of the case for metrics output
         hour_stop (float): number of hours to simulation
         flag (str): WithMarket or NoMarket to use the simple_auction, or not
+        helicsConfig:
     """
     print('starting HELICS substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
     print('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,' +

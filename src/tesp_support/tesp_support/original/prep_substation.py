@@ -492,7 +492,7 @@ def prep_substation(gldfileroot, jsonfile='', bus_id=None):
     Args:
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
         jsonfile (str): fully qualified path to an optional JSON configuration file 
-                        (if not provided, an E+ connection to Eplus_load will be created)
+            (if not provided, an E+ connection to Eplus_load will be created)
         bus_id: substation bus identifier
     """
     global dt, period, Eplus_Bus, Eplus_Load, Eplus_Meter, agent_participation

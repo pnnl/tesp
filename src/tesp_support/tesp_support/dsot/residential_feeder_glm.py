@@ -47,7 +47,7 @@ from tesp_support.api.helpers import gld_strict_name, random_norm_trunc
 from tesp_support.api.parse_helpers import parse_kva
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
-import tesp_support.commercial_feeder_glm as comm_FG
+import tesp_support.original.commercial_feeder_glm as comm_FG
 
 forERCOT = False
 port = 5570

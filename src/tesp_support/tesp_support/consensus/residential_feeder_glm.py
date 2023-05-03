@@ -43,7 +43,7 @@ from math import sqrt
 from tesp_support.api.data import feeders_path, weather_path
 from tesp_support.api.helpers import gld_strict_name, random_norm_trunc
 from tesp_support.api.parse_helpers import parse_kva
-import tesp_support.commercial_feeder_glm as comm_FG
+import tesp_support.original.commercial_feeder_glm as comm_FG
 
 forERCOT = False
 port = 5570

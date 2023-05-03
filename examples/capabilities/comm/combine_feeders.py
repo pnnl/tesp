@@ -1,8 +1,8 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: combine_feeders.py
 
-import tesp_support.case_merge as cm
-import tesp_support.tesp_case as tc
+import tesp_support.original.case_merge as cm
+import tesp_support.original.tesp_case as tc
 
 tc.make_tesp_case('Feeder1.json')
 tc.add_tesp_feeder('Feeder2.json')
