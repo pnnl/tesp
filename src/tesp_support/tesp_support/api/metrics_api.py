@@ -67,7 +67,7 @@ def synch_series(time_series, synch_interval, interval_unit):
     """ Function synchronizes all the time series data frames in the time_series list, so they
     all have the same start and ending times and the same number of times based upon a shared
     sampling interval
-    
+
     Args:
         time_series (list<dataframe>): time series dataframe
         synch_interval (int): the size of the time intervals to be used in the time series
@@ -216,7 +216,7 @@ def actual_der_vs_projected_ratio(actual_der, actual_col_name, projected_col_nam
             calc_times.append(actual_der.index[i])
             calc_ratios.append(actual_der[projected_col_name].iloc[i] / actual_der[actual_col_name].iloc[i])
             i += 1
-        df = pd.DataFrame(list(zip(calc_ratios)), index=calc_times)
+        df = pd.DataFrame(list(zip(calc_ratios)), columns=["ratio"], index=calc_times)
         return df
 
 
@@ -228,8 +228,8 @@ def get_average_air_temp_deviation(actual_df, actual_col_name, set_point_col_nam
     Args:
         actual_df (dataframe): per-device average deviation from desired air temperature set point
         actual_col_name (str): dataframe column id for the location of actual temperatures
-        set_point_col_name (str): dataframe column id for the location of set point data
         set_points_df (dataframe): time series data frame containing the set points data.
+        set_point_col_name  (str): dataframe column id for the location of set point data
         start_date_time (str): the starting date and time when the calculation should start
 
     Returns:
@@ -383,7 +383,7 @@ def get_feeder_energy_losses(feeder_gen_df, gen_column_id, feeder_load_df, load_
     return df
 
 
-def get_peak_demand(time_series, column_id):
+def get_peak_demand(time_series, column_id, start_date_time):
     """ This function calculates the highest hourly electricity demand (MW) in the year of
     data contained in the dataframe
 
@@ -392,31 +392,41 @@ def get_peak_demand(time_series, column_id):
     Args:
         time_series (dataframe): time series dataframe that contains the demand values over the course of a year
         column_id (str): name of the dataframe column where the demand data is located
+        start_date_time (str): calculation start date and time
     Returns:
         float: maximum value identified in the dataframe column identified by column_id
     """
-    if len(time_series.index) < 8760:
-        log_msg.log(log_msg.ERROR, "dataframe does not have 8761 rows")
-        return
-    return time_series.max()[column_id]
+    st_time = pd.to_datetime(start_date_time)
+    end_time = bc.adjust_date_time(st_time, "years", 1)
+    calc_dataframe = time_series.query('index >= @st_time and index <= @end_time')
+    if not bc.check_for_full_year_data(calc_dataframe):
+        return -9999.99
+    if not bc.check_for_hourly_data(calc_dataframe):
+        return -9999.99
+    return calc_dataframe.max()[column_id]
 
 
-def get_peak_supply(time_series, column_id):
-    """ This function calculates the highest hourly electricity supply (MW) in the year of
-    data contained in the dataframe
+def get_peak_supply(time_series, column_id, start_date_time):
+    """This function calculates the highest hourly electricity supply (MW) in the year of data contained in the
+        dataframe
 
     This metric is defined in document VM_PeakDemand or PeakSupply.docx
 
     Args:
         time_series (dataframe): time series dataframe that contains the supply values over the course of a year
         column_id (str): name of the dataframe column where the supply data is located
+        start_date_time (str): calculation start date and time
     Returns:
         float: maximum value identified in the dataframe column identified by column_id
     """
-    if len(time_series.index) < 8760:
-        log_msg.log(log_msg.ERROR, "dataframe does not have 8761 rows")
-        return
-    return time_series.max()[column_id]
+    st_time = pd.to_datetime(start_date_time)
+    end_time = bc.adjust_date_time(st_time, "years", 1)
+    calc_dataframe = time_series.query('index >= @st_time and index <= @end_time')
+    if not bc.check_for_full_year_data(calc_dataframe):
+        return -9999.99
+    if not bc.check_for_hourly_data(calc_dataframe):
+        return -9999.99
+    return calc_dataframe.max()[column_id]
 
 
 def get_max_under_voltage(time_series, column_id, threshold_val, start_date_time, duration):
@@ -441,11 +451,19 @@ def get_max_under_voltage(time_series, column_id, threshold_val, start_date_time
     while end_time <= ts_end_time:
         calc_dataframe = time_series.query('index >= @st_time and index <= @end_time')
         calc_times.append(st_time)
-        calc_dataframe["voltage_violation"] = abs(threshold_val - calc_dataframe[column_id])
-        calc_maxs.append(calc_dataframe.max()["voltage_violation"])
+        calc_diffs = []
+        calc_diffs_times = []
+        i = 0
+        while i < len(calc_dataframe.index):
+            calc_diffs.append(abs(threshold_val - calc_dataframe.iloc[i][column_id]))
+            calc_diffs_times.append(calc_dataframe.index[i])
+            i += 1
+        result_dataframe = pd.DataFrame(list(zip(calc_diffs)), columns=["max_under_voltage"], index=calc_diffs_times)
+        calc_maxs.append(result_dataframe.max()["max_under_voltage"])
+#        calc_dataframe["voltage_violation"] = abs(threshold_val - calc_dataframe[column_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_maxs)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_maxs)), columns=["minimums"], index=calc_times)
     return df
 
 
@@ -471,9 +489,17 @@ def get_max_over_voltage(time_series, column_id, threshold_val, start_date_time,
     while end_time <= ts_end_time:
         calc_dataframe = time_series.query('index >= @st_time and index <= @end_time')
         calc_times.append(st_time)
-        calc_dataframe2 = calc_dataframe
-        calc_dataframe2.loc[:, "voltage_violation_max"] = abs(calc_dataframe[column_id] - threshold_val)
-        calc_maxs.append(calc_dataframe2.max()["voltage_violation_max"])
+#        calc_dataframe2 = calc_dataframe
+#        calc_dataframe2.loc[:, "voltage_violation_max"] = abs(calc_dataframe[column_id] - threshold_val)
+        calc_diffs = []
+        calc_diffs_times = []
+        i = 0
+        while i < len(calc_dataframe.index):
+            calc_diffs.append(abs(calc_dataframe.iloc[i][column_id] - threshold_val))
+            calc_diffs_times.append(calc_dataframe.index[i])
+            i += 1
+        result_dataframe = pd.DataFrame(list(zip(calc_diffs)), columns=["max_violation"], index=calc_diffs_times)
+        calc_maxs.append(result_dataframe.max()["max_violation"])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
     df = pd.DataFrame(list(zip(calc_maxs)), columns=["maximums"], index=calc_times)
@@ -502,11 +528,18 @@ def get_indoor_air_temp_deviation(time_series, column_id, set_point, start_date_
     while end_time <= ts_end_time:
         calc_dataframe = time_series.query('index >= @st_time and index <= @end_time')
         calc_times.append(st_time)
-        calc_dataframe["max_deviation"] = abs(calc_dataframe[column_id] - set_point)
-        calc_maxs.append(calc_dataframe.max()["max_deviation"])
+        calc_diffs = []
+        calc_diffs_times = []
+        i = 0
+        while i < len(calc_dataframe.index):
+            calc_diffs.append(abs(calc_dataframe.iloc[i][column_id] - set_point))
+            calc_diffs_times.append(calc_dataframe.index[i])
+            i += 1
+        result_dataframe = pd.DataFrame(list(zip(calc_diffs)), columns=["max_deviation"], index=calc_diffs_times)
+        calc_maxs.append(result_dataframe.max()["max_deviation"])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_maxs)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_maxs)), columns=["temp_deviations"], index=calc_times)
     return df
 
 
@@ -537,7 +570,7 @@ def get_max_duration_under_voltage(time_series, column_id, limit_val, start_date
         calc_durations.append(duration_df.max()[column_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_durations)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_durations)), columns=["max_durations"], index=calc_times)
     return df
 
 
@@ -568,12 +601,12 @@ def get_max_duration_over_voltage(time_series, column_id, limit_val, start_date_
         calc_durations.append(duration_df.max()[column_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_durations)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_durations)), columns=["max_durations"], index=calc_times)
     return df
 
 
-def get_average_unit_price(time_series, column_id):
-    """ Function calculates the market average unit price (of electricity) over the course of 8,760 hours, in a specific
+def get_average_unit_price(time_series, column_id, start_date_time):
+    """Function calculates the market average unit price (of electricity) over the course of 8,760 hours, in a specific
     service territory managed by an independent system operator
 
     Metric defined in document VM_Market Average Unit Price.docx
@@ -581,13 +614,18 @@ def get_average_unit_price(time_series, column_id):
     Args:
         time_series (dataframe): time series dataframe that contains the hourly market electricity prices for a year
         column_id (str): name of the dataframe column that the price data is located
+        start_date_time (str): the date and time that the calculations are to start at
     Returns:
         float: the average unit price for the year
     """
-    if len(time_series.index) < 8760:
-        log_msg.log(log_msg.ERROR, "dataframe does not have 8761 rows")
-        return
-    return bc.get_avg_data_value(time_series, column_id)
+    st_time = pd.to_datetime(start_date_time)
+    ts_end_time = bc.adjust_date_time(st_time, "years", 1)
+    calc_dataframe = time_series.query('index >= @st_time and index <= @ts_end_time')
+    if not bc.check_for_full_year_data(calc_dataframe):
+        return -9999.99
+    if not bc.check_for_hourly_data(calc_dataframe):
+        return -9999.99
+    return bc.get_avg_data_value(calc_dataframe, column_id)
 
 
 def get_hot_water_deficit(water_temperatures, water_column_id, desired_temperatures,
@@ -628,9 +666,9 @@ def get_hot_water_deficit(water_temperatures, water_column_id, desired_temperatu
         i = 0
         hwsd = 0
         while i < len(calc_dataframe.index):
-            flow_rate = flow_rates[calc_dataframe.index[i]][flow_column_id]
-            desired_temp = desired_temperatures[calc_dataframe.index[i]][desired_column_id]
-            water_temp = water_temperatures[calc_dataframe.index[i]][water_column_id]
+            flow_rate = flow_rates.loc[calc_dataframe.index[i]][flow_column_id]
+            desired_temp = desired_temperatures.loc[calc_dataframe.index[i]][desired_column_id]
+            water_temp = water_temperatures.loc[calc_dataframe.index[i]][water_column_id]
             hwsd += flow_rate * (desired_temp - water_temp) * delta_t
             i += 1
         calc_durations.append(hwsd)
@@ -657,14 +695,16 @@ def get_max_market_price(time_series, column_id, start_date_time):
     st_time = pd.to_datetime(start_date_time)
     end_time = bc.adjust_date_time(st_time, "hours", 8760)
     calc_dataframe = time_series.query('index >= @st_time and index <= @end_time')
-    if len(calc_dataframe.index) < 8760:
-        log_msg.log(log_msg.ERROR, "dataframe does not have 8761 hourly records")
-        return
+    if not bc.check_for_full_year_data(calc_dataframe):
+        return None
+    if not bc.check_for_hourly_data(calc_dataframe):
+        return None
     return bc.get_max_column_value(time_series, column_id)
 
 
-def get_emergency_scarcity_sell(scarcity_power_df, scarcity_col_id, scarcity_price_df, price_col_id, generation_capacity_df, gen_col_id, available_power_df, available_col_id):
-    """ Function calculates the annual value of firm energy for Scarcity Conditions
+def get_emergency_scarcity_sell(scarcity_power_df, scarcity_col_id, scarcity_price_df, price_col_id,
+                                generation_capacity_df, gen_col_id, available_power_df, available_col_id):
+    """Function calculates the annual value of firm energy for Scarcity Conditions
 
     Metric is defined in the document VM_Emergency Scarcity Wholesales Sells.docx
 
@@ -697,12 +737,15 @@ def get_emergency_scarcity_sell(scarcity_power_df, scarcity_col_id, scarcity_pri
         return None
     i = 0
     while i < len(scarcity_power_df.index):
-        scarcity_pow = scarcity_power_df[scarcity_col_id].loc[i]
-        scarcity_price = scarcity_price_df[price_col_id].loc[i]
-        gen_cap = generation_capacity_df[gen_col_id].loc[i]
-        av_energy = available_power_df[available_col_id].loc[i]
-        calc_times.append(scarcity_power_df.index.loc[i])
-        scarcity_sell.append(scarcity_pow * scarcity_price * (av_energy / gen_cap))
+        scarcity_pow = scarcity_power_df.iloc[i][scarcity_col_id]
+        scarcity_price = scarcity_price_df.iloc[i][price_col_id]
+        gen_cap = generation_capacity_df.iloc[i][gen_col_id]
+        av_energy = available_power_df.iloc[i][available_col_id]
+        calc_times.append(scarcity_power_df.index[i])
+        if gen_cap > 0:
+            scarcity_sell.append(scarcity_pow * scarcity_price * (av_energy / gen_cap))
+        else:
+            scarcity_sell.append(-9999.99)
         i += 1
     col_names = ['emergency_scarcity_sell']
     df = pd.DataFrame(list(zip(scarcity_sell)), columns=col_names, index=calc_times)
@@ -718,7 +761,7 @@ def get_max_comm_packet_size(time_series, size_column_id, start_date_time, durat
         time_series (dataframe): time series dataframe that contains the communication network packet size Mbs
         size_column_id (str): name of the dataframe column that contains the packet size data
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time which the calculations should be executed
+        duration (int): the length of time which the calculations should be executed
     Returns:
         float: the maximum communication packet size for the time period entered
     """
@@ -741,7 +784,7 @@ def get_mean_absolute_percentage(actual_load_df, actual_col_id, forecasted_load_
             over a period of time
         forecasted_col_id (str): name of the column where forecasted load data is located
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
        dataframe, float: time series dataframe containing the calculated ratios, the calculated average value
     """
@@ -768,21 +811,26 @@ def get_mean_absolute_percentage(actual_load_df, actual_col_id, forecasted_load_
     return df, mean_absolute_percentage_df['percentage_errors']
 
 
-def get_minimum_market_price(time_series, price_col_id):
-    """ Function calculates the minimum market price (of electricity) over the course of 8,760 hours
+def get_minimum_market_price(time_series, price_col_id, start_date_time):
+    """Function calculates the minimum market price (of electricity) over the course of 8,760 hours
 
     Metric defined in document VM_Minimum Market Price.docx
 
     Args:
         time_series (dataframe): Hourly market prices for electricity
         price_col_id (str): name of the dataframe column where the price data is located
+        start_date_time (str): the starting date and time when the calculation should start
     Returns:
         float: the minimum market price found in the data over the course of a year
     """
-    if len(time_series.index) < 8760:
-        log_msg.log(log_msg.ERROR, "time series has less than 8760 records")
+    st_time = pd.to_datetime(start_date_time)
+    end_time = bc.adjust_date_time(st_time, "years", 1)
+    calc_dataframe = time_series.query('index >= @st_time and index <= @end_time')
+    if not bc.check_for_full_year_data(calc_dataframe):
         return None
-    return bc.get_min_column_value(time_series, price_col_id)
+    if not bc.check_for_hourly_data(calc_dataframe):
+        return None
+    return bc.get_min_column_value(calc_dataframe, price_col_id)
 
 
 def get_substation_peak_power(time_series, power_col_id, start_date_time, duration):
@@ -794,7 +842,7 @@ def get_substation_peak_power(time_series, power_col_id, start_date_time, durati
         time_series (dataframe): time series containing substation real power flow (Mvar) at 5 minute intervals
         power_col_id (str): name of the dataframe column containing the power flow data
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe: time series dataframe containing the calculated hourly peak power flow
     """
@@ -809,12 +857,12 @@ def get_substation_peak_power(time_series, power_col_id, start_date_time, durati
         calc_peaks.append(calc_dataframe.max()[power_col_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_peaks)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_peaks)), columns=["peak_power"], index=calc_times)
     return df
 
 
-def get_reactive_power_demand(time_series, max_col_id, avg_col_id):
-    """ Function calculates the maximum and average substation reactive power flow reported each hour
+def get_reactive_power_demand(time_series, max_col_id, avg_col_id, start_date_time, duration):
+    """Function calculates the maximum and average substation reactive power flow reported each hour
 
     Metric is defined in document VM_Substation Reactive Power Demand.docx
 
@@ -822,11 +870,14 @@ def get_reactive_power_demand(time_series, max_col_id, avg_col_id):
         time_series (dataframe): time series dataframe containing the 5-minute substation reactive power flow data
         max_col_id (str): name of the dataframe column containing the 5-minute maximum data
         avg_col_id (str): name of the dataframe column containing the 5-minute average data
+        start_date_time (str): the starting date and time when the calculation should start
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
-        dataframe: time series dataframe containing the hourly maximum and average values calculated by the function
+        dataframe: time series dataframe containing the hourly maximum and average values calculated
+        by the function
     """
-    st_time = time_series.index[0]
-    ts_end_time = time_series.index[-1]
+    st_time = pd.to_datetime(start_date_time)
+    ts_end_time = bc.adjust_date_time(st_time, "hours", duration)
     end_time = bc.adjust_date_time(st_time, "minutes", 60)
     calc_times = []
     calc_maxs = []
@@ -838,13 +889,13 @@ def get_reactive_power_demand(time_series, max_col_id, avg_col_id):
         calc_avgs.append(calc_dataframe.mean()[avg_col_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_maxs, calc_avgs)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_maxs, calc_avgs)), columns=["hourly_maximum", "hourly_average"], index=calc_times)
     return df
 
 
 def get_system_energy_losses(feeder_generation_df, gen_col_id, feeder_load_df, feeder_col_id, start_date_time,
                              duration):
-    """ Function calculates the total energy loss at a feeder
+    """Function calculates the total energy loss at a feeder
 
     Metric is defined in document VM_System Energy Losses.docx
 
@@ -854,7 +905,7 @@ def get_system_energy_losses(feeder_generation_df, gen_col_id, feeder_load_df, f
         feeder_load_df (dataframe): time series dataframe containing the 5-minute total feeder load data
         feeder_col_id (str): name of the dataframe column where the load data is located
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe: time series dataframe containing the calculated hourly energy losses
     """
@@ -867,21 +918,19 @@ def get_system_energy_losses(feeder_generation_df, gen_col_id, feeder_load_df, f
     end_time = bc.adjust_date_time(st_time, "minutes", 60)
     calc_times = []
     calc_losses = []
-    sum_losses = 0
     while end_time <= ts_end_time:
-        calc_dataframe = feeder_generation_df.query('index >= @st_time and index <= @end_time')
+        generation_df = feeder_generation_df.query('index >= @st_time and index <= @end_time')
+        load_df = feeder_load_df.query('index >= @st_time and index <= @end_time')
         calc_times.append(st_time)
-        calc_dataframe['losses'] = feeder_generation_df[gen_col_id] - feeder_load_df[feeder_col_id]
-        sum_losses = calc_dataframe.sum()['losses']
-        calc_losses.append(sum_losses)
+        calc_losses.append(generation_df.sum()[gen_col_id] - load_df.sum()[feeder_col_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_losses)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_losses)), columns=["energy_losses"], index=calc_times)
     return df
 
 
 def get_total_pv_reactive_power(time_series, pv_col_id, start_date_time, duration):
-    """ Function calculates the hourly total system reactive power generated from PV
+    """Function calculates the hourly total system reactive power generated from PV
 
     Metric defined in document VM_Total PV Reactive Power.docx
 
@@ -889,7 +938,7 @@ def get_total_pv_reactive_power(time_series, pv_col_id, start_date_time, duratio
         time_series (dataframe): time series dataframe that contains the 5-minute power data used in the calculations
         pv_col_id (str): name of the dataframe column where the power data is located
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe: time series dataframe containing the calculated hourly total reactive power values
     """
@@ -904,12 +953,12 @@ def get_total_pv_reactive_power(time_series, pv_col_id, start_date_time, duratio
         calc_pv_power.append(calc_dataframe.sum()[pv_col_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_pv_power)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_pv_power)), columns=["pv_reactive_power"], index=calc_times)
     return df
 
 
 def get_total_pv_real_power(time_series, pv_col_id, start_date_time, duration):
-    """ Function calculates the hourly total system reactive power generated from PV
+    """Function calculates the hourly total system reactive power generated from PV
 
     Metric is defined in document VM_Total PV Real Power.docx
 
@@ -917,7 +966,7 @@ def get_total_pv_real_power(time_series, pv_col_id, start_date_time, duration):
         time_series (dataframe): time series dataframe that contains the 5-minute power data used in the calculations
         pv_col_id (str): name of the dataframe column where the power data is located
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe:
     """
@@ -932,13 +981,13 @@ def get_total_pv_real_power(time_series, pv_col_id, start_date_time, duration):
         calc_pv_power.append(calc_dataframe.sum()[pv_col_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_pv_power)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_pv_power)), columns=["pv_real_power"], index=calc_times)
     return df
 
 
 def get_system_energy_loss(energy_sold_df, sold_col_id, energy_purchased_df, purchased_col_id, start_date_time,
                            duration):
-    """ Function calculates the energy losses inclusive of transmission and distribution losses
+    """Function calculates the energy losses inclusive of transmission and distribution losses
 
     Metric defined in document VM_Total System Losses.docx
 
@@ -948,7 +997,7 @@ def get_system_energy_loss(energy_sold_df, sold_col_id, energy_purchased_df, pur
         energy_purchased_df (dataframe): time series dataframe containing the 5-minute purchased energy data
         purchased_col_id (str): name of the dataframe column where the purchased data is located
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe: time series dataframe containing the calculated hourly energy loss
     """
@@ -974,7 +1023,7 @@ def get_system_energy_loss(energy_sold_df, sold_col_id, energy_purchased_df, pur
 
 
 def get_total_wind_reactive_power(time_series, power_col_id, start_date_time, duration):
-    """ Function calculates the hourly total system reactive power generated from Wind
+    """Function calculates the hourly total system reactive power generated from Wind
 
     Metric defined in document VM_Total Wind Reactive Power.docx
 
@@ -982,7 +1031,7 @@ def get_total_wind_reactive_power(time_series, power_col_id, start_date_time, du
         time_series (dataframe): time series dataframe containing the 5-minute wind reactive power data
         power_col_id (str): name of the dataframe column where the wind data is located
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe: time series dataframe containing the hourly wind power results
     """
@@ -997,12 +1046,12 @@ def get_total_wind_reactive_power(time_series, power_col_id, start_date_time, du
         calc_wind_power.append(calc_dataframe.sum()[power_col_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_wind_power)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_wind_power)), columns=["wind_reactive_power"], index=calc_times)
     return df
 
 
 def get_total_wind_real_power(time_series, power_col_id, start_date_time, duration):
-    """ Function calculates the hourly total system real power generated from wind
+    """Function calculates the hourly total system real power generated from wind
 
     Metric defined in document VM_Total Wind Real Power.docx
 
@@ -1010,7 +1059,7 @@ def get_total_wind_real_power(time_series, power_col_id, start_date_time, durati
         time_series (dataframe): time series dataframe containing the 5-minute wind power data
         power_col_id (str): name of the dataframe column where the wind data is located
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe: time series dataframe containing the hourly total wind data results
     """
@@ -1025,12 +1074,12 @@ def get_total_wind_real_power(time_series, power_col_id, start_date_time, durati
         calc_wind_power.append(calc_dataframe.sum()[power_col_id])
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_wind_power)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_wind_power)), columns=["real_wind_power"], index=calc_times)
     return df
 
 
 def get_transmission_over_voltage(time_series, voltage_col_id, compare_val, start_date_time, duration):
-    """ Function calculates the maximum over-voltage violations at the transmission node
+    """Function calculates the maximum over-voltage violations at the transmission node
 
     Metric defined in document VM_Transmission Over-Voltage Violation.docx
 
@@ -1039,7 +1088,7 @@ def get_transmission_over_voltage(time_series, voltage_col_id, compare_val, star
         voltage_col_id (str): name of the dataframe column containing the voltage data
         compare_val (float): threshold value to compare the data against
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe: time series dataframe containing the hourly transmission over voltage results
     """
@@ -1054,12 +1103,12 @@ def get_transmission_over_voltage(time_series, voltage_col_id, compare_val, star
         calc_over_voltage.append(bc.get_time_series_max_value_over(calc_dataframe, voltage_col_id, compare_val))
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_over_voltage)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_over_voltage)), columns=["max_over_voltages"], index=calc_times)
     return df
 
 
 def get_transmission_under_voltage(time_series, voltage_col_id, compare_val, start_date_time, duration):
-    """ Function calculates the maximum under-voltage violations at the transmission node
+    """Function calculates the maximum under-voltage violations at the transmission node
 
     Metric defined in document VM_Transmission Under-Voltage Violation.docx
 
@@ -1068,7 +1117,7 @@ def get_transmission_under_voltage(time_series, voltage_col_id, compare_val, sta
         voltage_col_id (str): name of the column where the voltage data is located
         compare_val (float): threshold value to compare the voltage data against
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe: time series dataframe containing the calculated hourly under voltage results
     """
@@ -1083,12 +1132,12 @@ def get_transmission_under_voltage(time_series, voltage_col_id, compare_val, sta
         calc_under_voltage.append(bc.get_time_series_max_value_under(calc_dataframe, voltage_col_id, compare_val))
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_under_voltage)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_under_voltage)), columns=["max_under_voltage"], index=calc_times)
     return df
 
 
 def get_wind_energy_production(time_series, prod_col_id, start_date_time, duration):
-    """ Function calculates the amount of energy produced by wind at a feeder
+    """Function calculates the amount of energy produced by wind at a feeder
 
     Metric defined in document VM_Wind Energy Production.docx
 
@@ -1096,7 +1145,7 @@ def get_wind_energy_production(time_series, prod_col_id, start_date_time, durati
         time_series (dataframe): time series dataframe that contains the 5-minute wind energy production data
         prod_col_id (str): name of the column where the wind energy production data is located
         start_date_time (str): the starting date and time when the calculation should start
-        duration (float): the length of time in hours which the calculations should be executed
+        duration (int): the length of time in hours which the calculations should be executed
     Returns:
         dataframe: time series dataframe containing the calculated hourly total wind energy results
     """
@@ -1111,5 +1160,5 @@ def get_wind_energy_production(time_series, prod_col_id, start_date_time, durati
         calc_production.append(bc.get_column_total_value(calc_dataframe, prod_col_id))
         st_time = end_time
         end_time = bc.adjust_date_time(st_time, "minutes", 60)
-    df = pd.DataFrame(list(zip(calc_production)), index=calc_times)
+    df = pd.DataFrame(list(zip(calc_production)), columns=["total_production"], index=calc_times)
     return df
