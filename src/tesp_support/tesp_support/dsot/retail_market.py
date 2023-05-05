@@ -31,7 +31,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from tesp_support.dsot.helpers_dsot import Curve, get_intersect, ClearingType, resample_curve, resample_curve_for_price_only
+from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType, resample_curve, resample_curve_for_price_only
 
 
 class RetailMarket:
@@ -248,10 +248,10 @@ class RetailMarket:
             temp = curve_buyer.quantities[0]
             if temp < 0.0:
                 log.info("Warning quantities submitted to retail are negative." +
-                         "The returns are ClearingType.UNCONGESTED, " +
+                         "The returns are MarketClearingType.UNCONGESTED, " +
                          "price set to 0, first quantity of the curve, " +
                          "and congestion price is set to 0. BAU case.")
-                return ClearingType.UNCONGESTED, 0.0, temp, 0.0
+                return MarketClearingType.UNCONGESTED, 0.0, temp, 0.0
             # log.info("Uncontrollable true, temp:" + str(temp) +
             #          " min: " + str(min(curve_seller.quantities)) +
             #          " max: " + str(max(curve_seller.quantities)))
@@ -268,11 +268,11 @@ class RetailMarket:
                     elif curve_seller.quantities[idx] == cleared_quantity:
                         cleared_price = curve_seller.prices[idx]
                 # if cleared_quantity > self.Q_max:
-                #     clear_type = ClearingType.CONGESTED
+                #     clear_type = MarketClearingType.CONGESTED
                 # else:
-                #     clear_type = ClearingType.UNCONGESTED
+                #     clear_type = MarketClearingType.UNCONGESTED
                 if cleared_quantity > self.Q_max:
-                    clear_type = ClearingType.CONGESTED
+                    clear_type = MarketClearingType.CONGESTED
                     uncongested_price = curve_seller.prices[0]
                     # uncongested_price = cleared_price - (cleared_quantity-Q_max) * self.FeederCongPrice
                     if uncongested_price < 0:
@@ -285,21 +285,21 @@ class RetailMarket:
                         congestion_surcharge = self.price_cap
                         log.info("congestion surcharge is beyond price cap, scale is too high!")
                 else:
-                    clear_type = ClearingType.UNCONGESTED
+                    clear_type = MarketClearingType.UNCONGESTED
                     congestion_surcharge = 0.0
                 return clear_type, cleared_price, cleared_quantity, congestion_surcharge
             else:
                 log.info("dso quantities: " + str(curve_buyer.quantities))
                 log.info("ERROR retail min: " + str(min(curve_seller.quantities)) +
                          ", max: " + str(max(curve_seller.quantities)))
-                return ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
+                return MarketClearingType.FAILURE, float('inf'), float('inf'), float('inf')
         else:
             max_q = min(max(curve_seller.quantities), max(curve_buyer.quantities))
             min_q = max(min(curve_seller.quantities), min(curve_buyer.quantities))
             # log.info("Uncontrollable false, min: " + str(min_q) + "  max: " + str(max_q))
             if max_q < min_q:
                 log.info("ERROR retail min_q: " + str(min_q) + ", max_q:" + str(max_q))
-                return ClearingType.FAILURE, float('inf'), float('inf'), float('inf')
+                return MarketClearingType.FAILURE, float('inf'), float('inf'), float('inf')
 
             # x,buyer_prices,seller_prices=resample_curve_for_market(curve_buyer.quantities, curve_buyer.prices,curve_seller.quantities, curve_seller.prices)
             # buyer_quantities=x
@@ -334,7 +334,7 @@ class RetailMarket:
                         p4 = (seller_quantities[idx + 1], seller_prices[idx + 1])
                         cleared_price, cleared_quantity = get_intersect(p1, p2, p3, p4)
                     if cleared_quantity > self.Q_max:
-                        clear_type = ClearingType.CONGESTED
+                        clear_type = MarketClearingType.CONGESTED
                         # uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
                         uncongested_price = curve_seller.prices[0]
                         if uncongested_price < 0:
@@ -344,7 +344,7 @@ class RetailMarket:
                             congestion_surcharge = self.price_cap
                             log.info("congestion surcharge is beyond price cap, scale is too high!")
                     else:
-                        clear_type = ClearingType.UNCONGESTED
+                        clear_type = MarketClearingType.UNCONGESTED
                         congestion_surcharge = 0.0
                     return clear_type, cleared_price, cleared_quantity, congestion_surcharge
 
@@ -357,22 +357,22 @@ class RetailMarket:
                 if max_q == max(curve_seller.quantities):
                     cleared_price = buyer_prices[-1]
                     cleared_quantity = buyer_quantities[-1]
-                    clear_type = ClearingType.CONGESTED
+                    clear_type = MarketClearingType.CONGESTED
                 elif max_q == max(curve_buyer.quantities):
                     cleared_price = seller_prices[-1]
                     cleared_quantity = seller_quantities[-1]
-                    clear_type = ClearingType.UNCONGESTED
+                    clear_type = MarketClearingType.UNCONGESTED
             else:
                 if min_q == min(curve_seller.quantities):
                     cleared_price = buyer_prices[0]
                     cleared_quantity = buyer_quantities[0]
-                    clear_type = ClearingType.UNCONGESTED
+                    clear_type = MarketClearingType.UNCONGESTED
                 elif min_q == min(curve_buyer.quantities):
                     cleared_price = seller_prices[0]
                     cleared_quantity = seller_quantities[0]
-                    clear_type = ClearingType.UNCONGESTED
+                    clear_type = MarketClearingType.UNCONGESTED
             if cleared_quantity > Q_max:
-                clear_type = ClearingType.CONGESTED
+                clear_type = MarketClearingType.CONGESTED
                 uncongested_price = cleared_price - (cleared_quantity - Q_max) * self.FeederCongPrice
                 if uncongested_price < 0:
                     uncongested_price = 0

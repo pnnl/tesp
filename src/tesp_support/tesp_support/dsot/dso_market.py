@@ -17,7 +17,7 @@ from copy import deepcopy
 import numpy as np
 
 from tesp_support.api.parse_helpers import parse_kw
-from tesp_support.dsot.helpers_dsot import Curve, get_intersect, ClearingType
+from tesp_support.dsot.helpers_dsot import Curve, get_intersect, MarketClearingType
 
 
 class DSOMarket:
@@ -291,9 +291,9 @@ class DSOMarket:
                     self.trial_cleared_quantity_RT + self.curve_c[day_of_week][hour_of_day]
 
                 if self.trial_cleared_quantity_RT > self.DSO_Q_max:
-                    self.trial_clear_type_RT = ClearingType.CONGESTED
+                    self.trial_clear_type_RT = MarketClearingType.CONGESTED
                 else:
-                    self.trial_clear_type_RT = ClearingType.UNCONGESTED
+                    self.trial_clear_type_RT = MarketClearingType.UNCONGESTED
             except:
                 self.Pwclear_RT, self.trial_cleared_quantity_RT, self.trial_clear_type_RT = \
                     self.trial_wholesale_clearing(self.curve_ws_node[day_of_week][hour_of_day],
@@ -351,8 +351,8 @@ class DSOMarket:
             if temp < 0.0:
                 log.info("Warning quantities submitted to DSO are negative. " +
                          "The returns are price set to 0, first quantity of the curve," +
-                         "and ClearingType.UNCONGESTED. BAU case.")
-                return 0.0, temp, ClearingType.UNCONGESTED
+                         "and MarketClearingType.UNCONGESTED. BAU case.")
+                return 0.0, temp, MarketClearingType.UNCONGESTED
             if min(curve_ws_node.quantities) <= temp <= max(curve_ws_node.quantities):
                 cleared_quantity = temp
                 for idx in range(1, self.num_samples):
@@ -365,7 +365,7 @@ class DSOMarket:
                         cleared_price = curve_ws_node.prices[idx - 1]
                     elif curve_ws_node.quantities[idx] == cleared_quantity:
                         cleared_price = curve_ws_node.prices[idx]
-                clear_type = ClearingType.UNCONGESTED
+                clear_type = MarketClearingType.UNCONGESTED
                 if cleared_price > self.price_cap:
                     cleared_price = self.price_cap
                 return cleared_price, cleared_quantity, clear_type
@@ -375,14 +375,14 @@ class DSOMarket:
                          str(max(curve_ws_node.quantities)) + " curve_DSO.quantities[0] " +
                          str(curve_DSO.quantities[0]))
                 log.info("dso quantities: curve_DSO" + str(curve_DSO.quantities))
-                return float('inf'), float('inf'), ClearingType.FAILURE
+                return float('inf'), float('inf'), MarketClearingType.FAILURE
         else:
 
             max_q = min(max(curve_ws_node.quantities), max(curve_DSO.quantities))
             min_q = max(min(curve_ws_node.quantities), min(curve_DSO.quantities))
             if max_q <= min_q:
                 log.info("ERROR dso min: " + str(min_q) + ", max: " + str(max_q))
-                return float('inf'), float('inf'), ClearingType.FAILURE
+                return float('inf'), float('inf'), MarketClearingType.FAILURE
 
             # x, buyer_prices, seller_prices = \
             #     resample_curve_for_market(curve_DSO.quantities, curve_DSO.prices,
@@ -444,9 +444,9 @@ class DSOMarket:
                                  " buyer_prices : " + str(buyer_prices) + " seller_prices: " + str(seller_prices) +
                                  " day: " + str(day) + " hour: " + str(hour))
                     if cleared_quantity > self.DSO_Q_max:
-                        trial_clear_type = ClearingType.CONGESTED
+                        trial_clear_type = MarketClearingType.CONGESTED
                     else:
-                        trial_clear_type = ClearingType.UNCONGESTED
+                        trial_clear_type = MarketClearingType.UNCONGESTED
                     return Pwclear, cleared_quantity, trial_clear_type
             log.info("ERROR dso intersection not found (not supposed to happen). quantities: " + str(
                 buyer_quantities) + ", buyer_prices: " + str(buyer_prices) + ", seller_prices: " + str(seller_prices))
@@ -454,20 +454,20 @@ class DSOMarket:
                 if max_q == max(curve_ws_node.quantities):
                     Pwclear = buyer_prices[-1]
                     cleared_quantity = buyer_quantities[-1]
-                    trial_clear_type = ClearingType.CONGESTED
+                    trial_clear_type = MarketClearingType.CONGESTED
                 elif max_q == max(curve_DSO.quantities):
                     Pwclear = seller_prices[-1]
                     cleared_quantity = seller_quantities[-1]
-                    trial_clear_type = ClearingType.UNCONGESTED
+                    trial_clear_type = MarketClearingType.UNCONGESTED
             else:
                 if min_q == min(curve_ws_node.quantities):
                     Pwclear = buyer_prices[0]
                     cleared_quantity = buyer_quantities[0]
-                    trial_clear_type = ClearingType.UNCONGESTED
+                    trial_clear_type = MarketClearingType.UNCONGESTED
                 elif min_q == min(curve_DSO.quantities):
                     Pwclear = seller_prices[0]
                     cleared_quantity = seller_quantities[0]
-                    trial_clear_type = ClearingType.UNCONGESTED
+                    trial_clear_type = MarketClearingType.UNCONGESTED
             return Pwclear, cleared_quantity, trial_clear_type
 
     def substation_supply_curve_RT(self, retail_obj):

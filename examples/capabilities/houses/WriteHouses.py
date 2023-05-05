@@ -1,7 +1,7 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: WriteHouses.py
 
-import tesp_support.original.resdential_feeder_glm as fg
+import tesp_support.original.residential_feeder_glm as fg
 
 fp = open('houses.glm', 'w')
 

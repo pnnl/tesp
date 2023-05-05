@@ -228,8 +228,8 @@ def get_average_air_temp_deviation(actual_df, actual_col_name, set_point_col_nam
     Args:
         actual_df (dataframe): per-device average deviation from desired air temperature set point
         actual_col_name (str): dataframe column id for the location of actual temperatures
+        set_point_col_name (str): dataframe column id for the location of set point data
         set_points_df (dataframe): time series data frame containing the set points data.
-        set_point_col_name  (str): dataframe column id for the location of set point data
         start_date_time (str): the starting date and time when the calculation should start
 
     Returns:
@@ -407,8 +407,8 @@ def get_peak_demand(time_series, column_id, start_date_time):
 
 
 def get_peak_supply(time_series, column_id, start_date_time):
-    """This function calculates the highest hourly electricity supply (MW) in the year of data contained in the
-        dataframe
+    """ This function calculates the highest hourly electricity supply (MW) in the year of
+    data contained in the dataframe
 
     This metric is defined in document VM_PeakDemand or PeakSupply.docx
 
@@ -606,7 +606,7 @@ def get_max_duration_over_voltage(time_series, column_id, limit_val, start_date_
 
 
 def get_average_unit_price(time_series, column_id, start_date_time):
-    """Function calculates the market average unit price (of electricity) over the course of 8,760 hours, in a specific
+    """ Function calculates the market average unit price (of electricity) over the course of 8,760 hours, in a specific
     service territory managed by an independent system operator
 
     Metric defined in document VM_Market Average Unit Price.docx
@@ -704,7 +704,7 @@ def get_max_market_price(time_series, column_id, start_date_time):
 
 def get_emergency_scarcity_sell(scarcity_power_df, scarcity_col_id, scarcity_price_df, price_col_id,
                                 generation_capacity_df, gen_col_id, available_power_df, available_col_id):
-    """Function calculates the annual value of firm energy for Scarcity Conditions
+    """ Function calculates the annual value of firm energy for Scarcity Conditions
 
     Metric is defined in the document VM_Emergency Scarcity Wholesales Sells.docx
 
@@ -812,7 +812,7 @@ def get_mean_absolute_percentage(actual_load_df, actual_col_id, forecasted_load_
 
 
 def get_minimum_market_price(time_series, price_col_id, start_date_time):
-    """Function calculates the minimum market price (of electricity) over the course of 8,760 hours
+    """ Function calculates the minimum market price (of electricity) over the course of 8,760 hours
 
     Metric defined in document VM_Minimum Market Price.docx
 
@@ -862,7 +862,7 @@ def get_substation_peak_power(time_series, power_col_id, start_date_time, durati
 
 
 def get_reactive_power_demand(time_series, max_col_id, avg_col_id, start_date_time, duration):
-    """Function calculates the maximum and average substation reactive power flow reported each hour
+    """ Function calculates the maximum and average substation reactive power flow reported each hour
 
     Metric is defined in document VM_Substation Reactive Power Demand.docx
 
@@ -895,7 +895,7 @@ def get_reactive_power_demand(time_series, max_col_id, avg_col_id, start_date_ti
 
 def get_system_energy_losses(feeder_generation_df, gen_col_id, feeder_load_df, feeder_col_id, start_date_time,
                              duration):
-    """Function calculates the total energy loss at a feeder
+    """ Function calculates the total energy loss at a feeder
 
     Metric is defined in document VM_System Energy Losses.docx
 
@@ -930,7 +930,7 @@ def get_system_energy_losses(feeder_generation_df, gen_col_id, feeder_load_df, f
 
 
 def get_total_pv_reactive_power(time_series, pv_col_id, start_date_time, duration):
-    """Function calculates the hourly total system reactive power generated from PV
+    """ Function calculates the hourly total system reactive power generated from PV
 
     Metric defined in document VM_Total PV Reactive Power.docx
 
@@ -958,7 +958,7 @@ def get_total_pv_reactive_power(time_series, pv_col_id, start_date_time, duratio
 
 
 def get_total_pv_real_power(time_series, pv_col_id, start_date_time, duration):
-    """Function calculates the hourly total system reactive power generated from PV
+    """ Function calculates the hourly total system reactive power generated from PV
 
     Metric is defined in document VM_Total PV Real Power.docx
 
@@ -987,7 +987,7 @@ def get_total_pv_real_power(time_series, pv_col_id, start_date_time, duration):
 
 def get_system_energy_loss(energy_sold_df, sold_col_id, energy_purchased_df, purchased_col_id, start_date_time,
                            duration):
-    """Function calculates the energy losses inclusive of transmission and distribution losses
+    """ Function calculates the energy losses inclusive of transmission and distribution losses
 
     Metric defined in document VM_Total System Losses.docx
 
@@ -1023,7 +1023,7 @@ def get_system_energy_loss(energy_sold_df, sold_col_id, energy_purchased_df, pur
 
 
 def get_total_wind_reactive_power(time_series, power_col_id, start_date_time, duration):
-    """Function calculates the hourly total system reactive power generated from Wind
+    """ Function calculates the hourly total system reactive power generated from Wind
 
     Metric defined in document VM_Total Wind Reactive Power.docx
 
@@ -1051,7 +1051,7 @@ def get_total_wind_reactive_power(time_series, power_col_id, start_date_time, du
 
 
 def get_total_wind_real_power(time_series, power_col_id, start_date_time, duration):
-    """Function calculates the hourly total system real power generated from wind
+    """ Function calculates the hourly total system real power generated from wind
 
     Metric defined in document VM_Total Wind Real Power.docx
 
@@ -1079,7 +1079,7 @@ def get_total_wind_real_power(time_series, power_col_id, start_date_time, durati
 
 
 def get_transmission_over_voltage(time_series, voltage_col_id, compare_val, start_date_time, duration):
-    """Function calculates the maximum over-voltage violations at the transmission node
+    """ Function calculates the maximum over-voltage violations at the transmission node
 
     Metric defined in document VM_Transmission Over-Voltage Violation.docx
 
@@ -1108,7 +1108,7 @@ def get_transmission_over_voltage(time_series, voltage_col_id, compare_val, star
 
 
 def get_transmission_under_voltage(time_series, voltage_col_id, compare_val, start_date_time, duration):
-    """Function calculates the maximum under-voltage violations at the transmission node
+    """ Function calculates the maximum under-voltage violations at the transmission node
 
     Metric defined in document VM_Transmission Under-Voltage Violation.docx
 
@@ -1137,7 +1137,7 @@ def get_transmission_under_voltage(time_series, voltage_col_id, compare_val, sta
 
 
 def get_wind_energy_production(time_series, prod_col_id, start_date_time, duration):
-    """Function calculates the amount of energy produced by wind at a feeder
+    """ Function calculates the amount of energy produced by wind at a feeder
 
     Metric defined in document VM_Wind Energy Production.docx
 

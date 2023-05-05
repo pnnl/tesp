@@ -71,7 +71,7 @@ Links to Dependencies
 Subdirectories
 ==============
 
-- *tesp_support*; Python code for agents, configuration and post-processing.
+- *tesp_support*; utilities for building and running using PYPOWER with or without FNCS/HELICS co-simulations.
 - *test*; scripts that support testing the package; not automated.
 
 License & Copyright
@@ -80,15 +80,15 @@ License & Copyright
 - Copyright (C) 2017-2022 Battelle Memorial Institute
 
 .. _Docker: https://www.docker.com
-.. _Python: http://www.python.org
-.. _pip: https://pip.pypa.io
-.. _Pandas: https://pandas.pydata.org
-.. _NumPy: http://www.numpy.org
-.. _SciPy: http://www.scipy.org
-.. _Matplotlib: https://matplotlib.org
-.. _NetworkX: http://networkx.github.io
-.. _MATPOWER: http://www.pserc.cornell.edu/matpower/
-.. _PYPOWER: https://github.com/rwl/PYPOWER
+.. _EnergyPlus: https://energyplus.net
 .. _GridLAB-D: http://gridlab-d.shoutwiki.com
-.. _EnergyPlus: https://energyplus.net/
-.. _TESP: http://tesp.readthedocs.io/en/latest/
+.. _Matplotlib: https://www.matplotlib.org
+.. _MATPOWER: https://www.matpower.org
+.. _NetworkX: https://www.networkx.org
+.. _NumPy: https://www.numpy.org
+.. _Pandas: https://pandas.pydata.org
+.. _pip: https://pip.pypa.io/en/stable
+.. _PYPOWER: https://github.com/rwl/PYPOWER
+.. _Python: https://www.python.org
+.. _SciPy: https://www.scipy.org
+.. _TESP: https://tesp.readthedocs.io/en/latest

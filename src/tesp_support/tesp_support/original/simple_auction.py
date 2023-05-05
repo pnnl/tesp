@@ -21,7 +21,7 @@ I think we should refactor this so that these assumptions are not so
 tightly integrated with the formulation.
 
 """
-from tesp_support.api.helpers import ClearingType, curve, aggregate_bid
+from tesp_support.original.curve import ClearingType, curve, aggregate_bid
 
 
 # Class definition

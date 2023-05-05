@@ -33,7 +33,7 @@ plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 
-######################################################end conf plot
+# #####################################################end conf plot
 class MarkerCollorsJSONpython:
     """ Object contains the markers, colors, and lines
     """
@@ -301,7 +301,7 @@ class DERsJSON:
         return list([meta_I_ver, start_time, all_homes_I_ver, data_individual, home_keys])
 
 
-########################################################## Function
+# ######################################################### Function
 def get_first_h(data_s):
     """ Gets the first hour of DA prices (DSO and retail)
 
@@ -344,7 +344,7 @@ def make_convergency_test(t, data_s, tf=47):
     return deepcopy(price)
 
 
-########################################################## Plots
+# ######################################################### Plots
 def Markets(obj_Market, obj_Color):
     """ Plot DSO and Retail markets
     

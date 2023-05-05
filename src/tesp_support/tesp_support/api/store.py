@@ -153,7 +153,7 @@ class Schema:
         if os.path.isfile(file):
             root = os.path.split(file)
             ext = os.path.splitext(root[1])
-            if ext[1] not in [".csv", ".json", ".db", ".hdf5"]:
+            if ext[1] not in [".csv", ".json", ".db", ".h5"]:
                 raise Exception("Sorry, can not read file type " + ext)
         else:
             raise Exception("Sorry, can not read " + file)
@@ -186,33 +186,33 @@ class Schema:
                     self.tables.append(tbl[0])
                 con.close()
 
-            if self.ext in [".hdf5"]:
+            if self.ext in [".h5"]:
                 f = h5py.File(self.file, 'r')
                 self.tables = list(f.keys())
-
+                f.close()
         return self.tables
 
     def get_columns(self, table):
         if table in self.tables:
-            if table not in self.columns:
-                if self.ext == ".csv":
-                    with open(self.file, newline='') as csvfile:
-                        reader = csv.DictReader(csvfile)
-                        self.columns[table] = reader.fieldnames
+            if self.ext == ".csv":
+                with open(self.file, newline='') as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    self.columns[table] = reader.fieldnames
 
-                if self.ext in [".db"]:
-                    con = sqlite3.connect(self.file)
-                    sql_query = """SELECT * FROM '""" + table + """';"""
-                    cursor = con.cursor()
-                    data = cursor.execute(sql_query)
-                    self.columns[table] = []
-                    for column in data.description:
-                        self.columns[table].append(column[0])
-                    con.close()
+            if self.ext in [".db"]:
+                con = sqlite3.connect(self.file)
+                sql_query = """SELECT * FROM '""" + table + """';"""
+                cursor = con.cursor()
+                data = cursor.execute(sql_query)
+                self.columns[table] = []
+                for column in data.description:
+                    self.columns[table].append(column[0])
+                con.close()
 
-                if self.ext in [".hdf5"]:
-                    f = h5py.File(self.file, 'r')
-                    self.tables = list(f.keys())
+            if self.ext in [".h5"]:
+                f = h5py.File(self.file, 'r')
+                self.columns[table] = list(f.__getitem__(table).dtype.names)
+                f.close()
         return self.columns[table]
 
     def set_date_bycol(self, table, name):
@@ -470,6 +470,28 @@ def _test_sqlite():
     print(tables)
     columns = my_file.get_columns(tables[0])
     print(columns)
+    my_store.write()
+
+
+def test_hdf5():
+    from .data import tesp_test
+
+    my_store = Store(tesp_test + 'api/store.json')
+    # 14 houses
+    my_file = my_store.add_file(tesp_test + 'api/test_houses_metrics_billing_meter.h5', "test_billing_meter", "My test h5 file")
+    tables = my_file.get_tables()
+    print(tables)
+    columns = my_file.get_columns(tables[1])
+    print(columns)
+    my_file.set_date_bycol(tables[1], columns[1])
+    my_file.set_date_bycol(tables[2], columns[1])
+
+    # 14 houses
+    f = h5py.File(my_file.file, 'r')
+    n = f.__getitem__(tables[1])[0:13]
+    print(n)
+
+
     my_store.write()
 
 

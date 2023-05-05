@@ -258,7 +258,7 @@ def write_dsot_management_script(master_file, case_path, system_config=None, sub
         for w_key, w_val in weather_config.items():
             outfile.write('cd %s\n' % w_key)
             outfile.write('(export WEATHER_CONFIG=weather_Config.json '
-                          '&& exec python3 -c "import tesp_tesp_support.weather.weather_agent as tesp;'
+                          '&& exec python3 -c "import tesp_support.weather.weather_agent as tesp;'
                           'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
                           % (outPath, w_key))
             outfile.write('cd ..\n')
@@ -373,7 +373,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             for w_key, w_val in weather_config.items():
                 outfile.write('set FNCS_CONFIG_FILE=%s.zpl\n' % w_key)
                 outfile.write('cd %s\n' % w_key)
-                outfile.write('start /b cmd /c python -c "import tesp_tesp_support.weather.weather_agent as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.weather.weather_agent as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" ^> %s\\%s_weather.log 2^>^&1\n'
                               % (outPath, w_key))
                 outfile.write('cd ..\n')
@@ -460,7 +460,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             for w_key, w_val in weather_config.items():
                 outfile.write('cd %s\n' % w_key)
                 outfile.write('(export FNCS_CONFIG_FILE=%s.zpl && export WEATHER_CONFIG=weather_Config.json '
-                              '&& exec python3 -c "import tesp_tesp_support.weather.weather_agent as tesp;'
+                              '&& exec python3 -c "import tesp_support.weather.weather_agent as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
                               % (w_key, outPath, w_key))
                 outfile.write('cd ..\n')
@@ -632,7 +632,7 @@ def write_players_msg(case_path, sys_config, dt):
         pf.write_file(case_path + "/" + player[0] + "_player.json")
 
 
-class ClearingType(IntEnum):
+class MarketClearingType(IntEnum):
     """ Describes the market clearing type
     """
     UNCONGESTED = 0

@@ -11,7 +11,7 @@ import copy
 from tesp_support.api.data import comm_path, energyplus_path
 from tesp_support.api.make_ems import merge_idf
 from tesp_support.api.process_eplus import read_eplus_metrics
-from tesp_support.api.tesp_runner import init_tests, run_test, report_tests
+from tesp_support.api.test_runner import init_tests, run_test, report_tests
 
 caseDir = './scratch'
 

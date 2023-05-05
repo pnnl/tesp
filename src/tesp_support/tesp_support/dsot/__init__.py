@@ -1,4 +1,5 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: __init__.py
-"""TESP is the Transactive Energy Simulation Platform tesp_support for DSOT
+""" Transactive Energy Simulation Platform (TESP)
+Contains the python files for the DSOT analysis
 """

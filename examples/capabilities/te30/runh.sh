@@ -10,4 +10,4 @@
 (exec gridlabd -D USE_HELICS -D METRICS_FILE=TE_ChallengeH_metrics.json TE_Challenge.glm &> gridlabd.log &)
 (exec python3 -c "import tesp_support.original.substation as tesp;tesp.substation_loop('TE_Challenge_agent_dict.json','TE_ChallengeH',helicsConfig='TE_Challenge_substation.json')" &> substation.log &)
 (exec python3 -c "import tesp_support.api.tso_PYPOWER as tesp;tesp.tso_pypower_loop('te30_pp.json','TE_ChallengeH',helicsConfig='pypower.json')" &> pypower.log &)
-(export WEATHER_CONFIG=TE_Challenge_weather.json && exec python3 -c "import tesp_support.api.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather.log &)
+(export WEATHER_CONFIG=TE_Challenge_weather.json && exec python3 -c "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather.log &)

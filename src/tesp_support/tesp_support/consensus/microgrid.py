@@ -7,7 +7,7 @@ import numpy as np
 import numpy.matlib as npm
 from scipy.interpolate import interp1d
 
-from tesp_support.dsot.helpers_dsot import ClearingType
+from tesp_support.dsot.helpers_dsot import MarketClearingType
 
 gamma = 0.0025
 iter_max = 1600
@@ -223,7 +223,7 @@ def Consenus_dist_DA(dso_market_obj, DA_horizon, fed, time_granted, time_market_
 
     dso_market_obj.trial_cleared_quantity_DA = np.concatenate([-1 * PG[:, agent_idx, kk], -1 * PG[:, agent_idx, kk]]).tolist()
     dso_market_obj.Pwclear_DA = np.concatenate([lambda_c[:, agent_idx, kk], lambda_c[:, agent_idx, kk]]).tolist()
-    dso_market_obj.trial_clear_type_DA = [ClearingType.UNCONGESTED] * dso_market_obj.windowLength
+    dso_market_obj.trial_clear_type_DA = [MarketClearingType.UNCONGESTED] * dso_market_obj.windowLength
 
     while time_granted < time_market_DA_complete:
         time_granted = h.helicsFederateRequestTime(fed, time_market_DA_complete)
@@ -441,7 +441,7 @@ def Consenus_dist_RT(dso_market_obj, fed, time_granted, time_market_RT_complete)
 
     dso_market_obj.trial_cleared_quantity_RT = -1 * PG[agent_idx, kk]
     dso_market_obj.Pwclear_RT = lambda_c[agent_idx, kk]
-    dso_market_obj.trial_clear_type_RT = ClearingType.UNCONGESTED
+    dso_market_obj.trial_clear_type_RT = MarketClearingType.UNCONGESTED
 
     while time_granted < time_market_RT_complete:
         time_granted = h.helicsFederateRequestTime(fed, time_market_RT_complete)

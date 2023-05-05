@@ -24,7 +24,7 @@ from tesp_support.api.make_ems import merge_idf
 from tesp_support.weather.TMYtoEPW import convert_tmy2_to_epw
 from .glm_dictionary import glm_dict
 from .prep_substation import prep_substation
-from .resdential_feeder_glm import populate_feeder
+from .residential_feeder_glm import populate_feeder
 
 if sys.platform == 'win32':
     pycall = 'python'
@@ -538,7 +538,7 @@ values:
     try:
         aucline = "import tesp_support.original.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "')"
         ppline = "import tesp_support.api.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('" + PPJsonFile + "','" + casename + "')"
-        weatherline = "import tesp_tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')"
+        weatherline = "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')"
 
         shfile = casedir + '/run.sh'
         op = open(shfile, 'w')

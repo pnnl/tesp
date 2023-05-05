@@ -1135,7 +1135,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             #         elif "cleared_quantity_RT" in property:
             #             dso_market_obj.trial_cleared_quantity_RT = json.loads(h.helicsEndpointGetMessage(endid["m{}".format(i)]).data)
             #
-            # dso_market_obj.trial_clear_type_RT = helpers_dsot.ClearingType.UNCONGESTED
+            # dso_market_obj.trial_clear_type_RT = helpers_dsot.MarketClearingType.UNCONGESTED
 
             log.info(str(dso_market_obj.Pwclear_RT))
             # create the supply curve that will be handed to the retail market
@@ -1177,7 +1177,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
             #             dso_market_obj.trial_cleared_quantity_DA = json.loads(h.helicsEndpointGetMessage(endid["m{}".format(i)]).data)
             #
             # for idx in range(dso_market_obj.windowLength):
-            #     dso_market_obj.trial_clear_type_DA[idx] = helpers_dsot.ClearingType.UNCONGESTED
+            #     dso_market_obj.trial_clear_type_DA[idx] = helpers_dsot.MarketClearingType.UNCONGESTED
             #
             # # set the day-ahead clearing price (trial clearing using the supply curve)
             # #dso_market_obj.set_Pwclear_DA(hour_of_day, day_of_week)
