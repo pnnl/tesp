@@ -150,7 +150,7 @@ def post_process():
     if not check_folder:
         os.makedirs(case_path + '/plots')
 
-    # STEP 1 --------- DSO Specific Post Processing -------------------------
+    # STEP 1 --------- DSO Specific Post-Processing -------------------------
 
     # --------------- PROCESS BILLING METERS  ------------------------------
     # Not sure how to find dso number that is running on a compute node
@@ -194,7 +194,7 @@ def post_process():
         print('No  process list')
         results = []
 
-    # STEP 2 --------- Month Specific (all DSOs/TSO) Post Processing -------------------------
+    # STEP 2 --------- Month Specific (all DSOs/TSO) Post-Processing -------------------------
 
     # ----------- CALCULATE POPULATION STATISTICS AND OUTPUT ---------------------------
     if pop_stats:

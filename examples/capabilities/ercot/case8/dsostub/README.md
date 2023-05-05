@@ -48,7 +48,7 @@ Directory of generated output files (note: metadata is embedded in the json file
  - *bus_ercot_8_metrics.json*; intermediate bulk system bus metrics, e.g. voltage and LMP
  - *dso_ercot_8_metrics.json*; intermediate DSO emulator metrics, e.g. bids and cleared loads
  - *dso8.log*; DSO emulator output log
- - *ercot_8_m_dict.json*; metadata for bulk system post processing, written by ../fncsTSO.py
+ - *ercot_8_m_dict.json*; metadata for bulk system post-processing, written by ../fncsTSO.py
  - *ercot_8_opf.csv*; optimal power flow solution summary at the market clearing interval, plot in Excel
  - *ercot_8_pf.csv*; regular power flow solution summary at the simulation time step, plot in Excel
  - *gen_ercot_8_metrics.json*; intermediate bulk system generating unit metrics

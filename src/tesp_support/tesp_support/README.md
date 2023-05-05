@@ -3,7 +3,7 @@
 Copyright (c) 2017-2022, Battelle Memorial Institute
 
 This is the main code repository for Python-based components of TESP, 
-including the transactive agents, case configuration and post processing.  
+including the transactive agents, case configuration and post-processing.  
 Currently, there are three kinds of transactive agent implemented here: 
 
 1. double-auction spot market, typically runs every 5 to 15 minutes
@@ -34,36 +34,16 @@ Suggested sequence of test cases for development:
 
 ### File Directory
 
-- *TMY2EPW.py*; command-line script that converts a TMY2 file to the EnergyPlus EPW format.
 - *__init__.py*; boilerplate for a Python package
-- *api.py*; collects Python import statements needed to use public functions from Python code outside of this directory.
-- *auction.py*; supervises one double-auction and multiple HVAC agents for a feeder; communicates via FNCS with GridLAB-D and PYPOWER/AMES
-- *feederGenerator.py*; from a PNNL taxonomy feeder as the backbone, populates it with houses, solar PV, batteries and smart inverters
-- *fncs.py*; the Python interface to FNCS, which is a C/C++ shared object library, or dynamic link library (Windows)
-- *glm_dict.py*; parses the GridLAB-D input (GLM) file and produces metafile data in JSON format, describing the houses, meters, DER, capacitors and regulators
-- *precool.py*; manages a set of house thermostats for NIST TE Challenge 2. There is no communication with a market. If the house experiences an overvoltage, the thermostat is turned down and locked for 4 hours, unless the house temperature violates comfort limits.
-- *prep_auction.py*; configures the agent metadata (JSON) and GridLAB-D FNCS subscriptions/publications for the double-auction, double-ramp simulations
-- *prep_precool.py*; configures the agent metadata (JSON) and GridLAB-D FNCS subscriptions/publications for NIST TE Challenge 2 precooling
-- *process_agents.py*; makes tabular and plotted summaries of agent results
-- *process_eplus.py*; makes tabular and plotted summaries of EnergyPlus results
-- *process_gld.py*; makes tabular and plotted summaries of GridLAB-D results (substation power/losses, average and sample house temperatures, meter voltage min/max)
-- *process_houses.py*; plots the HVAC power and air temperature for all houses
-- *process_inv.py*; makes tabular and plotted summaries of results for NIST TE Challenge 2, including inverters, capacitor switching and tap changes
-- *process_pypower.py*; makes tabular and plotted summaries of PYPOWER results for the 9-bus model in te30 or sgip1
-- *process_voltages.py*; plots the minimum and maximum voltage for all houses
-- *simple_auction.py*; implements the double-auction agent and the Olympic Peninsula cooling agent, as separate Python classes, called by auction.py
-- *tesp_case.py*; supervises the assembly of a TESP case with one feeder, one EnergyPlus building and one PYPOWER model. Reads the JSON file from tesp_config.py
-- *tesp_config.py*; a GUI for creating the JSON file used to configure a TESP case
-- *tesp_monitor.py*; a GUI for launching a TESP simulation, monitoring its progress, and terminating it early if necessary
-- *tso_PYPOWER.py*; manages PYPOWER solutions for the te30 and sgip1 examples, based on a 9-bus textbook model. Note that the ERCOT cases use custom local versions of this code instead.
 - *README.md*; this file
-- *weatherAgent.py*; the weather agent that reads from a .csv weather data file and publishes real-time weather data and hourly weather forecast. It needs a WeatherConfig.json config file, and the environment variable WEATHER_CONFIG needs to be set and point to the WeatherConfig.json config file. The example weather data file and WeatherConfig.json config file can be found in the tesp\examples\weatherAgent directory.
 
 ### Subdirectories
 
-Code in these subdirectories has been archived. It's not included in the tesp_support distribution, but may be useful as examples.
-
+- **api**; code that configures new capabilities for TESP
+- **consensus**; custom code that for running the consensus mechanism on microgrid n DSOT co simulation using TSO and DSO DER agents.
+- **dsot**; custom code that for running the DSOT co simulation using TSO and DSO DER agents. Used for a 2021 journal paper on TESP and the DSOT example.
 - *matpower*; legacy code that configures and post-processes MATPOWER v5+ for TESP. We now use PYPOWER and AMES instead.
+- *original*; legacy code that configures and creates most example/capabilities for TESP 
 - *sgip1*; custom code that plotted curves from different cases on the same graph. Used for a 2018 journal paper on TESP and the SGIP1 example.
 - *valuation*; custom code that post-processed SGIP1 outputs for the 2018 journal paper. May serve as an example, or use Jupyter notebooks instead.
-
+- *weather*; code that configures weather capabilities for TESP

@@ -39,19 +39,16 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
 
   - **tesp_support**; Python code for agents, configuration and post-processing
 
-    - *__init__.py*; boilerplate for a Python package
-    - *README.md*; this file
-
     - **api**; code that configures new capabilities for TESP
 
-        - *__init__.py*; boilerplate for a Python package
         - *data.py*; the paths to data libraries
         - *entity.py*; utilities for assign json file to attribute in python script
         - *fncs.py*; the Python interface to FNCS, which is a C/C++ shared object library, or dynamic link library (Windows)
         - *helpers.py*; utility functions for use within tesp_support
+        - *make_ems.py*; creates and merges the EMS for an EnergyPlus building model
         - *model.py*; GridLAB-D model I/O for TESP api
         - *modifier.py*; modify GridLAB-D model I/O for TESP api
-        - *metric_api.py*; utility metric api functions for use in post processing
+        - *metric_api.py*; utility metric api functions for use in post-processing
         - *metric_collector.py*; utility metric collector functions for use within simulation or post process
         - *parse_helpers.py*; parse text for different types of numbers
         - *player.py*; configure and plays a files for a simulation
@@ -69,7 +66,6 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
 
     - **original**; legacy code that configures most example/capabilities for TESP
 
-        - *__init__.py*; boilerplate for a Python package
         - *commercial_feeder_glm.py*; from a PNNL taxonomy feeder as the backbone, populates it with commercial building, solar PV, batteries and smart inverters
         - *copperplate_feeder_glm.py*; from a PNNL taxonomy feeder as the backbone, populates it with sudo copperplate
         - *curve*; accumulates a set of price, quantity bids for later aggregation for a curve
@@ -86,7 +82,6 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
 
     - **weather**; code that configures weather capabilities for TESP
 
-        - *__init__.py*; boilerplate for a Python package
         - *PSM_download.py*; simple script to download PSM weather files and convert them to DAT files
         - *PSMv3toDAT.py*; this code reads in PSM v3 csv files to converts weather DAT format for common use by agents
         - *README.md*; this file
@@ -95,7 +90,7 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
         - *weather_Agent.py*; publishes weather and forecasts based on a CSV file
 
     - **consensus**;  custom code that for running the consensus mechanism on microgrid n DSOT co simulation using TSO and DSO DER agents.
-    - **dsot**; custom code that for running the DSOT co simulation usingf TSO and DSO DER agents. Used for a 2021 journal paper on TESP and the DSOT example.
+    - **dsot**; custom code that for running the DSOT co simulation using TSO and DSO DER agents. Used for a 2021 journal paper on TESP and the DSOT example.
     - **sgip1**; custom code that plotted curves from different cases on the same graph. Used for a 2018 journal paper on TESP and the SGIP1 example.
     - **matpower**; legacy code that configures and post-processes MATPOWER v5+ for TESP. We now use PYPOWER and PSST instead.
     - **valuation**; custom code that post-processed SGIP1 outputs for the 2018 journal paper. May serve as an example, or use Jupyter notebooks instead.

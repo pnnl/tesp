@@ -1531,7 +1531,7 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None):
         else:
             der_loads_df = pd.concat([der_loads_df, der_df])
 
-    # Save file of combined dso DER stack loads for later post processing.
+    # Save file of combined dso DER stack loads for later post-processing.
     der_loads_df.to_hdf(case + '/DER_profiles.h5', key='DER_Profiles')
     der_loads_df.to_csv(path_or_buf=case + '/DERstack_data.csv')
 

@@ -57,7 +57,7 @@ if not check_folder:
     os.makedirs(case_path + '\\plots')
 
 
-# STEP 1 --------- DSO Specfic Post Processing -------------------------
+# STEP 1 --------- DSO Specfic Post-Processing -------------------------
 
 # --------------- PROCESS BILLING METERS  ------------------------------
 # Not sure how to find dso number that is running on a compute node
@@ -127,7 +127,7 @@ for dso_num in dso_range:
         print('Amenity scores complete: DSO ' + str(dso_num) + ', Month ' + month_name)
         tesp_support.dsot.plots.toc()
 
-# STEP 2 --------- Month Specfic (all DSOs/TSO) Post Processing -------------------------
+# STEP 2 --------- Month Specfic (all DSOs/TSO) Post-Processing -------------------------
 
 # ----------- CALCULATE POPULATION STATISTICS AND OUTPUT ---------------------------
 if pop_stats:

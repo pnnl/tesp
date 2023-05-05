@@ -14,8 +14,8 @@ TODO: fill out descriptions for file
 - *gridpiq.py*;
 - *fncs.py*; the Python interface to FNCS, which is a C/C++ shared object library, or dynamic link library (Windows)
 - *helpers.py*; utility functions for use within tesp_support
-- *make_ems.py*;
-- *metric_api.py*; utility metric api functions for use in post processing
+- *make_ems.py*; creates and merges the EMS for an EnergyPlus building model
+- *metric_api.py*; utility metric api functions for use in post-processing
 - *metric_base_api.py*; utility metric base api functions for use in metric_api
 - *metric_collector.py*; utility metric collector functions for use within simulation or post process
 - *model.py*; GridLAB-D model I/O for TESP api
