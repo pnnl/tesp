@@ -130,7 +130,7 @@ def read_eplus_metrics(path, name_root, quiet=False):
 
     # create a NumPy array of all metrics for the first building, 8760*39 doubles
     # we also want a NumPy array of times in hours
-    data = np.empty(shape=(len(times), len(ary)), dtype=np.float)
+    data = np.empty(shape=(len(times), len(ary)), dtype=float)
     if not quiet:
         print('Constructed', data.shape, 'NumPy array')
     i = 0
@@ -138,7 +138,7 @@ def read_eplus_metrics(path, name_root, quiet=False):
         ary = lst[str(t)][building]
         data[i, :] = ary
         i = i + 1
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=float)
     denom = 3600.0
     hrs /= denom
 

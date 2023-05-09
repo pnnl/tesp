@@ -10,7 +10,7 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 0
+   :maxdepth: 2
 
    tesp_support.api
    tesp_support.consensus

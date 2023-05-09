@@ -92,7 +92,7 @@ def EnergyPlus_test():
     tr.start_test('EnergyPlus EMS/IDF examples')
     os.chdir('capabilities/energyplus')
     subprocess.Popen('./clean.sh', shell=True).wait()
-    tr.exec_test('./run_baselines.sh > baselines.log', 'Baselines files')
+    tr.exec_test('./run_baselines.sh > baselines.log', 'Houston, TX Baselines files')
     if b_helics:
         tr.exec_test('./make_all_ems.sh True > all_ems.log', 'Generated all EMS/IDF files - HELICS')
         tr.run_test('runh.sh', 'EnergyPlus EMS - HELICS')

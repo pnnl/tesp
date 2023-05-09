@@ -85,7 +85,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
     times = list(map(int, list(lst_s.keys())))
     times.sort()
     print('There are', len(times), 'sample times at', times[1] - times[0], 'second intervals')
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=float)
     denom = 3600.0
     hrs /= denom
 
@@ -103,7 +103,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
             SUB_LOSSES_UNITS = val['units']
 
     # create a NumPy array of all metrics for the substation
-    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float)
+    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=float)
     # print ("\nConstructed", data_s.shape, "NumPy array for Substations")
     j = 0
     for _ in sub_keys:
@@ -154,7 +154,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
             HSE_WH_AVG_IDX = val['index']
             HSE_WH_AVG_UNITS = val['units']
 
-    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
+    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=float)
     # print ("\nConstructed", data_h.shape, "NumPy array for Houses")
     j = 0
     for _ in hse_keys:
@@ -215,7 +215,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
         elif key == 'below_10_percent_NormVol_Duration':
             MTR_OUT_DURATION_IDX = val['index']
 
-    data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+    data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=float)
     # print ("\nConstructed", data_m.shape, "NumPy array for Meters")
     j = 0
     for _ in mtr_keys:
@@ -247,7 +247,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
                 INV_Q_AVG_IDX = val['index']
                 INV_Q_AVG_UNITS = val['units']
 
-        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
+        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=float)
         print("\nConstructed", data_i.shape, "NumPy array for Inverters")
         j = 0
         for _ in inv_keys:
@@ -268,7 +268,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
         times_p = list(map(int, list(lst_p.keys())))
         times_p.sort()
         print("There are", len(times_p), "agent sample times at", times_p[1] - times_p[0], "second intervals")
-        hrs_p = np.array(times_p, dtype=np.float)
+        hrs_p = np.array(times_p, dtype=float)
         denom = 3600.0
         hrs_p /= denom
         time_p_key = str(times_p[0])
@@ -282,7 +282,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
             elif key == 'temperature_deviation_max':
                 TEMPDEV_MAX_IDX = val['index']
                 TEMPDEV_MAX_UNITS = val['units']
-        data_p = np.empty(shape=(1, len(times_p), len(lst_p[time_p_key])), dtype=np.float)
+        data_p = np.empty(shape=(1, len(times_p), len(lst_p[time_p_key])), dtype=float)
         print("\nConstructed", data_p.shape, "NumPy array for Agents")
         for i, t in enumerate(times_p):
             ary = lst_p[str(t)]
@@ -299,7 +299,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
             if key == 'operation_count':
                 CAP_COUNT_IDX = val['index']
                 CAP_COUNT_UNITS = val['units']
-        data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=np.float)
+        data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=float)
         print("\nConstructed", data_c.shape, "NumPy array for Capacitors")
         j = 0
         for _ in cap_keys:
@@ -321,7 +321,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
             if key == 'operation_count':
                 REG_COUNT_IDX = val['index']
                 REG_COUNT_UNITS = val['units']
-        data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=np.float)
+        data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=float)
         print("\nConstructed", data_r.shape, "NumPy array for Regulators")
         j = 0
         for _ in reg_keys:
@@ -334,8 +334,8 @@ def read_inv_metrics(path, name_root, diction_name=''):
 
     # assemble the total solar and battery inverter power
     j = 0
-    solar_kw = np.zeros(len(times), dtype=np.float)
-    battery_kw = np.zeros(len(times), dtype=np.float)
+    solar_kw = np.zeros(len(times), dtype=float)
+    battery_kw = np.zeros(len(times), dtype=float)
     for key in inv_keys:
         res = diction['inverters'][key]['resource']
         if res == 'solar':
@@ -383,7 +383,7 @@ def read_inv_metrics(path, name_root, diction_name=''):
     if have_regs:
         print("Total tap changes =", '{:.2f}'.format(data_r[:, -1, REG_COUNT_IDX].sum()))
 
-    final_bill = np.empty(shape=(len(times)), dtype=np.float)
+    final_bill = np.empty(shape=(len(times)), dtype=float)
     final_bill[0] = 0.0
     for i in range(1, len(hrs)):
         if 15.0 < hrs[i] <= 19.0:
@@ -435,9 +435,9 @@ def read_inv_metrics(path, name_root, diction_name=''):
     tavg1 = (data_h[:, :, HSE_AIR_AVG_IDX]).squeeze()
     tavg2 = tavg1.mean(axis=0)
 
-    vavg = np.zeros(shape=(len(times)), dtype=np.float)
-    vmin = np.full(shape=(len(times)), fill_value=1000.0, dtype=np.float)
-    vmax = np.zeros(shape=(len(times)), dtype=np.float)
+    vavg = np.zeros(shape=(len(times)), dtype=float)
+    vmin = np.full(shape=(len(times)), fill_value=1000.0, dtype=float)
+    vmax = np.zeros(shape=(len(times)), dtype=float)
     for i, mtr in enumerate(mtr_keys):
         vbase = diction['billingmeters'][mtr]['vln']
         vscale = 100.0 / vbase

@@ -937,11 +937,11 @@ def inner_substation_loop(metrics_root, with_market):
             forecast_start_time = current_time + timedelta(0, 60)  # (days, seconds)
             # Estimating nominal solargain forecast, it is same for all houses
             forecast_solargain = forecast_obj.get_solar_gain_forecast(config_glm['climate'], forecast_start_time)
-            site_da_wh_uncntrl = np.zeros((len(site_da_meter), 48), dtype=np.float)
-            site_da_zip_loads = np.zeros((len(site_da_meter), 48), dtype=np.float)
-            site_da_hvac_uncntrl = np.zeros((len(site_da_meter), 48), dtype=np.float)
-            site_da_ev_uncntrl = np.zeros((len(site_da_meter), 48), dtype=np.float)
-            site_da_pv_uncntrl = np.zeros((len(site_da_meter), 48), dtype=np.float)
+            site_da_wh_uncntrl = np.zeros((len(site_da_meter), 48), dtype=float)
+            site_da_zip_loads = np.zeros((len(site_da_meter), 48), dtype=float)
+            site_da_hvac_uncntrl = np.zeros((len(site_da_meter), 48), dtype=float)
+            site_da_ev_uncntrl = np.zeros((len(site_da_meter), 48), dtype=float)
+            site_da_pv_uncntrl = np.zeros((len(site_da_meter), 48), dtype=float)
             timing(proc[15], False)
 
             # Battery bidding
@@ -1646,10 +1646,10 @@ def inner_substation_loop(metrics_root, with_market):
             forecast_obj.set_retail_price_forecast(retail_market_obj.cleared_price_DA)
             log.info("price_forecast: " + str(forecast_obj.retail_price_forecast))
             retail_market_obj.update_price_CA(forecast_obj.retail_price_forecast)
-            site_da_wh_cleared_quantities = np.zeros([len(site_da_meter), 48], dtype=np.float)
-            site_da_hvac_cleared_quantities = np.zeros([len(site_da_meter), 48], dtype=np.float)
-            site_da_batt_cleared_quantities = np.zeros([len(site_da_meter), 48], dtype=np.float)
-            site_da_ev_cleared_quantities = np.zeros([len(site_da_meter), 48], dtype=np.float)
+            site_da_wh_cleared_quantities = np.zeros([len(site_da_meter), 48], dtype=float)
+            site_da_hvac_cleared_quantities = np.zeros([len(site_da_meter), 48], dtype=float)
+            site_da_batt_cleared_quantities = np.zeros([len(site_da_meter), 48], dtype=float)
+            site_da_ev_cleared_quantities = np.zeros([len(site_da_meter), 48], dtype=float)
 
             for key, obj in hvac_agent_objs.items():
                 site_id = site_da_meter.index(config_glm['houses'][key]['billingmeter_id'])

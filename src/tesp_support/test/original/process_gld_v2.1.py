@@ -64,7 +64,7 @@ meta_s = lst_s.pop('Metadata')
 times = list(map(int, list(lst_s.keys())))
 times.sort()
 print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-hrs = np.array(times, dtype=np.float)
+hrs = np.array(times, dtype=float)
 denom = 3600.0
 hrs /= denom
 
@@ -82,7 +82,7 @@ for key, val in meta_s.items():
         SUB_LOSSES_UNITS = val['units']
 
 # create a NumPy array of all metrics for the substation
-data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s['3600'][sub_keys[0]])), dtype=np.float)
+data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s['3600'][sub_keys[0]])), dtype=float)
 print("\nConstructed", data_s.shape, "NumPy array for Substations")
 j = 0
 for key in sub_keys:
@@ -129,7 +129,7 @@ for key, val in meta_h.items():
     elif key == 'air_temperature_deviation_heating':
         HSE_AIR_DEV_HEATING_IDX = val['index']
         HSE_AIR_DEV_HEATING_UNITS = val['units']
-data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h['3600'][hse_keys[0]])), dtype=np.float)
+data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h['3600'][hse_keys[0]])), dtype=float)
 print("\nConstructed", data_h.shape, "NumPy array for Houses")
 j = 0
 for key in hse_keys:
@@ -185,7 +185,7 @@ for key, val in meta_m.items():
     elif key == 'bill':
         MTR_BILL_IDX = val['index']
         MTR_BILL_UNITS = val['units']
-data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float)
+data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=float)
 print("\nConstructed", data_m.shape, "NumPy array for Meters")
 j = 0
 for key in mtr_keys:
@@ -207,7 +207,7 @@ for key, val in meta_i.items():
     elif key == 'reactive_power_avg':
         INV_Q_AVG_IDX = val['index']
         INV_Q_AVG_UNITS = val['units']
-data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i['3600'][inv_keys[0]])), dtype=np.float)
+data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i['3600'][inv_keys[0]])), dtype=float)
 print("\nConstructed", data_i.shape, "NumPy array for Inverters")
 j = 0
 for key in inv_keys:

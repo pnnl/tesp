@@ -47,7 +47,7 @@ def read_voltages_metrics(path, name_root, diction_name=''):
     times = list(map(int, list(lst_m.keys())))
     times.sort()
     print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=float)
     denom = 3600.0
     hrs /= denom
 
@@ -75,7 +75,7 @@ def read_voltages_metrics(path, name_root, diction_name=''):
             idx_m['MTR_VOLTUNB_MAX_UNITS'] = val['units']
 
     time_key = str(times[0])
-    data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+    data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=float)
     print("\nConstructed", data_m.shape, "NumPy array for Meters")
     j = 0
     for _ in mtr_keys:

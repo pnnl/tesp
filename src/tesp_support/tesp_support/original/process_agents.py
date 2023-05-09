@@ -62,7 +62,7 @@ def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False)
     times = list(map(int, list(lst_a.keys())))
     times.sort()
     print('There are', len(times), 'sample times at', times[1] - times[0], 'second intervals')
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=float)
     denom = 3600.0
     hrs /= denom
 
@@ -88,7 +88,7 @@ def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False)
             idx_a['SUPPLIER_SURPLUS_UNITS'] = val['units']
 
     # create a NumPy array of all auction metrics
-    data_a = np.empty(shape=(len(a_keys), len(times), len(lst_a[str(times[0])][a_keys[0]])), dtype=np.float)
+    data_a = np.empty(shape=(len(a_keys), len(times), len(lst_a[str(times[0])][a_keys[0]])), dtype=float)
     print('\nConstructed', data_a.shape, 'NumPy array for Auctions')
     j = 0
     for _ in a_keys:
@@ -120,7 +120,7 @@ def read_agent_metrics(path, name_root, diction_name='', print_dictionary=False)
             idx_c['BID_Q_UNITS'] = val['units']
 
     # create a NumPy array of all controller metrics - many are 'missing' zero-bids
-    data_c = np.empty(shape=(len(c_keys), len(times), len(meta_c.items())), dtype=np.float)
+    data_c = np.empty(shape=(len(c_keys), len(times), len(meta_c.items())), dtype=float)
     print('\nConstructed', data_c.shape, 'NumPy array for Controllers')
     zary = np.zeros(len(meta_c.items()))
     j = 0

@@ -48,7 +48,7 @@ def read_houses_metrics(path, name_root, diction_name=''):
     times = list(map(int, list(lst_h.keys())))
     times.sort()
     print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=float)
     denom = 3600.0
     hrs /= denom
 
@@ -86,7 +86,7 @@ def read_houses_metrics(path, name_root, diction_name=''):
             idx_h['HSE_SET_HEAT_IDX'] = val['index']
 
     time_key = str(times[0])
-    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
+    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=float)
     print("\nConstructed", data_h.shape, "NumPy array for Houses")
     j = 0
     for _ in hse_keys:

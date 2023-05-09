@@ -1,4 +1,5 @@
-. $HOME/tesp/venv/bin/activate
+. $HOME/venv/bin/activate
+# . $HOME/tesp/venv/bin/activate
 
 # TESP exports
 export INSTDIR=$HOME/tesp/tenv

@@ -74,7 +74,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
     times = list(map(int, list(lst_s.keys())))
     times.sort()
     print('There are', len(times), 'sample times at', times[1] - times[0], 'second intervals')
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=float)
     denom = 3600.0
     hrs /= denom
 
@@ -102,7 +102,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
             idx_s['SUB_LOSSES_UNITS'] = val['units']
 
     # create a NumPy array of all metrics for the substation
-    data_s = np.empty(shape=(1, len(times), len(lst_s[time_key][sub_key])), dtype=np.float)
+    data_s = np.empty(shape=(1, len(times), len(lst_s[time_key][sub_key])), dtype=float)
     print('\nConstructed', data_s.shape, 'NumPy array for Substations')
     j = 0
     for key in [sub_key]:
@@ -173,7 +173,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
         # e.g., write_node_houses with default node_metrics_interval=None
         hse_keys = [x for x in hse_keys if x in lst_h[time_key]]
         print(len(hse_keys), 'houses left')
-        data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
+        data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=float)
         print('\nConstructed', data_h.shape, 'NumPy array for Houses')
         j = 0
         for _ in hse_keys:
@@ -261,7 +261,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
         # e.g., write_node_houses with default node_metrics_interval=None
         mtr_keys = [x for x in mtr_keys if x in lst_m[time_key]]
         print(len(mtr_keys), 'meters left, expecting', nBillingMeters)
-        data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+        data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=float)
         print('\nConstructed', data_m.shape, 'NumPy array for Meters')
         j = 0
         for _ in mtr_keys:
@@ -289,8 +289,8 @@ def read_gld_metrics(path, name_root, diction_name=''):
     lst_i.pop('StartTime')
     meta_i = lst_i.pop('Metadata')
     # assemble the total solar and battery inverter power
-    solar_kw = np.zeros(len(times), dtype=np.float)
-    battery_kw = np.zeros(len(times), dtype=np.float)
+    solar_kw = np.zeros(len(times), dtype=float)
+    battery_kw = np.zeros(len(times), dtype=float)
     #  print('\nInverter Metadata for', len(inv_keys), 'objects')
     for key, val in meta_i.items():
         #    print (key, val['index'], val['units'])
@@ -301,7 +301,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
             idx_i['INV_Q_AVG_IDX'] = val['index']
             idx_i['INV_Q_AVG_UNITS'] = val['units']
     if len(inv_keys) > 0:
-        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
+        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=float)
         print('\nConstructed', data_i.shape, 'NumPy array for Inverters')
         j = 0
         for _ in inv_keys:
@@ -330,7 +330,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
             idx_c['CAP_COUNT_IDX'] = val['index']
             idx_c['CAP_COUNT_UNITS'] = val['units']
     if len(cap_keys) > 0 and bCollectedRegCapMetrics:
-        data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=np.float)
+        data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=float)
         print('\nConstructed', data_c.shape, 'NumPy array for Capacitors')
         j = 0
         for _ in cap_keys:
@@ -352,7 +352,7 @@ def read_gld_metrics(path, name_root, diction_name=''):
             idx_r['REG_COUNT_IDX'] = val['index']
             idx_r['REG_COUNT_UNITS'] = val['units']
     if len(reg_keys) > 0 and bCollectedRegCapMetrics:
-        data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=np.float)
+        data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=float)
         print('\nConstructed', data_r.shape, 'NumPy array for Regulators')
         j = 0
         for _ in reg_keys:
