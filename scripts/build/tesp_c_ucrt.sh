@@ -14,7 +14,7 @@ echo
 echo "Installing Python Libraries..."
 which python > "${TESPBUILD}/tesp_pypi.log" 2>&1
 pip list >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-pip install recommonmark PYPOWER PuLP Pyomo PyYAML future networkx pyutilib >> "${TESPBUILD}/tesp_pypi.log" 2>&1
+pip install recommonmark xarray PYPOWER PuLP Pyomo PyYAML plotly future networkx pyutilib >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 #pip install NREL-PySAM~=4.1.0 PyGLM~=2.7.0 tables~=3.8.0 >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 
 echo "Installing Python TESP API..."

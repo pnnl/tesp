@@ -15,7 +15,9 @@ joblib
 matplotlib
 networkx
 numpy
+openpyxl
 pandas
+plotly
 psst
 python-dateutil
 pytz
@@ -28,7 +30,8 @@ seaborn
 sphinx-jsonschema
 sphinxcontrib-bibtex
 tables
-xlrd
 urllib3==1.26.6
+xlrd
+xarray
 tesp-support
 src/tesp_support/
