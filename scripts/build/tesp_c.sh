@@ -14,13 +14,7 @@ echo
 echo "Installing Python Libraries..."
 which python > "${TESPBUILD}/tesp_pypi.log" 2>&1
 pip3 install --upgrade pip >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-# better rollup of dependencies
-pip3 install PYPOWER==5.1.16 PuLP~=2.7.0 Pyomo==6.5.0 PyYAML~=6.0.0 recommonmark~=0.7.1 >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-pip3 install colorama~=0.4.6 future~=0.18.2 joblib~=1.2.0 networkx~=3.1 xlrd~=2.0.1 >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-pip3 install pandas~=2.0.1 pyutilib==6.0.0 sphinx-jsonschema~=1.19.1 sphinxcontrib-bibtex~=2.5.0 >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-pip3 install NREL-PySAM~=4.1.0 PyGLM~=2.7.0 tables~=3.8.0 >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-# old dependencies
-# pip3 install -r "${TESPDIR}/requirements.txt" >> "${TESPBUILD}/tesp_pypi.log" 2>&1
+pip3 install -r "${TESPDIR}/requirements.txt" >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 
 echo "Installing Python TESP API..."
 cd "${TESPDIR}/src/tesp_support" || exit
