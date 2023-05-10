@@ -31,3 +31,4 @@ tables
 xlrd
 urllib3==1.26.6
 tesp-support
+src/tesp_support/
