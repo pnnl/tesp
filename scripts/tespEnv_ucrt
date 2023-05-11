@@ -6,7 +6,7 @@ export TESPBUILD=$TESPDIR/scripts/build
 export TESPHELPR=$TESPDIR/scripts/helpers
 
 # COMPILE exports
-export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+export JAVA_HOME=/c/java/jdk-20/bin
 export PYHELICS_INSTALL=$INSTDIR
 export GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
 export CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include

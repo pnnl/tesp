@@ -17,6 +17,7 @@ pip list >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 pip install sphinx-jsonschema sphinxcontrib-bibtex recommonmark xarray >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 pip install PYPOWER PuLP Pyomo PyYAML plotly future networkx pyutilib >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 #pip install NREL-PySAM~=4.1.0 PyGLM~=2.7.0 tables~=3.8.0 >> "${TESPBUILD}/tesp_pypi.log" 2>&1
+# pygccxml pybindgen
 
 echo "Installing Python TESP API..."
 cd "${TESPDIR}/src/tesp_support" || exit

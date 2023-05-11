@@ -46,10 +46,12 @@ done
 
 pacman -Su
 pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain
+yes | pacman -S --needed mingw-w64-ucrt-x86_64-autotools
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-cmake
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-dlfcn
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-xerces-c
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-zeromq
+yes | pacman -S --needed mingw-w64-ucrt-x86_64-boost
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-openblas
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-openblas64
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-lapack
@@ -57,7 +59,7 @@ yes | pacman -S --needed mingw-w64-ucrt-x86_64-metis
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-ninja
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-jsoncpp
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-hdf5
-yes | pacman -S --needed git libtool
+yes | pacman -S --needed git libtool zip unzip svn
 
 # python 
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-python-pip
@@ -116,6 +118,7 @@ git clone -b master https://github.com/ames-market/AMES-V5.0.git
 "${TESPBUILD}/patch.sh" AMES-V5.0 AMES-V5.0
 
 if [[ $binaries == "develop" ]]; then
+
   echo
   echo ++++++++++++++ FNCS
   git clone -b feature/opendss https://github.com/FNCS/fncs.git
