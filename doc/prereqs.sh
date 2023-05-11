@@ -1,7 +1,9 @@
-pip3 install sphinx
+pip3 install sphinx==6.2.1
 pip3 install sphinx-autobuild
 pip3 install recommonmark
 pip3 install javasphinx
+pip3 install sphinx-jsonschema
+pip3 install sphinx_rtd_theme
 pip3 install sphinxcontrib-bibtex
 pip3 install urllib3==1.26.6
 # make html

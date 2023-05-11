@@ -5,9 +5,9 @@ PuLP
 PyGLM
 PyYAML
 Pyomo==6.5.0
-Sphinx
+Sphinx==6.2.1
 colorama
-docutils
+docutils==0.18.1
 future
 h5py
 helics
@@ -28,6 +28,7 @@ scikit-learn
 scipy
 seaborn
 sphinx-jsonschema
+sphinx_rtd_theme
 sphinxcontrib-bibtex
 tables
 urllib3==1.26.6
