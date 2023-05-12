@@ -8,17 +8,21 @@
 
 Installing and Building TESP
 ****************************
-
 TESP, as a software platform, provides much of its functionality through third-party software that it integrates to provide the means of performing transactive analysis. All of this software is open-source and in every case can be built on any of the three major OSs (Mac, Windows, and Linux). That said, TESP itself is only officially supported on Ubuntu Linux simply as a means of reducing the support burden and allowing us, the TESP developers, to add and improve TESP itself without spending the significant time required to ensure functionality across all three OSs. If you're comfortable with building your own software, a quick inspection of the build scripts we use to install TESP on Ubuntu Linux will be likely all you need to figure out how to get it built and installed on your OS of choice.
-
-In the past TESP has provided a wide variety of installation methods. One of the methods allow you used Windows. We no longer support Windows, but it can be done. We now provide short version of TESP installation that be can be used on most platforms.  This methods allows the you to create an environment for Python that can be for TESP, after that point, the user needs to configure other tools be used. There is not enough time, money and effort to support multiple environments.
 
 The current supported method uses a set of custom build scripts to download source code from public repositories and build from source. This particular method was chosen for a key reason: it allows you, the user, to pull down the latest version of TESP (which may include bug fixes in a special branch) and have those changes quickly be realized in your installation. Similarly, the live linking of the third-party tools' repositories with git allows similar bugfix changes and upgrades to those tools to be readily applied to your installation. This installation method provides not only working executables of all the software but also all of the source code for said tools. In fact, for those that are more daring or have more complex analysis requirements, this installation method allows edits to the source code of any of the software tools and by re-compiling and installing that source (which the installation scripts automate) a custom version of any of the tools can be utilized and maintained in this installation. (We'll cover this in more detail in a dedicated section on customizing TESP in :doc:`Developing_Customizing_TESP`.)
 
+Create a Github account (somewhat optional)
+===========================================
+Many of the repositories holding the source code for the simulation tools used in TESP are hosted on Github. If you want to be able to push code back up to these repositories, you'll need a Github account. The Github user name and email are typically provided as part of running the TESP install script but are technically optional and can be omitted. TESP will still install but the ability to commit back into the repository will not exist.
+
 Installation Guide
 ==================
+This guide will assume that TESP is being installed on a clean Ubuntu Linux installation or Windows 10 using MSYS2.
 
-This guide will assume that TESP is being installed on a clean Ubuntu Linux installation. For many, this will be a virtual machine (VM) and the good news is that there is a no-cost means of creating this VM using Oracle's `VirtualBox <https://www.virtualbox.org>`_. Other commercial virtualization software such as VMWare and Parallels will also do the trick.
+For many, this will be a virtual machine (VM) and the good news is that there is a no-cost means of creating this VM using Oracle's `VirtualBox <https://www.virtualbox.org>`_. Other commercial virtualization software such as VMWare and Parallels will also do the trick.
+
+For Windows 10 users we can use MSYS2. In many ways a it is like a virtual machine that allows shell commands just as if it were Linux.
 
 Creating a Ubuntu Linux VM with VirtualBox
 ------------------------------------------
@@ -28,7 +32,6 @@ There is lots of documentation out there on installing Ubuntu on a VirtualBox VM
 - `How to Install Ubuntu on VirtualBox? Here’s the Full Guide <https://www.minitool.com/partition-disk/how-to-install-ubuntu-on-virtualbox.html>`_
 - `How to install Ubuntu on VirtualBox <https://www.freecodecamp.org/news/how-to-install-ubuntu-with-oracle-virtualbox/>`_
 
-
 You can get the OS disk image (.iso) `from Ubuntu <https://ubuntu.com/download/desktop>`_ and mount it in the virtual machine for installation. Alternatively, `OSboxes provides a hard drive image <https://www.osboxes.org/virtualbox-images/>`_ with the OS already installed that you can install in your virtual machine. 
 
 A few notes:
@@ -37,18 +40,38 @@ A few notes:
     - Make sure you install the VirtualBox Guest Additions to improve the integration with the host OS and the overall user experience.
     - Administrative access for the account where TESP will be installed is required.
 
-Create a Github account (somewhat optional)
--------------------------------------------
-Many of the repositories holding the source code for the simulation tools used in TESP are hosted on Github. If you want to be able to push code back up to these repositories, you'll need a Github account. The Github user name and email are typically provided as part of running the TESP install script but are technically optional and can be omitted. TESP will still install but the ability to commit back into the repository will not exist.
+Creating a MSYS2 on Windows 10
+------------------------------
+The Windows build procedure is very similar to that for Linux and Mac OSX, using MSYS2 tools that you'll execute from a MSYS2 command window. However, some further adjustments are necessary as described below.
+
+Install Java and MSYS2 packages
+...............................
+Download and install the Java Development Kit (20.0 suggested) from Oracle.
+
+- you must install JavaSDK to a folder without spaces, such as c:\Java\jdk-20\
+- the Oracle javapath doesn't work for MSYS2, and it doesn't find javac in Windows
+- c:\Java\jdk-20\bin should be added to your path
+
+These instructions are based on https://github.com/gridlab-d/gridlab-d/blob/develop/BuildingGridlabdOnWindowsWithMsys2.docx
+
+- Install a 64-bit version of MSYS2 from https://www.msys2.org. Accept all of the defaults.
+- Start the MSYS2 environment from the Start Menu shortcut for "MSYS2 UCRT64"
 
 Running TESP install script
 ---------------------------
-Once you have a working Ubuntu installation, the TESP install process is straight-forward. From a command prompt do the following:
+Once you have a working Ubuntu/Windows 10 installation, the TESP install process is straight-forward. From a command prompt do the following:
 
 .. code-block:: shell-session
-   :caption: TESP installation commands
+   :caption: TESP installation commands for Ubuntu
 
    wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp.sh
+   chmod 755 tesp.sh
+   ./tesp.sh <Github user name> <Github email address>
+
+.. code-block:: shell-session
+   :caption: TESP installation commands for Window10
+
+   wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp_ucrt.sh
    chmod 755 tesp.sh
    ./tesp.sh <Github user name> <Github email address>
 
@@ -63,7 +86,6 @@ Running this script will kick off a process where all latest linux packages are 
 
 After getting TESP software installed and the executables built, the TESP installation will have created a `tesp` directory the same directory level as the `tesp.sh` script. All installed files are descended from the `tesp` directory.
 
-
 Setting Up TESP Environment
 ---------------------------
 Prior to running any of the included examples, we need to be sure to set up the compute environment so that the TESP software can be found by the system. The `tespEnv` file is added at the same level as the root `tesp` folder and it contains all the environment configuration.
@@ -73,7 +95,6 @@ Prior to running any of the included examples, we need to be sure to set up the 
     source tespEnv
     
 You will need to do this every time you open a new terminal. If the computing environment set-up you're using allows it, you can add this command to your ".bashrc" or equivalent so that it is automatically run for you each time you start a terminal session.
-
 
 Validate TESP installation 
 --------------------------
