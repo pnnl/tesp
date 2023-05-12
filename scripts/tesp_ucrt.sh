@@ -59,7 +59,8 @@ yes | pacman -S --needed mingw-w64-ucrt-x86_64-metis
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-ninja
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-jsoncpp
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-hdf5
-yes | pacman -S --needed git libtool zip unzip svn
+yes | pacman -S --needed mingw-w64-ucrt-x86_64-helics
+yes | pacman -S --needed git libtool zip unzip
 
 # python 
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-python-pip
@@ -118,7 +119,6 @@ git clone -b master https://github.com/ames-market/AMES-V5.0.git
 "${TESPBUILD}/patch.sh" AMES-V5.0 AMES-V5.0
 
 if [[ $binaries == "develop" ]]; then
-
   echo
   echo ++++++++++++++ FNCS
   git clone -b feature/opendss https://github.com/FNCS/fncs.git
@@ -152,10 +152,6 @@ if [[ $binaries == "develop" ]]; then
   echo ++++++++++++++ HELICS-NS-3
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
   "${TESPBUILD}/patch.sh" ns-3-dev/contrib/helics helics-ns3
-
-  echo
-  echo ++++++++++++++ KLU SOLVER
-  svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL
 fi
 
 # Compile all relevant executables

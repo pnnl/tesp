@@ -31,11 +31,19 @@ cd build || exit
 #    MAIN_DEPENDENCY fncs.jar
 #)
 
-cmake ..
+myoption="Ninja"
+if [ ${MSYSTEM_PREFIX} ]; then
+  myoption=MSYS\ Makefiles
+fi
+
+cmake - G "$myoption" ..
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 
 JAVAPATH=$INSTDIR/java
 mkdir -p "$JAVAPATH"
 cp fncs.jar "$JAVAPATH/"
-cp libJNIfncs.so "$JAVAPATH/"
-
+if [ ${MSYSTEM_PREFIX} ]; then
+  cp JNIfncs.dll "$JAVAPATH/"
+else:
+  cp libJNIfncs.so "$JAVAPATH/"
+fi

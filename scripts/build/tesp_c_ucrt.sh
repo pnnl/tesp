@@ -15,9 +15,8 @@ echo "Installing Python Libraries..."
 which python > "${TESPBUILD}/tesp_pypi.log" 2>&1
 pip list >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 pip install sphinx-jsonschema sphinxcontrib-bibtex recommonmark xarray >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-pip install PYPOWER PuLP Pyomo PyYAML plotly future networkx pyutilib >> "${TESPBUILD}/tesp_pypi.log" 2>&1
+pip install pygccxml pybindgen PYPOWER PuLP Pyomo PyYAML plotly future networkx pyutilib >> "${TESPBUILD}/tesp_pypi.log" 2>&1
 #pip install NREL-PySAM~=4.1.0 PyGLM~=2.7.0 tables~=3.8.0 >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-# pygccxml pybindgen
 
 echo "Installing Python TESP API..."
 cd "${TESPDIR}/src/tesp_support" || exit
@@ -33,6 +32,9 @@ pip3 install -e . > "${TESPBUILD}/AMES-V5.0.log" 2>&1
 cd "${TESPBUILD}" || exit
 if [[ $1 == "develop" ]]; then
 
+  echo "Compiling and Installing CZMQ..."
+  ./czmq_b.sh clean > czmq.log 2>&1
+
   echo "Compiling and Installing FNCS..."
   ./fncs_b.sh clean > fncs.log 2>&1
 
@@ -43,7 +45,8 @@ if [[ $1 == "develop" ]]; then
   ./HELICS-src_b.sh clean > HELICS-src.log 2>&1
 
   echo "Compiling and Installing KLU..."
-  ./KLU_DLL_b.sh clean > KLU_DLL.log 2>&1
+  wget --no-check-certificate https://raw.githubusercontent.com/gridlab-d/tools/klu-build-update/solver_klu/solver_klu_x64.dll  > KLU_DLL.log 2>&1
+  mv solver_klu_x64.dll "${INSTDIR}/bin/solver_klu.dll" > KLU_DLL.log 2>&1
 
   echo "Compiling and Installing Gridlabd..."
   ./gridlab-d_b.sh clean > gridlab-d.log 2>&1
@@ -69,9 +72,9 @@ else
   ver=$(cat "${TESPBUILD}/version")
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
-  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/tesp_binaries.zip
-  unzip tesp_binaries.zip > "${TESPBUILD}/tesp_binaries.log" 2>&1
-  rm tesp_binaries.zip
+#  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/tesp_binaries.zip
+#  unzip tesp_binaries.zip > "${TESPBUILD}/tesp_binaries.log" 2>&1
+#  rm tesp_binaries.zip
 fi
 
 cd "${TESPBUILD}" || exit
@@ -84,7 +87,7 @@ echo "Installing TESP documentation..."
 # Creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
 # and in the trusted directories (/lib and /usr/lib).
-sudo ldconfig
+# sudo ldconfig
 echo
 echo "TESP installation logs are found in ${TESPBUILD}"
 echo "++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++"
