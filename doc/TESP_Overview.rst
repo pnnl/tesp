@@ -136,3 +136,12 @@ Post-Processing and Analysis
 With the final dataset produced from all the necessary analysis steps the validation and key performance metrics can be calculated and reviewed. Ideally the presentations of the data show both that the co-simulation and the analysis as a whole have been constructed correctly (validation) and that the TE system is having the expected impact. Both the validation and the value-based metrics should have comparisons between base and transactive case(s) making the impact of the transactive system clear. 
 
 
+Next Steps After TESP-Based Analysis
+====================================
+TESP is well-suited when trying to explore, design, and validate the fundamental principles of a new or modified transactive mechanism. Having simulation results that show the mechanism works as expected and/or produces specific value is an important first step but is by no means the last. Generally, simulations in TESP are not concerned with appropriate access to data, data imperfections, protocols for the messages, and many other implementation details.
+
+Users who wish to validate or demonstrate transactive mechanisms under operational constraints may consider `GridAPPS-D`_. GridAPPS-D provides a standards-based API for grid operations and control applications (or apps) to interface with a simulation-based field emulator. Apps interact with the emulated as they would with an operating system in the field; i.e., asynchronously without direct access to co-simulation variables. GridAPPS-D provides app development tools, a library of services, and a standard model set to facilitate app development. Model management and configuration capabilities and a test manager enable app validation under emulated abnormal grid conditions. For more information visit the `GridAPPS-D homepage`_ and/or `repository`_.
+
+ .. _GridAPPS-D: https://doi.org/10.1109/ACCESS.2018.2851186
+ .. _GridAPPS-D homepage: https://gridapps-d.org/
+ .. _repository: https://github.com/GRIDAPPSD
