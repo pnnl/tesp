@@ -48,14 +48,13 @@ Install Java and MSYS2 packages
 ...............................
 Download and install the Java Development Kit (20.0 suggested) from Oracle.
 
-- you must install JavaSDK to a folder without spaces, such as c:\Java\jdk-20\
-- the Oracle javapath doesn't work for MSYS2, and it doesn't find javac in Windows
-- c:\Java\jdk-20\bin should be added to your path
+* you must install JavaSDK to a folder without spaces, such as c:\Java\jdk-20\
+* the Oracle javapath doesn't work for MSYS2, and it doesn't find javac in Windows
 
 These instructions are based on https://github.com/gridlab-d/gridlab-d/blob/develop/BuildingGridlabdOnWindowsWithMsys2.docx
 
-- Install a 64-bit version of MSYS2 from https://www.msys2.org. Accept all of the defaults.
-- Start the MSYS2 environment from the Start Menu shortcut for "MSYS2 UCRT64"
+* Install a 64-bit version of MSYS2 from https://www.msys2.org. Accept all of the defaults.
+* Start the MSYS2 environment from the Start Menu shortcut for "MSYS2 UCRT64"
 
 Running TESP install script
 ---------------------------

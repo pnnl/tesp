@@ -14,10 +14,15 @@ if [[ $1 == "clean" ]]; then
   rm czmq-4.2.1.tar.gz
 fi
 
-cd "${REPODIR}/czmq" || exit
-# edit two lines of c:/msys64/mingw64/lib/pkgconfig/libzmq.pc so they read
+# edit two lines of c:/msys64/ucrt64/lib/pkgconfig/libzmq.pc so they read
 #    Libs: -L${libdir} -lzmq -lws2_32 -liphlpapi -lpthread -lrpcrt4
 #    Libs.private: -lstdc++
+
+cd /c/msys64/ucrt64/lib/pkgconfig
+sed -i "s:Libs\: -L${libdir} -lzmq*:Libs\: -L${libdir} -lzmq -lws2_32 -liphlpapi -lpthread -lrpcrt4:g" libzmq.pc
+sed -i "s:Libs.private\: -lstdc++*:Libs.private\: -lstdc++:g" libzmq.pc
+
+cd "${REPODIR}/czmq" || exit
 ./configure --prefix="${INSTDIR}" --with-liblz4=no 'CXXFLAGS=-O2 -w -std=gnu++14' 'CFLAGS=-O2 -w'
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 make install
