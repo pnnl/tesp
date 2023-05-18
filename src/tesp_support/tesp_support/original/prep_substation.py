@@ -304,6 +304,7 @@ def ProcessGLM(fileroot):
 
     # write HELICS config file
     dso = HelicsMsg(sub_federate, dt)
+    dso.config("uninterruptible", True)
     dso.pubs_n(False, "unresponsive_mw", "double")
     dso.pubs_n(False, "responsive_max_mw", "double")
     dso.pubs_n(False, "responsive_c2", "double")

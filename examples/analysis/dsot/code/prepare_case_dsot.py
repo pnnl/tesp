@@ -321,6 +321,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         HelicsMsg.gld = HelicsMsg("gld" + case_config['SimulationConfig']['Substation'], 30)
         HelicsMsg.dso = HelicsMsg("dso" + case_config['SimulationConfig']['Substation'], dt)
+        HelicsMsg.dso.config("uninterruptible", True)
         feeders = dso_val['feeders']
         feedercnt = 1
         for feed_key, feed_val in feeders.items():
