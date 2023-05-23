@@ -31,7 +31,7 @@ cd build || exit
 #    MAIN_DEPENDENCY fncs.jar
 #)
 
-myoption="Ninja"
+myoption="Unix Makefiles"
 if [ ${MSYSTEM_PREFIX} ]; then
   myoption=MSYS\ Makefiles
 fi

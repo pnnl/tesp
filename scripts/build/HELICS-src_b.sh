@@ -10,7 +10,7 @@ if [[ $1 == "clean" ]]; then
   git submodule update --init
 fi
 
-myoption="Ninja"
+myoption="Unix Makefiles"
 if [ ${MSYSTEM_PREFIX} ]; then
   myoption=MSYS\ Makefiles
 fi

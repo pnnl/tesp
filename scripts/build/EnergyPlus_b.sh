@@ -11,7 +11,7 @@ if [[ $1 == "clean" ]]; then
   rm -rf build
 fi
 
-myoption="Ninja"
+myoption="Unix Makefiles"
 if [ ${MSYSTEM_PREFIX} ]; then
   myoption=MSYS\ Makefiles
 fi
