@@ -7,7 +7,7 @@ PyYAML
 Pyomo==6.5.0
 Sphinx==6.2.1
 colorama
-docutils==0.17.1
+docutils==0.18.1
 future
 h5py
 helics

@@ -7,7 +7,7 @@ PyYAML~=6.0.0
 Pyomo==6.5.0
 Sphinx==6.2.1
 colorama~=0.4.5
-docutils==0.17.1
+docutils==0.18.1
 future~=0.18.2
 h5py~=3.8.0
 helics~=3.4.0
@@ -28,7 +28,7 @@ scikit-learn~=1.2.2
 scipy~=1.10.1
 seaborn~=0.12.2
 sphinx-jsonschema~=1.19.1
-sphinx_rtd_theme~=1.2.0
+sphinx_rtd_theme~=1.2.1
 sphinxcontrib-bibtex~=2.5.0
 tables~=3.8.0
 urllib3==1.26.6
