@@ -115,8 +115,8 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
 
     bus = ''.join(ele for ele in sub_federate if ele.isdigit())
     # print('subLMP -> ' + tso_federate + '/LMP_' + bus, flush=True)
-    subFeeder = helics.helicsFederateGetSubscription(hFed, gld_federate + '/distribution_load')
-    subLMP = helics.helicsFederateGetSubscription(hFed, tso_federate + '/LMP_' + bus)
+    subFeeder = helics.helicsFederateGetInputByTarget(hFed, gld_federate + '/distribution_load')
+    subLMP = helics.helicsFederateGetInputByTarget(hFed, tso_federate + '/LMP_' + bus)
     pubC1 = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_c1')
     pubC2 = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_c2')
     pubDeg = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_deg')
@@ -137,16 +137,16 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
         mtrPubTopic = ctl.name + '/' + ctl.meterName
         # print('{:s} hseSub={:s} mtrSub={:s}  mtrPub={:s}  ctlPub={:s}'
         #       .format(key, hseSubTopic, mtrSubTopic, mtrPubTopic, ctlPubTopic), flush=True)
-        subTemp[ctl] = helics.helicsFederateGetSubscription(hFed, hseSubTopic + '#air_temperature')
-        subState[ctl] = helics.helicsFederateGetSubscription(hFed, hseSubTopic + '#power_state')
-        subHVAC[ctl] = helics.helicsFederateGetSubscription(hFed, hseSubTopic + '#hvac_load')
+        subTemp[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '#air_temperature')
+        subState[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '#power_state')
+        subHVAC[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '#hvac_load')
 
         pubHeating[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/heating_setpoint')
         pubCooling[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/cooling_setpoint')
         pubDeadband[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/thermostat_deadband')
         if ctl.meterName not in pubSubMeters:
             pubSubMeters.add(ctl.meterName)
-            subVolt[ctl] = helics.helicsFederateGetSubscription(hFed, mtrSubTopic + '#measured_voltage_1')
+            subVolt[ctl] = helics.helicsFederateGetInputByTarget(hFed, mtrSubTopic + '#measured_voltage_1')
             pubMtrMode[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/bill_mode')
             pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/price')
             pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/monthly_fee')
