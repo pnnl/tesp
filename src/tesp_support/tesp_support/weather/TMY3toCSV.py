@@ -78,25 +78,25 @@ def readtmy3(filename=None, coerce_year=None, recolumn=True):
     # header is actually the second line in file, but tell pandas to look for
     # header information on the 1st line (0 indexing) because we've already
     # advanced past the true first line with the readline call above.
-    data = pd.read_csv(
-        csvdata, header=0,
-        parse_dates={'datetime': ['Date (MM/DD/YYYY)', 'Time (HH:MM)']},
-        date_parser=lambda *x: _parsedate(*x, year=coerce_year),
-        index_col='datetime')
-
-    # converters = {
-    #     'Time (HH:MM)': lambda x: _parsehour(x),
-    # }
-    #
     # data = pd.read_csv(
     #     csvdata, header=0,
     #     parse_dates={'datetime': ['Date (MM/DD/YYYY)', 'Time (HH:MM)']},
-    #     converters=converters,
-    #     index_col='datetime'
-    # )
-    #
-    # if coerce_year is not None:
-    #     data['datetime'] = data['datetime'].replace(year=coerce_year)
+    #     date_parser=lambda *x: _parsedate(*x, year=coerce_year),
+    #     index_col='datetime')
+
+    converters = {
+        'Time (HH:MM)': lambda x: _parsehour(x),
+    }
+
+    data = pd.read_csv(
+        csvdata, header=0,
+        parse_dates={'datetime': ['Date (MM/DD/YYYY)', 'Time (HH:MM)']},
+        converters=converters,
+        index_col='datetime'
+    )
+
+    if coerce_year is not None:
+        data['datetime'] = data['datetime'].replace(year=coerce_year)
 
     if recolumn:
         data = _recolumn(data)  # rename to standard column names
