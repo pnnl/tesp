@@ -36,7 +36,7 @@ if [ ${MSYSTEM_PREFIX} ]; then
   myoption=MSYS\ Makefiles
 fi
 
-cmake - G "$myoption" ..
+cmake -G "$myoption" ..
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 
 JAVAPATH=$INSTDIR/java

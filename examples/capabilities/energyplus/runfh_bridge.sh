@@ -17,5 +17,5 @@ python3 -c "import tesp_support.api.make_ems as tesp;tesp.merge_idf('SchoolBase.
 
 # HELICS federation is the pricing with agent, and a recorder; the agent was already started as part of the FNCS federation
 (exec helics_broker -f 3 --loglevel=warning --name=mainbroker &> helics_broker.log &)
-(exec helics_player --input=prices.txt --local --time_units=ns --stop 172800s &> helics_player.log &)
-(exec helics_recorder --input=helicsRecorder.txt --timedelta 1s --period 300s --stop 172800s &> helics_recorder.log &)
+(exec helics_player prices.txt -n player --local --time_units=ns --stop 172800s &> helics_player.log &)
+(exec helics_recorder --config-file helicsRecorder.txt --timedelta 1s --period 300s --stop 172800s &> helics_recorder.log &)

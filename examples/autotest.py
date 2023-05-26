@@ -63,7 +63,7 @@ def loadshed_proto_test():
         subprocess.Popen('make >> make.log', shell=True).wait()
         os.chdir('../R1-12.47-1')
         tr.exec_test('gridlabd R1-12.47-1_processed.glm > gridlabd.log', 'Establishing baseline results')
-        os.chdir(tesp_path + '/capabilities/loadshed-prototypical-communication')
+        os.chdir('..')
         tr.run_test('run.sh', 'Load shedding control without communication network')
         tr.run_test('run_ns3.sh', 'Load shedding control over communication network')
         os.chdir(tesp_path)

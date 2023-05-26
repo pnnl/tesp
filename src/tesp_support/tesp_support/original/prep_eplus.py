@@ -384,8 +384,8 @@ def prepare_glm_helics(caseConfig, fedMeters, fedLoadNames):
 
 
 brkTemplate = "(exec helics_broker -f {nFed} --name=mainbroker &> broker.log &)"
-plyTemplate = "(exec helics_player --input=prices.txt --local --time_units=ns --stop {nSec}s &> player.log &)"
-recTemplate = "(exec helics_recorder --input=helicsRecorder.json --timedelta 1s --period {period}s --stop {nSec}s &> tracer.log &)"
+plyTemplate = "(exec helics_player prices.txt --name player --local --time_units=ns --stop {nSec}s &> player.log &)"
+recTemplate = "(exec helics_recorder --config-file helicsRecorder.json --timedelta 1s --period {period}s --stop {nSec}s &> tracer.log &)"
 gldTemplate = "(exec gridlabd -D USE_HELICS {root}.glm &> gridlabd.log &)"
 epTemplate = "(export HELICS_CONFIG_FILE={epcfg} && exec energyplus -w epWeather.epw -d {outdir} {idfname} &> {eplog} &)"
 agjTemplate = "(exec eplus_agent_helics {agjcfg} &> {aglog} &)"

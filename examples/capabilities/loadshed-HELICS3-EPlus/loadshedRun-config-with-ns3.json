@@ -31,7 +31,7 @@
     },
     {
       "directory": ".",
-      "exec": "helics_player --input=prices.txt --local --time_units=ns --stop 21600s",
+      "exec": "helics_player prices.txt --name player --local --time_units=ns --stop 21600s",
       "host": "localhost",
       "name": "player_Federate"
     },

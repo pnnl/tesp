@@ -1,5 +1,5 @@
 {
-  "log_level": "warning",
+  "loglevel": "warning",
   "period": 1.0,
   "stop": 21600.0,
   "marker": 900.0,
@@ -7,7 +7,7 @@
   "subscriptions": [
     {
       "key": "loadshed/sw_status",
-      "type": "double",
+      "type": "string",
       "required": true
     }
   ]

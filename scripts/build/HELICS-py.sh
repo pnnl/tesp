@@ -15,10 +15,6 @@ a=( ${ver//./ } )
 ((a[2]--))
 ver="${a[0]}.${a[1]}.${a[2]}"
 
-if [[ $1 == "copy" ]];  then
-  pip3 install helics
-  pip3 install git+https://github.com/GMLC-TDC/helics-cli.git@main
-  pip3 install --upgrade helics-apps
-else
-  pip3 install helics=="${ver}"
-fi
+pip3 install helics=="${ver}"
+pip3 install helics-apps=="${ver}"
+pip3 install git+https://github.com/GMLC-TDC/helics-cli.git@main

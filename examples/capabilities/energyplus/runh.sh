@@ -10,6 +10,6 @@ python3 -c "import tesp_support.api.make_ems as tesp;tesp.merge_idf('SchoolBase.
 
 (exec helics_broker -f 4 --name=mainbroker &> broker.log &)
 (export HELICS_CONFIG_FILE=eplusH.json && exec energyplus -w $EPWFILE -d output Merged.idf &> eplusH.log &)
-(exec helics_player --input=prices.txt --local --time_units=ns --stop 172800s &> playerH.log &)
+(exec helics_player prices.txt -n player --local --time_units=ns --stop 172800s &> playerH.log &)
 (exec eplus_agent_helics 172800s 300s SchoolDualController eplus_eplus_metrics.json  0.10 25 4 4 eplus_agentH.json &> eplus_agentH.log &)
-(exec helics_recorder --input=helicsRecorder.json --timedelta 1s --period 300s --stop 172800s &> tracerH.log &)
+(exec helics_recorder --config-file helicsRecorder.json --timedelta 1s --period 300s --stop 172800s &> tracerH.log &)
