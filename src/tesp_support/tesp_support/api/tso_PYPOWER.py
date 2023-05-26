@@ -126,7 +126,7 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
     for i in range(subCount):
         sub = helics.helicsFederateGetInputByIndex(hFed, i)
         key = helics.helicsInputGetName(sub)
-        target = helics.helicsSubscriptionGetTarget(sub)
+        target = helics.helicsInputGetTarget(sub)
         print('HELICS subscription key', i, key, 'target', target)
         upper_target = target.upper()  # FNCS-compatible matching
         if 'RESPONSIVE_C2' in upper_target:

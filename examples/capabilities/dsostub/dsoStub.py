@@ -132,7 +132,7 @@ def dso_loop(casename):
         # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
-            key = helics.helicsSubscriptionGetTarget(sub)
+            key = helics.helicsInputGetTarget(sub)
             topic = key.upper().split('/')[1]
             # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
             if helics.helicsInputIsUpdated(sub):

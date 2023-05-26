@@ -757,7 +757,7 @@ def inner_substation_loop(metrics_root, with_market):
                 cache_sub[t] = helics.helicsFederateGetInputByIndex(hFed, t)
                 sub = cache_sub[t]
             # sub = helics.helicsFederateGetInputByIndex(hFed, t)
-            key = helics.helicsSubscriptionGetTarget(sub)
+            key = helics.helicsInputGetTarget(sub)
             topic = key.split('/')[1]
             # log.info("HELICS subscription index: " + str(t) + ", key: " + key)
             if helics.helicsInputIsUpdated(sub):

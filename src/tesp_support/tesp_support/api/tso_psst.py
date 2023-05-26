@@ -1357,7 +1357,7 @@ def tso_psst_loop(casename):
         # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
             sub = getSub(t)
-            key = helics.helicsSubscriptionGetTarget(sub)
+            key = helics.helicsInputGetTarget(sub)
             log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
             topic = key.upper().split('/')[1]
             if helics.helicsInputIsUpdated(sub):

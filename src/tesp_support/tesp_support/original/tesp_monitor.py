@@ -593,7 +593,7 @@ class TespMonitorGUI:
         for i in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(self.hFed, i)
             key = helics.helicsInputGetName(sub)
-            target = helics.helicsSubscriptionGetTarget(sub)
+            target = helics.helicsInputGetTarget(sub)
             print('HELICS subscription key', i, key, 'target', target, flush=True)
             if 'power_A' in target:
                 self.sub_power_A = sub

@@ -107,7 +107,7 @@ def helics_substation_loop(configfile, metrics_root, hour_stop, flag, helicsConf
     # for i in range(subCount):
     #   sub = helics.helicsFederateGetInputByIndex(hFed, i)
     #   key = helics.helicsInputGetName(sub)
-    #   target = helics.helicsSubscriptionGetTarget(sub)
+    #   target = helics.helicsInputGetTarget(sub)
     #   print ('== Available HELICS subscription key', i, key, 'target', target)
     gld_federate = diction['GridLABD']
     sub_federate = helics.helicsFederateGetName(hFed)

@@ -41,7 +41,7 @@ def register_federate(json_filename):
     for i in range(0, subkeys_count):
         subid["m{}".format(i)] = h.helicsFederateGetInputByIndex(fed, i)
         status = h.helicsInputSetDefaultString(subid["m{}".format(i)], 'default')
-        sub_key = h.helicsSubscriptionGetTarget(subid["m{}".format(i)])
+        sub_key = h.helicsInputGetTarget(subid["m{}".format(i)])
         print('Registered Subscription ---> {}'.format(sub_key))
 
     return fed, federate_name

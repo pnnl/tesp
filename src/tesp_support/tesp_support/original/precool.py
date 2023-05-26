@@ -340,7 +340,7 @@ def helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)
         # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
-            key = helics.helicsSubscriptionGetTarget(sub)
+            key = helics.helicsInputGetTarget(sub)
             log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
             topic = key.split('/')[1]
             if helics.helicsInputIsUpdated(sub):
