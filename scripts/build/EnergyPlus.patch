@@ -29,7 +29,7 @@ index f5374bee5..819893807 100644
  )
  message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
 diff --git a/src/EnergyPlus/ExternalInterface.cc b/src/EnergyPlus/ExternalInterface.cc
-index 667e11bff..8057eca58 100644
+index 667e11bff..ae737a1f9 100644
 --- a/src/EnergyPlus/ExternalInterface.cc
 +++ b/src/EnergyPlus/ExternalInterface.cc
 @@ -1298,8 +1298,8 @@ namespace EnergyPlus {
@@ -63,6 +63,15 @@ index 667e11bff..8057eca58 100644
                          //std::cout << " pub " << i << ":" << thispub.getInfo() << ":" << pubkey << ":" << thispub.getType() << ":" << thispub.getUnits() << std::endl;
                          vpubs.push_back(thispub);
                          pubs(i+1)=thispub;
+@@ -1329,7 +1329,7 @@ namespace EnergyPlus {
+                       }
+                     }
+                     for (int i = 0; i < sub_count; i++) {
+-                      helicscpp::Input thissub = pHelicsFederate->getSubscription(i);
++                      helicscpp::Input thissub = pHelicsFederate->getInput(i);
+                       if (thissub.isValid() ) {
+                     	std::string thisKey = std::string(thissub.getTarget());
+                         //char const* temp = thissub.getKey();
 @@ -1402,7 +1402,7 @@ namespace EnergyPlus {
  //                  pHelicsFederate->enterExecutingMode();
                  }
@@ -109,7 +118,7 @@ index 667e11bff..8057eca58 100644
  //            if (preSimTim != time_returned) {
  //                ShowFatalError("helics::requestTime() was interrupted with earlier time");
 diff --git a/third_party/BCVTB/utilXml.c b/third_party/BCVTB/utilXml.c
-index 5ae4be2e7..16861a5d8 100644
+index 5ae4be2e7..b61589671 100644
 --- a/third_party/BCVTB/utilXml.c
 +++ b/third_party/BCVTB/utilXml.c
 @@ -103,6 +103,30 @@ derivative works thereof, in binary and source code form.
@@ -144,7 +153,7 @@ index 5ae4be2e7..16861a5d8 100644
  /// Call back functions that will be used by the expat xml parser.
  ///
 diff --git a/third_party/BCVTB/utilXml.h b/third_party/BCVTB/utilXml.h
-index 6879dcd77..a09b043c2 100644
+index 6879dcd77..5fef9f470 100644
 --- a/third_party/BCVTB/utilXml.h
 +++ b/third_party/BCVTB/utilXml.h
 @@ -100,7 +100,8 @@ derivative works thereof, in binary and source code form.
