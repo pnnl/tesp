@@ -45,7 +45,8 @@ while true; do
 done
 
 pacman -Su
-pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain
+yes | pacman -S --needed base-devel 
+yes | pacman -S --needed mingw-w64-ucrt-x86_64-toolchain
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-autotools
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-cmake
 yes | pacman -S --needed mingw-w64-ucrt-x86_64-dlfcn
