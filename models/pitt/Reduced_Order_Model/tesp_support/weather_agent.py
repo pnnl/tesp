@@ -165,7 +165,7 @@ def startWeatherAgent(file):
             row = weatherData2.loc[dtStart + timedelta(seconds=timeNeedToBePublished[i])]
             # print('publishing at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i])) +
             #       ' for weather at ' + str(dtStart + timedelta(seconds=timeNeedToBePublished[i])), flush=True)
-            for key, value in row.iteritems():
+            for key, value in row.items():
                 fncs.publish(key, value)
         # if forecasting needed and the time is on the hour
         if forecast == 1 and timeNeedToBePublished[i] in timeNeedToPublishForecast:

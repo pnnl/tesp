@@ -115,7 +115,7 @@ def tso_psst_loop():
         sum_lmp = 0.0
         DA_LMPs = [[0 for _ in range(hours_in_a_day)] for _ in range(total_bus_num)]
         for h, r in model.results.lmp.iterrows():
-            for b, lmp in sorted(r.iteritems()):
+            for b, lmp in sorted(r.items()):
                 bn = int(b[3:])
                 if lmp is None:
                     lmp = 0
@@ -225,7 +225,7 @@ def tso_psst_loop():
         sum_lmp = 0.0
         RT_LMPs = [[0 for _ in range(TAU)] for _ in range(total_bus_num)]
         for h, r in model.results.lmp.iterrows():
-            for b, lmp in sorted(r.iteritems()):
+            for b, lmp in sorted(r.items()):
                 bn = int(b[3:])
                 if lmp is None:
                     lmp = 0

@@ -43,11 +43,11 @@ def tso_psst_loop_f(casename):
             uc = os.path.join(output_Path, file_time + "uc.dat")
             with open(uc, 'w') as outfile:
                 results = {}
-                for g in instance.Generators.value:
+                for g in instance.Generators.data():
                     for t in instance.TimePeriods:
                         results[(g, t)] = instance.UnitOn[g, t]
 
-                for g in sorted(instance.Generators.value):
+                for g in sorted(instance.Generators.data()):
                     outfile.write("%s\n" % str(g).ljust(8))
                     for t in sorted(instance.TimePeriods):
                         outfile.write("% 1d \n" % (int(results[(g, t)].value + 0.5)))
@@ -64,7 +64,7 @@ def tso_psst_loop_f(casename):
         sum_lmp = 0.0
         DA_LMPs = [[0 for _ in range(hours_in_a_day)] for _ in range(total_bus_num)]
         for h, r in model.results.lmp.iterrows():
-            for b, lmp in sorted(r.iteritems()):
+            for b, lmp in sorted(r.items()):
                 bn = int(b[3:])
                 if lmp is None:
                     lmp = 0
@@ -81,7 +81,7 @@ def tso_psst_loop_f(casename):
         dispatch = {}
         if outcomes[1] == 'optimal':
             status = True
-            for g in sorted(instance.Generators.value):
+            for g in sorted(instance.Generators.data()):
                 dispatch[g] = []
                 for t in sorted(instance.TimePeriods):
                     dispatch[g].append(instance.PowerGenerated[g, t].value * baseS)
@@ -151,7 +151,7 @@ def tso_psst_loop_f(casename):
 
         lseDispatch = {}
         if len(priceSenLoadData) != 0:
-            for ld in sorted(instance.PriceSensitiveLoads.value):
+            for ld in sorted(instance.PriceSensitiveLoads.data()):
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
@@ -223,7 +223,7 @@ def tso_psst_loop_f(casename):
         sum_lmp = 0.0
         RT_LMPs = [[0 for _ in range(TAU)] for _ in range(total_bus_num)]
         for h, r in model.results.lmp.iterrows():
-            for b, lmp in sorted(r.iteritems()):
+            for b, lmp in sorted(r.items()):
                 bn = int(b[3:])
                 if lmp is None:
                     lmp = 0
@@ -246,7 +246,7 @@ def tso_psst_loop_f(casename):
         dispatch = {}
         if outcomes[1] == 'optimal':
             status = True
-            for g in sorted(instance.Generators.value):
+            for g in sorted(instance.Generators.data()):
                 dispatch[g] = []
                 for t in sorted(instance.TimePeriods):
                     dispatch[g].append(instance.PowerGenerated[g, t].value * baseS)
@@ -303,7 +303,7 @@ def tso_psst_loop_f(casename):
 
         lseDispatch = {}
         if len(priceSenLoadData) != 0:
-            for ld in sorted(instance.PriceSensitiveLoads.value):
+            for ld in sorted(instance.PriceSensitiveLoads.data()):
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)

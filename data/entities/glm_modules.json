@@ -5,13 +5,14 @@
     ["Start time", "", "", "TEXT", "starttime",""],
     ["Stop time", "", "", "TEXT", "stoptime",""]
   ],
-  "tape": [],
   "climate": [],
+  "commercial": [],
   "connection": [],
   "generators": [
     ["Enable sub-second models", "", "true|false", "BOOLEAN", "enable_subsecond_models", ""],
     ["Delta mode timestep", "", "ms", "INTEGER", "deltamode_timestep", ""]
   ],
+  "market": [],
   "powerflow": [
     ["lu_solver", "KLU", "KLU|?", "TEXT", "lu_solver",""],
     ["solver_method", "FBS", "NR|FBS", "TEXT", "solver_method",""],
@@ -29,6 +30,7 @@
   "residential": [
     ["implicit_enduses", "NONE", "", "TEXT", "implicit_enduses",""]
   ],
+  "tape": [],
   "player": [
     ["double", "", "", "TEXT", "double",""],
     ["integer", "", "", "TEXT", "integer",""],
