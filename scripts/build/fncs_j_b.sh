@@ -44,6 +44,6 @@ mkdir -p "$JAVAPATH"
 cp fncs.jar "$JAVAPATH/"
 if [ ${MSYSTEM_PREFIX} ]; then
   cp JNIfncs.dll "$JAVAPATH/"
-else:
+else
   cp libJNIfncs.so "$JAVAPATH/"
 fi
