@@ -10,20 +10,13 @@ the broker process to finish before function returns.
 This code has limited functionality as the 'run*' scripts
 for the examples are written in a very specified way.
 """
+
 import os
-import sys
 import time
 import subprocess
 
-if sys.platform == 'win32':
-    pycall = 'python'
-else:
-    pycall = 'python3'
-
-
 reports = []
 b_reporting = False
-
 
 def init_tests():
     global reports, b_reporting
@@ -31,16 +24,13 @@ def init_tests():
     reports = []
     b_reporting = True
 
-
 def block_test(call):
     print('\n<!--', flush=True)
     call()
     print('--!>', flush=True)
 
-
 def start_test(case_name=None):
     print('==  Prepare: ', case_name, flush=True)
-
 
 def process_line(line, local_vars):
     #  print ('@@@@ input line to execute:', line)
@@ -50,7 +40,6 @@ def process_line(line, local_vars):
         exports = exports + 'export ' + var['key'] + '=' + var['val'] + ' && '
     #  print (' line transformed to:', exports + foreground)
     return exports + foreground
-
 
 def exec_test(file_name, case_name=None):
     t_start = time.time()
@@ -64,7 +53,6 @@ def exec_test(file_name, case_name=None):
         reports.append({'case': case_name, 'elapsed': t_elapsed})
         print('====  Time elapsed: {:12.6f}'.format(t_elapsed), flush=True)
     print('==  Done: ', case_name, flush=True)
-
 
 def run_test(file_name, case_name=None):
     t_start = time.time()
@@ -116,7 +104,6 @@ def run_test(file_name, case_name=None):
         reports.append({'case': case_name, 'elapsed': t_elapsed})
         print('====  Time elapsed: {:12.6f}'.format(t_elapsed), flush=True)
     print('==  Done: ', case_name, flush=True)
-
 
 def report_tests():
     lines = '\n\n{:30s}   {:12s}\n'.format('Test Case(s)', 'Time Taken')

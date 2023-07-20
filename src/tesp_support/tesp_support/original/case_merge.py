@@ -11,16 +11,10 @@ Public Functions:
     :merge_gld_msg: combines GridLAB-D HELICS publish/subscribe configurations
     :merge_substation_msg: combines the substation agent HELICS publish/subscribe configurations
 """
+
 import json
-import sys
 
 from tesp_support.api.helpers import gld_strict_name
-
-if sys.platform == 'win32':
-    pycall = 'python'
-else:
-    pycall = 'python3'
-
 
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into target/target.glm. The source files must already exist.
@@ -92,14 +86,12 @@ def merge_glm(target, sources, xfmva):
         inFirstFile = False
     op.close()
 
-
 def key_present(val, ary):
     tok = val['key']
     for msg in ary:
         if tok == msg['key']:
             return True
     return False
-
 
 def merge_gld_msg(target, sources):
     print('combining', sources, 'HELICS GridLAB-D json files into', target)
@@ -124,7 +116,6 @@ def merge_gld_msg(target, sources):
     json.dump(diction, dp, ensure_ascii=False, indent=2)
     dp.close()
 
-
 def merge_substation_msg(target, sources):
     print('combining', sources, 'HELICS Substation json files into', target)
     workdir = './' + target + '/'
@@ -147,7 +138,6 @@ def merge_substation_msg(target, sources):
     dp = open(workdir + target + '_substation.json', 'w')
     json.dump(diction, dp, ensure_ascii=False, indent=2)
     dp.close()
-
 
 def merge_glm_dict(target, sources, xfmva):
     """ Combines GridLAB-D metadata files into target/target.json. The source files must already exist.
@@ -193,7 +183,6 @@ def merge_glm_dict(target, sources, xfmva):
     print(json.dumps(diction), file=op)
     op.close()
 
-
 def merge_agent_dict(target, sources, xfmva):
     """ Combines the substation agent configuration files into target/target.json. The source files must already exist.
   
@@ -222,7 +211,6 @@ def merge_agent_dict(target, sources, xfmva):
     print(json.dumps(diction), file=op)
     op.close()
 
-
 def merge_substation_yaml(target, sources):
     """ Combines GridLAB-D input files into target/target.yaml. The source files must already exist.
   
@@ -244,7 +232,6 @@ def merge_substation_yaml(target, sources):
                     numListFalse += 1
         inFirstFile = False
     op.close()
-
 
 def merge_fncs_config(target, sources):
     """ Combines GridLAB-D input files into target/target.txt. The source feeders must already exist.

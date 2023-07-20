@@ -169,7 +169,7 @@
       "args": [
         "python3",
         "-c",
-        "import tesp_support.substation as tesp;tesp.substation_loop('TE_Challenge_agent_dict.json','TE_Challenge')"
+        "import tesp_support.substation_f as tesp;tesp.substation_loop_f('TE_Challenge_agent_dict.json','TE_Challenge')"
       ],
       "env": [
         [

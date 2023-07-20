@@ -16,7 +16,7 @@ from datetime import datetime
 from tesp_support.api.parse_helpers import parse_mva
 from .tso_helpers import load_json_case, make_dictionary, dist_slack
 from .metrics_collector import MetricsStore, MetricsCollector
-
+from tesp_support.api.bench_profile import bench_profile
 
 def make_generator_plants(ppc, renewables):
     gen = ppc['gen']
@@ -30,7 +30,7 @@ def make_generator_plants(ppc, renewables):
             plants[str(genFuel[i][2])] = [busnum, MW, unRespMW, genFuel[i][2]]
     return plants
 
-
+@bench_profile
 def tso_psst_loop(casename):
 
     def getSub(subIndex):
@@ -1844,7 +1844,6 @@ def tso_psst_loop(casename):
     vp.close()
     log.info('finalizing HELICS tso federate')
     helics.helicsFederateDestroy(hFed)
-
 
 if __name__ == "__main__":
     tso_psst_loop('./generate_case_config')

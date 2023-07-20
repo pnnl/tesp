@@ -8,7 +8,6 @@ Public Functions:
 """
 import json
 import logging as log
-import sys
 import time
 from datetime import datetime, timedelta
 
@@ -22,12 +21,8 @@ from .retail_market import RetailMarket
 from tesp_support.api.helpers import enable_logging
 from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
 
-if sys.platform != 'win32':
-    import resource
-
 # import multiprocessing as mp
 NUM_CORE = 1
-
 
 def register_federate(json_filename):
     print('register_federate -->', json_filename, flush=True)
@@ -58,12 +53,10 @@ def register_federate(json_filename):
 
     return fed, federate_name
 
-
 def destroy_federate(fed):
     h.helicsFederateDisconnect(fed)
     h.helicsFederateFree(fed)
     h.helicsCloseLibrary()
-
 
 def worker(arg):
     # timing(arg.__class__.__name__, True)
@@ -71,7 +64,6 @@ def worker(arg):
     # timing(arg.__class__.__name__, False)
     # return batt_da_solve(arg.DA_optimal_quantities_model())
     return arg.DA_optimal_quantities()
-
 
 def inner_substation_loop(configfile, metrics_root, with_market):
     """ Helper function that initializes and runs the DSOT agents
@@ -584,7 +576,6 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     op.close()
     destroy_federate(fed)
 
-
 def substation_loop(configfile, metrics_root, with_market=True):
     """ Wrapper for *inner_substation_loop*
 
@@ -593,27 +584,3 @@ def substation_loop(configfile, metrics_root, with_market=True):
     """
 
     inner_substation_loop(configfile, metrics_root, with_market)
-
-    # Code that can be used to profile the substation
-    #    import cProfile
-    #    command = """inner_substation_loop(configfile, metrics_root, with_market)"""
-    #    cProfile.runctx(command, globals(), locals(), filename="profile.stats")
-
-    if sys.platform != 'win32':
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        resource_names = [
-            ('ru_utime', 'User time'),
-            ('ru_stime', 'System time'),
-            ('ru_maxrss', 'Max. Resident Set Size'),
-            ('ru_ixrss', 'Shared Memory Size'),
-            ('ru_idrss', 'Unshared Memory Size'),
-            ('ru_isrss', 'Stack Size'),
-            ('ru_inblock', 'Block inputs'),
-            ('ru_oublock', 'Block outputs')]
-        print('Resource usage:')
-        for name, desc in resource_names:
-            print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
-
-
-# for debugging
-# substation_loop('generator_1_agent_dict.json', 'generator_1', True)

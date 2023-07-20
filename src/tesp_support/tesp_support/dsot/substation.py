@@ -6,11 +6,12 @@ Public Functions:
     :dso_loop: initializes and runs the agents
 
 """
-import sys
+
 import time
 import json
 import logging as log
 import numpy as np
+import helics
 from datetime import datetime, timedelta
 from copy import deepcopy
 from joblib import Parallel, delayed
@@ -25,17 +26,9 @@ from .dso_market import DSOMarket
 from .retail_market import RetailMarket
 from .forecasting import Forecasting
 from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
+from tesp_support.api.bench_profile import bench_profile
 
-try:
-    import helics
-except ImportError:
-    # helics = None
-    print('WARNING: unable to load HELICS module.', flush=True)
-
-if sys.platform != 'win32':
-    import resource
-
-
+@bench_profile
 def inner_substation_loop(metrics_root, with_market):
     """ Helper function that initializes and runs the DSOT agents
 
@@ -1965,7 +1958,6 @@ def inner_substation_loop(metrics_root, with_market):
     op.close()
     helics.helicsFederateDestroy(hFed)
 
-
 def dso_loop(metrics_root, with_market):
     """ Wrapper for *inner_substation_loop*
 
@@ -1977,26 +1969,3 @@ def dso_loop(metrics_root, with_market):
         market = False
 
     inner_substation_loop(metrics_root, market)
-
-# Code that can be used to profile the substation
-#    import cProfile
-#    command = """inner_substation_loop(metrics_root, with_market)"""
-#    cProfile.runctx(command, globals(), locals(), filename="profile.stats")
-
-    if sys.platform != 'win32':
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        resource_names = [
-            ('ru_utime', 'User time'),
-            ('ru_stime', 'System time'),
-            ('ru_maxrss', 'Max. Resident Set Size'),
-            ('ru_ixrss', 'Shared Memory Size'),
-            ('ru_idrss', 'Unshared Memory Size'),
-            ('ru_isrss', 'Stack Size'),
-            ('ru_inblock', 'Block inputs'),
-            ('ru_oublock', 'Block outputs')]
-        print('Resource usage:')
-        for name, desc in resource_names:
-            print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
-
-# for debugging
-# dso_loop('Substation_1', 1)

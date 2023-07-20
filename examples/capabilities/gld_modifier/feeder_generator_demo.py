@@ -71,8 +71,8 @@ def _auto_run(args):
         billing_meter_name = f'{tp_meter_names[house_num]}_billing'
         meter_params = {
             'parent': tp_meter_names[house_num],
-            'phases': glmMod.get_object('triplex_meter').instance[f'{tp_meter_names[house_num]}']['phases'],
-            'nominal_voltage': glmMod.get_object('triplex_meter').instance[tp_meter_names[house_num]]['nominal_voltage']
+            'phases': glmMod.get_object('triplex_meter').instances[f'{tp_meter_names[house_num]}']['phases'],
+            'nominal_voltage': glmMod.get_object('triplex_meter').instances[tp_meter_names[house_num]]['nominal_voltage']
         }
 
         # Only adding print out for the first time through the loop, so I don't flood the terminal.
@@ -90,8 +90,8 @@ def _auto_run(args):
         house_meter_name = f'{tp_meter_names[house_num]}_house'
         meter_params = {
             'parent': billing_meter_name,
-            'phases': glmMod.get_object('triplex_meter').instance[billing_meter_name]['phases'],
-            'nominal_voltage': glmMod.get_object('triplex_meter').instance[billing_meter_name]['nominal_voltage']
+            'phases': glmMod.get_object('triplex_meter').instances[billing_meter_name]['phases'],
+            'nominal_voltage': glmMod.get_object('triplex_meter').instances[billing_meter_name]['nominal_voltage']
         }
         # Returns a dictionary of the object we just added;
         # in this case I don't do anything with that dictionary.
@@ -213,16 +213,16 @@ def _auto_run(args):
     print("\t(In GridLAB-D, the sizing information is stored in the transformer_configuration object.)")
     transformer_configs_to_upgrade = {'as': [], 'bs': [], 'cs': []}
     for transformer in transformer_names:
-        phases = transformer_objs.instance[transformer]['phases']
+        phases = transformer_objs.instances[transformer]['phases']
         if phases.lower() == 'as':
-            if transformer_objs.instance[transformer]['configuration'] not in transformer_configs_to_upgrade['as']:
-                transformer_configs_to_upgrade['as'].append(transformer_objs.instance[transformer]['configuration'])
+            if transformer_objs.instances[transformer]['configuration'] not in transformer_configs_to_upgrade['as']:
+                transformer_configs_to_upgrade['as'].append(transformer_objs.instances[transformer]['configuration'])
         elif phases.lower() == 'bs':
-            if transformer_objs.instance[transformer]['configuration'] not in transformer_configs_to_upgrade['bs']:
-                transformer_configs_to_upgrade['bs'].append(transformer_objs.instance[transformer]['configuration'])
+            if transformer_objs.instances[transformer]['configuration'] not in transformer_configs_to_upgrade['bs']:
+                transformer_configs_to_upgrade['bs'].append(transformer_objs.instances[transformer]['configuration'])
         elif phases.lower() == 'cs':
-            if transformer_objs.instance[transformer]['configuration'] not in transformer_configs_to_upgrade['cs']:
-                transformer_configs_to_upgrade['cs'].append(transformer_objs.instance[transformer]['configuration'])
+            if transformer_objs.instances[transformer]['configuration'] not in transformer_configs_to_upgrade['cs']:
+                transformer_configs_to_upgrade['cs'].append(transformer_objs.instances[transformer]['configuration'])
     print(f'\tFound {len(transformer_configs_to_upgrade["as"])} configurations with phase "AS" that will be upgraded.')
     print(f'\tFound {len(transformer_configs_to_upgrade["bs"])} configurations with phase "BS" that will be upgraded.')
     print(f'\tFound {len(transformer_configs_to_upgrade["cs"])} configurations with phase "CS" that will be upgraded.')
@@ -235,12 +235,12 @@ def _auto_run(args):
         elif phase == 'cs':
             rating_param = 'powerC_rating'
         for config in transformer_configs_to_upgrade[phase]:
-            old_rating = float(transformer_config_objs.instance[config][rating_param])
+            old_rating = float(transformer_config_objs.instances[config][rating_param])
             new_rating = 1.15 * old_rating
             # Both the "power_rating" and "powerX_rating" are defined in the model, for some reason.
-            transformer_config_objs.instance[config][rating_param] = new_rating
-            transformer_config_objs.instance[config]['power_rating'] = new_rating
-            upgraded_rating = str(round(transformer_config_objs.instance[config][rating_param], 3))
+            transformer_config_objs.instances[config][rating_param] = new_rating
+            transformer_config_objs.instances[config]['power_rating'] = new_rating
+            upgraded_rating = str(round(transformer_config_objs.instances[config][rating_param], 3))
             print(f'\tUpgraded configuration {config} from {old_rating} to {upgraded_rating}')
 
     # The model topology is stored as a networks graph, allowing you to do fancy manipulations of the model more easily.
@@ -253,8 +253,8 @@ def _auto_run(args):
     print(f'\nDemonstrating the use of networkx to find the feeder head and the closest fuse')
     swing_bus = ''
     for gld_node_name in gld_node_names:
-        if 'bustype' in gld_node_objs.instance[gld_node_name].keys():  # Not every bus has the "bustype" parameter
-            if gld_node_objs.instance[gld_node_name]['bustype'].lower() == 'swing':
+        if 'bustype' in gld_node_objs.instances[gld_node_name].keys():  # Not every bus has the "bustype" parameter
+            if gld_node_objs.instances[gld_node_name]['bustype'].lower() == 'swing':
                 swing_bus = gld_node_name
     print(f'\tFound feeder head (swing bus) as node {swing_bus}')
 

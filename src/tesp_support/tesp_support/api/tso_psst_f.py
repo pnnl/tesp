@@ -16,7 +16,7 @@ from datetime import datetime
 from tesp_support.api.parse_helpers import parse_mva
 from .tso_helpers import load_json_case, make_dictionary, dist_slack
 from .metrics_collector import MetricsStore, MetricsCollector
-
+from tesp_support.api.bench_profile import bench_profile
 
 def make_generator_plants(ppc, renewables):
     gen = ppc['gen']
@@ -30,7 +30,7 @@ def make_generator_plants(ppc, renewables):
             plants[str(genFuel[i][2])] = [busnum, MW, unRespMW, genFuel[i][2]]
     return plants
 
-
+@bench_profile
 def tso_psst_loop_f(casename):
 
     def scucDAM(data):
@@ -1812,7 +1812,6 @@ def tso_psst_loop_f(casename):
     vp.close()
     log.info('finalizing FNCS tso federate')
     fncs.finalize()
-
 
 if __name__ == "__main__":
     tso_psst_loop_f('./generate_case_config')

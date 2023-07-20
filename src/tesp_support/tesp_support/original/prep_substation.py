@@ -105,8 +105,6 @@ std_dev = 0.01
 latitude = 30.0
 longitude = -110.0
 
-
-#####################################################
 def ProcessGLM(fileroot):
     """ Helper function that processes one GridLAB-D file
 
@@ -305,6 +303,8 @@ def ProcessGLM(fileroot):
     # write HELICS config file
     dso = HelicsMsg(sub_federate, dt)
     dso.config("uninterruptible", True)
+    dso.config("onlyUpdateOnChange", True)
+    dso.config("onlyTransmitOnChange", True)
     dso.pubs_n(False, "unresponsive_mw", "double")
     dso.pubs_n(False, "responsive_max_mw", "double")
     dso.pubs_n(False, "responsive_c2", "double")
@@ -406,6 +406,8 @@ def ProcessGLM(fileroot):
 
     # write the GridLAB-D publications and subscriptions for HELICS
     gld = HelicsMsg(gld_federate, dt)
+    gld.config("onlyUpdateOnChange", True)
+    gld.config("onlyTransmitOnChange", True)
     gld.pubs(False, "distribution_load", "complex", network_node, "distribution_load")
     gld.subs(tso_federate + "/" + "three_phase_voltage_" + str(dso_substation_bus_id), "complex", network_node, "positive_sequence_voltage")
     if len(climate_name) > 0:
@@ -478,7 +480,6 @@ def ProcessGLM(fileroot):
             print('subscribe "precommit:' + meter_name + '.price <- ' + sub_federate + '/' + key + '/price";', file=op)
             print('subscribe "precommit:' + meter_name + '.monthly_fee <- ' + sub_federate + '/' + key + '/monthly_fee";', file=op)
     op.close()
-
 
 def prep_substation(gldfileroot, jsonfile='', bus_id=None):
     """ Process a base GridLAB-D file with supplemental JSON configuration data

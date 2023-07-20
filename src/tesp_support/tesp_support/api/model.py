@@ -8,12 +8,13 @@ import os.path
 import re
 import sqlite3
 
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import networkx as nx
 
 from .data import feeders_path
 from .data import entities_path
 from .entity import Entity
-
 
 class GLModel:
     # it seems to public for all GLMODEL class
@@ -23,50 +24,171 @@ class GLModel:
     conn = None
     modules = None
     objects = None
-    object_entities = {}
+    module_types = []
+    class_types = []
     module_entities = {}
-    network = nx.Graph()
+    object_entities = {}
     set_lines = []
     define_lines = []
     include_lines = []
     inside_comments = dict()
     outside_comments = dict()
     inline_comments = dict()
-    edge_class = ['switch', 'fuse', 'recloser', 'regulator', 'transformer',
-                  'overhead_line', 'underground_line', 'triplex_line']
-    node_class = ['node', 'load', 'meter', 'triplex_node', 'triplex_meter']
+
+    edge_classes = {'switch': 'red',
+                    'fuse': 'blue',
+                    'recloser': 'green',
+                    'regulator': 'yellow',
+                    'transformer': 'orange',
+                    'overhead_line': 'black',
+                    'underground_line': 'gray',
+                    'triplex_line': 'brown',
+                    'parent': 'violet'}
+
+    node_classes = {'substation': 'black',
+                    'node': 'red',
+                    'load': 'blue',
+                    'meter': 'green',
+                    'triplex_node': 'yellow',
+                    'triplex_meter': 'orange',
+                    'house': 'brown'}
+
+    set_declarations = ['profiler','iteration_limit','randomseed',
+                        'relax_naming_rules','minimum_timestep',
+                        'suppress_repeat_messages','pauseatexit',
+                        'double_format','complex_format','complex_output_format',
+                        'deltamode_timestep','deltamode_maximumtime',
+                        'deltamode_iteration_limit','deltamode_forced_always']
 
     """
-        backbone file should follow order below 
-            clock 
-            set [profile,
-            module ...
-            objects ...
+    Examples misc. for set declarations
+        #set profiler=1
+        #set pauseatexit=1
+        #set relax_naming_rules=1;
+        #set suppress_repeat_messages=1
+    Examples format value set declarations
+        #set double_format=%+.12lg
+        #set complex_format=%+.12lg%+.12lg%c
+        #set complex_output_format=RECT
+    Example Deltamode set declarations
+        #set deltamode_timestep=100000000		//100 ms
+        #set deltamode_maximumtime=60000000000	//1 minute
+        #set deltamode_iteration_limit=10		//Iteration limit
+        #set deltamode_forced_always=true
 
-        Can be used any where    
-            #define -> are one line black boxes
-            #ifdef / #endif -> are black boxes 
+    Backbone file should follow order below 
+        clock 
+        #set ... 
+        #define ...
+        #include ...
+        module ...
+        objects ...
+
+    Can be used any where    
+        #define -> are one line black boxes
+        #include -> *.glm files are black boxes
+        #ifdef / #endif -> are black boxes 
     """
 
     def __init__(self):
-        # define modules that can be in a GLM file
-        with open(os.path.join(entities_path, 'glm_modules.json'), 'r', encoding='utf-8') as json_file:
-            self.modules = json.load(json_file)
-            for name in self.modules:
-                self.module_entities[name] = Entity(name, self.modules[name])
+        # with open(os.path.join(entities_path, 'glm_modules.json'), 'r', encoding='utf-8') as json_file:
+        #     self.modules = json.load(json_file)
+        #     for name in self.modules:
+        #         self.module_entities[name] = Entity(name, self.modules[name])
+        #
+        # # define objects that can be in a GLM file
+        # with open(os.path.join(entities_path, 'glm_objects.json'), 'r', encoding='utf-8') as json_file:
+        #     self.objects = json.load(json_file)
+        #     for name in self.objects:
+        #         self.object_entities[name] = Entity(name, self.objects[name])
 
-        # define objects that can be in a GLM file
-        with open(os.path.join(entities_path, 'glm_objects.json'), 'r', encoding='utf-8') as json_file:
-            self.objects = json.load(json_file)
-            for name in self.objects:
-                self.object_entities[name] = Entity(name, self.objects[name])
+        with open(os.path.join(entities_path, 'glm_classes.json'), 'r', encoding='utf-8') as json_file:
+            self.classes = json.load(json_file)
+            entity = Entity("clock", None)
+            entity.add_attr("TEXT", "Time zone", "", "timezone", value=None)
+            entity.add_attr("TEXT", "Start time", "", "timestamp", value=None)
+            entity.add_attr("TEXT", "Start time", "", "starttime", value=None)
+            entity.add_attr("TEXT", "Stop time", "", "stoptime", value=None)
+            self.module_entities["clock"] = entity
+            for module_name in self.classes:
+                self.module_types.append(module_name)
+                for object_name in self.classes[module_name]:
+                    if object_name == "global_attributes":
+                        obj = self.classes[module_name][object_name]
+                        entity = Entity(module_name, None)
+                        for attr in obj:
+                            self._add_attr(entity, attr, obj[attr])
+                        self.module_entities[module_name] = entity
+                    else:
+                        obj = self.classes[module_name][object_name]
+                        entity = Entity(object_name, None)
+                        entity.add_attr("OBJECT", "Parent", "", "parent", value=None)
+                        for attr in obj:
+                            self._add_attr(entity, attr, obj[attr])
+                        self.object_entities[object_name] = entity
+
+    @staticmethod
+    def _add_attr(entity, name, attr):
+        # define modules that can be in a GLM file
+        # set (bit), enumeration, bool
+        # char8, char32, char256, char1024,
+        # double, int16, int32, int64,
+        # timestamp, complex, complex_array, double_array
+        # object(gen,mkt,pwr,res)  name of object
+        # loadshape(res), enduse(pwr), function
+        # parent classes
+        #   pwr: line, link, load, node, powerflow_object, switch, triplex_node
+        #   res: residential_enduse
+
+        # unit with define unit or if "enumeration" or "set" use 'keywords' seperated by '|'
+        unit = ""
+        if "unit" in attr:
+            unit = attr["unit"]
+        # label with name otherwise the description
+        label = name.replace("_"," ").replace(".", " ")
+        if "description" in attr:
+            label = attr["description"]
+
+        # all attribute must have a type
+        m_type = attr["type"]
+        if m_type == "double":
+            datatype = "REAL"
+        elif m_type in ["char8", "char32", "char256", "char1024"]:
+            datatype = "TEXT"
+        elif m_type in ["int16", "int32", "int64"]:
+            datatype = "INTEGER"
+        elif m_type in ["enumeration", "set"]:
+            datatype = "TEXT"
+            unit = "|"
+            for key in attr["keywords"]:
+                unit += key + "|"
+        elif m_type == "bool":
+            datatype = "BOOLEAN"
+            unit = "|true|false|"
+        elif m_type == "timestamp":
+            datatype = "TEXT"
+        elif m_type == "complex":
+            datatype = "TEXT"
+        elif m_type == "complex_array":
+            datatype = "TEXT"
+        elif m_type == "double_array":
+            datatype = "TEXT"
+        elif m_type in ["enduse", "loadshape", "object", "parent"]:
+            datatype = "OBJECT"
+        else:
+            datatype = ""
+
+        if datatype:
+            entity.add_attr(datatype, label, unit, name, value = None)
+        else:
+            print("name ->", name, "type", m_type)
 
     def entitiesToJson(self):
         diction = {}
         for name in self.module_entities:
-            diction[name] = self.module_entities[name].toJson()
+            diction[name] = self.module_entities[name].toList()
         for name in self.object_entities:
-            diction[name] = self.object_entities[name].toJson()
+            diction[name] = self.object_entities[name].toList()
         return diction
 
     def entitiesToHelp(self):
@@ -133,18 +255,19 @@ class GLModel:
         return comment
 
     @staticmethod
-    def get_diction(obj_entities, name, instanceTo):
+    def get_diction(obj_entities, object_name, instanceTo, name):
         diction = ""
-        ent_keys = obj_entities[name].instance.keys()
+        ent_keys = obj_entities[object_name].instances.keys()
         if len(ent_keys) > 0:
-            diction += instanceTo(obj_entities[name])
+            diction += instanceTo(obj_entities[object_name], name)
         return diction
 
-    def instanceToModule(self, i_module):
+    def instanceToModule(self, i_module, module_name):
         """ Adds the comments pulled from the glm file to the new/modified glm file.
 
         Args:
             i_module:
+            module_name:
         Returns:
             str: contains the lines that make up the module
         """
@@ -154,59 +277,66 @@ class GLModel:
             out_comments = self.outside_comments[i_module.entity]
             for comment in out_comments:
                 diction += comment + "\n"
-        if len(i_module.instance) > 0:
+        if len(i_module.instances) > 0:
             if name in ["clock"]:
                 diction = name
-            elif name in ["player"]:
-                diction = "class " + name
-            else:
+            elif name in self.module_types:
                 diction = "module " + name
-            keys = i_module.instance[name].keys()
+            else:
+                diction = "class " + name
+            keys = i_module.instances[name].keys()
             if len(keys) > 0:
                 diction += " {\n"
                 diction += self.get_InsideComments(name, 'name')
-                for item in i_module.instance[name].keys():
+                for item in i_module.instances[name].keys():
                     diction += self.get_InsideComments(name, item)
+                    if i_module.instances[name][item] is None:
+                        continue
                     comments = self.get_InlineComment(name, item)
-                    diction += "  " + item + " " + str(i_module.instance[name][item]) + ";" + comments + "\n"
+                    diction += "  " + item + " " + str(i_module.instances[name][item]) + ";" + comments + "\n"
                 diction += self.get_InsideComments(name, "__last__")
                 diction += "}\n"
             else:
                 diction += ";\n"
         return diction
 
-    def instanceToObject(self, i_object):
+    def instanceToObject(self, i_object, object_name):
         """ Adds the comments pulled from the glm file to the new/modified glm file.
 
         Args:
             i_object:
+            object_name:
         Returns:
             str: contains the lines that make up the object
         """
         diction = ""
-        for object_name in i_object.instance:
-            if object_name in self.outside_comments:
-                out_comments = self.outside_comments[object_name]
-                for comment in out_comments:
-                    diction += comment + "\n"
-            diction += "object " + i_object.entity + " {\n"
-            diction += self.get_InsideComments(object_name, "name")
-            diction += "  name " + object_name + ";\n"
-            for item in i_object.instance[object_name].keys():
-                diction += self.get_InsideComments(object_name, item)
-                comments = self.get_InlineComment(object_name, item)
-                diction += "  " + item + " " + str(i_object.instance[object_name][item]) + ";" + comments + "\n"
-            diction += self.get_InsideComments(object_name, "__last__")
-            diction += "}\n\n"
+        if object_name in self.outside_comments:
+            out_comments = self.outside_comments[object_name]
+            for comment in out_comments:
+                diction += comment + "\n"
+        diction += "object " + i_object.entity + " {\n"
+        diction += self.get_InsideComments(object_name, "name")
+        diction += "  name " + object_name + ";\n"
+        for item in i_object.instances[object_name].keys():
+            diction += self.get_InsideComments(object_name, item)
+            if i_object.instances[object_name][item] is None:
+                continue
+            comments = self.get_InlineComment(object_name, item)
+            diction += "  " + item + " " + str(i_object.instances[object_name][item]) + ";" + comments + "\n"
+        diction += self.get_InsideComments(object_name, "__last__")
+        diction += "}\n\n"
         return diction
 
     def instancesToGLM(self):
         diction = ""
 
         # Write the clock
-        if self.module_entities["clock"]:
-            diction += self.get_diction(self.module_entities, "clock", self.instanceToModule)
-        diction += "\n"
+        try:
+            if self.module_entities["clock"]:
+                diction += self.get_diction(self.module_entities, "clock", self.instanceToModule, "clock")
+            diction += "\n"
+        except:
+            print("No clock has been defined")
 
         # Write the sets commands
         for name in self.set_lines:
@@ -229,21 +359,33 @@ class GLModel:
         # Write the modules
         for name in self.module_entities:
             if name not in ["clock"]:
-                diction += self.get_diction(self.module_entities, name, self.instanceToModule)
+                diction += self.get_diction(self.module_entities, name, self.instanceToModule, name)
         if len(self.module_entities):
             diction += "\n"
 
         # Write the objects
-        for name in self.object_entities:
-            diction += self.get_diction(self.object_entities, name, self.instanceToObject)
+        # for object_name in self.object_entities:
+        #     for name in self.object_entities[object_name].instances:
+        #         diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
 
         # recorder, player, metrics_collector don't apply to the network, there are others
         # this work for the network (powerflow)
-        # for name_1 in self.network:
-        #     for object_name in self.model:
-        #         for name_2 in self.object_entities[object_name].instance:
-        #             if name_1 == name_2:
-        #                 diction += self.get_diction(self.object_entities, object_name, self.instanceToObject)
+        G = self.draw_network()
+        power_entities = []
+        for node_name in G:
+            for object_name in self.object_entities:
+                for name in self.object_entities[object_name].instances:
+                    if node_name == name:
+                        if node_name in power_entities:
+                            continue
+                        diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
+                        power_entities.append(name)
+
+        # Write the objects
+        for object_name in self.object_entities:
+            for name in self.object_entities[object_name].instances:
+                if name not in power_entities:
+                    diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
 
         return diction
 
@@ -272,10 +414,13 @@ class GLModel:
                 entity = self.module_entities[mod_type]
                 return entity.set_instance(mod_type, params)
             except:
-                print("Unrecognized GRIDLABD module:", mod_type)
-                self.modules[mod_type] = {}
-                entity = self.module_entities[mod_type] = Entity(mod_type, self.modules[mod_type])
-                return entity.set_instance(mod_type, params)
+                print("Unrecognized GRIDLABD module:", mod_type, "must be a new class")
+                self.class_types.append(mod_type)
+                entity = self.module_entities[mod_type] = Entity(mod_type, None)
+                for items in params:
+                    if items in ["integer", "double", "string"]:
+                        entity.add_attr('TEXT', items[0], "", items[0], "")
+                    return entity.set_instance(mod_type, params)
         else:
             print("GRIDLABD module type is not a string")
         return None
@@ -291,27 +436,31 @@ class GLModel:
             print("GRIDLABD module is not a string")
         return None
 
-    def set_object_instance(self, obj_type, obj_name, params):
-        if type(obj_type) == str and type(obj_name) == str:
+    def set_object_instance(self, obj_type, object_name, params):
+        if type(obj_type) == str and type(object_name) == str:
             try:
                 entity = self.object_entities[obj_type]
-                return entity.set_instance(obj_name, params)
+                return entity.set_instance(object_name, params)
             except:
-                print("Unrecognized GRIDLABD object and id:", obj_type, obj_name)
-                self.objects[obj_type] = {}
-                entity = self.object_entities[obj_type] = Entity(obj_type, self.objects[obj_type])
-                return entity.set_instance(obj_name, params)
+                print("Unrecognized GRIDLABD object and id:", obj_type, object_name, ", must be a new object")
+                if obj_type in self.class_types:
+                    entity = self.object_entities[obj_type] = Entity(obj_type, self.objects[obj_type])
+                    for items in params:
+                        entity.add_attr('TEXT', items[0], "", items[0], "")
+                    return entity.set_instance(object_name, params)
+                else:
+                    print("Unrecognized user class/object and id:", obj_type, object_name)
         else:
             print("GRIDLABD object type and/or object name is not a string")
         return None
 
-    def get_object_instance(self, obj_type, obj_name):
+    def get_object_instance(self, obj_type, object_name):
         if type(obj_type) == str and type(obj_type) == str:
             try:
                 entity = self.object_entities[obj_type]
-                return entity.get_instance(obj_name)
+                return entity.get_instance(object_name)
             except:
-                print("Unrecognized GRIDLABD object and id:", obj_type, obj_name)
+                print("Unrecognized GRIDLABD object and id:", obj_type, object_name)
         else:
             print("GRIDLABD object name and/or object id is not a string")
         return None
@@ -345,22 +494,21 @@ class GLModel:
         return region
 
     def is_edge_class(self, s):
-        """ Edge class is networkx terminology. In GridLAB-D, we will represent those edges with
-        [switch, fuse, recloser, regulator, transformer, overhead_line,
-        underground_line and triplex_line] instances
+        """ Edge class is networkx terminology. In GridLAB-D, we will represent those with
+        the variable 'edge_classes' define in this model
 
         Args:
             s (str): the GridLAB-D class name
         Returns:
             bool: True if an edge class, False otherwise
         """
-        if s in self.edge_class:
+        if s in self.edge_classes.keys():
             return True
         return False
 
     def is_node_class(self, s):
         """Node class is networkx terminology. In GridLAB-D, we will represent those nodes with
-        [node, load, meter, triplex_node or triplex_meter] instances
+        the variable 'node_classes' define in this model
 
         Node class is networkx terminology. In GridLAB-D, node classes are in node_class.
         Args:
@@ -368,9 +516,22 @@ class GLModel:
         Returns:
             bool: True if a node class, False otherwise
         """
-        if s in self.node_class:
+        if s in self.node_classes.keys():
             return True
         return False
+
+    def add_object(self, _type, name, params):
+        # add the new object type to the model
+        if _type not in self.model:
+            self.model[_type] = {}
+        # add name and set object entity instance to model type
+        self.model[_type][name] = {}
+        self.model[_type][name] = self.set_object_instance(_type, name, params)
+        return self.model[_type][name]
+
+    def del_object(self, _type, name):
+        # del name and set object entity instance to model type
+        del self.model[_type][name]
 
     def glm_module(self, mod, line, itr):
         """ Store a clock/module/class in the model structure
@@ -447,7 +608,7 @@ class GLModel:
             self.inline_comments[_type] = inline_comments
         return _type
 
-    def glm_object(self, parent, model, line, itr, oidh, counter):
+    def glm_object(self, parent, line, itr, oidh, counter):
         """ Store an object in the model structure
 
         Args:
@@ -521,7 +682,7 @@ class GLModel:
                     if name is None:
                         print('ERROR: nested object defined before parent name')
                         quit()
-                    line, counter, lname = self.glm_object(name, model, line, itr, oidh, counter)
+                    line, counter, lname = self.glm_object(name, line, itr, oidh, counter)
                 else:
                     # found a parameter val
                     if val == "$":
@@ -553,11 +714,7 @@ class GLModel:
         if n:
             oidh[oid] = name
         # add the new object type to the model
-        if _type not in model:
-            model[_type] = {}
-        # add name and set object entity instance to model type
-        model[_type][name] = {}
-        model[_type][name] = self.set_object_instance(_type, name, params)
+        self.add_object(_type, name, params)
 
         if len(comments) > 0:
             inside_comments['__last__'] = comments
@@ -578,7 +735,7 @@ class GLModel:
         counter = 0
         h = {}  # OID hash
         lines = []
-        model = {}
+        self.model = {}
         self.set_lines = []
         self.define_lines = []
         self.include_lines = []
@@ -621,7 +778,7 @@ class GLModel:
                 elif re.search('module', line):
                     name = self.glm_module("module", line, itr)
                 elif re.search('object', line):
-                    line, counter, name = self.glm_object("", model, line, itr, h, counter)
+                    line, counter, name = self.glm_object("", line, itr, h, counter)
                 else:
                     print('Un-parsed line "' + line + '"')
 
@@ -630,56 +787,27 @@ class GLModel:
                         self.outside_comments[name] = outside_comments
                     outside_comments = []
                     name = ""
-
-            # construct a graph of the model, starting with known links
-            G = nx.Graph()
-            for t in model:
-                if self.is_edge_class(t):
-                    for o in model[t]:
-                        n1 = self.gld_strict_name(model[t][o]['from'])
-                        n2 = self.gld_strict_name(model[t][o]['to'])
-                        G.add_edge(n1, n2, eclass=t, ename=o, edata=model[t][o])
-
-            # add the parent-child node links
-            for t in model:
-                if self.is_node_class(t):
-                    for o in model[t]:
-                        if 'parent' in model[t][o]:
-                            p = self.gld_strict_name(model[t][o]['parent'])
-                            G.add_edge(o, p, eclass='parent', ename=o, edata={})
-
-            # now we back-fill the node attributes
-            for t in model:
-                if self.is_node_class(t):
-                    for o in model[t]:
-                        if o in G.nodes():
-                            G.nodes()[o]['nclass'] = t
-                            G.nodes()[o]['ndata'] = model[t][o]
-                        else:
-                            print('orphaned node', t, o)
-            return model, G
+            return True
         else:
             print('File name not found')
-            return None
+        return False
 
     def readBackboneModel(self, root_name):
         filename = feeders_path + root_name
-        results = self.readModel(filename)
-        if results:
+        if self.readModel(filename):
             self.in_file = filename
-            self.model = results[0]
-            self.network = results[1]
-            return self.network
-        return None
+            return True
+        self.in_file = filename
+        self.model = {}
+        return False
 
     def read(self, filename):
-        results = self.readModel(filename)
-        if results:
+        if self.readModel(filename):
             self.in_file = filename
-            self.model = results[0]
-            self.network = results[1]
-            return self.network
-        return None
+            return True
+        self.in_file = filename
+        self.model = {}
+        return False
 
     def write(self, filepath):
         try:
@@ -693,6 +821,126 @@ class GLModel:
         op.close()
         return True
 
+    def draw_network(self):
+        # construct a graph of the model, starting with known links
+        G = nx.Graph()
+        for t in self.model:
+            if self.is_edge_class(t):
+                for o in self.model[t]:
+                    n1 = self.gld_strict_name(self.model[t][o]['from'])
+                    n2 = self.gld_strict_name(self.model[t][o]['to'])
+                    G.add_edge(n1, n2, eclass=t, ename=o, edata=self.model[t][o])
+
+            # add the parent-child node links
+        # for t in self.model:
+            if self.is_node_class(t):
+                for o in self.model[t]:
+                    if 'parent' in self.model[t][o]:
+                        p = self.gld_strict_name(self.model[t][o]['parent'])
+                        G.add_edge(o, p, eclass='parent', ename=o, edata={})
+
+        # now we back-fill the node attributes because 'add_edge' adds the nodes
+        for t in self.model:
+            if self.is_node_class(t):
+                for o in self.model[t]:
+                    if o in G.nodes():
+                        G.nodes()[o]['nclass'] = t
+                        G.nodes()[o]['ndata'] = self.model[t][o]
+                    else:
+                        print('orphaned node', t, o)
+        return G
+
+    def plot_model(self, node_labels=False, edge_labels=False, node_legend=True, edge_legend=True):
+
+        def update_annot(ind):
+            _node_idx = ind["ind"][0]
+            _node = idx_to_node_dict[_node_idx]
+            _xy = pos[_node]
+            annot.xy = _xy
+            node_attr = {'node': _node}
+            node_attr.update(G.nodes[_node])
+            text = '\n'.join(f'{_k}: {_v}' for _k, _v in node_attr.items())
+            text = text.replace(', ', '\n').replace('ndata: {', '').replace('}', '')
+            text = text.replace('nclass', 'class').replace("'", '')
+            annot.set_text(text)
+
+        def hover(event):
+            vis = annot.get_visible()
+            if event.inaxes == ax:
+                cont, ind = n1.contains(event)
+                if cont:
+                    update_annot(ind)
+                    annot.set_visible(True)
+                    fig.canvas.draw_idle()
+                else:
+                    if vis:
+                        annot.set_visible(False)
+                        fig.canvas.draw_idle()
+
+        def plot_node_legend():
+            def make_node_proxy(nm, mappable, **kwargs):
+                clr = self.node_classes[nm]
+                return Line2D([], [], color="white", marker="o", markerfacecolor=clr, **kwargs)
+
+            l_proxies = [make_node_proxy(nm, n1, lw=self.node_classes.__len__()) for nm in self.node_classes]
+            l_labels = ["{}".format(nm) for nm in self.node_classes]
+            legend1 = plt.legend(l_proxies, l_labels, loc="upper right", fontsize=8)
+            plt.gca().add_artist(legend1)
+
+        def plot_edge_legend():
+            def make_edge_proxy(nm, mappable, **kwargs):
+                clr = self.edge_classes[nm]
+                return Line2D([], [], color="white", marker="s", markerfacecolor=clr, **kwargs)
+
+            l_proxies = [make_edge_proxy(nm, e1, lw=self.edge_classes.__len__()) for nm in self.edge_classes]
+            l_labels = ["{}".format(nm) for nm in self.edge_classes]
+            legend1 = plt.legend(l_proxies, l_labels, loc="lower right", fontsize=8)
+            plt.gca().add_artist(legend1)
+
+        G = self.draw_network()
+
+        # Nodes colors and labels
+        nc = []
+        nlb = {}
+        for u, v in G.nodes(data=True):
+            nc.append(self.node_classes[v['nclass']])
+            nlb[u] = u
+
+        # Edges colors and attributes
+        ec = []
+        elb = {}
+        for u, v in G.edges():
+            ec.append(self.edge_classes[G[u][v]['eclass']])
+            elb[u,v] =  G[u][v]['ename']
+
+        # Draw
+        fig, ax = plt.subplots()
+        pos = nx.kamada_kawai_layout(G)
+        n1 = nx.draw_networkx_nodes(G, pos, ax=ax, node_size=20, node_color=nc)
+        e1 = nx.draw_networkx_edges(G, pos, ax=ax, edge_color=ec)
+        if node_labels:
+            n2 = nx.draw_networkx_labels(G, pos, ax=ax, labels=nlb)
+        if edge_labels:
+            e2 = nx.draw_networkx_edge_labels(G, pos, ax=ax, edge_labels=elb)
+
+        # Annotate and connect event handler
+        annot = ax.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
+                            bbox=dict(boxstyle="round", fc="w"),
+                            arrowprops=dict(arrowstyle="->"))
+        annot.set_visible(False)
+        idx_to_node_dict = {}
+        for idx, node in enumerate(G.nodes):
+            idx_to_node_dict[idx] = node
+        fig.canvas.mpl_connect("motion_notify_event", hover)
+
+        # Add legends
+        if node_legend:
+            plot_node_legend()
+        if edge_legend:
+            plot_edge_legend()
+
+        plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
+        plt.show()
 
 def _test1():
     from .data import tesp_test
@@ -716,7 +964,6 @@ def _test1():
     json.dump(model_file.entitiesToJson(), op, ensure_ascii=False, indent=2)
     op.close()
 
-
 def _test2():
     testMod = GLModel()
     tval = testMod.read(feeders_path + "R1-12.47-1.glm")
@@ -724,7 +971,6 @@ def _test2():
         print(testMod.module_entities[name].toHelp())
     for name in testMod.object_entities:
         print(testMod.object_entities[name].toHelp())
-
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
