@@ -42,11 +42,16 @@ GridLAB-D split their functionality into various modules and for this example, w
 
 	glmMod.add_module('residential', [])
 	
-GLMModifier makes it easy to get all of the objects of a given class and in this case, to add houses, we need to look for GridLAB-D's "triplex_meters" to attach the houses to.::
+GLMModifier makes it easy to get the names of all of the objects of a given class and in this case, to add houses, we need to look for GridLAB-D's "triplex_meters" to attach the houses to.::
 	
 	tp_meter_names = glmMod.get_object_names('triplex_meter')
 	
-	
+If we wanted the objects themselves we would instead call::
+
+	tp_meter_objs = glmMod.get_object('triplex_meter').instance
+
+``tp_meter_objs`` is then a Python dictionary with the keys being the object names and the value being an Python dictionary of the object parameters and values.
+
 Adding Objects
 --------------
 	

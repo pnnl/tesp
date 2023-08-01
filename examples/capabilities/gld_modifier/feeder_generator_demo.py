@@ -257,7 +257,7 @@ def _auto_run(args):
             if gld_node_objs.instance[gld_node_name]['bustype'].lower() == 'swing':
                 swing_bus = gld_node_name
     print(f'\tFound feeder head (swing bus) as node {swing_bus}')
-
+    
     # Find first fuse downstream of the feeder head. I'm guessing it is close-by so doing a breadth-first search using
     #   the networkx API and the topology graph of our GridLAB-D model
     graph = glmMod.model.network
@@ -267,7 +267,7 @@ def _auto_run(args):
             feeder_head_fuse = edge_data['ename']
             break
     print(f'\tUsing networkx traversal algorithms, found the closest fuse as {feeder_head_fuse}.')
-
+    
     # For demonstration purposes, increasing the rating on the fuse by 10%
     #   (If you look at a visualization of the graph you'll see that this fuse isn't really the feeder head fuse.
     #       And that's what you get for making assumptions.
@@ -278,28 +278,28 @@ def _auto_run(args):
     fuse_obj['current_limit'] = float(fuse_obj['current_limit']) * 1.1
     print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]} A')
 
-    # Unused code that works but doesn't show off the things I wanted to show off.
-    # for gld_node in gld_node_names:
-    #     neighbors = graph.neighbors(gld_node)
-    #     for neighbor in neighbors:
-    #         print(neighbor)
-    #     print("\n")
-    # Look for largest transformer configuration in the model
-    # under the assumption that it's for the substation transformer
-    # (Turns out, this is a bad assumption.)
-    # max_transformer_power = 0
-    # max_transformer_name = ''
-    # for transformer_config_name in transformer_config_names:
-    #     transformer_power_rating = float(transformer_config_objs.instance[transformer_config_name]['power_rating'])
-    #     if transformer_power_rating > max_transformer_power:
-    #         max_transformer_power = transformer_power_rating
-    #         max_transformer_name = transformer_config_name
-    # dummy = 0
-    # for node, nodedata in graph.nodes.items():
-    #     dummy = 0
-    #     print(node)
-    #     print(pp.pformat(nodedata))
-    #     dummy = 0
+    Unused code that works but doesn't show off the things I wanted to show off.
+    for gld_node in gld_node_names:
+        neighbors = graph.neighbors(gld_node)
+        for neighbor in neighbors:
+            print(neighbor)
+        print("\n")
+    Look for largest transformer configuration in the model
+    under the assumption that it's for the substation transformer
+    (Turns out, this is a bad assumption.)
+    max_transformer_power = 0
+    max_transformer_name = ''
+    for transformer_config_name in transformer_config_names:
+        transformer_power_rating = float(transformer_config_objs.instance[transformer_config_name]['power_rating'])
+        if transformer_power_rating > max_transformer_power:
+            max_transformer_power = transformer_power_rating
+            max_transformer_name = transformer_config_name
+    dummy = 0
+    for node, nodedata in graph.nodes.items():
+        dummy = 0
+        print(node)
+        print(pp.pformat(nodedata))
+        dummy = 0
 
     glmMod.write_model(args.output_file)
 
