@@ -3,7 +3,7 @@
 """Manages the simple_auction and hvac agents for the te30 and sgip1 examples
 
 Public Functions:
-    :substation_loop: initializes and runs the agents
+    :substation_loop_f: initializes and runs the agents
 
 Todo:
     * Getting an overflow error when killing process - investigate whether that happens if simulation runs to completion
@@ -13,16 +13,17 @@ Todo:
 """
 
 import json
-import helics
 from datetime import datetime
 from datetime import timedelta
 
+import tesp_support.api.fncs as fncs
+from tesp_support.api.parse_helpers import parse_magnitude, parse_kw
 from .hvac_agent import hvac
 from .simple_auction import simple_auction
 from tesp_support.api.bench_profile import bench_profile
 
 @bench_profile
-def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='WithMarket'):
+def substation_loop_f(configfile, metrics_root, hour_stop=48, flag='WithMarket'):
     """ Helper function that initializes and runs the agents
 
     Reads configfile. Writes *auction_metrics_root_metrics.json* and
@@ -33,9 +34,8 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
         metrics_root (str): base name of the case for metrics output
         hour_stop (float): number of hours to simulation
         flag (str): WithMarket or NoMarket to use the simple_auction, or not
-        helicsConfig:
     """
-    print('starting HELICS substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
+    print('starting FNCS substation loop', configfile, metrics_root, hour_stop, flag, flush=True)
     print('##,tnow,tclear,ClearType,ClearQ,ClearP,BuyCount,BuyUnresp,BuyResp,' +
           'SellCount,SellUnresp,SellResp,MargQ,MargFrac,LMP,RefLoad,' +
           'ConSurplus,AveConSurplus,SupplierSurplus,UnrespSupplierSurplus', flush=True)
@@ -71,74 +71,24 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
     dt = float(diction['dt'])
     period = aucObj.period
 
-    # Initialize controllers, map HELICS values to Python attributes
-    subTemp = {}
-    subVolt = {}
-    subState = {}
-    subHVAC = {}
-    pubMtrMode = {}
-    pubMtrPrice = {}
-    pubMtrMonthly = {}
-    pubHeating = {}
-    pubCooling = {}
-    pubDeadband = {}
-    hFed = helics.helicsCreateValueFederateFromConfig(helicsConfig)
-    pubCount = helics.helicsFederateGetPublicationCount(hFed)
-    subCount = helics.helicsFederateGetInputCount(hFed)
-    # for i in range(pubCount):
-    #   pub = helics.helicsFederateGetPublicationByIndex(hFed, i)
-    #   key = helics.helicsPublicationGetName (pub)
-    #   print ('** Available HELICS publication key', i, key)
-    # for i in range(subCount):
-    #   sub = helics.helicsFederateGetInputByIndex(hFed, i)
-    #   key = helics.helicsInputGetName(sub)
-    #   target = helics.helicsInputGetTarget(sub)
-    #   print ('== Available HELICS subscription key', i, key, 'target', target)
-    gld_federate = diction['GridLABD']
-    sub_federate = helics.helicsFederateGetName(hFed)
-    tso_federate = 'pypower'
+    # to dispatch incoming FNCS messages; 0..5 for LMP, Feeder load, airtemp, mtr volts, hvac load, hvac state
+    topicMap = {'LMP': [aucObj, 0],
+                'refload': [aucObj, 1]}
 
-    bus = ''.join(ele for ele in sub_federate if ele.isdigit())
-    # print('subLMP -> ' + tso_federate + '/LMP_' + bus, flush=True)
-    subFeeder = helics.helicsFederateGetInputByTarget(hFed, gld_federate + '/distribution_load')
-    subLMP = helics.helicsFederateGetInputByTarget(hFed, tso_federate + '/LMP_' + bus)
-    pubC1 = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_c1')
-    pubC2 = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_c2')
-    pubDeg = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_deg')
-    pubMax = helics.helicsFederateGetPublication(hFed, sub_federate + '/responsive_max_mw')
-    pubUnresp = helics.helicsFederateGetPublication(hFed, sub_federate + '/unresponsive_mw')
-    pubAucPrice = helics.helicsFederateGetPublication(hFed, sub_federate + '/clear_price')
-
-    pubSubMeters = set()
     hvacObjs = {}
     hvac_keys = list(diction['controllers'].keys())
     for key in hvac_keys:
         row = diction['controllers'][key]
         hvacObjs[key] = hvac(row, key, aucObj)
         ctl = hvacObjs[key]
-        hseSubTopic = gld_federate + '/' + ctl.houseName
-        mtrSubTopic = gld_federate + '/' + ctl.meterName
-        ctlPubTopic = ctl.name
-        mtrPubTopic = ctl.name + '/' + ctl.meterName
-        # print('{:s} hseSub={:s} mtrSub={:s}  mtrPub={:s}  ctlPub={:s}'
-        #       .format(key, hseSubTopic, mtrSubTopic, mtrPubTopic, ctlPubTopic), flush=True)
-        subTemp[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '#air_temperature')
-        subState[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '#power_state')
-        subHVAC[ctl] = helics.helicsFederateGetInputByTarget(hFed, hseSubTopic + '#hvac_load')
-
-        pubHeating[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/heating_setpoint')
-        pubCooling[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/cooling_setpoint')
-        pubDeadband[ctl] = helics.helicsFederateGetPublication(hFed, ctlPubTopic + '/thermostat_deadband')
-        if ctl.meterName not in pubSubMeters:
-            pubSubMeters.add(ctl.meterName)
-            subVolt[ctl] = helics.helicsFederateGetInputByTarget(hFed, mtrSubTopic + '#measured_voltage_1')
-            pubMtrMode[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/bill_mode')
-            pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/price')
-            pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/monthly_fee')
+        topicMap[key + '#Tair'] = [ctl, 2]
+        topicMap[key + '#V1'] = [ctl, 3]
+        topicMap[key + '#Load'] = [ctl, 4]
+        topicMap[key + '#On'] = [ctl, 5]
 
     # ==================== Time step looping under FNCS ===========================
 
-    helics.helicsFederateEnterExecutingMode(hFed)
+    fncs.initialize()
     aucObj.initAuction()
     LMP = aucObj.mean
     refload = 0.0
@@ -153,50 +103,52 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
     time_granted = 0
     time_last = 0
     while time_granted < time_stop:
-        nextHELICSTime = int(min([tnext_bid, tnext_agg, tnext_clear, tnext_adjust, time_stop]))
-        time_granted = int(helics.helicsFederateRequestTime(hFed, nextHELICSTime))
+        nextFNCSTime = int(min([tnext_bid, tnext_agg, tnext_clear, tnext_adjust, time_stop]))
+        fncs.update_time_delta(nextFNCSTime - time_granted)
+        time_granted = fncs.time_request(nextFNCSTime)
         time_delta = time_granted - time_last
         time_last = time_granted
         hour_of_day = 24.0 * ((float(time_granted) / 86400.0) % 1.0)
-        # print(dt_now, time_delta, timedelta (seconds=time_delta))
+        #        print (dt_now, time_delta, timedelta (seconds=time_delta))
         dt_now = dt_now + timedelta(seconds=time_delta)
         day_of_week = dt_now.weekday()
         hour_of_day = dt_now.hour
-        # print('STEP', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week,
+        # print ('STEP', time_last, time_granted, time_stop, time_delta, hour_of_day, day_of_week,
         # tnext_bid, tnext_agg, tnext_opf, tnext_clear, tnext_adjust, flush=True)
-        if helics.helicsInputIsUpdated(subLMP):
-            LMP = helics.helicsInputGetDouble(subLMP)
-            aucObj.set_lmp(LMP)
-        if helics.helicsInputIsUpdated(subFeeder):
-            refload = 0.001 * helics.helicsInputGetDouble(subFeeder)  # supposed to be kW?
-            aucObj.set_refload(refload)
-        for key, obj in hvacObjs.items():
-            if helics.helicsInputIsUpdated(subTemp[obj]):
-                value = helics.helicsInputGetDouble(subTemp[obj])
-                obj.set_air_temp_from_helics(value)
-                # print('temp ', value, flush=True)
-                if obj in subVolt:
-                    cval = helics.helicsInputGetComplex(subVolt[obj])
-                    obj.set_voltage_from_helics(cval)
-                    # print('voltage ', cval, flush=True)
-                value = helics.helicsInputGetDouble(subHVAC[obj])
-                obj.set_hvac_load_from_helics(value)
+        # update the data from FNCS messages
+        events = fncs.get_events()
+        for topic in events:
+            value = fncs.get_value(topic)
+            row = topicMap[topic]
+            if row[1] == 0:
+                LMP = parse_magnitude(value)
+                aucObj.set_lmp(LMP)
+            elif row[1] == 1:
+                refload = parse_kw(value)
+                aucObj.set_refload(refload)
+            elif row[1] == 2:
+                row[0].set_air_temp_from_fncs_str(value)
+                # print('temp ',value, flush=True)
+            elif row[1] == 3:
+                row[0].set_voltage_from_fncs_str(value)
+                # print('volatge ', value, flush=True)
+            elif row[1] == 4:
+                row[0].set_hvac_load_from_fncs_str(value)
                 # print('load ', value, flush=True)
-                value = helics.helicsInputGetString(subState[obj])
-                obj.set_hvac_state_from_helics(value)
+            elif row[1] == 5:
+                row[0].set_hvac_state_from_fncs_str(value)
                 # print('state ', value, flush=True)
 
         # set the time-of-day schedule
         for key, obj in hvacObjs.items():
             if obj.change_basepoint(hour_of_day, day_of_week):
-                helics.helicsPublicationPublishDouble(pubCooling[obj], obj.basepoint)
+                fncs.publish(obj.name + '/cooling_setpoint', obj.basepoint)
         if bSetDefaults:
             for key, obj in hvacObjs.items():
-                if obj in pubMtrMode:
-                    helics.helicsPublicationPublishString(pubMtrMode[obj], 'HOURLY')
-                    helics.helicsPublicationPublishDouble(pubMtrMonthly[obj], 0.0)
-                helics.helicsPublicationPublishDouble(pubDeadband[obj], obj.deadband)
-                helics.helicsPublicationPublishDouble(pubHeating[obj], 60.0)
+                fncs.publish(obj.name + '/bill_mode', 'HOURLY')
+                fncs.publish(obj.name + '/monthly_fee', '0.0')
+                fncs.publish(obj.name + '/thermostat_deadband', obj.deadband)
+                fncs.publish(obj.name + '/heating_setpoint', '60.0')
             bSetDefaults = False
             # print('  SET DEFAULTS', flush=True)
 
@@ -215,11 +167,11 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
 
         if time_granted >= tnext_agg:
             aucObj.aggregate_bids()
-            helics.helicsPublicationPublishDouble(pubUnresp, aucObj.agg_unresp)
-            helics.helicsPublicationPublishDouble(pubMax, aucObj.agg_resp_max)
-            helics.helicsPublicationPublishDouble(pubC2, aucObj.agg_c2)
-            helics.helicsPublicationPublishDouble(pubC1, aucObj.agg_c1)
-            helics.helicsPublicationPublishInteger(pubDeg, aucObj.agg_deg)
+            fncs.publish('unresponsive_mw', aucObj.agg_unresp)
+            fncs.publish('responsive_max_mw', aucObj.agg_resp_max)
+            fncs.publish('responsive_c2', aucObj.agg_c2)
+            fncs.publish('responsive_c1', aucObj.agg_c1)
+            fncs.publish('responsive_deg', aucObj.agg_deg)
             tnext_agg += period
             # print('  AGGREGATE BIDS', flush=True)
 
@@ -227,7 +179,7 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
             if bWantMarket:
                 aucObj.clear_market(tnext_clear, time_granted)
                 aucObj.surplusCalculation(tnext_clear, time_granted)
-                helics.helicsPublicationPublishDouble(pubAucPrice, aucObj.clearing_price)
+                fncs.publish('clear_price', aucObj.clearing_price)
                 for key, obj in hvacObjs.items():
                     obj.inform_bid(aucObj.clearing_price)
             time_key = str(int(tnext_clear))
@@ -240,10 +192,9 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
         if time_granted >= tnext_adjust:
             if bWantMarket:
                 for key, obj in hvacObjs.items():
-                    if obj in pubMtrPrice:
-                        helics.helicsPublicationPublishDouble(pubMtrPrice[obj], aucObj.clearing_price)
+                    fncs.publish(obj.name + '/price', aucObj.clearing_price)
                     if obj.bid_accepted():
-                        helics.helicsPublicationPublishDouble(pubCooling[obj], obj.setpoint)
+                        fncs.publish(obj.name + '/cooling_setpoint', obj.setpoint)
             tnext_adjust += period
             # print('  ADJUSTED', flush=True)
 
@@ -256,5 +207,5 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
     print(json.dumps(controller_metrics), file=controller_op)
     auction_op.close()
     controller_op.close()
-    print('finalizing HELICS', flush=True)
-    helics.helicsFederateDestroy(hFed)
+    print('finalizing FNCS', flush=True)
+    fncs.finalize()

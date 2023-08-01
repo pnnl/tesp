@@ -1,18 +1,14 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: loadshed.py
 
-
 import sys
 
 import tesp_support.api.fncs as fncs
 
-if sys.platform != 'win32':
-    import resource
-
 time_stop = int(sys.argv[1])
 time_granted = 0
 
-# requires yaml specificied in an envar
+# requires yaml file specified in an environmental variable
 fncs.initialize()
 
 while time_granted < time_stop:
@@ -25,18 +21,3 @@ while time_granted < time_stop:
             fncs.publish('sw_status', value)
 
 fncs.finalize()
-
-if sys.platform != 'win32':
-    usage = resource.getrusage(resource.RUSAGE_SELF)
-    RESOURCES = [
-        ('ru_utime', 'User time'),
-        ('ru_stime', 'System time'),
-        ('ru_maxrss', 'Max. Resident Set Size'),
-        ('ru_ixrss', 'Shared Memory Size'),
-        ('ru_idrss', 'Unshared Memory Size'),
-        ('ru_isrss', 'Stack Size'),
-        ('ru_inblock', 'Block inputs'),
-        ('ru_oublock', 'Block outputs')]
-    print('Resource usage:')
-    for name, desc in RESOURCES:
-        print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))

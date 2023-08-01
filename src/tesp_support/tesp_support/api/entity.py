@@ -6,7 +6,6 @@
 import json
 import sqlite3
 
-
 def assign_defaults(obj, file_name):
     """ Utilities that opens a JSON file and assigns the attributes to the specified object
 
@@ -21,7 +20,6 @@ def assign_defaults(obj, file_name):
         for attr in config:
             setattr(obj, attr, config[attr])
     return config
-
 
 def assign_item_defaults(obj, file_name):
     """ Utilities that opens a JSON file and assigns the attributes Item to the specified object
@@ -40,7 +38,6 @@ def assign_item_defaults(obj, file_name):
             tmp = Item(str(type(config[attr])), attr, "", attr, config[attr])
             setattr(obj, attr, tmp)
     return config
-
 
 class Item:
     def __init__(self, datatype, label, unit, item, value=None, range_check=None):
@@ -71,7 +68,7 @@ class Item:
         """
         return [self.label, self.value, self.unit, self.datatype, self.item, self.range_check]
 
-    def toJson(self):
+    def toList(self):
         """ List the attribute in the Items
 
         Returns:
@@ -96,12 +93,11 @@ class Item:
             tmp = tmp + self.value + '}'
         return tmp
 
-
 class Entity:
     def __init__(self, entity, config):
         self.item_cnt = 0
         self.entity = entity
-        self.instance = {}
+        self.instances = {}
         try:
             if type(config[0]) is list:
                 for attr in config:
@@ -118,7 +114,7 @@ class Entity:
 
     # def __init__(self, config):
     #     self.entity = "static"
-    #     self.instance = None
+    #     self.instances = None
     #     for attr in config:
     #         # config format -> label=0, value=1, unit=2, datatype=3, item=4
     #         # Item format -> datatype=3, label=0, unit=2, item=4, value=1
@@ -166,10 +162,10 @@ class Entity:
         """
         if type(object_name) == str:
             try:
-                instance = self.instance[object_name]
+                instance = self.instances[object_name]
             except:
-                self.instance[object_name] = {}
-                instance = self.instance[object_name]
+                self.instances[object_name] = {}
+                instance = self.instances[object_name]
 
             for attr in params:
                 item = self.find_item(attr)
@@ -183,9 +179,12 @@ class Entity:
                             print("Attribute id is not a string in", self.entity, "named", object_name)
                             continue
                 else:
-                    print("Unrecognized parameter", attr, "in", self.entity, "named", object_name)
                     # add to dictionary datatype, label, unit, item, value
-                    self.add_attr("TEXT", attr, "", attr, "")
+                    if self.find_item("parent") or self.find_item("configuration"):
+                        # todo lookup attr in parent, configuration if it exists, for now add it
+                        self.add_attr("TEXT", attr, "", attr, "")
+                    else:
+                        print("Unrecognized parameter", attr, "in", self.entity, "named", object_name)
                 instance[attr] = params[attr]
             return instance
         else:
@@ -202,10 +201,10 @@ class Entity:
         """
         if type(object_name) == str:
             try:
-                return self.instance[object_name]
+                return self.instances[object_name]
             except:
-                self.instance[object_name] = {}
-                return self.instance[object_name]
+                self.instances[object_name] = {}
+                return self.instances[object_name]
         else:
             print("object name is not a string in", self.entity)
         return None
@@ -218,7 +217,7 @@ class Entity:
         """
         if type(object_name) == str:
             try:
-                del self.instance[object_name]
+                del self.instances[object_name]
             except:
                 # TODO: Need to add error message
                 pass
@@ -263,8 +262,8 @@ class Entity:
     #         if type(_item) == Item:
     #             setattr(self, _item, None)
     #             # remove all instances
-    #             for object_name in self.instance:
-    #                 del self.instance[object_name][_item]
+    #             for object_name in self.instances:
+    #                 del self.instances[object_name][_item]
     #     return None
 
     def set_item(self, object_name, item, val):
@@ -280,8 +279,8 @@ class Entity:
         if self.find_item(item):
             _item = self.__getattribute__(item)
             if type(_item) == Item:
-                self.instance[object_name][item] = val
-                return self.instance[object_name][item]
+                self.instances[object_name][item] = val
+                return self.instances[object_name][item]
         return None
 
     def del_item(self, object_name, item):
@@ -294,7 +293,7 @@ class Entity:
         if self.find_item(item):
             _item = self.__getattribute__(item)
             if type(_item) == Item:
-                del self.instance[object_name][item]
+                del self.instances[object_name][item]
 
     def toList(self):
         """ List the Item(s) in the Entity
@@ -319,7 +318,7 @@ class Entity:
         for attr in self.__dict__:
             item = self.__getattribute__(attr)
             if type(item) == Item:
-                diction.append(item.toJson())
+                diction.append(item.toList())
         return diction
 
     def toHelp(self):
@@ -377,10 +376,10 @@ class Entity:
             str: JSON string of the instance(s) in the Entity
         """
         diction = ""
-        for object_name in self.instance:
+        for object_name in self.instances:
             diction += "object " + self.entity + " {\n  name " + object_name + ";\n"
-            for item in self.instance[object_name].keys():
-                diction += "  " + item + " " + self.instance[object_name][item] + ";\n"
+            for item in self.instances[object_name].keys():
+                diction += "  " + item + " " + self.instances[object_name][item] + ";\n"
             diction += "}\n"
         return diction
 
@@ -406,14 +405,14 @@ class Entity:
                     valu BLOB);"""
         cursor_obj.execute(sql)
 
-        if self.instance:
+        if self.instances:
             multi_row = " ('"
             # print(self.entity)
             sql = "INSERT INTO " + self.entity + "_values(entity, item, valu) VALUES"
-            for name in self.instance:
-                if len(self.instance[name].keys()) > 0:
-                    for item in self.instance[name].keys():
-                        sql += multi_row + name + "', '" + item + "', '" + self.instance[name][item] + "')"
+            for name in self.instances:
+                if len(self.instances[name].keys()) > 0:
+                    for item in self.instances[name].keys():
+                        sql += multi_row + name + "', '" + item + "', '" + self.instances[name][item] + "')"
                         multi_row = ", ('"
                     sql = sql.replace("''", "'")
                 else:
@@ -423,7 +422,6 @@ class Entity:
             # print(sql, flush=True)
             cursor_obj.execute(sql)
             connection.commit()
-
 
 def _test():
 
@@ -465,7 +463,7 @@ def _test():
     # Better to use Entity as object models for editing and persistence like glm_model,
 
     # this a multiple config file a using dictionary list persistence
-    file_name = 'glm_objects.json'
+    file_name = 'glm_classes.json'
     with open(entities_path + file_name, 'r', encoding='utf-8') as json_file:
         entities = json.load(json_file)
         mylist = {}
@@ -475,7 +473,6 @@ def _test():
             mylist[name].toSQLite(conn)
             # mylist[name].instanceToSQLite(conn)
     conn.close()
-
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

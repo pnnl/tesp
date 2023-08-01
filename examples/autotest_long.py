@@ -3,6 +3,7 @@
 """Runs the longer set of tesp test cases;
 SGIP1, NIST TE Challenge 2, ERCOT 8-Bus with PSST
 """
+
 import os
 import sys
 import subprocess
@@ -13,7 +14,6 @@ if sys.platform == 'win32':
     pycall = 'python'
 else:
     pycall = 'python3'
-
 
 def sgip_test():
     tr.start_test('SGIP1 examples')
@@ -36,14 +36,12 @@ def sgip_test():
         tr.run_test('runSGIP1ex.sh', 'SGIP1ex - FNCS')
     os.chdir(tesp_path)
 
-
 def ieee8500_base_test():
     tr.start_test('IEEE8500 GridLAB-D example')
     os.chdir('capabilities/ieee8500')
     subprocess.Popen('./clean.sh', shell=True).wait()
     tr.run_test('runIEEE8500.sh', 'PNNL Team IEEE8500')
     os.chdir(tesp_path)
-
 
 def ieee8500_precool_test():
     tr.start_test('IEEE8500 PNNL team examples')
@@ -67,7 +65,6 @@ def ieee8500_precool_test():
     tr.run_test('run8500vwatt.sh', 'PNNL Team 8500 VoltWatt')
     os.chdir(tesp_path)
 
-
 def ercot_test():
     # ERCOT Case8 example
     tr.start_test('ERCOT Case8 examples')
@@ -83,7 +80,6 @@ def ercot_test():
         tr.run_test('run_market.sh', 'ERCOT 8-bus Market - FNCS')
     os.chdir(tesp_path)
 
-
 def dso_stub_test():
     tr.start_test('DSO Stub example')
     if b_helics:
@@ -98,7 +94,6 @@ def dso_stub_test():
     else:
         tr.run_test('run.sh', 'DSO Stub - FNCS')
     os.chdir(tesp_path)
-
 
 if __name__ == '__main__':
     b_helics = True

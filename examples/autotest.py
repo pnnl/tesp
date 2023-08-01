@@ -3,6 +3,7 @@
 """Runs the set of TESP test cases, excluding the longer FNCS cases
 MATPOWER/MOST example must be run after manual installation of Octave and MATPOWER
 """
+
 import os
 import sys
 import shutil
@@ -22,7 +23,6 @@ def gld_player_test():
     tr.run_test('run.sh', 'GridLAB-D Player/Recorder')
     os.chdir(tesp_path)
 
-
 def loadshed_test():
     tr.start_test('Loadshed examples')
     if b_helics:
@@ -40,7 +40,6 @@ def loadshed_test():
         tr.run_test('runjava.sh', 'Loadshed - FNCS Java')
     os.chdir(tesp_path)
 
-
 def loadshed_cli_test():
     if b_helics:
         tr.start_test('Loadshed examples for HELICS CLI')
@@ -51,7 +50,6 @@ def loadshed_cli_test():
         tr.run_test('run.sh', 'Loadshed - HELICS/EPlus')
         # tr.run_test('run_ns3.sh', 'Loadshed - HELICS/EPLUS/NS3')
         os.chdir(tesp_path)
-
 
 def loadshed_proto_test():
     if b_helics:
@@ -68,14 +66,12 @@ def loadshed_proto_test():
         tr.run_test('run_ns3.sh', 'Load shedding control over communication network')
         os.chdir(tesp_path)
 
-
 def houses_test():
     tr.start_test('Houses example')
     os.chdir('capabilities/houses')
     subprocess.Popen('./clean.sh', shell=True).wait()
     tr.run_test('run.sh', 'Houses')
     os.chdir(tesp_path)
-
 
 def PYPOWER_test():
     tr.start_test('PYPOWER example')
@@ -86,7 +82,6 @@ def PYPOWER_test():
     else:
         tr.run_test('runpp.sh', 'PYPOWER - FNCS')
     os.chdir(tesp_path)
-
 
 def EnergyPlus_test():
     tr.start_test('EnergyPlus EMS/IDF examples')
@@ -103,7 +98,6 @@ def EnergyPlus_test():
         tr.run_test('run2.sh', 'EnergyPlus EMS - FNCS')
     os.chdir(tesp_path)
 
-
 def weather_agent_test():
     tr.start_test('Weather Agent example')
     os.chdir('capabilities/weatherAgent')
@@ -113,7 +107,6 @@ def weather_agent_test():
     else:
         tr.run_test('run.sh', 'Weather Agent - FNCS')
     os.chdir(tesp_path)
-
 
 def TE30_test():
     tr.start_test('TE30 examples')
@@ -127,7 +120,6 @@ def TE30_test():
         tr.run_test('run.sh', 'TE30 - FNCS Market')
         tr.run_test('run0.sh', 'TE30 - FNCS No Market')
     os.chdir(tesp_path)
-
 
 def make_comm_base_test():
     tr.start_test('Communication Network examples')
@@ -156,7 +148,6 @@ def make_comm_base_test():
         tr.run_test('run.sh', 'SGIP1c - FNCS')
     os.chdir(tesp_path)
 
-
 def make_comm_eplus_test():
     if b_helics:
         tr.start_test('Eplus with Communication Network example')
@@ -165,7 +156,6 @@ def make_comm_eplus_test():
         os.chdir('Eplus_Comm')
         tr.run_test('run.sh', 'Eplus w/Comm - HELICS')
         os.chdir(tesp_path)
-
 
 def combine_feeders_test():
     tr.start_test('Communication Network Combined Case example')
@@ -179,7 +169,6 @@ def combine_feeders_test():
     else:
         tr.run_test('runcombined.sh', '4 Feeders - FNCS')
     os.chdir(tesp_path)
-
 
 if __name__ == '__main__':
     b_helics = True

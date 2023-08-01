@@ -6,7 +6,6 @@ Public Functions:
     :pypower_loop: Initializes and runs the simulation.  
 """
 
-import sys
 import json
 import helics
 import numpy as np
@@ -15,14 +14,9 @@ from math import sqrt
 from copy import deepcopy
 
 from .tso_helpers import load_json_case, make_dictionary
+from tesp_support.api.bench_profile import bench_profile
 
-# import cProfile
-# import pstats
-
-if sys.platform != 'win32':
-    import resource
-
-
+@bench_profile
 def tso_pypower_loop(casefile, rootname, helicsConfig):
     """ Public function to start PYPOWER solutions under control of HELICS
 
@@ -166,30 +160,22 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
         #     will become True if value changes later
         #  4) helicsInputLastUpdateTime is > 0 only after the other federate published its first value
         if sub_max is not None:
-            if helics.helicsInputIsUpdated(sub_unresp):
+            if helics.helicsInputIsUpdated(sub_max):
+                new_bid = True
+                resp_max = helics.helicsInputGetComplex(sub_max).real * load_scale
+                # the rest of the bid parameters are updated at the same time
                 unresp = helics.helicsInputGetDouble(sub_unresp) * load_scale
                 dsoBus[0][3] = unresp  # to poke unresponsive estimate into the bus load slot
-            if helics.helicsInputIsUpdated(sub_c2):
                 resp_c2 = helics.helicsInputGetDouble(sub_c2) / load_scale
-            if helics.helicsInputIsUpdated(sub_c1):
                 resp_c1 = helics.helicsInputGetDouble(sub_c1)
-            if helics.helicsInputIsUpdated(sub_deg):
                 resp_deg = helics.helicsInputGetInteger(sub_deg)
-            if helics.helicsInputIsUpdated(sub_max):
-                #        print (ts,'resp_max updated before', helics.helicsInputIsUpdated(sub_max))
-                resp_max = helics.helicsInputGetComplex(sub_max).real * load_scale
-                #        print (ts,'resp_max updated after', helics.helicsInputIsUpdated(sub_max))
-                new_bid = True
+
         if helics.helicsInputIsUpdated(sub_load):
             gld_load = helics.helicsInputGetComplex(sub_load)
             feeder_load = gld_load.real * load_scale / 1.0e6
-        #      print ('HELICS inputs at', ts, feeder_load, load_scale, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid)
-        #      print ('HELICS resp_max', ts, resp_max, helics.helicsInputIsValid(sub_max),
-        #        helics.helicsInputIsUpdated(sub_max), helics.helicsInputLastUpdateTime(sub_max))
 
-        if new_bid == True:
-            dummy = 2
-        #      print('**Bid', ts, unresp, resp_max, resp_deg, resp_c2, resp_c1)
+        if new_bid:
+            print('HELICS inputs at', ts, gld_load, feeder_load, load_scale, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid, flush=True)
 
         # update the case for bids, outages and CSV loads
         idx = int((ts + dt) / period) % nloads
@@ -202,12 +188,12 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
         bus[8, 2] = loads[idx, 2]
         # process the generator and branch outages
         for row in ppc['UnitsOut']:
-            if ts >= row[1] and ts <= row[2]:
+            if row[1] <= ts <= row[2]:
                 gen[row[0], 7] = 0
             else:
                 gen[row[0], 7] = 1
         for row in ppc['BranchesOut']:
-            if ts >= row[1] and ts <= row[2]:
+            if row[1] <= ts <= row[2]:
                 branch[row[0], 10] = 0
             else:
                 branch[row[0], 10] = 1
@@ -383,26 +369,3 @@ def tso_pypower_loop(casefile, rootname, helicsConfig):
     op.close()
     print('finalizing DSO - HELICS', flush=True)
     helics.helicsFederateDestroy(hFed)
-
-    if sys.platform != 'win32':
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        RESOURCES = [
-            ('ru_utime', 'User time'),
-            ('ru_stime', 'System time'),
-            ('ru_maxrss', 'Max. Resident Set Size'),
-            ('ru_ixrss', 'Shared Memory Size'),
-            ('ru_idrss', 'Unshared Memory Size'),
-            ('ru_isrss', 'Stack Size'),
-            ('ru_inblock', 'Block inputs'),
-            ('ru_oublock', 'Block outputs')]
-        print('Resource usage:')
-        for name, desc in RESOURCES:
-            print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
-
-# main_loop()
-#  profiler = cProfile.Profile ()
-#  profiler.runcall (main_loop)
-#  stats = pstats.Stats(profiler)
-#  stats.strip_dirs()
-#  stats.sort_stats('cumulative')
-#  stats.print_stats()

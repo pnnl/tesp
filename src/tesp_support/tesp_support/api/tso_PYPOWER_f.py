@@ -6,7 +6,6 @@ Public Functions:
     :pypower_loop: Initializes and runs the simulation.  
 """
 
-import sys
 import json
 import numpy as np
 import pypower.api as pp
@@ -16,14 +15,9 @@ from copy import deepcopy
 import tesp_support.api.fncs as fncs
 from .parse_helpers import parse_mva
 from .tso_helpers import load_json_case, make_dictionary
+from tesp_support.api.bench_profile import bench_profile
 
-# import cProfile
-# import pstats
-
-if sys.platform != 'win32':
-    import resource
-
-
+@bench_profile
 def tso_pypower_loop_f(casefile, rootname):
     """ Public function to start PYPOWER solutions under control of FNCS
 
@@ -100,16 +94,6 @@ def tso_pypower_loop_f(casefile, rootname):
     op = open(rootname + '.csv', 'w')
     print('t[s],Converged,Pload,P7 (csv),Unresp (opf),P7 (rpf),Resp (opf),GLD Pub,BID?,P7 Min,V7,LMP_P7,LMP_Q7,Pgen1,Pgen2,Pgen3,Pgen4,Pdisp,Deg,c2,c1', file=op, flush=True)
 
-    hFed = None
-    pub_lmp = None
-    pub_volts = None
-    sub_load = None
-    sub_unresp = None
-    sub_max = None
-    sub_c2 = None
-    sub_c1 = None
-    sub_deg = None
-
     fncs.initialize()
 
     # transactive load components
@@ -149,9 +133,8 @@ def tso_pypower_loop_f(casefile, rootname):
                 gld_load = parse_mva(value)  # actual value, may not match unresp + resp load
                 feeder_load = float(gld_load[0]) * load_scale
 
-        if new_bid == True:
-            dummy = 2
-        #      print('**Bid', ts, unresp, resp_max, resp_deg, resp_c2, resp_c1)
+        if new_bid:
+            print('HELICS inputs at', ts, gld_load, feeder_load, load_scale, unresp, resp_max, resp_c2, resp_c1, resp_deg, new_bid, flush=True)
 
         # update the case for bids, outages and CSV loads
         idx = int((ts + dt) / period) % nloads
@@ -345,26 +328,3 @@ def tso_pypower_loop_f(casefile, rootname):
     op.close()
     print('finalizing DSO - FNCS', flush=True)
     fncs.finalize()
-
-    if sys.platform != 'win32':
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        RESOURCES = [
-            ('ru_utime', 'User time'),
-            ('ru_stime', 'System time'),
-            ('ru_maxrss', 'Max. Resident Set Size'),
-            ('ru_ixrss', 'Shared Memory Size'),
-            ('ru_idrss', 'Unshared Memory Size'),
-            ('ru_isrss', 'Stack Size'),
-            ('ru_inblock', 'Block inputs'),
-            ('ru_oublock', 'Block outputs')]
-        print('Resource usage:')
-        for name, desc in RESOURCES:
-            print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
-
-# main_loop()
-#  profiler = cProfile.Profile ()
-#  profiler.runcall (main_loop)
-#  stats = pstats.Stats(profiler)
-#  stats.strip_dirs()
-#  stats.sort_stats('cumulative')
-#  stats.print_stats()

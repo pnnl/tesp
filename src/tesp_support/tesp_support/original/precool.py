@@ -30,9 +30,6 @@ except:
 import json
 import math
 
-if sys.platform != 'win32':
-    import resource
-
 from tesp_support.api.parse_helpers import parse_number, parse_magnitude_2
 
 thermalIntegrity = {
@@ -53,7 +50,6 @@ thermalIntegrity = {
     'UNKNOWN':
         {'Rroof': 30.0, 'Rwall': 19.0, 'Rfloor': 22.0, 'Rdoors': 5.0, 'Rwindows': 1/0.47, 'airchange_per_hour': 0.5}
 }
-
 
 class precooler:
     """
@@ -255,7 +251,6 @@ class precooler:
         """
         return abs(self.air_temp - self.basepoint)
 
-
 def helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig):
     """ Function that supervises FNCS messages and time stepping for precooler agents
 
@@ -413,7 +408,6 @@ def helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)
     log.info('finalizing HELICS tso federate')
     helics.helicsFederateDestroy(hFed)
 
-
 def fncs_precool_loop(nhours, metrics_root, dict_root, response):
     """ Function that supervises FNCS messages and time stepping for precooler agents
 
@@ -547,7 +541,6 @@ def fncs_precool_loop(nhours, metrics_root, dict_root, response):
     print('finalizing FNCS', flush=True)
     fncs.finalize()
 
-
 def precool_loop(nhours, metrics_root, dict_root, response='PriceVoltage', helicsConfig=None):
     """ Wrapper for *inner_substation_loop*
 
@@ -563,38 +556,3 @@ def precool_loop(nhours, metrics_root, dict_root, response='PriceVoltage', helic
         helics_precool_loop(nhours, metrics_root, dict_root, response, helicsConfig)
     else:
         fncs_precool_loop(nhours, metrics_root, dict_root, response)
-
-    #    gc.enable()
-    #    gc.set_debug(gc.DEBUG_LEAK)
-
-    #    profiler = cProfile.Profile ()
-    #    args = (configfile, metrics_root, hour_stop, flag)
-    #    profiler.runcall (inner_substation_loop, *args)
-    #    stats = pstats.Stats(profiler)
-    #    stats.strip_dirs()
-    #    stats.sort_stats('cumulative')
-    #    stats.print_stats()
-
-    #    print (gc.collect (), 'unreachable objects')
-    #    for x in gc.garbage:
-    #        s = str(x)
-    #        print (type(x), ':', len(s), flush=True)
-    if sys.platform != 'win32':
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        RESOURCES = [
-            ('ru_utime', 'User time'),
-            ('ru_stime', 'System time'),
-            ('ru_maxrss', 'Max. Resident Set Size'),
-            ('ru_ixrss', 'Shared Memory Size'),
-            ('ru_idrss', 'Unshared Memory Size'),
-            ('ru_isrss', 'Stack Size'),
-            ('ru_inblock', 'Block inputs'),
-            ('ru_oublock', 'Block outputs')]
-        print('Resource usage:')
-        for name, desc in RESOURCES:
-            print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
-
-
-#if __name__ == '__main__':
-    # precool_loop('', '', '', '')
-    # precool_loop('', '', '', '', helicsConfig='Test_substation.json')

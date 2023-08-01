@@ -31,7 +31,6 @@ if sys.platform == 'win32':
 else:
     pycall = 'python3'
 
-
 def write_tesp_case(config, cfgfile, freshdir=True):
     """ Writes the TESP case from data structure to JSON file
 
@@ -536,7 +535,7 @@ values:
     # ====================================================================
     # FNCS shell scripts and chmod for Mac/Linux - need to specify python3
     try:
-        aucline = "import tesp_support.original.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "')"
+        aucline = "import tesp_support.original.substation_f as tesp;tesp.substation_loop_f('" + AgentDictFile + "','" + casename + "')"
         ppline = "import tesp_support.api.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('" + PPJsonFile + "','" + casename + "')"
         weatherline = "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')"
 
@@ -666,7 +665,6 @@ values:
     finally:
         pass
 
-
 def make_tesp_case(cfgfile='test.json'):
     """ Wrapper function for a single TESP case configuration.
 
@@ -678,7 +676,6 @@ def make_tesp_case(cfgfile='test.json'):
     lp = open(cfgfile).read()
     config = json.loads(lp)
     write_tesp_case(config, cfgfile)
-
 
 def modify_mc_config(config, mcvar, band, sample):
     """ Helper function that modifies the Monte Carlo configuration for a specific sample, i.e., shot
@@ -703,7 +700,6 @@ def modify_mc_config(config, mcvar, band, sample):
     elif mcvar == 'WeekdayEveningSetMid':
         config['ThermostatSchedule']['WeekdayEveningSetLo'] = sample - 0.5 * band
         config['ThermostatSchedule']['WeekdayEveningSetHi'] = sample + 0.5 * band
-
 
 def make_monte_carlo_cases(cfgfile='test.json'):
     """ Writes up to 20 TESP simulation case setups to a directory for Monte Carlo simulations
@@ -742,7 +738,6 @@ def make_monte_carlo_cases(cfgfile='test.json'):
         #        print (mc_case, mc['Samples1'][i], mc['Samples2'][i], mc['Samples3'][i])
         write_tesp_case(config, mc_cfg)
 
-
 def add_tesp_feeder(cfgfile):
     """ Wrapper function to start a single TESP case configuration.
 
@@ -757,7 +752,6 @@ def add_tesp_feeder(cfgfile):
     lp = open(cfgfile).read()
     config = json.loads(lp)
     write_tesp_case(config, cfgfile, freshdir=False)
-
 
 if __name__ == "__main__":
     make_tesp_case('~/tesp/repository/tesp/examples/capabilities/ttest/test.json')

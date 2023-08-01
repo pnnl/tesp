@@ -6,7 +6,7 @@ Public Functions:
     :dso_loop_f: initializes and runs the agents
 
 """
-import sys
+
 import time
 import json
 import logging as log
@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from copy import deepcopy
 from joblib import Parallel, delayed
 
+import tesp_support.api.fncs as fncs
 from tesp_support.api.helpers import enable_logging
 from .hvac_agent import HVACDSOT
 from .water_heater_agent import WaterHeaterDSOT
@@ -25,17 +26,9 @@ from .dso_market import DSOMarket
 from .retail_market import RetailMarket
 from .forecasting import Forecasting
 from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
+from tesp_support.api.bench_profile import bench_profile
 
-try:
-    import tesp_support.api.fncs as fncs
-except ImportError:
-    fncs = None
-    print('WARNING: unable to load FNCS module.', flush=True)
-
-if sys.platform != 'win32':
-    import resource
-
-
+@bench_profile
 def inner_substation_loop(configfile, metrics_root, with_market):
     """ Helper function that initializes and runs the DSOT agents
 
@@ -1931,7 +1924,6 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     op.close()
     fncs.finalize()
 
-
 def dso_loop_f(configfile, metrics_root, with_market):
     """ Wrapper for *inner_substation_loop*
 
@@ -1943,26 +1935,3 @@ def dso_loop_f(configfile, metrics_root, with_market):
         market = False
 
     inner_substation_loop(configfile, metrics_root, market)
-
-# Code that can be used to profile the substation
-#    import cProfile
-#    command = """inner_substation_loop(configfile, metrics_root, with_market)"""
-#    cProfile.runctx(command, globals(), locals(), filename="profile.stats")
-
-    if sys.platform != 'win32':
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        resource_names = [
-            ('ru_utime', 'User time'),
-            ('ru_stime', 'System time'),
-            ('ru_maxrss', 'Max. Resident Set Size'),
-            ('ru_ixrss', 'Shared Memory Size'),
-            ('ru_idrss', 'Unshared Memory Size'),
-            ('ru_isrss', 'Stack Size'),
-            ('ru_inblock', 'Block inputs'),
-            ('ru_oublock', 'Block outputs')]
-        print('Resource usage:')
-        for name, desc in resource_names:
-            print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
-
-# for debugging
-# dso_loop_f('Substation_1_agent_dict.json', 'Substation_1', 1)

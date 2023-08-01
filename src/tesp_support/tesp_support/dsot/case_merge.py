@@ -9,17 +9,11 @@ Public Functions:
     :merge_substation_yaml: combines the substation agent FNCS publish/subscribe files
     :merge_fncs_config: combines GridLAB-D FNCS publish/subscribe files
 """
+
 import json
-import sys
 from os import path
 
 from tesp_support.api.helpers import gld_strict_name
-
-if sys.platform == 'win32':
-    pycall = 'python'
-else:
-    pycall = 'python3'
-
 
 def merge_glm(target, sources, xfmva):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
@@ -107,7 +101,6 @@ def merge_glm(target, sources, xfmva):
         inFirstFile = False
     op.close()
 
-
 def merge_glm_dict(target, sources, xfmva):
     """ Combines GridLAB-D metadata files into "target". The source files must already exist.
 
@@ -153,7 +146,6 @@ def merge_glm_dict(target, sources, xfmva):
     print(json.dumps(diction), file=op)
     op.close()
 
-
 def merge_agent_dict(target, sources):
     """ Combines the substation agent configuration files into "target". The source files must already exist.
 
@@ -185,7 +177,6 @@ def merge_agent_dict(target, sources):
     print(json.dumps(diction), file=op)
     op.close()
 
-
 def merge_substation_yaml(target, sources):
     """ Combines GridLAB-D input files into "target". The source files must already exist.
 
@@ -200,7 +191,6 @@ def merge_substation_yaml(target, sources):
             for line in ip:
                 print(line.rstrip(), file=op)
     op.close()
-
 
 def merge_fncs_config(target, sources):
     """ Combines GridLAB-D input files into "target". The source feeders must already exist.

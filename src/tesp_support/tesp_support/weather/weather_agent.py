@@ -16,27 +16,6 @@ import numpy
 import pandas as pd
 from scipy.stats import truncnorm
 
-if sys.platform != 'win32':
-    import resource
-
-
-def show_resource_consumption():
-    if sys.platform != 'win32':
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        RESOURCES = [
-            ('ru_utime', 'User time'),
-            ('ru_stime', 'System time'),
-            ('ru_maxrss', 'Max. Resident Set Size'),
-            ('ru_ixrss', 'Shared Memory Size'),
-            ('ru_idrss', 'Unshared Memory Size'),
-            ('ru_isrss', 'Stack Size'),
-            ('ru_inblock', 'Block inputs'),
-            ('ru_oublock', 'Block outputs')]
-        print('Resource usage:')
-        for name, desc in RESOURCES:
-            print('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
-
-
 def startWeatherAgent(file):
     """ The weather agent publishes weather data as configured by the json file
 
@@ -235,12 +214,9 @@ def startWeatherAgent(file):
     else:
         print('finalizing FNCS', flush=True)
         fncs.finalize()
-    show_resource_consumption()
-
 
 def usage():
     print("usage: python weatherAgent.py <input weather file full path>")
-
 
 def convertTimeToSeconds(time):
     """ Convert time string with unit to integer in seconds
@@ -266,7 +242,6 @@ def convertTimeToSeconds(time):
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
 
-
 def deltaTimeToResmapleFreq(time):
     """ Convert time unit to a resampling frequency that can be recognized by pandas.DataFrame.resample()
 
@@ -290,7 +265,6 @@ def deltaTimeToResmapleFreq(time):
         return str(timeNum) + "s"
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
-
 
 def findDeltaTimeMultiplier(time):
     """ Find the multiplier to convert delta_time to seconds
@@ -316,7 +290,6 @@ def findDeltaTimeMultiplier(time):
     else:
         raise Exception("unrecognized time unit '" + unit + "'.")
 
-
 """Class that includes error to the known Weather data 
 
 Implements the range of values the errors are randomly selected. The range is time
@@ -331,7 +304,6 @@ All the variables utilize in the class are time dependent. Thus, arrays where
 element "0" is the next hour and so forth.   
 
 """
-
 
 class weather_forecast:
     """
@@ -425,7 +397,6 @@ class weather_forecast:
 
         weather_f = error + weather
         return weather_f
-
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
