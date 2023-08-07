@@ -260,7 +260,7 @@ def _auto_run(args):
     
     # Find first fuse downstream of the feeder head. I'm guessing it is close-by so doing a breadth-first search using
     #   the networkx API and the topology graph of our GridLAB-D model
-    graph = glmMod.model.network
+    graph = glmMod.model.draw_network()
     for edge in nx.bfs_edges(graph, swing_bus):
         edge_data = graph.get_edge_data(edge[0], edge[1])
         if edge_data['eclass'] == 'fuse':
@@ -278,22 +278,22 @@ def _auto_run(args):
     fuse_obj['current_limit'] = float(fuse_obj['current_limit']) * 1.1
     print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]} A')
 
-    Unused code that works but doesn't show off the things I wanted to show off.
+    # Unused code that works but doesn't show off the things I wanted to show off.
     for gld_node in gld_node_names:
         neighbors = graph.neighbors(gld_node)
         for neighbor in neighbors:
             print(neighbor)
         print("\n")
-    Look for largest transformer configuration in the model
-    under the assumption that it's for the substation transformer
-    (Turns out, this is a bad assumption.)
+    # Look for largest transformer configuration in the model
+    # under the assumption that it's for the substation transformer
+    # (Turns out, this is a bad assumption.)
     max_transformer_power = 0
     max_transformer_name = ''
-    for transformer_config_name in transformer_config_names:
-        transformer_power_rating = float(transformer_config_objs.instance[transformer_config_name]['power_rating'])
+    for transformer_config in transformer_config_objs.instances:
+        transformer_power_rating = float(transformer_config_objs.instances[transformer_config]['power_rating'])
         if transformer_power_rating > max_transformer_power:
             max_transformer_power = transformer_power_rating
-            max_transformer_name = transformer_config_name
+            max_transformer_name = transformer_config
     dummy = 0
     for node, nodedata in graph.nodes.items():
         dummy = 0
@@ -322,7 +322,7 @@ def test():
     parser.add_argument('-p',
                         '--feeder_path',
                         nargs='?',
-                        default='../../..data/feeders')
+                        default='../../../data/feeders')
     parser.add_argument('-n',
                         '--feeder_file',
                         nargs='?',
