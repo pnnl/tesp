@@ -301,7 +301,7 @@ def _auto_run(args):
     glmMod.write_model(args.output_file)
 
 
-def _test():
+def test():
     # TDH: This slightly complex mess allows lower importance messages
     # to be sent to the log file and ERROR messages to additionally
     # be sent to the console as well. Thus, when bad things happen
