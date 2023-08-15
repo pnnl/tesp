@@ -12,9 +12,9 @@ import pypower.api as pp
 from math import sqrt
 from copy import deepcopy
 
-import tesp_support.api.fncs as fncs
-from .parse_helpers import parse_mva
-from .tso_helpers import load_json_case, make_dictionary
+import tesp_support.original.fncs as fncs
+from tesp_support.api.parse_helpers import parse_mva
+from tesp_support.api.tso_helpers import load_json_case, make_dictionary
 from tesp_support.api.bench_profile import bench_profile
 
 @bench_profile

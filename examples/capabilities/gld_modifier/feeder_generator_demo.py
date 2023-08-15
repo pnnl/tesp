@@ -28,9 +28,6 @@ from tesp_support.api.data import feeders_path
 # Setting a few environment variables so the imports work smoothly
 #   If you're working in a REAL TESP install you don't have to do this.
 
-
-
-
 # Setting up logging
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
@@ -260,7 +257,7 @@ def _auto_run(args):
 
     # Find first fuse downstream of the feeder head. I'm guessing it is close-by so doing a breadth-first search using
     #   the networkx API and the topology graph of our GridLAB-D model
-    graph = glmMod.model.network
+    graph = glmMod.model.draw_network()
     for edge in nx.bfs_edges(graph, swing_bus):
         edge_data = graph.get_edge_data(edge[0], edge[1])
         if edge_data['eclass'] == 'fuse':
@@ -279,32 +276,32 @@ def _auto_run(args):
     print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]} A')
 
     # Unused code that works but doesn't show off the things I wanted to show off.
-    # for gld_node in gld_node_names:
-    #     neighbors = graph.neighbors(gld_node)
-    #     for neighbor in neighbors:
-    #         print(neighbor)
-    #     print("\n")
+    for gld_node in gld_node_names:
+        neighbors = graph.neighbors(gld_node)
+        for neighbor in neighbors:
+            print(neighbor)
+        print("\n")
     # Look for largest transformer configuration in the model
     # under the assumption that it's for the substation transformer
     # (Turns out, this is a bad assumption.)
-    # max_transformer_power = 0
-    # max_transformer_name = ''
-    # for transformer_config_name in transformer_config_names:
-    #     transformer_power_rating = float(transformer_config_objs.instance[transformer_config_name]['power_rating'])
-    #     if transformer_power_rating > max_transformer_power:
-    #         max_transformer_power = transformer_power_rating
-    #         max_transformer_name = transformer_config_name
-    # dummy = 0
-    # for node, nodedata in graph.nodes.items():
-    #     dummy = 0
-    #     print(node)
-    #     print(pp.pformat(nodedata))
-    #     dummy = 0
+    max_transformer_power = 0
+    max_transformer_name = ''
+    for transformer_config_name in transformer_config_objs.instances:
+        transformer_power_rating = float(transformer_config_objs.instances[transformer_config_name]['power_rating'])
+        if transformer_power_rating > max_transformer_power:
+            max_transformer_power = transformer_power_rating
+            max_transformer_name = transformer_config_name
+    dummy = 0
+    for node, nodedata in graph.nodes.items():
+        dummy = 0
+        print(node)
+        print(pp.pformat(nodedata))
+        dummy = 0
 
     glmMod.write_model(args.output_file)
 
 
-def test():
+def _test():
     # TDH: This slightly complex mess allows lower importance messages
     # to be sent to the log file and ERROR messages to additionally
     # be sent to the console as well. Thus, when bad things happen
@@ -314,15 +311,14 @@ def test():
     fileHandle.setLevel(logging.DEBUG)
     streamHandle = logging.StreamHandler(sys.stdout)
     streamHandle.setLevel(logging.ERROR)
-    logging.basicConfig(level=logging.DEBUG,
-                        handlers=[fileHandle, streamHandle])
+    logging.basicConfig(level=logging.DEBUG, handlers=[fileHandle, streamHandle])
 
     parser = argparse.ArgumentParser(description='GridLAB-D Feeder Generator')
-    script_path = os.path.dirname(os.path.realpath(__file__))
+    # script_path = os.path.dirname(os.path.realpath(__file__))
     parser.add_argument('-p',
                         '--feeder_path',
                         nargs='?',
-                        default='../../..data/feeders')
+                        default='../../../data/feeders')
     parser.add_argument('-n',
                         '--feeder_file',
                         nargs='?',
@@ -336,4 +332,4 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    _test()

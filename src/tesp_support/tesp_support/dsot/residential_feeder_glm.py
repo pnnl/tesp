@@ -2840,8 +2840,11 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
         else:
             replace_commercial_loads(model, h, 'load', 0.001 * avgcommercial)
             identify_xfmr_houses(model, h, 'transformer', seg_loads, 0.001 * avghouse, rgn)
+
             for key in house_nodes:
                 write_houses(key, op, 120.0)
+
+
             for key in small_nodes:
                 write_small_loads(key, op, 120.0)
             for key in comm_loads:

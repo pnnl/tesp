@@ -373,7 +373,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             for w_key, w_val in weather_config.items():
                 outfile.write('set FNCS_CONFIG_FILE=%s.zpl\n' % w_key)
                 outfile.write('cd %s\n' % w_key)
-                outfile.write('start /b cmd /c python -c "import tesp_support.weather.weather_agent as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.weather.weather_agent_f as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" ^> %s\\%s_weather.log 2^>^&1\n'
                               % (outPath, w_key))
                 outfile.write('cd ..\n')
@@ -400,7 +400,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
                 outfile.write('cd ..\n')
             if master_file != '':
                 outfile.write('set FNCS_CONFIG_FILE=tso.yaml\n')
-                outfile.write('start /b cmd /c python -c "import tesp_support.api.tso_psst_f as tesp;'
+                outfile.write('start /b cmd /c python -c "import tesp_support.original.tso_psst_f as tesp;'
                               'tesp.tso_psst_loop_f(\'./%s\')" ^> %s\\tso.log 2^>^&1\n'
                               % (master_file, outPath))
 
@@ -408,7 +408,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
                     player = system_config[players[plyr]]
                     if player[6] or player[7]:
                         outfile.write('set FNCS_CONFIG_FILE=%s_player.yaml\n' % (player[0]))
-                        outfile.write('start /b cmd /c python -c "import tesp_support.api.player_f as tesp;'
+                        outfile.write('start /b cmd /c python -c "import tesp_support.original.player_f as tesp;'
                                       'tesp.load_player_loop_f(\'./%s\', \'%s\')" ^> %s\\%s_player.log 2^>^&1\n'
                                       % (master_file, players[plyr], outPath, player[0]))
 
@@ -460,7 +460,7 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
             for w_key, w_val in weather_config.items():
                 outfile.write('cd %s\n' % w_key)
                 outfile.write('(export FNCS_CONFIG_FILE=%s.zpl && export WEATHER_CONFIG=weather_Config.json '
-                              '&& exec python3 -c "import tesp_support.weather.weather_agent as tesp;'
+                              '&& exec python3 -c "import tesp_support.weather.weather_agent_f as tesp;'
                               'tesp.startWeatherAgent(\'weather.dat\')" &> %s/%s_weather.log &)\n'
                               % (w_key, outPath, w_key))
                 outfile.write('cd ..\n')
@@ -488,14 +488,14 @@ def write_dsot_management_script_f(master_file, case_path, system_config=None, s
 
             if master_file != '':
                 outfile.write('(export FNCS_CONFIG_FILE=tso.yaml '
-                              '&& exec python3 -c "import tesp_support.api.tso_psst_f as tesp;'
+                              '&& exec python3 -c "import tesp_support.original.tso_psst_f as tesp;'
                               'tesp.tso_psst_loop_f(\'./%s\')" &> %s/tso.log &)\n'
                               % (master_file, outPath))
                 for plyr in range(len(players)):
                     player = system_config[players[plyr]]
                     if player[6] or player[7]:
                         outfile.write('(export FNCS_CONFIG_FILE=%s_player.yaml '
-                                      '&& exec python3 -c "import tesp_support.api.player_f as tesp;'
+                                      '&& exec python3 -c "import tesp_support.original.player_f as tesp;'
                                       'tesp.load_player_loop_f(\'./%s\', \'%s\')" &> %s/%s_player.log &)\n'
                                       % (player[0], master_file, players[plyr], outPath, player[0]))
 

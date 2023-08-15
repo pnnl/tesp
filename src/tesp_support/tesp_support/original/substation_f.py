@@ -16,7 +16,7 @@ import json
 from datetime import datetime
 from datetime import timedelta
 
-import tesp_support.api.fncs as fncs
+import tesp_support.original.fncs as fncs
 from tesp_support.api.parse_helpers import parse_magnitude, parse_kw
 from .hvac_agent import hvac
 from .simple_auction import simple_auction

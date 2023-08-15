@@ -76,7 +76,7 @@
       "args": [
         "python3",
         "-c",
-        "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')"
+        "import tesp_support.weather.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')"
       ],
       "env": [
         [
@@ -169,7 +169,7 @@
       "args": [
         "python3",
         "-c",
-        "import tesp_support.substation_f as tesp;tesp.substation_loop_f('TE_Challenge_agent_dict.json','TE_Challenge')"
+        "import tesp_support.original.substation_f as tesp;tesp.substation_loop_f('TE_Challenge_agent_dict.json','TE_Challenge')"
       ],
       "env": [
         [
@@ -191,7 +191,7 @@
       "args": [
         "python3",
         "-c",
-        "import tesp_support.api.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('te30_pp.json','TE_Challenge')"
+        "import tesp_support.original.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('te30_pp.json','TE_Challenge')"
       ],
       "env": [
         [
@@ -213,7 +213,7 @@
       "args": [
         "python3",
         "-c",
-        "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weather.dat')"
+        "import tesp_support.weather.weatherAgent_f as tesp;tesp.startWeatherAgent('weather.dat')"
       ],
       "env": [
         [

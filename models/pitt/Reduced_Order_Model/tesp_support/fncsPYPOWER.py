@@ -9,7 +9,7 @@ import json
 import sys
 
 try:
-  import tesp_support.api.fncs as fncs
+  import tesp_support.original.fncs as fncs
 except:
   pass
 import numpy as np

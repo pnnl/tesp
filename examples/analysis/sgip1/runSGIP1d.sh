@@ -10,5 +10,5 @@ declare -r EPLUS_PATH=$TESPDIR/data/energyplus
 (export FNCS_CONFIG_FILE=eplus_agent.yaml && exec eplus_agent 2d 5m SchoolDualController eplus_SGIP1d_metrics.json &> eplus_agent1d.log &)
 (export FNCS_FATAL=YES && exec gridlabd -D SCHED_PATH=$SCHED_PATH -D USE_FNCS -D METRICS_FILE=SGIP1d_metrics.json SGIP1d.glm &> gridlabd1d.log &)
 (export FNCS_CONFIG_FILE=SGIP1b_substation.yaml && export FNCS_FATAL=YES && exec python3 -c "import tesp_support.original.substation_f as tesp;tesp.substation_loop_f('SGIP1d_agent_dict.json','SGIP1d')" &> substation1d.log &)
-(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.api.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('sgip1_pp.json','SGIP1d')" &> pypower1d.log &)
-(export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && export WEATHER_CONFIG=SGIP1b_weather.json && exec python3 -c "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')" &> weather1d.log &)
+(export FNCS_CONFIG_FILE=pypower.yaml && export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && exec python3 -c "import tesp_support.original.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('sgip1_pp.json','SGIP1d')" &> pypower1d.log &)
+(export FNCS_FATAL=YES && export FNCS_LOG_STDOUT=yes && export WEATHER_CONFIG=SGIP1b_weather.json && exec python3 -c "import tesp_support.weather.weather_agent_f as tesp;tesp.startWeatherAgent('weather.dat')" &> weather1d.log &)

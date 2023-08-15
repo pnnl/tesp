@@ -17,8 +17,8 @@ import helics
 from datetime import datetime
 from datetime import timedelta
 
-from .hvac_agent import hvac
-from .simple_auction import simple_auction
+from tesp_support.original.hvac_agent import hvac
+from tesp_support.original.simple_auction import simple_auction
 from tesp_support.api.bench_profile import bench_profile
 
 @bench_profile
@@ -136,7 +136,7 @@ def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='
             pubMtrPrice[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/price')
             pubMtrMonthly[ctl] = helics.helicsFederateGetPublication(hFed, mtrPubTopic + '/monthly_fee')
 
-    # ==================== Time step looping under FNCS ===========================
+    # ==================== Time step looping under HELICS ===========================
 
     helics.helicsFederateEnterExecutingMode(hFed)
     aucObj.initAuction()

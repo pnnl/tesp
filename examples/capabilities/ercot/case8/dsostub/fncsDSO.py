@@ -5,7 +5,7 @@ import sys
 import numpy as np
 import scipy.interpolate as ip
 
-import tesp_support.api.fncs as fncs
+import tesp_support.original.fncs as fncs
 import tesp_support.api.tso_helpers as tso
 
 # day-ahead market runs at noon every day

@@ -24,7 +24,7 @@ import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import messagebox
 
-import tesp_support.api.fncs as fncs
+import tesp_support.original.fncs as fncs
 from tesp_support.api.parse_helpers import parse_kw
 
 import matplotlib

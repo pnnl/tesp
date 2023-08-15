@@ -3,7 +3,7 @@
 
 import sys
 try:
-  import tesp_support.api.fncs as fncs
+  import tesp_support.original.fncs as fncs
 except:
   pass
 import tesp_support.original.simple_auction as auction
@@ -259,7 +259,7 @@ def inner_substation_loop (configfile, metrics_root, house_num, hour_stop=72, fl
     fncs.finalize()
 
 
-def substation_loop (configfile, metrics_root, house_num, hour_stop=72, flag='WithMarket'):
+def substation_loop(configfile, metrics_root, house_num, hour_stop=72, flag='WithMarket'):
     """ Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed

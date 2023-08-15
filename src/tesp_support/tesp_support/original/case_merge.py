@@ -119,14 +119,19 @@ def merge_gld_msg(target, sources):
 def merge_substation_msg(target, sources):
     print('combining', sources, 'HELICS Substation json files into', target)
     workdir = './' + target + '/'
-    diction = {"name": "gld_1", "period": 1, "subscriptions": [], "publications": []}
+    diction = {}
     subs = []
     pubs = []
     for fdr in sources:
         lp = open(workdir + fdr + '_substation.json').read()
         cfg = json.loads(lp)
-        diction["name"] = cfg["name"]
-        diction["period"] = cfg["period"]
+        for key in cfg:
+            if not key in ["subscriptions", "publications"]:
+                if not key in diction:
+                    diction[key] = cfg[key]
+                else:
+                    if diction[key] != cfg[key]:
+                        print("Miss match ->", diction[key], " != ", cfg[key])
         for pub in cfg["publications"]:
             if not key_present(pub, pubs):
                 pubs.append(pub)
