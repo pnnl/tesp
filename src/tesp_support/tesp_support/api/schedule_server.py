@@ -78,8 +78,7 @@ class DataProxy(object):
             time_stop = time_begin + pd.Timedelta(hours=len_forecast)
             # Now let's check if time_stop has gone to the next year
             if time_stop.year > time_begin.year:  # instead of next year, use the same year values
-                temp = dataframe[time_begin:].append(dataframe[:time_stop.replace(year=dataframe.index[0].year)])[
-                    'data'].values
+                temp = pd.concat([dataframe[time_begin:], dataframe[:time_stop.replace(year=dataframe.index[0].year)]])['data'].values
             elif time_stop.year == time_begin.year:  # if the window lies in the same year
                 temp = dataframe[time_begin:time_stop]['data'].values
             else:
