@@ -17,6 +17,23 @@ import json
 import numpy as np
 from copy import deepcopy
 
+def print_m_case(ppc, ppc_case):
+
+    def printline(name, thing):
+        print("mpc." + name +" = [", file=fp)
+        for i in range(thing.shape[0]):
+            print(thing[1], ";", file=fp)
+        print("];", file=fp)
+
+    fp = open(ppc_case, 'w')
+    print("function mpc = ", ppc.caseName, file=fp)
+    print("mpc.version = ", ppc.version, file=fp)
+    print("mpc.baseMVA = 1", ppc.baseMVA, file=fp)
+    printline("bus", ppc.bus)
+    printline("gen", ppc.gen)
+    printline("branch", ppc.branch)
+    printline("gencost", ppc.gencost)
+    fp.close()
 
 def print_matrix(lbl, A, fmt='{:8.4f}'):
     if A is None:

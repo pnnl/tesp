@@ -14,7 +14,7 @@ from copy import deepcopy
 from datetime import datetime
 
 from tesp_support.api.parse_helpers import parse_mva
-from tesp_support.api.tso_helpers import load_json_case, make_dictionary, dist_slack
+from tesp_support.api.tso_helpers import load_json_case, make_dictionary, dist_slack, print_m_case
 from tesp_support.api.metrics_collector import MetricsStore, MetricsCollector
 from tesp_support.api.bench_profile import bench_profile
 
@@ -1654,6 +1654,9 @@ def tso_psst_loop_f(casename):
             opf = False
 
         rpf = pp.runpf(ppc, ppopt_regular)
+        if not (file_time == ""):
+            print_m_case(ppc, os.path.join(output_Path, file_time + ".mpc"))
+
         # TODO: add a check if does not converge, switch to DC
         if not rpf[0]['success']:
             conv_accum = False
