@@ -276,11 +276,11 @@ def _auto_run(args):
     print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]} A')
 
     # Unused code that works but doesn't show off the things I wanted to show off.
-    for gld_node in gld_node_names:
-        neighbors = graph.neighbors(gld_node)
-        for neighbor in neighbors:
-            print(neighbor)
-        print("\n")
+    # for gld_node in gld_node_names:
+    #     neighbors = graph.neighbors(gld_node)
+    #     for neighbor in neighbors:
+    #         print(neighbor)
+    #     print("\n")
     # Look for largest transformer configuration in the model
     # under the assumption that it's for the substation transformer
     # (Turns out, this is a bad assumption.)
@@ -291,13 +291,15 @@ def _auto_run(args):
         if transformer_power_rating > max_transformer_power:
             max_transformer_power = transformer_power_rating
             max_transformer_name = transformer_config_name
-    dummy = 0
-    for node, nodedata in graph.nodes.items():
-        dummy = 0
-        print(node)
-        print(pp.pformat(nodedata))
-        dummy = 0
 
+    # for node, nodedata in graph.nodes.items():
+    #     dummy = 0
+    #     print(node)
+    #     print(pp.pformat(nodedata))
+    #     dummy = 0
+
+    # Use networkx to plot graph of model for exploration
+    glmMod.model.plot_model()
     glmMod.write_model(args.output_file)
 
 
@@ -332,4 +334,4 @@ def test():
 
 
 if __name__ == '__main__':
-    _test()
+    test()

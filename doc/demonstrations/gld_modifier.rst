@@ -111,11 +111,27 @@ After that, you can use networks APIs to explore the model. For example, startin
 	
 For each edge you, the modeler, can look at the properties of each edge (GridLAB-D link objects) to see if it is of particular interest and modify it in a specific way.
 
+
+Plotting Model
+--------------
+GLMModifier includes the capability of creating a visual representation of the network for manual inspection. This allows the user to evaluate the model and make sure the changes made are as expected and has the topology expected. To create the plot of the graph of the model a simple API is used::
+
+	glmMod.model.plot_model()
+	
+Under the hood, this API makes an update to the networkx graph and then automatically lays it out and plots it on screen, as shown below.
+
+.. figure:: ../media/glmmodGraphPlot.png
+	:name: glmmodGraphPlot
+	
+
+Mousing over the nodes of the system shows some of the metadata associated with them; in the example image shown above one of the houses is selected. As of this writing, this metadata is not available for the links/edges in the graph but we're anticipating adding that data soon. The layout chosen is algorithmic and does not respect coordinates that may be present in the imported .glm. For larger networks, it can take tens (or many tens) of seconds for the layout to complete; creating the graph is a blocking call in the script and the rest of the script will not run until the plotting window is closed.
+
+
 Writing Out Final Model
 -----------------------
 Once all the edits to the model have been made, the model can be written out to file as a .glm and run in GridLAB-D.::
 
-	glmMod.write_model("output file path including file name")
+	glmMod.write_model("output file path including file name.glm")
 
 
 GLMModifier House Object Population
