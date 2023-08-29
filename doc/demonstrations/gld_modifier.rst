@@ -99,9 +99,10 @@ networkx APIs
 -------------
 `networkx library <https://networkx.org/>`_ is a general graph Python library and it utilized by TESP to store the topology of the electrical network in GridLAB-D. The core GLMModifier APIs are oriented around the GridLAB-D classes and their objects in the model and from these the topology of the electrical circuit can be derived but not easily or quickly. To make topology-based modifications easier, we've done the hard work of parsing the model and building the networkx graph. With this graph, modelers can more easily and comprehensively explore and edit the model. 
 
-First to get the networkx graph object::
+First, if any edits have been made to the GridLAB-D model since importing it, the networkx object needs to be updated prior to include those changes. Conveniently, this also returns the networkx graph object::
+
+	graph = glmMod.model.draw_network()
 	
-	graph = glmMod.model.network
 	
 As you can see, the networkx graph is a property of the GLMModifer.model object and the above line of code simply makes a more succinct reference to it.
 
@@ -125,6 +126,7 @@ Under the hood, this API makes an update to the networkx graph and then automati
 	
 
 Mousing over the nodes of the system shows some of the metadata associated with them; in the example image shown above one of the houses is selected. As of this writing, this metadata is not available for the links/edges in the graph but we're anticipating adding that data soon. The layout chosen is algorithmic and does not respect coordinates that may be present in the imported .glm. For larger networks, it can take tens (or many tens) of seconds for the layout to complete; creating the graph is a blocking call in the script and the rest of the script will not run until the plotting window is closed.
+
 
 
 Writing Out Final Model
