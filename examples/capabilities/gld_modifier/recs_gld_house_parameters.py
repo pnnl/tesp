@@ -8,9 +8,7 @@ def get_residential_metadata(recs_data_file,dsot_metadata_file,output_file,sampl
     # Read RECS data file
     recs = pd.read_csv(recs_data_file)
     # Make sure income level is in the right order
-    print(sample['income_level'])
     sample['income_level'].sort()
-    print(sample['income_level'])
     # Read DSOT_residential_parameters_metadata.json
     with open(dsot_metadata_file) as json_file:
         dsot_metadata = json.load(json_file)
