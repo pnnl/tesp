@@ -1,11 +1,16 @@
 import json
 import pandas as pd
 import numpy as np
+import warnings
 import os
 
-def get_residential_metadata(recs_data_file,dsot_metadata_file,output_file,sample={'state':[],'housing_density':[],'income_level':[]}):
+def get_residential_metadata(recs_data_file,dsot_metadata_file,output_file,sample={'state':[],'housing_density':[],'income_level':[]},bin_size_thres=100,climate_zone=''):
     # Read RECS data file
     recs = pd.read_csv(recs_data_file)
+    # Make sure income level is in the right order
+    print(sample['income_level'])
+    sample['income_level'].sort()
+    print(sample['income_level'])
     # Read DSOT_residential_parameters_metadata.json
     with open(dsot_metadata_file) as json_file:
         dsot_metadata = json.load(json_file)
@@ -78,15 +83,91 @@ def get_residential_metadata(recs_data_file,dsot_metadata_file,output_file,sampl
             ].sum()
             for il in sample['income_level']:
                 for key in metadata: metadata[key][st][hd_str].update({il:{}})
+                # Get sample dataframe for triple
                 sample_df = recs.loc[
                     ((recs['state_postal']==st) & 
                      (recs['UATYP10']==hd) & 
                      (recs['Income_cat']==il))
                 ]
-                print(len(sample_df))
+                total_triple = sample_df['NWEIGHT'].sum() # Get total population for triple
+                metadata['income_level'][st][hd_str][il] = round(total_triple/total_st_hd,4)
+                og_bin_size = len(sample_df)
+                # Check if bin size is less than threshold.
+                # If it is, use census region, then climate zone, and then finally widen income level input if needed.
+                if og_bin_size<bin_size_thres:
+                    print(st, hd, il)
+                    rgn = [key for key, value in census_rgn.items() if st in value][0]
+                    rgn_bin_size = len(recs.loc[
+                        ((recs['DIVISION']==rgn) & 
+                        (recs['UATYP10']==hd) & 
+                        (recs['Income_cat']==il))
+                    ])
+                    cz_bin_size = len(recs.loc[
+                        ((recs['IECC_climate_code']==climate_zone) & 
+                        (recs['UATYP10']==hd) & 
+                        (recs['Income_cat']==il))
+                    ])
+                    if il=='Low':
+                        il_bin_size = len(recs.loc[
+                            ((recs['state_postal']==st) & 
+                            (recs['UATYP10']==hd) & 
+                            (recs['Income_cat'].isin(['Low','Middle'])))
+                        ])
+                    elif il=='Middle':
+                        il_bin_size = len(recs.loc[
+                            ((recs['state_postal']==st) & 
+                            (recs['UATYP10']==hd) & 
+                            (recs['Income_cat'].isin(['Low','Middle','Upper'])))
+                        ])
+                    elif il=='Upper':
+                        il_bin_size = len(recs.loc[
+                            ((recs['state_postal']==st) & 
+                            (recs['UATYP10']==hd) & 
+                            (recs['Income_cat'].isin(['Middle','Upper'])))
+                        ])
+                    max_bin = max(rgn_bin_size,cz_bin_size,il_bin_size)
+                    # if cz_bin_size<rgn_bin_size: use_cz=False
+                    if rgn_bin_size>bin_size_thres or rgn_bin_size==max_bin:
+                        sample_df = recs.loc[
+                            ((recs['DIVISION']==rgn) & 
+                            (recs['UATYP10']==hd) & 
+                            (recs['Income_cat']==il))
+                        ]
+                        warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {bin_size_thres}. Using census region to generate distributions with bin size {rgn_bin_size}.',UserWarning)
+                        # print(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {bin_size_thres}. Using census region to generate distributions with bin size {rgn_bin_size}.')
+                    elif cz_bin_size>bin_size_thres or cz_bin_size==max_bin:
+                        sample_df = recs.loc[
+                            ((recs['IECC_climate_code']==climate_zone) & 
+                            (recs['UATYP10']==hd) & 
+                            (recs['Income_cat']==il))
+                        ]
+                        warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {bin_size_thres}. Using climate zone to generate distributions with bin size {cz_bin_size}.')
+                    elif il_bin_size==max_bin:
+                        if il=='Low':
+                            sample_df = recs.loc[
+                                ((recs['state_postal']==st) & 
+                                (recs['UATYP10']==hd) & 
+                                (recs['Income_cat'].isin(['Low','Middle'])))
+                            ]
+                            warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {bin_size_thres}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
+                        elif il=='Middle':
+                            sample_df = recs.loc[
+                                ((recs['state_postal']==st) & 
+                                (recs['UATYP10']==hd) & 
+                                (recs['Income_cat'].isin(['Low','Middle','Upper'])))
+                            ]
+                            warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {bin_size_thres}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
+                        elif il=='Upper':
+                            sample_df = recs.loc[
+                                ((recs['state_postal']==st) & 
+                                (recs['UATYP10']==hd) & 
+                                (recs['Income_cat'].isin(['Middle','Upper'])))
+                            ]
+                            warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {bin_size_thres}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
+                if len(sample_df)<bin_size_thres:
+                    print(f'WARNING: Bin size={len(sample_df)}. Bin size less than bin size threshold of {bin_size_thres}. No expansion methods meet bin size threshold.')
+                total = sample_df['NWEIGHT'].sum() # Get total population for final sample after bin size check/adjustments
 
-                total = sample_df['NWEIGHT'].sum() # Get total population for triple
-                metadata['income_level'][st][hd_str][il] = round(total/total_st_hd,4)
 
                 # Define probability distribution for housing_type
                 total_dict = {}
@@ -103,7 +184,6 @@ def get_residential_metadata(recs_data_file,dsot_metadata_file,output_file,sampl
                         if total_dict[h][y]==0:
                             total_dict[h][y]=1
                         metadata['housing_vintage'][st][hd_str][il][h][y]=round(total_dict[h][y]/total,4)
-                # print(metadata['housing_vintage'])
 
                 # Get number of stories by house type and vintage
                 for k, h in housing_type_dict.items():
@@ -184,7 +264,5 @@ def get_residential_metadata(recs_data_file,dsot_metadata_file,output_file,sampl
     with open(output_file,'w') as outfile:
         json.dump(metadata,outfile,indent=4)
 
-
-# os.chdir(r'C:\Users\good729\tesp\examples\capabilities\gld_modifier')
-# print(os.getcwd())
-get_residential_metadata('RECSwIncomeLvl.csv','DSOT_residential_metadata.json','residential_metadata.json',{'state':['WA'],'housing_density':['C'],'income_level':['Low','Middle','Upper']})
+if __name__ == "__main__":
+    get_residential_metadata('RECSwIncomeLvl.csv','DSOT_residential_metadata.json','residential_metadata.json',{'state':['WA'],'housing_density':['R','U'],'income_level':['Middle','Upper','Low']},bin_size_thres=100,climate_zone='4C')
