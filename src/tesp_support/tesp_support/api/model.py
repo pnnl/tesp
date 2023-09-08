@@ -18,22 +18,6 @@ from .entity import Entity
 
 class GLModel:
     # it seems to public for all GLMODEL class
-    in_file = ""
-    out_file = ""
-    model = {}
-    conn = None
-    modules = None
-    objects = None
-    module_types = []
-    class_types = []
-    module_entities = {}
-    object_entities = {}
-    set_lines = []
-    define_lines = []
-    include_lines = []
-    inside_comments = dict()
-    outside_comments = dict()
-    inline_comments = dict()
 
     edge_classes = {'switch': 'red',
                     'fuse': 'blue',
@@ -101,7 +85,22 @@ class GLModel:
         #     self.objects = json.load(json_file)
         #     for name in self.objects:
         #         self.object_entities[name] = Entity(name, self.objects[name])
-
+        self.in_file = ""
+        self.out_file = ""
+        self.model = {}
+        self.conn = None
+        self.modules = None
+        self.objects = None
+        self.module_types = []
+        self.class_types = []
+        self.module_entities = {}
+        self.object_entities = {}
+        self.set_lines = []
+        self.define_lines = []
+        self.include_lines = []
+        self.inside_comments = dict()
+        self.outside_comments = dict()
+        self.inline_comments = dict()
         with open(os.path.join(entities_path, 'glm_classes.json'), 'r', encoding='utf-8') as json_file:
             self.classes = json.load(json_file)
             entity = Entity("clock", None)
