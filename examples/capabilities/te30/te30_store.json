@@ -1,0 +1,857 @@
+{
+  "store": [
+    {
+      "path": "../te30",
+      "name": "te30",
+      "filetype": "dir",
+      "description": "TE30 Directory",
+      "directory": [
+        {
+          "name": ".",
+          "recurse": false,
+          "include": [
+            "billing_meter_TE_ChallengeH_metrics.h5",
+            "billing_meter_TE_ChallengeH0_metrics.h5",
+            "capacitor_TE_ChallengeH_metrics.h5",
+            "capacitor_TE_ChallengeH0_metrics.h5",
+            "evchargerdet_TE_ChallengeH_metrics.h5",
+            "evchargerdet_TE_ChallengeH0_metrics.h5",
+            "house_TE_ChallengeH_metrics.h5",
+            "house_TE_ChallengeH0_metrics.h5",
+            "inverter_TE_ChallengeH_metrics.h5",
+            "inverter_TE_ChallengeH0_metrics.h5",
+            "line_TE_ChallengeH_metrics.h5",
+            "line_TE_ChallengeH0_metrics.h5",
+            "substation_TE_ChallengeH_metrics.h5",
+            "substation_TE_ChallengeH0_metrics.h5",
+            "transformer_TE_ChallengeH_metrics.h5",
+            "transformer_TE_ChallengeH0_metrics.h5",
+            "TE_ChallengeH.csv",
+            "TE_ChallengeH0.csv",
+            "eplus_load.csv",
+            "weather.csv",
+            "auction_TE_ChallengeH_metrics.json",
+            "auction_TE_ChallengeH0_metrics.json",
+            "controller_TE_ChallengeH_metrics.json",
+            "controller_TE_ChallengeH0_metrics.json",
+            "eplus_TE_ChallengeH_metrics.json",
+            "eplus_TE_ChallengeH0_metrics.json",
+            "bus_TE_ChallengeH_metrics.json",
+            "bus_TE_ChallengeH0_metrics.json",
+            "gen_TE_ChallengeH_metrics.json",
+            "gen_TE_ChallengeH0_metrics.json",
+            "sys_TE_ChallengeH_metrics.json",
+            "sys_TE_ChallengeH0_metrics.json",
+            "TE_ChallengeHagent_dict.json",
+            "TE_ChallengeH_glm_dict.json",
+            "TE_ChallengeHmodel_dict.json"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "billing_meter_TE_ChallengeH_metrics.h5",
+      "name": "billing_meter_TE_ChallengeH_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index1",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg",
+            "real_energy",
+            "reactive_energy",
+            "bill",
+            "voltage12_min",
+            "voltage12_max",
+            "voltage12_avg",
+            "above_RangeA_Duration",
+            "below_RangeA_Duration",
+            "above_RangeB_Duration",
+            "below_RangeB_Duration",
+            "voltage_min",
+            "voltage_max",
+            "voltage_avg",
+            "voltage_unbalance_min",
+            "voltage_unbalance_max",
+            "voltage_unbalance_avg",
+            "above_RangeA_Count",
+            "below_RangeA_Count",
+            "above_RangeB_Count",
+            "below_RangeB_Count",
+            "below_10_percent_NormVol_Duration",
+            "below_10_percent_NormVol_Count"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index2",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg",
+            "real_energy",
+            "reactive_energy",
+            "bill",
+            "voltage12_min",
+            "voltage12_max",
+            "voltage12_avg",
+            "above_RangeA_Duration",
+            "below_RangeA_Duration",
+            "above_RangeB_Duration",
+            "below_RangeB_Duration",
+            "voltage_min",
+            "voltage_max",
+            "voltage_avg",
+            "voltage_unbalance_min",
+            "voltage_unbalance_max",
+            "voltage_unbalance_avg",
+            "above_RangeA_Count",
+            "below_RangeA_Count",
+            "above_RangeB_Count",
+            "below_RangeB_Count",
+            "below_10_percent_NormVol_Duration",
+            "below_10_percent_NormVol_Count"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "billing_meter_TE_ChallengeH0_metrics.h5",
+      "name": "billing_meter_TE_ChallengeH0_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index1",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg",
+            "real_energy",
+            "reactive_energy",
+            "bill",
+            "voltage12_min",
+            "voltage12_max",
+            "voltage12_avg",
+            "above_RangeA_Duration",
+            "below_RangeA_Duration",
+            "above_RangeB_Duration",
+            "below_RangeB_Duration",
+            "voltage_min",
+            "voltage_max",
+            "voltage_avg",
+            "voltage_unbalance_min",
+            "voltage_unbalance_max",
+            "voltage_unbalance_avg",
+            "above_RangeA_Count",
+            "below_RangeA_Count",
+            "above_RangeB_Count",
+            "below_RangeB_Count",
+            "below_10_percent_NormVol_Duration",
+            "below_10_percent_NormVol_Count"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index2",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg",
+            "real_energy",
+            "reactive_energy",
+            "bill",
+            "voltage12_min",
+            "voltage12_max",
+            "voltage12_avg",
+            "above_RangeA_Duration",
+            "below_RangeA_Duration",
+            "above_RangeB_Duration",
+            "below_RangeB_Duration",
+            "voltage_min",
+            "voltage_max",
+            "voltage_avg",
+            "voltage_unbalance_min",
+            "voltage_unbalance_max",
+            "voltage_unbalance_avg",
+            "above_RangeA_Count",
+            "below_RangeA_Count",
+            "above_RangeB_Count",
+            "below_RangeB_Count",
+            "below_10_percent_NormVol_Duration",
+            "below_10_percent_NormVol_Count"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "capacitor_TE_ChallengeH_metrics.h5",
+      "name": "capacitor_TE_ChallengeH_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "capacitor_TE_ChallengeH0_metrics.h5",
+      "name": "capacitor_TE_ChallengeH0_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "evchargerdet_TE_ChallengeH_metrics.h5",
+      "name": "evchargerdet_TE_ChallengeH_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "evchargerdet_TE_ChallengeH0_metrics.h5",
+      "name": "evchargerdet_TE_ChallengeH0_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "house_TE_ChallengeH_metrics.h5",
+      "name": "house_TE_ChallengeH_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index1",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "total_load_min",
+            "total_load_max",
+            "total_load_avg",
+            "hvac_load_min",
+            "hvac_load_max",
+            "hvac_load_avg",
+            "air_temperature_min",
+            "air_temperature_max",
+            "air_temperature_avg",
+            "air_temperature_setpoint_cooling",
+            "air_temperature_setpoint_heating",
+            "system_mode",
+            "waterheater_load_min",
+            "waterheater_load_max",
+            "waterheater_load_avg",
+            "waterheater_setpoint_min",
+            "waterheater_setpoint_max",
+            "waterheater_setpoint_avg",
+            "waterheater_demand_min",
+            "waterheater_demand_max",
+            "waterheater_demand_avg",
+            "waterheater_temp_min",
+            "waterheater_temp_max",
+            "waterheater_temp_avg"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index2",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "total_load_min",
+            "total_load_max",
+            "total_load_avg",
+            "hvac_load_min",
+            "hvac_load_max",
+            "hvac_load_avg",
+            "air_temperature_min",
+            "air_temperature_max",
+            "air_temperature_avg",
+            "air_temperature_setpoint_cooling",
+            "air_temperature_setpoint_heating",
+            "system_mode",
+            "waterheater_load_min",
+            "waterheater_load_max",
+            "waterheater_load_avg",
+            "waterheater_setpoint_min",
+            "waterheater_setpoint_max",
+            "waterheater_setpoint_avg",
+            "waterheater_demand_min",
+            "waterheater_demand_max",
+            "waterheater_demand_avg",
+            "waterheater_temp_min",
+            "waterheater_temp_max",
+            "waterheater_temp_avg"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "house_TE_ChallengeH0_metrics.h5",
+      "name": "house_TE_ChallengeH0_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index1",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "total_load_min",
+            "total_load_max",
+            "total_load_avg",
+            "hvac_load_min",
+            "hvac_load_max",
+            "hvac_load_avg",
+            "air_temperature_min",
+            "air_temperature_max",
+            "air_temperature_avg",
+            "air_temperature_setpoint_cooling",
+            "air_temperature_setpoint_heating",
+            "system_mode",
+            "waterheater_load_min",
+            "waterheater_load_max",
+            "waterheater_load_avg",
+            "waterheater_setpoint_min",
+            "waterheater_setpoint_max",
+            "waterheater_setpoint_avg",
+            "waterheater_demand_min",
+            "waterheater_demand_max",
+            "waterheater_demand_avg",
+            "waterheater_temp_min",
+            "waterheater_temp_max",
+            "waterheater_temp_avg"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index2",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "total_load_min",
+            "total_load_max",
+            "total_load_avg",
+            "hvac_load_min",
+            "hvac_load_max",
+            "hvac_load_avg",
+            "air_temperature_min",
+            "air_temperature_max",
+            "air_temperature_avg",
+            "air_temperature_setpoint_cooling",
+            "air_temperature_setpoint_heating",
+            "system_mode",
+            "waterheater_load_min",
+            "waterheater_load_max",
+            "waterheater_load_avg",
+            "waterheater_setpoint_min",
+            "waterheater_setpoint_max",
+            "waterheater_setpoint_avg",
+            "waterheater_demand_min",
+            "waterheater_demand_max",
+            "waterheater_demand_avg",
+            "waterheater_temp_min",
+            "waterheater_temp_max",
+            "waterheater_temp_avg"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "inverter_TE_ChallengeH_metrics.h5",
+      "name": "inverter_TE_ChallengeH_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index1",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index2",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "inverter_TE_ChallengeH0_metrics.h5",
+      "name": "inverter_TE_ChallengeH0_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index1",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index2",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "line_TE_ChallengeH_metrics.h5",
+      "name": "line_TE_ChallengeH_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "line_TE_ChallengeH0_metrics.h5",
+      "name": "line_TE_ChallengeH0_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "substation_TE_ChallengeH_metrics.h5",
+      "name": "substation_TE_ChallengeH_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index1",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "real_power_median",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg",
+            "reactive_power_median",
+            "real_energy",
+            "reactive_energy",
+            "real_power_losses_min",
+            "real_power_losses_max",
+            "real_power_losses_avg",
+            "real_power_losses_median",
+            "reactive_power_losses_min",
+            "reactive_power_losses_max",
+            "reactive_power_losses_avg",
+            "reactive_power_losses_median"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index2",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "real_power_median",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg",
+            "reactive_power_median",
+            "real_energy",
+            "reactive_energy",
+            "real_power_losses_min",
+            "real_power_losses_max",
+            "real_power_losses_avg",
+            "real_power_losses_median",
+            "reactive_power_losses_min",
+            "reactive_power_losses_max",
+            "reactive_power_losses_avg",
+            "reactive_power_losses_median"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "substation_TE_ChallengeH0_metrics.h5",
+      "name": "substation_TE_ChallengeH0_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index1",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "real_power_median",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg",
+            "reactive_power_median",
+            "real_energy",
+            "reactive_energy",
+            "real_power_losses_min",
+            "real_power_losses_max",
+            "real_power_losses_avg",
+            "real_power_losses_median",
+            "reactive_power_losses_min",
+            "reactive_power_losses_max",
+            "reactive_power_losses_avg",
+            "reactive_power_losses_median"
+          ],
+          "date": ""
+        },
+        {
+          "name": "index2",
+          "columns": [
+            "time",
+            "date",
+            "name",
+            "real_power_min",
+            "real_power_max",
+            "real_power_avg",
+            "real_power_median",
+            "reactive_power_min",
+            "reactive_power_max",
+            "reactive_power_avg",
+            "reactive_power_median",
+            "real_energy",
+            "reactive_energy",
+            "real_power_losses_min",
+            "real_power_losses_max",
+            "real_power_losses_avg",
+            "real_power_losses_median",
+            "reactive_power_losses_min",
+            "reactive_power_losses_max",
+            "reactive_power_losses_avg",
+            "reactive_power_losses_median"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "transformer_TE_ChallengeH_metrics.h5",
+      "name": "transformer_TE_ChallengeH_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "transformer_TE_ChallengeH0_metrics.h5",
+      "name": "transformer_TE_ChallengeH0_metrics",
+      "filetype": ".h5",
+      "description": "",
+      "schema": [
+        {
+          "name": "Metadata",
+          "columns": [
+            "name",
+            "value"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "TE_ChallengeH.csv",
+      "name": "TE_ChallengeH",
+      "filetype": ".csv",
+      "description": "",
+      "schema": [
+        {
+          "name": "TE_ChallengeH",
+          "columns": [
+            "t[s]",
+            "Converged",
+            "Pload",
+            "P7 (csv)",
+            "Unresp (opf)",
+            "P7 (rpf)",
+            "Resp (opf)",
+            "GLD Pub",
+            "BID?",
+            "P7 Min",
+            "V7",
+            "LMP_P7",
+            "LMP_Q7",
+            "Pgen1",
+            "Pgen2",
+            "Pgen3",
+            "Pgen4",
+            "Pdisp",
+            "Deg",
+            "c2",
+            "c1"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "TE_ChallengeH0.csv",
+      "name": "TE_ChallengeH0",
+      "filetype": ".csv",
+      "description": "",
+      "schema": [
+        {
+          "name": "TE_ChallengeH0",
+          "columns": [
+            "t[s]",
+            "Converged",
+            "Pload",
+            "P7 (csv)",
+            "Unresp (opf)",
+            "P7 (rpf)",
+            "Resp (opf)",
+            "GLD Pub",
+            "BID?",
+            "P7 Min",
+            "V7",
+            "LMP_P7",
+            "LMP_Q7",
+            "Pgen1",
+            "Pgen2",
+            "Pgen3",
+            "Pgen4",
+            "Pdisp",
+            "Deg",
+            "c2",
+            "c1"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "eplus_load.csv",
+      "name": "eplus_load",
+      "filetype": ".csv",
+      "description": "",
+      "schema": [
+        {
+          "name": "eplus_load",
+          "columns": [
+            "# file...... eplus_load.csv"
+          ],
+          "date": ""
+        }
+      ]
+    },
+    {
+      "path": "weather.csv",
+      "name": "weather",
+      "filetype": ".csv",
+      "description": "",
+      "schema": [
+        {
+          "name": "weather",
+          "columns": [
+            "# file...... weather.csv"
+          ],
+          "date": ""
+        }
+      ]
+    }
+  ]
+}
