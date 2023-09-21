@@ -29,7 +29,7 @@ index f5374bee5..819893807 100644
  )
  message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
 diff --git a/src/EnergyPlus/ExternalInterface.cc b/src/EnergyPlus/ExternalInterface.cc
-index 667e11bff..ae737a1f9 100644
+index 667e11bff..8057eca58 100644
 --- a/src/EnergyPlus/ExternalInterface.cc
 +++ b/src/EnergyPlus/ExternalInterface.cc
 @@ -1298,8 +1298,8 @@ namespace EnergyPlus {
@@ -63,15 +63,6 @@ index 667e11bff..ae737a1f9 100644
                          //std::cout << " pub " << i << ":" << thispub.getInfo() << ":" << pubkey << ":" << thispub.getType() << ":" << thispub.getUnits() << std::endl;
                          vpubs.push_back(thispub);
                          pubs(i+1)=thispub;
-@@ -1329,7 +1329,7 @@ namespace EnergyPlus {
-                       }
-                     }
-                     for (int i = 0; i < sub_count; i++) {
--                      helicscpp::Input thissub = pHelicsFederate->getSubscription(i);
-+                      helicscpp::Input thissub = pHelicsFederate->getInput(i);
-                       if (thissub.isValid() ) {
-                     	std::string thisKey = std::string(thissub.getTarget());
-                         //char const* temp = thissub.getKey();
 @@ -1402,7 +1402,7 @@ namespace EnergyPlus {
  //                  pHelicsFederate->enterExecutingMode();
                  }
@@ -117,111 +108,3 @@ index 667e11bff..ae737a1f9 100644
  //            std::cout << "requested time: " << preSimTim << ", returned time: " << time_returned << std::endl;
  //            if (preSimTim != time_returned) {
  //                ShowFatalError("helics::requestTime() was interrupted with earlier time");
-diff --git a/third_party/BCVTB/utilXml.c b/third_party/BCVTB/utilXml.c
-index 5ae4be2e7..b61589671 100644
---- a/third_party/BCVTB/utilXml.c
-+++ b/third_party/BCVTB/utilXml.c
-@@ -103,6 +103,30 @@ derivative works thereof, in binary and source code form.
- 
- #include "utilXml.h"
- 
-+char Buff[BUFFSIZE]; ///< Local buffer for reading in the xml file
-+
-+Stack2 expStk; ///< Variables for getxmlvalue function
-+
-+char * att; ///< Local global variable for function \c getxmlvalue
-+char * vals;  ///< Local global variable for function \c getxmlvalue
-+int * numVals; ///< Local global variable for function \c getxmlvalue
-+int PARSEVALUE; ///< flag for parsing xml values 1 if parse, 0 if not parse
-+int ERROR_STATUS; ///< flag for xml element handler error status settings
-+
-+////////////////////////////////////////////////////////////////
-+/// local global variables for function \c getepvariables
-+////////////////////////////////////////////////////////////////
-+char *  outputVarsName; ///< the string pointer to the parsed output variable names
-+char *  outputVarsType; ///< the string pointer to the parsed output variable types
-+int *   numOutputVars;  ///< the integer pointer to the number of output variables
-+char *  inputVars;      ///< the string pointer to the input variables
-+int *   numInputVars;   ///< the integer pointer to the number of input variables
-+int *   inputVarsType;  ///< the integer array to store the types of each input variables
-+char ** inputKeys;      ///< the string array to store the types of input variable types
-+int     numInputKeys;   ///< the number of input variable types
-+int     source;         ///< flag for function /c getepvariables 0=EnergyPlus, 1=Ptolemy
-+int const * strLen;     ///< the length of string parsed to this function
-+
- ////////////////////////////////////////////////////////////////
- /// Call back functions that will be used by the expat xml parser.
- ///
-diff --git a/third_party/BCVTB/utilXml.h b/third_party/BCVTB/utilXml.h
-index 6879dcd77..5fef9f470 100644
---- a/third_party/BCVTB/utilXml.h
-+++ b/third_party/BCVTB/utilXml.h
-@@ -100,7 +100,8 @@ derivative works thereof, in binary and source code form.
- /// \sa getepvariables()
- ///
- //////////////////////////////////////////////////////////
--
-+#ifndef _UTILXML_H_
-+#define _UTILXML_H_
- #include <stdio.h>
- //#include <stdlib.h>
- #include <string.h>
-@@ -124,7 +125,7 @@ derivative works thereof, in binary and source code form.
- 
- #define BUFFSIZE        8192
- 
--char Buff[BUFFSIZE]; ///< Local buffer for reading in the xml file
-+extern char Buff[BUFFSIZE]; ///< Local buffer for reading in the xml file
- 
- ////////////////////////////////////////////////////////////////
- ///\struct A simple stack structure to keep track of the parent elements
-@@ -136,27 +137,27 @@ typedef struct Stack2 {
- } Stack2;
- 
- 
--Stack2 expStk; ///< Variables for getxmlvalue function
-+extern Stack2 expStk; ///< Variables for getxmlvalue function
- 
--char * att; ///< Local global variable for function \c getxmlvalue
--char * vals;  ///< Local global variable for function \c getxmlvalue
--int * numVals; ///< Local global variable for function \c getxmlvalue
--int PARSEVALUE; ///< flag for parsing xml values 1 if parse, 0 if not parse
--int ERROR_STATUS; ///< flag for xml element handler error status settings
-+extern char * att; ///< Local global variable for function \c getxmlvalue
-+extern char * vals;  ///< Local global variable for function \c getxmlvalue
-+extern int * numVals; ///< Local global variable for function \c getxmlvalue
-+extern int PARSEVALUE; ///< flag for parsing xml values 1 if parse, 0 if not parse
-+extern int ERROR_STATUS; ///< flag for xml element handler error status settings
- 
- ////////////////////////////////////////////////////////////////
- /// local global variables for function \c getepvariables
- ////////////////////////////////////////////////////////////////
--char *  outputVarsName; ///< the string pointer to the parsed output variable names  
--char *  outputVarsType; ///< the string pointer to the parsed output variable types
--int *   numOutputVars;  ///< the integer pointer to the number of output variables
--char *  inputVars;      ///< the string pointer to the input variables
--int *   numInputVars;   ///< the integer pointer to the number of input variables
--int *   inputVarsType;  ///< the integer array to store the types of each input variables
--char ** inputKeys;      ///< the string array to store the types of input variable types
--int     numInputKeys;   ///< the number of input variable types
--int     source;         ///< flag for function /c getepvariables 0=EnergyPlus, 1=Ptolemy
--int const * strLen;     ///< the length of string parsed to this function
-+extern char *  outputVarsName; ///< the string pointer to the parsed output variable names
-+extern char *  outputVarsType; ///< the string pointer to the parsed output variable types
-+extern int *   numOutputVars;  ///< the integer pointer to the number of output variables
-+extern char *  inputVars;      ///< the string pointer to the input variables
-+extern int *   numInputVars;   ///< the integer pointer to the number of input variables
-+extern int *   inputVarsType;  ///< the integer array to store the types of each input variables
-+extern char ** inputKeys;      ///< the string array to store the types of input variable types
-+extern int     numInputKeys;   ///< the number of input variable types
-+extern int     source;         ///< flag for function /c getepvariables 0=EnergyPlus, 1=Ptolemy
-+extern int const * strLen;     ///< the length of string parsed to this function
- 
- 
- ////////////////////////////////////////////////////////////////
-@@ -369,3 +370,5 @@ getxmlvalue(
- ////////////////////////////////////////////////////////////////
- int
- check_variable_cfg_Validate(char const * const fileName);
-+
-+#endif /* _UTILXML_H_ */

@@ -48,3 +48,11 @@ tesp\_support.weather.weather\_agent module
    :members:
    :undoc-members:
    :show-inheritance:
+
+tesp\_support.weather.weather\_agent\_f module
+----------------------------------------------
+
+.. automodule:: tesp_support.weather.weather_agent_f
+   :members:
+   :undoc-members:
+   :show-inheritance:

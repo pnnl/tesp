@@ -1,9 +1,7 @@
 # Copyright (C) 2019-2022 Battelle Memorial Institute
 # file: glm_modifier.py
 
-import os
-
-from .data import entities_path
+from .data import feeder_entities_path
 from .entity import assign_defaults
 from .model import GLModel
 
@@ -12,7 +10,7 @@ class GLMModifier:
 
     def __init__(self):
         self.model = GLModel()
-        assign_defaults(self, os.path.join(entities_path, 'feeder_defaults.json'))
+        assign_defaults(self, feeder_entities_path)
         return
 
     # get/add/del module calls to modify GridLabD module entities

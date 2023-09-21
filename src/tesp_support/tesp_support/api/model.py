@@ -13,7 +13,8 @@ from matplotlib.lines import Line2D
 import networkx as nx
 
 from .data import feeders_path
-from .data import entities_path
+# from .data import entities_path
+from .data import glm_entities_path
 from .entity import Entity
 
 class GLModel:
@@ -101,7 +102,7 @@ class GLModel:
         self.inside_comments = dict()
         self.outside_comments = dict()
         self.inline_comments = dict()
-        with open(os.path.join(entities_path, 'glm_classes.json'), 'r', encoding='utf-8') as json_file:
+        with open(glm_entities_path, 'r', encoding='utf-8') as json_file:
             self.classes = json.load(json_file)
             entity = Entity("clock", None)
             entity.add_attr("TEXT", "Time zone", "", "timezone", value=None)

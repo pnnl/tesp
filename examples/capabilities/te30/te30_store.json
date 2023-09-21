@@ -12,20 +12,10 @@
           "include": [
             "billing_meter_TE_ChallengeH_metrics.h5",
             "billing_meter_TE_ChallengeH0_metrics.h5",
-            "capacitor_TE_ChallengeH_metrics.h5",
-            "capacitor_TE_ChallengeH0_metrics.h5",
-            "evchargerdet_TE_ChallengeH_metrics.h5",
-            "evchargerdet_TE_ChallengeH0_metrics.h5",
             "house_TE_ChallengeH_metrics.h5",
             "house_TE_ChallengeH0_metrics.h5",
             "inverter_TE_ChallengeH_metrics.h5",
             "inverter_TE_ChallengeH0_metrics.h5",
-            "line_TE_ChallengeH_metrics.h5",
-            "line_TE_ChallengeH0_metrics.h5",
-            "substation_TE_ChallengeH_metrics.h5",
-            "substation_TE_ChallengeH0_metrics.h5",
-            "transformer_TE_ChallengeH_metrics.h5",
-            "transformer_TE_ChallengeH0_metrics.h5",
             "TE_ChallengeH.csv",
             "TE_ChallengeH0.csv",
             "eplus_load.csv",
@@ -61,6 +51,7 @@
             "name",
             "value"
           ],
+          "skip_rows": 0,
           "date": ""
         },
         {
@@ -98,7 +89,8 @@
             "below_10_percent_NormVol_Duration",
             "below_10_percent_NormVol_Count"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         },
         {
           "name": "index2",
@@ -135,7 +127,8 @@
             "below_10_percent_NormVol_Duration",
             "below_10_percent_NormVol_Count"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         }
       ]
     },
@@ -151,6 +144,7 @@
             "name",
             "value"
           ],
+          "skip_rows": 0,
           "date": ""
         },
         {
@@ -188,7 +182,8 @@
             "below_10_percent_NormVol_Duration",
             "below_10_percent_NormVol_Count"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         },
         {
           "name": "index2",
@@ -225,71 +220,8 @@
             "below_10_percent_NormVol_Duration",
             "below_10_percent_NormVol_Count"
           ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "capacitor_TE_ChallengeH_metrics.h5",
-      "name": "capacitor_TE_ChallengeH_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "capacitor_TE_ChallengeH0_metrics.h5",
-      "name": "capacitor_TE_ChallengeH0_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "evchargerdet_TE_ChallengeH_metrics.h5",
-      "name": "evchargerdet_TE_ChallengeH_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "evchargerdet_TE_ChallengeH0_metrics.h5",
-      "name": "evchargerdet_TE_ChallengeH0_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         }
       ]
     },
@@ -305,6 +237,7 @@
             "name",
             "value"
           ],
+          "skip_rows": 0,
           "date": ""
         },
         {
@@ -338,7 +271,8 @@
             "waterheater_temp_max",
             "waterheater_temp_avg"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         },
         {
           "name": "index2",
@@ -371,7 +305,8 @@
             "waterheater_temp_max",
             "waterheater_temp_avg"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         }
       ]
     },
@@ -387,6 +322,7 @@
             "name",
             "value"
           ],
+          "skip_rows": 0,
           "date": ""
         },
         {
@@ -420,7 +356,8 @@
             "waterheater_temp_max",
             "waterheater_temp_avg"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         },
         {
           "name": "index2",
@@ -453,7 +390,8 @@
             "waterheater_temp_max",
             "waterheater_temp_avg"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         }
       ]
     },
@@ -469,6 +407,7 @@
             "name",
             "value"
           ],
+          "skip_rows": 0,
           "date": ""
         },
         {
@@ -484,7 +423,8 @@
             "reactive_power_max",
             "reactive_power_avg"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         },
         {
           "name": "index2",
@@ -499,7 +439,8 @@
             "reactive_power_max",
             "reactive_power_avg"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         }
       ]
     },
@@ -515,6 +456,7 @@
             "name",
             "value"
           ],
+          "skip_rows": 0,
           "date": ""
         },
         {
@@ -530,7 +472,8 @@
             "reactive_power_max",
             "reactive_power_avg"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         },
         {
           "name": "index2",
@@ -545,211 +488,8 @@
             "reactive_power_max",
             "reactive_power_avg"
           ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "line_TE_ChallengeH_metrics.h5",
-      "name": "line_TE_ChallengeH_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "line_TE_ChallengeH0_metrics.h5",
-      "name": "line_TE_ChallengeH0_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "substation_TE_ChallengeH_metrics.h5",
-      "name": "substation_TE_ChallengeH_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
-        },
-        {
-          "name": "index1",
-          "columns": [
-            "time",
-            "date",
-            "name",
-            "real_power_min",
-            "real_power_max",
-            "real_power_avg",
-            "real_power_median",
-            "reactive_power_min",
-            "reactive_power_max",
-            "reactive_power_avg",
-            "reactive_power_median",
-            "real_energy",
-            "reactive_energy",
-            "real_power_losses_min",
-            "real_power_losses_max",
-            "real_power_losses_avg",
-            "real_power_losses_median",
-            "reactive_power_losses_min",
-            "reactive_power_losses_max",
-            "reactive_power_losses_avg",
-            "reactive_power_losses_median"
-          ],
-          "date": ""
-        },
-        {
-          "name": "index2",
-          "columns": [
-            "time",
-            "date",
-            "name",
-            "real_power_min",
-            "real_power_max",
-            "real_power_avg",
-            "real_power_median",
-            "reactive_power_min",
-            "reactive_power_max",
-            "reactive_power_avg",
-            "reactive_power_median",
-            "real_energy",
-            "reactive_energy",
-            "real_power_losses_min",
-            "real_power_losses_max",
-            "real_power_losses_avg",
-            "real_power_losses_median",
-            "reactive_power_losses_min",
-            "reactive_power_losses_max",
-            "reactive_power_losses_avg",
-            "reactive_power_losses_median"
-          ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "substation_TE_ChallengeH0_metrics.h5",
-      "name": "substation_TE_ChallengeH0_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
-        },
-        {
-          "name": "index1",
-          "columns": [
-            "time",
-            "date",
-            "name",
-            "real_power_min",
-            "real_power_max",
-            "real_power_avg",
-            "real_power_median",
-            "reactive_power_min",
-            "reactive_power_max",
-            "reactive_power_avg",
-            "reactive_power_median",
-            "real_energy",
-            "reactive_energy",
-            "real_power_losses_min",
-            "real_power_losses_max",
-            "real_power_losses_avg",
-            "real_power_losses_median",
-            "reactive_power_losses_min",
-            "reactive_power_losses_max",
-            "reactive_power_losses_avg",
-            "reactive_power_losses_median"
-          ],
-          "date": ""
-        },
-        {
-          "name": "index2",
-          "columns": [
-            "time",
-            "date",
-            "name",
-            "real_power_min",
-            "real_power_max",
-            "real_power_avg",
-            "real_power_median",
-            "reactive_power_min",
-            "reactive_power_max",
-            "reactive_power_avg",
-            "reactive_power_median",
-            "real_energy",
-            "reactive_energy",
-            "real_power_losses_min",
-            "real_power_losses_max",
-            "real_power_losses_avg",
-            "real_power_losses_median",
-            "reactive_power_losses_min",
-            "reactive_power_losses_max",
-            "reactive_power_losses_avg",
-            "reactive_power_losses_median"
-          ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "transformer_TE_ChallengeH_metrics.h5",
-      "name": "transformer_TE_ChallengeH_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
-        }
-      ]
-    },
-    {
-      "path": "transformer_TE_ChallengeH0_metrics.h5",
-      "name": "transformer_TE_ChallengeH0_metrics",
-      "filetype": ".h5",
-      "description": "",
-      "schema": [
-        {
-          "name": "Metadata",
-          "columns": [
-            "name",
-            "value"
-          ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "date"
         }
       ]
     },
@@ -784,7 +524,8 @@
             "c2",
             "c1"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "t[s]"
         }
       ]
     },
@@ -819,7 +560,8 @@
             "c2",
             "c1"
           ],
-          "date": ""
+          "skip_rows": 0,
+          "date": "t[s]"
         }
       ]
     },
@@ -832,9 +574,13 @@
         {
           "name": "eplus_load",
           "columns": [
-            "# file...... eplus_load.csv"
+            "# timestamp",
+            "measured_real_power",
+            "measured_reactive_power",
+            "measured_voltage_AB"
           ],
-          "date": ""
+          "skip_rows": 8,
+          "date": "# timestamp"
         }
       ]
     },
@@ -847,9 +593,13 @@
         {
           "name": "weather",
           "columns": [
-            "# file...... weather.csv"
+            "timestamp",
+            "temperature",
+            "humidity",
+            "solar_flux"
           ],
-          "date": ""
+          "skip_rows": 8,
+          "date": "timestamp"
         }
       ]
     }

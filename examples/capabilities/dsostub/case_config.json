@@ -29,7 +29,7 @@
   "howToConfigureOutputPath": "Leave it blank for default, otherwise use full path",
   "outputPath": "",
   "archivePath": ".",
-  "version": 2,
+  "version": "2",
   "baseMVA": 100.0,
   "genPower": true,
   "renewables": [

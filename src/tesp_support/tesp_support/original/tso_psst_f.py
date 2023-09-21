@@ -982,7 +982,7 @@ def tso_psst_loop_f(casename):
             if 'gridPIQ' in ppc:
                 piq = ppc['gridPIQ']
                 if piq:
-                    from gridpiq import GridPIQ
+                    from tesp_support.api.gridpiq import GridPIQ
                     pq = GridPIQ()
                     pq.set_datetime(StartTime, EndTime, 24, 0)
 
@@ -1655,7 +1655,7 @@ def tso_psst_loop_f(casename):
 
         rpf = pp.runpf(ppc, ppopt_regular)
         if not (file_time == ""):
-            print_m_case(ppc, os.path.join(output_Path, file_time + ".mpc"))
+            print_m_case(ppc, os.path.join(output_Path, file_time + ".m"))
 
         # TODO: add a check if does not converge, switch to DC
         if not rpf[0]['success']:
@@ -1699,13 +1699,6 @@ def tso_psst_loop_f(casename):
             # publish the bus VLN for GridLAB-D
             bus_vln = 1000.0 * row[7] * row[9] / math.sqrt(3.0)
             fncs.publish('three_phase_voltage_' + busnum, bus_vln)
-
-            # publish the bus LMP [$/kwh] ?for GridLAB-D
-            # if ames:
-            #     lmp = float(bus[busidx, 13]) * 0.001
-            # else:
-            #     lmp = float(opf_bus[busidx, 13]) * 0.001
-            # fncs.publish('LMP_Bus' + busnum, str(lmp))  # publishing $/kwh
 
             # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
             PD = row[2]  # + resp # TODO, if more than one FNCS bus, track scaled_resp separately

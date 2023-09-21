@@ -20,7 +20,7 @@ import zipfile as zf
 #     {
 #       "path": <full qualified path and name>',
 #       "name": <identifier>,
-#       "filetype": <sql, hdf5, csv>
+#       "filetype": <sql, h5, csv>
 #       "description": <intent and description of the data file>,
 #       "source": <>
 #       "schema": [
@@ -160,6 +160,7 @@ class Schema:
 
         self.file = file
         self.name = name
+        self.description = description
         self.ext = ext[1]
         if name is not None:
             self.name = ext[0]
@@ -168,6 +169,7 @@ class Schema:
         self.tables = None
         self.columns = {}
         self.dates = {}
+        self.skip_rows = {}
         return
 
     def get_tables(self):
@@ -192,10 +194,18 @@ class Schema:
                 f.close()
         return self.tables
 
-    def get_columns(self, table):
+    def get_columns(self, table, skip_rows=0):
+        if not table in self.skip_rows:
+            self.skip_rows[table] = skip_rows
+        else:
+            if skip_rows > 0:
+                self.skip_rows[table] = skip_rows
+
         if table in self.tables:
             if self.ext == ".csv":
                 with open(self.file, newline='') as csvfile:
+                    for i in range(self.skip_rows[table]):
+                        csvfile.readline()
                     reader = csv.DictReader(csvfile)
                     self.columns[table] = reader.fieldnames
 
@@ -248,6 +258,7 @@ class Schema:
     # │ pd.read_csv(..., thousands='.', decimal=',')          │ Numeric data is in European format (eg., 1.234,56) │
     # └───────────────────────────────────────────────────────┴────────────────────────────────────────────────────┘
     def get_series_data(self, table, start, end, usecols=None, index_col=None):
+
         if table in self.dates:
             dt = self.dates[table]
         else:
@@ -257,26 +268,38 @@ class Schema:
             if table in self.columns:
                 if self.ext == ".csv":
                     if type(dt) == list:
-                        df = pd.read_csv(self.file, usecols=usecols, index_col=index_col)
+                        df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table])
                         df['dates'] = pd.date_range(start=dt[0], periods=len(df), freq=dt[1])
                         df[(start < df['dates']) & (df['dates'] < end)]
                     else:
-                        df = pd.read_csv(self.file, usecols=usecols, index_col=index_col, parse_dates=[dt])
+                        df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table],
+                                         parse_dates=True, keep_date_col=True)
                         df = df[(start < df[dt]) & (df[dt] < end)]
                     return df
 
                 if self.ext in [".db"]:
                     con = sqlite3.connect(self.file)
                     sql_query = """SELECT * FROM '""" + table + """';"""
-                    cursor = con.cursor()
-                    data = cursor.execute(sql_query)
-                    for column in data.description:
-                        self.columns[table].append(column[0])
+                    df = pd.read_sql_query(sql_query, con, parse_dates={dt: '%Y-%m-%d %H:%M:%S'})
+                    df = df[(start < df[dt]) & (df[dt] < end)]
+                    # cursor = con.cursor()
+                    # data = cursor.execute(sql_query)
+                    # for column in data.description:
+                    #     self.columns[table].append(column[0])
                     con.close()
+                    return df
 
-                if self.ext in [".hdf5"]:
+
+                if self.ext in [".h5"]:
                     f = h5py.File(self.file, 'r')
-                    self.tables = list(f.keys())
+                    tbl = np.array(f[table])
+                    df = pd.DataFrame(tbl)
+                    df[dt] = df[dt].astype('str')
+                    pd.to_datetime(df[dt], format='%Y-%m-%d %H:%M:%S PDT')
+                    df = df[(start < df[dt]) & (df[dt] < end)]
+                    # self.tables = list(f.keys())
+                    f.close()
+                    return df
 
         return None
 
@@ -287,8 +310,12 @@ class Schema:
                    "description": self.description,
                    "schema": []}
         for tbl in self.get_tables():
+            skip_rows = 0
+            if tbl in self.skip_rows:
+                skip_rows = self.skip_rows[tbl]
             table = {"name": tbl,
                      "columns": self.get_columns(tbl),
+                     "skip_rows": skip_rows,
                      "date": self.get_date(tbl)}
             diction["schema"].append(table)
         return diction
@@ -362,12 +389,12 @@ class Store:
             desc = []
             for schema in self.store:
                 if type(schema) == Schema:
-                    desc.append([schema['name'], schema['ext'], schema['description']])
+                    desc.append([schema.name, schema.ext, schema.description])
             return desc
         else:
             for schema in self.store:
                 if type(schema) == Schema:
-                    if schema['name'] == name:
+                    if schema.name == name:
                         return schema
         return None
 
@@ -407,6 +434,8 @@ class Store:
                                 scheme.tables.append(name)
                                 if "columns" in table:
                                     scheme.columns[name] = table["columns"]
+                                if "skip_rows" in table:
+                                    scheme.skip_rows[name] = table["skip_rows"]
                                 if "date" in table:
                                     scheme.dates[name] = table["date"]
                         except:
@@ -414,6 +443,7 @@ class Store:
 
     def zip(self, target):
         theZipFile = zf.ZipFile(target, 'w')
+        theZipFile.write(self.file)
         for file in self.store:
             if type(file) == Directory:
                 file.zip(theZipFile)

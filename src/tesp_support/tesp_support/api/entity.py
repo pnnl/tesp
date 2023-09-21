@@ -425,7 +425,7 @@ class Entity:
 
 def _test():
 
-    from .data import entities_path
+    from .data import feeder_entities_path
     from .data import tesp_test
 
     class mytest:
@@ -443,9 +443,8 @@ def _test():
         print("Database Sqlite3.db not formed")
 
     # this a config  -- file probably going to be static json
-    file_name = entities_path + 'feeder_defaults.json'
     myEntity = mytest()
-    assign_defaults(myEntity, file_name)
+    assign_defaults(myEntity, feeder_entities_path)
     name = 'rgnPenResHeat'
     print(name)
     print(type(myEntity.__getattribute__(name)))

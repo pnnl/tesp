@@ -19,21 +19,28 @@ from copy import deepcopy
 
 def print_m_case(ppc, ppc_case):
 
-    def printline(name, thing):
+    def printline(name, thing, integers):
         print("mpc." + name +" = [", file=fp)
         for i in range(thing.shape[0]):
-            print(thing[1], ";", file=fp)
+            line = ""
+            for j in range(thing.shape[1]):
+                if j in integers:
+                    line += "\t{}".format(int(thing[i][j]))
+                else:
+                    line += "\t{}".format(thing[i][j])
+            print(line + ";", file=fp)
         print("];", file=fp)
 
     fp = open(ppc_case, 'w')
-    print("function mpc = ", ppc.caseName, file=fp)
-    print("mpc.version = ", ppc.version, file=fp)
-    print("mpc.baseMVA = 1", ppc.baseMVA, file=fp)
-    printline("bus", ppc.bus)
-    printline("gen", ppc.gen)
-    printline("branch", ppc.branch)
-    printline("gencost", ppc.gencost)
+    print("function mpc =", ppc["caseName"], file=fp)
+    print("mpc.version = '" + str(ppc["version"]) + "'", file=fp)
+    print("mpc.baseMVA =", ppc["baseMVA"], file=fp)
+    printline("bus", ppc["bus"], [0, 1])
+    printline("gen", ppc["gen"], [0, 7])
+    printline("branch", ppc["branch"], [0, 1, 10])
+    printline("gencost", ppc["gencost"], [0, 3])
     fp.close()
+
 
 def print_matrix(lbl, A, fmt='{:8.4f}'):
     if A is None:
@@ -341,9 +348,7 @@ def dist_slack(mpc, prev_load):
     gen_update = deepcopy(mpc['gen'][:, 1])
     for i in range(len(index)):
         up_ramp_flag = 0
-        max_flag = 0
         down_ramp_flag = 0
-        min_flag = 0
         # P (MW) + del_P (MW)
         gen_update[index[i]] = mpc['gen'][index[i], 1] + mpc['gen'][index[i], 8] * del_f / gov_R[I[i]]
 

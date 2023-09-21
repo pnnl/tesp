@@ -9,6 +9,14 @@ tesp\_support.api package
 Submodules
 ----------
 
+tesp\_support.api.bench\_profile module
+---------------------------------------
+
+.. automodule:: tesp_support.api.bench_profile
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tesp\_support.api.data module
 -----------------------------
 
@@ -21,14 +29,6 @@ tesp\_support.api.entity module
 -------------------------------
 
 .. automodule:: tesp_support.api.entity
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-tesp\_support.api.fncs module
------------------------------
-
-.. automodule:: tesp_support.api.fncs
    :members:
    :undoc-members:
    :show-inheritance:
@@ -113,14 +113,6 @@ tesp\_support.api.player module
    :undoc-members:
    :show-inheritance:
 
-tesp\_support.api.player\_f module
-----------------------------------
-
-.. automodule:: tesp_support.api.player_f
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 tesp\_support.api.process\_eplus module
 ---------------------------------------
 
@@ -193,6 +185,14 @@ tesp\_support.api.store module
    :undoc-members:
    :show-inheritance:
 
+tesp\_support.api.substation module
+-----------------------------------
+
+.. automodule:: tesp_support.api.substation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tesp\_support.api.test\_runner module
 -------------------------------------
 
@@ -217,14 +217,6 @@ tesp\_support.api.tso\_PYPOWER module
    :undoc-members:
    :show-inheritance:
 
-tesp\_support.api.tso\_PYPOWER\_f module
-----------------------------------------
-
-.. automodule:: tesp_support.api.tso_PYPOWER_f
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 tesp\_support.api.tso\_helpers module
 -------------------------------------
 
@@ -237,14 +229,6 @@ tesp\_support.api.tso\_psst module
 ----------------------------------
 
 .. automodule:: tesp_support.api.tso_psst
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-tesp\_support.api.tso\_psst\_f module
--------------------------------------
-
-.. automodule:: tesp_support.api.tso_psst_f
    :members:
    :undoc-members:
    :show-inheritance:

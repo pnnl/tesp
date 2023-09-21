@@ -168,7 +168,7 @@ def tso_psst_loop(casename):
 
         lseDispatch = {}
         if len(priceSenLoadData) != 0:
-            for ld in sorted(instance.PriceSensitiveLoads.value):
+            for ld in sorted(instance.PriceSensitiveLoads.data()):
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
@@ -265,7 +265,7 @@ def tso_psst_loop(casename):
         dispatch = {}
         if outcomes[1] == 'optimal':
             status = True
-            for g in sorted(instance.Generators.value):
+            for g in sorted(instance.Generators.data()):
                 dispatch[g] = []
                 for t in sorted(instance.TimePeriods):
                     dispatch[g].append(instance.PowerGenerated[g, t].value * baseS)
@@ -1693,7 +1693,7 @@ def tso_psst_loop(casename):
 
         rpf = pp.runpf(ppc, ppopt_regular)
         if not (file_time == ""):
-            print_m_case(ppc, os.path.join(output_Path, file_time + ".mpc"))
+            print_m_case(ppc, os.path.join(output_Path, file_time + ".m"))
 
         # TODO: add a check if does not converge, switch to DC
         if not rpf[0]['success']:
