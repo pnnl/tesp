@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2022 Battelle Memorial Institute
+# Copyright (C) 2023 Battelle Memorial Institute
 # file: entity.py
 """
 """

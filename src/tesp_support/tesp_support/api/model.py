@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2022 Battelle Memorial Institute
+# Copyright (C) 2019-2023 Battelle Memorial Institute
 # file: glm_model.py
 """GridLAB-D model I/O for TESP api
 """

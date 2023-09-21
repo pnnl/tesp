@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (C) 2023 Battelle Memorial Institute
 """
 Created on Tue Jan 17 14:05:08 2023
 
