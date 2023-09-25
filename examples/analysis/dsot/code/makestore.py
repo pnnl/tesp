@@ -5,7 +5,7 @@ import tesp_support.api.store as fle
 
 
 def dsot_store(case_name):
-    my_store = fle.Store('dsot_store.json')
+    my_store = fle.Store('dsot_store')
 
     my_file = my_store.add_path("../", "DSOT Directory")
     # case
@@ -22,6 +22,9 @@ def dsot_store(case_name):
             name = tso_config[i][1] + 'metrics_billing_meter.h5'
             my_file = my_store.add_file(name, tso_config[i][1], "billing for " + tso_config[i][1])
             tables = my_file.get_tables()
+            if len(tables) > 1:
+                columns = my_file.get_columns(tables[1])
+                my_file.set_date_bycol(tables[1], 'date')
 
     # schedules
     sub = my_file.set_includeDir("data/schedule_df", True)
@@ -56,7 +59,7 @@ def dsot_store(case_name):
     # "WeatherDataSourcePath": "../data/8-node data/DAT formatted files/"
 
     my_store.write()
-    my_store.zip('dsot_store.zip')
+    my_store.zip('dsot_store')
 
 
 def little_post():

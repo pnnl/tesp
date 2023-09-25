@@ -289,7 +289,6 @@ class Schema:
                     con.close()
                     return df
 
-
                 if self.ext in [".h5"]:
                     f = h5py.File(self.file, 'r')
                     tbl = np.array(f[table])
@@ -321,9 +320,39 @@ class Schema:
         return diction
 
 
+def unzip(file, path):
+    """
+    This function unzip take name add .zip and unzip the file to specified path.
+    Then finds the store json in that path and fixes the relative path for the stores work
+    """
+    root = os.path.split(file + ".zip")
+    if root[1] == "":
+        raise Exception("Sorry, " + file + " is not a file!")
+    root = root[1]
+
+    if os.path.isdir(path):
+        cwd = os.path.split(path)
+        if cwd[1] == "":
+            cwd = cwd[0]
+        else:
+            raise Exception("Sorry, parameter " + path + " is a file!")
+
+    if os.path.isfile(file + ".zip"):
+        theZipfile = zf.ZipFile(file+".zip", 'r')
+        theZipfile.extractall(cwd)
+
+        # TODO fix up paths
+        # if os.path.isfile(cwd + file + ".json"):
+        #     meta = json.loads(cwd + file + ".json")
+        #     #write(cwd + file + ".json")
+
+    return
+
+
 class Store:
     def __init__(self, file):
-        self.file = file
+        self.root = file
+        self.file = file + '.json'
         self.store = []
         self.read()
         return
@@ -441,16 +470,13 @@ class Store:
                         except:
                             pass
 
-    def zip(self, target):
-        theZipFile = zf.ZipFile(target, 'w')
+    def zip(self):
+        theZipFile = zf.ZipFile(self.root + '.zip', 'w')
         theZipFile.write(self.file)
         for file in self.store:
             if type(file) == Directory:
                 file.zip(theZipFile)
         theZipFile.close()
-
-    def unzip(self):
-        return
 
 
 def _test_debug_resample():

@@ -9,7 +9,7 @@ def te30_store(case_name):
     challenge0 = 'TE_ChallengeH0'
     h5 = "_metrics.h5"
     json = "_metrics.json"
-    my_store = fle.Store(case_name + '.json')
+    my_store = fle.Store(case_name)
 
     my_path = my_store.add_path("../te30", "TE30 Directory")
     sub = my_path.set_includeDir(".", False)
@@ -79,7 +79,7 @@ def te30_store(case_name):
         my_path.set_includeFile(sub, challenge + names[i] + ".json")
 
     my_store.write()
-    my_store.zip('te30_store.zip')
+    my_store.zip('te30_store')
 
 
 def _test(case_name):
@@ -97,5 +97,5 @@ def _test(case_name):
 
 
 if __name__ == "__main__":
-    # te30_store("te30_store")
-    _test("te30_store")
+    te30_store("te30_store")
+    # _test("te30_store")
