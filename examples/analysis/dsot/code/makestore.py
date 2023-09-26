@@ -59,7 +59,7 @@ def dsot_store(case_name):
     # "WeatherDataSourcePath": "../data/8-node data/DAT formatted files/"
 
     my_store.write()
-    my_store.zip('dsot_store')
+    my_store.zip()
 
 
 def little_post():

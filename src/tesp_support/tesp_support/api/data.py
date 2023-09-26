@@ -45,8 +45,10 @@ elif platform == "win32":
 def download_data():
     print("download data")
 
+
 def download_analysis():
     print("download analysis")
+
 
 def download_examples():
     print("download examples")

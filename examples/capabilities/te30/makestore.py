@@ -40,21 +40,21 @@ def te30_store(case_name):
             columns = my_file.get_columns(tables[2])
             my_file.set_date_bycol(tables[2], 'date')
 
-    my_file = my_store.add_file(challenge + ".csv", challenge,'CSV for TE_ChallengeH')
+    my_file = my_store.add_file(challenge + ".csv", challenge, 'CSV for TE_ChallengeH')
     tables = my_file.get_tables()
     if len(tables):
         columns = my_file.get_columns(tables[0], 0)
         my_file.set_date_bycol(tables[0], 't[s]')
     my_path.set_includeFile(sub, challenge + ".csv")
 
-    my_file = my_store.add_file(challenge0 + ".csv", challenge0,'CSV for TE_ChallengeH0')
+    my_file = my_store.add_file(challenge0 + ".csv", challenge0, 'CSV for TE_ChallengeH0')
     tables = my_file.get_tables()
     if len(tables):
         columns = my_file.get_columns(tables[0], 0)
         my_file.set_date_bycol(tables[0], 't[s]')
     my_path.set_includeFile(sub, challenge0 + ".csv")
 
-    my_file = my_store.add_file("eplus_load.csv", 'eplus_load','eplus load CSV')
+    my_file = my_store.add_file("eplus_load.csv", 'eplus_load', 'eplus load CSV')
     tables = my_file.get_tables()
     if len(tables):
         columns = my_file.get_columns(tables[0], 8)

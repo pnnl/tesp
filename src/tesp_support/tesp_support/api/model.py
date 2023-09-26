@@ -13,12 +13,48 @@ from matplotlib.lines import Line2D
 import networkx as nx
 
 from .data import feeders_path
-# from .data import entities_path
 from .data import glm_entities_path
 from .entity import Entity
 
+
 class GLModel:
-    # it seems to public for all GLMODEL class
+    """ GLModel class
+
+    Examples miscellaneous for set declarations::
+
+    #set profiler=1
+    #set pauseatexit=1
+    #set relax_naming_rules=1
+    #set suppress_repeat_messages=1
+
+    Examples format value set declarations::
+
+    #set double_format=%+.12lg
+    #set complex_format=%+.12lg%+.12lg%c
+    #set complex_output_format=RECT
+
+    Example Deltamode set declarations::
+
+    #set deltamode_timestep=100000000       //100 ms
+    #set deltamode_maximumtime=60000000000  //1 minute
+    #set deltamode_iteration_limit=10       //Iteration limit
+    #set deltamode_forced_always=true
+
+    Backbone file should follow order below::
+
+        clock
+        #set ...
+        #define ...
+        #include ...
+        module ...
+        objects ...
+
+    Can be used any where::
+
+        #define -> are one line black boxes
+        #include -> *.glm files are black boxes
+        #ifdef / #endif -> are black boxes
+    """
 
     edge_classes = {'switch': 'red',
                     'fuse': 'blue',
@@ -38,42 +74,12 @@ class GLModel:
                     'triplex_meter': 'orange',
                     'house': 'brown'}
 
-    set_declarations = ['profiler','iteration_limit','randomseed',
-                        'relax_naming_rules','minimum_timestep',
-                        'suppress_repeat_messages','pauseatexit',
-                        'double_format','complex_format','complex_output_format',
-                        'deltamode_timestep','deltamode_maximumtime',
-                        'deltamode_iteration_limit','deltamode_forced_always']
-
-    """
-    Examples misc. for set declarations
-        #set profiler=1
-        #set pauseatexit=1
-        #set relax_naming_rules=1;
-        #set suppress_repeat_messages=1
-    Examples format value set declarations
-        #set double_format=%+.12lg
-        #set complex_format=%+.12lg%+.12lg%c
-        #set complex_output_format=RECT
-    Example Deltamode set declarations
-        #set deltamode_timestep=100000000		//100 ms
-        #set deltamode_maximumtime=60000000000	//1 minute
-        #set deltamode_iteration_limit=10		//Iteration limit
-        #set deltamode_forced_always=true
-
-    Backbone file should follow order below 
-        clock 
-        #set ... 
-        #define ...
-        #include ...
-        module ...
-        objects ...
-
-    Can be used any where    
-        #define -> are one line black boxes
-        #include -> *.glm files are black boxes
-        #ifdef / #endif -> are black boxes 
-    """
+    set_declarations = ['profiler', 'iteration_limit', 'randomseed',
+                        'relax_naming_rules', 'minimum_timestep',
+                        'suppress_repeat_messages', 'pauseatexit',
+                        'double_format', 'complex_format', 'complex_output_format',
+                        'deltamode_timestep', 'deltamode_maximumtime',
+                        'deltamode_iteration_limit', 'deltamode_forced_always']
 
     def __init__(self):
         # with open(os.path.join(entities_path, 'glm_modules.json'), 'r', encoding='utf-8') as json_file:
@@ -145,7 +151,7 @@ class GLModel:
         if "unit" in attr:
             unit = attr["unit"]
         # label with name otherwise the description
-        label = name.replace("_"," ").replace(".", " ")
+        label = name.replace("_", " ").replace(".", " ")
         if "description" in attr:
             label = attr["description"]
 
@@ -179,7 +185,7 @@ class GLModel:
             datatype = ""
 
         if datatype:
-            entity.add_attr(datatype, label, unit, name, value = None)
+            entity.add_attr(datatype, label, unit, name, value=None)
         else:
             print("name ->", name, "type", m_type)
 
@@ -613,7 +619,6 @@ class GLModel:
 
         Args:
             parent (str): name of parent object (used for nested object defs)
-            model (dict): dictionary model structure
             line (str): glm line containing the object definition
             itr (iter): iterator over the list of lines
             oidh (dict): hash of object id's to object names
@@ -911,7 +916,7 @@ class GLModel:
         elb = {}
         for u, v in G.edges():
             ec.append(self.edge_classes[G[u][v]['eclass']])
-            elb[u,v] =  G[u][v]['ename']
+            elb[u, v] = G[u][v]['ename']
 
         # Draw
         fig, ax = plt.subplots()
@@ -942,35 +947,38 @@ class GLModel:
         plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
         plt.show()
 
+
 def _test1():
     from .data import tesp_test
 
     # Test model.py
     model_file = GLModel()
-    tval = model_file.readBackboneModel("R1-12.47-1.glm")
-    # tval = model_file.read(feeders_path + "GLD_three_phase_house.glm")
-    # Output json with new parameters
-    model_file.write(tesp_test + "api/R1-12.47-1_out.glm")
+    if model_file.readBackboneModel("R1-12.47-1.glm"):
+    # if model_file.read(feeders_path + "GLD_three_phase_house.glm"):
+        # Output json with new parameters
+        model_file.write(tesp_test + "api/R1-12.47-1_out.glm")
 
     model_file = GLModel()
-    tval = model_file.readModel(tesp_test + "api/testing.glm")
-    model_file.write(tesp_test + "api/model_out.glm")
+    if model_file.readModel(tesp_test + "api/testing.glm"):
+        model_file.write(tesp_test + "api/model_out.glm")
 
-    model_file.instancesToSQLite(tesp_test + 'api/model_out.db')
-    print(model_file.entitiesToHelp())
-    print(model_file.instancesToGLM())
+        model_file.instancesToSQLite(tesp_test + 'api/model_out.db')
+        print(model_file.entitiesToHelp())
+        print(model_file.instancesToGLM())
 
-    op = open(tesp_test + 'api/model_out.json', 'w', encoding='utf-8')
-    json.dump(model_file.entitiesToJson(), op, ensure_ascii=False, indent=2)
-    op.close()
+        op = open(tesp_test + 'api/model_out.json', 'w', encoding='utf-8')
+        json.dump(model_file.entitiesToJson(), op, ensure_ascii=False, indent=2)
+        op.close()
+
 
 def _test2():
     testMod = GLModel()
-    tval = testMod.read(feeders_path + "R1-12.47-1.glm")
-    for name in testMod.module_entities:
-        print(testMod.module_entities[name].toHelp())
-    for name in testMod.object_entities:
-        print(testMod.object_entities[name].toHelp())
+    if testMod.read(feeders_path + "R1-12.47-1.glm"):
+        for name in testMod.module_entities:
+            print(testMod.module_entities[name].toHelp())
+        for name in testMod.object_entities:
+            print(testMod.object_entities[name].toHelp())
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
