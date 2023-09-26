@@ -18,9 +18,9 @@ pypower_path = tesp_model + 'pypower/'
 
 tesp_test = path.expandvars('$TESPDIR/src/tesp_support/test/')
 
-glm_entities_path = files('api.datafiles').joinpath('glm_classes.json')
-piq_entities_path = files('api.datafiles').joinpath('grid_PIQ.json')
-feeder_entities_path = files('api.datafiles').joinpath('feeder_defaults.json')
+glm_entities_path = files('tesp_support.api.datafiles').joinpath('glm_classes.json')
+piq_entities_path = files('tesp_support.api.datafiles').joinpath('grid_PIQ.json')
+feeder_entities_path = files('tesp_support.api.datafiles').joinpath('feeder_defaults.json')
 
 """
 If your Python package needs to write to a file for shared data

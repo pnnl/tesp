@@ -18,3 +18,4 @@ ver="${a[0]}.${a[1]}.${a[2]}"
 pip3 install helics=="${ver}"
 # pip3 install helics-apps=="${ver}"
 # pip3 install git+https://github.com/GMLC-TDC/helics-cli.git@main
+pip3 install helics[cli]

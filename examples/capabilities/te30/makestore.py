@@ -21,7 +21,7 @@ def te30_store(case_name):
     names = ['billing_meter_', 'house_', 'inverter_']
     for i in range(len(names)):
         name = names[i] + challenge + h5
-        my_file = my_store.add_file(name, names[i] + 'for ' + challenge)
+        my_file = my_store.add_file(name, name[i], names[i] + ' for ' + challenge)
         my_path.set_includeFile(sub, name)
         tables = my_file.get_tables()
         if len(tables) > 1:
@@ -31,7 +31,7 @@ def te30_store(case_name):
             my_file.set_date_bycol(tables[2], 'date')
 
         name = names[i] + challenge0 + h5
-        my_file = my_store.add_file(name, names[i] + 'for ' + challenge0)
+        my_file = my_store.add_file(name, names[i], names[i] + ' for ' + challenge0)
         my_path.set_includeFile(sub, name)
         tables = my_file.get_tables()
         if len(tables) > 1:
@@ -40,28 +40,28 @@ def te30_store(case_name):
             columns = my_file.get_columns(tables[2])
             my_file.set_date_bycol(tables[2], 'date')
 
-    my_file = my_store.add_file(challenge + ".csv", 'CSV for TE_ChallengeH')
+    my_file = my_store.add_file(challenge + ".csv", challenge,'CSV for TE_ChallengeH')
     tables = my_file.get_tables()
     if len(tables):
         columns = my_file.get_columns(tables[0], 0)
         my_file.set_date_bycol(tables[0], 't[s]')
     my_path.set_includeFile(sub, challenge + ".csv")
 
-    my_file = my_store.add_file(challenge0 + ".csv", 'CSV for TE_ChallengeH0')
+    my_file = my_store.add_file(challenge0 + ".csv", challenge0,'CSV for TE_ChallengeH0')
     tables = my_file.get_tables()
     if len(tables):
         columns = my_file.get_columns(tables[0], 0)
         my_file.set_date_bycol(tables[0], 't[s]')
     my_path.set_includeFile(sub, challenge0 + ".csv")
 
-    my_file = my_store.add_file("eplus_load.csv", 'eplus load CSV')
+    my_file = my_store.add_file("eplus_load.csv", 'eplus_load','eplus load CSV')
     tables = my_file.get_tables()
     if len(tables):
         columns = my_file.get_columns(tables[0], 8)
         my_file.set_date_bycol(tables[0], columns[0])
     my_path.set_includeFile(sub, "eplus_load.csv")
 
-    my_file = my_store.add_file("weather.csv", 'weather CSV')
+    my_file = my_store.add_file("weather.csv", 'weather', 'weather CSV')
     tables = my_file.get_tables()
     if len(tables):
         columns = my_file.get_columns(tables[0], 8)
@@ -79,7 +79,7 @@ def te30_store(case_name):
         my_path.set_includeFile(sub, challenge + names[i] + ".json")
 
     my_store.write()
-    my_store.zip('te30_store')
+    my_store.zip()
 
 
 def _test(case_name):
