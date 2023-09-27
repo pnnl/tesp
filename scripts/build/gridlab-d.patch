@@ -10865,18 +10865,23 @@ index a33ef714..89fede1c 100644
  set_target_properties(${GLD_MODULE_NAME} PROPERTIES PREFIX "")
  target_link_libraries(${GLD_MODULE_NAME} PRIVATE ${OS_SPECIFIC_LIBRARIES})
 diff --git a/gldcore/cmdarg.cpp b/gldcore/cmdarg.cpp
-index c31ca75f..1a8ec030 100644
+index c31ca75f..458efb9a 100644
 --- a/gldcore/cmdarg.cpp
 +++ b/gldcore/cmdarg.cpp
 @@ -11,6 +11,7 @@
   @{
   **/
  
-+#include <json/json.h> 
++#include <json/json.h>
  #include <cstdio>
  #include <cstring>
  #if defined(_WIN32) && !defined(__MINGW__)
-@@ -80,8 +81,10 @@ void modhelp_alpha(pntree **ctree, CLASS *oclass){
+@@ -76,12 +77,14 @@ typedef struct s_pntree{
+ void modhelp_alpha(pntree **ctree, CLASS *oclass){
+ 	int cmpval = 0;
+ 	pntree *targ = *ctree;
+-	
++
  	cmpval = strcmp(oclass->name, targ->name);
  	
  	if(cmpval == 0){
@@ -10884,7 +10889,7 @@ index c31ca75f..1a8ec030 100644
 -	} if(cmpval < 0){ /*  class < root ~ go left */
 +		//printf("ERROR %s", oclass->name); /* exception? */
 +		return;
-+	} 
++	}
 +	if(cmpval < 0){ /*  class < root ~ go left */
  		if(targ->left == NULL){
  			targ->left = (pntree *)malloc(sizeof(pntree));
@@ -10916,7 +10921,7 @@ index c31ca75f..1a8ec030 100644
 +				_property["type"] = propname;
 +				for (key=prop->keywords; key!=NULL; key=key->next)
 +					_property["keywords"][key->name] = key->value;
-+			} 
++			}
 +			else {
 +				_property["type"] = propname;
 +			}
@@ -10950,6 +10955,17 @@ index c31ca75f..1a8ec030 100644
  void print_class_d(CLASS *oclass, int tabdepth){
  	PROPERTY *prop;
  	FUNCTION *func;
+@@ -153,8 +210,8 @@ void print_class_d(CLASS *oclass, int tabdepth){
+ 				for (key=prop->keywords; key!=NULL; key=key->next)
+ 					printf("%s=%" FMT_INT64 "u%s", key->name, (int64)key->value, key->next==NULL?"":", ");
+ 				printf("} %s;", prop->name);
+-			} 
+-			else 
++			}
++			else
+ 			{
+ 				printf("%s\t%s %s;", tabs, propname, prop->name);
+ 			}
 @@ -165,11 +222,9 @@ void print_class_d(CLASS *oclass, int tabdepth){
  	}
  	printf("%s}\n\n", tabs);
@@ -11013,8 +11029,8 @@ index c31ca75f..1a8ec030 100644
 +					_property["type"] = proptype;
 +					for (key=prop->keywords; key!=NULL; key=key->next)
 +						_property["keywords"][key->name] = key->value;
-+				} 
-+				else 
++				}
++				else
 +				{
 +					_property["type"] = proptype;
 +				}
@@ -11042,18 +11058,18 @@ index c31ca75f..1a8ec030 100644
 +
 +		oclass=class_get_first_class();
 +		ctree = (pntree *)malloc(sizeof(pntree));
-+		
++
 +		if(ctree == NULL){
 +			throw_exception("--modhelp: malloc failure");
 +			/* TROUBLESHOOT
 +				The memory allocation needed for module help to function has failed.  Try freeing up system memory and try again.
 +			 */
 +		}
-+		
++
 +		ctree->name = oclass->name;
 +		ctree->oclass = oclass;
 +		ctree->left = ctree->right = 0;
-+		
++
 +		for(; oclass != NULL; oclass = oclass->next){
 +			modhelp_alpha(&ctree, oclass);
 +		}
@@ -11078,6 +11094,20 @@ index c31ca75f..1a8ec030 100644
  						printf("} %s;", strrchr(prop->name,':')+1);
  					} 
  					else 
+@@ -591,11 +737,11 @@ static int modhelp(int argc, char *argv[])
+ 					The memory allocation needed for module help to function has failed.  Try freeing up system memory and try again.
+ 				 */
+ 			}
+-			
++
+ 			ctree->name = oclass->name;
+ 			ctree->oclass = oclass;
+ 			ctree->left = ctree->right = 0;
+-			
++
+ 			for(; oclass != NULL; oclass = oclass->next){
+ 				modhelp_alpha(&ctree, oclass);
+ 				//print_class(oclass);
 @@ -1053,14 +1199,13 @@ static int slave(int argc, char *argv[])
  	output_verbose("slave instance for master '%s' using connection '%" FMT_INT64 "x' started ok", global_master, global_master_port);
  	return 1;
@@ -14691,7 +14721,7 @@ index a1f74547..67deaddd 100644
  		phases = (phases | PHASE_S);
  	}
 diff --git a/reliability/eventgen.cpp b/reliability/eventgen.cpp
-index 55d6414d..799b9e83 100644
+index 55d6414d..105ca502 100644
 --- a/reliability/eventgen.cpp
 +++ b/reliability/eventgen.cpp
 @@ -2308,9 +2308,15 @@ SIMULATIONMODE eventgen::inter_deltaupdate(unsigned int64 delta_time, unsigned l
@@ -14704,11 +14734,11 @@ index 55d6414d..799b9e83 100644
 -	bool parse_successful = json_rdr.parse(events_str, json_events);
 +	std::string errors {};
 +
-+	auto reader = std::unique_ptr<Json::CharReader>( builder.newCharReader() );	
++	auto reader = std::unique_ptr<Json::CharReader>( builder.newCharReader() );
 +	const auto parse_successful = reader->parse(events_str.c_str(),
 +                                          events_str.c_str() + events_str.length(),
 +                                          &json_events,
-+                                          &errors );	
++                                          &errors );
  	if(parse_successful) {
  		for(Json::ValueIterator i = json_events.begin(); i != json_events.end(); i++) {
  			Json::Value json_event = *i;

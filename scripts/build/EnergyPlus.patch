@@ -29,7 +29,7 @@ index f5374bee5..819893807 100644
  )
  message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
 diff --git a/src/EnergyPlus/ExternalInterface.cc b/src/EnergyPlus/ExternalInterface.cc
-index 667e11bff..a554b5711 100644
+index 667e11bff..db7bc42aa 100644
 --- a/src/EnergyPlus/ExternalInterface.cc
 +++ b/src/EnergyPlus/ExternalInterface.cc
 @@ -1298,8 +1298,8 @@ namespace EnergyPlus {
@@ -71,7 +71,7 @@ index 667e11bff..a554b5711 100644
 +                      helicscpp::Input thissub = pHelicsFederate->getInput(i);
                        if (thissub.isValid() ) {
 -                    	std::string thisKey = std::string(thissub.getTarget());
-+                    	  std::string thisKey = std::string(thissub.getTarget());
++                        std::string thisKey = std::string(thissub.getTarget());
                          //char const* temp = thissub.getKey();
                          //std::cout << " sub " << i << ":" << thissub.getInfo() << ":" << thisKey << ":" << thissub.getType() << ":" << thissub.getUnits() << std::endl;
                          vsubs.push_back(thissub);
