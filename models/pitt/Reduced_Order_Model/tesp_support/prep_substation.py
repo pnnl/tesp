@@ -98,7 +98,7 @@ std_dev = 0.01
 #####################################################
 
 def ProcessGLM(fileroot):
-    """Helper function that processes one GridLAB-D file
+    """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
 

@@ -23,7 +23,7 @@ from pypower.opf_consfcn import opf_consfcn
 
 
 def opf_hessfcn(x, lmbda, om, Ybus, Yf, Yt, ppopt, il=None, cost_mult=1.0):
-    """Evaluates Hessian of Lagrangian for AC OPF.
+    """ Evaluates Hessian of Lagrangian for AC OPF.
 
     Hessian evaluation function for AC optimal power flow, suitable
     for use with L{pips}.

@@ -1,23 +1,23 @@
 #!/bin/bash
 
-git describe > tesp_version
-docker images -q tesp_private:latest > docker_version
+cat $TESPDIR/scripts/version > tesp_version
+IMAGE_NAME="tesp-$(cat $TESPDIR/scripts/version):latest"
+docker images -q $IMAGE_NAME > docker_version
 hostname > hostname
 
-REPO="tesp_private"
-LOCAL_TESP="$HOME/projects/dsot/code/tesp-private"
-WORKING_DIR="/data/tesp/examples/dsot_v3"
+WORKING_DIR="/data/tesp/examples/analysis/dsot/code"
 ARCHIVE_DIR="/mnt/simdata/done"
+USER_ID=oste814
 
 docker run \
-       -e LOCAL_USER_ID="$(id -u oste814)" \
+       -e LOCAL_USER_ID="$(id -u $USER_ID)" \
        -it \
        --rm \
        --network=none \
-       --mount type=bind,source="$LOCAL_TESP",destination="/data/tesp" \
+       --mount type=bind,source="$TESPDIR",destination="/data/tesp" \
        --mount type=bind,source="$ARCHIVE_DIR",destination="/mnt/simdata/done" \
        -w=${WORKING_DIR} \
-       $REPO:latest \
+       $IMAGE_NAME \
        /bin/bash
 #        "export PSST_SOLVER=/opt/ibm/cplex/bin/x86-64_linux/cplexamp; \
 #       pip install --user -e /data/tesp/src/tesp_support/;"

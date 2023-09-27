@@ -5,5 +5,5 @@
 
 (exec helics_broker -f 3 --loglevel=warning --name=mainbroker &> broker8500.log &)
 (exec gridlabd  -D USE_HELICS -D INV_MODE=CONSTANT_PF -D METRICS_ROOT=inv8500 inv8500.glm &> gridlabd8500.log &)
-(exec helics_player --input=prices.player --local --time_units=ns --stop 86400s &> player8500.log &)
-(exec python3 -c "import tesp_support.precool as tesp;tesp.precool_loop(24, 'inv8500', 'inv8500', response='PriceVoltage', helicsConfig='inv8500_precool.json')" &> precool8500.log &)
+(exec helics_player prices.player -n player --local --time_units=ns --stop 86400s &> player8500.log &)
+(exec python3 -c "import tesp_support.original.precool as tesp;tesp.precool_loop(24, 'inv8500', 'inv8500', response='PriceVoltage', helicsConfig='inv8500_precool.json')" &> precool8500.log &)

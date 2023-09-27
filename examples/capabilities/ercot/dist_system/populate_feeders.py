@@ -2,7 +2,7 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: populate_feeders.py
 
-from tesp_support.feederGenerator import populate_feeder
+from tesp_support.original.residential_feeder_glm import populate_feeder
 
 backbone_config = {'backbone_feeders': {
     'sim_R5-12.47-1': {'vll': 13800.0, 'vln': 7970.0, 'avg_house': 6500.0, 'avg_comm': 20000.0},

@@ -6,7 +6,12 @@ fi
 
 cd "${REPODIR}/fncs" || exit
 autoreconf -isf
-./configure 'CXXFLAGS=-w -O2 -std=c++14' 'CFLAGS=-w -O2' --prefix="${INSTDIR}"
+
+if [ ${MSYSTEM_PREFIX} ]; then
+  ./configure 'CXXFLAGS=-w -O2 -std=c++14' 'CFLAGS=-w -O2' --prefix="${INSTDIR}" --with-czmq="${INSTDIR}"
+else
+  ./configure 'CXXFLAGS=-w -O2 -std=c++14' 'CFLAGS=-w -O2' --prefix="${INSTDIR}"
+fi
 # leave off --prefix if using the /usr/local
 if [[ $1 == "clean" ]]; then
   make clean

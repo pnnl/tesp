@@ -79,7 +79,7 @@ solar_inv_mode = 'CONSTANT_PF'
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
 def gld_strict_name(val):
-    """Sanitizes a name for GridLAB-D publication to FNCS
+    """ Sanitizes a name for GridLAB-D publication to FNCS
 
     Args:
         val (str): the input name
@@ -93,7 +93,7 @@ def gld_strict_name(val):
 
 
 def write_solar_inv_settings(op):
-    """Writes volt-var and volt-watt settings for solar inverters
+    """ Writes volt-var and volt-watt settings for solar inverters
 
     Args:
         op (file): an open GridLAB-D input file
@@ -131,7 +131,7 @@ tier3_price = 0.0
 
 
 def write_tariff(op):
-    """Writes tariff information to billing meters
+    """ Writes tariff information to billing meters
 
     Args:
         op (file): an open GridLAB-D input file
@@ -202,7 +202,7 @@ rgnThermalPct = [[[0.0805, 0.0724, 0.1090, 0.0867, 0.1384, 0.1264, 0.1297],  # R
 
 
 def selectResidentialBuilding(rgnTable, prob):
-    """Writes volt-var and volt-watt settings for solar inverters
+    """ Writes volt-var and volt-watt settings for solar inverters
 
     Args:
         op (file): an open GridLAB-D input file
@@ -309,7 +309,7 @@ heating_bins = [[0, 0, 0, 0, 0, 0],
 
 
 def selectSetpointBins(bldg, rand):
-    """Randomly choose a histogram row from the cooling and heating setpoints
+    """ Randomly choose a histogram row from the cooling and heating setpoints
 
     The random number for the heating setpoint row is generated internally.
 
@@ -339,7 +339,7 @@ def selectSetpointBins(bldg, rand):
 
 
 def checkResidentialBuildingTable():
-    """Verify that the regional building parameter histograms sum to one
+    """ Verify that the regional building parameter histograms sum to one
     """
     for tbl in range(len(rgnThermalPct)):
         total = 0
@@ -415,7 +415,7 @@ mobileHomeProperties = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # is it really this 
 
 
 def selectThermalProperties(bldgIdx, tiIdx):
-    """Retrieve the building thermal properties for a given type and integrity level
+    """ Retrieve the building thermal properties for a given type and integrity level
 
     Args:
         bldgIdx (int): 0 for single-family, 1 for apartment, 2 for mobile home
@@ -465,7 +465,7 @@ single_phase = [[5, 2.10, 1.53, 0.90, 3.38],
 
 
 def parse_kva_old(arg):
-    """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
+    """ Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
 
     DEPRECATED
 
@@ -521,7 +521,7 @@ def parse_kva_old(arg):
 
 
 def parse_kva(cplx):  # this drops the sign of p and q
-    """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
+    """ Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
 
     Args:
         cplx (str): the GridLAB-D P+jQ value
@@ -571,7 +571,7 @@ def FindFuseLimit(amps):
 
 
 def Find1PhaseXfmrKva(kva):
-    """Select a standard 1-phase transformer size, with some margin
+    """ Select a standard 1-phase transformer size, with some margin
 
     Standard sizes are 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
@@ -589,7 +589,7 @@ def Find1PhaseXfmrKva(kva):
 
 
 def Find3PhaseXfmrKva(kva):
-    """Select a standard 3-phase transformer size, with some margin
+    """ Select a standard 3-phase transformer size, with some margin
 
     Standard sizes are 30, 45, 75, 112.5, 150, 225, 300, 500, 750, 1000, 1500, 
     2000, 2500, 3750, 5000, 7500 or 10000 kVA
@@ -608,7 +608,7 @@ def Find3PhaseXfmrKva(kva):
 
 
 def Find1PhaseXfmr(kva):
-    """Select a standard 1-phase transformer size, with data
+    """ Select a standard 1-phase transformer size, with data
 
     Standard sizes are 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
@@ -625,7 +625,7 @@ def Find1PhaseXfmr(kva):
 
 
 def Find3PhaseXfmr(kva):
-    """Select a standard 3-phase transformer size, with data
+    """ Select a standard 3-phase transformer size, with data
 
     Standard sizes are 30, 45, 75, 112.5, 150, 225, 300, 500, 750, 1000, 1500, 
     2000, 2500, 3750, 5000, 7500 or 10000 kVA
@@ -673,13 +673,12 @@ casefiles = [['R1-12.47-1', 12470.0, 7200.0, 4000.0, 20000.0]]
 
 
 def is_node_class(s):
-    """Identify node, load, meter, triplex_node or triplex_meter instances
+    """ Identify node, load, meter, triplex_node or triplex_meter instances
 
     Args:
         s (str): the GridLAB-D class name
-
     Returns:
-        Boolean: True if a node class, False otherwise
+        bool: True if a node class, False otherwise
     """
     if s == 'node':
         return True
@@ -695,15 +694,14 @@ def is_node_class(s):
 
 
 def is_edge_class(s):
-    """Identify switch, fuse, recloser, regulator, transformer, overhead_line, underground_line and triplex_line instances
+    """ Identify switch, fuse, recloser, regulator, transformer, overhead_line, underground_line and triplex_line instances
 
     Edge class is networkx terminology. In GridLAB-D, edge classes are called links.
 
     Args:
         s (str): the GridLAB-D class name
-
     Returns:
-        Boolean: True if an edge class, False otherwise
+        bool: True if an edge class, False otherwise
     """
     if s == 'switch':
         return True
@@ -725,7 +723,7 @@ def is_edge_class(s):
 
 
 def obj(parent, model, line, itr, oidh, octr):
-    """Store an object in the model structure
+    """ Store an object in the model structure
 
     Args:
         parent (str): name of parent object (used for nested object defs)
@@ -802,7 +800,7 @@ def obj(parent, model, line, itr, oidh, octr):
 
 
 def write_config_class(model, h, t, op):
-    """Write a GridLAB-D configuration (i.e. not a link or node) class
+    """ Write a GridLAB-D configuration (i.e. not a link or node) class
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -824,7 +822,7 @@ def write_config_class(model, h, t, op):
 
 
 def write_link_class(model, h, t, seg_loads, op):
-    """Write a GridLAB-D link (i.e. edge) class
+    """ Write a GridLAB-D link (i.e. edge) class
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -856,7 +854,7 @@ triplex_configurations = [['tpx_config', 'triplex_4/0_aa', 'triplex_4/0_aa', 0.0
 
 
 def write_local_triplex_configurations(op):
-    """Write a 4/0 AA triplex configuration
+    """ Write a 4/0 AA triplex configuration
 
     Args:
       op (file): an open GridLAB-D input file
@@ -883,7 +881,7 @@ def write_local_triplex_configurations(op):
 
 
 def buildingTypeLabel(rgn, bldg, ti):
-    """Formatted name of region, building type name and thermal integrity level
+    """ Formatted name of region, building type name and thermal integrity level
 
     Args:
         rgn (int): region number 1..5
@@ -910,7 +908,7 @@ tpxAMP = 235.0
 
 
 def connect_ercot_houses(model, h, op, vln, vsec):
-    """For the reduced-order ERCOT feeders, add houses and a large service transformer to the load points
+    """ For the reduced-order ERCOT feeders, add houses and a large service transformer to the load points
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -1015,7 +1013,7 @@ def connect_ercot_houses(model, h, op, vln, vsec):
 
 
 def write_ercot_small_loads(basenode, op, vnom):
-    """For the reduced-order ERCOT feeders, write loads that are too small for houses
+    """ For the reduced-order ERCOT feeders, write loads that are too small for houses
 
     Args:
       basenode (str): the GridLAB-D node name
@@ -1049,7 +1047,7 @@ def write_ercot_small_loads(basenode, op, vnom):
 
 # look at primary loads, not the service transformers
 def identify_ercot_houses(model, h, t, avgHouse, rgn):
-    """For the reduced-order ERCOT feeders, scan each primary load to determine the number of houses it should have
+    """ For the reduced-order ERCOT feeders, scan each primary load to determine the number of houses it should have
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -1110,7 +1108,7 @@ def identify_ercot_houses(model, h, t, avgHouse, rgn):
 
 
 def replace_commercial_loads(model, h, t, avgBuilding):
-    """For the full-order feeders, scan each load with load_class==C to determine the number of zones it should have
+    """ For the full-order feeders, scan each load with load_class==C to determine the number of zones it should have
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -1165,7 +1163,7 @@ def replace_commercial_loads(model, h, t, avgBuilding):
 
 
 def identify_xfmr_houses(model, h, t, seg_loads, avgHouse, rgn):
-    """For the full-order feeders, scan each service transformer to determine the number of houses it should have
+    """ For the full-order feeders, scan each service transformer to determine the number of houses it should have
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -1220,7 +1218,7 @@ def identify_xfmr_houses(model, h, t, seg_loads, avgHouse, rgn):
 
 
 def write_small_loads(basenode, op, vnom):
-    """Write loads that are too small for a house, onto a node
+    """ Write loads that are too small for a house, onto a node
 
     Args:
       basenode (str): GridLAB-D node name
@@ -1282,7 +1280,7 @@ def write_small_loads(basenode, op, vnom):
 
 
 def write_commercial_loads(key, op):
-    """Put commercial building zones and ZIP loads into the model
+    """ Put commercial building zones and ZIP loads into the model
 
     Args:
         key (str): GridLAB-D load name that is being replaced
@@ -1291,7 +1289,7 @@ def write_commercial_loads(key, op):
 
 
 def write_houses(basenode, op, vnom):
-    """Put houses, along with solar panels and batteries, onto a node
+    """ Put houses, along with solar panels and batteries, onto a node
 
     Args:
         basenode (str): GridLAB-D node name
@@ -1656,7 +1654,7 @@ def write_houses(basenode, op, vnom):
 
 
 def write_substation(op, name, phs, vnom, vll):
-    """Write the substation swing node, transformer, metrics collector and fncs_msg object
+    """ Write the substation swing node, transformer, metrics collector and fncs_msg object
 
     Args:
         op (file): an open GridLAB-D input file
@@ -1723,7 +1721,7 @@ def write_substation(op, name, phs, vnom, vll):
 #   therefore, it should not be necessary to look up kva_total, but phases might have changed N==>S
 # if the phasing did change N==>S, we have to prepend triplex_ to the class, write power_1 and voltage_1
 def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
-    """Write GridLAB-D instances that have a primary nominal voltage, i.e., node, meter and load
+    """ Write GridLAB-D instances that have a primary nominal voltage, i.e., node, meter and load
 
     Args:
         model (dict): a parsed GridLAB-D model
@@ -1837,7 +1835,7 @@ def write_voltage_class(model, h, t, op, vprim, vll, secmtrnode):
 
 
 def write_xfmr_config(key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln, op):
-    """Write a transformer_configuration
+    """ Write a transformer_configuration
 
     Args:
         key (str): name of the configuration
@@ -1897,7 +1895,7 @@ def write_xfmr_config(key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln
 
 
 def log_model(model, h):
-    """Prints the whole parsed model for debugging
+    """ Prints the whole parsed model for debugging
 
     Args:
         model (dict): parsed GridLAB-D model
@@ -1915,7 +1913,8 @@ def log_model(model, h):
 
 
 def accumulate_load_kva(data):
-    """Add up the total kva in a load-bearing object instance
+    """
+    Add up the total kva in a load-bearing object instance
 
     Considers constant_power_A/B/C/1/2/12 and power_1/2/12 attributes
 
@@ -1945,7 +1944,7 @@ def accumulate_load_kva(data):
 
 
 def union_of_phases(phs1, phs2):
-    """Collect all phases on both sides of a connection
+    """ Collect all phases on both sides of a connection
 
     Args:
         phs1 (str): first phasing
@@ -1967,7 +1966,7 @@ def union_of_phases(phs1, phs2):
 
 
 def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
-    """Parse and re-populate one backbone feeder, usually but not necessarily one of the PNNL taxonomy feeders
+    """ Parse and re-populate one backbone feeder, usually but not necessarily one of the PNNL taxonomy feeders
 
     This function:
 
@@ -2353,7 +2352,7 @@ def ProcessTaxonomyFeeder(outname, rootname, vll, vln, avghouse, avgcommercial):
 
 
 def populate_feeder(configfile=None, config=None, taxconfig=None):
-    """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
+    """ Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
 
     Args:
         configfile (str): JSON file name for the feeder population data, mutually exclusive with config
@@ -2448,7 +2447,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
 
 
 def populate_all_feeders():
-    """Wrapper function that batch processes all taxonomy feeders in the casefiles table (see source file)
+    """ Wrapper function that batch processes all taxonomy feeders in the casefiles table (see source file)
     """
     if sys.platform == 'win32':
         batname = 'run_all.bat'

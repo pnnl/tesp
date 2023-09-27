@@ -34,13 +34,13 @@ class LargeOffice(object):
 
     def FMU_init(self, fmu_init_inputs):
         fmu = self.system
-        for key, value in fmu_init_inputs.iteritems():
+        for key, value in fmu_init_inputs.items():
             self.system.set(key, value)
         self.system.initialize(start_time=self.startTime, stop_time=self.stopTime)
 
     def FMU_step(self, current_t, fmu_inputs):
         inputs = fmu_inputs
-        for key, value in inputs.iteritems():
+        for key, value in inputs.items():
             self.system.set(key, value)
         self.system.do_step(current_t=current_t, step_size=self.stepSize)
         TSup = self.system.get('TSupOutput')

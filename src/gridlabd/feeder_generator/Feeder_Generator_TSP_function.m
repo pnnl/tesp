@@ -4325,7 +4325,7 @@ for tax_ind=1:no_of_tax
 
     
     % if you want to create and emissions object - THIS WILL BE REMOVED AND
-    % EMISSIONS WILL BE PERFORMED IN POST PROCESSING
+    % EMISSIONS WILL BE PERFORMED IN POST-PROCESSING
 %     if (use_flags.use_emissions ~= 0)
 %         % Add emissions object
 %         fprintf(write_file,'object emissions {\n');

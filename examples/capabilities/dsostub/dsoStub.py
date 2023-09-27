@@ -5,9 +5,9 @@ import json
 import helics
 import logging as log
 
-import tesp_support.tso_helpers as tso
-from tesp_support.helpers import parse_mva
-from tesp_support.helpers import HelicsMsg
+import tesp_support.api.tso_helpers as tso
+from tesp_support.api.parse_helpers import parse_mva
+from tesp_support.api.helpers import HelicsMsg
 
 
 def dso_make_stub(casename):
@@ -132,7 +132,7 @@ def dso_loop(casename):
         # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
-            key = helics.helicsSubscriptionGetTarget(sub)
+            key = helics.helicsInputGetTarget(sub)
             topic = key.upper().split('/')[1]
             # log.info("HELICS subscription index: " + str(t) + ", key: " + key + ", topic: " + topic)
             if helics.helicsInputIsUpdated(sub):

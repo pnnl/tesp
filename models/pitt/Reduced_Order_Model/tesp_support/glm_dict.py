@@ -66,8 +66,8 @@ def glm_dict(name_root, ercot=False, te30=False):
 
     Args:
         name_root (str): path and file name of the GLM file, without the extension
-        ercot (boolean): request ERCOT billing meter naming. Defaults to false.
-        te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false.
+        ercot (bool): request ERCOT billing meter naming. Defaults to false.
+        te30 (bool): request hierarchical meter handling in the 30-house test harness. Defaults to false.
     """
     ip = open(name_root + '.glm', 'r')
     op = open(name_root + '_glm_dict.json', 'w')

@@ -1,5 +1,5 @@
 # Copyright (C) 2018-2022 Battelle Memorial Institute
-# file: prep_substation_dsot.py
+# file: prep_substation_dsot_f.py
 """ Sets up the FNCS and agent configurations for DSOT ercot case 8 example
 
 Public Functions:
@@ -12,7 +12,7 @@ from datetime import datetime
 
 import numpy as np
 
-from tesp_support.helpers_dsot import random_norm_trunc
+from tesp_support.api.helpers import random_norm_trunc
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -25,7 +25,7 @@ np.random.seed(0)
 def select_setpt_occ(prob, mode):
     hdr = hvac_setpt['occ_' + mode][0]
     temp = hvac_setpt['occ_' + mode][1:]
-    temp = (np.array(temp)).astype(np.float)
+    temp = (np.array(temp)).astype(np.float64)
     total = 0
     for row in range(len(temp)):
         total += temp[row][1]
@@ -45,7 +45,7 @@ def select_setpt_occ(prob, mode):
 def select_setpt_unocc(wakeup_set, mode):
     hdr = hvac_setpt['unocc_' + mode][0]
     temp = hvac_setpt['unocc_' + mode][1:]
-    temp = (np.array(temp)).astype(np.float)
+    temp = (np.array(temp)).astype(np.float64)
     # first get the column corresponding day_occ set-point
     if wakeup_set == 100 and mode == 'cool':
         return 100
@@ -76,7 +76,7 @@ def select_setpt_unocc(wakeup_set, mode):
 def select_setpt_night(wakeup_set, daylight_set, mode):
     hdr = hvac_setpt['night_' + mode][0]
     temp = hvac_setpt['night_' + mode][1:]
-    temp = (np.array(temp)).astype(np.float)
+    temp = (np.array(temp)).astype(np.float64)
     # first get the column corresponding occ and unocc set-point pair
     if wakeup_set == 100 and mode == 'cool':
         return 100
@@ -106,7 +106,7 @@ def select_setpt_night(wakeup_set, daylight_set, mode):
 
 
 def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
-    """Helper function that processes one GridLAB-D file
+    """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
 
@@ -1012,7 +1012,8 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     op.close()
 
 
-def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt, config=None, hvacSetpt=None, jsonfile='',Q_forecast=None,Q_dso_key=None):
+def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
+                    config=None, hvacSetpt=None, jsonfile='', Q_forecast=None, Q_dso_key=None):
     """ Process a base GridLAB-D file with supplemental JSON configuration data
 
     Always reads gldfileroot.glm and writes:

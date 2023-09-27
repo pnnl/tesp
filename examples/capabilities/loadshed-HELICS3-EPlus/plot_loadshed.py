@@ -1,4 +1,6 @@
-# file: plot_loadshed.py
+# Copyright (C) 2021-2022 Battelle Memorial Institute
+# file: plots.py
+
 import json
 import os
 import sys
@@ -6,7 +8,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-import tesp_support.api as tesp
+import tesp_support.original.prep_eplus as pe
 
 outputFolder = './'
 # first, read and print a dictionary of all the monitored GridLAB-D objects
@@ -53,7 +55,7 @@ meta_m = lst_m.pop('Metadata')
 times = list(map(int, list(lst_m.keys())))
 times.sort()
 print("There are", len(times), "sample times beginning with", times[1] - times[0], "second intervals")
-hrs = np.array(times, dtype=np.float64)
+hrs = np.array(times, dtype=float)
 denom = 3600.0
 hrs /= denom
 
@@ -74,7 +76,7 @@ for key, val in meta_m.items():
     elif key == 'voltage12_min':
         MTR_VOLT12_MIN_IDX = val['index']
         MTR_VOLT12_MIN_UNITS = val['units']
-data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[t1][mtr_keys[0]])), dtype=np.float64)
+data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[t1][mtr_keys[0]])), dtype=float)
 print("\nConstructed", data_m.shape, "NumPy array for Meters")
 j = 0
 for key in mtr_keys:
@@ -99,7 +101,7 @@ for key, val in meta_s.items():
     elif key == 'real_power_losses_avg':
         SUB_LOSSES_IDX = val['index']
         SUB_LOSSES_UNITS = val['units']
-data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[t1][sub_keys[0]])), dtype=np.float64)
+data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[t1][sub_keys[0]])), dtype=float)
 print("\nConstructed", data_s.shape, "NumPy array for Substations")
 j = 0
 for key in sub_keys:
@@ -128,7 +130,7 @@ ax[1].set_title("Real Power at Substation")
 ax[1].legend(loc='best')
 ax[1].set_xlabel("Hours")
 
-emetrics = tesp.read_eplus_metrics(os.getcwd(), 'agent')
-tesp.plot_eplus(emetrics)
+emetrics = pe.read_eplus_metrics(os.getcwd(), 'agent')
+pe.plot_eplus(emetrics)
 
 plt.show()

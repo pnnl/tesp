@@ -28,7 +28,7 @@ from pypower.run_userfcn import run_userfcn
 
 
 def ext2int(ppc, val_or_field=None, ordering=None, dim=0):
-    """Converts external to internal indexing.
+    """ Converts external to internal indexing.
 
     This function has two forms, the old form that operates on
     and returns individual matrices and the new form that operates
@@ -215,7 +215,7 @@ def ext2int(ppc, val_or_field=None, ordering=None, dim=0):
 
 
 def ext2int1(bus, gen, branch, areas=None):
-    """Converts from (possibly non-consecutive) external bus numbers to
+    """ Converts from (possibly non-consecutive) external bus numbers to
     consecutive internal bus numbers which start at 1. Changes are made
     to BUS, GEN, BRANCH and optionally AREAS matrices, which are returned
     along with a vector of indices I2E that can be passed to INT2EXT to

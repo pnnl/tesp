@@ -16,8 +16,8 @@ declare -r ns3=
 #(exec python3 helicshed.py &> loadshed.log & jobs -p >> tesp.pid)
 
 
-(exec helics_broker -f 4 --loglevel=warning --dumplog --name=mainbroker &> broker.log &)
-(exec helics_recorder --input=helicsRecorder.json --timedelta 1s --period 1s --stop 21600s &> tracer.log &)
+(exec helics_broker -f 4 --loglevel=warning --name=mainbroker &> broker.log &)
+(exec helics_recorder --config-file helicsRecorder.json --timedelta 1s --period 1s --stop 21600s &> tracer.log &)
 (exec gridlabd -D WANT_HELICS_NS3 loadshed.glm &> gridlabd.log &)
 (export NS_LOG=$ns3 && exec ./loadshedCommNetwork --helicsConfigFile=loadshedCommNetworkConfig.json --simulationRunTime=21600.0 &> network.log &)
 (exec python3 helicshed.py &> loadshed.log &)

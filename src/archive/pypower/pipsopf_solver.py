@@ -21,7 +21,7 @@ from pypower.pips import pips
 from pypower.util import sub2ind
 
 def pipsopf_solver(om, ppopt, out_opt=None):
-    """Solves AC optimal power flow using PIPS.
+    """ Solves AC optimal power flow using PIPS.
 
     Inputs are an OPF model object, a PYPOWER options vector and
     a dict containing keys (can be empty) for each of the desired

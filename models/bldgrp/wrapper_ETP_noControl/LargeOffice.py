@@ -42,7 +42,7 @@ class LargeOffice(object):
     def set_init_values(self):
         initTemp = np.genfromtxt('./init2.csv', delimiter=',', max_rows=self.start_day + self.duration)
         inputs, outputs = self.set_io_structure(self.modelType)  # get inputs/outputs structure
-        for key, value in self.inputSettings.iteritems():  # over-write with user defined values
+        for key, value in self.inputSettings.items():  # over-write with user defined values
             inputs[key] = value
             # self.model.set(key, value) #set initial values in fmu,
             print("set " + key + " to " + value)
@@ -109,13 +109,13 @@ class LargeOffice(object):
         self.model.initialize(self.startTime, self.stopTime)
         self.setInitValues()
         # initialize the inputs variables
-        for key, value in init_inputs.iteritems():
+        for key, value in init_inputs.items():
             # self.model.set(key, value)
             print("set " + key + " to " + value)
 
     def step(self, current_t, curInputs, T_prev, TO_current, Q_current, TG):
         # -----FMU step, temporarily commented out ----
-        # for key, value in curInputs.iteritems():
+        # for key, value in curInputs.items():
         #	if value == "Y":
         #		value = "1"
         #	elif value == "N":

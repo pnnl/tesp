@@ -1,0 +1,162 @@
+clock {
+	timezone "PST+8PDT";
+	starttime '2001-08-01 12:00:00 PST';
+	stoptime '2001-08-01 12:00:05 PST';
+}
+
+#set suppress_repeat_messages=1
+#set relax_naming_rules=1;
+#set profiler=1
+//#set pauseatexit=1
+#define rotor_convergence=0.00000000000001
+#set double_format=%+.12lg
+#set complex_format=%+.12lg%+.12lg%c
+#set complex_output_format=RECT
+
+
+//Deltamode declarations - global values
+#set deltamode_timestep=100000000		//100 ms
+#set deltamode_maximumtime=60000000000	//1 minute
+#set deltamode_iteration_limit=10		//Iteration limit
+#set deltamode_forced_always=true
+
+module tape;
+
+module powerflow {
+	enable_subsecond_models true;
+	deltamode_timestep 1 ms;	//10 ms
+	solver_method NR;
+	all_powerflow_delta true;
+	//lu_solver "KLU";
+	//enable_inrush TRUE;
+};
+
+module generators {
+	enable_subsecond_models true;
+	deltamode_timestep 1 ms;
+}
+
+//Fault check option
+object fault_check {
+	name base_fault_check_object;
+	check_mode ONCHANGE;
+	strictly_radial false;
+	grid_association true;	//Flag to ensure non-monolithic islands
+	// output_filename test_connect.txt;
+	// full_output_file true;
+}
+
+//Phase Conductor for 1 thru 8: 336,400 26/7 ACSR
+object overhead_line_conductor {
+	name overhead_line_conductor_1;
+	geometric_mean_radius 0.0244  ;
+	resistance 0.30600;
+}
+
+//Phase Conductor for 9 thru 11: 1/0 ACSR
+object overhead_line_conductor {
+	name overhead_line_conductor_2;
+	geometric_mean_radius 0.004460  ;
+	resistance 1.12000;
+}	
+
+//Phase Conductor for neutral: 4/0 6/1 ACSR
+object overhead_line_conductor {
+	name overhead_line_conductor_3;
+	geometric_mean_radius 0.008140  ;
+	resistance 0.59200;
+}
+
+// Phase Conductor for 12: 1/0 AA,TS
+object underground_line_conductor { 
+	name underground_line_conductor_1;
+	outer_diameter 1.060000;
+	conductor_gmr 0.011100;
+	conductor_diameter 0.368000;
+	conductor_resistance 0.970000;
+	neutral_gmr 0.011100;
+	neutral_resistance 0.970000;
+	neutral_diameter 0.0640837;
+	neutral_strands 6.000000;
+	shield_gmr 0.000000;
+	shield_resistance 0.000000;
+}
+
+// Overhead line configurations
+// ABCN
+object line_spacing {
+	name line_spacing_1;
+	distance_AB 2.5;
+	distance_AC 7.0;
+	distance_BC 4.5;
+	distance_AN 5.656854;
+	distance_BN 4.272002;
+	distance_CN 5.0;
+}
+
+object line_configuration {
+	name line_configuration_1;
+	conductor_A overhead_line_conductor_1;
+	conductor_B overhead_line_conductor_1;
+	conductor_C overhead_line_conductor_1;
+	conductor_N overhead_line_conductor_3;
+	spacing line_spacing_1;
+}
+
+//Define line objects 
+object overhead_line  {
+	name OH_line_1-2;
+	phases "ABCN";
+	from node_1;
+	to node_2;
+	length 175;
+	configuration line_configuration_1;
+	object recorder {
+		flags DELTAMODE;
+		property "power_in,power_in_A,power_in_B,power_in_C";
+		interval 1;
+		file "test_reactive_power.csv";
+	};
+}
+
+object overhead_line  {
+	name OH_line_2-3;
+	phases "ABCN";
+	from node_2;
+	to node_3;
+	length 175;
+	configuration line_configuration_1;
+}
+
+object meter {
+	phases ABCN;
+	name node_1;
+	nominal_voltage 7200.0;
+	bustype SWING;
+}
+
+object meter {
+	phases ABCN;
+	name node_2;
+	nominal_voltage 7200.0;
+}
+
+object load {
+	phases ABCN;
+	name node_3;
+	nominal_voltage 7200.0;
+	base_power_A 1000.0 W;
+	base_power_B 1000.0 W;
+	base_power_C 1000.0 W;
+	impedance_pf_A 0.85;
+	impedance_pf_B 0.85;
+	impedance_pf_C 0.85;
+	impedance_fraction_A 1.0;
+	impedance_fraction_B 1.0;
+	impedance_fraction_C 1.0;
+	object player {
+		flags DELTAMODE;
+		property "base_power_A,base_power_B,base_power_C";
+		file base_power_player_multi.csv;
+	};
+}	

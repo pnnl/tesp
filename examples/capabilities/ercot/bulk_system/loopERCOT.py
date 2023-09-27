@@ -8,7 +8,7 @@ import numpy as np
 import pypower.api as pp
 import scipy.interpolate as ip
 
-import tesp_support.tso_helpers as tso
+import tesp_support.api.tso_helpers as tso
 
 casename = 'ercot_8'
 wind_period = 3600

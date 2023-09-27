@@ -1,0 +1,84 @@
+{
+  "tech": [
+    {
+      "key": "custom1",
+      "type": "custom",
+      "parameters": {
+        "grid_location": {
+          "data": "substation"
+        },
+        "post_project_load": {
+          "start_date": "2016-01-04 00:00",
+          "end_date": "2016-01-04 23:00",
+          "lookup_id": "None",
+          "unit": "MW",
+          "file_name": "post_load.csv",
+          "data": []
+        },
+        "post_project_max_load": {
+          "data": 0,
+          "unit": "MW"
+        }
+      },
+      "steps": [
+        "custom_load_upload",
+        "grid_location"
+      ]
+    }
+  ],
+  "impacts": {
+    "emissions": "True"
+  },
+  "context": {
+    "parameters": {
+      "region_type": {
+        "data": "avert-region"
+      },
+      "region_name": {
+        "data": "TX"
+      },
+      "pre_project_load": {
+        "lookup_id": "None",
+        "unit": "MW",
+        "data": [],
+        "start_date": "2016-01-04 00:00",
+        "end_date": "2016-01-04 23:00",
+        "source": "avert",
+        "file": "None",
+        "file_name": "None",
+        "key": "avert_pre_project_load"
+      },
+      "pre_project_max_load": {
+        "data": 0,
+        "unit": "MW"
+      },
+      "emissions_calc_method": {
+        "data": "upload_dispatch"
+      },
+      "dispatch_data": {
+        "start_date": "2016-01-04 00:00",
+        "end_date": "2016-01-04 23:00",
+        "time_unit": "hour",
+        "data": {
+        }
+      }
+    },
+    "steps": [
+      "region_select",
+      "pre_project_load",
+      "pre_project_max_load",
+      "emissions_calc_method",
+      "dispatch_data_upload"
+    ]
+  },
+  "global": {
+    "parameters": {
+      "analysis_start_date": {
+        "data": "2016-01-04 00:00"
+      },
+      "analysis_end_date": {
+        "data": "2016-01-04 23:00"
+      }
+    }
+  }
+}

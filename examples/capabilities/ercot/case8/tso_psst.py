@@ -14,7 +14,7 @@ import scipy.interpolate as ip
 from copy import deepcopy
 from datetime import datetime
 
-import tesp_support.tso_helpers as tso
+import tesp_support.api.tso_helpers as tso
 
 
 casename = 'ercot_8'
@@ -115,7 +115,7 @@ def tso_psst_loop():
         sum_lmp = 0.0
         DA_LMPs = [[0 for _ in range(hours_in_a_day)] for _ in range(total_bus_num)]
         for h, r in model.results.lmp.iterrows():
-            for b, lmp in sorted(r.iteritems()):
+            for b, lmp in sorted(r.items()):
                 bn = int(b[3:])
                 if lmp is None:
                     lmp = 0
@@ -225,7 +225,7 @@ def tso_psst_loop():
         sum_lmp = 0.0
         RT_LMPs = [[0 for _ in range(TAU)] for _ in range(total_bus_num)]
         for h, r in model.results.lmp.iterrows():
-            for b, lmp in sorted(r.iteritems()):
+            for b, lmp in sorted(r.items()):
                 bn = int(b[3:])
                 if lmp is None:
                     lmp = 0
@@ -1085,7 +1085,7 @@ def tso_psst_loop():
         # see another example for helics integration at tso_PYPOWER.py
         for t in range(subCount):
             sub = helics.helicsFederateGetInputByIndex(hFed, t)
-            key = helics.helicsSubscriptionGetTarget(sub)
+            key = helics.helicsInputGetTarget(sub)
             log.debug("HELICS subscription index: " + str(t) + ", key: " + key)
             key = key.upper().split('/')
             federate = key[0]

@@ -3,7 +3,7 @@
 
 import sys
 import pypower.api as pp
-import tesp_support.tso_helpers as tso
+import tesp_support.api.tso_helpers as tso
 
 
 def rescale_case(scale):

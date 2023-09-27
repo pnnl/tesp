@@ -33,14 +33,14 @@ def tic():
     toc(False)
 
 def load_json(dir_path, file_name):
-    """Utility to open Json files."""
+    """ Utility to open Json files."""
     with open(os.path.join(dir_path, file_name)) as json_file:
         data = json.load(json_file)
     return data
 
 
 def get_date(dir_path, dso, day):
-    """Utility to return start time (datetime format) of simulation day (str) in question"""
+    """ Utility to return start time (datetime format) of simulation day (str) in question"""
     # Determine first day of simulation and the date of the day requested
     dso = '2'
     case_config = load_json(dir_path, 'case_config_' + dso + '.json')
@@ -50,8 +50,8 @@ def get_date(dir_path, dso, day):
 
 
 def customer_meta_data(glm_meta, agent_meta, tariff_path, transactive=False):
-    """Update GLM dictionary with information from agent dictionary needed for customer billing.
-    Arguments:
+    """ Update GLM dictionary with information from agent dictionary needed for customer billing.
+    Args:
         glm_meta (dict): dictionary of GridLab-D information
         agent_meta (dict): dictionary of transactive agent information
     Returns:
@@ -132,10 +132,10 @@ def customer_meta_data(glm_meta, agent_meta, tariff_path, transactive=False):
 
 
 def load_gen_data(dir_path, gen_name, day_range):
-    """Utility to open h5 files for agent data.
-    Arguments:
+    """ Utility to open h5 files for agent data.
+    Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter' etc)
     Returns:
@@ -185,8 +185,8 @@ def load_gen_data(dir_path, gen_name, day_range):
 
 
 def load_ames_data(dir_path, day_range):
-    """Utility to open AMES csv file.
-    Arguments:
+    """ Utility to open AMES csv file.
+    Args:
         dir_path (str): path of directory where AMES data lives
         day_range (range): range of simulation days for data to be returned
     Returns:
@@ -211,8 +211,8 @@ def load_ames_data(dir_path, day_range):
 
 
 def load_ercot_data(ercot_path, dir_path, day_range):
-    """Utility to open AMES csv file.
-    Arguments:
+    """ Utility to open AMES csv file.
+    Args:
         dir_path (str): path of directory where the case config files lives
         ercot_path (str): path where the ercot fuel mix excel workbook lives
         day_range (range): range of simulation days for data to be returned
@@ -240,8 +240,8 @@ def load_ercot_data(ercot_path, dir_path, day_range):
     return data_df
 
 def load_indust_data(indust_path, day_range):
-    """Utility to open industrial load csv file.
-    Arguments:
+    """ Utility to open industrial load csv file.
+    Args:
         dir_path (str): path of directory where the case config files lives
         indust_path (str): path where the industrial csv load lives
         day_range (range): range of simulation days for data to be returned
@@ -257,8 +257,8 @@ def load_indust_data(indust_path, day_range):
 
 
 def load_ercot_fuel_mix(ercot_path, dir_path, day_range):
-    """Utility to open AMES csv file.
-    Arguments:
+    """ Utility to open AMES csv file.
+    Args:
         dir_path (str): path of directory where AMES data lives
         day_range (range): range of simulation days for data to be returned
     Returns:
@@ -281,11 +281,11 @@ def load_ercot_fuel_mix(ercot_path, dir_path, day_range):
 
 
 def load_da_retail_price(dir_path, folder_prefix, dso_num, day_num):
-    """Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
+    """ Utility to return day ahead cleared retail price.  Data corresponds to 10am bid day before mapped to actual
     datetime when the energy will be consumed.
-    Arguments:
+    Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
     Returns:
         retail_da_data_df : dataframe of cleared DA retail price
@@ -314,10 +314,10 @@ def load_da_retail_price(dir_path, folder_prefix, dso_num, day_num):
 
 
 def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
-    """Utility to open h5 files for agent data.
-    Arguments:
+    """ Utility to open h5 files for agent data.
+    Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter' etc)
     Returns:
@@ -363,10 +363,10 @@ def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
 
 
 def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
-    """Utility to open h5 files for agent data.
-    Arguments:
+    """ Utility to open h5 files for agent data.
+    Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter' etc)
     Returns:
@@ -435,10 +435,10 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
 
 
 def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
-    """Utility to open GLD created h5 files for systems' data.
-    Arguments:
+    """ Utility to open GLD created h5 files for systems' data.
+    Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\TE_base_s')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         system_name (str): name of system data to load (e.g. 'house', 'substation', 'inverter' etc)
     Returns:
@@ -474,9 +474,9 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
 
 
 def get_house_schedules(agent_metadata, gld_metadata, house_name):
-    """Utility to get schedules directly from the agent dictionary.  This allows evaluation of schedules prior to agent
+    """ Utility to get schedules directly from the agent dictionary.  This allows evaluation of schedules prior to agent
     control.
-    Arguments:
+    Args:
         agent_metadata (dict): dictionary of agent metadata
         gld_metadata (dict): dictionary of gld metadata
         house_name (str): name of GLD house object schedules are wanted for
@@ -545,10 +545,10 @@ def get_house_schedules(agent_metadata, gld_metadata, house_name):
 
 
 def load_weather_data(dir_path, folder_prefix, dso_num, day_num):
-    """Utility to open weather dat files and find day of data
-    Arguments:
+    """ Utility to open weather dat files and find day of data
+    Args:
         dir_path (str): path of parent directory where DSO folders live
-        folder_prefix(str): prefix of DSO folder name (e.g. '\DSO_')
+        folder_prefix (str): prefix of DSO folder name (e.g. '\DSO_')
         dso_num (str): number of the DSO folder to be opened
         day_num (str): simulation day number (1 = first day of simulation)
     Returns:
@@ -578,7 +578,7 @@ def wind_diff(x):
 
 def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, energybill=False):
     """  For a specified dso range and case this function will analyze the ratios of Res, Comm, and Industrial.
-    Arguments:
+    Args:
         dso_range (range): the DSO range that the data should be analyzed
         case (str): folder extension of case of interest
         metadata_path (str): folder extension for DSO and Comm Building  metadata
@@ -833,7 +833,7 @@ def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, e
 
 def DSO_loadprofiles(dso_range, day_range, case, dso_metadata_file, ercot_path, plot_weather=True):
     """  For a specified dso range and case this function will analyze the ratios of Res, Comm, and Industrial.
-    Arguments:
+    Args:
         dso_range (range): the DSO range that the data should be analyzed
         case (str): folder extension of case of interest
         dso_metadata_file (str): folder extension and file name for DSO metadata
@@ -920,7 +920,7 @@ def DSO_loadprofiles(dso_range, day_range, case, dso_metadata_file, ercot_path, 
 def find_edge_cases(dso, case, day_range, agent_prefix, gld_prefix):
     """  For a specified dso and case this function will return the day associated with a range of 'edge cases' (for
          example the hottest day or biggest swing in prices.
-    Arguments:
+    Args:
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         case (str): folder extension of case of interest
         agent_prefix (str): folder extension for agent data
@@ -1044,7 +1044,7 @@ def find_edge_cases(dso, case, day_range, agent_prefix, gld_prefix):
 def bldg_load_stack(dso_range, day_range, case, agent_prefix, gld_prefix, dso_metadata_file, ercot_path):
     """  For a specified dso, system, variable, and day this function will load in the required data, plot the daily
      profile and save the plot to file.
-    Arguments:
+    Args:
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         system (str): the system to be plotted (e.g. 'substation', 'house', 'HVAC_agent')
         subsystem (str): the individual house to be plotted (e.g. 'HousesA_hse_1') or the operator to be used if
@@ -1188,7 +1188,7 @@ def bldg_load_stack(dso_range, day_range, case, agent_prefix, gld_prefix, dso_me
 def der_load_stack(dso_range, day_range, case, agent_prefix, gld_prefix, dso_metadata_file, ercot_path):
     """  For a specified dso and day range this function will load in the required data, plot the stacked DER loads
     and save the plot to file.
-    Arguments:
+    Args:
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         day_range (range): the day range to plotted.
         case (str): folder extension of case of interest
@@ -1322,7 +1322,7 @@ def der_load_stack(dso_range, day_range, case, agent_prefix, gld_prefix, dso_met
 def der_stack_plot(day_range, ercot_path, case, comp = None):
     """  For a specified dso and day range this function will load in the required data, plot the stacked DER loads
     and save the plot to file.
-    Arguments:
+    Args:
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         day_range (range): the day range to plotted.
         case (str): folder extension of case of interest
@@ -1409,7 +1409,7 @@ def der_stack_plot(day_range, ercot_path, case, comp = None):
 def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_prefix, gld_prefix):
     """  For a specified dso, system, variable, and day this function will load in the required data, plot the daily
      profile and save the plot to file.
-    Arguments:
+    Args:
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         system (str): the system to be plotted (e.g. 'substation', 'house', 'HVAC_agent')
         subsystem (str): the individual house to be plotted (e.g. 'HousesA_hse_1') or the operator to be used if
@@ -1480,9 +1480,9 @@ def daily_load_plots(dso, system, subsystem, variable, day, case, comp, agent_pr
 
 
 def load_duration_plot(dso, system, subsystem, variable, day, case, comp, agent_prefix, gld_prefix):
-    """For a specified dso, system, variable, and day this function will load in the required data, plot the load
+    """ For a specified dso, system, variable, and day this function will load in the required data, plot the load
      duration profile and save the plot to file.  NOTE: currently for one day = should extend to a day-range.
-    Arguments:
+    Args:
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         system (str): the system to be plotted (e.g. 'substation', 'house', 'HVAC_agent')
         subsystem (str): the individual house to be plotted (e.g. 'HousesA_hse_1') or the operator to be used if
@@ -1531,9 +1531,9 @@ def load_duration_plot(dso, system, subsystem, variable, day, case, comp, agent_
 
 
 def dso_comparison_plot(dso_range, system, subsystem, variable, day, case, agent_prefix, gld_prefix):
-    """For a specified dso range, system, variable, and day this function will load in the required data, plot the
+    """ For a specified dso range, system, variable, and day this function will load in the required data, plot the
      variable for all DSOs and save the plot to file.
-    Arguments:
+    Args:
         dso_range (range): the DSO range that the data should be plotted for
         system (str): the system to be plotted (e.g. 'substation', 'house', 'HVAC_agent')
         subsystem (str): the individual house to be plotted (e.g. 'HousesA_hse_1') or the operator to be used if
@@ -1573,9 +1573,9 @@ def dso_comparison_plot(dso_range, system, subsystem, variable, day, case, agent
 
 
 def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, config_file):
-    """For a specified dso range and day this function will load in the required data, plot standard market price and
+    """ For a specified dso range and day this function will load in the required data, plot standard market price and
     quantity values all for DSOs and save the plots to file.
-    Arguments:
+    Args:
         dso_range (range): the DSO range that the data should be plotted for
         day (str): the day to plotted.
         case (str): folder extension of case of interest
@@ -1748,9 +1748,9 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir, config_f
 
 
 def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir, config_file):
-    """For a specified dso range and day range this function will load in the required data, plot forecast errors for
+    """ For a specified dso range and day range this function will load in the required data, plot forecast errors for
      all for DSOs and save the plots to file.
-    Arguments:
+    Args:
         dso_range (range): the DSO range that the data should be plotted for
         day_range (range): the day to plotted.
         case (str): folder extension of case of interest
@@ -1900,7 +1900,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir,
 def heatmap_plots(dso, system, subsystem, variable, day_range, case, agent_prefix, gld_prefix):
     """  For a specified day, system, variable, and day_range this function will load in the required data, manipulate
     the dataframe into the required shape, plot the heatmap and save the heatmap to file.
-    Arguments:
+    Args:
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         system (str): the system to be plotted (e.g. 'substation', 'house', 'HVAC_agent')
         subsystem (str): the individual house to be plotted (e.g. 'HousesA_hse_1') or the operator to be used if
@@ -1983,7 +1983,7 @@ def daily_summary_plots(dso, system, subsystem, variable, day_range, case, comp,
                         agent_prefix, gld_prefix):
     """  For a specified day range, system, variable, and dso this function will load in the required data and
      plot the variable for each day based on the operator and compare it to another case (optional).
-    Arguments:
+    Args:
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         system (str): the system to be plotted (e.g. 'substation', 'house', 'HVAC_agent')
         subsystem (str): the individual house to be plotted (e.g. 'HousesA_hse_1') or the operator to be used if
@@ -2062,7 +2062,7 @@ def daily_summary_plots(dso, system, subsystem, variable, day_range, case, comp,
 def generation_load_profiles(dir_path, config_dir, ercot_path, data_path, day_range, use_ercot_fuel_mix_data = False):
     """  For a specified day range this function plots the stacked profiles of all generators (by fuel type) along with
     load plots.
-    Arguments:
+    Args:
         dir_path (str): path locating the AMES data file
         ercot_path (str): path locating the ERCOT load profile 5 minute data
         data_path (str): path to the folder containing the plots sub folder
@@ -2144,12 +2144,12 @@ def generation_load_profiles(dir_path, config_dir, ercot_path, data_path, day_ra
 def generation_statistics(dir_path, config_dir, data_path, day_range, use_gen_data = True):
     """  For a specified day range this function plots the stacked profiles of all generators (by fuel type) along with
     load plots.
-    Arguments:
+    Args:
         dir_path (str): path locating the AMES data file
         ercot_path (str): path locating the ERCOT load profile 5 minute data
         data_path (str): path to the folder containing the plots sub folder
         day_range (range): range of starting day and ending day of plot
-        use_gen_data (boolean): if True uses dispatched generator performance from PyPower.  If False uses dispatched
+        use_gen_data (bool): if True uses dispatched generator performance from PyPower.  If False uses dispatched
         AMES performance
     Returns:
         saves plots to file
@@ -2296,12 +2296,12 @@ def generation_statistics(dir_path, config_dir, data_path, day_range, use_gen_da
 def transmission_statistics(metadata_file_path, case_config_path, data_path, day_range, sim_results = False):
     """  For a specified day range this function determines key transmission statistics (e.g. line lenght, max
     normalized line usage etc).
-    Arguments:
+    Args:
         metadata_file_path (str): path and file name of the 8/200-bus metadata json file
         case_config_path (str): path and file name locating the system case config json file
         data_path (str): path to the folder containing the simulation results
         day_range (range): range of starting day and ending day of data to include
-        sim_results (boolean): if True loads in simuation results.  If false skips simulation results.
+        sim_results (bool): if True loads in simuation results.  If false skips simulation results.
     Returns:
         saves csv statistics to files
         """
@@ -2521,7 +2521,7 @@ def transmission_statistics(metadata_file_path, case_config_path, data_path, day
 def metadata_dist_plots(system, sys_class, variable, dso_range, case, agent_prefix):
     """  For a , system, class, and dso_range this function will load in the required data, and plot a
      histogram of the population distribution.
-    Arguments:
+    Args:
         system (str): the system to be plotted (e.g. 'house')
         sys_class (str): the subclass to be plotted (e.g. 'SINGLE_FAMILY').  If system has no subsystems or you want to
             see the full population set equal to None
@@ -2623,8 +2623,8 @@ def metadata_dist_plots(system, sys_class, variable, dso_range, case, agent_pref
 
 
 def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
-    """Determines the loss of amenity metrics (aka unmet hours) for HVAC and WH.
-    Arguments:
+    """ Determines the loss of amenity metrics (aka unmet hours) for HVAC and WH.
+    Args:
         gld_metadata (dict): gld metadata structure for the DSO to be analyzed
         dir_path (str): directory path for the case to be analyzed
         folder_prefix (str): prefix of GLD folder name (e.g. '\TE_base_s')
@@ -2719,8 +2719,8 @@ def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
 
 
 def annual_amenity(metadata, month_list, folder_prefix, dso_num):
-    """Creates a dataframe of monthly energy consumption values and annual sum based on monthly h5 files.
-    Arguments:
+    """ Creates a dataframe of monthly energy consumption values and annual sum based on monthly h5 files.
+    Args:
         month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
         folder_prefix (str): prefix of GLD folder name (e.g. '\TE_base_s')
         dso_num (str): number of the DSO folder to be opened
@@ -2756,7 +2756,7 @@ def annual_amenity(metadata, month_list, folder_prefix, dso_num):
 
 
 def customer_comparative_analysis(case_data, comp_data, case_path, comp_path, dso_num, month='sum', slice=None):
-    """Creates a comparison of change in energy consumption and anemities for all customers:
+    """ Creates a comparison of change in energy consumption and anemities for all customers:
         case_data (str): path location for reference case with annual energy and amenity data
         comp_data (str): path location for comparison case with annual energy and amenity data
         case_path (str): path location for reference case with simulation metadata for agents/GLD etc.
@@ -2898,7 +2898,7 @@ def customer_comparative_analysis(case_data, comp_data, case_path, comp_path, ds
 def limit_check(log_list, dso_num, system, variable, day_range, case, agent_prefix, GLD_prefix, max_lim, min_lim):
     """  For a specified dso, system, variable, and day_range this function will the time and place of the value that
     most exceeds upper and lower limits.  A text description will be added to a log list and returned.
-    Arguments:
+    Args:
         log_list (list): list of limit excursions that will be added to.
         dso_num (str): the DSO that the data should be plotted for (e.g. '1')
         system (str): the system to be checked (e.g. 'substation', 'house', 'HVAC_agent')
@@ -2969,7 +2969,7 @@ def limit_check(log_list, dso_num, system, variable, day_range, case, agent_pref
 
 
 def house_check(dso_range, sourceCase, targetCase, houseProperties):
-    """Main function of the module.
+    """ Main function of the module.
 
       Parameters
       ----------
@@ -3086,7 +3086,7 @@ def house_check(dso_range, sourceCase, targetCase, houseProperties):
 
 def get_day_df(dso, system, subsystem, variable, day, case, agent_prefix, gld_prefix):
     """  This utility loads and returns a dataframe for the desired variable for the day and dso in question.
-    Arguments:
+    Args:
         dso (str): the DSO that the data should be plotted for (e.g. '1')
         system (str): the system to be plotted (e.g. 'substation', 'house', 'HVAC_agent')
         subsystem (str): the individual house to be plotted (e.g. 'HousesA_hse_1') or the operator to be used if
@@ -3123,7 +3123,7 @@ def get_day_df(dso, system, subsystem, variable, day, case, agent_prefix, gld_pr
 def df_reduction(df, subsystem, variable, format):
     """  This utility slices a dataframe based on the subsystem (or aggregation) of interest.  This is used for agent
     or house data where there is multiple house data per timestep and reduction is needed before plotting data.
-    Arguments:
+    Args:
         df (dataframe): dataframe to be reduced
         subsystem (str): the individual house to be plotted (e.g. 'HousesA_hse_1') or the operator to be used if
                 aggregating many houses (e.g. 'sum', 'mean').  If system has no subsystems set equal to None

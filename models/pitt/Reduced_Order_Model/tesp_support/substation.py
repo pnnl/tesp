@@ -3,12 +3,12 @@
 
 import sys
 try:
-  import tesp_support.fncs as fncs
+  import tesp_support.original.fncs as fncs
 except:
   pass
-import tesp_support.simple_auction as auction
+import tesp_support.original.simple_auction as auction
 #import tesp_support.hvac as hvac
-import tesp_support.helpers as helpers
+import tesp_support.api.helpers as helpers
 import json
 from datetime import datetime
 from datetime import timedelta
@@ -27,7 +27,7 @@ if sys.platform != 'win32':
   
 
 def inner_substation_loop (configfile, metrics_root, house_num, hour_stop=72, flag='WithMarket'):
-    """Helper function that initializes and runs the agents
+    """ Helper function that initializes and runs the agents
 
     Reads configfile. Writes *auction_metrics_root_metrics.json* and
     *controller_metrics_root_metrics.json* upon completion.
@@ -127,7 +127,7 @@ def inner_substation_loop (configfile, metrics_root, house_num, hour_stop=72, fl
     tic=time.time()
     while (time_granted < time_stop):
         nextFNCSTime = int(min ([tnext_bid, tnext_agg, tnext_clear, tnext_adjust, time_stop]))
-        fncs.update_time_delta (nextFNCSTime-time_granted)
+        fncs.update_time_delta (nextFNCSTime - time_granted)
         time_granted = fncs.time_request (nextFNCSTime)
         time_delta = time_granted - time_last
         time_last = time_granted
@@ -259,8 +259,8 @@ def inner_substation_loop (configfile, metrics_root, house_num, hour_stop=72, fl
     fncs.finalize()
 
 
-def substation_loop (configfile, metrics_root, house_num, hour_stop=72, flag='WithMarket'):
-    """Wrapper for *inner_substation_loop*
+def substation_loop(configfile, metrics_root, house_num, hour_stop=72, flag='WithMarket'):
+    """ Wrapper for *inner_substation_loop*
 
     When *inner_substation_loop* finishes, timing and memory metrics will be printed
     for non-Windows platforms.

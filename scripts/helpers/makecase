@@ -3,7 +3,7 @@
 # file: editconfig
 
 import sys
-import tesp_support.tesp_case as tesp
+import tesp_support.original.tesp_case as tesp
 
 if len(sys.argv) > 0:
     tesp.make_tesp_case(sys.argv[1])

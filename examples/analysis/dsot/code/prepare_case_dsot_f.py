@@ -12,12 +12,14 @@ import json
 import shutil
 import datetime
 import numpy as np
-import tesp_support.helpers_dsot as helpers
-import tesp_support.case_merge_dsot as cm
-import tesp_support.glm_dict_dsot as gd
-import tesp_support.commbldgenerator as com_FG
-import tesp_support.feederGenerator_dsot as res_FG
-import tesp_support.copperplateFeederGenerator_dsot as cp_FG
+
+import tesp_support.dsot.helpers_dsot as helpers
+import tesp_support.original.commercial_feeder_glm as com_FG
+import tesp_support.original.copperplate_feeder_glm as cp_FG
+
+import tesp_support.dsot.case_merge as cm
+import tesp_support.dsot.glm_dictionary as gd
+import tesp_support.dsot.residential_feeder_glm as res_FG
 import prep_substation_dsot_f as prep
 
 
@@ -340,6 +342,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         # when only one feeder was expected
         with open(caseName + '/case_config_' + str(dso_val['bus_number']) + '.json', 'w') as outfile:
             json.dump(case_config, outfile, ensure_ascii=False, indent=2)
+
         feeders = dso_val['feeders']
         feedercnt = 1
         for feed_key, feed_val in feeders.items():
@@ -425,20 +428,25 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         cm.merge_substation_yaml(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.yaml'), list(dso_val['feeders'].keys()))
 
         # cleaning after feeders had been merged
-        foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName)) if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
+        foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName))
+                           if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
         print("=== Removing the following folders: {0}. ===".format(foldersToDelete))
         [shutil.rmtree(os.path.join(os.path.abspath(caseName), folder)) for folder in foldersToDelete]
 
         # for dso_key, dso_val in substation_config.items():
-        filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key)) if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
+        filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key))
+                         if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
         print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, dso_key))
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
     yp.close()
 
     # Also create the launch, kill and clean scripts for this case
-    helpers.write_dsot_management_script_f(master_file="generate_case_config", case_path=caseName, system_config=sys_config,
-                                               substation_config=dso_config, weather_config=weather_config)
+    helpers.write_dsot_management_script_f(master_file="generate_case_config",
+                                           case_path=caseName,
+                                           system_config=sys_config,
+                                           substation_config=dso_config,
+                                           weather_config=weather_config)
 
 
 if __name__ == "__main__":

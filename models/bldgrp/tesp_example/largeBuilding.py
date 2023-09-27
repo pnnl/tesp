@@ -1,12 +1,12 @@
 from __future__ import print_function
 
-from datetime import datetime, timedelta
-
-import os
 import json
-from LargeOffice import LargeOffice
-import sys
 import math
+import os
+import sys
+from datetime import datetime
+
+from LargeOffice import LargeOffice
 
 try:
     import fncs
@@ -116,7 +116,7 @@ def startLOSimulation(configFile):
 
     # define metadata for metric files
     metrics_collector = MetricsStore(
-        name_units_pairs= [
+        name_units_pairs=[
             ('total_power', ['kW']),
             # ('room_temperature', [u"\u2103".encode('utf-8')] * 19)
             ('room_temperature', ['degF'] * 19)
@@ -153,7 +153,7 @@ def startLOSimulation(configFile):
                 P_total.tolist(),
                 [convertTemperatureFromFtoC(t) for t in T_room]
             )
-            tnext_add_metrics+=metricsAddInterval
+            tnext_add_metrics += metricsAddInterval
         # metrics_collector_obj.add_data('large_office_' + str(metricsRecordInterval) + '_interval_', time_granted, {'total_power': [P_total.tolist()], 'room temperature': [T_room.tolist()]})
         # metrics_collector_obj.add_data('large_office_' + str(metricsRecordInterval) + '_interval_', time_granted, {'name': [P_total.tolist(), T_room.tolist()]})
         # metrics_collector_obj.add_data('large_office_' + str(metricsRecordInterval) + '_interval_', time_granted, {'name': [P_total.tolist() + T_room.tolist()]})
@@ -214,7 +214,7 @@ def startLOSimulation(configFile):
                     P_total.tolist(),
                     [convertTemperatureFromFtoC(t) for t in T_room]
                 )
-                tnext_add_metrics+=metricsAddInterval
+                tnext_add_metrics += metricsAddInterval
             # metrics_collector_obj.add_data('large_office_' + str(metricsRecordInterval) + '_interval_', time_granted, {'total_power': [P_total.tolist()], 'room temperature': [T_room.tolist()]})
             # metrics_collector_obj.add_data('large_office_' + str(metricsRecordInterval) + '_interval_', time_granted, {'name': [P_total.tolist(), T_room.tolist()]})
             # metrics_collector_obj.add_data('large_office_' + str(metricsRecordInterval) + '_interval_', time_granted, {'name': [P_total.tolist() + T_room.tolist()]})
@@ -248,7 +248,8 @@ def startLOSimulation(configFile):
 
 
 def parse_complex(arg):
-    """ Helper function to parse P+jQ from a FNCS value
+    """
+    Helper function to parse P+jQ from a FNCS value
 
     Args:
       arg (str): FNCS value in rectangular format
@@ -296,20 +297,19 @@ def parse_complex(arg):
 
 def usage():
     # print(        "usage: python largeBuilding.py <startDay of year> <duration by day> <time step by seconds(optional, default to 60 seconds)> <metrics record interval by seconds(optional, default to 300 seconds)>")
-    print(
-        "usage: python largeBuilding.py <configFile>")
+    print("usage: python largeBuilding.py <configFile>")
 
 
 def convertTimeToSeconds(time):
-    """Convert time string with unit to integer in seconds
+    """
+    Convert time string with unit to integer in seconds
 
-    It only parse unit in day, hour, minute and second.
-    It will not recognize week, month, year, millisecond, microsecond or nanosecond, they can be added if needed.
-
-    :param time: str
-        time with unit
-    :return: int
-        represent the input time in second
+    Parse unit in day, hour, minute and second. It will not recognize week, month, year, millisecond,
+    microsecond or nanosecond, they can be added if needed.
+    Args:
+        time (str): time with unit
+    Returns:
+        int: represent the input time in second
     """
     unit = filter(lambda x: x.isalpha(), time)
     timeNum = int(filter(lambda x: x.isdigit(), time))
@@ -327,6 +327,7 @@ def convertTimeToSeconds(time):
 
 def convertTemperatureFromFtoC(t):
     return t * 9.0 / 5.0 + 32.0
+
 
 if __name__ == '__main__':
     # argLength = len(sys.argv)

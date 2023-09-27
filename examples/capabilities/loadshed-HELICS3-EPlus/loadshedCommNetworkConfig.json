@@ -2,16 +2,18 @@
   "name": "loadshedCommNetwork",
   "coreType": "zmq",
   "core_name": "loadshedComm-core",
+  "loglevel": "warning",
   "period": "1ns",
-  "loglevel": "debug",
   "endpoints": [
     {
-      "name": "gridlabdSimulator1/sw_status",
+      "name": "loadshed/sw_status",
+      "type": "string",
       "info": "1",
       "global": false
     },
     {
-      "name": "loadshed/sw_status",
+      "name": "gridlabdSimulator1/sw_status",
+      "type": "string",
       "info": "1",
       "global": false
     }
@@ -19,9 +21,7 @@
   "filters": [
     {
       "name": "gld_sw_status_filter",
-      "sourcetargets": [
-        "gridlabdSimulator1/sw_status"
-      ],
+      "sourcetargets": ["gridlabdSimulator1/sw_status"],
       "operation": "reroute",
       "properties": {
         "name": "newdestination",
@@ -30,9 +30,7 @@
     },
     {
       "name": "loadshed_sw_status_filter",
-      "sourcetargets": [
-        "loadshed/sw_status"
-      ],
+      "sourcetargets": ["loadshed/sw_status"],
       "operation": "reroute",
       "properties": {
         "name": "newdestination",

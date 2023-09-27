@@ -22,7 +22,7 @@ class LargeOffice(object):
 
 	def setInitValues(self):
 		self.inputs, self.outputs = self.setIOStructure(self.modelType)
-		for key, value in self.inputSettings.iteritems():
+		for key, value in self.inputSettings.items():
 			self.inputs[key] = value
 			# self.model.set(key, value)
 			print("set " + key + " to " + value)
@@ -88,12 +88,12 @@ class LargeOffice(object):
 		self.model.initialize(self.startTime, self.stopTime)
 		self.setInitValues()
 		# initialize the inputs variables
-		for key, value in initInputs.iteritems():
+		for key, value in initInputs.items():
 			# self.model.set(key, value)
 			print("set " + key + " to " + value)
 
 	def step(self, current_t, curInputs):
-		for key, value in curInputs.iteritems():
+		for key, value in curInputs.items():
 			if value == "Y":
 				value = "1"
 			elif value == "N":

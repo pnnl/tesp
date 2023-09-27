@@ -1,12 +1,11 @@
 # Copyright (C) 2021-2022 Battelle Memorial Institute
 # file: prepare_case.py
 
-from tesp_support.data import energyplus_path
-from tesp_support.data import weather_path
-from tesp_support.TMY3toCSV import weathercsv
-from tesp_support.glm_dict import glm_dict
-from tesp_support.make_ems import merge_idf
-from tesp_support.prep_substation import prep_substation
+from tesp_support.api.data import weather_path
+from tesp_support.weather.TMY3toCSV import weathercsv
+from tesp_support.original.glm_dictionary import glm_dict
+from tesp_support.api.make_ems import merge_idf
+from tesp_support.original.prep_substation import prep_substation
 
 tmy_file = weather_path + 'AZ-Tucson_International_Ap.tmy3'
 weathercsv(tmy_file, 'weather.dat', '2013-07-01 00:00:00', '2013-07-03 00:00:00', 2013)

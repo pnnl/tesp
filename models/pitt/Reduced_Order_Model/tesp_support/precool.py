@@ -14,11 +14,10 @@ precooler agent.
 Public Functions:
     :precooler_loop: Initializes and runs the precooler agents.  
 """
-import string
 import sys
 
 try:
-  import tesp_support.fncs as fncs
+  import tesp_support.original.fncs as fncs
 except:
   pass
 import json
@@ -29,7 +28,7 @@ if sys.platform != 'win32':
   import resource
 
 def parse_fncs_magnitude (arg):
-  """Helper function to find the magnitude of a possibly complex number from FNCS
+  """ Helper function to find the magnitude of a possibly complex number from FNCS
 
   Args:
     arg (str): The FNCS value
@@ -59,7 +58,8 @@ thermalIntegrity = {
   }
 
 class precooler:
-  """This agent manages the house thermostat for time-of-use and overvoltage responses.
+  """
+    This agent manages the house thermostat for time-of-use and overvoltage responses.
 
   References:
     `NIST TE Modeling and Simulation Challenge <https://www.nist.gov/engineering-laboratory/smart-grid/hot-topics/transactive-energy-modeling-and-simulation-challenge>`_
@@ -96,7 +96,7 @@ class precooler:
     basepoint (float): the preferred time-scheduled thermostat setpoint in deg F
     setpoint (float): the thermostat setpoint, including price response, in deg F
     lastchange (float): time of day in seconds when the setpoint was last changed
-    precooling (Boolean): True if the house is precooling, False if not
+    precooling (bool): True if the house is precooling, False if not
     ti (int): thermal integrity level, as enumerated for GridLAB-D, from gldrow
     sqft (float: total floor area in square feet, from gldrow
     stories (int): number of stories, from gldrow
@@ -185,7 +185,7 @@ class precooler:
     self.make_etp_model()
 
   def set_air_temp (self,str):
-    """Set the air_temp member variable
+    """ Set the air_temp member variable
 
     Args:
         str (str): FNCS message with temperature in degrees Fahrenheit
@@ -201,15 +201,14 @@ class precooler:
     self.mtr_v = parse_fncs_magnitude (str)
 
   def check_setpoint_change (self, hour_of_day, price, time_seconds):
-    """Update the setpoint for time of day and price
+    """ Update the setpoint for time of day and price
 
     Args:
         hour_of_day (float): the current time of day, 0..24
         price (float): the current price in $/kwh
         time_seconds (long long): the current FNCS time in seconds
-
     Returns:
-        Boolean: True if the setpoint changed, False if not
+        bool: True if the setpoint changed, False if not
     """
     # time-scheduled changes to the basepoint
     if hour_of_day >= self.day_start_hour and hour_of_day <= self.day_end_hour:
@@ -237,7 +236,7 @@ class precooler:
     return False
 
   def get_temperature_deviation(self):
-    """For metrics, find the difference between air temperature and time-scheduled (preferred) setpoint
+    """ For metrics, find the difference between air temperature and time-scheduled (preferred) setpoint
 
     Returns:
         float: absolute value of deviation
@@ -245,7 +244,7 @@ class precooler:
     return abs (self.air_temp - self.basepoint)
 
 def precool_loop (nhours, metrics_root):
-  """Function that supervises FNCS messages and time stepping for precooler agents
+  """ Function that supervises FNCS messages and time stepping for precooler agents
 
   Opens metrics_root_agent_dict.json and metrics_root_glm_dict.json for configuration.
   Writes precool_metrics_root.json at completion.

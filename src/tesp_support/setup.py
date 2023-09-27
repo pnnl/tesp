@@ -1,7 +1,6 @@
 # Copyright (C) 2017-2022 Battelle Memorial Institute
 # file: setup.py
 
-import pathlib
 from setuptools import setup, find_packages
 
 version = open("version", 'r').readline().strip()
@@ -18,17 +17,20 @@ setup(
     url='https://github.com/pnnl/tesp',
     license='BSD',
     install_requires=[
-        'pandas~=1.4.3',
-        'numpy~=1.21.6',
-        'scipy~=1.8.1',
-        'matplotlib~=3.5.3',
-        'networkx~=2.8.5',
-        'PYPOWER==5.1.5',
-        'pyutilib==5.8.0',
-        'Pyomo==5.6.8'
+        'pandas~=2.0.1',
+        'numpy~=1.24.3',
+        'scipy~=1.10.1',
+        'matplotlib~=3.7.1',
+        'networkx~=3.1',
+        'PYPOWER==5.1.16',
+        'pyutilib==6.0.0',
+        'Pyomo==6.5.0'
     ],
     packages=find_packages(),
     include_package_data=True,
+    package_data={
+        'tesp_support': ['api/datafiles/*.json']
+    },
     python_requires='>=3.8',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -43,5 +45,12 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering'
     ],
-    zip_safe=False
+    zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            'download_data = tesp_support.api.data:download_data',
+            'download_analysis = tesp_support.api.data:download_analysis',
+            'download_examples = tesp_support.api.data:download_examples'
+        ]
+    }
 )

@@ -1,6 +1,7 @@
 {
   "name": "pypower",
   "period": 3600.0,
+  "logging": "warning",
   "publications":[
     {
       "global": false,

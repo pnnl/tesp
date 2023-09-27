@@ -22,7 +22,9 @@ from os import path
 
 import matplotlib.pyplot as plt
 
-import tesp_support.api as tesp
+import tesp_support.api.process_pypower as pp
+import tesp_support.api.process_gld as pg
+import tesp_support.api.process_eplus as pe
 
 # Setting up logging
 logger = logging.getLogger(__name__)
@@ -34,17 +36,17 @@ ppt = pprint.PrettyPrinter(indent=4, )
 def load_pypower_data(data, case, data_path):
     """
     Loads data collected from PYPOWER into data dictionary
-
-    :param data: dictionary of nparrays
-    :param case: string case designator used as key in data diction
-    :param data_path: string directory path for file
-    :return:
-        data: data diction with PYPOWER data added
+    Args:
+        data (dict): dictionary of nparrays
+        case (str): case designator used as key in data dictionary
+        data_path (str): directory path for file
+    Returns:
+        dict: data dictionary with PYPOWER data added
     """
     diction = None
     found_data = False
     try:
-        diction = tesp.read_pypower_metrics(data_path, f'SGIP1{case}')
+        diction = pp.read_pypower_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load PYPOWER data for Case {case}.')
@@ -67,18 +69,18 @@ def load_gld_data(data, case, data_path):
     """
     Loads data collected from GridLAB-D into data dictionary. Not all
     GridLAB-D data is loaded into the dictionary, only that which is needed.
-
-    :param data: dictionary of nparrays
-    :param case: string case designator used as key in data diction
-    :param data_path: string directory path for file
-    :return:
-        data: data diction with PYPOWER data added
+    Args:
+        data (dict): dictionary of nparrays
+        case (str): case designator used as key in data dictionary
+        data_path (str): directory path for file
+    Returns:
+        dict: data dictionary with PYPOWER data added
     """
 
     diction = None
     found_data = False
     try:
-        diction = tesp.read_gld_metrics(data_path, f'SGIP1{case}')
+        diction = pg.read_gld_metrics(data_path, f'SGIP1{case}')
         found_data = True
     except:
         logger.error(f'\tUnable to load GridLAB-D data for Case {case}.')
@@ -99,18 +101,18 @@ def load_gld_data(data, case, data_path):
 def load_energy_plus_data(data, case, data_path):
     """
     Loads data collected from Energy+ into data dictionary.
-
-    :param data: dictionary of nparrays
-    :param case: string case designator used as key in data diction
-    :param data_path: string directory path for file
-    :return:
-        data: data diction with PYPOWER data added
+    Args:
+        data (dict): dictionary of nparrays
+        case (str): case designator used as key in data dictionary
+        data_path (str): directory path for file
+    Returns:
+        dict: data dictionary with PYPOWER data added
     """
 
     diction = None
     found_data = False
     try:
-        diction = tesp.read_eplus_metrics(data_path, f'SGIP1{case}', quiet=True)
+        diction = pe.read_eplus_metrics(data_path, f'SGIP1{case}', quiet=True)
         found_data = True
     except:
         logger.error(f'\tUnable to load Energy+ data for Case {case}.')
@@ -128,10 +130,10 @@ def load_energy_plus_data(data, case, data_path):
 def load_data(data_path):
     """
      Loads data from a variety of sources to allow cross-case comparison
-
-    :param data_path: string directory path for file
-    :return:
-        data: dictionary of nparrays for use in plotting functions
+    Args:
+        data_path (str): directory path for file
+    Returns:
+        dict: dictionary of nparrays for use in plotting functions
     """
 
     logger.info('Loading processed metrics data')
@@ -156,13 +158,12 @@ def load_data(data_path):
 
 
 def plot_gen_comparison(data, save_path):
-    """
-    SGIP1(a) output of individual generators vs time. Expect to see dramatic
+    """ SGIP1(a) output of individual generators vs time. Expect to see dramatic
     change in dispatch on day 2 as a generator goes out.
 
-    :param data: Data dictionary with necessary data for creating plot
-    :param save_path: string directory path for file
-    :return:
+    Args:
+        data (dict): dictionary with necessary data for creating plot
+        save_path (str): directory path for file
     """
 
     if 'a' in data.keys():
@@ -206,15 +207,13 @@ def plot_gen_comparison(data, save_path):
 
 
 def plot_transactive_bus_LMP(data, save_path):
-    """
-    SGIP1(a) and (b) LMP for transactive bus vs time. Expect to see price
+    """ SGIP1(a) and (b) LMP for transactive bus vs time. Expect to see price
     spike on second day as generator goes out; should have lower prices for
-    the transactive case (b)
+    the transactive case (b) Bus 7 is the only bus for which data is recorded.
 
-    Bus 7 is the only bus for which data is recorded.
-    :param data: Data dictionary with necessary data for creating plot
-    :param save_path: string directory path for file
-    :return:
+    Args:
+        data (dict): dictionary with necessary data for creating plot
+        save_path (str): directory path for file
     """
 
     if 'a' in data.keys() and 'b' in data.keys():
@@ -273,15 +272,13 @@ def plot_transactive_bus_LMP(data, save_path):
 
 
 def plot_transactive_feeder_load(data, save_path):
-    """
-    SGIP1(a), and (b) total feeder load vs time. (a) is base and (b) is
+    """ SGIP1(a), and (b) total feeder load vs time. (a) is base and (b) is
     transactive. Expect (b) to show peak-shaving, snapback, and
-    valley-filling where (a) does not.
+    valley-filling where (a) does not. Bus 7 is the only bus for which data is recorded.
 
-    Bus 7 is the only bus for which data is recorded.
-    :param data: Data dictionary with necessary data for creating plot
-    :param save_path: string directory path for file
-    :return:
+    Args:
+        data (dict): dictionary with necessary data for creating plot
+        save_path (str): directory path for file
     """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'pypower' in data['a'].keys() and 'pypower' in data['b'].keys():
@@ -346,15 +343,14 @@ def plot_transactive_feeder_load(data, save_path):
 
 
 def plot_transactive_feeder_load_solar(data, save_path):
-    """
-    SGIP1a, b, c, d, e transactive total feeder load vs time. (a) is base
+    """ SGIP1a, b, c, d, e transactive total feeder load vs time. (a) is base
     and (b)-(e) are transactive with increasing amounts of solar and energy
     storage systems. Expect to see decreasing daytime loads with increasing
     solar penetration ((b) to (e)).
 
-    :param data: Data dictionary with necessary data for creating plot
-    :param save_path: string directory path for file
-    :return:
+    Args:
+        data (dict): dictionary with necessary data for creating plot
+        save_path (str): directory path for file
     """
     if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
             'e' in data.keys():
@@ -444,15 +440,15 @@ def plot_transactive_feeder_load_solar(data, save_path):
 
 
 def plot_avg_indoor_air_temperature(data, save_path):
-    """
-    SGIP1(a) and (b) all residential customer average indoor temperature
-    vs time. SGIP1(a) is base and (b) is transactive. Expect to see
+    """ SGIP1(a) and (b) all residential customer average indoor temperature vs time.
+
+    SGIP1(a) is base and (b) is transactive. Expect to see
     constant temperatures for (a) and higher temperatures for (b) on the
     second day with the generator outage while (a) is unaffected.
 
-    :param data: Data dictionary with necessary data for creating plot
-    :param save_path: string directory path for file
-    :return:
+    Args:
+        data (dict): dictionary with necessary data for creating plot
+        save_path (str): directory path for file
     """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'gld' in data['a'].keys() and 'gld' in data['b'].keys() and \
@@ -539,13 +535,12 @@ def plot_avg_indoor_air_temperature(data, save_path):
 
 
 def plot_solar_output(data, save_path):
-    """
-    SGIP1b-e total solar PV output vs time. Expect to see increasing total
+    """ SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
 
-    :param data: Data dictionary with necessary data for creating plot
-    :param save_path: string directory path for file
-    :return:
+    Args:
+        data (dict): dictionary with necessary data for creating plot
+        save_path (str): directory path for file
     """
 
     if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
@@ -630,14 +625,13 @@ def plot_solar_output(data, save_path):
 
 
 def plot_ES_output(data, save_path):
-    """
-    SGIP1(a) and (b) Energy+ average indoor cooling temperature vs time.
-    Expect to case (b) to show higher temperatures as it is
-    price-responsive.
+    """ SGIP1(a) and (b) Energy+ average indoor cooling temperature vs time.
 
-    :param data: Data dictionary with necessary data for creating plot
-    :param save_path: string directory path for file
-    :return:
+    Expect to case (b) to show higher temperatures as it is price-responsive.
+
+    Args:
+        data (dict): dictionary with necessary data for creating plot
+        save_path (str): directory path for file
     """
     if 'b' in data.keys() and 'c' in data.keys() and 'd' in data.keys() and \
             'e' in data.keys():
@@ -722,13 +716,12 @@ def plot_ES_output(data, save_path):
 
 
 def plot_energy_plus_indoor_temperature(data, save_path):
-    """
-    SGIP1b-e total solar PV output vs time. Expect to see increasing total
+    """ SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
 
-    :param data: Data dictionary with necessary data for creating plot
-    :param save_path: string directory path for file
-    :return:
+    Args:
+        data (dict): dictionary with necessary data for creating plot
+        save_path (str): directory path for file
     """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys() and \
@@ -806,13 +799,12 @@ def plot_energy_plus_indoor_temperature(data, save_path):
 
 
 def plot_energy_plus_prices(data, save_path):
-    """
-    SGIP1b-e total solar PV output vs time. Expect to see increasing total
+    """ SGIP1b-e total solar PV output vs time. Expect to see increasing total
     output in moving from (b) to (e).
 
-    :param data: Data dictionary with necessary data for creating plot
-    :param save_path: string directory path for file
-    :return:
+    Args:
+        data (dict): dictionary with necessary data for creating plot
+        save_path (str): directory path for file
     """
     if 'a' in data.keys() and 'b' in data.keys():
         if 'eplus' in data['a'].keys() and 'eplus' in data['b'].keys():
@@ -904,7 +896,7 @@ if __name__ == '__main__':
     # to be sent to the log file and ERROR messages to additionally
     # be sent to the console as well. Thus, when bad things happen
     # the user will get an error message in both places which,
-    # hopefully, will aid in trouble-shooting.
+    # hopefully, will aid in troubleshooting.
     fileHandle = logging.FileHandler("SGIP_validation.log", mode='w')
     fileHandle.setLevel(logging.DEBUG)
     streamHandle = logging.StreamHandler(sys.stdout)

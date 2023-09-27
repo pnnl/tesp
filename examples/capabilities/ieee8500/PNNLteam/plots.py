@@ -5,8 +5,8 @@
 import os
 import sys
 
-import tesp_support.process_gld as gp
-import tesp_support.process_inv as ip
+import tesp_support.api.process_gld as gp
+import tesp_support.api.process_inv as ip
 
 rootname = sys.argv[1]
 

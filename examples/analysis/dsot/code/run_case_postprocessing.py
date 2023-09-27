@@ -4,8 +4,8 @@ from os.path import dirname, abspath, isdir
 from datetime import datetime, timedelta
 from joblib import Parallel, delayed
 
-import tesp_support.DSOT_plots
-import tesp_support.DSO_rate_making
+import tesp_support.dsot.plots as pt
+import tesp_support.dsot.dso_rate_making as rm
 
 ''' This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:
@@ -20,7 +20,7 @@ It has the following elements:
 # “loky” used by default, can induce some communication and memory overhead when exchanging input and
 #    output data with the worker Python processes.
 # “multiprocessing” previous process-based backend based on multiprocessing.Pool. Less robust than loky.
-# “threading” is a very low-overhead backend but it suffers from the Python Global Interpreter Lock
+# “threading” is a very low-overhead backend, but it suffers from the Python Global Interpreter Lock
 #    if the called function relies a lot on Python objects. “threading” is mostly useful when the execution
 #    bottleneck is a compiled extension that explicitly releases the GIL (for instance a Cython loop
 #    wrapped in a “with nogil” block or an expensive call to a library such as NumPy).
@@ -42,26 +42,26 @@ def post_process():
         # return arg2
         return worker_results
 
-    def DSO_bldg_loads(dso_num):
+    def DSO_bldg_loads(dso_number):
         os.chdir(config_path)
-        tesp_support.DSOT_plots.bldg_load_stack(dso_num, day_range, case_path, agent_prefix, GLD_prefix, metadata_path)
+        pt.bldg_load_stack(dso_number, day_range, case_path, agent_prefix, GLD_prefix, metadata_path)
 
-    def DSO_der_loads(dso_num):
+    def DSO_der_loads(dso_number):
         os.chdir(config_path)
-        tesp_support.DSOT_plots.der_load_stack(dso_num, day_range, case_path, GLD_prefix, metadata_path)
+        pt.der_load_stack(dso_number, day_range, case_path, GLD_prefix, metadata_path)
 
-    def Daily_market_plot(day_num):
+    def Daily_market_plot(day_number):
         os.chdir(config_path)
-        tesp_support.DSOT_plots.dso_market_plot(dso_range, str(day_num), case_path, dso_metadata_file, metadata_path)
+        pt.dso_market_plot(dso_range, str(day_number), case_path, dso_metadata_file, metadata_path)
 
-    def DSO_specific_cost(dso_num):
+    def DSO_specific_cost(dso_number):
         # load DSO metadata
-        file_name = 'Substation_' + str(dso_num) + '_glm_dict.json'
-        GLD_metadata = tesp_support.DSOT_plots.load_json(case_path + agent_prefix + str(dso_num), file_name)
+        file_name = 'Substation_' + str(dso_number) + '_glm_dict.json'
+        GLD_metadata = pt.load_json(case_path + agent_prefix + str(dso_number), file_name)
 
-        dso_scaling_factor = DSOmetadata['DSO_' + str(dso_num)]['scaling_factor']
-        # Determine tariff rate class of each meter up front ---- This wont be needed once this is done in prepare case
-        commdata = tesp_support.DSOT_plots.load_json(metadata_path, 'DSOT_commercial_metadata.json')
+        dso_scaling_factor = DSOmetadata['DSO_' + str(dso_number)]['scaling_factor']
+        # Determine tariff rate class of each meter up front ---- This won't be needed once this is done in prepare case
+        commdata = pt.load_json(metadata_path, 'DSOT_commercial_metadata.json')
         commbldglist = []
         for bldg in commdata['building_model_specifics']:
             commbldglist.append(bldg)
@@ -82,40 +82,36 @@ def post_process():
 
         # Placeholder code to add whether a customer is participating or not.
         # TODO: this should be done in prepare case and read in as part of GLD meter metadata.
-        agent_file_name = 'Substation_' + str(dso_num) + '_agent_dict.json'
-        agent_metadata = tesp_support.DSOT_plots.load_json(case_path + agent_prefix + str(dso_num), agent_file_name)
+        agent_file_name = 'Substation_' + str(dso_number) + '_agent_dict.json'
+        agent_metadata = pt.load_json(case_path + agent_prefix + str(dso_number), agent_file_name)
 
-        GLD_metadata = tesp_support.DSOT_plots.customer_meta_data(GLD_metadata, agent_metadata, metadata_path)
+        GLD_metadata = pt.customer_meta_data(GLD_metadata, agent_metadata, metadata_path)
 
         # Need to preprocess agent retail data prior to calculating customer energy meter data.
         # This function saves an h5.
         if read_meters:
-            tesp_support.DSOT_plots.tic()
-            for day_num in day_range:
-                retail_data_df, retail_index_df = tesp_support.DSOT_plots.load_retail_data(case_path, agent_prefix,
-                                                                                           str(dso_num), str(day_num),
-                                                                                           'retail_site')
-            print('Retail agent data processing complete: DSO ' + str(dso_num) + ', Month ' + month_name)
-            tesp_support.DSOT_plots.toc()
+            pt.tic()
+            for day_number in day_range:
+                retail_data_df, retail_index_df = \
+                    pt.load_retail_data(case_path, agent_prefix, str(dso_number), str(day_number), 'retail_site')
+            print('Retail agent data processing complete: DSO ' + str(dso_number) + ', Month ' + month_name)
+            pt.toc()
 
         # This function calculates the energy consumption every day for every customer and saves it to an h5 file.
         if read_meters:
-            tesp_support.DSOT_plots.tic()
-            meter_df, energysum_df = tesp_support.DSO_rate_making.read_meters(GLD_metadata, case_path, GLD_prefix,
-                                                                              str(dso_num),
-                                                                              day_range, dso_scaling_factor,
-                                                                              metadata_path)
-            print('Meter reading complete: DSO ' + str(dso_num) + ', Month ' + month_name)
-            tesp_support.DSOT_plots.toc()
+            pt.tic()
+            meter_df, energysum_df = rm.read_meters(GLD_metadata, case_path, GLD_prefix, str(dso_number),
+                                                    day_range, dso_scaling_factor, metadata_path)
+            print('Meter reading complete: DSO ' + str(dso_number) + ', Month ' + month_name)
+            pt.toc()
         # --------------- CALCULATE AMENITY SCORES  ------------------------------
 
         # This function calculates the amenity scores (HVAC and WH unmet hours or gallons) and saves it to an h5 file.
         if calc_amenity:
-            tesp_support.DSOT_plots.tic()
-            amenity_df = tesp_support.DSOT_plots.amenity_loss(GLD_metadata, case_path, GLD_prefix, str(dso_num),
-                                                              day_range)
-            print('Amenity scores complete: DSO ' + str(dso_num) + ', Month ' + month_name)
-            tesp_support.DSOT_plots.toc()
+            pt.tic()
+            amenity_df = pt.amenity_loss(GLD_metadata, case_path, GLD_prefix, str(dso_number), day_range)
+            print('Amenity scores complete: DSO ' + str(dso_number) + ', Month ' + month_name)
+            pt.toc()
 
     #  STEP 0 ---------  STEP UP ------------------------------
     #  Determine which metrics to post-process
@@ -141,7 +137,7 @@ def post_process():
     # ------------ Select folder locations for different cases ---------
     # Load System Case Config
     config_path = os.getcwd()
-    case_config = tesp_support.DSOT_plots.load_json(config_path, system_case)
+    case_config = pt.load_json(config_path, system_case)
 
     case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']
     metadata_path = case_config['dataPath']
@@ -154,11 +150,11 @@ def post_process():
     if not check_folder:
         os.makedirs(case_path + '/plots')
 
-    # STEP 1 --------- DSO Specific Post Processing -------------------------
+    # STEP 1 --------- DSO Specific Post-Processing -------------------------
 
     # --------------- PROCESS BILLING METERS  ------------------------------
     # Not sure how to find dso number that is running on a compute node
-    DSOmetadata = tesp_support.DSOT_plots.load_json(metadata_path, dso_metadata_file)
+    DSOmetadata = pt.load_json(metadata_path, dso_metadata_file)
 
     num_sim_days = (datetime.strptime(case_config['EndTime'], '%Y-%m-%d %H:%M:%S') -
                     datetime.strptime(case_config['StartTime'], '%Y-%m-%d %H:%M:%S')).days
@@ -198,31 +194,31 @@ def post_process():
         print('No  process list')
         results = []
 
-    # STEP 2 --------- Month Specific (all DSOs/TSO) Post Processing -------------------------
+    # STEP 2 --------- Month Specific (all DSOs/TSO) Post-Processing -------------------------
 
     # ----------- CALCULATE POPULATION STATISTICS AND OUTPUT ---------------------------
     if pop_stats:
         bill = False
-        rci_df = tesp_support.DSOT_plots.RCI_analysis(dso_range, case_path, case_path, metadata_path, dso_metadata_file, bill)
+        rci_df = pt.RCI_analysis(dso_range, case_path, case_path, metadata_path, dso_metadata_file, bill)
 
     # ------------  PLOT TSO GENERATION AND AMES DATA  ------------------
     if gen_plots:
-        tesp_support.DSOT_plots.generation_load_profiles(case_path, metadata_path, case_path, day_range, True)
-        tesp_support.DSOT_plots.generation_load_profiles(case_path, metadata_path, case_path, day_range, False)
-        GenAMES_df = tesp_support.DSOT_plots.generation_statistics(case_path, config_path, system_case, day_range, False)
-        GenPYPower_df = tesp_support.DSOT_plots.generation_statistics(case_path, config_path, system_case, day_range, True)
+        pt.generation_load_profiles(case_path, metadata_path, case_path, day_range, True)
+        pt.generation_load_profiles(case_path, metadata_path, case_path, day_range, False)
+        GenAMES_df = pt.generation_statistics(case_path, config_path, system_case, day_range, False)
+        GenPYPower_df = pt.generation_statistics(case_path, config_path, system_case, day_range, True)
 
     if der_stack_plots:
-        tesp_support.DSOT_plots.tic()
-        tesp_support.DSOT_plots.der_stack_plot(dso_range, day_range, metadata_path, case_path)
+        pt.tic()
+        pt.der_stack_plot(dso_range, day_range, metadata_path, case_path)
         print('DER Load Stack Data Aggregation and Plot complete')
-        tesp_support.DSOT_plots.toc()
+        pt.toc()
 
     if bldg_stack_plots:
-        tesp_support.DSOT_plots.bldg_stack_plot(dso_range, day_range, case_path, metadata_path)
+        pt.bldg_stack_plot(dso_range, day_range, case_path, metadata_path)
 
     if forecast_plots:
-        tesp_support.DSOT_plots.dso_forecast_stats(dso_range, day_range, case_path, dso_metadata_file, metadata_path)
+        pt.dso_forecast_stats(dso_range, day_range, case_path, dso_metadata_file, metadata_path)
 
     # STEP 3 ------- ANNUAL AGGREGATION AND ANALYSIS FUNCTIONS (to be run once all month aggregation is complete) ------
     # This step is performed in run_annual_postprocessing.py
