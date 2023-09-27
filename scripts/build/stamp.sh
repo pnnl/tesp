@@ -64,6 +64,8 @@ echo "Stamping TESP $ver for install"
 cd "${TESPDIR}" || exit
 echo "$ver" > "scripts/version"
 echo "$ver" > "src/tesp_support/version"
+
+# un-comment for final version
 git tag "v$ver"
 
 echo "Creating TESP distribution package for pypi"
