@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021 - 2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: ruh30.glm
 
 declare -r SCHED_PATH=$TESPDIR/data/schedules

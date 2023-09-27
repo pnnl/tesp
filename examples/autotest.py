@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: autotest.py
 """Runs the set of TESP test cases, excluding the longer FNCS cases
 MATPOWER/MOST example must be run after manual installation of Octave and MATPOWER

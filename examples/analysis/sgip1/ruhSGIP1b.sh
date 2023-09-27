@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: ruhSGIP1b.sh
 
 declare -r SCHED_PATH=$TESPDIR/data/schedules

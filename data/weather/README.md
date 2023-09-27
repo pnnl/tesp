@@ -36,7 +36,7 @@ To use TMY2 files, one shall directly call the TMY2EPW.py.
     cd TMY2EPW\source_code
     python TMY2EPW.py FL-Miami_Intl_Ap.tmy2
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/main/LICENSE
 

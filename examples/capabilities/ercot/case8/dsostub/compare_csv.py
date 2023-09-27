@@ -1,4 +1,4 @@
-#   Copyright (C) 2020-2022 Battelle Memorial Institute
+# Copyright (C) 2020-2023 Battelle Memorial Institute
 
 import matplotlib.pyplot as plt
 import numpy as np

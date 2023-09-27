@@ -77,7 +77,7 @@ Subdirectories
 License & Copyright
 ===================
 
-- Copyright (C) 2017-2022 Battelle Memorial Institute
+- Copyright (c) 2017-2023 Battelle Memorial Institute
 
 .. _Docker: https://www.docker.com
 .. _EnergyPlus: https://energyplus.net

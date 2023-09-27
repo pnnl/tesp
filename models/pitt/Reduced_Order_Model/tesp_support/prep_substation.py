@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (c) 2018-2023 Battelle Memorial Institute
 # file: prep_substation.py
 """ Sets up the FNCS and agent configurations for te30 and sgip1 examples
 

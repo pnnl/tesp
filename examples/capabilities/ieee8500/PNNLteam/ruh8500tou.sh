@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: ruh85000tou.sh
 
 (exec helics_broker -f 3 --loglevel=warning --name=mainbroker &> broker8500_tou.log &)

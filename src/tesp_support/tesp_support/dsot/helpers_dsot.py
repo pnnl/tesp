@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: helpers_dsot.py
 """ Utility functions for use within tesp_support, including new agents.
 This is DSO+T specific helper functions

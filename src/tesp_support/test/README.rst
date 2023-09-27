@@ -19,5 +19,5 @@ Files
 License & Copyright
 ===================
 
-- Copyright (C) 2017-2022 Battelle Memorial Institute
+- Copyright (c) 2017-2023 Battelle Memorial Institute
 

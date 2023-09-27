@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (c) 2018-2023 Battelle Memorial Institute
 # file: feederGenerator.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 

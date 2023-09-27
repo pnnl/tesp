@@ -1,7 +1,7 @@
 DSO+T Simulation Files
 ----------------------
 
-Copyright (c) 2018-2022, Battelle Memorial Institute
+Copyright (c) 2018-2023 Battelle Memorial Institute
 
 Directory of input and script files:
 

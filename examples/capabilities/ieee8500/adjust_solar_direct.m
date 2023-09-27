@@ -1,4 +1,4 @@
-% Copyright (C) 2021-2022 Battelle Memorial Institute
+% Copyright (C) 2021-2023 Battelle Memorial Institute
 % file: adjust_solar_direct.m
 
 function [ cloudy_direct ] = adjust_solar_direct( sunny_direct )

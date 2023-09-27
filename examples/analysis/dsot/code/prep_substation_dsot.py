@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: prep_substation_dsot.py
 """ Sets up the HELICS and agent configurations for DSOT ercot case 8 example
 

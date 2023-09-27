@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: run_ems_case.sh
 
 # need to have made ems*.idf in the local directory, with bHELICS=True

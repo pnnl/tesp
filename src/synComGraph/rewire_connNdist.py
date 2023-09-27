@@ -5,7 +5,7 @@ modified to incorporate given xy coordinates of vertices, so that a rewired edge
 does not have length exceeding a user-specified threshold. Other parts of this
 function -- such as how many swap attempts are made -- have also been rewritten.
 """
-#    Copyright (C) 2004-2018 by
+#    Copyright (c) 2004-2018 by
 #    Aric Hagberg <hagberg@lanl.gov>
 #    Dan Schult <dschult@colgate.edu>
 #    Pieter Swart <swart@lanl.gov>

@@ -67,7 +67,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'TESP'
-copyright = '2017-2022, Battelle Memorial Institute'
+copyright = '2017-2023 Battelle Memorial Institute'
 author = 'Pacific Northwest National Laboratory'
 
 # The version info for the project you're documenting, acts as replacement for

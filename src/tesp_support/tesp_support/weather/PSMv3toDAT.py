@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: PSMv3toDAT.py
 # Created 8/7/2019
 # @author: Ebony Mayhorn

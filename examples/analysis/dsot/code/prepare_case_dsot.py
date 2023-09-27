@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: prepare_case_dsot.py
 """ Sets up a simple DSO+T use-case with one feeder
 

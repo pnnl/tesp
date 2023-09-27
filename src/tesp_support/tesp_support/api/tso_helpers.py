@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: tso_helpers.py
 """ Helpers for PYPOWER, PSST, MOST solutions
 

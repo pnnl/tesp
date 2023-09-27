@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: tso_PYPOWER_f.py
 """ PYPOWER solutions under control of FNCS or HELICS for te30 and dsot, sgip1 examples
 

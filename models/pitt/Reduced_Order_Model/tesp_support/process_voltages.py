@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: process_voltages.py
 """Functions to plot all billing meter voltages from GridLAB-D
 

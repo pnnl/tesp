@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: runh0.sh
 
 # start a HELICS federation for GridLAB-D, substation, weather, PYPOWER, E+ and E+ agent
