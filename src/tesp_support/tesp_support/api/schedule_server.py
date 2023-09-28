@@ -42,12 +42,13 @@ class DataProxy(object):
 
     @staticmethod
     def forecasting_pv_schedules(name, time, windowlength, col_num):
-        """ Returns windowlength values of given time as forecasting
+        """ Returns window length values of the given time for the name of schedule forecast and column
+
         Args:
-            name : schedule name for data frame
-            time : current time
-            windowlength: length of window
-            col_num: column number 1 to n
+            name (str): schedule name for data frame
+            time (any): current time
+            windowlength (int): length of window
+            col_num (int): column number 1 to n
         """
         idx = name + str(col_num)
         try:
@@ -64,11 +65,12 @@ class DataProxy(object):
 
     @staticmethod
     def forecasting_schedules(name, time, len_forecast):
-        """ Returns len_forecast values from given time as forecasting
+        """ Returns len_forecast values from the given time as for the name schedule forecast
+
         Args:
-            name : schedule name for data frame used to forecast
-            time : current time at which DA optimization occurs
-            len_forecast: length of forecast in hours
+            name (str): schedule name for data frame used to forecast
+            time (any): current time at which DA optimization occurs
+            len_forecast (int): length of forecast in hours
         """
         cache = cache_output[name]
         if cache[0] != time:

@@ -17,6 +17,8 @@ setup(
     url='https://github.com/pnnl/tesp',
     license='BSD',
     install_requires=[
+        'importlib_resouces~=6.1.0',
+        'h5py~=3.8.0',
         'pandas~=2.0.1',
         'numpy~=1.24.3',
         'scipy~=1.10.1',

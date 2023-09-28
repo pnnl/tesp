@@ -270,7 +270,7 @@ class Schema:
                     if type(dt) == list:
                         df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table])
                         df['dates'] = pd.date_range(start=dt[0], periods=len(df), freq=dt[1])
-                        df[(start < df['dates']) & (df['dates'] < end)]
+                        df = df[(start < df['dates']) & (df['dates'] < end)]
                     else:
                         df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table],
                                          parse_dates=True, keep_date_col=True)

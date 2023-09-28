@@ -5,17 +5,22 @@ from .data import feeder_entities_path
 from .entity import assign_defaults
 from .model import GLModel
 
+
 class GLMModifier:
     # instances of entity values
 
     def __init__(self):
         self.model = GLModel()
+        self.glm = self.model.glm
         assign_defaults(self, feeder_entities_path)
         return
 
     # get/add/del module calls to modify GridLabD module entities
     def get_module(self, gld_type):
         return self.model.module_entities[gld_type]
+
+    def get_module_vals(self, gld_type):
+        return self.model.module_entities[gld_type].instances
 
     def get_module_named_instance(self, gld_type):
         return self.get_module(gld_type).instances[gld_type]
@@ -50,6 +55,9 @@ class GLMModifier:
     # get/add/del object calls to modify GridLabD objects entities
     def get_object(self, gld_type):
         return self.model.object_entities[gld_type]
+
+    def get_object_vals(self, gld_type):
+        return self.model.object_entities[gld_type].instances
 
     def get_object_named_instance(self, gld_type, name):
         return self.get_object(gld_type).instances[name]
@@ -124,6 +132,7 @@ class GLMModifier:
     def set_simulation_times(self):
         return True
 
+
 def _test1():
     from .data import tesp_test
 
@@ -143,6 +152,7 @@ def _test1():
     testMod.model.read(f)
     testMod.write_model(tesp_test + "api/loadshed_out.glm")
     testMod.model.plot_model()
+
 
 def _test2():
     from .data import tesp_test
@@ -180,6 +190,7 @@ def _test2():
 
     testMod.model.plot_model()
     testMod.write_model(tesp_test + "api/modifier_test2.glm")
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

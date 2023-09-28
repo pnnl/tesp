@@ -54,11 +54,11 @@ pp = pprint.PrettyPrinter(indent=4, )
 def _auto_run(args):
     glmMod = GLMModifier()
     feeder_path = os.path.join(feeders_path, args.feeder_file)
-    glmMod.model.read(feeder_path)
+    glmMod.read_model(feeder_path)
 
     glmMod.add_module('residential', [])
 
-	# Houses have to be associated with triplex_meters so we just as for a list of meters
+    # Houses have to be associated with triplex_meters so we just as for a list of meters
     tp_meter_names = glmMod.get_object_names('triplex_meter')
     num_houses_to_add = 11
 
@@ -176,7 +176,7 @@ def _auto_run(args):
     else:
         print(f'\t"Rroof" for house {house_name} is undefined.')
     print(f'\tDeleting paramter Rroof from house {house_name}')
-    #glmMod.del_object_attr('house', house_name, 'Rroof')
+    # glmMod.del_object_attr('house', house_name, 'Rroof')
     house_to_edit["Rroof"] = None
     if 'Rroof' in house_to_edit.keys():
         print(f'\tCurrent "Rroof" is {house_to_edit["Rroof"]}')
@@ -329,7 +329,7 @@ def test():
                         '--output_file',
                         nargs='?',
                         default='modified_R1-12.47-1.glm')
-    _args = parser.parse_args()
+    _args = parser.parse_args([])
     _auto_run(_args)
 
 

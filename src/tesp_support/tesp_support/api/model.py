@@ -95,6 +95,7 @@ class GLModel:
         self.in_file = ""
         self.out_file = ""
         self.model = {}
+        self.glm = None
         self.conn = None
         self.modules = None
         self.objects = None
@@ -132,6 +133,9 @@ class GLModel:
                         for attr in obj:
                             self._add_attr(entity, attr, obj[attr])
                         self.object_entities[object_name] = entity
+
+            for obj in self.object_entities:
+                setattr(self.glm, obj, self.object_entities[obj].instances)
 
     @staticmethod
     def _add_attr(entity, name, attr):
