@@ -16,7 +16,7 @@ import os
 import numpy as np
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
-# write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
+# write txt for GridLAB-D to subscribe house setpoints and meter price; publish meter voltages
 # write the json agent dictionary for post-processing, and run-time configuration of substation.py
 
 # we want the same psuedo-random thermostat schedules each time, for repeatability

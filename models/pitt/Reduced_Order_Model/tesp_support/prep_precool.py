@@ -27,7 +27,7 @@ def prep_precool(name_root):
     np.random.seed(0)
 
     # write yaml for precool.py to subscribe meter voltages and house setpoints
-    # write txt for gridlabd to subscribe house setpoints and publish meter voltages
+    # write txt for GridLAB-D to subscribe house setpoints and publish meter voltages
 
     dt = 15
     period = 300

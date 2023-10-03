@@ -23,6 +23,7 @@ Change log:
 - v1.1.3  Updated some documentation and build patches.
 - v1.1.4  Updates to auto testing and minors bug fixes for Comm cases using HELICS3.0.
 - v1.1.5  Updates to auto testing and minors bug fixes for install and a better loadshed example.
-- v1.2.0  Updates to auto testing and minors bug fixes. Version changes for HELICS 3.3, GridLABD 5.0. Reorganize environment and updated documentation. Add more loadshed N3 examples.
+- v1.2.0  Updates to auto testing and minors bug fixes. Version changes for HELICS 3.3, GridLAB-D 5.0. Reorganize environment and updated documentation. Add more loadshed N3 examples.
 - v1.2.1  Fixed python shell files, fixed complex python to use helics complex.
 - v1.2.2  Fixed the installation for Ubuntu 22.04.
+- v1.3.0  Refactor the TESP PyPI api. Upgrade all models(GridLAB-D, EnergyPlus, NS3) to work with HELICS 3.4. Add modifier.py for GridLAB-D models
