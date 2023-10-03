@@ -22,7 +22,7 @@ This guide will assume that TESP is being installed on a clean Ubuntu Linux inst
 
 For many, this will be a virtual machine (VM) and the good news is that there is a no-cost means of creating this VM using Oracle's `VirtualBox <https://www.virtualbox.org>`_. Other commercial virtualization software such as VMWare and Parallels will also do the trick.
 
-For Windows 10 users we can use MSYS2. In many ways a it is like a virtual machine that allows shell commands just as if it were Linux.
+For Windows 10 users we can use WSL2. In many ways a it is like a virtual machine that allows shell commands just as if it were Linux.
 
 Creating a Ubuntu Linux VM with VirtualBox
 ------------------------------------------
@@ -40,37 +40,18 @@ A few notes:
     - Make sure you install the VirtualBox Guest Additions to improve the integration with the host OS and the overall user experience.
     - Administrative access for the account where TESP will be installed is required.
 
-Creating a MSYS2 on Windows 10
+Creating a WLS2 on Windows 10
 ------------------------------
-The Windows build procedure is very similar to that for Linux and Mac OSX, using MSYS2 tools that you'll execute from a MSYS2 command window. However, some further adjustments are necessary as described below.
-
-Install Java and MSYS2 packages
-...............................
-Download and install the Java Development Kit (20.0 suggested) from Oracle.
-
-* you must install JavaSDK to a folder without spaces, such as c:\Java\jdk-20\
-* the Oracle javapath doesn't work for MSYS2, and it doesn't find javac in Windows
-
-These instructions are based on https://github.com/gridlab-d/gridlab-d/blob/develop/BuildingGridlabdOnWindowsWithMsys2.docx
-
-* Install a 64-bit version of MSYS2 from https://www.msys2.org. Accept all of the defaults.
-* Start the MSYS2 environment from the Start Menu shortcut for "MSYS2 UCRT64"
+The Windows build procedure is very similar to that for Linux and Mac OSX, using MSYS2 tools that you'll execute from a MSYS2 command window. However, some further adjustments maybe necessary.
 
 Running TESP install script
 ---------------------------
 Once you have a working Ubuntu/Windows 10 installation, the TESP install process is straight-forward. From a command prompt do the following:
 
 .. code-block:: shell-session
-   :caption: TESP installation commands for Ubuntu
+   :caption: TESP installation commands for Ubuntu/WLS2 on Window10
 
    wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp.sh
-   chmod 755 tesp.sh
-   ./tesp.sh <Github user name> <Github email address>
-
-.. code-block:: shell-session
-   :caption: TESP installation commands for Window10
-
-   wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp_ucrt.sh
    chmod 755 tesp.sh
    ./tesp.sh <Github user name> <Github email address>
 
@@ -109,11 +90,11 @@ TESP includes a small script that attempts to run a trivial command with each of
 
     FNCS, installed
 
-    HELICS, 3.1.0 (2021-11-24)
+    HELICS, 3.4.0-main-g0b3d894e7 (2023-09-25)
 
-    HELICS Java, 3.1.1-main-g9a5726ba9 (2022-04-01)
+    HELICS Java, 3.4.0-main-g0b3d894e7 (2023-09-25)
 
-    GridLAB-D 4.3.0-18941 (Navajo [725bec8d:develop:Mod]) 64-bit LINUX RELEASE
+    GridLAB-D 5.1.0-19625 (7c599faa:develop) 64-bit LINUX RELEASE
 
     EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
 
@@ -233,21 +214,27 @@ Even this subset of examples can take several hours to run (roughly 4.9 hours in
 
     Test Case(s)                     Time Taken
     ===========================================
-    GridLAB-D Player/Recorder          0.033965
-    Loadshed - HELICS ns-3             6.103482
-    Loadshed - HELICS Python           1.116138
-    Loadshed - HELICS Java             1.754056
-    PYPOWER - HELICS                   7.025858
-    EnergyPlus EMS - HELICS           10.403496
-    Weather Agent - HELICS            11.020228
-    Houses                           284.137236
-    TE30 - HELICS Market             293.542043
-    TE30 - HELICS No Market          282.648197
-    No Comm Base - HELICS           6138.132330
-    Eplus Restaurant - HELICS       4206.033149
-    SGIP1c - HELICS                 5104.257472
-    Eplus w/Comm - HELICS             64.887238
-    4 Feeders - HELICS              1241.105777
+    GridLAB-D Player/Recorder          0.070416
+    Loadshed - HELICS ns-3             2.843944
+    Loadshed - HELICS Python           1.296527
+    Loadshed - HELICS Java             2.225544
+    Loadshed - HELICS/EPlus           14.175762
+    Establishing baseline results     94.899277
+    Load shedding w/o comm network    98.244369
+    Load shedding over comm network  239.413551
+    PYPOWER - HELICS                   6.374153
+    Houston,TX Baseline build types 2726.467754
+    Generated EMS/IDF files - HELICS   1.535267
+    EnergyPlus EMS - HELICS           12.170665
+    Weather Agent - HELICS             6.189842
+    Houses                           254.118936
+    TE30 - HELICS Market             675.682123
+    TE30 - HELICS No Market          645.321853
+    4 Feeders - HELICS              1202.865312
+    Eplus w/Comm - HELICS            152.659505
+    No Comm Base - HELICS           4948.638870
+    Eplus Restaurant - HELICS       3494.475850
+    SGIP1c - HELICS                 5063.826888
 
 
 Total runtime will depend on the compute resources available and each example run serially.

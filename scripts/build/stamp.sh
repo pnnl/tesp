@@ -66,7 +66,7 @@ echo "$ver" > "scripts/version"
 echo "$ver" > "src/tesp_support/version"
 
 # un-comment for final version
-git tag "v$ver"
+# git tag "v$ver"
 
 echo "Creating TESP distribution package for pypi"
 cd "${TESPDIR}/src/tesp_support" || exit

@@ -40,7 +40,7 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
     """ Determines building parameters based on building type, dso type, and (ASHRAE) climate zone
 
     Args:
-        bldg_type (str): class of building (e.g. 'strip_mall', etc)
+        bldg_type (str): class of building (e.g. 'strip_mall', etc.)
         bldg_size: size of the building in sq. ft.
         dso_type (str): whether the dso is 'Urban', 'Suburban', or 'Rural'
         climate (str): ASHRAE climate zone that the DSO resides in (e.g. '2A')
@@ -227,7 +227,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
         bldg (dict): dictionary of building parameters for the building to be processed.
         comm_loads:
         key (str): name of feeder node or meter being used
-        op (str): GLD output file
+        op (any): GLD output file
         batt_metadata:
         storage_percentage:
         ev_metadata:
@@ -256,7 +256,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
     c_z_frac = 0.2
     c_i_frac = 0.4
     c_p_frac = 1.0 - c_z_frac - c_i_frac
-    light_scalar_comm = 0.0  # Turned off street lights - set to 1.0 to turn on.
+    light_scalar_comm = 0.0  # Turned off-street lights - set to 1.0 to turn on.
 
     if bldg['type'] not in ['large_office', 'ZIPLOAD']:
         bldg_size = bldg['floor_area']
@@ -264,7 +264,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
         bldg['mtr'] = mtr
         bldg['groupid'] = comm_type  # + '_' + str(loadnum)
 
-        # Need to create a buffer version of bldg so zip loads do not get over ridden in the multi-zone for loops
+        # Need to create a buffer version of bldg so zip loads do not get overridden in the multi-zone for loops
         buff = bldg.copy()
         print('// load', key, 'parent', bldg['mtr'], 'type', comm_type, 'sqft', comm_size, 'kva', '{:.3f}'.format(kva),
               'nphs', nphs, 'phases', phases, 'vln', '{:.3f}'.format(vln), file=op)
@@ -477,7 +477,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 else:
                     print('    Q_Out 0;', file=op)
                 # Instead of solar object, write a fake V_in and I_in sufficient high so
-                # that it doesnt limit the player output
+                # that it doesn't limit the player output
                 print('     V_In 10000000;', file=op)
                 print('     I_In 10000000;', file=op)
                 if metrics_interval > 0:
@@ -584,6 +584,8 @@ def find_envelope_prop(prop, age, env_data, climate):
     Returns:
         val (float): property value - typically a U-value.
     """
+
+    val = None
     # Find age bin for properties
     if age < 1960:
         age_bin = '1960'
@@ -619,40 +621,40 @@ def find_envelope_prop(prop, age, env_data, climate):
     return val
 
 
-def normalize_dict_prob(name, dict):
+def normalize_dict_prob(name, diction):
     """ Ensures that the probability distribution of values in a dictionary effectively sums to one
 
     Args:
         name: name of dictionary to normalize
-        dict: dictionary of elements and associated non-cumulative probabilities
+        diction: dictionary of elements and associated non-cumulative probabilities
     """
     sum1 = 0
     sum2 = 0
-    for i in dict:
-        sum1 += dict[i]
-    for y in dict:
-        dict[y] = dict[y] / sum1
-    for z in dict:
-        sum2 += dict[z]
+    for i in diction:
+        sum1 += diction[i]
+    for y in diction:
+        diction[y] = diction[y] / sum1
+    for z in diction:
+        sum2 += diction[z]
     if sum1 != sum2:
-        print("WARNING " + name + " dictionary normalize to 1, value are > ", dict)
-    return dict
+        print("WARNING " + name + " dictionary normalize to 1, value are > ", diction)
+    return diction
 
 
-def rand_bin_select(dict, prob):
+def rand_bin_select(diction, probability):
     """ Returns the element (bin) in a dictionary given a certain probability
 
     Args:
-        dict: dictionary of elements and associated non-cumulative probabilities
-        prob: scalar value between 0 and 1
+        diction: dictionary of elements and associated non-cumulative probabilities
+        probability: scalar value between 0 and 1
     """
     total = 0
 
-    for bin in dict:
-        total += dict[bin]
-        if total >= prob:
-            return bin
-    return bin
+    for element in diction:
+        total += diction[element]
+        if total >= probability:
+            return element
+    return None
 
 
 def sub_bin_select(bin, type, prob):
@@ -812,98 +814,3 @@ def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
         print('    interval', str(metrics_interval) + ';', file=op)
         print('  };', file=op)
     print('}', file=op)
-
-
-def test():
-    metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v1/analysis_metadata'
-    with open(os.path.join(metadata_path, 'DSOT_commercial_metadata.json')) as json_file:
-        comm_bldg_data = json.load(json_file)
-
-    # TODO: Ensure that there is a strategy to set a random seed that is different for each DSO.
-    # np.random.seed(30)
-    dso = 'Suburban'
-    climate = '2A'  # ASHRAE climate zone
-    num_bldg = 30
-
-    outpath = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Dummy/'
-    outname = 'test_comm_' + str(num_bldg) + '_bldg_' + climate
-    op = open(outpath + outname + '.glm', 'w')
-
-    #  1 - define random population of building types and sizes
-    comm_bldgs = define_comm_bldg(comm_bldg_data, dso, num_bldg)
-
-    #  2 - set parameters for each defined building
-    comm_bldg = {}
-    comm_zones = {}
-    comm_loads = {}
-    for i in comm_bldgs:
-        comm_bldg[i] = define_comm_loads(comm_bldgs[i][0], comm_bldgs[i][1], dso, climate, comm_bldg_data)
-
-        comm_zones[i] = comm_bldg[i].copy()
-
-        #  3 - for large buildings subdivide into subzones.  Write all buildings and zones out to GLD format
-        key = i
-        comm_loads[key] = [i, comm_bldgs[i][0], 3, 20, 3, 'A', 240, 200]
-        # comm_loads[key][1] = bldgs[i][0]
-        # comm_loads[key][2] = 3  # Dummy number for number of zones
-        # comm_loads[key][3] = 20  # Dummy number for kVA
-        # comm_loads[key][4] = 3  # Dummy number for nphs
-        # comm_loads[key][5] = 'A'  # Dummy number for phases
-        # comm_loads[key][6] = 240  # dummy number for vln
-        # comm_loads[key][7] = 200  # Dummy number for load number
-
-        create_comm_zones(comm_zones[i], comm_loads, key, op, 'test')
-
-    #   PLOT OUTPUT AND SAVE PLOTS TO FILE
-    plot_path = 'C:/Users/reev057/OneDrive - PNNL/Documents/GMLC/DSO+T/building distribution'
-    vars = ['age', 'os_rand', 'COP_A', 'airchange_per_hour', 'floor_area', 'ceiling_height', 'window_wall_ratio',
-            'aspect_ratio', 'Rroof', 'Rwall', 'thermal_mass_per_floor_area', 'window_exterior_transmission_coefficient',
-            'Rwindows', 'glazing_shgc', 'int_gains']
-    # vars = ['start_time_weekdays', 'duration_weekdays', 'end_time_weekdays', 'start_time_sat', 'duration_sat',
-    #         'end_time_sat', 'start_time_sun', 'duration_sun', 'end_time_sun']
-    outputs = ['total', 'office', 'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service',
-               'food_sales', 'healthcare_inpatient', 'lodging', 'low_occupancy']
-
-    dist = {}
-
-    for var in vars:
-        for out in outputs:
-            dist[out] = []
-
-        for i in comm_bldgs:
-            if comm_bldg[i]['type'] not in ['large_office']:
-                if comm_bldg[i][var] is not None:
-                    dist['total'].append(comm_bldg[i][var])
-                    dist[comm_bldg[i]['type']].append(comm_bldg[i][var])
-
-        # Plot distribution of variable for total distribution
-        label = var
-        plt.figure(figsize=(8, 6))
-        plt.hist(dist['total'], bins=20, alpha=0.5, edgecolor='k', label=label)
-        plt.title(var + ' distribution')
-        plt.legend(loc='upper right')
-        plt.xlabel(var)
-        plt.ylabel('Count')
-
-        plot_filename = datetime.now().strftime('%Y%m%d') + '-total_bldg_distribution_' + var + '.png'
-        file_path_fig = os.path.join(plot_path, plot_filename)
-
-        plt.savefig(file_path_fig, bbox_inches='tight')
-
-        # Plot distribution of variable for each building type
-        fig, axes = plt.subplots(nrows=5, ncols=2, figsize=(10, 10))
-        fig.suptitle('Distributions of ' + var)
-        for ax, each in zip(axes.flatten(), dist):
-            ax.hist(dist[each], bins=10, alpha=0.5, edgecolor='k', label=label)
-            ax.set_title(label=each, pad=-9, )
-
-        plot_filename = datetime.now().strftime('%Y%m%d') + '-bldg_sub-distributions_' + var + '.png'
-        file_path_fig = os.path.join(plot_path, plot_filename)
-
-        fig.savefig(file_path_fig, bbox_inches='tight')
-
-    print(comm_bldg)
-
-
-if __name__ == '__main__':
-    test()

@@ -7,16 +7,16 @@ Public Functions:
 
 """
 import os
-import json;
-import sys;
-import numpy as np;
-import csv;
+import json
+import numpy as np
+import csv
 
 try:
-    import matplotlib as mpl;
-    import matplotlib.pyplot as plt;
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
 except:
     pass
+
 
 def get_nominal_voltage(voltage):
     nom_volt_lst = np.array([120.0, 277.0, 480.0, 7200])
@@ -47,13 +47,13 @@ def process_gld(nameroot, dictname=''):
     dso_num = ''
     # Somehow metrics files are not being named properly. Rename them properly
     for file in os.listdir():
-        if nameroot+'_metrics_' in file and '.json' not in file:
-            new_name = file+'.json'
+        if nameroot + '_metrics_' in file and '.json' not in file:
+            new_name = file + '.json'
             os.rename(file, new_name)
 
     # let's get the starttime and endtime
-    #lp_ag = open("..\\DSO_"+dso_num+"\\" + nameroot + "_agent_dict.json").read()
-    lp_ag = open("../DSO" + "/" +nameroot + "_agent_dict.json").read()
+    # lp_ag = open("..\\DSO_"+dso_num+"\\" + nameroot + "_agent_dict.json").read()
+    lp_ag = open("../DSO" + "/" + nameroot + "_agent_dict.json").read()
     agent_dict = json.loads(lp_ag)
     start_time = agent_dict['StartTime']
     end_time = agent_dict['EndTime']
@@ -61,7 +61,7 @@ def process_gld(nameroot, dictname=''):
     if len(dictname) > 0:
         lp = open(dictname).read()
     else:
-        #lp = open("..\\DSO_"+dso_num+"\\" + nameroot + "_glm_dict.json").read()
+        # lp = open("..\\DSO_"+dso_num+"\\" + nameroot + "_glm_dict.json").read()
         lp = open("../DSO" + "/" + nameroot + "_glm_dict.json").read()
     dict = json.loads(lp)
     sub_keys = list(dict['feeders'].keys())
@@ -110,7 +110,7 @@ def process_gld(nameroot, dictname=''):
     times = list(map(int, list(lst_s.keys())))
     times.sort()
     print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -128,14 +128,14 @@ def process_gld(nameroot, dictname=''):
             SUB_LOSSES_UNITS = val['units']
 
     # create a NumPy array of all metrics for the substation
-    #data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float)
-    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key]['network_node'])), dtype=np.float)
+    # data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float64)
+    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key]['network_node'])), dtype=np.float64)
     print("\nConstructed", data_s.shape, "NumPy array for Substations")
     j = 0
-    for key in sub_keys:
+    for _ in sub_keys:
         i = 0
         for t in times:
-            #ary = lst_s[str(t)][sub_keys[j]]
+            # ary = lst_s[str(t)][sub_keys[j]]
             ary = lst_s[str(t)]['network_node']
             data_s[j, i, :] = ary
             i = i + 1
@@ -178,10 +178,10 @@ def process_gld(nameroot, dictname=''):
         elif key == 'air_temperature_deviation_heating':
             DEV_HEAT_IDX = val['index']
 
-    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
+    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float64)
     print("\nConstructed", data_h.shape, "NumPy array for Houses")
     j = 0
-    for key in hse_keys:
+    for _ in hse_keys:
         i = 0
         for t in times:
             ary = lst_h[str(t)][hse_keys[j]]
@@ -189,7 +189,7 @@ def process_gld(nameroot, dictname=''):
             i = i + 1
         j = j + 1
 
-    #print('average all house temperatures Noon-8 pm first day:', data_h[:, 144:240, HSE_AIR_AVG_IDX].mean())
+    # print('average all house temperatures Noon-8 pm first day:', data_h[:, 144:240, HSE_AIR_AVG_IDX].mean())
     # endregion
     # House collection ended
 
@@ -223,10 +223,10 @@ def process_gld(nameroot, dictname=''):
             MTR_REAL_POWER_AVG = val['index']
 
     if nBillingMeters > 0:
-        data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+        data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float64)
         print('\nConstructed', data_m.shape, 'NumPy array for Meters')
         j = 0
-        for key in mtr_keys:
+        for _ in mtr_keys:
             i = 0
             for t in times:
                 ary = lst_m[str(t)][mtr_keys[j]]
@@ -242,31 +242,31 @@ def process_gld(nameroot, dictname=''):
     meta_i = lst_i.pop('Metadata')
     # print("\nInverter Metadata for", len(lst_i[time_key]), "objects")
     for key, val in meta_i.items():
-            print (key, val['index'], val['units'])
-            if key == 'real_power_avg':
-                INV_P_AVG_IDX = val['index']
-                INV_P_AVG_UNITS = val['units']
-            elif key == 'reactive_power_avg':
-                INV_Q_AVG_IDX = val['index']
-                INV_Q_AVG_UNITS = val['units']
+        print(key, val['index'], val['units'])
+        if key == 'real_power_avg':
+            INV_P_AVG_IDX = val['index']
+            INV_P_AVG_UNITS = val['units']
+        elif key == 'reactive_power_avg':
+            INV_Q_AVG_IDX = val['index']
+            INV_Q_AVG_UNITS = val['units']
     if lst_i[time_key]:
-        inv_keys = list(lst_i[time_key].keys())     # TODO: inv_keys extracted earlier at line 49 is not correct
+        inv_keys = list(lst_i[time_key].keys())  # TODO: inv_keys extracted earlier at line 49 is not correct
         inv_keys.sort()
-        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
+        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float64)
         print("\nConstructed", data_i.shape, "NumPy array for Inverters")
         j = 0
-        for key in inv_keys:
-                i = 0
-                for t in times:
-                    ary = lst_i[str(t)][inv_keys[j]]
-                    data_i[j, i,:] = ary
-                    i = i + 1
-                j = j + 1
+        for _ in inv_keys:
+            i = 0
+            for t in times:
+                ary = lst_i[str(t)][inv_keys[j]]
+                data_i[j, i, :] = ary
+                i = i + 1
+            j = j + 1
     # endregion
 
     # #Collecting outside air temperature from weather agent
     out_temp = []
-    #with open('../weather_Substation_'+dso_num+'/weather.dat', mode='r') as csv_file:
+    # with open('../weather_Substation_'+dso_num+'/weather.dat', mode='r') as csv_file:
     with open('../weather_Substation' + dso_num + '/weather.dat', mode='r') as csv_file:
         for i in range(1):
             next(csv_file)
@@ -278,7 +278,7 @@ def process_gld(nameroot, dictname=''):
         for row in csv_reader:
             out_temp.append(row[1])
         out_temp = np.array(out_temp)
-        out_temp = out_temp.astype(np.float)
+        out_temp = out_temp.astype(np.float64)
         # print(out_temp)
 
     # out_temp=[]
@@ -292,7 +292,7 @@ def process_gld(nameroot, dictname=''):
     #         out_temp.append(row[1])
     #         #print('out**')
     #     out_temp = np.array(out_temp)
-    #     out_temp = out_temp.astype(np.float)
+    #     out_temp = out_temp.astype(np.float64)
     #     print(out_temp)
     #
     # in_temp=[]
@@ -306,7 +306,7 @@ def process_gld(nameroot, dictname=''):
     #         in_temp.append(row[10])
     #         #print('out**')
     #     in_temp = np.array(in_temp)
-    #     in_temp = in_temp.astype(np.float)
+    #     in_temp = in_temp.astype(np.float64)
     #     #print(in_temp)
     #
     # set_pt=[]
@@ -320,7 +320,7 @@ def process_gld(nameroot, dictname=''):
     #         set_pt.append(row[10])
     #         #print('out**')
     #     set_pt = np.array(set_pt)
-    #     set_pt = set_pt.astype(np.float)
+    #     set_pt = set_pt.astype(np.float64)
     #     #print(in_temp)
 
     # fl_area=[]
@@ -332,7 +332,7 @@ def process_gld(nameroot, dictname=''):
     #         row.pop(0)
     #         break
     #     fl_area = np.array(row)
-    #     fl_area = fl_area.astype(np.float)
+    #     fl_area = fl_area.astype(np.float64)
     #
     # hvac_oversize = []
     # with open('hvac_oversize.csv', mode='r') as csv_file:
@@ -343,11 +343,9 @@ def process_gld(nameroot, dictname=''):
     #         row.pop(0)
     #         break
     #     hvac_oversize = np.array(row)
-    #     hvac_oversize = hvac_oversize.astype(np.float)
+    #     hvac_oversize = hvac_oversize.astype(np.float64)
 
-
-
-    #Plotting temperatures via csv files with gld time resolution
+    # Plotting temperatures via csv files with gld time resolution
     # plt.plot(np.linspace(0, 48, len(out_temp)), out_temp, label='outside')
     # plt.plot(np.linspace(0, 48, len(in_temp)), in_temp, label='inside')
     # plt.plot(np.linspace(0, 48, len(set_pt)), set_pt, label='set point')
@@ -356,7 +354,7 @@ def process_gld(nameroot, dictname=''):
     # plt.title("Temperatures Profile due to HVAC")
     # plt.legend(loc='best')
     # plt.show()
-    return hrs, times, hse_keys, data_h, HVAC_LOAD_AVG_IDX, WH_AVG_IDX, TOTAL_LOAD_AVG_IDX,  DEV_COOL_IDX, data_m, MTR_REAL_POWER_AVG, MTR_VOLT_MIN_IDX, MTR_VOLT_MAX_IDX, data_s, SUB_POWER_IDX, SUB_LOSSES_IDX
+    return hrs, times, hse_keys, data_h, HVAC_LOAD_AVG_IDX, WH_AVG_IDX, TOTAL_LOAD_AVG_IDX, DEV_COOL_IDX, data_m, MTR_REAL_POWER_AVG, MTR_VOLT_MIN_IDX, MTR_VOLT_MAX_IDX, data_s, SUB_POWER_IDX, SUB_LOSSES_IDX
     # display an aggregated plot
 #     fig1, ax1 = plt.subplots(2, 2, sharex='col')
 #
@@ -434,113 +432,113 @@ def process_gld(nameroot, dictname=''):
 #     ax1[1, 1].set_xlabel("Hours")
 #     ax1[1, 1].set_ylabel("Voltage (pu)")
 #     ax1[1, 1].set_title("Meter Voltages at all Houses")
-    #ax1[1, 1].legend(loc='best')
-    #plt.show()
+# ax1[1, 1].legend(loc='best')
+# plt.show()
 
-    # fig, ax = plt.subplots(2, 2, sharex='col')
-    # vabase = dict['inverters'][inv_keys[0]]['rated_W']
-    # print ("Inverter base power =", vabase)
-    # ax[0,1].plot(data_i[0,:,INV_P_AVG_IDX] / vabase, color="blue", label="Real")
-    # ax[0,1].plot(data_i[0,:,INV_Q_AVG_IDX] / vabase, color="red", label="Reactive")
-    # ax[0,1].set_ylabel("perunit")
-    # ax[0,1].set_title ("Inverter Power at " + inv_keys[0])
-    # ax[0,1].legend(loc='best')
+# fig, ax = plt.subplots(2, 2, sharex='col')
+# vabase = dict['inverters'][inv_keys[0]]['rated_W']
+# print ("Inverter base power =", vabase)
+# ax[0,1].plot(data_i[0,:,INV_P_AVG_IDX] / vabase, color="blue", label="Real")
+# ax[0,1].plot(data_i[0,:,INV_Q_AVG_IDX] / vabase, color="red", label="Reactive")
+# ax[0,1].set_ylabel("perunit")
+# ax[0,1].set_title ("Inverter Power at " + inv_keys[0])
+# ax[0,1].legend(loc='best')
 
-    # ax[0,1].plot(hrs, data_m[0,:,MTR_VOLTUNB_MAX_IDX], color="red", label="Max")
-    # ax[0,1].set_ylabel("perunit")
-    # ax[0,1].set_title ("Voltage Unbalance at " + mtr_keys[0])
+# ax[0,1].plot(hrs, data_m[0,:,MTR_VOLTUNB_MAX_IDX], color="red", label="Max")
+# ax[0,1].set_ylabel("perunit")
+# ax[0,1].set_title ("Voltage Unbalance at " + mtr_keys[0])
 
-    # # Plotting at one house
-    # fig, ax = plt.subplots(2, 2, sharex='col')
-    # #house_key = hse_keys.index('R5_12_47_3_tn_5_hse_1')
-    # #meter_key = mtr_keys.index('R5_12_47_3_tn_5_mtr_1')
-    # house_key = hse_keys.index('Houses_B_hse_5')
-    # meter_key = mtr_keys.index('Houses_B_mtr_5')
-    # # if lst_i[time_key]:
-    # #     inv_key = inv_keys.index('R5_12_47_3_tn_5_ibat_2')
-    # #     ax[0, 1].plot(hrs, data_i[inv_key, hrs_start:, INV_P_AVG_IDX]/1000, label="inv P")
-    # #     ax[0, 1].plot(hrs, data_i[inv_key, hrs_start:, INV_Q_AVG_IDX]/1000, label="inv Q")
-    # #     # ax[0, 1].plot(hrs, data_h[house_key, hrs_start:, TOTAL_LOAD_AVG_IDX], label="total")
-    # #     ax[0, 1].set_ylabel('kW')
-    # #     ax[0, 1].set_title("Inverter power at " + inv_keys[inv_key])
-    # #     ax[0, 1].legend(loc='best')
-    #
-    # ax[0,0].plot(hrs, data_h[house_key, hrs_start:, HVAC_LOAD_AVG_IDX], label="hvac")
-    # # ax[0,0].plot(hrs, data_h[house_key, hrs_start:, WH_AVG_IDX], label="wh")
-    # ax[0,0].plot(hrs, data_h[house_key, hrs_start:, TOTAL_LOAD_AVG_IDX], label="total")
-    # # ax[0,0].plot(hrs, -data_i[house_key, hrs_start:, INV_P_AVG_IDX] / 1000, label="inverter")
-    # # ax[0,0].plot(hrs, data_m[meter_key, hrs_start:, MTR_REAL_POWER_AVG] / 1000, label="net meter")
-    # # ax[0,0].plot(hrs, data_h[house_key, hrs_start:, TOTAL_LOAD_AVG_IDX]-data_i[house_key, hrs_start:, INV_P_AVG_IDX]/1000, label="total - inv")
-    # ax[0,0].set_ylabel("kW")
-    # ax[0,0].set_title("Load Profiles at " + hse_keys[house_key])
-    # ax[0,0].legend(loc='best')
-    #
-    # if nBillingMeters > 0:
-    #     ax[1,0].plot(hrs, np.ones(len(hrs))*0.95,'k--')
-    #     ax[1, 0].plot(hrs, np.ones(len(hrs))*1.05, 'k--')
-    #     nominal_v = get_nominal_voltage(data_m[meter_key, hrs_start, MTR_VOLT_MIN_IDX])
-    #     ax[1, 0].plot(hrs, data_m[meter_key, hrs_start:, MTR_VOLT_MAX_IDX]/nominal_v, color="blue", label="Max LN")
-    #     ax[1, 0].plot(hrs, data_m[meter_key, hrs_start:, MTR_VOLT_MIN_IDX]/nominal_v, color="red", label="Min LN")
-    #     #ax[1, 0].plot(hrs, data_m[0, :, MTR_VOLT12_MAX_IDX], color="green", label="Max LL")
-    #     #ax[1, 0].plot(hrs, data_m[0, :, MTR_VOLT12_MIN_IDX], color="magenta", label="Min LL")
-    #     ax[1, 0].set_xlabel("Hours")
-    #     ax[1, 0].set_ylabel("Voltage (pu)")
-    #     ax[1, 0].set_title("Meter Voltages at " + mtr_keys[meter_key])
-    #     ax[1, 0].legend(loc='best')
-    # else:
-    #     ax[1, 0].set_title('No Billing Meters to Plot')
-    #
-    # ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, HSE_AIR_AVG_IDX], color="blue", label="Mean")
-    # ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, HSE_AIR_MIN_IDX], color="red", label="Min")
-    # ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, HSE_AIR_MAX_IDX], color="green", label="Max")
-    # ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, DEV_COOL_IDX], color="black", label="cooling setpoint")
-    # # for i in range(len(hse_keys)):
-    # #     ax[1, 1].plot(hrs, data_h[i, :, DEV_COOL_IDX], color="black", label="cooling setpoint")
-    # ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, DEV_HEAT_IDX], color="black", label="heating setpoint")
-    # #ax[1, 1].plot(hrs,out_temp[discard_mins*60:len(out_temp):300], 'b--', label="outside")
-    # ax[1, 1].set_xlabel("Hours")
-    # ax[1, 1].set_ylabel(HSE_AIR_AVG_UNITS)
-    # ax[1, 1].set_title("House Air at " + hse_keys[house_key])
-    # ax[1, 1].legend(loc='best')
-    #
-    # # plotting inverter battery performance
-    # # if lst_i[time_key]:
-    # #     fig, ax_in = plt.subplots(2, 1, sharex='col')
-    # #     inv_key = inv_keys.index('R5_12_47_3_tn_5_ibat_2')
-    # #     ax_in[0].plot(hrs, data_i[inv_key, hrs_start:, INV_P_AVG_IDX] / 1000, label="inv P")
-    # #     ax_in[0].plot(hrs, data_i[inv_key, hrs_start:, INV_Q_AVG_IDX] / 1000, label="inv Q")
-    # #     ax_in[0].set_ylabel('kW')
-    # #     ax_in[0].set_xlabel('Time (hour')
-    # #     ax_in[0].set_title("Inverter power at " + inv_keys[inv_key])
-    # #     ax_in[0].legend(loc='best')
-    # #     ax_in[0].grid(True)
-    # #     ax_in[1].plot(hrs, inv_load[hrs_start:], label="inverter_real")
-    # #     ax_in[1].plot(hrs, inv_load_var[hrs_start:], label="inverter_var")
-    # #     ax_in[1].set_ylabel('kW')
-    # #     ax_in[1].set_title("Aggregated Inverter Power")
-    # #     ax_in[1].legend(loc='best')
-    # #     ax_in[1].set_xlabel('Time (hour')
-    # #     ax_in[1].grid(True)
-    #
-    # # fig2, ax2 = plt.subplots()
-    # # for i in range(len(hse_keys)):
-    # #     ax2.plot(hrs, data_h[i, hrs_start:, DEV_COOL_IDX], color="black")
-    # #     # ax2.plot(hrs, data_h[i, hrs_start:, DEV_COOL_IDX], color="black", label="cooling setpoint")
-    # # ax2.plot(np.linspace(0, 24, len(out_temp)), out_temp, label='outside air temp')
-    # # ax2.set_title("Cooling setpoints for all HVAC units")
-    # # ax2.set_ylabel("Farenhite")
-    # # ax2.set_xlabel("hours")
-    # # ax2.legend(loc='best')
-    #
-    # # fig3, ax3 = plt.subplots()
-    # # ax3.scatter(fl_area, hvac_oversize, color="black", label="")
-    # # ax3.set_xlabel("Floor area")
-    # # ax3.set_ylabel("Oversizing factor of hvac")
-    # # ax3.set_title("HVAC oversizing with respect to floor area")
-    # fig.savefig('Figures/individual.png')
-    # fig1.savefig('Figures/aggregated.png')
-    # plt.show(block=False)
-    # plt.pause(0.5)
-    # plt.close()
-    #
-    #
+# # Plotting at one house
+# fig, ax = plt.subplots(2, 2, sharex='col')
+# #house_key = hse_keys.index('R5_12_47_3_tn_5_hse_1')
+# #meter_key = mtr_keys.index('R5_12_47_3_tn_5_mtr_1')
+# house_key = hse_keys.index('Houses_B_hse_5')
+# meter_key = mtr_keys.index('Houses_B_mtr_5')
+# # if lst_i[time_key]:
+# #     inv_key = inv_keys.index('R5_12_47_3_tn_5_ibat_2')
+# #     ax[0, 1].plot(hrs, data_i[inv_key, hrs_start:, INV_P_AVG_IDX]/1000, label="inv P")
+# #     ax[0, 1].plot(hrs, data_i[inv_key, hrs_start:, INV_Q_AVG_IDX]/1000, label="inv Q")
+# #     # ax[0, 1].plot(hrs, data_h[house_key, hrs_start:, TOTAL_LOAD_AVG_IDX], label="total")
+# #     ax[0, 1].set_ylabel('kW')
+# #     ax[0, 1].set_title("Inverter power at " + inv_keys[inv_key])
+# #     ax[0, 1].legend(loc='best')
+#
+# ax[0,0].plot(hrs, data_h[house_key, hrs_start:, HVAC_LOAD_AVG_IDX], label="hvac")
+# # ax[0,0].plot(hrs, data_h[house_key, hrs_start:, WH_AVG_IDX], label="wh")
+# ax[0,0].plot(hrs, data_h[house_key, hrs_start:, TOTAL_LOAD_AVG_IDX], label="total")
+# # ax[0,0].plot(hrs, -data_i[house_key, hrs_start:, INV_P_AVG_IDX] / 1000, label="inverter")
+# # ax[0,0].plot(hrs, data_m[meter_key, hrs_start:, MTR_REAL_POWER_AVG] / 1000, label="net meter")
+# # ax[0,0].plot(hrs, data_h[house_key, hrs_start:, TOTAL_LOAD_AVG_IDX]-data_i[house_key, hrs_start:, INV_P_AVG_IDX]/1000, label="total - inv")
+# ax[0,0].set_ylabel("kW")
+# ax[0,0].set_title("Load Profiles at " + hse_keys[house_key])
+# ax[0,0].legend(loc='best')
+#
+# if nBillingMeters > 0:
+#     ax[1,0].plot(hrs, np.ones(len(hrs))*0.95,'k--')
+#     ax[1, 0].plot(hrs, np.ones(len(hrs))*1.05, 'k--')
+#     nominal_v = get_nominal_voltage(data_m[meter_key, hrs_start, MTR_VOLT_MIN_IDX])
+#     ax[1, 0].plot(hrs, data_m[meter_key, hrs_start:, MTR_VOLT_MAX_IDX]/nominal_v, color="blue", label="Max LN")
+#     ax[1, 0].plot(hrs, data_m[meter_key, hrs_start:, MTR_VOLT_MIN_IDX]/nominal_v, color="red", label="Min LN")
+#     #ax[1, 0].plot(hrs, data_m[0, :, MTR_VOLT12_MAX_IDX], color="green", label="Max LL")
+#     #ax[1, 0].plot(hrs, data_m[0, :, MTR_VOLT12_MIN_IDX], color="magenta", label="Min LL")
+#     ax[1, 0].set_xlabel("Hours")
+#     ax[1, 0].set_ylabel("Voltage (pu)")
+#     ax[1, 0].set_title("Meter Voltages at " + mtr_keys[meter_key])
+#     ax[1, 0].legend(loc='best')
+# else:
+#     ax[1, 0].set_title('No Billing Meters to Plot')
+#
+# ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, HSE_AIR_AVG_IDX], color="blue", label="Mean")
+# ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, HSE_AIR_MIN_IDX], color="red", label="Min")
+# ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, HSE_AIR_MAX_IDX], color="green", label="Max")
+# ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, DEV_COOL_IDX], color="black", label="cooling setpoint")
+# # for i in range(len(hse_keys)):
+# #     ax[1, 1].plot(hrs, data_h[i, :, DEV_COOL_IDX], color="black", label="cooling setpoint")
+# ax[1, 1].plot(hrs, data_h[house_key, hrs_start:, DEV_HEAT_IDX], color="black", label="heating setpoint")
+# #ax[1, 1].plot(hrs,out_temp[discard_mins*60:len(out_temp):300], 'b--', label="outside")
+# ax[1, 1].set_xlabel("Hours")
+# ax[1, 1].set_ylabel(HSE_AIR_AVG_UNITS)
+# ax[1, 1].set_title("House Air at " + hse_keys[house_key])
+# ax[1, 1].legend(loc='best')
+#
+# # plotting inverter battery performance
+# # if lst_i[time_key]:
+# #     fig, ax_in = plt.subplots(2, 1, sharex='col')
+# #     inv_key = inv_keys.index('R5_12_47_3_tn_5_ibat_2')
+# #     ax_in[0].plot(hrs, data_i[inv_key, hrs_start:, INV_P_AVG_IDX] / 1000, label="inv P")
+# #     ax_in[0].plot(hrs, data_i[inv_key, hrs_start:, INV_Q_AVG_IDX] / 1000, label="inv Q")
+# #     ax_in[0].set_ylabel('kW')
+# #     ax_in[0].set_xlabel('Time (hour')
+# #     ax_in[0].set_title("Inverter power at " + inv_keys[inv_key])
+# #     ax_in[0].legend(loc='best')
+# #     ax_in[0].grid(True)
+# #     ax_in[1].plot(hrs, inv_load[hrs_start:], label="inverter_real")
+# #     ax_in[1].plot(hrs, inv_load_var[hrs_start:], label="inverter_var")
+# #     ax_in[1].set_ylabel('kW')
+# #     ax_in[1].set_title("Aggregated Inverter Power")
+# #     ax_in[1].legend(loc='best')
+# #     ax_in[1].set_xlabel('Time (hour')
+# #     ax_in[1].grid(True)
+#
+# # fig2, ax2 = plt.subplots()
+# # for i in range(len(hse_keys)):
+# #     ax2.plot(hrs, data_h[i, hrs_start:, DEV_COOL_IDX], color="black")
+# #     # ax2.plot(hrs, data_h[i, hrs_start:, DEV_COOL_IDX], color="black", label="cooling setpoint")
+# # ax2.plot(np.linspace(0, 24, len(out_temp)), out_temp, label='outside air temp')
+# # ax2.set_title("Cooling setpoints for all HVAC units")
+# # ax2.set_ylabel("Fahrenheit")
+# # ax2.set_xlabel("hours")
+# # ax2.legend(loc='best')
+#
+# # fig3, ax3 = plt.subplots()
+# # ax3.scatter(fl_area, hvac_oversize, color="black", label="")
+# # ax3.set_xlabel("Floor area")
+# # ax3.set_ylabel("Oversizing factor of hvac")
+# # ax3.set_title("HVAC oversizing with respect to floor area")
+# fig.savefig('Figures/individual.png')
+# fig1.savefig('Figures/aggregated.png')
+# plt.show(block=False)
+# plt.pause(0.5)
+# plt.close()
+#
+#

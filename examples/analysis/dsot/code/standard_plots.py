@@ -3,7 +3,7 @@
 
     Develop only for json output 
         
-    The file will first read all the required input files. The plots are made 
+    The file will first read all the required input files. The plots are made
     by functions that receive the objects with the input data.
 """
 import itertools
@@ -129,7 +129,7 @@ class marketJSONpython:
                 temp[j].append(I_ver[t][node])
             j = j + 1
 
-        Order = [[] for i in range(len(meta_I_ver))]
+        Order = [[] for _ in range(len(meta_I_ver))]
         for i in meta_I_ver:
             index = meta_I_ver[i]['index']
             for t in range(len(temp[0])):
@@ -170,9 +170,8 @@ class DERsJSON:
             list
                 meta_I_ver (dic): Metadata of .json file
                 start_time (str): Start time of the simulation
-                agregated_DERs (dataframe): agregated metadata
-                list
-                    DERs (dataframe): metadata by DER
+                aggregated_DERs (dataframe): aggregated metadata
+                list DERs (dataframe): metadata by DER
                 home_keys (list): home key or DER key
         """
         d1 = dict()
@@ -237,7 +236,7 @@ class DERsJSON:
         x = len(I_ver[times[0]].keys())
         y = len(times)
         z = len(meta_I_ver)
-        data_I_ver = np.empty(shape=(x, y, z), dtype=np.float)
+        data_I_ver = np.empty(shape=(x, y, z), dtype=float)
 
         j = 0
         for node in list(I_ver[times[0]].keys()):
@@ -250,8 +249,8 @@ class DERsJSON:
                     if len(I_ver[t][node][0]) > 1:
                         temp = []
                         for k in range(len(I_ver[t][node][0])):
-                            for l in range(len(I_ver[t][node][0][0])):
-                                temp.append(I_ver[t][node][0][k][l])
+                            for m in range(len(I_ver[t][node][0][0])):
+                                temp.append(I_ver[t][node][0][k][m])
                         for p in range(1, len(I_ver[t][node])):
                             temp.append(I_ver[t][node][p])
                     try:
@@ -306,7 +305,6 @@ def get_first_h(data_s):
     """ Gets the first hour of DA prices (DSO and retail)
 
     Args:
-        t (int): selects the number of DA run
         data_s (list of list 48 float): clear DA prices
 
     Returns:
@@ -353,7 +351,7 @@ def Markets(obj_Market, obj_Color):
         obj_Color (obj): contain colors
     """
     markers = obj_Color.Marker
-    #### Plot DSO and RET for DA and RT
+    # ### Plot DSO and RET for DA and RT
     plt.figure('Plot DSO and RET for DA and RT')
 
     V_analis = 'trial_cleared_price_da'
@@ -399,8 +397,11 @@ def DSOplots(obj_Market, obj_Color):
     V_analis = 'trial_cleared_price_da'
     #    first_h = get_first_h(data_s=obj_Market.DSO3600[2][obj_Market.DSO3600[0][V_analis]['index']])
     #    #### Plot clear DSO
-    #    plt.plot(first_h,color = obj_Color.Color_market[0],marker='x');plt.ylabel('DSO price ($/kWh)');plt.xlabel('time (hours)');plt.grid(True);plt.show()
-    #### Plot convergency of DSO market
+    #    plt.plot(first_h,color = obj_Color.Color_market[0],marker='x')
+    #    plt.ylabel('DSO price ($/kWh)')
+    #    plt.xlabel('time (hours)')
+    #    plt.grid(True);plt.show()
+    # ### Plot convergency of DSO market
     plt.figure('Plot convergency of DSO market')
 
     M_in = 0
@@ -429,8 +430,11 @@ def RETplots(obj_Market, obj_Color):
     V_analis = 'cleared_price_da'
     #    first_h = get_first_h(data_s=obj_Market.RET3600[2][obj_Market.RET3600[0][V_analis]['index']])
     #    #### Plot clear DSO
-    #    plt.plot(first_h,color = obj_Color.Color_market[0],marker='x');plt.ylabel('retail price ($/kWh)');plt.xlabel('time (hours)');plt.grid(True);plt.show()
-    #### Plot convergency of RET market
+    #    plt.plot(first_h,color = obj_Color.Color_market[0],marker='x')
+    #    plt.ylabel('retail price ($/kWh)')
+    #    plt.xlabel('time (hours)')
+    #    plt.grid(True);plt.show()
+    # ### Plot convergency of RET market
     plt.figure('Plot convergency of RET market')
 
     M_in = 0
@@ -457,7 +461,7 @@ def Inverter(obj_Market, obj_DER_PYT_battery, obj_DER_GLD_inverter, obj_Color):
         obj_Color (obj): contain colors
     """
     markers = obj_Color.Marker
-    #### Plot individual DA, RT, and GLD quantity Inv
+    # ### Plot individual DA, RT, and GLD quantity Inv
     plt.figure('Plot individual DA, RT, and GLD quantity Inv')
 
     M_in = 0
@@ -500,8 +504,8 @@ def Inverter(obj_Market, obj_DER_PYT_battery, obj_DER_GLD_inverter, obj_Color):
     plt.grid(True)
     plt.show()
 
-    #### Plot agregated sum DA, RT, and GLD quantity Inv
-    plt.figure('Plot agregated sum DA, RT, and GLD quantity Inv')
+    # ### Plot aggregated sum DA, RT, and GLD quantity Inv
+    plt.figure('Plot aggregated sum DA, RT, and GLD quantity Inv')
 
     M_in = 0
 
@@ -530,12 +534,12 @@ def Inverter(obj_Market, obj_DER_PYT_battery, obj_DER_GLD_inverter, obj_Color):
     to_kW = -1000
     plt.plot((sumAgreGLD.resample('5min').mean() / to_kW).values, color=obj_Color.Color_GLD[M_in], marker=markers[M_in],
              label='GLD')
-    plt.ylabel('agregated sum quantity (kW)')
+    plt.ylabel('aggregated sum quantity (kW)')
     plt.xlabel('time (5-min)')
     plt.legend(bbox_to_anchor=(1.1, 1.00))
     plt.grid(True)
     plt.show()
-    #### Plot inverter sum power and RET price Inv  
+    # ### Plot inverter sum power and RET price Inv
     # plt.figure('Plot inverter sum power and RET price Inv')
 
     V_analis = 'real_power_avg'
@@ -550,14 +554,14 @@ def Inverter(obj_Market, obj_DER_PYT_battery, obj_DER_GLD_inverter, obj_Color):
     ax1 = fig.add_subplot(111)
     ax1.plot((AVG_power.resample('60min').mean() / 1000).values, marker='x', color=obj_Color.Color_GLD[0])
     ax1.set_xlabel('time (hours)')
-    ax1.set_ylabel('agregated sum inverter power (kW)', color=obj_Color.Color_GLD[0])
+    ax1.set_ylabel('aggregated sum inverter power (kW)', color=obj_Color.Color_GLD[0])
     ax2 = ax1.twinx()
     ax2.plot(first_h, marker='o', color=obj_Color.Color_market[0])
     ax2.set_ylabel('DA retail price ($/kWh)', color=obj_Color.Color_market[0])
     plt.grid(True)
     plt.show()
-    #### Plot Convergency sum optimal agregated quantity bid Inv
-    plt.figure('Plot Convergency sum optimal agregated quantity bid Inv')
+    # ### Plot Convergency sum optimal aggregated quantity bid Inv
+    plt.figure('Plot Convergency sum optimal aggregated quantity bid Inv')
 
     V_analis = 'bid_4P_da_H_0_Q_1'
     df = obj_DER_PYT_battery.DER_1h[2][3]
@@ -579,7 +583,7 @@ def Inverter(obj_Market, obj_DER_PYT_battery, obj_DER_GLD_inverter, obj_Color):
     for i in range(da_convergence_start, da_convergence_start + N_convergence_hours):
         convergency_max = make_convergency_test(data_s=row_list, t=i)
         plt.plot(convergency_max, marker=markers[M_in], color=obj_Color.Color_convergency[M_in], label=str(i) + '-h')
-        plt.ylabel('agregated sum optimal quantity bid (kWh)')
+        plt.ylabel('aggregated sum optimal quantity bid (kWh)')
         plt.xlabel('from time ahead to present (hours)')
         M_in = M_in + 1
     plt.grid(True)
@@ -599,23 +603,23 @@ def Water_Heater(obj_Market, obj_DER_PYT_water, obj_DER_GLD_house, obj_Color):
     """
     markers = obj_Color.Marker
 
-    #### Plot upper set point WH
+    # ### Plot upper set point WH
     plt.figure('Plot upper set point WH')
 
     M_in = 0
 
     # obj_DER_PYT_water.DER_5m[2][3] = data_s for the sum
-    # obj_DER_PYT_water.DER_5m[0] = meta_S 
+    # obj_DER_PYT_water.DER_5m[0] = meta_S
 
     V_analis = 'upper_tank_setpoint'
     AVG_power = obj_DER_PYT_water.DER_5m[2][3][obj_DER_PYT_water.DER_5m[0][V_analis]['index']]
     to_kW = 1
     plt.plot((AVG_power.resample('60min').mean() / to_kW).values, marker=markers[M_in], color=obj_Color.Color_RT[M_in])
-    plt.ylabel('agregated sum upper tank setpoint (F)')
+    plt.ylabel('aggregated sum upper tank setpoint (F)')
     plt.xlabel('time (hours)')
     plt.grid(True)
     plt.show()
-    #### Plot lower set point WH
+    # ### Plot lower set point WH
     plt.figure('Plot lower set point WH')
 
     M_in = M_in + 1
@@ -623,12 +627,12 @@ def Water_Heater(obj_Market, obj_DER_PYT_water, obj_DER_GLD_house, obj_Color):
     V_analis = 'lower_tank_setpoint'
     AVG_power = obj_DER_PYT_water.DER_5m[2][3][obj_DER_PYT_water.DER_5m[0][V_analis]['index']]
     plt.plot((AVG_power.resample('60min').mean() / to_kW).values, marker=markers[M_in], color=obj_Color.Color_RT[M_in])
-    plt.ylabel('agregated sum lower tank setpoint (F)')
+    plt.ylabel('aggregated sum lower tank setpoint (F)')
     plt.xlabel('time (hours)')
     plt.grid(True)
     plt.show()
 
-    #### Plot convergency of individual bids WH
+    # ### Plot convergency of individual bids WH
     plt.figure('Plot convergency of individual bids WH')
     home = 0
 
@@ -660,7 +664,7 @@ def Water_Heater(obj_Market, obj_DER_PYT_water, obj_DER_GLD_house, obj_Color):
     plt.title('Water heater individual ' + obj_DER_PYT_water.DER_1h[4][home])
     plt.show()
 
-    #### Plot convergency of sum bids WH
+    # ### Plot convergency of sum bids WH
     plt.figure('Plot convergency of sum bids WH')
 
     V_analis = 'bid_4P_da_H_0_Q_1'
@@ -683,7 +687,7 @@ def Water_Heater(obj_Market, obj_DER_PYT_water, obj_DER_GLD_house, obj_Color):
     for i in range(da_convergence_start, da_convergence_start + N_convergence_hours):
         convergency_max = make_convergency_test(data_s=row_list, t=i)
         plt.plot(convergency_max, marker=markers[M_in], color=obj_Color.Color_convergency[M_in], label=str(i) + '-h')
-        plt.ylabel('agregated sum optimal quantity bid (kWh)')
+        plt.ylabel('aggregated sum optimal quantity bid (kWh)')
         plt.xlabel('from time ahead to present (hours)')
         M_in = M_in + 1
     plt.grid(True)
@@ -702,7 +706,7 @@ def HVAC(obj_Market, obj_DER_PYT_hvac, obj_DER_GLD_house, obj_Color):
         obj_Color (obj): contain colors
     """
     markers = obj_Color.Marker
-    #### Plot temperatures and price
+    # ### Plot temperatures and price
     fig = plt.figure('Plot individual temperature and price HVAC')
     ax1 = fig.add_subplot(111)
 
@@ -729,7 +733,7 @@ def HVAC(obj_Market, obj_DER_PYT_hvac, obj_DER_GLD_house, obj_Color):
     plt.title('HVAC individual ' + obj_DER_PYT_hvac.DER_5m[4][home])
     plt.show()
 
-    #### Plot convergency of individual bids HVAC
+    # ### Plot convergency of individual bids HVAC
     plt.figure('Plot convergency of individual bids HVAC')
     home = 0
 
@@ -761,7 +765,7 @@ def HVAC(obj_Market, obj_DER_PYT_hvac, obj_DER_GLD_house, obj_Color):
     plt.title('HVAC individual ' + obj_DER_PYT_hvac.DER_5m[4][home])
     plt.show()
 
-    #### Plot convergency of sum bids HVAC
+    # ### Plot convergency of sum bids HVAC
     plt.figure('Plot convergency of sum bids HVAC')
 
     V_analis = 'bid_4P_da_H_0_Q_1'
@@ -784,7 +788,7 @@ def HVAC(obj_Market, obj_DER_PYT_hvac, obj_DER_GLD_house, obj_Color):
     for i in range(da_convergence_start, da_convergence_start + N_convergence_hours):
         convergency_max = make_convergency_test(data_s=row_list, t=i)
         plt.plot(convergency_max, marker=markers[M_in], color=obj_Color.Color_convergency[M_in], label=str(i) + '-h')
-        plt.ylabel('agregated sum optimal quantity bid (kWh)')
+        plt.ylabel('aggregated sum optimal quantity bid (kWh)')
         plt.xlabel('from time ahead to present (hours)')
         M_in = M_in + 1
     plt.grid(True)
@@ -797,6 +801,7 @@ if __name__ == "__main__":
     """
     All the data will be loaded first for the requested days
     """
+
     pre_file_out = 'TE_test/dso_1/'
     pos_file = '.json'
     days = list([0, 3])
@@ -818,13 +823,13 @@ if __name__ == "__main__":
 
     obj_Color = MarkerCollorsJSONpython()
 
-    #### Making plots
+    # ### Making plots
     Markets(obj_Market, obj_Color)
     DSOplots(obj_Market, obj_Color)
     RETplots(obj_Market, obj_Color)
-    #### Inverter plots
+    # ### Inverter plots
     Inverter(obj_Market, obj_DER_PYT_battery, obj_DER_GLD_inverter, obj_Color)
-    #### Water heater
+    # ### Water heater
     Water_Heater(obj_Market, obj_DER_PYT_water, obj_DER_GLD_house, obj_Color)
-    #### HVAC plots
+    # ### HVAC plots
     HVAC(obj_Market, obj_DER_PYT_hvac, obj_DER_GLD_house, obj_Color)

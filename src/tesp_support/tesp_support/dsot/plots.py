@@ -121,7 +121,8 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
 
     for meter in agent_meta['site_agent']:
         glm_meta['billingmeters'][meter]['cust_participating'] = agent_meta['site_agent'][meter]['participating']
-        glm_meta['billingmeters'][meter]['slider_setting'] = agent_meta['site_agent'][meter]['slider_settings']['customer']
+        glm_meta['billingmeters'][meter]['slider_setting'] = agent_meta['site_agent'][meter]['slider_settings'][
+            'customer']
 
     for hvac in agent_meta['hvacs']:
         meter = agent_meta['hvacs'][hvac]['meterName']
@@ -154,7 +155,7 @@ def load_gen_data(dir_path, gen_name, day_range):
     Args:
         dir_path (str): path of parent directory where DSO folders live
         gen_name (str): name of generator (e.g. '')
-        day_range (list): range of days to be summed (for example a month)
+        day_range (range): range of days to be summed (for example a month)
     Returns:
         gen_data_df (dataframe): dataframe of system metadata
     """
@@ -698,9 +699,13 @@ def wind_diff(x):
 def RCI_analysis(dso_range, case, data_path, metadata_path, dso_metadata_file, energybill=False):
     """  For a specified dso range and case this function will analyze the ratios of Res, Comm, and Industrial.
     Args:
-        dso_range (range): the DSO range that the data should be analyzed
+        dso_range (list): the DSO range that the data should be analyzed
         case (str): folder extension of case of interest
-        metadata_path (str): folder extension for DSO and Comm Building  metadata
+        data_path (str):
+        metadata_path (str):
+        dso_metadata_file (str): DSO and Comm Building metadata
+        energybill (bool):
+
     Returns:
         dataframe with analysis values
         saves values to file
@@ -1162,8 +1167,7 @@ def find_edge_cases(dso, base_case, day_range, agent_prefix, gld_prefix):
          'substation_load_avg': load_ave,
          'substation_load_ramp_max': load_ramp_max}
 
-    edge_df = pd.DataFrame(data=d,
-                           index=day)
+    edge_df = pd.DataFrame(data=d, index=day)
 
     # Create a dictionary with the select day for each case
     edge_dict = {}
@@ -1307,7 +1311,7 @@ def bldg_stack_plot(dso_range, day_range, case, metadata_path):
     For a specified dso, system, variable, and day this function will load in the required data,
     plot the daily profile and save the plot to file.
     Args:
-        dso_range (range):
+        dso_range (list):
         day_range (range): range of starting day and ending day of data to include
         case (str): folder extension of case of interest
         metadata_path (str): path of folder containing metadata
@@ -1491,7 +1495,7 @@ def der_stack_plot(dso_range, day_range, metadata_path, case, comp=None):
     """  For a specified dso range and day range this function will load in the required data, plot the stacked DER loads
     and save the plot to file.
     Args:
-        dso_range (range): the DSO range that should be plotted.
+        dso_range (list): the DSO range that should be plotted.
         day_range (range): the day range to plotted.
         metadata_path (str): path of folder containing metadata
         case (str): folder extension of case of interest
@@ -1790,7 +1794,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
     """ For a specified dso range and day this function will load in the required data, plot standard market price and
     quantity values all for DSOs and save the plots to file.
     Args:
-        dso_range (range): the DSO range that the data should be plotted for
+        dso_range (list): the DSO range that the data should be plotted for
         day (str): the day to plotted.
         case (str): folder extension of case of interest
         dso_metadata_file (str): path and file name of the dso metadata file
@@ -1984,7 +1988,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
     For a specified dso range and day range this function will load in the required data, plot forecast errors for
     all for DSOs and save the plots to file.
     Args:
-        dso_range (range): the DSO range that the data should be plotted for
+        dso_range (list): the DSO range that the data should be plotted for
         day_range (range): the day to plotted.
         case (str): folder extension of case of interest
         dso_metadata_file (str): path and file name of the dso metadata file
@@ -2274,7 +2278,7 @@ def dso_load_stats(dso_range, month_list, data_path, metadata_path, plot=False):
     """ For a specified dso range and list of month path information this function will load in the required data,
     and summarize DSO loads for all months, plot comparisons, and find Qmax.
     Args:
-        dso_range (range): the DSO range that the data should be plotted for
+        dso_range (list): the DSO range that the data should be plotted for
         month_list (list): list of lists.  Each sub list has month name (str), directory path (str)
         data_path (str): path of the location where output (plots, csv) should be saved
         metadata_path (str): location of ercot load data
@@ -3303,7 +3307,8 @@ def heatmap_plots(dso, system, subsystem, variable, day_range, case, agent_prefi
     # Since weather and generation files have all days in one file use different construction method
     if 'gen' in system:
         # TODO: Need to fix give that load_gen now uses day_range as input.
-        data = load_gen_data(case, system)
+        data = load_gen_data(case, system, day_range)
+        first = True
 
         for day in day_range:
             start = (day - 1) * 288
@@ -3312,8 +3317,9 @@ def heatmap_plots(dso, system, subsystem, variable, day_range, case, agent_prefi
             temp_df = temp_df.iloc[start:(start + 287), :]
             temp_df = temp_df.set_index(pd.Index(np.arange(0, 24 - 1.1 * (24 / 288), 24 / 288)))
             temp_df = temp_df.rename(columns={variable: str(day)})
-            if i == 0:
+            if first:
                 heat_map_df = temp_df
+                first = False
             else:
                 heat_map_df = heat_map_df.join(temp_df)
     else:
@@ -3933,15 +3939,17 @@ def transmission_statistics(metadata_file_path, case_config_path, data_path, day
 
 def metadata_dist_plots(system, sys_class, variable, dso_range, case, data_path, metadata_path, agent_prefix):
     """
-    For a , system, class, and dso_range this function will load in the required data, and plot a
+    For system, class, and dso_range this function will load in the required data, and plot a
     histogram of the population distribution.
     Args:
         system (str): the system to be plotted (e.g. 'house')
         sys_class (str): the subclass to be plotted (e.g. 'SINGLE_FAMILY').  If system has no subsystems or you want to
         see the full population set equal to None
         variable (str): variable to be plotted from system dataframe (e.g. 'sqft')
-        dso_range (range): range of the DSOs to be plotted.  DSO 1 has an index of 0
+        dso_range (list): range of the DSOs to be plotted.  DSO 1 has an index of 0
         case (str): folder extension of case of interest
+        data_path (str):
+        metadata_path (str):
         agent_prefix (str): folder extension for agent data
     Returns:
         saves plot of population distribution to file
@@ -4049,7 +4057,7 @@ def amenity_loss(gld_metadata, dir_path, folder_prefix, dso_num, day_range):
         dir_path (str): directory path for the case to be analyzed
         folder_prefix (str): prefix of GLD folder name (e.g. '/TE_base_s')
         dso_num (str): number of the DSO folder to be opened
-        day_range (list): range of days to be summed (for example a month).
+        day_range (range): range of days to be summed (for example a month).
     Returns:
         amenity_df: dataframe of loss of amenity metrics for HVAC and WH
     """
@@ -4916,9 +4924,9 @@ def run_plots():
         ames_df[' LMP1'].plot(legend='RT LMP')
         da_lmp_data_df.xs('da_lmp1', level=1)['LMP'].plot(legend='DA LMP')
         ames_df[' coal14'].plot(legend='RT LMP')
-        gen_data_df.xs('gen14', level=1)['Pgen'].plot(legend='DA LMP')
+        rt_gen_data_df.xs('gen14', level=1)['Pgen'].plot(legend='DA LMP')
         ames_df[' gas53'].plot(legend='RT LMP')
-        gen_data_df.xs('gen53', level=1)['Pgen'].plot(legend='DA LMP')
+        rt_gen_data_df.xs('gen53', level=1)['Pgen'].plot(legend='DA LMP')
 
         # ames_df = pd.read_csv('opf.csv', index_col='seconds') # Has RT LMPs for each DSO
         # energy_df, energysum_df = load_agent_data(data_path, agent_prefix, dso_num, day_num, 'energy')
@@ -5855,12 +5863,12 @@ def run_plots():
 
         dso_forecast_stats(dso_range, day_range, base_case, dso_meta_file, metadata_path)
 
-        der_load_stack(dso_range, day_range, base_case, agent_prefix, GLD_prefix, dso_meta_file, metadata_path)
+        der_load_stack(dso_range, day_range, base_case, GLD_prefix, metadata_path)
 
-        der_stack_plot(day_range, metadata_path, base_case)
+        der_stack_plot(dso_range, day_range, metadata_path, base_case)
 
         for day in day_range:
-            dso_market_plot(dso_range, str(day), base_case, dso_meta_file, metadata_path, case_config_file)
+            dso_market_plot(dso_range, str(day), base_case, dso_meta_file, case_config_file)
 
         # dso_load_stats(dso_range, month_def, data_path)
 

@@ -14,9 +14,11 @@ from .plots import load_json
 def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
     """ Will plot LMPS by month, duration, and versus netloads loads (for select month), and save to file.
     Args:
-        data_path (str): location of the data files to be used.
+        cases (List[str]): names of the cases
+        data_paths (str): location of the data files to be used.
         output_path (str): path of the location where output (plots, csv) should be saved
         dso_num (str): bus number for LMP data to be plotted
+        variable (str):
     Returns:
         saves dso lmps plots to file
         """

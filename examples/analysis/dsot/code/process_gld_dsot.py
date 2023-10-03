@@ -108,7 +108,7 @@ def process_gld(name_root, diction_name=''):
     times = list(map(int, list(lst_s.keys())))
     times.sort()
     print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -126,7 +126,7 @@ def process_gld(name_root, diction_name=''):
             SUB_LOSSES_UNITS = val['units']
 
     # create a NumPy array of all metrics for the substation
-    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float)
+    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float64)
     print("\nConstructed", data_s.shape, "NumPy array for Substations")
     j = 0
     for key in sub_keys:
@@ -174,7 +174,7 @@ def process_gld(name_root, diction_name=''):
         elif key == 'air_temperature_deviation_heating':
             DEV_HEAT_IDX = val['index']
 
-    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
+    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float64)
     print("\nConstructed", data_h.shape, "NumPy array for Houses")
     j = 0
     for key in hse_keys:
@@ -219,7 +219,7 @@ def process_gld(name_root, diction_name=''):
             MTR_REAL_POWER_AVG = val['index']
 
     if nBillingMeters > 0:
-        data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+        data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float64)
         print('\nConstructed', data_m.shape, 'NumPy array for Meters')
         j = 0
         for key in mtr_keys:
@@ -248,7 +248,7 @@ def process_gld(name_root, diction_name=''):
     if lst_i[time_key]:
         inv_keys = list(lst_i[time_key].keys())  # TODO: inv_keys extracted earlier at line 49 is not correct
         inv_keys.sort()
-        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
+        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float64)
         print("\nConstructed", data_i.shape, "NumPy array for Inverters")
         j = 0
         for key in inv_keys:
@@ -273,7 +273,7 @@ def process_gld(name_root, diction_name=''):
         for row in csv_reader:
             out_temp.append(row[1])
         out_temp = np.array(out_temp)
-        out_temp = out_temp.astype(np.float)
+        out_temp = out_temp.astype(np.float64)
         # print(out_temp)
 
     # out_temp=[]
@@ -287,7 +287,7 @@ def process_gld(name_root, diction_name=''):
     #         out_temp.append(row[1])
     #         #print('out**')
     #     out_temp = np.array(out_temp)
-    #     out_temp = out_temp.astype(np.float)
+    #     out_temp = out_temp.astype(np.float64)
     #     print(out_temp)
     #
     # in_temp=[]
@@ -301,7 +301,7 @@ def process_gld(name_root, diction_name=''):
     #         in_temp.append(row[10])
     #         #print('out**')
     #     in_temp = np.array(in_temp)
-    #     in_temp = in_temp.astype(np.float)
+    #     in_temp = in_temp.astype(np.float64)
     #     #print(in_temp)
     #
     # set_pt=[]
@@ -315,7 +315,7 @@ def process_gld(name_root, diction_name=''):
     #         set_pt.append(row[10])
     #         #print('out**')
     #     set_pt = np.array(set_pt)
-    #     set_pt = set_pt.astype(np.float)
+    #     set_pt = set_pt.astype(np.float64)
     #     #print(in_temp)
 
     # fl_area=[]
@@ -327,7 +327,7 @@ def process_gld(name_root, diction_name=''):
     #         row.pop(0)
     #         break
     #     fl_area = np.array(row)
-    #     fl_area = fl_area.astype(np.float)
+    #     fl_area = fl_area.astype(np.float64)
     #
     # hvac_oversize = []
     # with open('hvac_oversize.csv', mode='r') as csv_file:
@@ -338,7 +338,7 @@ def process_gld(name_root, diction_name=''):
     #         row.pop(0)
     #         break
     #     hvac_oversize = np.array(row)
-    #     hvac_oversize = hvac_oversize.astype(np.float)
+    #     hvac_oversize = hvac_oversize.astype(np.float64)
 
     discarded_hours = 24 * 2  # discarded hours
     discard_secs = discarded_hours * 60 * 60  # first discard_secs should be discarded while plotting

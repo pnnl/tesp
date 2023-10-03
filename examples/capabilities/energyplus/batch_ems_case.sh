@@ -4,7 +4,7 @@
 
 EPLUS_PATH=$TESPDIR/data/energyplus
 
-cp $EPLUS_PATH/emsHELICS/*.idf .
+cp "$EPLUS_PATH"/emsHELICS/*.idf .
 
 ./run_seasonal_cases.sh "FullServiceRestaurant"
 ./run_seasonal_cases.sh "Hospital"
@@ -24,4 +24,3 @@ cp $EPLUS_PATH/emsHELICS/*.idf .
 ./run_seasonal_cases.sh "Warehouse"
 
 #./run_seasonal_cases.sh "SchoolBase"
-

@@ -40,7 +40,6 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
   - **tesp_support**; Python code for agents, configuration and post-processing
 
     - **api**; code that configures new capabilities for TESP
-
         - *data.py*; the paths to data libraries
         - *entity.py*; utilities for assign json file to attribute in python script
         - *fncs.py*; the Python interface to FNCS, which is a C/C++ shared object library, or dynamic link library (Windows)
@@ -65,7 +64,6 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
         - *tso_PYPOWER.py*; manages PYPOWER solutions for the te30 and sgip1 examples, based on a 9-bus textbook model. Note that the ERCOT cases use custom local versions of this code instead.
 
     - **original**; legacy code that configures most example/capabilities for TESP
-
         - *commercial_feeder_glm.py*; from a PNNL taxonomy feeder as the backbone, populates it with commercial building, solar PV, batteries and smart inverters
         - *copperplate_feeder_glm.py*; from a PNNL taxonomy feeder as the backbone, populates it with sudo copperplate
         - *curve*; accumulates a set of price, quantity bids for later aggregation for a curve
@@ -81,7 +79,6 @@ This list shows **directories** and *Python files* under the **tesp/src** reposi
         - *tesp_monitor.py*; a GUI for launching a TESP simulation, monitoring its progress, and terminating it early if necessary
 
     - **weather**; code that configures weather capabilities for TESP
-
         - *PSM_download.py*; simple script to download PSM weather files and convert them to DAT files
         - *PSMv3toDAT.py*; this code reads in PSM v3 csv files to converts weather DAT format for common use by agents
         - *README.md*; this file

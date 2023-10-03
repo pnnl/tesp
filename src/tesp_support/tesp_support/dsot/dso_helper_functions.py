@@ -132,7 +132,7 @@ def TEAM(FteLev1=100.0, SalaryEsc1=1.3):
             Fte[N] = float(math.ceil(Fte[N - 1] / MaxDirect[N]))
     FteTeam = sum(Fte)
 
-    Esc = [0] * 6
+    Esc = [0.0] * 6
     for N in range(0, 6):
         Esc[N] = SalaryEsc1 ** N
 
@@ -170,9 +170,9 @@ def labor(group, metadata_general, metadata_dso, utility_type, NoSubstations):
     FteTeam, CostRatio, LeaderRatio, LeaderLevel = TEAM(labor_Lev1Fte,
                                                         metadata_general['labor']['team_salary_escalation_1'])
 
-    Lev1_labor_cost = metadata_general['labor'][group][group + '_hourly_rate'][utility_type] * \
-                      metadata_general['hours_per_year'] / metadata_general['labor'][
-                          'salary_to_total_compensation_ratio']
+    Lev1_labor_cost = (metadata_general['labor'][group][group + '_hourly_rate'][utility_type] *
+                       metadata_general['hours_per_year'] /
+                       metadata_general['labor']['salary_to_total_compensation_ratio'])
 
     labor_cost = CostRatio * labor_Lev1Fte * Lev1_labor_cost / 1000
 
@@ -192,9 +192,9 @@ def labor_transactive(group, metadata_general, metadata_dso, utility_type, NoSub
                                                         metadata_general['labor']['team_salary_escalation_1'])
     FteTeam = FteTeam * TransactiveCaseFlag
 
-    Lev1_labor_cost = metadata_general['labor'][group][group + '_hourly_rate'][utility_type] * \
-                      metadata_general['hours_per_year'] / metadata_general['labor'][
-                          'salary_to_total_compensation_ratio'] * TransactiveCaseFlag
+    Lev1_labor_cost = (metadata_general['labor'][group][group + '_hourly_rate'][utility_type] *
+                       metadata_general['hours_per_year'] /
+                       metadata_general['labor']['salary_to_total_compensation_ratio'] * TransactiveCaseFlag)
 
     labor_cost = CostRatio * labor_Lev1Fte * Lev1_labor_cost / 1000
 
@@ -217,11 +217,11 @@ def labor_increase(group, metadata_general, metadata_dso, utility_type, NoSubsta
     labor_Fte = FteTeam * (1 + metadata_general['labor'][group][group + '_labor_ratios'][
         'transactive_increase'] * TransactiveCaseFlag)
 
-    Lev1_labor_cost = metadata_general['labor'][group][group + '_hourly_rate'][utility_type] * \
-                      metadata_general['hours_per_year'] / metadata_general['labor'][
-                          'salary_to_total_compensation_ratio'] * \
-                      (1 + metadata_general['labor'][group][group + '_labor_ratios'][
-                          'transactive_increase'] * TransactiveCaseFlag)
+    Lev1_labor_cost = (metadata_general['labor'][group][group + '_hourly_rate'][utility_type] *
+                       metadata_general['hours_per_year'] /
+                       metadata_general['labor']['salary_to_total_compensation_ratio'] *
+                       (1 + metadata_general['labor'][group][group + '_labor_ratios']['transactive_increase'] *
+                        TransactiveCaseFlag))
 
     labor_cost = CostRatio * labor_Lev1Fte * Lev1_labor_cost / 1000
 
@@ -239,9 +239,9 @@ def labor_network_admin(group, hourly_rate, metadata_general, metadata_dso, util
     FteTeam, CostRatio, LeaderRatio, LeaderLevel = TEAM(labor_Lev1Fte,
                                                         metadata_general['labor']['team_salary_escalation_1'])
 
-    Lev1_labor_cost = metadata_general['labor']['network_admin'][hourly_rate][utility_type] * \
-                      metadata_general['hours_per_year'] / metadata_general['labor'][
-                          'salary_to_total_compensation_ratio']
+    Lev1_labor_cost = (metadata_general['labor']['network_admin'][hourly_rate][utility_type] *
+                       metadata_general['hours_per_year'] /
+                       metadata_general['labor']['salary_to_total_compensation_ratio'])
 
     labor_cost = CostRatio * labor_Lev1Fte * Lev1_labor_cost / 1000
 
@@ -262,10 +262,10 @@ def labor_network_admin_transactive(group, hourly_rate, metadata_general, metada
                                                         metadata_general['labor']['team_salary_escalation_1'])
     FteTeam = FteTeam * TransactiveCaseFlag
 
-    Lev1_labor_cost = metadata_general['labor']['network_admin'][hourly_rate][utility_type] * \
-                      metadata_general['hours_per_year'] / metadata_general['labor'][
-                          'salary_to_total_compensation_ratio'] * \
-                      TransactiveCaseFlag
+    Lev1_labor_cost = (metadata_general['labor']['network_admin'][hourly_rate][utility_type] *
+                       metadata_general['hours_per_year'] /
+                       metadata_general['labor']['salary_to_total_compensation_ratio'] *
+                       TransactiveCaseFlag)
 
     labor_cost = CostRatio * labor_Lev1Fte * Lev1_labor_cost / 1000
 
@@ -284,14 +284,15 @@ def labor_network_admin_increase(group, hourly_rate, metadata_general, metadata_
     FteTeam, CostRatio, LeaderRatio, LeaderLevel = TEAM(labor_Lev1Fte,
                                                         metadata_general['labor']['team_salary_escalation_1'])
 
-    labor_Fte = FteTeam * \
-                (1 + metadata_general['labor']['network_admin'][group]['transactive_increase'] * TransactiveCaseFlag)
+    labor_Fte = (FteTeam *
+                 (1 + metadata_general['labor']['network_admin'][group]['transactive_increase'] *
+                  TransactiveCaseFlag))
 
-    Lev1_labor_cost = metadata_general['labor']['network_admin'][hourly_rate][utility_type] * \
-                      metadata_general['hours_per_year'] / metadata_general['labor'][
-                          'salary_to_total_compensation_ratio'] * \
-                      (1 + metadata_general['labor']['network_admin'][group][
-                          'transactive_increase'] * TransactiveCaseFlag)
+    Lev1_labor_cost = (metadata_general['labor']['network_admin'][hourly_rate][utility_type] *
+                       metadata_general['hours_per_year'] /
+                       metadata_general['labor']['salary_to_total_compensation_ratio'] *
+                       (1 + metadata_general['labor']['network_admin'][group]['transactive_increase'] *
+                        TransactiveCaseFlag))
 
     labor_cost = CostRatio * labor_Lev1Fte * Lev1_labor_cost / 1000
 
@@ -323,5 +324,3 @@ def get_mean_for_diff_groups(df, main_variables, variables_combs, cfs_start_posi
             customer_mean_df[comb] = temp_col
 
     return customer_mean_df
-
-

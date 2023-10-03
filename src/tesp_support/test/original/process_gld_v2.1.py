@@ -282,10 +282,10 @@ mp_meter_metrics = xr.Dataset({'Vmax': (['meterID', 'time'], data_m[:, :, MTR_VO
                                #                          'Losses':(['meterID', 'time'], data_s[:, :, SUB_LOSSES_IDX]),
                                'VolatgeViolationCounts_aboveRangeA': (
                                ['meterID', 'time'], data_m[:, :, MTR_VOLT_ABOVE_A_COUNT_IDX]),
-                               'VolatgeViolationCounts_belowRangeB': (
-                               ['meterID', 'time'], data_m[:, :, MTR_VOLT_BELOW_B_COUNT_IDX]),
-                               'VolatgeViolationCounts_aboveRangeA': (
-                               ['meterID', 'time'], data_m[:, :, MTR_VOLT_ABOVE_A_COUNT_IDX]),
+                               'VolatgeViolationCounts_belowRangeA': (
+                               ['meterID', 'time'], data_m[:, :, MTR_VOLT_BELOW_A_COUNT_IDX]),
+                               'VolatgeViolationCounts_aboveRangeB': (
+                               ['meterID', 'time'], data_m[:, :, MTR_VOLT_ABOVE_B_COUNT_IDX]),
                                'VolatgeViolationCounts_belowRangeB': (
                                ['meterID', 'time'], data_m[:, :, MTR_VOLT_BELOW_B_COUNT_IDX]),
                                'bill': (['meterID', 'time'], data_m[:, :, MTR_BILL_IDX]),

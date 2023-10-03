@@ -10,6 +10,9 @@ import tesp_support.dsot.plots as pt
 import tesp_support.dsot.dso_quadratic_curves as qc
 import tesp_support.dsot.dso_rate_making as rm
 import tesp_support.dsot.dso_helper_functions as hf
+import tesp_support.dsot.dso_CFS as dcfs
+import tesp_support.dsot.customer_CFS as ccfs
+
 
 ''' This script runs key postprocessing functions that warrant execution after every simulation run.  
 It has the following elements:
@@ -284,8 +287,8 @@ if retail:
         agent_metadata = pt.load_json(month_def[0][1] + agent_prefix + str(dso_num), agent_file_name)
 
         GLD_metadata = pt.customer_meta_data(GLD_metadata, agent_metadata, metadata_path)
-        num_ind_cust = DSOmetadata['DSO_' + str(dso_num)]['number_of_customers'] * \
-                       DSOmetadata['DSO_' + str(dso_num)]['RCI customer count mix']['industrial']
+        num_ind_cust = (DSOmetadata['DSO_' + str(dso_num)]['number_of_customers'] *
+                        DSOmetadata['DSO_' + str(dso_num)]['RCI customer count mix']['industrial'])
         dso_scaling_factor = DSOmetadata['DSO_' + str(dso_num)]['scaling_factor']
         if squareup_revenue:
             required_revenue = (float(dso_df.iloc[13, dso_num]) + float(dso_df.iloc[30, dso_num])) * 1000
@@ -317,7 +320,7 @@ if retail:
 
 if customer_cfs:
     # dso_range = [1]
-    customer_df = hf.get_customer_df(dso_range, case_path, metadata_path)
+    customer_df = ccfs.get_customer_df(dso_range, case_path, metadata_path)
     customer_df.to_hdf(case_path + '/Master_Customer_Dataframe.h5', key='customer_data')
     customer_df.to_csv(path_or_buf=case_path + '/Master_Customer_Dataframe.csv')
 
@@ -331,7 +334,7 @@ if customer_cfs:
 
 if dso_cfs:
     DSO_df, CapitalCosts_dict_list, Expenses_dict_list, Revenues_dict_list, DSO_Cash_Flows_dict_list = \
-        hf.get_DSO_df(dso_range, generate_case_config, DSOmetadata, case_path, base_case_path)
+        dcfs.get_DSO_df(dso_range, generate_case_config, DSOmetadata, case_path, base_case_path)
 
     DSO_df.to_csv(path_or_buf=case_path + '/DSO_CFS_Summary.csv')
 

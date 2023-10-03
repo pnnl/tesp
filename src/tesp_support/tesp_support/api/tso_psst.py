@@ -1838,7 +1838,7 @@ def tso_psst_loop(casename):
     # ======================================================
     if piq:
         pq.avg_dispatch_data(piq_count)
-        pq.write_json()
+        pq.write('piq.json')
 
     log.info('finalize metrics writing')
     collector.finalize_writing()

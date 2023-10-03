@@ -216,7 +216,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                     else:
                         energysum_df.loc[(load, 'demand_quantity'), day_name] += meter_df.loc[
                                                                                      (each, 'max_kw'), day_name] * SF
-        # Break the street lights out into a separate catagory for reporting and verification purposes
+        # Break the streetlights out into a separate category for reporting and verification purposes
         # energysum_df.loc[('street_lights', 'kw-hr'), :] = energysum_df.loc[('industrial', 'kw-hr'), :]
         # energysum_df.loc[('street_lights', 'max_kw'), :] = energysum_df.loc[('industrial', 'max_kw'), :]
 
@@ -518,9 +518,9 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
                     billsum_df.loc[(load, 'fix_connect'), m] += bill_df.loc[(each, 'fix_connect'), m] * SF
                     billsum_df.loc[(load, 'fix_total'), m] += bill_df.loc[(each, 'fix_total'), m] * SF
 
-    # Calculate industrial load bill.  This lumps all industrial loads as one entity and surplants the any individual
+    # Calculate industrial load bill.  This lumps all industrial loads as one entity and surplants any individual
     # industrial load bills calculated for individual GLD meters above.  This is OK as those meters are small zip loads
-    # representing street lights.
+    # representing streetlights.
     for m in months:
         # Calculate bill for baseline (non-participating) customer on fixed tariff structure
         tier2 = 0
@@ -656,7 +656,7 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
 
 def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scaling_factor, num_indust_cust):
     """ Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
-    ensure revenue matches expenses.  Saves meter and bill dataframes to an hdf5 file.
+    ensure revenue matches expenses.  Saves meter and bill dataframes to a hdf5 file.
     Args:
         case (str): directory path for the case to be analyzed
         dso_num (str): number of the DSO folder to be opened
@@ -670,7 +670,7 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
         bill_df : dataframe of monthly and total bill for each house broken out by each element (energy, demand,
         connection, and total bill)
         tariff: Updated dictionary of tariff structure with rates adjusted to ensure revenue meets expenses
-        surplus: dollar value difference between dso revenue and expenses.  When converged should be tiny (e.g 1e-12)
+        surplus: dollar value difference between dso revenue and expenses.  When converged should be tiny (e.g. 1e-12)
         """
 
     # Load Tariff structure:

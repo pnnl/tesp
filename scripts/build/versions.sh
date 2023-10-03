@@ -25,7 +25,7 @@ gridlabd --version
 energyplus --version
 
 message="NS-3 not installed"
-for file in "${INSTDIR}/bin/ns3-dev-*" ; do
+for file in "${INSTDIR}"/bin/ns3-dev-* ; do
   lst=( ${file// / } )
   for a in "${lst}" ; do
     if [[ -f "${a}" ]]; then

@@ -79,7 +79,8 @@ class DSO_LMPs_vs_Q:
             raw.index = data_da.index
             df_dsos_lml_q.append(raw)
 
-        # Remove outliers (Retail market has a maximum price of "1000.0". Thus after division is equal to "1".)
+        # Remove outliers (Retail market has a maximum price of "1000.0",
+        # thus after division is equal to "1".)
         for i in range(len(lmps)):
             df_dsos_lml_q[i] = df_dsos_lml_q[i][df_dsos_lml_q[i]['y'] <= 0.999]
 
@@ -102,12 +103,10 @@ class DSO_LMPs_vs_Q:
         return df_dsos_lml_q
 
     def multiple_fit_calls(self):
-        """ Calls the fit model for each cenario
+        """ Calls the fit model for each scenario
         
-        The cenarios are hour of day and day type (i.e., weekday and weekends)
+        The scenarios are hour of day and day type (i.e., weekday and weekends)
         
-        Args:
-            positive (bolean): True to force curve coefficients to be positive 
         """
         coeficients_weekday = list()
         coeficients_weekend = list()

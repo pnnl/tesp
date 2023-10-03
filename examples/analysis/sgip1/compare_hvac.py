@@ -40,7 +40,7 @@ def MakePlotData(root):
 
     times = list(map(int, list(lst_h.keys())))
     times.sort()
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -56,7 +56,7 @@ def MakePlotData(root):
         elif key == 'hvac_load_avg':
             HVAC_AVG_IDX = val['index']
 
-    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float)
+    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float64)
     j = 0
     for key in sub_keys:
         i = 0
@@ -67,7 +67,7 @@ def MakePlotData(root):
         j = j + 1
     sub_mw = 1.0e-6 * data_s[0, :, SUB_POWER_IDX]
 
-    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
+    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float64)
     j = 0
     for key in hse_keys:
         i = 0
@@ -82,7 +82,7 @@ def MakePlotData(root):
 
     j = 0
     n = 0
-    avg_temp = np.zeros(len(times), dtype=np.float)
+    avg_temp = np.zeros(len(times), dtype=np.float64)
     for key in hse_keys:
         cool = dict['houses'][key]['cooling']
         if cool == 'ELECTRIC':

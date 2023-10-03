@@ -36,6 +36,14 @@ class WaterHeaterDSOT:
     This agent manage the operation of water heater
 
     Args:
+        wh_dict (dict):
+        wh_properties (dict):
+        key (str):
+        model_diag_level (int): Specific level for logging errors; set it to 11
+        sim_time (str): Current time in the simulation; should be human-readable
+        solver (str):
+
+    Attributes:
         volume (float): volume of the tank, in gal
         diameter (float): diameter of the tank layer, in ft
         Phw (float): rated power of the heating elements, in kW
@@ -51,10 +59,6 @@ class WaterHeaterDSOT:
         ProfitMargin_slope (float): specified in % to generate a small dead band (i.e., change in price does not affect quantity). Set to 0 to disable
         Participating (bool): equals to 1 when participate in the price-responsive biddings
         price_cap (float): the maximum price that is allowed in the retail market, in $/kWh
-        model_diag_level (int): Specific level for logging errors; set it to 11
-        sim_time (str): Current time in the simulation; should be human-readable
-
-    Attributes:
         H_tank (float): height of the water tank, in ft
         A_tank (float): area of the layer of tank, in ft2
         A_wall (float): area of the water tank wall, in ft2
@@ -468,7 +472,7 @@ class WaterHeaterDSOT:
         """ Set the f_DA_schedule attribute
 
         Args:
-            forecasted_waterdraw_schedule (list): forecasted waterdraw flow rate schedule in gallons/min, provided by forecast agent
+            forecasted_waterdraw_array (list): forecasted waterdraw flow rate schedule in gallons/min, provided by forecast agent
         """
         # only update the schedule forecast when there are enough memory of water draw
         # if len(self.his_wd_rate) < self.length_memory:
@@ -939,7 +943,6 @@ class WaterHeaterDSOT:
         """ Updated the DA_cleared_prices and DA_cleared_quantities attributes when informed by retail market agent
 
         Args:
-            DAquantities (list): cleared quantities from the last DA market clearing, in kWh, provided by retail market agent
             DAprices (list): cleared prices from the last DA market clearing, in $/kWh, provided by retail market agent
         """
         self.DA_cleared_prices = DAprices
@@ -950,7 +953,6 @@ class WaterHeaterDSOT:
         """ Updated the RT_cleared_prices and RT_cleared_quantities attributes when informed by retail market agent
 
         Args:
-            RTquantity (float): cleared quantity from the last RT market clearing, in kWh, provided by retail market agent
             RTprice (float): cleared price from the last RT market clearing, in $/kWh, provided by retail market agent
         """
         self.RT_cleared_price = RTprice

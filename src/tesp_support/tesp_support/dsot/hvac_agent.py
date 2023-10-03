@@ -31,9 +31,12 @@ class HVACDSOT:  # TODO: update class name
     # TODO: update the purpose of this Agent
 
     Args:
-        # TODO: update inputs for this agent
+        hvac_dict (dict):
+        house_properties (dict):
+        key (str):
         model_diag_level (int): Specific level for logging errors; set it to 11
         sim_time (str): Current time in the simulation; should be human-readable
+        solver (str):
 
     Attributes:
         # TODO: update attributes for this agent
@@ -1955,14 +1958,14 @@ class HVACDSOT:  # TODO: update class name
             Quantity (list) (1 x windowLength): Optimized quantities for each hour in the DA bidding horizon, in kWh
         """
 
-        # TODO: this is for model validation only
-        if False:  # self.hod != 0.0 and not self.FirstTime:
-            # roll the values to the next hour
-            Quantity = self.optimized_Quantity
-            Quantity.insert(len(Quantity), Quantity.pop(0))
-            temp_room = self.temp_room
-            temp_room.insert(len(self.temp_room), temp_room.pop(0))
-            return [Quantity, temp_room]
+        # this is for model validation only
+        # if self.hod != 0.0 and not self.FirstTime:
+        #     # roll the values to the next hour
+        #     Quantity = self.optimized_Quantity
+        #     Quantity.insert(len(Quantity), Quantity.pop(0))
+        #     temp_room = self.temp_room
+        #     temp_room.insert(len(self.temp_room), temp_room.pop(0))
+        #     return [Quantity, temp_room]
 
         nonlinear = True
         # Initialize the problem

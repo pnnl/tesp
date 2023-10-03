@@ -35,7 +35,7 @@ meta_i = lst_i.pop('Metadata')
 times = list(map(int, list(lst_i.keys())))
 times.sort()
 print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-hrs = np.array(times, dtype=np.float)
+hrs = np.array(times, dtype=np.float64)
 denom = 3600.0
 hrs /= denom
 time_key = str(times[0])
@@ -52,7 +52,7 @@ for key, val in meta_i.items():
         INV_Q_AVG_UNITS = val['units']
 
 # create a NumPy array of all metrics
-data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
+data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float64)
 print("\nConstructed", data_i.shape, "NumPy array for Inverters")
 j = 0
 for key in inv_keys:
@@ -81,7 +81,7 @@ for key, val in meta_m.items():
         MTR_VOLT_AVG_IDX = val['index']
         MTR_VOLT_AVG_UNITS = val['units']
 
-data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float64)
 print("\nConstructed", data_m.shape, "NumPy array for Meters")
 # find the inverter meter with highest voltage
 keymax = ''

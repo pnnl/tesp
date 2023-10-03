@@ -6,6 +6,7 @@
 import json
 import sqlite3
 
+
 def assign_defaults(obj, file_name):
     """ Utilities that opens a JSON file and assigns the attributes to the specified object
 
@@ -20,6 +21,7 @@ def assign_defaults(obj, file_name):
         for attr in config:
             setattr(obj, attr, config[attr])
     return config
+
 
 def assign_item_defaults(obj, file_name):
     """ Utilities that opens a JSON file and assigns the attributes Item to the specified object
@@ -38,6 +40,7 @@ def assign_item_defaults(obj, file_name):
             tmp = Item(str(type(config[attr])), attr, "", attr, config[attr])
             setattr(obj, attr, tmp)
     return config
+
 
 class Item:
     def __init__(self, datatype, label, unit, item, value=None, range_check=None):
@@ -92,6 +95,7 @@ class Item:
         else:  # self.datatype in ["REAL", "INTEGER"]:
             tmp = tmp + self.value + '}'
         return tmp
+
 
 class Entity:
     def __init__(self, entity, config):
@@ -171,7 +175,7 @@ class Entity:
                 item = self.find_item(attr)
                 if type(item) == Item:
                     try:
-                        item_instance = instance[attr]
+                        _ = instance[attr]
                     except:
                         if type(attr) == str:
                             instance[attr] = {}
@@ -332,7 +336,8 @@ class Entity:
         for attr in self.__dict__:
             item = self.__getattribute__(attr)
             if type(item) == Item:
-                diction += "\n  " + item.label + ", code=" + item.item + ", type=" + item.datatype + ", default=" + str(item)
+                diction += ("\n  " + item.label + ", code=" + item.item +
+                            ", type=" + item.datatype + ", default=" + str(item))
         return diction
 
     def toSQLite(self, connection):
@@ -423,9 +428,11 @@ class Entity:
             cursor_obj.execute(sql)
             connection.commit()
 
+
 def _test():
 
     from .data import feeder_entities_path
+    from .data import glm_entities_path
     from .data import tesp_test
 
     class mytest:
@@ -435,12 +442,6 @@ def _test():
     # entity_names = ["SimulationConfig", "BackboneFiles",  "WeatherPrep", "FeederGenerator",
     #             "EplusConfiguration", "PYPOWERConfiguration", "AgentPrep", "ThermostatSchedule"]
     # entity_names = ['house', 'inverter', 'battery', 'object solar', 'waterheater']
-
-    try:
-        conn = sqlite3.connect(tesp_test + 'api/test.db')
-        print("Opened database successfully")
-    except:
-        print("Database Sqlite3.db not formed")
 
     # this a config  -- file probably going to be static json
     myEntity = mytest()
@@ -452,7 +453,7 @@ def _test():
 
     # this a config  -- file probably going to be static
     myEntity = mytest()
-    assign_item_defaults(myEntity, file_name)
+    assign_item_defaults(myEntity, feeder_entities_path)
     print(myEntity.rgnPenResHeat.datatype)
     print(myEntity.rgnPenResHeat.item)
     print(myEntity.rgnPenResHeat)
@@ -461,17 +462,23 @@ def _test():
     # Better to use Entity as subclass like substation for metrics
     # Better to use Entity as object models for editing and persistence like glm_model,
 
-    # this a multiple config file a using dictionary list persistence
-    file_name = 'glm_classes.json'
-    with open(entities_path + file_name, 'r', encoding='utf-8') as json_file:
-        entities = json.load(json_file)
-        mylist = {}
-        for name in entities:
-            mylist[name] = Entity(name, entities[name])
-            print(mylist[name].toHelp())
-            mylist[name].toSQLite(conn)
-            # mylist[name].instanceToSQLite(conn)
-    conn.close()
+    try:
+        conn = sqlite3.connect(tesp_test + 'api/test.db')
+        print("Opened database successfully")
+
+        # this a multiple config file a using dictionary list persistence
+        with open(glm_entities_path, 'r', encoding='utf-8') as json_file:
+            entities = json.load(json_file)
+            mylist = {}
+            for name in entities:
+                mylist[name] = Entity(name, entities[name])
+                print(mylist[name].toHelp())
+                mylist[name].toSQLite(conn)
+                # mylist[name].instanceToSQLite(conn)
+        conn.close()
+    except:
+        print("Database Sqlite3.db not formed")
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

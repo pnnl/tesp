@@ -88,7 +88,7 @@ def process_gld(name_root, diction_name=''):
     times = list(map(int, list(lst_s.keys())))
     times.sort()
     print('There are', len(times), 'sample times at', times[1] - times[0], 'second intervals')
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -106,7 +106,7 @@ def process_gld(name_root, diction_name=''):
             SUB_LOSSES_UNITS = val['units']
 
     # create a NumPy array of all metrics for the substation
-    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float)
+    data_s = np.empty(shape=(len(sub_keys), len(times), len(lst_s[time_key][sub_keys[0]])), dtype=np.float64)
     print('\nConstructed', data_s.shape, 'NumPy array for Substations')
     j = 0
     for _ in sub_keys:
@@ -163,7 +163,7 @@ def process_gld(name_root, diction_name=''):
         elif key == 'waterheater_load_avg':
             HSE_WH_AVG_IDX = val['index']
             HSE_WH_AVG_UNITS = val['units']
-    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
+    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float64)
     print('\nConstructed', data_h.shape, 'NumPy array for Houses')
     j = 0
     for _ in hse_keys:
@@ -229,7 +229,7 @@ def process_gld(name_root, diction_name=''):
             MTR_OUT_DURATION_IDX = val['index']
 
     if nBillingMeters > 0:
-        data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+        data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float64)
         print('\nConstructed', data_m.shape, 'NumPy array for Meters')
         j = 0
         for _ in mtr_keys:
@@ -256,8 +256,8 @@ def process_gld(name_root, diction_name=''):
     lst_i.pop('StartTime')
     meta_i = lst_i.pop('Metadata')
     # assemble the total solar and battery inverter power
-    solar_kw = np.zeros(len(times), dtype=np.float)
-    battery_kw = np.zeros(len(times), dtype=np.float)
+    solar_kw = np.zeros(len(times), dtype=np.float64)
+    battery_kw = np.zeros(len(times), dtype=np.float64)
     print('\nInverter Metadata for', len(inv_keys), 'objects')
     for key, val in meta_i.items():
         print(key, val['index'], val['units'])
@@ -268,7 +268,7 @@ def process_gld(name_root, diction_name=''):
             INV_Q_AVG_IDX = val['index']
             INV_Q_AVG_UNITS = val['units']
     if len(inv_keys) > 0:
-        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float)
+        data_i = np.empty(shape=(len(inv_keys), len(times), len(lst_i[time_key][inv_keys[0]])), dtype=np.float64)
         print('\nConstructed', data_i.shape, 'NumPy array for Inverters')
         j = 0
         for key in inv_keys:
@@ -301,7 +301,7 @@ def process_gld(name_root, diction_name=''):
             CAP_COUNT_IDX = val['index']
             CAP_COUNT_UNITS = val['units']
     if len(cap_keys) > 0 and bCollectedRegCapMetrics:
-        data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=np.float)
+        data_c = np.empty(shape=(len(cap_keys), len(times), len(lst_c[time_key][cap_keys[0]])), dtype=np.float64)
         print('\nConstructed', data_c.shape, 'NumPy array for Capacitors')
         j = 0
         for key in cap_keys:
@@ -321,7 +321,7 @@ def process_gld(name_root, diction_name=''):
             REG_COUNT_IDX = val['index']
             REG_COUNT_UNITS = val['units']
     if len(reg_keys) > 0 and bCollectedRegCapMetrics:
-        data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=np.float)
+        data_r = np.empty(shape=(len(reg_keys), len(times), len(lst_r[time_key][reg_keys[0]])), dtype=np.float64)
         print('\nConstructed', data_r.shape, 'NumPy array for Regulators')
         j = 0
         for key in reg_keys:

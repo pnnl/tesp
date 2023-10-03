@@ -8,7 +8,7 @@ Notes:
     wrapper functions, these pass-through library calls are always needed:
 
     - *fncs.finalize*: call after the simulation completes
-    - *fncs.time_request (long long)*: request the next time step; blocks execution of this process until FNCS grants the requested time. Then, the process should check for messages from FNCS.
+    - *fncs.time_request (long)*: request the next time step; blocks execution of this process until FNCS grants the requested time. Then, the process should check for messages from FNCS.
 
     These pass-through calls are also available, but not used in TESP:
 

@@ -77,7 +77,7 @@ def process_voltages(name_root, diction_name=''):
     times = list(map(int, list(lst_s.keys())))
     times.sort()
     print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -110,7 +110,7 @@ def process_voltages(name_root, diction_name=''):
             MTR_VOLTUNB_MAX_IDX = val['index']
             MTR_VOLTUNB_MAX_UNITS = val['units']
 
-    data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float)
+    data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float64)
     print("\nConstructed", data_m.shape, "NumPy array for Meters")
     j = 0
     for _ in mtr_keys:

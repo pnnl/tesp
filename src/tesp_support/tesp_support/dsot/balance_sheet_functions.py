@@ -103,7 +103,8 @@ def iso_balance_sheet_annual(meta_path, write_path, write_to_txt=False, write_to
     with open(os.path.join(meta_path, 'DSOT_ISO_metadata.json')) as json_file:
         ISO_metadata = json.load(json_file)
 
-    #    PerMWTransacted?
+    # PerMWTransacted ?
+    PerMWTransacted = 1
     HrsPerYear = 8760
 
     Maintenance = (ISO_metadata['Maintenance']['fixed_cost'] +

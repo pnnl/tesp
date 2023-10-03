@@ -44,7 +44,7 @@ def process_pypower(name_root):
     times = list(map(int, list(lst_b.keys())))
     times.sort()
     print('There are', len(times), 'sample times at', times[1] - times[0], 'second intervals')
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -88,7 +88,7 @@ def process_pypower(name_root):
             C2_UNITS = val['units']
 
     # create a NumPy array of all bus metrics, display summary information
-    data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
+    data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float64)
     print('\nConstructed', data_b.shape, 'NumPy array for Buses')
     print('#  LMPavg   LMPmax  LMP1avg  LMP1std   Vmin   Vmax   Unresp  RespMax     C1     C2')
     last1 = int(3600 * 24 / (times[1] - times[0]))
@@ -131,7 +131,7 @@ def process_pypower(name_root):
             GENLMP_UNITS = val['units']
 
     # create a NumPy array of all generator metrics
-    data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
+    data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float64)
     print('\nConstructed', data_g.shape, 'NumPy array for Generators')
     print('Unit Bus Type   Fuel    Pmax    CF   COV')
     j = 0
@@ -164,7 +164,7 @@ def process_pypower(name_root):
     dtimes = list(map(int, list(lst_d.keys())))
     dtimes.sort()
     print('There are', len(dtimes), 'sample times at', dtimes[1] - dtimes[0], 'second intervals')
-    dhrs = np.array(dtimes, dtype=np.float)
+    dhrs = np.array(dtimes, dtype=np.float64)
     denom = 3600.0
     dhrs /= denom
 
@@ -184,7 +184,7 @@ def process_pypower(name_root):
             LMP_IDX = val['index']
             LMP_UNITS = val['units']
 
-    data_d = np.empty(shape=(len(bus_keys), len(dtimes), len(lst_d[str(times[0])][bus_keys[0]])), dtype=np.float)
+    data_d = np.empty(shape=(len(bus_keys), len(dtimes), len(lst_d[str(times[0])][bus_keys[0]])), dtype=np.float64)
     print('\nConstructed', data_d.shape, 'NumPy array for DSO buses')
     j = 0
     for key in bus_keys:

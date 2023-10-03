@@ -89,7 +89,7 @@ def get_metrics_full_multiple_KEY_Mdays(file_name, pre_file, pos_file):
     x = len(I_ver[times[0]].keys())
     y = len(times)
     z = len(meta_I_ver)
-    data_I_ver = np.empty(shape=(x, y, z), dtype=np.float)
+    data_I_ver = np.empty(shape=(x, y, z), dtype=np.float64)
 
     j = 0
     for node in list(I_ver[times[0]].keys()):
@@ -178,7 +178,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
     x = len(I_ver[times[0]].keys())
     y = len(times)
     z = len(meta_I_ver)
-    data_I_ver = np.empty(shape=(x, y, z), dtype=np.float)
+    data_I_ver = np.empty(shape=(x, y, z), dtype=np.float64)
     # print (x,y,z)
     j = 0
     for node in list(I_ver[times[0]].keys()):

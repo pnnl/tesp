@@ -31,6 +31,7 @@ if sys.platform == 'win32':
 else:
     pycall = 'python3'
 
+
 def write_tesp_case(config, cfgfile, freshdir=True):
     """ Writes the TESP case from data structure to JSON file
 

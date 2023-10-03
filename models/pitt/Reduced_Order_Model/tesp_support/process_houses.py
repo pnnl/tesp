@@ -77,7 +77,7 @@ def process_houses(name_root, diction_name=''):
     times = list(map(int, list(lst_s.keys())))
     times.sort()
     print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -122,7 +122,7 @@ def process_houses(name_root, diction_name=''):
         elif key == 'air_temperature_deviation_heating':
             DEV_HEAT_IDX = val['index']
 
-    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float)
+    data_h = np.empty(shape=(len(hse_keys), len(times), len(lst_h[time_key][hse_keys[0]])), dtype=np.float64)
     print("\nConstructed", data_h.shape, "NumPy array for Houses")
     j = 0
     for _ in hse_keys:

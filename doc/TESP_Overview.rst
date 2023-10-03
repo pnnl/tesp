@@ -12,7 +12,6 @@
 Introduction to Transactive Energy and TESP
 *******************************************
 
-
 What Is Transactive Energy?
 =====================================
 
@@ -28,15 +27,13 @@ Transactive energy seeks to change that by including all actors, including the e
 
 By choosing to enable all participants in the management through appropriate value signals, transactive energy hopes to use the flexibility in all existing actors behavior to manage the power system in a more efficient manner
 
-
-
 Transactive Energy Simulation Platform (TESP)
 =============================================
 
 .. sidebar:: Transactive Systems Program
 
   .. figure:: ./media/Transactive.png
-	:name: logo
+    :name: logo
 
 Traditionally, analysis of power systems has been split cleanly between the bulk power system (*e.g.* long-distance transmission lines connecting large generation to large load centers like cities) and the distribution system (*e.g.* neighborhoods). This separation has been motivated by different needs. The bulk power system is often concerned with finding the most economical means of dispatching generators to meet the expected load or trying to determine the most economical expansion of the power system. Distribution system planners have been concerned with appropriately sizing the power lines the run through a neighborhood or what measures need to be made to ensure good voltage management.
 
@@ -55,8 +52,6 @@ The Transactive Energy Simulation Platform (TESP) has been developed by Pacific 
     - Fully realized examples of transactive analysis
     - All of the above in an easily managed software package that is readily customizable and altered for particular analysis needs.
 
-
-
 TESP Software Stack Overview
 ============================
 
@@ -68,11 +63,10 @@ TESP Software Stack Overview
  - ns-3 is a communication system simulator that can also host software agents. 
  - The integrating message bus, using either the Hierarchical Engine for Large-scale Infrastructure Co-Simulation (HELICS :cite:`Palmintier:2017aa`) manages the time step synchronization and message exchange among all of the federated simulation modules.  
 
-
 .. figure:: ./media/Federates.png
-	:name: fig_federates
+    :name: fig_federates
 
-	TESP Rev 1 components federated through FNCS and/or HELICS.
+    TESP Rev 1 components federated through FNCS and/or HELICS.
 
 Assuming this software stack satisfies the needs of the particular analysis, the user interacts with TESP by configuring simulation cases (magenta) and 
 then running them.  Simulation federates or Agents, write intermediate outputs
@@ -90,13 +84,10 @@ programming language, though custom code for TESP can also be implemented in oth
 and Java. To demonstrate, the Buildings agent was implemented in C++ and
 one version of one of the examples distributed with TESP (Load Shed) has an agent was written in Java. 
 
-
-
 Overview of Transactive Energy Analysis Process
 ===============================================
 
 Given the complexity of many TE analysis and the variety of software components that may need to be used to perform said analysis, taking time to clearly plan the analysis conceptually and practically will generally save time in the long run. The following is an outline of the process PNNL has developed and implemented for TE Analysis.
-
 
 Value Model
 -----------
@@ -118,7 +109,7 @@ Regardless, the critical element are the performance metrics that have been prev
 
 To show the impact of the TE system, to demonstrate the impacts of the system the design should make it clear in some way what defines the base or business-as-usual case and what constitutes the transactive case(s). Keeping the system models and inputs constant across the cases makes a direct apples-to-apples comparison possible in the key performance metrics.
 
-Lastly, in addition to the key performance metrics, there are likely to be supplemental data that is helpful in validating the performance of the co-simulation and the analysis as a whole. These validation metrics would not generally be defined by the value model because they generally are not tied to the value flows. For example, if the TE system adjusts air-conditioning thermostats higher during high price periods and lower as the price drops a validation graph could be created to show the thermostat setpoint throughout the day with the energy price overlayed. Though this graph and its associated data are not necessarily needed to calculate the final value-based metrics it is useful to confirm that the co-simulation that produced this data is working as expected.
+Lastly, in addition to the key performance metrics, there are likely to be supplemental data that is helpful in validating the performance of the co-simulation and the analysis as a whole. These validation metrics would not generally be defined by the value model because they generally are not tied to the value flows. For example, if the TE system adjusts air-conditioning thermostats higher during high price periods and lower as the price drops a validation graph could be created to show the thermostat setpoint throughout the day with the energy price overlaid. Though this graph and its associated data are not necessarily needed to calculate the final value-based metrics it is useful to confirm that the co-simulation that produced this data is working as expected.
 
 An example of these models can be found in the :ref:`SGIP1 analysis design model`.
 
@@ -129,12 +120,10 @@ With an analysis plan in place, now the direct work of implementation can begin.
 
 The co-simulation will be run at some point and this may require computation resources beyond what a typical desktop or laptop computer provides. There may need to be some extra work done in developing deployment plans and tools for the co-simulation components. Relatedly, the datasets produced by the co-simulation could be very large and requires more complex data handling and storage techniques.
 
-
 Post-Processing and Analysis
 ----------------------------
 
 With the final dataset produced from all the necessary analysis steps the validation and key performance metrics can be calculated and reviewed. Ideally the presentations of the data show both that the co-simulation and the analysis as a whole have been constructed correctly (validation) and that the TE system is having the expected impact. Both the validation and the value-based metrics should have comparisons between base and transactive case(s) making the impact of the transactive system clear. 
-
 
 Next Steps After TESP-Based Analysis
 ====================================

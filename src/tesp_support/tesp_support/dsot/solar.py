@@ -980,8 +980,7 @@ def aggregate_to_8_nodes(dso_meta, output_path):
         #   profiles to add to the aggregated 8-node data
         if idx < 200:
             eight_node_idx = 200 + dso['8-bus'] - 1
-            logger.info('Added solar PV power profile from 200 node DSO {'
-                        '}...'.format(idx))
+            logger.info('Added solar PV power profile from 200 node DSO {}...'.format(idx))
             # Summing up distributed power profiles to create single,
             #   aggregated profile for 8-node DSO
             dso_meta[eight_node_idx]['dist power profile'] = [

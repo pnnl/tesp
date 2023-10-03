@@ -80,7 +80,7 @@ def process_pypower(name_root):
     times = list(map(int, list(lst_b.keys())))
     times.sort()
     print('There are', len(times), 'sample times at', times[1] - times[0], 'second intervals')
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -114,7 +114,7 @@ def process_pypower(name_root):
             VMIN_UNITS = val['units']
 
     # create a NumPy array of all bus metrics, display summary information
-    data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
+    data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float64)
     print('\nConstructed', data_b.shape, 'NumPy array for Buses')
     print('LMPavg,LMPmax,LMP1avg,LMP1std,Vmin,Vmax')
     last1 = int(3600 * 24 / (times[1] - times[0]))
@@ -155,7 +155,7 @@ def process_pypower(name_root):
             GENLMP_UNITS = val['units']
 
     # create a NumPy array of all generator metrics
-    data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
+    data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float64)
     print('\nConstructed', data_g.shape, 'NumPy array for Generators')
     print('Unit,Bus,Type,Fuel,CF,COV')
     j = 0

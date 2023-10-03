@@ -1,361 +1,365 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="en"> <!--<![endif]-->
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Documentation for the code &mdash; fnss-ns3 Matrix Topology example 0.0.1 documentation</title>
-  
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  
-  
-  
-  
+    <title>Documentation for the code &mdash; fnss-ns3 Matrix Topology example 0.0.1 documentation</title>
 
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
+    <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./"
+            src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
-    
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Overview" href="Overview.html" /> 
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css"/>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css"/>
+    <link rel="index" title="Index" href="genindex.html"/>
+    <link rel="search" title="Search" href="search.html"/>
+    <link rel="prev" title="Overview" href="Overview.html"/>
 </head>
 
 <body class="wy-body-for-nav">
 
-   
-  <div class="wy-grid-for-nav">
-    
+<div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
+        <div class="wy-side-scroll">
+            <div class="wy-side-nav-search">
+                <a href="index.html" class="icon icon-home"> fnss-ns3 Matrix Topology example</a>
+                <div role="search">
+                    <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+                        <input type="text" name="q" placeholder="Search docs"/>
+                        <input type="hidden" name="check_keywords" value="yes"/>
+                        <input type="hidden" name="area" value="default"/>
+                    </form>
+                </div>
+            </div>
 
-          
-            <a href="index.html" class="icon icon-home"> fnss-ns3 Matrix Topology example
-          
-
-          
-          </a>
-
-          
-            
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
+            <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+                    <li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation for the code</a>
+                        <ul>
+                            <li class="toctree-l2"><a class="reference internal"
+                                                      href="#module-fnss_ns3_MatrixTopoEx.main">The main function</a>
+                            </li>
+                            <li class="toctree-l2"><a class="reference internal"
+                                                      href="#module-fnss_ns3_MatrixTopoEx.fnssTopology">FNSS topology - build and visualize</a>
+                            </li>
+                            <li class="toctree-l2"><a class="reference internal"
+                                                      href="#module-fnss_ns3_MatrixTopoEx.ns3Model">ns-3 model - build</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation for the code</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-fnss_ns3_MatrixTopoEx.main">The main function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-fnss_ns3_MatrixTopoEx.fnssTopology">FNSS topology - build and visualize</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-fnss_ns3_MatrixTopoEx.ns3Model">ns-3 model - build</a></li>
-</ul>
-</li>
-</ul>
-
-            
-          
-        </div>
-      </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+        <nav class="wy-nav-top" aria-label="top navigation">
+            <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+            <a href="index.html">fnss-ns3 Matrix Topology example</a>
+        </nav>
+        <div class="wy-nav-content">
+            <div class="rst-content">
+                <div role="navigation" aria-label="breadcrumbs navigation">
+                    <ul class="wy-breadcrumbs">
+                        <li><a href="index.html">Docs</a> &raquo;</li>
+                        <li>Documentation for the code</li>
+                        <li class="wy-breadcrumbs-aside">
+                            <a href="_sources/Code_documentation.rst.txt" rel="nofollow">View page source</a>
+                        </li>
+                    </ul>
+                    <hr/>
+                </div>
+                <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+                    <div itemprop="articleBody">
+                        <div class="section" id="module-fnss_ns3_MatrixTopoEx">
+                            <span id="documentation-for-the-code"></span>
+                            <h1>Documentation for the code<a class="headerlink" href="#module-fnss_ns3_MatrixTopoEx"
+                                                             title="Permalink to this headline">¶</a></h1>
+                            <span class="target" id="module-__init__"></span>
+                            <p>This is just an example that creates and runs a ns-3 model using:</p>
+                            <blockquote>
+                                <div>
+                                    <ul class="simple">
+                                        <li><p>FNSS to create and visualize a certain communication topology (tree
+                                            topology)</p></li>
+                                        <li><p>ns-3 Python bindings to create, visualize and run the actual ns-3
+                                            model</p></li>
+                                    </ul>
+                                </div>
+                            </blockquote>
+                            <div class="section" id="module-fnss_ns3_MatrixTopoEx.main">
+                                <span id="the-main-function"></span>
+                                <h2>The main function<a class="headerlink"
+                                                        href="#module-fnss_ns3_MatrixTopoEx.main"
+                                                        title="Permalink to this headline">¶</a></h2>
+                                <span class="target" id="module-main"></span>
+                                <dl class="field-list simple">
+                                    <dt class="field-odd">platform</dt>
+                                    <dd class="field-odd"><p>Unix, Windows</p>
+                                    </dd>
+                                    <dt class="field-even">synopsis</dt>
+                                    <dd class="field-even"><p>Call functions to build, visualize, and run the model.</p>
+                                    </dd>
+                                </dl>
+                                <div class="admonition note">
+                                    <p class="admonition-title">Note</p>
+                                    <p>This is a simple note.</p>
+                                </div>
+                                <div class="admonition warning">
+                                    <p class="admonition-title">Warning</p>
+                                    <p>This is a warning</p>
+                                </div>
+                                <div class="versionadded">
+                                    <p><span class="versionmodified added">New in version version.</span></p>
+                                </div>
+                                <div class="versionchanged">
+                                    <p><span class="versionmodified changed">Changed in version version.</span></p>
+                                </div>
+                                <div class="admonition seealso">
+                                    <p class="admonition-title">See also</p>
+                                    <p>see this as well</p>
+                                </div>
+                                <dl class="function">
+                                    <dt id="fnss_ns3_MatrixTopoEx.main.main">
+                                        <code class="descclassname">fnss_ns3_MatrixTopoEx.main.</code><code
+                                            class="descname">main</code><span
+                                            class="sig-paren">(</span><em>argv</em><span class="sig-paren">)</span><a
+                                            class="headerlink" href="#fnss_ns3_MatrixTopoEx.main.main"
+                                            title="Permalink to this definition">¶</a></dt>
+                                    <dd><p>This is the main function.</p>
+                                        <dl class="field-list simple">
+                                            <dt class="field-odd">Parameters</dt>
+                                            <dd class="field-odd"><p><strong>argv</strong> (<em>str</em>) – just a fake
+                                                argument for testing purposes</p>
+                                            </dd>
+                                        </dl>
+                                    </dd>
+                                </dl>
 
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">fnss-ns3 Matrix Topology example</a>
-        
-      </nav>
+                            </div>
+                            <div class="section" id="module-fnss_ns3_MatrixTopoEx.fnssTopology">
+                                <span id="fnss-topology-build-and-visualize"></span>
+                                <h2>FNSS topology - build and visualize<a class="headerlink"
+                                                                          href="#module-fnss_ns3_MatrixTopoEx.fnssTopology"
+                                                                          title="Permalink to this headline">¶</a></h2>
+                                <span class="target" id="module-fnssTopology"></span>
+                                <dl class="field-list simple">
+                                    <dt class="field-odd">platform</dt>
+                                    <dd class="field-odd"><p>Unix, Windows</p>
+                                    </dd>
+                                    <dt class="field-even">synopsis</dt>
+                                    <dd class="field-even"><p></p></dd>
+                                </dl>
+                                <dl class="function">
+                                    <dt id="fnss_ns3_MatrixTopoEx.fnssTopology.buildFNSStopology">
+                                        <code class="descclassname">fnss_ns3_MatrixTopoEx.fnssTopology.</code><code
+                                            class="descname">buildFNSStopology</code><span
+                                            class="sig-paren">(</span><span class="sig-paren">)</span><a
+                                            class="headerlink"
+                                            href="#fnss_ns3_MatrixTopoEx.fnssTopology.buildFNSStopology"
+                                            title="Permalink to this definition">¶</a></dt>
+                                    <dd><p>This function invokes Fast Network Simulation Setup (<a
+                                            class="reference external" href="http://fnss.github.io">FNSS</a>) to build a
+                                        network topology.</p>
+                                        <dl class="field-list simple">
+                                            <dt class="field-odd">Parameters</dt>
+                                            <dd class="field-odd"><p><strong>none</strong> – The function does not need
+                                                an argument</p>
+                                            </dd>
+                                            <dt class="field-even">Returns</dt>
+                                            <dd class="field-even"><p>topo - FNSS topology in dictionary format</p>
+                                            </dd>
+                                        </dl>
+                                        <div class="highlight-default notranslate">
+                                            <div class="highlight">
+<pre>
+    <span></span>
+    <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="nn">pprint</span>
+    <span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span>
+    <span class="o">.</span><span class="n">pprint</span>
+    <span class="p">(</span><span class="n">topo</span>
+    <span class="o">.</span><span class="vm">__dict__</span>
+    <span class="p">)</span>
+    <span class="go">{</span>
+    <span class="go">&#39;_adj&#39;: {},</span>
+    <span class="go">&#39;_node&#39;: {},</span>
+    <span class="go">&#39;adjlist_inner_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
+    <span class="go">&#39;adjlist_outer_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
+    <span class="go">&#39;edge_attr_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
+    <span class="go">&#39;graph&#39;: {},</span>
+    <span class="go">&#39;graph_attr_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
+    <span class="go">&#39;node_attr_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
+    <span class="go">&#39;node_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
+    <span class="go">&#39;nodes&#39;: NodeView((0, 1, 2)</span>
+    <span class="go">}</span>
+</pre>
+                                            </div>
+                                        </div>
+                                        <p>This function:</p>
+                                        <blockquote>
+                                            <div>
+                                                <ul>
+                                                    <li><p>uses FNSS <code
+                                                            class="xref py py-func docutils literal notranslate"><span
+                                                            class="pre">k_ary_tree_topology()</span></code> function to
+                                                        build a tree topology</p></li>
+                                                    <li><p>assigns coordinates (longitude and latitude) to the nodes</p>
+                                                    </li>
+                                                    <li><p>uses the coordinates and FNSS <code
+                                                            class="xref py py-func docutils literal notranslate"><span
+                                                            class="pre">geographical_distance()</span></code> function
+                                                        to calculate distance between nodes and assigns these values as
+                                                        the lengths of the graph edges</p></li>
+                                                    <li><p>sets random capacities to the graph edges using FNNS <code
+                                                            class="xref py py-func docutils literal notranslate"><span
+                                                            class="pre">set_capacities_random_uniform()</span></code>
+                                                        function</p></li>
+                                                    <li><p>sets specific propagation delays using FNSS <code
+                                                            class="xref py py-func docutils literal notranslate"><span
+                                                            class="pre">set_delays_geo_distance()</span></code>
+                                                        function, based on the ropagation delay of light in an average
+                                                        optical fiber</p>
+                                                        <div class="highlight-default notranslate">
+                                                            <div class="highlight">
+                                                                <pre>
+                                                                    <span></span>
+                                                                    <span class="gp">&gt;&gt;&gt; </span>
+                                                                    <span class="n">specificDelay</span>
+                                                                    <span class="o">=</span> <span class="n">fnss</span>
+                                                                    <span class="o">.</span>
+                                                                    <span class="n">PROPAGATION_DELAY_FIBER</span>
+                                                                </pre>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li><p>sets the weights to links proportionally to their delay using
+                                                        FNSS <code class="xref py py-func docutils literal notranslate"><span
+                                                                class="pre">set_weights_delays()</span></code></p></li>
+                                                    <li><p>sets the buffer sizes proportionally to the product of link
+                                                        bandwidth and average network RTT using FNSS <code
+                                                                class="xref py py-func docutils literal notranslate"><span
+                                                                class="pre">set_buffer_sizes_bw_delay_prod()</span></code>
+                                                    </p></li>
+                                                </ul>
+                                            </div>
+                                        </blockquote>
+                                        <div class="admonition note">
+                                            <p class="admonition-title">Note</p>
+                                            <p>The function does assign applications and event schedules, but they are
+                                                not used subsequently. At least not at this point.</p>
+                                        </div>
+                                    </dd>
+                                </dl>
 
+                                <dl class="function">
+                                    <dt id="fnss_ns3_MatrixTopoEx.fnssTopology.plotTopology">
+                                        <code class="descclassname">fnss_ns3_MatrixTopoEx.fnssTopology.</code><code
+                                            class="descname">plotTopology</code><span
+                                            class="sig-paren">(</span><em>topo</em><span class="sig-paren">)</span><a
+                                            class="headerlink" href="#fnss_ns3_MatrixTopoEx.fnssTopology.plotTopology"
+                                            title="Permalink to this definition">¶</a></dt>
+                                    <dd><p>Plots the FNSS network topology usings <code
+                                            class="xref py py-mod docutils literal notranslate"><span class="pre">networkx</span></code>
+                                    </p>
+                                    </dd>
+                                </dl>
 
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
+                            </div>
+                            <div class="section" id="module-fnss_ns3_MatrixTopoEx.ns3Model">
+                                <span id="ns-3-model-build"></span>
+                                <h2>ns-3 model - build<a class="headerlink"
+                                                         href="#module-fnss_ns3_MatrixTopoEx.ns3Model"
+                                                         title="Permalink to this headline">¶</a></h2>
+                                <span class="target" id="module-ns3Model"></span>
+                                <dl class="field-list simple">
+                                    <dt class="field-odd">platform</dt>
+                                    <dd class="field-odd"><p>Unix, Windows</p>
+                                    </dd>
+                                    <dt class="field-even">synopsis</dt>
+                                    <dd class="field-even"><p></p></dd>
+                                </dl>
+                                <dl class="function">
+                                    <dt id="fnss_ns3_MatrixTopoEx.ns3Model.buildNS3model">
+                                        <code class="descclassname">fnss_ns3_MatrixTopoEx.ns3Model.</code><code
+                                            class="descname">buildNS3model</code><span class="sig-paren">(</span><em>topo</em><span
+                                            class="sig-paren">)</span><a class="headerlink"
+                                                                         href="#fnss_ns3_MatrixTopoEx.ns3Model.buildNS3model"
+                                                                         title="Permalink to this definition">¶</a></dt>
+                                    <dd><p>The function builds a ns-3 model based on an FNSS topology.</p>
+                                        <dl class="field-list simple">
+                                            <dt class="field-odd">Parameters</dt>
+                                            <dd class="field-odd"><p><strong>topo</strong> – FNSS topology in dictionary
+                                                format</p>
+                                            </dd>
+                                            <dt class="field-even">Returns</dt>
+                                            <dd class="field-even"><p>nothing</p>
+                                            </dd>
+                                        </dl>
+                                        <p>The function is structured as follows:</p>
+                                        <blockquote>
+                                            <div>
+                                                <ul class="simple">
+                                                    <li><p>initialization of simulation/model parameters</p></li>
+                                                    <li><p>network setup</p>
+                                                        <ul>
+                                                            <li><p>load FNSS topology and create the nodes of the ns-3
+                                                                model</p></li>
+                                                            <li><p>create location matrix containing longitude and
+                                                                latitude of the nodes based on the FNSS topology</p>
+                                                            </li>
+                                                            <li><p>create adjacency matrix based on existence of edge
+                                                                between nodes according to the FNSS topology</p></li>
+                                                            <li><p>create P2P (Point-To-Point) link attributes</p></li>
+                                                            <li><p>install internet stack to nodes</p></li>
+                                                            <li><p>assign addresses to nodes</p></li>
+                                                        </ul>
+                                                    </li>
+                                                    <li><p>allocate node positions for mobility and netanim</p></li>
+                                                    <li><p>create CBR flows based on adjacency matrix</p></li>
+                                                </ul>
+                                            </div>
+                                        </blockquote>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <footer>
+                    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+                        <a href="Overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p"
+                           rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>Documentation for the code</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/Code_documentation.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
-  
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-            
-  <div class="section" id="module-fnss_ns3_MatrixTopoEx">
-<span id="documentation-for-the-code"></span><h1>Documentation for the code<a class="headerlink" href="#module-fnss_ns3_MatrixTopoEx" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-__init__"></span><p>This is just an example that creates and runs an ns-3 model using:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>FNSS to create and visualize a certain communication topology (tree topology)</p></li>
-<li><p>ns-3 Python bindings to create, visualize and run the actual ns-3 model</p></li>
-</ul>
-</div></blockquote>
-<div class="section" id="module-fnss_ns3_MatrixTopoEx.main">
-<span id="the-main-function"></span><h2>The main function<a class="headerlink" href="#module-fnss_ns3_MatrixTopoEx.main" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-fnss_ns3_MatrixTopoEx"></span><dl class="field-list simple">
-<dt class="field-odd">platform</dt>
-<dd class="field-odd"><p>Unix, Windows</p>
-</dd>
-<dt class="field-even">synopsis</dt>
-<dd class="field-even"><p>Call functions to build, visualize, and run the model.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This is a simple note.</p>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This is a warning</p>
-</div>
-<div class="versionadded">
-<p><span class="versionmodified added">New in version version.</span></p>
-</div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">Changed in version version.</span></p>
-</div>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p>see this as well</p>
-</div>
-<dl class="function">
-<dt id="fnss_ns3_MatrixTopoEx.main.main">
-<code class="descclassname">fnss_ns3_MatrixTopoEx.main.</code><code class="descname">main</code><span class="sig-paren">(</span><em>argv</em><span class="sig-paren">)</span><a class="headerlink" href="#fnss_ns3_MatrixTopoEx.main.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is the main function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>argv</strong> (<em>str</em>) – just a fake argument for testing purposes</p>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
-<div class="section" id="module-fnss_ns3_MatrixTopoEx.fnssTopology">
-<span id="fnss-topology-build-and-visualize"></span><h2>FNSS topology - build and visualize<a class="headerlink" href="#module-fnss_ns3_MatrixTopoEx.fnssTopology" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-fnssTopology"></span><dl class="field-list simple">
-<dt class="field-odd">platform</dt>
-<dd class="field-odd"><p>Unix, Windows</p>
-</dd>
-<dt class="field-even">synopsis</dt>
-<dd class="field-even"><p></p></dd>
-</dl>
-<dl class="function">
-<dt id="fnss_ns3_MatrixTopoEx.fnssTopology.buildFNSStopology">
-<code class="descclassname">fnss_ns3_MatrixTopoEx.fnssTopology.</code><code class="descname">buildFNSStopology</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fnss_ns3_MatrixTopoEx.fnssTopology.buildFNSStopology" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function invokes Fast Network Simulation Setup (<a class="reference external" href="http://fnss.github.io">FNSS</a>) to build a network topology.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>none</strong> – The function does not need an argument</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>topo - FNSS topology in dictionary format</p>
-</dd>
-</dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pprint</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">topo</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
-<span class="go">{</span>
-<span class="go">&#39;_adj&#39;: {},</span>
-<span class="go">&#39;_node&#39;: {},</span>
-<span class="go">&#39;adjlist_inner_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
-<span class="go">&#39;adjlist_outer_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
-<span class="go">&#39;edge_attr_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
-<span class="go">&#39;graph&#39;: {},</span>
-<span class="go">&#39;graph_attr_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
-<span class="go">&#39;node_attr_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
-<span class="go">&#39;node_dict_factory&#39;: &lt;class &#39;dict&#39;&gt;,</span>
-<span class="go">&#39;nodes&#39;: NodeView((0, 1, 2)</span>
-<span class="go">}</span>
-</pre></div>
-</div>
-<p>This function:</p>
-<blockquote>
-<div><ul>
-<li><p>uses FNSS <code class="xref py py-func docutils literal notranslate"><span class="pre">k_ary_tree_topology()</span></code> function to build a tree topology</p></li>
-<li><p>assigns coordinates (longitude and latitude) to the nodes</p></li>
-<li><p>uses the coordinates and FNSS <code class="xref py py-func docutils literal notranslate"><span class="pre">geographical_distance()</span></code> function to calculate distance between nodes and assigns these values as the lengths of the graph edges</p></li>
-<li><p>sets random capacities to the graph edges using FNNS <code class="xref py py-func docutils literal notranslate"><span class="pre">set_capacities_random_uniform()</span></code> function</p></li>
-<li><p>sets specific propagation delays using FNSS <code class="xref py py-func docutils literal notranslate"><span class="pre">set_delays_geo_distance()</span></code> function, based on the ropagation delay of light in an average optical fiber</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">specificDelay</span> <span class="o">=</span> <span class="n">fnss</span><span class="o">.</span><span class="n">PROPAGATION_DELAY_FIBER</span>
-</pre></div>
-</div>
-</li>
-<li><p>sets the weights to links proportionally to their delay using FNSS <code class="xref py py-func docutils literal notranslate"><span class="pre">set_weights_delays()</span></code></p></li>
-<li><p>sets the buffer sizes proportionally to the product of link bandwidth and average network RTT using FNSS <code class="xref py py-func docutils literal notranslate"><span class="pre">set_buffer_sizes_bw_delay_prod()</span></code></p></li>
-</ul>
-</div></blockquote>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The function does assign applications and event schedules, but they are not used subsequently. At least not at this point.</p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="fnss_ns3_MatrixTopoEx.fnssTopology.plotTopology">
-<code class="descclassname">fnss_ns3_MatrixTopoEx.fnssTopology.</code><code class="descname">plotTopology</code><span class="sig-paren">(</span><em>topo</em><span class="sig-paren">)</span><a class="headerlink" href="#fnss_ns3_MatrixTopoEx.fnssTopology.plotTopology" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots the FNSS network topology usings <code class="xref py py-mod docutils literal notranslate"><span class="pre">networkx</span></code></p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-fnss_ns3_MatrixTopoEx.ns3Model">
-<span id="ns-3-model-build"></span><h2>ns-3 model - build<a class="headerlink" href="#module-fnss_ns3_MatrixTopoEx.ns3Model" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-ns3Model"></span><dl class="field-list simple">
-<dt class="field-odd">platform</dt>
-<dd class="field-odd"><p>Unix, Windows</p>
-</dd>
-<dt class="field-even">synopsis</dt>
-<dd class="field-even"><p></p></dd>
-</dl>
-<dl class="function">
-<dt id="fnss_ns3_MatrixTopoEx.ns3Model.buildNS3model">
-<code class="descclassname">fnss_ns3_MatrixTopoEx.ns3Model.</code><code class="descname">buildNS3model</code><span class="sig-paren">(</span><em>topo</em><span class="sig-paren">)</span><a class="headerlink" href="#fnss_ns3_MatrixTopoEx.ns3Model.buildNS3model" title="Permalink to this definition">¶</a></dt>
-<dd><p>The function builds an ns-3 model based on an FNSS topology.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>topo</strong> – FNSS topology in dictionary format</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>nothing</p>
-</dd>
-</dl>
-<p>The function is structured as follows:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>initialization of simulation/model parameters</p></li>
-<li><p>network setup</p>
-<ul>
-<li><p>load FNSS topology and create the nodes of the ns-3 model</p></li>
-<li><p>create location matrix containing longitude and latitude of the nodes based on the FNSS topology</p></li>
-<li><p>create adjacency matrix based on existence of edge between nodes according with the FNSS topology</p></li>
-<li><p>create P2P (Point-To-Point) link attributes</p></li>
-<li><p>install internet stack to nodes</p></li>
-<li><p>assign addresses to nodes</p></li>
-</ul>
-</li>
-<li><p>allocate node positions for mobility and netanim</p></li>
-<li><p>create CBR flows based on adjacency matrix</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-</div>
-</div>
-
-
-           </div>
-           
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-      
-        <a href="Overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
-  
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2019, Laurentiu Marinovici
-
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
-</footer>
-
+                    </div>
+                    <hr/>
+                    <div role="contentinfo">
+                        <p>&copy; Copyright 2019, Laurentiu Marinovici</p>
+                    </div>
+                    Built with <a href="http://sphinx-doc.org/">Sphinx</a>
+                    using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+                    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+                </footer>
+            </div>
         </div>
-      </div>
-
     </section>
+</div>
 
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
-    
-   
+<script type="text/javascript">
+    jQuery(function () {
+        SphinxRtdTheme.Navigation.enable(true);
+    });
+</script>
 
 </body>
 </html>

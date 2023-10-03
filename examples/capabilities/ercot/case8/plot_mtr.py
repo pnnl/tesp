@@ -30,7 +30,7 @@ meta_m = lst_m.pop('Metadata')
 times = list(map(int, list(lst_m.keys())))
 times.sort()
 print('There are', len(times), 'sample times at', times[1] - times[0], 'second intervals')
-hrs = np.array(times, dtype=np.float)
+hrs = np.array(times, dtype=np.float64)
 denom = 3600.0
 hrs /= denom
 
@@ -80,7 +80,7 @@ for key, val in meta_m.items():
     elif key == 'below_10_percent_NormVol_Duration':
         MTR_OUT_DURATION_IDX = val['index']
 
-data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float)
+data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m['3600'][mtr_keys[0]])), dtype=np.float64)
 print('\nConstructed', data_m.shape, 'NumPy array for Meters')
 j = 0
 for key in mtr_keys:

@@ -22,6 +22,7 @@ from .hvac_agent import hvac
 from .simple_auction import simple_auction
 from tesp_support.api.bench_profile import bench_profile
 
+
 @bench_profile
 def substation_loop_f(configfile, metrics_root, hour_stop=48, flag='WithMarket'):
     """ Helper function that initializes and runs the agents
