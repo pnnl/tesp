@@ -1,12 +1,12 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: plots.py
 
 # usage 'python3 plots.py'
 import os
 
-import tesp_support.process_gld as gp
-import tesp_support.process_houses as hp
-import tesp_support.process_voltages as vp
+import tesp_support.api.process_gld as gp
+import tesp_support.api.process_houses as hp
+import tesp_support.api.process_voltages as vp
 
 rootname = 'test_houses'
 

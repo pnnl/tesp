@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: runInvTi30.sh
 
 clear
@@ -156,6 +156,6 @@ export FNCS_LOG_LEVEL=$agentLOGlevel && \
 export FNCS_CONFIG_FILE=${agentCONFfile} && \
 export FNCS_FATAL=YES && \
 cd ${SCEN_ROOT} && \
-python -c "import tesp_support.precool as tesp;tesp.precool_loop(${agentTime},'${scenarioName}')" &> ${agentOutFile} &
+python -c "import tesp_support.original.precool as tesp;tesp.precool_loop(${agentTime},'${scenarioName}')" &> ${agentOutFile} &
 
 exit 0

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: glm_dict.py
 # tuned to feederGenerator_TSP.m for sequencing of objects and attributes
 """Functions to create metadata from a GridLAB-D input (GLM) file
@@ -66,8 +66,8 @@ def glm_dict(name_root, ercot=False, te30=False):
 
     Args:
         name_root (str): path and file name of the GLM file, without the extension
-        ercot (boolean): request ERCOT billing meter naming. Defaults to false.
-        te30 (boolean): request hierarchical meter handling in the 30-house test harness. Defaults to false.
+        ercot (bool): request ERCOT billing meter naming. Defaults to false.
+        te30 (bool): request hierarchical meter handling in the 30-house test harness. Defaults to false.
     """
     ip = open(name_root + '.glm', 'r')
     op = open(name_root + '_glm_dict.json', 'w')

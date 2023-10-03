@@ -36,11 +36,20 @@ if [[ $clean_me == "clean" ]]; then
   echo "   /sgip1"
   cd "$TESPDIR/examples/analysis/sgip1" || exit
   ./clean.sh
-  echo "   /dsot/code"
-  cd ../dsot/code || exit
-  ./clean.sh
-  echo "  Done!"
 
+  echo "   /dsot/code"
+  cd "$TESPDIR/examples/analysis/dsot/code" || exit
+  ./clean.sh
+
+  echo "   /consensus/code"
+  cd "$TESPDIR/examples/analysis/consensus/code" || exit
+  ./clean.sh
+
+  echo "   /test"
+  cd "$TESPDIR/src/tesp_support/test/api" || exit
+  ./clean.sh
+
+  echo "  Done!"
   cd "$CWD" || exit
 else
   echo "  Not cleaning TESP examples"

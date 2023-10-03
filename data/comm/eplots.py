@@ -1,10 +1,10 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: eplots.py
 # usage 'python3 eplots.py metrics_root my_title my_png'
 
 import sys
 
-import tesp_support.process_eplus as ep
+import tesp_support.api.process_eplus as ep
 
 root = 'eplus'
 title = None

@@ -1,12 +1,12 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: plots.py
 
 # usage 'python plots metrics_root'
 import os
 import sys
 
-import tesp_support.process_gld as gp
-import tesp_support.process_inv as ip
+import tesp_support.api.process_gld as gp
+import tesp_support.api.process_inv as ip
 
 rootname = sys.argv[1]
 

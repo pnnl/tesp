@@ -1,6 +1,6 @@
 # 8-Bus and 200-Bus ERCOT Bulk System Models
 
-Copyright (c) 2018-2022, Battelle Memorial Institute
+Copyright (c) 2018-2023 Battelle Memorial Institute
 
 This directory contains the baseline bulk generation and transmission model for 8-bus and 200-bus
 versions of the ERCOT Test System. Changes should be tested here before use in the complete

@@ -4,11 +4,11 @@ This directory contains 12 typical meteorological year version 3 (TMY3) weather 
 use with TESP. They sample all 6 climate regions as defined for PNNL's taxonomy feeders:
 
 1. Region 1 (Temperate) CA-Los Angeles and CA-San Francisco
-1. Region 2 (Cold) IL-Chicago
-1. Region 3 (Hot and Arid) AZ-Phoenix, AZ-Tucson and TX-El Paso
-1. Region 4 (Hot and Cold) TN-Nashville, TX-Wichita Falls
-1. Region 5 (Hot and Humid) FL-Miami, TX-Houston
-1. Region 6 (Tropical) HI-Honolulu
+2. Region 2 (Cold) IL-Chicago
+3. Region 3 (Hot and Arid) AZ-Phoenix, AZ-Tucson and TX-El Paso
+4. Region 4 (Hot and Cold) TN-Nashville, TX-Wichita Falls
+5. Region 5 (Hot and Humid) FL-Miami, TX-Houston
+6. Region 6 (Tropical) HI-Honolulu
 
 These samples were chosen to include the same default weather locations available 
 in earlier versions of PNNL's feeder generator, the NIST TE Challenge, the 2018 
@@ -36,7 +36,7 @@ To use TMY2 files, one shall directly call the TMY2EPW.py.
     cd TMY2EPW\source_code
     python TMY2EPW.py FL-Miami_Intl_Ap.tmy2
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/main/LICENSE
 

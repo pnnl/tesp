@@ -1,4 +1,4 @@
-#   Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 import json
 
 import matplotlib.pyplot as plt
@@ -67,7 +67,7 @@ def process_pypower(name_root):
     meta_g = lst_g.pop('Metadata')
     times = list(map(int, list(lst_g.keys())))
     times.sort()
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -85,7 +85,7 @@ def process_pypower(name_root):
             GENLMP_UNITS = val['units']
 
     # create a NumPy array of all generator metrics
-    data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
+    data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float64)
     print('\nConstructed', data_g.shape, 'NumPy array for Generators')
     print('Unit,Bus,Type,Fuel,CF,COV')
     j = 0

@@ -15,14 +15,20 @@ cd "${REPODIR}/ns-3-dev" || exit
 # --with-helics may not be left blank, so use either $INSTDIR or /usr/local
 if [[ $1 == "clean" ]]; then
   ./waf distclean
-fi  
+#  ./ns3 distclean
+fi
 
 ./waf configure --prefix="${INSTDIR}" --with-helics="${INSTDIR}" --build-profile=optimized \
                 --disable-werror --enable-logs --enable-build-version
+
+#./ns3 configure --prefix="${INSTDIR}" --build-profile=optimized --disable-werror \
+#                --enable-logs --enable-build-version
 # To enable examples or tests add the respective --enable command to the waf configure command line
 # --enable-examples --enable-tests
 
 ./waf build
+# ./ns3 build
 
 ./waf install
+# ./ns3 install
 #./test.py

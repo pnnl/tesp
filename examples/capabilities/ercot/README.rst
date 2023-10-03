@@ -32,4 +32,4 @@ The sub-directory structure is:
 - *case8* contains the complete 8-bus model; run simulations from here
 - *dist_system* contains the reduced-order feeder models; populate feeders with houses from here
 
-Copyright (c) 2018-2022, Battelle Memorial Institute
+Copyright (c) 2018-2023 Battelle Memorial Institute

@@ -1,7 +1,7 @@
 /*
 Launching the MATPOWER Power Flow / Optimal Power Flow solver
 ==========================================================================================
-Copyright (C) 2013-2022, Battelle Memorial Institute
+Copyright (c) 2013-2023 Battelle Memorial Institute
 Written by Laurentiu Dan Marinovici, Pacific Northwest National Laboratory
 ==========================================================================================
 Due to the fact that the file has been going through many updates, I have taken out the updates

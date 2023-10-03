@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: run_ems_case.sh
 
 # need to have made ems*.idf in the local directory, with bHELICS=True
@@ -22,7 +22,7 @@ echo $MERGED, $OUTPUT, $RAMP, $CAP, $METRICS
 
 (exec helics_broker -f 3 --name=mainbroker &> broker.log &)
 (export HELICS_CONFIG_FILE=eplusH.json && exec energyplus -w $EPWFILE -d out$OUTPUT $MERGED.idf &> eplus$OUTPUT.log &)
-(exec helics_player --input=prices.txt --local --time_units=ns --stop 172800s &> playerH.log &)
+(exec helics_player prices.txt -n player --local --time_units=ns --stop 172800s &> playerH.log &)
 (exec eplus_agent_helics 172800s 300s $OUTPUT $METRICS  0.10 $RAMP $CAP $CAP eplus_agentH.json &> eplus_agent$OUTPUT.log &)
 
 sleep 2

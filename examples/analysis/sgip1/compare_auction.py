@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: compare_auction.py
 import json
 
@@ -29,7 +29,7 @@ def MakePlotData(root):
 
     times = list(map(int, list(lst_a.keys())))
     times.sort()
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
 
@@ -42,7 +42,7 @@ def MakePlotData(root):
         elif key == 'clearing_type':
             TYPE_IDX = val['index']
 
-    data_a = np.empty(shape=(len(a_keys), len(times), len(lst_a[time_key][a_keys[0]])), dtype=np.float)
+    data_a = np.empty(shape=(len(a_keys), len(times), len(lst_a[time_key][a_keys[0]])), dtype=np.float64)
     j = 0
     for key in a_keys:
         i = 0

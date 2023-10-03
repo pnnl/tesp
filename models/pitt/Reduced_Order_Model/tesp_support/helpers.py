@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: helpers.py
 """ Utility functions for use within tesp_support, including new agents.
 """
@@ -57,7 +57,7 @@ class curve:
         Args:
             price (float): the bid price, should be $/kWhr
             quantity (float): the bid quantity, should be kW
-            is_on (Boolean): True if the load is currently on, False if not
+            is_on (bool): True if the load is currently on, False if not
         """
         if quantity == 0:
             return
@@ -202,7 +202,7 @@ def parse_kw(arg):
         return 0
 
 def aggregate_bid (crv):
-    """aggregates the buyer curve into a quadratic or straight-line fit with zero intercept
+    """ Aggregates the buyer curve into a quadratic or straight-line fit with zero intercept
 
     Args:
         crv (curve): the accumulated buyer bids

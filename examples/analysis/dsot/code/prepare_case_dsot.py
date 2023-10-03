@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: prepare_case_dsot.py
 """ Sets up a simple DSO+T use-case with one feeder
 
@@ -12,20 +12,22 @@ import json
 import shutil
 import datetime
 import numpy as np
-import tesp_support.helpers_dsot as helpers
-import tesp_support.case_merge_dsot as cm
-import tesp_support.glm_dict_dsot as gd
-import tesp_support.commbldgenerator as com_FG
-import tesp_support.feederGenerator_dsot as res_FG
-import tesp_support.copperplateFeederGenerator_dsot as cp_FG
+
+from tesp_support.api.helpers import HelicsMsg
+import tesp_support.original.commercial_feeder_glm as com_FG
+import tesp_support.original.copperplate_feeder_glm as cp_FG
+
+import tesp_support.dsot.helpers_dsot as helpers
+import tesp_support.dsot.case_merge as cm
+import tesp_support.dsot.glm_dictionary as gd
+import tesp_support.dsot.residential_feeder_glm as res_FG
 import prep_substation_dsot as prep
-from tesp_support.helpers import HelicsMsg
 
 
 # Simulation settings for the experimental case
 def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
-    # We need to load in the master metadata (*system_case_config.josn)
+    # We need to load in the master metadata (*system_case_config.json)
     with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
         sys_config = json.load(json_file)
 
@@ -292,14 +294,15 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         except:
             pass
 
-        # (Laurentiu Marinovici 11/07/2019) but now, we are going to copy the .dat file from its location into the weather agent folder
+        # (Laurentiu Marinovici 11/07/2019)
+        # we are going to copy the .dat file from its location into the weather agent folder
         shutil.copy(os.path.join(os.path.abspath(sys_config['WeatherDataSourcePath']), dso_val['weather_file']),
                     os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat'))
 
         # We need to generate the total population of commercial buildings by type and size
         num_res_customers = dso_val['number_of_gld_homes']
         num_comm_customers = round(num_res_customers * dso_val['RCI customer count mix']['commercial'] /
-                             dso_val['RCI customer count mix']['residential'])
+                                   dso_val['RCI customer count mix']['residential'])
         num_comm_bldgs = num_comm_customers / dso_val['comm_customers_per_bldg']
         comm_bldgs_pop = com_FG.define_comm_bldg(comm_config, dso_val['utility_type'], num_comm_bldgs)
         bldPrep['CommBldgPopulation'] = comm_bldgs_pop
@@ -318,6 +321,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
         HelicsMsg.gld = HelicsMsg("gld" + case_config['SimulationConfig']['Substation'], 30)
         HelicsMsg.dso = HelicsMsg("dso" + case_config['SimulationConfig']['Substation'], dt)
+        HelicsMsg.dso.config("uninterruptible", True)
         feeders = dso_val['feeders']
         feedercnt = 1
         for feed_key, feed_val in feeders.items():
@@ -403,20 +407,25 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         HelicsMsg.dso.write_file(os.path.abspath(caseName + '/' + dso_key + '/' + sub_key + '.json'))
 
         # cleaning after feeders had been merged
-        foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName)) if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
+        foldersToDelete = [name for name in os.listdir(os.path.abspath(caseName))
+                           if os.path.isdir(os.path.join(os.path.abspath(caseName), name)) and 'feeder' in name]
         print("=== Removing the following folders: {0}. ===".format(foldersToDelete))
         [shutil.rmtree(os.path.join(os.path.abspath(caseName), folder)) for folder in foldersToDelete]
 
         # for dso_key, dso_val in substation_config.items():
-        filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key)) if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
+        filesToDelete = [name for name in os.listdir(os.path.abspath(caseName + '/' + dso_key))
+                         if os.path.isfile(os.path.join(os.path.abspath(caseName + '/' + dso_key), name)) and 'feeder' in name]
         print("=== Removing the following files: {0} for {1}. ===".format(filesToDelete, dso_key))
         [os.remove(os.path.join(os.path.abspath(caseName + '/' + dso_key), fileName)) for fileName in filesToDelete]
 
     tso.write_file(caseName + '/tso_h.json')
 
     # Also create the launch, kill and clean scripts for this case
-    helpers.write_dsot_management_script(master_file="generate_case_config", case_path=caseName, system_config=sys_config,
-                                               substation_config=dso_config, weather_config=weather_config)
+    helpers.write_dsot_management_script(master_file="generate_case_config",
+                                         case_path=caseName,
+                                         system_config=sys_config,
+                                         substation_config=dso_config,
+                                         weather_config=weather_config)
 
 
 if __name__ == "__main__":

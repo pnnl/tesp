@@ -76,7 +76,7 @@ class LargeOffice(object):
 		self.Inf = np.multiply(self.ExWall, self.InfRatePerEW)
 
 	def FMU_init(self, fmu_init_inputs):  # this is a function to set fmu parameters
-		for key, value in fmu_init_inputs.iteritems():
+		for key, value in fmu_init_inputs.items():
 			if key == 'Tout':
 				# print 'Tout setting: '+str(value)
 				self.systems['basement'].set(key, value)
@@ -107,7 +107,7 @@ class LargeOffice(object):
 		self.systems['top'].initialize(start_time=self.startTime, stop_time=self.stopTime)
 
 	def FMU_step(self, current_t, fmu_inputs):
-		for key, value in fmu_inputs.iteritems():
+		for key, value in fmu_inputs.items():
 			if key == 'Tout':
 				self.systems['basement'].set(key, value)
 				self.systems['bot'].set(key, value)

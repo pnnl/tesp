@@ -1,6 +1,6 @@
 /*
 ==========================================================================================
-Copyright (C) 2013-2022, Battelle Memorial Institute
+Copyright (c) 2013-2023 Battelle Memorial Institute
 Written by Laurentiu Dan Marinovici, Pacific Northwest National Laboratory
 ==========================================================================================
 Launching the MATPOWER Optimal Power Flow solver

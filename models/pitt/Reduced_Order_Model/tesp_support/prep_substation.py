@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (c) 2018-2023 Battelle Memorial Institute
 # file: prep_substation.py
 """ Sets up the FNCS and agent configurations for te30 and sgip1 examples
 
@@ -16,7 +16,7 @@ import os
 import numpy as np
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
-# write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
+# write txt for GridLAB-D to subscribe house setpoints and meter price; publish meter voltages
 # write the json agent dictionary for post-processing, and run-time configuration of substation.py
 
 # we want the same psuedo-random thermostat schedules each time, for repeatability
@@ -98,7 +98,7 @@ std_dev = 0.01
 #####################################################
 
 def ProcessGLM(fileroot):
-    """Helper function that processes one GridLAB-D file
+    """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
 

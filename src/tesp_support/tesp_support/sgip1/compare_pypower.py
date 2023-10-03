@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: compare_pypower.py
 import json
 
@@ -36,7 +36,7 @@ def MakePlotData(root):
 
     times = list(map(int, list(lst_b.keys())))
     times.sort()
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=float)
     denom = 3600.0
     hrs /= denom
 
@@ -79,7 +79,7 @@ def MakePlotData(root):
             VMIN_IDX = val['index']
             VMIN_UNITS = val['units']
 
-    data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[time_key][gen_keys[0]])), dtype=np.float)
+    data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[time_key][gen_keys[0]])), dtype=float)
     j = 0
     for key in gen_keys:
         i = 0
@@ -89,7 +89,7 @@ def MakePlotData(root):
             i = i + 1
         j = j + 1
 
-    data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[time_key][bus_keys[0]])), dtype=np.float)
+    data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[time_key][bus_keys[0]])), dtype=float)
     j = 0
     for key in bus_keys:
         i = 0

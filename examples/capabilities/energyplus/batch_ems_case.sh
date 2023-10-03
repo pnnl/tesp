@@ -1,10 +1,10 @@
 #!/bin/bash
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: batch_ems_case.sh
 
 EPLUS_PATH=$TESPDIR/data/energyplus
 
-cp $EPLUS_PATH/emsHELICS/*.idf .
+cp "$EPLUS_PATH"/emsHELICS/*.idf .
 
 ./run_seasonal_cases.sh "FullServiceRestaurant"
 ./run_seasonal_cases.sh "Hospital"
@@ -24,4 +24,3 @@ cp $EPLUS_PATH/emsHELICS/*.idf .
 ./run_seasonal_cases.sh "Warehouse"
 
 #./run_seasonal_cases.sh "SchoolBase"
-

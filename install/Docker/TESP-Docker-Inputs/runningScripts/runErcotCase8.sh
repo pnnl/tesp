@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: runErcotCase8.sh
 
 clear
@@ -166,6 +166,6 @@ done
 #export FNCS_CONFIG_FILE=${agentCONFfile} && \
 #export FNCS_FATAL=YES && \
 #cd ${SCEN_ROOT} && \
-#python -c "import tesp_support.substation as tesp;tesp.substation_loop('${agentDICTfile}','${scenarioName}',flag='${scenarioType}')" > ${agentOutFile} 2>&1 &
+#python -c "import tesp_support.original.substation_f as tesp;tesp.substation_loop_f('${agentDICTfile}','${scenarioName}',flag='${scenarioType}')" > ${agentOutFile} 2>&1 &
 
 exit 0

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: tesp_monitor.py
 """Presents a GUI to launch a TESP simulation and monitor its progress
 
@@ -19,17 +19,15 @@ from tkinter import messagebox
 import subprocess
 import os
 try:
-  import tesp_support.fncs as fncs
+  import tesp_support.original.fncs as fncs
 except:
   pass
-import tesp_support.helpers as helpers
-import time
+import tesp_support.api.helpers as helpers
 
-import numpy as np
 import matplotlib
 
 matplotlib.use('TkAgg')
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
@@ -37,7 +35,7 @@ import matplotlib.pyplot as plt
 
 
 class TespMonitorGUI:
-  """Manages a GUI with 4 plotted variables, and buttons to stop TESP
+  """ Manages a GUI with 4 plotted variables, and buttons to stop TESP
 
   The GUI reads a JSON file with scripted shell commands to launch
   other FNCS federates, and a YAML file with FNCS subscriptions to update
@@ -82,7 +80,7 @@ class TespMonitorGUI:
     fig (Figure): animated Matplotlib figure hosted on the GUI
     ax (Axes): set of 4 xy axes to plot on
     canvas (FigureCanvasTkAgg): a TCL Tk canvas that can host Matplotlib
-    bFNCSactive (Boolean): True if a TESP simulation is running with other FNCS federates, False if not
+    bFNCSactive (bool): True if a TESP simulation is running with other FNCS federates, False if not
   """
   def __init__ (self, master):
     self.root = master
@@ -168,7 +166,7 @@ class TespMonitorGUI:
     self.bFNCSactive = False
 
   def on_closing(self):
-    """Verify whether the user wants to stop TESP simulations before exiting the monitor
+    """ Verify whether the user wants to stop TESP simulations before exiting the monitor
 
     This monitor is itself a FNCS federate, so it can not be shut down without shutting
     down all other FNCS federates in the TESP simulation.
@@ -181,7 +179,7 @@ class TespMonitorGUI:
         self.bFNCSactive = False
 
   def Quit(self):
-    """Shuts down this monitor, and also shuts down FNCS if active
+    """ Shuts down this monitor, and also shuts down FNCS if active
     """
     self.root.quit()
     self.root.destroy()
@@ -190,7 +188,7 @@ class TespMonitorGUI:
       self.bFNCSactive = False
 
   def OpenConfig(self):
-    """Read the JSON configuration file for this monitor, and initialize the plot axes
+    """ Read the JSON configuration file for this monitor, and initialize the plot axes
     """ 
     fname = filedialog.askopenfilename(initialdir = '.',
                                        initialfile = 'tesp_monitor.json',
@@ -216,7 +214,7 @@ class TespMonitorGUI:
     self.fig.canvas.draw()
 
   def kill_all(self):
-    """Shut down all FNCS federates in TESP, except for this monitor
+    """ Shut down all FNCS federates in TESP, except for this monitor
     """
     for proc in self.pids:
       print ('trying to kill', proc.pid)
@@ -229,7 +227,7 @@ class TespMonitorGUI:
     print ('FNCS finalized')
 
   def expand_limits(self, v, vmin, vmax):
-    """Whenever a variable meets a vertical axis limit, expand the limits with 10% padding above and below
+    """ Whenever a variable meets a vertical axis limit, expand the limits with 10% padding above and below
 
     Args:
       v (float): the out of range value
@@ -248,7 +246,8 @@ class TespMonitorGUI:
     return vmin, vmax
 
   def update_plots(self, i):
-    """This function is called by Matplotlib for each animation frame
+    """
+    This function is called by Matplotlib for each animation frame
 
     Each time called, collect FNCS messages until the next time to plot
     has been reached. Then update the plot quantities and return the
@@ -350,7 +349,7 @@ class TespMonitorGUI:
     return self.ln0, self.ln1, self.ln2auc, self.ln2lmp, self.ln3fncs, self.ln3gld,  # in case we miss the last point
 
   def launch_all(self):
-    """Launches the simulators, initializes FNCS and starts the animated plots
+    """ Launches the simulators, initializes FNCS and starts the animated plots
     """
     self.root.update()
 
@@ -386,7 +385,7 @@ class TespMonitorGUI:
     self.fig.canvas.draw()
 
 def show_tesp_monitor ():
-  """Creates and displays the monitor GUI
+  """ Creates and displays the monitor GUI
   """
   root = tk.Tk()
   root.title('Transactive Energy Simulation Platform: Solution Monitor')

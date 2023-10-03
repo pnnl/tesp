@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: tesp.sh
 
 
@@ -47,7 +47,7 @@ done
 # repo for git
 # sudo add-apt-repository ppa:git-core/ppa
 
-# Some support depends linux version
+# Some support depends on linux version
 lv=( $(cat /etc/issue) )
 lv=( ${lv[1]//./ } )
 if [[ ${lv[0]} -eq 18 ]]; then

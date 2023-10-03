@@ -17,7 +17,7 @@ import networkx as nx
 import numpy as np
 from numpy.linalg import inv
 
-from tesp_support.data import feeders_path
+from tesp_support.api.data import feeders_path
 
 '''
 switch line 68 to line 69 for feeder #16 #17 #19 #20
@@ -28,7 +28,7 @@ min_load_size = 10.0
 
 # GridLAB-D name should not begin with a number, or contain '-' for FNCS
 def gld_strict_name(val):
-    """Sanitizes a name for GridLAB-D publication to FNCS
+    """ Sanitizes a name for GridLAB-D publication to FNCS
 
     Args:
         val (str): the input name

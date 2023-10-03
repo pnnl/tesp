@@ -1,10 +1,10 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: tabulate_responses.py
 # usage 'python3 tabulate_metrics.py'
 
 import os
 
-import tesp_support.process_eplus as tesp_e
+import tesp_support.api.process_eplus as te
 
 bldgs = ['FullServiceRestaurant',
          'Hospital',
@@ -26,7 +26,7 @@ bldgs = ['FullServiceRestaurant',
 
 def get_kw(season, market, building):
     name_root = '{:s}_{:s}_{:s}'.format(season, market, building)
-    _metrics = tesp_e.read_eplus_metrics(os.getcwd(), name_root, quiet=True)
+    _metrics = te.read_eplus_metrics(os.getcwd(), name_root, quiet=True)
     data = _metrics['data_e']
     idx_e = _metrics['idx_e']
     avg_kw = 0.001 * data[:, idx_e['ELECTRIC_DEMAND_IDX']].mean()

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: process_matpower.py
 
 import json
@@ -44,7 +44,7 @@ meta_b = lst_b.pop('Metadata')
 times = list(map(int, list(lst_b.keys())))
 times.sort()
 print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-hrs = np.array(times, dtype=np.float)
+hrs = np.array(times, dtype=np.float64)
 denom = 3600.0
 hrs /= denom
 
@@ -78,7 +78,7 @@ for key, val in meta_b.items():
         VMIN_UNITS = val['units']
 
 # create a NumPy array of all bus metrics
-data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
+data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float64)
 print("\nConstructed", data_b.shape, "NumPy array for Buses")
 j = 0
 for key in bus_keys:
@@ -114,7 +114,7 @@ for key, val in meta_g.items():
         QGEN_UNITS = val['units']
 
 # create a NumPy array of all bus metrics
-data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
+data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float64)
 print("\nConstructed", data_g.shape, "NumPy array for Generators")
 j = 0
 for key in gen_keys:

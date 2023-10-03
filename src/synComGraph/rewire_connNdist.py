@@ -5,7 +5,7 @@ modified to incorporate given xy coordinates of vertices, so that a rewired edge
 does not have length exceeding a user-specified threshold. Other parts of this
 function -- such as how many swap attempts are made -- have also been rewritten.
 """
-#    Copyright (C) 2004-2018 by
+#    Copyright (c) 2004-2018 by
 #    Aric Hagberg <hagberg@lanl.gov>
 #    Dan Schult <dschult@colgate.edu>
 #    Pieter Swart <swart@lanl.gov>
@@ -29,7 +29,7 @@ __all__ = ['double_edge_swap',
 
 
 def double_edge_swap(G, nswap=1, max_tries=100):
-    """Swap two edges in the graph while keeping the node degrees fixed.
+    """ Swap two edges in the graph while keeping the node degrees fixed.
 
     A double-edge swap removes two randomly chosen edges u-v and x-y
     and creates the new edges u-x and v-y::
@@ -106,7 +106,8 @@ def double_edge_swap(G, nswap=1, max_tries=100):
 
 
 def connected_double_edge_swap(G, xy, nswap=1, _window_threshold=3, distThresh=1000, max_tries=10000):
-    """Attempts the specified number of double-edge swaps in the graph `G`.
+    """
+    Attempts the specified number of double-edge swaps in the graph `G`.
 
     A double-edge swap removes two randomly chosen edges `(u, v)` and `(x,
     y)` and creates the new edges `(u, x)` and `(v, y)`::

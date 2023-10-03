@@ -1,7 +1,7 @@
 //
 // MATLAB Compiler: 6.4 (R2017a)
 // Date: Thu Apr 13 14:21:49 2017
-// Arguments:
+// Args:
 // "-B""macro_default""-W""cpplib:libMATPOWER""-T""link:lib""-d""/home/laurentiu
 // /work/MATPOWER4CoSimulation""-v""mpoption.m""runpf.m""runopf.m"
 //

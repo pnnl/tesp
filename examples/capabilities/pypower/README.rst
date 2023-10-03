@@ -37,6 +37,6 @@ TODO: Player/Recorder comments
 * *runhpp.sh*; script for running the case - HELICS
 * *runpp.sh*; script for running the case - FNCS
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/main/LICENSE

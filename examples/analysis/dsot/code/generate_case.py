@@ -1,15 +1,15 @@
-# Copyright (C) 2019-2022 Battelle Memorial Institute
+# Copyright (C) 2019-2023 Battelle Memorial Institute
 # file: generate_case.py
 """ Utility function to split a year run to monthly runs. This is DSO+T specific helper functions
 """
-import datetime
+
 import json
 import prepare_case_dsot_f as prep_case
 
 
-def generate_case(casename, port, pv=None, bt=None, fl=None, ev=None):
+def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
 
-    with open(casename + '.json', 'r', encoding='utf-8') as json_file:
+    with open(case_name + '.json', 'r', encoding='utf-8') as json_file:
         ppc = json.load(json_file)
     splitCase = ppc['splitCase']
     caseStartYear = ppc['caseStartYear']
@@ -56,4 +56,3 @@ generate_case(node + "_system_case_config", 5570, pv=0, bt=1, fl=0, ev=0)
 generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=0, fl=0, ev=0)
 generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=1, fl=0, ev=1)
 # generate_case(node + "_hi_system_case_config", 5570, pv=1, bt=0, fl=1, ev=1)
-

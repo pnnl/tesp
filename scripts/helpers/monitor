@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: monitor
 
 import sys
-import tesp_support.tesp_monitor as tesp
+import tesp_support.original.tesp_monitor as tesp
 
 if len(sys.argv) > 1:
     if 'FNCS' in sys.argv[1]:

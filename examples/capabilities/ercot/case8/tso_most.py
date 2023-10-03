@@ -1,4 +1,4 @@
-#   Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: tso_most.py
 
 import json
@@ -12,10 +12,10 @@ import numpy as np
 import pypower.api as pp
 import scipy.interpolate as ip
 
-import tesp_support.api as tesp
-import tesp_support.fncs as fncs
-import tesp_support.tso_helpers as tso
-from tesp_support.helpers import parse_mva
+import tesp_support.original.fncs as fncs
+import tesp_support.original.parse_msout as pm
+import tesp_support.api.tso_helpers as th
+from tesp_support.api.parse_helpers import parse_mva
 
 casename = 'ercot_8'
 
@@ -130,7 +130,7 @@ def solve_most_dam_case(fprog, froot):
     cmdline = '{:s} {:s}solve.m'.format(fprog, froot)
     proc = subprocess.Popen(cmdline, shell=True)
     proc.wait()
-    f, nb, ng, nl, ns, nt, nj_max, Pg, Pd, Pf, u, lamP = tesp.read_most_solution('msout.txt')
+    f, nb, ng, nl, ns, nt, nj_max, Pg, Pd, Pf, u, lamP = pm.read_most_solution('msout.txt')
     #  print ('f={:.2f} nb={:d} ng={:d} nl={:d} ns={:d} nt={:d} nj_max={:d}'.format (f, nb, ng, nl, ns, nt, nj_max))
     return f, Pg, Pd, Pf, u, lamP
 
@@ -224,7 +224,9 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
     print("""mpc.bus = [""", file=fp)
     write_array_rows(ppc['bus'], fp)
     print("""];""", file=fp)
-    print ("""%% bus  Pg  Qg  Qmax  Qmin  Vg  mBase status  Pmax  Pmin  Pc1 Pc2 Qc1min  Qc1max  Qc2min  Qc2max  ramp_agc  ramp_10 ramp_30 ramp_q  apf""", file=fp)
+    print(
+        """%% bus  Pg  Qg  Qmax  Qmin  Vg  mBase status  Pmax  Pmin  Pc1 Pc2 Qc1min  Qc1max  Qc2min  Qc2max  ramp_agc  ramp_10 ramp_30 ramp_q  apf""",
+        file=fp)
     print("""mpc.gen = [""", file=fp)
     write_array_rows(ppc['gen'], fp)
     print("""];""", file=fp)
@@ -272,7 +274,8 @@ def write_most_dam_files(ppc, bids, wind_plants, unit_state, froot):
         commit = get_plant_commit_key(fuel, ppc['gencost'][i], ppc['gen'][i], usewind)
         reserve = get_plant_reserve(fuel, ppc['gencost'][i], ppc['gen'][i])
         minup, mindown = get_plant_min_up_down_hours(fuel, ppc['gencost'][i], ppc['gen'][i])
-        paPrice, naPrice, pdPrice, ndPrice, plfPrice, nlfPrice = get_plant_prices(fuel, ppc['gencost'][i], ppc['gen'][i])
+        paPrice, naPrice, pdPrice, ndPrice, plfPrice, nlfPrice = get_plant_prices(fuel, ppc['gencost'][i],
+                                                                                  ppc['gen'][i])
         print(' {:2d} {:4d} {:2d} {:2d} {:f} {:.2f} {:f} {:.2f} {:f} {:f} {:f} {:.2f} {:f} {:.2f};'
               .format(commit, int(unit_state[i]), minup, mindown, paPrice, reserve, naPrice, reserve,
                       pdPrice, ndPrice, plfPrice, reserve, nlfPrice, reserve), file=fp)
@@ -398,7 +401,9 @@ def write_most_base_case(ppc, fname):
     print("""mpc.bus = [""", file=fp)
     write_array_rows(ppc['bus'], fp)
     print("""];""", file=fp)
-    print ("""%% bus  Pg  Qg  Qmax  Qmin  Vg  mBase status  Pmax  Pmin  Pc1 Pc2 Qc1min  Qc1max  Qc2min  Qc2max  ramp_agc  ramp_10 ramp_30 ramp_q  apf""", file=fp)
+    print(
+        """%% bus  Pg  Qg  Qmax  Qmin  Vg  mBase status  Pmax  Pmin  Pc1 Pc2 Qc1min  Qc1max  Qc2min  Qc2max  ramp_agc  ramp_10 ramp_30 ramp_q  apf""",
+        file=fp)
     print("""mpc.gen = [""", file=fp)
     write_array_rows(ppc['gen'], fp)
     print("""];""", file=fp)
@@ -491,7 +496,7 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
     t = np.append(t, [1, 1, 1])
     tck_load = [t, [x, y], 3]
 
-    ppc = tso.load_json_case(casename + '.json')
+    ppc = th.load_json_case(casename + '.json')
     ppopt_market = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['opf_dc'], OPF_ALG_DC=200)  # dc for
     ppopt_regular = pp.ppoption(VERBOSE=0, OUT_ALL=0, PF_DC=ppc['pf_dc'], PF_MAX_IT=20, PF_ALG=1)  # ac for power flow
 
@@ -549,7 +554,7 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
     bus_metrics = {'Metadata': bus_meta, 'StartTime': StartTime}
     gen_metrics = {'Metadata': gen_meta, 'StartTime': StartTime}
     sys_metrics = {'Metadata': sys_meta, 'StartTime': StartTime}
-    tso.make_dictionary(ppc)
+    th.make_dictionary(ppc)
 
     # initialize for variable wind
     wind_plants = {}
@@ -910,9 +915,9 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
                 conv_accum = False
             opf_bus = deepcopy(ropf['bus'])
             opf_gen = deepcopy(ropf['gen'])
-            #      tso.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'GLD Load after OPF', ts)
+            #      th.print_mod_load(ppc['bus'], ppc['DSO'], gld_load, 'GLD Load after OPF', ts)
             #      print_bus_lmps ('### from OPF at {:d}'.format(ts), opf_bus)
-            #      tso.summarize_opf(ropf)
+            #      th.summarize_opf(ropf)
             Pcleared = 0
             Pproduced = 0
             Pswing = 0
@@ -956,9 +961,9 @@ def tso_most_loop_f(bTestDAM=False, test_bids=None):
             print('rpf did not converge at', ts)
         rBus = rpf[0]['bus']
         rGen = rpf[0]['gen']
-        #    tso.print_mod_load (ppc['bus'], ppc['DSO'], gld_load, 'GLD Load after PF', ts)
-        #    tso.print_bus_lmps (' $$ from RPF at {:d}'.format(ts), rBus)
-        #    tso.summarize_opf (rpf[0])
+        #    th.print_mod_load (ppc['bus'], ppc['DSO'], gld_load, 'GLD Load after PF', ts)
+        #    th.print_bus_lmps (' $$ from RPF at {:d}'.format(ts), rBus)
+        #    th.summarize_opf (rpf[0])
 
         Pload = rBus[:, 2].sum()
         Pgen = rGen[:, 1].sum()

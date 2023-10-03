@@ -28,6 +28,9 @@
 
 # -- General configuration ------------------------------------------------
 
+# Add support for markdown
+from recommonmark.parser import CommonMarkParser
+
 # If your documentation needs a minimal Sphinx version, state it here.
 #
 needs_sphinx = '3.5.1'
@@ -39,24 +42,21 @@ needs_sphinx = '3.5.1'
 numfig = True
 
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.imgmath',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.todo',
-    'sphinx-jsonschema',
-    'sphinxcontrib.bibtex'
-    ]
+              'sphinx.ext.imgmath',
+              'sphinx.ext.githubpages',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.todo',
+              'sphinx-jsonschema',
+              'sphinxcontrib.bibtex'
+              ]
+
 bibtex_bibfiles = ['./references/refs.bib']
-bibtex_default_style = 'unsrt' # alpha, plain, unsrt, unsrtalpha
+bibtex_default_style = 'unsrt'  # alpha, plain, unsrt, unsrtalpha
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-# Add support for markdown
-from recommonmark.parser import CommonMarkParser
-
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-#
 source_suffix = ['.rst', '.md']
 # source_suffix = '.rst'
 
@@ -67,7 +67,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'TESP'
-copyright = '2017-2022, Battelle Memorial Institute'
+copyright = '2017-2023 Battelle Memorial Institute'
 author = 'Pacific Northwest National Laboratory'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -173,6 +173,3 @@ texinfo_documents = [
      author, 'TESP', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

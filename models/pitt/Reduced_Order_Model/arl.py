@@ -39,7 +39,7 @@ class arl:
     """
 
     def __init__(self,house_num,rnn1,rnn2,aucObj,hn):
-        """Initializes the class
+        """ Initializes the class
         """
         self.house_number = house_num
         self.bid_RNN = rnn1

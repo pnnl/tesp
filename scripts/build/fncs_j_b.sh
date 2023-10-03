@@ -31,11 +31,26 @@ cd build || exit
 #    MAIN_DEPENDENCY fncs.jar
 #)
 
-cmake ..
+myoption="Unix Makefiles"
+if [ ${MSYSTEM_PREFIX} ]; then
+  myoption=MSYS\ Makefiles
+fi
+
+cmake -G "$myoption" ..
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 
 JAVAPATH=$INSTDIR/java
-mkdir -p "$JAVAPATH"
-cp fncs.jar "$JAVAPATH/"
-cp libJNIfncs.so "$JAVAPATH/"
+if [ -d "$JAVAPATH" ]; then
+  rm -rf "$JAVAPATH/fncs.jar"
+  rm -rf "$JAVAPATH/libJNIfncs.so"
+  rm -rf "$JAVAPATH/JNIfncs.dll"
+else
+  mkdir -p "$JAVAPATH"
+fi
 
+cp fncs.jar "$JAVAPATH/"
+if [ ${MSYSTEM_PREFIX} ]; then
+  cp JNIfncs.dll "$JAVAPATH/"
+else
+  cp libJNIfncs.so "$JAVAPATH/"
+fi

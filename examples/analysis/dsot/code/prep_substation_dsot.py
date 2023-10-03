@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: prep_substation_dsot.py
 """ Sets up the HELICS and agent configurations for DSOT ercot case 8 example
 
@@ -12,8 +12,8 @@ from datetime import datetime
 
 import numpy as np
 
-from tesp_support.helpers import HelicsMsg
-from tesp_support.helpers_dsot import random_norm_trunc
+from tesp_support.api.helpers import HelicsMsg
+from tesp_support.api.helpers import random_norm_trunc
 
 # write yaml for substation.py to subscribe meter voltages, house temperatures, hvac load and hvac state
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
@@ -26,7 +26,7 @@ np.random.seed(0)
 def select_setpt_occ(prob, mode):
     hdr = hvac_setpt['occ_' + mode][0]
     temp = hvac_setpt['occ_' + mode][1:]
-    temp = (np.array(temp)).astype(np.float)
+    temp = (np.array(temp)).astype(np.float64)
     total = 0
     for row in range(len(temp)):
         total += temp[row][1]
@@ -46,7 +46,7 @@ def select_setpt_occ(prob, mode):
 def select_setpt_unocc(wakeup_set, mode):
     hdr = hvac_setpt['unocc_' + mode][0]
     temp = hvac_setpt['unocc_' + mode][1:]
-    temp = (np.array(temp)).astype(np.float)
+    temp = (np.array(temp)).astype(np.float64)
     # first get the column corresponding day_occ set-point
     if wakeup_set == 100 and mode == 'cool':
         return 100
@@ -77,7 +77,7 @@ def select_setpt_unocc(wakeup_set, mode):
 def select_setpt_night(wakeup_set, daylight_set, mode):
     hdr = hvac_setpt['night_' + mode][0]
     temp = hvac_setpt['night_' + mode][1:]
-    temp = (np.array(temp)).astype(np.float)
+    temp = (np.array(temp)).astype(np.float64)
     # first get the column corresponding occ and unocc set-point pair
     if wakeup_set == 100 and mode == 'cool':
         return 100
@@ -107,13 +107,13 @@ def select_setpt_night(wakeup_set, daylight_set, mode):
 
 
 def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
-    """Helper function that processes one GridLAB-D file
+    """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
 
-    - *fileroot_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
-    - *fileroot_substation.yaml*, contains FNCS subscriptions for the psimple_auction and hvac agents
-    - *[name_root]_gridlabd.txt*, a GridLAB-D include file with FNCS publications and subscriptions
+    - *[gldfileroot]_agent_dict.json*, contains configuration data for the simple_auction and hvac agents
+    - *[gldfileroot]_substation.json*, contains HELICS subscriptions for the psimple_auction and hvac agents
+    - *[gldfileroot]_gridlabd.json*, a GridLAB-D include file with HELICS publications and subscriptions
 
     Args:
         gldfileroot (str): path to and base file name for the GridLAB-D file, without an extension
@@ -925,7 +925,7 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
 
     - *gldfileroot_agent_dict.json*, contains configuration data for the all control agents
     - *gldfileroot_substation.json*, contains HELICS subscriptions for the all control agents
-    - *gldfileroot_substation.json*, a GridLAB-D include file with HELICS publications and subscriptions
+    - *gldfileroot_gridlabd.json*, a GridLAB-D include file with HELICS publications and subscriptions
 
     Futhermore reads either the jsonfile or config dictionary.
     This supplemental data includes time-scheduled thermostat setpoints (NB: do not use the scheduled

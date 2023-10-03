@@ -1,13 +1,13 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: prepare_case.py
 
 import utilities
 import json
 from datetime import datetime
 
-from tesp_support.data import weather_path
-from tesp_support.glm_dict import glm_dict
-from tesp_support.TMY3toCSV import weathercsv
+from tesp_support.api.data import weather_path
+from tesp_support.original.glm_dictionary import glm_dict
+from tesp_support.weather.TMY3toCSV import weathercsv
 
 _FNCS = False
 # _FNCS = True

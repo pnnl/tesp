@@ -1,4 +1,4 @@
-#   Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: tso_psst_f.py
 
 import os
@@ -11,9 +11,9 @@ from copy import deepcopy
 import psst.cli as pst
 import pandas as pd
 
-import tesp_support.fncs as fncs
-import tesp_support.tso_helpers as tso
-from tesp_support.helpers import parse_mva
+import tesp_support.original.fncs as fncs
+import tesp_support.api.tso_helpers as tso
+from tesp_support.api.parse_helpers import parse_mva
 
 casename = 'ercot_8'
 ames_DAM_case_file = './../DAMReferenceModel.dat'
@@ -113,7 +113,7 @@ def tso_psst_loop_f():
         DA_LMPs = [[0 for x in range(hours_in_a_day)] for y in range(total_bus_num)]
         DA_LMPs_pub = [[0 for x in range(hours_in_a_day)] for y in range(total_bus_num)]
         for h, r in model.results.lmp.iterrows():
-            for b, lmp in sorted(r.iteritems()):
+            for b, lmp in sorted(r.items()):
                 bn = int(b[3:])
                 if lmp is None:
                     lmp = 0
@@ -227,7 +227,7 @@ def tso_psst_loop_f():
         RT_LMPs = [[0 for x in range(TAU)] for y in range(total_bus_num)]
         RT_LMPs_pub = [[0 for x in range(TAU)] for y in range(total_bus_num)]
         for h, r in model.results.lmp.iterrows():
-            for b, lmp in sorted(r.iteritems()):
+            for b, lmp in sorted(r.items()):
                 bn = int(b[3:])
                 if lmp is None:
                     lmp = 0
@@ -248,7 +248,7 @@ def tso_psst_loop_f():
         #   # click.echo("..." + str(model.results.lmp))
         #   for h, r in model.results.lmp.iterrows():
         #     bn = 1
-        #     for _, lmp in r.iteritems():
+        #     for _, lmp in r.items():
         #       if lmp is None:
         #         lmp = 0
         #       f.write(str(bn) + ' : ' + str(h + 1) + ' : ' + str(round(lmp, 2)) + "\n")

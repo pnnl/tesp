@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: tabulate_responses.py
 
 # usage 'python3 tabulate_metrics.py'
@@ -8,10 +8,10 @@ import stat
 import json
 import copy
 
-from tesp_support.data import comm_path, energyplus_path
-from tesp_support.make_ems import merge_idf
-from tesp_support.process_eplus import read_eplus_metrics
-from tesp_support.tesp_runner import init_tests, run_test, report_tests
+from tesp_support.api.data import comm_path, energyplus_path
+from tesp_support.api.make_ems import merge_idf
+from tesp_support.api.process_eplus import read_eplus_metrics
+from tesp_support.api.test_runner import init_tests, run_test, report_tests
 
 caseDir = './scratch'
 
@@ -20,8 +20,8 @@ EndTime = '2013-08-03 00:00:00'
 EPWFile = '2A_USA_TX_HOUSTON.epw'
 
 brkTemplate = """(exec helics_broker -f {nFed} --name=mainbroker &> broker.log &)"""
-plyTemplate = """(exec helics_player --input=prices.txt --local --time_units=ns --stop {nSec}s &> player.log &)"""
-recTemplate = """(exec helics_recorder --input=helicsRecorder.json --timedelta 1s --period {period}s --stop {nSec}s &> tracer.log &)"""
+plyTemplate = """(exec helics_player prices.txt --name player --local --time_units=ns --stop {nSec}s &> player.log &)"""
+recTemplate = """(exec helics_recorder --config-file helicsRecorder.json --timedelta 1s --period {period}s --stop {nSec}s &> tracer.log &)"""
 epTemplate = """(export HELICS_CONFIG_FILE={epcfg} && exec energyplus -w epWeather.epw -d {outdir} -r {idfname} &> {eplog} &)"""
 agjTemplate = """(exec eplus_agent_helics {agjcfg} &> {aglog} &)"""
 

@@ -1,10 +1,10 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: plots.py
 
 
 import sys
 
-import tesp_support.process_pypower as pp
+import tesp_support.api.process_pypower as pp
 
 root = 'ppcase'
 title = None

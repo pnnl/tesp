@@ -16,6 +16,8 @@ export FNCS_INCLUDE_DIR=$INSTDIR/include
 export FNCS_LIBRARY=$INSTDIR/lib
 export LD_LIBRARY_PATH=$INSTDIR/lib
 export LD_RUN_PATH=$INSTDIR/lib
+# export BENCH_PROFILE=1
+
 
 # PATH
 export PATH=$INSTDIR/bin:$PATH

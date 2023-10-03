@@ -31,7 +31,8 @@ import json
 
 
 def parse_json_file(json_file, out_path, out_file_name):
-    """This function turns a JSON file representation of
+    """
+    This function turns a JSON file representation of
     GLD power distribution system model into a dataframe
     of the billing meter names and positions.
 
@@ -91,7 +92,8 @@ def parse_json_file(json_file, out_path, out_file_name):
 
 
 def parse_dss_file(load_file, coord_file, out_path, out_file_name):
-    """This function parses the lines of a file
+    """
+    This function parses the lines of a file
     and saves them as a csv file.
 
     Args:

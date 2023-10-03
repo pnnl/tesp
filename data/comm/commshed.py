@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2022 Battelle Memorial Institute
+# Copyright (c) 2020-2023 Battelle Memorial Institute
 # file: commshed.py
 import sys
 import helics
@@ -29,7 +29,7 @@ def helics_loop(tmax, market_period, thresh_kW, max_offset_kW):
     for i in range(subCount):
         sub = helics.helicsFederateGetInputByIndex(hFed, i)
         key = helics.helicsInputGetName(sub)
-        target = helics.helicsSubscriptionGetTarget(sub)
+        target = helics.helicsInputGetTarget(sub)
         print('HELICS subscription key', i, key, 'target', target)
         if 'distribution_load' in target:
             sub_load = sub

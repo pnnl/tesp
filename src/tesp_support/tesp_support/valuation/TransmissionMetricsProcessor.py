@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: TransmissionMetricsProcessor.py
 
 import json
@@ -17,31 +17,31 @@ class TransmissionMetricsProcessor:
         self.casepath = case_path
 
     def loadAllMetricsFromJSONFiles(self, case_name="", case_path=""):
-        if (len(case_name) > 0):
+        if len(case_name) > 0:
             self.casename = case_name
-        if (len(case_path) > 0):
+        if len(case_path) > 0:
             self.casepath = case_path
 
         lp = open(self.casepath + self.casename + "_m_dict.json").read()
-        dict = json.loads(lp)
-        baseMVA = dict['baseMVA']
-        ampFactor = dict['ampFactor']
-        gen_keys = list(dict['generators'].keys())
+        diction = json.loads(lp)
+        baseMVA = diction['baseMVA']
+        ampFactor = diction['ampFactor']
+        gen_keys = list(diction['generators'].keys())
         gen_keys.sort()
-        bus_keys = list(dict['fncsBuses'].keys())
+        bus_keys = list(diction['fncsBuses'].keys())
         bus_keys.sort()
         print("\n\nFile", self.casename, "has baseMVA", baseMVA, "with GLD load scaling =", ampFactor)
         # print("\nGenerator Dictionary:")
         # print("Unit Bus Type Pnom Pmax Costs[Start Stop C2 C1 C0]")
         # for key in gen_keys:
-        #     row = dict['generators'][key]
+        #     row = diction['generators'][key]
         #     print(key, row['bus'], row['bustype'], row['Pnom'], row['Pmax'], "[", row['StartupCost'],
         #           row['ShutdownCost'], row['c2'], row['c1'], row['c0'], "]")
 
         print("\nFNCS Bus Dictionary:")
         print("Bus Pnom Qnom [GridLAB-D Substations]")
         for key in bus_keys:
-            row = dict['fncsBuses'][key]
+            row = diction['fncsBuses'][key]
             print(key, row['Pnom'], row['Qnom'], row['GLDsubstations'])
 
         # read the bus metrics file
@@ -60,7 +60,7 @@ class TransmissionMetricsProcessor:
         times.sort()
         print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
 
-        hrs = np.array(times, dtype=np.float)
+        hrs = np.array(times, dtype=float)
         denom = 3600.0
         hrs /= denom
         time_interval_hours = (times[1] - times[0]) / denom
@@ -95,7 +95,7 @@ class TransmissionMetricsProcessor:
                 VMIN_UNITS = val['units']
 
         # create a NumPy array of all bus metrics
-        data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=np.float)
+        data_b = np.empty(shape=(len(bus_keys), len(times), len(lst_b[str(times[0])][bus_keys[0]])), dtype=float)
         print("\nConstructed", data_b.shape, "NumPy array for Buses")
         j = 0
         for key in bus_keys:
@@ -130,7 +130,7 @@ class TransmissionMetricsProcessor:
                 QGEN_UNITS = val['units']
 
         # create a NumPy array of all bus metrics
-        data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=np.float)
+        data_g = np.empty(shape=(len(gen_keys), len(times), len(lst_g[str(times[0])][gen_keys[0]])), dtype=float)
         print("\nConstructed", data_g.shape, "NumPy array for Generators")
         j = 0
         for key in gen_keys:
@@ -141,8 +141,7 @@ class TransmissionMetricsProcessor:
                 i = i + 1
             j = j + 1
 
-        ## transform to a xarray dataset
-
+        # transform to a xarray dataset
         self.bus_metrics = xr.Dataset({'LMP_P': (['busNum', 'time'], data_b[:, :, LMP_P_IDX]),
                                        'PD': (['busNum', 'time'], data_b[:, :, PD_IDX]),
                                        'QD': (['busNum', 'time'], data_b[:, :, QD_IDX]),
@@ -150,9 +149,9 @@ class TransmissionMetricsProcessor:
                                        },
                                       coords={'busNum': list(map(int, bus_keys)),
                                               'time': hrs})  # or hrs
-        ## TODO add the bus-feeder and bus substation relationship to the attrs
+        # TODO add the bus-feeder and bus substation relationship to the attrs
         # bus_metrics.attrs["bus_substation_map"] = {7: 'SUBSTATION7'}
-        self.bus_metrics.attrs["bus_info_dict"] = dict['fncsBuses']
+        self.bus_metrics.attrs["bus_info_dict"] = diction['fncsBuses']
 
         # processing the generation part metrics
 
@@ -169,44 +168,44 @@ class TransmissionMetricsProcessor:
                              'gas_singlecycle': [117.08 * 11.37, 0.001 * 11.37, 0.0075 * 11.37]}
         # print('gen_emission_rate')
 
-        gen_cost = np.empty(shape=(len(gen_keys), len(times)), dtype=np.float)
-        gen_revenue = np.empty(shape=(len(gen_keys), len(times)), dtype=np.float)
-        gen_emission_co2 = np.empty(shape=(len(gen_keys), len(times)), dtype=np.float)
-        gen_emission_sox = np.empty(shape=(len(gen_keys), len(times)), dtype=np.float)
-        gen_emission_nox = np.empty(shape=(len(gen_keys), len(times)), dtype=np.float)
+        gen_cost = np.empty(shape=(len(gen_keys), len(times)), dtype=float)
+        gen_revenue = np.empty(shape=(len(gen_keys), len(times)), dtype=float)
+        gen_emission_co2 = np.empty(shape=(len(gen_keys), len(times)), dtype=float)
+        gen_emission_sox = np.empty(shape=(len(gen_keys), len(times)), dtype=float)
+        gen_emission_nox = np.empty(shape=(len(gen_keys), len(times)), dtype=float)
 
-        co2_emission_rate = np.empty(shape=(len(gen_keys)), dtype=np.float)
-        sox_emission_rate = np.empty(shape=(len(gen_keys)), dtype=np.float)
-        nox_emission_rate = np.empty(shape=(len(gen_keys)), dtype=np.float)
+        co2_emission_rate = np.empty(shape=(len(gen_keys)), dtype=float)
+        sox_emission_rate = np.empty(shape=(len(gen_keys)), dtype=float)
+        nox_emission_rate = np.empty(shape=(len(gen_keys)), dtype=float)
 
         j = 0
         for key in gen_keys:
-            c0 = dict['generators'][key]['c0']
-            c1 = dict['generators'][key]['c1']
-            c2 = dict['generators'][key]['c2']
+            c0 = diction['generators'][key]['c0']
+            c1 = diction['generators'][key]['c1']
+            c2 = diction['generators'][key]['c2']
             co2_emission_rate[j] = 0
             sox_emission_rate[j] = 0
             nox_emission_rate[j] = 0
 
-            if (dict['generators'][key]['genfuel']) == 'gas':
-                if ((dict['generators'][key]['gentype'] == 'combinedcycle') | (
-                        dict['generators'][key]['gentype'] == 'combinedcycle')):
+            if (diction['generators'][key]['genfuel']) == 'gas':
+                if ((diction['generators'][key]['gentype'] == 'combinedcycle') | (
+                        diction['generators'][key]['gentype'] == 'combinedcycle')):
                     co2_emission_rate[j] = \
                         gen_emission_rate[
-                            dict['generators'][key]['genfuel'] + "_" + dict['generators'][key]['gentype']][0]
+                            diction['generators'][key]['genfuel'] + "_" + diction['generators'][key]['gentype']][0]
                     sox_emission_rate[j] = \
                         gen_emission_rate[
-                            dict['generators'][key]['genfuel'] + "_" + dict['generators'][key]['gentype']][1]
+                            diction['generators'][key]['genfuel'] + "_" + diction['generators'][key]['gentype']][1]
                     nox_emission_rate[j] = \
                         gen_emission_rate[
-                            dict['generators'][key]['genfuel'] + "_" + dict['generators'][key]['gentype']][2]
+                            diction['generators'][key]['genfuel'] + "_" + diction['generators'][key]['gentype']][2]
 
-            elif (dict['generators'][key]['genfuel']) == 'coal':
-                co2_emission_rate[j] = gen_emission_rate[dict['generators'][key]['genfuel']][0]
-                sox_emission_rate[j] = gen_emission_rate[dict['generators'][key]['genfuel']][1]
-                nox_emission_rate[j] = gen_emission_rate[dict['generators'][key]['genfuel']][2]
+            elif (diction['generators'][key]['genfuel']) == 'coal':
+                co2_emission_rate[j] = gen_emission_rate[diction['generators'][key]['genfuel']][0]
+                sox_emission_rate[j] = gen_emission_rate[diction['generators'][key]['genfuel']][1]
+                nox_emission_rate[j] = gen_emission_rate[diction['generators'][key]['genfuel']][2]
             else:
-                print('genfuel type', dict['generators'][key]['genfuel'], ' has zero emission or not supported yet!!')
+                print('genfuel type', diction['generators'][key]['genfuel'], ' has zero emission or not supported yet!!')
 
             # print('gen_id, c0, c1, c2:', key, c0, c1, c2)
             i = 0
@@ -235,12 +234,11 @@ class TransmissionMetricsProcessor:
                                        'EMISSION_SOX': (['busNum', 'time'], gen_emission_sox),
                                        'EMISSION_NOX': (['busNum', 'time'], gen_emission_nox),
                                        },
-                                      coords={'busNum': list(map(int, gen_keys)),
-                                              'time': hrs})  # times or hrs
+                                      coords={'busNum': list(map(int, gen_keys)), 'time': hrs})  # times or hrs
 
-        ## add the generator dictionary to the attributes of the dataset
-        self.gen_metrics.attrs["gen_info_dict"] = dict['generators']
-        ##TODO add ancillary generator unit info
+        # add the generator dictionary to the attributes of the dataset
+        self.gen_metrics.attrs["gen_info_dict"] = diction['generators']
+        # TODO add ancillary generator unit info
 
     def loadBusMetricsFromNetCMFFile(self, bus_metrics_netCMF):
         self.bus_metrics = xr.open_dataset(bus_metrics_netCMF)
@@ -277,7 +275,7 @@ class TransmissionMetricsProcessor:
         return self.bus_metrics.sel(busNum=bus_num).LMP_P
 
     #
-    # -------------------------------- The following are generator related metrics---------------------------------------
+    # ------------------------------ The following are generator related metrics --------------------------------------
     #
     def get_gen_metrics(self):
         return self.gen_metrics

@@ -1,5 +1,5 @@
 ..
-    _ Copyright (C) 2021-2022 Battelle Memorial Institute
+    _ Copyright (c) 2021-2023 Battelle Memorial Institute
     _ file: Design_Reference.rst
 
 .. _design_reference:
@@ -606,7 +606,7 @@ Development Work Flow for tesp_support
 --------------------------------------
 
 This is the main code repository for Python-based components of TESP, 
-including the transactive agents, case configuration and post processing.  
+including the transactive agents, case configuration and post-processing.
 Currently, there are three kinds of transactive agent implemented here: 
 
 1. double-auction spot market, typically runs every 5 to 15 minutes

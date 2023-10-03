@@ -1,4 +1,4 @@
-#   Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: process_eplus.py
 """Functions to plot data from the EnergyPlus agent
 
@@ -88,14 +88,14 @@ def process_eplus(name_root):
 
     # create a NumPy array of all metrics for the first building, 8760*39 doubles
     # we also want a NumPy array of times in hours
-    data = np.empty(shape=(len(times), len(ary)), dtype=np.float)
+    data = np.empty(shape=(len(times), len(ary)), dtype=np.float64)
     print("Constructed", data.shape, "NumPy array")
     i = 0
     for t in times:
         ary = lst[str(t)]['SchoolDualController']
         data[i, :] = ary
         i = i + 1
-    hrs = np.array(times, dtype=np.float)
+    hrs = np.array(times, dtype=np.float64)
     denom = 3600.0
     hrs /= denom
     print("Samples at", hrs, "hours")

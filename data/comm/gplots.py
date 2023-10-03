@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: gplots.py
 # usage 'python3 gplots.py metrics_root'
 
@@ -8,7 +8,7 @@ import sys
 
 import matplotlib.pyplot as plt
 
-import tesp_support.process_gld as gp
+import tesp_support.api.process_gld as gp
 
 name_root = sys.argv[1]
 

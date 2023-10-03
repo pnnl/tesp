@@ -10,7 +10,6 @@ CXXFLAGS += -std=c++17
 CPPFLAGS =
 CPPFLAGS += -I$(INSTALL_PATH)/include
 CPPFLAGS += -I$(INSTALL_PATH)/include/ns3-dev
-#CPPFLAGS += -pthread
 
 LDFLAGS =
 LDFLAGS += -L$(INSTALL_PATH)/lib

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: fncs.py
 """ Functions that provide access from Python to the FNCS library
 
@@ -192,7 +192,7 @@ def is_initialized():
     """ Determine whether the FNCS library has been initialized
 
     Returns:
-        Boolean: True if initialized, False if not.
+        bool: True if initialized, False if not.
     """
     return 1 == _is_initialized()
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: matpower_dict.py
 # tested on case9_9Subst.m
 # it's assumed that whenever a section starts, eg mpc.buses, 

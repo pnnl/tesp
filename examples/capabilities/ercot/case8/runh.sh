@@ -1,13 +1,13 @@
 #!/bin/bash
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: runh.sh
 
 mkdir -p PyomoTempFiles
 
 (exec helics_broker -f 12 --loglevel=warning --name=mainbroker &> helics_broker.log &)
-(export WEATHER_CONFIG=weatherIAH.json && exec python3 -c "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weatherIAH.dat')"  &> weatherIAH.log &)
-(export WEATHER_CONFIG=weatherSPS.json && exec python3 -c "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weatherSPS.dat')"  &> weatherSPS.log &)
-(export WEATHER_CONFIG=weatherELP.json && exec python3 -c "import tesp_support.weatherAgent as tesp;tesp.startWeatherAgent('weatherELP.dat')"  &> weatherELP.log &)
+(export WEATHER_CONFIG=weatherIAH.json && exec python3 -c "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weatherIAH.dat')"  &> weatherIAH.log &)
+(export WEATHER_CONFIG=weatherSPS.json && exec python3 -c "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weatherSPS.dat')"  &> weatherSPS.log &)
+(export WEATHER_CONFIG=weatherELP.json && exec python3 -c "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weatherELP.dat')"  &> weatherELP.log &)
 (exec gridlabd -D USE_HELICS -D METRICS_FILE=Bus1_metrics.json Bus1.glm &> Bus1.log &)
 (exec gridlabd -D USE_HELICS -D METRICS_FILE=Bus2_metrics.json Bus2.glm &> Bus2.log &)
 (exec gridlabd -D USE_HELICS -D METRICS_FILE=Bus3_metrics.json Bus3.glm &> Bus3.log &)
