@@ -18,7 +18,7 @@ Many of the repositories holding the source code for the simulation tools used i
 
 Installation Guide
 ==================
-This guide will assume that TESP is being installed on a clean Ubuntu Linux installation or Windows 10 using MSYS2.
+This guide will assume that TESP is being installed on a clean Ubuntu Linux installation or Windows 10 using WSL2.
 
 For many, this will be a virtual machine (VM) and the good news is that there is a no-cost means of creating this VM using Oracle's `VirtualBox <https://www.virtualbox.org>`_. Other commercial virtualization software such as VMWare and Parallels will also do the trick.
 
@@ -32,7 +32,7 @@ There is lots of documentation out there on installing Ubuntu on a VirtualBox VM
 - `How to Install Ubuntu on VirtualBox? Here’s the Full Guide <https://www.minitool.com/partition-disk/how-to-install-ubuntu-on-virtualbox.html>`_
 - `How to install Ubuntu on VirtualBox <https://www.freecodecamp.org/news/how-to-install-ubuntu-with-oracle-virtualbox/>`_
 
-You can get the OS disk image (.iso) `from Ubuntu <https://ubuntu.com/download/desktop>`_ and mount it in the virtual machine for installation. Alternatively, `OSboxes provides a hard drive image <https://www.osboxes.org/virtualbox-images/>`_ with the OS already installed that you can install in your virtual machine. 
+You can get the OS disk image (.iso) `from Ubuntu <https://ubuntu.com/download/desktop>`_ and mount it in the virtual machine for installation. Alternatively, `OSboxes <https://www.osboxes.org/virtualbox-images/>`_ provides a hard drive image with the OS already installed that you can install in your virtual machine.
 
 A few notes:
     - Installing TESP will require building (compiling) software from source which is generally resource intensive. Giving the VM lots of compute resources (CPUs, memory) will be very helpful when installing (and running) TESP.
@@ -42,11 +42,11 @@ A few notes:
 
 Creating a WLS2 on Windows 10
 ------------------------------
-The Windows build procedure is very similar to that for Linux and Mac OSX, using MSYS2 tools that you'll execute from a MSYS2 command window. However, some further adjustments maybe necessary.
+The setup procedure for creating a WLS2 on Windows 10 very easy with these `instructions <https://learn.microsoft.com/en-us/windows/wsl/install>`_ . However, some further adjustments maybe necessary with permissions and proxy.
 
 Running TESP install script
 ---------------------------
-Once you have a working Ubuntu/Windows 10 installation, the TESP install process is straight-forward. From a command prompt do the following:
+Once you have a working Ubuntu/WLS2 on Windows installation, the TESP install process is straight-forward. From a command prompt, issue the following commands:
 
 .. code-block:: shell-session
    :caption: TESP installation commands for Ubuntu/WLS2 on Window10
@@ -88,22 +88,19 @@ TESP includes a small script that attempts to run a trivial command with each of
 
     ++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++
 
-    FNCS, installed
+    TESP software modules installed are:
 
-    HELICS, 3.4.0-main-g0b3d894e7 (2023-09-25)
+    TESP 1.3.0
+    FNCS installed
+    HELICS 3.4.0-main-g0b3d894e7 (2023-10-03)
+    HELICS Java, 3.4.0-main-g0b3d894e7 (2023-10-03)
 
-    HELICS Java, 3.4.0-main-g0b3d894e7 (2023-09-25)
-
-    GridLAB-D 5.1.0-19625 (7c599faa:develop) 64-bit LINUX RELEASE
-
+    GridLAB-D 5.1.0-19475 (4ea6109e:develop:Modified) 64-bit LINUX RELEASE
     EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
-
-    NS-3, installed
-
+    NS-3 installed
     Ipopt 3.13.2 (x86_64-pc-linux-gnu), ASL(20190605)
 
-    ++++++++++++++  TESP versions has been installed! That's all folks!  ++++++++++++++
-
+    ++++++++++++++  TESP has been installed! That's all folks!  ++++++++++++++
 
 If you see any messages indicating `command not found` if indicates one of the software packages did not install correctly.
 
@@ -212,30 +209,29 @@ Even this subset of examples can take several hours to run (roughly 4.9 hours in
 
 .. code-block:: text
 
-    Test Case(s)                     Time Taken
-    ===========================================
-    GridLAB-D Player/Recorder          0.070416
-    Loadshed - HELICS ns-3             2.843944
-    Loadshed - HELICS Python           1.296527
-    Loadshed - HELICS Java             2.225544
-    Loadshed - HELICS/EPlus           14.175762
-    Establishing baseline results     94.899277
-    Load shedding w/o comm network    98.244369
-    Load shedding over comm network  239.413551
-    PYPOWER - HELICS                   6.374153
-    Houston,TX Baseline build types 2726.467754
-    Generated EMS/IDF files - HELICS   1.535267
-    EnergyPlus EMS - HELICS           12.170665
-    Weather Agent - HELICS             6.189842
-    Houses                           254.118936
-    TE30 - HELICS Market             675.682123
-    TE30 - HELICS No Market          645.321853
-    4 Feeders - HELICS              1202.865312
-    Eplus w/Comm - HELICS            152.659505
-    No Comm Base - HELICS           4948.638870
-    Eplus Restaurant - HELICS       3494.475850
-    SGIP1c - HELICS                 5063.826888
-
+    Test Case(s)                       Time Taken
+    =============================================
+    GridLAB-D Player/Recorder            0.891868
+    Loadshed - HELICS ns-3               4.129848
+    Loadshed - HELICS Python             1.014755
+    Loadshed - HELICS Java               4.055216
+    Loadshed - HELICS/EPlus             11.930494
+    Establishing baseline results       70.629668
+    Load shedding w/o comm network      70.957783
+    Load shedding over comm network    368.501483
+    PYPOWER - HELICS                     5.283039
+    Houston,TX Baselines build types  1183.537504
+    Generated EMS/IDF files - HELICS     1.555593
+    EnergyPlus EMS - HELICS              6.210505
+    Weather Agent - HELICS               8.205831
+    Houses                             180.550353
+    TE30 - HELICS Market               297.990520
+    TE30 - HELICS No Market            301.580143
+    4 Feeders - HELICS                 824.673296
+    Eplus w/Comm - HELICS              432.880265
+    No Comm Base - HELICS             3289.462584
+    Eplus Restaurant - HELICS         2958.467020
+    SGIP1c - HELICS                   3087.110814
 
 Total runtime will depend on the compute resources available and each example run serially.
 
