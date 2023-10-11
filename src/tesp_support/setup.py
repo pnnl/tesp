@@ -53,7 +53,8 @@ setup(
         'console_scripts': [
             'download_data = tesp_support.api.data:download_data',
             'download_analysis = tesp_support.api.data:download_analysis',
-            'download_examples = tesp_support.api.data:download_examples'
+            'download_examples = tesp_support.api.data:download_examples',
+            'schedule_server = tesp_support.api.schedule_server:main'
         ]
     }
 )

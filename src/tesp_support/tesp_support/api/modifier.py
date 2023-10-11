@@ -99,9 +99,14 @@ class GLMModifier:
                     if 'parent' in instance.keys():
                         if instance['parent'] == name:
                             myArr.append(myName)
+            # TODO from-to relations
             for myName in myArr:
                 self.model.del_object(gld_type, name)
                 myObj.del_instance(myName)
+
+    def replace_object_type(self):
+        # TODO replace node with node or edge with edge classes
+        pass
 
     def add_object_attr(self, gld_type, name, item_name, item_value):
         return self.get_object(gld_type).set_item(name, item_name, item_value)

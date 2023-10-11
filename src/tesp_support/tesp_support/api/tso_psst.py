@@ -13,10 +13,10 @@ import helics
 from copy import deepcopy
 from datetime import datetime
 
-from tesp_support.api.parse_helpers import parse_mva
+from .parse_helpers import parse_mva
 from .tso_helpers import load_json_case, make_dictionary, dist_slack, print_m_case
 from .metrics_collector import MetricsStore, MetricsCollector
-from tesp_support.api.bench_profile import bench_profile
+from .bench_profile import bench_profile
 
 def make_generator_plants(ppc, renewables):
     gen = ppc['gen']

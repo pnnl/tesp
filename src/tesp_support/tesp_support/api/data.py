@@ -2,9 +2,12 @@
 # file: data.py
 """Path and Data functions for use within tesp_support.
 """
+
 from os import path
 from sys import platform
+import argparse
 from importlib_resources import files
+
 
 tesp_share = path.expandvars('$TESPDIR/data/')
 comm_path = tesp_share + 'comm/'
@@ -33,13 +36,47 @@ that is then copied to the correct system directory if no pre-existing file is f
 
 if platform == "linux" or platform == "linux2":
     # Linux
-    path = "~/.config/tesp"
+    t_path = "~/.config/tesp"
 elif platform == "darwin":
     # OS X
-    path = "~/.config/tesp"
+    t_path = "~/.config/tesp"
 elif platform == "win32":
     # Windows
-    path = "~/.config/tesp"
+    t_path = "~/.config/tesp"
+
+
+def arguments(description="", args=""):
+
+    parser = argparse.ArgumentParser(description=description)
+    if 'p' in args:
+        parser.add_argument('-p', '--port', nargs=1)
+    if 'i' in args:
+        parser.add_argument('-i', '--input_file', nargs=1)
+    if 'o' in args:
+        parser.add_argument('-o', '--output_file', nargs=1)
+    _args = parser.parse_args()
+
+    error = False
+    if 'i' in args:
+        if _args.input_file is None:
+            print('ERROR-> Input file missing')
+            error = True
+        elif not path.isfile(_args.input_file[0]):
+            print('ERROR-> Input file ' + _args.input_file[0] + ' not found')
+            error = True
+    if 'p' in args:
+        if _args.port is None:
+            print('ERROR-> Input port is missing')
+            error = True
+    if 'o' in args:
+        if _args.output_file[0] is None:
+            print('ERROR-> Output file missing')
+            error = True
+    if error:
+        print('ERROR-> ' + description + " not loaded")
+        print(parser.format_usage())
+
+    return error, _args
 
 
 def download_data():

@@ -116,7 +116,7 @@ def inner_substation_loop(metrics_root, with_market):
 
     # enable logging
     level = config['LogLevel']
-    enable_logging(level, 11)
+    enable_logging(level, 11, metrics_root)
 
     log.info('starting substation loop...')
     log.info('metrics root -> ' + metrics_root)

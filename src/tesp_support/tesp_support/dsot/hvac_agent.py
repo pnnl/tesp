@@ -239,7 +239,7 @@ class HVACDSOT:  # TODO: update class name
         self.cooling_COP = float(house_properties['cooling_COP'])
 
         self.latent_load_fraction = 0.3
-        self.latent_factor = [self.latent_load_fraction for t in self.TIME]
+        self.latent_factor = [self.latent_load_fraction for _ in self.TIME]
         self.cooling_design_temperature = 95.0
         self.design_cooling_setpoint = 75.0
         self.design_internal_gains = 167.09 * self.sqft ** 0.442
@@ -306,7 +306,6 @@ class HVACDSOT:  # TODO: update class name
         self.COP = 0.
         self.K1 = 0.
         self.K2 = 0.
-        # self.calc_1st_etp_model()  # approximate etp model to 1st order for DA
         self.eps = math.exp(-self.UA / (self.CM + self.CA) * 1.0)  # using 1 fixed for time constant
 
         self.ProfitMargin_intercept = 10  # hvac_dict['ProfitMargin_intercept']
@@ -322,7 +321,7 @@ class HVACDSOT:  # TODO: update class name
         else:
             self.ProfitMargin_slope = 9999  # just a large value to prevent errors when slider=0
 
-        ### Sanity checks:
+        # Sanity checks:
         if self.wakeup_start <= self.daylight_start:
             pass
         else:
@@ -755,7 +754,8 @@ class HVACDSOT:  # TODO: update class name
         # airchange_UA
         # UA = envelope_UA + airchange_UA
 
-        # TODO: handle dividing by zero differently? Only adding this since Rc, Rf, Rw, Rg, or Rd turned out to be zero for a substation in dsot_v3
+        # TODO: handle dividing by zero differently?
+        #  Only adding this since Rc, Rf, Rw, Rg, or Rd turned out to be zero for a substation in dsot_v3
         def div(x, y, def_val_if_zero_denom=0):
             return x / y if y != 0 else def_val_if_zero_denom
 
@@ -769,18 +769,18 @@ class HVACDSOT:  # TODO: update class name
         self.mass_internal_gain_fraction = MIGF
         self.mass_solar_gain_fraction = MSGF
 
-        self.design_cooling_capacity = (1.0 + self.over_sizing_factor) * (1.0 + self.latent_load_fraction) * (
-                self.UA * (
-                self.cooling_design_temperature - self.design_cooling_setpoint) + self.design_internal_gains + (
-                        self.design_peak_solar * self.solar_heatgain_factor))
+        self.design_cooling_capacity = ((1.0 + self.over_sizing_factor) * (1.0 + self.latent_load_fraction) *
+                                        (self.UA * (self.cooling_design_temperature - self.design_cooling_setpoint) +
+                                         self.design_internal_gains +
+                                         (self.design_peak_solar * self.solar_heatgain_factor)))
         round_value = self.design_cooling_capacity / 6000.0
         self.design_cooling_capacity = math.ceil(round_value) * 6000.0
 
         if self.heating_system_type == 'HEAT_PUMP':
             self.design_heating_capacity = self.design_cooling_capacity
         else:
-            self.design_heating_capacity = (1.0 + self.over_sizing_factor) * (self.UA) * (
-                    self.design_heating_setpoint - self.heating_design_temperature)
+            self.design_heating_capacity = ((1.0 + self.over_sizing_factor) * self.UA *
+                                            (self.design_heating_setpoint - self.heating_design_temperature))
             round_value = self.design_heating_capacity / 10000.0
             self.design_heating_capacity = math.ceil(round_value) * 10000.0
 
@@ -978,11 +978,11 @@ class HVACDSOT:  # TODO: update class name
         cosaz = cos(az)
         sinhr = sin(hr_ang)
         coshr = cos(hr_ang)
-        cos_incident = sindecl * sinlat * cosslope \
-                       - sindecl * coslat * sinslope * cosaz \
-                       + cosdecl * coslat * cosslope * coshr \
-                       + cosdecl * sinlat * sinslope * cosaz * coshr \
-                       + cosdecl * sinslope * sinaz * sinhr
+        cos_incident = (sindecl * sinlat * cosslope -
+                        sindecl * coslat * sinslope * cosaz +
+                        cosdecl * coslat * cosslope * coshr +
+                        cosdecl * sinlat * sinslope * cosaz * coshr +
+                        cosdecl * sinslope * sinaz * sinhr)
         if cos_incident < 0:
             cos_incident = 0
         return dnr_i * cos_incident + dhr_i
@@ -1470,15 +1470,12 @@ class HVACDSOT:  # TODO: update class name
         time = np.linspace(0, T, num=10)  # [0,topt-dt, topt, topt+dt]
         # TODO: this needs to be more generic, like a function of slider
         npt = 5
-        self.temp_curve = [0 for i in range(npt)]
-        for itemp in range(npt):
-            # self.temp_curve = [self.temp_room[0]-1.0*self.slider,self.temp_room[0]-0.5*self.slider,self.temp_room[0],self.temp_room[0]+0.5*self.slider,self.temp_room[0]+1.0*self.slider]
-            self.temp_curve[itemp] = Topt_DA + (itemp - 2) / 4.0 * self.slider
-        # for it in range(5):
-        #     if ((Tset_array[it] > self.temp_max_cool or Tset_array[it] < self.temp_min_cool) and self.thermostat_mode == "Cooling") or \
-        #         ((Tset_array[it] > self.temp_max_heat or Tset_array[it] < self.temp_min_heat) and self.thermostat_mode == "Heating"):
-        #         Tset_array.pop(it)
-        self.quantity_curve = [0 for i in self.temp_curve]
+        self.temp_curve = []
+        self.quantity_curve = []
+        for i in range(npt):
+            self.temp_curve.append(Topt_DA + (i - 2) / 4.0 * self.slider)
+            self.quantity_curve.append(0.0)
+
         # if self.name == "R4_12_47_1_tn_9_hse_1":
         #     print("RT bidding",self.name,sim_time,self.hvac_on,self.hvac_kw,self.thermostat_mode)
         #     print(self.minute, self.temp_room[0], self.temp_da_prev, Topt_DA)
@@ -1486,7 +1483,7 @@ class HVACDSOT:  # TODO: update class name
         #     print(self.outside_air_temperature,self.air_temp,self.mass_temp)
         #     print(Qs,Qi,QM,Qa_OFF,Qa_ON)
 
-        for itemp in range(len(self.temp_curve)):
+        for itemp in range(npt):
             x = np.zeros([2, 1])
             x[0] = self.air_temp
             x[1] = self.mass_temp
@@ -1494,9 +1491,11 @@ class HVACDSOT:  # TODO: update class name
             Q_min = 0.0
 
             # self.temp_curve[0] = self.air_temp
-            if (self.thermostat_mode == "Cooling" and self.hvac_on) or (self.thermostat_mode != "Cooling" and not self.hvac_on):
+            if ((self.thermostat_mode == "Cooling" and self.hvac_on) or
+                    (self.thermostat_mode != "Cooling" and not self.hvac_on)):
                 self.temp_curve[0] = self.air_temp + self.deadband / 2.0
-            elif (self.thermostat_mode != "Cooling" and self.hvac_on) or (self.thermostat_mode == "Cooling" and not self.hvac_on):
+            elif ((self.thermostat_mode != "Cooling" and self.hvac_on) or
+                  (self.thermostat_mode == "Cooling" and not self.hvac_on)):
                 self.temp_curve[0] = self.air_temp - self.deadband / 2.0
             hvac_on_tmp = self.hvac_on
             last_T_off = 0
@@ -1525,8 +1524,10 @@ class HVACDSOT:  # TODO: update class name
                     # last_T_on = time[itime]
                     Q_total += 1 / 10 * self.hvac_kw
                     # self.quantity_curve[itime] = (time[itime]-last_T_off) * self.hvac_kw / T
-                    if (x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
-                            (x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
+                    if ((x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and
+                         self.thermostat_mode == 'Cooling') or
+                            (x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and
+                             self.thermostat_mode == 'Heating')):
                         hvac_on_tmp = False
                 else:
                     AxB = AEx + self.B_ETP_OFF
@@ -1541,8 +1542,10 @@ class HVACDSOT:  # TODO: update class name
                     #     self.temp_curve[itime] = x[0][0] + self.deadband / 2.0
                     # self.quantity_curve[itime] = last_T_on * self.hvac_kw / T
                     # last_T_off = time[itime]
-                    if (x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and self.thermostat_mode == 'Cooling') or \
-                            (x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and self.thermostat_mode == 'Heating'):
+                    if ((x[0][0] > self.temp_curve[itemp] + self.deadband / 2.0 and
+                         self.thermostat_mode == 'Cooling') or
+                            (x[0][0] < self.temp_curve[itemp] - self.deadband / 2.0 and
+                             self.thermostat_mode == 'Heating')):
                         hvac_on_tmp = True
                 # self.temp_curve[itime] = x[0][0]
                 # if self.thermostat_mode == "Cooling":
@@ -1679,7 +1682,8 @@ class HVACDSOT:  # TODO: update class name
             else:
                 t_pre = temp_room[t - 1]
             temp1 = ((temp_room[t] - self.eps * t_pre) / (1 - self.eps)) - self.temperature_forecast[t]
-            temp2 = temp1*self.UA - self.internalgain_forecast[t] - self.solargain_forecast[t] * self.solar_heatgain_factor
+            temp2 = (temp1 * self.UA - self.internalgain_forecast[t] -
+                     self.solargain_forecast[t] * self.solar_heatgain_factor)
             quant = temp2 / (cop_adj[t] * 3412.1416331279 / self.latent_factor[t])
             quant_cool = max(quant, 0)
 
@@ -1691,7 +1695,8 @@ class HVACDSOT:  # TODO: update class name
             else:
                 t_pre = temp_room[t - 1]
             temp1 = ((temp_room[t] - self.eps * t_pre) / (1 - self.eps)) - self.temperature_forecast[t]
-            temp2 = temp1*self.UA - self.internalgain_forecast[t] - self.solargain_forecast[t] * self.solar_heatgain_factor
+            temp2 = (temp1 * self.UA - self.internalgain_forecast[t] -
+                     self.solargain_forecast[t] * self.solar_heatgain_factor)
             quant = temp2 / (cop_adj[t] * 3412.1416331279 / self.latent_factor[t])
             quant_heat = max(quant, 0)
 
@@ -1709,7 +1714,8 @@ class HVACDSOT:  # TODO: update class name
     def formulate_bid_da(self):  # , moh2, hod2, dow2):
         """ Formulate windowLength hours 4 points PQ bid curves for the DA market
 
-        Function calls DA_optimal_quantities to obtain the optimal quantities for the DA market. With the quantities, a 4 point bids are formulated for each hour.
+        Function calls DA_optimal_quantities to obtain the optimal quantities for the DA market.
+        With the quantities, a 4 point bids are formulated for each hour.
 
         Returns
             BID (float) (windowLength X 4 X 2): DA bids to be sent to the retail DA market
@@ -1718,7 +1724,9 @@ class HVACDSOT:  # TODO: update class name
         # save the previous bid quantity for interpolation use
         self.Qopt_da_prev = self.bid_da[0][1][0]
         self.price_forecast_0 = self.price_forecast[0]
-        BID = [[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] for _ in self.TIME]
+        BID = []
+        for _ in self.TIME:
+            BID.append([[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]])
         if self.heating_system_type != 'HEAT_PUMP' and self.thermostat_mode == 'Heating':
             self.bid_da = BID
             return self.bid_da
@@ -1734,8 +1742,11 @@ class HVACDSOT:  # TODO: update class name
         P = 1  # self.P
         Q = 0  # self.Q
 
-        CurveSlope = [0 for _ in self.TIME]
-        yIntercept = [-1 for _ in self.TIME]
+        CurveSlope = []
+        yIntercept = []
+        for _ in self.TIME:
+            CurveSlope.append(0.0)
+            yIntercept.append(-1.0)
 
         delta_DA_price = max(self.price_forecast) - min(self.price_forecast)
         for t in self.TIME:
@@ -1916,32 +1927,34 @@ class HVACDSOT:  # TODO: update class name
     def con_rule_eq1(self, m, t):  # initialize SOHC state
         if self.thermostat_mode == 'Cooling':
             if t == 0:
-                return m.temp_room[0] == self.eps * self.temp_room_init + (1 - self.eps) * (
-                        self.temperature_forecast[0] + (
-                        (-self.cooling_cop_adj[0] * 0.98 * m.quan_hvac[0] * 3412.1416331279 / self.latent_factor[0] +
-                         self.internalgain_forecast[0] +
-                         self.solargain_forecast[0] * self.solar_heatgain_factor) / self.UA))  # Initial SOHC state
+                # Initial SOHC state
+                return m.temp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
+                                          (self.temperature_forecast[0] +
+                                           ((-self.cooling_cop_adj[0] * 0.98 * m.quan_hvac[0] *
+                                             3412.1416331279 / self.latent_factor[0] + self.internalgain_forecast[0] +
+                                             self.solargain_forecast[0] * self.solar_heatgain_factor) / self.UA)))
             else:
                 # update SOHC
-                return m.temp_room[t] == self.eps * m.temp_room[t - 1] + (1 - self.eps) * (
-                        self.temperature_forecast[t] + (
-                        (-self.cooling_cop_adj[t] * 0.98 * m.quan_hvac[t] * 3412.1416331279 / self.latent_factor[t] +
-                         self.internalgain_forecast[t] +
-                         self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA))
+                return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + (1 - self.eps) *
+                                          (self.temperature_forecast[t] +
+                                           ((-self.cooling_cop_adj[t] * 0.98 * m.quan_hvac[t] *
+                                             3412.1416331279 / self.latent_factor[t] + self.internalgain_forecast[t] +
+                                             self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA)))
         else:
             if t == 0:
-                return m.temp_room[0] == self.eps * self.temp_room_init + (1 - self.eps) * (
-                        self.temperature_forecast[0] + (
-                        (self.heating_cop_adj[0] * 1.02 * m.quan_hvac[0] * 3412.1416331279 / self.latent_factor[0] +
-                         self.internalgain_forecast[0] + self.solargain_forecast[0] *
-                         self.solar_heatgain_factor) / self.UA))  # Initial SOHC state
+                # Initial SOHC state
+                return m.temp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
+                                          (self.temperature_forecast[0] +
+                                           ((self.heating_cop_adj[0] * 1.02 * m.quan_hvac[0] *
+                                             3412.1416331279 / self.latent_factor[0] + self.internalgain_forecast[0] +
+                                             self.solargain_forecast[0] * self.solar_heatgain_factor) / self.UA)))
             else:
                 # update SOHC
-                return m.temp_room[t] == self.eps * m.temp_room[t - 1] + (1 - self.eps) * (
-                        self.temperature_forecast[t] + (
-                        (self.heating_cop_adj[t] * 1.02 * m.quan_hvac[t] * 3412.1416331279 / self.latent_factor[t] +
-                         self.internalgain_forecast[t] +
-                         self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA))
+                return m.temp_room[t] == (self.eps * m.temp_room[t - 1] + (1 - self.eps) *
+                                          (self.temperature_forecast[t] +
+                                           ((self.heating_cop_adj[t] * 1.02 * m.quan_hvac[t] *
+                                             3412.1416331279 / self.latent_factor[t] + self.internalgain_forecast[t] +
+                                             self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA)))
 
     def temp_bound_rule(self, m, t):
         if self.thermostat_mode == 'Cooling':
@@ -1952,7 +1965,8 @@ class HVACDSOT:  # TODO: update class name
                     self.temp_desired_48hour_heat[t] + self.range_high_heat)
 
     def DA_optimal_quantities(self):
-        """ Generates Day Ahead optimized quantities for Water Heater according to the forecasted prices and water draw schedule, called by DA_formulate_bid function
+        """ Generates Day Ahead optimized quantities for Water Heater according to the forecasted prices
+        and water draw schedule, called by DA_formulate_bid function
 
         Returns:
             Quantity (list) (1 x windowLength): Optimized quantities for each hour in the DA bidding horizon, in kWh
@@ -1996,47 +2010,53 @@ class HVACDSOT:  # TODO: update class name
             # classmethod dicts(name, indexs, lowBound=None, upBound=None, cat=0, indexStart=[])
 
             if self.thermostat_mode == 'Cooling':
-                # to avoid problem while warming up and gridlabd is heating instead of cooling
+                # to avoid problem while warming up and GridLAB-D is heating instead of cooling
                 if self.hvac_kw < 3.0:
                     self.hvac_kw = 3.0
                 # if self.hvac_kw>6.0:
                 #    self.hvac_kw = 6.0
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, 0, self.hvac_kw)
-                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME, self.temp_min_cool, self.temp_max_cool)
+                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME,
+                                                  self.temp_min_cool, self.temp_max_cool)
 
-                prob += pulp.lpSum((self.price_forecast[t] * quan_hvac[t] * self.slider) + (
-                        ((2 * self.range_high_cool * self.price_std_dev) / self.temp_delta) * (
-                        temp_room[t] - self.temp_desired_48hour_cool[t])) + (
-                                           ((2 * self.range_low_cool * self.price_std_dev) / self.temp_delta) * (
-                                           self.temp_desired_48hour_cool[t] - temp_room[t])) for t in self.TIME)
+                prob += (pulp.lpSum((self.price_forecast[t] * quan_hvac[t] * self.slider) +
+                                    (((2 * self.range_high_cool * self.price_std_dev) / self.temp_delta) *
+                                     (temp_room[t] - self.temp_desired_48hour_cool[t])) +
+                                    (((2 * self.range_low_cool * self.price_std_dev) / self.temp_delta) *
+                                     (self.temp_desired_48hour_cool[t] - temp_room[t])) for t in self.TIME))
             else:
                 quan_hvac = pulp.LpVariable.dicts("hvac_quantity", self.TIME, -self.hvac_kw, 0)
-                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME, self.temp_min_heat, self.temp_max_heat)
-                prob += pulp.lpSum((self.price_forecast[t] * quan_hvac[t]) + (
-                        ((-2 * self.range_high_heat * self.price_std_dev) / self.temp_delta) * (
-                        temp_room[t] - self.temp_desired_48hour_heat[t])) + (
-                                           ((-2 * self.range_low_heat * self.price_std_dev) / self.temp_delta) * (
-                                           self.temp_desired_48hour_heat[t] - temp_room[t])) for t in self.TIME)
+                temp_room = pulp.LpVariable.dicts("Temparature_room", self.TIME,
+                                                  self.temp_min_heat, self.temp_max_heat)
+                prob += (pulp.lpSum((self.price_forecast[t] * quan_hvac[t]) +
+                                    (((-2 * self.range_high_heat * self.price_std_dev) / self.temp_delta) *
+                                     (temp_room[t] - self.temp_desired_48hour_heat[t])) +
+                                    (((-2 * self.range_low_heat * self.price_std_dev) / self.temp_delta) *
+                                     (self.temp_desired_48hour_heat[t] - temp_room[t])) for t in self.TIME))
             # else:
             #    log.log('Thermostat mode is not defined.')
 
             # Constraints
-            prob += temp_room[0] == self.eps * self.temp_room_init + (1 - self.eps) * (
-                    self.temp_outside_init + (
-                    (-self.cooling_cop_adj[0] * quan_hvac[0] * 3412.1416331279 / self.latent_factor[0] +
-                     self.internalgain_forecast[0] +
-                     self.solargain_forecast[0] * self.solar_heatgain_factor) / self.UA))  # Initial SOHC state
+            prob += temp_room[0] == (self.eps * self.temp_room_init + (1 - self.eps) *
+                                     (self.temp_outside_init +
+                                      ((-self.cooling_cop_adj[0] * quan_hvac[0] *
+                                        3412.1416331279 / self.latent_factor[0] +
+                                        self.internalgain_forecast[0] + self.solargain_forecast[0] *
+                                        self.solar_heatgain_factor) / self.UA)))  # Initial SOHC state
 
             for t in range(1, self.windowLength):  # Update SOHC
-                prob += temp_room[t] == self.eps * temp_room[t - 1] + (1 - self.eps) * (
-                        self.temperature_forecast[t] + (
-                        (-self.cooling_cop_adj[t] * quan_hvac[t] * 3412.1416331279 / self.latent_factor[t] +
-                         self.internalgain_forecast[t] +
-                         self.solargain_forecast[t] * self.solar_heatgain_factor) / self.UA))
+                prob += temp_room[t] == (self.eps * temp_room[t - 1] + (1 - self.eps) *
+                                         (self.temperature_forecast[t] +
+                                          ((-self.cooling_cop_adj[t] * quan_hvac[t] *
+                                            3412.1416331279 / self.latent_factor[t] +
+                                            self.internalgain_forecast[t] + self.solargain_forecast[t] *
+                                            self.solar_heatgain_factor) / self.UA)))
 
             prob.solve()  # Solve optimization for one HVAC
 
-            Quantity = [0 for i in self.TIME]
+            Quantity = []
+            for _ in self.TIME:
+                Quantity.append(0)
             TOL = 0.00001  # Tolerance for checking bid
             for t in self.TIME:
                 self.temp_room[t] = temp_room[t].varValue
@@ -2051,16 +2071,6 @@ class HVACDSOT:  # TODO: update class name
         """
         return self.name
 
-    def calc_1st_etp_model(self):
-        """ Uses ETP second order model to obtain a first order model
-
-        """
-        T = (self.bid_delay + self.period) / 3600.0  # 300
-        self.eps = math.exp(-self.UA / (self.CM + self.CA) * 1.0)  # using 1 fixed for time constant
-        self.COP = 3.0
-        self.K1 = 5.0
-        self.K2 = 3.0
-
     def set_da_cleared_quantity(self, BID, PRICE):
         """ Convert the 4 point bids to a quantity with the known price
 
@@ -2073,20 +2083,16 @@ class HVACDSOT:  # TODO: update class name
         """
         P = 1
         Q = 0
+        m = 0
         # TODO: these equations might need revising
         if PRICE >= BID[1][P]:
-            if BID[0][P] == BID[1][P]:
-                m = 0
-            else:
+            if BID[0][P] != BID[1][P]:
                 m = (BID[0][Q] - BID[1][Q]) / (BID[0][P] - BID[1][P])
             cleared_da_quantity = BID[1][Q] + m * (PRICE - BID[1][P])
         elif PRICE >= BID[2][P]:
-            m = 0
             cleared_da_quantity = BID[2][Q]
         else:  # PRICE <= BID[2][P]
-            if BID[2][P] == BID[3][P]:
-                m = 0
-            else:
+            if BID[2][P] != BID[3][P]:
                 m = (BID[2][Q] - BID[3][Q]) / (BID[2][P] - BID[3][P])
             cleared_da_quantity = BID[2][Q] + m * (PRICE - BID[2][P])
         if cleared_da_quantity >= BID[3][Q]:
@@ -2195,7 +2201,7 @@ def test():
     # ## Supply these values (into WaterHeaterDSOT) when using the water
     # ## heater agent in the simulation.
     # model_diag_level = 11
-    # helpers.enable_logging('DEBUG', model_diag_level)
+    # helpers.enable_logging('DEBUG', model_diag_level, 'hvac_agent')
     start_time = '2016-08-12 05:59:00'
     time_format = '%Y-%m-%d %H:%M:%S'
     sim_time = datetime.strptime(start_time, time_format)

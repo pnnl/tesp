@@ -26,7 +26,7 @@ from tesp_support.api.data import feeders_path
 # sys.path.append('../tesp_api')
 
 # Setting a few environment variables so the imports work smoothly
-#   If you're working in a REAL TESP install you don't have to do this.
+# If you're working in a REAL TESP install you don't have to do this.
 
 # Setting up logging
 logger = logging.getLogger(__name__)
@@ -303,12 +303,12 @@ def _auto_run(args):
     glmMod.write_model(args.output_file)
 
 
-def test():
+def demo():
     # TDH: This slightly complex mess allows lower importance messages
     # to be sent to the log file and ERROR messages to additionally
     # be sent to the console as well. Thus, when bad things happen
     # the user will get an error message in both places which,
-    # hopefully, will aid in trouble-shooting.
+    # hopefully, will aid in troubleshooting.
     fileHandle = logging.FileHandler("feeder_generator.log", mode='w')
     fileHandle.setLevel(logging.DEBUG)
     streamHandle = logging.StreamHandler(sys.stdout)
@@ -329,9 +329,9 @@ def test():
                         '--output_file',
                         nargs='?',
                         default='modified_R1-12.47-1.glm')
-    _args = parser.parse_args([])
+    _args = parser.parse_args()
     _auto_run(_args)
 
 
 if __name__ == '__main__':
-    test()
+    demo()
