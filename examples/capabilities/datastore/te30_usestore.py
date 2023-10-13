@@ -10,7 +10,6 @@ import tesp_support.api.store as store
 import os
 import pprint
 import matplotlib.pyplot as plt
-from datetime import datetime as dt
 import pandas as pd
 
 # Setting up pretty printing, mostly for debugging.
@@ -58,10 +57,7 @@ def process_results(case_name):
     # Checking data type for timestamp and convert if necessary
     weather_time = weather_data["timestamp"]
     if isinstance(weather_time.iloc[0], str):
-        # For some reason, Pandas is not a happy camper with the timezone information
-        # cutting it out since it is not relevant for this example
-        weather_time = weather_time.str[:-4]
-        weather_time = pd.to_datetime(weather_time, format="%Y-%m-%d %H:%M:%S")
+        weather_time = pd.to_datetime(weather_time, format="%Y-%m-%d %H:%M:%S PDT")
     # And convert the data as strings to numeric values
     if isinstance(weather_data["solar_flux"].iloc[0], str):
         solar_data = pd.to_numeric(weather_data["solar_flux"])
