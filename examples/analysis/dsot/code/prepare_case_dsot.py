@@ -20,7 +20,7 @@ import tesp_support.original.copperplate_feeder_glm as cp_FG
 import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
-import tesp_support.dsot.residential_feeder_glm as res_FG
+import tesp_support.dsot.residential_feeder_glm_RECS_inputs as res_FG # Change to my feeder
 import prep_substation_dsot as prep
 
 
@@ -234,6 +234,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sim['BulkpowerBus'] = dso_val['bus_number']
         # case_config['BackboneFiles']['RandomSeed'] = dso_val['random_seed']
         sim['DSO_type'] = dso_val['utility_type']
+        sim['state'] = dso_val['state']
+        sim['income_level'] = dso_val['income_level']
         sim['rooftop_pv_rating_MW'] = dso_val['rooftop_pv_rating_MW']
         sim['scaling_factor'] = dso_val['scaling_factor']
         sim['serverPort'] = 5150 + (int(bus) // 20)
