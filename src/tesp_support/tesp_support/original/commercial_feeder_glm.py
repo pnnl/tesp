@@ -10,7 +10,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 from tesp_support.api.helpers import gld_strict_name
-import tesp_support.dsot.residential_feeder_glm as res_FG
+import tesp_support.dsot.residential_feeder_glm_RECS_inputs as res_FG
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
