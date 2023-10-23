@@ -100,11 +100,14 @@ def get_residential_metadata(recs_data_file,dsot_metadata_file,output_file,sampl
                         (recs['UATYP10']==hd) & 
                         (recs['Income_cat']==il))
                     ])
-                    cz_bin_size = len(recs.loc[
-                        ((recs['IECC_climate_code']==climate_zone) & 
-                        (recs['UATYP10']==hd) & 
-                        (recs['Income_cat']==il))
-                    ])
+                    if climate_zone == None:
+                        cz_bin_size = 0
+                    else:
+                        cz_bin_size = len(recs.loc[
+                            ((recs['IECC_climate_code']==climate_zone) & 
+                            (recs['UATYP10']==hd) & 
+                            (recs['Income_cat']==il))
+                        ])
                     if il=='Low':
                         il_bin_size = len(recs.loc[
                             ((recs['state_postal']==st) & 
@@ -263,4 +266,4 @@ def get_residential_metadata(recs_data_file,dsot_metadata_file,output_file,sampl
         json.dump(metadata,outfile,indent=4)
 
 if __name__ == "__main__":
-    get_residential_metadata('RECSwIncomeLvl.csv','DSOT_residential_metadata.json','residential_metadata.json',{'state':['WA'],'housing_density':['R','U'],'income_level':['Middle','Upper','Low']},bin_size_thres=100,climate_zone='4C')
+    get_residential_metadata('RECSwIncomeLvl.csv','DSOT_residential_metadata.json','../../analysis/dsot/data/residential_metadata.json',{'state':['TX'],'housing_density':['R','U','C'],'income_level':['Middle','Upper','Low']},bin_size_thres=40,climate_zone='4C')
