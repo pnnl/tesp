@@ -300,7 +300,7 @@
   "hvacSetPoint": "hvac_setpt.json",
   "dsoQuadraticFile": "8_DSO_quadratic_curves.json",
   "dsoCommBldgFile": "DSOT_commercial_metadata.json",
-  "dsoResBldgFile": "DSOT_residential_metadata.json",
+  "dsoResBldgFile": "residential_metadata.json",
   "dsoBattFile": "DSOT_battery_metadata.json",
   "dsoEvModelFile": "DSOT_ev_model_metadata.json",
   "dsoEvDrivingFile": "DSOT_ev_driving_metadata.csv",
