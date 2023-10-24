@@ -115,6 +115,9 @@ inverter_efficiency = 0.97
 battery_capacity = 13500
 round_trip_efficiency = 0.86
 
+dso_type = ''
+income_level = ''
+state = ''
 
 # EV population functions
 def process_nhts_data(data_file):
@@ -329,7 +332,7 @@ def getDsoThermalTable(income):
     vintage_mat = res_bldg_metadata['housing_vintage'][state][dso_type][income]
     df = pd.DataFrame(vintage_mat)
     # df = df.transpose()
-    dsoThermalPct = np.zeros(shape=(3, 8))  # initialize array
+    dsoThermalPct = np.zeros(shape=(3, 9))  # initialize array
     dsoThermalPct[0] = (df['single_family_detached'] + df['single_family_attached']).values
     dsoThermalPct[1] = (df['apartment_2_4_units'] + df['apartment_5_units']).values
     dsoThermalPct[2] = (df['mobile_home']).values
@@ -1498,6 +1501,7 @@ def identify_xfmr_houses(model, h, t, seg_loads, avgHouse, rgn):
                             total_apt += nhouse
                         else:
                             total_mh += nhouse
+                        node += "_" + income_level[inc_lev] # adding income level to the house name
                         house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti, inc_lev]
     print(total_small, 'small loads totaling', '{:.2f}'.format(total_small_kva), 'kva')
     print(total_houses, 'houses on', len(house_nodes), 'transformers, [SF,APT,MH]=', total_sf, total_apt, total_mh)
@@ -1863,16 +1867,17 @@ def write_houses(basenode, op, vnom):
         heat_rand = np.random.uniform(0, 1)
         cool_rand = np.random.uniform(0, 1)
         house_fuel_type = 'electric'
+        heat_pump_prob = res_bldg_metadata['space_heating_type'][state][dso_type][income][fa_bldg][vint]['gas_heating'] + res_bldg_metadata['space_heating_type'][state][dso_type][income][fa_bldg][vint]['heat_pump']
+        # electric_cooling_percentage should be defined here only
+        electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][dso_type][income][fa_bldg][vint]
         if heat_rand <= res_bldg_metadata['space_heating_type'][state][dso_type][income][fa_bldg][vint]['gas_heating']:
             house_fuel_type = 'gas'
             print('  heating_system_type GAS;', file=op)
-            # electric_cooling_percentage should be defined here only
-            electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][dso_type][income][fa_bldg][vint]
             if cool_rand <= electric_cooling_percentage:
                 print('  cooling_system_type ELECTRIC;', file=op)
             else:
                 print('  cooling_system_type NONE;', file=op)
-        elif heat_rand <= res_bldg_metadata['space_heating_type'][state][dso_type][income][fa_bldg][vint]['gas_heating'] + res_bldg_metadata['space_heating_type'][state][dso_type][income_level][fa_bldg][vint]['heat_pump']:
+        elif heat_rand <= heat_pump_prob:
             print('  heating_system_type HEAT_PUMP;', file=op)
             print('  heating_COP', '{:.1f}'.format(h_COP) + ';', file=op)
             print('  cooling_system_type ELECTRIC;', file=op)
@@ -3064,12 +3069,9 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     latitude = float(config['WeatherPrep']['Latitude'])
     longitude = float(config['WeatherPrep']['Longitude'])
     time_zone_offset = float(config['WeatherPrep']['TimeZoneOffset'])
-    # TODO: Need to add this to config file and change prepare_case_dsot.py
-    state = config['SimulationConfig']['State']
-    # TODO: Need to add this to config file and change prepare_case_dsot.py
+    state = config['SimulationConfig']['state']
     dso_type = config['SimulationConfig']['DSO_type']
-    # TODO: Need to add this to config file and determine if 'SimulationConfig' is the right key
-    income_level = ['SimulationConfig']['IncomeLevel'] # Should be a list of income levels for the DSO being tested
+    income_level = config['SimulationConfig']['income_level'] # Should be a list of income levels for the DSO being tested
     gld_scaling_factor = config['SimulationConfig']['scaling_factor']
     pv_rating_MW = config['SimulationConfig']['rooftop_pv_rating_MW']
     res_bldg_metadata = config['BuildingPrep']['ResBldgMetaData']
