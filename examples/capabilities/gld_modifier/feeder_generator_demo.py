@@ -181,7 +181,6 @@ def _auto_run(args):
     else:
         print(f'\t"Rroof" for house {house_name} is undefined.')
     print(f"\tDeleting paramter Rroof from house {house_name}")
-    # glmMod.del_object_attr('house', house_name, 'Rroof')
     house_to_edit["Rroof"] = None
     if "Rroof" in house_to_edit.keys():
         print(f'\tCurrent "Rroof" is {house_to_edit["Rroof"]}')
