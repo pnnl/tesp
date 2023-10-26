@@ -78,9 +78,12 @@ def process_results(case_name):
     # Just going to be looking at data from a single house
     houseA11_inv = inverter_data.loc[(inverter_data["name"] == b"inv_F1_house_A11")]
     inverter_time = houseA11_inv["date"]
+    # If the date is typed as a string instead of a datetime object, we need to
+    # convert it to a datetime object to allow for indexing.
     if isinstance(inverter_time.iloc[0], str):
         inverter_time = inverter_time.str[:-4]
         inverter_time = pd.to_datetime(inverter_time, format="%Y-%m-%d %H:%M:%S")
+    # Making a new DataFrame for convenience
     inverter_data = pd.concat([inverter_time.T, houseA11_inv["real_power_avg"]], axis=1)
     inverter_data = inverter_data.set_index("date")
 
