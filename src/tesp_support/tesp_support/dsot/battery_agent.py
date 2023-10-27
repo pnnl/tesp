@@ -641,7 +641,7 @@ def test():
     # Uncomment for testing logging functionality.
     # Supply these values when using the battery agent in the simulation.
     # model_diag_level = 11
-    # helpers.enable_logging('DEBUG', model_diag_level)
+    # helpers.enable_logging('DEBUG', model_diag_level, 'battery_agent')
     sim_time = '2019-11-20 07:47:00'
 
     B_obj1 = BatteryDSOT(agent, glm, 'test', 11, sim_time, 'ipopt')  # make object; add model_diag_level and sim_time

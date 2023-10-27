@@ -34,6 +34,7 @@ from .retail_market import RetailMarket
 # import multiprocessing as mp
 NUM_CORE = 1
 
+
 def register_federate(json_filename):
     print('register_federate -->', json_filename, flush=True)
     fed = h.helicsCreateCombinationFederateFromConfig(json_filename)
@@ -63,10 +64,12 @@ def register_federate(json_filename):
 
     return fed, federate_name
 
+
 def destroy_federate(fed):
     h.helicsFederateDisconnect(fed)
     h.helicsFederateFree(fed)
     h.helicsCloseLibrary()
+
 
 def worker(arg):
     # timing(arg.__class__.__name__, True)
@@ -74,6 +77,7 @@ def worker(arg):
     # timing(arg.__class__.__name__, False)
     # return batt_da_solve(arg.DA_optimal_quantities_model())
     return arg.DA_optimal_quantities()
+
 
 def inner_substation_loop(configfile, metrics_root, with_market):
     """ Helper function that initializes and runs the DSOT agents
@@ -124,7 +128,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
 
     # enable logging
     level = config['LogLevel']
-    enable_logging(level, 11)
+    enable_logging(level, 11, metrics_root)
 
     log.info('starting substation loop...')
     log.info('config file -> ' + configfile)
@@ -572,7 +576,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     billing_set_defaults = True
 
     # interval for metrics recording
-    # HACK: gld will be typically be on an (even) hour, so we will offset our frequency by 30 minutes (should be on the .5 hour)
+    # HACK: gld will be typically be on an (even) hour,
+    # so we will offset our frequency by 30 minutes (should be on the .5 hour)
     metrics_record_interval = 7200  # will actually be x2 after first round
     tnext_write_metrics_cnt = 1
     tnext_write_metrics = metrics_record_interval + 1800
@@ -620,9 +625,8 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     gld_load_scaled_mean = 0.0
     retail_day_ahead_diff_observed = 0.0
     timing(proc[0], False)
-
     timing(proc[1], True)
-    Quanity_cleared_RT_previous = np.array([0, 0, 0])  ### For three agents
+
     while time_granted < simulation_duration:
         # determine the next HELICS time
         timing(proc[10], True)
@@ -833,7 +837,9 @@ def inner_substation_loop(configfile, metrics_root, with_market):
                 retail_cleared_quantity_diff_observed / 1000.0) + "MW")
             log.info('<-------- Real Time Bid Formulation Done -------> ')
 
-            if abs(retail_day_ahead_diff_observed) > 0.0:  # for the first step of real-time bid, we have recieved the correction from the zeroth hour day-ahead, now we set it to zero so it doesn't keep adding
+            # for the first step of real-time bid, we have received the correction from the zeroth hour day-ahead,
+            # now we set it to zero, so it doesn't keep adding
+            if abs(retail_day_ahead_diff_observed) > 0.0:
                 retail_day_ahead_diff_observed = 0.0
 
             # log.info("Real-time scaled flexible bid min, max " + str(min(retail_market_obj.curve_buyer_RT.quantities)) + " , " + str(max(retail_market_obj.curve_buyer_RT.quantities)))
@@ -1607,6 +1613,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     print(wall_time, sep=', ', file=op, flush=True)
     op.close()
     destroy_federate(fed)
+
 
 def substation_loop(configfile, metrics_root, with_market=True):
     """ Wrapper for *inner_substation_loop*

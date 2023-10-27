@@ -3,7 +3,7 @@
 Created on Thu Feb  4 07:01:52 2021
 
 The purpose of this module is to provide some
-miscellaneous funtionality for data pre-processing.
+miscellaneous functionality for data pre-processing.
 This will help the analysis efforts of power
 distribution system models.
 

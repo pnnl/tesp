@@ -4,7 +4,7 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-ver="1.3.0"
+ver="1.3.2"
 
 echo
 echo "Stamping TESP $ver, if you want to change the version, edit this file."

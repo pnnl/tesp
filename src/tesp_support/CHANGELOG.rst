@@ -71,8 +71,16 @@ Version 1.2.4 (2022-12-1)
 * GridLAB-D triplex_node no longer uses power_12_real and power12_reac, this has commented out for SGIP1*.glm files
 * Add pypi packaging to stamping process, refined docker build in scripts/docker, moved HELICS version checker to build
 
-Version 1.3.0 (2023-10-3)
+Version 1.3.0 (2023-9-23)
 --------------------------
 * Refactor the TESP PyPI installation for better division between api vs custom (one off) file
 * Upgrade all models(GridLAB-D, EnergyPlus, NS3) to work with HELICS 3.4
 * Add modifier.py for GridLAB-D models
+
+Version 1.3.1 (2023-10-3)
+--------------------------
+* Fix modifier.py for GridLAB-D models, upgrade np.float to np.float64
+
+Version 1.3.2 (2023-10-27)
+--------------------------
+* Another fix for model and modifier for GridLAB-D models

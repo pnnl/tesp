@@ -15,7 +15,6 @@ import logging.config
 import json
 import itertools
 
-
 if __name__ == '__main__':
     pd.options.mode.chained_assignment = None  # default='warn'
     head, tail = os.path.split(os.getcwd())

@@ -19,7 +19,7 @@ from datetime import timedelta
 
 from tesp_support.original.hvac_agent import hvac
 from tesp_support.original.simple_auction import simple_auction
-from tesp_support.api.bench_profile import bench_profile
+from .bench_profile import bench_profile
 
 @bench_profile
 def substation_loop(configfile, metrics_root, helicsConfig, hour_stop=48, flag='WithMarket'):

@@ -27,3 +27,4 @@ Change log:
 - v1.2.1  Fixed python shell files, fixed complex python to use helics complex.
 - v1.2.2  Fixed the installation for Ubuntu 22.04.
 - v1.3.0  Refactor the TESP PyPI api. Upgrade all models(GridLAB-D, EnergyPlus, NS3) to work with HELICS 3.4. Add modifier.py for GridLAB-D models
+- v1.3.2  Updated model and modifier for GridLAB-D models, added readme for GLM modifier and Store examples

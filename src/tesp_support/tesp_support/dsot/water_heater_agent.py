@@ -1262,7 +1262,7 @@ def test():
         # ## Supply these values (into WaterHeaterDSOT) when using the water
         # ## heater agent in the simulation.
         # model_diag_level = 11
-        # helpers.enable_logging('DEBUG', model_diag_level)
+        # helpers.enable_logging('DEBUG', model_diag_level, 'wh_agent')
         sim_time = '2019-11-20 07:47:00'
         
         EWH = WaterHeaterDSOT(wh_dict, wh_properties, 'abc', 11, sim_time, 'ipopt')  # add model_diag_level, and sim_time

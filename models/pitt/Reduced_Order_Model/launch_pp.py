@@ -3,4 +3,4 @@
 
 import tesp_support.original.tso_PYPOWER_f as pp
 
-pp.pypower_loop_f('TE_pp.json', 'TE')
+pp.tso_pypower_loop_f('TE_pp.json', 'TE')

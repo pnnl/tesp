@@ -33,6 +33,7 @@ from joblib import Parallel, delayed
 import logging
 import logging.config
 import json
+
 pd.options.mode.chained_assignment = None  # default='warn'
 
 # Creating a custom logger:
@@ -93,26 +94,20 @@ class EvaluateSystem:
         # Checking to make sure the input data has
         # all the important data for the metric
         # calculations:
-        assert 'model_name' in self.dataframe.columns,\
+        assert 'model_name' in self.dataframe.columns, \
             'Make sure the name of the model is included.'
         self.model_name = self.dataframe['model_name'].unique()[0]
-        assert 'feeder' in self.dataframe.columns,\
+        assert 'feeder' in self.dataframe.columns, \
             'Make sure the feeder name is included in the dataframe.'
         self.feeder = self.dataframe['feeder'].unique()[0]
-        logger.info(
-            '----- An EvaluateSystem object has -----')
-        logger.info(
-            '----- been created for {} --'.format(self.feeder))
+        logger.info('----- An EvaluateSystem object has -----')
+        logger.info('----- been created for {} --'.format(self.feeder))
         self.meters = meters
-        assert pos_x in self.dataframe.columns,\
-            'Oops! {} is not in the dataframe'.format(pos_x)
+        assert pos_x in self.dataframe.columns, 'Oops! {} is not in the dataframe'.format(pos_x)
         self.pos_x = pos_x
-        assert pos_y in self.dataframe.columns,\
-            'Oops! {} is not in the dataframe'.format(pos_y)
+        assert pos_y in self.dataframe.columns, 'Oops! {} is not in the dataframe'.format(pos_y)
         self.pos_y = pos_y
-        assert unit == 'feet' or unit == 'geo',\
-            'Oops! "{}" is not valid; it must be "feet" or "geo"'.format(
-                unit)
+        assert unit == 'feet' or unit == 'geo', 'Oops! "{}" is not valid; it must be "feet" or "geo"'.format(unit)
         self.unit = unit
         # NOTE: More descriptions of these attributes
         # are provided in the functions below.
@@ -128,10 +123,10 @@ class EvaluateSystem:
         self.composite_score = None
 
     def _modify_dataframe(self):
-        """ This funciton modifies the dataframe to speed up the
+        """ This function modifies the dataframe to speed up the
         get_distances function.
 
-        It goes through all the permutations of abstact connections between
+        It goes through all the permutations of abstract connections between
         any two meters in the system. Then, it grabs each "start" and
         "end" meters' positions. Then, it saves all this information
         as a dataframe, which can be accessed as an EvaluateSystem object's
@@ -214,9 +209,7 @@ class EvaluateSystem:
                 index=range(len(perms)))
             self.perm_df = perm_df
         else:
-            logger.error(
-                '"{}" is invalid. It must be "feet" or "geo".'.format(
-                    unit))
+            logger.error('"{}" is invalid. It must be "feet" or "geo".'.format(unit))
 
     def get_distances(self):
         """ This function calculates the distances between all
@@ -231,8 +224,7 @@ class EvaluateSystem:
             that has the calculated distance between all meters
             in a given meter network (aka model).
         """
-        logger.info(
-            '........................................')
+        logger.info('........................................')
         logger.info('calculating the distances between all the meters')
         if self.unit == 'geo':
             self._modify_dataframe()
@@ -246,7 +238,7 @@ class EvaluateSystem:
 
             #   IMPORTANT: The longitude MUST be the first argument.
             #   So, it is important that the data read in has the
-            #   the longitude values as the "x" values and latitude
+            #   longitude values as the "x" values and latitude
             #   values as "y" values.
             p_df['distance'] = geodesic.inv(
                 np.array(p_df.start_x), np.array(p_df.start_y),
@@ -254,8 +246,7 @@ class EvaluateSystem:
             # Saving the result to be used for the different
             # metrics:
             distance_dataframe = p_df[['start', 'end', 'distance']]
-            logger.info(
-                '\tsaving the results to be used elsewhere')
+            logger.info('\tsaving the results to be used elsewhere')
             self.distance_dataframe = distance_dataframe
         elif self.unit == 'feet':
             self._modify_dataframe()
@@ -267,13 +258,10 @@ class EvaluateSystem:
             # Saving the result to be used for the different
             # metrics:
             distance_dataframe = p_df[['start', 'end', 'distance']]
-            logger.info(
-                '\tsaving the results to be used elsewhere')
+            logger.info('\tsaving the results to be used elsewhere')
             self.distance_dataframe = distance_dataframe
         else:
-            logger.error(
-                '{} is an invalid option. It must be "feet" or "geo".'.format(
-                    self.unit))
+            logger.error('{} is an invalid option. It must be "feet" or "geo".'.format(self.unit))
         logger.info('finished calculating the distances.')
         return distance_dataframe
 
@@ -298,12 +286,9 @@ class EvaluateSystem:
             total_meters (int) - The total number of meters within
             the radius.
         """
-        logger.info(
-            '........................................')
-        logger.info(
-            'Finding all the meters within {} (ft) of {}'.format(
-                radius, meter))
-        assert isinstance(radius, float),\
+        logger.info('........................................')
+        logger.info('Finding all the meters within {} (ft) of {}'.format(radius, meter))
+        assert isinstance(radius, float), \
             'Oops, {} is not a float.'.format(radius)
         # Grabbing the dataframe that has all the calculated
         # distances between all the meters:
@@ -313,9 +298,7 @@ class EvaluateSystem:
         # Counting the total number of meters within a certain
         # distance:
         total_meters = len(reduced_dd)
-        logger.info(
-            'The number of meters within {} (ft) of {} is {}.'.format(
-                radius, meter, total_meters))
+        logger.info('The number of meters within {} (ft) of {} is {}.'.format(radius, meter, total_meters))
         return total_meters
 
     def meter_range(self, meter):
@@ -335,11 +318,8 @@ class EvaluateSystem:
             radius (float) - The maximum distance that envelopes all
             meters with a given meter as the center.
         """
-        logger.info(
-            '........................................')
-        logger.info(
-            'Finding the largest radius where {} is the center'.format(
-                meter))
+        logger.info('........................................')
+        logger.info('Finding the largest radius where {} is the center'.format(meter))
         # Grabbing the dataframe that has all the calculated
         # distances between all the meters:
         dd = self.distance_dataframe
@@ -347,9 +327,7 @@ class EvaluateSystem:
         reduced_dd = dd[dd.start == meter]
         # Finding the maximum distance:
         radius = np.max(reduced_dd['distance'])
-        logger.info(
-            '{} (ft) captures all meters with {} as the center'.format(
-                radius, meter))
+        logger.info('{} (ft) captures all meters with {} as the center'.format(radius, meter))
         return radius
 
     def isolated_meter_count(self, radius):
@@ -360,43 +338,36 @@ class EvaluateSystem:
         (meter1, meter2, ... meter10). Suppose further meter2
         and meter3 are 300+ feet from each other and the
         remaining meters, and the remaining meters are 150
-        feet or less from each other. Let the radius to test
-        against be 200 feet. Then, this function would say there
+        feet less from each other. Let the test radius
+        be 200 feet. Then, this function would say there
         are two meters that are isolated from the other meters
         because their distances are greater than 200 feet.
 
         Args:
-            radius (float) - A given distance to test whether
-            or not meters are near each other.
+            radius (float) - A given distance to test just whether
+            meters are near each other.
 
         Returns:
             isolated_count (int) - The total number of meters that are
             isolated from others, given a specific distance.
         """
-        assert isinstance(radius, float),\
-            'Oops, {} is not a float.'.format(radius)
-        logger.info(
-            '........................................')
-        logger.info(
-            'Counting all the isolated meters within {} (ft)'.format(
-                radius))
+        assert isinstance(radius, float), 'Oops, {} is not a float.'.format(radius)
+        logger.info('........................................')
+        logger.info('Counting all the isolated meters within {} (ft)'.format(radius))
         # Grabbing the dataframe that has all the calculated
         # distances between all the meters:
         dd = self.distance_dataframe.copy()
-        # Chekcing whether the calculated distances are
+        # Checking whether the calculated distances are
         # bigger than the given radius:
         bools = ['T' if d > radius else 'F' for d in dd.distance]
         dd['is_isolated'] = bools
         gpd = dd.groupby('start')
         # Counting all the isolated meters:
-        gpd_df = gpd['is_isolated'].value_counts().to_frame(
-            name='total_count').reset_index()
+        gpd_df = gpd['is_isolated'].value_counts().to_frame(name='total_count').reset_index()
         isolated_count = len(gpd_df[
-            (gpd_df.is_isolated == 'T') &
-            (gpd_df.total_count == len(self.meters) - 1)]['start'].values[:])
-        logger.info(
-            '{} meters are isolated within {} (ft)'.format(
-                isolated_count, radius))
+                                 (gpd_df.is_isolated == 'T') &
+                                 (gpd_df.total_count == len(self.meters) - 1)]['start'].values[:])
+        logger.info('{} meters are isolated within {} (ft)'.format(isolated_count, radius))
         return isolated_count
 
     def meter_continuity(self, radius):
@@ -407,28 +378,25 @@ class EvaluateSystem:
         For example, suppose we have a model of 10 meters
         (meter1, meter2, ... meter10). Suppose further meter2
         and meter3 are 300+ feet from each other, but they
-        are 100 feet from the remaining meters. Let the radius
-        to test against be 200 feet. Since meter2 and meter3
+        are 100 feet from the remaining meters. Let the test radius
+        be 200 feet. Since meter2 and meter3
         are closer to the remaining meters (rather than each other),
         this function will say that there is continuity because
         there is an indirect path from meter2 to meter3 through
         any of the remaining meters.
 
         Args:
-            radius (float) - A given distance to test whether
-            or not a path exists between any two meters.
+            radius (float) - A given distance to test just whether
+            a path exists between any two meters.
 
         Returns:
-            continuity (bool) - Whether or not the meters are
+            continuity (bool) - Just whether the meters are
             connected to each other.
         """
-        logger.info(
-            '........................................')
-        logger.info(
-            'Checking to see if paths exist between any {} {} {}'.format(
-                'two meters within', radius, 'feet.'))
-        assert isinstance(radius, float),\
-            'Oops, {} is not a float.'.format(radius)
+        logger.info('........................................')
+        logger.info('Checking to see if paths exist between any {} {} {}'.
+                    format('two meters within', radius, 'feet.'))
+        assert isinstance(radius, float), 'Oops, {} is not a float.'.format(radius)
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
@@ -448,14 +416,11 @@ class EvaluateSystem:
         # Otherwise, a path doesn't exist and the model
         # is not continuous.
         if dd_set1 == r_set1 and dd_set2 == r_set2:
-            logger.info(
-                '\tPaths exists between any two nodes.')
-            logger.info(
-                '\tThus, there is continuity across the network of meters.')
+            logger.info('\tPaths exists between any two nodes.')
+            logger.info('\tThus, there is continuity across the network of meters.')
             continuity = True
         else:
-            logger.info(
-                '\tThere must not be a path between ANY two nodes.')
+            logger.info('\tThere must not be a path between ANY two nodes.')
             continuity = False
         return continuity
 
@@ -474,8 +439,8 @@ class EvaluateSystem:
         and meter3 all have 2 meters or less within 200 feet.
 
         Args:
-            radius (float) - A given distance to test whether
-            or not a number of meters, y, are within a certain
+            radius (float) - A given distance to test just whether
+            a number of meters, y, are within a certain
             distance of a specified meter as the center.
 
             y (int) - Specific number of meters near a starting
@@ -486,15 +451,10 @@ class EvaluateSystem:
             with a certain number of meters near them within a
             given distance.
         """
-        logger.info(
-            '........................................')
-        logger.info(
-            'Counting how many meters have {} meters within {}'.format(
-                y, radius))
-        assert isinstance(radius, float),\
-            'Oops! {} is not a float.'.format(radius)
-        assert isinstance(y, int),\
-            'Oops! {} is not an int.'.format(y)
+        logger.info('........................................')
+        logger.info('Counting how many meters have {} meters within {}'.format(y, radius))
+        assert isinstance(radius, float), 'Oops! {} is not a float.'.format(radius)
+        assert isinstance(y, int), 'Oops! {} is not an int.'.format(y)
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
@@ -505,11 +465,10 @@ class EvaluateSystem:
         gpd = dd.groupby('start')
         # Counting how may meters have "y" meters
         # within a certain radius:
-        gpd_df = gpd['within_radius'].value_counts().to_frame(
-            name='total_count').reset_index()
+        gpd_df = gpd['within_radius'].value_counts().to_frame(name='total_count').reset_index()
         single_hop_count = len(gpd_df[
-            (gpd_df.within_radius == 'T') &
-            (gpd_df.total_count >= y)]['start'].values[:])
+                                   (gpd_df.within_radius == 'T') &
+                                   (gpd_df.total_count >= y)]['start'].values[:])
         logger.info(
             'There are {} meters that have {} meters within {} feet.'.format(
                 single_hop_count, y, radius))
@@ -536,8 +495,7 @@ class EvaluateSystem:
             island_count (int) - The number of islands in
             the model.
         """
-        assert isinstance(radius, float),\
-            'Oops! {} is not a float.'.format(radius)
+        assert isinstance(radius, float), 'Oops! {} is not a float.'.format(radius)
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
@@ -582,24 +540,20 @@ class EvaluateSystem:
             dens (list) - List of number of meters near a given
             meter within each of the radii.
         """
-        logger.info(
-            '........................................')
-        logger.info(
-            'Counting the number of meters nearby within each radius.')
+        logger.info('........................................')
+        logger.info('Counting the number of meters nearby within each radius.')
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
         df_list = []
         for rad in radii:
-            assert isinstance(rad, float),\
-                'Oops! {} is not a float.'.format(rad)
+            assert isinstance(rad, float), 'Oops! {} is not a float.'.format(rad)
             # Reducing the dataframe to meters with distances
             # less than or equal to the given radius:
             reduced_dd = dd[dd.distance <= rad]
             # Counting how many meters are within that radius
             # of each of the meters as the center:
-            gpd_df = reduced_dd.groupby('start')['start'].count()\
-                .to_frame(name='count').reset_index()
+            gpd_df = reduced_dd.groupby('start')['start'].count().to_frame(name='count').reset_index()
             gpd_df['radius'] = [rad] * len(gpd_df)
             gpd_df['meter'] = gpd_df['start']
             df_list.append(gpd_df)
@@ -711,7 +665,7 @@ class EvaluateSystem:
             radii.
 
         Returns:
-            conts (list) - List of the booleans of whether or not
+            conts (list) - List of the booleans of just whether
             paths exist between any two nodes within given radii.
         """
         logger.info(
@@ -749,7 +703,7 @@ class EvaluateSystem:
 
         Args:
             radii (list) - List of radii (in feet) for counting
-            how many neters have a certain number of meters
+            how many meters have a certain number of meters
             near them.
 
         Returns:
@@ -763,36 +717,34 @@ class EvaluateSystem:
         #   reducing the amount of values to test is
         #   for better analysis and realistic results.
         y_list = [1, 2, 3, 4, 5, 10]
-        logger.info(
-            '........................................')
-        logger.info(
-            'Counting the number of meters that have {}'.format(
+        logger.info('........................................')
+        logger.info('Counting the number of meters that have {}'.format(
                 'a given number of meters nearby within each radius.'))
         # Grabbing the dataframe that has all the calculated
         # distances between all meters:
         dd = self.distance_dataframe.copy()
         df_list = []
         for rad in radii:
-            assert isinstance(rad, float),\
+            assert isinstance(rad, float), \
                 'Oops! {} is not a float.'.format(rad)
             # Reducing the dataframe to meters with distances
             # less than or equal to the given radius:
             reduced_dd = dd[dd.distance <= rad]
             # Counting how many meters are withing the given
             # radius near each of the meters as the center:
-            gpd_df = reduced_dd.groupby('start')['start'].count()\
+            gpd_df = reduced_dd.groupby('start')['start'].count() \
                 .to_frame(name='total_count').reset_index()
             gpd_df['radius'] = [rad] * len(gpd_df)
             df_list.append(gpd_df)
         dens_df = pd.concat(df_list, axis=0, ignore_index=True)
         df_list2 = []
         for y in y_list:
-            assert isinstance(y, int),\
+            assert isinstance(y, int), \
                 'Oops! {} is not an int.'.format(y)
             # Counting how many meters have at least y meters
             # nearby:
             r_df = dens_df[dens_df['total_count'] >= y]
-            gpd_r_df = r_df.groupby('radius')['total_count'].count()\
+            gpd_r_df = r_df.groupby('radius')['total_count'].count() \
                 .to_frame(name='count').reset_index()
             gpd_r_df['y'] = [y] * len(gpd_r_df)
             df_list2.append(gpd_r_df)
@@ -828,8 +780,7 @@ class EvaluateSystem:
             the model.
         """
         for rad in radii:
-            assert isinstance(rad, float),\
-                'Oops! {} is not a float.'.format(rad)
+            assert isinstance(rad, float), 'Oops! {} is not a float.'.format(rad)
         # Getting the island count for each radius:
         islands_tup = [
             (rad, self.island_count(rad)) for rad in radii]
@@ -894,7 +845,7 @@ class EvaluateSystem:
                     dens = (sum(counts) / len(counts)) / total_meters - 1
 
                 2021-03-23: Dividing by maximum density value instead;
-                will come back to this when we get more mony.
+                will come back to this when we get more money.
 
             Ranges:
                 For our analysis, we need to know what the ranges
@@ -922,7 +873,7 @@ class EvaluateSystem:
             Continuous:
                 For our analysis, we want to know if any two
                 meters can communicate to each other, whether
-                that is diretly or indirectly.
+                that is directly or indirectly.
 
                 To get a weighted continuity score, we find the
                 average of the continuity scores. The best case
@@ -992,10 +943,8 @@ class EvaluateSystem:
             for all meters for all radii. It is represented as a
             percent.
         """
-        logger.info(
-            '........................................')
-        logger.info(
-            'Caclulating the composite score for the meter network.')
+        logger.info('........................................')
+        logger.info('Calculating the composite score for the meter network.')
         # Checking whether or the metric dataframes are empty or not:
         #   NOTE: If they are empty, then we call the functions to
         #   fill them out and grab the results. If they're not empty,
@@ -1007,7 +956,7 @@ class EvaluateSystem:
                    self.all_continuous, self.all_densities,
                    self.all_islands]
             # This speeds up going through the functions by
-            # parallelizing:
+            # parallelization:
             delayed_fns = [delayed(fn)(radii) for fn in fns]
             results = Parallel(n_jobs=4, prefer='threads')(delayed_fns)
             isolates = results[0]
@@ -1030,24 +979,16 @@ class EvaluateSystem:
         shc_frac = (np.sum(single_hops) / len(single_hops)) / len(meters)
         cont_frac = continuous.count(True) / len(continuous)
         # 2021-03-23: Trying to divide density by max density for now:
-        dens_frac = (np.sum(densities) / len(densities))\
-            / np.max(densities)
+        dens_frac = (np.sum(densities) / len(densities)) / np.max(densities)
         # dens_frac = (np.sum(densities) / len(densities)) / (len(meters) - 1)
         range_frac = 1 - ((np.sum(ranges) / len(ranges)) / np.max(ranges))
         island_frac = 1 - (np.mean(islands) / len(meters))
-        logger.info(
-            '\tdensity score = {}, isolated score = {}'.format(
-                dens_frac, iso_frac))
-        logger.info(
-            '\tcontinuous score = {}, single hop score = {}'.format(
-                cont_frac, shc_frac))
+        logger.info('\tdensity score = {}, isolated score = {}'.format(dens_frac, iso_frac))
+        logger.info('\tcontinuous score = {}, single hop score = {}'.format(cont_frac, shc_frac))
         logger.info('\trange score = {}'.format(range_frac))
         # For now, evenly weighting each of the fractions:
-        score = (0.2 * (dens_frac + iso_frac + shc_frac + cont_frac))\
-            + (0.1 * (range_frac + island_frac))
-        logger.info(
-            'The overall score for this network = {}{}'.format(
-                score, '%'))
+        score = (0.2 * (dens_frac + iso_frac + shc_frac + cont_frac)) + (0.1 * (range_frac + island_frac))
+        logger.info('The overall score for this network = {}{}'.format(score, '%'))
         # Saving the scores:
         self.composite_score = score
         self.score_df = pd.DataFrame(
@@ -1077,8 +1018,7 @@ class Results:
 
     def __init__(self):
         """ This initializes the class."""
-        logger.info(
-            '########### Created a Results object for saving data ###########')
+        logger.info('########### Created a Results object for saving data ###########')
         self.systems = []
 
     def add(self, system):
@@ -1100,7 +1040,7 @@ class Results:
         self.systems.append(system)
 
     def save(self, output_path, output_name):
-        """ This function saves all the results as an hdf5 file.
+        """ This function saves all the results as a hdf5 file.
 
         Args:
             output_path (path) - The path to send the results file.
@@ -1180,133 +1120,42 @@ class Compare:
         It will be used for comparing the model(s)
         """
         head, tail = os.path.split(os.getcwd())
-        # self.real_density = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'santa_fe', 'santa_fe_results.h5'),
-        #     key='density')
-        # self.real_range = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'santa_fe', 'santa_fe_results.h5'),
-        #     key='range')
-        # self.real_isolated = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'santa_fe', 'santa_fe_results.h5'),
-        #     key='isolated')
-        # self.real_continuous = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'santa_fe', 'santa_fe_results.h5'),
-        #     key='continuous')
-        # self.real_single_hop = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'santa_fe', 'santa_fe_results.h5'),
-        #     key='single_hop')
-        # self.real_island = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'santa_fe', 'santa_fe_results.h5'),
-        #     key='island')
-        # self.real_scores = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'santa_fe', 'santa_fe_results.h5'),
-        #     key='scores')
-        # self.real_density = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'grb', 'grb_results.h5'),
-        #     key='density')
-        # self.real_range = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'grb', 'grb_results.h5'),
-        #     key='range')
-        # self.real_isolated = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'grb', 'grb_results.h5'),
-        #     key='isolated')
-        # self.real_continuous = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'grb', 'grb_results.h5'),
-        #     key='continuous')
-        # self.real_single_hop = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'grb', 'grb_results.h5'),
-        #     key='single_hop')
-        # self.real_island = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'grb', 'grb_results.h5'),
-        #     key='island')
-        # self.real_scores = pd.read_hdf(
-        #     os.path.join(head, 'results',
-        #                  'grb', 'grb_results.h5'),
-        #     key='scores')
+        # self.real_density = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='density')
+        # self.real_range = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='range')
+        # self.real_isolated = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='isolated')
+        # self.real_continuous = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='continuous')
+        # self.real_single_hop = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='single_hop')
+        # self.real_island = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='island')
+        # self.real_scores = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='scores')
+        # self.real_density = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='density')
+        # self.real_range = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='range')
+        # self.real_isolated = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='isolated')
+        # self.real_continuous = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='continuous')
+        # self.real_single_hop = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='single_hop')
+        # self.real_island = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='island')
+        # self.real_scores = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='scores')
         # Reading in the metric calculation results:
-        grb_density = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'grb', 'grb_results.h5'),
-            key='density')
-        grb_range = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'grb', 'grb_results.h5'),
-            key='range')
-        grb_isolated = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'grb', 'grb_results.h5'),
-            key='isolated')
-        grb_continuous = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'grb', 'grb_results.h5'),
-            key='continuous')
-        grb_single_hop = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'grb', 'grb_results.h5'),
-            key='single_hop')
-        grb_island = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'grb', 'grb_results.h5'),
-            key='island')
-        grb_scores = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'grb', 'grb_results.h5'),
-            key='scores')
-        santa_fe_density = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'santa_fe', 'santa_fe_results.h5'),
-            key='density')
-        santa_fe_range = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'santa_fe', 'santa_fe_results.h5'),
-            key='range')
-        santa_fe_isolated = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'santa_fe', 'santa_fe_results.h5'),
-            key='isolated')
-        santa_fe_continuous = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'santa_fe', 'santa_fe_results.h5'),
-            key='continuous')
-        santa_fe_single_hop = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'santa_fe', 'santa_fe_results.h5'),
-            key='single_hop')
-        santa_fe_island = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'santa_fe', 'santa_fe_results.h5'),
-            key='island')
-        santa_fe_scores = pd.read_hdf(
-            os.path.join(head, 'results',
-                         'santa_fe', 'santa_fe_results.h5'),
-            key='scores')
-        self.real_density = pd.concat(
-            [grb_density, santa_fe_density], axis=0, ignore_index=True)
-        self.real_range = pd.concat(
-            [grb_range, santa_fe_range], axis=0, ignore_index=True)
-        self.real_isolated = pd.concat(
-            [grb_isolated, santa_fe_isolated], axis=0, ignore_index=True)
-        self.real_continuous = pd.concat(
-            [grb_continuous, santa_fe_continuous], axis=0, ignore_index=True)
-        self.real_single_hop = pd.concat(
-            [grb_single_hop, santa_fe_single_hop], axis=0, ignore_index=True)
-        self.real_island = pd.concat(
-            [grb_island, santa_fe_island], axis=0, ignore_index=True)
-        self.real_scores = pd.concat(
-            [grb_scores, santa_fe_scores], axis=0, ignore_index=True)
+        grb_density = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='density')
+        grb_range = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='range')
+        grb_isolated = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='isolated')
+        grb_continuous = pd.read_hdf(os.path.join(head, 'results',  'grb', 'grb_results.h5'), key='continuous')
+        grb_single_hop = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='single_hop')
+        grb_island = pd.read_hdf(os.path.join(head, 'results',  'grb', 'grb_results.h5'), key='island')
+        grb_scores = pd.read_hdf(os.path.join(head, 'results', 'grb', 'grb_results.h5'), key='scores')
+        santa_fe_density = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='density')
+        santa_fe_range = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='range')
+        santa_fe_isolated = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='isolated')
+        santa_fe_continuous = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='continuous')
+        santa_fe_single_hop = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='single_hop')
+        santa_fe_island = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='island')
+        santa_fe_scores = pd.read_hdf(os.path.join(head, 'results', 'santa_fe', 'santa_fe_results.h5'), key='scores')
+        self.real_density = pd.concat([grb_density, santa_fe_density], axis=0, ignore_index=True)
+        self.real_range = pd.concat([grb_range, santa_fe_range], axis=0, ignore_index=True)
+        self.real_isolated = pd.concat([grb_isolated, santa_fe_isolated], axis=0, ignore_index=True)
+        self.real_continuous = pd.concat([grb_continuous, santa_fe_continuous], axis=0, ignore_index=True)
+        self.real_single_hop = pd.concat([grb_single_hop, santa_fe_single_hop], axis=0, ignore_index=True)
+        self.real_island = pd.concat([grb_island, santa_fe_island], axis=0, ignore_index=True)
+        self.real_scores = pd.concat([grb_scores, santa_fe_scores], axis=0, ignore_index=True)
 
     def compare_meter_density(self, models, how, radii):
         """ This function compares the meter density distributions
@@ -1315,7 +1164,7 @@ class Compare:
         To compare the modelled data to the real data, we
         calculate the Mean Squared Error (MSE) between the
         two datasets. First, we capture the bar heights of
-        the histogram representatiom of the meter densities
+        the histogram representation of the meter densities
         per radius. Then, we normalize the bar heights so
         that the modelled and real data are on the same scale.
         Lastly, we use scikit-learn's mean_squared_error
@@ -1331,11 +1180,11 @@ class Compare:
             demographic (str) - Whether the model(s) represent(s)
             an urban, suburban, and/or a rural feeder.
 
-            how (str) - How we should compare the models to the real
-            data. The options are as follows:
+            how (str) - How we should compare the models to the real data.
+            The options are as follows:
                 'agg' - Choosing how='agg' will compare the model(s)
                 to the real data as a whole, meaning we will compare
-                the model(s) to ALL of the feeders at once in a
+                the model(s) to all the feeders at once in a
                 particular region and demographic.
 
                 'single' - Choosing how='single' will compare the
@@ -1362,13 +1211,13 @@ class Compare:
         # Making sure the models are dataframes and
         # that they have the correct columns:
         for m in models:
-            assert isinstance(m, pd.DataFrame),\
+            assert isinstance(m, pd.DataFrame), \
                 'Oops! Your model needs to be a pandas DataFrame.'
-            assert 'count' in list(m.columns.unique()),\
+            assert 'count' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_densities on your model and {}'.format(
                     'extract the EvaluateSystem.dens_df dataframe {}'.format(
                         'for this method to work.'))
-            assert 'radius' in list(m.columns.unique()),\
+            assert 'radius' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_densities on your model and {}'.format(
                     'extract the EvaluateSystem.dens_df dataframe {}'.format(
                         'for this method to work.'))
@@ -1390,28 +1239,22 @@ class Compare:
                 # from the real density results:
                 df1 = real_dens[real_dens['radius'] == rad]
                 bins1 = pd.cut(df1['count'], list(range(0, 21)))
-                gpd1 = df1.groupby(bins1)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean())  / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
                 bins2 = pd.cut(df2['count'], list(range(0, 21)))
-                gpd2 = df2.groupby(bins2)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
@@ -1419,11 +1262,8 @@ class Compare:
                 mses.append(MSE)
                 rads.append(rad)
             # Creating a dataframe of the results:
-            stats_df = pd.DataFrame(
-                {'model_feeder': model_names,
-                 'radius': rads,
-                 'mse': mses},
-                index=range(len(model_names)))
+            stats_df = pd.DataFrame({'model_feeder': model_names, 'radius': rads, 'mse': mses},
+                                    index=range(len(model_names)))
         elif how == 'single':
             my_list = [models, radii, list(self.real_density.feeder.unique())]
             # Making tuples of the combinations
@@ -1436,31 +1276,24 @@ class Compare:
                 m, rad, f = c[0], c[1], c[2]
                 # Getting the "histogram" bar heights
                 # from the real density results:
-                df1 = real_dens[(real_dens['feeder'] == f)
-                                & (real_dens['radius'] == rad)]
+                df1 = real_dens[(real_dens['feeder'] == f) & (real_dens['radius'] == rad)]
                 bins1 = pd.cut(df1['count'], list(range(0, 21)))
-                gpd1 = df1.groupby(bins1)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
                 bins2 = pd.cut(df2['count'], list(range(0, 21)))
-                gpd2 = df2.groupby(bins2)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
@@ -1470,10 +1303,7 @@ class Compare:
                 rads.append(rad)
             # Creating a dataframe of the results:
             stats_df = pd.DataFrame(
-                {'real_feeder': feeders,
-                 'model_feeder': model_names,
-                 'radius': rads,
-                 'mse': mses},
+                {'real_feeder': feeders, 'model_feeder': model_names, 'radius': rads, 'mse': mses},
                 index=range(len(feeders)))
         else:
             logging.error(
@@ -1488,7 +1318,7 @@ class Compare:
         To compare the modelled data to the real data, we
         calculate the Mean Squared Error (MSE) between the
         two datasets. First, we capture the bar heights of
-        the histogram representatiom of the meter ranges.
+        the histogram representation of the meter ranges.
         Then, we normalize the bar heights so that the modelled
         and real data are on the same scale. Lastly, we use
         scikit-learn's mean_squared_error function to get
@@ -1508,7 +1338,7 @@ class Compare:
             data. The options are as follows:
                 'agg' - Choosing how='agg' will compare the model(s)
                 to the real data as a whole, meaning we will compare
-                the model(s) to ALL of the feeders at once in a
+                the model(s) to all the feeders at once in a
                 particular region and demographic.
 
                 'single' - Choosing how='single' will compare the
@@ -1531,9 +1361,9 @@ class Compare:
         # Making sure the models are dataframes and
         # that they have the correct columns:
         for m in models:
-            assert isinstance(m, pd.DataFrame),\
+            assert isinstance(m, pd.DataFrame), \
                 'Oops! Your model needs to be a pandas DataFrame.'
-            assert 'radius' in list(m.columns.unique()),\
+            assert 'radius' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_ranges on your model and {}'.format(
                     'extract the EvaluateSystem.range_df dataframe {}'.format(
                         'for this method to work.'))
@@ -1548,37 +1378,28 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the real range results:
                 bins1 = pd.cut(df1['radius'], bins=list(range(2500, 20001)))
-                gpd1 = df1.groupby(bins1)['radius'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['radius'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 bins2 = pd.cut(df2['radius'], bins=list(range(2500, 20001)))
-                gpd2 = df2.groupby(bins2)['radius'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['radius'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
                 model_names.append(m.feeder.unique()[0])
                 mses.append(MSE)
             # Creating a dataframe of the results:
-            stats_df = pd.DataFrame(
-                {'model_feeder': model_names,
-                 'mse': mses},
-                index=range(len(model_names)))
+            stats_df = pd.DataFrame({'model_feeder': model_names, 'mse': mses}, index=range(len(model_names)))
         elif how == 'single':
             my_list = [models, list(self.real_range.feeder.unique())]
             # Making tuples of the combinations
@@ -1595,27 +1416,21 @@ class Compare:
                 # Getting the "histogram" bar heights
                 # from the real range results:
                 bins1 = pd.cut(df1['radius'], bins=list(range(2500, 20001)))
-                gpd1 = df1.groupby(bins1)['radius'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['radius'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 bins2 = pd.cut(df2['radius'], bins=list(range(2500, 20001)))
-                gpd2 = df2.groupby(bins2)['radius'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['radius'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
@@ -1623,11 +1438,8 @@ class Compare:
                 model_names.append(m.feeder.unique()[0])
                 mses.append(MSE)
             # Creating a dataframe of the results:
-            stats_df = pd.DataFrame(
-                {'real_feeder': feeders,
-                 'model_feeder': model_names,
-                 'mse': mses},
-                index=range(len(feeders)))
+            stats_df = pd.DataFrame({'real_feeder': feeders, 'model_feeder': model_names, 'mse': mses},
+                                    index=range(len(feeders)))
         else:
             logging.error(
                 '{} is an invalid option for the "how" argument; {}'.format(
@@ -1641,7 +1453,7 @@ class Compare:
         To compare the modelled data to the real data, we
         calculate the Mean Squared Error (MSE) between the
         two datasets. First, we capture the bar heights of
-        the histogram representatiom of the isolated meters
+        the histogram representation of the isolated meters
         per radius. Then, we normalize the bar heights so
         that the modelled and real data are on the same scale.
         Lastly, we use scikit-learn's mean_squared_error
@@ -1661,7 +1473,7 @@ class Compare:
             data. The options are as follows:
                 'agg' - Choosing how='agg' will compare the model(s)
                 to the real data as a whole, meaning we will compare
-                the model(s) to ALL of the feeders at once in a
+                the model(s) to all the feeders at once in a
                 particular region and demographic.
 
                 'single' - Choosing how='single' will compare the
@@ -1688,13 +1500,13 @@ class Compare:
         # Making sure the models are dataframes and
         # that they have the correct columns:
         for m in models:
-            assert isinstance(m, pd.DataFrame),\
+            assert isinstance(m, pd.DataFrame), \
                 'Oops! Your model needs to be a pandas DataFrame.'
-            assert 'count' in list(m.columns.unique()),\
+            assert 'count' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_isolates on your model and {}'.format(
                     'extract the EvaluateSystem.iso_df dataframe {}'.format(
                         'for this method to work.'))
-            assert 'radius' in list(m.columns.unique()),\
+            assert 'radius' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_isolates on your model and {}'.format(
                     'extract the EvaluateSystem.iso_df dataframe {}'.format(
                         'for this method to work.'))
@@ -1716,28 +1528,22 @@ class Compare:
                 # from the real isolated results:
                 df1 = real_isos[real_isos['radius'] == rad]
                 bins1 = pd.cut(df1['count'], list(range(0, 601)))
-                gpd1 = df1.groupby(bins1)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
                 bins2 = pd.cut(df2['count'], list(range(0, 601)))
-                gpd2 = df2.groupby(bins2)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
@@ -1745,11 +1551,8 @@ class Compare:
                 mses.append(MSE)
                 rads.append(rad)
             # Creating a dataframe of the results:
-            stats_df = pd.DataFrame(
-                {'model_feeder': model_names,
-                 'radius': rads,
-                 'mse': mses},
-                index=range(len(model_names)))
+            stats_df = pd.DataFrame({'model_feeder': model_names, 'radius': rads, 'mse': mses},
+                                    index=range(len(model_names)))
         elif how == 'single':
             my_list = [models, radii,
                        list(self.real_isolated.feeder.unique())]
@@ -1766,28 +1569,22 @@ class Compare:
                 df1 = real_isos[(real_isos['feeder'] == f)
                                 & (real_isos['radius'] == rad)]
                 bins1 = pd.cut(df1['count'], list(range(0, 601)))
-                gpd1 = df1.groupby(bins1)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
                 bins2 = pd.cut(df2['count'], list(range(0, 601)))
-                gpd2 = df2.groupby(bins2)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
@@ -1797,10 +1594,7 @@ class Compare:
                 rads.append(rad)
             # Creating a dataframe of the results:
             stats_df = pd.DataFrame(
-                {'real_feeder': feeders,
-                 'model_feeder': model_names,
-                 'radius': rads,
-                 'mse': mses},
+                {'real_feeder': feeders, 'model_feeder': model_names, 'radius': rads, 'mse': mses},
                 index=range(len(feeders)))
         else:
             logging.error(
@@ -1833,7 +1627,7 @@ class Compare:
             data. The options are as follows:
                 'agg' - Choosing how='agg' will compare the model(s)
                 to the real data as a whole, meaning we will compare
-                the model(s) to ALL of the feeders at once in a
+                the model(s) to all the feeders at once in a
                 particular region and demographic.
 
                 'single' - Choosing how='single' will compare the
@@ -1859,13 +1653,13 @@ class Compare:
         # Making sure the models are dataframes and
         # that they have the correct columns:
         for m in models:
-            assert isinstance(m, pd.DataFrame),\
+            assert isinstance(m, pd.DataFrame), \
                 'Oops! Your model needs to be a pandas DataFrame.'
-            assert 'continuous' in list(m.columns.unique()),\
+            assert 'continuous' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_continuous on your model {}'.format(
                     'and extract the EvaluateSystem.cont_df {}'.format(
                         'dataframe for this method to work.'))
-            assert 'radius' in list(m.columns.unique()),\
+            assert 'radius' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_continuous on your model {}'.format(
                     'and extract the EvaluateSystem.cont_df {}'.format(
                         'dataframe for this method to work.'))
@@ -1884,15 +1678,12 @@ class Compare:
                 gpd1 = df1.groupby('radius')['continuous'].mean().reset_index()
                 gpd2 = df2.groupby('radius')['continuous'].mean().reset_index()
                 # Calculating the mean squared error:
-                MSE = mean_squared_error(
-                    gpd1['continuous'], gpd2['continuous'])
+                MSE = mean_squared_error(gpd1['continuous'], gpd2['continuous'])
                 # Appending the results to the lists:
                 model_names.append(df2.feeder.unique()[0])
                 mses.append(MSE)
             # Creating a dataframe of the results:
-            stats_df = pd.DataFrame(
-                {'model_feeder': model_names,
-                 'mse': mses})
+            stats_df = pd.DataFrame({'model_feeder': model_names, 'mse': mses})
         elif how == 'single':
             my_list = [models, list(self.real_continuous.feeder.unique())]
             # Making tuples of the combinations
@@ -1913,17 +1704,13 @@ class Compare:
                 gpd1 = df1.groupby('radius')['continuous'].mean().reset_index()
                 gpd2 = df2.groupby('radius')['continuous'].mean().reset_index()
                 # Calculating the mean squared error:
-                MSE = mean_squared_error(
-                    gpd1['continuous'], gpd2['continuous'])
+                MSE = mean_squared_error(gpd1['continuous'], gpd2['continuous'])
                 # Appending the results to the lists:
                 model_names.append(df2.feeder.unique()[0])
                 feeders.append(f)
                 mses.append(MSE)
             # Creating a dataframe of the results:
-            stats_df = pd.DataFrame(
-                {'real_feeder': feeders,
-                 'model_feeder': model_names,
-                 'mse': mses})
+            stats_df = pd.DataFrame({'real_feeder': feeders, 'model_feeder': model_names, 'mse': mses})
         else:
             logging.error(
                 '{} is an invalid option for the "how" argument; {}'.format(
@@ -1937,7 +1724,7 @@ class Compare:
         To compare the modelled data to the real data, we
         calculate the Mean Squared Error (MSE) between the
         two datasets. First, we capture the bar heights of
-        the histogram representatiom of the single hops
+        the histogram representation of the single hops
         per radius. Then, we normalize the bar heights so
         that the modelled and real data are on the same scale.
         Lastly, we use scikit-learn's mean_squared_error
@@ -1957,7 +1744,7 @@ class Compare:
             data. The options are as follows:
                 'agg' - Choosing how='agg' will compare the model(s)
                 to the real data as a whole, meaning we will compare
-                the model(s) to ALL of the feeders at once in a
+                the model(s) to all the feeders at once in a
                 particular region and demographic.
 
                 'single' - Choosing how='single' will compare the
@@ -1970,7 +1757,7 @@ class Compare:
 
         Returns:
             stats_df (pandas dataframe) - A pandas dataframe that
-            contains the results of calucalting the MSE. If how
+            contains the results of calculating the MSE. If how
             equals 'agg', then the dataframe will have the scores
             based off of comparing the model(s) to the WHOLE real
             dataset. If how equals 'single', the dataframe will have
@@ -1985,17 +1772,17 @@ class Compare:
         # Making sure the models are dataframes and
         # that they have the correct columns:
         for m in models:
-            assert isinstance(m, pd.DataFrame),\
+            assert isinstance(m, pd.DataFrame), \
                 'Oops! Your model needs to be a pandas DataFrame.'
-            assert 'count' in list(m.columns.unique()),\
+            assert 'count' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_single_hops on your model {}'.format(
                     'extract the EvaluateSystem.shc_df dataframe{}'.format(
                         'for this method to work.'))
-            assert 'radius' in list(m.columns.unique()),\
+            assert 'radius' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_single_hops on your model {}'.format(
                     'extract the EvaluateSystem.shc_df dataframe{}'.format(
                         'for this method to work.'))
-            assert 'y' in list(m.columns.unique()),\
+            assert 'y' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_single_hops on your model {}'.format(
                     'extract the EvaluateSystem.shc_df dataframe{}'.format(
                         'for this method to work.'))
@@ -2012,33 +1799,26 @@ class Compare:
             real_shc = self.real_single_hop
             for c in combos:
                 m, rad, yi = c[0], c[1], c[2]
-                df1 = real_shc[(real_shc['radius'] == rad)
-                               & (real_shc['y'] == yi)]
+                df1 = real_shc[(real_shc['radius'] == rad) & (real_shc['y'] == yi)]
                 df2 = m[(m['radius'] == rad) & (m['y'] == yi)]
                 # Getting the "histogram" bar heights
                 # from the real single hop results:
                 bins1 = pd.cut(df1['count'], bins=list(range(0, 2001)))
-                gpd1 = df1.groupby(bins1)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 bins2 = pd.cut(df2['count'], list(range(0, 2001)))
-                gpd2 = df2.groupby(bins2)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
@@ -2047,16 +1827,11 @@ class Compare:
                 rads.append(rad)
                 ys.append(yi)
             # Creating a dataframe of the results:
-            stats_df = pd.DataFrame(
-                {'model_feeder': model_names,
-                 'radius': rads,
-                 'y': ys,
-                 'mse': mses},
-                index=range(len(model_names)))
+            stats_df = pd.DataFrame({'model_feeder': model_names, 'radius': rads, 'y': ys, 'mse': mses},
+                                    index=range(len(model_names)))
         elif how == 'single':
             y = [1.0, 2.0, 3.0, 4.0, 5.0, 10.0]
-            my_list = [models, radii,
-                       y, list(self.real_single_hop.feeder.unique())]
+            my_list = [models, radii, y, list(self.real_single_hop.feeder.unique())]
             # Making tuples of the combinations
             # of models, radii, real feeders and
             # y to speed up the for loop:
@@ -2065,34 +1840,26 @@ class Compare:
             real_shc = self.real_single_hop
             for c in combos:
                 m, rad, yi, f = c[0], c[1], c[2], c[3]
-                df1 = real_shc[(real_shc['feeder'] == f)
-                               & (real_shc['radius'] == rad)
-                               & (real_shc['y'] == yi)]
+                df1 = real_shc[(real_shc['feeder'] == f) & (real_shc['radius'] == rad) & (real_shc['y'] == yi)]
                 df2 = m[(m['radius'] == rad) & (m['y'] == yi)]
                 # Getting the "histogram" bar heights
                 # from the real single hop results:
                 bins1 = pd.cut(df1['count'], bins=list(range(0, 2001)))
-                gpd1 = df1.groupby(bins1)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 bins2 = pd.cut(df2['count'], list(range(0, 2001)))
-                gpd2 = df2.groupby(bins2)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
@@ -2103,11 +1870,7 @@ class Compare:
                 ys.append(yi)
             # Creating a dataframe of the results:
             stats_df = pd.DataFrame(
-                {'real_feeder': feeders,
-                 'model_feeder': model_names,
-                 'radius': rads,
-                 'y': ys,
-                 'mse': mses},
+                {'real_feeder': feeders, 'model_feeder': model_names, 'radius': rads, 'y': ys, 'mse': mses},
                 index=range(len(model_names)))
         return stats_df
 
@@ -2118,7 +1881,7 @@ class Compare:
         To compare the modelled data to the real data, we
         calculate the Mean Squared Error (MSE) between the
         two datasets. First, we capture the bar heights of
-        the histogram representatiom of the island counts
+        the histogram representation of the island counts
         per radius. Then, we normalize the bar heights so
         that the modelled and real data are on the same scale.
         Lastly, we use scikit-learn's mean_squared_error
@@ -2138,7 +1901,7 @@ class Compare:
             data. The options are as follows:
                 'agg' - Choosing how='agg' will compare the model(s)
                 to the real data as a whole, meaning we will compare
-                the model(s) to ALL of the feeders at once in a
+                the model(s) to all the feeders at once in a
                 particular region and demographic.
 
                 'single' - Choosing how='single' will compare the
@@ -2165,13 +1928,13 @@ class Compare:
         # Making sure the models are dataframes and
         # that they have the correct columns:
         for m in models:
-            assert isinstance(m, pd.DataFrame),\
+            assert isinstance(m, pd.DataFrame), \
                 'Oops! Your model needs to be a pandas DataFrame.'
-            assert 'count' in list(m.columns.unique()),\
+            assert 'count' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_isolates on your model and {}'.format(
                     'extract the EvaluateSystem.island_df dataframe {}'.format(
                         'for this method to work.'))
-            assert 'radius' in list(m.columns.unique()),\
+            assert 'radius' in list(m.columns.unique()), \
                 'Run EvaluateSystem.all_islands on your model and {}'.format(
                     'extract the EvaluateSystem.island_df dataframe {}'.format(
                         'for this method to work.'))
@@ -2193,28 +1956,22 @@ class Compare:
                 # from the real island results:
                 df1 = real_isl[real_isl['radius'] == rad]
                 bins1 = pd.cut(df1['count'], list(range(0, 2001)))
-                gpd1 = df1.groupby(bins1)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
                 bins2 = pd.cut(df2['count'], list(range(0, 2001)))
-                gpd2 = df2.groupby(bins2)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
@@ -2222,11 +1979,8 @@ class Compare:
                 mses.append(MSE)
                 rads.append(rad)
             # Creating a dataframe of the results:
-            stats_df = pd.DataFrame(
-                {'model_feeder': model_names,
-                 'radius': rads,
-                 'mse': mses},
-                index=range(len(model_names)))
+            stats_df = pd.DataFrame({'model_feeder': model_names, 'radius': rads, 'mse': mses},
+                                    index=range(len(model_names)))
         elif how == 'single':
             my_list = [models, radii, list(self.real_island.feeder.unique())]
             # Making tuples of the combinations
@@ -2239,31 +1993,24 @@ class Compare:
                 m, rad, f = c[0], c[1], c[2]
                 # Getting the "histogram" bar heights
                 # from the real island results:
-                df1 = real_isl[(real_isl['feeder'] == f)
-                               & (real_isl['radius'] == rad)]
+                df1 = real_isl[(real_isl['feeder'] == f) & (real_isl['radius'] == rad)]
                 bins1 = pd.cut(df1['count'], list(range(0, 2001)))
-                gpd1 = df1.groupby(bins1)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd1 = df1.groupby(bins1)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd1['hist_height'].sum() == 0:
                     gpd1['normed'] = [0] * len(gpd1)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd1['normed'] = (
-                        gpd1['hist_height'] - gpd1['hist_height'].mean())\
-                        / gpd1['hist_height'].std()
+                    gpd1['normed'] = (gpd1['hist_height'] - gpd1['hist_height'].mean()) / gpd1['hist_height'].std()
                 # Getting the "histogram" bar heights
                 # from the model results:
                 df2 = m[m['radius'] == rad]
                 bins2 = pd.cut(df2['count'], list(range(0, 2001)))
-                gpd2 = df2.groupby(bins2)['count'].count().to_frame(
-                    name='hist_height').reset_index()
+                gpd2 = df2.groupby(bins2)['count'].count().to_frame(name='hist_height').reset_index()
                 if gpd2['hist_height'].sum() == 0:
                     gpd2['normed'] = [0] * len(gpd2)
                 else:
                     # Normalizing the histogram bar heights:
-                    gpd2['normed'] = (
-                        gpd2['hist_height'] - gpd2['hist_height'].mean())\
-                        / gpd2['hist_height'].std()
+                    gpd2['normed'] = (gpd2['hist_height'] - gpd2['hist_height'].mean()) / gpd2['hist_height'].std()
                 # Calculating the mean squared error:
                 MSE = mean_squared_error(gpd1['normed'], gpd2['normed'])
                 # Appending the results to the lists:
@@ -2273,10 +2020,7 @@ class Compare:
                 rads.append(rad)
             # Creating a dataframe of the results:
             stats_df = pd.DataFrame(
-                {'real_feeder': feeders,
-                 'model_feeder': model_names,
-                 'radius': rads,
-                 'mse': mses},
+                {'real_feeder': feeders, 'model_feeder': model_names, 'radius': rads, 'mse': mses},
                 index=range(len(feeders)))
         else:
             logging.error(
