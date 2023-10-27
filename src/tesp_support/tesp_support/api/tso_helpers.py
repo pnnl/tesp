@@ -12,15 +12,16 @@ Public Functions:
     dist_slack
 """
 
-import os
 import json
-import numpy as np
+import os
 from copy import deepcopy
 
-def print_m_case(ppc, ppc_case):
+import numpy as np
 
+
+def print_m_case(ppc, ppc_case):
     def printline(name, thing, integers):
-        print("mpc." + name +" = [", file=fp)
+        print("mpc." + name + " = [", file=fp)
         for i in range(thing.shape[0]):
             line = ""
             for j in range(thing.shape[1]):
@@ -51,10 +52,10 @@ def print_matrix(lbl, A, fmt='{:8.4f}'):
             ncols = len(A[0])
             print('{:s} is {:d}x{:d}'.format(lbl, nrows, ncols))
             print('\n'.join([' '.join([fmt.format(item) for item in row]) for row in A]), flush=True)
-        else:                          # 1D array, printed flat
+        else:  # 1D array, printed flat
             print('{:s} has {:d} elements'.format(lbl, nrows))
             print(' '.join(fmt.format(item) for item in A), flush=True)
-    else:                              # single value
+    else:  # single value
         print(lbl, '=', fmt.format(A), flush=True)
 
 
@@ -71,15 +72,15 @@ def print_keyed_matrix(lbl, D, fmt='{:8.4f}'):
         print('{:8s}'.format(key), ' '.join(fmt.format(item) for item in row), flush=True)
 
 
-def load_json_case(fname):
+def load_json_case(file_name):
     """ Helper function to load PYPOWER case from a JSON file
 
     Args:
-      fname (str): the JSON file to open
+      file_name (str): the JSON file name to open
     Returns:
       dict: the loaded PYPOWER case structure
     """
-    lp = open(fname, encoding='utf-8').read()
+    lp = open(file_name, encoding='utf-8').read()
     ppc = json.loads(lp)
     ppc['bus'] = np.array(ppc['bus'])
     ppc['gen'] = np.array(ppc['gen'])
@@ -148,8 +149,9 @@ def summarize_opf(mpc):
 
 
 def make_dictionary(mpc):
-    """ Helper function to write the JSON metafile for post-processing
-        additions to DSO, and Pnom==>Pmin for generators
+    """ Helper function to write the JSON model dictionary metafile for post-processing
+
+    Additions to DSO, and Pnom==>Pmin for generators are there
 
     Args:
         mpc (dict): PYPOWER case file structure based on matpower
@@ -221,10 +223,10 @@ def dist_slack(mpc, prev_load):
     """
 
     Args:
-        mpc:
-        prev_load:
+        mpc (dict): PYPOWER case structure
+        prev_load (float): previous load
     Returns:
-        list:
+        array: generator loads
     """
     # this section will calculate the delta power from previous cycle using the prev_load
     # if previous load is equal to 0 we assume this is the first run and will
@@ -267,11 +269,11 @@ def dist_slack(mpc, prev_load):
                 gas_idx.append(i)
                 if mpc['gen'][i, 16] <= 0:
                     if mpc['gen'][i, 8] < 200:
-                        mpc['gen'][i, 16] = 2.79   # (MW)
+                        mpc['gen'][i, 16] = 2.79  # (MW)
                     elif mpc['gen'][i, 8] < 400:
-                        mpc['gen'][i, 16] = 7.62   # (MW)
+                        mpc['gen'][i, 16] = 7.62  # (MW)
                     elif mpc['gen'][i, 8] < 600:
-                        mpc['gen'][i, 16] = 4.8    # (MW)
+                        mpc['gen'][i, 16] = 4.8  # (MW)
                     elif mpc['gen'][i, 8] >= 600:
                         mpc['gen'][i, 16] = 26.66  # (MW)
                 governor_capacity = governor_capacity + mpc['gen'][i, 8] * (.05 / mpc['governor']['gas'])
@@ -295,7 +297,7 @@ def dist_slack(mpc, prev_load):
                 elif mpc['gen'][i, 8] < 400:
                     mpc['gen'][i, 16] = 7.62  # (MW)
                 elif mpc['gen'][i, 8] < 600:
-                    mpc['gen'][i, 16] = 4.8   # (MW)
+                    mpc['gen'][i, 16] = 4.8  # (MW)
                 elif mpc['gen'][i, 8] >= 600:
                     mpc['gen'][i, 16] = 26.66  # (MW)
     ramping_capacity = mpc['gen'][:, 16] * ramping_time  # ramp rate (MW/min) * ramp time (min)  ->  (MW)
@@ -365,7 +367,7 @@ def dist_slack(mpc, prev_load):
 
         # Checking generation max Limits
         if gen_update[index[i]] > mpc['gen'][index[i], 8]:  # PG > PG_max (MW)
-            max_flag = 1                                    # limit is reached
+            max_flag = 1  # limit is reached
             # both the limits are reached
             if (up_ramp_flag == 1) & (max_flag == 1):
                 gen_update[index[i]] = mpc['gen'][index[i], 8]

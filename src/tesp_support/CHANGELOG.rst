@@ -80,3 +80,7 @@ Version 1.3.0 (2023-9-23)
 Version 1.3.1 (2023-10-3)
 --------------------------
 * Fix modifier.py for GridLAB-D models, upgrade np.float to np.float64
+
+Version 1.3.2 (2023-10-27)
+--------------------------
+* Another fix for model and modifier for GridLAB-D models

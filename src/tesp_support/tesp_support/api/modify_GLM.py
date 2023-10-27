@@ -20,23 +20,11 @@ class GLMModifier:
         assign_defaults(self.defaults, feeder_entities_path)
 
     # get/add/del module calls to modify GridLabD module entities
-    def get_module(self, gld_type):
-        return self.model.module_entities[gld_type]
-
-    def get_module_vals(self, gld_type):
-        return self.model.module_entities[gld_type].instances
-
-    def get_module_named_instance(self, gld_type):
-        return self.get_module(gld_type).instances[gld_type]
-
-    def get_module_names(self, gld_type):
-        return list(self.get_module(gld_type).instances.keys())
-
     def add_module(self, gld_type, params):
-        return self.get_module(gld_type).set_instance(gld_type, params)
+        return self.model.module_entities[gld_type].set_instance(gld_type, params)
 
     def del_module(self, gld_type, name):
-        self.get_module(gld_type).del_instance(name)
+        self.model.module_entities[gld_type].del_instance(name)
         # delete all object in the module
         # for obj in self.model.module_entities:
         #     myObj = self.model.module_entities[obj]
@@ -51,30 +39,17 @@ class GLMModifier:
         #         myObj.del_instance(myName)
 
     def add_module_attr(self, gld_type, name, item_name, item_value):
-        return self.get_module(gld_type).set_item(name, item_name, item_value)
+        return self.model.module_entities[gld_type].set_item(name, item_name, item_value)
 
     def del_module_attr(self, gld_type, name, item_name):
-        self.get_module(gld_type).del_item(name, item_name)
-
-    # get/add/del object calls to modify GridLabD objects entities
-    def get_object(self, gld_type):
-        return self.model.object_entities[gld_type]
-
-    def get_object_vals(self, gld_type):
-        return self.model.object_entities[gld_type].instances
-
-    def get_object_named_instance(self, gld_type, name):
-        return self.get_object(gld_type).instances[name]
-        
-    def get_object_names(self, gld_type):
-        return list(self.get_object(gld_type).instances.keys())
+        self.model.module_entities[gld_type].del_item(name, item_name)
 
     def add_object(self, gld_type, name, params):
         # TODO make sure that module exist (i.e. auction object needs market module)
         return self.model.add_object(gld_type, name, params)
 
     def rename_object(self, gld_type, old_name, new_name):
-        object_entity = self.get_object(gld_type)
+        object_entity = self.model.object_entities[gld_type]
         if object_entity:
             if object_entity.instances[old_name]:
                 model_object = self.model.model[gld_type]
@@ -93,7 +68,7 @@ class GLMModifier:
         return False
 
     def del_object(self, gld_type, name):
-        self.get_object(gld_type).del_instance(name)
+        self.model.object_entities[gld_type].del_instance(name)
         for obj in self.model.object_entities:
             myObj = self.model.object_entities[obj]
             myArr = []
@@ -113,19 +88,17 @@ class GLMModifier:
         pass
 
     def add_object_attr(self, gld_type, name, item_name, item_value):
-        return self.get_object(gld_type).set_item(name, item_name, item_value)
+        return self.model.object_entities[gld_type].set_item(name, item_name, item_value)
 
     def del_object_attr(self, gld_type, name, item_name):
-        self.get_object(gld_type).del_item(name, item_name)
+        self.model.object_entities[gld_type].del_item(name, item_name)
 
     # Read and Write .GLM files
     def read_model(self, filepath):
-        self.model.read(filepath)
-        return self.model.glm, True
+        return self.model.read(filepath)
 
     def write_model(self, filepath):
-        self.model.write(filepath)
-        return True
+        return self.model.write(filepath)
 
     # normal objects
     def resize(self):
@@ -170,32 +143,33 @@ def _test2():
     feeder = "IEEE-123.glm"
     # feeder = "R3-12.47-3.glm"
     testMod = GLMModifier()
-    if not testMod.model.readBackboneModel(feeder):
+    glm, success = testMod.model.readBackboneModel(feeder)
+    if not success:
         exit()
+
     testMod.rename_object("node", "n3", "mynode3")
-    testMod.model.plot_model()
-    loads = testMod.get_object('load')
+    # testMod.model.plot_model()
     meter_counter = 0
     house_counter = 0
     house_meter_counter = 0
-    for obj_id in loads.instances:
+    for key, value in glm.load.items():
         # add meter for this load
         meter_counter = meter_counter + 1
         meter_name = 'meter_' + str(meter_counter)
-        meter = testMod.add_object('meter', meter_name, { 'parent': obj_id })
+        meter = testMod.add_object('meter', meter_name, {'parent': key})
         # how much power is going to be needed
         # while kva < total_kva:
         house_meter_counter = house_meter_counter + 1
         # add parent meter for houses to follow
         house_meter_name = 'house_meter_' + str(house_meter_counter)
-        meter = testMod.add_object('meter', house_meter_name, { 'parent': meter_name })
+        meter = testMod.add_object('meter', house_meter_name, {'parent': meter_name})
         # add house
         house_counter = house_counter + 1
         house_name = 'house_' + str(house_counter)
         house = testMod.add_object('house', house_name, [])
         house['parent'] = house_meter_name
-        meter = testMod.add_object('transformer', 'f2_transformer', { 'from': 'meter_1', 'to': 'meter_2' })
-        meter = testMod.add_object('meter', 'meter_2', { 'parent': 'meter_1'})
+        meter = testMod.add_object('transformer', 'f2_transformer', {'from': 'meter_1', 'to': 'meter_2'})
+        meter = testMod.add_object('meter', 'meter_2', {'parent': 'meter_1'})
 
     testMod.model.plot_model()
     testMod.write_model(tesp_test + "api/modifier_test2.glm")

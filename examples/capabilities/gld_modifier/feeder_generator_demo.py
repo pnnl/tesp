@@ -17,7 +17,7 @@ import os
 import sys
 import networkx as nx
 
-from tesp_support.api.modifier import GLMModifier
+from tesp_support.api.modify_GLM import GLMModifier
 from tesp_support.api.data import feeders_path
 
 # Getting all the existing tesp_support stuff
@@ -56,8 +56,9 @@ pp = pprint.PrettyPrinter(
 def _auto_run(args):
     feeder_path = os.path.join(args.feeder_path, args.feeder_file)
     glmMod = GLMModifier()
-    glmMod.read_model(feeder_path)
-    glm = glmMod.glm
+    glm, success = glmMod.read_model(feeder_path)
+    if not success:
+        print('File not found or file not supported, exiting!')
 
     glmMod.add_module("residential", [])
 

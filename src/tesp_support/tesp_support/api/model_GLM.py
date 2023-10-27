@@ -809,7 +809,7 @@ class GLModel:
         filename = feeders_path + root_name
         if self.readModel(filename):
             self.in_file = filename
-            return True
+            return self.glm, True
         self.in_file = filename
         self.model = {}
         return False
@@ -817,7 +817,7 @@ class GLModel:
     def read(self, filename):
         if self.readModel(filename):
             self.in_file = filename
-            return True
+            return self.glm, True
         self.in_file = filename
         self.model = {}
         return False

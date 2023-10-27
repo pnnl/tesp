@@ -17521,7 +17521,7 @@ index 86c796a..8cfbba5 100644
  
  /* Version number of package */
 diff --git a/configure b/configure
-index 855abed..3471e94 100755
+index 855abed..81ce984 100755
 --- a/configure
 +++ b/configure
 @@ -1,11 +1,12 @@
@@ -32544,7 +32544,7 @@ index 855abed..3471e94 100755
  ltmain=$ac_aux_dir/ltmain.sh
  
  
-@@ -25622,44 +26774,43 @@ if test "$no_create" != yes; then
+@@ -25622,44 +26774,45 @@ if test "$no_create" != yes; then
    $ac_cs_success || as_fn_exit 1
  fi
  if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
@@ -32590,7 +32590,6 @@ index 855abed..3471e94 100755
 -$as_echo "$as_me:         ZIP_EXT=$ZIP_EXT" >&6;}
 -{ $as_echo "$as_me:${as_lineno-$LINENO}: " >&5
 -$as_echo "$as_me: " >&6;}
--
 +{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: " >&5
 +printf "%s\n" "$as_me: " >&6;}
 +{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: **************************************************************" >&5
@@ -32625,6 +32624,8 @@ index 855abed..3471e94 100755
 +printf "%s\n" "$as_me:         ZIP_EXT=$ZIP_EXT" >&6;}
 +{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: " >&5
 +printf "%s\n" "$as_me: " >&6;}
++
+ 
 diff --git a/m4/libtool.m4 b/m4/libtool.m4
 deleted file mode 100644
 index a3bc337..0000000
