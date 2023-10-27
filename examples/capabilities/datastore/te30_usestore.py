@@ -69,10 +69,19 @@ def process_results(case_name):
     # Get rooftop solar production data (HDF5)
     inverter_schema = te30_store.get_schema("inverter_TE_ChallengeH_metrics")
 
-    print(f"Inverter tables {pp.pformat(inverter_schema.tables)}")
-    print(f"inverter columns {pp.pformat(inverter_schema.columns)}")
+    print(f"Inverter tables list  {pp.pformat(inverter_schema.tables)}")
+    print(f"Inverter columns dictionary {pp.pformat(inverter_schema.columns)}")
     # For silly reasons, GridLAB-D stores each day of data in its own table
     # called "index1", "index2", etc.
+
+    # The schema is just a dictionary so if we want to look at columns for just a
+    # table it's pretty easy. (In this case the columns are identical for each day so
+    # it's not that exciting.)
+    print(f"What is this? {pp.pformat(inverter_schema.tables)}")
+    print(
+        f"Inverter columns list for table of data for first simulated day ('index1') "
+        f"{pp.pformat(inverter_schema.columns['index1'])}"
+    )
 
     inverter_data = inverter_schema.get_series_data("index1", start_date_1, end_date_1)
     # Just going to be looking at data from a single house
