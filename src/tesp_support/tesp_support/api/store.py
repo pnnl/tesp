@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 import zipfile as zf
 
+"""
 #  add empty json "file" store that holds
 #  the directory and schemas classes for each file store
 #
@@ -52,6 +53,7 @@ import zipfile as zf
 #     {...}
 #   ]
 # }
+"""
 
 
 class Directory:

@@ -3,7 +3,11 @@
 
 from .data import feeder_entities_path
 from .entity import assign_defaults
-from .model import GLModel
+from .model_GLM import GLModel
+
+
+class Defaults:
+    pass
 
 
 class GLMModifier:
@@ -12,8 +16,8 @@ class GLMModifier:
     def __init__(self):
         self.model = GLModel()
         self.glm = self.model.glm
-        assign_defaults(self, feeder_entities_path)
-        return
+        self.defaults = Defaults
+        assign_defaults(self.defaults, feeder_entities_path)
 
     # get/add/del module calls to modify GridLabD module entities
     def get_module(self, gld_type):
@@ -117,7 +121,7 @@ class GLMModifier:
     # Read and Write .GLM files
     def read_model(self, filepath):
         self.model.read(filepath)
-        return True
+        return self.model.glm, True
 
     def write_model(self, filepath):
         self.model.write(filepath)

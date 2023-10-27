@@ -3,4 +3,4 @@
 
 import tesp_support.substation as ss
 
-ss.substation_loop_f('TE_agent_dict.json', 'TE', 900)
+ss.substation_loop('TE_agent_dict.json', 'TE', 900)

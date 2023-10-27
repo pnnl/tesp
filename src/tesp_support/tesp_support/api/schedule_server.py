@@ -143,9 +143,9 @@ def main():
     if error:
         return
 
-    print('Schedule server metadata file: ', args.input_file)
-    print('Schedule server port: ', args.port)
-    schedule_server(args.input_file, args.port)
+    print('Schedule server metadata file: ', args.input_file[0])
+    print('Schedule server port: ', args.port[0])
+    schedule_server(args.input_file[0], int(args.port[0]))
 
 
 if __name__ == '__main__':

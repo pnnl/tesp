@@ -17,6 +17,10 @@ from .data import glm_entities_path
 from .entity import Entity
 
 
+class GLM:
+    pass
+
+
 class GLModel:
     """ GLModel class
 
@@ -95,7 +99,7 @@ class GLModel:
         self.in_file = ""
         self.out_file = ""
         self.model = {}
-        self.glm = None
+        self.glm = GLM()
         self.conn = None
         self.modules = None
         self.objects = None
@@ -955,7 +959,7 @@ class GLModel:
 def _test1():
     from .data import tesp_test
 
-    # Test model.py
+    # Test model_GLM.py
     model_file = GLModel()
     if model_file.readBackboneModel("R1-12.47-1.glm"):
     # if model_file.read(feeders_path + "GLD_three_phase_house.glm"):

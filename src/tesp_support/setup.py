@@ -1,7 +1,7 @@
 # Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: setup.py
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, installer
 
 version = open("version", 'r').readline().strip()
 long_description = '\n\n'.join(open(f, 'rb').read().decode('utf-8') for f in ['README.rst', 'CHANGELOG.rst'])
@@ -51,9 +51,9 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'download_data = tesp_support.api.data:download_data',
-            'download_analysis = tesp_support.api.data:download_analysis',
-            'download_examples = tesp_support.api.data:download_examples',
+            'tesp_download_data = tesp_support.api.data:download_data',
+            'tesp_download_analysis = tesp_support.api.data:download_analysis',
+            'tesp_download_examples = tesp_support.api.data:download_examples',
             'schedule_server = tesp_support.api.schedule_server:main'
         ]
     }

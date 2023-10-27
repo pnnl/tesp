@@ -2,7 +2,7 @@
 """
 Created on Fri Jan 15 08:40:05 2021
 
-This module turns a model of a power distribtuion
+This module turns a model of a power distribution
 system into a graph that can be evaluated.
 
 It has the ability to read in different file formats,
@@ -93,9 +93,9 @@ class MeterNetwork:
             of the meter system.
         """
         # Checking to make sure this is a valid file:
-        assert os.path.isfile(excel_file),\
+        assert os.path.isfile(excel_file), \
             'Oops! %r is not a valid Excel file' % excel_file
-        logger.info('Reading in the data from the excel spredsheet')
+        logger.info('Reading in the data from the excel spreadsheet')
         # Reading in the spreadsheet:
         nodes = pd.read_excel(excel_file, sheet_name=sheet)
         # Checking if model name and feeder information is
@@ -123,7 +123,7 @@ class MeterNetwork:
         G.add_nodes_from(
             [(n, {'pos': (a, b)}) for n, a, b, in zip(
                 nodes[columns[0]], nodes[columns[1]], nodes[columns[2]])]
-            )
+        )
         edges = list(combinations(nodes[columns[0]], 2))
         G.add_edges_from(edges)
         logger.info('Reformatting the meter position info for plotting')
@@ -160,7 +160,7 @@ class MeterNetwork:
             G (NetworkX graph) - NetworkX graph representation
             of the meter system.
         """
-        assert os.path.isfile(csv_file),\
+        assert os.path.isfile(csv_file), \
             'Oops! %r is not a valid CSV file.' % csv_file
         logger.info('Reading in the data from the csv file')
         # Reading in the .csv file:
@@ -185,14 +185,14 @@ class MeterNetwork:
         #   will be errors or incorrect results, otherwise.
         nodes = nodes[columns]
         logger.info('Creating a NetworkX representation of! the data')
-        # Creating a NetorkX representation of the data:
+        # Creating a NetworkX representation of the data:
         G = nx.Graph()
         edges = list(combinations(nodes[columns[0]], 2))
         G.add_edges_from(edges)
         G.add_nodes_from(
             [(n, {'pos': (a, b)}) for n, a, b, in zip(
                 nodes[columns[0]], nodes[columns[1]], nodes[columns[2]])]
-            )
+        )
         logger.info('Reformatting the meter position info for plotting')
         # Grabbing the positional data for plotting:
         positions = {
@@ -229,10 +229,10 @@ class MeterNetwork:
             is the 'longitude' element.
 
         Returns:
-            G (NetworkX graph) - NetworkX graph reprsentation
+            G (NetworkX graph) - NetworkX graph representation
             of the meter system.
         """
-        assert os.path.isfile(json_file),\
+        assert os.path.isfile(json_file), \
             'Oops! %r is not a valid JSON' % json_file
         logger.info('Reading in the data from the JSON file')
         # Reading in the JSON file:
@@ -240,7 +240,7 @@ class MeterNetwork:
             data = json.load(file)
         # Checking to see if model name and feeder are in
         # the data:
-        if ('model_name' in data.keys() and 'feeder' in data.keys()):
+        if 'model_name' in data.keys() and 'feeder' in data.keys():
             model_name = data['model_name']
             feeder = data['feeder']
         else:
@@ -260,7 +260,7 @@ class MeterNetwork:
         G.add_nodes_from(
             [(n, {'pos': (
                 nodes[n][position_labels[0]], nodes[n][position_labels[1]])})
-                for n in list(nodes.keys())])
+             for n in list(nodes.keys())])
         logger.info('Reformatting the meter position info for plotting')
         # Grabbing the positional data for plotting:
         positions = {
@@ -287,7 +287,7 @@ class MeterNetwork:
             (null)
 
         Returns:
-            dataframe (pandas dataframe) - Pandas datafrane
+            dataframe (pandas dataframe) - Pandas dataframe
             representation of the meter names, locations, and
             other information.
         """
@@ -331,9 +331,8 @@ class MeterNetwork:
 
             node_args (dict) - Dictionary of data of how to draw the
             graph. Things to consider include node color, node size, node
-            labels, etc. Visit
-            http://holoviews.org/user_guide/Network_Graphs.html for more
-            examples and suggestions.
+            labels, etc. Visit http://holoviews.org/user_guide/Network_Graphs.html
+            for more examples and suggestions.
 
             edges (list) - List of the edges that connect the meters.
 
@@ -353,7 +352,7 @@ class MeterNetwork:
             output_dir (directory) - Directory to send the final
             plot of the graph.
 
-            save_plot (bool) - Boolean of whether or not to save the
+            save_plot (bool) - Boolean of whether to save the
             plot generated. Default is 'True'.
 
         Returns:

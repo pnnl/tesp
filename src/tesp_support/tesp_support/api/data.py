@@ -47,45 +47,65 @@ elif platform == "win32":
 
 def arguments(description="", args=""):
 
-    parser = argparse.ArgumentParser(description=description)
+    _parser = argparse.ArgumentParser(description=description)
     if 'p' in args:
-        parser.add_argument('-p', '--port', nargs=1)
+        _parser.add_argument('-p', '--port', nargs=1)
     if 'i' in args:
-        parser.add_argument('-i', '--input_file', nargs=1)
+        _parser.add_argument('-i', '--input_file', nargs=1)
     if 'o' in args:
-        parser.add_argument('-o', '--output_file', nargs=1)
-    _args = parser.parse_args()
+        _parser.add_argument('-o', '--output_file', nargs=1)
+    if 'd' in args:
+        _parser.add_argument('-d', '--output_dir', nargs=1)
+    _args = _parser.parse_args()
 
-    error = False
+    _error = False
     if 'i' in args:
         if _args.input_file is None:
-            print('ERROR-> Input file missing')
-            error = True
+            _error = True
         elif not path.isfile(_args.input_file[0]):
             print('ERROR-> Input file ' + _args.input_file[0] + ' not found')
-            error = True
+            _error = True
     if 'p' in args:
         if _args.port is None:
-            print('ERROR-> Input port is missing')
-            error = True
+            _error = True
     if 'o' in args:
         if _args.output_file[0] is None:
-            print('ERROR-> Output file missing')
-            error = True
+            _error = True
+    if 'd' in args:
+        if _args.output_dir is None:
+            _error = True
+        elif not path.isdir(_args.output_dir[0]):
+            print('ERROR-> Output directory ' + _args.output_dir[0] + ' not found')
+            _error = True
+    if _error:
+        print(description + " not loaded, desired input needed")
+        print(_parser.format_usage())
+
+    return _error, _args
+
+
+def tesp_download_data():
+    description = "Download TESP Model, Schedules and Weather Data"
+    error, args = arguments(description=description, args='d')
     if error:
-        print('ERROR-> ' + description + " not loaded")
-        print(parser.format_usage())
+        return
 
-    return error, _args
-
-
-def download_data():
-    print("download data")
+    print('Output directory: ', args.output_dir[0])
 
 
-def download_analysis():
-    print("download analysis")
+def tesp_download_analysis():
+    description = "Download TESP Analysis Case Studies Data"
+    error, args = arguments(description=description, args='d')
+    if error:
+        return
+
+    print('Output directory: ', args.output_dir[0])
 
 
-def download_examples():
-    print("download examples")
+def tesp_download_examples():
+    description = "Download TESP Examples Case Data"
+    error, args = arguments(description=description, args='d')
+    if error:
+        return
+
+    print('Output directory: ', args.output_dir[0])
