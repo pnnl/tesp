@@ -14,14 +14,25 @@ import datetime
 import numpy as np
 
 from tesp_support.api.helpers import HelicsMsg
-import tesp_support.original.commercial_feeder_glm as com_FG
-import tesp_support.original.copperplate_feeder_glm as cp_FG
 
 import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
-import tesp_support.dsot.residential_feeder_glm as res_FG
+
 import prep_substation_dsot as prep
+
+recs = ""
+# recs_data = False
+recs_data = True
+if recs_data:
+    recs = "RECS"
+    import examples.analysis.dsot.recs.commercial_feeder_glm as com_FG
+    import examples.analysis.dsot.recs.copperplate_feeder_glm as cp_FG
+    import examples.analysis.dsot.recs.residential_feeder_glm as res_FG
+else:
+    import tesp_support.original.commercial_feeder_glm as com_FG
+    import tesp_support.original.copperplate_feeder_glm as cp_FG
+    import tesp_support.dsot.residential_feeder_glm as res_FG
 
 
 # Simulation settings for the experimental case
@@ -59,10 +70,10 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     with open(os.path.join(data_Path, sys_config['dsoAgentFile']), 'r', encoding='utf-8') as json_file:
         case_config = json.load(json_file)
     # loading building and DSO metadata
-    with open(os.path.join(data_Path, sys_config['dsoPopulationFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_Path, sys_config['dso' + recs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
         dso_config = json.load(json_file)
     # loading residential metadata
-    with open(os.path.join(data_Path, sys_config['dsoResBldgFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_Path, sys_config['dso' + recs + 'ResBldgFile']), 'r', encoding='utf-8') as json_file:
         res_config = json.load(json_file)
     # loading commercial building metadata
     with open(os.path.join(data_Path, sys_config['dsoCommBldgFile']), 'r', encoding='utf-8') as json_file:
@@ -234,6 +245,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sim['BulkpowerBus'] = dso_val['bus_number']
         # case_config['BackboneFiles']['RandomSeed'] = dso_val['random_seed']
         sim['DSO_type'] = dso_val['utility_type']
+        if recs_data:
+            sim['state'] = dso_val['state']
+            sim['income_level'] = dso_val['income_level']
         sim['rooftop_pv_rating_MW'] = dso_val['rooftop_pv_rating_MW']
         sim['scaling_factor'] = dso_val['scaling_factor']
         sim['serverPort'] = 5150 + (int(bus) // 20)

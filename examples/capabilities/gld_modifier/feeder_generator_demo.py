@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2023 Battelle Memorial Institute
+# Copyright (C) 2019-2023 Battelle Memorial Institute
 """
 Created on Tue Jan 17 14:05:08 2023
 
@@ -48,9 +48,7 @@ logging.DATA = DATA_LEVEL_NUM
 logging.Logger.data = data
 
 # Setting up pretty printing, mostly for debugging.
-pp = pprint.PrettyPrinter(
-    indent=4,
-)
+pp = pprint.PrettyPrinter(indent=4, )
 
 
 def _auto_run(args):
@@ -351,13 +349,18 @@ def demo():
 
     parser = argparse.ArgumentParser(description="GridLAB-D Feeder Generator")
     # script_path = os.path.dirname(os.path.realpath(__file__))
-    parser.add_argument(
-        "-p", "--feeder_path", nargs="?", default="../../../data/feeders"
-    )
-    parser.add_argument("-n", "--feeder_file", nargs="?", default="R1-12.47-1.glm")
-    parser.add_argument(
-        "-o", "--output_file", nargs="?", default="modified_R1-12.47-1.glm"
-    )
+    parser.add_argument('-p',
+                        '--feeder_path',
+                        nargs='?',
+                        default='../../../data/feeders')
+    parser.add_argument('-n',
+                        '--feeder_file',
+                        nargs='?',
+                        default='R1-12.47-1.glm')
+    parser.add_argument('-o',
+                        '--output_file',
+                        nargs='?',
+                        default='modified_R1-12.47-1.glm')
     _args = parser.parse_args()
     _auto_run(_args)
 
