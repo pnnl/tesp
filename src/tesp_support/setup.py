@@ -51,9 +51,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'tesp_download_data = tesp_support.api.data:download_data',
-            'tesp_download_analysis = tesp_support.api.data:download_analysis',
-            'tesp_download_examples = tesp_support.api.data:download_examples',
+            'tesp_component = tesp_support.api.data:tesp_component',
             'schedule_server = tesp_support.api.schedule_server:main'
         ]
     }

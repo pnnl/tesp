@@ -52,6 +52,7 @@ class GLModel:
         #include ...
         module ...
         objects ...
+        schedule ...
 
     Can be used any where::
 
@@ -96,6 +97,7 @@ class GLModel:
         #     self.objects = json.load(json_file)
         #     for name in self.objects:
         #         self.object_entities[name] = Entity(name, self.objects[name])
+        self.root = None
         self.in_file = ""
         self.out_file = ""
         self.model = {}
@@ -103,6 +105,7 @@ class GLModel:
         self.conn = None
         self.modules = None
         self.objects = None
+        self.schedule_types = {}
         self.module_types = []
         self.class_types = []
         self.module_entities = {}
@@ -401,6 +404,11 @@ class GLModel:
                 if name not in power_entities:
                     diction += self.get_diction(self.object_entities, object_name, self.instanceToObject, name)
 
+        # Write the schedules
+        for name in self.schedule_types:
+            for line in self.schedule_types[name]:
+                diction += line + "\n"
+            diction += "\n"
         return diction
 
     def instancesToSQLite(self, filename):
@@ -546,6 +554,31 @@ class GLModel:
     def del_object(self, _type, name):
         # del name and set object entity instance to model type
         del self.model[_type][name]
+
+    def glm_schedule(self, line, itr):
+        # This only grab the lines, real parsing of the schedule
+
+        m_sched = re.search('schedule\W+(\w+)\s*([;{])', line, re.IGNORECASE)
+        if m_sched:
+            # schedule found
+            self.schedule_types[m_sched.group(1)] = []
+            self.schedule_types[m_sched.group(1)].append(line)
+            if m_sched.group(2) == '{':
+                # multi-line schedule
+                oend = 1
+                tab = ["  "]
+                while oend:
+                    line = next(itr)
+                    if re.search('}', line):
+                        # end of the schedule
+                        tab.remove("  ")
+                        oend -= 1
+                    self.schedule_types[m_sched.group(1)].append(''.join(tab) + line)
+                    if re.search('{', line):
+                        # start of the sub schedule
+                        tab.append("  ")
+                        oend += 1
+        return m_sched.group(1)
 
     def glm_module(self, mod, line, itr):
         """ Store a clock/module/class in the model structure
@@ -790,6 +823,8 @@ class GLModel:
                     name = self.glm_module("class", line, itr)
                 elif re.search('module', line):
                     name = self.glm_module("module", line, itr)
+                elif re.search('schedule', line):
+                    name = self.glm_schedule(line, itr)
                 elif re.search('object', line):
                     line, counter, name = self.glm_object("", line, itr, h, counter)
                 else:
@@ -808,6 +843,7 @@ class GLModel:
     def readBackboneModel(self, root_name):
         filename = feeders_path + root_name
         if self.readModel(filename):
+            self.root = root_name
             self.in_file = filename
             return self.glm, True
         self.in_file = filename
@@ -816,6 +852,8 @@ class GLModel:
 
     def read(self, filename):
         if self.readModel(filename):
+            root = os.path.split(filename)
+            self.root = root[1]
             self.in_file = filename
             return self.glm, True
         self.in_file = filename
@@ -927,7 +965,7 @@ class GLModel:
             elb[u, v] = G[u][v]['ename']
 
         # Draw
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(num=(self.root + " network"))
         pos = nx.kamada_kawai_layout(G)
         n1 = nx.draw_networkx_nodes(G, pos, ax=ax, node_size=20, node_color=nc)
         e1 = nx.draw_networkx_edges(G, pos, ax=ax, edge_color=ec)
@@ -956,7 +994,7 @@ class GLModel:
         plt.show()
 
 
-def _test1():
+def test1():
     from .data import tesp_test
 
     # Test model_GLM.py

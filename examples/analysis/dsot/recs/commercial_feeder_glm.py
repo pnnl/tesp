@@ -45,11 +45,12 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
 
     if bldg_type not in ['large_office', 'ZIPLOAD']:
         data = bldg_metadata['building_model_specifics'][bldg_type]
-        # normalize a couple of data list
+
+        # TODO these should NOT have to be normalized but they are
+        age = normalize_dict_prob('vintage', data['vintage'])
+        data['wall_construction'] = normalize_dict_prob('wall_construction', data['wall_construction'])
         data['roof_construction_insulation'] = normalize_dict_prob('roof_construction_insulation',
                                                                    data['roof_construction_insulation'])
-        data['wall_construction'] = normalize_dict_prob('wall_construction', data['wall_construction'])
-        age = normalize_dict_prob('vintage', data['vintage'])
         # Randomly determine the age (year of construction) of the building
         age_bin = rand_bin_select(age, np.random.uniform(0, 1))
         bldg['age'] = sub_bin_select(age_bin, 'vintage', np.random.uniform(0, 1))
@@ -96,9 +97,9 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
 
         # Set thermal integrity of the building
         # bldg['surface_heat_trans_coeff'] = data['Hm']  # NOT USED IN GLD.
-        wall_area = bldg['ceiling_height'] * \
-                    2 * math.sqrt(bldg['floor_area'] / bldg['no_of_stories'] / bldg['aspect_ratio']) * \
-                    (bldg['aspect_ratio'] + 1)
+        wall_area = (bldg['ceiling_height'] * 2 *
+                     math.sqrt(bldg['floor_area'] / bldg['no_of_stories'] / bldg['aspect_ratio']) *
+                     (bldg['aspect_ratio'] + 1))
         ratio = wall_area * (1 - bldg['window_wall_ratio']) / bldg['floor_area']
 
         bldg['thermal_mass_per_floor_area'] = (0.9 *
@@ -109,21 +110,21 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
         bldg['roof_type'] = rand_bin_select(data['roof_construction_insulation'], np.random.uniform(0, 1))
         bldg['wall_type'] = rand_bin_select(data['wall_construction'], np.random.uniform(0, 1))
         bldg['Rroof'] = 1 / find_envelope_prop(bldg['roof_type'], bldg['age'],
-                                               bldg_metadata['general']['thermal_integrity'], climate) \
-                        * 1.3 * np.random.normal(1, 0.1)
+                                               bldg_metadata['general']['thermal_integrity'],
+                                               climate) * 1.3 * np.random.normal(1, 0.1)
         bldg['Rwall'] = 1 / find_envelope_prop(bldg['wall_type'], bldg['age'],
-                                               bldg_metadata['general']['thermal_integrity'], climate) \
-                        * 1.3 * np.random.normal(1, 0.1)
+                                               bldg_metadata['general']['thermal_integrity'],
+                                               climate) * 1.3 * np.random.normal(1, 0.1)
         bldg['Rfloor'] = 22.  # Values from previous studies
         bldg['Rdoors'] = 3.  # Values from previous studies
         bldg['no_of_doors'] = 3  # Values from previous studies
 
         bldg['Rwindows'] = 1 / (find_envelope_prop('u_windows', bldg['age'],
-                                                   bldg_metadata['general']['thermal_integrity'], climate)
-                                * 1.15 * np.random.normal(1, 0.05))
+                                                   bldg_metadata['general']['thermal_integrity'],
+                                                   climate) * 1.15 * np.random.normal(1, 0.05))
         bldg['glazing_shgc'] = find_envelope_prop('window_SHGC', bldg['age'],
-                                                  bldg_metadata['general']['thermal_integrity'], climate) \
-                               * 1.15 * np.random.normal(1, 0.05)
+                                                  bldg_metadata['general']['thermal_integrity'],
+                                                  climate) * 1.15 * np.random.normal(1, 0.05)
         if data['fraction_awnings'] > np.random.uniform(0, 1):
             bldg['window_exterior_transmission_coefficient'] = np.random.normal(0.5, 0.1)
         else:
@@ -197,19 +198,19 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
 
         # randomize 10# then convert W/sf -> kW
         floor_area = bldg['floor_area']
-        bldg['adj_lights'] = data['internal_heat_gains']['lighting'] * \
-                             (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+        bldg['adj_lights'] = (data['internal_heat_gains']['lighting'] * (0.9 + 0.1 * np.random.random()) *
+                              floor_area / 1000.0)
         bldg['adj_plugs'] = data['internal_heat_gains']['MEL'] * (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
-        bldg['adj_refrig'] = data['internal_heat_gains']['large_refrigeration'] \
-                             * (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+        bldg['adj_refrig'] = (data['internal_heat_gains']['large_refrigeration'] *
+                              (0.9 + 0.2 * np.random.random()) * floor_area / 1000.0)
         # ---------------- Setting gas water heating to zero ----------------
         bldg['adj_gas'] = 0
         # bldg['adj_gas'] = (0.9 + 0.2 * np.random.random())
         # Set exterior lighting to zero as plug and light parameters capture all of CBECS loads.
         bldg['adj_ext'] = 0  # (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
         occ_load = 73  # Assumes 73 watts / occupant from Caney Fork study
-        bldg['adj_occ'] = data['internal_heat_gains']['occupancy'] * occ_load \
-                          * (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+        bldg['adj_occ'] = (data['internal_heat_gains']['occupancy'] * occ_load *
+                           (0.9 + 0.1 * np.random.random()) * floor_area / 1000.0)
 
         bldg['int_gains'] = bldg['adj_lights'] + bldg['adj_plugs'] + bldg['adj_occ'] + bldg['adj_gas']
 
@@ -511,8 +512,8 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                     not res_FG.is_hhmm_valid(drive_sch['home_leave_time']) or \
                     not res_FG.is_hhmm_valid(drive_sch['work_arr_time']):
                 raise UserWarning('invalid HHMM format of driving time!')
-            if drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or drive_sch[
-                'work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0:
+            if (drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or
+                    drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0):
                 raise UserWarning('invalid home or work duration for ev!')
             if not res_FG.is_drive_time_valid(drive_sch):
                 raise UserWarning('home and work arrival time are not consistent with durations!')
@@ -656,27 +657,28 @@ def rand_bin_select(diction, probability):
     return None
 
 
-def sub_bin_select(bin, type, prob):
+def sub_bin_select(_bin, _type, _prob):
     """ Returns a scalar value within a bin range based on a uniform probability within that bin range
 
     Args:
-        bin: name of bin
-        type: building parameter describing set of bins
-        prob: scalar value between 0 and 1
+        _bin: name of bin
+        _type: building parameter describing set of bins
+        _prob: scalar value between 0 and 1
     """
-    if type == 'vintage':
+    bins = {}
+    if _type == 'vintage':
         bins = {'pre_1960': [1945, 1959],
                 '1960-1979': [1960, 1979],
                 '1980-1999': [1980, 1999],
                 '2000-2009': [2000, 2009],
                 '2010-2015': [2010, 2015]}
-    elif type == 'total_area':
+    elif _type == 'total_area':
         bins = {'1-5': [1000, 5000],
                 '5-10': [5001, 10000],
                 '10-25': [10001, 25000],
                 '25-50': [25001, 50000],
                 '50_more': [50001, 55000]}
-    elif type == 'occupancy':
+    elif _type == 'occupancy':
         bins = {'0': [0, 0],
                 '1-39': [1, 39.99],
                 '40-48': [40, 48.99],
@@ -684,8 +686,8 @@ def sub_bin_select(bin, type, prob):
                 '61-84': [61, 84.99],
                 '85-167': [85, 167.99],
                 '168': [168, 168]}
-    val = bins[bin][0] + prob * (bins[bin][1] - bins[bin][0])
-    if type in ['vintage']:
+    val = bins[_bin][0] + _prob * (bins[_bin][1] - bins[_bin][0])
+    if _type in ['vintage']:
         val = int(val)
     return val
 
@@ -798,7 +800,8 @@ def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
     if bldg['adj_refrig'] != 0:
         print('  object ZIPload { // large refrigeration electrical load', file=op)
         # print('    schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
-        # TODO: set to 0.01 to avoid a divide by zero issue in the agent code.  Should be set to zero after that is fixed.
+        # TODO: set to 0.01 to avoid a divide by zero issue in the agent code.
+        #  Should be set to zero after that is fixed.
         print('    heatgain_fraction 0.01;', file=op)
         print('    power_fraction {:.2f};'.format(bldg['c_p_frac']), file=op)
         print('    impedance_fraction {:.2f};'.format(bldg['c_z_frac']), file=op)

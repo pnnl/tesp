@@ -654,7 +654,6 @@ class Curve:
         pricecap (float): the maximum price that is allowed in the market, in $/kWh
         num_samples (int): the number of sampling points, describes how precisely the curve is sampled
 
-
     Attributes:
         prices ([float]): array of prices, in $/kWh
         quantities ([float]): array of quantities, in kW
