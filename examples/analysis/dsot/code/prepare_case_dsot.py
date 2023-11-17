@@ -21,14 +21,16 @@ import tesp_support.dsot.glm_dictionary as gd
 
 import prep_substation_dsot as prep
 
+
 recs = ""
 # recs_data = False
 recs_data = True
 if recs_data:
     recs = "RECS"
-    import examples.analysis.dsot.recs.commercial_feeder_glm as com_FG
-    import examples.analysis.dsot.recs.copperplate_feeder_glm as cp_FG
-    import examples.analysis.dsot.recs.residential_feeder_glm as res_FG
+    sys.path.append('../')
+    import recs.commercial_feeder_glm as com_FG
+    import recs.copperplate_feeder_glm as cp_FG
+    import recs.residential_feeder_glm as res_FG
 else:
     import tesp_support.original.commercial_feeder_glm as com_FG
     import tesp_support.original.copperplate_feeder_glm as cp_FG

@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 from tesp_support.api.helpers import gld_strict_name
-import examples.analysis.dsot.recs.residential_feeder_glm as res_FG
+import recs.residential_feeder_glm as res_FG
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):

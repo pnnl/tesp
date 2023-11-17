@@ -43,7 +43,7 @@ from math import sqrt
 from tesp_support.api.data import feeders_path, weather_path
 from tesp_support.api.helpers import gld_strict_name
 from tesp_support.api.parse_helpers import parse_kva
-from examples.analysis.dsot.recs.commercial_feeder_glm import define_comm_loads, create_comm_zones
+from recs.commercial_feeder_glm import define_comm_loads, create_comm_zones
 
 transmissionVoltage = 138000.0
 transmissionXfmrMVAbase = 12.0
