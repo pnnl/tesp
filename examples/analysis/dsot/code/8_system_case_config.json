@@ -297,7 +297,7 @@
   "dsoAgentFile": "default_case_config.json",
   "dsoPopulationFile": "8-metadata-lean.json",
   "WeatherDataSourcePath": "../data/8-node data/DAT formatted files/",
-  "hvacSetPoint": "hvac_setpt.json",
+  "hvacSetPoint": "hvac_setpt_RECS.json",
   "dsoQuadraticFile": "8_DSO_quadratic_curves.json",
   "dsoCommBldgFile": "DSOT_commercial_metadata.json",
   "dsoResBldgFile": "residential_metadata.json",
