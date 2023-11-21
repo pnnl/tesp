@@ -162,6 +162,7 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
             if lst[1] == 'house':
                 inHouses = True
                 parent = ''
+                inc_level = 'None'
                 sqft = 2500.0
                 cooling = 'NONE'
                 heating = 'NONE'
@@ -306,6 +307,14 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
             if inHouses:
                 if lst[0] == 'name':
                     name = lst[1].strip(';')
+                    if 'Low' in name:
+                        inc_level = 'Low'
+                    elif 'Middle' in name:
+                        inc_level = 'Middle'
+                    elif 'Upper' in name:
+                        inc_level = 'Upper'
+                    # else:
+                    #     print('Income level not defined')
                 if lst[0] == 'parent':
                     parent = lst[1].strip(';')
                 if lst[0] == 'floor_area':
@@ -376,7 +385,7 @@ def glm_dict(name_root, config=None, ercot=False):  # , te30=False):
                     fuel_type = 'electric'
                     if heating == 'GAS':
                         fuel_type = 'gas'
-                    houses[name] = {'feeder_id': feeder_id, 'billingmeter_id': lastBillingMeter, 'sqft': sqft,
+                    houses[name] = {'feeder_id': feeder_id, 'billingmeter_id': lastBillingMeter, 'income_level':inc_level, 'sqft': sqft,
                                     'stories': stories, 'doors': doors, 'thermal_integrity': thermal_integrity,
                                     'cooling': cooling, 'heating': heating, 'wh_gallons': 0,
                                     'house_class': house_class, 'Rroof': Rroof, 'Rwall': Rwall, 'Rfloor': Rfloor,
