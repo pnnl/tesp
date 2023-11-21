@@ -1,16 +1,11 @@
-# Copyright (C) 2019-2022 Battelle Memorial Institute
+# Copyright (C) 2019-2023 Battelle Memorial Institute
 # file: commercial_feeder_glm.py
 
-import os
-import json
 import math
 import numpy as np
-from datetime import datetime
-
-import matplotlib.pyplot as plt
 
 from tesp_support.api.helpers import gld_strict_name
-import tesp_support.dsot.residential_feeder_glm_RECS_inputs as res_FG
+import recs.residential_feeder_glm as res_FG
 
 
 def define_comm_bldg(bldg_metadata, dso_type, num_bldgs):
@@ -40,7 +35,7 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
     """ Determines building parameters based on building type, dso type, and (ASHRAE) climate zone
 
     Args:
-        bldg_type (str): class of building (e.g. 'strip_mall', etc)
+        bldg_type (str): class of building (e.g. 'strip_mall', etc.)
         bldg_size: size of the building in sq. ft.
         dso_type (str): whether the dso is 'Urban', 'Suburban', or 'Rural'
         climate (str): ASHRAE climate zone that the DSO resides in (e.g. '2A')
@@ -49,9 +44,14 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
     bldg = {'type': bldg_type}
 
     if bldg_type not in ['large_office', 'ZIPLOAD']:
-        # Randomly determine the age (year of construction) of the building
         data = bldg_metadata['building_model_specifics'][bldg_type]
+
+        # TODO these should NOT have to be normalized but they are
         age = normalize_dict_prob('vintage', data['vintage'])
+        data['wall_construction'] = normalize_dict_prob('wall_construction', data['wall_construction'])
+        data['roof_construction_insulation'] = normalize_dict_prob('roof_construction_insulation',
+                                                                   data['roof_construction_insulation'])
+        # Randomly determine the age (year of construction) of the building
         age_bin = rand_bin_select(age, np.random.uniform(0, 1))
         bldg['age'] = sub_bin_select(age_bin, 'vintage', np.random.uniform(0, 1))
 
@@ -97,9 +97,9 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
 
         # Set thermal integrity of the building
         # bldg['surface_heat_trans_coeff'] = data['Hm']  # NOT USED IN GLD.
-        wall_area = bldg['ceiling_height'] * \
-                    2 * math.sqrt(bldg['floor_area'] / bldg['no_of_stories'] / bldg['aspect_ratio']) * \
-                    (bldg['aspect_ratio'] + 1)
+        wall_area = (bldg['ceiling_height'] * 2 *
+                     math.sqrt(bldg['floor_area'] / bldg['no_of_stories'] / bldg['aspect_ratio']) *
+                     (bldg['aspect_ratio'] + 1))
         ratio = wall_area * (1 - bldg['window_wall_ratio']) / bldg['floor_area']
 
         bldg['thermal_mass_per_floor_area'] = (0.9 *
@@ -110,21 +110,21 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
         bldg['roof_type'] = rand_bin_select(data['roof_construction_insulation'], np.random.uniform(0, 1))
         bldg['wall_type'] = rand_bin_select(data['wall_construction'], np.random.uniform(0, 1))
         bldg['Rroof'] = 1 / find_envelope_prop(bldg['roof_type'], bldg['age'],
-                                               bldg_metadata['general']['thermal_integrity'], climate) \
-                        * 1.3 * np.random.normal(1, 0.1)
+                                               bldg_metadata['general']['thermal_integrity'],
+                                               climate) * 1.3 * np.random.normal(1, 0.1)
         bldg['Rwall'] = 1 / find_envelope_prop(bldg['wall_type'], bldg['age'],
-                                               bldg_metadata['general']['thermal_integrity'], climate) \
-                        * 1.3 * np.random.normal(1, 0.1)
+                                               bldg_metadata['general']['thermal_integrity'],
+                                               climate) * 1.3 * np.random.normal(1, 0.1)
         bldg['Rfloor'] = 22.  # Values from previous studies
         bldg['Rdoors'] = 3.  # Values from previous studies
         bldg['no_of_doors'] = 3  # Values from previous studies
 
         bldg['Rwindows'] = 1 / (find_envelope_prop('u_windows', bldg['age'],
-                                                   bldg_metadata['general']['thermal_integrity'], climate)
-                                * 1.15 * np.random.normal(1, 0.05))
+                                                   bldg_metadata['general']['thermal_integrity'],
+                                                   climate) * 1.15 * np.random.normal(1, 0.05))
         bldg['glazing_shgc'] = find_envelope_prop('window_SHGC', bldg['age'],
-                                                  bldg_metadata['general']['thermal_integrity'], climate) \
-                               * 1.15 * np.random.normal(1, 0.05)
+                                                  bldg_metadata['general']['thermal_integrity'],
+                                                  climate) * 1.15 * np.random.normal(1, 0.05)
         if data['fraction_awnings'] > np.random.uniform(0, 1):
             bldg['window_exterior_transmission_coefficient'] = np.random.normal(0.5, 0.1)
         else:
@@ -812,98 +812,3 @@ def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
         print('    interval', str(metrics_interval) + ';', file=op)
         print('  };', file=op)
     print('}', file=op)
-
-
-def test():
-    metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v1/analysis_metadata'
-    with open(os.path.join(metadata_path, 'DSOT_commercial_metadata.json')) as json_file:
-        comm_bldg_data = json.load(json_file)
-
-    # TODO: Ensure that there is a strategy to set a random seed that is different for each DSO.
-    # np.random.seed(30)
-    dso = 'Suburban'
-    climate = '2A'  # ASHRAE climate zone
-    num_bldg = 30
-
-    outpath = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Dummy/'
-    outname = 'test_comm_' + str(num_bldg) + '_bldg_' + climate
-    op = open(outpath + outname + '.glm', 'w')
-
-    #  1 - define random population of building types and sizes
-    comm_bldgs = define_comm_bldg(comm_bldg_data, dso, num_bldg)
-
-    #  2 - set parameters for each defined building
-    comm_bldg = {}
-    comm_zones = {}
-    comm_loads = {}
-    for i in comm_bldgs:
-        comm_bldg[i] = define_comm_loads(comm_bldgs[i][0], comm_bldgs[i][1], dso, climate, comm_bldg_data)
-
-        comm_zones[i] = comm_bldg[i].copy()
-
-        #  3 - for large buildings subdivide into subzones.  Write all buildings and zones out to GLD format
-        key = i
-        comm_loads[key] = [i, comm_bldgs[i][0], 3, 20, 3, 'A', 240, 200]
-        # comm_loads[key][1] = bldgs[i][0]
-        # comm_loads[key][2] = 3  # Dummy number for number of zones
-        # comm_loads[key][3] = 20  # Dummy number for kVA
-        # comm_loads[key][4] = 3  # Dummy number for nphs
-        # comm_loads[key][5] = 'A'  # Dummy number for phases
-        # comm_loads[key][6] = 240  # dummy number for vln
-        # comm_loads[key][7] = 200  # Dummy number for load number
-
-        create_comm_zones(comm_zones[i], comm_loads, key, op, 'test')
-
-    #   PLOT OUTPUT AND SAVE PLOTS TO FILE
-    plot_path = 'C:/Users/reev057/OneDrive - PNNL/Documents/GMLC/DSO+T/building distribution'
-    vars = ['age', 'os_rand', 'COP_A', 'airchange_per_hour', 'floor_area', 'ceiling_height', 'window_wall_ratio',
-            'aspect_ratio', 'Rroof', 'Rwall', 'thermal_mass_per_floor_area', 'window_exterior_transmission_coefficient',
-            'Rwindows', 'glazing_shgc', 'int_gains']
-    # vars = ['start_time_weekdays', 'duration_weekdays', 'end_time_weekdays', 'start_time_sat', 'duration_sat',
-    #         'end_time_sat', 'start_time_sun', 'duration_sun', 'end_time_sun']
-    outputs = ['total', 'office', 'warehouse_storage', 'big_box', 'strip_mall', 'education', 'food_service',
-               'food_sales', 'healthcare_inpatient', 'lodging', 'low_occupancy']
-
-    dist = {}
-
-    for var in vars:
-        for out in outputs:
-            dist[out] = []
-
-        for i in comm_bldgs:
-            if comm_bldg[i]['type'] not in ['large_office']:
-                if comm_bldg[i][var] is not None:
-                    dist['total'].append(comm_bldg[i][var])
-                    dist[comm_bldg[i]['type']].append(comm_bldg[i][var])
-
-        # Plot distribution of variable for total distribution
-        label = var
-        plt.figure(figsize=(8, 6))
-        plt.hist(dist['total'], bins=20, alpha=0.5, edgecolor='k', label=label)
-        plt.title(var + ' distribution')
-        plt.legend(loc='upper right')
-        plt.xlabel(var)
-        plt.ylabel('Count')
-
-        plot_filename = datetime.now().strftime('%Y%m%d') + '-total_bldg_distribution_' + var + '.png'
-        file_path_fig = os.path.join(plot_path, plot_filename)
-
-        plt.savefig(file_path_fig, bbox_inches='tight')
-
-        # Plot distribution of variable for each building type
-        fig, axes = plt.subplots(nrows=5, ncols=2, figsize=(10, 10))
-        fig.suptitle('Distributions of ' + var)
-        for ax, each in zip(axes.flatten(), dist):
-            ax.hist(dist[each], bins=10, alpha=0.5, edgecolor='k', label=label)
-            ax.set_title(label=each, pad=-9, )
-
-        plot_filename = datetime.now().strftime('%Y%m%d') + '-bldg_sub-distributions_' + var + '.png'
-        file_path_fig = os.path.join(plot_path, plot_filename)
-
-        fig.savefig(file_path_fig, bbox_inches='tight')
-
-    print(comm_bldg)
-
-
-if __name__ == '__main__':
-    test()
