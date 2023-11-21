@@ -41,6 +41,14 @@ tesp\_support.original.curve module
    :undoc-members:
    :show-inheritance:
 
+tesp\_support.original.fncs module
+----------------------------------
+
+.. automodule:: tesp_support.original.fncs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tesp\_support.original.glm\_dictionary module
 ---------------------------------------------
 
@@ -61,6 +69,14 @@ tesp\_support.original.parse\_msout module
 ------------------------------------------
 
 .. automodule:: tesp_support.original.parse_msout
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.original.player\_f module
+---------------------------------------
+
+.. automodule:: tesp_support.original.player_f
    :members:
    :undoc-members:
    :show-inheritance:
@@ -121,10 +137,10 @@ tesp\_support.original.simple\_auction module
    :undoc-members:
    :show-inheritance:
 
-tesp\_support.original.substation module
-----------------------------------------
+tesp\_support.original.substation\_f module
+-------------------------------------------
 
-.. automodule:: tesp_support.original.substation
+.. automodule:: tesp_support.original.substation_f
    :members:
    :undoc-members:
    :show-inheritance:
@@ -157,6 +173,22 @@ tesp\_support.original.tesp\_monitor\_ercot module
 --------------------------------------------------
 
 .. automodule:: tesp_support.original.tesp_monitor_ercot
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.original.tso\_PYPOWER\_f module
+---------------------------------------------
+
+.. automodule:: tesp_support.original.tso_PYPOWER_f
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tesp\_support.original.tso\_psst\_f module
+------------------------------------------
+
+.. automodule:: tesp_support.original.tso_psst_f
    :members:
    :undoc-members:
    :show-inheritance:

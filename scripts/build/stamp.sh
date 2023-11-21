@@ -4,7 +4,7 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-ver="1.2.4"
+ver="1.3.2"
 
 echo
 echo "Stamping TESP $ver, if you want to change the version, edit this file."
@@ -64,11 +64,13 @@ echo "Stamping TESP $ver for install"
 cd "${TESPDIR}" || exit
 echo "$ver" > "scripts/version"
 echo "$ver" > "src/tesp_support/version"
-git tag "v$ver"
+
+# un-comment for final version
+# git tag "v$ver"
 
 echo "Creating TESP distribution package for pypi"
 cd "${TESPDIR}/src/tesp_support" || exit
-python -m build . > "${TESPBUILD}/package.log"
+python3 -m build . > "${TESPBUILD}/package.log"
 echo "Checking TESP distribution package for pypi"
 twine check dist/*
 echo

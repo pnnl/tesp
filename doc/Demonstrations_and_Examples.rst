@@ -1,5 +1,5 @@
 ..
-    _ Copyright (C) 2021-2022 Battelle Memorial Institute
+    _ Copyright (c) 2021-2023 Battelle Memorial Institute
     _ file: Demonstrations_and_Examples.rst
     
 .. _RunExamples:
@@ -30,6 +30,8 @@ TESP Capability Demonstrations
     ./demonstrations/houses.rst
     ./demonstrations/gld_player_recorder.rst
     ./demonstrations/gld_modifier.rst
+    ./demonstrations/datastore.rst
+    
     
 TESP uses TCP/IP port 5570 for communication and requires Python 3. Simulations can start many processes, and take minutes or hours to complete. At this time, instructions are given only for the Linux package or Docker version of TESP, which is installable. See below for advice on running TESP in native Mac OS X or Windows.
 

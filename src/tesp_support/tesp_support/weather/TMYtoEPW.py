@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: TMYtoEPW.py
 """Functions to convert Typical Meteorological Year data for EnergyPlus
 

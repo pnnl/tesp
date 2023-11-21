@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: tesp.sh
 
 
@@ -184,7 +184,7 @@ if [[ $binaries == "develop" ]]; then
   echo ++++++++++++++ GRIDLAB
   #develop - dec21 commit number for dsot
   #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
-  git clone -b develop https://github.com/gridlab-d/gridlab-d.git
+  git clone -b master https://github.com/gridlab-d/gridlab-d.git
   "${TESPBUILD}/patch.sh" gridlab-d gridlab-d
 
   echo

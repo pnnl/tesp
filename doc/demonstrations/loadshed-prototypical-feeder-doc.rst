@@ -1,5 +1,5 @@
 ..
-    _ Copyright (C) 2021-2022 Battelle Memorial Institute
+    _ Copyright (c) 2021-2023 Battelle Memorial Institute
     _ file: loadshed-taxonomy-feeder-doc.rst
 
 loadshed - Prototypical Feeder with Point-to-Point Communication Network
@@ -274,6 +274,6 @@ In :numref:`loadshed-results` the results of this scenario are shown in the oran
 ..    :all:
 ..    :style: plain
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/main/LICENSE

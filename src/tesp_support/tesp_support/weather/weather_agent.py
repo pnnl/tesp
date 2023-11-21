@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: weatherAgent.py
 
 """Weather Agent
@@ -15,6 +15,9 @@ from datetime import timedelta
 import numpy
 import pandas as pd
 from scipy.stats import truncnorm
+
+import helics
+
 
 def startWeatherAgent(file):
     """ The weather agent publishes weather data as configured by the json file
@@ -53,33 +56,12 @@ def startWeatherAgent(file):
     # convert some time values in config file to seconds
     try:
         publishTimeAhead = convertTimeToSeconds(publishTimeAhead)
-    except Exception as ex:
-        print("Error in PublishTimeAhead", ex)
-
-    try:
         timeDeltaInSeconds = convertTimeToSeconds(timeDeltaStr)
-    except Exception as ex:
-        print("Error in time_delta", ex)
-
-    try:
         publishIntervalInSeconds = convertTimeToSeconds(publishInterval)
-    except Exception as ex:
-        print("Error in publish Interval", ex)
-
-    try:
         forecastLength = convertTimeToSeconds(forecastLength)
-    except Exception as ex:
-        print("Error in ForecastLength", ex)
-
-    try:
         timeStopInSeconds = convertTimeToSeconds(timeStop)
     except Exception as ex:
-        print("Error in time_stop", ex)
-
-    # write fncs.zpl file here
-    # this config str won't work as an argument to fncs::initialize, so write fncs.zpl just in time
-    zplstr = "name = {}\ntime_delta = {}s\ntime_stop = {}s\nbroker = {}".format(
-              agentName, timeDeltaInSeconds, timeStopInSeconds, broker)
+        print("Error in", ex)
 
     # when doing resample(), use publishIntervalInSeconds to make it uniform
     # the reason for that is due to some of the units that we use for fncs, such as 'min',
@@ -114,46 +96,29 @@ def startWeatherAgent(file):
 
     # other weather agents could be initializing from FNCS.zpl, so we might have a race condition
     #  file locking didn't work, because fncs.initialize() doesn't return until broker hears from all other simulators
-    hFed = None
     hPubs = {}
     fedName = agentName  # 'weather'
-    if broker == 'HELICS':
-        try:
-            import helics  # set the broker = HELICS in WEATHER_CONFIG
-        except:
-            pass
-        fedInfo = helics.helicsCreateFederateInfo()
-        helics.helicsFederateInfoSetCoreName(fedInfo, fedName)
-        helics.helicsFederateInfoSetCoreTypeFromString(fedInfo, 'zmq')
-        helics.helicsFederateInfoSetCoreInitString(fedInfo, '--federates=1')
-        helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.helics_property_time_delta, timeDeltaInSeconds)
-        hFed = helics.helicsCreateValueFederate(fedName, fedInfo)
-        for col in weatherData.columns:
-            pubName = fedName + '/#' + col
-            hPubs[col] = helics.helicsFederateRegisterGlobalPublication(
-                         hFed, pubName, helics.helics_data_type_string, "")
-            pubName = pubName + '#forecast'
-            hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(
-                                       hFed, pubName, helics.helics_data_type_string, "")
-        helics.helicsFederateEnterExecutingMode(hFed)
-        print('HELICS initialized to publish', hPubs, flush=True)
-    else:
-        try:
-            import tesp_support.api.fncs as fncs
-        except:
-            pass
-        configstr = zplstr.encode('utf-8')
-        fncs.initialize(configstr)
-        print('FNCS initialized', flush=True)
+    fedInfo = helics.helicsCreateFederateInfo()
+    helics.helicsFederateInfoSetCoreName(fedInfo, fedName)
+    helics.helicsFederateInfoSetCoreTypeFromString(fedInfo, 'zmq')
+    helics.helicsFederateInfoSetCoreInitString(fedInfo, '--federates=1')
+    helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.helics_property_time_delta, timeDeltaInSeconds)
+    hFed = helics.helicsCreateValueFederate(fedName, fedInfo)
+    for col in weatherData.columns:
+        pubName = fedName + '/#' + col
+        hPubs[col] = helics.helicsFederateRegisterGlobalPublication(
+                     hFed, pubName, helics.helics_data_type_string, "")
+        pubName = pubName + '#forecast'
+        hPubs[col + '/forecast'] = helics.helicsFederateRegisterGlobalPublication(
+                                   hFed, pubName, helics.helics_data_type_string, "")
+    helics.helicsFederateEnterExecutingMode(hFed)
+    print('HELICS initialized to publish', hPubs, flush=True)
 
     time_granted = 0
     for i in range(len(timeNeedToPublish)):
         if i > 0:
             timeToRequest = timeNeedToPublish[i]
-            if hFed is not None:
-                time_granted = int(helics.helicsFederateRequestTime(hFed, timeToRequest))
-            else:
-                time_granted = fncs.time_request(timeToRequest)
+            time_granted = int(helics.helicsFederateRequestTime(hFed, timeToRequest))
         if timeNeedToBePublished[i] in timeNeedToPublishRealtime:
             # find the data by the time point and publish them
             row = weatherData2.loc[dtStart + timedelta(seconds=timeNeedToBePublished[i])]
@@ -163,10 +128,7 @@ def startWeatherAgent(file):
                 # remove the improper value generated by interpolation
                 if key != "temperature" and value < 1e-4:
                     value = 0
-                if hFed is not None:
-                    helics.helicsPublicationPublishDouble(hPubs[key], value)
-                else:
-                    fncs.publish(key, value)
+                helics.helicsPublicationPublishDouble(hPubs[key], value)
         # if forecasting needed and the time is on the hour
         if forecast == 1 and timeNeedToBePublished[i] in timeNeedToPublishForecast:
             print('forecasting at ' + str(dtStart + timedelta(seconds=timeNeedToPublish[i])) +
@@ -196,24 +158,14 @@ def startWeatherAgent(file):
                         data[v] = 0
                     wd[str(times[v])] = str(data[v])
 #               print(col, json.dumps(wd))
-                if hFed is not None:
-                    helics.helicsPublicationPublishString(hPubs[col + '/forecast'], json.dumps(wd))
-                else:
-                    fncs.publish(col + '/forecast', json.dumps(wd))
+                helics.helicsPublicationPublishString(hPubs[col + '/forecast'], json.dumps(wd))
 
     # if the last time step/stop time is not requested
     if timeStopInSeconds not in timeNeedToPublish:
-        if hFed is not None:
-            time_granted = int(helics.helicsFederateRequestTime(hFed, timeStopInSeconds))
-        else:
-            time_granted = fncs.time_request(timeStopInSeconds)
+        time_granted = int(helics.helicsFederateRequestTime(hFed, timeStopInSeconds))
 
-    if hFed is not None:
-        print('finalizing HELICS', flush=True)
-        helics.helicsFederateDestroy(hFed)
-    else:
-        print('finalizing FNCS', flush=True)
-        fncs.finalize()
+    print('finalizing HELICS', flush=True)
+    helics.helicsFederateDestroy(hFed)
 
 def usage():
     print("usage: python weatherAgent.py <input weather file full path>")
@@ -240,7 +192,7 @@ def convertTimeToSeconds(time):
     elif "s" == unit or "sec" == unit or "second" == unit or "seconds" == unit:
         return timeNum
     else:
-        raise Exception("unrecognized time unit '" + unit + "'.")
+        raise Exception("unrecognized time unit '" + unit + "' in " + time + ".")
 
 def deltaTimeToResmapleFreq(time):
     """ Convert time unit to a resampling frequency that can be recognized by pandas.DataFrame.resample()

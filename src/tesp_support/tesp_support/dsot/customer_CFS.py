@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: customer_CFS.py
 
 """
@@ -11,18 +11,20 @@ import json
 import os
 
 import tesp_support.dsot.dso_helper_functions as dso_helper
+from tesp_support.dsot.plots import load_json
+from tesp_support.dsot.dso_rate_making import get_cust_bill
 
 
 def get_customer_df(dso_range, case_path, metadata_path):
     customer_df = dso_helper.pd.DataFrame([])
     for dso_num in dso_range:
-        GLD_metadata = dso_helper.load_json(case_path, 'DSO' + str(dso_num) + '_Customer_Metadata.json')
+        GLD_metadata = load_json(case_path, 'DSO' + str(dso_num) + '_Customer_Metadata.json')
         cust_bill_file = case_path + '/bill_dso_' + str(dso_num) + '_data.h5'
         cust_bills = dso_helper.pd.read_hdf(cust_bill_file, key='cust_bill_data', mode='r')
         for i in range(len(GLD_metadata['billingmeters'].keys())):
             customer = list(GLD_metadata['billingmeters'].keys())[i]
             if GLD_metadata['billingmeters'][customer]['tariff_class'] != 'industrial':
-                customer_bill = dso_helper.get_cust_bill(customer, cust_bills, GLD_metadata)
+                customer_bill = get_cust_bill(customer, cust_bills, GLD_metadata)
                 customer_metadata = GLD_metadata['billingmeters'][customer]
                 Customer_Cash_Flows_dict, Customer_Cash_Flows_csv = customer_CFS(
                     GLD_metadata, metadata_path, customer, customer_bill)
@@ -121,25 +123,29 @@ def customer_CFS(GLD_metadata,
         Rated_System_Size = GLD_metadata['billingmeters'][customer]['pv_capacity']
 
         Participant = 1 if wh_participating else 0
-        WaterHeater = Participant * ACCF_WaterHeater * \
-        (metadata_water_heater['controller_purchase_price'] + metadata_water_heater['mixing_valve_purchase_price'] +
-         metadata_water_heater['mixing_valve_installation_time_hrs']*Average_Hourly_Labor_Cost_plumber)
+        WaterHeater = (Participant * ACCF_WaterHeater *
+                       (metadata_water_heater['controller_purchase_price'] +
+                        metadata_water_heater['mixing_valve_purchase_price'] +
+                        metadata_water_heater['mixing_valve_installation_time_hrs'] *
+                        Average_Hourly_Labor_Cost_plumber))
 
         battery_present = 1 if Rated_Battery_Size > 0 else 0
         Participant = 1 if batt_participating else 0
-        Battery = Participant * ACCF_Battery * \
-                  ((metadata_battery['installed_system_first_costs'] * Rated_Battery_Size) + \
-        metadata_battery['fixed_O&M_costs'] * battery_present + metadata_battery['variable_O&M_costs'] * Rated_Battery_Size)
+        Battery = (Participant * ACCF_Battery *
+                   ((metadata_battery['installed_system_first_costs'] * Rated_Battery_Size) +
+                    metadata_battery['fixed_O&M_costs'] * battery_present +
+                    metadata_battery['variable_O&M_costs'] * Rated_Battery_Size))
 
         Participant = 1 if ev_participating else 0
-        V1G = Participant * ACCF_V1G * \
-              (metadata_V1G['marginal_purchase_price'] + metadata_V1G['marginal_installation_time'] *
-               Average_Hourly_Labor_Cost_electrician + metadata_V1G['marginal_installation_capital'])
+        V1G = (Participant * ACCF_V1G *
+               (metadata_V1G['marginal_purchase_price'] + metadata_V1G['marginal_installation_time'] *
+                Average_Hourly_Labor_Cost_electrician + metadata_V1G['marginal_installation_capital']))
 
-        V2G = Participant * ACCF_V2G * \
-              (metadata_V2G['marginal_purchase_price'] + metadata_V2G['marginal_installation_time'] *
-               Average_Hourly_Labor_Cost_electrician + metadata_V2G['marginal_installation_capital'])
+        V2G = (Participant * ACCF_V2G *
+               (metadata_V2G['marginal_purchase_price'] + metadata_V2G['marginal_installation_time'] *
+                Average_Hourly_Labor_Cost_electrician + metadata_V2G['marginal_installation_capital']))
 
+        installed_price_per_kW = 0
         Participant = 1 if pv_participating else 0
         if Customer_class == 'residential':
             if Rated_System_Size < 2:
@@ -185,34 +191,32 @@ def customer_CFS(GLD_metadata,
                 installed_price_per_kW = metadata_PV['installed_price_per_kW'][Customer_class]['>1000']
 
         PV_present = 1 if Rated_System_Size > 0 else 0
-        PV = Participant * ACCF_PV * ((installed_price_per_kW * Rated_System_Size) +
-                                      (PV_present * metadata_PV['operating_expenses'][Customer_class]))
+        PV = (Participant * ACCF_PV * ((installed_price_per_kW * Rated_System_Size) +
+                                       (PV_present * metadata_PV['operating_expenses'][Customer_class])))
 
+        UnitaryHVAC = 0
+        LgHVAC = 0
         if Customer_class == 'commercial':
-            UnitaryHVAC = 0
-
             ACCF_comHVAC = metadata_general['ACCF'][Customer_class]['smart_large_HVAC_marginal'][Building_type.lower()]
-
             Participant = 1 if hvac_participating else 0
             Number_of_Zones = GLD_metadata['billingmeters'][customer]['sqft'] / 2500
             LgHVAC = Participant * ACCF_comHVAC * (metadata_thermostat['marginal_purchase_price'] * Number_of_Zones)
 
         elif Customer_class == 'residential':
-            LgHVAC = 0
             Number_of_Zones = 1
-
             ACCF_thermostat = metadata_general['ACCF'][Customer_class]['smart_thermostat_marginal'][Building_type.lower()]
             Participant = 1 if hvac_participating else 0
-            UnitaryHVAC = Participant * Number_of_Zones * ACCF_thermostat * \
-                          (metadata_thermostat['marginal_purchase_price'] +
-                           metadata_thermostat['marginal_installation_time_hrs'] *
-                           Average_Hourly_Labor_Cost_maintenance_repair +
-                           metadata_thermostat['marginal_installation_capital'])
+            UnitaryHVAC = (Participant * Number_of_Zones * ACCF_thermostat *
+                           (metadata_thermostat['marginal_purchase_price'] +
+                            metadata_thermostat['marginal_installation_time_hrs'] *
+                            Average_Hourly_Labor_Cost_maintenance_repair +
+                            metadata_thermostat['marginal_installation_capital']))
 
         Bills = customer_bill['BillsFix']['TotalFix'] + customer_bill['BillsTransactive']['TotalDyn']
         # fed_corporate_income_tax = metadata['general']['fed_corporate_income_tax']
         # state_income_tax = metadata['general']['state_income_tax']
-        # Depreciation = 0 # Please retain this field in the Cusomter CFS but assign it a value of Zero for the DSO+T analsysis
+        # Depreciation = 0 # Please retain this field in the Customer CFS but
+        # assign it a value of Zero for the DSO+T analysis
         # Deductions = Bills * metadata_general['tax_bill_deduction'][Customer_class][Building_type.lower()]
 
         IncomeAllocation = Bills
@@ -270,7 +274,6 @@ def customer_CFS(GLD_metadata,
         EnergyFix = customer_bill['BillsFix']['PurchasesFix']['EnergyFix']
         DemandCharges = customer_bill['BillsFix']['PurchasesFix']['DemandCharges']
         ConnChargesFix = customer_bill['BillsFix']['ConnChargesFix']
-
         BillsFix = customer_bill['BillsFix']['TotalFix']
 
         PurchasesDyn = dso_helper.returnDictSum(customer_bill['BillsTransactive']['PurchasesDyn'])
@@ -278,17 +281,10 @@ def customer_CFS(GLD_metadata,
         RTEnergy = customer_bill['BillsTransactive']['PurchasesDyn']['RTEnergy']
         DistCharges = customer_bill['BillsTransactive']['DistCharges']
         ConnChargesDyn = customer_bill['BillsTransactive']['ConnChargesDyn']
-
         BillsTransactive = customer_bill['BillsTransactive']['TotalDyn']
-
         Bills = BillsFix + BillsTransactive
-
         Taxes = ElectricityExpense - TaxCredits
-
         NetEnergyCost = Capital + Expenses + Taxes - Revenues
-
-        FixedEnergy = BillsFix
-        # EnergyPurchased = FixedEnergy + DAEnergy + RTEnergy
         EnergyPurchased = customer_bill['EnergyQuantity']
         EffectiveCostEnergy = NetEnergyCost / EnergyPurchased
 

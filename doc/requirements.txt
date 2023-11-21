@@ -5,12 +5,13 @@ PuLP
 PyGLM
 PyYAML
 Pyomo==6.5.0
-Sphinx==6.2.1
+Sphinx
 colorama
 docutils==0.18.1
 future
 h5py
 helics
+importlib-resources
 joblib
 matplotlib
 networkx
@@ -19,11 +20,10 @@ openpyxl
 pandas
 plotly
 psst
-python-dateutil
-pytz
 pyutilib==6.0.0
 recommonmark
 requests
+resource
 scikit-learn
 scipy
 seaborn
@@ -31,7 +31,7 @@ sphinx-jsonschema
 sphinx_rtd_theme
 sphinxcontrib-bibtex
 tables
-urllib3==1.26.6
+urllib3
 xlrd
 xarray
 tesp-support

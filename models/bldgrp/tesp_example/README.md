@@ -1,6 +1,6 @@
 # jModelica large building example
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 This example has the jModelica large building model. 
 
@@ -19,7 +19,7 @@ Currently, there are four inputs to the model:
 	- *current time,
 	- *temperature and wind speed from weather agent,
 	- *control inputs, includes TSetHeating, TSetCooling and LightDimmer, using default value for now,
-	- *voltage, three phase line to line voltages from gridlabd simulation as a dictionary.
+	- *voltage, three phase line to line voltages from GridLAB-D simulation as a dictionary.
 
 The output from the model are:
 

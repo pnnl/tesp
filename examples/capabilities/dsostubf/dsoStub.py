@@ -1,7 +1,7 @@
 import json
 import logging as log
 
-import tesp_support.api.fncs as fncs
+import tesp_support.original.fncs as fncs
 
 from tesp_support.api.parse_helpers import parse_mva
 from tesp_support.api.tso_helpers import load_json_case

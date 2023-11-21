@@ -33,7 +33,7 @@
   "howToConfigureOutputPath": "Leave it blank for default, otherwise use full path",
   "outputPath": "",
   "myoutputPath": "/home/osboxes/grid/repository/tesp-private/examples/dsot_v2/output",
-  "version": 2,
+  "version": "2",
   "baseMVA": 100.0,
   "dataPath": "../usecase_data",
   "dsoAgentFile": "default_case_config_TM.json",

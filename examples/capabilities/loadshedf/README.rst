@@ -49,7 +49,7 @@ may provide a useful starting point. *eplus_json* handles
 time synchronization, FNCS publish, FNCS subscribe, and
 generating JSON output files with metrics.
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/main/LICENSE
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: substation.py
 """Manages the Transactive Control scheme for DSO+T implementation version 1
 
@@ -38,12 +38,6 @@ def inner_substation_loop(metrics_root, with_market):
         metrics_root (str): base name of the case for input/output
         with_market (bool): flag that determines if we run with markets
     """
-    def using(point=""):
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        return '''%s: usertime=%s systime=%s mem=%s mb
-               ''' % (point, usage[0], usage[1],
-                      usage[2] / 1024.0)
-
     def publish(name, val):
         try:
             pub = cache_pub[name]
@@ -122,7 +116,7 @@ def inner_substation_loop(metrics_root, with_market):
 
     # enable logging
     level = config['LogLevel']
-    enable_logging(level, 11)
+    enable_logging(level, 11, metrics_root)
 
     log.info('starting substation loop...')
     log.info('metrics root -> ' + metrics_root)
@@ -693,7 +687,6 @@ def inner_substation_loop(metrics_root, with_market):
 
     timing(proc[1], True)
     while time_granted < simulation_duration:
-        print(using("after1"), flush=True)
         # determine the next HELICS time
         timing(proc[16], True)
         next_time =\
@@ -1920,7 +1913,6 @@ def inner_substation_loop(metrics_root, with_market):
                     timing(proc[17], False)
 
             tnext_retail_adjust_rt += retail_period_rt
-        print(using("after2"), flush=True)
 
         # ----------------------------------------------------------------------------------------------------
         # ------------------------------------ Write metrics -------------------------------------------------
@@ -1941,7 +1933,6 @@ def inner_substation_loop(metrics_root, with_market):
             print(proc_time, sep=', ', file=op, flush=True)
             print(wall_time, sep=', ', file=op, flush=True)
             op.close()
-        print(using("after3"), flush=True)
 
     log.info('finalizing metrics writing')
     #     # timing(arg.__class__.__name__, True)

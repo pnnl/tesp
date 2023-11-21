@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: substation.py
 """Manages the simple_auction and hvac agents for the te30 and sgip1 examples
 
@@ -14,7 +14,7 @@ Todo:
 import sys
 
 try:
-    import tesp_support.api.fncs as fncs
+    import tesp_support.original.fncs as fncs
 except:
     pass
 import tesp_support.original.simple_auction as auction

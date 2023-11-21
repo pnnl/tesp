@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: precool.py
 """Classes for NIST TE Challenge 2 example
 
@@ -15,7 +15,6 @@ Public Functions:
     :precooler_loop: Initializes and runs the precooler agents.  
 """
 
-import sys
 import logging as log
 
 try:
@@ -23,7 +22,7 @@ try:
 except:
     pass
 try:
-    import tesp_support.api.fncs as fncs
+    import tesp_support.original.fncs as fncs
 except:
     pass
 

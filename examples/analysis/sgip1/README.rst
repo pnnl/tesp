@@ -57,6 +57,6 @@ File Directory:
 * *SGIP1d.glm*: GridLAB-D file for case D, with market, added PV
 * *SGIP1e.glm*: GridLAB-D file for case E, with market, added PV
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/main/LICENSE

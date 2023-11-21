@@ -88,7 +88,7 @@ def post_process():
         GLD_metadata = pt.customer_meta_data(GLD_metadata, agent_metadata, metadata_path)
 
         # Need to preprocess agent retail data prior to calculating customer energy meter data.
-        # This function saves an h5.
+        # This function saves a h5.
         if read_meters:
             pt.tic()
             for day_number in day_range:
@@ -97,7 +97,7 @@ def post_process():
             print('Retail agent data processing complete: DSO ' + str(dso_number) + ', Month ' + month_name)
             pt.toc()
 
-        # This function calculates the energy consumption every day for every customer and saves it to an h5 file.
+        # This function calculates the energy consumption every day for every customer and saves it to a h5 file.
         if read_meters:
             pt.tic()
             meter_df, energysum_df = rm.read_meters(GLD_metadata, case_path, GLD_prefix, str(dso_number),
@@ -106,7 +106,7 @@ def post_process():
             pt.toc()
         # --------------- CALCULATE AMENITY SCORES  ------------------------------
 
-        # This function calculates the amenity scores (HVAC and WH unmet hours or gallons) and saves it to an h5 file.
+        # This function calculates the amenity scores (HVAC and WH unmet hours or gallons) and saves it to a h5 file.
         if calc_amenity:
             pt.tic()
             amenity_df = pt.amenity_loss(GLD_metadata, case_path, GLD_prefix, str(dso_number), day_range)

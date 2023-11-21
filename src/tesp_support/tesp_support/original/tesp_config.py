@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: tesp_config.py
 """Presents a GUI to configure and package TESP cases
 
@@ -156,8 +156,7 @@ varsFD = [['Electric Cooling Penetration', 90, '%', 'FeederGenerator', 'Electric
           ['Solar Penetration', 0, '%', 'FeederGenerator', 'SolarPercentage'],
           ['Storage Penetration', 0, '%', 'FeederGenerator', 'StoragePercentage'],
           ['Solar Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'SolarInverterMode', 'inverterModesPV'],
-          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode',
-           'inverterModesBattery'],
+          ['Storage Inverter Mode', 'CONSTANT_PF', '', 'FeederGenerator', 'StorageInverterMode', 'inverterModesBattery'],
           ['Billing Mode', 'TIERED', '', 'FeederGenerator', 'BillingMode', 'billingModes'],
           ['Monthly Fee', 13.0, '$', 'FeederGenerator', 'MonthlyFee'],
           ['Price', 0.102013, '$/kwh', 'FeederGenerator', 'Price'],

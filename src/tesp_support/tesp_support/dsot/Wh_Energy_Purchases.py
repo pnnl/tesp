@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: Wh_Energy_Purchases.py
 """Utilities to open and read load
 

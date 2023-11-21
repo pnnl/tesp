@@ -404,7 +404,7 @@ class Forecasting:
         if dst:
             tz_offset = -5  # when daylight saving is on, offset for central time zone is UTC-5
         else:
-            tz_offset = -6  # other wise UTC-6
+            tz_offset = -6  # otherwise UTC-6
         day_of_yr = current_time.timetuple().tm_yday  # get day of year from datetime
         dnr = self.solar_direct_forecast
         dhr = self.solar_diffuse_forecast

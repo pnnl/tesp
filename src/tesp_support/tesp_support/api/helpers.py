@@ -1,28 +1,27 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: helpers.py
 """ Utility functions for use within tesp_support, including new agents.
 """
 
 import logging
 import json
-import numpy as np
-from enum import IntEnum
 from scipy.stats import truncnorm
 
 
-def enable_logging(level, model_diag_level):
+def enable_logging(level, model_diag_level, name_prefix):
     """ Enable logging for process
 
         Args:
             level (str): the logging level you want set for the process
             model_diag_level (int): initial value used to filter logging files
+            name_prefix (str): description prefix for the log file name
     """
 
     # Setting up main/standard debugging output
     logger = logging.getLogger()
     # logger.setLevel(logging.DEBUG)
     logger.setLevel(logging.INFO)
-    main_fh = logging.FileHandler('main_log.txt', mode='w')
+    main_fh = logging.FileHandler(name_prefix + '_log.txt', mode='w')
     if level == 'DEBUG':
         main_fh.setLevel(logging.DEBUG)
     elif level == 'INFO':
@@ -42,15 +41,16 @@ def enable_logging(level, model_diag_level):
     logger.addHandler(main_fh)
 
     # Setting up model diagnostics logging output
-    model_diag_fh = logging.FileHandler('model_diagnostics.txt', mode='w')
+    model_diag_fh = logging.FileHandler(name_prefix + '_diag.txt', mode='w')
     model_diag_fh.setLevel(model_diag_level)
     model_diag_format = logging.Formatter('%(levelname)s: %(module)s: %(lineno)d: %(message)s')
     model_diag_fh.setFormatter(model_diag_format)
-    model_diag_fh.addFilter(one_level_only(model_diag_level))
+    model_diag_fh.addFilter(all_from_one_level_down(model_diag_level))
     logger.addHandler(model_diag_fh)
+    return logging
 
 
-class one_level_only(object):
+class all_from_one_level_down(object):
     def __init__(self, level):
         self.__level = level
 
@@ -146,22 +146,22 @@ class HelicsMsg(object):
         self._cnfg[_n] = _v
 
     def pubs(self, _g, _k, _t, _o, _p):
-        # for object and property is for internal code interface for gridlabd
+        # for object and property is for internal code interface for GridLAB-D
         self._pubs.append({"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}})
 
     def pubs_n(self, _g, _k, _t):
         self._pubs.append({"global": _g, "key": _k, "type": _t})
 
     def pubs_e(self, _g, _k, _t, _u):
-        # for object and property is for internal code interface for eplus
+        # for object and property is for internal code interface for EnergyPlus
         self._pubs.append({"global": _g, "key": _k, "type": _t, "unit": _u})
 
     def subs(self, _k, _t, _o, _p):
-        # for object and property is for internal code interface for gridlabd
+        # for object and property is for internal code interface for GridLAB-D
         self._subs.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
 
     def subs_e(self, _r, _k, _t, _i):
-        # for object and property is for internal code interface for eplus
+        # for object and property is for internal code interface for EnergyPlus
         self._subs.append({"key": _k, "type": _t, "require": _r, "info": _i})
 
     def subs_n(self, _k, _t):

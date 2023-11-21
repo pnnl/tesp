@@ -111,7 +111,7 @@ So far (that is by 2016/12/13), there haven't been any simulations done involvin
 ## Launching the MATPOWER Power Flow / Optimal Power Flow solver from a C++ wrapper ##
 ****************************************
 ```start_MATPOWER.cpp```  
-_Copyright (C) 2013-2022, Battelle Memorial Institute_  
+_Copyright (c) 2013-2023 Battelle Memorial Institute_  
 _Written by_ **Laurentiu Dan Marinovici**, Pacific Northwest National Laboratory  
 _Additional updates by_ **Jacob Hansen**, Pacific Northwest National Laboratory
 ****************************************
@@ -161,17 +161,17 @@ list from the actual source file and present them below.
       - Added a third parameter as input representing the final time of the MATPOWER simulator. Once the time returned by FNCS reaches this value, MATPOWER simulator sends a nice BYE signal to let broker know it ended. It will DIE if it cannot complete successfully.
   - [x] Update: 09/09/2015  ]
     Purpose:
-      - While discussing scalability issue, the idea of having multiple distribution networks (GridLAB-D instances) connected to the same node/bus of a transmission network raised the question of correctly subscribing and aggregating the loads connected to the same bus. One idea is to create a map between generic subscription names and the corresponding location where they are to be placed. A map matrix has been created in the MATPOWER model in the form, similar to:  
+      - While discussing scalability issue, the idea of having multiple distribution networks (GridLAB-D instances) connected to the same node/bus of a transmission network raised the question of correctly subscribing and aggregating the loads connected to the same bus. One idea is to create a map between generic subscription names and the corresponding location where they are to be placed. A map matrix has been created in the MATPOWER model in the form, similar to:
 
-      Subscriber name   | Subscriber bus number
-      :---------------: | :---------------------:
-      SUBSTATIONCOM1    |            7           
-      SUBSTATIONCOM2    |            7
-      SUBSTATIONCOM3    |            5
-      SUBSTATIONCOM4    |            5
-      SUBSTATIONCOM5    |            5  
+    | Subscriber name | Subscriber bus number |
+    |:---------------:|:---------------------:|
+    | SUBSTATIONCOM1  |           7           |
+    | SUBSTATIONCOM2  |           7           |
+    | SUBSTATIONCOM3  |           5           |
+    | SUBSTATIONCOM4  |           5           |
+    | SUBSTATIONCOM5  |           5           |
 
-  - [x] Update: 02/17/2017  
+- [x] Update: 02/17/2017  
     Purpose:
       - For the Transactive Energy Systems Platform (TESP) project, a set of metrics are needed. They are to be saved in a JSON structure.
       - ```jsoncpplib``` is going to be used to accommodate for saving the necessary data into a file.

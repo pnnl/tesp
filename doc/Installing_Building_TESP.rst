@@ -1,5 +1,5 @@
 ..
-    _ Copyright (C) 2021-2022 Battelle Memorial Institute
+    _ Copyright (c) 2021-2023 Battelle Memorial Institute
     _ file: Installing_Building_TESP.rst
 
 
@@ -18,11 +18,11 @@ Many of the repositories holding the source code for the simulation tools used i
 
 Installation Guide
 ==================
-This guide will assume that TESP is being installed on a clean Ubuntu Linux installation or Windows 10 using MSYS2.
+This guide will assume that TESP is being installed on a clean Ubuntu Linux installation or Windows 10 using WSL2.
 
 For many, this will be a virtual machine (VM) and the good news is that there is a no-cost means of creating this VM using Oracle's `VirtualBox <https://www.virtualbox.org>`_. Other commercial virtualization software such as VMWare and Parallels will also do the trick.
 
-For Windows 10 users we can use MSYS2. In many ways a it is like a virtual machine that allows shell commands just as if it were Linux.
+For Windows 10 users we can use WSL2. In many ways a it is like a virtual machine that allows shell commands just as if it were Linux.
 
 Creating a Ubuntu Linux VM with VirtualBox
 ------------------------------------------
@@ -32,7 +32,7 @@ There is lots of documentation out there on installing Ubuntu on a VirtualBox VM
 - `How to Install Ubuntu on VirtualBox? Here’s the Full Guide <https://www.minitool.com/partition-disk/how-to-install-ubuntu-on-virtualbox.html>`_
 - `How to install Ubuntu on VirtualBox <https://www.freecodecamp.org/news/how-to-install-ubuntu-with-oracle-virtualbox/>`_
 
-You can get the OS disk image (.iso) `from Ubuntu <https://ubuntu.com/download/desktop>`_ and mount it in the virtual machine for installation. Alternatively, `OSboxes provides a hard drive image <https://www.osboxes.org/virtualbox-images/>`_ with the OS already installed that you can install in your virtual machine. 
+You can get the OS disk image (.iso) `from Ubuntu <https://ubuntu.com/download/desktop>`_ and mount it in the virtual machine for installation. Alternatively, `OSboxes <https://www.osboxes.org/virtualbox-images/>`_ provides a hard drive image with the OS already installed that you can install in your virtual machine.
 
 A few notes:
     - Installing TESP will require building (compiling) software from source which is generally resource intensive. Giving the VM lots of compute resources (CPUs, memory) will be very helpful when installing (and running) TESP.
@@ -40,37 +40,18 @@ A few notes:
     - Make sure you install the VirtualBox Guest Additions to improve the integration with the host OS and the overall user experience.
     - Administrative access for the account where TESP will be installed is required.
 
-Creating a MSYS2 on Windows 10
+Creating a WLS2 on Windows 10
 ------------------------------
-The Windows build procedure is very similar to that for Linux and Mac OSX, using MSYS2 tools that you'll execute from a MSYS2 command window. However, some further adjustments are necessary as described below.
-
-Install Java and MSYS2 packages
-...............................
-Download and install the Java Development Kit (20.0 suggested) from Oracle.
-
-* you must install JavaSDK to a folder without spaces, such as c:\Java\jdk-20\
-* the Oracle javapath doesn't work for MSYS2, and it doesn't find javac in Windows
-
-These instructions are based on https://github.com/gridlab-d/gridlab-d/blob/develop/BuildingGridlabdOnWindowsWithMsys2.docx
-
-* Install a 64-bit version of MSYS2 from https://www.msys2.org. Accept all of the defaults.
-* Start the MSYS2 environment from the Start Menu shortcut for "MSYS2 UCRT64"
+The setup procedure for creating a WLS2 on Windows 10 very easy with these `instructions <https://learn.microsoft.com/en-us/windows/wsl/install>`_ . However, some further adjustments maybe necessary with permissions and proxy.
 
 Running TESP install script
 ---------------------------
-Once you have a working Ubuntu/Windows 10 installation, the TESP install process is straight-forward. From a command prompt do the following:
+Once you have a working Ubuntu/WLS2 on Windows installation, the TESP install process is straight-forward. From a command prompt, issue the following commands:
 
 .. code-block:: shell-session
-   :caption: TESP installation commands for Ubuntu
+   :caption: TESP installation commands for Ubuntu/WLS2 on Window10
 
    wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp.sh
-   chmod 755 tesp.sh
-   ./tesp.sh <Github user name> <Github email address>
-
-.. code-block:: shell-session
-   :caption: TESP installation commands for Window10
-
-   wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp_ucrt.sh
    chmod 755 tesp.sh
    ./tesp.sh <Github user name> <Github email address>
 
@@ -107,22 +88,19 @@ TESP includes a small script that attempts to run a trivial command with each of
 
     ++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++
 
-    FNCS, installed
+    TESP software modules installed are:
 
-    HELICS, 3.1.0 (2021-11-24)
+    TESP 1.3.0
+    FNCS installed
+    HELICS 3.4.0-main-g0b3d894e7 (2023-10-03)
+    HELICS Java, 3.4.0-main-g0b3d894e7 (2023-10-03)
 
-    HELICS Java, 3.1.1-main-g9a5726ba9 (2022-04-01)
-
-    GridLAB-D 4.3.0-18941 (Navajo [725bec8d:develop:Mod]) 64-bit LINUX RELEASE
-
+    GridLAB-D 5.1.0-19475 (4ea6109e:develop:Modified) 64-bit LINUX RELEASE
     EnergyPlus, Version 9.3.0-fd4546e21b (No OpenGL)
-
-    NS-3, installed
-
+    NS-3 installed
     Ipopt 3.13.2 (x86_64-pc-linux-gnu), ASL(20190605)
 
-    ++++++++++++++  TESP versions has been installed! That's all folks!  ++++++++++++++
-
+    ++++++++++++++  TESP has been installed! That's all folks!  ++++++++++++++
 
 If you see any messages indicating `command not found` if indicates one of the software packages did not install correctly.
 
@@ -231,24 +209,29 @@ Even this subset of examples can take several hours to run (roughly 4.9 hours in
 
 .. code-block:: text
 
-    Test Case(s)                     Time Taken
-    ===========================================
-    GridLAB-D Player/Recorder          0.033965
-    Loadshed - HELICS ns-3             6.103482
-    Loadshed - HELICS Python           1.116138
-    Loadshed - HELICS Java             1.754056
-    PYPOWER - HELICS                   7.025858
-    EnergyPlus EMS - HELICS           10.403496
-    Weather Agent - HELICS            11.020228
-    Houses                           284.137236
-    TE30 - HELICS Market             293.542043
-    TE30 - HELICS No Market          282.648197
-    No Comm Base - HELICS           6138.132330
-    Eplus Restaurant - HELICS       4206.033149
-    SGIP1c - HELICS                 5104.257472
-    Eplus w/Comm - HELICS             64.887238
-    4 Feeders - HELICS              1241.105777
-
+    Test Case(s)                       Time Taken
+    =============================================
+    GridLAB-D Player/Recorder            0.891868
+    Loadshed - HELICS ns-3               4.129848
+    Loadshed - HELICS Python             1.014755
+    Loadshed - HELICS Java               4.055216
+    Loadshed - HELICS/EPlus             11.930494
+    Establishing baseline results       70.629668
+    Load shedding w/o comm network      70.957783
+    Load shedding over comm network    368.501483
+    PYPOWER - HELICS                     5.283039
+    Houston,TX Baselines build types  1183.537504
+    Generated EMS/IDF files - HELICS     1.555593
+    EnergyPlus EMS - HELICS              6.210505
+    Weather Agent - HELICS               8.205831
+    Houses                             180.550353
+    TE30 - HELICS Market               297.990520
+    TE30 - HELICS No Market            301.580143
+    4 Feeders - HELICS                 824.673296
+    Eplus w/Comm - HELICS              432.880265
+    No Comm Base - HELICS             3289.462584
+    Eplus Restaurant - HELICS         2958.467020
+    SGIP1c - HELICS                   3087.110814
 
 Total runtime will depend on the compute resources available and each example run serially.
 

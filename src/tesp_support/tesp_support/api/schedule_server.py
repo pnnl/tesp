@@ -1,17 +1,19 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: schedule_server.py
+
 import json
-import sys
 import numpy as np
 import pandas as pd
 from multiprocessing.managers import SyncManager
+
+from .data import arguments
 
 # Global for storing the data to be served
 sch_df_dict = {}
 cache_output = {}
 
 #
-# power_sch = ["pv_power", "../../../src/tesp_support/tesp_support/solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv"]
+# power_sch = ["pv_power", "../solar/auto_run/solar_pv_power_profiles/8-node_dist_hourly_forecast_power.csv"]
 #
 
 # # schedule files must be .csv
@@ -41,13 +43,14 @@ class DataProxy(object):
         pass
 
     @staticmethod
-    def forecasting_pv_schedules(name, time, windowlength, col_num):
-        """ Returns windowlength values of given time as forecasting
+    def forecasting_pv_schedules(name, time, window_length, col_num):
+        """ Returns window length values of the given time for the name of schedule forecast and column
+
         Args:
-            name : schedule name for data frame
-            time : current time
-            windowlength: length of window
-            col_num: column number 1 to n
+            name (str): schedule name for data frame
+            time (any): current time
+            window_length (int): length of window
+            col_num (int): column number 1 to n
         """
         idx = name + str(col_num)
         try:
@@ -58,17 +61,18 @@ class DataProxy(object):
 
         if cache[0] != time:
             cache[0] = time
-            cache[1] = sch_df_dict[name].loc[pd.date_range(time, periods=windowlength, freq='H')]
+            cache[1] = sch_df_dict[name].loc[pd.date_range(time, periods=window_length, freq='H')]
         # print(name, " ", time)
         return cache[1][col_num]
 
     @staticmethod
     def forecasting_schedules(name, time, len_forecast):
-        """ Returns len_forecast values from given time as forecasting
+        """ Returns len_forecast values from the given time as for the name schedule forecast
+
         Args:
-            name : schedule name for data frame used to forecast
-            time : current time at which DA optimization occurs
-            len_forecast: length of forecast in hours
+            name (str): schedule name for data frame used to forecast
+            time (any): current time at which DA optimization occurs
+            len_forecast (int): length of forecast in hours
         """
         cache = cache_output[name]
         if cache[0] != time:
@@ -78,8 +82,8 @@ class DataProxy(object):
             time_stop = time_begin + pd.Timedelta(hours=len_forecast)
             # Now let's check if time_stop has gone to the next year
             if time_stop.year > time_begin.year:  # instead of next year, use the same year values
-                temp = dataframe[time_begin:].append(dataframe[:time_stop.replace(year=dataframe.index[0].year)])[
-                    'data'].values
+                temp = pd.concat([dataframe[time_begin:],
+                                  dataframe[:time_stop.replace(year=dataframe.index[0].year)]])['data'].values
             elif time_stop.year == time_begin.year:  # if the window lies in the same year
                 temp = dataframe[time_begin:time_stop]['data'].values
             else:
@@ -134,9 +138,15 @@ def schedule_server(config_file, port):
     server.serve_forever()
 
 
+def main():
+    error, args = arguments(description="Schedule server", args='ip')
+    if error:
+        return
+
+    print('Schedule server metadata file: ', args.input_file[0])
+    print('Schedule server port: ', args.port[0])
+    schedule_server(args.input_file[0], int(args.port[0]))
+
+
 if __name__ == '__main__':
-    _file = sys.argv[1]
-    _port = int(sys.argv[2])
-    print('Schedule server metadata file: ', _file)
-    print('Schedule server port: ', _port)
-    schedule_server(_file, _port)
+    main()

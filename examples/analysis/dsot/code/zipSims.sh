@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 # if you have to remount the dsot share drive
 #sudo mount -t cifs //pnnlfs07.pnl.gov/sharedata09$/DSOT  /mnt/dsot -o username=d3j331
@@ -8,17 +8,17 @@
 
 share="/mnt/dsot/run_outputs/DER"
 
-for dir in $1*
+for dir in "$1"*
 do
   if [ -d "$dir" ]
   then
     FILE=$dir/tesp_version
     if [ -f "$FILE" ]
     then
-      target=$share/$(cat $FILE)/zip
-      echo "Zip simulation" $dir "to" $target
-      sudo mkdir -p $target
-      sudo zip -r -9 -q $target/$dir.zip $dir
+      target=$share/$(cat "$FILE")/zip
+      echo "Zip simulation $dir to $target"
+      sudo mkdir -p "$target"
+      sudo zip -r -9 -q "$target/$dir.zip" "$dir"
     fi
   fi
 done

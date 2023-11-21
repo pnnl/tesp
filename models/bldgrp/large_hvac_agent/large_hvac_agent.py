@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file large_hvac_agent.py
 """
     Test Class that that implements large Commercial Building HVAC Agent.

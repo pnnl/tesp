@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019-2022 Battelle Memorial Institute
+# Copyright (C) 2022-2023 Battelle Memorial Institute
 # file: gridpiq.py
 # Created on 1/23/2023
 # @author: d3j331 - Mitch Pelton
@@ -9,7 +9,7 @@
 import json
 from datetime import datetime, timedelta
 
-from .data import entities_path
+from .data import piq_entities_path
 from .entity import assign_defaults
 
 
@@ -32,7 +32,7 @@ class GridPIQ:
         self.Total = []
 
         self.choices = {"Nuclear", "Wind", "Coal", "Solar", "NaturalGas", "Petroleum"}
-        self.config = assign_defaults(self, entities_path + 'grid_PIQ.json')
+        self.config = assign_defaults(self, piq_entities_path)
 
     def reset_dispatch_data(self):
         """

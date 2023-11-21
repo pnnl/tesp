@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: bill.py; custom for the IEEE 8500-node circuit
 
 import json
@@ -34,7 +34,7 @@ meta_m = lst_m.pop('Metadata')
 times = list(map(int, list(lst_m.keys())))
 times.sort()
 print("There are", len(times), "sample times at", times[1] - times[0], "second intervals")
-hrs = np.array(times, dtype=np.float)
+hrs = np.array(times, dtype=np.float64)
 denom = 3600.0
 hrs /= denom
 time_key = str(times[0])
@@ -50,7 +50,7 @@ for key, val in meta_m.items():
         BILL_IDX = val['index']
 
 # create a NumPy array of all metrics
-data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float)
+data_m = np.empty(shape=(len(mtr_keys), len(times), len(lst_m[time_key][mtr_keys[0]])), dtype=np.float64)
 j = 0
 for key in mtr_keys:
     i = 0
@@ -60,7 +60,7 @@ for key in mtr_keys:
         i = i + 1
     j = j + 1
 
-final_bill = np.empty(shape=(len(times)), dtype=np.float)
+final_bill = np.empty(shape=(len(times)), dtype=np.float64)
 final_bill[0] = 0.0
 for i in range(1, len(hrs)):
     if 15.0 < hrs[i] <= 19.0:

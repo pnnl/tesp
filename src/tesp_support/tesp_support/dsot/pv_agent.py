@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: pv_dsot.py
 """Class that controls the Photovoltaic Solar agents
 for now, it only provides day ahead forecast for each agent.

@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (c) 2018-2023 Battelle Memorial Institute
 # file: precool.py
 """Classes for NIST TE Challenge 2 example
 
@@ -17,7 +17,7 @@ Public Functions:
 import sys
 
 try:
-  import tesp_support.api.fncs as fncs
+  import tesp_support.original.fncs as fncs
 except:
   pass
 import json

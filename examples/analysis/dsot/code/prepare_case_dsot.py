@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: prepare_case_dsot.py
 """ Sets up a simple DSO+T use-case with one feeder
 
@@ -24,16 +24,16 @@ recs = ""
 recs_data = True
 if recs_data:
     recs = "RECS"
-    import examples.analysis.dsot.recs.commercial_feeder_glm as com_FG
-    import examples.analysis.dsot.recs.copperplate_feeder_glm as cp_FG
-    import examples.analysis.dsot.recs.residential_feeder_glm as res_FG
-    import examples.analysis.dsot.recs.prep_substation_recs as prep
+    sys.path.append('../')
+    import recs.commercial_feeder_glm as com_FG
+    import recs.copperplate_feeder_glm as cp_FG
+    import recs.residential_feeder_glm as res_FG
+    import recs.prep_substation_recs as prep
 else:
     import tesp_support.original.commercial_feeder_glm as com_FG
     import tesp_support.original.copperplate_feeder_glm as cp_FG
     import tesp_support.dsot.residential_feeder_glm as res_FG
     import prep_substation_dsot as prep
-
 
 # Simulation settings for the experimental case
 def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
@@ -245,6 +245,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         sim['BulkpowerBus'] = dso_val['bus_number']
         # case_config['BackboneFiles']['RandomSeed'] = dso_val['random_seed']
         sim['DSO_type'] = dso_val['utility_type']
+        if recs_data:
+            sim['state'] = dso_val['state']
+            sim['income_level'] = dso_val['income_level']
         if recs_data:
             sim['state'] = dso_val['state']
             sim['income_level'] = dso_val['income_level']

@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: tesp_monitor_ercot.py
 """Presents a GUI to launch a TESP simulation and monitor its progress
 
@@ -24,7 +24,7 @@ import tkinter.ttk as ttk
 from tkinter import filedialog
 from tkinter import messagebox
 
-import tesp_support.api.fncs as fncs
+import tesp_support.original.fncs as fncs
 from tesp_support.api.parse_helpers import parse_kw
 
 import matplotlib

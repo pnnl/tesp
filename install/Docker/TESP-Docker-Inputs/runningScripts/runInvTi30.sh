@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: runInvTi30.sh
 
 clear

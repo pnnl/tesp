@@ -3,7 +3,7 @@ rm -f *.csv
 rm -f *.out
 rm -f *.xml
 rm -f *.audit
-rm -f *metrics.json
+rm -f *metrics*.*
 rm -f *dict.json
 rm -f *_gridlabd.json
 rm -f *_substation.json

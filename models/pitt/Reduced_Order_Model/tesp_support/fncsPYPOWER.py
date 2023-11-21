@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: fncsPYPOWER.py
 """ PYPOWER solutions under control of FNCS for te30 and sgip1 examples
 
@@ -9,7 +9,7 @@ import json
 import sys
 
 try:
-  import tesp_support.api.fncs as fncs
+  import tesp_support.original.fncs as fncs
 except:
   pass
 import numpy as np

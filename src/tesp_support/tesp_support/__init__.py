@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: __init__.py
 """ Transactive Energy Simulation Platform (TESP)
 Contains the python packages for the tesp_support
@@ -6,7 +6,7 @@ Contains the python packages for the tesp_support
 Example:
     To start PYPOWER for connection to FNCS::
 
-        import tesp_support.api.tso_PYPOWER_f as tesp
+        import tesp_support.original.tso_PYPOWER_f as tesp
         tesp.tso_pypower_loop_f('te30_pp.json','TE_Challenge')
 
     To start PYPOWER for connection to HELICS::

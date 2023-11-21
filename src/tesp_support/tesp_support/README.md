@@ -1,6 +1,6 @@
 # tesp_support Python files
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 This is the main code repository for Python-based components of TESP, 
 including the transactive agents, case configuration and post-processing.  
@@ -42,8 +42,8 @@ Suggested sequence of test cases for development:
 - **api**; code that configures new capabilities for TESP
 - **consensus**; custom code that for running the consensus mechanism on microgrid n DSOT co simulation using TSO and DSO DER agents.
 - **dsot**; custom code that for running the DSOT co simulation using TSO and DSO DER agents. Used for a 2021 journal paper on TESP and the DSOT example.
-- *matpower*; legacy code that configures and post-processes MATPOWER v5+ for TESP. We now use PYPOWER and AMES instead.
-- *original*; legacy code that configures and creates most example/capabilities for TESP 
-- *sgip1*; custom code that plotted curves from different cases on the same graph. Used for a 2018 journal paper on TESP and the SGIP1 example.
-- *valuation*; custom code that post-processed SGIP1 outputs for the 2018 journal paper. May serve as an example, or use Jupyter notebooks instead.
-- *weather*; code that configures weather capabilities for TESP
+- **matpower**; legacy code that configures and post-processes MATPOWER v5+ for TESP. We now use PYPOWER and AMES instead.
+- **original**; legacy code that configures and creates most example/capabilities for TESP 
+- **sgip1**; custom code that plotted curves from different cases on the same graph. Used for a 2018 journal paper on TESP and the SGIP1 example.
+- **valuation**; custom code that post-processed SGIP1 outputs for the 2018 journal paper. May serve as an example, or use Jupyter notebooks instead.
+- **weather**; code that configures weather capabilities for TESP

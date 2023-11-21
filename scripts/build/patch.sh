@@ -11,9 +11,9 @@ a=$(cat "$id")
 cd "${1}" || exit
 b=$(git rev-parse HEAD)
 if [ "$a" = "$b" ]; then
-  echo "Repository has been installed to a commit id on file"
+  echo "Repository has been installed to a commit id $a file"
 else
-  echo "Repository HEAD does not match, resetting to a commit id on file"
+  echo "Repository HEAD id $b does not match, resetting to a commit id $a"
   git reset --hard "$a"
 fi
 
@@ -24,5 +24,6 @@ if [ -f "$patch" ]; then
     cd "${1}" || exit
     git apply tesp.patch
     echo "Apply patches for repository ${1}"
+    echo "Patch file at ${1}/tesp.patch"
   fi
 fi

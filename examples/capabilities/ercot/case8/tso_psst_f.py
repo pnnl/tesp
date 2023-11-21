@@ -1,4 +1,4 @@
-#   Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: tso_psst_f.py
 
 import os
@@ -11,7 +11,7 @@ from copy import deepcopy
 import psst.cli as pst
 import pandas as pd
 
-import tesp_support.api.fncs as fncs
+import tesp_support.original.fncs as fncs
 import tesp_support.api.tso_helpers as tso
 from tesp_support.api.parse_helpers import parse_mva
 

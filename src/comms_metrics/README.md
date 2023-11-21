@@ -223,7 +223,7 @@ Args:
     	position_labels (list) - List of the meter position keys in the JSON, e.g. 'lat' and 'lon', 'latitude' and 'longitude', 'x' and 'y', etc. This method assumes the first element is the 'longitude' element.
 
 Returns:
-     	G (NetworkX graph) - NetworkX graph reprsentation of the meter system.
+     	G (NetworkX graph) - NetworkX graph representation of the meter system.
 ```
 ```
 import os

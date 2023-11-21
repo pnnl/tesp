@@ -1,4 +1,4 @@
-#   Copyright (C) 2020-2022 Battelle Memorial Institute
+#   Copyright (C) 2020-2023 Battelle Memorial Institute
 # file: parse_msout.py
 
 import numpy as np

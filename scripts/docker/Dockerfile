@@ -5,10 +5,6 @@ FROM ${UBUNTU}${UBUNTU_VERSION} AS ubuntu-base
 
 ENV USER_NAME=tesp-user
 ENV TESP_HOME=/home/${USER_NAME}
-# 18.04, 20.04
-ENV tk=python3-tk
-# 22.04
-# ENV tk=python3.8-tk
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
@@ -51,7 +47,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   python3.8 \
   python3.8-venv \
   python3-pip \
-  ${tk} \
+  python3-tk \
   python3-pil.imagetk && \
   ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
   echo "root:tesp" | chpasswd && \
@@ -105,7 +101,6 @@ RUN git config --global user.name "${USER_NAME}" && \
   cd tesp || exit && \
   mkdir -p repository && \
   mkdir -p tenv && \
-  python3.8 -m pip install --upgrade pip && \
   python3.8 -m pip install virtualenv && \
   "${HOME}/.local/bin/virtualenv" venv --prompt TESP && \
   cd repository || exit && \
@@ -145,7 +140,7 @@ RUN git config --global user.name "${USER_NAME}" && \
   echo "++++++++++++++  Compiling and Installing TESP software is starting!  ++++++++++++++" && \
   # Install all pip libraries
   echo "Installing Python Libraries..." && \
-  pip3 install --upgrade pip >> "${TESPBUILD}/tesp_pypi.log" && \
+  pip3 install --upgrade pip > "${TESPBUILD}/tesp_pypi.log" && \
   pip3 install -r "${TESPDIR}/requirements.txt" >> "${TESPBUILD}/tesp_pypi.log" && \
   #develop tesp api
   echo "Installing Python TESP API..." && \

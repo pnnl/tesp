@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: tso_PYPOWER.py
 """ PYPOWER solutions under control of HELICS for te30 and dsot, sgip1 examples
 
@@ -14,7 +14,7 @@ from math import sqrt
 from copy import deepcopy
 
 from .tso_helpers import load_json_case, make_dictionary
-from tesp_support.api.bench_profile import bench_profile
+from .bench_profile import bench_profile
 
 @bench_profile
 def tso_pypower_loop(casefile, rootname, helicsConfig):

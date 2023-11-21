@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: dso_CFS.py
 """
 @author: yint392
@@ -10,6 +10,7 @@
 import numpy as np
 
 import tesp_support.dsot.dso_helper_functions as dso_helper
+from .plots import load_json
 
 
 def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
@@ -19,11 +20,11 @@ def get_DSO_df(dso_range, case_config, DSOmetadata, case_path, base_case_path):
     Revenues_dict_list = []
     DSO_Cash_Flows_dict_list = []
     for dso_num in dso_range:
-        Market_Purchases = dso_helper.load_json(case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
-        Market_Purchases_base_case = dso_helper.load_json(base_case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
+        Market_Purchases = load_json(case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
+        Market_Purchases_base_case = load_json(base_case_path, 'DSO' + str(dso_num) + '_Market_Purchases.json')
 
-        DSO_Cash_Flows = dso_helper.load_json(case_path, 'DSO' + str(dso_num) + '_Cash_Flows.json')
-        DSO_Revenues_and_Energy_Sales = dso_helper.load_json(case_path, 'DSO' + str(dso_num) + '_Revenues_and_Energy_Sales.json')
+        DSO_Cash_Flows = load_json(case_path, 'DSO' + str(dso_num) + '_Cash_Flows.json')
+        DSO_Revenues_and_Energy_Sales = load_json(case_path, 'DSO' + str(dso_num) + '_Revenues_and_Energy_Sales.json')
 
         DSO_peak_demand = Market_Purchases['WhEnergyPurchases']['WholesalePeakLoadRate']
         DSO_base_case_peak_demand = Market_Purchases_base_case['WhEnergyPurchases']['WholesalePeakLoadRate']
@@ -83,7 +84,7 @@ def dso_CFS(case_config,
             DSO_Revenues_and_Energy_Sales,
             Market_Purchases,
             Market_Purchases_base_case):
-    ### reading json data
+    # reading json data
     # with open(os.path.join(metadata_path, '8-node-metadata.json')) as json_file:
     #    metadata_8_node = json.load(json_file)
 
@@ -94,7 +95,7 @@ def dso_CFS(case_config,
 
     metadata_gen = DSOmetadata
 
-    ## assuming glm_dict is the same for different months?
+    # assuming glm_dict is the same for different months?
     # with open(os.path.join(dso_path, [f for f in os.listdir(dso_path) if f.endswith('glm_dict.json')][0])) as json_file:  # should it be Substation_path?
     #     glm_dict = json.load(json_file)
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: substation.py
 """Manages the simple_auction and hvac agents for the te30 and sgip1 examples
 
@@ -16,11 +16,12 @@ import json
 from datetime import datetime
 from datetime import timedelta
 
-import tesp_support.api.fncs as fncs
+import tesp_support.original.fncs as fncs
 from tesp_support.api.parse_helpers import parse_magnitude, parse_kw
 from .hvac_agent import hvac
 from .simple_auction import simple_auction
 from tesp_support.api.bench_profile import bench_profile
+
 
 @bench_profile
 def substation_loop_f(configfile, metrics_root, hour_stop=48, flag='WithMarket'):

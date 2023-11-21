@@ -1,8 +1,7 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: setup.py
 
-import pathlib
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, installer
 
 version = open("version", 'r').readline().strip()
 long_description = '\n\n'.join(open(f, 'rb').read().decode('utf-8') for f in ['README.rst', 'CHANGELOG.rst'])
@@ -18,10 +17,13 @@ setup(
     url='https://github.com/pnnl/tesp',
     license='BSD',
     install_requires=[
-        'pandas~=2.0.1',
-        'numpy~=1.24.3',
+        'importlib-resources~=6.1.0',
+        'h5py~=3.9.0',
+        'helics~=3.4.0',
+        'pandas~=2.0.3',
+        'numpy~=1.24.4',
         'scipy~=1.10.1',
-        'matplotlib~=3.7.1',
+        'matplotlib~=3.7.3',
         'networkx~=3.1',
         'PYPOWER==5.1.16',
         'pyutilib==6.0.0',
@@ -29,7 +31,9 @@ setup(
     ],
     packages=find_packages(),
     include_package_data=True,
-    data_files=[],
+    package_data={
+        'tesp_support': ['api/datafiles/*.json']
+    },
     python_requires='>=3.8',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -44,5 +48,11 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering'
     ],
-    zip_safe=False
+    zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            'tesp_component = tesp_support.api.data:tesp_component',
+            'schedule_server = tesp_support.api.schedule_server:main'
+        ]
+    }
 )

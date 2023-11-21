@@ -1,9 +1,9 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: loadshed.py
 
 import sys
 
-import tesp_support.api.fncs as fncs
+import tesp_support.original.fncs as fncs
 
 time_stop = int(sys.argv[1])
 time_granted = 0

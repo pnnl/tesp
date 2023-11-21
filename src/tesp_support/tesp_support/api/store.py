@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2023 Battelle Memorial Institute
 # file: data.py
 """ Path and Data functions for use within tesp_support, including new agents.
 """
@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 import zipfile as zf
 
+"""
 #  add empty json "file" store that holds
 #  the directory and schemas classes for each file store
 #
@@ -20,7 +21,7 @@ import zipfile as zf
 #     {
 #       "path": <full qualified path and name>',
 #       "name": <identifier>,
-#       "filetype": <sql, hdf5, csv>
+#       "filetype": <sql, h5, csv>
 #       "description": <intent and description of the data file>,
 #       "source": <>
 #       "schema": [
@@ -52,6 +53,7 @@ import zipfile as zf
 #     {...}
 #   ]
 # }
+"""
 
 
 class Directory:
@@ -160,6 +162,7 @@ class Schema:
 
         self.file = file
         self.name = name
+        self.description = description
         self.ext = ext[1]
         if name is not None:
             self.name = ext[0]
@@ -168,6 +171,7 @@ class Schema:
         self.tables = None
         self.columns = {}
         self.dates = {}
+        self.skip_rows = {}
         return
 
     def get_tables(self):
@@ -192,10 +196,18 @@ class Schema:
                 f.close()
         return self.tables
 
-    def get_columns(self, table):
+    def get_columns(self, table, skip_rows=0):
+        if not table in self.skip_rows:
+            self.skip_rows[table] = skip_rows
+        else:
+            if skip_rows > 0:
+                self.skip_rows[table] = skip_rows
+
         if table in self.tables:
             if self.ext == ".csv":
                 with open(self.file, newline='') as csvfile:
+                    for i in range(self.skip_rows[table]):
+                        csvfile.readline()
                     reader = csv.DictReader(csvfile)
                     self.columns[table] = reader.fieldnames
 
@@ -248,6 +260,7 @@ class Schema:
     # │ pd.read_csv(..., thousands='.', decimal=',')          │ Numeric data is in European format (eg., 1.234,56) │
     # └───────────────────────────────────────────────────────┴────────────────────────────────────────────────────┘
     def get_series_data(self, table, start, end, usecols=None, index_col=None):
+
         if table in self.dates:
             dt = self.dates[table]
         else:
@@ -257,26 +270,37 @@ class Schema:
             if table in self.columns:
                 if self.ext == ".csv":
                     if type(dt) == list:
-                        df = pd.read_csv(self.file, usecols=usecols, index_col=index_col)
+                        df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table])
                         df['dates'] = pd.date_range(start=dt[0], periods=len(df), freq=dt[1])
-                        df[(start < df['dates']) & (df['dates'] < end)]
+                        df = df[(start < df['dates']) & (df['dates'] < end)]
                     else:
-                        df = pd.read_csv(self.file, usecols=usecols, index_col=index_col, parse_dates=[dt])
+                        df = pd.read_csv(self.file, names=self.columns[table], skiprows=self.skip_rows[table],
+                                         parse_dates=True, keep_date_col=True)
                         df = df[(start < df[dt]) & (df[dt] < end)]
                     return df
 
                 if self.ext in [".db"]:
                     con = sqlite3.connect(self.file)
                     sql_query = """SELECT * FROM '""" + table + """';"""
-                    cursor = con.cursor()
-                    data = cursor.execute(sql_query)
-                    for column in data.description:
-                        self.columns[table].append(column[0])
+                    df = pd.read_sql_query(sql_query, con, parse_dates={dt: '%Y-%m-%d %H:%M:%S'})
+                    df = df[(start < df[dt]) & (df[dt] < end)]
+                    # cursor = con.cursor()
+                    # data = cursor.execute(sql_query)
+                    # for column in data.description:
+                    #     self.columns[table].append(column[0])
                     con.close()
+                    return df
 
-                if self.ext in [".hdf5"]:
+                if self.ext in [".h5"]:
                     f = h5py.File(self.file, 'r')
-                    self.tables = list(f.keys())
+                    tbl = np.array(f[table])
+                    df = pd.DataFrame(tbl)
+                    df[dt] = df[dt].astype('str')
+                    pd.to_datetime(df[dt], format='%Y-%m-%d %H:%M:%S PDT')
+                    df = df[(start < df[dt]) & (df[dt] < end)]
+                    # self.tables = list(f.keys())
+                    f.close()
+                    return df
 
         return None
 
@@ -287,16 +311,50 @@ class Schema:
                    "description": self.description,
                    "schema": []}
         for tbl in self.get_tables():
+            skip_rows = 0
+            if tbl in self.skip_rows:
+                skip_rows = self.skip_rows[tbl]
             table = {"name": tbl,
                      "columns": self.get_columns(tbl),
+                     "skip_rows": skip_rows,
                      "date": self.get_date(tbl)}
             diction["schema"].append(table)
         return diction
 
 
+def unzip(file, path):
+    """
+    This function unzip take name add .zip and unzip the file to specified path.
+    Then finds the store json in that path and fixes the relative path for the stores work
+    """
+    root = os.path.split(file + ".zip")
+    if root[1] == "":
+        raise Exception("Sorry, " + file + " is not a file!")
+    root = root[1]
+
+    if os.path.isdir(path):
+        cwd = os.path.split(path)
+        if cwd[1] == "":
+            cwd = cwd[0]
+        else:
+            raise Exception("Sorry, parameter " + path + " is a file!")
+
+    if os.path.isfile(file + ".zip"):
+        theZipfile = zf.ZipFile(file+".zip", 'r')
+        theZipfile.extractall(cwd)
+
+        # TODO fix up paths
+        # if os.path.isfile(cwd + file + ".json"):
+        #     meta = json.loads(cwd + file + ".json")
+        #     #write(cwd + file + ".json")
+
+    return
+
+
 class Store:
     def __init__(self, file):
-        self.file = file
+        self.root = file
+        self.file = file + '.json'
         self.store = []
         self.read()
         return
@@ -362,12 +420,12 @@ class Store:
             desc = []
             for schema in self.store:
                 if type(schema) == Schema:
-                    desc.append([schema['name'], schema['ext'], schema['description']])
+                    desc.append([schema.name, schema.ext, schema.description])
             return desc
         else:
             for schema in self.store:
                 if type(schema) == Schema:
-                    if schema['name'] == name:
+                    if schema.name == name:
                         return schema
         return None
 
@@ -407,20 +465,20 @@ class Store:
                                 scheme.tables.append(name)
                                 if "columns" in table:
                                     scheme.columns[name] = table["columns"]
+                                if "skip_rows" in table:
+                                    scheme.skip_rows[name] = table["skip_rows"]
                                 if "date" in table:
                                     scheme.dates[name] = table["date"]
                         except:
                             pass
 
-    def zip(self, target):
-        theZipFile = zf.ZipFile(target, 'w')
+    def zip(self):
+        theZipFile = zf.ZipFile(self.root + '.zip', 'w')
+        theZipFile.write(self.file)
         for file in self.store:
             if type(file) == Directory:
                 file.zip(theZipFile)
         theZipFile.close()
-
-    def unzip(self):
-        return
 
 
 def _test_debug_resample():
@@ -452,7 +510,7 @@ def _test_debug_resample():
 def _test_csv():
     from .data import tesp_test
 
-    my_store = Store(tesp_test + 'api/store.json')
+    my_store = Store(tesp_test + 'api/store')
     my_file = my_store.add_file(tesp_test + 'api/test.csv', "test_csv", "My test csv file")
     tables = my_file.get_tables()
     print(tables)
@@ -464,7 +522,7 @@ def _test_csv():
 def _test_sqlite():
     from .data import tesp_test
 
-    my_store = Store(tesp_test + 'api/store.json')
+    my_store = Store(tesp_test + 'api/store')
     my_file = my_store.add_file(tesp_test + 'api/test.db', "test_db", "My test sqlite file")
     tables = my_file.get_tables()
     print(tables)
@@ -491,7 +549,6 @@ def test_hdf5():
     n = f.__getitem__(tables[1])[0:13]
     print(n)
 
-
     my_store.write()
 
 
@@ -499,7 +556,7 @@ def _test_read():
     from .data import tesp_test
     from .metrics_api import get_synch_date_range
 
-    my_store = Store(tesp_test + 'api/store.json')
+    my_store = Store(tesp_test + 'api/store')
     my_file = my_store.add_file(tesp_test + 'api/test.csv', "test_csv", "My test csv file")
     tables = my_file.get_tables()
     print(tables)
@@ -525,7 +582,7 @@ def _test_dir():
     from .data import tesp_share
     from .data import tesp_test
 
-    my_store = Store(tesp_test + 'api/store.json')
+    my_store = Store(tesp_test + 'api/store')
     my_file = my_store.add_path(tesp_share, "My data directory")
     my_file.set_includeDir("energyplus")
     sub = my_file.set_includeDir("feeders", True)
@@ -533,7 +590,7 @@ def _test_dir():
     my_file.set_includeFile(sub, "comm*")
     my_file.set_includeFile(sub, ".gitignore")
     my_store.write()
-    my_store.zip(tesp_test + 'api/store.zip')
+    my_store.zip()
 
 
 def _test_change_gencost():

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: gld_model_updater.py
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-

@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: residential_feeder_glm.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
@@ -367,6 +367,7 @@ def selectResidentialBuilding(rgnTable, prob):
     col = len(rgnTable[row]) - 1
     return row, col
 
+
 # -----------fraction of income level in a given dso type and state---------
 # index 0 is the income level:
 #   0 = Low
@@ -384,6 +385,7 @@ def getDsoIncomeLevelTable():
     if total > 1.01 or total < 0.99:
         raise UserWarning('Income level distribution does not sum to 1!')
     return dsoIncomePct
+
 
 def selectIncomeLevel(incTable, prob):
     """ Selects the income level with region and probability
@@ -1604,13 +1606,17 @@ def write_houses(basenode, op, vnom):
     else:
         vstart = format(-0.5 * vnom, '.2f') + '+' + format(0.866025 * vnom, '.2f') + 'j'
 
+    if "_Low" in basenode or "_Middle" in basenode or "_Upper" in basenode:
+        _basenode = basenode.replace("_Low", "")
+        _basenode = _basenode.replace("_Middle", "")
+        _basenode = _basenode.replace("_Upper", "")
     if forERCOT:
         phs = phs + 'S'
         tpxname = gld_strict_name(basenode + '_tpx')
         mtrname = gld_strict_name(basenode + '_mtr')
     else:
         print('object triplex_node {', file=op)
-        print('  name', basenode + ';', file=op)
+        print('  name', _basenode + ';', file=op)
         print('  phases', phs + ';', file=op)
         print('  nominal_voltage ' + str(vnom) + ';', file=op)
         print('  voltage_1 ' + vstart + ';', file=op)
@@ -1622,7 +1628,7 @@ def write_houses(basenode, op, vnom):
             mtrname = gld_strict_name(basenode + '_mtr_' + str(i + 1))
             print('object triplex_line {', file=op)
             print('  name', tpxname + ';', file=op)
-            print('  from', basenode + ';', file=op)
+            print('  from', _basenode + ';', file=op)
             print('  to', mtrname + ';', file=op)
             print('  phases', phs + ';', file=op)
             print('  length 30;', file=op)
@@ -1966,18 +1972,18 @@ def write_houses(basenode, op, vnom):
                 wh_data = res_bldg_metadata['water_heater_tank_size']
                 if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
                     size_array = range(wh_data['tank_size']['1_2_people']['min'],
-                                    wh_data['tank_size']['1_2_people']['max'] + 1, 5)
+                                       wh_data['tank_size']['1_2_people']['max'] + 1, 5)
                     wh_demand_type = 'small_'
                 elif floor_area <= wh_data['floor_area']['2_3_people']['floor_area_max']:
                     size_array = range(wh_data['tank_size']['2_3_people']['min'],
-                                    wh_data['tank_size']['2_3_people']['max'] + 1, 5)
+                                       wh_data['tank_size']['2_3_people']['max'] + 1, 5)
                     wh_demand_type = 'small_'
                 elif floor_area <= wh_data['floor_area']['3_4_people']['floor_area_max']:
                     size_array = range(wh_data['tank_size']['3_4_people']['min'],
-                                    wh_data['tank_size']['3_4_people']['max'] + 1, 10)
+                                       wh_data['tank_size']['3_4_people']['max'] + 1, 10)
                 else:
                     size_array = range(wh_data['tank_size']['5_plus_people']['min'],
-                                    wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
+                                       wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
                 wh_size = np.random.choice(size_array)
 
                 wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
@@ -2997,7 +3003,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     global storage_inv_mode, solar_inv_mode, solar_percentage, storage_percentage, ev_percentage
     global work_path, weather_file
     global timezone, starttime, endtime, timestep
-    global metrics, metrics_type, metrics_interval, metrics_interim # removed electric_cooling_percentage; now defined by house
+    global metrics, metrics_type, metrics_interval, metrics_interim  # removed electric_cooling_percentage; now defined by house
     global water_heater_percentage, water_heater_participation
     global case_name, name_prefix, port, forERCOT, substation_name
     global house_nodes, small_nodes, comm_loads
@@ -3085,8 +3091,8 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     solar_P_player = config['BuildingPrep']['SolarPPlayerFile']
     solar_Q_player = config['BuildingPrep']['SolarQPlayerFile']
     # if not provided in JSON config, use a regional default
-    # electric_cooling_percentage = res_bldg_metadata['air_conditioning'] # TODO: This shouldn't be defined here anymore - should be defined in write_houses()
-    ashrae_zone = config['BuildingPrep']['ASHRAEZone'] # TODO: use this later
+    # electric_cooling_percentage = res_bldg_metadata['air_conditioning']  # TODO: This shouldn't be defined here anymore - should be defined in write_houses()
+    ashrae_zone = config['BuildingPrep']['ASHRAEZone']  # TODO: use this later
     comm_bldg_metadata = config['BuildingPrep']['CommBldgMetaData']
     comm_bldgs_pop = config['BuildingPrep']['CommBldgPopulation']
     case_type = config['SimulationConfig']['caseType']

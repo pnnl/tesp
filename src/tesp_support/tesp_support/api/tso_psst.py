@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: tso_psst.py
 
 import os
@@ -13,10 +13,10 @@ import helics
 from copy import deepcopy
 from datetime import datetime
 
-from tesp_support.api.parse_helpers import parse_mva
-from .tso_helpers import load_json_case, make_dictionary, dist_slack
+from .parse_helpers import parse_mva
+from .tso_helpers import load_json_case, make_dictionary, dist_slack, print_m_case
 from .metrics_collector import MetricsStore, MetricsCollector
-from tesp_support.api.bench_profile import bench_profile
+from .bench_profile import bench_profile
 
 def make_generator_plants(ppc, renewables):
     gen = ppc['gen']
@@ -168,7 +168,7 @@ def tso_psst_loop(casename):
 
         lseDispatch = {}
         if len(priceSenLoadData) != 0:
-            for ld in sorted(instance.PriceSensitiveLoads.value):
+            for ld in sorted(instance.PriceSensitiveLoads.data()):
                 lseDispatch[ld] = []
                 for t in sorted(instance.TimePeriods):
                     lseDispatch[ld].append(instance.PSLoadDemand[ld, t].value)
@@ -265,7 +265,7 @@ def tso_psst_loop(casename):
         dispatch = {}
         if outcomes[1] == 'optimal':
             status = True
-            for g in sorted(instance.Generators.value):
+            for g in sorted(instance.Generators.data()):
                 dispatch[g] = []
                 for t in sorted(instance.TimePeriods):
                     dispatch[g].append(instance.PowerGenerated[g, t].value * baseS)
@@ -1692,6 +1692,9 @@ def tso_psst_loop(casename):
             opf = False
 
         rpf = pp.runpf(ppc, ppopt_regular)
+        if not (file_time == ""):
+            print_m_case(ppc, os.path.join(output_Path, file_time + ".m"))
+
         # TODO: add a check if does not converge, switch to DC
         if not rpf[0]['success']:
             conv_accum = False
@@ -1737,7 +1740,7 @@ def tso_psst_loop(casename):
             helics.helicsPublicationPublishDouble(pub, bus_vln)
 
             # LMP_P, LMP_Q, PD, QD, Vang, Vmag, Vmax, Vmin: row[11] and row[12] are Vmax and Vmin constraints
-            PD = row[2]  # + resp # TODO, if more than one FNCS bus, track scaled_resp separately
+            PD = row[2]  # + resp # TODO, if more than one DSO bus, track scaled_resp separately
             Vpu = row[7]
             bus_accum[busnum][0] += row[13] * 0.001
             bus_accum[busnum][1] += row[14] * 0.001
@@ -1835,7 +1838,7 @@ def tso_psst_loop(casename):
     # ======================================================
     if piq:
         pq.avg_dispatch_data(piq_count)
-        pq.write_json()
+        pq.write('piq.json')
 
     log.info('finalize metrics writing')
     collector.finalize_writing()

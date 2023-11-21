@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: runti30.sh
 
 declare -r SCHED_PATH=$TESPDIR/data/schedules

@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: case_comparison_plots.py
 import os
 from datetime import datetime
@@ -14,9 +14,11 @@ from .plots import load_json
 def plot_lmp_stats(cases, data_paths, output_path, dso_num, variable):
     """ Will plot LMPS by month, duration, and versus netloads loads (for select month), and save to file.
     Args:
-        data_path (str): location of the data files to be used.
+        cases (List[str]): names of the cases
+        data_paths (str): location of the data files to be used.
         output_path (str): path of the location where output (plots, csv) should be saved
         dso_num (str): bus number for LMP data to be plotted
+        variable (str):
     Returns:
         saves dso lmps plots to file
         """

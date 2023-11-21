@@ -1,6 +1,6 @@
 # weather Python files
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 This is the weather code repository for Python-based components of TESP
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: runTE30-withMarket.sh
 
 clear
@@ -172,7 +172,7 @@ export FNCS_LOG_STDOUT=$ppSTDOUTlog \
 export FNCS_LOG_LEVEL=$fncsLOGlevel && \
 export PYPOWER_LOG_LEVEL=$ppLOGlevel && \
 cd ${SCEN_ROOT} && \
-python -c "import tesp_support.api.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('te30_pp.json','${scenarioName}_${scenarioType}')" &> $ppOutFile &
+python -c "import tesp_support.original.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('te30_pp.json','${scenarioName}_${scenarioType}')" &> $ppOutFile &
 
 # ================================================ starting GridLAB-D ===============================================================
 for ((i=0; i<$gldNum; i++)); do

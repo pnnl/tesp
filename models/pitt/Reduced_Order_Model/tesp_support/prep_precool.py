@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (c) 2018-2023 Battelle Memorial Institute
 # file: prep_precool.py
 """Writes the precooling agent and GridLAB-D metadata for NIST TE Challenge 2 example
  
@@ -27,7 +27,7 @@ def prep_precool(name_root):
     np.random.seed(0)
 
     # write yaml for precool.py to subscribe meter voltages and house setpoints
-    # write txt for gridlabd to subscribe house setpoints and publish meter voltages
+    # write txt for GridLAB-D to subscribe house setpoints and publish meter voltages
 
     dt = 15
     period = 300

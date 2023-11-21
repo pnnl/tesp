@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (c) 2018-2023 Battelle Memorial Institute
 # file: tesp_monitor_ercot.py
 """Presents a GUI to launch a TESP simulation and monitor its progress
 
@@ -22,7 +22,7 @@ from tkinter import messagebox
 import subprocess
 import os
 try:
-  import tesp_support.api.fncs as fncs
+  import tesp_support.original.fncs as fncs
 except:
   pass
 import tesp_support.api.helpers as helpers

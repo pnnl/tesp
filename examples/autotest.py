@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: autotest.py
 """Runs the set of TESP test cases, excluding the longer FNCS cases
 MATPOWER/MOST example must be run after manual installation of Octave and MATPOWER
@@ -23,6 +23,7 @@ def gld_player_test():
     tr.run_test('run.sh', 'GridLAB-D Player/Recorder')
     os.chdir(tesp_path)
 
+
 def loadshed_test():
     tr.start_test('Loadshed examples')
     if b_helics:
@@ -40,6 +41,7 @@ def loadshed_test():
         tr.run_test('runjava.sh', 'Loadshed - FNCS Java')
     os.chdir(tesp_path)
 
+
 def loadshed_cli_test():
     if b_helics:
         tr.start_test('Loadshed examples for HELICS CLI')
@@ -50,6 +52,7 @@ def loadshed_cli_test():
         tr.run_test('run.sh', 'Loadshed - HELICS/EPlus')
         # tr.run_test('run_ns3.sh', 'Loadshed - HELICS/EPLUS/NS3')
         os.chdir(tesp_path)
+
 
 def loadshed_proto_test():
     if b_helics:
@@ -62,9 +65,10 @@ def loadshed_proto_test():
         os.chdir('../R1-12.47-1')
         tr.exec_test('gridlabd R1-12.47-1_processed.glm > gridlabd.log', 'Establishing baseline results')
         os.chdir('..')
-        tr.run_test('run.sh', 'Load shedding control without communication network')
-        tr.run_test('run_ns3.sh', 'Load shedding control over communication network')
+        tr.run_test('run.sh', 'Load shedding w/o comm network')
+        tr.run_test('run_ns3.sh', 'Load shedding over comm network')
         os.chdir(tesp_path)
+
 
 def houses_test():
     tr.start_test('Houses example')
@@ -73,7 +77,8 @@ def houses_test():
     tr.run_test('run.sh', 'Houses')
     os.chdir(tesp_path)
 
-def PYPOWER_test():
+
+def pypower_test():
     tr.start_test('PYPOWER example')
     os.chdir('capabilities/pypower')
     subprocess.Popen('./clean.sh', shell=True).wait()
@@ -83,20 +88,22 @@ def PYPOWER_test():
         tr.run_test('runpp.sh', 'PYPOWER - FNCS')
     os.chdir(tesp_path)
 
-def EnergyPlus_test():
+
+def energyplus_test():
     tr.start_test('EnergyPlus EMS/IDF examples')
     os.chdir('capabilities/energyplus')
     subprocess.Popen('./clean.sh', shell=True).wait()
-    tr.exec_test('./run_baselines.sh > baselines.log', 'Houston, TX Baselines files')
+    tr.exec_test('./run_baselines.sh > baselines.log', 'Houston,TX Baselines build types')
     if b_helics:
-        tr.exec_test('./make_all_ems.sh True > all_ems.log', 'Generated all EMS/IDF files - HELICS')
+        tr.exec_test('./make_all_ems.sh True > all_ems.log', 'Generated EMS/IDF files - HELICS')
         tr.run_test('runh.sh', 'EnergyPlus EMS - HELICS')
     #    tr.run_test('batch_ems_case.sh', 'EnergyPlus Batch EMS')
     else:
-        tr.exec_test('./make_all_ems.sh False > all_ems_f.log', 'Generated all EMS/IDF files - FNCS')
+        tr.exec_test('./make_all_ems.sh False > all_ems_f.log', 'Generated EMS/IDF files - FNCS')
         tr.run_test('run.sh', 'EnergyPlus IDF - FNCS')
         tr.run_test('run2.sh', 'EnergyPlus EMS - FNCS')
     os.chdir(tesp_path)
+
 
 def weather_agent_test():
     tr.start_test('Weather Agent example')
@@ -108,7 +115,8 @@ def weather_agent_test():
         tr.run_test('run.sh', 'Weather Agent - FNCS')
     os.chdir(tesp_path)
 
-def TE30_test():
+
+def te30_test():
     tr.start_test('TE30 examples')
     os.chdir('capabilities/te30')
     subprocess.Popen('./clean.sh', shell=True).wait()
@@ -120,6 +128,7 @@ def TE30_test():
         tr.run_test('run.sh', 'TE30 - FNCS Market')
         tr.run_test('run0.sh', 'TE30 - FNCS No Market')
     os.chdir(tesp_path)
+
 
 def make_comm_base_test():
     tr.start_test('Communication Network examples')
@@ -148,6 +157,7 @@ def make_comm_base_test():
         tr.run_test('run.sh', 'SGIP1c - FNCS')
     os.chdir(tesp_path)
 
+
 def make_comm_eplus_test():
     if b_helics:
         tr.start_test('Eplus with Communication Network example')
@@ -156,6 +166,7 @@ def make_comm_eplus_test():
         os.chdir('Eplus_Comm')
         tr.run_test('run.sh', 'Eplus w/Comm - HELICS')
         os.chdir(tesp_path)
+
 
 def combine_feeders_test():
     tr.start_test('Communication Network Combined Case example')
@@ -169,6 +180,7 @@ def combine_feeders_test():
     else:
         tr.run_test('runcombined.sh', '4 Feeders - FNCS')
     os.chdir(tesp_path)
+
 
 if __name__ == '__main__':
     b_helics = True
@@ -184,13 +196,13 @@ if __name__ == '__main__':
     tr.block_test(loadshed_test)
     tr.block_test(loadshed_cli_test)
     tr.block_test(loadshed_proto_test)
-    tr.block_test(PYPOWER_test)
-    tr.block_test(EnergyPlus_test)
+    tr.block_test(pypower_test)
+    tr.block_test(energyplus_test)
     tr.block_test(weather_agent_test)
     tr.block_test(houses_test)
-    tr.block_test(TE30_test)
+    tr.block_test(te30_test)
     tr.block_test(combine_feeders_test)
-    tr.block_test(make_comm_eplus_test)  # TODO May not be working correctly
+    tr.block_test(make_comm_eplus_test)
     tr.block_test(make_comm_base_test)  # there are 3 different runs, takes ~5min each
 
     print(tr.report_tests())

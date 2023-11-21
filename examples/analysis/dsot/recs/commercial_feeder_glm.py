@@ -198,19 +198,19 @@ def define_comm_loads(bldg_type, bldg_size, dso_type, climate, bldg_metadata):
 
         # randomize 10# then convert W/sf -> kW
         floor_area = bldg['floor_area']
-        bldg['adj_lights'] = data['internal_heat_gains']['lighting'] * \
-                             (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+        bldg['adj_lights'] = (data['internal_heat_gains']['lighting'] * (0.9 + 0.1 * np.random.random()) *
+                              floor_area / 1000.0)
         bldg['adj_plugs'] = data['internal_heat_gains']['MEL'] * (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
-        bldg['adj_refrig'] = data['internal_heat_gains']['large_refrigeration'] \
-                             * (0.9 + 0.2 * np.random.random()) * floor_area / 1000.
+        bldg['adj_refrig'] = (data['internal_heat_gains']['large_refrigeration'] *
+                              (0.9 + 0.2 * np.random.random()) * floor_area / 1000.0)
         # ---------------- Setting gas water heating to zero ----------------
         bldg['adj_gas'] = 0
         # bldg['adj_gas'] = (0.9 + 0.2 * np.random.random())
         # Set exterior lighting to zero as plug and light parameters capture all of CBECS loads.
         bldg['adj_ext'] = 0  # (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
         occ_load = 73  # Assumes 73 watts / occupant from Caney Fork study
-        bldg['adj_occ'] = data['internal_heat_gains']['occupancy'] * occ_load \
-                          * (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
+        bldg['adj_occ'] = (data['internal_heat_gains']['occupancy'] * occ_load *
+                           (0.9 + 0.1 * np.random.random()) * floor_area / 1000.0)
 
         bldg['int_gains'] = bldg['adj_lights'] + bldg['adj_plugs'] + bldg['adj_occ'] + bldg['adj_gas']
 
@@ -227,7 +227,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
         bldg (dict): dictionary of building parameters for the building to be processed.
         comm_loads:
         key (str): name of feeder node or meter being used
-        op (str): GLD output file
+        op (any): GLD output file
         batt_metadata:
         storage_percentage:
         ev_metadata:
@@ -256,7 +256,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
     c_z_frac = 0.2
     c_i_frac = 0.4
     c_p_frac = 1.0 - c_z_frac - c_i_frac
-    light_scalar_comm = 0.0  # Turned off street lights - set to 1.0 to turn on.
+    light_scalar_comm = 0.0  # Turned off-street lights - set to 1.0 to turn on.
 
     if bldg['type'] not in ['large_office', 'ZIPLOAD']:
         bldg_size = bldg['floor_area']
@@ -264,7 +264,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
         bldg['mtr'] = mtr
         bldg['groupid'] = comm_type  # + '_' + str(loadnum)
 
-        # Need to create a buffer version of bldg so zip loads do not get over ridden in the multi-zone for loops
+        # Need to create a buffer version of bldg so zip loads do not get overridden in the multi-zone for loops
         buff = bldg.copy()
         print('// load', key, 'parent', bldg['mtr'], 'type', comm_type, 'sqft', comm_size, 'kva', '{:.3f}'.format(kva),
               'nphs', nphs, 'phases', phases, 'vln', '{:.3f}'.format(vln), file=op)
@@ -477,7 +477,7 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                 else:
                     print('    Q_Out 0;', file=op)
                 # Instead of solar object, write a fake V_in and I_in sufficient high so
-                # that it doesnt limit the player output
+                # that it doesn't limit the player output
                 print('     V_In 10000000;', file=op)
                 print('     I_In 10000000;', file=op)
                 if metrics_interval > 0:
@@ -512,8 +512,8 @@ def create_comm_zones(bldg, comm_loads, key, op, batt_metadata, storage_percenta
                     not res_FG.is_hhmm_valid(drive_sch['home_leave_time']) or \
                     not res_FG.is_hhmm_valid(drive_sch['work_arr_time']):
                 raise UserWarning('invalid HHMM format of driving time!')
-            if drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or drive_sch[
-                'work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0:
+            if (drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or
+                    drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0):
                 raise UserWarning('invalid home or work duration for ev!')
             if not res_FG.is_drive_time_valid(drive_sch):
                 raise UserWarning('home and work arrival time are not consistent with durations!')
@@ -584,6 +584,8 @@ def find_envelope_prop(prop, age, env_data, climate):
     Returns:
         val (float): property value - typically a U-value.
     """
+
+    val = None
     # Find age bin for properties
     if age < 1960:
         age_bin = '1960'
@@ -619,63 +621,64 @@ def find_envelope_prop(prop, age, env_data, climate):
     return val
 
 
-def normalize_dict_prob(name, dict):
+def normalize_dict_prob(name, diction):
     """ Ensures that the probability distribution of values in a dictionary effectively sums to one
 
     Args:
         name: name of dictionary to normalize
-        dict: dictionary of elements and associated non-cumulative probabilities
+        diction: dictionary of elements and associated non-cumulative probabilities
     """
     sum1 = 0
     sum2 = 0
-    for i in dict:
-        sum1 += dict[i]
-    for y in dict:
-        dict[y] = dict[y] / sum1
-    for z in dict:
-        sum2 += dict[z]
+    for i in diction:
+        sum1 += diction[i]
+    for y in diction:
+        diction[y] = diction[y] / sum1
+    for z in diction:
+        sum2 += diction[z]
     if sum1 != sum2:
-        print("WARNING " + name + " dictionary normalize to 1, value are > ", dict)
-    return dict
+        print("WARNING " + name + " dictionary normalize to 1, value are > ", diction)
+    return diction
 
 
-def rand_bin_select(dict, prob):
+def rand_bin_select(diction, probability):
     """ Returns the element (bin) in a dictionary given a certain probability
 
     Args:
-        dict: dictionary of elements and associated non-cumulative probabilities
-        prob: scalar value between 0 and 1
+        diction: dictionary of elements and associated non-cumulative probabilities
+        probability: scalar value between 0 and 1
     """
     total = 0
 
-    for bin in dict:
-        total += dict[bin]
-        if total >= prob:
-            return bin
-    return bin
+    for element in diction:
+        total += diction[element]
+        if total >= probability:
+            return element
+    return None
 
 
-def sub_bin_select(bin, type, prob):
+def sub_bin_select(_bin, _type, _prob):
     """ Returns a scalar value within a bin range based on a uniform probability within that bin range
 
     Args:
-        bin: name of bin
-        type: building parameter describing set of bins
-        prob: scalar value between 0 and 1
+        _bin: name of bin
+        _type: building parameter describing set of bins
+        _prob: scalar value between 0 and 1
     """
-    if type == 'vintage':
+    bins = {}
+    if _type == 'vintage':
         bins = {'pre_1960': [1945, 1959],
                 '1960-1979': [1960, 1979],
                 '1980-1999': [1980, 1999],
                 '2000-2009': [2000, 2009],
                 '2010-2015': [2010, 2015]}
-    elif type == 'total_area':
+    elif _type == 'total_area':
         bins = {'1-5': [1000, 5000],
                 '5-10': [5001, 10000],
                 '10-25': [10001, 25000],
                 '25-50': [25001, 50000],
                 '50_more': [50001, 55000]}
-    elif type == 'occupancy':
+    elif _type == 'occupancy':
         bins = {'0': [0, 0],
                 '1-39': [1, 39.99],
                 '40-48': [40, 48.99],
@@ -683,8 +686,8 @@ def sub_bin_select(bin, type, prob):
                 '61-84': [61, 84.99],
                 '85-167': [85, 167.99],
                 '168': [168, 168]}
-    val = bins[bin][0] + prob * (bins[bin][1] - bins[bin][0])
-    if type in ['vintage']:
+    val = bins[_bin][0] + _prob * (bins[_bin][1] - bins[_bin][0])
+    if _type in ['vintage']:
         val = int(val)
     return val
 
@@ -797,7 +800,8 @@ def write_one_commercial_zone(bldg, op, metrics, metrics_interval, mode=None):
     if bldg['adj_refrig'] != 0:
         print('  object ZIPload { // large refrigeration electrical load', file=op)
         # print('    schedule_skew {:.0f};'.format(bldg['skew_value']), file=op)
-        # TODO: set to 0.01 to avoid a divide by zero issue in the agent code.  Should be set to zero after that is fixed.
+        # TODO: set to 0.01 to avoid a divide by zero issue in the agent code.
+        #  Should be set to zero after that is fixed.
         print('    heatgain_fraction 0.01;', file=op)
         print('    power_fraction {:.2f};'.format(bldg['c_p_frac']), file=op)
         print('    impedance_fraction {:.2f};'.format(bldg['c_z_frac']), file=op)

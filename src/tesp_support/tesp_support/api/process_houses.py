@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: process_houses.py; focus on HVAC
 """Functions to plot house data from GridLAB-D
 

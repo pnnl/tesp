@@ -5,23 +5,26 @@ import tesp_support.api.store as fle
 
 
 def dsot_store(case_name):
-    my_store = fle.Store('dsot_store.json')
+    my_store = fle.Store('dsot_store')
 
     my_file = my_store.add_path("../", "DSOT Directory")
     # case
     sub = my_file.set_includeDir("code/" + case_name, True)
 
     # We need to load in the master metadata (*system_case_config.json)
-    case_file = "../code/" + case_name + "/generate_case_config.json"
-    with open(case_file, 'r', encoding='utf-8') as json_file:
-        sys_config = json.load(json_file)
-        start_time = sys_config['StartTime']
-        end_time = sys_config['EndTime']
-        tso_config = sys_config['DSO']
-        for i in range(len(tso_config)):
-            name = tso_config[i][1] + 'metrics_billing_meter.h5'
-            my_file = my_store.add_file(name, tso_config[i][1], "billing for " + tso_config[i][1])
-            tables = my_file.get_tables()
+    # case_file = "../code/" + case_name + "/generate_case_config.json"
+    # with open(case_file, 'r', encoding='utf-8') as json_file:
+    #     sys_config = json.load(json_file)
+    #     start_time = sys_config['StartTime']
+    #     end_time = sys_config['EndTime']
+    #     tso_config = sys_config['DSO']
+    #     for i in range(len(tso_config)):
+    #         name = tso_config[i][1] + 'metrics_billing_meter.h5'
+    #         my_file = my_store.add_file(name, tso_config[i][1], "billing for " + tso_config[i][1])
+    #         tables = my_file.get_tables()
+    #         if len(tables) > 1:
+    #             columns = my_file.get_columns(tables[1])
+    #             my_file.set_date_bycol(tables[1], 'date')
 
     # schedules
     sub = my_file.set_includeDir("data/schedule_df", True)
@@ -56,7 +59,7 @@ def dsot_store(case_name):
     # "WeatherDataSourcePath": "../data/8-node data/DAT formatted files/"
 
     my_store.write()
-    my_store.zip('dsot_store.zip')
+    my_store.zip()
 
 
 def little_post():

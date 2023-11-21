@@ -56,7 +56,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
     x = len(I_ver[times[0]].keys())
     y = len(times)
     z = len(meta_I_ver)
-    data_I_ver = np.empty(shape=(x, y, z), dtype=np.float)
+    data_I_ver = np.empty(shape=(x, y, z), dtype=np.float64)
     # print (x,y,z)
     j = 0
     for node in list(I_ver[times[0]].keys()):
@@ -95,7 +95,7 @@ def get_metrics_full_multiple_KEY(file_name, pre_file, pos_file, to_hour=True):
     all_homes_I_ver.append(Ip.sum(axis=0))
 
     data_individual = list()
-    data_individual = [pd.DataFrame(data_I_ver[i, :, :], index=index) for i in range(x)]
+    data_individual = [pd.DataFrame(data_I_ver[_, :, :], index=index) for _ in range(x)]
 
     return meta_I_ver, start_time, all_homes_I_ver, data_individual, list(I_ver[times[0]].keys())  # indovidual homes
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: battery_dsot.py
 """Class that controls the Battery DER
 
@@ -63,7 +63,7 @@ class BatteryDSOT:
         bidSpread (int): this can be used to spread out bids in multiple hours. When set to 1 hour (recommended), it’s effect is none
         P (int): location of P in bids
         Q (int): location of Q in bids
-        f_DA (float) (1 X windowLength): forecasted prices in $/kWh for all the hours in the duration of windowLength
+        f_DA (List[float]) (1 X windowLength): forecasted prices in $/kWh for all the hours in the duration of windowLength
         ProfitMargin_slope (float): specified in % and used to modify slope of bid curve. Set to 0 to disable
         ProfitMargin_intercept (float): specified in % to generate a small dead band (i.e., change in price does not affect quantity). Set to 0 to disable
         pm_hi (float): Highest possible profit margin in %
@@ -72,10 +72,10 @@ class BatteryDSOT:
         RT_state_maintain_flag (int): (0) not define at current hour (-1) charging (+1) discharging
         RT_flag (bool): if True, has to update GridLAB-D
         inv_P_setpoint (float): next GridLAB-D inverter power output
-        optimized_Quantity (float) (1 X Window Length): Optimized quantity
+        optimized_Quantity (List[float]) (1 X Window Length): Optimized quantity
         #not used if not biding DA
-        prev_clr_Quantity (float) (1 X Window Length): cleared quantities (kWh) from previous market iteration for all hours
-        prev_clr_Price (float) (1 X windowLength): cleared prices ($/kWh) from previous market iteration
+        prev_clr_Quantity (List[float]) (1 X Window Length): cleared quantities (kWh) from previous market iteration for all hours
+        prev_clr_Price (List[float]) (1 X windowLength): cleared prices ($/kWh) from previous market iteration
         BindingObjFunc (bool): if True, then optimization considers cleared price, quantities from previous iteration in the objective function
     """
 
@@ -268,7 +268,7 @@ class BatteryDSOT:
                 # BID[t][0][P] = -self.Rd*CurveSlope[t]+yIntercept[t]+(self.ProfitMargin_intercept/100)*deltaf_DA
                 # BID[t][1][P] = Quantity[t]*CurveSlope[t]+yIntercept[t]+(self.ProfitMargin_intercept/100)*deltaf_DA
                 # BID[t][2][P] = Quantity[t]*CurveSlope[t]+yIntercept[t]-(self.ProfitMargin_intercept/100)*deltaf_DA
-                # BID[t][3][P] = self.Rc * CurveSlope[t] + yIntercept[t] - (self.ProfitMargin_intercept / 100) * deltaf_DA
+                # BID[t][3][P] = self.Rc*CurveSlope[t]+yIntercept[t]-(self.ProfitMargin_intercept/100)*deltaf_DA
                 BID[t][0][P] = -self.Rd * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
                         1 + self.profit_margin)
                 BID[t][1][P] = Quantity[t] * CurveSlope[t] + yIntercept[t] + self.batteryLifeDegFactor * (
@@ -641,7 +641,7 @@ def test():
     # Uncomment for testing logging functionality.
     # Supply these values when using the battery agent in the simulation.
     # model_diag_level = 11
-    # helpers.enable_logging('DEBUG', model_diag_level)
+    # helpers.enable_logging('DEBUG', model_diag_level, 'battery_agent')
     sim_time = '2019-11-20 07:47:00'
 
     B_obj1 = BatteryDSOT(agent, glm, 'test', 11, sim_time, 'ipopt')  # make object; add model_diag_level and sim_time

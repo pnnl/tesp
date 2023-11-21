@@ -1,5 +1,6 @@
-// Copyright (C) 2021-2022 Battelle Memorial Institute
+// Copyright (C) 2021-2023 Battelle Memorial Institute
 // file: TE_Challenge.glm
+
 
 #set double_format=%+.12lg
 #set profiler=1
@@ -40,6 +41,8 @@ module generators;
 object metrics_collector_writer {
      interval 300;
      filename ${METRICS_FILE}; // TE_Challenge_metrics.json
+//     extension json;
+     extension h5;
 };
 
 object climate {

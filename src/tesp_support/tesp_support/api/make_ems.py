@@ -1,14 +1,15 @@
-# Copyright (C) 2020-2022 Battelle Memorial Institute
+# Copyright (C) 2020-2023 Battelle Memorial Institute
 # file: make_ems.py
 """Creates and merges the EMS for an EnergyPlus building model
 
 Public Functions:
-  :make_ems: Creates the energy management system (EMS) for FNCS/HELICS to interface with EnergyPlus.
+  :make_ems: Creates the energy management system (EMS) for FNCS/HELICS to interface with EnergyPlus
   :merge_idf: Assembles the base IDF, the EMS, start time and end time
 """
 import csv
 import re
 from datetime import datetime
+
 
 def idf_int(val):
     """ Helper function to format integers for the EnergyPlus IDF input data file
@@ -24,14 +25,17 @@ def idf_int(val):
         return sval + ', '
     return sval + ','
 
+
 def valid_var(name):
     return name.replace(' ', '_').replace('-', '_').replace('.', '_').replace('(', '_').replace(')', '_')
+
 
 def schedule_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
     print('    {:s},  !- Name'.format(name), file=op)
     print('    {:s},  !- Output:Variable or Output:Meter Index Key Name'.format(name), file=op)
     print('    Schedule Value;    !- Output:Variable or Output:Meter Name', file=op)
+
 
 def schedule_actuator(name, target, op):
     print('  EnergyManagementSystem:Actuator,', file=op)
@@ -40,9 +44,11 @@ def schedule_actuator(name, target, op):
     print('    Schedule:Compact, !- Actuated Component Type', file=op)
     print('    Schedule Value;   !- Actuated Component Control Type', file=op)
 
+
 def global_variable(name, op):
     print('  EnergyManagementSystem:GlobalVariable,', file=op)
     print('    {:s};'.format(name), file=op)
+
 
 def output_variable(name, target, op):
     print('  EnergyManagementSystem:OutputVariable,', file=op)
@@ -53,11 +59,13 @@ def output_variable(name, target, op):
     print('    ,             !- EMS Program or Subroutine Name', file=op)
     print('    ;             !- Units', file=op)
 
+
 def heating_coil_sensor(name, target, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
     print('    {:s},  !- Name'.format(valid_var(name)), file=op)
     print('    {:s},  !- Coil'.format(target), file=op)
     print('    Heating Coil Electric Energy;', file=op)
+
 
 def cooling_coil_sensor(name, target, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
@@ -65,11 +73,13 @@ def cooling_coil_sensor(name, target, op):
     print('    {:s},  !- Coil'.format(target), file=op)
     print('    Cooling Coil Electric Energy;', file=op)
 
+
 def zone_temperature_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
     print('    {:s}_T,  !- Name'.format(valid_var(name)), file=op)
     print('    {:s},    !- Zone'.format(name), file=op)
     print('    Zone Mean Air Temperature;', file=op)
+
 
 def zone_heating_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
@@ -77,11 +87,13 @@ def zone_heating_sensor(name, op):
     print('    {:s} VAV Box Reheat Coil, !- Zone/Coil'.format(name), file=op)
     print('    Heating Coil Heating Energy;', file=op)
 
+
 def zone_sensible_heating_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
     print('    {:s}_H,  !- Name'.format(valid_var(name)), file=op)
     print('    {:s},    !- Zone'.format(name), file=op)
     print('    Zone Air System Sensible Heating Energy;', file=op)
+
 
 def zone_sensible_cooling_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
@@ -89,11 +101,13 @@ def zone_sensible_cooling_sensor(name, op):
     print('    {:s},    !- Zone'.format(name), file=op)
     print('    Zone Air System Sensible Cooling Energy;', file=op)
 
+
 def zone_occupant_sensor(name, op):
     print('  EnergyManagementSystem:Sensor,', file=op)
     print('    {:s}_O,  !- Name'.format(valid_var(name)), file=op)
     print('    {:s},    !- Zone'.format(name), file=op)
     print('    Zone People Occupant Count;', file=op)
+
 
 def get_eplus_token(sval):
     val = sval.strip()
@@ -101,6 +115,7 @@ def get_eplus_token(sval):
     if idx < 0:
         idx = val.rfind(',')
     return val[:idx].upper()
+
 
 def print_idf_summary(zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs):
     print('  === hvacs', hvacs)
@@ -129,6 +144,7 @@ def print_idf_summary(zones, zonecontrols, thermostats, schedules, hcoils, ccoil
         People = row['People']
         Controlled = row['Controlled']
         print('{:40s} {:8.2f}   {:40s}   {:40s} {:1}      {:1}'.format(zname, zvol, Hsched, Csched, People, Controlled))
+
 
 def summarize_idf(fname, baseidf):
     schedules = {}
@@ -237,9 +253,11 @@ def summarize_idf(fname, baseidf):
     nhvacs = len(hvacs)
     nccoils = len(ccoils)
     nhcoils = len(hcoils)
-    print('  === {:d} zones total {:.2f} m3 with {:d} zone controls, {:d} dual setpoints, {:d} schedules, {:d} heating coils, {:d} cooling coils and {:d} HVAC loops'
+    print(('  === {:d} zones total {:.2f} m3 with {:d} zone controls, {:d} dual setpoints, ' +
+          '{:d} schedules, {:d} heating coils, {:d} cooling coils and {:d} HVAC loops')
           .format(nzones, volume, ncontrols, nsetpoints, nschedused, nhcoils, nccoils, nhvacs))
     return zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs
+
 
 def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs, bHELICS):
     if bHELICS:
@@ -543,20 +561,25 @@ def write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, c
 
     op.close()
 
+
 def make_ems(sourcedir='./output', baseidf='SchoolBase.idf', target='ems.idf', write_summary=False, bHELICS=False):
     """ Creates the EMS for an EnergyPlus building model
 
     Args:
-      target (str): desired output file in PWD, default ems.idf
-      baseidf (str): is the original EnergyPlus model file without the EMS
       sourcedir (str): directory of the output from EnergyPlus baseline simulation, default ./output
+      baseidf (str): is the original EnergyPlus model file without the EMS
+      target (str): desired output file in PWD, default ems.idf
+      write_summary:
+      bHELICS:
     """
 
     print('*** make_ems from', sourcedir, 'to', target, 'HELICS', bHELICS)
-    zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs = summarize_idf(sourcedir + '/eplusout.eio', baseidf)
+    zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs = summarize_idf(sourcedir + '/eplusout.eio',
+                                                                                       baseidf)
     if write_summary:
         print_idf_summary(zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs)
     return write_new_ems(target, zones, zonecontrols, thermostats, schedules, hcoils, ccoils, hvacs, bHELICS)
+
 
 def merge_idf(base, ems, StartTime, EndTime, target, StepsPerHour):
     """

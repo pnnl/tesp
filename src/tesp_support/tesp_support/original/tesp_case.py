@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: tesp_case.py
 """Creates and fills a subdirectory with files to run a TESP simulation
 
@@ -30,6 +30,7 @@ if sys.platform == 'win32':
     pycall = 'python'
 else:
     pycall = 'python3'
+
 
 def write_tesp_case(config, cfgfile, freshdir=True):
     """ Writes the TESP case from data structure to JSON file
@@ -536,8 +537,8 @@ values:
     # FNCS shell scripts and chmod for Mac/Linux - need to specify python3
     try:
         aucline = "import tesp_support.original.substation_f as tesp;tesp.substation_loop_f('" + AgentDictFile + "','" + casename + "')"
-        ppline = "import tesp_support.api.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('" + PPJsonFile + "','" + casename + "')"
-        weatherline = "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')"
+        ppline = "import tesp_support.original.tso_PYPOWER_f as tesp;tesp.tso_pypower_loop_f('" + PPJsonFile + "','" + casename + "')"
+        weatherline = "import tesp_support.weather.weather_agent_f as tesp;tesp.startWeatherAgent('weather.dat')"
 
         shfile = casedir + '/run.sh'
         op = open(shfile, 'w')
@@ -614,8 +615,9 @@ values:
         PypowerConfigFile = 'pypower.json'
         SubstationConfigFile = casename + '_substation.json'
         WeatherConfigFile = casename + '_weather.json'
-        aucline = "import tesp_support.original.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "',helicsConfig='" + SubstationConfigFile + "')"
+        aucline = "import tesp_support.api.substation as tesp;tesp.substation_loop('" + AgentDictFile + "','" + casename + "',helicsConfig='" + SubstationConfigFile + "')"
         ppline = "import tesp_support.api.tso_PYPOWER as tesp;tesp.tso_pypower_loop('" + PPJsonFile + "','" + casename + "',helicsConfig='" + PypowerConfigFile + "')"
+        weatherline = "import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')"
 
         shfile = casedir + '/runh.sh'
         op = open(shfile, 'w')

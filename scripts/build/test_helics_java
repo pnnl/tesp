@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: test_helics_java.sh
 
 if [[ -z ${INSTDIR} ]]; then

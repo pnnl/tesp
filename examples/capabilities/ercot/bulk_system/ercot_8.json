@@ -9,7 +9,7 @@
   "reserveUp": 0.15,
   "zonalReserves": false,
   "caseName": "ercot_8",
-  "version": 2,
+  "version": "2",
   "baseMVA": 100.0,
   "StartTime": "2013-07-01 00:00:00",
   "EndTime": "2013-07-04 00:00:00",

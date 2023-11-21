@@ -29,7 +29,7 @@ index f5374bee5..819893807 100644
  )
  message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
 diff --git a/src/EnergyPlus/ExternalInterface.cc b/src/EnergyPlus/ExternalInterface.cc
-index 667e11bff..ae737a1f9 100644
+index 667e11bff..db7bc42aa 100644
 --- a/src/EnergyPlus/ExternalInterface.cc
 +++ b/src/EnergyPlus/ExternalInterface.cc
 @@ -1298,8 +1298,8 @@ namespace EnergyPlus {
@@ -63,25 +63,103 @@ index 667e11bff..ae737a1f9 100644
                          //std::cout << " pub " << i << ":" << thispub.getInfo() << ":" << pubkey << ":" << thispub.getType() << ":" << thispub.getUnits() << std::endl;
                          vpubs.push_back(thispub);
                          pubs(i+1)=thispub;
-@@ -1329,7 +1329,7 @@ namespace EnergyPlus {
+@@ -1329,9 +1329,9 @@ namespace EnergyPlus {
                        }
                      }
                      for (int i = 0; i < sub_count; i++) {
 -                      helicscpp::Input thissub = pHelicsFederate->getSubscription(i);
 +                      helicscpp::Input thissub = pHelicsFederate->getInput(i);
                        if (thissub.isValid() ) {
-                     	std::string thisKey = std::string(thissub.getTarget());
+-                    	std::string thisKey = std::string(thissub.getTarget());
++                        std::string thisKey = std::string(thissub.getTarget());
                          //char const* temp = thissub.getKey();
-@@ -1402,7 +1402,7 @@ namespace EnergyPlus {
- //                  pHelicsFederate->enterExecutingMode();
+                         //std::cout << " sub " << i << ":" << thissub.getInfo() << ":" << thisKey << ":" << thissub.getType() << ":" << thissub.getUnits() << std::endl;
+                         vsubs.push_back(thissub);
+@@ -1340,56 +1340,6 @@ namespace EnergyPlus {
+                         msubs[thisKey] = thissub;
+                       }
+                     }
+-/*                	std::cout << "register HELICS pub and sub here." << std::endl;
+-                	int typeCount = size(varTypes);
+-                	std::cout << "typeCount: " << typeCount << std::endl;
+-//                	for (auto count = 1; count <= nOutVal; count++){
+-//                    	std::cout << "varTypes: " << varTypes(count) << std::endl;
+-//                	}
+-                	int keyVarIndexesCount = size(keyVarIndexes);
+-                	std::cout << "keyVarIndexesCount: " << keyVarIndexesCount << std::endl;
+-//                	for (auto count = 1; count <= nOutVal; count++){
+-//                    	std::cout << "keyVarIndexes: " << keyVarIndexes(count) << std::endl;
+-//                	}
+-                	int varIndCount = size(varInd);
+-                	std::cout << "varIndCount: " << varIndCount << std::endl;
+-//                	for (auto count = 1; count <= nOutVal; count++){
+-//                    	std::cout << "varInd: " << varInd(count) << std::endl;
+-//                	}
+-                	int varKeysCount = size(varKeys);
+-                	std::cout << "varKeysCount: " << varKeysCount << std::endl;
+-                	for (auto count = 1; count <= nOutVal; count++){
+-                    	std::cout << "varKeys: " << varKeys(count) << std::endl;
+-                	}
+-                	int varNamesCount = size(varNames);
+-                	std::cout << "varNamesCount: " << varNamesCount << std::endl;
+-                	for (auto count = 1; count <= nOutVal; count++){
+-                    	std::cout << "varNames: " << varNames(count) << std::endl;
+-                	}
+-                	int inpVarTypesCount = size(inpVarTypes);
+-                	std::cout << "inpVarTypesCount: " << inpVarTypesCount << std::endl;
+-                	for (auto count = 1; count <= nInpVar; count++){
+-                    	std::cout << "inpVarTypes: " << inpVarTypes(count) << std::endl;
+-                	}
+-                	int inpVarNamesCount = size(inpVarNames);
+-                	std::cout << "inpVarNamesCount: " << inpVarNamesCount << std::endl;
+-                	for (auto count = 1; count <= nInpVar; count++){
+-                    	std::cout << "inpVarNames: " << inpVarNames(count) << std::endl;
+-                	}*/
+-//                    std::vector<std::string> keys;
+-//                    auto nkeys = fncs::get_keys_size();
+-//                    for(int index = 0; index < nkeys; index++){
+-//                    	keys.push_back(fncs::get_key_by_index(index));
+-//                    }
+-//                    fncsKeys.insert(keys.begin(), keys.end());
+-//                    for (std::vector<std::string>::iterator it = keys.begin();
+-//                        it != keys.end(); ++it) {
+-//                    	std::cout << *it << std::endl;
+-//                        if (it->find('+') != string::npos) {
+-//                            fncsEncode = true;
+-//                            break;
+-//                        }
+-//                    }
+                 }
+                 else {
+                     ShowSevereError("ExternalInterface: HELICS failed to initialize.");
+@@ -1398,13 +1348,9 @@ namespace EnergyPlus {
+                 if (pHelicsFederate) {
+                   std::cout << "HELICS enter intializing mode" << std::endl;
+                   pHelicsFederate->enterInitializingMode();
+-//                  std::cout << "HELICS enter executing mode" << std::endl;
+-//                  pHelicsFederate->enterExecutingMode();
                  }
  
 -                helics_time delta = pHelicsFederate->getTimeProperty(helics_property_time_period);
+-                // FNCS time delta is already in minutes, not nanoseconds
+-                //delta = delta / (60ULL * 1000000000ULL);
 +                HelicsTime delta = pHelicsFederate->getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
-                 // FNCS time delta is already in minutes, not nanoseconds
-                 //delta = delta / (60ULL * 1000000000ULL);
                  //helics time is in seconds
-@@ -3341,7 +3341,7 @@ namespace EnergyPlus {
+                 delta = delta / 60;
+                 if (delta != (unsigned long long)MinutesPerTimeStep) {
+@@ -1416,11 +1362,9 @@ namespace EnergyPlus {
+                 }
+ 
+                 StopExternalInterfaceIfError();
+-
+                 firstCall = false;
+ 
+                 // Establish connection to HELICS broker.
+-
+             }
+             else if (!configuredControlPoints) {
+                 keyVarIndexes.allocate(nOutVal);
+@@ -3341,7 +3285,7 @@ namespace EnergyPlus {
              int i; // Loop counter
  
              int nDblWri; // number of doubles to write to socket
@@ -90,7 +168,7 @@ index 667e11bff..ae737a1f9 100644
  
              static bool firstCall(true);
  
-@@ -3351,7 +3351,7 @@ namespace EnergyPlus {
+@@ -3351,7 +3295,7 @@ namespace EnergyPlus {
                  DisplayString("ExternalInterface starts first data exchange. (HELICS)");
                  simulationStatus = 2;
                  preSimTim = 0; // In the first call, E+ did not reset SimTimeSteps to zero
@@ -99,7 +177,7 @@ index 667e11bff..ae737a1f9 100644
                  //helics_time cTime = pHelicsFederate->getCurrentTime();
                  //std::cout << "current time is: " << cTime << std::endl;
                  if (preSimTim != cTime) {
-@@ -3364,7 +3364,7 @@ namespace EnergyPlus {
+@@ -3364,7 +3308,7 @@ namespace EnergyPlus {
                  preSimTim = SimTimeSteps * MinutesPerTimeStep;
                  //std::cout << "preSimTim: " << preSimTim << ", SimTimeSteps: " << SimTimeSteps << ", MinutesPerTimeStep: " << MinutesPerTimeStep << std::endl;
                  preSimTim = preSimTim * 60;
@@ -108,7 +186,7 @@ index 667e11bff..ae737a1f9 100644
                  //std::cout << "requested time: " << preSimTim << ", returned time: " << time_returned << std::endl;
                  if (preSimTim != time_returned) {
                      ShowFatalError("helics::requestTime() was interrupted with earlier time");
-@@ -3375,7 +3375,7 @@ namespace EnergyPlus {
+@@ -3375,7 +3319,7 @@ namespace EnergyPlus {
  
              //DisplayString( "preSimTim=" + TrimSigDigits( preSimTim ) );
  

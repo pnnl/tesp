@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: runhpy0.sh
 
 (exec helics_broker -f 3 --loglevel=warning --name=mainbroker &> broker.log &)

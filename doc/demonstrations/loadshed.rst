@@ -1,5 +1,5 @@
 ..
-    _ Copyright (C) 2021-2022 Battelle Memorial Institute
+    _ Copyright (c) 2021-2023 Battelle Memorial Institute
     _ file: loadshed.rst
 
 
@@ -83,7 +83,7 @@ It differs from the other examples, in not using the *tesp_support* Python packa
 
 
 
-Copyright (c) 2017-2022, Battelle Memorial Institute
+Copyright (c) 2017-2023 Battelle Memorial Institute
 
 License: https://github.com/pnnl/tesp/blob/main/LICENSE
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (c) 2017-2023 Battelle Memorial Institute
 # file: tesp_monitor.py
 """Presents a GUI to launch a TESP simulation and monitor its progress
 
@@ -19,7 +19,7 @@ from tkinter import messagebox
 import subprocess
 import os
 try:
-  import tesp_support.api.fncs as fncs
+  import tesp_support.original.fncs as fncs
 except:
   pass
 import tesp_support.api.helpers as helpers
@@ -42,7 +42,7 @@ class TespMonitorGUI:
   the solution status. Both JSON and YAML files are written by *tesp.tesp_config*
   The plotted variables provide a sign-of-life and sign-of-stability indication
   for each of the major federates in the te30 or sgip1 examples, namely
-  GridLAB-D, PYPOWER, EnergPlus, and the substation_loop that manages a simple_auction
+  GridLAB-D, PYPOWER, EnergyPlus, and the substation_loop that manages a simple_auction
   with multiple hvac agents. If a solution appears to be unstable or must be
   stopped for any other reason, exiting the solution monitor will do so.
 

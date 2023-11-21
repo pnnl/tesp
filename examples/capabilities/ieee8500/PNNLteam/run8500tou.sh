@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: run85000tou.sh
 
 (export FNCS_LOG_STDOUT=yes && exec fncs_broker 3 &> broker8500_tou.log &)

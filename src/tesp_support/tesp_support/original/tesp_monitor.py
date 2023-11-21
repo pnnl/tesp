@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Battelle Memorial Institute
+# Copyright (C) 2017-2023 Battelle Memorial Institute
 # file: tesp_monitor.py
 """Presents a GUI to launch a TESP simulation and monitor its progress
 
@@ -41,11 +41,11 @@ class TespMonitorGUI:
     """ Manages a GUI with 4 plotted variables, and buttons to stop TESP
 
     The GUI reads a JSON file with scripted shell commands to launch
-    other FNCS federates, and a YAML file with FNCS subscriptions to update
+    other HELICS/FNCS federates, and a YAML file with HELICS/FNCS subscriptions to update
     the solution status. Both JSON and YAML files are written by *tesp.tesp_config*
     The plotted variables provide a sign-of-life and sign-of-stability indication
     for each of the major federates in the te30 or sgip1 examples, namely
-    GridLAB-D, PYPOWER, EnergPlus, and the substation_loop that manages a simple_auction
+    GridLAB-D, PYPOWER, EnergyPlus, and the substation_loop that manages a simple_auction
     with multiple hvac agents. If a solution appears to be unstable or must be
     stopped for any other reason, exiting the solution monitor will do so.
 
@@ -87,7 +87,7 @@ class TespMonitorGUI:
       ax (Axes): set of 4 xy axes to plot on
       canvas (FigureCanvasTkAgg): a TCL Tk canvas that can host Matplotlib
       bFNCSactive (bool): True if a TESP simulation is running with other FNCS federates, False if not
-      bHELICSactive (bool): True if a HELICS simulation is running with other HELICS federates, False if not
+      bHELICSactive (bool): True if a TESP simulation is running with other HELICS federates, False if not
     """
 
     def __init__(self, master, HELICS=True):
@@ -631,9 +631,9 @@ def show_tesp_monitor(HELICS=True):
     """
     global helics, fncs
     if HELICS:
-        pass
+        import helics
     else:
-        pass
+        import fncs
 
     root = tk.Tk()
     root.title('Transactive Energy Simulation Platform: Solution Monitor')
@@ -645,3 +645,7 @@ def show_tesp_monitor(HELICS=True):
             break
         except UnicodeDecodeError:
             pass
+
+
+if __name__ == '__main__':
+    show_tesp_monitor()

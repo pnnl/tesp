@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2021-2022 Battelle Memorial Institute
+# Copyright (C) 2021-2023 Battelle Memorial Institute
 # file: dsot_solar.py
 # Created 2/27/2020
 # @author: hard312 (Trevor Hardy)
@@ -980,8 +980,7 @@ def aggregate_to_8_nodes(dso_meta, output_path):
         #   profiles to add to the aggregated 8-node data
         if idx < 200:
             eight_node_idx = 200 + dso['8-bus'] - 1
-            logger.info('Added solar PV power profile from 200 node DSO {'
-                        '}...'.format(idx))
+            logger.info('Added solar PV power profile from 200 node DSO {}...'.format(idx))
             # Summing up distributed power profiles to create single,
             #   aggregated profile for 8-node DSO
             dso_meta[eight_node_idx]['dist power profile'] = [
