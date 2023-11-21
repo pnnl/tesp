@@ -19,8 +19,6 @@ import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
 
-import prep_substation_dsot as prep
-
 recs = ""
 # recs_data = False
 recs_data = True
