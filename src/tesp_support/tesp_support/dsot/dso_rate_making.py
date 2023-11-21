@@ -35,6 +35,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         saves the two dataframe above to an h5 file in the dir_path
         """
     # Load in bulk industrial loads
+    os.chdir(dir_path)
     case_config = load_json(dir_path, 'generate_case_config.json')
     industrial_file = os.path.join(dso_data_path, case_config['indLoad'][5].split('/')[-1])
     indust_df = load_indust_data(industrial_file, day_range)
@@ -154,7 +155,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                                                                   'substation')
         substation_data_df = substation_data_df.set_index(['time'])
         meter_meta_df, meter_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'billing_meter')
-        meter_data_df['date'] = pd.to_datetime(meter_data_df['date'], infer_datetime_format=True)
+        meter_data_df['date'] = pd.to_datetime(meter_data_df['date'])
         # meter_data_df['date'] = meter_data_df['date'].apply(pd.to_datetime(infer_datetime_format=True))
         meter_data_df = meter_data_df.set_index(['time', 'name'])
         for each in metadata['billingmeters']:
@@ -241,11 +242,11 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
 
     # Sum the total power consumption for all days
     meter_df.loc[(slice(None), 'kw-hr'), ['sum']] = \
-        meter_df.loc[(slice(None), 'kw-hr'), meter_df.columns[not meter_df.columns.str.contains('sum')]].sum(axis=1)
+        meter_df.loc[(slice(None), 'kw-hr'), meter_df.columns[~meter_df.columns.str.contains('sum')]].sum(axis=1)
     meter_df.loc[(slice(None), 'max_kw'), ['sum']] = \
-        meter_df.loc[(slice(None), 'max_kw'), meter_df.columns[not meter_df.columns.str.contains('sum')]].max(axis=1)
+        meter_df.loc[(slice(None), 'max_kw'), meter_df.columns[~meter_df.columns.str.contains('sum')]].max(axis=1)
     meter_df.loc[(slice(None), 'avg_load'), ['sum']] = \
-        meter_df.loc[(slice(None), 'avg_load'), meter_df.columns[not meter_df.columns.str.contains('sum')]].mean(axis=1)
+        meter_df.loc[(slice(None), 'avg_load'), meter_df.columns[~meter_df.columns.str.contains('sum')]].mean(axis=1)
 
     for each in metadata['billingmeters']:
         if meter_df.loc[(each, 'max_kw'), 'sum'] != 0:
@@ -255,15 +256,15 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             meter_df.loc[(each, 'load_factor'), 'sum'] = 0
 
     trans_df.loc[:, ['sum']] = \
-        trans_df.loc[:, trans_df.columns[not trans_df.columns.str.contains('sum')]].sum(axis=1)
+        trans_df.loc[:, trans_df.columns[~trans_df.columns.str.contains('sum')]].sum(axis=1)
 
     # Sum all days to create total for the month.
     energysum_df['sum'] = \
-        energysum_df.loc[:, meter_df.columns[not meter_df.columns.str.contains('sum')]].sum(axis=1)
+        energysum_df.loc[:, meter_df.columns[~meter_df.columns.str.contains('sum')]].sum(axis=1)
     # Need to correct demand quantity to be the max for the month and not the sum of each day of the month.
     energysum_df.loc[(slice(None), 'demand_quantity'), ['sum']] = \
         energysum_df.loc[(slice(None), 'demand_quantity'),
-                         energysum_df.columns[not energysum_df.columns.str.contains('sum')]].max(axis=1)
+                         energysum_df.columns[~energysum_df.columns.str.contains('sum')]].max(axis=1)
     # Save summary data to h5 file in folder where meter data came from (dir_path)
     # os.chdir(dir_path + folder_prefix + dso_num)
     save_path = dir_path + folder_prefix + dso_num
@@ -311,10 +312,10 @@ def annual_energy(month_list, folder_prefix, dso_num, metadata):
 
     year_meter_df.loc[(slice(None), 'max_kw'), ['sum']] = \
         year_meter_df.loc[(slice(None), 'max_kw'),
-                          year_meter_df.columns[not year_meter_df.columns.str.contains('sum')]].max(axis=1)
+                          year_meter_df.columns[~year_meter_df.columns.str.contains('sum')]].max(axis=1)
     year_meter_df.loc[(slice(None), 'avg_load'), ['sum']] = \
         year_meter_df.loc[(slice(None), 'avg_load'),
-                          year_meter_df.columns[not year_meter_df.columns.str.contains('sum')]].mean(axis=1)
+                          year_meter_df.columns[~year_meter_df.columns.str.contains('sum')]].mean(axis=1)
     for each in metadata['billingmeters']:
         if year_meter_df.loc[(each, 'max_kw'), 'sum'] != 0:
             year_meter_df.loc[(each, 'load_factor'), 'sum'] = \
@@ -443,7 +444,7 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
     trans_retail_scale = tariff['DSO_' + dso_num]['transactive_LMP_multiplier']
 
     # Cycle through each month for which there is energy data and calculate customer bill
-    months = list(meter_df.columns[not meter_df.columns.str.contains('sum')])
+    months = list(meter_df.columns[~meter_df.columns.str.contains('sum')])
 
     for m in months:
         bill_df[m] = [0] * len(bill_df)
@@ -554,12 +555,12 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
             billsum_df.loc[('total', item), :] += billsum_df.loc[(load, item), :]
 
     # Calculate the annual sum.
-    bill_df['sum'] = bill_df.loc[:, bill_df.columns[not bill_df.columns.str.contains('sum')]].sum(axis=1)
+    bill_df['sum'] = bill_df.loc[:, bill_df.columns[~bill_df.columns.str.contains('sum')]].sum(axis=1)
     for each in metadata['billingmeters']:
         bill_df.loc[(each, 'blended_rate'), 'sum'] = (bill_df.loc[(each, 'fix_total'), 'sum'] +
                                                       bill_df.loc[(each, 'trans_total'), 'sum']) / bill_df.loc[
                                                          (each, 'quantity_purchased'), 'sum']
-    billsum_df['sum'] = billsum_df.loc[:, billsum_df.columns[not billsum_df.columns.str.contains('sum')]].sum(
+    billsum_df['sum'] = billsum_df.loc[:, billsum_df.columns[~billsum_df.columns.str.contains('sum')]].sum(
         axis=1)
 
     #  Calculated average electricity price (blended rate) for each customer class and purchase type

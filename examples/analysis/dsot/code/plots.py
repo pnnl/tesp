@@ -1,5 +1,6 @@
-# usage 'python ../plots.py metrics_root'
-# run it from inside the metrics_root folder
+# usage 'python ./plots.py metrics_root'
+# run it from inside the metrics_root folder 
+# .json file format only
 import sys
 import os
 import matplotlib as mpl
@@ -11,7 +12,7 @@ import process_gld_dsot as pg
 rootname = sys.argv[1]
 
 cur_dir = os.getcwd()
-new_dir = cur_dir + "\\" + rootname + "\\Substation_3"
+new_dir = cur_dir + "/" + rootname + "/Substation_3"
 os.chdir(new_dir)
 
 if not os.path.exists("Figures"):

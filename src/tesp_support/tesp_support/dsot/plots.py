@@ -160,7 +160,7 @@ def load_gen_data(dir_path, gen_name, day_range):
         gen_data_df (dataframe): dataframe of system metadata
     """
     os.chdir(dir_path)
-    hdf5filenames = [f for f in os.listdir('..') if f.startswith(gen_name + '_') and f.endswith('.h5')]
+    hdf5filenames = [f for f in os.listdir('.') if f.startswith(gen_name + '_') and f.endswith('.h5')]
     if len(hdf5filenames) != 0:
         filename = hdf5filenames[0]
         store = h5py.File(filename, "r")
@@ -206,7 +206,7 @@ def load_gen_data(dir_path, gen_name, day_range):
         else:
             gen_data_df = data_df.loc[start_time:stop_time, :]
     else:
-        jsonfilenames = [f for f in os.listdir('..') if f.startswith(gen_name + '_') and f.endswith('.json')]
+        jsonfilenames = [f for f in os.listdir('.') if f.startswith(gen_name + '_') and f.endswith('.json')]
         if len(jsonfilenames) == 0:
             raise Exception('Could not find H5 or json file for ' + gen_name)
         filename = jsonfilenames[0]
@@ -442,7 +442,7 @@ def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
         """
     date = get_date(dir_path, dso_num, str(day_num))
     os.chdir(dir_path + folder_prefix + dso_num)
-    hdf5filenames = [f for f in os.listdir('..') if ('_' + dso_num) in f and f.startswith(agent_name)]
+    hdf5filenames = [f for f in os.listdir('.') if ('_' + dso_num) in f and f.startswith(agent_name)]
 
     # TODO: - error message if more than one value in hdf5filenames
     filename = hdf5filenames[0]
@@ -495,14 +495,14 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
     # daystr = '_' + str(int(day_num)) + '_'
     if agent_name in ['bill', 'energy', 'amenity']:
         os.chdir(dir_path)
-        hdf5filenames = [f for f in os.listdir('..') if ('_' + dso_num) in f and f.startswith(agent_name)]
+        hdf5filenames = [f for f in os.listdir('.') if ('_' + dso_num) in f and f.startswith(agent_name)]
     else:
         date = get_date(dir_path, dso_num, str(day_num))
         os.chdir(dir_path + folder_prefix + dso_num)
         if agent_name in ['retail_site']:
-            hdf5filenames = [f for f in os.listdir('..') if ('_' + dso_num) in f and f.startswith(agent_name)]
+            hdf5filenames = [f for f in os.listdir('.') if ('_' + dso_num) in f and f.startswith(agent_name)]
         else:
-            hdf5filenames = [f for f in os.listdir('..') if '300' in f and f.startswith(agent_name)]
+            hdf5filenames = [f for f in os.listdir('.') if '300' in f and f.startswith(agent_name)]
     # TODO: - error message if more than one value in hdf5filenames
     filename = hdf5filenames[0]
     store = h5py.File(filename, "r")
@@ -566,7 +566,7 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
         """
     daily_index = True
     os.chdir(dir_path + folder_prefix + dso_num)
-    hdf5filenames = [f for f in os.listdir('..') if f.endswith('.h5') and system_name in f]
+    hdf5filenames = [f for f in os.listdir('.') if f.endswith('.h5') and system_name in f]
     filename = hdf5filenames[0]
     # reading data as pandas dataframe
     store = h5py.File(filename, "r")
