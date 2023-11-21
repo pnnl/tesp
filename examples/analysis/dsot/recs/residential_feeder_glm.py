@@ -47,7 +47,7 @@ from tesp_support.api.helpers import gld_strict_name, random_norm_trunc
 from tesp_support.api.parse_helpers import parse_kva
 from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
 from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
-import tesp_support.original.commercial_feeder_glm as comm_FG
+import recs.commercial_feeder_glm as comm_FG
 
 forERCOT = False
 port = 5570
@@ -317,7 +317,7 @@ rgnName = ['West_Coast',
            'Southeast_Coast']
 rgnTimeZone = ['PST+8PDT', 'EST+5EDT', 'MST+7MDT', 'CST+6CDT', 'EST+5EDT']
 rgnWeather = ['CA-San_francisco', 'OH-Cleveland', 'AZ-Phoenix', 'TN-Nashville', 'FL-Miami']
-vint_type = ['pre_1950', '1950-1959', '1960-1969', '1970-1979', '1980-1989', '1990-1999', '2000-2009', '2010-2015','2016-2020']
+vint_type = ['pre_1950', '1950-1959', '1960-1969', '1970-1979', '1980-1989', '1990-1999', '2000-2009', '2010-2015', '2016-2020']
 dsoThermalPct = []
 
 # -----------fraction of vintage type by home type in a given dso type---------
@@ -1820,7 +1820,7 @@ def write_houses(basenode, op, vnom):
         mass_int_gain_frac = 0.5
         # ***********COP*********************************
         # pick any one year value randomly from the bin in cop_lookup
-        if ti>7: # until 2016-2020 values are added
+        if ti > 7:  # until 2016-2020 values are added
             h_COP = c_COP = np.random.choice(cop_lookup[7]) * (0.9 + np.random.uniform(0, 1) * 0.2)  # +- 10% of mean value
         else:
             h_COP = c_COP = np.random.choice(cop_lookup[ti]) * (0.9 + np.random.uniform(0, 1) * 0.2)  # +- 10% of mean value
@@ -3071,6 +3071,7 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     state = config['SimulationConfig']['state']
     dso_type = config['SimulationConfig']['DSO_type']
     res_dso_type = 'No_DSO_Type'
+    # res_dso_type = dso_type  # use if RECS data filtered by DSO type
     income_level = config['SimulationConfig']['income_level'] # Should be a list of income levels for the DSO being tested
     gld_scaling_factor = config['SimulationConfig']['scaling_factor']
     pv_rating_MW = config['SimulationConfig']['rooftop_pv_rating_MW']
