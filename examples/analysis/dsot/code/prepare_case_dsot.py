@@ -354,7 +354,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                                  config=case_config,
                                  hvacSetpt=hvac_setpt,
                                  Q_forecast=sim['Q_bid_forecast_correction'],
-                                 Q_dso_key=dso_key)
+                                 Q_dso_key=dso_key,
+                                 usState=sim['state'], 
+                                 dsoType=dso_val['utility_type'])
             feedercnt += 1
             print("=== DONE WITH FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
