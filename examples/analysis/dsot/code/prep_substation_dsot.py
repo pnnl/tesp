@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2022 Battelle Memorial Institute
+# Copyright (C) 2018-2023 Battelle Memorial Institute
 # file: prep_substation_dsot.py
 """ Sets up the HELICS and agent configurations for DSOT ercot case 8 example
 
@@ -23,9 +23,9 @@ from tesp_support.api.helpers import random_norm_trunc
 np.random.seed(0)
 
 
-def select_setpt_occ(prob, mode, st, hd, inc_lev):
-    hdr = hvac_setpt['occ_' + mode][st][hd][inc_lev][0]
-    temp = hvac_setpt['occ_' + mode][st][hd][inc_lev][1:]
+def select_setpt_occ(prob, mode):
+    hdr = hvac_setpt['occ_' + mode][0]
+    temp = hvac_setpt['occ_' + mode][1:]
     temp = (np.array(temp)).astype(np.float64)
     total = 0
     for row in range(len(temp)):
@@ -43,9 +43,9 @@ def select_setpt_occ(prob, mode, st, hd, inc_lev):
         return temp[-1][0]
 
 
-def select_setpt_unocc(wakeup_set, mode, st, hd, inc_lev):
-    hdr = hvac_setpt['unocc_' + mode][st][hd][inc_lev][0]
-    temp = hvac_setpt['unocc_' + mode][st][hd][inc_lev][1:]
+def select_setpt_unocc(wakeup_set, mode):
+    hdr = hvac_setpt['unocc_' + mode][0]
+    temp = hvac_setpt['unocc_' + mode][1:]
     temp = (np.array(temp)).astype(np.float64)
     # first get the column corresponding day_occ set-point
     if wakeup_set == 100 and mode == 'cool':
@@ -74,9 +74,9 @@ def select_setpt_unocc(wakeup_set, mode, st, hd, inc_lev):
         return day_set
 
 
-def select_setpt_night(wakeup_set, daylight_set, mode, st, hd, inc_lev):
-    hdr = hvac_setpt['night_' + mode][st][hd][inc_lev][0]
-    temp = hvac_setpt['night_' + mode][st][hd][inc_lev][1:]
+def select_setpt_night(wakeup_set, daylight_set, mode):
+    hdr = hvac_setpt['night_' + mode][0]
+    temp = hvac_setpt['night_' + mode][1:]
     temp = (np.array(temp)).astype(np.float64)
     # first get the column corresponding occ and unocc set-point pair
     if wakeup_set == 100 and mode == 'cool':
@@ -105,33 +105,8 @@ def select_setpt_night(wakeup_set, daylight_set, mode, st, hd, inc_lev):
             night_set = wakeup_set
         return night_set
 
-def telework(prob, st, hd, inc_lev):
-    """ Selects how many days of teleworking per week
-    Outputs which DOWs are for teleworking.
-    0:Sunday, 1:Monday, 2:Tuesday, 3:Wednesday, 4:Thursday, 5:Friday, 6:Saturday
-    """
-    ntd = hvac_setpt['num_days_telework'][st][hd][inc_lev]
-    total = 0
-    for k in ntd:
-        total += ntd[k]
-        if total >= prob:
-            break
-    n_days = int(k)
-    if n_days == -2:
-        n_days = 0
-    if n_days == 5:
-        tw_dow = np.arange(1,6)
-    elif n_days ==6:
-        tw_dow = np.arange(1,7)
-    elif n_days > 0:
-        tw_dow = np.random.choice(np.arange(1,6),n_days,replace=False)
-    else:
-        tw_dow = 0
-    return n_days, tw_dow
 
-
-
-def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, state, dso_type):
+def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     """ Helper function that processes one GridLAB-D file
 
     Reads fileroot.glm and writes:
@@ -365,13 +340,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                         weekend_day_set_heat = occ_comm_heat_setpoint
                         weekend_night_set_heat = night_set_heat
                     else:
-                        # New schedule to implmement RECS 2020 data
-                        prob = np.random.uniform(0, 1)  # a random number
-                        inc_level = val['income_level'] # Determine income level of house from glm dictionary
-                        # Detemine teleworking
-                        n_tw_days, tw_dows = telework(prob, state, dso_type, inc_level)
-                        
-                        # Determine setpoint transition times
+                        # New schedule to implmement CBEC's data
                         wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
                         daylight_start = wakeup_start + random_norm_trunc(
                             thermostat_schedule_config['WeekdayWakeToDaylightTime'])
@@ -384,22 +353,18 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
                         night_start = min(night_start, 23.9)
                         weekend_night_start = min(weekend_night_start, 23.9)
 
-                        # Determine setpoints
-                        # cooling - RECS data individual behavior
-                        wakeup_set_cool = select_setpt_occ(prob, 'cool', state, dso_type, inc_level)  # when home is occupied during day
+                        # cooling - CBEC's data individual behavior
+                        prob = np.random.uniform(0, 1)  # a random number
+                        wakeup_set_cool = select_setpt_occ(prob, 'cool')  # when home is occupied during day
                         daylight_set_cool = select_setpt_unocc(wakeup_set_cool,
-                                                               'cool', state, dso_type, inc_level)  # when home is not occupied during day
+                                                               'cool')  # when home is not occupied during day
                         evening_set_cool = wakeup_set_cool  # when home is occupied during evening
-                        night_set_cool = select_setpt_night(wakeup_set_cool, daylight_set_cool, 'cool',state,dso_type,inc_level)  # during night
-                        # heating - RECS data individual behavior
-                        wakeup_set_heat = select_setpt_occ(prob, 'heat', state, dso_type, inc_level)
-                        daylight_set_heat = select_setpt_unocc(wakeup_set_heat, 'heat', state, dso_type, inc_level)
+                        night_set_cool = select_setpt_night(wakeup_set_cool, daylight_set_cool, 'cool')  # during night
+                        # heating - CBEC's data individual behavior
+                        wakeup_set_heat = select_setpt_occ(prob, 'heat')
+                        daylight_set_heat = select_setpt_unocc(wakeup_set_heat, 'heat')
                         evening_set_heat = wakeup_set_heat
-                        night_set_heat = select_setpt_night(wakeup_set_heat, daylight_set_heat, 'heat', state, dso_type, inc_level)
-                        # If they work from home at least 1 day per week, set the daylight setpoint to the same value as the wakeup setpoint
-                        if n_tw_days > 0:
-                            daylight_set_cool = wakeup_set_cool
-                            daylight_set_heat = wakeup_set_heat
+                        night_set_heat = select_setpt_night(wakeup_set_heat, daylight_set_heat, 'heat')
                         # highest heating setpoint must be less than (lowest cooling setpoint - margin of 6 degree)
                         if max(wakeup_set_heat, night_set_heat) > min(wakeup_set_cool, night_set_cool) - 6:
                             offset = max(wakeup_set_heat, night_set_heat) - (min(wakeup_set_cool, night_set_cool) - 6)
@@ -953,7 +918,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, sta
 
 
 def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
-                    config=None, hvacSetpt=None, jsonfile='', Q_forecast=None, Q_dso_key=None, usState=None, dsoType=None):
+                    config=None, hvacSetpt=None, jsonfile='', Q_forecast=None, Q_dso_key=None):
     """ Process a base GridLAB-D file with supplemental JSON configuration data
 
     Always reads gldfileroot.glm and writes:
@@ -993,4 +958,4 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
         print('WARNING: neither configuration dictionary or json file provided')
 
     hvac_setpt = hvacSetpt
-    process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt, usState, dsoType)
+    process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt)
