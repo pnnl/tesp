@@ -509,7 +509,6 @@ def get_hvac_setpoints(metadata,sample_data,state,hsdens_str,inc_lev,total):
     return metadata
 
 if __name__ == "__main__":
-    # get_residential_metadata('RECSwIncomeLvl.csv','DSOT_residential_metadata.json','../../analysis/dsot/data/residential_metadata.json',{'state':['TX'],'housing_density':['R','U','C'],'income_level':['Middle','Upper','Low']},bin_size_thres=40,climate_zone=None)
     get_RECS_jsons(
         '../../../../data/feeders/RECSwIncomeLvl.csv',
         '../data/DSOT_residential_metadata.json',
