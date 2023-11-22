@@ -1607,16 +1607,16 @@ def write_houses(basenode, op, vnom):
         vstart = format(-0.5 * vnom, '.2f') + '+' + format(0.866025 * vnom, '.2f') + 'j'
 
     if "_Low" in basenode or "_Middle" in basenode or "_Upper" in basenode:
-        _basenode = basenode.replace("_Low", "")
-        _basenode = _basenode.replace("_Middle", "")
-        _basenode = _basenode.replace("_Upper", "")
+        basenode = basenode.replace("_Low", "")
+        basenode = basenode.replace("_Middle", "")
+        basenode = basenode.replace("_Upper", "")
     if forERCOT:
         phs = phs + 'S'
         tpxname = gld_strict_name(basenode + '_tpx')
         mtrname = gld_strict_name(basenode + '_mtr')
     else:
         print('object triplex_node {', file=op)
-        print('  name', _basenode + ';', file=op)
+        print('  name', basenode + ';', file=op)
         print('  phases', phs + ';', file=op)
         print('  nominal_voltage ' + str(vnom) + ';', file=op)
         print('  voltage_1 ' + vstart + ';', file=op)
@@ -1628,7 +1628,7 @@ def write_houses(basenode, op, vnom):
             mtrname = gld_strict_name(basenode + '_mtr_' + str(i + 1))
             print('object triplex_line {', file=op)
             print('  name', tpxname + ';', file=op)
-            print('  from', _basenode + ';', file=op)
+            print('  from', basenode + ';', file=op)
             print('  to', mtrname + ';', file=op)
             print('  phases', phs + ';', file=op)
             print('  length 30;', file=op)
@@ -1901,7 +1901,7 @@ def write_houses(basenode, op, vnom):
             else:
                 print('  cooling_system_type NONE;', file=op)
 
-        # TODO: This is being overwritten in prep_substation_dsot.py. Remove for clarity.
+        # TODO: Update with RECS data for homes that don't participate
         cooling_sch = np.ceil(coolingScheduleNumber * np.random.uniform(0, 1))
         heating_sch = np.ceil(heatingScheduleNumber * np.random.uniform(0, 1))
         # Set point bins dict:[Bin Prob, NightTimeAvgDiff, HighBinSetting, LowBinSetting]
