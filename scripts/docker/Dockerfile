@@ -96,17 +96,16 @@ RUN git config --global user.name "${USER_NAME}" && \
   git config --global user.email "${USER_NAME}@${USER_NAME}.com" && \
   echo "User .name=${USER_NAME} and .email=${USER_NAME}@${USER_NAME}.com have been set for git repositories!" && \
   git config --global credential.helper store && \
-  echo "Create directory structure for TESP" && \
+  echo "Clone directory structure for TESP" && \
   cd ${HOME} || exit && \
-  mkdir -p tesp && \
+  echo "++++++++++++++ TESP" && \
+  git clone -b main https://github.com/pnnl/tesp.git && \
   cd tesp || exit && \
   mkdir -p repository && \
   mkdir -p tenv && \
   python3.8 -m pip install virtualenv && \
   "${HOME}/.local/bin/virtualenv" venv --prompt TESP && \
   cd repository || exit && \
-  echo "++++++++++++++ TESP" && \
-  git clone -b main https://github.com/pnnl/tesp.git && \
   echo "Download all relevant repositories..." && \
   echo "++++++++++++++ PSST" && \
   echo "Copy TESP environment variables to $HOME/tespEnv" && \
