@@ -3,8 +3,9 @@ ARG UBUNTU_VERSION=:20.04
 
 FROM ${UBUNTU}${UBUNTU_VERSION} AS ubuntu-base
 
-ENV USER_NAME=tesp-user
-ENV TESP_HOME=/home/${USER_NAME}
+# TESP user name and work directory
+ENV USER_NAME=worker
+ENV USER_HOME=/home/$USER_NAME
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
@@ -58,14 +59,14 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   usermod -aG sudo ${USER_NAME}
 
 USER ${USER_NAME}
-WORKDIR ${TESP_HOME}
+WORKDIR ${USER_HOME}
 
 FROM ubuntu-base AS tesp-production
 
 # TESP exports
-ENV INSTDIR=${TESP_HOME}/tesp/tenv
-ENV REPODIR=${TESP_HOME}/tesp/repository
-ENV TESPDIR=${TESP_HOME}/tesp/repository/tesp
+ENV TESPDIR=${USER_HOME}/tesp
+ENV INSTDIR=${USER_HOME}/tesp/tenv
+ENV REPODIR=${USER_HOME}/tesp/repository
 ENV TESPBUILD=$TESPDIR/scripts/build
 ENV TESPHELPR=$TESPDIR/scripts/helpers
 

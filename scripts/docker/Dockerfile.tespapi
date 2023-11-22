@@ -1,0 +1,40 @@
+# Build runtime image
+FROM tesp-python:latest AS tesp-run
+
+# TESP user name and work directory
+ENV USER_NAME=worker
+ENV USER_HOME=/home/$USER_NAME
+ENV TESPDIR=${USER_HOME}/tesp
+ENV INSTDIR=${TESPDIR}/tenv
+
+# Copy Binaries
+# COPY --from=tesp-1.3.0:latest $INSTDIR/ $INSTDIR/
+COPY --from=tesp-1.3.0:latest $TESPDIR/requirements.txt $TESPDIR
+COPY --from=tesp-1.3.0:latest $TESPDIR/data/ $TESPDIR/data/
+COPY --from=tesp-1.3.0:latest $TESPDIR/repository/AMES-V5.0/README.rst $TESPDIR
+COPY --from=tesp-1.3.0:latest $TESPDIR/repository/AMES-V5.0/psst/ $TESPDIR/psst/
+
+RUN echo "===== BUILD RUN TESPAPI =====" && \
+  export DEBIAN_FRONTEND=noninteractive && \
+  export DEBCONF_NONINTERACTIVE_SEEN=true && \
+  echo "===== Install Libraries =====" && \
+  apt-get update && \
+  apt-get dist-upgrade -y && \
+  apt-get install -y \
+# Ipopt cbc solver support libraries
+  coinor-cbc \
+  coinor-libcbc-dev \
+  coinor-libipopt-dev \
+  liblapack-dev \
+  libmetis-dev && \
+# Install Python Libraries
+  pip3 install -r "$TESPDIR/requirements.txt" > "$TESPDIR/tesp_pypi.log" && \
+  cd $TESPDIR/psst || exit && \
+  pip3 install -e . >> "$TESPDIR/tesp_pypi.log" && \
+# protect images by changing root password
+  echo "root:tesp" | chpasswd && \
+  echo "<<<< Adding the TESP user >>>>" && \
+  useradd -m -s /bin/bash ${USER_NAME} && \
+  echo "<<<< Changing new user password >>>>" && \
+  echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
+  usermod -aG sudo ${USER_NAME}
