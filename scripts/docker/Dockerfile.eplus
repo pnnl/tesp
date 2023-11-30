@@ -11,20 +11,14 @@ ENV INSTDIR=${TESPDIR}/tenv
 ENV PATH=$PATH:$INSTDIR/energyplus
 ENV PATH=$PATH:$INSTDIR/energyplus/PreProcess
 ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
 
 # Copy Binaries
-# COPY --from=tesp-1.3.0:latest $INSTDIR/ $INSTDIR/
+# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
 
 RUN echo "===== BUILD RUN EPLUS =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
   apt-get update && \
-  apt-get dist-upgrade -y && \
-# protect images by changing root password
-  echo "root:tesp" | chpasswd && \
-  echo "<<<< Adding the TESP user >>>>" && \
-  useradd -m -s /bin/bash ${USER_NAME} && \
-  echo "<<<< Changing new user password >>>>" && \
-  echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
-  usermod -aG sudo ${USER_NAME}
+  apt-get dist-upgrade -y

@@ -8,7 +8,7 @@ ENV TESPDIR=${USER_HOME}/tesp
 ENV INSTDIR=${TESPDIR}/tenv
 
 # Copy Binaries
-# COPY --from=tesp-1.3.0:latest $INSTDIR/ $INSTDIR/
+# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
 
 RUN echo "===== BUILD RUN Python =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -24,11 +24,4 @@ RUN echo "===== BUILD RUN Python =====" && \
   python3-tk \
   python3-pil.imagetk && \
   pip3 install helics > "$TESPDIR/tesp_pypi.log" && \
-  pip3 install helics[cli] >> "$TESPDIR/tesp_pypi.log" && \
-# protect images by changing root password
-  echo "root:tesp" | chpasswd && \
-  echo "<<<< Adding the TESP user >>>>" && \
-  useradd -m -s /bin/bash ${USER_NAME} && \
-  echo "<<<< Changing new user password >>>>" && \
-  echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
-  usermod -aG sudo ${USER_NAME}
+  pip3 install helics[cli] >> "$TESPDIR/tesp_pypi.log"

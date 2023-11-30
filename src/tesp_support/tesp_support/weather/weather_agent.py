@@ -27,6 +27,7 @@ def startWeatherAgent(file):
     """
     # read the weather data file, arguments to mimic deprecated from_csv function
     weatherData = pd.read_csv(file, index_col=0, parse_dates=True)
+    broker_address = None
     config = os.environ['WEATHER_CONFIG']  # read the weather config json file
     if os.path.isfile(config):
         with open(config, 'r') as stream:
@@ -46,6 +47,7 @@ def startWeatherAgent(file):
                 publishTimeAhead = conf['PublishTimeAhead']
                 forecastPeriod = conf['forecastPeriod']
                 forecastParameters = conf['parameters']
+                broker_address = conf['broker_address']
             except ValueError as ex:
                 print(ex)
     else:
@@ -102,6 +104,8 @@ def startWeatherAgent(file):
     helics.helicsFederateInfoSetCoreName(fedInfo, fedName)
     helics.helicsFederateInfoSetCoreTypeFromString(fedInfo, 'zmq')
     helics.helicsFederateInfoSetCoreInitString(fedInfo, '--federates=1')
+    if broker_address is not None:
+        helics.helicsFederateInfoSetCoreInitString(fedInfo, '--broker_address=' + broker_address)
     helics.helicsFederateInfoSetTimeProperty(fedInfo, helics.helics_property_time_delta, timeDeltaInSeconds)
     hFed = helics.helicsCreateValueFederate(fedName, fedInfo)
     for col in weatherData.columns:

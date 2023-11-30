@@ -11,7 +11,7 @@ ENV INSTDIR=${TESPDIR}/tenv
 ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
 
 # Copy Binaries
-# COPY --from=tesp-1.3.0:latest $INSTDIR/ $INSTDIR/
+# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
 
 RUN echo "===== BUILD RUN GridLabD =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -23,14 +23,4 @@ RUN echo "===== BUILD RUN GridLabD =====" && \
 # GridLAB-D support libraries
   libxerces-c-dev \
   libhdf5-serial-dev \
-  libsuitesparse-dev && \
-# protect images by changing root password
-  echo "root:tesp" | chpasswd && \
-  echo "<<<< Adding the TESP user >>>>" && \
-  useradd -m -s /bin/bash ${USER_NAME} && \
-  echo "<<<< Changing new user password >>>>" && \
-  echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
-  usermod -aG sudo ${USER_NAME}
-
-USER ${USER_NAME}
-WORKDIR ${USER_HOME}
+  libsuitesparse-dev

@@ -100,18 +100,17 @@ RUN git config --global user.name "${USER_NAME}" && \
   cd ${HOME} || exit && \
   echo "++++++++++++++ TESP" && \
   git clone -b main https://github.com/pnnl/tesp.git && \
-  cd tesp || exit && \
+  cd ${TESPDIR} || exit && \
   mkdir -p repository && \
   mkdir -p tenv && \
   python3.8 -m pip install virtualenv && \
   "${HOME}/.local/bin/virtualenv" venv --prompt TESP && \
-  cd repository || exit && \
-  echo "Download all relevant repositories..." && \
-  echo "++++++++++++++ PSST" && \
   echo "Copy TESP environment variables to $HOME/tespEnv" && \
-  cp tesp/scripts/tespEnv "$HOME/" && \
+  cp ${TESPDIR}/scripts/tespEnv "$HOME/" && \
   echo "Activate the python virtual environment" && \
-  . $HOME/tesp/venv/bin/activate && \
+  . ${TESPDIR}/venv/bin/activate && \
+  echo "Download all relevant repositories..." && \
+  cd ${REPODIR} || exit && \
   echo "++++++++++++++ PSST" && \
   git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
   echo "Applying the patch for AMES...... from ${TESPBUILD}" && \

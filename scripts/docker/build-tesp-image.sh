@@ -2,7 +2,7 @@
 
 
 images=(
-  "tesp-$(cat $TESPDIR/scripts/version):latest"
+  "tesp-build:latest"
   "tesp-helics:latest"
   "tesp-gridlabd:latest"
   "tesp-eplus:latest"

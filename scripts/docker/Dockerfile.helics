@@ -19,7 +19,7 @@ ENV PYHELICS_INSTALL=$INSTDIR
 ENV PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
 
 # Copy Binaries
-COPY --from=tesp-1.3.0:latest $INSTDIR/ $INSTDIR/
+COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
 
 RUN echo "===== BUILD RUN HELICS =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -43,6 +43,3 @@ RUN echo "===== BUILD RUN HELICS =====" && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
   usermod -aG sudo ${USER_NAME}
-
-USER ${USER_NAME}
-WORKDIR ${USER_HOME}
