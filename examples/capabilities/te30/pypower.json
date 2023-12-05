@@ -1,5 +1,6 @@
 {
   "name": "pypower",
+  "brokeraddress": "10.5.0.2",
   "period": 15,
   "logging": "warning",
   "publications": [

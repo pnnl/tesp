@@ -187,7 +187,6 @@ if __name__ == '__main__':
         Sd = Pd / load_pf
         Qd = Sd * load_qf
         Qs = float(ln[7])
-        # TODO - ask Mitch about the last two zeros
         ppcase['bus'].append([bus1, bustype, Pd, Qd, 0, Qs, 1, 1, 0, 345, zone, 1.1, 0.9, 0.0, 0.0])
         if Pd > 0.0:
             ppcase['DSO'].append([bus1, 'SUBSTATION' + str(bus1), 0.0, Pd, Qd, 1.0, random.randint(-3600, 3600)])

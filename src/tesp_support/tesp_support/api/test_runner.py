@@ -37,12 +37,12 @@ def start_test(case_name=None):
 
 
 def process_line(line, local_vars):
-    print('@@@@ input line to execute:', line)
+    # print('@@@@ input line to execute:', line)
     foreground = line.replace(' &)', ')').replace(' &>', ' >')
     exports = ''
     for var in local_vars:
         exports = exports + 'export ' + var['key'] + '=' + var['val'] + ' && '
-    print(' line transformed to:', exports + foreground)
+    # print(' line transformed to:', exports + foreground)
     return exports + foreground
 
 

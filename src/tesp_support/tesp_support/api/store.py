@@ -510,7 +510,7 @@ def _test_debug_resample():
 def _test_csv():
     from .data import tesp_test
 
-    my_store = Store(tesp_test + 'api/store.json')
+    my_store = Store(tesp_test + 'api/store')
     my_file = my_store.add_file(tesp_test + 'api/test.csv', "test_csv", "My test csv file")
     tables = my_file.get_tables()
     print(tables)
@@ -522,7 +522,7 @@ def _test_csv():
 def _test_sqlite():
     from .data import tesp_test
 
-    my_store = Store(tesp_test + 'api/store.json')
+    my_store = Store(tesp_test + 'api/store')
     my_file = my_store.add_file(tesp_test + 'api/test.db', "test_db", "My test sqlite file")
     tables = my_file.get_tables()
     print(tables)
@@ -549,7 +549,6 @@ def test_hdf5():
     n = f.__getitem__(tables[1])[0:13]
     print(n)
 
-
     my_store.write()
 
 
@@ -557,7 +556,7 @@ def _test_read():
     from .data import tesp_test
     from .metrics_api import get_synch_date_range
 
-    my_store = Store(tesp_test + 'api/store.json')
+    my_store = Store(tesp_test + 'api/store')
     my_file = my_store.add_file(tesp_test + 'api/test.csv', "test_csv", "My test csv file")
     tables = my_file.get_tables()
     print(tables)
@@ -583,7 +582,7 @@ def _test_dir():
     from .data import tesp_share
     from .data import tesp_test
 
-    my_store = Store(tesp_test + 'api/store.json')
+    my_store = Store(tesp_test + 'api/store')
     my_file = my_store.add_path(tesp_share, "My data directory")
     my_file.set_includeDir("energyplus")
     sub = my_file.set_includeDir("feeders", True)
@@ -591,7 +590,7 @@ def _test_dir():
     my_file.set_includeFile(sub, "comm*")
     my_file.set_includeFile(sub, ".gitignore")
     my_store.write()
-    my_store.zip(tesp_test + 'api/store.zip')
+    my_store.zip()
 
 
 def _test_change_gencost():

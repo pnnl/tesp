@@ -121,9 +121,12 @@ fi
 git config --global credential.helper store
 
 echo
-echo "Create directory structure for TESP"
-cd "${HOME}" || exit
-mkdir -p tesp
+echo "Clone directory structure for TESP"
+echo ++++++++++++++ TESP
+git clone -b main https://github.com/pnnl/tesp.git
+echo "Copy TESP environment variables to $HOME/tespEnv for shell scripts"
+cp tesp/scripts/tespEnv "$HOME/"
+. "${HOME}/tespEnv"
 cd tesp || exit
 
 echo "Install a virtual python environment to $HOME/tesp/venv"
@@ -153,13 +156,6 @@ mkdir -p repository
 cd repository || exit
 echo
 echo "Download all relevant repositories..."
-
-echo
-echo ++++++++++++++ TESP
-git clone -b main https://github.com/pnnl/tesp.git
-echo "Copy TESP environment variables to $HOME/tespEnv for shell scripts"
-cp tesp/scripts/tespEnv "$HOME/"
-. "${HOME}/tespEnv"
 
 echo
 echo ++++++++++++++ PSST

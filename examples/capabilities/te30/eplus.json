@@ -1,5 +1,6 @@
 {
   "name": "eplus",
+  "broker_address": "10.5.0.2",
   "period": 300,
   "logging": "warning",
   "publications": [
