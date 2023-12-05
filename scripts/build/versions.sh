@@ -27,7 +27,7 @@ energyplus --version
 message="NS-3 not installed"
 for file in "${INSTDIR}"/bin/ns3-dev-* ; do
   lst=( ${file// / } )
-  for a in "${lst}" ; do
+  for a in ${lst} ; do
     if [[ -f "${a}" ]]; then
       message="NS-3 installed"
       break

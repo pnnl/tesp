@@ -1,7 +1,7 @@
+#!/bin/bash
 # Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: runFNCS-TESP-Container-Mac.sh
 
-#!/bin/bash
 clear
 # 
 TESP_REP="laurmarinovici/tesp"
@@ -60,7 +60,7 @@ echo "===== Setting up GridLAB-D paths and folders."
 docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${GLD_INSTALL}/bin/outputFiles; then rmdir ${GLD_INSTALL}/bin/outputFiles; mkdir ${GLD_INSTALL}/bin/outputFiles; else mkdir ${GLD_INSTALL}/bin/outputFiles; fi'
 
 # =================== Energy Plus settings =========================================================
-echo "===== Settting up Energy Plus paths and folders."
+echo "===== Setting up Energy Plus paths and folders."
 docker container exec ${TESP_CONT} /bin/bash -c 'if test -e ${EPLUS_INSTALL}/outputFiles; then rmdir ${EPLUS_INSTALL}/outputFiles; mkdir ${EPLUS_INSTALL}/outputFiles; else mkdir ${EPLUS_INSTALL}/outputFiles; fi'
 
 # =================== Energy Plus JSON settings =========================================================
