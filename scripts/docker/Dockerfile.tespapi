@@ -4,8 +4,8 @@ FROM tesp-python:latest AS tesp-run
 # TESP user name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
-ENV TESPDIR=${USER_HOME}/tesp
-ENV INSTDIR=${TESPDIR}/tenv
+ENV TESPDIR=$USER_HOME/tesp
+ENV INSTDIR=$TESPDIR/tenv
 
 # Copy Binaries
 # COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
@@ -14,7 +14,7 @@ COPY --from=tesp-build:latest $TESPDIR/data/ $TESPDIR/data/
 COPY --from=tesp-build:latest $TESPDIR/repository/AMES-V5.0/README.rst $TESPDIR
 COPY --from=tesp-build:latest $TESPDIR/repository/AMES-V5.0/psst/ $TESPDIR/psst/
 
-RUN echo "===== BUILD RUN TESPAPI =====" && \
+RUN echo "===== BUILD RUN TESP API =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \

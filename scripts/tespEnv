@@ -1,9 +1,9 @@
-. $HOME/tesp/venv/bin/activate
+. $HOME/.tvenv/bin/activate
 
 # TESP exports
 export TESPDIR=$HOME/tesp
-export INSTDIR=$HOME/tesp/tenv
-export REPODIR=$HOME/tesp/repository
+export INSTDIR=$TESPDIR/tenv
+export REPODIR=$TESPDIR/repository
 export TESPBUILD=$TESPDIR/scripts/build
 export TESPHELPR=$TESPDIR/scripts/helpers
 

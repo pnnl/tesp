@@ -1,4 +1,4 @@
-# Delcare arguments
+# Declare arguments
 ARG UBUNTU=ubuntu
 ARG UBUNTU_VERSION=:20.04
 
@@ -8,8 +8,8 @@ FROM ${UBUNTU}${UBUNTU_VERSION} AS tesp-run
 # TESP user name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
-ENV TESPDIR=${USER_HOME}/tesp
-ENV INSTDIR=${TESPDIR}/tenv
+ENV TESPDIR=$USER_HOME/tesp
+ENV INSTDIR=$TESPDIR/tenv
 
 # Compile exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64

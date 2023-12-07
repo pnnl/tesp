@@ -3,7 +3,7 @@
 """Path and Data functions for use within tesp_support.
 """
 
-from os import path, chdir, mkdir, environ
+from os import path, chdir, environ
 from importlib_resources import files
 import argparse
 import subprocess
@@ -34,6 +34,8 @@ else:
 
 # uncomment for debug
 # tesp_path = path.expanduser('~') + '/tesp'
+# chdir(tesp_path)
+# tesp_path = path.expanduser('~') + '/tesp/tesp'
 
 if path.isdir(tesp_path):
     for _dir in components:
@@ -47,11 +49,17 @@ if path.isdir(tesp_path):
 else:
     # New instance
     try:
-        mkdir(tesp_path)
-        # print("Writing the TESP setting config file -> " + tesp_path)
-        # make_settings(tesp_path)
+        chdir(path.expanduser('~'))
+        cmd = 'git clone --no-checkout https://github.com/pnnl/tesp'
+        subprocess.Popen(cmd, shell=True).wait()
+        chdir(tesp_path)
+        cmd = 'git checkout HEAD scripts/tespPip.sh'
+        subprocess.Popen(cmd, shell=True).wait()
+        chdir('scripts')
+        cmd = './tespPip.sh'
+        subprocess.Popen(cmd, shell=True).wait()
     except FileExistsError:
-        print("Can NOT write the TESP setting config file -> " + tesp_path)
+        print("Can NOT write the TESP configure files -> " + tesp_path)
         pass
 
 
@@ -129,26 +137,21 @@ def tesp_component():
     if error:
         return
 
-    parcel = ["svn", "checkout", "https://github.com/pnnl/tesp/trunk/"]
-
+    parcel = ['git', 'checkout', 'HEAD']
     choice = int(args.component[0])
     if 9 > choice > 0:
-        parcel[2] = parcel[2] + components[choice]
-        print("Component ->", parcel[2])
+        parcel.append(components[choice])
+        print("Component ->", parcel[-1])
     else:
         print("Bad choice, choose 1 through 9")
         return
 
-    tmp = tesp_path + '/' + components[choice]
-    if path.isdir(tmp):
-        print("It seems we have a copy of " + tmp)
+    component = tesp_path + '/' + components[choice]
+    if path.isdir(component):
+        print("It seems we have a copy of " + component)
         return
 
     # can proceed with the copy
     chdir(tesp_path)
-    p = subprocess.Popen(parcel, shell=False)
-    p.wait()
-    line = ["rm", "-rf", components[choice] + "/.svn"]
-    p = subprocess.Popen(line, shell=False)
-    p.wait()
+    subprocess.Popen(parcel, shell=False).wait()
     print('Output directory: ', tesp_path + "/" + components[choice])
