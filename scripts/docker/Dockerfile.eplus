@@ -4,8 +4,8 @@ FROM tesp-helics:latest AS tesp-run
 # TESP user name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
-ENV TESPDIR=${USER_HOME}/tesp
-ENV INSTDIR=${TESPDIR}/tenv
+ENV TESPDIR=$USER_HOME/tesp
+ENV INSTDIR=$TESPDIR/tenv
 
 # PATH
 ENV PATH=$PATH:$INSTDIR/energyplus

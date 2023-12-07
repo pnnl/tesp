@@ -51,7 +51,7 @@ def docker_line(line, local_vars):
     exports = ''
     for var in local_vars:
         exports = exports + '      ' + var['key'] + ': "' + var['val'] + '"\n'
-    command = line.replace(' &)', '').replace(' &>', ' >').replace('(', '')
+    command = line.replace(' &)', '').replace(' &>', ' >').replace('(ex', 'ex').replace('"', '\\"')
     # print('docker line transformed to:', exports + command)
     return exports, command
 
@@ -125,13 +125,12 @@ def run_test(file_name, case_name=None):
 def services(name, image, env, cnt, outfile, depends=None):
     outfile.write("  " + name + ":\n")
     outfile.write("    image: \"" + image + "\"\n")
-    # outfile.write("    container_name: ${CONTAINER_NAME:" + '-jupyter_notebook' + "}")
     if env[0] != '':
         outfile.write("    environment:\n")
         outfile.write(env[0])
     outfile.write("    working_dir: /home/worker/case\n")
     outfile.write("    volumes:\n")
-    outfile.write("      - .:/home/worker\n")
+    outfile.write("      - .:/home/worker/case\n")
     outfile.write("      - ../../../data:/home/worker/tesp/data\n")
     if depends is not None:
         outfile.write("    depends_on:\n")
@@ -142,9 +141,46 @@ def services(name, image, env, cnt, outfile, depends=None):
     outfile.write("    command: sh -c \"" + env[1] + "\"\n")
 
 
+"""
+name = "fncs"
+image = "tesp-fncs:latest"
+f = ["fncs "]
+
+name = "helics",
+image = "tesp-helics:latest"
+f = ["helics"]
+line = line.replace(' -f', ' --ipv4 -f')
+
+name = "tespapi_" + str(cnt)
+image = "tesp-tespapi:latest"
+f = [" python", " java"]
+
+name = "gridlabd_" + str(cnt)
+image = "tesp-gridlabd:latest"
+f: ["gridlabd "]
+
+name = "eplus_" + str(cnt)
+image = "tesp-eplus:latest"
+f = ["energyplus ", "eplus_agent"]
+
+name = "eplus_" + str(cnt)
+image = "tesp-ns3:latest"
+f = ["energyplus ", "eplus_agent"]
+
+name = "helics_" + str(cnt)
+image = "tesp-helics:latest"
+f = ["helics_recorder", "helics_player"]
+
+# The master build, heavyweight docker
+name = "build_" + str(cnt)
+image = "tesp-build:latest"
+f = []
+"""
+
+
 def run_docker_test(file_name, case_name=None):
     t_start = time.time()
-    cnt = 2
+    cnt = 1
     local_vars = []
     fp = open(file_name, 'r')
     op = open(file_name.replace("sh", "yaml"), 'w')
@@ -168,14 +204,15 @@ def run_docker_test(file_name, case_name=None):
             jc = subprocess.Popen(process_line(line, local_vars), shell=True)
             jc.wait()
         else:
+            name = None
+            image = None
+            depends = None
             if "fncs_broker" in line:
-                print('====  Fncs Broker Start in\n        ' + os.getcwd(), flush=True)
-                p_broker = "fncs"
+                p_broker = "Fncs"
                 name = "fncs"
                 image = "tesp-fncs:latest"
             elif "helics_broker" in line:
-                print('====  Helics Broker Start in\n        ' + os.getcwd(), flush=True)
-                p_broker = "helics"
+                p_broker = "Helics"
                 line = line.replace(' -f', ' --ipv4 -f')
                 name = "helics"
                 image = "tesp-helics:latest"
@@ -195,8 +232,8 @@ def run_docker_test(file_name, case_name=None):
                 # The master build, heavyweight docker
                 name = "build_" + str(cnt)
                 image = "tesp-build:latest"
-            cnt = cnt + 1
-            services(name, image, docker_line(line, local_vars), cnt, op, p_broker)
+            cnt += 1
+            services(name, image, docker_line(line, local_vars), cnt, op, depends)
 
     op.write('networks:\n')
     op.write('  cu_net:\n')
@@ -209,12 +246,11 @@ def run_docker_test(file_name, case_name=None):
     fp.close()
 
     if p_broker is not None:
-        # ps = subprocess.Popen(process_line("docker-compose -f run.yaml up -d", local_vars), shell=True)
-        # ps.wait()
+        print('====  ' + p_broker + ' Broker Start in\n        ' + os.getcwd(), flush=True)
+        docker_compose = "docker-compose -f " + file_name.replace("sh", "yaml")
+        subprocess.Popen(docker_compose + " up", shell=True).wait()
+        subprocess.Popen(docker_compose + " down", shell=True).wait()
         print('====  Broker Exit in\n        ' + os.getcwd(), flush=True)
-    # todo launch docker and wait
-    # for p in p_list:
-    #     p.wait()
 
     t_end = time.time()
     if b_reporting:
