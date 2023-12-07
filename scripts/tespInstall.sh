@@ -25,7 +25,7 @@ echo "Install TESP home directory"
 echo "TESP home dirctory is $WORKDIR"
 
 cat > "$HOME/tespEnv" << EOF
-. $VIRTUAL_ENV/bin/activate
+. $HOME/.tvenv/bin/activate
 
 # TESP exports
 export TESPDIR=$WORKDIR
@@ -72,11 +72,14 @@ python3 -m venv "$HOME/.tvenv" --prompt TESP
 source "$HOME/tespEnv"
 
 echo "Installing Python Libraries..."
-which python > "$HOME/tesp_pypi.log" 2>&1
+which python > "$HOME/tesp.log" 2>&1
 pip install --upgrade pip >> "$HOME/tesp.log" 2>&1
 
-git clone --no-checkout main https://github.com/pnnl/tesp "$TESPDIR"
+echo "Installing TESP empty repo..."
+git clone --no-checkout https://github.com/pnnl/tesp "$TESPDIR"
 cd "$TESPDIR" || exit
+
+echo "Installing Python Libraries..."
 git checkout HEAD requirements.txt
 pip install -r "$TESPDIR/requirements.txt" >> "$HOME/tesp.log" 2>&1
 
