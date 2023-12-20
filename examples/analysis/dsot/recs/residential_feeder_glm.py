@@ -1793,12 +1793,12 @@ def write_houses(basenode, op, vnom):
         else:  # bldg == 2  # Mobile Homes
             # select between single and double wide
             wwr = (res_bldg_metadata['window_wall_ratio']['mobile_home']['mean'])  # window wall ratio
-            sw_pct = res_bldg_metadata['mobile_home_single_wide'][state][res_dso_type][income]  # single wide percentage for given vintage bin
+            # sw_pct = res_bldg_metadata['mobile_home_single_wide'][state][res_dso_type][income]  # single wide percentage for given vintage bin
             # next_ti = ti
             # while not sw_pct:  # if the value is null or 'None', check the next vintage bin
             #     next_ti += 1
             #     sw_pct = res_bldg_metadata['mobile_home_single_wide'][vint_type[next_ti]]
-            if np.random.uniform(0, 1) < sw_pct:  # Single wide
+            if floor_area <= 1080:  # Single wide
                 aspect_ratio = random_norm_trunc(res_bldg_metadata['aspect_ratio']['mobile_home_single_wide'])
             else:  # double wide
                 aspect_ratio = random_norm_trunc(res_bldg_metadata['aspect_ratio']['mobile_home_double_wide'])
