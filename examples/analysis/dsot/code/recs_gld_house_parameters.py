@@ -36,12 +36,17 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
             if inc_lev=='Low':
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
-                    (recs_data['Income_cat'].isin(['Low','Middle'])))
+                    (recs_data['Income_cat'].isin(['Low','Moderate'])))
+                ])
+            elif inc_lev=='Moderate':
+                il_bin_size = len(recs_data.loc[
+                    ((recs_data['state_postal']==state) & 
+                    (recs_data['Income_cat'].isin(['Low','Moderate','Middle'])))
                 ])
             elif inc_lev=='Middle':
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
-                    (recs_data['Income_cat'].isin(['Low','Middle','Upper'])))
+                    (recs_data['Income_cat'].isin(['Moderate','Middle','Upper'])))
                 ])
             elif inc_lev=='Upper':
                 il_bin_size = len(recs_data.loc[
@@ -67,13 +72,19 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
                 if inc_lev=='Low':
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
-                        (recs_data['Income_cat'].isin(['Low','Middle'])))
+                        (recs_data['Income_cat'].isin(['Low','Moderate'])))
+                    ]
+                    warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
+                elif inc_lev=='Moderate':
+                    sample_data = recs_data.loc[
+                        ((recs_data['state_postal']==state) & 
+                        (recs_data['Income_cat'].isin(['Low','Moderate','Middle'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
                 elif inc_lev=='Middle':
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
-                        (recs_data['Income_cat'].isin(['Low','Middle','Upper'])))
+                        (recs_data['Income_cat'].isin(['Moderate','Middle','Upper'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
                 elif inc_lev=='Upper':
@@ -100,13 +111,19 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
                     (recs_data['UATYP10']==housing_dens) & 
-                    (recs_data['Income_cat'].isin(['Low','Middle'])))
+                    (recs_data['Income_cat'].isin(['Low','Moderate'])))
+                ])
+            elif inc_lev=='Moderate':
+                il_bin_size = len(recs_data.loc[
+                    ((recs_data['state_postal']==state) & 
+                    (recs_data['UATYP10']==housing_dens) & 
+                    (recs_data['Income_cat'].isin(['Low','Moderate','Middle'])))
                 ])
             elif inc_lev=='Middle':
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
                     (recs_data['UATYP10']==housing_dens) & 
-                    (recs_data['Income_cat'].isin(['Low','Middle','Upper'])))
+                    (recs_data['Income_cat'].isin(['Moderate','Middle','Upper'])))
                 ])
             elif inc_lev=='Upper':
                 il_bin_size = len(recs_data.loc[
@@ -136,14 +153,21 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
                         (recs_data['UATYP10']==housing_dens) & 
-                        (recs_data['Income_cat'].isin(['Low','Middle'])))
+                        (recs_data['Income_cat'].isin(['Low','Moderate'])))
+                    ]
+                    warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
+                elif inc_lev=='Moderate':
+                    sample_data = recs_data.loc[
+                        ((recs_data['state_postal']==state) & 
+                        (recs_data['UATYP10']==housing_dens) & 
+                        (recs_data['Income_cat'].isin(['Low','Moderate','Middle'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
                 elif inc_lev=='Middle':
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
                         (recs_data['UATYP10']==housing_dens) & 
-                        (recs_data['Income_cat'].isin(['Low','Middle','Upper'])))
+                        (recs_data['Income_cat'].isin(['Moderate','Middle','Upper'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
                 elif inc_lev=='Upper':
@@ -234,7 +258,10 @@ def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total
         for p, y in housing_vintage_dict.items():
             metadata['num_stories'][state][hsdens_str][inc_lev][h][y]={}
             for n, s in num_stories_dict.items():
-                metadata['num_stories'][state][hsdens_str][inc_lev][h][y][s]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[n_stories_str]==n)),'NWEIGHT'].sum()/total_dict[h][y],4)
+                metadata['num_stories'][state][hsdens_str][inc_lev][h][y][s]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                                                                    (sample_data[vintage_str]==p) & 
+                                                                                                    (sample_data[n_stories_str]==n)),
+                                                                                                    'NWEIGHT'].sum()/total_dict[h][y],4)
 
     # Get floor_area distribution by house type and vintage
     for k, h in housing_type_dict.items():
@@ -258,13 +285,20 @@ def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total
     # Get number of stories by vintage
     # for p, y in housing_vintage_dict.items():
     #     metadata['mobile_home_single_wide'][st][hd_str][il][y] = round(sample_df.loc[((sample_df[house_type_str]==1) & (sample_df[vintage_str]==p) & (sample_df[flr_area_str]<=1080)),'NWEIGHT'].sum()/total_dict['mobile_home'][y],4)
-    metadata['mobile_home_single_wide'][state][hsdens_str][inc_lev] = round(sample_data.loc[((sample_data[house_type_str]==1) & (sample_data[flr_area_str]<=1080)),'NWEIGHT'].sum()/sum(total_dict['mobile_home'].values()),4)
+    metadata['mobile_home_single_wide'][state][hsdens_str][inc_lev] = round(sample_data.loc[((sample_data[house_type_str]==1) & 
+                                                                                             (sample_data[flr_area_str]<=1080)),
+                                                                                             'NWEIGHT'].sum()/sum(total_dict['mobile_home'].values()),4)
 
     # Get distribution for air conditioning by house type and vintage
     for k, h in housing_type_dict.items():
-        metadata['air_conditioning'][state][hsdens_str][inc_lev][h]={}
-        for p, y in housing_vintage_dict.items():
-            metadata['air_conditioning'][state][hsdens_str][inc_lev][h][y]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[ac_str]==1)),'NWEIGHT'].sum()/total_dict[h][y],4)
+        metadata['air_conditioning'][state][hsdens_str][inc_lev][h]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                                                            (sample_data[ac_str]==1)),
+                                                                                            'NWEIGHT'].sum()/sum(total_dict[h].values()),4)
+        # for p, y in housing_vintage_dict.items():
+        #     metadata['air_conditioning'][state][hsdens_str][inc_lev][h][y]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+        #                                                                                           (sample_data[vintage_str]==p) & 
+        #                                                                                           (sample_data[ac_str]==1)),
+        #                                                                                           'NWEIGHT'].sum()/total_dict[h][y],4)
 
     # Get distribution for gas heating by house type and vintage
     for k, h in housing_type_dict.items():
@@ -272,43 +306,66 @@ def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total
         for p, y in housing_vintage_dict.items():
             metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]={}
             # Gas heating defined as all heating that is not electric
-            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['gas_heating']=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[sh_fuel_str].isin([1,2,3,7,99,-2]))),'NWEIGHT'].sum()/total_dict[h][y],4)
-            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['heat_pump']=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[sh_equip_str].isin([4,13]))),'NWEIGHT'].sum()/total_dict[h][y],4)
-            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['resistance']=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[sh_fuel_str]==5) & (~sample_data[sh_equip_str].isin([4,13]))),'NWEIGHT'].sum()/total_dict[h][y],4)
+            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['gas_heating']=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                                                                                   (sample_data[vintage_str]==p) & 
+                                                                                                                   (sample_data[sh_fuel_str].isin([1,2,3,7,99,-2]))),
+                                                                                                                   'NWEIGHT'].sum()/total_dict[h][y],4)
+            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['heat_pump']=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                                                                                 (sample_data[vintage_str]==p) & 
+                                                                                                                 (sample_data[sh_equip_str].isin([4,13]))),
+                                                                                                                 'NWEIGHT'].sum()/total_dict[h][y],4)
+            metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['resistance']=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                                                                                  (sample_data[vintage_str]==p) & 
+                                                                                                                  (sample_data[sh_fuel_str]==5) & 
+                                                                                                                  (~sample_data[sh_equip_str].isin([4,13]))),
+                                                                                                                  'NWEIGHT'].sum()/total_dict[h][y],4)
     
     # Get distribution for if water heating matches space heating
     for k, h in housing_type_dict.items():
         metadata['water_heating_type'][state][hsdens_str][inc_lev][h]={}
         for p, y in housing_vintage_dict.items():
             metadata['water_heating_type'][state][hsdens_str][inc_lev][h][y]={}
-            both_gas = sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[sh_fuel_str].isin([1,2,3,7,99,-2])) & (sample_data[wh_fuel_str].isin([1,2,3,7,8,99,-2]))),'NWEIGHT'].sum()
-            both_electric = sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[sh_fuel_str]==5) & (sample_data[wh_fuel_str]==5)),'NWEIGHT'].sum()
+            both_gas = sample_data.loc[((sample_data[house_type_str]==k) & 
+                                        (sample_data[vintage_str]==p) & 
+                                        (sample_data[sh_fuel_str].isin([1,2,3,7,99,-2])) & 
+                                        (sample_data[wh_fuel_str].isin([1,2,3,7,8,99,-2]))),'NWEIGHT'].sum()
+            both_electric = sample_data.loc[((sample_data[house_type_str]==k) & 
+                                             (sample_data[vintage_str]==p) & 
+                                             (sample_data[sh_fuel_str]==5) & 
+                                             (sample_data[wh_fuel_str]==5)),'NWEIGHT'].sum()
             metadata['water_heating_type'][state][hsdens_str][inc_lev][h][y]=round((both_gas+both_electric)/total_dict[h][y],4)
     
     # Get distribution for high ceilings by house type and vintage
     for k, h in housing_type_dict.items():
         metadata['high_ceilings'][state][hsdens_str][inc_lev][h]={}
         for p, y in housing_vintage_dict.items():
-            metadata['high_ceilings'][state][hsdens_str][inc_lev][h][y]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[hiceiling_str]==1)),'NWEIGHT'].sum()/total_dict[h][y],4)
+            metadata['high_ceilings'][state][hsdens_str][inc_lev][h][y]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                                                               (sample_data[vintage_str]==p) & 
+                                                                                               (sample_data[hiceiling_str]==1)),'NWEIGHT'].sum()/total_dict[h][y],4)
 
     # Get distribution for number of occupants by house type and vintage
+    # Not being used in feeder generator
     for k, h in housing_type_dict.items():
         metadata['num_occupants'][state][hsdens_str][inc_lev][h]={}
         for p, y in housing_vintage_dict.items():
             metadata['num_occupants'][state][hsdens_str][inc_lev][h][y]={}
             for o in range(1,max_num_occupants+1):
-                metadata['num_occupants'][state][hsdens_str][inc_lev][h][y][o]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[n_occ_str]==o)),'NWEIGHT'].sum()/total_dict[h][y],4)
+                metadata['num_occupants'][state][hsdens_str][inc_lev][h][y][o]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                                                                      (sample_data[vintage_str]==p) & 
+                                                                                                      (sample_data[n_occ_str]==o)),'NWEIGHT'].sum()/total_dict[h][y],4)
     
-    # Get distribution for Solar PV by house type and vintage
+    # Get distribution for Solar PV by house type
     for k, h in housing_type_dict.items():
-        metadata['solar_pv'][state][hsdens_str][inc_lev][h]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[solar_str]==1)),'NWEIGHT'].sum()/sum(total_dict[h].values()),4)
+        metadata['solar_pv'][state][hsdens_str][inc_lev][h]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                                                   (sample_data[solar_str]==1)),'NWEIGHT'].sum()/sum(total_dict[h].values()),4)
         # metadata['solar_pv'][state][hsdens_str][inc_lev][h]={}
         # for p, y in housing_vintage_dict.items():
         #     metadata['solar_pv'][state][hsdens_str][inc_lev][h][y]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[solar_str]==1)),'NWEIGHT'].sum()/total_dict[h][y],4)
     
-    # Get distribution for EV
+    # Get distribution for EV by house type
     for k, h in housing_type_dict.items():
-        metadata['ev'][state][hsdens_str][inc_lev][h]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[ev_str]==1)),'NWEIGHT'].sum()/sum(total_dict[h].values()),4)
+        metadata['ev'][state][hsdens_str][inc_lev][h]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                                             (sample_data[ev_str]==1)),'NWEIGHT'].sum()/sum(total_dict[h].values()),4)
         # metadata['ev'][state][hsdens_str][inc_lev][h]={}
         # for p, y in housing_vintage_dict.items():
         #     metadata['ev'][state][hsdens_str][inc_lev][h][y]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[ev_str]==1)),'NWEIGHT'].sum()/total_dict[h][y],4)
@@ -337,7 +394,8 @@ def get_RECS_jsons(recs_data_file,dsot_metadata_file,output_file_resmeta,output_
     # Read RECS data file
     recs = pd.read_csv(recs_data_file)
     # Make sure income level is in the right order
-    sample['income_level'].sort()
+    order = {key: i for i, key in enumerate(['Low','Moderate','Middle','Upper'])}
+    sample['income_level'] = sorted(sample['income_level'],key=lambda d: order[d])
     # Read DSOT_residential_parameters_metadata.json
     with open(dsot_metadata_file) as json_file:
         dsot_metadata = json.load(json_file)
@@ -514,5 +572,5 @@ if __name__ == "__main__":
         '../data/DSOT_residential_metadata.json',
         '../data/RECS_residential_metadata.json',
         '../data/hvac_setpt_RECS.json',
-        {'state':['TX'],'housing_density':['No_DSO_Type'],'income_level':['Middle','Upper','Low']},
+        {'state':['TX'],'housing_density':['No_DSO_Type'],'income_level':['Middle','Moderate','Upper','Low']},
         bin_size_thres=100,climate_zone=None)
