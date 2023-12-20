@@ -371,8 +371,9 @@ def selectResidentialBuilding(rgnTable, prob):
 # -----------fraction of income level in a given dso type and state---------
 # index 0 is the income level:
 #   0 = Low
-#   1 = Middle
-#   2 = Upper
+#   1 = Moderate
+#   2 = Middle
+#   3 = Upper
 def getDsoIncomeLevelTable():
     income_mat = res_bldg_metadata['income_level'][state][res_dso_type]
     dsoIncomePct = {key: income_mat[key] for key in income_level} # Create new dictionary only with income levels of interest
@@ -1606,8 +1607,9 @@ def write_houses(basenode, op, vnom):
     else:
         vstart = format(-0.5 * vnom, '.2f') + '+' + format(0.866025 * vnom, '.2f') + 'j'
 
-    if "_Low" in basenode or "_Middle" in basenode or "_Upper" in basenode:
+    if "_Low" in basenode or "_Moderate" in basenode or "_Middle" in basenode or "_Upper" in basenode:
         basenode = basenode.replace("_Low", "")
+        basenode = basenode.replace("_Moderate", "")
         basenode = basenode.replace("_Middle", "")
         basenode = basenode.replace("_Upper", "")
     if forERCOT:
@@ -1869,7 +1871,7 @@ def write_houses(basenode, op, vnom):
         house_fuel_type = 'electric'
         heat_pump_prob = res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]['gas_heating'] + res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]['heat_pump']
         # electric_cooling_percentage should be defined here only
-        electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][res_dso_type][income][fa_bldg][vint]
+        electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][res_dso_type][income][fa_bldg]
         if heat_rand <= res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]['gas_heating']:
             house_fuel_type = 'gas'
             print('  heating_system_type GAS;', file=op)
@@ -1901,22 +1903,10 @@ def write_houses(basenode, op, vnom):
             else:
                 print('  cooling_system_type NONE;', file=op)
 
-        # TODO: Update with RECS data for homes that don't participate
-        cooling_sch = np.ceil(coolingScheduleNumber * np.random.uniform(0, 1))
-        heating_sch = np.ceil(heatingScheduleNumber * np.random.uniform(0, 1))
-        # Set point bins dict:[Bin Prob, NightTimeAvgDiff, HighBinSetting, LowBinSetting]
-        cooling_bin, heating_bin = selectSetpointBins(bldg, np.random.uniform(0, 1))
-        # randomly choose setpoints within bins, and then widen the separation to account for deadband
-        cooling_set = cooling_bin[3] + np.random.uniform(0, 1) * (cooling_bin[2] - cooling_bin[3])
-        heating_set = heating_bin[3] + np.random.uniform(0, 1) * (heating_bin[2] - heating_bin[3])
-        cooling_diff = 2.0 * cooling_bin[1] * np.random.uniform(0, 1)
-        heating_diff = 2.0 * heating_bin[1] * np.random.uniform(0, 1)
-        cooling_str = 'cooling{:.0f}*{:.4f}+{:.2f}'.format(cooling_sch, cooling_diff, cooling_set)
-        heating_str = 'heating{:.0f}*{:.4f}+{:.2f}'.format(heating_sch, heating_diff, heating_set)
         # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
         # we need more separation to assure no overlaps during transactive simulations
-        print('  cooling_setpoint 80.0; // ', cooling_str + ';', file=op)
-        print('  heating_setpoint 60.0; // ', heating_str + ';', file=op)
+        print('  cooling_setpoint 80.0;', file=op)
+        print('  heating_setpoint 60.0;', file=op)
 
         # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
         print('  object ZIPload { // responsive', file=op)
