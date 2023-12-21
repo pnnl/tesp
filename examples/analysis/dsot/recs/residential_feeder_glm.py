@@ -1828,10 +1828,7 @@ def write_houses(basenode, op, vnom):
         mass_int_gain_frac = 0.5
         # ***********COP*********************************
         # pick any one year value randomly from the bin in cop_lookup
-        if ti > 7:  # until 2016-2020 values are added
-            h_COP = c_COP = np.random.choice(cop_lookup[7]) * (0.9 + np.random.uniform(0, 1) * 0.2)  # +- 10% of mean value
-        else:
-            h_COP = c_COP = np.random.choice(cop_lookup[ti]) * (0.9 + np.random.uniform(0, 1) * 0.2)  # +- 10% of mean value
+        h_COP = c_COP = np.random.choice(cop_lookup[ti]) * (0.9 + np.random.uniform(0, 1) * 0.2)  # +- 10% of mean value
         # h_COP = c_COP = tiProps[10] + np.random.uniform(0, 1) * (tiProps[9] - tiProps[10])
 
         print('object house {', file=op)
@@ -3092,7 +3089,8 @@ def populate_feeder(configfile=None, config=None, taxconfig=None):
     # residential building metadata
     cop_mat = res_bldg_metadata['COP_average']
     years_bin = [range(1945, 1950), range(1950, 1960), range(1960, 1970), range(1970, 1980),
-                 range(1980, 1990), range(1990, 2000), range(2000, 2010), range(2010, 2016)]
+                 range(1980, 1990), range(1990, 2000), range(2000, 2010), range(2010, 2016),
+                 range(2016, 2020)]
     years_bin = [list(years_bin[ind]) for ind in range(len(years_bin))]
     cop_lookup = []
     for _bin in range(len(years_bin)):
