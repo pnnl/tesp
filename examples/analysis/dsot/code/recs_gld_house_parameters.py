@@ -513,12 +513,15 @@ def get_hvac_setpoints(metadata,sample_data,state,hsdens_str,inc_lev,total):
     clm = 1
     clm_cool = 1
     clm_heat = 1
-
+    # Only want houses with AC for the cooling setpoint distributions
+    total_c = sample_data.loc[((sample_data['AIRCOND']==1)),'NWEIGHT'].sum()
     # Get occupied setpoint distribution first
     for sp_idx, sp in enumerate(sp_rng):
-        total_o_cool = sample_data.loc[((sample_data[occ_cool_str]==sp)),'NWEIGHT'].sum() # Get total houses that have this occupied setpoint
+        total_o_cool = sample_data.loc[((sample_data[occ_cool_str]==sp) & 
+                                        (sample_data['AIRCOND']==1)),
+                                        'NWEIGHT'].sum() # Get total houses that have this occupied setpoint
         total_o_heat = sample_data.loc[((sample_data[occ_heat_str]==sp)),'NWEIGHT'].sum()
-        percentage_cool = round(100*total_o_cool/total,2)
+        percentage_cool = round(100*total_o_cool/total_c,2)
         percentage_heat = round(100*total_o_heat/total,2)
         metadata['occ_cool'][state][hsdens_str][inc_lev].append([str(sp),str(percentage_cool)])
         metadata['occ_heat'][state][hsdens_str][inc_lev].append([str(sp),str(percentage_heat)])
@@ -532,7 +535,9 @@ def get_hvac_setpoints(metadata,sample_data,state,hsdens_str,inc_lev,total):
                 metadata['unocc_cool'][state][hsdens_str][inc_lev].append([str(spu)])
                 metadata['unocc_heat'][state][hsdens_str][inc_lev].append([str(spu)])
 
-            total_o_u_cool = sample_data.loc[((sample_data[occ_cool_str]==sp) & (sample_data[unocc_cool_str]==spu)),'NWEIGHT'].sum()
+            total_o_u_cool = sample_data.loc[((sample_data[occ_cool_str]==sp) & 
+                                              (sample_data[unocc_cool_str]==spu) & 
+                                              (sample_data['AIRCOND']==1)),'NWEIGHT'].sum()
             total_o_u_heat = sample_data.loc[((sample_data[occ_heat_str]==sp) & (sample_data[unocc_heat_str]==spu)),'NWEIGHT'].sum()
             if total_o_cool==0 or total_o_u_cool==0:
                 metadata['unocc_cool'][state][hsdens_str][inc_lev][spu_idx+1].append('0')
@@ -543,11 +548,11 @@ def get_hvac_setpoints(metadata,sample_data,state,hsdens_str,inc_lev,total):
                 for spn_idx, spn in enumerate(sp_rng):
                     if clm_cool == 1:
                         metadata['night_cool'][state][hsdens_str][inc_lev].append([str(spn)])
-                    total_o_u_n_cool = sample_data.loc[
-                        ((sample_data[occ_cool_str]==sp) & 
-                        (sample_data[unocc_cool_str]==spu) & 
-                        (sample_data[night_cool_str]==spn)),'NWEIGHT'
-                    ].sum()
+                    total_o_u_n_cool = sample_data.loc[((sample_data[occ_cool_str]==sp) & 
+                                                        (sample_data[unocc_cool_str]==spu) & 
+                                                        (sample_data[night_cool_str]==spn) & 
+                                                        (sample_data['AIRCOND']==1)),
+                                                        'NWEIGHT'].sum()
                     metadata['night_cool'][state][hsdens_str][inc_lev][spn_idx+1].append(str(round(100*total_o_u_n_cool/total_o_u_cool,2)))
                 clm_cool +=1
             if total_o_heat==0 or total_o_u_heat==0:
