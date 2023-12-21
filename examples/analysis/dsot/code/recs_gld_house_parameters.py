@@ -469,6 +469,11 @@ def get_RECS_jsons(recs_data_file,dsot_metadata_file,output_file_resmeta,output_
     res_metadata['hvac_oversize'] = dsot_metadata['hvac_oversize']
     res_metadata['window_shading'] = dsot_metadata['window_shading']
     res_metadata['COP_average'] = dsot_metadata['COP_average']
+    res_metadata['COP_average']['2016'] = 3.9359
+    res_metadata['COP_average']['2017'] = 3.9359
+    res_metadata['COP_average']['2018'] = 3.9359
+    res_metadata['COP_average']['2019'] = 3.9359
+    res_metadata['COP_average']['2020'] = 3.2956
     res_metadata['GLD_residential_house_classes'] = dsot_metadata['GLD_residential_house_classes']
 
     with open(output_file_resmeta,'w') as outfile:
