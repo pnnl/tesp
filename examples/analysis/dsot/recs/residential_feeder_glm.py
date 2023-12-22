@@ -1931,77 +1931,82 @@ def write_houses(basenode, op, vnom):
         # if np.random.uniform(0, 1) <= water_heater_percentage:  # rgnPenElecWH[rgn-1]:
         # Determine if house has matching heating types for space and water
         if np.random.uniform(0, 1) <= res_bldg_metadata['water_heating_type'][state][res_dso_type][income][fa_bldg][vint]:
-            if house_fuel_type == 'electric':  # if the house fuel type is electric, install wh
-                heat_element = 3.0 + 0.5 * np.random.randint(1, 6)  # numpy randint (lo, hi) returns lo..(hi-1)
-                tank_set = 110 + 16 * np.random.uniform(0, 1)
-                therm_dead = 1  # 4 + 4 * np.random.uniform(0, 1)
-                tank_UA = 2 + 2 * np.random.uniform(0, 1)
-                water_sch = np.ceil(waterHeaterScheduleNumber * np.random.uniform(0, 1))
-                water_var = 0.95 + np.random.uniform(0, 1) * 0.1  # +/-5% variability
-                wh_demand_type = 'large_'
-                # sizeIncr = np.random.randint(0, 3)  # MATLAB randi(imax) returns 1..imax
-                # sizeProb = np.random.uniform(0, 1)
-                # old wh size implementation
-                # if sizeProb <= rgnWHSize[rgn - 1][0]:
-                #     wh_size = 20 + sizeIncr * 5
-                #     wh_demand_type = 'small_'
-                # elif sizeProb <= (rgnWHSize[rgn - 1][0] + rgnWHSize[rgn - 1][1]):
-                #     wh_size = 30 + sizeIncr * 10
-                #     if floor_area < 2000.0:
-                #         wh_demand_type = 'small_'
-                # else:
-                #     if floor_area < 2000.0:
-                #         wh_size = 30 + sizeIncr * 10
-                #     else:
-                #         wh_size = 50 + sizeIncr * 10
+            wh_fuel_type = house_fuel_type
+        elif house_fuel_type == 'gas': 
+            wh_fuel_type = 'electric'
+        elif house_fuel_type == 'electric': 
+            wh_fuel_type = 'gas'
+        if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
+            heat_element = 3.0 + 0.5 * np.random.randint(1, 6)  # numpy randint (lo, hi) returns lo..(hi-1)
+            tank_set = 110 + 16 * np.random.uniform(0, 1)
+            therm_dead = 1  # 4 + 4 * np.random.uniform(0, 1)
+            tank_UA = 2 + 2 * np.random.uniform(0, 1)
+            water_sch = np.ceil(waterHeaterScheduleNumber * np.random.uniform(0, 1))
+            water_var = 0.95 + np.random.uniform(0, 1) * 0.1  # +/-5% variability
+            wh_demand_type = 'large_'
+            # sizeIncr = np.random.randint(0, 3)  # MATLAB randi(imax) returns 1..imax
+            # sizeProb = np.random.uniform(0, 1)
+            # old wh size implementation
+            # if sizeProb <= rgnWHSize[rgn - 1][0]:
+            #     wh_size = 20 + sizeIncr * 5
+            #     wh_demand_type = 'small_'
+            # elif sizeProb <= (rgnWHSize[rgn - 1][0] + rgnWHSize[rgn - 1][1]):
+            #     wh_size = 30 + sizeIncr * 10
+            #     if floor_area < 2000.0:
+            #         wh_demand_type = 'small_'
+            # else:
+            #     if floor_area < 2000.0:
+            #         wh_size = 30 + sizeIncr * 10
+            #     else:
+            #         wh_size = 50 + sizeIncr * 10
 
-                # new wh size implementation
-                wh_data = res_bldg_metadata['water_heater_tank_size']
-                if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
-                    size_array = range(wh_data['tank_size']['1_2_people']['min'],
-                                       wh_data['tank_size']['1_2_people']['max'] + 1, 5)
-                    wh_demand_type = 'small_'
-                elif floor_area <= wh_data['floor_area']['2_3_people']['floor_area_max']:
-                    size_array = range(wh_data['tank_size']['2_3_people']['min'],
-                                       wh_data['tank_size']['2_3_people']['max'] + 1, 5)
-                    wh_demand_type = 'small_'
-                elif floor_area <= wh_data['floor_area']['3_4_people']['floor_area_max']:
-                    size_array = range(wh_data['tank_size']['3_4_people']['min'],
-                                       wh_data['tank_size']['3_4_people']['max'] + 1, 10)
-                else:
-                    size_array = range(wh_data['tank_size']['5_plus_people']['min'],
-                                       wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
-                wh_size = np.random.choice(size_array)
+            # new wh size implementation
+            wh_data = res_bldg_metadata['water_heater_tank_size']
+            if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
+                size_array = range(wh_data['tank_size']['1_2_people']['min'],
+                                    wh_data['tank_size']['1_2_people']['max'] + 1, 5)
+                wh_demand_type = 'small_'
+            elif floor_area <= wh_data['floor_area']['2_3_people']['floor_area_max']:
+                size_array = range(wh_data['tank_size']['2_3_people']['min'],
+                                    wh_data['tank_size']['2_3_people']['max'] + 1, 5)
+                wh_demand_type = 'small_'
+            elif floor_area <= wh_data['floor_area']['3_4_people']['floor_area_max']:
+                size_array = range(wh_data['tank_size']['3_4_people']['min'],
+                                    wh_data['tank_size']['3_4_people']['max'] + 1, 10)
+            else:
+                size_array = range(wh_data['tank_size']['5_plus_people']['min'],
+                                    wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
+            wh_size = np.random.choice(size_array)
 
-                wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
-                wh_skew_value = 3 * residential_skew_std * np.random.randn()
-                if wh_skew_value < -6 * residential_skew_max:
-                    wh_skew_value = -6 * residential_skew_max
-                elif wh_skew_value > 6 * residential_skew_max:
-                    wh_skew_value = 6 * residential_skew_max
-                print('  object waterheater {', file=op)
-                print('    name', whname + ';', file=op)
-                print('    schedule_skew', '{:.0f}'.format(wh_skew_value) + ';', file=op)
-                print('    heating_element_capacity', '{:.1f}'.format(heat_element), 'kW;', file=op)
-                print('    thermostat_deadband', '{:.1f}'.format(therm_dead) + ';', file=op)
-                print('    location INSIDE;', file=op)
-                print('    tank_diameter 1.5;', file=op)
-                print('    tank_UA', '{:.1f}'.format(tank_UA) + ';', file=op)
-                print('    water_demand', wh_demand_str + ';', file=op)
-                print('    tank_volume', '{:.0f}'.format(wh_size) + ';', file=op)
-                #            if np.random.uniform(0, 1) <= water_heater_participation:
-                print('    waterheater_model MULTILAYER;', file=op)
-                print('    discrete_step_size 60.0;', file=op)
-                print('    lower_tank_setpoint', '{:.1f}'.format(tank_set - 5.0) + ';', file=op)
-                print('    upper_tank_setpoint', '{:.1f}'.format(tank_set + 5.0) + ';', file=op)
-                print('    T_mixing_valve', '{:.1f}'.format(tank_set) + ';', file=op)
-                #            else:
-                #                print('    tank_setpoint', '{:.1f}'.format(tank_set) + ';', file=op)
-                if metrics_interval > 0 and "waterheater" in metrics:
-                    print('    object metrics_collector {', file=op)
-                    print('      interval', str(metrics_interval) + ';', file=op)
-                    print('    };', file=op)
-                print('  };', file=op)
+            wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
+            wh_skew_value = 3 * residential_skew_std * np.random.randn()
+            if wh_skew_value < -6 * residential_skew_max:
+                wh_skew_value = -6 * residential_skew_max
+            elif wh_skew_value > 6 * residential_skew_max:
+                wh_skew_value = 6 * residential_skew_max
+            print('  object waterheater {', file=op)
+            print('    name', whname + ';', file=op)
+            print('    schedule_skew', '{:.0f}'.format(wh_skew_value) + ';', file=op)
+            print('    heating_element_capacity', '{:.1f}'.format(heat_element), 'kW;', file=op)
+            print('    thermostat_deadband', '{:.1f}'.format(therm_dead) + ';', file=op)
+            print('    location INSIDE;', file=op)
+            print('    tank_diameter 1.5;', file=op)
+            print('    tank_UA', '{:.1f}'.format(tank_UA) + ';', file=op)
+            print('    water_demand', wh_demand_str + ';', file=op)
+            print('    tank_volume', '{:.0f}'.format(wh_size) + ';', file=op)
+            #            if np.random.uniform(0, 1) <= water_heater_participation:
+            print('    waterheater_model MULTILAYER;', file=op)
+            print('    discrete_step_size 60.0;', file=op)
+            print('    lower_tank_setpoint', '{:.1f}'.format(tank_set - 5.0) + ';', file=op)
+            print('    upper_tank_setpoint', '{:.1f}'.format(tank_set + 5.0) + ';', file=op)
+            print('    T_mixing_valve', '{:.1f}'.format(tank_set) + ';', file=op)
+            #            else:
+            #                print('    tank_setpoint', '{:.1f}'.format(tank_set) + ';', file=op)
+            if metrics_interval > 0 and "waterheater" in metrics:
+                print('    object metrics_collector {', file=op)
+                print('      interval', str(metrics_interval) + ';', file=op)
+                print('    };', file=op)
+            print('  };', file=op)
         if metrics_interval > 0 and "house" in metrics:
             print('  object metrics_collector {', file=op)
             print('    interval', str(metrics_interval) + ';', file=op)
