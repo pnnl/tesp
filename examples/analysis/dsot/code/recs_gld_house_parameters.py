@@ -5,7 +5,7 @@ import math
 import warnings
 import os
 
-def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,climate_zone):
+def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,climate_zone,income_str):
     og_bin_size = len(sample_data)
     print('Bin Size',inc_lev," ",og_bin_size)
     # Define Census Regions in case sample size is too small for state
@@ -24,80 +24,69 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
         if housing_dens=='No_DSO_Type':
             rgn_bin_size = len(recs_data.loc[
                 ((recs_data['DIVISION']==rgn) & 
-                (recs_data['Income_cat']==inc_lev))
+                (recs_data[income_str]==inc_lev))
             ])
             if climate_zone == None:
                 cz_bin_size = 0
             else:
                 cz_bin_size = len(recs_data.loc[
                     ((recs_data['IECC_climate_code']==climate_zone) & 
-                    (recs_data['Income_cat']==inc_lev))
+                    (recs_data[income_str]==inc_lev))
                 ])
             if inc_lev=='Low':
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
-                    (recs_data['Income_cat'].isin(['Low','Moderate'])))
-                ])
-            elif inc_lev=='Moderate':
-                il_bin_size = len(recs_data.loc[
-                    ((recs_data['state_postal']==state) & 
-                    (recs_data['Income_cat'].isin(['Low','Moderate','Middle'])))
+                    (recs_data[income_str].isin(['Low','Middle'])))
                 ])
             elif inc_lev=='Middle':
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
-                    (recs_data['Income_cat'].isin(['Moderate','Middle','Upper'])))
+                    (recs_data[income_str].isin(['Low','Middle','Upper'])))
                 ])
             elif inc_lev=='Upper':
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
-                    (recs_data['Income_cat'].isin(['Middle','Upper'])))
+                    (recs_data[income_str].isin(['Middle','Upper'])))
                 ])
             max_bin = max(rgn_bin_size,cz_bin_size,il_bin_size)
             # if cz_bin_size<rgn_bin_size: use_cz=False
             if rgn_bin_size>binsize or rgn_bin_size==max_bin:
                 sample_data = recs_data.loc[
                     ((recs_data['DIVISION']==rgn) & 
-                    (recs_data['Income_cat']==inc_lev))
+                    (recs_data[income_str]==inc_lev))
                 ]
                 warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Using census region to generate distributions with bin size {rgn_bin_size}.',UserWarning)
                 # print(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {bin_size_thres}. Using census region to generate distributions with bin size {rgn_bin_size}.')
             elif cz_bin_size>binsize or cz_bin_size==max_bin:
                 sample_data = recs_data.loc[
                     ((recs_data['IECC_climate_code']==climate_zone) & 
-                    (recs_data['Income_cat']==inc_lev))
+                    (recs_data[income_str]==inc_lev))
                 ]
                 warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Using climate zone to generate distributions with bin size {cz_bin_size}.')
             elif il_bin_size==max_bin:
                 if inc_lev=='Low':
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
-                        (recs_data['Income_cat'].isin(['Low','Moderate'])))
-                    ]
-                    warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
-                elif inc_lev=='Moderate':
-                    sample_data = recs_data.loc[
-                        ((recs_data['state_postal']==state) & 
-                        (recs_data['Income_cat'].isin(['Low','Moderate','Middle'])))
+                        (recs_data[income_str].isin(['Low','Middle'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
                 elif inc_lev=='Middle':
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
-                        (recs_data['Income_cat'].isin(['Moderate','Middle','Upper'])))
+                        (recs_data[income_str].isin(['Low','Middle','Upper'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
                 elif inc_lev=='Upper':
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
-                        (recs_data['Income_cat'].isin(['Middle','Upper'])))
+                        (recs_data[income_str].isin(['Middle','Upper'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
         else:
             rgn_bin_size = len(recs_data.loc[
                 ((recs_data['DIVISION']==rgn) & 
                 (recs_data['UATYP10']==housing_dens) & 
-                (recs_data['Income_cat']==inc_lev))
+                (recs_data[income_str]==inc_lev))
             ])
             if climate_zone == None:
                 cz_bin_size = 0
@@ -105,31 +94,25 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
                 cz_bin_size = len(recs_data.loc[
                     ((recs_data['IECC_climate_code']==climate_zone) & 
                     (recs_data['UATYP10']==housing_dens) & 
-                    (recs_data['Income_cat']==inc_lev))
+                    (recs_data[income_str]==inc_lev))
                 ])
             if inc_lev=='Low':
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
                     (recs_data['UATYP10']==housing_dens) & 
-                    (recs_data['Income_cat'].isin(['Low','Moderate'])))
-                ])
-            elif inc_lev=='Moderate':
-                il_bin_size = len(recs_data.loc[
-                    ((recs_data['state_postal']==state) & 
-                    (recs_data['UATYP10']==housing_dens) & 
-                    (recs_data['Income_cat'].isin(['Low','Moderate','Middle'])))
+                    (recs_data[income_str].isin(['Low','Middle'])))
                 ])
             elif inc_lev=='Middle':
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
                     (recs_data['UATYP10']==housing_dens) & 
-                    (recs_data['Income_cat'].isin(['Moderate','Middle','Upper'])))
+                    (recs_data[income_str].isin(['Low','Middle','Upper'])))
                 ])
             elif inc_lev=='Upper':
                 il_bin_size = len(recs_data.loc[
                     ((recs_data['state_postal']==state) & 
                     (recs_data['UATYP10']==housing_dens) & 
-                    (recs_data['Income_cat'].isin(['Middle','Upper'])))
+                    (recs_data[income_str].isin(['Middle','Upper'])))
                 ])
             max_bin = max(rgn_bin_size,cz_bin_size,il_bin_size)
             # if cz_bin_size<rgn_bin_size: use_cz=False
@@ -137,7 +120,7 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
                 sample_data = recs_data.loc[
                     ((recs_data['DIVISION']==rgn) & 
                     (recs_data['UATYP10']==housing_dens) & 
-                    (recs_data['Income_cat']==inc_lev))
+                    (recs_data[income_str]==inc_lev))
                 ]
                 warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Using census region to generate distributions with bin size {rgn_bin_size}.',UserWarning)
                 # print(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {bin_size_thres}. Using census region to generate distributions with bin size {rgn_bin_size}.')
@@ -145,7 +128,7 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
                 sample_data = recs_data.loc[
                     ((recs_data['IECC_climate_code']==climate_zone) & 
                     (recs_data['UATYP10']==housing_dens) & 
-                    (recs_data['Income_cat']==inc_lev))
+                    (recs_data[income_str]==inc_lev))
                 ]
                 warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Using climate zone to generate distributions with bin size {cz_bin_size}.')
             elif il_bin_size==max_bin:
@@ -153,28 +136,21 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
                         (recs_data['UATYP10']==housing_dens) & 
-                        (recs_data['Income_cat'].isin(['Low','Moderate'])))
-                    ]
-                    warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
-                elif inc_lev=='Moderate':
-                    sample_data = recs_data.loc[
-                        ((recs_data['state_postal']==state) & 
-                        (recs_data['UATYP10']==housing_dens) & 
-                        (recs_data['Income_cat'].isin(['Low','Moderate','Middle'])))
+                        (recs_data[income_str].isin(['Low','Middle'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
                 elif inc_lev=='Middle':
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
                         (recs_data['UATYP10']==housing_dens) & 
-                        (recs_data['Income_cat'].isin(['Moderate','Middle','Upper'])))
+                        (recs_data[income_str].isin(['Low','Middle','Upper'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
                 elif inc_lev=='Upper':
                     sample_data = recs_data.loc[
                         ((recs_data['state_postal']==state) & 
                         (recs_data['UATYP10']==housing_dens) & 
-                        (recs_data['Income_cat'].isin(['Middle','Upper'])))
+                        (recs_data[income_str].isin(['Middle','Upper'])))
                     ]
                     warnings.warn(f'WARNING: Bin size={og_bin_size}. Bin size less than bin size threshold of {binsize}. Widening income level selection to generate distributions with bin size {il_bin_size}.')
 
@@ -282,23 +258,22 @@ def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total
             metadata['floor_area'][state][hsdens_str][inc_lev][h]['min'] = float(np.min(values))
             metadata['floor_area'][state][hsdens_str][inc_lev][h]['standard_deviation'] = round(std_dev,4)
 
-    # Get number of stories by vintage
+    # Get single wide mobile home by income level
     # for p, y in housing_vintage_dict.items():
     #     metadata['mobile_home_single_wide'][st][hd_str][il][y] = round(sample_df.loc[((sample_df[house_type_str]==1) & (sample_df[vintage_str]==p) & (sample_df[flr_area_str]<=1080)),'NWEIGHT'].sum()/total_dict['mobile_home'][y],4)
-    metadata['mobile_home_single_wide'][state][hsdens_str][inc_lev] = round(sample_data.loc[((sample_data[house_type_str]==1) & 
-                                                                                             (sample_data[flr_area_str]<=1080)),
-                                                                                             'NWEIGHT'].sum()/sum(total_dict['mobile_home'].values()),4)
+    # metadata['mobile_home_single_wide'][state][hsdens_str][inc_lev] = round(sample_data.loc[((sample_data[house_type_str]==1) & 
+    #                                                                                          (sample_data[flr_area_str]<=1080)),
+    #                                                                                          'NWEIGHT'].sum()/sum(total_dict['mobile_home'].values()),4)
 
-    # Get distribution for air conditioning by house type and vintage
+    # Get distribution for air conditioning for homes with gas or resistance heating by house type and vintage
     for k, h in housing_type_dict.items():
-        metadata['air_conditioning'][state][hsdens_str][inc_lev][h]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
-                                                                                            (sample_data[ac_str]==1)),
-                                                                                            'NWEIGHT'].sum()/sum(total_dict[h].values()),4)
-        # for p, y in housing_vintage_dict.items():
-        #     metadata['air_conditioning'][state][hsdens_str][inc_lev][h][y]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
-        #                                                                                           (sample_data[vintage_str]==p) & 
-        #                                                                                           (sample_data[ac_str]==1)),
-        #                                                                                           'NWEIGHT'].sum()/total_dict[h][y],4)
+        total_gas_res_homes = sample_data.loc[((sample_data[house_type_str]==k) & 
+                                                (~sample_data[sh_equip_str].isin([4,13]))),
+                                                'NWEIGHT'].sum()
+        metadata['air_conditioning'][state][hsdens_str][inc_lev][h]=round(sample_data.loc[((sample_data[house_type_str]==k) &  
+                                                                                           (sample_data[ac_str]==1) &
+                                                                                           (~sample_data[sh_equip_str].isin([4,13]))),
+                                                                                           'NWEIGHT'].sum()/total_gas_res_homes,4)
 
     # Get distribution for gas heating by house type and vintage
     for k, h in housing_type_dict.items():
@@ -316,7 +291,7 @@ def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total
                                                                                                                  'NWEIGHT'].sum()/total_dict[h][y],4)
             metadata['space_heating_type'][state][hsdens_str][inc_lev][h][y]['resistance']=round(sample_data.loc[((sample_data[house_type_str]==k) & 
                                                                                                                   (sample_data[vintage_str]==p) & 
-                                                                                                                  (sample_data[sh_fuel_str]==5) & 
+                                                                                                                  (sample_data[sh_fuel_str].isin([5,10])) & 
                                                                                                                   (~sample_data[sh_equip_str].isin([4,13]))),
                                                                                                                   'NWEIGHT'].sum()/total_dict[h][y],4)
     
@@ -358,17 +333,11 @@ def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total
     for k, h in housing_type_dict.items():
         metadata['solar_pv'][state][hsdens_str][inc_lev][h]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
                                                                                    (sample_data[solar_str]==1)),'NWEIGHT'].sum()/sum(total_dict[h].values()),4)
-        # metadata['solar_pv'][state][hsdens_str][inc_lev][h]={}
-        # for p, y in housing_vintage_dict.items():
-        #     metadata['solar_pv'][state][hsdens_str][inc_lev][h][y]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[solar_str]==1)),'NWEIGHT'].sum()/total_dict[h][y],4)
-    
     # Get distribution for EV by house type
     for k, h in housing_type_dict.items():
         metadata['ev'][state][hsdens_str][inc_lev][h]=round(sample_data.loc[((sample_data[house_type_str]==k) & 
                                                                              (sample_data[ev_str]==1)),'NWEIGHT'].sum()/sum(total_dict[h].values()),4)
-        # metadata['ev'][state][hsdens_str][inc_lev][h]={}
-        # for p, y in housing_vintage_dict.items():
-        #     metadata['ev'][state][hsdens_str][inc_lev][h][y]=round(sample_data.loc[((sample_data[house_type_str]==k) & (sample_data[vintage_str]==p) & (sample_data[ev_str]==1)),'NWEIGHT'].sum()/total_dict[h][y],4)
+        
     metadata['programmable_thermostat'][state][hsdens_str][inc_lev] = round(sample_data.loc[((sample_data[therm_str].isin([2,3]))),'NWEIGHT'].sum()/total,4)
 
     # metadata['water_heater_tank_size']={}
@@ -393,6 +362,8 @@ def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total
 def get_RECS_jsons(recs_data_file,dsot_metadata_file,output_file_resmeta,output_file_hvacsp,sample={'state':[],'housing_density':[],'income_level':[]},bin_size_thres=100,climate_zone=''):
     # Read RECS data file
     recs = pd.read_csv(recs_data_file)
+    # Use the right income level data from RECS
+    inc_str = 'Income_cat2'
     # Make sure income level is in the right order
     order = {key: i for i, key in enumerate(['Low','Moderate','Middle','Upper'])}
     sample['income_level'] = sorted(sample['income_level'],key=lambda d: order[d])
@@ -428,13 +399,13 @@ def get_RECS_jsons(recs_data_file,dsot_metadata_file,output_file_resmeta,output_
             if hd=='No_DSO_Type':
                 total_st_hd = recs.loc[
                     ((recs['state_postal']==st) & 
-                    (recs['Income_cat'].isin(sample['income_level']))),'NWEIGHT'
+                    (recs[inc_str].isin(sample['income_level']))),'NWEIGHT'
                 ].sum()
             else:
                 total_st_hd = recs.loc[
                     ((recs['state_postal']==st) & 
                     (recs['UATYP10']==hd) & 
-                    (recs['Income_cat'].isin(sample['income_level']))),'NWEIGHT'
+                    (recs[inc_str].isin(sample['income_level']))),'NWEIGHT'
                 ].sum()
 
             for il in sample['income_level']:
@@ -444,19 +415,19 @@ def get_RECS_jsons(recs_data_file,dsot_metadata_file,output_file_resmeta,output_
                 if hd=='No_DSO_Type':
                     sample_df = recs.loc[
                         ((recs['state_postal']==st) & 
-                        (recs['Income_cat']==il))
+                        (recs[inc_str]==il))
                     ]
                 else:
                     sample_df = recs.loc[
                         ((recs['state_postal']==st) & 
                         (recs['UATYP10']==hd) & 
-                        (recs['Income_cat']==il))
+                        (recs[inc_str]==il))
                     ]
                 total_triple = sample_df['NWEIGHT'].sum() # Get total population for triple
                 res_metadata['income_level'][st][hd_str][il] = round(total_triple/total_st_hd,4)
                 # Check if bin size is less than threshold.
                 # If it is, use census region, then climate zone, and then finally widen income level input if needed.
-                sample_df, total = bin_size_check(sample_df,recs,st,hd,il,bin_size_thres,climate_zone)
+                sample_df, total = bin_size_check(sample_df,recs,st,hd,il,bin_size_thres,climate_zone,inc_str)
 
                 res_metadata, total_dict = get_residential_metadata(res_metadata,sample_df,st,hd_str,il,total)
                 hvac_setpoints = get_hvac_setpoints(hvac_setpoints,sample_df,st,hd_str,il,total)
@@ -475,6 +446,19 @@ def get_RECS_jsons(recs_data_file,dsot_metadata_file,output_file_resmeta,output_
     res_metadata['COP_average']['2019'] = 3.9359
     res_metadata['COP_average']['2020'] = 3.2956
     res_metadata['GLD_residential_house_classes'] = dsot_metadata['GLD_residential_house_classes']
+    # Add income level dependent solar, storage, and ev percentages
+    res_metadata['solar_percentage'] = {}
+    res_metadata['solar_percentage']['Low'] = 0.21
+    res_metadata['solar_percentage']['Middle'] = 0.21
+    res_metadata['solar_percentage']['Upper'] = 0.58
+    res_metadata['battery_percentage'] = {}
+    res_metadata['battery_percentage']['Low'] = 0.21
+    res_metadata['battery_percentage']['Middle'] = 0.21
+    res_metadata['battery_percentage']['Upper'] = 0.58
+    res_metadata['ev_percentage'] = {}
+    res_metadata['ev_percentage']['Low'] = 0.24
+    res_metadata['ev_percentage']['Middle'] = 0.42
+    res_metadata['ev_percentage']['Upper'] = 0.33
 
     with open(output_file_resmeta,'w') as outfile:
         json.dump(res_metadata,outfile,indent=4)
@@ -582,5 +566,5 @@ if __name__ == "__main__":
         '../data/DSOT_residential_metadata.json',
         '../data/RECS_residential_metadata.json',
         '../data/hvac_setpt_RECS.json',
-        {'state':['TX'],'housing_density':['No_DSO_Type'],'income_level':['Middle','Moderate','Upper','Low']},
+        {'state':['TX'],'housing_density':['No_DSO_Type'],'income_level':['Middle','Upper','Low']},
         bin_size_thres=100,climate_zone=None)
