@@ -371,9 +371,8 @@ def selectResidentialBuilding(rgnTable, prob):
 # -----------fraction of income level in a given dso type and state---------
 # index 0 is the income level:
 #   0 = Low
-#   1 = Moderate
-#   2 = Middle
-#   3 = Upper
+#   1 = Middle - No longer using Moderate
+#   2 = Upper
 def getDsoIncomeLevelTable():
     income_mat = res_bldg_metadata['income_level'][state][res_dso_type]
     dsoIncomePct = {key: income_mat[key] for key in income_level} # Create new dictionary only with income levels of interest
@@ -1867,7 +1866,7 @@ def write_houses(basenode, op, vnom):
         cool_rand = np.random.uniform(0, 1)
         house_fuel_type = 'electric'
         heat_pump_prob = res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]['gas_heating'] + res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]['heat_pump']
-        # electric_cooling_percentage should be defined here only
+        # Get the air conditioning percentage for homes that don't have heat pumps
         electric_cooling_percentage = res_bldg_metadata['air_conditioning'][state][res_dso_type][income][fa_bldg]
         if heat_rand <= res_bldg_metadata['space_heating_type'][state][res_dso_type][income][fa_bldg][vint]['gas_heating']:
             house_fuel_type = 'gas'
@@ -2019,11 +2018,15 @@ def write_houses(basenode, op, vnom):
         # bConsiderStorage = True
         # Solar percentage should be defined here only from RECS data based on income level
         # solar_percentage = res_bldg_metadata['solar_pv'][state][dso_type][income][fa_bldg]
+        # Calculate the solar, storage, and ev percentage based on the income level
+        solar_percentage_il = solar_percentage * res_bldg_metadata['solar_percentage'][income]
+        storage_percentage_il = storage_percentage * res_bldg_metadata['battery_percentage'][income]
+        ev_percentage_il = ev_percentage * res_bldg_metadata['ev_percentage'][income]
         if bldg == 0:  # Single-family homes
-            if solar_percentage > 0.0:
+            if solar_percentage_il > 0.0:
                 pass
                 # bConsiderStorage = False
-            if np.random.uniform(0, 1) <= solar_percentage:  # some single-family houses have PV
+            if np.random.uniform(0, 1) <= solar_percentage_il:  # some single-family houses have PV
                 # bConsiderStorage = True
                 # This is legacy code method to find solar rating
                 # panel_area = 0.1 * floor_area
@@ -2086,7 +2089,7 @@ def write_houses(basenode, op, vnom):
                         print('    };', file=op)
                     print('  };', file=op)
                     print('}', file=op)
-        if np.random.uniform(0, 1) <= storage_percentage:
+        if np.random.uniform(0, 1) <= storage_percentage_il:
             battery_capacity = get_dist(batt_metadata['capacity(kWh)']['mean'],
                                      batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
             max_charge_rate = get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
@@ -2141,9 +2144,7 @@ def write_houses(basenode, op, vnom):
                     print('    };', file=op)
                 print('  };', file=op)
                 print('}', file=op)
-        # ToDo: EV percentage should be defined here if using RECS data based on income level
-        # ev_percentage = res_bldg_metadata['ev'][state][dso_type][income][fa_bldg]
-        if np.random.uniform(0, 1) <= ev_percentage:
+        if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
             ev_name = selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
             ev_range = ev_metadata['Range (miles)'][ev_name]
