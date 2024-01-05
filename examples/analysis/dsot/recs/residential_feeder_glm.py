@@ -2019,9 +2019,10 @@ def write_houses(basenode, op, vnom):
         # Solar percentage should be defined here only from RECS data based on income level
         # solar_percentage = res_bldg_metadata['solar_pv'][state][dso_type][income][fa_bldg]
         # Calculate the solar, storage, and ev percentage based on the income level
-        solar_percentage_il = solar_percentage * res_bldg_metadata['solar_percentage'][income]
-        storage_percentage_il = storage_percentage * res_bldg_metadata['battery_percentage'][income]
-        ev_percentage_il = ev_percentage * res_bldg_metadata['ev_percentage'][income]
+        il_percentage = res_bldg_metadata['income_level'][state][res_dso_type][income]
+        solar_percentage_il = (solar_percentage * res_bldg_metadata['solar_percentage'][income])/il_percentage
+        storage_percentage_il = (storage_percentage * res_bldg_metadata['battery_percentage'][income])/il_percentage
+        ev_percentage_il = (ev_percentage * res_bldg_metadata['ev_percentage'][income])/il_percentage
         if bldg == 0:  # Single-family homes
             if solar_percentage_il > 0.0:
                 pass
