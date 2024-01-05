@@ -24,6 +24,8 @@ np.random.seed(0)
 
 
 def select_setpt_occ(prob, mode, st, hd, inc_lev):
+    if 'No_DSO_Type' in list(hvac_setpt['occ_' + mode][st].keys()):
+        hd = 'No_DSO_Type'
     hdr = hvac_setpt['occ_' + mode][st][hd][inc_lev][0]
     temp = hvac_setpt['occ_' + mode][st][hd][inc_lev][1:]
     temp = (np.array(temp)).astype(np.float64)
@@ -44,6 +46,8 @@ def select_setpt_occ(prob, mode, st, hd, inc_lev):
 
 
 def select_setpt_unocc(wakeup_set, mode, st, hd, inc_lev):
+    if 'No_DSO_Type' in list(hvac_setpt['unocc_' + mode][st].keys()):
+        hd = 'No_DSO_Type'
     hdr = hvac_setpt['unocc_' + mode][st][hd][inc_lev][0]
     temp = hvac_setpt['unocc_' + mode][st][hd][inc_lev][1:]
     temp = (np.array(temp)).astype(np.float64)
@@ -75,6 +79,8 @@ def select_setpt_unocc(wakeup_set, mode, st, hd, inc_lev):
 
 
 def select_setpt_night(wakeup_set, daylight_set, mode, st, hd, inc_lev):
+    if 'No_DSO_Type' in list(hvac_setpt['night_' + mode][st].keys()):
+        hd = 'No_DSO_Type'
     hdr = hvac_setpt['night_' + mode][st][hd][inc_lev][0]
     temp = hvac_setpt['night_' + mode][st][hd][inc_lev][1:]
     temp = (np.array(temp)).astype(np.float64)
@@ -110,6 +116,8 @@ def telework(prob, st, hd, inc_lev):
     Outputs which DOWs are for teleworking.
     0:Sunday, 1:Monday, 2:Tuesday, 3:Wednesday, 4:Thursday, 5:Friday, 6:Saturday
     """
+    if 'No_DSO_Type' in list(hvac_setpt['num_days_telework'][st].keys()):
+        hd = 'No_DSO_Type'
     ntd = hvac_setpt['num_days_telework'][st][hd][inc_lev]
     total = 0
     for k in ntd:
@@ -119,14 +127,12 @@ def telework(prob, st, hd, inc_lev):
     n_days = int(k)
     if n_days == -2:
         n_days = 0
-    if n_days == 5:
-        tw_dow = np.arange(1,6)
-    elif n_days ==6:
-        tw_dow = np.arange(1,7)
-    elif n_days > 0:
-        tw_dow = np.random.choice(np.arange(1,6),n_days,replace=False)
-    else:
+    if n_days == 0:
         tw_dow = 0
+    elif n_days >= 5:
+        tw_dow = np.arange(1,6)
+    else:
+        tw_dow = np.random.choice(np.arange(1,6),n_days,replace=False)
     return n_days, tw_dow
 
 
