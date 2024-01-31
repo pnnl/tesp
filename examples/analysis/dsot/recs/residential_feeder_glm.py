@@ -1726,10 +1726,10 @@ def write_houses(basenode, op, vnom):
         floor_area = random_norm_trunc(fa_array)  # truncated normal distribution
         floor_area = (1 + lg_v_sm) * floor_area  # adjustment depends on whether nhouses rounded up or down
         fa_rand = np.random.uniform(0, 1)
-        if floor_area > 6000:  # TODO: do we need this condition ? it was originally 4000
-            floor_area = 5800 + fa_rand * 200
-        elif floor_area < 300:
-            floor_area = 300 + fa_rand * 100
+        if floor_area > min(fa_array['max'],6000):  # TODO: do we need this condition ? it was originally 4000
+            floor_area = min(fa_array['max'],6000) + fa_rand * 200
+        elif floor_area < fa_array['min']:
+            floor_area = fa_array['min'] + fa_rand * 100
 
         # ********** residential skew and scalar for schedule files **********
         scalar1 = 324.9 / 8907 * floor_area ** 0.442
@@ -1928,13 +1928,16 @@ def write_houses(basenode, op, vnom):
         print('    power_fraction', '{:.2f}'.format(techdata[6]) + ';', file=op)
         print('  };', file=op)
         # if np.random.uniform(0, 1) <= water_heater_percentage:  # rgnPenElecWH[rgn-1]:
-        # Determine if house has matching heating types for space and water
-        if np.random.uniform(0, 1) <= res_bldg_metadata['water_heating_type'][state][res_dso_type][income][fa_bldg][vint]:
-            wh_fuel_type = house_fuel_type
-        elif house_fuel_type == 'gas': 
-            wh_fuel_type = 'electric'
-        elif house_fuel_type == 'electric': 
-            wh_fuel_type = 'gas'
+        # Determine house water heating fuel type based on space heating fuel type
+        wh_fuel_type = 'gas'
+        # if np.random.uniform(0, 1) <= res_bldg_metadata['water_heating_type'][state][res_dso_type][income][fa_bldg]:
+        #     wh_fuel_type = house_fuel_type
+        if house_fuel_type == 'gas':
+            if np.random.uniform(0, 1) <= res_bldg_metadata['water_heating_fuel'][state][res_dso_type][income][fa_bldg]['sh_gas']['electric']:            
+                wh_fuel_type = 'electric'
+        elif house_fuel_type == 'electric':
+            if np.random.uniform(0, 1) <= res_bldg_metadata['water_heating_fuel'][state][res_dso_type][income][fa_bldg]['sh_electric']['electric']:            
+                wh_fuel_type = 'electric'
         if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
             heat_element = 3.0 + 0.5 * np.random.randint(1, 6)  # numpy randint (lo, hi) returns lo..(hi-1)
             tank_set = 110 + 16 * np.random.uniform(0, 1)
@@ -2019,15 +2022,27 @@ def write_houses(basenode, op, vnom):
         # Solar percentage should be defined here only from RECS data based on income level
         # solar_percentage = res_bldg_metadata['solar_pv'][state][dso_type][income][fa_bldg]
         # Calculate the solar, storage, and ev percentage based on the income level
+        # Chain rule for conditional probabilities
+        # P(solar and income and SF)
+        p_sol_inc_sf = solar_percentage*res_bldg_metadata['solar_percentage'][income]
+        # P(SF|income)
+        p_sf_g_inc = res_bldg_metadata['housing_type'][state][res_dso_type][income]['single_family_detached']+res_bldg_metadata['housing_type'][state][res_dso_type][income]['single_family_attached']
+        # P(income)
         il_percentage = res_bldg_metadata['income_level'][state][res_dso_type][income]
-        solar_percentage_il = (solar_percentage * res_bldg_metadata['solar_percentage'][income])/il_percentage
-        storage_percentage_il = (storage_percentage * res_bldg_metadata['battery_percentage'][income])/il_percentage
-        ev_percentage_il = (ev_percentage * res_bldg_metadata['ev_percentage'][income])/il_percentage
+        # P(solar|income and SF)
+        sol_g_inc_sf = p_sol_inc_sf/(p_sf_g_inc*il_percentage)
+        # P(battery and solar and SF and income)
+        p_bat_sol_sf_inc = storage_percentage*res_bldg_metadata['battery_percentage'][income]
+        # P(battery|solar and SF and income)
+        bat_g_sol_sf_inc = p_bat_sol_sf_inc/(sol_g_inc_sf*p_sf_g_inc*il_percentage)
+        # P(ev|income)
+        ev_percentage_il = (ev_percentage * res_bldg_metadata['ev_percentage'][income])/il_percentage    
+
         if bldg == 0:  # Single-family homes
-            if solar_percentage_il > 0.0:
+            if sol_g_inc_sf > 0.0:
                 pass
                 # bConsiderStorage = False
-            if np.random.uniform(0, 1) <= solar_percentage_il:  # some single-family houses have PV
+            if np.random.uniform(0, 1) <= sol_g_inc_sf:  # some single-family houses have PV
                 # bConsiderStorage = True
                 # This is legacy code method to find solar rating
                 # panel_area = 0.1 * floor_area
@@ -2090,61 +2105,61 @@ def write_houses(basenode, op, vnom):
                         print('    };', file=op)
                     print('  };', file=op)
                     print('}', file=op)
-        if np.random.uniform(0, 1) <= storage_percentage_il:
-            battery_capacity = get_dist(batt_metadata['capacity(kWh)']['mean'],
-                                     batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
-            max_charge_rate = get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
-                                     batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
-            max_discharge_rate = max_charge_rate
-            inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
-            charging_loss = get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
-                                     batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
-            discharging_loss = charging_loss
-            round_trip_efficiency = charging_loss * discharging_loss
-            rated_power = max(max_charge_rate, max_discharge_rate)
+                if np.random.uniform(0, 1) <= bat_g_sol_sf_inc:
+                    battery_capacity = get_dist(batt_metadata['capacity(kWh)']['mean'],
+                                            batt_metadata['capacity(kWh)']['deviation_range_per']) * 1000
+                    max_charge_rate = get_dist(batt_metadata['rated_charging_power(kW)']['mean'],
+                                            batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
+                    max_discharge_rate = max_charge_rate
+                    inverter_efficiency = batt_metadata['inv_efficiency(per)'] / 100
+                    charging_loss = get_dist(batt_metadata['rated_charging_loss(per)']['mean'],
+                                            batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
+                    discharging_loss = charging_loss
+                    round_trip_efficiency = charging_loss * discharging_loss
+                    rated_power = max(max_charge_rate, max_discharge_rate)
 
-            if case_type['bt']:
-                battery_count += 1
-                print('object triplex_meter {', file=op)
-                print('  name', bat_m_name + ';', file=op)
-                print('  parent', mtrname + ';', file=op)
-                print('  phases', phs + ';', file=op)
-                print('  nominal_voltage ' + str(vnom) + ';', file=op)
-                print('  object inverter {', file=op)
-                print('    name', bat_i_name + ';', file=op)
-                print('    phases', phs + ';', file=op)
-                print('    groupid batt_inverter;', file=op)
-                print('    generator_status ONLINE;', file=op)
-                print('    generator_mode CONSTANT_PQ;', file=op)
-                print('    inverter_type FOUR_QUADRANT;', file=op)
-                print('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
-                print('    charge_lockout_time 1;', file=op)
-                print('    discharge_lockout_time 1;', file=op)
-                print('    rated_power', '{:.2f}'.format(rated_power) + ';', file=op)
-                print('    max_charge_rate', '{:.2f}'.format(max_charge_rate) + ';', file=op)
-                print('    max_discharge_rate', '{:.2f}'.format(max_discharge_rate) + ';', file=op)
-                print('    sense_object', mtrname + ';', file=op)
-                # print('    charge_on_threshold -100;', file=op)
-                # print('    charge_off_threshold 0;', file=op)
-                # print('    discharge_off_threshold 2000;', file=op)
-                # print('    discharge_on_threshold 3000;', file=op)
-                print('    inverter_efficiency', '{:.2f}'.format(inverter_efficiency) + ';', file=op)
-                print('    power_factor 1.0;', file=op)
-                print('    object battery { // Tesla Powerwall 2', file=op)
-                print('      name', batname + ';', file=op)
-                print('      use_internal_battery_model true;', file=op)
-                print('      battery_type LI_ION;', file=op)
-                print('      nominal_voltage 480;', file=op)
-                print('      battery_capacity', '{:.2f}'.format(battery_capacity) + ';', file=op)
-                print('      round_trip_efficiency', '{:.2f}'.format(round_trip_efficiency) + ';', file=op)
-                print('      state_of_charge 0.50;', file=op)
-                print('    };', file=op)
-                if metrics_interval > 0 and "inverter" in metrics:
-                    print('    object metrics_collector {', file=op)
-                    print('      interval', str(metrics_interval) + ';', file=op)
-                    print('    };', file=op)
-                print('  };', file=op)
-                print('}', file=op)
+                    if case_type['bt']:
+                        battery_count += 1
+                        print('object triplex_meter {', file=op)
+                        print('  name', bat_m_name + ';', file=op)
+                        print('  parent', mtrname + ';', file=op)
+                        print('  phases', phs + ';', file=op)
+                        print('  nominal_voltage ' + str(vnom) + ';', file=op)
+                        print('  object inverter {', file=op)
+                        print('    name', bat_i_name + ';', file=op)
+                        print('    phases', phs + ';', file=op)
+                        print('    groupid batt_inverter;', file=op)
+                        print('    generator_status ONLINE;', file=op)
+                        print('    generator_mode CONSTANT_PQ;', file=op)
+                        print('    inverter_type FOUR_QUADRANT;', file=op)
+                        print('    four_quadrant_control_mode', storage_inv_mode + ';', file=op)
+                        print('    charge_lockout_time 1;', file=op)
+                        print('    discharge_lockout_time 1;', file=op)
+                        print('    rated_power', '{:.2f}'.format(rated_power) + ';', file=op)
+                        print('    max_charge_rate', '{:.2f}'.format(max_charge_rate) + ';', file=op)
+                        print('    max_discharge_rate', '{:.2f}'.format(max_discharge_rate) + ';', file=op)
+                        print('    sense_object', mtrname + ';', file=op)
+                        # print('    charge_on_threshold -100;', file=op)
+                        # print('    charge_off_threshold 0;', file=op)
+                        # print('    discharge_off_threshold 2000;', file=op)
+                        # print('    discharge_on_threshold 3000;', file=op)
+                        print('    inverter_efficiency', '{:.2f}'.format(inverter_efficiency) + ';', file=op)
+                        print('    power_factor 1.0;', file=op)
+                        print('    object battery { // Tesla Powerwall 2', file=op)
+                        print('      name', batname + ';', file=op)
+                        print('      use_internal_battery_model true;', file=op)
+                        print('      battery_type LI_ION;', file=op)
+                        print('      nominal_voltage 480;', file=op)
+                        print('      battery_capacity', '{:.2f}'.format(battery_capacity) + ';', file=op)
+                        print('      round_trip_efficiency', '{:.2f}'.format(round_trip_efficiency) + ';', file=op)
+                        print('      state_of_charge 0.50;', file=op)
+                        print('    };', file=op)
+                        if metrics_interval > 0 and "inverter" in metrics:
+                            print('    object metrics_collector {', file=op)
+                            print('      interval', str(metrics_interval) + ';', file=op)
+                            print('    };', file=op)
+                        print('  };', file=op)
+                        print('}', file=op)
         if np.random.uniform(0, 1) <= ev_percentage_il:
             # first lets select an ev model:
             ev_name = selectEVmodel(ev_metadata['sale_probability'], np.random.uniform(0, 1))
