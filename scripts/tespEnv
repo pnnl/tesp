@@ -1,4 +1,4 @@
-. $HOME/.tvenv/bin/activate
+. $HOME/venv/bin/activate
 
 # TESP exports
 export TESPDIR=$HOME/tesp

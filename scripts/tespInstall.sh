@@ -25,7 +25,7 @@ echo "Install TESP home directory"
 echo "TESP home dirctory is $WORKDIR"
 
 cat > "$HOME/tespEnv" << EOF
-. $HOME/.tvenv/bin/activate
+. $HOME/venv/bin/activate
 
 # TESP exports
 export TESPDIR=$WORKDIR
@@ -64,10 +64,10 @@ export PSST_WARNING=ignore
 EOF
 
 echo
-echo "Install a virtual python environment to $HOME/.tvenv"
+echo "Install a virtual python environment to $HOME/venv"
 python3 -m pip install --upgrade pip
 python3 -m pip install virtualenv
-python3 -m venv "$HOME/.tvenv" --prompt TESP
+python3 -m venv "$HOME/venv" --prompt TESP
 
 source "$HOME/tespEnv"
 
