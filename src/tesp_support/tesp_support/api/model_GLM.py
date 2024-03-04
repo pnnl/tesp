@@ -222,9 +222,7 @@ class GLModel:
                 self.conn = sqlite3.connect(filename)
                 print("Opened database successfully")
             except:
-                self.conn = None
-                print("Database Sqlite3.db not formed")
-                return False
+                raise FileNotFoundError(f"Unable to form database at {filename}")
 
             for name in self.module_entities:
                 self.module_entities[name].toSQLite(self.conn)
@@ -353,7 +351,7 @@ class GLModel:
                 diction += self.get_diction(self.module_entities, "clock", self.instanceToModule, "clock")
             diction += "\n"
         except:
-            print("No clock has been defined")
+            raise AttributeError("No 'clock' defined in model.")
 
         # Write the sets commands
         for name in self.set_lines:
@@ -417,10 +415,7 @@ class GLModel:
                 self.conn = sqlite3.connect(filename)
                 print("Opened database successfully")
             except:
-                self.conn = None
-                print("Database Sqlite3.db not formed")
-                return False
-
+                raise FileNotFoundError(f"Unable to form database at {filename}")
             for name in self.module_entities:
                 self.module_entities[name].instanceToSQLite(self.conn)
             for name in self.object_entities:
@@ -444,7 +439,7 @@ class GLModel:
                         entity.add_attr('TEXT', items[0], "", items[0], "")
                     return entity.set_instance(mod_type, params)
         else:
-            print("GRIDLABD module type is not a string")
+            raise TypeError(f"{mod_type} must be a string and is not.")
         return None
 
     def get_module_instance(self, mod_type):
@@ -455,7 +450,7 @@ class GLModel:
             except:
                 print("Unrecognized GRIDLABD module:", mod_type)
         else:
-            print("GRIDLABD module is not a string")
+            raise TypeError(f"{mod_type} must be a string and is not.")
         return None
 
     def set_object_instance(self, obj_type, object_name, params):
@@ -473,7 +468,8 @@ class GLModel:
                 else:
                     print("Unrecognized user class/object and id:", obj_type, object_name)
         else:
-            print("GRIDLABD object type and/or object name is not a string")
+            raise TypeError(f"GRIDLABD object type and/or object name {obj_type} 
+                            must be a string and is not.")
         return None
 
     def get_object_instance(self, obj_type, object_name):
@@ -484,7 +480,8 @@ class GLModel:
             except:
                 print("Unrecognized GRIDLABD object and id:", obj_type, object_name)
         else:
-            print("GRIDLABD object name and/or object id is not a string")
+            raise TypeError(f"GRIDLABD object type and/or object name {obj_type} 
+                            must be a string and is not.")
         return None
 
     @staticmethod
@@ -726,8 +723,7 @@ class GLModel:
                     # found a nested object
                     intobj += 1
                     if name is None:
-                        print('ERROR: nested object defined before parent name')
-                        quit()
+                        raise RuntimeError("nested object defined before parent name")
                     line, counter, lname = self.glm_object(name, line, itr, oidh, counter)
                 else:
                     # found a parameter val
@@ -837,7 +833,7 @@ class GLModel:
                     name = ""
             return True
         else:
-            print('File name not found')
+            raise FileNotFoundError(f"{filename} not found")
         return False
 
     def readBackboneModel(self, root_name):
@@ -864,8 +860,7 @@ class GLModel:
         try:
             op = open(filepath, "w+")
         except:
-            print("Unable to open output file")
-            return False
+            raise FileNotFoundError(f"{filepath} unable to be opened for writing")
 
         # we can write using instance objects
         print(self.instancesToGLM(), file=op)
