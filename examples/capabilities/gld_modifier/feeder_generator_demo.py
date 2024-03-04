@@ -52,19 +52,22 @@ pp = pprint.PrettyPrinter(indent=4, )
 
 
 def _auto_run(args):
-    feeder_path = os.path.join(args.feeder_path, args.feeder_file)
+    feeder_path = os.path.join(feeders_path, args.feeder_file)
     glmMod = GLMModifier()
     glm, success = glmMod.read_model(feeder_path)
     if not success:
-        print('File not found or file not supported, exiting!')
+        print('{feeder_path}} not found or file not supported; exiting')
 
-    glmMod.add_module("residential", [])
+    
+    # Check to see if residential module is in the model now. If not, add it in.
+    # The residential module is needed to simulate houses in GridLAB-D.
+    if len(glmMod.model.module_entities["residential"].instances) == 0:
+        glmMod.add_module("residential", [])
 
     # Houses have to be associated with triplex_meters so we just as for a list of meters
     # Returns a dictionary where the meters names are the keys and values are the
     # GridLAB-D parameter values.
-    tp_meter_objs = glm.triplex_meter
-    tp_meter_names = list(tp_meter_objs.keys())
+    tp_meter_names = list(glmMod.glm.triplex_meter)
     num_houses_to_add = 11
     # Create dictionaries (with GridLAB-D parameter values) for new houses to be added
     for house_num in range(num_houses_to_add):
@@ -77,22 +80,22 @@ def _auto_run(args):
             "parent": new_name,
             "phases": glm.triplex_meter[f"{new_name}"]["phases"],
             "nominal_voltage": glm.triplex_meter[f"{new_name}"]["nominal_voltage"],
-        }
+        }        
 
         # Only adding print out for the first time through the loop, so I don't flood the terminal.
         if house_num == 0:
             print(
                 "Demonstrating addition of an object (triplex_meter in this case) to GridLAB-D model."
             )
-            num_tp_meters = len(tp_meter_objs)
-            print(f"\tNumber of triplex meters: {num_tp_meters}")
+            num_tp_meters = len(tp_meter_names)
+            print(f"\tNumber of triplex meters before adding one: {num_tp_meters}")
             print(f"\tAdding triplex_meter {billing_meter_name} to model.")
         glmMod.add_object("triplex_meter", billing_meter_name, meter_params)
         if house_num == 0:
-            num_tp_meters = len(glm.triplex_meter)
-            print(f"\tNumber of triplex meters: {num_tp_meters}")
+            num_tp_meters = len(glmMod.glm.triplex_meter)
+            print(f"\tNumber of triplex meters after adding one: {num_tp_meters}")
 
-        # Add a meter just to capture the house energy consumption
+        # Add a meter to capture just the house energy consumption
         house_meter_name = f"{new_name}_house"
         meter_params = {
             "parent": billing_meter_name,
@@ -110,10 +113,12 @@ def _auto_run(args):
         if house_num == 0:
             house_to_delete = house_name
 
-        # Ideally, these parameters for the house objects are not hard-coded like this. Good alternatives:
+        # Ideally, these parameters for the house objects are not hard-coded like this. 
+        # Good alternatives:
         #   - Make an external JSON that defines each house and reads them in
-        #   - Use algorithms and data like RECS to define random values for each house. This is what feeder_generator
-        #       has historically done in the past.
+        #   - Use algorithms and data like RECS to define random values for each house. 
+        #       This is what feeder_generator has historically done in the past.
+        #       TESP provides this functionality through TODO.
 
         # Defining these parameters in a silly way just so each one is unique.
         house_params = {
@@ -184,7 +189,7 @@ def _auto_run(args):
     if "Rroof" in house_to_edit.keys():
         print(f'\tCurrent "Rroof" is {house_to_edit["Rroof"]}')
     else:
-        print(f'\t"Rroof" for house {house_name} is undefined.')
+        print(f'\t"Rroof" for house {house_name} is undefined.\n')
 
     # You can also just remove an entire object instance from the model (if you know the GLD object type and its name)
     #   To prevent electrical islands, this method also deletes all downstream objects associated through a
@@ -349,10 +354,6 @@ def demo():
 
     parser = argparse.ArgumentParser(description="GridLAB-D Feeder Generator")
     # script_path = os.path.dirname(os.path.realpath(__file__))
-    parser.add_argument('-p',
-                        '--feeder_path',
-                        nargs='?',
-                        default='../../../data/feeders')
     parser.add_argument('-n',
                         '--feeder_file',
                         nargs='?',
