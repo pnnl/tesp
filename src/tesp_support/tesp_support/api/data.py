@@ -30,21 +30,21 @@ components = ["",
 if 'TESPDIR' in environ:
     tesp_path = environ['TESPDIR']
 else:
-    tesp_path = path.expanduser('~') + '/tesp'
+    tesp_path = path.join(path.expanduser('~'), 'tesp')
 
 # uncomment for debug
-# tesp_path = path.expanduser('~') + '/tesp'
+# tesp_path = path.join(path.expanduser('~'), 'tesp')
 # chdir(tesp_path)
-# tesp_path = path.expanduser('~') + '/tesp/tesp'
+# tesp_path = path.join(path.expanduser('~'), 'tesp', 'tesp')
 
 if path.isdir(tesp_path):
     for _dir in components:
-        tmp = tesp_path + '/' + _dir
+        tmp = path.join(tesp_path, _dir)
         if path.isdir(tmp):
-            # print(tmp + " directory has been installed for TESP")
+            # print(f"{tmp} directory has been installed for TESP")
             pass
         else:
-            # print(tmp + " directory has NOT been installed for TESP")
+            # print(f"{tmp} directory has NOT been installed for TESP")
             pass
 else:
     # New instance
@@ -63,17 +63,17 @@ else:
         pass
 
 
-tesp_share = path.expandvars(tesp_path + '/data/')
-comm_path = tesp_share + 'comm/'
-energyplus_path = tesp_share + 'energyplus/'
-feeders_path = tesp_share + 'feeders/'
-scheduled_path = tesp_share + 'schedules/'
-weather_path = tesp_share + 'weather/'
+tesp_share = path.expandvars(path.join(tesp_path, 'data'))
+comm_path = path.join(tesp_share, 'comm')
+energyplus_path = path.join(tesp_share, 'energyplus')
+feeders_path = path.join(tesp_share, 'feeders')
+scheduled_path = path.join(tesp_share, 'schedules')
+weather_path = path.join(tesp_share, 'weather')
 
-tesp_model = path.expandvars(tesp_path + '/models/')
-pypower_path = tesp_model + 'pypower/'
+tesp_model = path.expandvars(path.join(tesp_path, 'models'))
+pypower_path = path.join(tesp_model, 'pypower')
 
-tesp_test = path.expandvars(tesp_path + '/src/tesp_support/test/')
+tesp_test = path.expandvars(path.join(tesp_path, 'src', 'tesp_support', 'test'))
 
 glm_entities_path = files('tesp_support.api.datafiles').joinpath('glm_classes.json')
 piq_entities_path = files('tesp_support.api.datafiles').joinpath('grid_PIQ.json')
@@ -99,7 +99,7 @@ def arguments(description="", args=""):
         if _args.input_file is None:
             _error = True
         elif not path.isfile(_args.input_file[0]):
-            print('ERROR-> Input file ' + _args.input_file[0] + ' not found')
+            print(f'ERROR-> Input file  {_args.input_file[0]} not found')
             _error = True
     if 'p' in args:
         if _args.port is None:
@@ -114,7 +114,7 @@ def arguments(description="", args=""):
         if _args.output_dir is None:
             _error = True
         elif not path.isdir(_args.output_dir[0]):
-            print('ERROR-> Output directory ' + _args.output_dir[0] + ' not found')
+            print(f'ERROR-> Output directory {_args.output_dir[0]} not found')
             _error = True
     if _error:
         print(description + "\nNothing loaded, desired input needed")
@@ -146,12 +146,12 @@ def tesp_component():
         print("Bad choice, choose 1 through 9")
         return
 
-    component = tesp_path + '/' + components[choice]
+    component = path.join(tesp_path, components[choice])
     if path.isdir(component):
-        print("It seems we have a copy of " + component)
+        print(f"It seems we have a copy of {component}")
         return
 
     # can proceed with the copy
     chdir(tesp_path)
     subprocess.Popen(parcel, shell=False).wait()
-    print('Output directory: ', tesp_path + "/" + components[choice])
+    print(f'Output directory: {tesp_path}/{components[choice]}')
