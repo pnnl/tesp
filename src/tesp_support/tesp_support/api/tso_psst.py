@@ -1343,7 +1343,7 @@ def tso_psst_loop(casename):
             genFuel[i][3] = 1                  # turn on generator
         if genFuel[i][0] not in renewables:
             # gen[i, 1] = gen[i, 8]              # set to maximum real power output (MW)
-            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * 0.55)
+            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * 0.85)
 
     # copy of originals for outages
     ugen = deepcopy(gen)

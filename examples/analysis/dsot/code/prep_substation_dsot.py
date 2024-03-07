@@ -19,7 +19,7 @@ from tesp_support.api.helpers import random_norm_trunc
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
 # write the json agent dictionary for post-processing, and run-time configuration of substation.py
 
-# we want the same psuedo-random thermostat schedules each time, for repeatability
+# we want the same pseudo-random thermostat schedules each time, for repeatability
 np.random.seed(0)
 
 
@@ -31,7 +31,7 @@ def select_setpt_occ(prob, mode):
     for row in range(len(temp)):
         total += temp[row][1]
         if total >= prob * 100:
-            if temp[row][0] == -2:  # means they dont use hvac unit
+            if temp[row][0] == -2:  # means they do not use hvac unit
                 if mode == 'cool':
                     return 100  # AC is off most of time for such houses
                 elif mode == 'heat':
@@ -191,7 +191,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                     eligible_cust += 1
         inelig_per = ineligible_cust / (ineligible_cust + eligible_cust) * 100
 
-        # 2. Now check how much % is remaining of requested non participating (transactive) houses
+        # 2. Now check how much % is remaining of requested non-participating (transactive) houses
         requested_non_trans_cust_per = (100 - trans_cust_per)
         rem_non_trans_cust_per = requested_non_trans_cust_per - inelig_per
         if rem_non_trans_cust_per < 0:
@@ -202,7 +202,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         else:
             print("{} % of houses will be participating!".format(trans_cust_per))
 
-        # 3. Find out % of houses that needs to be set non particpating out of total eligible houses
+        # 3. Find out % of houses that needs to be set non-participating out of total eligible houses
         # For example: if ineligible houses are 5% and requested non-transactive houses is 20%, we only need to set
         # participating as false in 15% of the total houses which means 15/95% houses of the total eligible houses
         eff_non_participating_per = rem_non_trans_cust_per / (100 - inelig_per)
@@ -340,7 +340,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         weekend_day_set_heat = occ_comm_heat_setpoint
                         weekend_night_set_heat = night_set_heat
                     else:
-                        # New schedule to implmement CBEC's data
+                        # New schedule to implement CBEC's data
                         wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
                         daylight_start = wakeup_start + random_norm_trunc(
                             thermostat_schedule_config['WeekdayWakeToDaylightTime'])
@@ -927,7 +927,7 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
     - *gldfileroot_substation.json*, contains HELICS subscriptions for the all control agents
     - *gldfileroot_gridlabd.json*, a GridLAB-D include file with HELICS publications and subscriptions
 
-    Futhermore reads either the jsonfile or config dictionary.
+    Furthermore, reads either the jsonfile or config dictionary.
     This supplemental data includes time-scheduled thermostat setpoints (NB: do not use the scheduled
     setpoint feature within GridLAB-D, as the first messages will erase those schedules during
     simulation).
