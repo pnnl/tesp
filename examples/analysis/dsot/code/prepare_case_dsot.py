@@ -19,21 +19,22 @@ import tesp_support.dsot.helpers_dsot as helpers
 import tesp_support.dsot.case_merge as cm
 import tesp_support.dsot.glm_dictionary as gd
 
-recs = ""
 # recs_data = False
 recs_data = True
 if recs_data:
-    recs = "RECS"
+    rcs = "RECS"
     sys.path.append('../')
     import recs.commercial_feeder_glm as com_FG
     import recs.copperplate_feeder_glm as cp_FG
     import recs.residential_feeder_glm as res_FG
     import recs.prep_substation_recs as prep
 else:
+    rcs = ""
     import tesp_support.original.commercial_feeder_glm as com_FG
     import tesp_support.original.copperplate_feeder_glm as cp_FG
     import tesp_support.dsot.residential_feeder_glm as res_FG
     import prep_substation_dsot as prep
+
 
 # Simulation settings for the experimental case
 def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
@@ -70,10 +71,10 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     with open(os.path.join(data_Path, sys_config['dsoAgentFile']), 'r', encoding='utf-8') as json_file:
         case_config = json.load(json_file)
     # loading building and DSO metadata
-    with open(os.path.join(data_Path, sys_config['dso' + recs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_Path, sys_config['dso' + rcs + 'PopulationFile']), 'r', encoding='utf-8') as json_file:
         dso_config = json.load(json_file)
     # loading residential metadata
-    with open(os.path.join(data_Path, sys_config['dso' + recs + 'ResBldgFile']), 'r', encoding='utf-8') as json_file:
+    with open(os.path.join(data_Path, sys_config['dso' + rcs + 'ResBldgFile']), 'r', encoding='utf-8') as json_file:
         res_config = json.load(json_file)
     # loading commercial building metadata
     with open(os.path.join(data_Path, sys_config['dsoCommBldgFile']), 'r', encoding='utf-8') as json_file:
@@ -248,9 +249,6 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         if recs_data:
             sim['state'] = dso_val['state']
             sim['income_level'] = dso_val['income_level']
-        if recs_data:
-            sim['state'] = dso_val['state']
-            sim['income_level'] = dso_val['income_level']
         sim['rooftop_pv_rating_MW'] = dso_val['rooftop_pv_rating_MW']
         sim['scaling_factor'] = dso_val['scaling_factor']
         sim['serverPort'] = 5150 + (int(bus) // 20)
@@ -362,26 +360,17 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                         caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
             # Next we create the agent dictionary along with the substation YAML file
-            if recs_data:
-                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                    caseName + '/' + dso_key + '/' + feed_key,
-                                    caseName + '/' + weather_agent_name + '/',
-                                    feedercnt,
-                                    config=case_config,
-                                    hvacSetpt=hvac_setpt,
-                                    Q_forecast=sim['Q_bid_forecast_correction'],
-                                    Q_dso_key=dso_key,
-                                    usState=sim['state'], 
-                                    dsoType=dso_val['utility_type'])
-            else:
-                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                    caseName + '/' + dso_key + '/' + feed_key,
-                                    caseName + '/' + weather_agent_name + '/',
-                                    feedercnt,
-                                    config=case_config,
-                                    hvacSetpt=hvac_setpt,
-                                    Q_forecast=sim['Q_bid_forecast_correction'],
-                                    Q_dso_key=dso_key)
+            prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                caseName + '/' + dso_key + '/' + feed_key,
+                                caseName + '/' + weather_agent_name + '/',
+                                feedercnt,
+                                config=case_config,
+                                hvacSetpt=hvac_setpt,
+                                Q_forecast=sim['Q_bid_forecast_correction'],
+                                Q_dso_key=dso_key,
+                                usState=sim['state'],
+                                dsoType=dso_val['utility_type'])
+
             feedercnt += 1
             print("=== DONE WITH FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
@@ -414,7 +403,9 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                                      config=case_config,
                                      hvacSetpt=hvac_setpt,
                                      Q_forecast=sim['Q_bid_forecast_correction'],
-                                     Q_dso_key=dso_key)
+                                     Q_dso_key=dso_key,
+                                     usState=sim['state'],
+                                     dsoType=dso_val['utility_type'])
                 feedercnt += 1
                 print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 

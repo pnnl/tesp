@@ -179,9 +179,9 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     ineligible_cust = 0
     eligible_cust = 0
     # Customer Participation Strategy: Whether a customer (billing meter) will participate or not
-    # 1. First find out the % of customers ineligible to participate:
-    # % of customers without cooling and with gas fuel type
     if gd['billingmeters']:
+        # 1. First find out the % of customers ineligible to participate:
+        # % of customers without cooling and with gas fuel type
         for key, val in gd['billingmeters'].items():
             if val['children']:
                 hse = gd['houses'][val['children'][0]]

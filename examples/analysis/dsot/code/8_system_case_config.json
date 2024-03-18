@@ -200,6 +200,7 @@
   "archivePath": "/mnt/simdata/done",
   "version": "2",
   "baseMVA": 100.0,
+  "genPowerLevel": 0.85,
   "genPower": true,
   "renewables": [
     "wind"
@@ -4975,6 +4976,7 @@
     "agent_debug_mode": "ON==1 for allowing only hvac or only wh participation within flexLoadCase",
     "ames": "true == ames running, false == pypower running opf",
     "solver": "The name for the solver for ames",
+    "market": "false == turn market off (biding agents), true == turn market on (biding agents)",
     "priceSensLoad": "true == Substation load is flexible, false == only inflexible load",
     "windPower": "true == wind power, false == no wind power",
     "noScale": "FNCS gld_scale set to 1 if false",
@@ -4988,6 +4990,7 @@
     "version": "Version Number",
     "baseMVA": "conversion facter to p.u.",
     "metricsFullDetail": "level of reporting detail you want -> false for limited, true for full level of detail",
+    "genPowerLevel": "0.0 - 1.0 generation power level at start up, 1.0 == 100 percent on",
     "genPower": " true=renewables are turn on,  false=renewables are turn off",
     "renewables": "Set of renewable names, those can be 'wind', 'solar'",
     "keyLoad": "The key to be used for the load player -> refLoadMn, readLoadHr or indLoad, should be sync with Startdate",
