@@ -141,7 +141,7 @@ def load_price_data(dir_path, market_type, dso_num, simdata, place):
     return prices_data
 
 
-def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, place='Houston'):
+def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, place='Houston', monthly_data=False):
     """ Computes the total costs, total energy purchases and average price annually for bilateral,
     day-ahead and real-time markets from hourly and 5 min ERCOT energy and price data.
 
@@ -292,10 +292,24 @@ def Wh_Energy_Purchases(dir_path, dso_num, simdata=False, h1=5, h2=16, h3=20, pl
                                    WhBLPurchasesMonthly, WhDAPurchasesMonthly, WhRTPurchasesMonthly,
                                    WhBLPriceMonthly, WhDAPriceMonthly, WhRTPriceMonthly], axis=1)
 
-    Monthly_Purchases.rename(columns={'Fixed Quantity (MW)': 'Bilateral (MWh)', ' Bus1': 'Real-time (MWh)',
-                                      0: 'Bilateral Purchases ($)', 1: 'Day-ahead ($)', 2: 'Real-time ($)',
-                                      3: 'Bilateral Avg Price ($/MWh)', 4: 'Day-ahead Avg Price ($/MWh)',
-                                      5: 'Real-time Avg Price ($/MWh)'}, inplace=True)
+    Monthly_Purchases.rename(
+        columns={
+            "Fixed Quantity (MW)": "Bilateral Energy (MWh)",
+            "Day-ahead (MWh)": "Day-Ahead Energy (MWh)",
+            0: "Real-Time Energy (MWh)",
+            1: "Bilateral Purchases ($)",
+            2: "Day-Ahead Purchases ($)",
+            3: "Real-Time Purchases ($)",
+            4: "Bilateral Average Price ($/MWh)",
+            5: "Day-Ahead Average Price ($/MWh)",
+            6: "Real-Time Average Price ($/MWh)",
+        },
+        inplace=True,
+    )
+
+    # Return the monthly data instead of the annual data, if prompted by the user
+    if monthly_data:
+        return Monthly_Purchases
 
     # TO DO: Change the following path for the monthly purchases csv to the desired location
     # Monthly_Purchases.to_csv(r'C:/Users/mayh819/PycharmProjects/tesp-private/tesp-private/{}_DSO_{}_Monthly_Purchases.csv'.format(place,dso_num))
