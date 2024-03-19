@@ -101,6 +101,7 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
     # print(json.dumps(ev_model_config, sort_keys = True, indent = 2))
     # print(json.dumps(hvac_setpt, sort_keys = True, indent = 2))
 
+    port = str(sys_config['port'])
     caseName = sys_config['caseName']
     start_time = sys_config['StartTime']
     end_time = sys_config['EndTime']
@@ -360,17 +361,26 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                         caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
             # Next we create the agent dictionary along with the substation YAML file
-            prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                caseName + '/' + dso_key + '/' + feed_key,
-                                caseName + '/' + weather_agent_name + '/',
-                                feedercnt,
-                                config=case_config,
-                                hvacSetpt=hvac_setpt,
-                                Q_forecast=sim['Q_bid_forecast_correction'],
-                                Q_dso_key=dso_key,
-                                usState=sim['state'],
-                                dsoType=dso_val['utility_type'])
-
+            if recs_data:
+                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                     caseName + '/' + dso_key + '/' + feed_key,
+                                     caseName + '/' + weather_agent_name + '/',
+                                     feedercnt,
+                                     config=case_config,
+                                     hvacSetpt=hvac_setpt,
+                                     Q_forecast=sim['Q_bid_forecast_correction'],
+                                     Q_dso_key=dso_key,
+                                     usState = sim['state'],
+                                     dsoType = dso_val['utility_type'])
+            else:
+                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                     caseName + '/' + dso_key + '/' + feed_key,
+                                     caseName + '/' + weather_agent_name + '/',
+                                     feedercnt,
+                                     config=case_config,
+                                     hvacSetpt=hvac_setpt,
+                                     Q_forecast=sim['Q_bid_forecast_correction'],
+                                     Q_dso_key=dso_key)
             feedercnt += 1
             print("=== DONE WITH FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 
@@ -396,16 +406,26 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
                             caseName + '/' + dso_key + '/' + feed_key + '_glm_dict.json')
 
                 # Next we create the agent dictionary along with the substation YAML file
-                prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
-                                     caseName + '/' + dso_key + '/' + feed_key,
-                                     caseName + '/' + weather_agent_name + '/',
-                                     feedercnt,
-                                     config=case_config,
-                                     hvacSetpt=hvac_setpt,
-                                     Q_forecast=sim['Q_bid_forecast_correction'],
-                                     Q_dso_key=dso_key,
-                                     usState=sim['state'],
-                                     dsoType=dso_val['utility_type'])
+                if recs_data:
+                    prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                         caseName + '/' + dso_key + '/' + feed_key,
+                                         caseName + '/' + weather_agent_name + '/',
+                                         feedercnt,
+                                         config=case_config,
+                                         hvacSetpt=hvac_setpt,
+                                         Q_forecast=sim['Q_bid_forecast_correction'],
+                                         Q_dso_key=dso_key,
+                                         usState = sim['state'],
+                                         dsoType = dso_val['utility_type'])
+                else:
+                    prep.prep_substation(caseName + '/' + feed_key + '/' + feed_key,
+                                         caseName + '/' + dso_key + '/' + feed_key,
+                                         caseName + '/' + weather_agent_name + '/',
+                                         feedercnt,
+                                         config = case_config,
+                                         hvacSetpt = hvac_setpt,
+                                         Q_forecast = sim['Q_bid_forecast_correction'],
+                                         Q_dso_key = dso_key)
                 feedercnt += 1
                 print("=== DONE WITH COPPERPLATE FEEDER {0:s} for {1:s}. ======\n".format(feed_key, dso_key))
 

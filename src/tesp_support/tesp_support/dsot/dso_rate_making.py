@@ -150,16 +150,14 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         DA_price_df.columns = DA_price_df.columns.droplevel()
         DA_retail_df = load_da_retail_price(dir_path, '/DSO_', dso_num, str(day))
         # Load meter data
-        substation_meta_df, substation_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day),
-                                                                  'substation')
+        substation_meta_df, substation_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'substation')
         substation_data_df = substation_data_df.set_index(['time'])
+
         meter_meta_df, meter_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'billing_meter')
-
         meter_data_df['date'] = meter_data_df['date'].str.replace('CDT', '', regex=True)
-
         meter_data_df['date'] = pd.to_datetime(meter_data_df['date'])  #, infer_datetime_format=True)
-        # meter_data_df['date'] = meter_data_df['date'].apply(pd.to_datetime(infer_datetime_format=True))
         meter_data_df = meter_data_df.set_index(['time', 'name'])
+
         for each in metadata['billingmeters']:
             # Calculate standard customer energy consumption metrics used for all customers (including baseline)
             # temp = meter_data_df[meter_data_df['name'].str.contains(each)]

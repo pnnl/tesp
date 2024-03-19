@@ -1949,6 +1949,7 @@ def inner_substation_loop(metrics_root, with_market):
     op.close()
     helics.helicsFederateDestroy(hFed)
 
+
 def dso_loop(metrics_root, with_market):
     """ Wrapper for *inner_substation_loop*
 

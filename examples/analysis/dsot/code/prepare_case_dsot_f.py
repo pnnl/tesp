@@ -26,7 +26,7 @@ import prep_substation_dsot_f as prep
 # Simulation settings for the experimental case
 def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
 
-    # We need to load in the master metadata (*system_case_config.josn)
+    # We need to load in the master metadata (*system_case_config.json)
     with open(mastercase + '.json', 'r', encoding='utf-8') as json_file:
         sys_config = json.load(json_file)
 
@@ -319,7 +319,8 @@ def prepare_case(node, mastercase, pv=None, bt=None, fl=None, ev=None):
         except:
             pass
 
-        # (Laurentiu Marinovici 11/07/2019) but now, we are going to copy the .dat file from its location into the weather agent folder
+        # (Laurentiu Marinovici 11/07/2019)
+        # we are going to copy the .dat file from its location into the weather agent folder
         shutil.copy(os.path.join(os.path.abspath(sys_config['WeatherDataSourcePath']), dso_val['weather_file']),
                     os.path.join(os.path.abspath(caseName), weather_agent_name, 'weather.dat'))
 

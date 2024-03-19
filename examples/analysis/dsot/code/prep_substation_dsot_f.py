@@ -18,7 +18,7 @@ from tesp_support.api.helpers import random_norm_trunc
 # write txt for gridlabd to subscribe house setpoints and meter price; publish meter voltages
 # write the json agent dictionary for post-processing, and run-time configuration of substation.py
 
-# we want the same psuedo-random thermostat schedules each time, for repeatability
+# we want the same pseudo-random thermostat schedules each time, for repeatability
 np.random.seed(0)
 
 
@@ -30,7 +30,7 @@ def select_setpt_occ(prob, mode):
     for row in range(len(temp)):
         total += temp[row][1]
         if total >= prob * 100:
-            if temp[row][0] == -2:  # means they dont use hvac unit
+            if temp[row][0] == -2:  # means they do not use hvac unit
                 if mode == 'cool':
                     return 100  # AC is off most of time for such houses
                 elif mode == 'heat':
@@ -178,9 +178,9 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
     ineligible_cust = 0
     eligible_cust = 0
     # Customer Participation Strategy: Whether a customer (billing meter) will participate or not
-    # 1. First find out the % of customers ineligible to participate:
-    # % of customers without cooling and with gas fuel type
     if gd['billingmeters']:
+        # 1. First find out the % of customers ineligible to participate:
+        # % of customers without cooling and with gas fuel type
         for key, val in gd['billingmeters'].items():
             if val['children']:
                 hse = gd['houses'][val['children'][0]]
@@ -190,7 +190,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                     eligible_cust += 1
         inelig_per = ineligible_cust / (ineligible_cust + eligible_cust) * 100
 
-        # 2. Now check how much % is remaining of requested non participating (transactive) houses
+        # 2. Now check how much % is remaining of requested non-participating (transactive) houses
         requested_non_trans_cust_per = (100 - trans_cust_per)
         rem_non_trans_cust_per = requested_non_trans_cust_per - inelig_per
         if rem_non_trans_cust_per < 0:
@@ -201,7 +201,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         else:
             print("{} % of houses will be participating!".format(trans_cust_per))
 
-        # 3. Find out % of houses that needs to be set non particpating out of total eligible houses
+        # 3. Find out % of houses that needs to be set non-participating out of total eligible houses
         # For example: if ineligible houses are 5% and requested non-transactive houses is 20%, we only need to set
         # participating as false in 15% of the total houses which means 15/95% houses of the total eligible houses
         eff_non_participating_per = rem_non_trans_cust_per / (100 - inelig_per)
@@ -339,7 +339,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         weekend_day_set_heat = occ_comm_heat_setpoint
                         weekend_night_set_heat = night_set_heat
                     else:
-                        # New schedule to implmement CBEC's data
+                        # New schedule to implement CBEC's data
                         wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
                         daylight_start = wakeup_start + random_norm_trunc(
                             thermostat_schedule_config['WeekdayWakeToDaylightTime'])
@@ -881,6 +881,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
         print('    default: 0', file=yp)
 
     for key, val in battery_agents.items():
+        # key is the name of inverter resource
         battery_name = val['batteryName']
         print('  ' + key + '#SOC:', file=yp)
         print('    topic: ' + gld_sim_name + '/' + battery_name + '/state_of_charge', file=yp)
@@ -922,7 +923,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     yp.close()
 
-    # write GridLAB-D FNCS configuration
+    # write GridLAB-D FNCS message configuration
     op = open(gldfileroot + '_gridlabd.txt', 'w')
     print('publish "commit:network_node.distribution_load -> distribution_load; 1000";', file=op)
     # JH removed as we do not currently have the TSO in the federation
@@ -988,6 +989,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
               + substation_sim_key + '/upper_tank_setpoint";', file=op)
 
     for key, val in battery_agents.items():
+        # key is the name of inverter resource
         inverter_name = key
         battery_name = val['batteryName']
         substation_sim_key = substation_name + '/' + key
@@ -1022,7 +1024,7 @@ def prep_substation(gldfileroot, substationfileroot, weatherfileroot, feedercnt,
     - *gldfileroot_substation.yaml*, contains FNCS subscriptions for the all control agents
     - *gldfileroot_gridlabd.txt*, a GridLAB-D include file with FNCS publications and subscriptions
 
-    Futhermore reads either the jsonfile or config dictionary.
+    Furthermore, reads either the jsonfile or config dictionary.
     This supplemental data includes time-scheduled thermostat setpoints (NB: do not use the scheduled
     setpoint feature within GridLAB-D, as the first messages will erase those schedules during
     simulation).

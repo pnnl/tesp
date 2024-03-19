@@ -904,11 +904,12 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
 
     for key, val in battery_agents.items():
         # key is the name of inverter resource
+        inverter_name = key
         battery_name = val['batteryName']
         substation_sim_key = "dso" + substation_name + '/' + key
         gld.pubs(False, battery_name + "#SOC", "double", battery_name, "state_of_charge")
-        gld.subs(substation_sim_key + "/p_out", "double", key, "P_Out")
-        gld.subs(substation_sim_key + "/q_out", "double", key, "Q_Out")
+        gld.subs(substation_sim_key + "/p_out", "double", inverter_name, "P_Out")
+        gld.subs(substation_sim_key + "/q_out", "double", inverter_name, "Q_Out")
 
     for key, val in ev_agents.items():
         ev_name = val['evName']

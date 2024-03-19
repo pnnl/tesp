@@ -140,7 +140,7 @@ def post_process():
     case_config = pt.load_json(config_path, system_case)
 
     case_path = dirname(abspath(__file__)) + '/' + case_config['caseName']
-    metadata_path = case_config['dataPath']
+    metadata_path = "../" + case_config['dataPath']
     dso_metadata_file = case_config['dsoPopulationFile']
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
@@ -188,7 +188,7 @@ def post_process():
             processlist.append([Daily_market_plot, day_num])
 
     if len(processlist) > 0:
-        print('About to parallelize available processes)'.format(len(processlist)))
+        print('About to parallelize {} processes'.format(len(processlist)))
         results = parallel(delayed(worker)(p[0], p[1]) for p in processlist)
     else:
         print('No  process list')
