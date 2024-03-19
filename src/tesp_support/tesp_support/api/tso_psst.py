@@ -18,6 +18,7 @@ from .tso_helpers import load_json_case, make_dictionary, dist_slack, print_m_ca
 from .metrics_collector import MetricsStore, MetricsCollector
 from .bench_profile import bench_profile
 
+
 def make_generator_plants(ppc, renewables):
     gen = ppc['gen']
     genFuel = ppc['genfuel']
@@ -29,6 +30,7 @@ def make_generator_plants(ppc, renewables):
             unRespMW = [0] * 48
             plants[str(genFuel[i][2])] = [busnum, MW, unRespMW, genFuel[i][2]]
     return plants
+
 
 @bench_profile
 def tso_psst_loop(casename):
@@ -1012,7 +1014,7 @@ def tso_psst_loop(casename):
             solver = ppc['solver']
             if pst.SOLVER is not None:
                 solver = pst.SOLVER
-
+            power_level = ppc['genPowerLevel']
             priceCap = 2 * ppc['priceCap']
             used_curtail = ppc['curtail']
             genLowerLimit = ppc['genLowerLimit']
@@ -1342,8 +1344,8 @@ def tso_psst_loop(casename):
             genCost[i][1] = 0                  # no startup cost
             genFuel[i][3] = 1                  # turn on generator
         if genFuel[i][0] not in renewables:
-            # gen[i, 1] = gen[i, 8]              # set to maximum real power output (MW)
-            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * 0.55)
+            gen[i, 1] = gen[i, 9] + ((gen[i, 8] - gen[i, 9]) * power_level)
+            genFuel[i][3] = 1                  # turn on generator
 
     # copy of originals for outages
     ugen = deepcopy(gen)
@@ -1537,6 +1539,17 @@ def tso_psst_loop(casename):
 
                     # get the schedule for this hour
                     rt_schedule = write_rtm_schedule(schedule)
+
+                    # Turn on all generators at start up
+                    if day <= 2 and mn == 0 and not priceSensLoad:
+                        log.info("Start up " + print_time)
+                        for igen in range(numGen):
+                            if genFuel[igen][0] not in renewables:
+                                name = 'GenCo' + str(igen + 1)
+                                gen[igen, 1] = gen[igen, 9] + ((gen[igen, 8] - gen[igen, 9]) * power_level)
+                                genFuel[igen][3] = 1  # turn on generator
+                                if name in rt_schedule.keys():
+                                    rt_schedule[name] = '1'
 
                     # unplanned outage implementation on the hour
                     if outagesUnplanned:

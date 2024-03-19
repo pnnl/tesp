@@ -11,18 +11,18 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
 
     with open(case_name + '.json', 'r', encoding='utf-8') as json_file:
         ppc = json.load(json_file)
-    splitCase = ppc['splitCase']
-    caseStartYear = ppc['caseStartYear']
-    caseEndYear = ppc['caseEndYear']
+    split_case = ppc['splitCase']
+    case_start_year = ppc['caseStartYear']
+    case_end_year = ppc['caseEndYear']
 
-    if splitCase:
+    if split_case:
         while True:
             for i in range(12):
-                directoryName = str(caseStartYear) + "_" + '{0:0>2}'.format(i+1)
-                ppc['caseName'] = node + "_" + directoryName
+                directory_name = str(case_start_year) + "_" + '{0:0>2}'.format(i+1)
+                ppc['caseName'] = node + "_" + directory_name
                 ppc['port'] = int(port + i)
 
-                year = caseStartYear
+                year = case_start_year
                 month = '{0:0>2}'.format(i)
                 daytime = "-29 00:00:00"
                 if i == 0:
@@ -30,7 +30,7 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
                     month = '01'
                 ppc['StartTime'] = str(year) + "-" + month + daytime
 
-                year = caseStartYear
+                year = case_start_year
                 month = '{0:0>2}'.format(i+2)
                 daytime = "-01 00:00:00"
                 if i == 11:
@@ -42,9 +42,9 @@ def generate_case(case_name, port, pv=None, bt=None, fl=None, ev=None):
                     json.dump(ppc, outfile, indent=2)
                 prep_case.prepare_case(int(node), "generate_case_config", pv=pv, bt=bt, fl=fl, ev=ev)
 
-            if caseStartYear == caseEndYear:
+            if case_start_year == case_end_year:
                 break
-            caseStartYear += 1
+            case_start_year += 1
 
 
 node = "8"

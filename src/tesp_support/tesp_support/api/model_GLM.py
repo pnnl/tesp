@@ -994,7 +994,7 @@ class GLModel:
         plt.show()
 
 
-def test1():
+def _test1():
     from .data import tesp_test
 
     # Test model_GLM.py

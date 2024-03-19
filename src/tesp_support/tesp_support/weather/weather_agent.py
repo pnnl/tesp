@@ -50,6 +50,7 @@ def startWeatherAgent(file):
                 broker_address = conf['broker_address']
             except ValueError as ex:
                 print(ex)
+                pass
     else:
         print('could not open WEATHER_CONFIG file for FNCS or HELICS')
         sys.exit()

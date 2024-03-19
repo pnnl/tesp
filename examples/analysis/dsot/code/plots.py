@@ -1,5 +1,5 @@
-# usage 'python ./plots.py metrics_root'
-# run it from inside the metrics_root folder 
+# usage 'python ../plots.py metrics_root'
+# run it from inside the metrics_root folder
 # .json file format only
 import sys
 import os

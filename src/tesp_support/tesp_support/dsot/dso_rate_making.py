@@ -35,9 +35,8 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         saves the two dataframe above to an h5 file in the dir_path
         """
     # Load in bulk industrial loads
-    os.chdir(dir_path)
     case_config = load_json(dir_path, 'generate_case_config.json')
-    industrial_file = os.path.join(dso_data_path, case_config['indLoad'][5].split('/')[-1])
+    industrial_file = os.path.join("../" + dso_data_path, case_config['indLoad'][5].split('/')[-1])
     indust_df = load_indust_data(industrial_file, day_range)
 
     # Create empty dataframe structure for all meters.
@@ -151,13 +150,14 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         DA_price_df.columns = DA_price_df.columns.droplevel()
         DA_retail_df = load_da_retail_price(dir_path, '/DSO_', dso_num, str(day))
         # Load meter data
-        substation_meta_df, substation_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day),
-                                                                  'substation')
+        substation_meta_df, substation_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'substation')
         substation_data_df = substation_data_df.set_index(['time'])
+
         meter_meta_df, meter_data_df = load_system_data(dir_path, folder_prefix, dso_num, str(day), 'billing_meter')
-        meter_data_df['date'] = pd.to_datetime(meter_data_df['date'])
-        # meter_data_df['date'] = meter_data_df['date'].apply(pd.to_datetime(infer_datetime_format=True))
+        meter_data_df['date'] = meter_data_df['date'].str.replace('CDT', '', regex=True)
+        meter_data_df['date'] = pd.to_datetime(meter_data_df['date'])  #, infer_datetime_format=True)
         meter_data_df = meter_data_df.set_index(['time', 'name'])
+
         for each in metadata['billingmeters']:
             # Calculate standard customer energy consumption metrics used for all customers (including baseline)
             # temp = meter_data_df[meter_data_df['name'].str.contains(each)]
@@ -242,11 +242,11 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
 
     # Sum the total power consumption for all days
     meter_df.loc[(slice(None), 'kw-hr'), ['sum']] = \
-        meter_df.loc[(slice(None), 'kw-hr'), meter_df.columns[~meter_df.columns.str.contains('sum')]].sum(axis=1)
+        meter_df.loc[(slice(None), 'kw-hr'), meter_df.columns[~meter_df.columns.isin(['sum'])]].sum(axis=1)
     meter_df.loc[(slice(None), 'max_kw'), ['sum']] = \
-        meter_df.loc[(slice(None), 'max_kw'), meter_df.columns[~meter_df.columns.str.contains('sum')]].max(axis=1)
+        meter_df.loc[(slice(None), 'max_kw'), meter_df.columns[~meter_df.columns.isin(['sum'])]].max(axis=1)
     meter_df.loc[(slice(None), 'avg_load'), ['sum']] = \
-        meter_df.loc[(slice(None), 'avg_load'), meter_df.columns[~meter_df.columns.str.contains('sum')]].mean(axis=1)
+        meter_df.loc[(slice(None), 'avg_load'), meter_df.columns[~meter_df.columns.isin(['sum'])]].mean(axis=1)
 
     for each in metadata['billingmeters']:
         if meter_df.loc[(each, 'max_kw'), 'sum'] != 0:

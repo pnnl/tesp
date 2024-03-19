@@ -682,7 +682,7 @@ def inner_substation_loop(metrics_root, with_market):
     log.info('Federate name: ' + fedName)
     log.info('Subscription count: ' + str(subCount))
     log.info('Publications count: ' + str(pubCount))
-    log.info('Starting HELICS tso federate')
+    log.info('Starting HELICS dso federate')
     helics.helicsFederateEnterExecutingMode(hFed)
 
     timing(proc[1], True)
@@ -1948,6 +1948,7 @@ def inner_substation_loop(metrics_root, with_market):
     print(wall_time, sep=', ', file=op, flush=True)
     op.close()
     helics.helicsFederateDestroy(hFed)
+
 
 def dso_loop(metrics_root, with_market):
     """ Wrapper for *inner_substation_loop*
