@@ -82,11 +82,11 @@ def _auto_run(args):
             "nominal_voltage": glm.triplex_meter[f"{new_name}"]["nominal_voltage"],
         }        
 
-        # Only adding print out for the first time through the loop, so I don't flood the terminal.
+        # Only adding print out for the first time through the loop, so I don't
+        # flood the terminal with messages.
         if house_num == 0:
-            print(
-                "Demonstrating addition of an object (triplex_meter in this case) to GridLAB-D model."
-            )
+            print("Demonstrating addition of an object (triplex_meter in this"
+            "case) to GridLAB-D model." )
             num_tp_meters = len(tp_meter_names)
             print(f"\tNumber of triplex meters before adding one: {num_tp_meters}")
             print(f"\tAdding triplex_meter {billing_meter_name} to model.")
@@ -135,32 +135,29 @@ def _auto_run(args):
         house_obj = glmMod.add_object("house", house_name, house_params)
         # Can also modify the object parameters like this after the object has been created.
         if house_num == 0:
-            print(
-                "\nDemonstrating editing of object properties after adding them to the GridLAB-D model."
-            )
+            print("\nDemonstrating editing of object properties after adding them "
+                "to the GridLAB-D model.")
             if "floor_area" in house_obj.keys():
                 print(f'\t"Redefining floor_area" in {house_name}.')
                 house_obj["floor_area"] = 2469
             else:
-                print(
-                    f'\t"floor_area" not defined for house {house_name}, adding it now.'
-                )
+                print(f'\t"floor_area" not defined for house {house_name}, ' 
+                      'adding it now.')
                 house_obj["floor_area"] = 2469
-            print(
-                f'\t"floor_area" now defined in model with value {house_obj["floor_area"]}.'
-            )
+            print(f'\t"floor_area" now defined in model with value '
+                '{house_obj["floor_area"]}.')
 
             # You can get object parameters after the object has been created
             if house_num == 0:
-                print(
-                    "\nDemonstrating getting object parameters after they have been added to the GridLAB-D model."
-                )
+                print("\nDemonstrating getting object parameters after they "
+                       "have been added to the GridLAB-D model.")
                 cooling_COP = house_obj["cooling_COP"]
                 print(f"\tCooling COP for house {house_name} is {cooling_COP}.")
 
         # Add specific loads to the house object as ZIP model
         load_name = f"light_load_{house_num}"
-        # Again, hard-coding this in the file is not a good idea. Do as I say, not as I do.
+        # Again, hard-coding this in the file is not a good idea. Do as I say, 
+        # not as I do.
         ZIP_params = {
             "parent": house_name,
             "schedule_skew": -685,
@@ -175,10 +172,10 @@ def _auto_run(args):
         }
         load_obj = glmMod.add_object("ZIPload", load_name, ZIP_params)
 
-    # You can delete specific parameter definitions (effectively making them the default value defined in GridLAB-D)
-    print(
-        "\nDemonstrating the deletion of a parameter from a GridLAB-D object in the model."
-    )
+    # You can delete specific parameter definitions (effectively making them
+    # the default value defined in GridLAB-D)
+    print("\nDemonstrating the deletion of a parameter from a GridLAB-D object "
+           "in the model.")
     house_to_edit = glm.house[house_name]
     if "Rroof" in house_to_edit.keys():
         print(f'\t"Rroof" for house {house_name} is {house_to_edit["Rroof"]}.')
@@ -191,9 +188,10 @@ def _auto_run(args):
     else:
         print(f'\t"Rroof" for house {house_name} is undefined.\n')
 
-    # You can also just remove an entire object instance from the model (if you know the GLD object type and its name)
-    #   To prevent electrical islands, this method also deletes all downstream objects associated through a
-    #   parent-child relationship.
+    # You can also just remove an entire object instance from the model (if you
+    # know the GLD object type and its name) To prevent electrical islands, 
+    # this method also deletes all downstream objects associated through a
+    #  parent-child relationship.
     print("Demonstrating the deletion of an entire object from GridLAB-D model.")
     print("\tZIPload is child of house and will be automatically deleted as well.")
     num_houses = len(glm.house)
@@ -208,20 +206,17 @@ def _auto_run(args):
     print(f"\tNumber of ZIPloads: {num_zips}")
 
     # Increase all the secondary/distribution transformer ratings by 15%
-    print(
-        "\nDemonstrating modification of a GridLAB-D parameter for all objects of a certain type."
-    )
-    print(
-        "In this case, we're upgrading the rating of the secondary/distribution transformers by 15%."
-    )
+    print("\nDemonstrating modification of a GridLAB-D parameter for all "
+          "objects of a certain type.")
+    print("In this case, we're upgrading the rating of the "
+          "secondary/distribution transformers by 15%.")
     transformer_config_objs = glm.transformer_configuration
 
+    print("\tFinding all the split-phase transformers as these are the ones "
+           "we're targeting for upgrade.")
     print(
-        "\tFinding all the split-phase transformers as these are the ones we're targeting for upgrade."
-    )
-    print(
-        "\t(In GridLAB-D, the sizing information is stored in the transformer_configuration object.)"
-    )
+        "\t(In GridLAB-D, the sizing information is stored in the "
+        "transformer_configuration object.)")
     transformer_configs_to_upgrade = {"as": [], "bs": [], "cs": []}
     for transformer_name, transformer in glm.transformer.items():
         phases = transformer["phases"]
@@ -235,16 +230,16 @@ def _auto_run(args):
         elif phases.lower() == "cs":
             if config not in transformer_configs_to_upgrade["cs"]:
                 transformer_configs_to_upgrade["cs"].append(config)
-    print(
-        f'\tFound {len(transformer_configs_to_upgrade["as"])} configurations with phase "AS" that will be upgraded.'
-    )
-    print(
-        f'\tFound {len(transformer_configs_to_upgrade["bs"])} configurations with phase "BS" that will be upgraded.'
-    )
-    print(
-        f'\tFound {len(transformer_configs_to_upgrade["cs"])} configurations with phase "CS" that will be upgraded.'
-    )
+    print(f'\tFound {len(transformer_configs_to_upgrade["as"])}' 
+        'configurations with phase "AS" that will be upgraded.')
+    print(f'\tFound {len(transformer_configs_to_upgrade["bs"])} '
+                     'configurations with phase "BS" that will be upgraded.')
+    print(f'\tFound {len(transformer_configs_to_upgrade["cs"])}' 
+        'configurations with phase "CS" that will be upgraded.')
 
+    # Assumes the model has the "powerX_rating" in the transformer configuration
+    # to be used as the basis to determine the existing rating. This will not
+    # be true for every feeder.
     for phase in transformer_configs_to_upgrade.keys():
         if phase == "as":
             rating_param = "powerA_rating"
@@ -260,11 +255,9 @@ def _auto_run(args):
             glm.transformer_configuration[config][rating_param] = new_rating
             glm.transformer_configuration[config]["power_rating"] = new_rating
             upgraded_rating = str(
-                round(glm.transformer_configuration[config][rating_param], 3)
-            )
-            print(
-                f"\tUpgraded configuration {config} from {old_rating} to {upgraded_rating}"
-            )
+                round(glm.transformer_configuration[config][rating_param], 3))
+            print(f'\tUpgraded configuration {config} from {old_rating} '
+                  'to {upgraded_rating}')
 
     # The model topology is stored as a networks graph, allowing you to do fancy
     # manipulations of the model more easily.
@@ -275,9 +268,8 @@ def _auto_run(args):
 
     # Starting out just looking for the swing bus using the non-networkx APIs we've
     # been using up to this point.
-    print(
-        f"\nDemonstrating the use of networkx to find the feeder head and the closest fuse"
-    )
+    print(f"\nDemonstrating the use of networkx to find the feeder head and "
+        "the closest fuse")
     swing_bus = ""
     for gld_node_name in glm.node.keys():
         if (
@@ -287,37 +279,29 @@ def _auto_run(args):
                 swing_bus = gld_node_name
     print(f"\tFound feeder head (swing bus) as node {swing_bus}")
 
-    # Find first fuse downstream of the feeder head. I'm guessing it is close-by so doing a breadth-first search using
-    #   the networkx API and the topology graph of our GridLAB-D model
+    # Find first fuse downstream of the feeder head. I'm guessing it is close-by
+    # so doing a breadth-first search using the networkx API and the topology 
+    # graph of our GridLAB-D model.
     graph = glmMod.model.draw_network()
     for edge in nx.bfs_edges(graph, swing_bus):
         edge_data = graph.get_edge_data(edge[0], edge[1])
         if edge_data["eclass"] == "fuse":
             feeder_head_fuse = edge_data["ename"]
             break
-    print(
-        f"\tUsing networkx traversal algorithms, found the closest fuse as {feeder_head_fuse}."
-    )
+    print( f"\tUsing networkx traversal algorithms, found the closest fuse as "
+          "{feeder_head_fuse}.")
 
     # For demonstration purposes, increasing the rating on the fuse by 10%
-    #   (If you look at a visualization of the graph you'll see that this fuse isn't really the feeder head fuse.
-    #       And that's what you get for making assumptions.
-    #       https://emac.berkeley.edu/gridlabd/taxonomy_graphs/R1-12.47-1.pdf )
+    # (If you look at a visualization of the graph you'll see that this fuse
+    # isn't really the feeder head fuse.
+    # And that's what you get for making assumptions.
+    # https://emac.berkeley.edu/gridlabd/taxonomy_graphs/R1-12.47-1.pdf )
     print(f"\tIncreasing fuse size by an arbitrary 10%")
     fuse_obj = glm.fuse[feeder_head_fuse]
     print(f'\t\tOld fuse current limit: {fuse_obj["current_limit"]} A')
     fuse_obj["current_limit"] = float(fuse_obj["current_limit"]) * 1.1
     print(f'\t\tNew fuse current limit: {fuse_obj["current_limit"]} A')
 
-    # Unused code that works but doesn't show off the things I wanted to show off.
-    # for gld_node in gld_node_names:
-    #     neighbors = graph.neighbors(gld_node)
-    #     for neighbor in neighbors:
-    #         print(neighbor)
-    #     print("\n")
-    # Look for largest transformer configuration in the model
-    # under the assumption that it's for the substation transformer
-    # (Turns out, this is a bad assumption.)
     max_transformer_power = 0
     max_transformer_name = ""
     for transformer_config_name in glm.transformer_configuration:
@@ -341,7 +325,7 @@ def _auto_run(args):
 
 
 def demo():
-    # TDH: This slightly complex mess allows lower importance messages
+    # This slightly complex mess allows lower importance messages
     # to be sent to the log file and ERROR messages to additionally
     # be sent to the console as well. Thus, when bad things happen
     # the user will get an error message in both places which,
