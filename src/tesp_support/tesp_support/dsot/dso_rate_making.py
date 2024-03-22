@@ -18,7 +18,7 @@ from .plots import load_da_retail_price, customer_meta_data, load_json, load_age
     load_system_data, get_date, tic, toc, load_retail_data, load_ames_data, load_gen_data, load_indust_data
 
 
-def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_data_path):
+def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_data_path, tou_params=None):
     """ Determines the total energy consumed and max power consumption for all meters within a DSO for a series of days.
     Also collects information on day ahead and real time quantities consumed by transactive customers.
     Creates summation of these statistics by customer class.
@@ -29,6 +29,8 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         dso_num (str): number of the DSO folder to be opened
         day_range (list): range of days to be summed (for example a month).
         SF (float): Scaling factor to scale GLD results to TSO scale (e.g. 1743)
+        tou_params (dict): Parameters relevant to the time-of-use rate. Defaults to None, which indicates that a
+        time-of-use rate is not being considered.
     Returns:
         meter_df: dataframe of energy consumption and max 15 minute power consumption for each month and total
         energysum_df: dataframe of energy consumption summations by customer class (residential, commercial, and industial)
@@ -50,6 +52,13 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             meter.append(each)
             variable.append(var)
             month.append(0)
+
+        # Add consumtpion during time-of-use periods, if applicable
+        if tou_params is not None:
+            for k in tou_params.keys():
+                meter.append(each)
+                variable.append(k + "_kwh")
+                month.append(0)
 
     meter_df = pd.DataFrame(month,
                             index=[meter, variable],
@@ -95,6 +104,13 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             loads.append(each)
             variable.append('dist_loss_q')
             month.append(0)
+        
+        # Add consumtpion during time-of-use periods, if applicable
+        if tou_params is not None:
+            for k in tou_params.keys():
+                loads.append(each)
+                variable.append(k + "_kwh")
+                month.append(0)
 
     energysum_df = pd.DataFrame(month,
                                 index=[loads, variable],
@@ -147,6 +163,35 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                                                                 meter_df.loc[(each, 'max_kw'), day_name]
             else:
                 meter_df.loc[(each, 'load_factor'), day_name] = 0
+            
+            # Calculate each consumer's time-of-use-related consumption metrics, if applicable
+            if tou_params is not None:
+                for k in tou_params.keys():
+                    for t in range(len(tou_params[k]["hour_start"])):
+                        meter_df.loc[(each, k + "_kwh"), day_name] += (
+                            temp.loc[
+                                (
+                                    300
+                                    * 12
+                                    * (24 * (day - 1) + tou_params[k]["hour_start"][t])
+                                ) : (
+                                    300
+                                    * 12
+                                    * (24 * (day - 1) + tou_params[k]["hour_end"][t])
+                                    - 1
+                                ),
+                                "real_power_avg",
+                            ].sum()
+                            / 1000
+                            / 12
+                        )
+                        if tou_params[k]["hour_start"][t] == 0:
+                            meter_df.loc[(each, k + "_kwh"), day_name] += (
+                                temp.loc[300 * 12 * 24 * day, "real_power_avg"]
+                                / 1000
+                                / 12
+                            )
+
             # Calculate transactive customer energy consumption metrics
             temp2 = cust_trans_df[cust_trans_df.meter == each]
             trans_df.loc[(each, 'DA_Q'), day_name] = temp2.loc[:, 'total_cleared_quantity'].sum()
@@ -185,6 +230,14 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                     else:
                         energysum_df.loc[(load, 'demand_quantity'), day_name] += meter_df.loc[
                                                                                      (each, 'max_kw'), day_name] * SF
+                    
+                    # Calculate the time-of-use-related metrics, if applicable
+                    if tou_params is not None:
+                        for k in tou_params.keys():
+                            energysum_df.loc[(load, k + "_kwh"), day_name] += (
+                                meter_df.loc[(each, k + "_kwh"), day_name] * SF
+                            )
+
         # Break the streetlights out into a separate category for reporting and verification purposes
         # energysum_df.loc[('street_lights', 'kw-hr'), :] = energysum_df.loc[('industrial', 'kw-hr'), :]
         # energysum_df.loc[('street_lights', 'max_kw'), :] = energysum_df.loc[('industrial', 'max_kw'), :]
@@ -204,7 +257,11 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         energysum_df.loc[('total', 'dist_loss_q'), day_name] += dso_losses.sum()
 
     # Create totals for energy metrics
-    for item in ['kw-hr', 'demand_quantity', 'da_q', 'rt_q', 'congest_$', 'congest_q']:
+    energysum_metrics = ['kw-hr', 'demand_quantity', 'da_q', 'rt_q', 'congest_$', 'congest_q']
+    if tou_params is not None:
+        for k in tou_params.keys():
+            energysum_metrics.append(k + "_kwh")
+    for item in energysum_metrics:
         for load in ['residential', 'commercial', 'industrial']:
             energysum_df.loc[('total', item), :] += energysum_df.loc[(load, item), :]
 
@@ -222,6 +279,13 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                                                          meter_df.loc[(each, 'max_kw'), 'sum']
         else:
             meter_df.loc[(each, 'load_factor'), 'sum'] = 0
+    
+    if tou_params is not None:
+        for k in tou_params.keys():
+            meter_df.loc[(slice(None), k + "_kwh"), ["sum"]] = meter_df.loc[
+                (slice(None), k + "_kwh"),
+                meter_df.columns[~meter_df.columns.isin(["sum"])],
+            ].sum(axis=1)
 
     trans_df.loc[:, ['sum']] = \
         trans_df.loc[:, trans_df.columns[~trans_df.columns.str.contains('sum')]].sum(axis=1)
