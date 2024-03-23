@@ -20,11 +20,11 @@ index 27c20af9..107c0566 100644
 +	else if (strcmp(parent_string, "meter") == 0) {
  		real_power_array[curr_index] = *gl_get_double(obj->parent, propMeterP);
  		reactive_power_array[curr_index] = *gl_get_double(obj->parent, propMeterQ);
-
+ 
 @@ -968,8 +967,7 @@ int metrics_collector::read_line(OBJECT *obj){
  		voltage_vln_array[curr_index] = vavg;  // Vln
  		voltage_unbalance_array[curr_index] = vdev / vll; // max deviation from Vll / average Vll
- 	}
+ 	} 
 -	else if (strcmp(parent_string, "house") == 0)
 -	{
 +	else if (strcmp(parent_string, "house") == 0) {

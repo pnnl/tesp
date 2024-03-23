@@ -3,8 +3,8 @@
 # file: test_helics_java.sh
 
 if [[ -z ${INSTDIR} ]]; then
-  echo "Edit tespEnv in the $HOME directory"
-  echo "Run 'source tespEnv' in that same directory"
+  echo "Edit tesp.env in the TESP home directory"
+  echo "Run 'source tesp.env' in that same directory"
   exit
 fi
 

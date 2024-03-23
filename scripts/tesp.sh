@@ -149,13 +149,12 @@ fi
 
 echo "Clone directory structure for TESP"
 echo ++++++++++++++ TESP
-if [[ -d "$HOME/grid/tesp" ]]; then
+if [[ ! -d "$HOME/grid/tesp" ]]; then
   git clone -b main https://github.com/pnnl/tesp.git
 fi
 
 echo "Activate Virtual Environment..."
-cp tesp/scripts/tespEnv "$HOME/"
-. "$HOME/tespEnv"
+. tesp/tesp.env
 
 # The rest of the build/install depends on the exports in the tespEnv file
 which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
@@ -168,7 +167,7 @@ echo
 echo "Download all relevant repositories..."
 echo
 echo ++++++++++++++ PSST
-if [[ -d "${REPO_DIR}/AMES-V5.0" ]]; then
+if [[ ! -d "${REPO_DIR}/AMES-V5.0" ]]; then
   # git clone -b master https://github.com/ames-market/psst.git
   # For dsot
   git clone -b master https://github.com/ames-market/AMES-V5.0.git
@@ -178,7 +177,7 @@ fi
 if [[ $binaries == "develop" ]]; then
   echo
   echo ++++++++++++++ FNCS
-  if [[ -d "${REPO_DIR}/fncs" ]]; then
+  if [[ ! -d "${REPO_DIR}/fncs" ]]; then
     git clone -b feature/opendss https://github.com/FNCS/fncs.git
     # For different calling no cpp
     # git clone -b develop https://github.com/FNCS/fncs.git
@@ -187,35 +186,35 @@ if [[ $binaries == "develop" ]]; then
 
   echo
   echo ++++++++++++++ HELICS
-  if [[ -d "${REPO_DIR}/HELICS-src" ]]; then
+  if [[ ! -d "${REPO_DIR}/HELICS-src" ]]; then
     git clone -b main https://github.com/GMLC-TDC/HELICS-src
     "${BUILD_DIR}/patch.sh" HELICS-src HELICS-src
   fi
 
   echo
   echo ++++++++++++++ GRIDLAB
-  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
+  if [[ ! -d "${REPO_DIR}/gridlab-d" ]]; then
     git clone -b master https://github.com/gridlab-d/gridlab-d.git
     "${BUILD_DIR}/patch.sh" gridlab-d gridlab-d
   fi
 
   echo
   echo ++++++++++++++ ENERGYPLUS
-  if [[ -d "${REPO_DIR}/EnergyPlus" ]]; then
+  if [[ ! -d "${REPO_DIR}/EnergyPlus" ]]; then
     git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
     "${BUILD_DIR}/patch.sh" EnergyPlus EnergyPlus
   fi
 
   echo
   echo ++++++++++++++ NS-3
-  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
+  if [[ ! -d "${REPO_DIR}/gridlab-d" ]]; then
     git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
     "${BUILD_DIR}/patch.sh" ns-3-dev ns-3-dev
   fi
 
   echo
   echo ++++++++++++++ HELICS-NS-3
-  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
+  if [[ ! -d "${REPO_DIR}/gridlab-d" ]]; then
     git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
     "${BUILD_DIR}/patch.sh" ns-3-dev/contrib/helics helics-ns3
   fi
