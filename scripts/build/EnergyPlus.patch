@@ -1,0 +1,305 @@
+diff --git a/cmake/FindHELICS.cmake b/cmake/FindHELICS.cmake
+index f5374bee5..819893807 100644
+--- a/cmake/FindHELICS.cmake
++++ b/cmake/FindHELICS.cmake
+@@ -1,6 +1,6 @@
+ message("inside FindHELICS.cmake")
+ include(FindPkgConfig)
+-PKG_CHECK_MODULES(PC_HELICS "helicsSharedLib")# "helicsSharedLibd" "helics-shared" "helics-apps-shared")
++PKG_CHECK_MODULES(PC_HELICS "helics")
+ message("PKG_CONFIG_FOUND=${PKG_CONFIG_FOUND}")
+ message("PKG_CONFIG_EXECUTABLE=${PKG_CONFIG_EXECUTABLE}")
+ message("PKG_CONFIG_VERSION_STRING=${PKG_CONFIG_VERSION_STRING}")
+@@ -15,7 +15,7 @@ message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
+ message("PC_HELICS_LIBRARY_DIRS=${PC_HELICS_LIBRARY_DIRS}")
+ find_path(
+     HELICS_INCLUDE_DIR
+-    NAMES helics#/ValueFederate.hpp #Inputs.hpp Publications.hpp
++    NAMES helics
+     HINTS ${PC_HELICS_INCLUDEDIR} ${PC_HELICS_INCLUDE_DIRS}
+ )
+ message("HELICS_INCLUDE_DIR=${HELICS_INCLUDE_DIR}")
+@@ -25,7 +25,7 @@ message("HELICS_LIBRARY=${HELICS_LIBRARY}")
+ 
+ find_library(
+     HELICS_LIBRARY
+-    NAMES helicsSharedLib # helics-shared helics-apps-shared
++    NAMES helics
+     HINTS ${PC_HELICS_LIBDIR} ${PC_HELICS_LIBRARY_DIRS}
+ )
+ message("PC_HELICS_LIBDIR=${PC_HELICS_LIBDIR}")
+diff --git a/src/EnergyPlus/ExternalInterface.cc b/src/EnergyPlus/ExternalInterface.cc
+index 667e11bff..db7bc42aa 100644
+--- a/src/EnergyPlus/ExternalInterface.cc
++++ b/src/EnergyPlus/ExternalInterface.cc
+@@ -1298,8 +1298,8 @@ namespace EnergyPlus {
+                 DisplayString("Number of inputs  in ExternalInterface = " + TrimSigDigits(nInpVar));
+ 
+                 // launch the HELICS federate
+-                fi.setProperty(helics_property_time_delta, deltat);
+-                fi.setProperty(helics_property_int_max_iterations, 100);
++                fi.setProperty(HELICS_PROPERTY_TIME_DELTA, deltat);
++                fi.setProperty(HELICS_PROPERTY_INT_MAX_ITERATIONS, 100);
+                 // read config file here.
+                 std::string configFile;
+                 char const* temp = getenv("HELICS_CONFIG_FILE");
+@@ -1307,8 +1307,8 @@ namespace EnergyPlus {
+                 	configFile = std::string(temp);
+                 }
+                 pHelicsFederate = new helicscpp::ValueFederate(configFile);
+-                pHelicsFederate->setFlagOption(helics_flag_terminate_on_error, true);
+-                pHelicsFederate->setFlagOption(helics_flag_slow_responding, false);
++                pHelicsFederate->setFlagOption(HELICS_FLAG_TERMINATE_ON_ERROR, true);
++                pHelicsFederate->setFlagOption(HELICS_FLAG_SLOW_RESPONDING, false);
+                 int pub_count = pHelicsFederate->getPublicationCount();
+                 int sub_count = pHelicsFederate->getInputCount();
+                 pubs.allocate(pub_count);
+@@ -1320,7 +1320,7 @@ namespace EnergyPlus {
+                     for (int i = 0; i < pub_count; i++) {
+                       helicscpp::Publication thispub = pHelicsFederate->getPublication(i);
+                       if (thispub.isValid() ) {
+-                    	auto pubkey = std::string(thispub.getKey());
++                        auto pubkey = std::string(thispub.getName());
+                         //std::cout << " pub " << i << ":" << thispub.getInfo() << ":" << pubkey << ":" << thispub.getType() << ":" << thispub.getUnits() << std::endl;
+                         vpubs.push_back(thispub);
+                         pubs(i+1)=thispub;
+@@ -1329,9 +1329,9 @@ namespace EnergyPlus {
+                       }
+                     }
+                     for (int i = 0; i < sub_count; i++) {
+-                      helicscpp::Input thissub = pHelicsFederate->getSubscription(i);
++                      helicscpp::Input thissub = pHelicsFederate->getInput(i);
+                       if (thissub.isValid() ) {
+-                    	std::string thisKey = std::string(thissub.getTarget());
++                        std::string thisKey = std::string(thissub.getTarget());
+                         //char const* temp = thissub.getKey();
+                         //std::cout << " sub " << i << ":" << thissub.getInfo() << ":" << thisKey << ":" << thissub.getType() << ":" << thissub.getUnits() << std::endl;
+                         vsubs.push_back(thissub);
+@@ -1340,56 +1340,6 @@ namespace EnergyPlus {
+                         msubs[thisKey] = thissub;
+                       }
+                     }
+-/*                	std::cout << "register HELICS pub and sub here." << std::endl;
+-                	int typeCount = size(varTypes);
+-                	std::cout << "typeCount: " << typeCount << std::endl;
+-//                	for (auto count = 1; count <= nOutVal; count++){
+-//                    	std::cout << "varTypes: " << varTypes(count) << std::endl;
+-//                	}
+-                	int keyVarIndexesCount = size(keyVarIndexes);
+-                	std::cout << "keyVarIndexesCount: " << keyVarIndexesCount << std::endl;
+-//                	for (auto count = 1; count <= nOutVal; count++){
+-//                    	std::cout << "keyVarIndexes: " << keyVarIndexes(count) << std::endl;
+-//                	}
+-                	int varIndCount = size(varInd);
+-                	std::cout << "varIndCount: " << varIndCount << std::endl;
+-//                	for (auto count = 1; count <= nOutVal; count++){
+-//                    	std::cout << "varInd: " << varInd(count) << std::endl;
+-//                	}
+-                	int varKeysCount = size(varKeys);
+-                	std::cout << "varKeysCount: " << varKeysCount << std::endl;
+-                	for (auto count = 1; count <= nOutVal; count++){
+-                    	std::cout << "varKeys: " << varKeys(count) << std::endl;
+-                	}
+-                	int varNamesCount = size(varNames);
+-                	std::cout << "varNamesCount: " << varNamesCount << std::endl;
+-                	for (auto count = 1; count <= nOutVal; count++){
+-                    	std::cout << "varNames: " << varNames(count) << std::endl;
+-                	}
+-                	int inpVarTypesCount = size(inpVarTypes);
+-                	std::cout << "inpVarTypesCount: " << inpVarTypesCount << std::endl;
+-                	for (auto count = 1; count <= nInpVar; count++){
+-                    	std::cout << "inpVarTypes: " << inpVarTypes(count) << std::endl;
+-                	}
+-                	int inpVarNamesCount = size(inpVarNames);
+-                	std::cout << "inpVarNamesCount: " << inpVarNamesCount << std::endl;
+-                	for (auto count = 1; count <= nInpVar; count++){
+-                    	std::cout << "inpVarNames: " << inpVarNames(count) << std::endl;
+-                	}*/
+-//                    std::vector<std::string> keys;
+-//                    auto nkeys = fncs::get_keys_size();
+-//                    for(int index = 0; index < nkeys; index++){
+-//                    	keys.push_back(fncs::get_key_by_index(index));
+-//                    }
+-//                    fncsKeys.insert(keys.begin(), keys.end());
+-//                    for (std::vector<std::string>::iterator it = keys.begin();
+-//                        it != keys.end(); ++it) {
+-//                    	std::cout << *it << std::endl;
+-//                        if (it->find('+') != string::npos) {
+-//                            fncsEncode = true;
+-//                            break;
+-//                        }
+-//                    }
+                 }
+                 else {
+                     ShowSevereError("ExternalInterface: HELICS failed to initialize.");
+@@ -1398,13 +1348,9 @@ namespace EnergyPlus {
+                 if (pHelicsFederate) {
+                   std::cout << "HELICS enter intializing mode" << std::endl;
+                   pHelicsFederate->enterInitializingMode();
+-//                  std::cout << "HELICS enter executing mode" << std::endl;
+-//                  pHelicsFederate->enterExecutingMode();
+                 }
+ 
+-                helics_time delta = pHelicsFederate->getTimeProperty(helics_property_time_period);
+-                // FNCS time delta is already in minutes, not nanoseconds
+-                //delta = delta / (60ULL * 1000000000ULL);
++                HelicsTime delta = pHelicsFederate->getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
+                 //helics time is in seconds
+                 delta = delta / 60;
+                 if (delta != (unsigned long long)MinutesPerTimeStep) {
+@@ -1416,11 +1362,9 @@ namespace EnergyPlus {
+                 }
+ 
+                 StopExternalInterfaceIfError();
+-
+                 firstCall = false;
+ 
+                 // Establish connection to HELICS broker.
+-
+             }
+             else if (!configuredControlPoints) {
+                 keyVarIndexes.allocate(nOutVal);
+@@ -3341,7 +3285,7 @@ namespace EnergyPlus {
+             int i; // Loop counter
+ 
+             int nDblWri; // number of doubles to write to socket
+-            helics_time preSimTim; // previous time step's simulation time
++            HelicsTime preSimTim; // previous time step's simulation time
+ 
+             static bool firstCall(true);
+ 
+@@ -3351,7 +3295,7 @@ namespace EnergyPlus {
+                 DisplayString("ExternalInterface starts first data exchange. (HELICS)");
+                 simulationStatus = 2;
+                 preSimTim = 0; // In the first call, E+ did not reset SimTimeSteps to zero
+-                helics_time cTime = helicsFederateGetCurrentTime(pHelicsFederate->baseObject(), NULL);
++                HelicsTime cTime = helicsFederateGetCurrentTime(pHelicsFederate->baseObject(), NULL);
+                 //helics_time cTime = pHelicsFederate->getCurrentTime();
+                 //std::cout << "current time is: " << cTime << std::endl;
+                 if (preSimTim != cTime) {
+@@ -3364,7 +3308,7 @@ namespace EnergyPlus {
+                 preSimTim = SimTimeSteps * MinutesPerTimeStep;
+                 //std::cout << "preSimTim: " << preSimTim << ", SimTimeSteps: " << SimTimeSteps << ", MinutesPerTimeStep: " << MinutesPerTimeStep << std::endl;
+                 preSimTim = preSimTim * 60;
+-                helics_time time_returned = pHelicsFederate->requestTime(preSimTim);
++                HelicsTime time_returned = pHelicsFederate->requestTime(preSimTim);
+                 //std::cout << "requested time: " << preSimTim << ", returned time: " << time_returned << std::endl;
+                 if (preSimTim != time_returned) {
+                     ShowFatalError("helics::requestTime() was interrupted with earlier time");
+@@ -3375,7 +3319,7 @@ namespace EnergyPlus {
+ 
+             //DisplayString( "preSimTim=" + TrimSigDigits( preSimTim ) );
+ 
+-//            helics_time time_returned = pHelicsFederate->requestTime(preSimTim);
++//            HelicsTime time_returned = pHelicsFederate->requestTime(preSimTim);
+ //            std::cout << "requested time: " << preSimTim << ", returned time: " << time_returned << std::endl;
+ //            if (preSimTim != time_returned) {
+ //                ShowFatalError("helics::requestTime() was interrupted with earlier time");
+diff --git a/third_party/BCVTB/utilXml.c b/third_party/BCVTB/utilXml.c
+index 5ae4be2e7..b61589671 100644
+--- a/third_party/BCVTB/utilXml.c
++++ b/third_party/BCVTB/utilXml.c
+@@ -103,6 +103,30 @@ derivative works thereof, in binary and source code form.
+ 
+ #include "utilXml.h"
+ 
++char Buff[BUFFSIZE]; ///< Local buffer for reading in the xml file
++
++Stack2 expStk; ///< Variables for getxmlvalue function
++
++char * att; ///< Local global variable for function \c getxmlvalue
++char * vals;  ///< Local global variable for function \c getxmlvalue
++int * numVals; ///< Local global variable for function \c getxmlvalue
++int PARSEVALUE; ///< flag for parsing xml values 1 if parse, 0 if not parse
++int ERROR_STATUS; ///< flag for xml element handler error status settings
++
++////////////////////////////////////////////////////////////////
++/// local global variables for function \c getepvariables
++////////////////////////////////////////////////////////////////
++char *  outputVarsName; ///< the string pointer to the parsed output variable names
++char *  outputVarsType; ///< the string pointer to the parsed output variable types
++int *   numOutputVars;  ///< the integer pointer to the number of output variables
++char *  inputVars;      ///< the string pointer to the input variables
++int *   numInputVars;   ///< the integer pointer to the number of input variables
++int *   inputVarsType;  ///< the integer array to store the types of each input variables
++char ** inputKeys;      ///< the string array to store the types of input variable types
++int     numInputKeys;   ///< the number of input variable types
++int     source;         ///< flag for function /c getepvariables 0=EnergyPlus, 1=Ptolemy
++int const * strLen;     ///< the length of string parsed to this function
++
+ ////////////////////////////////////////////////////////////////
+ /// Call back functions that will be used by the expat xml parser.
+ ///
+diff --git a/third_party/BCVTB/utilXml.h b/third_party/BCVTB/utilXml.h
+index 6879dcd77..5fef9f470 100644
+--- a/third_party/BCVTB/utilXml.h
++++ b/third_party/BCVTB/utilXml.h
+@@ -100,7 +100,8 @@ derivative works thereof, in binary and source code form.
+ /// \sa getepvariables()
+ ///
+ //////////////////////////////////////////////////////////
+-
++#ifndef _UTILXML_H_
++#define _UTILXML_H_
+ #include <stdio.h>
+ //#include <stdlib.h>
+ #include <string.h>
+@@ -124,7 +125,7 @@ derivative works thereof, in binary and source code form.
+ 
+ #define BUFFSIZE        8192
+ 
+-char Buff[BUFFSIZE]; ///< Local buffer for reading in the xml file
++extern char Buff[BUFFSIZE]; ///< Local buffer for reading in the xml file
+ 
+ ////////////////////////////////////////////////////////////////
+ ///\struct A simple stack structure to keep track of the parent elements
+@@ -136,27 +137,27 @@ typedef struct Stack2 {
+ } Stack2;
+ 
+ 
+-Stack2 expStk; ///< Variables for getxmlvalue function
++extern Stack2 expStk; ///< Variables for getxmlvalue function
+ 
+-char * att; ///< Local global variable for function \c getxmlvalue
+-char * vals;  ///< Local global variable for function \c getxmlvalue
+-int * numVals; ///< Local global variable for function \c getxmlvalue
+-int PARSEVALUE; ///< flag for parsing xml values 1 if parse, 0 if not parse
+-int ERROR_STATUS; ///< flag for xml element handler error status settings
++extern char * att; ///< Local global variable for function \c getxmlvalue
++extern char * vals;  ///< Local global variable for function \c getxmlvalue
++extern int * numVals; ///< Local global variable for function \c getxmlvalue
++extern int PARSEVALUE; ///< flag for parsing xml values 1 if parse, 0 if not parse
++extern int ERROR_STATUS; ///< flag for xml element handler error status settings
+ 
+ ////////////////////////////////////////////////////////////////
+ /// local global variables for function \c getepvariables
+ ////////////////////////////////////////////////////////////////
+-char *  outputVarsName; ///< the string pointer to the parsed output variable names  
+-char *  outputVarsType; ///< the string pointer to the parsed output variable types
+-int *   numOutputVars;  ///< the integer pointer to the number of output variables
+-char *  inputVars;      ///< the string pointer to the input variables
+-int *   numInputVars;   ///< the integer pointer to the number of input variables
+-int *   inputVarsType;  ///< the integer array to store the types of each input variables
+-char ** inputKeys;      ///< the string array to store the types of input variable types
+-int     numInputKeys;   ///< the number of input variable types
+-int     source;         ///< flag for function /c getepvariables 0=EnergyPlus, 1=Ptolemy
+-int const * strLen;     ///< the length of string parsed to this function
++extern char *  outputVarsName; ///< the string pointer to the parsed output variable names
++extern char *  outputVarsType; ///< the string pointer to the parsed output variable types
++extern int *   numOutputVars;  ///< the integer pointer to the number of output variables
++extern char *  inputVars;      ///< the string pointer to the input variables
++extern int *   numInputVars;   ///< the integer pointer to the number of input variables
++extern int *   inputVarsType;  ///< the integer array to store the types of each input variables
++extern char ** inputKeys;      ///< the string array to store the types of input variable types
++extern int     numInputKeys;   ///< the number of input variable types
++extern int     source;         ///< flag for function /c getepvariables 0=EnergyPlus, 1=Ptolemy
++extern int const * strLen;     ///< the length of string parsed to this function
+ 
+ 
+ ////////////////////////////////////////////////////////////////
+@@ -369,3 +370,5 @@ getxmlvalue(
+ ////////////////////////////////////////////////////////////////
+ int
+ check_variable_cfg_Validate(char const * const fileName);
++
++#endif /* _UTILXML_H_ */

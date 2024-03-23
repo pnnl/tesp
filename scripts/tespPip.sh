@@ -1,7 +1,7 @@
 #!/bin/bash
 
 git checkout HEAD requirements.txt
-pip install -r "$HOME/grid/repo/tesp/requirements.txt" >> "$HOME/grid/repo/tesp/tesp.log"
+pip install -r "$HOME/tesp/requirements.txt" >> "$HOME/tesp.log"
 
 if [[ -z $VIRTUAL_ENV ]]; then
   VIRTUAL=""
@@ -13,7 +13,7 @@ cat >> "$HOME/tespEnv" << EOF
 $VIRTUAL
 
 # TESP exports
-export TESPDIR=$HOME/grid/repo/tesp
+export TESPDIR=$HOME/grid/tesp
 export INSTDIR=\$TESPDIR/tenv
 export REPODIR=\$TESPDIR/repository
 export TESPBUILD=\$TESPDIR/scripts/build

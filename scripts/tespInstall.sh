@@ -17,7 +17,7 @@ git config --global credential.helper store
 
 echo
 if [[ -z $3 ]]; then
-  WORKDIR=$HOME/tesp
+  WORKDIR=$HOME/grid/tesp
 else
   WORKDIR=$HOME/$3
 fi
@@ -28,9 +28,10 @@ cat > "$HOME/tespEnv" << EOF
 . $HOME/venv/bin/activate
 
 # TESP exports
+export GRIDDIR=$WORKDIR
 export TESPDIR=$WORKDIR
 export INSTDIR=\$TESPDIR/tenv
-export REPODIR=\$TESPDIR/repository
+export REPODIR=\$TESPDIR/repo
 export TESPBUILD=\$TESPDIR/scripts/build
 export TESPHELPR=\$TESPDIR/scripts/helpers
 

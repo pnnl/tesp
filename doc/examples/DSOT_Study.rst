@@ -135,7 +135,7 @@ Due to the scope and scale of the analysis, the DSO+T analysis typically takes s
 
 Start by downloading supporting data that is not stored in the repository due to its size and static nature. This will add a "data" folder alongside the existing "code" folder from the repository.
 .. code-block:: sh
-cd tesp/repository/tesp/examples/analysis/dsot/code
+cd ~/grid/tesp/examples/analysis/dsot/code
 ./dsotData.sh
     
 Open up "8_system_case_config.json" and confirm/change the following parameters:

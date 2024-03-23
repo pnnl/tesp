@@ -1,0 +1,251 @@
+diff --git a/examples/fed-filter.cc b/examples/fed-filter.cc
+index bdba5b0..92184a1 100644
+--- a/examples/fed-filter.cc
++++ b/examples/fed-filter.cc
+@@ -16,6 +16,7 @@ SPDX-License-Identifier: BSD-3-Clause
+ #include <stdexcept>
+ #include "helics/core/helicsCLI11.hpp"
+ #include "helics/core/helicsVersion.hpp"
++#include "helics/application_api/timeOperations.hpp"
+ 
+ int main (int argc, char *argv[])
+ {
+@@ -42,12 +43,12 @@ int main (int argc, char *argv[])
+     }
+     fi.defName = "filterFedNS3";
+     fi.loadInfoFromArgs(argc, argv);
+-    fi.setProperty(helics_property_time_delta, helics::loadTimeFromString("1s"));
++    fi.setProperty(HELICS_PROPERTY_TIME_DELTA, helics::loadTimeFromString("1s"));
+ 
+     auto mFed = std::make_unique<helics::MessageFederate> (myname, fi);
+     auto name = mFed->getName();
+     std::cout << " registering endpoint '" << srcEndpoint << "' for " << name<<'\n';
+-    auto &idsource = mFed->registerEndpoint(srcEndpoint, "");
++    auto &sourceEp = mFed->registerEndpoint(srcEndpoint, "");
+     std::cout << " registering endpoint '" << dstEndpoint << "' for " << name<<'\n';
+     (void)mFed->registerEndpoint(dstEndpoint, "");
+ 
+@@ -58,7 +59,7 @@ int main (int argc, char *argv[])
+     std::cout << "entered exec State\n";
+     for (int i=1; i<10; ++i) {
+         std::string message = "message sent from "+name+"/"+srcEndpoint+" to "+name+"/"+dstEndpoint+" at time " + std::to_string(i);
+-        mFed->sendMessage(idsource, name+"/"+dstEndpoint, message.data(), message.size());
++        sourceEp.sendTo(message.data(), message.size(), name+"/"+dstEndpoint);
+         std::cout << message << std::endl;
+         std::cout << "requesting time " << static_cast<double> (i) << "\n";
+         auto newTime = mFed->requestTime (i);
+diff --git a/examples/fed-pubsub.cc b/examples/fed-pubsub.cc
+index 21f5724..316bf42 100644
+--- a/examples/fed-pubsub.cc
++++ b/examples/fed-pubsub.cc
+@@ -54,7 +54,7 @@ int main (int argc, char *argv[])
+ 
+     cmd.Parse (args);
+     helicsHelper.SetupFederate (args);
+-    helics_federate->setProperty (helics_property_int_log_level, 5);
++    helics_federate->setProperty (HELICS_PROPERTY_INT_LOG_LEVEL, 5);
+ 
+     const auto name = helics_federate->getName();
+     std::cout << " registering publication '" << publishKey << "' for " << name<<'\n';
+@@ -70,14 +70,14 @@ int main (int argc, char *argv[])
+     for (int i=1; i<10; ++i)
+     {
+         const std::string message = "publishing message on "+publishKey+" at time " + std::to_string (i);
+-        helics_federate->publish (pub, message);
++        pub.publish (message);
+         std::cout << message << std::endl;
+         const auto newTime = helics_federate->requestTime (i);
+         std::cout << "processed time " << static_cast<double> (newTime) << "\n";
+         while (sub.checkUpdate ())
+         {
+             const auto nmessage = sub.getValue<std::string> ();
+-            std::cout << "received publication on key " << sub.getKey () << " at " << static_cast<double> (sub.getLastUpdate ()) << " ::" << nmessage << '\n';
++            std::cout << "received publication on key " << sub.getDisplayName () << " at " << static_cast<double> (sub.getLastUpdate ()) << " ::" << nmessage << '\n';
+         }
+ 
+     }
+diff --git a/examples/fed-sndrcv.cc b/examples/fed-sndrcv.cc
+index 616f025..a28f52f 100644
+--- a/examples/fed-sndrcv.cc
++++ b/examples/fed-sndrcv.cc
+@@ -47,12 +47,12 @@ int main (int argc, char *argv[])
+ 
+     std::string target = targetFederate + "/" + targetEndpoint;
+     fi.loadInfoFromArgs(argc, argv);
+-    fi.setProperty(helics_property_int_log_level, 5);
++    fi.setProperty(HELICS_PROPERTY_INT_LOG_LEVEL, 5);
+ 
+     auto mFed = std::make_unique<helics::MessageFederate> (myname, fi);
+     auto name = mFed->getName();
+     std::cout << " registering endpoint '" << mysource << "' for " << name<<'\n';
+-    auto &idsource = mFed->registerEndpoint(mysource, "");
++    auto &sourceEp = mFed->registerEndpoint(mysource, "");
+     std::cout << " registering endpoint '" << mydestination << "' for " << name<<'\n';
+     (void)mFed->registerEndpoint(mydestination, "");
+ 
+@@ -63,7 +63,7 @@ int main (int argc, char *argv[])
+     std::cout << "entered exec State\n";
+     for (int i=1; i<10; ++i) {
+         std::string message = "message sent from "+name+"/"+mysource+" to "+target+" at time " + std::to_string(i);
+-        mFed->sendMessage(idsource, target, message.data(), message.size());
++        sourceEp.sendTo(message.data(), message.size(), target);
+         std::cout << message << std::endl;
+         auto newTime = mFed->requestTime (i);
+         std::cout << "processed time " << static_cast<double> (newTime) << "\n";
+diff --git a/helper/helics-helper.cc b/helper/helics-helper.cc
+index 63a930e..670898a 100644
+--- a/helper/helics-helper.cc
++++ b/helper/helics-helper.cc
+@@ -17,7 +17,9 @@ SPDX-License-Identifier: BSD-3-Clause
+ #include "ns3/helics-static-source-application.h"
+ #include "ns3/helics-helper.h"
+ 
+-#include "helics/core/core-types.hpp"
++#include "helics/core/CoreTypes.hpp"
++#include "helics/application_api/typeOperations.hpp"
++#include "helics/application_api/timeOperations.hpp"
+ 
+ namespace ns3 {
+ 
+@@ -38,7 +40,7 @@ HelicsHelper::SetupFederate(void) {
+     helics::FederateInfo fi{};
+     fi.broker = broker;
+     fi.coreType = helics::coreTypeFromString(core);
+-    fi.setProperty(helics_property_time_delta, helics::loadTimeFromString("1ns"));
++    fi.setProperty(HELICS_PROPERTY_TIME_DELTA, helics::loadTimeFromString("1ns"));
+     if (!coreinit.empty()) {
+         fi.coreInitString = coreinit;
+     }
+diff --git a/model/helics-application.cc b/model/helics-application.cc
+index c6e47e5..b113c97 100644
+--- a/model/helics-application.cc
++++ b/model/helics-application.cc
+@@ -138,10 +138,10 @@ void HelicsApplication::SetupFilterApplication (const helics::Filter &filterInst
+ {
+ 	  NS_LOG_FUNCTION (this << epInstance.getName());
+ 	  m_filter_id = filterInstance;
+-	  m_endpoint_id = epInstance;
++	  m_endpoint = epInstance;
+ 	  SetName(epInstance.getName());
+ 	  std::function<void(helics::Endpoint,helics::Time)> func = std::bind (&HelicsApplication::EndpointCallback, this, std::placeholders::_1, std::placeholders::_2);
+-	  helics_federate->setMessageNotificationCallback(m_endpoint_id, func);
++	  helics_federate->setMessageNotificationCallback(m_endpoint, func);
+ }
+ 
+ void
+@@ -171,16 +171,16 @@ HelicsApplication::SetEndpointName (const std::string &name, bool is_global)
+   NS_LOG_FUNCTION (this << name << is_global);
+   SetName(name);
+   if (is_global) {
+-    m_endpoint_id = helics_federate->registerGlobalEndpoint (name);
++    m_endpoint = helics_federate->registerGlobalEndpoint (name);
+   }
+   else {
+-    m_endpoint_id = helics_federate->registerEndpoint (name);
++    m_endpoint = helics_federate->registerEndpoint (name);
+   }
+   using std::placeholders::_1;
+   using std::placeholders::_2;
+   std::function<void(helics::Endpoint,helics::Time)> func;
+   func = std::bind (&HelicsApplication::EndpointCallback, this, _1, _2);
+-  helics_federate->setMessageNotificationCallback(m_endpoint_id, func);
++  helics_federate->setMessageNotificationCallback(m_endpoint, func);
+ }
+ 
+ void
+@@ -190,7 +190,7 @@ HelicsApplication::SetEndpoint (helics::Endpoint &ep) {
+   using std::placeholders::_2;
+   std::function<void(helics::Endpoint,helics::Time)> func;
+   func = std::bind (&HelicsApplication::EndpointCallback, this, _1, _2);
+-  m_endpoint_id = ep;
++  m_endpoint = ep;
+   helics_federate->setMessageNotificationCallback(ep, func);
+ }
+ 
+@@ -298,7 +298,7 @@ HelicsApplication::StopApplication ()
+ }
+ 
+ static uint8_t
+-char_to_uint8_t (char c)
++stdbyte_to_uint8_t (std::byte c)
+ {
+   return uint8_t(c);
+ }
+@@ -332,7 +332,7 @@ HelicsApplication::Send (std::string dest, helics::Time time, std::unique_ptr<he
+   size_t total_size = message->data.size();
+   uint8_t *buffer = new uint8_t[total_size];
+   uint8_t *buffer_ptr = buffer;
+-  std::transform (message->data.begin(), message->data.end(), buffer_ptr, char_to_uint8_t);
++  std::transform (message->data.begin(), message->data.end(), buffer_ptr, stdbyte_to_uint8_t);
+   p = Create<Packet> (buffer, total_size);
+   NS_LOG_INFO("buffer='" << p << "'");
+   delete [] buffer;
+diff --git a/model/helics-application.h b/model/helics-application.h
+index 962a5e5..a6eeeb7 100644
+--- a/model/helics-application.h
++++ b/model/helics-application.h
+@@ -120,7 +120,7 @@ protected:
+   virtual void DoEndpoint (helics::Endpoint id, helics::Time time, std::unique_ptr<helics::Message> message);
+   virtual void DoRead (std::unique_ptr<helics::Message> message);
+ 
+-  helics::Endpoint m_endpoint_id;
++  helics::Endpoint m_endpoint;
+ 
+ private:
+   /**
+diff --git a/model/helics-filter-application.cc b/model/helics-filter-application.cc
+index 8693f86..51e0a39 100644
+--- a/model/helics-filter-application.cc
++++ b/model/helics-filter-application.cc
+@@ -85,7 +85,7 @@ HelicsFilterApplication::DoRead (std::unique_ptr<helics::Message> message)
+   NS_LOG_FUNCTION (this << message->to_string());
+ 
+   message->dest = message->original_dest;
+-  helics_federate->sendMessage (m_endpoint_id, std::move (message));
++  m_endpoint.send (std::move (message));
+ }
+ 
+ } // Namespace ns3
+diff --git a/model/helics-static-source-application.cc b/model/helics-static-source-application.cc
+index f8039b0..f1a084c 100644
+--- a/model/helics-static-source-application.cc
++++ b/model/helics-static-source-application.cc
+@@ -118,7 +118,7 @@ HelicsStaticSourceApplication::DoRead (std::unique_ptr<helics::Message> message)
+ 
+   NS_LOG_INFO ("sending message on to " << m_destination);
+ 
+-  helics_federate->sendMessage (m_endpoint_id, m_destination, message->data.data(), message->data.size());
++  m_endpoint.sendTo (message->data, m_destination);
+ }
+ 
+ } // Namespace ns3
+diff --git a/wscript b/wscript
+index 2b227a7..c802eeb 100644
+--- a/wscript
++++ b/wscript
+@@ -98,9 +98,8 @@ int main()
+     conf.env['DEFINES_HELICS'] = ['NS3_HELICS']
+ 
+     # Look for HELICS library
+-    # HELICS 2.3+: helics-shared, helics-sharedd
+-    # HELICS pre-2.3: helics-static, helics-staticd
+-    possible_helics_lib_names = ['helics-shared', 'helics-sharedd', 'helics-static', 'helics-staticd']
++    # HELICS 3: helicscpp, helicscppd
++    possible_helics_lib_names = ['helicscpp', 'helicscppd']
+     for try_helics_lib in possible_helics_lib_names:
+         retval = conf.check_nonfatal(fragment=helics_test_code, lib=try_helics_lib, libpath=conf.env['LIBPATH_HELICS'], use='HELICS')
+         if retval:
+@@ -119,11 +118,11 @@ int main()
+         # if they are enabled.
+         conf.env['MODULES_NOT_BUILT'].append('helics')
+ 
+-    # if HELICS is enabled, we must use c++14 instead of c++11
++    # if HELICS is enabled, we must use c++17 instead of c++11
+     if conf.env['HELICS']:
+         for index,flag in enumerate(conf.env['CXXFLAGS']):
+             if 'c++11' in flag:
+-                conf.env['CXXFLAGS'][index] = '-std=c++14'
++                conf.env['CXXFLAGS'][index] = '-std=c++17'
+                 break
+         print(conf.env['CXXFLAGS'])
+ 
