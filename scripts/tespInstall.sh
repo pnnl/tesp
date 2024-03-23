@@ -22,18 +22,17 @@ else
   WORKDIR=$HOME/$3
 fi
 echo "Install TESP home directory"
-echo "TESP home dirctory is $WORKDIR"
+echo "TESP home directory is $WORKDIR"
 
-cat > "$HOME/tespEnv" << EOF
-. $HOME/venv/bin/activate
+cat > "$HOME/grid/tesp.env" << EOF
+. $HOME/grid/venv/bin/activate
 
 # TESP exports
-export GRIDDIR=$WORKDIR
+export GRID_DIR=$WORKDIR
 export TESPDIR=$WORKDIR
-export INSTDIR=\$TESPDIR/tenv
-export REPODIR=\$TESPDIR/repo
-export TESPBUILD=\$TESPDIR/scripts/build
-export TESPHELPR=\$TESPDIR/scripts/helpers
+export INSTDIR=\$GRID_DIR/tenv
+export REPODIR=\$GRID_DIR/repo
+export BUILD_DIR=\$TESPDIR/scripts/build
 
 # COMPILE exports
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
@@ -52,7 +51,7 @@ export PATH=\$JAVA_HOME:\$PATH
 export PATH=\$PATH:\$INSTDIR/energyplus
 export PATH=\$PATH:\$INSTDIR/energyplus/PreProcess
 export PATH=\$PATH:\$INSTDIR/energyplus/PostProcess
-export PATH=\$PATH:\$TESPHELPR
+export PATH=\$PATH:\$TESPDIR/scripts/helpers
 
 # PSST environment variables
 export PSST_SOLVER=cbc

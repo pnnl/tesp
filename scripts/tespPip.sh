@@ -14,10 +14,9 @@ $VIRTUAL
 
 # TESP exports
 export TESPDIR=$HOME/grid/tesp
-export INSTDIR=\$TESPDIR/tenv
-export REPODIR=\$TESPDIR/repository
-export TESPBUILD=\$TESPDIR/scripts/build
-export TESPHELPR=\$TESPDIR/scripts/helpers
+export INSTDIR=\$TESPDIR/grid/tenv
+export REPO_DIR=\$TESPDIR/grid/repo
+export BUILD_DIR=\$TESPDIR/scripts/build
 
 # COMPILE exports
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
@@ -36,7 +35,7 @@ export PATH=\$JAVA_HOME:\$PATH
 export PATH=\$PATH:\$INSTDIR/energyplus
 export PATH=\$PATH:\$INSTDIR/energyplus/PreProcess
 export PATH=\$PATH:\$INSTDIR/energyplus/PostProcess
-export PATH=\$PATH:\$TESPHELPR
+export PATH=\$PATH:\$TESPDIR/scripts/helpers
 
 # PSST environment variables
 export PSST_SOLVER=cbc

@@ -13,12 +13,6 @@ echo
 echo "++++++++++++++  Compiling and Installing grid applications software is starting!  ++++++++++++++"
 echo
 
-
-echo "Activate Virtual Environment..."
-cp ${TESPDIR}/scripts/tespEnv "$HOME/"
-. "$HOME/tespEnv"
-which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
-
 echo "Installing Python Libraries Requirements for TESP..."
 pip install --upgrade pip >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
 pip install -r "${TESPDIR}/requirements.txt" >> "${BUILD_DIR}/tesp_pypi.log" 2>&1

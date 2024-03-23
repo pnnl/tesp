@@ -137,7 +137,7 @@ if [[ ${lv[0]} -eq 18 ]]; then
     # To compile with helics>=3.1 gridlabd>=5.0 need to upgrade cmake and g++-9 for ubuntu 18.04
     wget --no-check-certificate https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-3.24.2-linux-x86_64.sh
     chmod 755 cmake-3.24.2-linux-x86_64.sh
-    ./cmake-3.24.2-linux-x86_64.sh --skip-license --prefix="$HOME/tesp/tenv"
+    ./cmake-3.24.2-linux-x86_64.sh --skip-license --prefix="$HOME/grid/tenv"
     rm -f cmake-3.24.2-linux-x86_64.sh
   fi
   sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
@@ -149,9 +149,16 @@ fi
 
 echo "Clone directory structure for TESP"
 echo ++++++++++++++ TESP
-if [[ -d "${GRID_DIR}/tesp" ]]; then
+if [[ -d "$HOME/grid/tesp" ]]; then
   git clone -b main https://github.com/pnnl/tesp.git
 fi
+
+echo "Activate Virtual Environment..."
+cp tesp/scripts/tespEnv "$HOME/"
+. "$HOME/tespEnv"
+
+# The rest of the build/install depends on the exports in the tespEnv file
+which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
 
 echo "Install grid applications software to $HOME/grid/repo"
 mkdir -p repo
@@ -159,7 +166,6 @@ cd repo || exit
 
 echo
 echo "Download all relevant repositories..."
-
 echo
 echo ++++++++++++++ PSST
 if [[ -d "${REPO_DIR}/AMES-V5.0" ]]; then
