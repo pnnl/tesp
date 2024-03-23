@@ -17,16 +17,12 @@ echo "Installing Python Libraries Requirements for TESP..."
 pip install --upgrade pip >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
 pip install -r "${TESPDIR}/requirements.txt" >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
 
-cd "${TESPDIR}/src/tesp_support" || exit
-echo "Installing Python TESP API..."
-pip install -e . > "${BUILD_DIR}/tesp_api.log" 2>&1
-
-cd "${REPO_DIR}/AMES-V5.0/psst" || exit
-echo "Installing Python PSST..."
-pip install -e . > "${BUILD_DIR}/AMES-V5.0.log" 2>&1
-
-cd "${BUILD_DIR}" || exit
 if [[ $1 == "develop" ]]; then
+  cd "${TESPDIR}/src/tesp_support" || exit
+  echo "Installing Python TESP API..."
+  pip install -e . > "${BUILD_DIR}/tesp_api.log" 2>&1
+
+  cd "${BUILD_DIR}" || exit
   echo "Compiling and Installing FNCS..."
   ./fncs_b.sh clean > fncs.log 2>&1
 
@@ -60,6 +56,10 @@ if [[ $1 == "develop" ]]; then
   echo "Installing TESP documentation..."
   ./docs_b.sh clean > docs.log 2>&1
 else
+  echo "Installing Python TESP API..."
+  pip install tesp_support --upgrade > "${BUILD_DIR}/tesp_api.log" 2>&1
+#  pip install psst --upgrade
+
   ver=$(cat ../grid_version)
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
@@ -68,9 +68,9 @@ else
   rm tesp_binaries.zip
 fi
 
-cd "${TESPDIR}/src/cosim_toolbox" || exit
-echo "Installing Python TESP API..."
-pip install -e . > "${BUILD_DIR}/tesp_api.log" 2>&1
+cd "${REPO_DIR}/AMES-V5.0/psst" || exit
+echo "Installing Python PSST..."
+pip install -e . > "${BUILD_DIR}/AMES-V5.0.log" 2>&1
 
 cd "${BUILD_DIR}" || exit
 echo "Installing HELICS Python bindings..."

@@ -3,6 +3,15 @@
 # Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: tesp.sh
 
+if [[ -z ${INSTDIR} ]]; then
+  echo
+  echo "To build a local environment:"
+  echo "  Edit tesp.env in the TESP directory"
+  echo "  Run 'source tesp.env' in that same directory"
+  echo "  Run './scripts/tesp.sh [git login] [git email]' in that same directory"
+  echo
+  exit
+fi
 
 # You should get familiar with the command line to have good success with TESP
 # As such, you may want to run in remote shh terminal.
@@ -25,9 +34,8 @@
 # If you would to use and IDE here's to install snap Pycharm IDE for python
 #   sudo snap install pycharm-community --classic
 # Here is how to start the environment and pycharm and capture pycharm log for any errors
-#   source ~/tesp.env
+#   source ~/grid/tesp/tesp.env
 #   pycharm-community &> ~/charm.log&
-
 
 #alternatives command line for java or python
 #sudo update-alternatives --config java
@@ -98,14 +106,13 @@ python3-venv \
 python3-pip \
 python3-tk \
 python3-pil.imagetk
-
-sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
-
 #sudo apt-get -y install python3.8
 #sudo apt-get -y install python3.8-venv
 #sudo apt-get -y install python3-pip
 #sudo apt-get -y install ${tk}
 #sudo apt-get -y install python3-pil.imagetk
+
+sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
 
 echo
 if [[ -z $1 && -z $2 ]]; then
@@ -207,21 +214,23 @@ if [[ $binaries == "develop" ]]; then
 
   echo
   echo ++++++++++++++ NS-3
-  if [[ ! -d "${REPO_DIR}/gridlab-d" ]]; then
+  if [[ ! -d "${REPO_DIR}/ns-3-dev" ]]; then
     git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
     "${BUILD_DIR}/patch.sh" ns-3-dev ns-3-dev
   fi
 
   echo
   echo ++++++++++++++ HELICS-NS-3
-  if [[ ! -d "${REPO_DIR}/gridlab-d" ]]; then
+  if [[ ! -d "${REPO_DIR}/ns-3-dev/contrib/helics" ]]; then
     git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
     "${BUILD_DIR}/patch.sh" ns-3-dev/contrib/helics helics-ns3
   fi
 
   echo
   echo ++++++++++++++ KLU SOLVER
-  unzip -q "${BUILD_DIR}/KLU_DLL.zip" -d ./KLU_DLL
+  if [[ ! -d "${REPO_DIR}/KLU_DLL" ]]; then
+    unzip -q "${BUILD_DIR}/KLU_DLL.zip" -d ./KLU_DLL
+  fi
 fi
 
 # Compile all relevant executables
