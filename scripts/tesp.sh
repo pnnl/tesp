@@ -3,16 +3,6 @@
 # Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: tesp.sh
 
-if [[ -z ${INSTDIR} ]]; then
-  echo
-  echo "To build a local environment:"
-  echo "  Edit tesp.env in the TESP directory"
-  echo "  Run 'source tesp.env' in that same directory"
-  echo "  Run './scripts/tesp.sh [git login] [git email]' in that same directory"
-  echo
-  exit
-fi
-
 # You should get familiar with the command line to have good success with TESP
 # As such, you may want to run in remote shh terminal.
 # Here is to how to install and configured ssh server

@@ -9,7 +9,7 @@ fi
 echo
 echo "Grid applications software installed are:"
 echo
-echo "TESP $(cat ${TESPDIR}/src/tesp_support/version)"
+echo "TESP $(cat "${TESPDIR}/src/tesp_support/version")"
 
 FILE="${INSTDIR}/bin/fncs_broker"
 if [[ -f "${FILE}" ]]; then
@@ -20,7 +20,7 @@ fi
 
 echo "HELICS $(helics_broker --version)"
 
-echo $("${BUILD_DIR}/test_helics_java")
+"${BUILD_DIR}/test_helics_java.sh"
 
 gridlabd --version
 
