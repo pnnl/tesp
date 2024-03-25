@@ -47,26 +47,26 @@ Quick Example
 .............
 
 The TESP installation includes a full working example with data from the TE30 example (discussed more below) but here's a quick and dirty overview of the APIs in action::
-	
-	import tesp_support.api.store as store
-	
-	store = store.Store("*file name of store*") # Create store
-	os_data_path = store.add_path("*OS path to data*", "*name of path for metadata*")
-	zip_dir_path = os_data_path.set_includeDir("*ZIP path to data*", *recurse?[bool]*)
-	
-	# Adding file to metadata JSON
-	data_file = store.add_file("*OS file path + name relative to current working dir*", 
-									"*name in store*", 
-									"*description string for data*")
-	table_list = data_file.get_tables()
-	# Just doing the first table to keep it simple
-	data_file.get_columns(table_list[0]) 
-	data_file.set_date_bycol(table_list[0], "*column name with timestamp information*")
-	
-	# Adding files to ZIP in previously created directory in ZIP
-	store.set_includeFile(zip_dir_path, "*OS path to file to include*")
-	
-	
+
+    import tesp_support.api.store as store
+
+    store = store.Store("*file name of store*") # Create store
+    os_data_path = store.add_path("*OS path to data*", "*name of path for metadata*")
+    zip_dir_path = os_data_path.set_includeDir("*ZIP path to data*", *recurse?[bool]*)
+
+    # Adding file to metadata JSON
+    data_file = store.add_file("*OS file path + name relative to current working dir*",
+                                    "*name in store*",
+                                    "*description string for data*")
+    table_list = data_file.get_tables()
+    # Just doing the first table to keep it simple
+    data_file.get_columns(table_list[0])
+    data_file.set_date_bycol(table_list[0], "*column name with timestamp information*")
+
+    # Adding files to ZIP in previously created directory in ZIP
+    store.set_includeFile(zip_dir_path, "*OS path to file to include*")
+
+
 Retrieving and Using Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 The datastore is intended to allow portability of data to allow post-processing scripts the ability to work from data in a known location (that is, relative to the datastore), inspecting the schema of the stored data, and providing data import and conversion into pandas DataFrames for ease of processing.
@@ -74,12 +74,12 @@ The datastore is intended to allow portability of data to allow post-processing 
 Quick Example
 .............
 The essential APIs for using the data store are pretty simple.::
-	import tesp_support.api.store as store
-	store = store.Store(*store name*)
-	schema = store.get_schema(*data filename*)
-	tables = schema.tables
-	columns = schema.columns
-	df = schema.get_series_data(*table name*, *start time*, *stop time*)
+    import tesp_support.api.store as store
+    store = store.Store(*store name*)
+    schema = store.get_schema(*data filename*)
+    tables = schema.tables
+    columns = schema.columns
+    df = schema.get_series_data(*table name*, *start time*, *stop time*)
 
 
 
@@ -94,9 +94,9 @@ makestore.py
 To emulate the case where the TE30 example is run on a different computer than the post-processing takes place, "makestore.py" resides in the "examples/capabilities/te30" folder and should be run after the TE30 case has been run and the output data is produced.
 
 First, we create the datastore and add a directory to the metadata and .zip.::
-	
-	my_store = fle.Store(case_name)
-	...
+
+    my_store = fle.Store(case_name)
+    ...
     my_path = my_store.add_path("../te30", "TE30 Directory")
     sub = my_path.set_includeDir(".", False)	
 
@@ -104,7 +104,7 @@ The data being ingested by the store is from GridLAB-D and is in HDF5 format. Du
 
 For each of the GridLAB-D data files being added, add it to the metadata JSON and to the ZIP. Again, particular to the way GridLAB-D records its data using HDF5, for each simulated day GridLAB-D generates a new table in the HDF5 file. Thus, the files is added to the ZIP only once but the metadata for each day is added to the JSON separately.::
 
-	my_file = my_store.add_file(name, name[i], names[i] + ' for ' + challenge)
+    my_file = my_store.add_file(name, name[i], names[i] + ' for ' + challenge)
     my_path.set_includeFile(sub, name)
     tables = my_file.get_tables()
     if len(tables) > 1:
@@ -115,7 +115,7 @@ For each of the GridLAB-D data files being added, add it to the metadata JSON an
         
 As mentioned previously, the TESP datastore API assumes all data in a CSV is effectively a single table and thus is added singly. The second parameter in the .get_columns() method is optional but is particularly useful for CSVs that have header lines at the top of the file (such as these used in this example). The second parameter is the number of header lines to skip before getting to the row that defines the names of the columns.::
 
-	my_file = my_store.add_file(challenge + ".csv", challenge,'CSV for TE_ChallengeH')
+    my_file = my_store.add_file(challenge + ".csv", challenge,'CSV for TE_ChallengeH')
     tables = my_file.get_tables()
     if len(tables):
         columns = my_file.get_columns(tables[0], 0)
@@ -124,7 +124,7 @@ As mentioned previously, the TESP datastore API assumes all data in a CSV is eff
 
 For completeness sake, a number of JSONs with simulation metadata are included in the ZIP but NOT cataloged in the metadata JSON. Including this simulation metadata will be useful for those post-processing the results but as it is not time-series, it is not cataloged in the datastore metadata JSON.::
 
-	names = ['agent_dict', '_glm_dict', 'model_dict']
+    names = ['agent_dict', '_glm_dict', 'model_dict']
     for i in range(len(names)):
         my_path.set_includeFile(sub, challenge + names[i] + ".json")
 
@@ -135,38 +135,38 @@ To run the "te30_usestore.py" example, first copy "te30_store.zip" to the "te30_
 
 Once setting up the post-processing to define the time-range we're going to analyze and potentially change the working directory to that of the folder containing the unzipped files, we first create a datastore object.::
 
-	te30_store = store.Store(case_name)
-	
+    te30_store = store.Store(case_name)
+
 If you don't have a good sense of the data being passed to you in the .zip, you can get a list of the schemas in the datastore.::
 
-	    for item in te30_store.get_schema():
+        for item in te30_store.get_schema():
         print(f"\t{item}")
         
 Note that this is not necessarily a list of the files themselves. This is a list of the datafiles that have a defined schema in the datastore metadata. There could be other files that have not had schemas created but have been distributed in the zip.
 
 To look at the specific data in a schema, we can make a call to get the schema and then look at the tables in a schema and the columns associated with each table.::
 
-	weather_schema = te30_store.get_schema("weather")
-	# If you're not evaluating the schema interactively you can print it to console
-	print(f"Weather tables {pp.pformat(weather_schema.tables)}")
+    weather_schema = te30_store.get_schema("weather")
+    # If you're not evaluating the schema interactively you can print it to console
+    print(f"Weather tables {pp.pformat(weather_schema.tables)}")
     print(f"Weather columns {pp.pformat(weather_schema.columns)}")
     ...
     inverter_schema = te30_store.get_schema("inverter_TE_ChallengeH_metrics")
     
 Then we pull the data out.::
-	
-	weather_data = weather_schema.get_series_data("weather", start_date_1, end_date_1)
-	...
-	inverter_data = inverter_schema.get_series_data("index1", start_date_1, end_date_1)
+
+    weather_data = weather_schema.get_series_data("weather", start_date_1, end_date_1)
+    ...
+    inverter_data = inverter_schema.get_series_data("index1", start_date_1, end_date_1)
 
 TESP uses pandas DataFrames as the standard format for time-series data, regardless of the source data format (*e.g.* .csv, .h5); the conversion is handled by the TESP APIs. In this case, the weather data was from a .csv and the inverter data was from an HDF5 file generated by GridLAB-D. When properly indexed so the timestamps for the data are recognized as such, pandas takes care of aligning the data in time so actions like plotting are much easier.::
 
-	weather_data = weather_data.set_index("timestamp")
-	inverter_data = inverter_data.set_index("date")
-	
-Unfortunately, the GridLAB-D data contains all inverter data in the same table and since we're going to look at the output of a single inverter, we have to filter the table to only show us the data for that inverter.
+    weather_data = weather_data.set_index("timestamp")
+    inverter_data = inverter_data.set_index("date")
 
-	houseA11_inv = inverter_data.loc[(inverter_data["name"] == b"inv_F1_house_A11")]
+Unfortunately, the GridLAB-D data contains all inverter data in the same table and since we're going to look at the output of a single inverter, we have to filter the table to only show us the data for that inverter.::
+
+    houseA11_inv = inverter_data.loc[(inverter_data["name"] == b"inv_F1_house_A11")]
     inverter_time = houseA11_inv["date"]
     # If the date is typed as a string instead of a datetime object, we need to 
     # convert it to a datetime object to allow for indexing.
@@ -181,9 +181,9 @@ For this example, we're going to be confirming that the simulation shows a stron
 Once we've got the data from the two sources as DataFrames, the rest is just using pandas and Matplotlib to make our graph and visually evaluate the data as shown in :numref:`fig_datastore_solar_inverter`.
 
 .. figure:: ../media/datastoreSolarInverter.png
-	:name: fig_datastore_solar_inverter
-	
-	Comparison of solar flux and rooftop solar inverter output from TE30 example.
+    :name: fig_datastore_solar_inverter
+
+    Comparison of solar flux and rooftop solar inverter output from TE30 example.
 
 As expected, a strong correlation does exist and all is well.
 
