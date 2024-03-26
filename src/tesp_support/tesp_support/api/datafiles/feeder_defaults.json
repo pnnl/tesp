@@ -4,6 +4,8 @@
   "endtime": "2010-06-03 00:00:00",
   "timestep": 15,
   "port": 5570,
+  "message_broker": "helics_msg",
+  "WANT_VI_DUMP": "False",
   "metrics_interval": 300,
   "metrics": [
       "house",
@@ -255,5 +257,9 @@
   "tpxX11": 0.6235,
   "tpxR12": 0.8808,
   "tpxX12": 0.6737,
-  "tpxAMP": 235.0
+  "tpxAMP": 235.0,
+  "work_path": "./Dummy/",
+  "forERCOT": "True",
+  "time_zone_offset": 1.0,
+  "name_prefix": ""
 }

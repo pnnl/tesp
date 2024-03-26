@@ -468,8 +468,7 @@ class GLModel:
                 else:
                     print("Unrecognized user class/object and id:", obj_type, object_name)
         else:
-            raise TypeError(f"GRIDLABD object type and/or object name {obj_type} 
-                            must be a string and is not.")
+            raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
         return None
 
     def get_object_instance(self, obj_type, object_name):
@@ -480,8 +479,7 @@ class GLModel:
             except:
                 print("Unrecognized GRIDLABD object and id:", obj_type, object_name)
         else:
-            raise TypeError(f"GRIDLABD object type and/or object name {obj_type} 
-                            must be a string and is not.")
+            raise TypeError("GRIDLABD object type and/or object name {obj_type} must be a string and is not.")
         return None
 
     @staticmethod
@@ -989,7 +987,7 @@ class GLModel:
         plt.show()
 
 
-def test1():
+def _test1():
     from .data import tesp_test
 
     # Test model_GLM.py
