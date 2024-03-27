@@ -2,7 +2,7 @@
 # file: feederGenerator.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
-As this module populates the feeder backbone wiht houses and DER, it uses
+As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
 fuses, transformers and lines to serve the expected load. Transformers have
 a margin of 20% to avoid overloads, while fuses have a margin of 150% to
@@ -11,8 +11,15 @@ source file.
 
 There are two kinds of house populating methods implemented:
 
-    * :Feeders with Service Transformers: This case applies to the full PNNL taxonomy feeders. Do not specify the *taxchoice* argument to *populate_feeder*. Each service transformer receiving houses will have a short service drop and a small number of houses attached.
-    * :Feeders without Service Transformers: This applies to the reduced-order ERCOT feeders. To invoke this mode, specify the *taxchoice* argument to *populate_feeder*. Each primary load to receive houses will have a large service transformer, large service drop and large number of houses attached.
+    * :Feeders with Service Transformers: This case applies to the full PNNL 
+    taxonomy feeders. Do not specify the *taxchoice* argument to 
+    *populate_feeder*. Each service transformer receiving houses will have a 
+    short service drop and a small number of houses attached.
+
+    * :Feeders without Service Transformers: This applies to the reduced-order 
+    ERCOT feeders. To invoke this mode, specify the *taxchoice* argument to 
+    *populate_feeder*. Each primary load to receive houses will have a large 
+    service transformer, large service drop and large number of houses attached.
 
 References:
     `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_
@@ -21,7 +28,8 @@ Public Functions:
     :populate_feeder: processes one GridLAB-D input file
 
 Todo:
-    * Verify the level zero mobile home thermal integrity properties; these were copied from the MATLAB feeder generator
+    * Verify the level zero mobile home thermal integrity properties; these were
+     copied from the MATLAB feeder generator
 
 """
 import sys
@@ -97,20 +105,27 @@ def selectEVmodel(evTable, prob):
 # ***************************************************************************************************
 
 def add_node_house_configs(glm_modifier, xfkva, xfkvll, xfkvln, phs, want_inverter=False):
-    """Writes transformers, inverter settings for GridLAB-D houses at a primary load point.
+    """Writes transformers, inverter settings for GridLAB-D houses at a primary 
+    load point.
 
-    An aggregated single-phase triplex or three-phase quadriplex line configuration is also
-    written, based on estimating enough parallel 1/0 AA to supply xfkva load.
-    This function should only be called once for each combination of xfkva and phs to use,
-    and it should be called before write_node_houses.
+    An aggregated single-phase triplex or three-phase quadriplex line 
+    configuration is also written, based on estimating enough parallel 1/0 AA to
+    supply xfkva load. This function should only be called once for each 
+    combination of xfkva and phs to use, and it should be called before 
+    write_node_houses.
 
     Args:
         fp (file): Previously opened text file for writing; the caller closes it.
-        xfkva (float): the total transformer size to serve expected load; make this big enough to avoid overloads
-        xfkvll (float): line-to-line voltage [kV] on the primary. The secondary voltage will be 208 three-phase
-        xfkvln (float): line-to-neutral voltage [kV] on the primary. The secondary voltage will be 120/240 for split secondary
-        phs (str): either 'ABC' for three-phase, or concatenation of 'A', 'B', and/or 'C' with 'S' for single-phase to triplex
-        want_inverter (boolean): True to write the IEEE 1547-2018 smarter inverter function setpoints
+        xfkva (float): the total transformer size to serve expected load; make 
+            this big enough to avoid overloads
+        xfkvll (float): line-to-line voltage [kV] on the primary. The secondary 
+            voltage will be 208 three-phase
+        xfkvln (float): line-to-neutral voltage [kV] on the primary. The 
+            secondary voltage will be 120/240 for split secondary
+        phs (str): either 'ABC' for three-phase, or concatenation of 'A', 'B', 
+            and/or 'C' with 'S' for single-phase to triplex
+        want_inverter (boolean): True to write the IEEE 1547-2018 smarter 
+            inverter function setpoints
     """
     if want_inverter:
         # print ('#define INVERTER_MODE=CONSTANT_PF', file=fp)
@@ -129,7 +144,7 @@ def add_node_house_configs(glm_modifier, xfkva, xfkvll, xfkvln, phs, want_invert
         glm_modifier.model.define_lines.append("#define INV_IIN=32.5")
         glm_modifier.model.define_lines.append("#define INV_VVLOCKOUT=300.0")
         glm_modifier.model.define_lines.append("#define INV_VW_V1=1.05 // 1.05833")
-        glm_modifier.model.define_lines.append("define INV_VW_V2=1.10")
+        glm_modifier.model.define_lines.append("#define INV_VW_V2=1.10")
         glm_modifier.model.define_lines.append("#define INV_VW_P1=1.0")
         glm_modifier.model.define_lines.append("#define INV_VW_P2=0.0")
     if 'S' in phs:
@@ -149,9 +164,11 @@ def add_node_house_configs(glm_modifier, xfkva, xfkvll, xfkvln, phs, want_invert
 # ***************************************************************************************************
 
 def add_kersting_quadriplex(glm_modifier, kva):
-    """Writes a quadriplex_line_configuration based on 1/0 AA example from Kersting's book
+    """Writes a quadriplex_line_configuration based on 1/0 AA example from 
+    Kersting's book
 
-    The conductor capacity is 202 amps, so the number of triplex in parallel will be kva/sqrt(3)/0.208/202
+    The conductor capacity is 202 amps, so the number of triplex in parallel 
+    will be kva/sqrt(3)/0.208/202
     """
     params = dict()
     params["key"] = 'quad_cfg_{:d}'.format(int(kva))
@@ -174,9 +191,11 @@ def add_kersting_quadriplex(glm_modifier, kva):
 # ***************************************************************************************************
 
 def add_kersting_triplex(glm_modifier, kva):
-    """Writes a triplex_line_configuration based on 1/0 AA example from Kersting's book
+    """Writes a triplex_line_configuration based on 1/0 AA example from 
+    Kersting's book
 
-    The conductor capacity is 202 amps, so the number of triplex in parallel will be kva/0.12/202
+    The conductor capacity is 202 amps, so the number of triplex in parallel 
+    will be kva/0.12/202
     """
     params = dict()
     params["key"] = 'tpx_cfg_{:d}'.format(int(kva))
@@ -288,9 +307,11 @@ def randomize_commercial_skew(glm_modifier):
 
 
 def is_edge_class(s):
-    """Identify switch, fuse, recloser, regulator, transformer, overhead_line, underground_line and triplex_line instances
+    """Identify switch, fuse, recloser, regulator, transformer, overhead_line, 
+    underground_line and triplex_line instances
 
-    Edge class is networkx terminology. In GridLAB-D, edge classes are called links.
+    Edge class is networkx terminology. In GridLAB-D, edge classes are called 
+    links.
 
     Args:
         s (str): the GridLAB-D class name
@@ -449,7 +470,8 @@ def buildingTypeLabel(glm_modifier, rgn, bldg, ti):
     Args:
         rgn (int): region number 1..5
         bldg (int): 0 for single-family, 1 for apartment, 2 for mobile home
-        ti (int): thermal integrity level, 0..6 for single-family, only 0..2 valid for apartment or mobile home
+        ti (int): thermal integrity level, 0..6 for single-family, only 0..2 
+            valid for apartment or mobile home
     """
     return glm_modifier.defaults.rgnName[rgn - 1] + ': ' + glm_modifier.defaults.bldgTypeName[
         bldg] + ': TI Level ' + str(ti + 1)
@@ -468,7 +490,8 @@ def Find3PhaseXfmr(glm_modifier, kva):
         kva (float): the minimum transformer rating
 
     Returns:
-        [float,float,float,float,float]: the kva, %r, %x, %no-load loss, %magnetizing current
+        [float,float,float,float,float]: the kva, %r, %x, %no-load loss, 
+            %magnetizing current
     """
     for row in glm_modifier.defaults.three_phase:
         if row[0] >= kva:
@@ -488,7 +511,8 @@ def Find1PhaseXfmr(glm_modifier, kva):
         kva (float): the minimum transformer rating
 
     Returns:
-        [float,float,float,float,float]: the kva, %r, %x, %no-load loss, %magnetizing current
+        [float,float,float,float,float]: the kva, %r, %x, %no-load loss, 
+            %magnetizing current
     """
     for row in glm_modifier.defaults.single_phase:
         if row[0] >= kva:
@@ -583,7 +607,8 @@ def checkResidentialBuildingTable(glm_modifier):
 # ***************************************************************************************************
 
 def selectThermalProperties(glm_modifier, bldgIdx, tiIdx):
-    """Retrieve the building thermal properties for a given type and integrity level
+    """Retrieve the building thermal properties for a given type and integrity 
+    level
 
     Args:
         bldgIdx (int): 0 for single-family, 1 for apartment, 2 for mobile home
@@ -602,12 +627,11 @@ def selectThermalProperties(glm_modifier, bldgIdx, tiIdx):
 # ***************************************************************************************************
 
 def FindFuseLimit(glm_modifier, amps):
-    """ Find a Fuse size that's unlikely to melt during power flow
+    """ Find a fuse size that's unlikely to melt during power flow
 
-    Will choose a fuse size of 40, 65, 100 or 200 Amps.
-    If that's not large enough, will choose a recloser size
-    of 280, 400, 560, 630 or 800 Amps. If that's not large
-    enough, will choose a breaker size of 600 (skipped), 1200
+    Will choose a fuse size of 40, 65, 100 or 200 Amps. If that's not large 
+    enough, will choose a recloser size of 280, 400, 560, 630 or 800 Amps. If 
+    that's not large enough, will choose a breaker size of 600 (skipped), 1200
     or 2000 Amps. If that's not large enough, will choose 999999.
 
     Args:
@@ -898,7 +922,8 @@ def add_local_triplex_configurations(glm_modifier):
 # ***************************************************************************************************
 
 def add_ercot_houses(glm_modifier, model, h, vln, vsec):
-    """For the reduced-order ERCOT feeders, add houses and a large service transformer to the load points
+    """For the reduced-order ERCOT feeders, add houses and a large service 
+    transformer to the load points
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -1008,7 +1033,8 @@ def add_ercot_houses(glm_modifier, model, h, vln, vsec):
 # ***************************************************************************************************
 
 def connect_ercot_commercial(glm_modifier):
-    """For the reduced-order ERCOT feeders, add a billing meter to the commercial load points, except small ZIPLOADs
+    """For the reduced-order ERCOT feeders, add a billing meter to the 
+    commercial load points, except small ZIPLOADs
 
     Args:
         op (file): an open GridLAB-D input file
@@ -1042,7 +1068,8 @@ def connect_ercot_commercial(glm_modifier):
 # ***************************************************************************************************
 # ***************************************************************************************************
 def add_ercot_small_loads(glm_modifier, basenode, vnom):
-    """For the reduced-order ERCOT feeders, write loads that are too small for houses
+    """For the reduced-order ERCOT feeders, write loads that are too small for 
+    houses
 
     Args:
       basenode (str): the GridLAB-D node name
@@ -1083,7 +1110,8 @@ def add_ercot_small_loads(glm_modifier, basenode, vnom):
 # ***************************************************************************************************
 # look at primary loads, not the service transformers
 def identify_ercot_houses(glm_modifier, model, h, t, avgHouse, rgn):
-    """For the reduced-order ERCOT feeders, scan each primary load to determine the number of houses it should have
+    """For the reduced-order ERCOT feeders, scan each primary load to determine 
+    the number of houses it should have
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -1160,7 +1188,8 @@ def identify_ercot_houses(glm_modifier, model, h, t, avgHouse, rgn):
 # ***************************************************************************************************
 
 def replace_commercial_loads(glm_modifier, model, h, t, avgBuilding):
-    """For the full-order feeders, scan each load with load_class==C to determine the number of zones it should have
+    """For the full-order feeders, scan each load with load_class==C to determine 
+    the number of zones it should have
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -1208,7 +1237,8 @@ def replace_commercial_loads(glm_modifier, model, h, t, avgBuilding):
                         total_zipload += 1
                     mtr = model[t][o]['parent']
                     if glm_modifier.defaults.forERCOT == "True":
-                        # the parent node is actually a meter, but we have to add the tariff and metrics_collector unless only ZIPLOAD
+                        # the parent node is actually a meter, but we have to add 
+                        # the tariff and metrics_collector unless only ZIPLOAD
                         mtr = model[t][o]['parent']  # + '_mtr'
                         if comm_type != 'ZIPLOAD':
                             extra_billing_meters.add(mtr)
@@ -1228,13 +1258,15 @@ def replace_commercial_loads(glm_modifier, model, h, t, avgBuilding):
 # ***************************************************************************************************
 
 def identify_xfmr_houses(glm_modifier, model, h, t, seg_loads, avgHouse, rgn):
-    """For the full-order feeders, scan each service transformer to determine the number of houses it should have
+    """For the full-order feeders, scan each service transformer to determine 
+    the number of houses it should have
 
     Args:
         model (dict): the parsed GridLAB-D model
         h (dict): the object ID hash
         t (str): the GridLAB-D class name to scan
-        seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
+        seg_loads (dict): dictionary of downstream load (kva) served by each 
+            GridLAB-D link
         avgHouse (float): the average house load in kva
         rgn (int): the region number, 1..5
     """
@@ -2032,7 +2064,7 @@ def add_houses(glm_modifier, basenode, vnom, bIgnoreThermostatSchedule=True, bWr
             params11["interval"] = str(glm_modifier.defaults.metrics_interval)
             glm_modifier.add_object("metrics_collector", params9["name"], params11)
 
-        # if PV is allowed, then only single-family houses can buy it, and only the single-family houses with PV will also consider storage
+        # if PV is allowed, only single-family houses can buy it, and only single-family houses with PV will consider storage
         # if PV is not allowed, then any single-family house may consider storage (if allowed)
         # apartments and mobile homes may always consider storage, but not PV
         bConsiderStorage = True
@@ -2136,7 +2168,8 @@ def add_houses(glm_modifier, basenode, vnom, bIgnoreThermostatSchedule=True, bWr
 # ***************************************************************************************************
 # ***************************************************************************************************
 def add_substation(glm_modifier, name, phs, vnom, vll):
-    """Write the substation swing node, transformer, metrics collector and fncs_msg object
+    """Write the substation swing node, transformer, metrics collector and 
+    fncs_msg object
 
     Args:
         op (file): an open GridLAB-D input file
@@ -2217,17 +2250,19 @@ def add_substation(glm_modifier, name, phs, vnom, vll):
 # ***************************************************************************************************
 
 # if triplex load, node or meter, the nominal voltage is 120
-#   if the name or parent attribute is found in secmtrnode, we look up the nominal voltage there
-#   otherwise, the nominal voltage is vprim
+#   if the name or parent attribute is found in secmtrnode, we look up the 
+#   nominal voltage there otherwise, the nominal voltage is vprim
 # secmtrnode[mtr_node] = [kva_total, phases, vnom]
-#   the transformer phasing was not changed, and the transformers were up-sized to the largest phase kva
-#   therefore, it should not be necessary to look up kva_total, but phases might have changed N==>S
-# if the phasing did change N==>S, we have to prepend triplex_ to the class, write power_1 and voltage_1
-# when writing commercial buildings, if load_class is present and == C, skip the instance
-
+#   the transformer phasing was not changed, and the transformers were up-sized 
+#   to the largest phase kva therefore, it should not be necessary to look up 
+#   kva_total, but phases might have changed N==>S
+# if the phasing did change N==>S, we have to prepend triplex_ to the class, 
+#   write power_1 and voltage_1 when writing commercial buildings, if load_class 
+#   is present and == C, skip the instance
 
 def add_voltage_class(glm_modifier, model, h, t, vprim, vll, secmtrnode):
-    """Write GridLAB-D instances that have a primary nominal voltage, i.e., node, meter and load
+    """Write GridLAB-D instances that have a primary nominal voltage, i.e., 
+    node, meter and load
 
     Args:
         model (dict): a parsed GridLAB-D model
@@ -2353,7 +2388,7 @@ def add_voltage_class(glm_modifier, model, h, t, vprim, vll, secmtrnode):
 # ***************************************************************************************************
 # ***************************************************************************************************
 def add_config_class(glm_modifier, model, h, t):
-    """Write a GridLAB-D configuration (i.e. not a link or node) class
+    """Write a GridLAB-D configuration (i.e., not a link or node) class
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -2383,11 +2418,15 @@ def add_xfmr_config(glm_modifier, key, phs, kvat, vnom, vsec, install_type, vpri
         key (str): name of the configuration
         phs (str): primary phasing
         kvat (float): transformer rating in kVA
-        vnom (float): primary voltage rating, not used any longer (see vprimll and vprimln)
-        vsec (float): secondary voltage rating, should be line-to-neutral for single-phase or line-to-line for three-phase
+        vnom (float): primary voltage rating, not used any longer (see vprimll 
+            and vprimln)
+        vsec (float): secondary voltage rating, should be line-to-neutral for 
+            single-phase or line-to-line for three-phase
         install_type (str): should be VAULT, PADMOUNT or POLETOP
-        vprimll (float): primary line-to-line voltage, used for three-phase transformers
-        vprimln (float): primary line-to-neutral voltage, used for single-phase transformers
+        vprimll (float): primary line-to-line voltage, used for three-phase 
+            transformers
+        vprimln (float): primary line-to-neutral voltage, used for single-phase 
+            transformers
         op (file): an open GridLAB-D input file
     """
     params = dict()
@@ -2440,13 +2479,15 @@ def add_xfmr_config(glm_modifier, key, phs, kvat, vnom, vsec, install_type, vpri
 # ***************************************************************************************************
 
 def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, avgcommercial):
-    """Parse and re-populate one backbone feeder, usually but not necessarily one of the PNNL taxonomy feeders
+    """Parse and re-populate one backbone feeder, usually but not necessarily 
+    one of the PNNL taxonomy feeders
 
     This function:
 
         * reads and parses the backbone model from *rootname.glm*
         * replaces loads with houses and DER
-        * upgrades transformers and fuses as needed, based on a radial graph analysis
+        * upgrades transformers and fuses as needed, based on a radial graph 
+            analysis
         * writes the repopulated feeder to *outname.glm*
 
     Args:
@@ -2885,27 +2926,40 @@ def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None
                     node_metrics_interval=None, random_seed=False):
     """Writes GridLAB-D houses to a primary load point.
 
-    One aggregate service transformer is included, plus an optional aggregate secondary service drop. Each house
-    has a separate meter or triplex_meter, each with a common parent, either a node or triplex_node on either the
-    transformer secondary, or the end of the service drop. The houses may be written per phase, i.e., unbalanced load,
-    or as a balanced three-phase load. The houses should be #included into a master GridLAB-D file. Before using this
-    function, call write_node_house_configs once, and only once, for each combination xfkva/phs that will be used.
+    One aggregate service transformer is included, plus an optional aggregate 
+    secondary service drop. Each house has a separate meter or triplex_meter, 
+    each with a common parent, either a node or triplex_node on either the
+    transformer secondary, or the end of the service drop. The houses may be 
+    written per phase, i.e., unbalanced load, or as a balanced three-phase load.
+    The houses should be #included into the main GridLAB-D file. Before using 
+    this function, call write_node_house_configs once, and only once, for each 
+    combination xfkva/phs that will be used.
 
     Args:
-        fp (file): Previously opened text file for writing; the caller closes it.
+        fp (file): Previously opened text file for writing; the caller closes it
         node (str): the GridLAB-D primary node name
         region (int): the taxonomy region for housing population, 1..6
-        xfkva (float): the total transformer size to serve expected load; make this big enough to avoid overloads
-        phs (str): 'ABC' for three-phase balanced distribution, 'AS', 'BS', or 'CS' for single-phase triplex
-        nh (int): directly specify the number of houses; an alternative to loadkw and house_avg_kw
-        loadkw (float): total load kW that the houses will represent; with house_avg_kw, an alternative to nh
-        house_avg_kw (float): average house load in kW; with loadkw, an alternative to nh
-        secondary_ft (float): if not None, the length of adequately sized secondary circuit from transformer to the meters
-        electric_cooling_fraction (float): fraction of houses to have air conditioners
+        xfkva (float): the total transformer size to serve expected load; make 
+            this big enough to avoid overloads
+        phs (str): 'ABC' for three-phase balanced distribution, 'AS', 'BS', or 
+            'CS' for single-phase triplex
+        nh (int): directly specify the number of houses; an alternative to 
+            loadkw and house_avg_kw
+        loadkw (float): total load kW that the houses will represent; with 
+            house_avg_kw, an alternative to nh
+        house_avg_kw (float): average house load in kW; with loadkw, an 
+            alternative to nh
+        secondary_ft (float): if not None, the length of adequately sized 
+            secondary circuit from transformer to the meters
+        electric_cooling_fraction (float): fraction of houses to have air 
+            conditioners
         solar_fraction (float): fraction of houses to have rooftop solar panels
-        storage_fraction (float): fraction of houses with solar panels that also have residential storage systems
-        node_metrics_interval (int): if not None, the metrics collection interval in seconds for houses, meters, solar and storage at this node
-        random_seed (boolean): if True, reseed each function call. Default value False provides repeatability of output.
+        storage_fraction (float): fraction of houses with solar panels that also
+            have residential storage systems
+        node_metrics_interval (int): if not None, the metrics collection interval 
+            in seconds for houses, meters, solar and storage at this node
+        random_seed (boolean): if True, reseed each function call. Default value 
+            False provides repeatability of output.
     """
     glm_modifier.defaults.house_nodes = {}
     if not random_seed:
@@ -3003,13 +3057,17 @@ def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None
 # ***************************************************************************************************
 
 def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, fgconfig=None):
-    """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
+    """Wrapper function that processes one feeder. One or two keyword arguments 
+    must be supplied.
 
     Args:
-        configfile (str): JSON file name for the feeder population data, mutually exclusive with config
-        config (dict): dictionary of feeder population data already read in, mutually exclusive with configfile
+        configfile (str): JSON file name for the feeder population data, 
+            mutually exclusive with config
+        config (dict): dictionary of feeder population data already read in, 
+            mutually exclusive with configfile
         taxconfig (dict): dictionary of custom taxonomy data for ERCOT processing
-        targetdir (str): directory to receive the output files, defaults to ./CaseName
+        targetdir (str): directory to receive the output files, defaults to 
+            ./CaseName
     """
 
     if configfile is not None:
@@ -3119,7 +3177,8 @@ def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, 
 # ***************************************************************************************************
 
 def populate_all_feeders(glm_modifier, outpath):
-    """Wrapper function that batch processes all taxonomy feeders in the casefiles table (see source file)
+    """Wrapper function that batch processes all taxonomy feeders in the 
+    casefiles table (see source file)
     """
     print(glm_modifier.defaults.casefiles)
     # if sys.platform == 'win32':
