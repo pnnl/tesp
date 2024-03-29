@@ -100,8 +100,23 @@ def post_process():
         # This function calculates the energy consumption every day for every customer and saves it to a h5 file.
         if read_meters:
             pt.tic()
-            meter_df, energysum_df = rm.read_meters(GLD_metadata, case_path, GLD_prefix, str(dso_number),
-                                                    day_range, dso_scaling_factor, metadata_path)
+            if time_of_use:
+                tou_params = pt.load_json(
+                    case_path + agent_prefix + str(dso_number),
+                    "time_of_use_parameters.json",
+                )
+            else:
+                tou_params = None
+            meter_df, energysum_df = rm.read_meters(
+                GLD_metadata,
+                case_path,
+                GLD_prefix,
+                str(dso_number),
+                day_range,
+                dso_scaling_factor,
+                metadata_path,
+                tou_params=tou_params,
+            )
             print('Meter reading complete: DSO ' + str(dso_number) + ', Month ' + month_name)
             pt.toc()
         # --------------- CALCULATE AMENITY SCORES  ------------------------------
@@ -122,6 +137,7 @@ def post_process():
     der_stack_plots = True
     bldg_stack_plots = True
     forecast_plots = True
+    time_of_use = True
     # read_meters = False
     # calc_amenity = False
     # pop_stats = False
@@ -129,6 +145,7 @@ def post_process():
     # der_stack_plots = False
     # bldg_stack_plots = False
     # forecast_plots = False
+    # time_of_use = False
 
     system_case = 'generate_case_config.json'
     first_data_day = 4  # First day in the simulation that data to be analyzed. Run-in days before this are discarded.
