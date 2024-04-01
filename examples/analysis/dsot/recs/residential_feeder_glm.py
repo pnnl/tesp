@@ -575,8 +575,8 @@ residential_skew_std = 2700
 
 def randomize_skew(value, skew_max):
     sk = value * np.random.randn()
-    if sk < skew_max:
-        sk = skew_max
+    if sk < -skew_max:
+        sk = -skew_max
     elif sk > skew_max:
         sk = skew_max
     return sk
