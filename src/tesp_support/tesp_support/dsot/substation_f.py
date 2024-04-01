@@ -1916,6 +1916,7 @@ def inner_substation_loop(configfile, metrics_root, with_market):
     op.close()
     fncs.finalize()
 
+
 def dso_loop_f(configfile, metrics_root, with_market):
     """ Wrapper for *inner_substation_loop*
 

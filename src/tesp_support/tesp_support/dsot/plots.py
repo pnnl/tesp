@@ -160,7 +160,7 @@ def load_gen_data(dir_path, gen_name, day_range):
         gen_data_df (dataframe): dataframe of system metadata
     """
     os.chdir(dir_path)
-    hdf5filenames = [f for f in os.listdir('..') if f.startswith(gen_name + '_') and f.endswith('.h5')]
+    hdf5filenames = [f for f in os.listdir('.') if f.startswith(gen_name + '_') and f.endswith('.h5')]
     if len(hdf5filenames) != 0:
         filename = hdf5filenames[0]
         store = h5py.File(filename, "r")
@@ -206,7 +206,7 @@ def load_gen_data(dir_path, gen_name, day_range):
         else:
             gen_data_df = data_df.loc[start_time:stop_time, :]
     else:
-        jsonfilenames = [f for f in os.listdir('..') if f.startswith(gen_name + '_') and f.endswith('.json')]
+        jsonfilenames = [f for f in os.listdir('.') if f.startswith(gen_name + '_') and f.endswith('.json')]
         if len(jsonfilenames) == 0:
             raise Exception('Could not find H5 or json file for ' + gen_name)
         filename = jsonfilenames[0]
@@ -442,7 +442,7 @@ def load_retail_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
         """
     date = get_date(dir_path, dso_num, str(day_num))
     os.chdir(dir_path + folder_prefix + dso_num)
-    hdf5filenames = [f for f in os.listdir('..') if ('_' + dso_num) in f and f.startswith(agent_name)]
+    hdf5filenames = [f for f in os.listdir('.') if ('_' + dso_num) in f and f.startswith(agent_name)]
 
     # TODO: - error message if more than one value in hdf5filenames
     filename = hdf5filenames[0]
@@ -495,14 +495,14 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
     # daystr = '_' + str(int(day_num)) + '_'
     if agent_name in ['bill', 'energy', 'amenity']:
         os.chdir(dir_path)
-        hdf5filenames = [f for f in os.listdir('..') if ('_' + dso_num) in f and f.startswith(agent_name)]
+        hdf5filenames = [f for f in os.listdir('.') if ('_' + dso_num) in f and f.startswith(agent_name)]
     else:
         date = get_date(dir_path, dso_num, str(day_num))
         os.chdir(dir_path + folder_prefix + dso_num)
         if agent_name in ['retail_site']:
-            hdf5filenames = [f for f in os.listdir('..') if ('_' + dso_num) in f and f.startswith(agent_name)]
+            hdf5filenames = [f for f in os.listdir('.') if ('_' + dso_num) in f and f.startswith(agent_name)]
         else:
-            hdf5filenames = [f for f in os.listdir('..') if '300' in f and f.startswith(agent_name)]
+            hdf5filenames = [f for f in os.listdir('.') if '300' in f and f.startswith(agent_name)]
     # TODO: - error message if more than one value in hdf5filenames
     filename = hdf5filenames[0]
     store = h5py.File(filename, "r")
@@ -566,7 +566,7 @@ def load_system_data(dir_path, folder_prefix, dso_num, day_num, system_name):
         """
     daily_index = True
     os.chdir(dir_path + folder_prefix + dso_num)
-    hdf5filenames = [f for f in os.listdir('..') if f.endswith('.h5') and system_name in f]
+    hdf5filenames = [f for f in os.listdir('.') if f.endswith('.h5') and system_name in f]
     filename = hdf5filenames[0]
     # reading data as pandas dataframe
     store = h5py.File(filename, "r")
@@ -4683,29 +4683,41 @@ def run_plots():
 
     tic()
     # ------------ Selection of DSO and Day  ---------------------------------
-    dso_num = '2'  # Needs to be non-zero integer
+    dso_num = '1'  # Needs to be non-zero integer
     day_num = '9'  # Needs to be non-zero integer
     # Set day range of interest (1 = day 1)
-    day_range = range(2, 3)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
+    day_range = range(3, 10)  # 1 = Day 1. Starting at day two as agent data is missing first hour of run.
     dso_range = range(1, 9)  # 1 = DSO 1 (end range should be last DSO +1)
 
     #  ------------ Select folder locations for different cases ---------
+    # Load System Case Config
+    system_case = 'generate_case_config.json'
+    config_path = os.getcwd()
+    case_config = load_json(config_path, system_case)
 
-    data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
-    # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2'
-    metadata_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
-    ercot_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
-    base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
-    trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
-    config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v3'
-    case_config_name = '200_system_case_config.json'
-
-    case_config_file = config_path + '/' + case_config_name
+    # case_path = os.path.dirname(os.path.abspath(__file__)) + '/' + case_config['caseName']
+    # Set current working directory to location of case folder.
+    data_path = os.getcwd()
+    metadata_path = "../" + case_config['dataPath']
+    dso_metadata_file = case_config['dsoPopulationFile']
+    base_case = data_path
     agent_prefix = '/DSO_'
     GLD_prefix = '/Substation_'
-    case_config = load_json(config_path, case_config_name)
-    metadata_file = case_config['dsoPopulationFile']
-    dso_meta_file = metadata_path + '/' + metadata_file
+
+    # data_path = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
+    # ercot_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/analysis/dsot/data'
+    # base_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Batt/lean_8_bt'
+    # trans_case = 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Simdata/DER2/V1.1-1317-gfbf326a2/MR-Flex/lean_8_fl'
+    # config_path = 'C:/Users/reev057/PycharmProjects/TESP/src/examples/dsot_v3'
+    # case_config_name = '200_system_case_config.json'
+    #
+    # case_config_file = config_path + '/' + case_config_name
+    # agent_prefix = '/DSO_'
+    # GLD_prefix = '/Substation_'
+    # case_config = load_json(config_path, case_config_name)
+    # metadata_file = case_config['dsoPopulationFile']
+
+    dso_meta_file = metadata_path + '/' + dso_metadata_file
 
     # Check if there is a plots folder - create if not.
     check_folder = os.path.isdir(data_path + '/plots')
@@ -4719,37 +4731,22 @@ def run_plots():
         ['May', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/May/Base_858c4e40/2016_05', 2, 6],
         ['Aug', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/May/Base_858c4e40/2016_08', 2, 6]]
 
-    # month_def = [
-    #             ['Jan', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_1', 2, 31],
-    #             # ['Jan', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_1', 2, 31],
-    #             # ['Feb', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_2', 2, 30],
-    #             # ['March', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_3', 2, 31],
-    #             # ['April', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_4', 2, 31],
-    #             # ['May', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_5', 2, 31],
-    #             # ['June', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_6', 2, 30],
-    #             ['July', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_7', 2, 31]
-    #             # ['August', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_8', 2, 7],
-    #             # ['Sept', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_9', 2, 30],
-    #             # ['Oct', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_10', 2, 31],
-    #             # ['Nov', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_11', 2, 30],
-    #             #['Dec', 'C:/Users/reev057/PycharmProjects/DSO+T/Data/Slim2/case_slim_12', 2, 7]
-    #     ]
 
     # ---------- Flags to turn on and off plot types etc
     LoadExData = False  # load example data frames of GLD and agent data
     DictUpdate = False
     EdgeCases = False
-    DailyProfilePlots = False  # plot daily load profiles
+    DailyProfilePlots = True  # plot daily load profiles
     LoadDurationPlots = False  # plot load duration for substation loads (and other loads as desired)
     DailySummaryPlots = False  # plot single summary static for each day of a day range
     PlotDSOComp = False  # Plot daily profile of parameter across a range of DSOs
-    PlotHeatMaps = False  # Plot heatmaps for key variables across a day range
+    PlotHeatMaps = True  # Plot heatmaps for key variables across a day range
     amenity = False  # Calculate the loss of amenity metrics for HVAC and WH etc.
     PlotPopDist = False  # Plot a histogram of a population distribution
     OutLierCheck = False  # Create log of values that exceed
     HouseCheck = False  # Calculate the loss of amenity metrics for HVAC and WH etc.
     gen_plots = False  # Plot generation
-    transmission_plots = True  # Plot transmission
+    transmission_plots = False  # Plot transmission
     LMP_check = False
     dso_plots = False  # Plot dso items such as RT and DA quantities and loads
     BidCurve3D = False  # Work in progress plot of bid and supply curves for an entire day.
@@ -4980,7 +4977,7 @@ def run_plots():
         edge_days, edge_dict, edge_df = find_edge_cases(dso_num=dso_num, day_range=day_range, base_case=base_case,
                                                         agent_prefix=agent_prefix, gld_prefix=GLD_prefix)
 
-    # 1 ----------- Daily Load Profiles Plots ------------------
+    # 1 ----------- Daily Parameter Profiles Plots ------------------
     #  Provide parameters for system, subsystem, variable, base case, anc comparison case (optional)
     if DailyProfilePlots:
         params = [
@@ -5039,21 +5036,25 @@ def run_plots():
             #     ['hvac_agent', 'mean', 'DA_price', base_case, None],
             #     ['hvac_agent', 'mean', 'DA_temp', base_case, None],
             #     ['hvac_agent', 'mean', 'cooling_setpoint', base_case, None],
-            ['house', DSO_Houses['DSO_' + dso_num][0], 'air_temperature_setpoint_cooling', base_case, trans_case],
-            ['house', DSO_Houses['DSO_' + dso_num][0], 'hvac_load_avg', base_case, trans_case],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'RT_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'DA_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'cleared_price', base_case, None],
-            ['house', DSO_Houses['DSO_' + dso_num][1], 'air_temperature_setpoint_cooling', base_case, trans_case],
-            ['house', DSO_Houses['DSO_' + dso_num][1], 'hvac_load_avg', base_case, trans_case],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'RT_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'DA_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'cleared_price', base_case, None],
-            ['house', DSO_Houses['DSO_' + dso_num][2], 'air_temperature_setpoint_cooling', base_case, trans_case],
-            ['house', DSO_Houses['DSO_' + dso_num][2], 'hvac_load_avg', base_case, trans_case],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'RT_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'DA_bid_quantity', base_case, None],
-            ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'cleared_price', base_case, None]
+            ['house', 'mean', 'waterheater_setpoint_avg', base_case, None],
+            ['house', 'mean', 'air_temperature_avg', base_case, None],
+            ['house', 'sum', 'waterheater_load_avg', base_case, None],
+            ['house', 'sum', 'hvac_load_avg', base_case, None],
+            ['house', 'mean', 'air_temperature_setpoint_cooling', base_case, None]
+            # ['house', DSO_Houses['DSO_' + dso_num][0], 'hvac_load_avg', base_case, trans_case],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'RT_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'DA_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][0], 'cleared_price', base_case, None],
+            # ['house', DSO_Houses['DSO_' + dso_num][1], 'air_temperature_setpoint_cooling', base_case, trans_case],
+            # ['house', DSO_Houses['DSO_' + dso_num][1], 'hvac_load_avg', base_case, trans_case],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'RT_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'DA_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][1], 'cleared_price', base_case, None],
+            # ['house', DSO_Houses['DSO_' + dso_num][2], 'air_temperature_setpoint_cooling', base_case, trans_case],
+            # ['house', DSO_Houses['DSO_' + dso_num][2], 'hvac_load_avg', base_case, trans_case],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'RT_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'DA_bid_quantity', base_case, None],
+            # ['hvac_agent', DSO_Houses['DSO_' + dso_num][2], 'cleared_price', base_case, None]
         ]
 
         # params = [
@@ -5161,6 +5162,8 @@ def run_plots():
             # ['house', 'R3_12_47_2_load_16_bldg_410_zone_all', 'hvac_load_avg'],
             # ['house', DSO_Houses['DSO_'+dso_num][4], 'air_temperature_avg'],
             # ['house', DSO_Houses['DSO_' + dso_num][4], 'total_load_avg']
+            ['house', 'sum', 'hvac_load_avg'],
+            ['house', 'mean', 'air_temperature_setpoint_cooling'],
             ['house', 'mean', 'air_temperature_avg'],
             ['house', 'mean', 'total_load_avg']
             # ['house', DSO_Houses['DSO_'+dso_num][1], 'zip_loads'],
@@ -5179,7 +5182,7 @@ def run_plots():
         ]
 
         for para in params:
-            heatmap_plots(dso_num=dso_num, system=para[0], subsystem=para[1], variable=para[2], day_range=day_range,
+            heatmap_plots(dso=dso_num, system=para[0], subsystem=para[1], variable=para[2], day_range=day_range,
                           case=base_case, agent_prefix=agent_prefix, gld_prefix=GLD_prefix)
 
     # 5b -----------------   Loss of Amenity Metric Calculation   ---------------------------------
