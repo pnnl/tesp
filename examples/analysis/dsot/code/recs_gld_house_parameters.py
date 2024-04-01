@@ -159,7 +159,7 @@ def bin_size_check(sample_data,recs_data,state,housing_dens,inc_lev,binsize,clim
     total = sample_data['NWEIGHT'].sum() # Get total population for final sample after bin size check/adjustments
     return sample_data, total
 
-def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total):
+def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total,wh_shift_per):
     # Define RECS codebook
     # Define variable strings
     house_type_str = 'TYPEHUQ'
@@ -332,38 +332,39 @@ def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total
                                                                                                                      (sample_data[wh_fuel_str].isin([1,2,3,7,8,99,-2]))),
                                                                                                                     'NWEIGHT'].sum()/sum(total_dict[h].values()),4)
         # Shifting some gas WH to electric to model increased electrification
-        extra = 0
-        if metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']<0.05:
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] += metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']
-            extra = 0.05 - metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = 0
-        else: 
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric']+=0.05
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']-=0.05
-        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = min(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'],1)
-        
-        if metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']<0.05:
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] += metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = 0
-        else: 
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric']+= (0.05+extra)
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']-= (0.05+extra)
-        metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = min(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'],1)  
+        if wh_shift_per>0:
+            extra = 0
+            if metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']<(wh_shift_per/2):
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] += metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']
+                extra = (wh_shift_per/2) - metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = 0
+            else: 
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric']+=(wh_shift_per/2)
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']-=(wh_shift_per/2)
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = min(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'],1)
+            
+            if metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']<(wh_shift_per/2):
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] += metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = 0
+            else: 
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric']+= ((wh_shift_per/2)+extra)
+                metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']-= ((wh_shift_per/2)+extra)
+            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = min(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'],1)  
 
-        sum_gas = sum(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas'].values())
-        sum_electric = sum(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric'].values())
-        if sum_gas>0:
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric']/sum_gas,4)
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']/sum_gas,4)
-        else:
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = 0
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = 0
-        if sum_electric>0:
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric']/sum_electric,4)
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']/sum_electric,4)
-        else:
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = 0
-            metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = 0
+        # sum_gas = sum(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas'].values())
+        # sum_electric = sum(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric'].values())
+        # if sum_gas>0:
+        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric']/sum_gas,4)
+        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas']/sum_gas,4)
+        # else:
+        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['electric'] = 0
+        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_gas']['gas'] = 0
+        # if sum_electric>0:
+        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric']/sum_electric,4)
+        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = round(metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas']/sum_electric,4)
+        # else:
+        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['gas'] = 0
+        #     metadata['water_heating_fuel'][state][hsdens_str][inc_lev][h]['sh_electric']['electric'] = 0
 
     # Get distribution for high ceilings by house type and vintage
     for k, h in housing_type_dict.items():
@@ -414,7 +415,7 @@ def get_residential_metadata(metadata,sample_data,state,hsdens_str,inc_lev,total
     # print(metadata_df.values.sum())
     return metadata,total_dict
 
-def get_RECS_jsons(recs_data_file,dsot_metadata_file,output_file_resmeta,output_file_hvacsp,sample={'state':[],'housing_density':[],'income_level':[]},bin_size_thres=100,climate_zone=''):
+def get_RECS_jsons(recs_data_file,dsot_metadata_file,output_file_resmeta,output_file_hvacsp,sample={'state':[],'housing_density':[],'income_level':[]},bin_size_thres=100,climate_zone='',wh_shift=0):
     # Read RECS data file
     recs = pd.read_csv(recs_data_file)
     # Use the right income level data from RECS
@@ -484,7 +485,7 @@ def get_RECS_jsons(recs_data_file,dsot_metadata_file,output_file_resmeta,output_
                 # If it is, use census region, then climate zone, and then finally widen income level input if needed.
                 sample_df, total = bin_size_check(sample_df,recs,st,hd,il,bin_size_thres,climate_zone,inc_str)
 
-                res_metadata, total_dict = get_residential_metadata(res_metadata,sample_df,st,hd_str,il,total)
+                res_metadata, total_dict = get_residential_metadata(res_metadata,sample_df,st,hd_str,il,total,wh_shift)
                 hvac_setpoints = get_hvac_setpoints(hvac_setpoints,sample_df,st,hd_str,il,total)
     # Add distributions from DSO+T
     # metadata['floor_area'] = dsot_metadata['floor_area']
@@ -622,4 +623,4 @@ if __name__ == "__main__":
         '../data/RECS_residential_metadata.json',
         '../data/hvac_setpt_RECS.json',
         {'state':['TX'],'housing_density':['No_DSO_Type'],'income_level':['Middle','Upper','Low']},
-        bin_size_thres=100,climate_zone=None)
+        bin_size_thres=100,climate_zone=None,wh_shift=0.1)
