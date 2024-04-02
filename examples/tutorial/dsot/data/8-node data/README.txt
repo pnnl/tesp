@@ -1,0 +1,1 @@
+This folder contains the source PSM files that were used to create the correctly formatted .dat files that the weatherAgent uses. The conversion script from SPM v3 to DAT can be found in this repository tesp-private/src/tesp_support/tesp_support/PSMv3toDAT.py

@@ -1,0 +1,273 @@
+{
+  "SimulationConfig": {
+    "CaseName": "",
+    "StartTime": "",
+    "EndTime": "",
+    "LogLevel": "INFO",
+    "DSOTCase": true,
+    "OutputPath": "",
+    "SourceDirectory": "",
+    "BulkpowerBus": 1,
+    "solver": "ipopt",
+    "CopperplateFeeder": true,
+    "CopperplateFeederName": "commercial_copperplate_feeder",
+    "CopperplateFeederFile": "../data/feeders/commercial_copperplate_feeder.glm",
+    "ThermostatScheduleVersion": 2,
+    "slider_ranges": {
+      "bt": {"_UP": 1, "_DOWN": 0.001 },
+      "ev": {"_UP": 1, "_DOWN": 0.001 },
+      "hv": {"_UP": 1, "_DOWN": 0.4 },
+      "pv": {"_UP": 1, "_DOWN": 0.001 },
+      "wh": {"_UP": 1, "_DOWN": 0.001 }
+    }
+  },
+  "BackboneFiles": {
+    "TaxonomyChoice": "",
+    "RandomSeed": 0,
+    "supportpath": "../../../../../../data/schedules/",
+    "weatherpath": "../../../../../../data/weather/"
+  },
+  "FeederGenerator": {
+    "Metrics": [
+      "house",
+      "waterheater",
+      "meter",
+      "line",
+      "transformer",
+      "capacitor",
+      "inverter",
+      "regulator",
+      "substation"
+    ],
+    "MetricsType": "h5",
+    "MetricsInterval": 300,
+    "MetricsInterim": 7200,
+    "MinimumStep": 30,
+    "TransactiveHousePercentage": 80,
+    "SolarPercentage": 40,
+    "StoragePercentage": 40,
+    "StorageParticipation": 100,
+    "EVPercentage": 30,
+    "EVParticipation": 100,
+    "SolarInverterMode": "CONSTANT_PQ",
+    "StorageInverterMode": "CONSTANT_PQ",
+    "InverterEfficiency": 1.0,
+    "BatteryRoundTripEfficiency": 1.0,
+    "BillingMode": "TIERED",
+    "MonthlyFee": 13,
+    "Price": 0.102013,
+    "Tier1Energy": 500,
+    "Tier2Energy": 1000,
+    "Tier3Energy": 0,
+    "Tier1Price": 0.117013,
+    "Tier2Price": 0.122513,
+    "Tier3Price": 0,
+    "EnergyPlusBus": "",
+    "EnergyPlusServiceV": 480,
+    "EnergyPlusXfmrKva": 250
+  },
+  "WeatherPrep": {
+    "Name": "",
+    "WeatherChoice": "",
+    "DataSource": "",
+    "Latitude": "",
+    "Longitude": "",
+    "TimeZoneOffset": ""
+  },
+  "BuildingPrep": {
+    "ResBldgMetaData": "",
+    "ASHRAEZone": "",
+    "CommBldgMetaData": "",
+    "CommBldgPopulation": ""
+  },
+  "MarketPrep": {
+    "DSO": {
+      "Name": "DSO_1",
+      "Bus": 1,
+      "Unit": "kW",
+      "PriceCap": 0.5,
+      "CurveSamples": 100,
+      "TimeWindowDA": 48,
+      "MaximumQuantity": 2000,
+      "TransformerDegradation": false,
+      "Pnom": 1,
+      "Qnom": 1,
+      "dso_retail_scaling": 1.04,
+      "distribution_charge_rate": 0.04
+    },
+    "Retail": {
+      "Name": "Retail_1",
+      "Unit": "kW",
+      "PriceCap": 1.0,
+      "CurveSamples": 100,
+      "TimeWindowDA": 48,
+      "QMax": 3600,
+      "MaxPuLoading": 1.5,
+      "period_da": 3600,
+      "period_rt": 300,
+      "OperatingPeriod": 1440,
+      "timeStep": 1,
+      "Tamb": 30,
+      "delta_T_TO_init": 25,
+      "delta_T_W_init": 25,
+      "BP": 100000,
+      "toc_A": 3430,
+      "toc_B": 1090,
+      "Base_Year": 20.54794520547945,
+      "P_Rated": 2500000.0,
+      "NLL_rate": 0.3,
+      "LL_rate": 1.0,
+      "Sec_V": 69000,
+      "TOU_TOR": 75.0,
+      "TOU_GR": 5,
+      "Oil_n": 0.8,
+      "Wind_m": 0.8,
+      "delta_T_TOR": 55,
+      "delta_T_ave_wind_R": 65
+    }
+  },
+  "AgentPrep": {
+    "HVAC": {
+      "TimeStepGldAgents": 15,
+      "MarketClearingPeriod": 300,
+      "ThermostatRangeHi": 5.0,
+      "ThermostatRangeLo": 3.0,
+      "ThermostatRampHi": 5.0,
+      "ThermostatRampLo": 5.0,
+      "ThermostatSliderHi": 0.8,
+      "ThermostatSliderLo": 0.2,
+      "ThermostatBandLo": 2.0,
+      "ThermostatBandHi": 2.0,
+      "PriceCapLo": 1.0,
+      "PriceCapHi": 1.0,
+      "InitialPriceMean": 0.0342,
+      "InitialPriceStdDev": 0.0279
+    },
+    "Battery": {
+      "TimeStepGldAgents": 15,
+      "BatteryReserveLo": 20,
+      "BatteryReserveHi": 20,
+      "BatteryProfitMarginLo": 5,
+      "BatteryProfitMarginHi": 20,
+      "lifetime_cycles": 3650,
+      "installed_system_first_cost($/kWh)": 83
+    },
+    "EV": {
+      "TimeStepGldAgents": 15,
+      "EVReserveLo": 20,
+      "EVReserveHi": 20,
+      "EVProfitMarginLo": 5,
+      "EVProfitMarginHi": 20,
+      "lifetime_cycles": 3650,
+      "installed_system_first_cost($/kWh)": 83,
+      "boundary_cond": "slider_based",
+      "ev_mode": "V1G"
+    },
+    "WaterHeater": {
+      "TimeStepGldAgents": 15,
+      "InletWaterTemperature": 70,
+      "AmbientTemperature": 50,
+      "DesiredTemperature": 130,
+      "MaximumTemperature": 150,
+      "MinimumTemperature": 90,
+      "MemoryLength": 1152,
+      "WaterDrawSensor": false,
+      "WindowLength": 48,
+      "WeightSOHC": 0.34,
+      "WeightComfort": 0.5,
+      "ProfitMarginIntercept": 10,
+      "ProfitMarginSlope": 0,
+      "PriceCap": 1.0
+    }
+  },
+  "PYPOWERConfiguration": {
+    "TransformerBase": 12,
+    "TransmissionVoltage": 345
+  },
+  "ThermostatSchedule": {
+    "WeekdayWakeStartLo": 5.0,
+    "WeekdayWakeStartHi": 6.5,
+    "WeekdayDaylightStartLo": 8.0,
+    "WeekdayDaylightStartHi": 9.0,
+    "WeekdayEveningStartLo": 17.0,
+    "WeekdayEveningStartHi": 18.5,
+    "WeekdayNightStartLo": 22.0,
+    "WeekdayNightStartHi": 23.5,
+    "WeekdayWakeSetLo": 78.0,
+    "WeekdayWakeSetHi": 80.0,
+    "WeekdayDaylightSetLo": 84.0,
+    "WeekdayDaylightSetHi": 86.0,
+    "WeekdayEveningSetLo": 78.0,
+    "WeekdayEveningSetHi": 80.0,
+    "WeekdayNightSetLo": 72.0,
+    "WeekdayNightSetHi": 74.0,
+    "WeekendDaylightSetLo": 76.0,
+    "WeekendDaylightSetHi": 84.0,
+    "WeekendDaylightStartLo": 8.0,
+    "WeekendDaylightStartHi": 9.0,
+    "WeekendNightSetLo": 72.0,
+    "WeekendNightSetHi": 74.0,
+    "WeekendNightStartLo": 22.0,
+    "WeekendNightStartHi": 23.5
+  },
+  "ThermostatScheduleV2": {
+    "WeekdayWakeStart": {
+      "mean": 6.5,
+      "std": 2,
+      "min": 4.0,
+      "max": 10.0
+    },
+    "WeekdayWakeToDaylightTime": {
+      "mean": 1.0,
+      "std": 2,
+      "min": 0.5,
+      "max": 4.0
+    },
+    "WeekdayEveningStart": {
+      "mean": 17.5,
+      "std": 3,
+      "min": 12.0,
+      "max": 21.0
+    },
+    "WeekdayEveningToNightTime": {
+      "mean": 2.5,
+      "std": 2,
+      "min": 0.0,
+      "max": 6.0
+    },
+    "WeekendDaylightStart": {
+      "mean": 8.0,
+      "std": 2,
+      "min": 6.0,
+      "max": 11.0
+    },
+    "WeekendNightStart": {
+      "mean": 22,
+      "std": 2,
+      "min": 21.0,
+      "max": 23.9
+    },
+    "TemperatureMidPoint": {
+      "mean": 70.0,
+      "std": 4,
+      "min": 64.0,
+      "max": 80.0
+    },
+    "ScheduleScalar": {
+      "mean": 0.7,
+      "std": 0.8,
+      "min": 0.0,
+      "max": 2
+    },
+    "WeekdayScheduleOffset": {
+      "wakeup": 2.0,
+      "daylight": 4.0,
+      "evening": 2.0,
+      "night": 0.0
+    },
+    "WeekendScheduleOffset": {
+      "daylight": 2.0,
+      "night": 0.0
+    }
+  }
+}

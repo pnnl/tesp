@@ -1,0 +1,26 @@
+{
+    "coreInit": "--federates=1",
+    "coreName": "Transmission Federate",
+    "coreType": "zmq",
+    "name": "TransmissionSim",
+    "offset": 0.0,
+    "period": 60,
+    "timeDelta": 1.0,
+    "logfile": "transmission_helics_output.log",
+    "log_level": "warning",
+    "uninterruptible": true,
+    "publications": [
+        {
+        "key": "TransmissionSim/transmission_voltage",
+        "type": "complex",
+        "global": true
+         }
+    ],
+    "subscriptions": [
+        {
+        "key": "IEEE_123_feeder_0/totalLoad",
+        "type": "complex",
+        "required": true
+        }
+    ]
+}

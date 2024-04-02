@@ -1,0 +1,410 @@
+{
+  "DSO_1" : {
+    "transactive_dist_rate" : 0.13,
+    "transactive_connection_charge" : 10,
+    "flat_rate" : 0.13,
+    "base_connection_charge" : 10,
+    "residential" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 0
+    },
+    "commercial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.04
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.02
+      },
+      "demand_charge" : 15
+    },
+    "industrial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.04
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.04
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    }
+  },
+  "DSO_2" : {
+    "transactive_dist_rate" : 0.13,
+    "transactive_connection_charge" : 10,
+    "flat_rate" : 0.13,
+    "base_connection_charge" : 10,
+    "residential" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 0
+    },
+    "commercial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    },
+    "industrial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    }
+  },
+  "DSO_3" : {
+    "transactive_dist_rate" : 0.13,
+    "transactive_connection_charge" : 10,
+    "flat_rate" : 0.13,
+    "base_connection_charge" : 10,
+    "residential" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 0
+    },
+    "commercial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    },
+    "industrial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    }
+  },
+  "DSO_4" : {
+    "transactive_dist_rate" : 0.13,
+    "transactive_connection_charge" : 10,
+    "flat_rate" : 0.13,
+    "base_connection_charge" : 10,
+    "residential" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 0
+    },
+    "commercial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    },
+    "industrial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    }
+  },
+  "DSO_5" : {
+    "transactive_dist_rate" : 0.13,
+    "transactive_connection_charge" : 10,
+    "flat_rate" : 0.13,
+    "base_connection_charge" : 10,
+    "residential" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 0
+    },
+    "commercial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    },
+    "industrial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    }
+  },
+  "DSO_6" : {
+    "transactive_dist_rate" : 0.13,
+    "transactive_connection_charge" : 10,
+    "flat_rate" : 0.13,
+    "base_connection_charge" : 10,
+    "residential" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 0
+    },
+    "commercial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    },
+    "industrial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    }
+  },
+  "DSO_7" : {
+    "transactive_dist_rate" : 0.13,
+    "transactive_connection_charge" : 10,
+    "flat_rate" : 0.13,
+    "base_connection_charge" : 10,
+    "residential" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 0
+    },
+    "commercial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    },
+    "industrial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    }
+  },
+  "DSO_8" : {
+    "transactive_dist_rate" : 0.13,
+    "transactive_connection_charge" : 10,
+    "flat_rate" : 0.13,
+    "base_connection_charge" : 10,
+    "residential" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 0
+    },
+    "commercial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    },
+    "industrial" : {
+      "tier_1" : {
+        "max_quantity" : 1000,
+        "price" : -0.01
+      },
+      "tier_2" : {
+        "max_quantity" : 5000,
+        "price" : -0.01
+      },
+      "tier_3" : {
+        "max_quantity" : 999999999,
+        "price" : -0.01
+      },
+      "demand_charge" : 15
+    }
+  }
+}

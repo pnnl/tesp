@@ -1,0 +1,280 @@
+{
+    "data": [
+        {
+            "type": "sankey",
+            "domain": {
+                "x": [
+                    0,
+                    1
+                ],
+                "y": [
+                    0,
+                    1
+                ]
+            },
+            "orientation": "h",
+            "valueformat": ".0f",
+            "valuesuffix": "GW",
+            "node": {
+                "pad": 15,
+                "thickness": 15,
+                "line": {
+                    "color": "black",
+                    "width": 0.5
+                },
+                "label": [
+                    "Rooftop Solar",
+                    "Utility Solar",
+                    "Wind",
+                    "Nuclear",
+                    "Natural Gas",
+                    "Coal",
+                    "DSO",
+                    "Losses/Unmetered Loads",
+                    "Residential",
+                    "Commercial",
+                    "Industrial",
+                    "HVAC",
+                    "Miscellaneous Loads",
+                    "Water Heaters",
+                    "EVs",
+                    "Battery Losses"
+                ],
+                "color": [
+                    "yellow",
+                    "yellow",
+                    "blue",
+                    "silver",
+                    "darkorange",
+                    "black",
+                    "plum",
+                    "grey",
+                    "greenyellow",
+                    "powderblue",
+                    "grey",
+                    "wheat",
+                    "darkseagreen",
+                    "cornflowerblue",
+                    "yellowgreen",
+                    "coral"
+                ]
+            },
+            "link": {
+                "source": [
+                    0,
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    6,
+                    6,
+                    6,
+                    8,
+                    8,
+                    8,
+                    8,
+                    8,
+                    9,
+                    9,
+                    9,
+                    9,
+                    9,
+                    10
+                ],
+                "target": [
+                    8,
+                    9,
+                    6,
+                    6,
+                    6,
+                    6,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    12
+                ],
+                "value": [
+                    0.5,
+                    0.5,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    0.5,
+                    2,
+                    2,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ],
+                "color": [
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)",
+                    "rgba(0,0,96,0.2)"
+                ],
+                "label": [
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                ]
+            }
+        }],
+    "layout": {
+        "title": {"text": "DSO+T Average Energy Flow - Business-as-Usual Case"},
+        "width": 1118,
+        "height": 772,
+        "font": {
+            "size": 10
+        },
+        "updatemenus": [
+            {
+                "y": 1,
+                "buttons": [
+                    {
+                        "label": "Light",
+                        "method": "relayout",
+                        "args": [ "paper_bgcolor", "white" ]
+                    },
+                    {
+                        "label": "Dark",
+                        "method": "relayout",
+                        "args": [ "paper_bgcolor", "black"]
+                    }
+                ]
+            },
+            {
+                "y": 0.9,
+                "buttons": [
+                    {
+                        "label": "Thick",
+                        "method": "restyle",
+                        "args": [ "node.thickness", 15 ]
+                    },
+                    {
+                        "label": "Thin",
+                        "method": "restyle",
+                        "args": [ "node.thickness", 8]
+                    }
+                ]
+            },
+            {
+                "y": 0.8,
+                "buttons": [
+                    {
+                        "label": "Small gap",
+                        "method": "restyle",
+                        "args": [ "node.pad", 15 ]
+                    },
+                    {
+                        "label": "Large gap",
+                        "method": "restyle",
+                        "args": [ "node.pad", 20]
+                    }
+                ]
+            },
+            {
+                "y": 0.7,
+                "buttons": [
+                    {
+                        "label": "Snap",
+                        "method": "restyle",
+                        "args": [ "arrangement", "snap" ]
+                    },
+                    {
+                        "label": "Perpendicular",
+                        "method": "restyle",
+                        "args": [ "arrangement", "perpendicular"]
+                    },
+                    {
+                        "label": "Freeform",
+                        "method": "restyle",
+                        "args": [ "arrangement", "freeform"]
+                    },
+                    {
+                        "label": "Fixed",
+                        "method": "restyle",
+                        "args": [ "arrangement", "fixed"]
+                    }
+                ]
+            },
+            {
+                "y": 0.6,
+                "buttons": [
+                    {
+                        "label": "Horizontal",
+                        "method": "restyle",
+                        "args": [ "orientation", "h" ]
+                    },
+                    {
+                        "label": "Vertical",
+                        "method": "restyle",
+                        "args": [ "orientation", "v"]
+                    }
+                ]
+            }
+        ]
+    }
+}

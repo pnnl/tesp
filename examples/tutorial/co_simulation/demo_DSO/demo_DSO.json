@@ -1,0 +1,40 @@
+{
+    "coreType": "zmq",
+    "name": "DSOSim",
+    "period": 1,
+    "timeDelta": 0,
+    "logfile": "output.log",
+    "log_level": "warning",
+    "uninterruptible": true,
+    "coreInit": "--federates=1",
+    "coreName": "DSO Federate",
+    "publications": [
+        {
+            "global": true,
+            "key": "DSOSim.pcc.2.rt_energy.bid",
+            "type": "JSON"
+        },
+        {
+            "global": true,
+            "key": "DSOSim.pcc.2.da_energy.bid",
+            "type": "JSON"
+        },
+        {
+            "global": true,
+            "key": "DSOSim.pcc.storage",
+            "type": "JSON"
+        }
+    ],
+    "subscriptions": [
+        {
+            "required": false,
+            "key": "TransmissionSim.pcc.2.rt_energy.cleared",
+            "type": "JSON"
+        },
+        {
+            "required": false,
+            "key": "TransmissionSim.pcc.2.da_energy.cleared",
+            "type": "JSON"
+        }
+    ]
+}

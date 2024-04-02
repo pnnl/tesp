@@ -1,0 +1,23 @@
+{
+  "capacity(kWh)": {
+    "mean": 13.5,
+    "deviation_range_per": 20
+  },
+  "rated_charging_power(kW)": {
+    "mean": 5,
+    "deviation_range_per": 20
+  },
+   "rated_discharging_power(kW)": {
+    "mean": 5,
+    "deviation_range_per": 20
+  },
+   "inv_efficiency(per)": 98,
+   "rated_charging_loss(per)": {
+    "mean": 96,
+    "deviation_range_per": 3
+  },
+   "rated_discharging_loss(per)": {
+    "mean": 96,
+    "deviation_range_per": 3
+  }
+}

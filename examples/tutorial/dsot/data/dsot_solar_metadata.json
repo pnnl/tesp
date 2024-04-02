@@ -1,0 +1,21 @@
+{
+  "random_seed" : 2902,
+  "azimuth_factor" : {
+    "south" : 0.75,
+    "west" : 0.25
+  },
+  "distributed_sites" : {
+    "count" : 10,
+    "offset_km" : 25
+  },
+  "rooftop_tilt_limits" : {
+    "lower_limit_deg" : 18,
+    "upper_limit_deg" : 37
+  },
+  "ownership_factor" : {
+    "utility_owned" : 0.4,
+    "customer_owned" : 0.6
+  },
+  "total_solar_installation_capacity_MW" : 37000,
+  "dso_metadata_worksheet_name" : "Bus mapping"
+}
