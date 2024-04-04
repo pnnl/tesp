@@ -55,7 +55,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
 
         # Add consumtpion during time-of-use periods, if applicable
         if tou_params is not None:
-            for k in tou_params.keys():
+            for k in tou_params["periods"].keys():
                 meter.append(each)
                 variable.append(k + "_kwh")
                 month.append(0)
@@ -107,7 +107,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
         
         # Add consumtpion during time-of-use periods, if applicable
         if tou_params is not None:
-            for k in tou_params.keys():
+            for k in tou_params["periods"].keys():
                 loads.append(each)
                 variable.append(k + "_kwh")
                 month.append(0)
@@ -166,18 +166,18 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             
             # Calculate each consumer's time-of-use-related consumption metrics, if applicable
             if tou_params is not None:
-                for k in tou_params.keys():
-                    for t in range(len(tou_params[k]["hour_start"])):
+                for k in tou_params["periods"].keys():
+                    for t in range(len(tou_params["periods"][k]["hour_start"])):
                         meter_df.loc[(each, k + "_kwh"), day_name] += (
                             temp.loc[
                                 (
                                     300
                                     * 12
-                                    * (24 * (day - 1) + tou_params[k]["hour_start"][t])
+                                    * (24 * (day - 1) + tou_params["periods"][k]["hour_start"][t])
                                 ) : (
                                     300
                                     * 12
-                                    * (24 * (day - 1) + tou_params[k]["hour_end"][t])
+                                    * (24 * (day - 1) + tou_params["periods"][k]["hour_end"][t])
                                     - 1
                                 ),
                                 "real_power_avg",
@@ -185,7 +185,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                             / 1000
                             / 12
                         )
-                        if tou_params[k]["hour_start"][t] == 0:
+                        if tou_params["periods"][k]["hour_start"][t] == 0:
                             meter_df.loc[(each, k + "_kwh"), day_name] += (
                                 temp.loc[300 * 12 * 24 * day, "real_power_avg"]
                                 / 1000
@@ -233,7 +233,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
                     
                     # Calculate the time-of-use-related metrics, if applicable
                     if tou_params is not None:
-                        for k in tou_params.keys():
+                        for k in tou_params["periods"].keys():
                             energysum_df.loc[(load, k + "_kwh"), day_name] += (
                                 meter_df.loc[(each, k + "_kwh"), day_name] * SF
                             )
@@ -259,7 +259,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
     # Create totals for energy metrics
     energysum_metrics = ['kw-hr', 'demand_quantity', 'da_q', 'rt_q', 'congest_$', 'congest_q']
     if tou_params is not None:
-        for k in tou_params.keys():
+        for k in tou_params["periods"].keys():
             energysum_metrics.append(k + "_kwh")
     for item in energysum_metrics:
         for load in ['residential', 'commercial', 'industrial']:
@@ -281,7 +281,7 @@ def read_meters(metadata, dir_path, folder_prefix, dso_num, day_range, SF, dso_d
             meter_df.loc[(each, 'load_factor'), 'sum'] = 0
     
     if tou_params is not None:
-        for k in tou_params.keys():
+        for k in tou_params["periods"].keys():
             meter_df.loc[(slice(None), k + "_kwh"), ["sum"]] = meter_df.loc[
                 (slice(None), k + "_kwh"),
                 meter_df.columns[~meter_df.columns.isin(["sum"])],
