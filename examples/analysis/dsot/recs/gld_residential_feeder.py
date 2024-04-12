@@ -1,7 +1,7 @@
 
 # Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: feederGenerator.py
-"""Replaces ZIP loads with houses, and optional storage and solar generation.
+"""Replaces ZIP loads with houses and optional storage and solar generation.
 
 As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
@@ -24,6 +24,7 @@ There are two kinds of house populating methods implemented:
 
 References:
     `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_
+    `Distribution System Modeling and Analysis, Kersting, W.H., 9781420041736`
 
 Public Functions:
     :populate_feeder: processes one GridLAB-D input file
@@ -54,13 +55,15 @@ extra_billing_meters = set()
 #***************************************************************************************************
 
 # EV population functions
-def process_nhts_data(data_file):
+def process_nhts_data(data_file: str):
     """
-    read the large nhts survey data file containing driving data, process it and return a dataframe
+    Read the large nhts survey data file containing driving data, process it and
+    return a dataframe
     Args:
         data_file: path of the file
     Returns:
-        dataframe containing start_time, end_time, travel_day (weekday/weekend) and daily miles driven
+        dataframe containing start_time, end_time, travel_day (weekday/weekend) 
+        and daily miles driven
     """
     # Read data from NHTS survey
     df_data = pd.read_csv(data_file, index_col=[0, 1])
@@ -99,12 +102,15 @@ def selectEVmodel(evTable, prob):
         if total >= prob:
             return name
     raise UserWarning('EV model sale distribution does not sum to 1!')
+
 #***************************************************************************************************
 #***************************************************************************************************
 def match_driving_schedule(ev_range, ev_mileage, ev_max_charge):
-    """ Method to match the schedule of each vehicle from NHTS data based on vehicle ev_range"""
-    # let's pick a daily travel mile randomly from the driving data that is less than the ev_range-margin to ensure
-    # we can always maintain reserved soc level in EV
+    """ Method to match the schedule of each vehicle from NHTS data based on 
+    vehicle ev_range"""
+    # let's pick a daily travel mile randomly from the driving data that is less
+    # than the ev_range-margin to ensure we can always maintain reserved soc
+    # level in EV
     while True:
         mile_ind = np.random.randint(0, len(ev_driving_metadata['TRPMILES']))
         daily_miles = ev_driving_metadata['TRPMILES'].iloc[mile_ind]
@@ -155,7 +161,7 @@ def match_driving_schedule(ev_range, ev_mileage, ev_max_charge):
 
 def is_drive_time_valid(drive_sch):
     """
-    checks if work arrival time and home arrival time adds up properly
+    Checks if work arrival time and home arrival time adds up properly
     Args:
         drive_sch:
     Returns:
@@ -171,36 +177,30 @@ def is_drive_time_valid(drive_sch):
 #***************************************************************************************************
 #***************************************************************************************************
 
-
-
-
-
-
-
-
-
-
 def add_node_house_configs (glm_modifier, xfkva, xfkvll, xfkvln, phs, want_inverter=False):
-  """Writes transformers, inverter settings for GridLAB-D houses at a primary load point.
+  """Writes transformers and inverter settings for GridLAB-D houses at a primary
+    load point.
 
-  An aggregated single-phase triplex or three-phase quadriplex line configuration is also
-  written, based on estimating enough parallel 1/0 AA to supply xfkva load.
-  This function should only be called once for each combination of xfkva and phs to use,
-  and it should be called before write_node_houses.
+  An aggregated single-phase triplex or three-phase quadriplex line configuration
+    is also written, based on estimating enough parallel 1/0 AA to supply xfkva 
+    load. This function should only be called once for each combination of xfkva
+    and phs to use, and it should be called before write_node_houses.
 
   Args:
-      fp (file): Previously opened text file for writing; the caller closes it.
-      xfkva (float): the total transformer size to serve expected load; make this big enough to avoid overloads
-      xfkvll (float): line-to-line voltage [kV] on the primary. The secondary voltage will be 208 three-phase
-      xfkvln (float): line-to-neutral voltage [kV] on the primary. The secondary voltage will be 120/240 for split secondary
-      phs (str): either 'ABC' for three-phase, or concatenation of 'A', 'B', and/or 'C' with 'S' for single-phase to triplex
-      want_inverter (boolean): True to write the IEEE 1547-2018 smarter inverter function setpoints
+      glm_modifier (object): contains the data structure of the .glm being 
+        modified
+      xfkva (float): the total transformer size to serve expected load; make 
+        this big enough to avoid overloads
+      xfkvll (float): line-to-line voltage [kV] on the primary. The secondary 
+        voltage will be 208 three-phase
+      xfkvln (float): line-to-neutral voltage [kV] on the primary. The secondary
+        voltage will be 120/240 for split secondary
+      phs (str): phase, either 'ABC' for three-phase, or concatenation of 'A', 
+        'B', and/or 'C' with 'S' for single-phase to triplex
+      want_inverter (boolean): True to write the IEEE 1547-2018 smarter inverter
+        function setpoints
   """
   if want_inverter:
-    # print ('#define INVERTER_MODE=CONSTANT_PF', file=fp)
-    # print ('//#define INVERTER_MODE=VOLT_VAR', file=fp)
-    # print ('//#define INVERTER_MODE=VOLT_WATT', file=fp)
-    # print ('// default IEEE 1547-2018 settings for Category B', file=fp)
     glm_modifier.model.define_lines.append("#define INV_V2=0.98")
     glm_modifier.model.define_lines.append("#define INV_V2=0.98")
     glm_modifier.model.define_lines.append("#define INV_V3=1.02")
@@ -230,9 +230,19 @@ def add_node_house_configs (glm_modifier, xfkva, xfkvll, xfkvln, phs, want_inver
 #***************************************************************************************************
 
 def add_kersting_quadriplex (glm_modifier, kva):
-  """Writes a quadriplex_line_configuration based on 1/0 AA example from Kersting's book
+  """Writes a quadriplex_line_configuration based on 1/0 AA example from 
+    Kersting's book.
+    
+    The conductor capacity is 202 amps, so the number of triplex in parallel
+        will be kva/sqrt(3)/0.208/202
 
-  The conductor capacity is 202 amps, so the number of triplex in parallel will be kva/sqrt(3)/0.208/202
+    Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
+        kva (float): the minimum transformer rating
+    Returns: 
+        None
+        
   """
   params = dict()
   params["key"]= 'quad_cfg_{:d}'.format (int(kva))
@@ -254,9 +264,17 @@ def add_kersting_quadriplex (glm_modifier, kva):
 #***************************************************************************************************
 
 def add_kersting_triplex (glm_modifier, kva):
-  """Writes a triplex_line_configuration based on 1/0 AA example from Kersting's book
-
-  The conductor capacity is 202 amps, so the number of triplex in parallel will be kva/0.12/202
+  """Writes a triplex_line_configuration based on 1/0 AA example from Kersting's
+        book.
+    
+    The conductor capacity is 202 amps, so the number of triplex in parallel
+        will be kva/0.12/202
+    Args: 
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
+        kva (float): the minimum transformer rating
+    Returns:
+        None
   """
   params = dict()
   params["key"] = 'tpx_cfg_{:d}'.format (int(kva))
@@ -304,6 +322,8 @@ def accumulate_load_kva(data):
 
     Args:
         data (dict): dictionary of data for a selected GridLAB-D instance
+    Returns:
+        kva (float): the minimum transformer rating
     """
     kva = 0.0
     if 'constant_power_A' in data:
@@ -335,6 +355,8 @@ def log_model(model, h):
     Args:
         model (dict): parsed GridLAB-D model
         h (dict): object ID hash
+    Returns:
+        None
     """
     for t in model:
         print(t+':')
@@ -348,8 +370,16 @@ def log_model(model, h):
 #***************************************************************************************************
 #***************************************************************************************************
 
-
 def randomize_commercial_skew(glm_modifier):
+    """Applies a randomized 
+
+    Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
+    Returns:
+        sk (float): the random skew value
+        
+    """
     sk = glm_modifier.defaults.commercial_skew_std * np.random.randn()
     if sk < -glm_modifier.defaults.commercial_skew_max:
         sk = -glm_modifier.defaults.commercial_skew_max
@@ -477,8 +507,9 @@ def parse_kva_old(arg):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def parse_kva(cplx): # this drops the sign of p and q
-    """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
+def parse_kva(cplx):
+    """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular 
+        form. Note that this drops the sign of p and q.
 
     Args:
         cplx (str): the GridLAB-D P+jQ value
@@ -495,10 +526,14 @@ def parse_kva(cplx): # this drops the sign of p and q
 #***************************************************************************************************
 
 def selectResidentialBuilding(rgnTable,prob):
-    """Writes volt-var and volt-watt settings for solar inverters
+    """Selects the building with region and probability
 
     Args:
-        op (file): an open GridLAB-D input file
+        rgnTable ():
+        prob ():
+    Returns:
+        row ():
+        col ():
     """
     row = 0
     total = 0
@@ -520,6 +555,13 @@ def selectResidentialBuilding(rgnTable,prob):
 #   1 = Middle - No longer using Moderate
 #   2 = Upper
 def getDsoIncomeLevelTable():
+    """
+    Args:
+
+    Returns:
+        dsoIncomePct ():
+
+    """
     income_mat = res_bldg_metadata['income_level'][state][res_dso_type]
     dsoIncomePct = {key: income_mat[key] for key in income_level} # Create new dictionary only with income levels of interest
     dsoIncomePct = list(dsoIncomePct.values())
@@ -539,8 +581,10 @@ def selectIncomeLevel(incTable, prob):
     """ Selects the income level with region and probability
 
     Args:
-        rgnTable:
-        prob:
+        incTable ():
+        prob ():
+    Returns:
+        row ()
     """
     total = 0
     for row in range(len(incTable)):
@@ -557,10 +601,14 @@ def buildingTypeLabel (glm_modifier, rgn, bldg, ti):
     """Formatted name of region, building type name and thermal integrity level
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         rgn (int): region number 1..5
         bldg (int): 0 for single-family, 1 for apartment, 2 for mobile home
         ti (int): thermal integrity level, 0..6 for single-family, only 0..2 
             valid for apartment or mobile home
+    Returns:
+
     """
     return glm_modifier.defaults.rgnName[rgn-1] + ': ' +  glm_modifier.defaults.bldgTypeName[bldg] + ': TI Level ' + str (ti+1)
 #***************************************************************************************************
@@ -573,6 +621,8 @@ def Find3PhaseXfmr (glm_modifier, kva):
     2000, 2500, 3750, 5000, 7500 or 10000 kVA
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         kva (float): the minimum transformer rating
 
     Returns:
@@ -594,6 +644,8 @@ def Find1PhaseXfmr (glm_modifier, kva):
     Standard sizes are 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         kva (float): the minimum transformer rating
 
     Returns:
@@ -614,6 +666,8 @@ def Find3PhaseXfmrKva (glm_modifier, kva):
     2000, 2500, 3750, 5000, 7500 or 10000 kVA
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         kva (float): the minimum transformer rating
 
     Returns:
@@ -636,6 +690,8 @@ def Find1PhaseXfmrKva (glm_modifier, kva):
     Standard sizes are 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         kva (float): the minimum transformer rating
 
     Returns:
@@ -653,6 +709,12 @@ def Find1PhaseXfmrKva (glm_modifier, kva):
 
 def checkResidentialBuildingTable(glm_modifier):
     """Verify that the regional building parameter histograms sum to one
+    
+    Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
+    Returns:
+        None
     """
 
     for tbl in range(len(glm_modifier.defaults.dsoThermalPct)):
@@ -693,8 +755,12 @@ def selectThermalProperties(glm_modifier, bldgIdx, tiIdx):
     level
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         bldgIdx (int): 0 for single-family, 1 for apartment, 2 for mobile home
         tiIdx (int): 0..7 for single-family, apartment or mobile home
+    Returns:
+        tiProps (list): thermal integrity properties
     """
     if bldgIdx == 0:
         tiProps = glm_modifier.defaults.singleFamilyProperties[tiIdx]
@@ -717,6 +783,8 @@ def FindFuseLimit (glm_modifier, amps):
     or 2000 Amps. If that's not large enough, will choose 999999.
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         amps (float): the maximum load current expected; some margin will be added
 
     Returns:
@@ -740,9 +808,15 @@ def FindFuseLimit (glm_modifier, amps):
 def selectSetpointBins (glm_modifier, bldg, rand):
     """Randomly choose a histogram row from the cooling and heating setpoints
     The random number for the heating setpoint row is generated internally.
+    
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         bldg (int): 0 for single-family, 1 for apartment, 2 for mobile home
         rand (float): random number [0..1] for the cooling setpoint row
+    Returns:
+        bldgCoolingSetpoints, bldHeatingSetpoints (tuple): cooling and heating 
+            setpoints of the building
     """
     cBin = hBin = 0
     total = 0
@@ -768,6 +842,15 @@ def selectSetpointBins (glm_modifier, bldg, rand):
 
 
 def initialize_glm_modifier(glmfilepath):
+    """Instantiates the .glm file to be modified
+    
+    Args:
+        glmfilepath (str): file location of the .glm
+    
+    Returns:
+        glmMod (object): the glm modifier
+    
+    """
     glmMod = glmmod.GLMModifier()
 #    glm, success = glmMod.read_model("/home/d3k205/tesp/data/feeders/R1-12.47-1.glm")
     glm, success = glmMod.read_model(glmfilepath)
@@ -781,11 +864,15 @@ def initialize_glm_modifier(glmfilepath):
 #***************************************************************************************************
 #***************************************************************************************************
 
-
-
-#fgconfig: path and name of the file that is to be used as the configuration json for loading
-#ConfigDict dictionary
 def initialize_config_dict(fgconfig):
+    """
+    
+    Args:
+        fgconfig (str): path and name of the file that is to be used as the 
+            configuration json for loading ConfigDict dictionary
+    Returns:
+        None
+    """
     global ConfigDict
     global c_p_frac
     if fgconfig is not None:
@@ -805,60 +892,77 @@ def initialize_config_dict(fgconfig):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def add_solar_inv_settings (glm_modifier, params):
+def add_solar_inv_settings (glm_modifier, solar_invterer_params):
     """Writes volt-var and volt-watt settings for solar inverters
 
     Args:
-        op (file): an open GridLAB-D input file
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
+        solar_invterer_params (list): list of the attribute parameters
+    Returns:
+        None
     """
     #print ('    four_quadrant_control_mode ${' + name_prefix + 'INVERTER_MODE};', file=op)
-    params["four_quadrant_control_mode"] = glm_modifier.defaults.name_prefix + 'INVERTER_MODE'
-    params["V_base"] = '${INV_VBASE}'
-    params["V1"] = '${INV_V1}'
-    params["Q1"] = '${INV_Q1}'
-    params["V2"] = '${INV_V2}'
-    params["Q2"] = '${INV_Q2}'
-    params["V3"] = '${INV_V3}'
-    params["Q3"] = '${INV_Q3}'
-    params["V4"] = '${INV_V4}'
-    params["Q4"] = '${INV_Q4}'
-    params["V_In"] = '${INV_VIN}'
-    params["I_In"] = '${INV_IIN}'
-    params["volt_var_control_lockout"] = '${INV_VVLOCKOUT}'
-    params["VW_V1"] = '${INV_VW_V1}'
-    params["VW_V2"] = '${INV_VW_V2}'
-    params["VW_P1"] = '${INV_VW_P1}'
-    params["VW_P2"] = '${INV_VW_P2}'
+    solar_invterer_params["four_quadrant_control_mode"] = glm_modifier.defaults.name_prefix + 'INVERTER_MODE'
+    solar_invterer_params["V_base"] = '${INV_VBASE}'
+    solar_invterer_params["V1"] = '${INV_V1}'
+    solar_invterer_params["Q1"] = '${INV_Q1}'
+    solar_invterer_params["V2"] = '${INV_V2}'
+    solar_invterer_params["Q2"] = '${INV_Q2}'
+    solar_invterer_params["V3"] = '${INV_V3}'
+    solar_invterer_params["Q3"] = '${INV_Q3}'
+    solar_invterer_params["V4"] = '${INV_V4}'
+    solar_invterer_params["Q4"] = '${INV_Q4}'
+    solar_invterer_params["V_In"] = '${INV_VIN}'
+    solar_invterer_params["I_In"] = '${INV_IIN}'
+    solar_invterer_params["volt_var_control_lockout"] = '${INV_VVLOCKOUT}'
+    solar_invterer_params["VW_V1"] = '${INV_VW_V1}'
+    solar_invterer_params["VW_V2"] = '${INV_VW_V2}'
+    solar_invterer_params["VW_P1"] = '${INV_VW_P1}'
+    solar_invterer_params["VW_P2"] = '${INV_VW_P2}'
 
 #***************************************************************************************************
 #***************************************************************************************************
 
-def add_tariff(glm_modifier, params):
+def add_tariff(glm_modifier, tariff_params):
     """Writes tariff information to billing meters
 
     Args:
-        op (file): an open GridLAB-D input file
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
+        tariff_params (list): list of the attribute parameters
+    
+    Returns:
+        None
     """
-    params["bill_mode"] = glm_modifier.defaults.bill_mode
-    params["price"] = glm_modifier.defaults.kwh_price
-    params["monthly_fee"] = glm_modifier.defaults.monthly_fee
-    params["bill_day"] = "1"
+    tariff_params["bill_mode"] = glm_modifier.defaults.bill_mode
+    tariff_params["price"] = glm_modifier.defaults.kwh_price
+    tariff_params["monthly_fee"] = glm_modifier.defaults.monthly_fee
+    tariff_params["bill_day"] = "1"
     if 'TIERED' in glm_modifier.defaults.bill_mode:
         if glm_modifier.defaults.tier1_energy > 0.0:
-            params["first_tier_energy"] = glm_modifier.defaults.tier1_energy
-            params["first_tier_price"] = glm_modifier.defaults.tier1_price
+            tariff_params["first_tier_energy"] = glm_modifier.defaults.tier1_energy
+            tariff_params["first_tier_price"] = glm_modifier.defaults.tier1_price
         if glm_modifier.defaults.tier2_energy > 0.0:
-            params["second_tier_energy"] = glm_modifier.defaults.tier2_energy
-            params["second_tier_price"] = glm_modifier.defaults.tier2_price
+            tariff_params["second_tier_energy"] = glm_modifier.defaults.tier2_energy
+            tariff_params["second_tier_price"] = glm_modifier.defaults.tier2_price
         if glm_modifier.defaults.tier3_energy > 0.0:
-            params["third_tier_energy"] = glm_modifier.defaults.tier3_energy
-            params["third_tier_price"] = glm_modifier.defaults.tier3_price
+            tariff_params["third_tier_energy"] = glm_modifier.defaults.tier3_energy
+            tariff_params["third_tier_price"] = glm_modifier.defaults.tier3_price
 
 
 #***************************************************************************************************
 #***************************************************************************************************
 
 def getDsoThermalTable(income):
+    """
+    
+    Args: 
+        income ():
+    
+    Returns:
+        dsoThermalPct ():
+    """
     vintage_mat = res_bldg_metadata['housing_vintage'][state][res_dso_type][income]
     df = pd.DataFrame(vintage_mat)
     # df = df.transpose()
@@ -886,6 +990,8 @@ def obj(glm_modifier, parent, model, line, itr, oidh, octr):
     """Store an object in the model structure
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         parent (str): name of parent object (used for nested object defs)
         model (dict): dictionary model structure
         line (str): glm line containing the object definition
@@ -960,16 +1066,20 @@ def obj(glm_modifier, parent, model, line, itr, oidh, octr):
 
 #***************************************************************************************************
 #***************************************************************************************************
-def add_link_class (glm_modifier, model, h, t, seg_loads,  want_metrics=False):
-  """Write a GridLAB-D link (i.e. edge) class
+def add_link_class (glm_modifier, model, h, t, seg_loads, want_metrics=False):
+  """Write a GridLAB-D link (i.e., edge) class
 
   Args:
+    glm_modifier (object): contains the data structure of the .glm being 
+        modified
+    model (dict): the parsed GridLAB-D model
+    h (dict): the object ID hash
+    t (str): the GridLAB-D class
+    seg_loads (dict) : a dictionary of downstream loads for each link
+    want_metrics (boolean): if True, adds metrics_collector. Default is False.
 
-      model (dict): the parsed GridLAB-D model
-      h (dict): the object ID hash
-      t (str): the GridLAB-D class
-      seg_loads (dict) : a dictionary of downstream loads for each link
-      op (file): an open GridLAB-D input file
+    Returns:
+        None
   """
   if t in model:
     for o in model[t]:
@@ -994,6 +1104,16 @@ def add_link_class (glm_modifier, model, h, t, seg_loads,  want_metrics=False):
 #***************************************************************************************************
 #***************************************************************************************************
 def add_local_triplex_configurations (glm_modifier):
+    """Adds local triplex configurations
+
+    Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
+    
+    Returns:
+        None
+    
+    """
     params = dict()
     for row in glm_modifier.defaults.triplex_conductors:
         name = glm_modifier.defaults.name_prefix + row[0]
@@ -1019,14 +1139,19 @@ def add_local_triplex_configurations (glm_modifier):
 #***************************************************************************************************
 
 def add_ercot_houses (glm_modifier, model, h, vln, vsec):
-    """For the reduced-order ERCOT feeders, add houses and a large service transformer to the load points
+    """For the reduced-order ERCOT feeders, add houses and a large service 
+    transformer to the load points
 
     Args:
-        model (dict): the parsed GridLAB-D model
-        h (dict): the object ID hash
-        op (file): an open GridLAB-D input file
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
+        model (dict): the parsed GridLAB-D model TODO: remove?
+        h (dict): the object ID hash TODO: remove?
         vln (float): the primary line-to-neutral voltage
         vsec (float): the secondary line-to-neutral voltage
+    
+    Returns:
+        None
     """
     for key in glm_modifier.defaults.house_nodes:
 #        bus = key[:-2]
@@ -1126,10 +1251,15 @@ def add_ercot_houses (glm_modifier, model, h, vln, vsec):
 #***************************************************************************************************
 
 def connect_ercot_commercial(glm_modifier):
-  """For the reduced-order ERCOT feeders, add a billing meter to the commercial load points, except small ZIPLOADs
+  """For the reduced-order ERCOT feeders, add a billing meter to the commercial 
+  load points, except small ZIPLOADs
 
   Args:
-      op (file): an open GridLAB-D input file
+      glm_modifier (object): contains the data structure of the .glm being 
+            modified
+
+  Returns:
+      None
   """
   meters_added = set()
   for key in glm_modifier.defaults.comm_loads:
@@ -1162,9 +1292,13 @@ def add_ercot_small_loads(glm_modifier, basenode, vnom):
   """For the reduced-order ERCOT feeders, write loads that are too small for houses
 
   Args:
+    glm_modifier (object): contains the data structure of the .glm being 
+            modified
     basenode (str): the GridLAB-D node name
-    op (file): an open GridLAB-D input file
     vnom (float): the primary line-to-neutral voltage
+
+  Returns:
+    None
   """
   kva = float(glm_modifier.defaults.small_nodes[basenode][0])
   phs = glm_modifier.defaults.small_nodes[basenode][1]
@@ -1213,14 +1347,19 @@ def add_ercot_small_loads(glm_modifier, basenode, vnom):
 #***************************************************************************************************
 # look at primary loads, not the service transformers
 def identify_ercot_houses (glm_modifier,model, h, t, avgHouse, rgn):
-    """For the reduced-order ERCOT feeders, scan each primary load to determine the number of houses it should have
+    """For the reduced-order ERCOT feeders, scan each primary load to determine 
+    the number of houses it should have
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         model (dict): the parsed GridLAB-D model
-        h (dict): the object ID hash
+        h (dict): the object ID hash TODO: remove?
         t (str): the GridLAB-D class name to scan
         avgHouse (float): the average house load in kva
         rgn (int): the region number, 1..5
+    Returns:
+        None
     """
     print ('Average ERCOT House', avgHouse, rgn)
     total_houses = {'A': 0, 'B': 0, 'C': 0}
@@ -1279,14 +1418,20 @@ def identify_ercot_houses (glm_modifier,model, h, t, avgHouse, rgn):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def replace_commercial_loads (glm_modifier,model, h, t, avgBuilding):
-  """For the full-order feeders, scan each load with load_class==C to determine the number of zones it should have
+def replace_commercial_loads (glm_modifier, model, h, t, avgBuilding):
+  """For the full-order feeders, scan each load with load_class==C to determine 
+  the number of zones it should have
 
   Args:
+      glm_modifier (object): contains the data structure of the .glm being 
+            modified
       model (dict): the parsed GridLAB-D model
-      h (dict): the object ID hash
+      h (dict): the object ID hash TODO: remove?
       t (str): the GridLAB-D class name to scan
       avgBuilding (float): the average building in kva
+      
+  Returns:
+      None
   """
   print ('Average Commercial Building', avgBuilding)
   total_commercial = 0
@@ -1345,17 +1490,23 @@ def replace_commercial_loads (glm_modifier,model, h, t, avgBuilding):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def identify_xfmr_houses (glm_modifier,model, h, t, seg_loads, avgHouse, rgn):
-    """For the full-order feeders, scan each service transformer to determine the number of houses it should have
+def identify_xfmr_houses (glm_modifier, model, h, t, seg_loads, avgHouse, rgn):
+    """For the full-order feeders, scan each service transformer to determine 
+    the number of houses it should have
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         model (dict): the parsed GridLAB-D model
-        h (dict): the object ID hash
+        h (dict): the object ID hash TODO: remove?
         t (str): the GridLAB-D class name to scan
         seg_loads (dict): dictionary of downstream load (kva) served by each 
             GridLAB-D link
         avgHouse (float): the average house load in kva
         rgn (int): the region number, 1..5
+    
+    Returns:
+        None
     """
     print ('Average House', avgHouse)
     total_houses = 0
@@ -1403,13 +1554,17 @@ def identify_xfmr_houses (glm_modifier,model, h, t, seg_loads, avgHouse, rgn):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def add_small_loads(glm_modifier,basenode, vnom):
+def add_small_loads(glm_modifier, basenode, vnom):
   """Write loads that are too small for a house, onto a node
 
   Args:
+    glm_modifier (object): contains the data structure of the .glm being 
+            modified
     basenode (str): GridLAB-D node name
-    op (file): open file to write to
     vnom (float): nominal line-to-neutral voltage at basenode
+
+  Returns:
+    None
   """
   kva = float(glm_modifier.defaults.small_nodes[basenode][0])
   phs = glm_modifier.defaults.small_nodes[basenode][1]
@@ -1473,8 +1628,12 @@ def add_one_commercial_zone(glm_modifier, bldg):
   """Write one pre-configured commercial zone as a house
 
   Args:
+      glm_modifier (object): contains the data structure of the .glm being 
+            modified
       bldg: dictionary of GridLAB-D house and zipload attributes
-      op (file): open file to write to
+
+  Returns:
+      None
   """
   params = dict()
   name = bldg['zonename']
@@ -1585,13 +1744,17 @@ def add_one_commercial_zone(glm_modifier, bldg):
 
 #***************************************************************************************************
 #***************************************************************************************************
-def add_commercial_loads(glm_modifier,rgn, key):
+def add_commercial_loads(glm_modifier, rgn, key):
   """Put commercial building zones and ZIP loads into the model
 
   Args:
+      glm_modifier (object): contains the data structure of the .glm being 
+            modified
       rgn (int): region 1..5 where the building is located
       key (str): GridLAB-D load name that is being replaced
-      op (file): open file to write to
+
+  Returns:
+      None
   """
   mtr = glm_modifier.defaults.comm_loads[key][0]
   comm_type = glm_modifier.defaults.comm_loads[key][1]
@@ -1833,13 +1996,22 @@ def add_commercial_loads(glm_modifier,rgn, key):
 
 #***************************************************************************************************
 #***************************************************************************************************
-def add_houses(glm_modifier,basenode, vnom, bIgnoreThermostatSchedule=True, bWriteService=True, bTriplex=True, setpoint_offset=1.0):
+def add_houses(glm_modifier, basenode, vnom, bIgnoreThermostatSchedule=True, bWriteService=True, bTriplex=True, setpoint_offset=1.0):
     """Put houses, along with solar panels and batteries, onto a node
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         basenode (str): GridLAB-D node name
-        op (file): open file to write to
         vnom (float): nominal line-to-neutral voltage at basenode
+        bIgnoreThermostatSchedule (boolean): if True, ignores thermostat 
+            schedule. Default True.
+        bWriteService (boolean): if True, TODO: define. Default True.
+        bTriplex (boolean): if True, TODO: define. Default True.
+        setpoint_offset (float): thermostat setpoint offset. Default = 1.0
+    
+    Returns:
+        None
     """
 
     meter_class = 'triplex_meter'
@@ -2251,11 +2423,15 @@ def add_substation(glm_modifier, name, phs, vnom, vll):
     fncs_msg object
 
     Args:
-        op (file): an open GridLAB-D input file
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         name (str): node name of the primary (not transmission) substation bus
         phs (str): primary phasing in the substation
-        vnom (float): not used
+        vnom (float): not used. TODO: remove?
         vll (float): feeder primary line-to-line voltage
+
+    Returns:
+        None
     """
     # if this feeder will be combined with others, need USE_FNCS to appear first as a marker for the substation
     #if len(glm_modifier.defaults.fncs_case) > 0:
@@ -2336,28 +2512,36 @@ def add_substation(glm_modifier, name, phs, vnom, vll):
 # ***************************************************************************************************
 # ***************************************************************************************************
 
-# if triplex load, node or meter, the nominal voltage is 120
-#   if the name or parent attribute is found in secmtrnode, we look up the 
-#   nominal voltage there otherwise, the nominal voltage is vprim
-# secmtrnode[mtr_node] = [kva_total, phases, vnom]
-#   the transformer phasing was not changed, and the transformers were up-sized 
-#   to the largest phase kva therefore, it should not be necessary to look up 
-#   kva_total, but phases might have changed N==>S
-# if the phasing did change N==>S, we have to prepend triplex_ to the class, 
-#   write power_1 and voltage_1 when writing commercial buildings, if load_class 
-#   is present and == C, skip the instance
-
 def add_voltage_class(glm_modifier,model, h, t, vprim, vll, secmtrnode):
-    """Write GridLAB-D instances that have a primary nominal voltage, i.e., node, meter and load
+    """Write GridLAB-D instances that have a primary nominal voltage, i.e., 
+    node, meter and load. 
+    
+    If triplex load, node or meter, the nominal voltage is 120. If the name or 
+    parent attribute is found in secmtrnode, we look up the nominal voltage 
+    there; otherwise, the nominal voltage is vprim.
+    
+    secmtrnode[mtr_node] = [kva_total, phases, vnom]
+    The transformer phasing was not changed, and the transformers were up-sized 
+    to the largest phase kva therefore, it should not be necessary to look up 
+    kva_total, but phases might have changed N==>S.
+
+    If the phasing did change N==>S, we have to prepend triplex_ to the class, 
+    write power_1 and voltage_1 when writing commercial buildings, if load_class 
+    is present and == C, skip the instance
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         model (dict): a parsed GridLAB-D model
-        h (dict): the object ID hash
+        h (dict): the object ID hash TODO: remove?
         t (str): the GridLAB-D class name to write
-        op (file): an open GridLAB-D input file
         vprim (float): the primary nominal line-to-neutral voltage
         vll (float): the primary nominal line-to-line voltage
-        secmtrnode (dict): key to [transfomer kva, phasing, nominal voltage] by secondary node name
+        secmtrnode (dict): key to [transfomer kva, phasing, nominal voltage] by
+            secondary node name
+
+    Returns:
+        None
     """
     if t in model:
         for o in model[t]:
@@ -2475,10 +2659,14 @@ def add_config_class (glm_modifier, model, h, t):
     """Write a GridLAB-D configuration (i.e. not a link or node) class
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         model (dict): the parsed GridLAB-D model
         h (dict): the object ID hash
         t (str): the GridLAB-D class
-        op (file): an open GridLAB-D input file
+    
+    Returns:
+        None    
     """
     if t in model:
         for o in model[t]:
@@ -2495,15 +2683,17 @@ def add_config_class (glm_modifier, model, h, t):
 
 # ***************************************************************************************************
 # ***************************************************************************************************
-def add_xfmr_config(glm_modifier,key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln):
+def add_xfmr_config(glm_modifier, key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln):
     """Write a transformer_configuration
 
     Args:
+       glm_modifier (object): contains the data structure of the .glm being 
+            modified
         key (str): name of the configuration
         phs (str): primary phasing
         kvat (float): transformer rating in kVA
         vnom (float): primary voltage rating, not used any longer (see vprimll 
-            and vprimln)
+            and vprimln) TODO: remove?
         vsec (float): secondary voltage rating, should be line-to-neutral for 
             single-phase or line-to-line for three-phase
         install_type (str): should be VAULT, PADMOUNT or POLETOP
@@ -2511,7 +2701,9 @@ def add_xfmr_config(glm_modifier,key, phs, kvat, vnom, vsec, install_type, vprim
             transformers
         vprimln (float): primary line-to-neutral voltage, used for single-phase 
             transformers
-        op (file): an open GridLAB-D input file
+    
+    Returns:
+        None
     """
     params = dict()
     name = glm_modifier.defaults.name_prefix + key
@@ -2568,7 +2760,6 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
     one of the PNNL taxonomy feeders
 
     This function:
-
         * reads and parses the backbone model from *rootname.glm*
         * replaces loads with houses and DER
         * upgrades transformers and fuses as needed, based on a radial graph 
@@ -2576,12 +2767,17 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
         * writes the repopulated feeder to *outname.glm*
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified
         outname (str): the output feeder model name
         rootname (str): the input (usually taxonomy) feeder model name
         vll (float): the feeder primary line-to-line voltage
         vln (float): the feeder primary line-to-neutral voltage
         avghouse (float): the average house load in kVA
         avgcommercial (float): the average commercial load in kVA, not used
+    
+    Returns:
+        None
     """
     glm_modifier.defaults.solar_count = 0
     glm_modifier.defaults.solar_kw = 0
@@ -3016,9 +3212,8 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
 
 # ***************************************************************************************************
 # ***************************************************************************************************
-def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None, house_avg_kw=None, secondary_ft=None,
-                      storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5,
-                      node_metrics_interval=None, random_seed=False):
+def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None, house_avg_kw=None, secondary_ft=None, storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5,
+node_metrics_interval=None, random_seed=False):
     """Writes GridLAB-D houses to a primary load point.
 
     One aggregate service transformer is included, plus an optional aggregate 
@@ -3031,7 +3226,8 @@ def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None
     combination xfkva/phs that will be used.
 
     Args:
-        fp (file): Previously opened text file for writing; the caller closes it
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified       
         node (str): the GridLAB-D primary node name
         region (int): the taxonomy region for housing population, 1..6
         xfkva (float): the total transformer size to serve expected load; make 
@@ -3046,15 +3242,18 @@ def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None
             alternative to nh
         secondary_ft (float): if not None, the length of adequately sized 
             secondary circuit from transformer to the meters
-        electric_cooling_fraction (float): fraction of houses to have air 
-            conditioners
-        solar_fraction (float): fraction of houses to have rooftop solar panels
         storage_fraction (float): fraction of houses with solar panels that also
             have residential storage systems
+        solar_fraction (float): fraction of houses to have rooftop solar panels
+        electric_cooling_fraction (float): fraction of houses to have air 
+            conditioners
         node_metrics_interval (int): if not None, the metrics collection interval 
             in seconds for houses, meters, solar and storage at this node
         random_seed (boolean): if True, reseed each function call. Default value 
             False provides repeatability of output.
+
+    Returns:
+        None
     """
     glm_modifier.defaults.house_nodes = {}
     if not random_seed:
@@ -3151,17 +3350,22 @@ def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None
 # ***************************************************************************************************
 # ***************************************************************************************************
 
-def populate_feeder(glm_modifier,configfile=None, config=None, taxconfig=None, fgconfig=None):
-    """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
+def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, fgconfig=None):
+    """Wrapper function that processes one feeder. One or two keyword arguments 
+    must be supplied.
 
     Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified 
         configfile (str): JSON file name for the feeder population data, 
             mutually exclusive with config
         config (dict): dictionary of feeder population data already read in, 
             mutually exclusive with configfile
         taxconfig (dict): dictionary of custom taxonomy data for ERCOT processing
-        targetdir (str): directory to receive the output files, defaults to 
-            ./CaseName
+        fgconfig: TODO: remove?
+        
+    Returns:
+        None
     """
 
     if configfile is not None:
@@ -3273,6 +3477,14 @@ def populate_feeder(glm_modifier,configfile=None, config=None, taxconfig=None, f
 def populate_all_feeders(glm_modifier, outpath):
     """Wrapper function that batch processes all taxonomy feeders in the 
     casefiles table (see source file)
+
+    Args:
+        glm_modifier (object): contains the data structure of the .glm being 
+            modified 
+        outpath (str): output file location
+    
+    Returns:
+        None
     """
     print(glm_modifier.defaults.casefiles)
     if sys.platform == 'win32':
@@ -3297,9 +3509,9 @@ def populate_all_feeders(glm_modifier, outpath):
 
 if __name__ == "__main__":
 
-    test_modifier = initialize_glm_modifier("/home/d3k205/tesp/data/feeders/R1-12.47-1.glm")
-    populate_all_feeders(test_modifier, "/home/d3k205/")
-    test_modifier.write_model("/home/d3k205/test.glm")
+    test_modifier = initialize_glm_modifier("C:/Users/kerb930/AppData/Local/anaconda3/envs/win-tesp/tesp-main/tesp-main/data/feeders/R1-12.47-1.glm")
+    populate_all_feeders(test_modifier, "C:/Users/kerb930/AppData/Local/anaconda3/envs/win-tesp/tesp-main/tesp-main/data/feeders/R1-12.47-1-mod.glm")
+    test_modifier.write_model("test.glm")
 
 
 
