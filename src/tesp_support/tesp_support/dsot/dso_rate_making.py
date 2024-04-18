@@ -618,6 +618,320 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
     return bill_df, billsum_df
 
 
+def calculate_consumer_bills(
+        case_path,
+        metadata,
+        meter_df,
+        tariff,
+        dso_num,
+        sf,
+        rate_scenario,
+    ):
+    """Calculates the consumers' bills for the four different scenarios considered in 
+    the Rates Analysis work.
+    Args:
+        case_path (str): A string specifying the directory path of the case being analyzed.
+        metadata (dict): A dictionary containing the metadata structure of the DSO.
+        meter_df (pandas.DataFrame): DataFrame containing consumers' consumption information.
+        tariff (dict): A dictionary of pertinant tariff information. Includes information 
+        for the volumetric rates (i.e., flat and time-of-use).
+        dso_num (str): A string specifying the number of the DSo being considered.
+        sf (float): Scaling factor to scale the GridLAB-D results to TSO scale.
+        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
+        time-of-use, subscription, or transactive.
+    Returns:
+        bill_df (pandas.DataFrame): DataFrame containing bill information for each meter.
+        billsum_df (pandas.DataFrame): DataFrame containing bill information for each 
+        load sector.
+    """
+
+    # Specify a conversion between month name abbreviations and month numbers
+    month_name_to_num = {
+        "Jan": 1,
+        "Feb": 1,
+        "Mar": 3,
+        "Apr": 4,
+        "May": 5,
+        "Jun": 6,
+        "Jul": 7,
+        "Aug": 8,
+        "Sep": 9,
+        "Oct": 10,
+        "Nov": 11,
+        "Dec": 12,
+    }
+
+    # Load in necessary data for the defined rate scenario
+    if rate_scenario == "time-of-use":
+        # Note: this assumes each month has the same number of time-of-use periods
+        tou_params = load_json(
+            case_path,
+            "time_of_use_parameters_dso_" + dso_num + ".json",
+        )
+
+    # Specify the bill components that will be recorded
+    bill_components = [
+        "flat_energy_charge",
+        "flat_demand_charge",
+        "flat_fixed_charge",
+        "flat_total_charge",
+        "flat_energy_purchased",
+        "flat_average_price",
+    ]
+    if rate_scenario == "time-of-use":
+        bill_components.append("tou_energy_charge")
+        bill_components.extend(
+            ["tou_" * k * "_energy_charge" for k in tou_params[1]["periods"].keys()]
+        )
+        bill_components.append("tou_demand_charge")
+        bill_components.append("tou_fixed_charge")
+        bill_components.append("tou_total_charge")
+        bill_components.extend(
+            ["tou_" * k * "_energy_purchased" for k in tou_params[1]["periods"].keys()]
+        )
+        bill_components.append("tou_energy_purchased")
+        bill_components.append("tou_average_price")
+    elif rate_scenario == "subscription":
+        None
+    elif rate_scenario == "transactive":
+        None
+
+    # Create empty DataFrame for all consumer bills
+    meters = []
+    variable = []
+    month = []
+    for meter in metadata["billingmeters"]:
+        for component in bill_components:
+            meters.append(meter)
+            variable.append(component)
+            month.append(0)
+    bill_df = pd.DataFrame(month, index=[meters, variable], columns=["sum"])
+
+    # Create empty DataFrame for sectoral aggregations of consumers' bills
+    loads = []
+    variable = []
+    month = []
+    for load in ["residential", "commercial", "industrial", "total"]:
+        for component in bill_components:
+            loads.append(load)
+            variable.append(component)
+            month.append(0)
+    billsum_df = pd.DataFrame(month, index=[loads, variable], columns=["sum"])
+
+    # Specify price components that do not vary in time or by consumer type
+    flat_rate = tariff["DSO_" + dso_num]["flat_rate"]
+    fixed_charge = tariff["DSO_" + dso_num]["flat_rate"]
+    
+    # Cycle through each month for which there is energy data and calculate customer bill
+    months = list(meter_df.columns[~meter_df.columns.str.contains('sum')])
+    for m in months:
+        # Initialize the DataFrames for each month
+        bill_df[m] = [0] * len(bill_df)
+        billsum_df[m] = [0] * len(billsum_df)
+
+        # Iterate through each consumer
+        for each in metadata["billingmeters"]:
+            # Determine the consumer's energy consumption metrics
+            metrics = {
+                "total_energy": meter_df.loc[(each, "kw-hr"), m],
+                "max_demand": meter_df.loc[(each, "max_kw"), m],
+            }
+            if rate_scenario == "time-of-use":
+                for k in tou_params[month_name_to_num[m]]["periods"].keys():
+                    metrics["tou_" + k + "_energy"] = meter_df.loc[(each, k + "_kwh"), m]
+            
+            # Specify the demand charge based on the consumer's sector type
+            demand_charge = tariff["DSO_" + dso_num][
+                metadata["billingmeters"][each]["tariff_class"]
+            ]["demand_charge"]
+            
+            # Determine bills for participating vs. non-participating consumers
+            if metadata["billingmeters"][each]["cust_participating"]:
+                if rate_scenario == "time-of-use":
+                    # Calculate the consumer's energy charge under the time-of-use tariff
+                    bill_df.loc[(each, "tou_energy_charge"), m] = sum(
+                        tou_params[month_name_to_num[m]]["price"]
+                        * tou_params[month_name_to_num[m]]["periods"][k]["ratio"]
+                        * metrics["tou_" + k + "_energy"]
+                        for k in tou_params[month_name_to_num[m]]["periods"].keys()
+                    ) + calculate_tier_credit(
+                        metadata["billingmeters"][each]["tariff_class"], tariff, metrics
+                    )
+
+                    # Calculate the consumer's energy charge for each time-of-use period
+                    bill_df.loc[(each, "tou_" + k + "_energy_charge"), m] = (
+                            tou_params[month_name_to_num[m]]["price"]
+                            * tou_params[month_name_to_num[m]]["periods"][k]["ratio"]
+                            * metrics["tou_" + k + "_energy"]
+                        )
+
+                    # Calculate the consumer's demand charge under the time-of-use tariff
+                    bill_df.loc[(each, "tou_demand_charge"), m] = (
+                        demand_charge * metrics["max_demand"]
+                    )
+
+                    # Calculate the consumer's fixed charge under the time-of-use tariff
+                    bill_df.loc[(each, "tou_fixed_charge"), m] = fixed_charge
+
+                    # Calculate the consumer's total bill under the time-of-use tariff
+                    bill_df.loc[(each, "tou_total_charge"), m] = (
+                        bill_df.loc[(each, "tou_energy_charge"), m]
+                        + bill_df.loc[(each, "tou_demand_charge"), m]
+                        + bill_df.loc[(each, "tou_fixed_charge"), m]
+                    )
+
+                    # Store the total energy purchased under the time-of-use tariff
+                    bill_df.loc[(each, "tou_energy_purchased"), m] = metrics["total_energy"]
+
+                    # Store the total energy purchased during each time-of-use period
+                    for k in tou_params[month_name_to_num[m]]["periods"].keys():
+                        bill_df.loc[(each, "tou_" + k + "_energy_purchased"), m] = metrics["tou_" + k + "_energy"]
+
+                    # Calculate the average price under the time-of-use tariff
+                    if metrics["total_energy"] == 0:
+                        bill_df.loc[(each, "tou_average_price"), m] = 0
+                    else:
+                        bill_df.loc[(each, "tou_average_price"), m] = (
+                            bill_df.loc[(each, "tou_total_charge"), m]
+                            / metrics["total_energy"]
+                        )
+                elif rate_scenario == "subscription":
+                    None
+                elif rate_scenario == "transactive":
+                    None
+            else:
+                # Calculate the consumer's energy charge under the flat rate tariff
+                bill_df.loc[(each, "flat_energy_charge"), m] = flat_rate * metrics[
+                    "total_energy"
+                ] + calculate_tier_credit(
+                    metadata["billingmeters"][each]["tariff_class"], tariff, metrics
+                )
+
+                # Calculate the consumer's demand charge under the flat rate tariff
+                bill_df.loc[(each, "flat_demand_charge"), m] = (
+                    demand_charge * metrics["max_demand"]
+                )
+
+                # Calculate the consumer's fixed charge under the flat rate tariff
+                bill_df.loc[(each, "flat_fixed_charge"), m] = fixed_charge
+
+                # Calculate the consumer's total bill under the flat rate tariff
+                bill_df.loc[(each, "flat_total_charge"), m] = (
+                    bill_df.loc[(each, "flat_energy_charge"), m]
+                    + bill_df.loc[(each, "flat_demand_charge"), m]
+                    + bill_df.loc[(each, "flat_fixed_charge"), m]
+                )
+
+                # Store the total energy purchased under the flat tariff
+                bill_df.loc[(each, "flat_energy_purchased"), m] = metrics["total_energy"]
+
+                # Calculate the average price under the flat tariff
+                if metrics["total_energy"] == 0:
+                    bill_df.loc[(each, "flat_average_price"), m] = 0
+                else:
+                    bill_df.loc[(each, "flat_average_price"), m] = (
+                        bill_df.loc[(each, "flat_total_charge"), m]
+                        / metrics["total_energy"]
+                    )
+
+        # Calculate the totals for each consumer class for the flat rate
+        for each in metadata["billingmeters"]:
+            for load in ["residential", "commercial", "industrial"]:
+                if metadata["billingmeters"][each]["tariff_class"] == load:
+                    for component in bill_components:
+                        if "average_price" not in component:
+                            billsum_df.loc[(load, component), m] += (
+                                bill_df.loc[(each, component), m] * sf
+                            )
+
+        # Calculate the totals across all consumer classes
+        for component in bill_components:
+            if "average_price" not in component:
+                for load in ["residential", "commercial", "industrial"]:
+                    billsum_df.loc[("total", component), :] += billsum_df.loc[
+                        (load, component), :
+                    ]
+
+        # Calculate the annual sums
+        bill_df["sum"] = bill_df.loc[
+            :, bill_df.columns[~bill_df.columns.str.contains("sum")]
+        ].sum(axis=1)
+        billsum_df["sum"] = billsum_df.loc[
+            :, billsum_df.columns[~billsum_df.columns.str.contains("sum")]
+        ].sum(axis=1)
+
+        # Calculate the average prices at the meter level
+        for each in metadata["billingmeters"]:
+            bill_df.loc[(each, "flat_average_price"), "sum"] = (
+                bill_df.loc[(each, "flat_total_charge"), "sum"]
+                / bill_df.loc[(each, "flat_energy_purchased"), "sum"]
+            )
+            if rate_scenario == "time-of-use":
+                bill_df.loc[(each, "tou_average_price"), "sum"] = (
+                    bill_df.loc[(each, "tou_total_charge"), "sum"]
+                    / bill_df.loc[(each, "tou_energy_purchased"), "sum"]
+                )
+            elif rate_scenario == "subscription":
+                None
+            elif rate_scenario == "transactive":
+                None
+        
+        # Calculate the average prices at the sector level
+        for load in ["residential", "commercial", "industrial", "total"]:
+            billsum_df.loc[(load, "flat_average_price")] = (
+                billsum_df.loc[(load, "flat_total_charge")]
+                / billsum_df.loc[(load, "flat_energy_purchased")]
+            )
+            if rate_scenario == "time-of-use":
+                billsum_df.loc[(load, "tou_average_price")] = (
+                    billsum_df.loc[(load, "tou_total_charge")]
+                    / billsum_df.loc[(load, "tou_energy_purchased")]
+                )
+            elif rate_scenario == "subscription":
+                None
+            elif rate_scenario == "transactive":
+                None
+
+    # Return the bill DataFrames
+    return bill_df, billsum_df
+
+
+def calculate_tier_credit(tariff_class, tariff, metrics):
+    """Calculate the tier credit added to the consumers' bills from the declining-block 
+    rate.
+    Args:
+        tariff_class (str): Indicates the type of consumer that is under consideration.
+        tariff (dict): A dictionary of pertinant tariff information. Includes information 
+        for the volumetric rates (i.e., flat and time-of-use).
+        metrics (dict): Dictionary of the consumer's energy consumption metrics.
+    Returns:
+        tier_credit (float): The tier credit that will be applied to the energy portion 
+        of the consumer's bill.
+    """
+
+    # Specify the parameters of the declining-block tiers of the tiered rate
+    tier2 = 0
+    tier3 = 0
+    t1p = tariff["DSO_" + dso_num][tariff_class]["tier_1"]["price"]
+    t1q = tariff["DSO_" + dso_num][tariff_class]["tier_1"]["max_quantity"]
+    t2p = tariff["DSO_" + dso_num][tariff_class]["tier_2"]["price"]
+    t2q = tariff["DSO_" + dso_num][tariff_class]["tier_2"]["max_quantity"]
+
+    # Determine if the consumer's demand places them in either of the tiers
+    if metrics["total_energy"] >= t1q:
+        tier2 = 1
+    if metrics["total_energy"] >= t2q:
+        tier3 = 1
+    
+    # Calculate the tier credit
+    tier_credit = t1p * tier2 * (metrics["total_energy"] - t1q) + t2p * tier3 * (
+        metrics["total_energy"] - t2q
+    )
+
+    # Return the tier credit
+    return tier_credit
+
+
 # def calc_te_bill(metadata, meter_df, tariff):
     # """ Calculate the customer bill using realtime meter and agent bid data and transactive tariff structure.
     # Args:
@@ -687,8 +1001,18 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
     # Connection Charge
 
 
-def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scaling_factor, num_indust_cust,
-                    case_name='', iterate=False):
+def DSO_rate_making(
+        case,
+        dso_num,
+        metadata,
+        dso_expenses,
+        tariff_path,
+        dso_scaling_factor,
+        num_indust_cust,
+        case_name='',
+        iterate=False,
+        rate_scenario=None,
+    ):
     """ Main function to call for calculating the customer energy consumption, monthly bills, and tariff adjustments to
     ensure revenue matches expenses.  Saves meter and bill dataframes to a hdf5 file.
     Args:
@@ -701,6 +1025,8 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
         num_indust_cust (int): number of industrial customers
         case_name (str): name of the case ('MR-BAU', 'MR-Batt', 'MR-Flex', 'MR-BAU', 'MR-Batt', 'MR-Flex')
         iterate (Boolean): If True will iterate once to square up revenue.
+        rate_scenario (str): A str specifying the rate scenario under investigation: flat,
+        time-of-use, subscription, or transactive. If None, this function defaults to DSO+T.
     Returns:
         meter_df : dataframe of energy consumption and max 15 minute power consumption for each month and total
         bill_df : dataframe of monthly and total bill for each house broken out by each element (energy, demand,
@@ -788,23 +1114,55 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
             Non_participating_revenue_req = Indust_Sales + NP_DA_Sales + NP_RT_Sales + NP_connection_fees + NP_Energy * transactive_dist_rate
 
     #  Calculate data frame of month customer bills
-    # tic()
-    cust_bill_df, billsum_df = calc_cust_bill(metadata, year_meter_df, year_trans_df, year_energysum_df, tariff,
-                                              str(dso_num), dso_scaling_factor, num_indust_cust)
-    # toc()
+    #tic()
+    if rate_scenario == None:
+        # Legacy code used in DSO+T analysis
+        cust_bill_df, billsum_df = calc_cust_bill(
+            metadata,
+            year_meter_df,
+            year_trans_df,
+            year_energysum_df,
+            tariff,
+            str(dso_num),
+            dso_scaling_factor,
+            num_indust_cust,
+        )
+    else:
+        # Code used in Rate Scenario analysis
+        cust_bill_df, billsum_df = calculate_consumer_bills(
+            case,
+            metadata,
+            year_meter_df,
+            tariff,
+            str(dso_num),
+            dso_scaling_factor,
+            rate_scenario,
+        )
+    #toc()
 
-    surplus = (billsum_df.loc[('total', 'fix_total'), 'sum'] + billsum_df.loc[
-        ('total', 'trans_total'), 'sum']) - dso_expenses
-
-    if case_name in ['8-MR-BAU', '8-HR-BAU', '200-MR-BAU', '200-HR-BAU']:
-        rebate = surplus / year_energysum_df.loc[('total', 'kw-hr'), 'sum']
-    elif case_name in ['8-MR-Batt', '8-MR-Flex', '8-HR-Batt', '8-HR-Flex', '200-MR-Batt', '200-MR-Flex', '200-HR-Batt',
-                       '200-HR-Flex']:
-        if counter_factual:
-            rebate = surplus / (year_energysum_df.loc[('total', 'da_q'), 'sum'] + year_energysum_df.loc[
-                ('total', 'rt_q'), 'sum'])
-        else:
-            rebate = surplus / NP_Energy
+    if rate_scenario == None:
+        surplus = (
+            billsum_df.loc[("total", "fix_total"), "sum"]
+            + billsum_df.loc[("total", "trans_total"), "sum"]
+        ) - dso_expenses
+    
+        if case_name in ['8-MR-BAU', '8-HR-BAU', '200-MR-BAU', '200-HR-BAU']:
+            rebate = surplus / year_energysum_df.loc[('total', 'kw-hr'), 'sum']
+        elif case_name in [
+            '8-MR-Batt',
+            '8-MR-Flex',
+            '8-HR-Batt',
+            '8-HR-Flex',
+            '200-MR-Batt',
+            '200-MR-Flex',
+            '200-HR-Batt',
+            '200-HR-Flex',
+        ]:
+            if counter_factual:
+                rebate = surplus / (year_energysum_df.loc[('total', 'da_q'), 'sum'] + year_energysum_df.loc[
+                    ('total', 'rt_q'), 'sum'])
+            else:
+                rebate = surplus / NP_Energy
     if iterate:
         if counter_factual:
             if case_name in ['8-MR-BAU', '8-HR-BAU', '200-MR-BAU', '200-HR-BAU', '200-MR-Batt', '200-MR-Flex',
@@ -816,11 +1174,22 @@ def DSO_rate_making(case, dso_num, metadata, dso_expenses, tariff_path, dso_scal
         else:
             tariff['DSO_' + str(dso_num)]['flat_rate'] = tariff['DSO_' + str(dso_num)]['flat_rate'] - rebate
 
-        cust_bill_df, billsum_df = calc_cust_bill(metadata, year_meter_df, year_trans_df, year_energysum_df, tariff,
-                                                  str(dso_num), dso_scaling_factor, num_indust_cust)
+        cust_bill_df, billsum_df = calc_cust_bill(
+            metadata,
+            year_meter_df,
+            year_trans_df,
+            year_energysum_df,
+            tariff,
+            str(dso_num),
+            dso_scaling_factor,
+            num_indust_cust,
+            rate_scenario,
+        )
 
-        surplus = (billsum_df.loc[('total', 'fix_total'), 'sum'] + billsum_df.loc[
-            ('total', 'trans_total'), 'sum']) - dso_expenses
+        surplus = (
+            billsum_df.loc[('total', 'fix_total'), 'sum']
+            + billsum_df.loc[('total', 'trans_total'), 'sum']
+        ) - dso_expenses
         rebate = surplus / year_energysum_df.loc[('total', 'kw-hr'), 'sum']
 
     # Need to save files to hdf5 format.
