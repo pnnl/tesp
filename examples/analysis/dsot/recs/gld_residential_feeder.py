@@ -1,9 +1,9 @@
 
 # Copyright (C) 2018-2020 Battelle Memorial Institute
 # file: feederGenerator.py
-"""Replaces ZIP loads with houses and optional storage and solar generation.
+"""Replaces ZIP loads with houses, and optional storage and solar generation.
 
-As this module populates the feeder backbone with houses and DER, it uses
+As this module populates the feeder backbone wiht houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
 fuses, transformers and lines to serve the expected load. Transformers have
 a margin of 20% to avoid overloads, while fuses have a margin of 150% to
@@ -12,26 +12,17 @@ source file.
 
 There are two kinds of house populating methods implemented:
 
-    * :Feeders with Service Transformers: This case applies to the full PNNL 
-    taxonomy feeders. Do not specify the *taxchoice* argument to 
-    *populate_feeder*. Each service transformer receiving houses will have a 
-    short service drop and a small number of houses attached.
-
-    * :Feeders without Service Transformers: This applies to the reduced-order 
-    ERCOT feeders. To invoke this mode, specify the *taxchoice* argument to 
-    *populate_feeder*. Each primary load to receive houses will have a large 
-    service transformer, large service drop and large number of houses attached.
+    * :Feeders with Service Transformers: This case applies to the full PNNL taxonomy feeders. Do not specify the *taxchoice* argument to *populate_feeder*. Each service transformer receiving houses will have a short service drop and a small number of houses attached.
+    * :Feeders without Service Transformers: This applies to the reduced-order ERCOT feeders. To invoke this mode, specify the *taxchoice* argument to *populate_feeder*. Each primary load to receive houses will have a large service transformer, large service drop and large number of houses attached.
 
 References:
     `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_
-    `Distribution System Modeling and Analysis, Kersting, W.H., 9781420041736`
 
 Public Functions:
     :populate_feeder: processes one GridLAB-D input file
 
 Todo:
-    * Verify the level zero mobile home thermal integrity properties; these were
-     copied from the MATLAB feeder generator
+    * Verify the level zero mobile home thermal integrity properties; these were copied from the MATLAB feeder generator
 
 """
 import sys
@@ -40,13 +31,17 @@ import os.path
 import networkx as nx
 import numpy as np
 import pandas as pd
-import argparse
 import math
 import json
-import tesp_support.api.helpers as helper
-#import src.tesp_support.tesp_support.api.modify_GLM as helper
 import tesp_support.api.modify_GLM as glmmod
-#import src.tesp_support.tesp_support.api.modify_GLM as glmmod
+from tesp_support.api.helpers import gld_strict_name, random_norm_trunc
+from tesp_support.api.parse_helpers import parse_kva
+from tesp_support.api.time_helpers import is_hhmm_valid, subtract_hhmm_secs, add_hhmm_secs
+from tesp_support.api.time_helpers import get_secs_from_hhmm, get_hhmm_from_secs, get_duration, get_dist
+
+sys.path.append('./')
+import gld_commercial_feeder as comm_FG
+import recs_api as recs
 
 global c_p_frac
 extra_billing_meters = set()
@@ -55,15 +50,14 @@ extra_billing_meters = set()
 #***************************************************************************************************
 
 # EV population functions
-def process_nhts_data(data_file: str):
+def process_nhts_data(glm_modifier, data_file):
     """
-    Read the large nhts survey data file containing driving data, process it and
-    return a dataframe
+    read the large nhts survey data file containing driving data, process it and return a dataframe
     Args:
+        glm_modifier: modify_GLM class object
         data_file: path of the file
     Returns:
-        dataframe containing start_time, end_time, travel_day (weekday/weekend) 
-        and daily miles driven
+        dataframe containing start_time, end_time, travel_day (weekday/weekend) and daily miles driven
     """
     # Read data from NHTS survey
     df_data = pd.read_csv(data_file, index_col=[0, 1])
@@ -77,7 +71,7 @@ def process_nhts_data(data_file: str):
     df_data_miles = df_data.groupby(level=['HOUSEID', 'VEHID']).sum()['TRPMILES']
     # limit daily miles to maximum possible range of EV from the ev model data as EVs cant travel more
     # than the range in a day if we don't consider the highway charging
-    max_ev_range = max(ev_metadata['Range (miles)'].values())
+    max_ev_range = max(glm_modifier.defaults.ev_metadata['Range (miles)'])
     df_data_miles = df_data_miles[df_data_miles < max_ev_range]
     df_data_miles = df_data_miles[df_data_miles > 0]
 
@@ -102,23 +96,20 @@ def selectEVmodel(evTable, prob):
         if total >= prob:
             return name
     raise UserWarning('EV model sale distribution does not sum to 1!')
-
 #***************************************************************************************************
 #***************************************************************************************************
-def match_driving_schedule(ev_range, ev_mileage, ev_max_charge):
-    """ Method to match the schedule of each vehicle from NHTS data based on 
-    vehicle ev_range"""
-    # let's pick a daily travel mile randomly from the driving data that is less
-    # than the ev_range-margin to ensure we can always maintain reserved soc
-    # level in EV
+def match_driving_schedule(glm_modifier, ev_range, ev_mileage, ev_max_charge):
+    """ Method to match the schedule of each vehicle from NHTS data based on vehicle ev_range"""
+    # let's pick a daily travel mile randomly from the driving data that is less than the ev_range-margin to ensure
+    # we can always maintain reserved soc level in EV
     while True:
-        mile_ind = np.random.randint(0, len(ev_driving_metadata['TRPMILES']))
-        daily_miles = ev_driving_metadata['TRPMILES'].iloc[mile_ind]
-        if ev_range * 0.0 < daily_miles < ev_range * (1 - ev_reserved_soc / 100):
+        mile_ind = np.random.randint(0, len(glm_modifier.defaults.ev_driving_metadata['TRPMILES']))
+        daily_miles = glm_modifier.defaults.ev_driving_metadata['TRPMILES'].iloc[mile_ind]
+        if ev_range * 0.0 < daily_miles < ev_range * (1 - glm_modifier.defaults.ev_reserved_soc / 100):
             break
     daily_miles = max(daily_miles, ev_range * 0.2)
-    home_leave_time = ev_driving_metadata['STRTTIME'].iloc[mile_ind]
-    home_arr_time = ev_driving_metadata['ENDTIME'].iloc[mile_ind]
+    home_leave_time = glm_modifier.defaults.ev_driving_metadata['STRTTIME'].iloc[mile_ind]
+    home_arr_time = glm_modifier.defaults.ev_driving_metadata['ENDTIME'].iloc[mile_ind]
     home_duration = get_duration(home_arr_time, home_leave_time)
 
     # check if home_duration is enough to charge for daily_miles driven + margin
@@ -158,10 +149,25 @@ def match_driving_schedule(ev_range, ev_mileage, ev_max_charge):
     return driving_sch
 #***************************************************************************************************
 #***************************************************************************************************
+def randomize_residential_skew(glm_modifier):
+    return randomize_skew(glm_modifier.defaults.residential_skew_std, glm_modifier.defaults.residential_skew_max)
+#***************************************************************************************************
+#***************************************************************************************************
+def randomize_skew(value, skew_max):
+    sk = value * np.random.randn()
+    if sk < skew_max:
+        sk = skew_max
+    elif sk > skew_max:
+        sk = skew_max
+    return sk
+#***************************************************************************************************
+#***************************************************************************************************
+
+
 
 def is_drive_time_valid(drive_sch):
     """
-    Checks if work arrival time and home arrival time adds up properly
+    checks if work arrival time and home arrival time adds up properly
     Args:
         drive_sch:
     Returns:
@@ -177,30 +183,36 @@ def is_drive_time_valid(drive_sch):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def add_node_house_configs (glm_modifier, xfkva, xfkvll, xfkvln, phs, want_inverter=False):
-  """Writes transformers and inverter settings for GridLAB-D houses at a primary
-    load point.
 
-  An aggregated single-phase triplex or three-phase quadriplex line configuration
-    is also written, based on estimating enough parallel 1/0 AA to supply xfkva 
-    load. This function should only be called once for each combination of xfkva
-    and phs to use, and it should be called before write_node_houses.
+
+
+
+
+
+
+
+
+def add_node_house_configs (glm_modifier, xfkva, xfkvll, xfkvln, phs, want_inverter=False):
+  """Writes transformers, inverter settings for GridLAB-D houses at a primary load point.
+
+  An aggregated single-phase triplex or three-phase quadriplex line configuration is also
+  written, based on estimating enough parallel 1/0 AA to supply xfkva load.
+  This function should only be called once for each combination of xfkva and phs to use,
+  and it should be called before write_node_houses.
 
   Args:
-      glm_modifier (object): contains the data structure of the .glm being 
-        modified
-      xfkva (float): the total transformer size to serve expected load; make 
-        this big enough to avoid overloads
-      xfkvll (float): line-to-line voltage [kV] on the primary. The secondary 
-        voltage will be 208 three-phase
-      xfkvln (float): line-to-neutral voltage [kV] on the primary. The secondary
-        voltage will be 120/240 for split secondary
-      phs (str): phase, either 'ABC' for three-phase, or concatenation of 'A', 
-        'B', and/or 'C' with 'S' for single-phase to triplex
-      want_inverter (boolean): True to write the IEEE 1547-2018 smarter inverter
-        function setpoints
+      fp (file): Previously opened text file for writing; the caller closes it.
+      xfkva (float): the total transformer size to serve expected load; make this big enough to avoid overloads
+      xfkvll (float): line-to-line voltage [kV] on the primary. The secondary voltage will be 208 three-phase
+      xfkvln (float): line-to-neutral voltage [kV] on the primary. The secondary voltage will be 120/240 for split secondary
+      phs (str): either 'ABC' for three-phase, or concatenation of 'A', 'B', and/or 'C' with 'S' for single-phase to triplex
+      want_inverter (boolean): True to write the IEEE 1547-2018 smarter inverter function setpoints
   """
   if want_inverter:
+    # print ('#define INVERTER_MODE=CONSTANT_PF', file=fp)
+    # print ('//#define INVERTER_MODE=VOLT_VAR', file=fp)
+    # print ('//#define INVERTER_MODE=VOLT_WATT', file=fp)
+    # print ('// default IEEE 1547-2018 settings for Category B', file=fp)
     glm_modifier.model.define_lines.append("#define INV_V2=0.98")
     glm_modifier.model.define_lines.append("#define INV_V2=0.98")
     glm_modifier.model.define_lines.append("#define INV_V3=1.02")
@@ -230,19 +242,9 @@ def add_node_house_configs (glm_modifier, xfkva, xfkvll, xfkvln, phs, want_inver
 #***************************************************************************************************
 
 def add_kersting_quadriplex (glm_modifier, kva):
-  """Writes a quadriplex_line_configuration based on 1/0 AA example from 
-    Kersting's book.
-    
-    The conductor capacity is 202 amps, so the number of triplex in parallel
-        will be kva/sqrt(3)/0.208/202
+  """Writes a quadriplex_line_configuration based on 1/0 AA example from Kersting's book
 
-    Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
-        kva (float): the minimum transformer rating
-    Returns: 
-        None
-        
+  The conductor capacity is 202 amps, so the number of triplex in parallel will be kva/sqrt(3)/0.208/202
   """
   params = dict()
   params["key"]= 'quad_cfg_{:d}'.format (int(kva))
@@ -264,17 +266,9 @@ def add_kersting_quadriplex (glm_modifier, kva):
 #***************************************************************************************************
 
 def add_kersting_triplex (glm_modifier, kva):
-  """Writes a triplex_line_configuration based on 1/0 AA example from Kersting's
-        book.
-    
-    The conductor capacity is 202 amps, so the number of triplex in parallel
-        will be kva/0.12/202
-    Args: 
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
-        kva (float): the minimum transformer rating
-    Returns:
-        None
+  """Writes a triplex_line_configuration based on 1/0 AA example from Kersting's book
+
+  The conductor capacity is 202 amps, so the number of triplex in parallel will be kva/0.12/202
   """
   params = dict()
   params["key"] = 'tpx_cfg_{:d}'.format (int(kva))
@@ -322,8 +316,6 @@ def accumulate_load_kva(data):
 
     Args:
         data (dict): dictionary of data for a selected GridLAB-D instance
-    Returns:
-        kva (float): the minimum transformer rating
     """
     kva = 0.0
     if 'constant_power_A' in data:
@@ -355,8 +347,6 @@ def log_model(model, h):
     Args:
         model (dict): parsed GridLAB-D model
         h (dict): object ID hash
-    Returns:
-        None
     """
     for t in model:
         print(t+':')
@@ -370,16 +360,8 @@ def log_model(model, h):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def randomize_commercial_skew(glm_modifier):
-    """Applies a randomized 
 
-    Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
-    Returns:
-        sk (float): the random skew value
-        
-    """
+def randomize_commercial_skew(glm_modifier):
     sk = glm_modifier.defaults.commercial_skew_std * np.random.randn()
     if sk < -glm_modifier.defaults.commercial_skew_max:
         sk = -glm_modifier.defaults.commercial_skew_max
@@ -392,11 +374,9 @@ def randomize_commercial_skew(glm_modifier):
 
 
 def is_edge_class(s):
-    """Identify switch, fuse, recloser, regulator, transformer, overhead_line, 
-    underground_line and triplex_line instances
+    """Identify switch, fuse, recloser, regulator, transformer, overhead_line, underground_line and triplex_line instances
 
-    Edge class is networkx terminology. In GridLAB-D, edge classes are called 
-    links.
+    Edge class is networkx terminology. In GridLAB-D, edge classes are called links.
 
     Args:
         s (str): the GridLAB-D class name
@@ -455,7 +435,6 @@ def parse_kva_old(arg):
     DEPRECATED
 
     Args:
-        cplx (str): the GridLAB-D P+jQ value
 
     Returns:
         float: the parsed kva value
@@ -507,33 +486,27 @@ def parse_kva_old(arg):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def parse_kva(cplx):
-    """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular 
-        form. Note that this drops the sign of p and q.
-
-    Args:
-        cplx (str): the GridLAB-D P+jQ value
-
-    Returns:
-        float: the parsed kva value
-    """
-    toks = list(filter(None,re.split('[\+j-]',cplx)))
-    p = float(toks[0])
-    q = float(toks[1])
-    return 0.001 * math.sqrt(p*p + q*q)
+# def parse_kva(cplx): # this drops the sign of p and q
+#     """Parse the kVA magnitude from GridLAB-D P+jQ volt-amperes in rectangular form
+#
+#     Args:
+#         cplx (str): the GridLAB-D P+jQ value
+#
+#     Returns:
+#         float: the parsed kva value
+#     """
+#     toks = list(filter(None,re.split('[\+j-]',cplx)))
+#     p = float(toks[0])
+#     q = float(toks[1])
+#     return 0.001 * math.sqrt(p*p + q*q)
 
 #***************************************************************************************************
 #***************************************************************************************************
 
 def selectResidentialBuilding(rgnTable,prob):
-    """Selects the building with region and probability
+    """Writes volt-var and volt-watt settings for solar inverters
 
     Args:
-        rgnTable ():
-        prob ():
-    Returns:
-        row ():
-        col ():
     """
     row = 0
     total = 0
@@ -554,16 +527,9 @@ def selectResidentialBuilding(rgnTable,prob):
 #   0 = Low
 #   1 = Middle - No longer using Moderate
 #   2 = Upper
-def getDsoIncomeLevelTable():
-    """
-    Args:
-
-    Returns:
-        dsoIncomePct ():
-
-    """
-    income_mat = res_bldg_metadata['income_level'][state][res_dso_type]
-    dsoIncomePct = {key: income_mat[key] for key in income_level} # Create new dictionary only with income levels of interest
+def getDsoIncomeLevelTable(glm_modifier):
+    income_mat = glm_modifier.defaults.res_bldg_metadata['income_level'][glm_modifier.defaults.state][glm_modifier.defaults.dso_type]
+    dsoIncomePct = {key: income_mat[key] for key in glm_modifier.defaults.income_level} # Create new dictionary only with income levels of interest
     dsoIncomePct = list(dsoIncomePct.values())
     dsoIncomePct = [round(i/sum(dsoIncomePct),4) for i in dsoIncomePct] # Normalize so array adds up to 1
     # now check if the sum of all values is 1
@@ -581,10 +547,8 @@ def selectIncomeLevel(incTable, prob):
     """ Selects the income level with region and probability
 
     Args:
-        incTable ():
-        prob ():
-    Returns:
-        row ()
+        rgnTable:
+        prob:
     """
     total = 0
     for row in range(len(incTable)):
@@ -601,14 +565,9 @@ def buildingTypeLabel (glm_modifier, rgn, bldg, ti):
     """Formatted name of region, building type name and thermal integrity level
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         rgn (int): region number 1..5
         bldg (int): 0 for single-family, 1 for apartment, 2 for mobile home
-        ti (int): thermal integrity level, 0..6 for single-family, only 0..2 
-            valid for apartment or mobile home
-    Returns:
-
+        ti (int): thermal integrity level, 0..6 for single-family, only 0..2 valid for apartment or mobile home
     """
     return glm_modifier.defaults.rgnName[rgn-1] + ': ' +  glm_modifier.defaults.bldgTypeName[bldg] + ': TI Level ' + str (ti+1)
 #***************************************************************************************************
@@ -621,13 +580,10 @@ def Find3PhaseXfmr (glm_modifier, kva):
     2000, 2500, 3750, 5000, 7500 or 10000 kVA
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         kva (float): the minimum transformer rating
 
     Returns:
-        [float,float,float,float,float]: the kva, %r, %x, %no-load loss, 
-            %magnetizing current
+        [float,float,float,float,float]: the kva, %r, %x, %no-load loss, %magnetizing current
     """
     for row in glm_modifier.defaults.three_phase:
         if row[0] >= kva:
@@ -644,13 +600,10 @@ def Find1PhaseXfmr (glm_modifier, kva):
     Standard sizes are 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         kva (float): the minimum transformer rating
 
     Returns:
-        [float,float,float,float,float]: the kva, %r, %x, %no-load loss, 
-            %magnetizing current
+        [float,float,float,float,float]: the kva, %r, %x, %no-load loss, %magnetizing current
     """
     for row in glm_modifier.defaults.single_phase:
         if row[0] >= kva:
@@ -666,8 +619,6 @@ def Find3PhaseXfmrKva (glm_modifier, kva):
     2000, 2500, 3750, 5000, 7500 or 10000 kVA
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         kva (float): the minimum transformer rating
 
     Returns:
@@ -690,8 +641,6 @@ def Find1PhaseXfmrKva (glm_modifier, kva):
     Standard sizes are 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         kva (float): the minimum transformer rating
 
     Returns:
@@ -709,12 +658,6 @@ def Find1PhaseXfmrKva (glm_modifier, kva):
 
 def checkResidentialBuildingTable(glm_modifier):
     """Verify that the regional building parameter histograms sum to one
-    
-    Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
-    Returns:
-        None
     """
 
     for tbl in range(len(glm_modifier.defaults.dsoThermalPct)):
@@ -751,16 +694,11 @@ def checkResidentialBuildingTable(glm_modifier):
 #***************************************************************************************************
 
 def selectThermalProperties(glm_modifier, bldgIdx, tiIdx):
-    """Retrieve the building thermal properties for a given type and integrity 
-    level
+    """Retrieve the building thermal properties for a given type and integrity level
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         bldgIdx (int): 0 for single-family, 1 for apartment, 2 for mobile home
         tiIdx (int): 0..7 for single-family, apartment or mobile home
-    Returns:
-        tiProps (list): thermal integrity properties
     """
     if bldgIdx == 0:
         tiProps = glm_modifier.defaults.singleFamilyProperties[tiIdx]
@@ -777,14 +715,13 @@ def selectThermalProperties(glm_modifier, bldgIdx, tiIdx):
 def FindFuseLimit (glm_modifier, amps):
     """ Find a Fuse size that's unlikely to melt during power flow
 
-    Will choose a fuse size of 40, 65, 100 or 200 Amps. If that's not large 
-    enough, will choose a recloser size of 280, 400, 560, 630 or 800 Amps. If 
-    that's not large enough, will choose a breaker size of 600 (skipped), 1200
+    Will choose a fuse size of 40, 65, 100 or 200 Amps.
+    If that's not large enough, will choose a recloser size
+    of 280, 400, 560, 630 or 800 Amps. If that's not large
+    enough, will choose a breaker size of 600 (skipped), 1200
     or 2000 Amps. If that's not large enough, will choose 999999.
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         amps (float): the maximum load current expected; some margin will be added
 
     Returns:
@@ -808,15 +745,9 @@ def FindFuseLimit (glm_modifier, amps):
 def selectSetpointBins (glm_modifier, bldg, rand):
     """Randomly choose a histogram row from the cooling and heating setpoints
     The random number for the heating setpoint row is generated internally.
-    
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         bldg (int): 0 for single-family, 1 for apartment, 2 for mobile home
         rand (float): random number [0..1] for the cooling setpoint row
-    Returns:
-        bldgCoolingSetpoints, bldHeatingSetpoints (tuple): cooling and heating 
-            setpoints of the building
     """
     cBin = hBin = 0
     total = 0
@@ -842,15 +773,6 @@ def selectSetpointBins (glm_modifier, bldg, rand):
 
 
 def initialize_glm_modifier(glmfilepath):
-    """Instantiates the .glm file to be modified
-    
-    Args:
-        glmfilepath (str): file location of the .glm
-    
-    Returns:
-        glmMod (object): the glm modifier
-    
-    """
     glmMod = glmmod.GLMModifier()
 #    glm, success = glmMod.read_model("/home/d3k205/tesp/data/feeders/R1-12.47-1.glm")
     glm, success = glmMod.read_model(glmfilepath)
@@ -864,15 +786,11 @@ def initialize_glm_modifier(glmfilepath):
 #***************************************************************************************************
 #***************************************************************************************************
 
+
+
+#fgconfig: path and name of the file that is to be used as the configuration json for loading
+#ConfigDict dictionary
 def initialize_config_dict(fgconfig):
-    """
-    
-    Args:
-        fgconfig (str): path and name of the file that is to be used as the 
-            configuration json for loading ConfigDict dictionary
-    Returns:
-        None
-    """
     global ConfigDict
     global c_p_frac
     if fgconfig is not None:
@@ -892,78 +810,61 @@ def initialize_config_dict(fgconfig):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def add_solar_inv_settings (glm_modifier, solar_invterer_params):
+def add_solar_inv_settings (glm_modifier, params):
     """Writes volt-var and volt-watt settings for solar inverters
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
-        solar_invterer_params (list): list of the attribute parameters
-    Returns:
-        None
+        op (file): an open GridLAB-D input file
     """
     #print ('    four_quadrant_control_mode ${' + name_prefix + 'INVERTER_MODE};', file=op)
-    solar_invterer_params["four_quadrant_control_mode"] = glm_modifier.defaults.name_prefix + 'INVERTER_MODE'
-    solar_invterer_params["V_base"] = '${INV_VBASE}'
-    solar_invterer_params["V1"] = '${INV_V1}'
-    solar_invterer_params["Q1"] = '${INV_Q1}'
-    solar_invterer_params["V2"] = '${INV_V2}'
-    solar_invterer_params["Q2"] = '${INV_Q2}'
-    solar_invterer_params["V3"] = '${INV_V3}'
-    solar_invterer_params["Q3"] = '${INV_Q3}'
-    solar_invterer_params["V4"] = '${INV_V4}'
-    solar_invterer_params["Q4"] = '${INV_Q4}'
-    solar_invterer_params["V_In"] = '${INV_VIN}'
-    solar_invterer_params["I_In"] = '${INV_IIN}'
-    solar_invterer_params["volt_var_control_lockout"] = '${INV_VVLOCKOUT}'
-    solar_invterer_params["VW_V1"] = '${INV_VW_V1}'
-    solar_invterer_params["VW_V2"] = '${INV_VW_V2}'
-    solar_invterer_params["VW_P1"] = '${INV_VW_P1}'
-    solar_invterer_params["VW_P2"] = '${INV_VW_P2}'
+    params["four_quadrant_control_mode"] = glm_modifier.defaults.name_prefix + 'INVERTER_MODE'
+    params["V_base"] = '${INV_VBASE}'
+    params["V1"] = '${INV_V1}'
+    params["Q1"] = '${INV_Q1}'
+    params["V2"] = '${INV_V2}'
+    params["Q2"] = '${INV_Q2}'
+    params["V3"] = '${INV_V3}'
+    params["Q3"] = '${INV_Q3}'
+    params["V4"] = '${INV_V4}'
+    params["Q4"] = '${INV_Q4}'
+    params["V_In"] = '${INV_VIN}'
+    params["I_In"] = '${INV_IIN}'
+    params["volt_var_control_lockout"] = '${INV_VVLOCKOUT}'
+    params["VW_V1"] = '${INV_VW_V1}'
+    params["VW_V2"] = '${INV_VW_V2}'
+    params["VW_P1"] = '${INV_VW_P1}'
+    params["VW_P2"] = '${INV_VW_P2}'
 
 #***************************************************************************************************
 #***************************************************************************************************
 
-def add_tariff(glm_modifier, tariff_params):
+def add_tariff(glm_modifier, params):
     """Writes tariff information to billing meters
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
-        tariff_params (list): list of the attribute parameters
-    
-    Returns:
-        None
+        op (file): an open GridLAB-D input file
     """
-    tariff_params["bill_mode"] = glm_modifier.defaults.bill_mode
-    tariff_params["price"] = glm_modifier.defaults.kwh_price
-    tariff_params["monthly_fee"] = glm_modifier.defaults.monthly_fee
-    tariff_params["bill_day"] = "1"
+    params["bill_mode"] = glm_modifier.defaults.bill_mode
+    params["price"] = glm_modifier.defaults.kwh_price
+    params["monthly_fee"] = glm_modifier.defaults.monthly_fee
+    params["bill_day"] = "1"
     if 'TIERED' in glm_modifier.defaults.bill_mode:
         if glm_modifier.defaults.tier1_energy > 0.0:
-            tariff_params["first_tier_energy"] = glm_modifier.defaults.tier1_energy
-            tariff_params["first_tier_price"] = glm_modifier.defaults.tier1_price
+            params["first_tier_energy"] = glm_modifier.defaults.tier1_energy
+            params["first_tier_price"] = glm_modifier.defaults.tier1_price
         if glm_modifier.defaults.tier2_energy > 0.0:
-            tariff_params["second_tier_energy"] = glm_modifier.defaults.tier2_energy
-            tariff_params["second_tier_price"] = glm_modifier.defaults.tier2_price
+            params["second_tier_energy"] = glm_modifier.defaults.tier2_energy
+            params["second_tier_price"] = glm_modifier.defaults.tier2_price
         if glm_modifier.defaults.tier3_energy > 0.0:
-            tariff_params["third_tier_energy"] = glm_modifier.defaults.tier3_energy
-            tariff_params["third_tier_price"] = glm_modifier.defaults.tier3_price
+            params["third_tier_energy"] = glm_modifier.defaults.tier3_energy
+            params["third_tier_price"] = glm_modifier.defaults.tier3_price
 
 
 #***************************************************************************************************
 #***************************************************************************************************
 
-def getDsoThermalTable(income):
-    """
-    
-    Args: 
-        income ():
-    
-    Returns:
-        dsoThermalPct ():
-    """
-    vintage_mat = res_bldg_metadata['housing_vintage'][state][res_dso_type][income]
+def getDsoThermalTable(glm_modifier, income):
+    vintage_mat = glm_modifier.defaults.res_bldg_metadata['housing_vintage'][glm_modifier.defaults.state][glm_modifier.defaults.dso_type][income]
     df = pd.DataFrame(vintage_mat)
     # df = df.transpose()
     dsoThermalPct = np.zeros(shape=(3, 9))  # initialize array
@@ -990,8 +891,6 @@ def obj(glm_modifier, parent, model, line, itr, oidh, octr):
     """Store an object in the model structure
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         parent (str): name of parent object (used for nested object defs)
         model (dict): dictionary model structure
         line (str): glm line containing the object definition
@@ -1066,20 +965,16 @@ def obj(glm_modifier, parent, model, line, itr, oidh, octr):
 
 #***************************************************************************************************
 #***************************************************************************************************
-def add_link_class (glm_modifier, model, h, t, seg_loads, want_metrics=False):
-  """Write a GridLAB-D link (i.e., edge) class
+def add_link_class (glm_modifier, model, h, t, seg_loads,  want_metrics=False):
+  """Write a GridLAB-D link (i.e. edge) class
 
   Args:
-    glm_modifier (object): contains the data structure of the .glm being 
-        modified
-    model (dict): the parsed GridLAB-D model
-    h (dict): the object ID hash
-    t (str): the GridLAB-D class
-    seg_loads (dict) : a dictionary of downstream loads for each link
-    want_metrics (boolean): if True, adds metrics_collector. Default is False.
 
-    Returns:
-        None
+      model (dict): the parsed GridLAB-D model
+      h (dict): the object ID hash
+      t (str): the GridLAB-D class
+      seg_loads (dict) : a dictionary of downstream loads for each link
+      op (file): an open GridLAB-D input file
   """
   if t in model:
     for o in model[t]:
@@ -1091,7 +986,7 @@ def add_link_class (glm_modifier, model, h, t, seg_loads, want_metrics=False):
             params[p] = h[model[t][o][p]]
           else:
             if p == "from" or p == "to" or p == "parent":
-              params[p] = helper.gld_strict_name(model[t][o][p])
+              params[p] = gld_strict_name(model[t][o][p])
             else:
               params[p] = model[t][o][p]
             glm_modifier.add_object(t, o, params)
@@ -1099,21 +994,11 @@ def add_link_class (glm_modifier, model, h, t, seg_loads, want_metrics=False):
           params2 = dict()
           params2["parent"] = o
           params2["interval"] = str(glm_modifier.defaults.metrics_interval)
-          glm_modifier.add_object("metrics_collector", o, params2)
+          glm_modifier.add_object("metrics_collector", "", params2)
 
 #***************************************************************************************************
 #***************************************************************************************************
 def add_local_triplex_configurations (glm_modifier):
-    """Adds local triplex configurations
-
-    Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
-    
-    Returns:
-        None
-    
-    """
     params = dict()
     for row in glm_modifier.defaults.triplex_conductors:
         name = glm_modifier.defaults.name_prefix + row[0]
@@ -1131,27 +1016,22 @@ def add_local_triplex_configurations (glm_modifier):
         params["conductor_1"] = glm_modifier.defaults.name_prefix + row[0]
         params["conductor_2"] = glm_modifier.defaults.name_prefix + row[1]
         params["conductor_N"] = glm_modifier.defaults.name_prefix + row[2]
-        params["insulation_thickness"] = row[3] + row[4]
-        params["diameter"] = row[4]
+        params["insulation_thickness"] = str(row[3])
+        params["diameter"] = str(row[4])
         glm_modifier.add_object("triplex_line_configuration", name, params)
 
 #***************************************************************************************************
 #***************************************************************************************************
 
 def add_ercot_houses (glm_modifier, model, h, vln, vsec):
-    """For the reduced-order ERCOT feeders, add houses and a large service 
-    transformer to the load points
+    """For the reduced-order ERCOT feeders, add houses and a large service transformer to the load points
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
-        model (dict): the parsed GridLAB-D model TODO: remove?
-        h (dict): the object ID hash TODO: remove?
+        model (dict): the parsed GridLAB-D model
+        h (dict): the object ID hash
+        op (file): an open GridLAB-D input file
         vln (float): the primary line-to-neutral voltage
         vsec (float): the secondary line-to-neutral voltage
-    
-    Returns:
-        None
     """
     for key in glm_modifier.defaults.house_nodes:
 #        bus = key[:-2]
@@ -1225,41 +1105,36 @@ def add_ercot_houses (glm_modifier, model, h, vln, vsec):
         else:
             vstart = format(-0.5*vsec,'.2f') + '+' + format(0.866025*vsec,'.2f') + 'j;'
         params5 = dict()
-        name = key + '_tn'
+        t_name = key + '_tn'
         params5["phases"] = phs + 'S'
         params5["voltage_1"] = vstart
         params5["voltage_2"] = vstart
         params5["voltage_N"] = 0
         params5["nominal_voltage"] = format(vsec, '.1f')
-        glm_modifier.add_object("triplex_node", name, params5)
+        glm_modifier.add_object("triplex_node", t_name, params5)
         params6 = dict()
-        name = key + '_mtr'
+        t_name = key + '_mtr'
         params6["phases"] = phs + 'S'
         params6["voltage_1"] = vstart
         params6["voltage_2"] = vstart
         params6["voltage_N"] = 0
         params6["nominal_voltage"] = format(vsec, '.1f')
         add_tariff (glm_modifier)
-        glm_modifier.add_object("triplex_meter", name, params6)
+        glm_modifier.add_object("triplex_meter", t_name, params6)
         if glm_modifier.defaults.metrics_interval > 0:
             params7 = dict()
-            params7["parent"] = name
+            params7["parent"] = t_name
             params7["interval"] = str(glm_modifier.defaults.metrics_interval)
-            glm_modifier.add_object("metrics_collector", name, params7)
+            glm_modifier.add_object("metrics_collector", "", params7)
 
 #***************************************************************************************************
 #***************************************************************************************************
 
 def connect_ercot_commercial(glm_modifier):
-  """For the reduced-order ERCOT feeders, add a billing meter to the commercial 
-  load points, except small ZIPLOADs
+  """For the reduced-order ERCOT feeders, add a billing meter to the commercial load points, except small ZIPLOADs
 
   Args:
-      glm_modifier (object): contains the data structure of the .glm being 
-            modified
-
-  Returns:
-      None
+      op (file): an open GridLAB-D input file
   """
   meters_added = set()
   for key in glm_modifier.defaults.comm_loads:
@@ -1274,17 +1149,16 @@ def connect_ercot_commercial(glm_modifier):
     if mtr not in meters_added:
       params = dict()
       meters_added.add(mtr)
-      name = mtr
       params["parent"] = parent
       params["phases"] = phases
       params["nominal_voltage"] = format(vln, '.1f')
       add_tariff(glm_modifier)
-      glm_modifier.add_object("meter", name, params)
+      glm_modifier.add_object("meter", mtr, params)
       if glm_modifier.defaults.metrics_interval > 0:
           params2 = dict()
-          params2["parent"] = name
+          params2["parent"] = mtr
           params2["interval"] = str(glm_modifier.defaults.metrics_interval)
-          glm_modifier.add_object("metrics_collector", name, params2)
+          glm_modifier.add_object("metrics_collector", "", params2)
 
 #***************************************************************************************************
 #***************************************************************************************************
@@ -1292,13 +1166,9 @@ def add_ercot_small_loads(glm_modifier, basenode, vnom):
   """For the reduced-order ERCOT feeders, write loads that are too small for houses
 
   Args:
-    glm_modifier (object): contains the data structure of the .glm being 
-            modified
     basenode (str): the GridLAB-D node name
+    op (file): an open GridLAB-D input file
     vnom (float): the primary line-to-neutral voltage
-
-  Returns:
-    None
   """
   kva = float(glm_modifier.defaults.small_nodes[basenode][0])
   phs = glm_modifier.defaults.small_nodes[basenode][1]
@@ -1322,21 +1192,11 @@ def add_ercot_small_loads(glm_modifier, basenode, vnom):
   params["phases"] = phs
   params["nominal_voltage"] = str(vnom)
   params["load_class"] = cls
-
   params["voltage_C"] = format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j'
-
   params[phase_class] = vstart
-
-
-
-
-
   #print (vstart, file=op)
-
   #waiting for the add comment function to be added to the modifier class
   #print ('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
-
-
   params["constant_power_C_real"] = format (1000.0 * kva, '.2f')
   glm_modifier.add_object("load", name, params)
 
@@ -1347,19 +1207,14 @@ def add_ercot_small_loads(glm_modifier, basenode, vnom):
 #***************************************************************************************************
 # look at primary loads, not the service transformers
 def identify_ercot_houses (glm_modifier,model, h, t, avgHouse, rgn):
-    """For the reduced-order ERCOT feeders, scan each primary load to determine 
-    the number of houses it should have
+    """For the reduced-order ERCOT feeders, scan each primary load to determine the number of houses it should have
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         model (dict): the parsed GridLAB-D model
-        h (dict): the object ID hash TODO: remove?
+        h (dict): the object ID hash
         t (str): the GridLAB-D class name to scan
         avgHouse (float): the average house load in kva
         rgn (int): the region number, 1..5
-    Returns:
-        None
     """
     print ('Average ERCOT House', avgHouse, rgn)
     total_houses = {'A': 0, 'B': 0, 'C': 0}
@@ -1418,95 +1273,144 @@ def identify_ercot_houses (glm_modifier,model, h, t, avgHouse, rgn):
 #***************************************************************************************************
 #***************************************************************************************************
 
-def replace_commercial_loads (glm_modifier, model, h, t, avgBuilding):
-  """For the full-order feeders, scan each load with load_class==C to determine 
-  the number of zones it should have
-
-  Args:
-      glm_modifier (object): contains the data structure of the .glm being 
-            modified
-      model (dict): the parsed GridLAB-D model
-      h (dict): the object ID hash TODO: remove?
-      t (str): the GridLAB-D class name to scan
-      avgBuilding (float): the average building in kva
-      
-  Returns:
-      None
-  """
-  print ('Average Commercial Building', avgBuilding)
-  total_commercial = 0
-  total_comm_kva = 0
-  total_comm_zones = 0
-  total_zipload = 0
-  total_office = 0
-  total_bigbox = 0
-  total_stripmall = 0
-  if t in model:
-    for o in list(model[t].keys()):
-      if 'load_class' in model[t][o]:
-        if model[t][o]['load_class'] == 'C':
-          kva = accumulate_load_kva (model[t][o])
-          total_commercial += 1
-          total_comm_kva += kva
-          vln = float(model[t][o]['nominal_voltage'])
-          nphs = 0
-          phases = model[t][o]['phases']
-          if 'A' in phases:
-            nphs += 1
-          if 'B' in phases:
-            nphs += 1
-          if 'C' in phases:
-            nphs += 1
-          nzones = int ((kva / avgBuilding) + 0.5)
-          total_comm_zones += nzones
-          if nzones > 14 and nphs == 3:
-            comm_type = 'OFFICE'
-            total_office += 1
-          elif nzones > 5 and nphs > 1:
-            comm_type = 'BIGBOX'
-            total_bigbox += 1
-          elif nzones > 0:
-            comm_type = 'STRIPMALL'
-            total_stripmall += 1
-          else:
-            comm_type = 'ZIPLOAD'
-            total_zipload += 1
-          mtr = model[t][o]['parent']
-          if glm_modifier.defaults.forERCOT == "True":
-          # the parent node is actually a meter, but we have to add the tariff and metrics_collector unless only ZIPLOAD
-            mtr = model[t][o]['parent'] # + '_mtr'
-            if comm_type != 'ZIPLOAD':
-              extra_billing_meters.add(mtr)
-          else:
-            extra_billing_meters.add(mtr)
-          glm_modifier.defaults.comm_loads[o] = [mtr, comm_type, nzones, kva, nphs, phases, vln, total_commercial]
-          model[t][o]['groupid'] = comm_type + '_' + str(nzones)
-          del model[t][o]
-  print ('found', total_commercial, 'commercial loads totaling ', '{:.2f}'.format(total_comm_kva), 'KVA')
-  print (total_office, 'offices,', total_bigbox, 'bigbox retail,', total_stripmall, 'strip malls,',
-         total_zipload, 'ZIP loads')
-  print (total_comm_zones, 'total commercial HVAC zones')
-
-#***************************************************************************************************
-#***************************************************************************************************
-
-def identify_xfmr_houses (glm_modifier, model, h, t, seg_loads, avgHouse, rgn):
-    """For the full-order feeders, scan each service transformer to determine 
-    the number of houses it should have
+def replace_commercial_loads(glm_modifier, model, h, t, avgBuilding):
+    """For the full-order feeders, scan each load with load_class==C to determine the number of zones it should have
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
+        glm_modifier (modify_GLM): modify_GLM class object
         model (dict): the parsed GridLAB-D model
-        h (dict): the object ID hash TODO: remove?
+        h (dict): the object ID hash
         t (str): the GridLAB-D class name to scan
-        seg_loads (dict): dictionary of downstream load (kva) served by each 
-            GridLAB-D link
+        avgBuilding (float): the average building in kva
+    """
+    print('Average Commercial Building', avgBuilding)
+    total_commercial = 0
+    total_comm_kva = 0
+    total_zipload = 0
+    total_office = 0
+    total_warehouse_storage = 0
+    total_big_box = 0
+    total_strip_mall = 0
+    total_education = 0
+    total_food_service = 0
+    total_food_sales = 0
+    total_lodging = 0
+    total_healthcare_inpatient = 0
+    total_low_occupancy = 0
+    sqft_kva_ratio = 0.005  # Average com building design load is 5 W/sq ft.
+
+    if t in model:
+        for o in list(model[t].keys()):
+            if 'load_class' in model[t][o]:
+                if model[t][o]['load_class'] == 'C':
+                    kva = accumulate_load_kva(model[t][o])
+                    total_commercial += 1
+                    total_comm_kva += kva
+                    vln = float(model[t][o]['nominal_voltage'])
+                    nphs = 0
+                    phases = model[t][o]['phases']
+                    if 'A' in phases:
+                        nphs += 1
+                    if 'B' in phases:
+                        nphs += 1
+                    if 'C' in phases:
+                        nphs += 1
+                    nzones = int((kva / avgBuilding) + 0.5)
+                    target_sqft = kva / sqft_kva_ratio
+                    sqft_error = -target_sqft
+                    select_bldg = None
+                    # TODO: Need a way to place all remaining buildings if this is the last/fourth feeder.
+                    # TODO: Need a way to place link for j-modelica buildings on fourth feeder of Urban DSOs
+                    # TODO: Need to work out what to do if we run out of commercial buildings before we get to the fourth feeder.
+                    for bldg in glm_modifier.defaults.comm_bldgs_pop:
+                        if 0 >= (glm_modifier.defaults.comm_bldgs_pop[bldg][1] - target_sqft) > sqft_error:
+                            select_bldg = bldg
+                            sqft_error = glm_modifier.defaults.comm_bldgs_pop[bldg][1] - target_sqft
+                    # if nzones > 14 and nphs == 3:
+                    #   comm_type = 'OFFICE'
+                    #   total_office += 1
+                    # elif nzones > 5 and nphs > 1:
+                    #   comm_type = 'BIGBOX'
+                    #   total_bigbox += 1
+                    # elif nzones > 0:
+                    #   comm_type = 'STRIPMALL'
+                    #   total_stripmall += 1
+                if select_bldg is not None:
+                    comm_name = select_bldg
+                    comm_type = glm_modifier.defaults.comm_bldgs_pop[select_bldg][0]
+                    comm_size = glm_modifier.defaults.comm_bldgs_pop[select_bldg][1]
+                    if comm_type == 'office':
+                        total_office += 1
+                    elif comm_type == 'warehouse_storage':
+                        total_warehouse_storage += 1
+                    elif comm_type == 'big_box':
+                        total_big_box += 1
+                    elif comm_type == 'strip_mall':
+                        total_strip_mall += 1
+                    elif comm_type == 'education':
+                        total_education += 1
+                    elif comm_type == 'food_service':
+                        total_food_service += 1
+                    elif comm_type == 'food_sales':
+                        total_food_sales += 1
+                    elif comm_type == 'lodging':
+                        total_lodging += 1
+                    elif comm_type == 'healthcare_inpatient':
+                        total_healthcare_inpatient += 1
+                    elif comm_type == 'low_occupancy':
+                        total_low_occupancy += 1
+
+                        # code = 'total_' + comm_type + ' += 1'
+                        # exec(code)
+                        # my_exec(code)
+                        # eval(compile(code, '<string>', 'exec'))
+
+                        del (glm_modifier.defaults.comm_bldgs_pop[select_bldg])
+                    else:
+                        if nzones > 0:
+                            print('Commercial building could not be found for ', '{:.2f}'.format(kva), ' KVA load')
+                        comm_name = 'streetlights'
+                        comm_type = 'ZIPLOAD'
+                        comm_size = 0
+                        total_zipload += 1
+                    mtr = gld_strict_name(model[t][o]['parent'])
+                    extra_billing_meters.add(mtr)
+                    glm_modifier.defaults.comm_loads[o] = [mtr, comm_type, comm_size, kva, nphs, phases, vln,
+                                                           total_commercial, comm_name]
+                    model[t][o]['groupid'] = comm_type + '_' + str(comm_size)
+                    del model[t][o]
+    # Print commercial info
+    print('Found', total_commercial, 'commercial loads totaling', '{:.2f}'.format(total_comm_kva), 'KVA')
+    print('  ', total_office, 'med/small offices,')
+    print('  ', total_warehouse_storage, 'warehouses,')
+    print('  ', total_big_box, 'big box retail,')
+    print('  ', total_strip_mall, 'strip malls,')
+    print('  ', total_education, 'education,')
+    print('  ', total_food_service, 'food service,')
+    print('  ', total_food_sales, 'food sales,')
+    print('  ', total_lodging, 'lodging,')
+    print('  ', total_healthcare_inpatient, 'healthcare,')
+    print('  ', total_low_occupancy, 'low occupancy,')
+    print('  ', total_zipload, 'ZIP loads')
+    remain_comm_kva = 0
+    for bldg in glm_modifier.defaults.comm_bldgs_pop:
+        remain_comm_kva += glm_modifier.defaults.comm_bldgs_pop[bldg][1] * sqft_kva_ratio
+    print(len(glm_modifier.defaults.comm_bldgs_pop), 'commercial buildings (approximately', int(remain_comm_kva),
+        'kVA) still to be assigned.')
+
+#***************************************************************************************************
+#***************************************************************************************************
+
+def identify_xfmr_houses (glm_modifier,model, h, t, seg_loads, avgHouse, rgn):
+    """For the full-order feeders, scan each service transformer to determine the number of houses it should have
+
+    Args:
+        model (dict): the parsed GridLAB-D model
+        h (dict): the object ID hash
+        t (str): the GridLAB-D class name to scan
+        seg_loads (dict): dictionary of downstream load (kva) served by each GridLAB-D link
         avgHouse (float): the average house load in kva
         rgn (int): the region number, 1..5
-    
-    Returns:
-        None
     """
     print ('Average House', avgHouse)
     total_houses = 0
@@ -1523,7 +1427,7 @@ def identify_xfmr_houses (glm_modifier, model, h, t, seg_loads, avgHouse, rgn):
                 if 'S' in phs:
                     nhouse = int ((tkva / avgHouse) + 0.5) # round to nearest int
                     name = o
-                    node = model[t][o]['to']
+                    node = gld_strict_name(model[t][o]['to'])
                     if nhouse <= 0:
                         total_small += 1
                         total_small_kva += tkva
@@ -1531,6 +1435,11 @@ def identify_xfmr_houses (glm_modifier, model, h, t, seg_loads, avgHouse, rgn):
                     else:
                         total_houses += nhouse
                         lg_v_sm = tkva / avgHouse - nhouse # >0 if we rounded down the number of houses
+                        # let's get the income level for the dso_type and state
+                        dsoIncomePct = getDsoIncomeLevelTable()
+                        inc_lev = selectIncomeLevel(dsoIncomePct, np.random.uniform(0,1))
+                        # let's get the vintage table for dso_type, state, and income level
+                        dsoThermalPct = getDsoThermalTable(glm_modifier.defaults.income_level[inc_lev])
                         bldg, ti = selectResidentialBuilding (glm_modifier.defaults.rgnThermalPct[rgn-1], np.random.uniform (0, 1))
                         if bldg == 0:
                             total_sf += nhouse
@@ -1555,85 +1464,79 @@ def identify_xfmr_houses (glm_modifier, model, h, t, seg_loads, avgHouse, rgn):
 #***************************************************************************************************
 
 def add_small_loads(glm_modifier, basenode, vnom):
-  """Write loads that are too small for a house, onto a node
+    """Write loads that are too small for a house, onto a node
 
-  Args:
-    glm_modifier (object): contains the data structure of the .glm being 
-            modified
-    basenode (str): GridLAB-D node name
-    vnom (float): nominal line-to-neutral voltage at basenode
+    Args:
+      basenode (str): GridLAB-D node name
+      op (file): open file to write to
+      vnom (float): nominal line-to-neutral voltage at basenode
+    """
+    kva = float(glm_modifier.defaults.small_nodes[basenode][0])
+    phs = glm_modifier.defaults.small_nodes[basenode][1]
 
-  Returns:
-    None
-  """
-  kva = float(glm_modifier.defaults.small_nodes[basenode][0])
-  phs = glm_modifier.defaults.small_nodes[basenode][1]
+    if 'A' in phs:
+        vstart = str(vnom) + '+0.0j'
+    elif 'B' in phs:
+        vstart = format(-0.5 * vnom, '.2f') + format(-0.866025 * vnom, '.2f') + 'j'
+    else:
+        vstart = format(-0.5 * vnom, '.2f') + '+' + format(0.866025 * vnom, '.2f') + 'j'
 
-  if 'A' in phs:
-      vstart = str(vnom) + '+0.0j'
-  elif 'B' in phs:
-      vstart = format(-0.5*vnom,'.2f') + format(-0.866025*vnom,'.2f') + 'j'
-  else:
-      vstart = format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j'
+    tpxname = basenode + '_tpx_1'
+    mtrname = basenode + '_mtr_1'
+    loadname = basenode + '_load_1'
+    params = dict()
+    name = basenode
+    params["phases"] = phs
+    params["nominal_voltage"] = str(vnom)
+    params["voltage_1"] = vstart
+    params["voltage_2"] = vstart
+    glm_modifier.add_object("triplex_node", name, params)
+    params2 = dict()
+    name = tpxname
+    params2["from"] = basenode
+    params2["to"] = mtrname
+    params2["phases"] = phs
+    params2["length"] = "30"
+    params2["configuration"] = glm_modifier.defaults.triplex_configurations[0][0]
+    glm_modifier.add_object("triplex_line", name, params2)
 
-  tpxname = basenode + '_tpx_1'
-  mtrname = basenode + '_mtr_1'
-  loadname = basenode + '_load_1'
-  params = dict()
-  name = basenode
-  params["phases"] = phs
-  params["nominal_voltage"] = str(vnom)
-  params["voltage_1"] = vstart
-  params["voltage_2"] = vstart
-  glm_modifier.add_object("triplex_node", name, params)
-  params2 = dict()
-  name = tpxname
-  params2["from"] = basenode
-  params2["to"] = mtrname
-  params2["phases"] = phs
-  params2["length"] = "30"
-  params2["configuration"] = glm_modifier.defaults.triplex_configurations[0][0]
-  glm_modifier.add_object("triplex_line", name, params2)
-  params3 = dict()
-  name = mtrname
-  params3["phases"] = phs
-  params3["meter_power_consumption"] = "1+7j"
-  add_tariff (glm_modifier)
-  params3["nominal_voltage"] = str(vnom)
-  params3["voltage_1"] = vstart
-  params3["voltage_2"] = vstart
-  glm_modifier.add_object("triplex_meter", name, params3)
-  if ConfigDict['metrics_interval']['value'] > 0:
-    params4 = dict()
-    params4["parent"] = name
-    params4["interval"] = str(glm_modifier.defaults.metrics_interval)
-    glm_modifier.add_object("metrics_collector", name, params4)
-  params5 = dict()
-  name = loadname
-  params5["parent"] = mtrname
-  params5["phases"] = phs
-  params5["nominal_voltage"] = str(vnom)
-  params5["voltage_1"] = vstart
-  params5["voltage_2"] = vstart
+    params3 = dict()
+    params3["phases"] = phs
+    params3["meter_power_consumption"] = "1+7j"
+    add_tariff(glm_modifier)
+    params3["nominal_voltage"] = str(vnom)
+    params3["voltage_1"] = vstart
+    params3["voltage_2"] = vstart
+    glm_modifier.add_object("triplex_meter", mtrname, params3)
+    if glm_modifier.defaults.metrics_interval > 0:
+        params4 = dict()
+        params4["parent"] = mtrname
+        params4["interval"] = str(glm_modifier.defaults.metrics_interval)
+        glm_modifier.add_object("metrics_collector", "", params4)
+    params5 = dict()
+    t_name = loadname
+    params5["parent"] = mtrname
+    params5["phases"] = phs
+    params5["nominal_voltage"] = str(vnom)
+    params5["voltage_1"] = vstart
+    params5["voltage_2"] = vstart
 
-  #waiting for the add comment method to be added to the modifier class
-  #print ('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
+    # waiting for the add comment method to be added to the modifier class
+    # print ('  //', '{:.3f}'.format(kva), 'kva is less than 1/2 avg_house', file=op)
 
-  params5["power_12_real"] = "10.0"
-  params5["power_12_reac"] = "8.0"
-  glm_modifier.add_object("triplex_load", name, params5)
+    params5["constant_power_12_real"] = "10.0"
+    params5["constant_power_12_reac"] = "8.0"
+    glm_modifier.add_object("triplex_load", t_name, params5)
+
+
 #***************************************************************************************************
 #***************************************************************************************************
 def add_one_commercial_zone(glm_modifier, bldg):
   """Write one pre-configured commercial zone as a house
 
   Args:
-      glm_modifier (object): contains the data structure of the .glm being 
-            modified
       bldg: dictionary of GridLAB-D house and zipload attributes
-
-  Returns:
-      None
+      op (file): open file to write to
   """
   params = dict()
   name = bldg['zonename']
@@ -1744,17 +1647,13 @@ def add_one_commercial_zone(glm_modifier, bldg):
 
 #***************************************************************************************************
 #***************************************************************************************************
-def add_commercial_loads(glm_modifier, rgn, key):
+def add_commercial_loads(glm_modifier,rgn, key):
   """Put commercial building zones and ZIP loads into the model
 
   Args:
-      glm_modifier (object): contains the data structure of the .glm being 
-            modified
       rgn (int): region 1..5 where the building is located
       key (str): GridLAB-D load name that is being replaced
-
-  Returns:
-      None
+      op (file): open file to write to
   """
   mtr = glm_modifier.defaults.comm_loads[key][0]
   comm_type = glm_modifier.defaults.comm_loads[key][1]
@@ -1853,7 +1752,7 @@ def add_commercial_loads(glm_modifier, rgn, key):
           bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
           bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
 
-          bldg['zonename'] = helper.gld_strict_name (key + '_bldg_' + str(jjj+1) + '_floor_' + str(floor) + '_zone_' + str(zone))
+          bldg['zonename'] = gld_strict_name (key + '_bldg_' + str(jjj+1) + '_floor_' + str(floor) + '_zone_' + str(zone))
           add_one_commercial_zone (glm_modifier, bldg)
 
   elif comm_type == 'BIGBOX':
@@ -1913,7 +1812,7 @@ def add_commercial_loads(glm_modifier, rgn, key):
         bldg['adj_ext'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
         bldg['adj_occ'] = (0.9 + 0.1 * np.random.random()) * floor_area / 1000.
 
-        bldg['zonename'] = helper.gld_strict_name (key + '_bldg_' + str(jjj+1) + '_zone_' + str(zone))
+        bldg['zonename'] = gld_strict_name (key + '_bldg_' + str(jjj+1) + '_zone_' + str(zone))
         add_one_commercial_zone (glm_modifier, bldg)
 
   elif comm_type == 'STRIPMALL':
@@ -1963,7 +1862,7 @@ def add_commercial_loads(glm_modifier, rgn, key):
       bldg['adj_ext'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.
       bldg['adj_occ'] = (0.8 + 0.4 * np.random.random()) * floor_area / 1000.
 
-      bldg['zonename'] = helper.gld_strict_name (key + '_zone_' + str(zone))
+      bldg['zonename'] = gld_strict_name (key + '_zone_' + str(zone))
       add_one_commercial_zone (glm_modifier, bldg)
 
   params = dict()
@@ -1996,22 +1895,18 @@ def add_commercial_loads(glm_modifier, rgn, key):
 
 #***************************************************************************************************
 #***************************************************************************************************
-def add_houses(glm_modifier, basenode, vnom, bIgnoreThermostatSchedule=True, bWriteService=True, bTriplex=True, setpoint_offset=1.0):
+
+
+
+
+def add_houses(glm_modifier, basenode, vnom, bIgnoreThermostatSchedule=True, bWriteService=True, bTriplex=True,
+               setpoint_offset=1.0, fg_recs_dataset=None):
     """Put houses, along with solar panels and batteries, onto a node
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         basenode (str): GridLAB-D node name
+        op (file): open file to write to
         vnom (float): nominal line-to-neutral voltage at basenode
-        bIgnoreThermostatSchedule (boolean): if True, ignores thermostat 
-            schedule. Default True.
-        bWriteService (boolean): if True, TODO: define. Default True.
-        bTriplex (boolean): if True, TODO: define. Default True.
-        setpoint_offset (float): thermostat setpoint offset. Default = 1.0
-    
-    Returns:
-        None
     """
 
     meter_class = 'triplex_meter'
@@ -2020,441 +1915,701 @@ def add_houses(glm_modifier, basenode, vnom, bIgnoreThermostatSchedule=True, bWr
         meter_class = 'meter'
         node_class = 'node'
 
-    nhouse = int(glm_modifier.defaults.house_nodes[basenode][0])
+    if fg_recs_dataset is None:
+        nhouse = int(glm_modifier.defaults.house_nodes[basenode][0])
+    else:
+        housing_type, year_made_range = fg_recs_dataset.get_house_type_vintage(glm_modifier.defaults.recs_state,
+                                                                               glm_modifier.defaults.recs_income_level,
+                                                                               glm_modifier.defaults.recs_housing_density)
+        SQFTRANGE = fg_recs_dataset.get_parameter_sample(glm_modifier.defaults.recs_state,
+                                                         glm_modifier.defaults.recs_income_level,
+                                                         glm_modifier.defaults.recs_housing_density,
+                                                         housing_type[0], year_made_range[0], "SQFTRANGE")
+        nhouse = fg_recs_dataset.calc_building_count(glm_modifier.defaults.recs_state,
+                                                     glm_modifier.defaults.recs_income_level,
+                                                     glm_modifier.defaults.recs_housing_density,
+                                                     housing_type[0], year_made_range[0])
+
     rgn = int(glm_modifier.defaults.house_nodes[basenode][1])
     lg_v_sm = float(glm_modifier.defaults.house_nodes[basenode][2])
     phs = glm_modifier.defaults.house_nodes[basenode][3]
     bldg = glm_modifier.defaults.house_nodes[basenode][4]
     ti = glm_modifier.defaults.house_nodes[basenode][5]
-    rgnTable = glm_modifier.defaults.rgnThermalPct[rgn-1]
+    inc_lev = glm_modifier.defaults.house_nodes[basenode][6]
+    # rgnTable = glm_modifier.defaults.rgnThermalPct[rgn-1]
+
 
     if 'A' in phs:
         vstart = str(vnom) + '+0.0j'
     elif 'B' in phs:
-        vstart = format(-0.5*vnom,'.2f') + format(-0.866025*vnom,'.2f') + 'j'
+        vstart = format(-0.5 * vnom, '.2f') + format(-0.866025 * vnom, '.2f') + 'j'
     else:
-        vstart = format(-0.5*vnom,'.2f') + '+' + format(0.866025*vnom,'.2f') + 'j'
+        vstart = format(-0.5 * vnom, '.2f') + '+' + format(0.866025 * vnom, '.2f') + 'j'
 
     if glm_modifier.defaults.forERCOT == "True":
         phs = phs + 'S'
-        tpxname = helper.gld_strict_name (basenode + '_tpx')
-        mtrname = helper.gld_strict_name (basenode + '_mtr')
-    elif bWriteService == True:
+        tpxname = gld_strict_name(basenode + '_tpx')
+        mtrname = gld_strict_name(basenode + '_mtr')
+    else:
         params = dict()
-        name = basenode
+        t_name = basenode
         params["phases"] = phs
         params["nominal_voltage"] = str(vnom)
         params["voltage_1"] = vstart
         params["voltage_2"] = vstart
-        glm_modifier.add_object('{:s} {{'.format (node_class), name, params)
-    else:
-        mtrname = helper.gld_strict_name (basenode + '_mtr')
+        glm_modifier.add_object("triplex_node", t_name, params)
     for i in range(nhouse):
         if (glm_modifier.defaults.forERCOT == "False") and (bWriteService == True):
 
-            tpxname = helper.gld_strict_name (basenode + '_tpx_' + str(i+1))
-            mtrname = helper.gld_strict_name (basenode + '_mtr_' + str(i+1))
+            tpxname = gld_strict_name(basenode + '_tpx_' + str(i + 1))
+            mtrname = gld_strict_name(basenode + '_mtr_' + str(i + 1))
             params2 = dict()
             name = tpxname
             params2["from"] = basenode
             params2["to"] = mtrname
             params2["phases"] = phs
             params2["length"] = "30"
-            params2["configuration"] = glm_modifier.defaults.name_prefix + list(glm_modifier.defaults.triplex_configurations.keys())[0]
+            params2["configuration"] = glm_modifier.defaults.name_prefix + \
+                                       list(glm_modifier.defaults.triplex_configurations.keys())[0]
             glm_modifier.add_object("triplex_line", name, params2)
 
             params3 = dict()
             params3[""] = str
-            name = mtrname
             params3["phases"] = phs
             params3["meter_power_consumption"] = "1+7j"
-            add_tariff (params3)
+            add_tariff(params3)
             params3["nominal_voltage"] = str(vnom)
             params3["voltage_1"] = vstart
             params3["voltage_2"] = vstart
-            glm_modifier.add_object("triplex_meter", name, params3)
+            glm_modifier.add_object("triplex_meter", mtrname, params3)
 
-
-            if glm_modifier.defaults.metrics_interval > 0:
+            if glm_modifier.defaults.metrics_interval > 0 and "meter" in glm_modifier.defaults.metrics:
                 params4 = dict()
-                params4["parent"] = name
+                params4["parent"] = mtrname
                 params4["interval"] = str(glm_modifier.defaults.metrics_interval)
-                glm_modifier.add_object("metrics_collector", name, params4)
-        hsename = helper.gld_strict_name (basenode + '_hse_' + str(i+1))
-        whname = helper.gld_strict_name (basenode + '_wh_' + str(i+1))
-        solname = helper.gld_strict_name (basenode + '_sol_' + str(i+1))
-        batname = helper.gld_strict_name (basenode + '_bat_' + str(i+1))
-        sol_i_name = helper.gld_strict_name (basenode + '_isol_' + str(i+1))
-        bat_i_name = helper.gld_strict_name (basenode + '_ibat_' + str(i+1))
-        sol_m_name = helper.gld_strict_name (basenode + '_msol_' + str(i+1))
-        bat_m_name = helper.gld_strict_name (basenode + '_mbat_' + str(i+1))
+                glm_modifier.add_object("metrics_collector", "", params4)
+        hsename = gld_strict_name(basenode + '_hse_' + str(i + 1))
+        whname = gld_strict_name(basenode + '_wh_' + str(i + 1))
+        solname = gld_strict_name(basenode + '_sol_' + str(i + 1))
+        batname = gld_strict_name(basenode + '_bat_' + str(i + 1))
+        evname = gld_strict_name(basenode + '_ev_' + str(i + 1))
+        sol_i_name = gld_strict_name(basenode + '_isol_' + str(i + 1))
+        bat_i_name = gld_strict_name(basenode + '_ibat_' + str(i + 1))
+        sol_m_name = gld_strict_name(basenode + '_msol_' + str(i + 1))
+        bat_m_name = gld_strict_name(basenode + '_mbat_' + str(i + 1))
         if glm_modifier.defaults.forERCOT == "True":
-          hse_m_name = mtrname
-        else:
-          hse_m_name = helper.gld_strict_name (basenode + '_mhse_' + str(i+1))
-          params5 = dict()
-          name = hse_m_name
-          params5["parent"] = mtrname
-          params5["phases"] = phs
-          params5["nominal_voltage"] = str(vnom)
-          glm_modifier.add_object('{:s} {{'.format (meter_class), name, params5)
+            hse_m_name = mtrname
+            hse_m_name = gld_strict_name(basenode + '_mhse_' + str(i + 1))
+            params4 = dict()
+            t_name = hse_m_name
+            params4["parent"] = mtrname
+            params4["phases"] = phs
+            params4["nominal_voltage"] = str(vnom)
+            glm_modifier.add_object("triplex_meter", t_name, params4)
+    else:
+        hse_m_name = gld_strict_name(basenode + '_mhse_' + str(i + 1))
+        params5 = dict()
+        t_name = hse_m_name
+        params5["parent"] = mtrname
+        params5["phases"] = phs
+        params5["nominal_voltage"] = str(vnom)
+        glm_modifier.add_object("triplex_meter", t_name, params5)
 
-        fa_base = glm_modifier.defaults.rgnFloorArea[rgn-1][bldg]
-        fa_rand = np.random.uniform (0, 1)
-        stories = 1
-        ceiling_height = 8
-        if bldg == 0: # SF homes
-            floor_area = fa_base + 0.5 * fa_base * fa_rand * (ti - 3) / 3;
-            if np.random.uniform (0, 1) > glm_modifier.defaults.rgnOneStory[rgn-1]:
-                stories = 2
-            ceiling_height += np.random.randint (0, 2)
-        else: # apartment or MH
-            floor_area = fa_base + 0.5 * fa_base * (0.5 - fa_rand) # +/- 50%
-        floor_area = (1 + lg_v_sm) * floor_area # adjustment depends on whether nhouses rounded up or down
-        if floor_area > 4000:
-            floor_area = 3800 + fa_rand*200;
-        elif floor_area < 300:
-            floor_area = 300 + fa_rand*100;
+    # ************* Floor area, ceiling height and stories *************************
+    fa_array = {}  # distribution array for floor area min, max, mean, standard deviation
+    stories = 1
+    ceiling_height = 8
+    vint = glm_modifier.defaults.vint_type[ti]
+    income = glm_modifier.defaults.income_level[inc_lev]
 
-        scalar1 = 324.9/8907 * floor_area**0.442
-        scalar2 = 0.8 + 0.4 * np.random.uniform(0,1)
-        scalar3 = 0.8 + 0.4 * np.random.uniform(0,1)
-        resp_scalar = scalar1 * scalar2
-        unresp_scalar = scalar1 * scalar3
 
-        skew_value = glm_modifier.defaults.residential_skew_std * np.random.randn ()
-        if skew_value < -glm_modifier.defaults.residential_skew_max:
-            skew_value = -glm_modifier.defaults.residential_skew_max
-        elif skew_value > glm_modifier.defaults.residential_skew_max:
-            skew_value = glm_modifier.defaults.residential_skew_max
+    if bldg == 0:  # SF
+        fa_bldg = 'single_family_detached'  # then pick single_Family_detached values for floor_area
+        if np.random.uniform(0, 1) > \
+                glm_modifier.defaults.res_bldg_metadata['num_stories'][glm_modifier.defaults.state][
+                    glm_modifier.defaults.res_dso_type][income][fa_bldg][vint][
+                    'one_story']:
+            stories = 2  # all SF homes which are not single story are 2 stories
+        if np.random.uniform(0, 1) <= \
+                glm_modifier.defaults.res_bldg_metadata['high_ceilings'][glm_modifier.defaults.state][
+                    glm_modifier.defaults.res_dso_type][income][fa_bldg][vint]:
+            ceiling_height = 10  # all SF homes that have high ceilings are 10 ft
+        ceiling_height += np.random.randint(0, 2)
+    elif bldg == 1:  # apartments
+        fa_bldg = 'apartment_2_4_units'  # then pick apartment_2_4_units for floor area
+    elif bldg == 2:  # mh
+        fa_bldg = 'mobile_home'
+    else:
+        raise ValueError("Wrong building type chosen !")
 
-        oversize = glm_modifier.defaults.rgnOversizeFactor[rgn-1] * (0.8 + 0.4 * np.random.uniform(0,1))
-        tiProps = selectThermalProperties (bldg, ti)
-        # Rceiling(roof), Rwall, Rfloor, WindowLayers, WindowGlass,Glazing,WindowFrame,Rdoor,AirInfil,COPhi,COPlo
-        Rroof = tiProps[0] * (0.8 + 0.4 * np.random.uniform(0,1))
-        Rwall = tiProps[1] * (0.8 + 0.4 * np.random.uniform(0,1))
-        Rfloor = tiProps[2] * (0.8 + 0.4 * np.random.uniform(0,1))
-        glazing_layers = int(tiProps[3])
-        glass_type = int(tiProps[4])
-        glazing_treatment = int(tiProps[5])
-        window_frame = int(tiProps[6])
-        Rdoor = tiProps[7] * (0.8 + 0.4 * np.random.uniform(0,1))
-        airchange = tiProps[8] * (0.8 + 0.4 * np.random.uniform(0,1))
-        init_temp = 68 + 4 * np.random.uniform(0,1)
-        mass_floor = 2.5 + 1.5 * np.random.uniform(0,1)
-        h_COP = c_COP = tiProps[10] + np.random.uniform(0,1) * (tiProps[9] - tiProps[10])
-        params6 = dict()
-        name = hsename
-        params6["parent"] = hse_m_name
-        params6["groupid"] = glm_modifier.defaults.bldgTypeName[bldg]
 
-        #print ('  // thermal_integrity_level', ConfigDict['tiName']['value'][ti] + ';', file=op)
-        #params6["thermal_integrity_level"] = glm_modifier.defaults.thermal_integrity_level[ti]
 
-        params6["schedule_skew"] = '{:.0f}'.format(skew_value)
-        params6["floor_area"] = '{:.0f}'.format(floor_area)
-        params6["number_of_stories"] = str(stories)
-        params6["ceiling_height"] = str(ceiling_height)
-        params6["over_sizing_factor"] = '{:.1f}'.format(oversize)
-        params6["Rroof"] = '{:.2f}'.format(Rroof)
-        params6["Rwall"] = '{:.2f}'.format(Rwall)
-        params6["Rfloor"] = '{:.2f}'.format(Rfloor)
-        params6["glazing_layers"] = str (glazing_layers)
-        params6["glass_type"] = str (glass_type)
-        params6["glazing_treatment"] = str (glazing_treatment)
-        params6["window_frame"] = str (window_frame)
-        params6["Rdoors"] = '{:.2f}'.format(Rdoor)
-        params6["airchange_per_hour"] = '{:.2f}'.format(airchange)
-        params6["cooling_COP"] = '{:.1f}'.format(c_COP)
-        params6["air_temperature"] = '{:.2f}'.format(init_temp)
-        params6["mass_temperature"] = '{:.2f}'.format(init_temp)
-        params6["total_thermal_mass_per_floor_area"] = '{:.3f}'.format(mass_floor)
-        params6["breaker_amps"] = "1000"
-        params6["hvac_breaker_rating"] = "1000"
-        heat_rand = np.random.uniform(0,1)
-        cool_rand = np.random.uniform(0,1)
-        if heat_rand <= glm_modifier.defaults.rgnPenGasHeat[rgn-1]:
-            params6["heating_system_type"] = "GAS"
-            if cool_rand <= glm_modifier.defaults.electric_cooling_percentage:
-                params6["cooling_system_type"] = "ELECTRIC"
-            else:
-                params6["cooling_system_type"] = "NONE"
-        elif heat_rand <= glm_modifier.defaults.rgnPenGasHeat[rgn-1] + glm_modifier.defaults.rgnPenHeatPump[rgn-1]:
-            params6["heating_system_type"] = "HEAT_PUMP"
-            params6["heating_COP"] = '{:.1f}'.format(h_COP)
+    vint = glm_modifier.defaults.vint_type[ti]
+    # creating distribution array for floor_area
+    for ind in ['min', 'max', 'mean', 'standard_deviation']:
+        fa_array[ind] = glm_modifier.defaults.res_bldg_metadata['floor_area'][glm_modifier.defaults.state][
+            glm_modifier.defaults.res_dso_type][income][fa_bldg][ind]
+        # next_ti = ti
+        # while not fa_array[ind]:  # if value is null/None, check the next vintage bin
+        #     next_ti += 1
+        #     fa_array[ind] = res_bldg_metadata['floor_area'][ind][fa_bldg][vint_type[next_ti]]
+    # print(i)
+    # print(nhouse)
+    floor_area = random_norm_trunc(fa_array)  # truncated normal distribution
+    floor_area = (1 + lg_v_sm) * floor_area  # adjustment depends on whether nhouses rounded up or down
+    fa_rand = np.random.uniform(0, 1)
+    if floor_area > 6000:  # TODO: do we need this condition ? it was originally 4000
+        floor_area = 5800 + fa_rand * 200
+    elif floor_area < 300:
+        floor_area = 300 + fa_rand * 100
+    floor_area = (1 + lg_v_sm) * floor_area  # adjustment depends on whether nhouses rounded up or down
+
+    fa_rand = np.random.uniform(0, 1)
+    if floor_area > 6000:  # TODO: do we need this condition ? it was originally 4000
+        floor_area = 5800 + fa_rand * 200
+    elif floor_area < 300:
+        floor_area = 300 + fa_rand * 100
+
+    scalar1 = 324.9 / 8907 * floor_area ** 0.442
+    scalar2 = 0.6 + 0.4 * np.random.uniform(0, 1)
+    scalar3 = 0.6 + 0.4 * np.random.uniform(0, 1)
+    resp_scalar = scalar1 * scalar2
+    unresp_scalar = scalar1 * scalar3
+
+    skew_value = randomize_residential_skew()
+
+    #  *************** Aspect ratio, ewf, ecf, eff, wwr ****************************
+    if bldg == 0:  # SF homes
+        dist_array = glm_modifier.defaults.res_bldg_metadata['aspect_ratio']['single_family']  # min, max, mean, std
+        aspect_ratio = random_norm_trunc(dist_array)
+        # Exterior wall and ceiling and floor fraction
+        # A normal single family house has all walls exterior, has a ceiling and a floor
+        ewf = 1  # exterior wall fraction
+        ecf = 1  # exterior ceiling fraction
+        eff = 1  # exterior floor fraction
+        wwr = (
+            glm_modifier.defaults.res_bldg_metadata['window_wall_ratio']['single_family']['mean'])  # window wall ratio
+    elif bldg == 1:  # APT
+        dist_array = glm_modifier.defaults.res_bldg_metadata['aspect_ratio']['apartments']  # min, max, mean, std
+        aspect_ratio = random_norm_trunc(dist_array)
+        wwr = (glm_modifier.defaults.res_bldg_metadata['window_wall_ratio']['apartments']['mean'])  # window wall ratio
+        # Two type of apts assumed:
+        #       1. small apt: 8 units with 4 units on each level: total 2 levels
+        #       2. large apt: 16 units with 8 units on each level: total 2 levels
+        # Let's decide if this unit belongs to a small apt (8 units) or large (16 units)
+        small_apt_pct = glm_modifier.defaults.res_bldg_metadata['housing_type'][glm_modifier.defaults.state][
+            glm_modifier.defaults.res_dso_type][income]['apartment_2_4_units']
+        large_apt_pct = glm_modifier.defaults.res_bldg_metadata['housing_type'][glm_modifier.defaults.state][
+            glm_modifier.defaults.res_dso_type][income]['apartment_5_units']
+        if np.random.uniform(0, 1) < small_apt_pct / (small_apt_pct + large_apt_pct):  # 2-level small apt (8 units)
+            # in these apt, all 4 upper units are identical and all 4 lower units are identical
+            # So, only two types of units: upper and lower (50% chances of each)
+            ewf = 0.5  # all units have 50% walls exterior
+            if np.random.uniform(0, 1) < 0.5:  # for 50% units: has floor but no ceiling
+                ecf = 0
+                eff = 1
+            else:  # for other 50% units: has ceiling but not floor
+                ecf = 1
+                eff = 0
+        else:  # double-loaded (2-level) 16 units apts
+            # In these apts, there are 4 type of units: 4 corner bottom floor, 4 corner upper,
+            # 4 middle upper and 4 middle lower floor units. Each unit type has 25% chances
+            if np.random.uniform(0, 1) < 0.25:  # 4: corner bottom floor units
+                ewf = 0.5
+                ecf = 0
+                eff = 1
+            elif np.random.uniform(0, 1) < 0.5:  # 4: corner upper floor units
+                ewf = 0.5
+                ecf = 1
+                eff = 0
+            elif np.random.uniform(0, 1) < 0.75:  # 4: middle bottom floor units
+                ewf = aspect_ratio / (1 + aspect_ratio) / 2
+                ecf = 0
+                eff = 1
+            else:  # np.random.uniform(0, 1) < 1  # 4: middle upper floor units
+                ewf = aspect_ratio / (1 + aspect_ratio) / 2
+                ecf = 1
+                eff = 0
+    else:  # bldg == 2  # Mobile Homes
+        # select between single and double wide
+        wwr = (glm_modifier.defaults.res_bldg_metadata['window_wall_ratio']['mobile_home']['mean'])  # window wall ratio
+        # sw_pct = res_bldg_metadata['mobile_home_single_wide'][state][res_dso_type][income]  # single wide percentage for given vintage bin
+        # next_ti = ti
+        # while not sw_pct:  # if the value is null or 'None', check the next vintage bin
+        #     next_ti += 1
+        #     sw_pct = res_bldg_metadata['mobile_home_single_wide'][vint_type[next_ti]]
+        if floor_area <= 1080:  # Single wide
+            aspect_ratio = random_norm_trunc(
+                glm_modifier.defaults.res_bldg_metadata['aspect_ratio']['mobile_home_single_wide'])
+        else:  # double wide
+            aspect_ratio = random_norm_trunc(
+                glm_modifier.defaults.res_bldg_metadata['aspect_ratio']['mobile_home_double_wide'])
+        # A normal MH has all walls exterior, has a ceiling and a floor
+        ewf = 1  # exterior wall fraction
+        ecf = 1  # exterior ceiling fraction
+        eff = 1  # exterior floor fraction
+
+    # oversize = rgnOversizeFactor[rgn-1] * (0.8 + 0.4 * np.random.uniform(0,1))
+    # data from https://collaborate.pnl.gov/projects/Transactive/Shared%20Documents/DSO+T/Setup%20Assumptions%205.3/Residential%20HVAC.xlsx
+    oversize = random_norm_trunc(
+        glm_modifier.defaults.res_bldg_metadata['hvac_oversize'])  # hvac_oversize factor
+    wetc = random_norm_trunc(
+        glm_modifier.defaults.res_bldg_metadata['window_shading'])  # window_exterior_transmission_coefficient
+
+    tiProps = selectThermalProperties(bldg, ti)
+    # Rceiling(roof), Rwall, Rfloor, WindowLayers, WindowGlass,Glazing,WindowFrame,Rdoor,AirInfil,COPhi,COPlo
+    Rroof = tiProps[0] * (0.8 + 0.4 * np.random.uniform(0, 1))
+    Rwall = tiProps[1] * (0.8 + 0.4 * np.random.uniform(0, 1))
+    Rfloor = tiProps[2] * (0.8 + 0.4 * np.random.uniform(0, 1))
+    glazing_layers = int(tiProps[3])
+    glass_type = int(tiProps[4])
+    glazing_treatment = int(tiProps[5])
+    window_frame = int(tiProps[6])
+    Rdoor = tiProps[7] * (0.8 + 0.4 * np.random.uniform(0, 1))
+    airchange = tiProps[8] * (0.8 + 0.4 * np.random.uniform(0, 1))
+    init_temp = 68 + 4 * np.random.uniform(0, 1)
+    mass_floor = 2.5 + 1.5 * np.random.uniform(0, 1)
+    mass_solar_gain_frac = 0.5
+    mass_int_gain_frac = 0.5
+    # ***********COP*********************************
+    # pick any one year value randomly from the bin in cop_lookup
+    h_COP = c_COP = np.random.choice(glm_modifier.defaults.cop_lookup[ti]) * (
+            0.9 + np.random.uniform(0, 1) * 0.2)  # +- 10% of mean value
+    # h_COP = c_COP = tiProps[10] + np.random.uniform(0, 1) * (tiProps[9] - tiProps[10])
+
+    params6 = dict()
+    name = hsename
+    params6["parent"] = hse_m_name
+    params6["groupid"] = glm_modifier.defaults.bldgTypeName[bldg]
+
+    # params6["thermal_integrity_level"] = glm_modifier.defaults.tiName[ti]
+    # params6["thermal_integrity_level"] = glm_modifier.defaults.thermal_integrity_level[ti]
+
+    params6["schedule_skew"] = '{:.0f}'.format(skew_value)
+    params6["floor_area"] = '{:.0f}'.format(floor_area)
+    params6["number_of_stories"] = str(stories)
+    params6["ceiling_height"] = str(ceiling_height)
+    params6["over_sizing_factor"] = '{:.1f}'.format(oversize)
+    params6["Rroof"] = '{:.2f}'.format(Rroof)
+    params6["Rwall"] = '{:.2f}'.format(Rwall)
+    params6["Rfloor"] = '{:.2f}'.format(Rfloor)
+    params6["glazing_layers"] = str(glazing_layers)
+    params6["glass_type"] = str(glass_type)
+    params6["glazing_treatment"] = str(glazing_treatment)
+    params6["window_frame"] = str(window_frame)
+    params6["Rdoors"] = '{:.2f}'.format(Rdoor)
+    params6["airchange_per_hour"] = '{:.2f}'.format(airchange)
+    params6["cooling_COP"] = '{:.1f}'.format(c_COP)
+    params6["air_temperature"] = '{:.2f}'.format(init_temp)
+    params6["mass_temperature"] = '{:.2f}'.format(init_temp)
+    params6["total_thermal_mass_per_floor_area"] = '{:.3f}'.format(mass_floor)
+    params6["mass_solar_gain_fraction"] = '{}'.format(mass_solar_gain_frac)
+    params6["mass_internal_gain_fraction"] = '{}'.format(mass_int_gain_frac)
+    params6["aspect_ratio"] = '{:.2f}'.format(aspect_ratio)
+    params6["exterior_wall_fraction"] = '{:.2f}'.format(ewf)
+    params6["exterior_floor_fraction"] = '{:.2f}'.format(eff)
+    params6["exterior_ceiling_fraction"] = '{:.2f}'.format(ecf)
+    params6["window_exterior_transmission_coefficient"] = '{:.2f}'.format(wetc)
+    params6["window_wall_ratio"] = '{:.2f}'.format(wwr)
+    params6["breaker_amps"] = "1000"
+    params6["hvac_breaker_rating"] = "1000"
+    heat_rand = np.random.uniform(0, 1)
+    cool_rand = np.random.uniform(0, 1)
+    house_fuel_type = 'electric'
+    heat_pump_prob = glm_modifier.defaults.res_bldg_metadata['space_heating_type'][glm_modifier.defaults.state][
+                         glm_modifier.defaults.res_dso_type][income][fa_bldg][vint][
+                         'gas_heating'] + \
+                     glm_modifier.defaults.res_bldg_metadata['space_heating_type'][glm_modifier.defaults.state][
+                         glm_modifier.defaults.res_dso_type][income][fa_bldg][vint]['heat_pump']
+    # Get the air conditioning percentage for homes that don't have heat pumps
+    electric_cooling_percentage = \
+        glm_modifier.defaults.res_bldg_metadata['air_conditioning'][glm_modifier.defaults.state][
+            glm_modifier.defaults.res_dso_type][income][fa_bldg]
+
+    if heat_rand <= glm_modifier.defaults.res_bldg_metadata['space_heating_type'][glm_modifier.defaults.state][
+        glm_modifier.defaults.res_dso_type][income][fa_bldg][vint]['gas_heating']:
+        house_fuel_type = 'gas'
+        params6["heating_system_type"] = "GAS"
+        if cool_rand <= electric_cooling_percentage:
             params6["cooling_system_type"] = "ELECTRIC"
-            params6["auxiliary_strategy"] = "DEADBAND"
-            params6["auxiliary_system_type"] = "ELECTRIC"
+        else:
+            params6["cooling_system_type"] = "NONE"
+    elif heat_rand <= glm_modifier.defaults.rgnPenGasHeat[rgn - 1] + glm_modifier.defaults.rgnPenHeatPump[rgn - 1]:
+        params6["heating_system_type"] = "HEAT_PUMP"
+        params6["heating_COP"] = '{:.1f}'.format(h_COP)
+        params6["cooling_system_type"] = "ELECTRIC"
+        params6["auxiliary_strategy"] = "DEADBAND"
+        params6["auxiliary_system_type"] = "ELECTRIC"
+        params6["motor_model"] = "BASIC"
+        params6["motor_efficiency"] = "AVERAGE"
+    # TODO: check with Rob if following large home condition is needed or not:
+    # elif floor_area * ceiling_height > 12000.0:  # electric heat not allowed on large homes
+    #     params6["heating_system_type"] =  "GAS"
+    #     if cool_rand <= electric_cooling_percentage:
+    #         params6["cooling_system_type"] = "ELECTRIC"
+    #     else:
+    #         params6["cooling_system_type"] = "NONE"
+    else:
+        params6["heating_system_type"] = "RESISTANCE"
+        if cool_rand <= glm_modifier.defaults.electric_cooling_percentage:
+            params6["cooling_system_type"] = "ELECTRIC"
             params6["motor_model"] = "BASIC"
-            params6["motor_efficiency"] = "AVERAGE"
-        elif floor_area * ceiling_height > 12000.0: # electric heat not allowed on large homes
-            params6["heating_system_type"] = "GAS"
-            if cool_rand <= glm_modifier.defaults.electric_cooling_percentage:
-                params6["cooling_system_type"] = "ELECTRIC"
-            else:
-                params6["cooling_system_type"] = "NONE"
+            params6["motor_efficiency"] = "GOOD"
         else:
-            params6["heating_system_type"] = "RESISTANCE"
-            if cool_rand <= glm_modifier.defaults.electric_cooling_percentage:
-                params6["cooling_system_type"] = "ELECTRIC"
-                params6["motor_model"] = "BASIC"
-                params6["motor_efficiency"] = "GOOD"
-            else:
-                params6["cooling_system_type"] = "NONE"
+            params6["cooling_system_type"] = "NONE"
 
-        cooling_sch = np.ceil(glm_modifier.defaults.coolingScheduleNumber * np.random.uniform (0, 1))
-        heating_sch = np.ceil(glm_modifier.defaults.heatingScheduleNumber * np.random.uniform (0, 1))
-        # [Bin Prob, NightTimeAvgDiff, HighBinSetting, LowBinSetting]
-        cooling_bin, heating_bin = selectSetpointBins (bldg, np.random.uniform (0,1))
-        # randomly choose setpoints within bins, and then widen the separation to account for deadband
-        cooling_set = cooling_bin[3] + np.random.uniform(0,1) * (cooling_bin[2] - cooling_bin[3]) + setpoint_offset
-        heating_set = heating_bin[3] + np.random.uniform(0,1) * (heating_bin[2] - heating_bin[3]) - setpoint_offset
-        cooling_diff = 2.0 * cooling_bin[1] * np.random.uniform(0,1)
-        heating_diff = 2.0 * heating_bin[1] * np.random.uniform(0,1)
-        cooling_scale = np.random.uniform(0.95, 1.05)
-        heating_scale = np.random.uniform(0.95, 1.05)
-        cooling_str = 'cooling{:.0f}*{:.4f}+{:.2f}'.format(cooling_sch, cooling_scale, cooling_diff)
-        heating_str = 'heating{:.0f}*{:.4f}+{:.2f}'.format(heating_sch, heating_scale, heating_diff)
-        # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
-        # we need more separation to assure no overlaps during transactive simulations
-        if bIgnoreThermostatSchedule == True:
-            params6["cooling_setpoint"] = str
-            params6["heating_setpoint"] = str
+    # default heating and cooling setpoints are 70 and 75 degrees in GridLAB-D
+    # we need more separation to assure no overlaps during transactive simulations
+    params6["cooling_setpoint"] = "80.0"
+    params6["heating_setpoint"] = "60.0"
+    glm_modifier.add_object("house", params6["house"], params6)
+
+    # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
+    params7 = dict()
+    params7["schedule_skew"] = '{:.0f}'.format(skew_value)
+    params7["base_power"] = 'responsive_loads*' + '{:.2f}'.format(resp_scalar)
+    params7["heatgain_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['heatgain_fraction'])
+    params7["impedance_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['impedance_pf'])
+    params7["current_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['current_pf'])
+    params7["power_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['power_pf'])
+    params7["impedance_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['impedance_fraction'])
+    params7["current_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['current_fraction'])
+    params7["power_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['power_fraction'])
+    glm_modifier.add_object("ZIPload", "responsive", params7)
+
+    params8 = dict()
+    params8["schedule_skew"] = '{:.0f}'.format(skew_value)
+    params8["base_power"] = 'unresponsive_loads*' + '{:.2f}'.format(unresp_scalar)
+    params8["heatgain_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['heatgain_fraction'])
+    params8["impedance_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['impedance_pf'])
+    params8["current_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['current_pf'])
+    params8["power_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['power_pf'])
+    params8["impedance_fkraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['impedance_fraction'])
+    params8["current_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['current_fraction'])
+    params8["power_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['power_fraction'])
+    glm_modifier.add_object("ZIPload", "unresponsive", params8)
+
+    # if np.random.uniform (0, 1) <= glm_modifier.defaults.water_heater_percentage:
+    # Determine if house has matching heating types for space and water
+    if np.random.uniform(0, 1) <= \
+            glm_modifier.defaults.res_bldg_metadata['water_heating_type'][glm_modifier.defaults.state][
+                glm_modifier.defaults.res_dso_type][income][fa_bldg][vint]:
+        wh_fuel_type = house_fuel_type
+    elif house_fuel_type == 'gas':
+        wh_fuel_type = 'electric'
+    elif house_fuel_type == 'electric':
+        wh_fuel_type = 'gas'
+    if wh_fuel_type == 'electric':  # if the water heater fuel type is electric, install wh
+        heat_element = 3.0 + 0.5 * np.random.randint(1, 6);  # numpy randint (lo, hi) returns lo..(hi-1)
+        tank_set = 110 + 16 * np.random.uniform(0, 1);
+        therm_dead = 4 + 4 * np.random.uniform(0, 1);
+        tank_UA = 2 + 2 * np.random.uniform(0, 1);
+        water_sch = np.ceil(glm_modifier.defaults.waterHeaterScheduleNumber * np.random.uniform(0, 1))
+        water_var = 0.95 + np.random.uniform(0, 1) * 0.1  # +/-5% variability
+        wh_demand_type = 'large_'
+
+        # sizeIncr = np.random.randint (0,3)  # MATLAB randi(imax) returns 1..imax
+        # sizeProb = np.random.uniform (0, 1);
+        # if sizeProb <= glm_modifier.defaults.rgnWHSize[rgn-1][0]:
+        #    wh_size = 20 + sizeIncr * 5
+        #    wh_demand_type = 'small_'
+        # elif sizeProb <= (glm_modifier.defaults.rgnWHSize[rgn-1][0] + glm_modifier.defaults.rgnWHSize[rgn-1][1]):
+        #    wh_size = 30 + sizeIncr * 10
+        #    if floor_area < 2000.0:
+        #        wh_demand_type = 'small_'
+        # else:
+        #    if floor_area < 2000.0:
+        #       wh_size = 30 + sizeIncr * 10
+        #   else:
+        #       wh_size = 50 + sizeIncr * 10
+        # new wh size implementation
+        wh_data = glm_modifier.defaults.res_bldg_metadata['water_heater_tank_size']
+        if floor_area <= wh_data['floor_area']['1_2_people']['floor_area_max']:
+            size_array = range(wh_data['tank_size']['1_2_people']['min'],
+                               wh_data['tank_size']['1_2_people']['max'] + 1, 5)
+            wh_demand_type = 'small_'
+        elif floor_area <= wh_data['floor_area']['2_3_people']['floor_area_max']:
+            size_array = range(wh_data['tank_size']['2_3_people']['min'],
+                               wh_data['tank_size']['2_3_people']['max'] + 1, 5)
+            wh_demand_type = 'small_'
+        elif floor_area <= wh_data['floor_area']['3_4_people']['floor_area_max']:
+            size_array = range(wh_data['tank_size']['3_4_people']['min'],
+                               wh_data['tank_size']['3_4_people']['max'] + 1, 10)
         else:
-            params6["cooling_setpoint"] = str
-            params6["heating_setpoint"] = str
-        glm_modifier.add_object("house", params6["house"], params6)
-        # heatgain fraction, Zpf, Ipf, Ppf, Z, I, P
-        params7 = dict()
-        params7["schedule_skew"] = '{:.0f}'.format(skew_value)
-        params7["base_power"] = 'responsive_loads*' + '{:.2f}'.format(resp_scalar)
-        params7["heatgain_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['heatgain_fraction'])
-        params7["impedance_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['impedance_pf'])
-        params7["current_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['current_pf'])
-        params7["power_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['power_pf'])
-        params7["impedance_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['impedance_fraction'])
-        params7["current_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['current_fraction'])
-        params7["power_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['power_fraction'])
-        glm_modifier.add_object("ZIPload", "responsive", params7)
+            size_array = range(wh_data['tank_size']['5_plus_people']['min'],
+                               wh_data['tank_size']['5_plus_people']['max'] + 1, 10)
+        wh_size = np.random.choice(size_array)
+    wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
+    wh_skew_value = 3 * glm_modifier.defaults.residential_skew_std * np.random.randn()
+    if wh_skew_value < -6 * glm_modifier.defaults.residential_skew_max:
+        wh_skew_value = -6 * glm_modifier.defaults.residential_skew_max
+    elif wh_skew_value > 6 * glm_modifier.defaults.residential_skew_max:
+        wh_skew_value = 6 * glm_modifier.defaults.residential_skew_max
+    params9 = dict()
+    name = whname
+    params9["schedule_skew"] = '{:.0f}'.format(wh_skew_value)
+    params9["heating_element_capacity"] = '{:.1f}'.format(heat_element)
+    params9["thermostat_deadband"] = '{:.1f}'.format(therm_dead)
+    params9["location"] = "INSIDE"
+    params9["tank_diameter"] = "1.5"
+    params9["tank_UA"] = '{:.1f}'.format(tank_UA)
+    params9["water_demand"] = wh_demand_str
+    params9["tank_volume"] = '{:.0f}'.format(wh_size)
+    #          if np.random.uniform (0, 1) <= glm_modifier.defaults.water_heater_participation:
+    params9["waterheater_model"] = "MULTILAYER"
+    params9["discrete_step_size"] = "60.0"
+    params9["lower_tank_setpoint"] = '{:.1f}'.format(tank_set - 5.0)
+    params9["upper_tank_setpoint"] = '{:.1f}'.format(tank_set + 5.0)
+    params9["T_mixing_valve"] = '{:.1f}'.format(tank_set)
+    #          else:
+    #              params9["tank_setpoint"] = '{:.1f}'.format(tank_set)
+    glm_modifier.add_object("waterheater", whname, params9)
 
-        params8 = dict()
-        params8["schedule_skew"] = '{:.0f}'.format(skew_value)
-        params8["base_power"] = 'unresponsive_loads*' + '{:.2f}'.format(unresp_scalar)
-        params8["heatgain_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['heatgain_fraction'])
-        params8["impedance_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['impedance_pf'])
-        params8["current_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['current_pf'])
-        params8["power_pf"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['power_pf'])
-        params8[""] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['impedance_fraction'])
-        params8["current_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['current_fraction'])
-        params8["power_fraction"] = '{:.2f}'.format(glm_modifier.defaults.ZIPload_parameters[0]['power_fraction'])
-        glm_modifier.add_object("ZIPload", "unresponsive", params8)
+    if glm_modifier.defaults.metrics_interval > 0:
+        params10 = dict()
+        params10["parent"] = whname
+        params10["interval"] = str(glm_modifier.defaults.metrics_interval)
+        glm_modifier.add_object("metrics_collector", "", params10)
 
-        if np.random.uniform (0, 1) <= glm_modifier.defaults.water_heater_percentage:
-          heat_element = 3.0 + 0.5 * np.random.randint (1,6);  # numpy randint (lo, hi) returns lo..(hi-1)
-          tank_set = 110 + 16 * np.random.uniform (0, 1);
-          therm_dead = 4 + 4 * np.random.uniform (0, 1);
-          tank_UA = 2 + 2 * np.random.uniform (0, 1);
-          water_sch = np.ceil(glm_modifier.defaults.waterHeaterScheduleNumber * np.random.uniform (0, 1))
-          water_var = 0.95 + np.random.uniform (0, 1) * 0.1 # +/-5% variability
-          wh_demand_type = 'large_'
-          sizeIncr = np.random.randint (0,3)  # MATLAB randi(imax) returns 1..imax
-          sizeProb = np.random.uniform (0, 1);
-          if sizeProb <= glm_modifier.defaults.rgnWHSize[rgn-1][0]:
-              wh_size = 20 + sizeIncr * 5
-              wh_demand_type = 'small_'
-          elif sizeProb <= (glm_modifier.defaults.rgnWHSize[rgn-1][0] + glm_modifier.defaults.rgnWHSize[rgn-1][1]):
-              wh_size = 30 + sizeIncr * 10
-              if floor_area < 2000.0:
-                  wh_demand_type = 'small_'
-          else:
-              if floor_area < 2000.0:
-                  wh_size = 30 + sizeIncr * 10
-              else:
-                  wh_size = 50 + sizeIncr * 10
-          wh_demand_str = wh_demand_type + '{:.0f}'.format(water_sch) + '*' + '{:.2f}'.format(water_var)
-          wh_skew_value = 3 * glm_modifier.defaults.residential_skew_std * np.random.randn ()
-          if wh_skew_value < -6 * glm_modifier.defaults.residential_skew_max:
-              wh_skew_value = -6 * glm_modifier.defaults.residential_skew_max
-          elif wh_skew_value > 6 * glm_modifier.defaults.residential_skew_max:
-              wh_skew_value = 6 * glm_modifier.defaults.residential_skew_max
-
-          params9 = dict()
-          name = whname
-          params9["schedule_skew"] = '{:.0f}'.format(wh_skew_value)
-          params9["heating_element_capacity"] = '{:.1f}'.format(heat_element)
-          params9["thermostat_deadband"] = '{:.1f}'.format(therm_dead)
-          params9["location"] = "INSIDE"
-          params9["tank_diameter"] = "1.5"
-          params9["tank_UA"] = '{:.1f}'.format(tank_UA)
-          params9["water_demand"] = wh_demand_str
-          params9["tank_volume"] = '{:.0f}'.format(wh_size)
-          if np.random.uniform (0, 1) <= glm_modifier.defaults.water_heater_participation:
-              params9["waterheater_model"] = "MULTILAYER"
-              params9["discrete_step_size"] = "60.0"
-              params9["lower_tank_setpoint"] = '{:.1f}'.format(tank_set - 5.0)
-              params9["upper_tank_setpoint"] = '{:.1f}'.format(tank_set + 5.0)
-              params9["T_mixing_valve"] = '{:.1f}'.format(tank_set)
-          else:
-              params9["tank_setpoint"] = '{:.1f}'.format(tank_set)
-          glm_modifier.add_object("waterheater", name, params9)
-
-          if glm_modifier.defaults.metrics_interval > 0:
-              params10 = dict()
-              params10["parent"] = name
-              params10["interval"] = str(glm_modifier.defaults.metrics_interval)
-              glm_modifier.add_object("metrics_collector", name, params10)
+    if glm_modifier.defaults.metrics_interval > 0:
+        params11 = dict()
+        params11["parent"] = whname
+        params11["interval"] = str(glm_modifier.defaults.metrics_interval)
+        glm_modifier.add_object("metrics_collector", "", params11)
 
 
-        if glm_modifier.defaults.metrics_interval > 0:
-            params11 = dict()
-            params11["parent"] = name
-            params11["interval"] = str(glm_modifier.defaults.metrics_interval)
-            glm_modifier.add_object("metrics_collector", params9["name"], params11)
+# if PV is allowed, then only single-family houses can buy it, and only the single-family houses with PV will also consider storage
+# if PV is not allowed, then any single-family house may consider storage (if allowed)
+# apartments and mobile homes may always consider storage, but not PV
+# bConsiderStorage = True
+# Solar percentage should be defined here only from RECS data based on income level
+# solar_percentage = res_bldg_metadata['solar_pv'][state][dso_type][income][fa_bldg]
+# Calculate the solar, storage, and ev percentage based on the income level
+    il_percentage = glm_modifier.defaults.res_bldg_metadata['income_level'][glm_modifier.defaults.state][
+        glm_modifier.defaults.res_dso_type][income]
 
-        # if PV is allowed, then only single-family houses can buy it, and only the single-family houses with PV will also consider storage
-        # if PV is not allowed, then any single-family house may consider storage (if allowed)
-        # apartments and mobile homes may always consider storage, but not PV
-        bConsiderStorage = True
-        if bldg == 0:  # Single-family homes
-            if glm_modifier.defaults.solar_percentage > 0.0:
-                bConsiderStorage = False
-            if np.random.uniform (0, 1) <= glm_modifier.defaults.solar_percentage:  # some single-family houses have PV
-                bConsiderStorage = True
-                panel_area = 0.1 * floor_area
-                if panel_area < 162:
-                    panel_area = 162
-                elif panel_area > 270:
-                    panel_area = 270
-                #inv_power = inv_undersizing * (panel_area/10.7642) * rated_insolation * array_efficiency
-                inv_power = glm_modifier.defaults.inv_undersizing * (panel_area/10.7642) * glm_modifier.defaults.rated_insolation * glm_modifier.defaults.array_efficiency
+    if fg_recs_dataset is not None:
+        solar_percentage_il = fg_recs_dataset.calc_solar_percentage(glm_modifier.defaults.recs_state,
+                                                                    glm_modifier.defaults.recs_income_level,
+                                                                        glm_modifier.defaults.recs_housing_density)
+    else:
+        solar_percentage_il = (glm_modifier.defaults.solar_percentage *
+                        glm_modifier.defaults.res_bldg_metadata['solar_percentage'][income]) / il_percentage
+
+
+    storage_percentage_il = (glm_modifier.defaults.storage_percentage *
+        glm_modifier.defaults.res_bldg_metadata['battery_percentage'][income]) / il_percentage
+    ev_percentage_il = (glm_modifier.defaults.ev_percentage * glm_modifier.defaults.res_bldg_metadata['ev_percentage'][
+        income]) / il_percentage
+    if bldg == 0:  # Single-family homes
+        if solar_percentage_il > 0.0:
+            pass
+            # bConsiderStorage = False
+        if np.random.uniform(0, 1) <= solar_percentage_il:  # some single-family houses have PV
+            # bConsiderStorage = True
+            # This is legacy code method to find solar rating
+            # panel_area = 0.1 * floor_area
+            # if panel_area < 162:
+            #     panel_area = 162
+            # elif panel_area > 270:
+            #     panel_area = 270
+            # inverter_undersizing = 1.0
+            # array_efficiency = 0.2
+            # rated_insolation = 1000.0
+            # inv_power = inverter_undersizing * (panel_area / 10.7642) * rated_insolation * array_efficiency
+            # this results in solar ranging from 3 to 5 kW
+            # new method directly proportional to sq. ft.
+            # typical PV panel is 350 Watts and avg home has 5kW installed.
+            # If we assume 2500 sq. ft as avg area of a single family house, we can say:
+            # one 350 W panel for every 175 sq. ft.
+            num_panel = np.floor(floor_area / 175)
+            inverter_undersizing = 1.0
+            inv_power = num_panel * 350 * inverter_undersizing
+            pv_scaling_factor = inv_power / glm_modifier.defaults.pv_rating_MW
+            if glm_modifier.defaults.case_type['pv']:
                 glm_modifier.defaults.solar_count += 1
                 glm_modifier.defaults.solar_kw += 0.001 * inv_power
-
-
-
                 params12 = dict()
-                name = sol_m_name
+                t_name = sol_m_name
                 params12["parent"] = mtrname
                 params12["phases"] = phs
                 params12["nominal_voltage"] = str(vnom)
-                glm_modifier.add_object('{:s} {{'.format (meter_class), name, params12)
-
-
+                glm_modifier.add_object("triplex_meter", t_name, params12)
 
                 params13 = dict()
-                params13[""] = str
+                t_name = sol_i_name
+                params13["phases"] = phs
+                params13["groupid"] = "sol_inverter"
+                params13["generator_status"] = "ONLINE"
+                params13["inverter_type"] = "FOUR_QUADRANT"
+                params13["inverter_efficiency"] = "1"
+                params13["rated_power"] = '{:.0f}'.format(inv_power)
+                params13["generator_mode"] = glm_modifier.defaults.solar_inv_mode
+                params13["four_quadrant_control_mode"] = glm_modifier.defaults.solar_inv_mode
+                params13["P_Out"] = 'P_out_inj.value * {}'.format(pv_scaling_factor)
+                if 'no_file' not in glm_modifier.defaults.solar_Q_player:
+                    params13["Q_Out"] = "Q_out_inj.value * 0.0"
+                else:
+                    params13["Q_Out"] = "0"
+                # write_solar_inv_settings(op)  # don't want volt/var control
+                # No need of solar object
+                # print('    object solar {', file=op)
+                # print('      name', solname + ';', file=op)
+                # print('      panel_type SINGLE_CRYSTAL_SILICON;', file=op)
+                # print('      efficiency', '{:.2f}'.format(array_efficiency) + ';', file=op)
+                # print('      area', '{:.2f}'.format(panel_area) + ';', file=op)
+                # print('    };', file=op)
+                # Instead of solar object, write a fake V_in and I_in sufficient high so
+                # that it doesn't limit the player output
+                params13["V_In"] = "10000000"
+                params13["I_In"] = "10000000"
+                glm_modifier.add_object("inverter", sol_i_name, params13)
+            if glm_modifier.defaults.metrics_interval > 0:
+                params15 = dict()
+                params15["interval"] = str(glm_modifier.defaults.metrics_interval)
+                params15["parent"] = sol_i_name
+                glm_modifier.add_object("metrics_collector", "", params15)
 
-                params13[""] = str
-                params13[""] = str
-                params13[""] = str
-                params13[""] = str
-                params13[""] = str
-                params13[""] = str
-                params13[""] = str
-                add_solar_inv_settings (glm_modifier, params13)
-                glm_modifier.add_object('{:s} {{'.format (meter_class), name, params12)
+    if np.random.uniform(0, 1) <= storage_percentage_il:
+        battery_capacity = get_dist(glm_modifier.defaults.batt_metadata['capacity(kWh)']['mean'],
+            glm_modifier.defaults.batt_metadata['capacity(kWh)'][
+                                           'deviation_range_per']) * 1000
+        max_charge_rate = get_dist(glm_modifier.defaults.batt_metadata['rated_charging_power(kW)']['mean'],
+            glm_modifier.defaults.batt_metadata['rated_charging_power(kW)']['deviation_range_per']) * 1000
+        max_discharge_rate = max_charge_rate
+        inverter_efficiency = glm_modifier.defaults.batt_metadata['inv_efficiency(per)'] / 100
+        charging_loss = get_dist(glm_modifier.defaults.batt_metadata['rated_charging_loss(per)']['mean'],
+            glm_modifier.defaults.batt_metadata['rated_charging_loss(per)']['deviation_range_per']) / 100
+        discharging_loss = charging_loss
+        round_trip_efficiency = charging_loss * discharging_loss
+        rated_power = max(max_charge_rate, max_discharge_rate)
 
-                params14 = dict()
-                name = solname
-                params14["panel_type"] = "SINGLE_CRYSTAL_SILICON"
-                params14["efficiency"] = '{:.2f}'.format(glm_modifier.defaults.solar['array_efficiency'])
-                params14["area"] = '{:.2f}'.format(panel_area)
-                glm_modifier.add_object("solar", name, params14)
-                if glm_modifier.defaults.metrics_interval > 0:
-                    params15 = dict()
-                    params15["interval"] = str(glm_modifier.defaults.metrics_interval)
-                    params15["parent"] = name
-                    glm_modifier.add_object("metrics_collector", name, params15)
+        if glm_modifier.defaults.case_type['bt']:
+            glm_modifier.defaults.battery_count += 1
+            params16 = dict()
+            params16["parent"] = mtrname
+            params16["phases"] = phs
+            params16["nominal_voltage"] = str(vnom)
+            glm_modifier.add_object("triplex_meter", bat_m_name, params16)
 
-        if bConsiderStorage:
-            if np.random.uniform (0, 1) <= glm_modifier.defaults.storage_percentage:
-                glm_modifier.defaults.battery_count += 1
-#                print ('object triplex_meter {', file=op)
-                params16 = dict()
-                name = bat_m_name
-                params16["parent"] = mtrname
-                params16["phases"] = phs
-                params16["nominal_voltage"] = str(vnom)
-                glm_modifier.add_object('{:s} {{'.format (meter_class), name, params16)
-                params17 = dict()
-                name = bat_i_name
-                params17["phases"] = phs
-                params17["generator_status"] = 'ONLINE'
-                params17["generator_mode"] = 'CONSTANT_PQ'
-                params17["inverter_type"] = 'FOUR_QUADRANT'
-                params17["four_quadrant_control_mode"] = glm_modifier.defaults.storage_inv_mode
-                params17["V_base"] = '${INV_VBASE}'
-                params17["charge_lockout_time"] = '1'
-                params17["discharge_lockout_time"] = '1'
-                params17["rated_power"] = '5000'
-                params17["max_charge_rate"] = '5000'
-                params17["max_discharge_rate"] = '5000'
-                params17["sense_object"] = mtrname
-                params17["charge_on_threshold"] = '-100'
-                params17["charge_off_threshold"] = '0'
-                params17["discharge_off_threshold"] = '2000'
-                params17["discharge_on_threshold"] = '3000'
-                params17["inverter_efficiency"] = '0.97'
-                params17["power_factor"] = '1.0'
-                glm_modifier.add_object("inverter", name, params17)
+            params17 = dict()
+            params17["phases"] = phs
+            params17["groupid"] = "batt_inverter"
+            params17["generator_status"] = "ONLINE"
+            params17["generator_mode"] = "CONSTANT_PQ"
+            params17["inverter_type"] = "FOUR_QUADRANT"
+            params17["four_quadrant_control_mode"] = glm_modifier.defaults.storage_inv_mode
+            params17["charge_lockout_time"] = 1
+            params17["discharge_lockout_time"] = 1
+            params17["rated_power"] = rated_power
+            params17["max_charge_rate"] = max_charge_rate
+            params17["max_discharge_rate"] = max_discharge_rate
+            params17["sense_object"] = mtrname
+            params17["inverter_efficiency"] = inverter_efficiency
+            params17["power_factor"] = 1.0
+            glm_modifier.add_object("inverter", bat_i_name, params17)
 
-                params18 = dict()
-                name = batname
-                params18["use_internal_battery_model"] = 'true'
-                params18["battery_type"] = 'LI_ION'
-                params18["nominal_voltage"] = '480'
-                params18["battery_capacity"] = '13500'
-                params18["round_trip_efficiency"] = '0.86'
-                params18["state_of_charge"] = '0.50'
-                glm_modifier.add_object("battery", name, params18)
+            params18 = dict()
+            params18["use_internal_battery_model"] = "true"
+            params18[""] = ""
+            params18["nominal_voltage"] = 480
+            params18["battery_capacity"] = battery_capacity
+            params18["round_trip_efficiency"] = round_trip_efficiency
+            params18["state_of_charge"] = 0.50
+            glm_modifier.add_object("battery", batname, params18)
 
-                if glm_modifier.defaults.metrics_interval > 0:
-                    params19 = dict()
-                    params19["parent"] = name
-                    params19["interval"] = str(glm_modifier.defaults.metrics_interval)
-                    glm_modifier.add_object("metrics_collector", name, params19)
+            if glm_modifier.defaults.metrics_interval > 0 and "inverter" in glm_modifier.defaults.metrics:
+                params19 = dict()
+                params19["parent"] = batname
+                params19["interval"] = glm_modifier.defaults.metrics_interval
+                glm_modifier.add_object("metrics_collector", "", params19)
 
+    if np.random.uniform(0, 1) <= ev_percentage_il:
+        # first lets select an ev model:
+        ev_name = selectEVmodel(glm_modifier.defaults.ev_metadata['sale_probability'], np.random.uniform(0, 1))
+        ev_range = glm_modifier.defaults.ev_metadata['Range (miles)'][ev_name]
+        ev_mileage = glm_modifier.defaults.ev_metadata['Miles per kWh'][ev_name]
+        ev_charge_eff = glm_modifier.defaults.ev_metadata['charging efficiency']
+        # check if level 1 charger is used or level 2
+        if np.random.uniform(0, 1) <= glm_modifier.defaults.ev_metadata['Level_1_usage']:
+            ev_max_charge = glm_modifier.defaults.ev_metadata['Level_1 max power (kW)']
+            volt_conf = 'IS110'  # for level 1 charger, 110 V is good
+        else:
+            ev_max_charge = glm_modifier.defaults.ev_metadata['Level_2 max power (kW)'][ev_name]
+            volt_conf = 'IS220'  # for level 2 charger, 220 V is must
+
+        # now, let's map a random driving schedule with this vehicle ensuring daily miles
+        # doesn't exceed the vehicle range and home duration is enough to charge the vehicle
+        drive_sch = match_driving_schedule(ev_range, ev_mileage, ev_max_charge)
+        # ['daily_miles','home_arr_time','home_duration','work_arr_time','work_duration']
+
+        # Should be able to turn off ev entirely using ev_percentage, definitely in debugging
+        if glm_modifier.defaults.case_type['pv']:  # evs are populated when its pvCase i.e. high renewable case
+            # few sanity checks
+            if drive_sch['daily_miles'] > ev_range:
+                raise UserWarning('daily travel miles for EV can not be more than range of the vehicle!')
+            if not is_hhmm_valid(drive_sch['home_arr_time']) or not is_hhmm_valid(
+                drive_sch['home_leave_time']) or not is_hhmm_valid(drive_sch['work_arr_time']):
+                raise UserWarning('invalid HHMM format of driving time!')
+            if drive_sch['home_duration'] > 24 * 3600 or drive_sch['home_duration'] < 0 or \
+                drive_sch['work_duration'] > 24 * 3600 or drive_sch['work_duration'] < 0:
+                raise UserWarning('invalid home or work duration for ev!')
+            if not is_drive_time_valid(drive_sch):
+                raise UserWarning('home and work arrival time are not consistent with durations!')
+
+            glm_modifier.defaults.ev_count += 1
+            params20 = dict()
+            params20["parent"] = hsename
+            params20["configuration"] = volt_conf
+            params20["breaker_amps"] = 1000
+            params20["battery_SOC"] = 100.0
+            params20["travel_distance"] = drive_sch['daily_miles']
+            params20["arrival_at_work"] = drive_sch['work_arr_time']
+            params20["duration_at_work"] = drive_sch['work_duration']
+            params20["arrival_at_home"] = drive_sch['home_arr_time']
+            params20["duration_at_home"] = '{}; // (secs)'.format(drive_sch['home_duration'])
+            params20["work_charging_available"] = "FALSE"
+            params20["maximum_charge_rate"] = ev_max_charge * 1000
+            params20["mileage_efficiency"] = ev_mileage
+            params20["mileage_classification"] = ev_range
+            params20["charging_efficiency"] = ev_charge_eff
+            glm_modifier.add_object("evcharger_det", evname, params20)
+
+            if glm_modifier.defaults.metrics_interval > 0:
+                params21 = dict()
+                params21["parent"] = evname
+                params21["interval"] = glm_modifier.defaults.metrics_interval
+                glm_modifier.add_object("metrics_collector", "", params21)
 
 
 #***************************************************************************************************
 #***************************************************************************************************
 def add_substation(glm_modifier, name, phs, vnom, vll):
-    """Write the substation swing node, transformer, metrics collector and 
-    fncs_msg object
+    """Write the substation swing node, transformer, metrics collector and fncs_msg object
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
+        op (file): an open GridLAB-D input file
         name (str): node name of the primary (not transmission) substation bus
         phs (str): primary phasing in the substation
-        vnom (float): not used. TODO: remove?
+        vnom (float): not used
         vll (float): feeder primary line-to-line voltage
-
-    Returns:
-        None
     """
     # if this feeder will be combined with others, need USE_FNCS to appear first as a marker for the substation
-    #if len(glm_modifier.defaults.fncs_case) > 0:
-        #if glm_modifier.defaults.message_broker == "fncs_msg":
-    params = dict()
-    #if glm_modifier.defaults.forERCOT == "True":
-        # print ('  name gridlabd' + fncs_case + ';', file=op)
-    #    params["gridlabd"] = 'gridlabd' + glm_modifier.defaults.fncs_case
-    #else:
-    #name = "gld1"
-    #params["parent"] = "network_node"
-    #params["configure"] = glm_modifier.defaults.fncs_case + '_FNCS_Config.txt'
-    #params["option"] = "transport:hostname localhost, port 5570"
-    #params["aggregate_subscriptions"] = "true"
-    #params["aggregate_publications"] = "true"
-    #glm_modifier.add_object("fncs_msg", name, params)
-    # if glm_modifier.defaults.message_broker == "helics_msg":
-    #    params[""] = str
-    #    params2 = dict()
-    #    params["configure"] = "glm_modifier.defaults.fncs_case + '_HELICS_gld_msg.json"
-    #    glm_modifier.add_object("helics_msg", name, params2)
-
-
+    if len(glm_modifier.defaults.case_name) > 0:
+        if glm_modifier.defaults.message_broker == "fncs_msg":
+            def_params = dict()
+            t_name = "gld" + glm_modifier.defaults.substation_name
+            def_params["parent"] = "network_node"
+            def_params["configure"] = glm_modifier.defaults.case_name + '_gridlabd.txt'
+            def_params["option"] = "transport:hostname localhost, port " + str(glm_modifier.defaults.port)
+            def_params["aggregate_subscriptions"] = "true"
+            def_params["aggregate_publications"] = "true"
+            glm_modifier.add_object("fncs_msg",t_name,def_params)
+        if glm_modifier.defaults.message_broker == "helics_msg":
+            def_params = dict()
+            t_name = "gld" + glm_modifier.defaults.substation_name
+            def_params["configure"] = glm_modifier.defaults.case_name + '.json'
+            glm_modifier.add_object("helics_msg",t_name,def_params)
 
     params3 = dict()
     name = 'substation_xfmr_config'
@@ -2469,8 +2624,6 @@ def add_substation(glm_modifier, name, phs, vnom, vll):
     params3["shunt_reactance"] = '{:.2f}'.format(100.0 / glm_modifier.defaults.transmissionXfmrImagpct)
     glm_modifier.add_object("transformer_configuration", name, params3)
 
-
-
     params4 = dict()
     name = "substation_transformer"
     params4["from"] = "network_node"
@@ -2480,24 +2633,22 @@ def add_substation(glm_modifier, name, phs, vnom, vll):
     glm_modifier.add_object("transformer", name, params4)
     vsrcln = glm_modifier.defaults.transmissionVoltage / math.sqrt(3.0)
 
-
     params5 = dict()
-    name = 'name network_node'
+    name = 'network_node'
     params5["groupid"] = glm_modifier.defaults.base_feeder_name
-    params5["bustype"] = 'bustype SWING'
+    params5["bustype"] = 'SWING'
     params5["nominal_voltage"] = '{:.2f}'.format(vsrcln)
     params5["positive_sequence_voltage"] = '{:.2f}'.format(vsrcln)
     params5["base_power"] = '{:.2f}'.format(glm_modifier.defaults.transmissionXfmrMVAbase * 1000000.0)
     params5["power_convergence_value"] = "100.0"
     params5["phases"] = phs
-    glm_modifier.add_object("substation", name, params5)
-
+    glm_modifier.add_object("substation", 'network_node', params5)
 
     if glm_modifier.defaults.metrics_interval > 0:
         params6 = dict()
-        params6["parent"] = name
+        params6["parent"] = 'network_node'
         params6["interval"] = str(glm_modifier.defaults.metrics_interval)
-        glm_modifier.add_object("metrics_collector", name, params6)
+        glm_modifier.add_object("metrics_collector", "", params6)
         # debug
         params7 = dict()
         params7["parent"] = name
@@ -2506,42 +2657,30 @@ def add_substation(glm_modifier, name, phs, vnom, vll):
         params7["interval"] = "300"
         glm_modifier.add_object("recorder", name, params7)
 
-
-
-
 # ***************************************************************************************************
 # ***************************************************************************************************
+
+# if triplex load, node or meter, the nominal voltage is 120
+#   if the name or parent attribute is found in secmtrnode, we look up the nominal voltage there
+#   otherwise, the nominal voltage is vprim
+# secmtrnode[mtr_node] = [kva_total, phases, vnom]
+#   the transformer phasing was not changed, and the transformers were up-sized to the largest phase kva
+#   therefore, it should not be necessary to look up kva_total, but phases might have changed N==>S
+# if the phasing did change N==>S, we have to prepend triplex_ to the class, write power_1 and voltage_1
+# when writing commercial buildings, if load_class is present and == C, skip the instance
+
 
 def add_voltage_class(glm_modifier,model, h, t, vprim, vll, secmtrnode):
-    """Write GridLAB-D instances that have a primary nominal voltage, i.e., 
-    node, meter and load. 
-    
-    If triplex load, node or meter, the nominal voltage is 120. If the name or 
-    parent attribute is found in secmtrnode, we look up the nominal voltage 
-    there; otherwise, the nominal voltage is vprim.
-    
-    secmtrnode[mtr_node] = [kva_total, phases, vnom]
-    The transformer phasing was not changed, and the transformers were up-sized 
-    to the largest phase kva therefore, it should not be necessary to look up 
-    kva_total, but phases might have changed N==>S.
-
-    If the phasing did change N==>S, we have to prepend triplex_ to the class, 
-    write power_1 and voltage_1 when writing commercial buildings, if load_class 
-    is present and == C, skip the instance
+    """Write GridLAB-D instances that have a primary nominal voltage, i.e., node, meter and load
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         model (dict): a parsed GridLAB-D model
-        h (dict): the object ID hash TODO: remove?
+        h (dict): the object ID hash
         t (str): the GridLAB-D class name to write
+        op (file): an open GridLAB-D input file
         vprim (float): the primary nominal line-to-neutral voltage
         vll (float): the primary nominal line-to-line voltage
-        secmtrnode (dict): key to [transfomer kva, phasing, nominal voltage] by
-            secondary node name
-
-    Returns:
-        None
+        secmtrnode (dict): key to [transfomer kva, phasing, nominal voltage] by secondary node name
     """
     if t in model:
         for o in model[t]:
@@ -2659,14 +2798,10 @@ def add_config_class (glm_modifier, model, h, t):
     """Write a GridLAB-D configuration (i.e. not a link or node) class
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         model (dict): the parsed GridLAB-D model
         h (dict): the object ID hash
         t (str): the GridLAB-D class
-    
-    Returns:
-        None    
+        op (file): an open GridLAB-D input file
     """
     if t in model:
         for o in model[t]:
@@ -2683,27 +2818,19 @@ def add_config_class (glm_modifier, model, h, t):
 
 # ***************************************************************************************************
 # ***************************************************************************************************
-def add_xfmr_config(glm_modifier, key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln):
+def add_xfmr_config(glm_modifier,key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln):
     """Write a transformer_configuration
 
     Args:
-       glm_modifier (object): contains the data structure of the .glm being 
-            modified
         key (str): name of the configuration
         phs (str): primary phasing
         kvat (float): transformer rating in kVA
-        vnom (float): primary voltage rating, not used any longer (see vprimll 
-            and vprimln) TODO: remove?
-        vsec (float): secondary voltage rating, should be line-to-neutral for 
-            single-phase or line-to-line for three-phase
+        vnom (float): primary voltage rating, not used any longer (see vprimll and vprimln)
+        vsec (float): secondary voltage rating, should be line-to-neutral for single-phase or line-to-line for three-phase
         install_type (str): should be VAULT, PADMOUNT or POLETOP
-        vprimll (float): primary line-to-line voltage, used for three-phase 
-            transformers
-        vprimln (float): primary line-to-neutral voltage, used for single-phase 
-            transformers
-    
-    Returns:
-        None
+        vprimll (float): primary line-to-line voltage, used for three-phase transformers
+        vprimln (float): primary line-to-neutral voltage, used for single-phase transformers
+        op (file): an open GridLAB-D input file
     """
     params = dict()
     name = glm_modifier.defaults.name_prefix + key
@@ -2755,39 +2882,35 @@ def add_xfmr_config(glm_modifier, key, phs, kvat, vnom, vsec, install_type, vpri
 # ***************************************************************************************************
 # ***************************************************************************************************
 
-def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, avgcommercial):
-    """Parse and re-populate one backbone feeder, usually but not necessarily 
-    one of the PNNL taxonomy feeders
+def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, avgcommercial, fg_recs_dataset=None):
+    """Parse and re-populate one backbone feeder, usually but not necessarily one of the PNNL taxonomy feeders
 
     This function:
+
         * reads and parses the backbone model from *rootname.glm*
         * replaces loads with houses and DER
-        * upgrades transformers and fuses as needed, based on a radial graph 
-            analysis
+        * upgrades transformers and fuses as needed, based on a radial graph analysis
         * writes the repopulated feeder to *outname.glm*
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified
         outname (str): the output feeder model name
         rootname (str): the input (usually taxonomy) feeder model name
         vll (float): the feeder primary line-to-line voltage
         vln (float): the feeder primary line-to-neutral voltage
         avghouse (float): the average house load in kVA
         avgcommercial (float): the average commercial load in kVA, not used
-    
-    Returns:
-        None
     """
     glm_modifier.defaults.solar_count = 0
     glm_modifier.defaults.solar_kw = 0
     glm_modifier.defaults.battery_count = 0
+    glm_modifier.defaults.ev_count = 0
 
-    glm_modifier.defaults.base_feeder_name = helper.gld_strict_name(rootname)
+    glm_modifier.defaults.base_feeder_name = gld_strict_name(rootname)
 
 #    fname = glm_modifier.defaults.glmpath + rootname + '.glm'
     fname = glm_modifier.model.in_file
     print('Populating From:', fname)
+    rootname = gld_strict_name(rootname)
     rgn = 0
     if 'R1' in rootname:
         rgn = 1
@@ -2829,7 +2952,6 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
 
         op = open(glm_modifier.defaults.work_path + outname + '.glm', 'w')
 
-        #op = open(glm_modifier.defaults.outpath + glm_modifier.defaults.outname + '.glm', 'w')
         print('###### Writing to', glm_modifier.defaults.work_path + outname + '.glm')
         octr = 0;
         model = {}
@@ -2839,17 +2961,20 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
             if re.search('object', line):
                 line, octr = obj(glm_modifier,None, model, line, itr, h, octr)
             else:  # should be the pre-amble, need to replace timestamp and stoptime
-                if 'timestamp' in line:
+                if 'timestamp' in line or 'starttime' in line:
                     glm_modifier.model.module_entities['clock'].starttime.value = glm_modifier.defaults.starttime
-                    #print('  timestamp \'' + glm_modifier.defaults.starttime + '\';', file=op)
                 elif 'stoptime' in line:
                     glm_modifier.model.module_entities['clock'].stoptime.value = glm_modifier.defaults.endtime
-#                    print('  stoptime \'' + glm_modifier.defaults.endtime + '\';', file=op)
+                elif 'timezone' in line:
+                    #print('  timezone ' + timezone + ';', file=op)
+                    glm_modifier.model.module_entities['clock'].timezone.value = glm_modifier.defaults.timezone
+#                elif 'module powerflow' in line:
+#                    print('module powerflow{', file=op)
+#                    print('  lu_solver \"KLU\";', file=op)
 #                else:
 #                    print(line, file=op)
 
         # apply the nameing prefix if necessary
-        # if len(name_prefix) > 0:
         if len(glm_modifier.defaults.name_prefix) > 0:
             for t in model:
                 for o in model[t]:
@@ -2867,8 +2992,8 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
         for t in model:
             if is_edge_class(t):
                 for o in model[t]:
-                    n1 = model[t][o]['from']
-                    n2 = model[t][o]['to']
+                    n1 = gld_strict_name(model[t][o]['from'])
+                    n2 = gld_strict_name(model[t][o]['to'])
                     G.add_edge(n1, n2, eclass=t, ename=o, edata=model[t][o])
 
         # add the parent-child node links
@@ -2876,7 +3001,7 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
             if is_node_class(t):
                 for o in model[t]:
                     if 'parent' in model[t][o]:
-                        p = model[t][o]['parent']
+                        p = gld_strict_name(model[t][o]['parent'])
                         G.add_edge(o, p, eclass='parent', ename=o, edata={})
 
         # now we backfill node attributes
@@ -2921,12 +3046,15 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
         print('  swing node', swing_node, 'with', len(list(sub_graphs)), 'subgraphs and',
               '{:.2f}'.format(total_kva), 'total kva')
         dummy_params = dict()
+        t_module = dict()
         # preparatory items for TESP
         glm_modifier.add_module("climate", dummy_params)
         glm_modifier.add_module("generators", dummy_params)
         glm_modifier.add_module("connection", dummy_params)
+        t_module["implicit_enduses"] = "NONE"
         mod_params = dict()
         mod_params["implicit_enduses"] = "NONE"
+        glm_modifier.add_module("residential",mod_params)
 
 
         glm_modifier.model.include_lines.append('#include "${TESPDIR}/data/schedules/appliance_schedules.glm"')
@@ -2953,16 +3081,12 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
 
         params2 = dict()
         name = "localWeather"
-        #waiting for add comment method to be added to the modify class
-#        print('  // tmyfile "' + glm_modifier.defaults.weatherpath + glm_modifier.defaults.weather_file + '";',
-#              file=op)
-#        print('  // agent name', glm_modifier.defaults.weatherName, file=op)
+        params2["name"] = str(glm_modifier.defaults.weather_name)
         params2["interpolate"] = "QUADRATIC"
         params2["latitude"] = str(glm_modifier.defaults.latitude)
         params2["longitude"] = str(glm_modifier.defaults.longitude)
-#        print('  // altitude', str(glm_modifier.defaults.altitude) + ';', file=op)
         params2["tz_meridian"] = '{0:.2f};'.format(15 * glm_modifier.defaults.time_zone_offset)
-#        glm_modifier.add_object("climate", name, params2)
+        glm_modifier.add_object("climate", name, params2)
 
 
         if glm_modifier.defaults.solar_percentage > 0.0:
@@ -3039,7 +3163,7 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
                     vsec = 208.0
                     vnom = 120.0
 
-            secnode[model[t][o]['to']] = [kvat, seg_phs, vnom]
+            secnode[gld_strict_name(model[t][o]['to'])] = [kvat, seg_phs, vnom]
 
             old_key = h[model[t][o]['configuration']]
             install_type = model['transformer_configuration'][old_key]['install_type']
@@ -3128,7 +3252,13 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
             for key in glm_modifier.defaults.small_nodes:
                 add_small_loads(glm_modifier, key, 120.0)
             for key in glm_modifier.defaults.comm_loads:
-                add_commercial_loads(glm_modifier, rgn, key)
+                #add_commercial_loads(glm_modifier, rgn, key)
+                bldg_definition = comm_FG.define_comm_loads(glm_modifier.defaults.comm_loads[key][1], glm_modifier.defaults.comm_loads[key][2],
+                                                    glm_modifier.defaults.dso_type, glm_modifier.defaults.ashrae_zone, glm_modifier.defaults.comm_bldg_metadata)
+                comm_FG.create_comm_zones(bldg_definition, glm_modifier.defaults.comm_loads, key, op, glm_modifier.defaults.batt_metadata,
+                                  glm_modifier.defaults.storage_percentage, glm_modifier.defaults.ev_metadata, glm_modifier.defaults.ev_percentage,
+                                  glm_modifier.defaults.solar_percentage, glm_modifier.defaults.pv_rating_MW, glm_modifier.defaults.solar_Q_player,
+                                  glm_modifier.defaults.case_type, glm_modifier.defaults.metrics, glm_modifier.defaults.metrics_interval, None)
 
         add_voltage_class(glm_modifier, model, h, 'node', vln, vll, secnode)
         add_voltage_class(glm_modifier, model, h, 'meter', vln, vll, secnode)
@@ -3170,7 +3300,7 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
 
 
             params7 = dict()
-            name = glm_modifier.defaults.name_prefix + 'Eplus_meter'
+            t_name = glm_modifier.defaults.name_prefix + 'Eplus_meter'
             params7["phases"] = "ABCN"
             params7["meter_power_consumption"] = "1+15j"
             params7["nominal_voltage"] = '{:.4f}'.format(Eplus_vln)
@@ -3178,15 +3308,15 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
             params7["voltage_B"] = vstartb
             params7["voltage_C"] = vstartc
             add_tariff(glm_modifier, params7)
-            glm_modifier.add_object("meter", name, params7)
+            glm_modifier.add_object("meter", t_name, params7)
 
 
 
             if glm_modifier.defaults.metrics_interval > 0:
                 params8 = dict()
-                params8["parent"] = name
+                params8["parent"] = t_name
                 params8["interval"] = str(glm_modifier.defaults.metrics_interval)
-                glm_modifier.add_object("metrics_collector", name, params8)
+                glm_modifier.add_object("metrics_collector", "", params8)
 
 
             params9 = dict()
@@ -3210,50 +3340,35 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
         op.close()
 
 
+
 # ***************************************************************************************************
 # ***************************************************************************************************
-def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None, house_avg_kw=None, secondary_ft=None, storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5,
-node_metrics_interval=None, random_seed=False):
+def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None, house_avg_kw=None, secondary_ft=None,
+                      storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5,
+                      node_metrics_interval=None, random_seed=False):
     """Writes GridLAB-D houses to a primary load point.
 
-    One aggregate service transformer is included, plus an optional aggregate 
-    secondary service drop. Each house has a separate meter or triplex_meter, 
-    each with a common parent, either a node or triplex_node on either the
-    transformer secondary, or the end of the service drop. The houses may be 
-    written per phase, i.e., unbalanced load, or as a balanced three-phase load.
-    The houses should be #included into the main GridLAB-D file. Before using 
-    this function, call write_node_house_configs once, and only once, for each 
-    combination xfkva/phs that will be used.
+    One aggregate service transformer is included, plus an optional aggregate secondary service drop. Each house
+    has a separate meter or triplex_meter, each with a common parent, either a node or triplex_node on either the
+    transformer secondary, or the end of the service drop. The houses may be written per phase, i.e., unbalanced load,
+    or as a balanced three-phase load. The houses should be #included into a master GridLAB-D file. Before using this
+    function, call write_node_house_configs once, and only once, for each combination xfkva/phs that will be used.
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified       
+        fp (file): Previously opened text file for writing; the caller closes it.
         node (str): the GridLAB-D primary node name
         region (int): the taxonomy region for housing population, 1..6
-        xfkva (float): the total transformer size to serve expected load; make 
-            this big enough to avoid overloads
-        phs (str): 'ABC' for three-phase balanced distribution, 'AS', 'BS', or 
-            'CS' for single-phase triplex
-        nh (int): directly specify the number of houses; an alternative to 
-            loadkw and house_avg_kw
-        loadkw (float): total load kW that the houses will represent; with 
-            house_avg_kw, an alternative to nh
-        house_avg_kw (float): average house load in kW; with loadkw, an 
-            alternative to nh
-        secondary_ft (float): if not None, the length of adequately sized 
-            secondary circuit from transformer to the meters
-        storage_fraction (float): fraction of houses with solar panels that also
-            have residential storage systems
+        xfkva (float): the total transformer size to serve expected load; make this big enough to avoid overloads
+        phs (str): 'ABC' for three-phase balanced distribution, 'AS', 'BS', or 'CS' for single-phase triplex
+        nh (int): directly specify the number of houses; an alternative to loadkw and house_avg_kw
+        loadkw (float): total load kW that the houses will represent; with house_avg_kw, an alternative to nh
+        house_avg_kw (float): average house load in kW; with loadkw, an alternative to nh
+        secondary_ft (float): if not None, the length of adequately sized secondary circuit from transformer to the meters
+        electric_cooling_fraction (float): fraction of houses to have air conditioners
         solar_fraction (float): fraction of houses to have rooftop solar panels
-        electric_cooling_fraction (float): fraction of houses to have air 
-            conditioners
-        node_metrics_interval (int): if not None, the metrics collection interval 
-            in seconds for houses, meters, solar and storage at this node
-        random_seed (boolean): if True, reseed each function call. Default value 
-            False provides repeatability of output.
-
-    Returns:
-        None
+        storage_fraction (float): fraction of houses with solar panels that also have residential storage systems
+        node_metrics_interval (int): if not None, the metrics collection interval in seconds for houses, meters, solar and storage at this node
+        random_seed (boolean): if True, reseed each function call. Default value False provides repeatability of output.
     """
     glm_modifier.defaults.house_nodes = {}
     if not random_seed:
@@ -3350,22 +3465,14 @@ node_metrics_interval=None, random_seed=False):
 # ***************************************************************************************************
 # ***************************************************************************************************
 
-def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, fgconfig=None):
-    """Wrapper function that processes one feeder. One or two keyword arguments 
-    must be supplied.
+def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, fgconfig=None, fg_recs_data=None):
+    """Wrapper function that processes one feeder. One or two keyword arguments must be supplied.
 
     Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified 
-        configfile (str): JSON file name for the feeder population data, 
-            mutually exclusive with config
-        config (dict): dictionary of feeder population data already read in, 
-            mutually exclusive with configfile
+        configfile (str): JSON file name for the feeder population data, mutually exclusive with config
+        config (dict): dictionary of feeder population data already read in, mutually exclusive with configfile
         taxconfig (dict): dictionary of custom taxonomy data for ERCOT processing
-        fgconfig: TODO: remove?
-        
-    Returns:
-        None
+        targetdir (str): directory to receive the output files, defaults to ./CaseName
     """
 
     if configfile is not None:
@@ -3376,9 +3483,6 @@ def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, 
     if config is None:
         lp = open(configfile).read()
         config = json.loads(lp)
-    # if fgconfig is not None:
-    #     fgfile = open(fgconfig).read()
-    #     ConfigDict = json.loads(fgfile)
 
     rootname = config['BackboneFiles']['TaxonomyChoice']
     tespdir = os.path.expandvars(os.path.expanduser(config['SimulationConfig']['SourceDirectory']))
@@ -3387,23 +3491,31 @@ def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, 
     glm_modifier.defaults.weatherpath = ''  # tespdir + '/weather'
     if 'NamePrefix' in config['BackboneFiles']:
         glm_modifier.defaults.name_prefix = config['BackboneFiles']['NamePrefix']
+    work_path = './' + config['SimulationConfig']['CaseName'] + '/'
+
     if 'WorkingDirectory' in config['SimulationConfig']:
-        glm_modifier.defaults.outpath = config['SimulationConfig']['WorkingDirectory'] + '/'  # for full-order DSOT
-    #      outpath = './' + config['SimulationConfig']['CaseName'] + '/'
-    else:
-        # outpath = './' + config['SimulationConfig']['CaseName'] + '/'
-        glm_modifier.defaults.outpath = './' + config['SimulationConfig']['CaseName'] + '/'
+        work_path = config['SimulationConfig']['WorkingDirectory'] + '/'
+
+    if 'OutputPath' in config['SimulationConfig']:
+        work_path = config['SimulationConfig']['OutputPath'] + '/'
+
+    substation_name = config['SimulationConfig']['Substation']
+    glm_modifier.defaults.timezone = config['SimulationConfig']['TimeZone']
+
     glm_modifier.defaults.starttime = config['SimulationConfig']['StartTime']
     glm_modifier.defaults.endtime = config['SimulationConfig']['EndTime']
+    glm_modifier.defaults.port = config['SimulationConfig']['port']
     glm_modifier.defaults.timestep = int(config['FeederGenerator']['MinimumStep'])
+    glm_modifier.defaults.metrics = config['FeederGenerator']['Metrics']
+    glm_modifier.defaults.metrics_type = config['FeederGenerator']['MetricsType']
     glm_modifier.defaults.metrics_interval = int(config['FeederGenerator']['MetricsInterval'])
-    glm_modifier.defaults.electric_cooling_percentage = 0.01 * float(
-        config['FeederGenerator']['ElectricCoolingPercentage'])
-    glm_modifier.defaults.water_heater_percentage = 0.01 * float(config['FeederGenerator']['WaterHeaterPercentage'])
-    glm_modifier.defaults.water_heater_participation = 0.01 * float(
-        config['FeederGenerator']['WaterHeaterParticipation'])
+    glm_modifier.defaults.metrics_interim = int(config['FeederGenerator']['MetricsInterim'])
+    # glm_modifier.defaults.electric_cooling_percentage = 0.01 * float(config['FeederGenerator']['ElectricCoolingPercentage'])
+    # glm_modifier.defaults.water_heater_percentage = 0.01 * float(config['FeederGenerator']['WaterHeaterPercentage'])
+    # glm_modifier.defaults.water_heater_participation = 0.01 * float(config['FeederGenerator']['WaterHeaterParticipation'])
     glm_modifier.defaults.solar_percentage = 0.01 * float(config['FeederGenerator']['SolarPercentage'])
     glm_modifier.defaults.storage_percentage = 0.01 * float(config['FeederGenerator']['StoragePercentage'])
+    glm_modifier.defaults.ev_percentage = 0.01 * float(config['FeederGenerator']['EVPercentage'])
     glm_modifier.defaults.solar_inv_mode = config['FeederGenerator']['SolarInverterMode']
     glm_modifier.defaults.storage_inv_mode = config['FeederGenerator']['StorageInverterMode']
     glm_modifier.defaults.weather_file = config['WeatherPrep']['DataSource']
@@ -3421,13 +3533,47 @@ def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, 
     glm_modifier.defaults.Eplus_kVA = float(config['EplusConfiguration']['EnergyPlusXfmrKva'])
     glm_modifier.defaults.transmissionXfmrMVAbase = float(config['PYPOWERConfiguration']['TransformerBase'])
     glm_modifier.defaults.transmissionVoltage = 1000.0 * float(config['PYPOWERConfiguration']['TransmissionVoltage'])
+    glm_modifier.defaults.weather_name = config['WeatherPrep']['Name']
     glm_modifier.defaults.latitude = float(config['WeatherPrep']['Latitude'])
     glm_modifier.defaults.longitude = float(config['WeatherPrep']['Longitude'])
-    glm_modifier.defaults.altitude = float(config['WeatherPrep']['Altitude'])
-    glm_modifier.defaults.tz_meridian = float(config['WeatherPrep']['TZmeridian'])
-    if 'AgentName' in config['WeatherPrep']:
-        glm_modifier.defaults.weatherName = config['WeatherPrep']['AgentName']
+    glm_modifier.defaults.time_zone_offset = float(config['WeatherPrep']['TimeZoneOffset'])
+    glm_modifier.defaults.state = config['SimulationConfig']['state']
+    glm_modifier.defaults.dso_type = config['SimulationConfig']['DSO_type']
+    glm_modifier.defaults.income_level = config['SimulationConfig'][
+        'income_level']  # Should be a list of income levels for the DSO being tested
+    glm_modifier.defaults.gld_scaling_factor = config['SimulationConfig']['scaling_factor']
+    glm_modifier.defaults.pv_rating_MW = config['SimulationConfig']['rooftop_pv_rating_MW']
+    glm_modifier.defaults.res_bldg_metadata = config['BuildingPrep']['ResBldgMetaData']
+    glm_modifier.defaults.batt_metadata = config['BuildingPrep']['BattMetaData']
+    glm_modifier.defaults.ev_metadata = config['BuildingPrep']['EvModelMetaData']
+    glm_modifier.defaults.driving_data_file = config['BuildingPrep']['EvDrivingDataFile']
+    glm_modifier.defaults.ev_driving_metadata = process_nhts_data(
+        config['BuildingPrep']['MetaDataPath'] + glm_modifier.defaults.driving_data_file)
+    glm_modifier.defaults.ev_reserved_soc = config['AgentPrep']['EV']['EVReserveHi']
+    glm_modifier.defaults.solar_path = config['BuildingPrep']['SolarDataPath']
+    glm_modifier.defaults.solar_P_player = config['BuildingPrep']['SolarPPlayerFile']
+    glm_modifier.defaults.solar_Q_player = config['BuildingPrep']['SolarQPlayerFile']
+    glm_modifier.defaults.ashrae_zone = config['BuildingPrep']['ASHRAEZone']  # TODO: use this later
+    glm_modifier.defaults.comm_bldg_metadata = config['BuildingPrep']['CommBldgMetaData']
+    glm_modifier.defaults.comm_bldgs_pop = config['BuildingPrep']['CommBldgPopulation']
+    glm_modifier.defaults.case_type = config['SimulationConfig']['caseType']
 
+    # -------- create cop lookup table by vintage bin-----------
+    # (Laurentiu MArinovici 11/18/2019) moving the cop_lookup inside this function as it requires
+    # residential building metadata
+    cop_mat = glm_modifier.defaults.driving_data_fileres_bldg_metadata['COP_average']
+    years_bin = [range(1945, 1950), range(1950, 1960), range(1960, 1970), range(1970, 1980),
+                 range(1980, 1990), range(1990, 2000), range(2000, 2010), range(2010, 2016)]
+    years_bin = [list(years_bin[ind]) for ind in range(len(years_bin))]
+    cop_lookup = []
+    for _bin in range(len(years_bin)):
+        temp = []
+        for yr in years_bin[_bin]:
+            temp.append(cop_mat[str(yr)])
+        cop_lookup.append(temp)
+    # cop_lookup will have similar structure as years bin with years replaced with corresponding mean cop value
+    # cop_lookup: index 0: vintage bins (0,1..7)
+    #             index 1: each year in the corresponding vintage bin
     glm_modifier.defaults.house_nodes = {}
     glm_modifier.defaults.small_nodes = {}
     glm_modifier.defaults.comm_loads = {}
@@ -3442,31 +3588,26 @@ def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, 
             vln = taxrow['vln']
             avg_house = taxrow['avg_house']
             avg_comm = taxrow['avg_comm']
-            glm_modifier.defaults.fncs_case = config['SimulationConfig']['CaseName']
-            glm_modifier.defaults.glmpath = taxconfig['glmpath']
-            glm_modifier.defaults.outpath = taxconfig['outpath']
-            glm_modifier.defaults.supportpath = taxconfig['supportpath']
-            glm_modifier.defaults.weatherpath = taxconfig['weatherpath']
-            print(glm_modifier.defaults.fncs_case, rootname, vll, vln, avg_house, avg_comm,
-                  glm_modifier.defaults.glmpath, glm_modifier.defaults.outpath, glm_modifier.defaults.supportpath,
-                  glm_modifier.defaults.weatherpath)
-            ProcessTaxonomyFeeder(glm_modifier.defaults.fncs_case, rootname, vll, vln, avg_house,
-                                  avg_comm)  # need a name_prefix mechanism
+            glm_modifier.defaults.case_name = config['SimulationConfig']['CaseName']
+            work_path = taxconfig['work_path']
+            print(glm_modifier.defaults.driving_data_filecase_name, rootname, vll, vln, avg_house, avg_comm, glm_modifier.defaults.driving_data_filefeeders_path, glm_modifier.defaults.work_path)
+            ProcessTaxonomyFeeder(glm_modifier.defaults.case_name, rootname, vll, vln, avg_house, avg_comm)
         else:
             print(rootname, 'not found in taxconfig backbone_feeders')
     else:
+        glm_modifier.defaults.forERCOT = config['SimulationConfig']['simplifiedFeeders']
         print('using the built-in taxonomy')
-        print(rootname, 'to', glm_modifier.defaults.outpath, 'using', glm_modifier.defaults.weather_file)
-        print('times', glm_modifier.defaults.starttime, glm_modifier.defaults.endtime)
+        print(rootname, 'to', work_path, 'using', glm_modifier.defaults.weather_file)
+        print('times', glm_modifier.model.module_entities['clock'].starttime.value, glm_modifier.model.module_entities['clock'].stoptime.value)
         print('steps', glm_modifier.defaults.timestep, glm_modifier.defaults.metrics_interval)
-        print('hvac', glm_modifier.defaults.electric_cooling_percentage)
+        # print('hvac', electric_cooling_percentage)
         print('pv', glm_modifier.defaults.solar_percentage, glm_modifier.defaults.solar_inv_mode)
         print('storage', glm_modifier.defaults.storage_percentage, glm_modifier.defaults.storage_inv_mode)
         print('billing', glm_modifier.defaults.kwh_price, glm_modifier.defaults.monthly_fee)
         for c in glm_modifier.defaults.taxchoice:
-            if c[0] == rootname:
-                glm_modifier.defaults.fncs_case = config['SimulationConfig']['CaseName']
-                ProcessTaxonomyFeeder(glm_modifier.defaults.fncs_case, c[0], c[1], c[2], c[3], c[4])
+            if c[0] in rootname:
+                glm_modifier.defaults.case_name = config['SimulationConfig']['CaseName']
+                ProcessTaxonomyFeeder(glm_modifier.defaults.case_name, rootname, c[1], c[2], c[3], c[4])
 
 
 #                quit()
@@ -3475,18 +3616,12 @@ def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, 
 # ***************************************************************************************************
 
 def populate_all_feeders(glm_modifier, outpath):
-    """Wrapper function that batch processes all taxonomy feeders in the 
-    casefiles table (see source file)
-
-    Args:
-        glm_modifier (object): contains the data structure of the .glm being 
-            modified 
-        outpath (str): output file location
-    
-    Returns:
-        None
+    """Wrapper function that batch processes all taxonomy feeders in the casefiles table (see source file)
     """
     print(glm_modifier.defaults.casefiles)
+    fg_recs_dataset = None
+    if glm_modifier.defaults.use_recs_data == "true":
+        fg_recs_dataset = recs.recs_data_set(glm_modifier.defaults.recs_data_file)
     if sys.platform == 'win32':
         batname = 'run_all.bat'
     else:
@@ -3502,16 +3637,19 @@ def populate_all_feeders(glm_modifier, outpath):
                           glm_modifier.defaults.casefiles[0][1],
                           glm_modifier.defaults.casefiles[0][2],
                           glm_modifier.defaults.casefiles[0][3],
-                          glm_modifier.defaults.casefiles[0][4])
+                          glm_modifier.defaults.casefiles[0][4], fg_recs_dataset)
 
 # ***************************************************************************************************
 # ***************************************************************************************************
+# def selectRECSBuildingTypeVintage(rcs_dataset, state, income_lvl, pop_density):
+#     type_df, vint_df = rcs_dataset.get_house_type_vintage("Washington","Low","U" )
+#     tdt, tdv = rcs_dataset.sample_type_vintage(type_df, vint_df)
+#     return tdt, tdv
 
 if __name__ == "__main__":
-
-    test_modifier = initialize_glm_modifier("C:/Users/kerb930/AppData/Local/anaconda3/envs/win-tesp/tesp-main/tesp-main/data/feeders/R1-12.47-1.glm")
-    populate_all_feeders(test_modifier, "C:/Users/kerb930/AppData/Local/anaconda3/envs/win-tesp/tesp-main/tesp-main/data/feeders/R1-12.47-1-mod.glm")
-    test_modifier.write_model("test.glm")
+    test_modifier = initialize_glm_modifier("/home/d3k205/tesp/data/feeders/R1-12.47-1.glm")
+    populate_all_feeders(test_modifier, "/home/d3k205/")
+    test_modifier.write_model("/home/d3k205/test.glm")
 
 
 

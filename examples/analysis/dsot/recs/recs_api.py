@@ -1,10 +1,16 @@
+import sys
 import pandas as pd
 import numpy as np
 import sqlite3 as sqlite
 import datetime
 import duckdb as dkdb
 import random
+sys.path.append('./')
+
 pd.options.mode.chained_assignment = None
+
+# *******************************************************************************************************************
+# *******************************************************************************************************************
 
 """Function reads into a pandas dataframe an Excel or SQLite file containing RECS data. Upon success the function returns
     the dataframe containing the data. The function detects if the file path is for an Excel file or a SQLite file and uses
@@ -33,26 +39,46 @@ def get_recs_data(file_name):
     else:
         return None
 
-    """Class is used to access and process a file which contains RECS data.
+
+# *******************************************************************************************************************
+# *******************************************************************************************************************
+
+"""Class is used to access and process a file which contains RECS data.
     """
 
-
 class recs_data_set:
-    """Function creates and initializes a new recs_data_set class object
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
+    """Function creates and initializes a new recs_data_set class object
 Args:
 	file_name (str): the name and path of the file to be read in.
     Returns:
 	    dataframe: containing the RECS data read from the input file. If there is a problem reading the file, the
 	    function returns None.
     """
-
     def __init__(self, file_name):
         self.recs_data = get_recs_data(file_name)
 
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
+    """Function queries a list of unique date built ranges contained in the dataset
+    Args:
+        none
+    Returns:
+    	dataframe: contains the list of unique date built ranges
+    """
+    def get_year_made_ranges(self):
+        xlrd = self.recs_data
+        sql_query = "SELECT DISTINCT(YEARMADERANGE) FROM xlrd ORDER BY YEARMADERANGE ASC"
+        year_made_ranges = dkdb.query(sql_query).to_df()
+        return year_made_ranges
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
     """Function calculates the sum of nweight values based upon the arguments entered as parameters to the function
-
-
     Args:
     	st_name (string): name of the state the summed weights for a building type are to be calculated
     	income_level (string): income category that summed weights are to be calculate "Low","Middle", "Moderate",
@@ -64,13 +90,15 @@ Args:
     Returns:
     	dataframe: containing the calculated summation value
     """
-
     def calc_building_weight(self, st_name, income_level, population_density, housing_type):
         xlrd = self.recs_data
         sql_query = "SELECT SUM(nweight) FROM xlrd WHERE state_name='" + st_name + "'" + " AND typehuq=" + str(
             housing_type) + " AND Income_cat='" + income_level + "'" + " AND UATYP10='" + population_density + "'"
         nweight = dkdb.query(sql_query).to_df()
         return nweight
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
     def is_base_param_valid(self, param_name, param_type):
         if param_type == "state_name":
@@ -89,6 +117,9 @@ Args:
             if param_name == param:
                 return True
         return False
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
     def is_base_param_list_valid(self, param_names, param_type):
         if param_type == "state_name":
@@ -114,6 +145,9 @@ Args:
                 in_check = False
         return True
 
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
     def check_base_param(self, param_name, param_type):
         param_list = []
         temp_type = type(param_name)
@@ -134,11 +168,17 @@ Args:
             return None
         return param_list
 
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
     def calc_parameter_distribution(self, st_name, income_level, population_density):
         xlrd = self.recs_data
         sql_query = "SELECT state_name, Income_cat, UATYP10, SUM(nweight) as 'summed_nweight',COUNT(nweight) as 'count' FROM xlrd WHERE state_name='" + st_name + "'" + " AND Income_cat='" + income_level + "'" + " AND UATYP10='" + population_density + "' GROUP BY state_name, Income_cat, UATYP10"
         nweight = dkdb.query(sql_query).to_df()
         return nweight
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
     def calculate_key_parameter_percentages(self, key_parameter_df):
         sql_query = "SELECT  SUM(summed_nweight) as 'total_nweight' FROM key_parameter_df"
@@ -150,6 +190,9 @@ Args:
         # calculated_percents_df = pd.concat(frames)
         # return calculated_percents_df
         return percentage_df
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
     def get_all_params_list(self, param_type):
         param_list = []
@@ -170,6 +213,9 @@ Args:
         for param in param_df[param_id]:
             param_list.append(param)
         return param_list
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
     def build_key_parameter_distributions(self, state, income_level, housing_density):
         distribution_df = pd.DataFrame()
@@ -201,9 +247,10 @@ Args:
         for percentage in percentage_df['percentage']:
             distribution_df.iloc[i, 5] = percentage
             i += 1
-        # distribution_df.to_csv("/home/d3k204/PycharmProjects/house_vintage_key_distributions.csv")
-        # distribution_df.to_excel("/home/d3k204/PycharmProjects/key_distributions.xls")
         return distribution_df
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
     def sample_type_vintage(self, distribution_df, num_samples):
         indices = []
@@ -211,24 +258,20 @@ Args:
         sampled_indices = []
         sampled_types = []
         sampled_vintages = []
-
         i = 0
-        for row in distribution_df:
+        for row in distribution_df.iterrows():
             i += 1
             indices.append(i)
             print(row)
-            # sampled_weights.append(row.iloc[i]['percentage'])
-            sampled_weights.append(distribution_df.iloc[i].loc['percentage'])
+            sampled_weights.append(row[1]['percentage'])
         sampled_indices = random.choices(indices, weights=sampled_weights, k=num_samples)
         for index in sampled_indices:
             sampled_types.append(distribution_df.iloc[index].loc['TYPEHUQ'])
             sampled_vintages.append(distribution_df.iloc[index].loc['YEARMADERANGE'])
-        print(sampled_indices)
-        print(sampled_types)
-        print(sampled_vintages)
         return sampled_types, sampled_vintages
 
-    #        sampled_types = []#list()
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
     def get_house_type_vintage(self, state, income_level, housing_density):
         distribution_df = pd.DataFrame()
@@ -239,11 +282,9 @@ Args:
         vintage_sampled_lst = []
         income_search_string = self.get_parameter_search_string(income_level, "Income_cat")
         density_search_string = self.get_parameter_search_string(housing_density, "UATYP10")
-
         xlrd = self.recs_data
         for house_type in housing_lst:
             for vintage_type in vintage_lst:
-                #                sql_query = "SELECT state_name, Income_cat, UATYP10, TYPEHUQ, YEARMADERANGE, SUM(nweight) as 'summed_nweight',COUNT(nweight) as 'count' FROM xlrd WHERE state_name='" + state + "'" + " AND Income_cat='" + income_level + "'" + " AND UATYP10='" + housing_density + "' AND TYPEHUQ='" + house_type + "' AND YEARMADERANGE='" + vintage_type + "' GROUP BY state_name, Income_cat, UATYP10, TYPEHUQ, YEARMADERANGE"
                 sql_query = "SELECT state_name, Income_cat, UATYP10, TYPEHUQ, YEARMADERANGE, SUM(nweight) as 'summed_nweight',COUNT(nweight) as 'count' FROM xlrd WHERE state_name='" + state + "'" + " AND " + income_search_string + " AND " + density_search_string + " AND TYPEHUQ='" + house_type + "' AND YEARMADERANGE='" + vintage_type + "' GROUP BY state_name, Income_cat, UATYP10, TYPEHUQ, YEARMADERANGE"
                 house_vintage_df = dkdb.query(sql_query).to_df()
                 frames = [distribution_df, house_vintage_df]
@@ -252,17 +293,15 @@ Args:
         distribution_df["percentage"] = 0.0
         distribution_df['indice'] = 0
         i = 0
-        # for percentage in percentage_df['percentage']:
         for percentage in percentage_df['percentage']:
-            # distribution_df.iloc[i]['percentage'] = percentage
-            # distribution_df.at[i, 'percentage'] = percentage
             distribution_df['percentage'].iloc[i] = percentage
             distribution_df['indice'].iloc[i] = i
             i += 1
-        vintage_sampled_lst = list(distribution_df['YEARMADERANGE'])
-        # print(distribution_df)
-        housing_sampled_lst = list(distribution_df['TYPEHUQ'])
-        return vintage_sampled_lst, housing_sampled_lst
+        housing_sampled_lst, vintage_sampled_lst = self.sample_type_vintage(distribution_df,1)
+        return housing_sampled_lst, vintage_sampled_lst
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
     def get_parameter_search_string(self, parameter_string, parameter_name):
         param_list = parameter_string.split('&')
@@ -280,8 +319,30 @@ Args:
                 i += 1
             return search_string
 
-    def get_parameter_distribution(self, state_name, income_level, housing_density, house_type, house_vintage,
-                                   parameter_name):
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
+    def sample_parameter_distribution(self, distribution_df, num_samples, parameter_name):
+        indices = []
+        sampled_weights = []
+        sampled_indices = []
+        sampled_values = []
+        i = 0
+        for row in distribution_df.iterrows():
+            i += 1
+            indices.append(i)
+            print(row)
+            sampled_weights.append(row[1]['percentage'])
+        sampled_indices = random.choices(indices, weights=sampled_weights, k=num_samples)
+        for index in sampled_indices:
+            sampled_values.append(distribution_df.iloc[index].loc[parameter_name])
+        return sampled_values
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
+    def get_parameter_sample(self, state_name, income_level, housing_density, house_type, house_vintage, parameter_name):
+        sampled_values = []
         xlrd = self.recs_data
         sql_query = "SELECT state_name, Income_cat, UATYP10," + parameter_name + ", SUM(nweight) as 'summed_nweight',COUNT(nweight) as 'count' FROM xlrd WHERE state_name='" + state_name + "'" + " AND " + self.get_parameter_search_string(
             income_level, "Income_cat") + " AND " + self.get_parameter_search_string(housing_density,
@@ -293,11 +354,13 @@ Args:
         for percentage in percentage_df['percentage']:
             distribution_df['percentage'].iloc[i] = percentage
             i += 1
-        return distribution_df
+        sampled_values = self.sample_parameter_distribution(distribution_df, 1, parameter_name)
+        return sampled_values
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
 
     """Function calculates the sum of nweight values based upon the arguments entered as parameters to the function
-
-
     Args:
     	st_name (string): name of the state the summed weights for a building type are to be calculated
     	income_level (string): income category that summed weights are to be calculate "Low","Middle", "Moderate",
@@ -307,16 +370,25 @@ Args:
     Returns:
     	dataframe: containing the calculated summation value
     """
-
     def calc_total_building_weight(self, st_name, income_level, population_density):
         xlrd = self.recs_data
         sql_query = "SELECT SUM(nweight) FROM xlrd WHERE state_name='" + st_name + "'" + " AND Income_cat='" + income_level + "'" + " AND UATYP10='" + population_density + "'"
         total_weight = dkdb.query(sql_query).to_df()
         return total_weight
 
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+    def calc_solar_percentage(self, st_name, income_lvl, pop_density):
+        xlrd = self.recs_data
+        sql_query = "SELECT COUNT(SOLAR) FROM xlrd WHERE state_name='" + st_name + "'" + " AND Income_cat='" + income_lvl + "'" + " AND UATYP10='" + pop_density + "'"
+        total_cnt = dkdb.query(sql_query).fetchall()
+        sql_query2 = "SELECT COUNT(SOLAR) FROM xlrd WHERE state_name='" + st_name + "'" + " AND Income_cat='" + income_lvl + "'" + " AND UATYP10='" + pop_density + "' AND SOLAR=1"
+        yes_cnt = dkdb.query(sql_query2).fetchall()
+        return yes_cnt[0][0] / total_cnt[0][0]
+
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
     """Function calculates the sum of nweight values based upon the arguments entered as parameters to the function
-
-
     Args:
     	st_name (string): name of the state the summed weights for a building type are to be calculated
     	income_level (string): income category that summed weights are to be calculate "Low","Middle", "Moderate",
@@ -332,7 +404,6 @@ Args:
     Returns:
     	dataframe: containing the calculated summation value
     """
-
     def calc_building_age(self, st_name, income_level, population_density, housing_type, year_made_range):
         xlrd = self.recs_data
         sql_query = "SELECT SUM(nweight) FROM xlrd WHERE state_name='" + st_name + "'" + " AND typehuq=" + str(
@@ -341,9 +412,10 @@ Args:
         total_age_weight = dkdb.query(sql_query).to_df()
         return total_age_weight
 
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
     """Function calculates the sum of nweight values based upon the arguments entered as parameters to the function
-
-
     Args:
     	st_name (string): name of the state the summed weights for a building type are to be calculated
     	income_level (string): income category that summed weights are to be calculate "Low","Middle", "Moderate",
@@ -359,11 +431,9 @@ Args:
     	    2 = 2 600 to 799 square feet, 3 = 3 800 to 999 square feet, 4 = 4 1,000 to 1,499 square feet, 
     	    5 = 5 1,500 to 1,999 square feet, 6 = 6 2,000 to 2,499 square feet, 7 = 7 2,500 to 2,999 square feet,
     	    8 = 8 3,000 square feet or more
-
     Returns:
     	dataframe: containing the calculated summation value
     """
-
     def calc_building_count(self, st_name, income_level, population_density, housing_type, year_made_range, sqft_range):
         xlrd = self.recs_data
         sql_query = "SELECT SUM(nweight), COUNT(nweight) FROM xlrd WHERE state_name='" + st_name + "'" + " AND typehuq=" + str(
@@ -372,126 +442,76 @@ Args:
         total_building_count = dkdb.query(sql_query).to_df()
         return total_building_count
 
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
     """Function queries a list of unique state names contained in the dataset
-
-
     Args:
         none
     Returns:
     	dataframe: containing the calculated summation value
     """
-
     def get_state_names(self):
         xlrd = self.recs_data
         sql_query = "SELECT DISTINCT(state_name) FROM xlrd ORDER BY state_name ASC"
         state_names = dkdb.query(sql_query).to_df()
         return state_names
 
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
     """Function queries a list of unique income categories contained in the dataset
-
-
     Args:
         none
     Returns:
     	dataframe: contains the list of unique income categories
     """
-
     def get_income_levels(self):
         xlrd = self.recs_data
         sql_query = "SELECT DISTINCT(Income_cat) FROM xlrd ORDER BY Income_cat ASC"
         income_levels = dkdb.query(sql_query).to_df()
         return income_levels
 
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
     """Function queries a list of unique population density categories contained in the dataset
-
-
     Args:
         none
     Returns:
     	dataframe: contains the list of unique population density categories
     """
-
     def get_density_levels(self):
         xlrd = self.recs_data
         sql_query = "SELECT DISTINCT(UATYP10) FROM xlrd ORDER BY UATYP10 ASC"
         density_levels = dkdb.query(sql_query).to_df()
         return density_levels
 
+    #*******************************************************************************************************************
+    #*******************************************************************************************************************
+
     """Function queries a list of unique building type categories contained in the dataset
-
-
     Args:
         none
     Returns:
     	dataframe: contains the list of unique building type categories
     """
-
     def get_building_types(self):
         xlrd = self.recs_data
         sql_query = "SELECT DISTINCT(TYPEHUQ) FROM xlrd ORDER BY TYPEHUQ ASC"
         building_types = dkdb.query(sql_query).to_df()
         return building_types
 
-    """Function queries a list of unique date built ranges contained in the dataset
-
-
-    Args:
-        none
-    Returns:
-    	dataframe: contains the list of unique date built ranges
-    """
-
-    def get_year_made_ranges(self):
-        xlrd = self.recs_data
-        sql_query = "SELECT DISTINCT(YEARMADERANGE) FROM xlrd ORDER BY YEARMADERANGE ASC"
-        year_made_ranges = dkdb.query(sql_query).to_df()
-        return year_made_ranges
-
-    """Function queries a list of unique square footage ranges contained in the dataset
-
-
-    Args:
-        none
-    Returns:
-    	dataframe: contains the list of unique square footage ranges
-    """
-
-    def get_square_footage_ranges(self):
-        xlrd = self.recs_data
-        sql_query = "SELECT DISTINCT(SQFTRANGE) FROM xlrd ORDER BY SQFTRANGE ASC"
-        square_footage_ranges = dkdb.query(sql_query).to_df()
-        return square_footage_ranges
-
     def run_test(self, filename):
-        # state_list = ['California','Washington','Oregon','Texas','Jupiter']
-        # income_list = ['Low', 'Middle', 'Upper','out_of_sight']
-        # density_list = ['C', 'R', 'U','X']
-        state_list = ['California', 'Washington', 'Oregon', 'Texas']
-        income_list = ['Low', 'Middle', 'Upper']
-        density_list = ['C', 'R', 'U']
-
-        #        self.build_key_parameter_distributions("California", "Low", "U")
-        dist_df = self.build_key_parameter_distributions(state_list, income_list, density_list)
-        print(dist_df)
-        # dist_df = self.build_key_parameter_distributions('all', 'all', 'all')
-        #house_vintage_df, hocuse_type_df = self.get_house_type_vintage('California', 'Middle&Moderate', 'U')
-        house_vintage_df, hocuse_type_df = self.get_house_type_vintage('California', 'Middle&Moderate', 'U')
-        # dist_df = self.build_key_parameter_distributions('California','all', 'all')
-        # self.sample_type_vintage(house_vintage_df, 15)
-        # print(dist_df)
-
-        test_string = self.get_parameter_search_string("U&R&C", "UATYPE0")
-
-        # dist_df = self.get_parameter_distribution('California', 'Low', 'U', 2, 5, 'WINDOWS')
-        # print(dist_df)
+        house_vintage_df, house_type_df = self.get_house_type_vintage("California", "Middle&Moderate", "U")
 #        dist_df = self.get_parameter_distribution('California', 'Middle&Moderate', 'U', 2, 5, 'ROOFTYPE')
-#        print(dist_df)
+        solar_percent = self.calc_solar_percentage("California", "Upper", "U")
+        print(solar_percent)
+
+#***************************************************************************************************
+#***************************************************************************************************
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-        #recs_ds = rd.recs_data_set("/home/d3k204/PycharmProjects/RECSwIncomeLvl.xlsx")
-    # print("reading RECS database")
-    # start_time = datetime.datetime.now()
-    tlist = [1, 2, 3]
-    recs_ds = recs_data_set("/home/d3k205/PycharmProjects/TESP_RECS.db")
-    recs_ds.run_test("/home/d3k205/PycharmProjects/recs_All_testing.xls")
+    recs_ds = recs_data_set("TESP_RECS.db")
+    recs_ds.run_test("/home/d3k205/recs_All_testing.xls")
