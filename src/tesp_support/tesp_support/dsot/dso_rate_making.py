@@ -619,14 +619,14 @@ def calc_cust_bill(metadata, meter_df, trans_df, energy_sum_df, tariff, dso_num,
 
 
 def calculate_consumer_bills(
-        case_path,
-        metadata,
-        meter_df,
-        tariff,
-        dso_num,
-        sf,
-        rate_scenario,
-    ):
+    case_path,
+    metadata,
+    meter_df,
+    tariff,
+    dso_num,
+    sf,
+    rate_scenario,
+):
     """Calculates the consumers' bills for the four different scenarios considered in 
     the Rates Analysis work.
     Args:
@@ -731,15 +731,6 @@ def calculate_consumer_bills(
 
         # Iterate through each consumer
         for each in metadata["billingmeters"]:
-            # Determine the consumer's energy consumption metrics
-            metrics = {
-                "total_energy": meter_df.loc[(each, "kw-hr"), m],
-                "max_demand": meter_df.loc[(each, "max_kw"), m],
-            }
-            if rate_scenario == "time-of-use":
-                for k in tou_params[month_name_to_num[m]]["periods"].keys():
-                    metrics["tou_" + k + "_energy"] = meter_df.loc[(each, k + "_kwh"), m]
-            
             # Specify the demand charge based on the consumer's sector type
             demand_charge = tariff["DSO_" + dso_num][
                 metadata["billingmeters"][each]["tariff_class"]
@@ -752,22 +743,25 @@ def calculate_consumer_bills(
                     bill_df.loc[(each, "tou_energy_charge"), m] = sum(
                         tou_params[month_name_to_num[m]]["price"]
                         * tou_params[month_name_to_num[m]]["periods"][k]["ratio"]
-                        * metrics["tou_" + k + "_energy"]
+                        * meter_df.loc[(each, k + "_kwh"), m]
                         for k in tou_params[month_name_to_num[m]]["periods"].keys()
                     ) + calculate_tier_credit(
-                        metadata["billingmeters"][each]["tariff_class"], tariff, metrics
+                        metadata["billingmeters"][each]["tariff_class"],
+                        tariff,
+                        meter_df.loc[(each, "kw-hr"), m],
                     )
 
                     # Calculate the consumer's energy charge for each time-of-use period
-                    bill_df.loc[(each, "tou_" + k + "_energy_charge"), m] = (
+                    for k in tou_params[month_name_to_num[m]]["periods"].keys():
+                        bill_df.loc[(each, "tou_" + k + "_energy_charge"), m] = (
                             tou_params[month_name_to_num[m]]["price"]
                             * tou_params[month_name_to_num[m]]["periods"][k]["ratio"]
-                            * metrics["tou_" + k + "_energy"]
+                            * meter_df.loc[(each, k + "_kwh"), m]
                         )
 
                     # Calculate the consumer's demand charge under the time-of-use tariff
                     bill_df.loc[(each, "tou_demand_charge"), m] = (
-                        demand_charge * metrics["max_demand"]
+                        demand_charge * meter_df.loc[(each, "max_kw"), m]
                     )
 
                     # Calculate the consumer's fixed charge under the time-of-use tariff
@@ -781,19 +775,23 @@ def calculate_consumer_bills(
                     )
 
                     # Store the total energy purchased under the time-of-use tariff
-                    bill_df.loc[(each, "tou_energy_purchased"), m] = metrics["total_energy"]
+                    bill_df.loc[(each, "tou_energy_purchased"), m] = meter_df.loc[
+                        (each, "kw-hr"), m
+                    ]
 
                     # Store the total energy purchased during each time-of-use period
                     for k in tou_params[month_name_to_num[m]]["periods"].keys():
-                        bill_df.loc[(each, "tou_" + k + "_energy_purchased"), m] = metrics["tou_" + k + "_energy"]
+                        bill_df.loc[
+                            (each, "tou_" + k + "_energy_purchased"), m
+                        ] = meter_df.loc[(each, k + "_kwh"), m]
 
                     # Calculate the average price under the time-of-use tariff
-                    if metrics["total_energy"] == 0:
+                    if meter_df.loc[(each, "kw-hr"), m] == 0:
                         bill_df.loc[(each, "tou_average_price"), m] = 0
                     else:
                         bill_df.loc[(each, "tou_average_price"), m] = (
                             bill_df.loc[(each, "tou_total_charge"), m]
-                            / metrics["total_energy"]
+                            / meter_df.loc[(each, "kw-hr"), m]
                         )
                 elif rate_scenario == "subscription":
                     None
@@ -801,15 +799,17 @@ def calculate_consumer_bills(
                     None
             else:
                 # Calculate the consumer's energy charge under the flat rate tariff
-                bill_df.loc[(each, "flat_energy_charge"), m] = flat_rate * metrics[
-                    "total_energy"
+                bill_df.loc[(each, "flat_energy_charge"), m] = flat_rate * meter_df.loc[
+                    (each, "kw-hr"), m
                 ] + calculate_tier_credit(
-                    metadata["billingmeters"][each]["tariff_class"], tariff, metrics
+                    metadata["billingmeters"][each]["tariff_class"],
+                    tariff,
+                    meter_df.loc[(each, "kw-hr"), m],
                 )
 
                 # Calculate the consumer's demand charge under the flat rate tariff
                 bill_df.loc[(each, "flat_demand_charge"), m] = (
-                    demand_charge * metrics["max_demand"]
+                    demand_charge * meter_df.loc[(each, "max_kw"), m]
                 )
 
                 # Calculate the consumer's fixed charge under the flat rate tariff
@@ -823,15 +823,17 @@ def calculate_consumer_bills(
                 )
 
                 # Store the total energy purchased under the flat tariff
-                bill_df.loc[(each, "flat_energy_purchased"), m] = metrics["total_energy"]
+                bill_df.loc[(each, "flat_energy_purchased"), m] = meter_df.loc[
+                    (each, "kw-hr"), m
+                ]
 
                 # Calculate the average price under the flat tariff
-                if metrics["total_energy"] == 0:
+                if meter_df.loc[(each, "kw-hr"), m] == 0:
                     bill_df.loc[(each, "flat_average_price"), m] = 0
                 else:
                     bill_df.loc[(each, "flat_average_price"), m] = (
                         bill_df.loc[(each, "flat_total_charge"), m]
-                        / metrics["total_energy"]
+                        / meter_df.loc[(each, "kw-hr"), m]
                     )
 
         # Calculate the totals for each consumer class for the flat rate
@@ -896,14 +898,14 @@ def calculate_consumer_bills(
     return bill_df, billsum_df
 
 
-def calculate_tier_credit(tariff_class, tariff, metrics):
+def calculate_tier_credit(tariff_class, tariff, total_energy):
     """Calculate the tier credit added to the consumers' bills from the declining-block 
     rate.
     Args:
         tariff_class (str): Indicates the type of consumer that is under consideration.
         tariff (dict): A dictionary of pertinant tariff information. Includes information 
         for the volumetric rates (i.e., flat and time-of-use).
-        metrics (dict): Dictionary of the consumer's energy consumption metrics.
+        total_energy (float): Consumer's total energy consumption for the month.
     Returns:
         tier_credit (float): The tier credit that will be applied to the energy portion 
         of the consumer's bill.
@@ -918,15 +920,13 @@ def calculate_tier_credit(tariff_class, tariff, metrics):
     t2q = tariff["DSO_" + dso_num][tariff_class]["tier_2"]["max_quantity"]
 
     # Determine if the consumer's demand places them in either of the tiers
-    if metrics["total_energy"] >= t1q:
+    if total_energy >= t1q:
         tier2 = 1
-    if metrics["total_energy"] >= t2q:
+    if total_energy >= t2q:
         tier3 = 1
     
     # Calculate the tier credit
-    tier_credit = t1p * tier2 * (metrics["total_energy"] - t1q) + t2p * tier3 * (
-        metrics["total_energy"] - t2q
-    )
+    tier_credit = t1p * tier2 * (total_energy - t1q) + t2p * tier3 * (total_energy - t2q)
 
     # Return the tier credit
     return tier_credit
