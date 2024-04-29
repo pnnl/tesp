@@ -150,7 +150,7 @@ def customer_meta_data(glm_meta, agent_meta, dso_metadata_path):
 
 
 def load_gen_data(dir_path, gen_name, day_range):
-    """ Utility to open h5 files for agent data.
+    """ Utility to open h5 files for generator data.
 
     Args:
         dir_path (str): path of parent directory where DSO folders live
@@ -180,10 +180,11 @@ def load_gen_data(dir_path, gen_name, day_range):
 
         # For Day Ahead quantities need to layout 24-hour 10 am commitments
         # to actual real time to match real time format.
-        if gen_name in ['da_q', 'da_lmp', 'da_line']:
+        if gen_name in ['da_q', 'da_lmp', 'da_line', 'da_gen']:
             clear_time = start_time - timedelta(hours=14)
             column_key = {'da_q': 'ClearQ_',
                           'da_lmp': 'LMP_',
+                          'da_gen': 'ClearQ_',
                           'da_line': 'Line_'}
             dso_list = data_df.loc[(clear_time), :].index.tolist()
             # Reduce raw data to day range of interest and reshape/flatten
@@ -486,13 +487,12 @@ def load_agent_data(dir_path, folder_prefix, dso_num, day_num, agent_name):
         folder_prefix (str): prefix of DSO folder name (e.g. '/TE_base_s')
         dso_num (str): number of the DSO folder to be opened
         day_num (str): simulation day number (1 = first day of simulation)
-        agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter' etc)
+        agent_name (str): name of agent data to load (e.g. 'house', 'substation', 'inverter', 'retail site' etc)
     Returns:
         agent_meta_df : dataframe of system metadata
         agent_df: dataframe of agent timeseries data
         """
-    # os.chdir(dir_path + folder_prefix + dso_num)
-    # daystr = '_' + str(int(day_num)) + '_'
+
     if agent_name in ['bill', 'energy', 'amenity']:
         os.chdir(dir_path)
         hdf5filenames = [f for f in os.listdir('.') if ('_' + dso_num) in f and f.startswith(agent_name)]
@@ -1849,6 +1849,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
             rt_retail_congest_df = RT_retail_df[['congestion_surcharge_RT']]
             da_retail_price_df = DA_retail_df[['cleared_price_da']]
             da_dso_price_df = DA_dso_df[['trial_cleared_price_da']]
+            da_dso_q_df = DA_dso_df[['trial_cleared_quantity_da']]
             da_retail_q_df = DA_retail_df[['cleared_quantity_da']] / 1e3
             da_retail_congest_df = DA_retail_df[['congestion_surcharge_DA']]
 
@@ -1864,6 +1865,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
             rt_retail_congest_df = rt_retail_congest_df.join(RT_retail_df[['congestion_surcharge_RT']])
             da_retail_price_df = da_retail_price_df.join(DA_retail_df[['cleared_price_da']])
             da_dso_price_df = da_dso_price_df.join(DA_dso_df[['trial_cleared_price_da']])
+            da_dso_q_df = da_dso_q_df.join(DA_dso_df[['trial_cleared_quantity_da']])
             da_retail_q_df = da_retail_q_df.join(DA_retail_df[['cleared_quantity_da']] / 1e3)
             da_retail_congest_df = da_retail_congest_df.join(DA_retail_df[['congestion_surcharge_DA']])
             q_max_df['DSO ' + str(dso)] = np.ones(len(q_max_df)) * FNCS[dso - 1][3]
@@ -1875,6 +1877,7 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
         rt_retail_congest_df = rt_retail_congest_df.rename(columns={'congestion_surcharge_RT': 'DSO ' + str(dso)})
         da_retail_price_df = da_retail_price_df.rename(columns={'cleared_price_da': 'DSO ' + str(dso)})
         da_dso_price_df = da_dso_price_df.rename(columns={'trial_cleared_price_da': 'DSO ' + str(dso)})
+        da_dso_q_df = da_dso_q_df.rename(columns={'trial_cleared_quantity_da': 'DSO ' + str(dso)})
         da_retail_q_df = da_retail_q_df.rename(columns={'cleared_quantity_da': 'DSO ' + str(dso)})
         da_retail_congest_df = da_retail_congest_df.rename(columns={'congestion_surcharge_DA': 'DSO ' + str(dso)})
 
@@ -1886,8 +1889,9 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
     ames_da_lmp_df = load_gen_data(case, 'da_lmp', range(int(day), int(day) + 1))
     ames_da_lmp_df = ames_da_lmp_df.unstack(level=1)
     ames_da_lmp_df.columns = ames_da_lmp_df.columns.droplevel()
+    ames_da_gen_df = load_gen_data(case, 'da_gen', range(int(day), int(day) + 1))
     # TODO: Need to check - think this is PyPower results.
-    ames_da_gen_df = load_gen_data(case, 'gen', range(int(day), int(day) + 1))
+    PyPower_rt_gen_df = load_gen_data(case, 'gen', range(int(day), int(day) + 1))
 
     substation_df = substation_df.set_index(ercot_df.index)
 
@@ -1903,12 +1907,14 @@ def dso_market_plot(dso_range, day, case, dso_metadata_file, ercot_dir):
     plt.figure()
     plt.plot(rt_q_df.sum(axis=1), label='DSO Market RT Q', marker='.')
     plt.plot(substation_df.sum(axis=1), label='Actual Substation+Ind. Power', marker='.')
-    # plt.plot(ercot_df.sum(axis=1), label='ERCOT 2106 Load', marker='.')
-    plt.plot(da_retail_q_df.sum(axis=1), label='DSO DA Retail Q', marker='.')
+    # plt.plot(ercot_df.sum(axis=1), label='ERCOT 2016 Load', marker='.')
+    plt.plot(da_retail_q_df.sum(axis=1), label='DA Retail Q', marker='.')
+    plt.plot(da_dso_q_df.sum(axis=1)/1000, label='DA DSO Q', marker='.')
     plt.plot(ames_rt_df[' TotalLoad'], label='AMES RT Total Load', marker='.')
     plt.plot(ames_rt_df[' TotalGen'], label='AMES RT Total Gen', marker='.')
     plt.plot(ames_da_q_df.sum(axis=1), label='DA Cleared Q', marker='.')
-    plt.plot(ames_da_gen_df.groupby(level=0)['Pgen'].sum(), label='PyPower Generation', marker='.')
+    plt.plot(ames_da_gen_df.groupby(level=0)['ClearQ'].sum(), label='DA Gen Q Generation', marker='.')
+    plt.plot(PyPower_rt_gen_df.groupby(level=0)['Pgen'].sum(), label='PyPower Generation', marker='.')
     plt.legend()
     plt.title('DSO Market Quantity Comparison (all DSOs; Day ' + date.strftime("%m-%d") + ')')
     plt.xlabel('Time')
@@ -2031,6 +2037,7 @@ def dso_forecast_stats(dso_range, day_range, case, dso_metadata_file, ercot_dir)
 
             # Load RT quantities values
             dsomarket_data_df, dsomarket_bid_df = load_agent_data(case, '/DSO_', str(dso), str(day), 'dso_market')
+            dso_tso_data_df, dso_tso_bid_df = load_agent_data(case, '/DSO_', str(dso), str(day), 'dso_tso')
             dsomarket_data_df = dsomarket_data_df.droplevel(1, axis=0)
             RT_retail_df, RT_bid_df = load_agent_data(case, '/DSO_', str(dso), str(day), 'retail_market')
             RT_retail_df = RT_retail_df.droplevel(level=1)
