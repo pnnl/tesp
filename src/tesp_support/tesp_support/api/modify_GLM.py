@@ -1,5 +1,6 @@
 # Copyright (C) 2019-2023 Battelle Memorial Institute
 # file: glm_modifier.py
+import numpy as np
 
 from .data import feeder_entities_path
 from .entity import assign_defaults
@@ -100,11 +101,178 @@ class GLMModifier:
     def write_model(self, filepath):
         return self.model.write(filepath)
 
-    # normal objects
+    # normal objects that use feeder system 'defaults'
+    def union_of_phases(self, phs1, phs2):
+        """Collect all phases on both sides of a connection
+
+        Args:
+            phs1 (str): first phasing
+            phs2 (str): second phasing
+
+        Returns:
+            str: union of phs1 and phs2
+        """
+        phs = ''
+        if 'A' in phs1 or 'A' in phs2:
+            phs += 'A'
+        if 'B' in phs1 or 'B' in phs2:
+            phs += 'B'
+        if 'C' in phs1 or 'C' in phs2:
+            phs += 'C'
+        if 'S' in phs1 or 'S' in phs2:
+            phs += 'S'
+        return phs
+
+    def find_1phase_xfmr_kva(self, kva):
+        """Select a standard 1-phase transformer size, with some margin
+
+        Standard sizes are 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
+
+        Args:
+            kva (float): the minimum transformer rating
+
+        Returns:
+            float: the kva size, or 0 if none found
+        """
+        kva *= self.defaults.xfmrMargin
+        for row in self.defaults.single_phase:
+            if row[0] >= kva:
+                return row[0]
+        n500 = int((kva + 250.0) / 500.0)
+        return 500.0 * n500
+
+    def find_1phase_xfmr(self, kva):
+        """Select a standard 1-phase transformer size, with data
+
+        Standard sizes are 5, 10, 15, 25, 37.5, 50, 75, 100, 167, 250, 333 or 500 kVA
+
+        Args:
+            kva (float): the minimum transformer rating
+
+        Returns:
+            [float,float,float,float,float]: the kva, %r, %x, %no-load loss, %magnetizing current
+        """
+        for row in self.defaults.single_phase:
+            if row[0] >= kva:
+                return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
+        return self.find_1phase_xfmr_kva(kva)
+
+    def find_3phase_xfmr_kva(self, kva):
+        """Select a standard 3-phase transformer size, with some margin
+
+        Standard sizes are 30, 45, 75, 112.5, 150, 225, 300, 500, 750, 1000, 1500,
+        2000, 2500, 3750, 5000, 7500 or 10000 kVA
+
+        Args:
+            kva (float): the minimum transformer rating
+
+        Returns:
+            float: the kva size, or 0 if none found
+        """
+        kva *= self.defaults.xfmrMargin
+        for row in self.defaults.three_phase:
+            if row[0] >= kva:
+                return row[0]
+        n10 = int((kva + 5000.0) / 10000.0)
+        return 500.0 * n10
+
+    def find_3phase_xfmr(self, kva):
+        """Select a standard 3-phase transformer size, with data
+
+        Standard sizes are 30, 45, 75, 112.5, 150, 225, 300, 500, 750, 1000, 1500,
+        2000, 2500, 3750, 5000, 7500 or 10000 kVA
+
+        Args:
+            kva (float): the minimum transformer rating
+
+        Returns:
+            [float,float,float,float,float]: the kva, %r, %x, %no-load loss, %magnetizing current
+        """
+        for row in self.defaults.three_phase:
+            if row[0] >= kva:
+                return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
+        return self.find_3phase_xfmr_kva(kva)
+
+    def find_fuse_limit(self, amps):
+        """ Find a Fuse size that's unlikely to melt during power flow
+
+        Will choose a fuse size of 40, 65, 100 or 200 Amps.
+        If that's not large enough, will choose a recloser size
+        of 280, 400, 560, 630 or 800 Amps. If that's not large
+        enough, will choose a breaker size of 600 (skipped), 1200
+        or 2000 Amps. If that's not large enough, will choose 999999.
+
+        Args:
+            amps (float): the maximum load current expected; some margin will be added
+
+        Returns:
+            float: the GridLAB-D fuse size to insert
+        """
+        amps *= self.defaults.fuseMargin
+        for row in self.defaults.standard_fuses:
+            if row >= amps:
+                return row
+        for row in self.defaults.standard_reclosers:
+            if row >= amps:
+                return row
+        for row in self.defaults.standard_breakers:
+            if row >= amps:
+                return row
+        return 999999
+
+    def randomize_residential_skew(self):
+        return self.randomize_skew(self.defaults.residential_skew_std, self.defaults.residential_skew_max)
+
+    def randomize_commercial_skew(self):
+        return self.randomize_skew(self.defaults.residential_skew_std, self.defaults.residential_skew_max)
+
+    def randomize_skew(self, value, skew_max):
+        sk = value * np.random.randn()
+        if sk < -skew_max:
+            sk = -skew_max
+        elif sk > skew_max:
+            sk = skew_max
+        return sk
+
+    # custom objects
+    def add_tariff(self, params):
+        """Writes tariff information to billing meters
+
+        Args:
+            params:
+        """
+        params["bill_mode"] = self.defaults.bill_mode
+        params["price"] = self.defaults.kwh_price
+        params["monthly_fee"] = self.defaults.monthly_fee
+        params["bill_day"] = "1"
+        if 'TIERED' in self.defaults.bill_mode:
+            if self.defaults.tier1_energy > 0.0:
+                params["first_tier_energy"] = self.defaults.tier1_energy
+                params["first_tier_price"] = self.defaults.tier1_price
+            if self.defaults.tier2_energy > 0.0:
+                params["second_tier_energy"] = self.defaults.tier2_energy
+                params["second_tier_price"] = self.defaults.tier2_price
+            if self.defaults.tier3_energy > 0.0:
+                params["third_tier_energy"] = self.defaults.tier3_energy
+                params["third_tier_price"] = self.defaults.tier3_price
+
+    def add_collector(self, parent: str, metric: str):
+        if self.defaults.metrics_interval > 0 and metric in self.defaults.metrics:
+            params = {"parent": parent,
+                      "interval": str(self.defaults.metrics_interval)}
+            self.add_object("metrics_collector", "mc_" + parent, params)
+
+    def add_recorder(self, parent: str, property_name: str, file: str):
+        if self.defaults.metrics_interval > 0:
+            params = {"parent": parent,
+                      "property": property_name,
+                      "file": file,
+                      "interval": str(self.defaults.metrics_interval)}
+            self.add_object("recorder", property_name, params)
+
     def resize(self):
         return True
 
-    # custom objects
     def resize_secondary_transformers(self):
         return True
 
