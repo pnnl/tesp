@@ -340,7 +340,7 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         weekend_day_set_heat = occ_comm_heat_setpoint
                         weekend_night_set_heat = night_set_heat
                     else:
-                        # New schedule to implement REC's data
+                        # New schedule to implement CBEC's data
                         wakeup_start = random_norm_trunc(thermostat_schedule_config['WeekdayWakeStart'])
                         daylight_start = wakeup_start + random_norm_trunc(
                             thermostat_schedule_config['WeekdayWakeToDaylightTime'])
@@ -353,14 +353,14 @@ def process_glm(gldfileroot, substationfileroot, weatherfileroot, feedercnt):
                         night_start = min(night_start, 23.9)
                         weekend_night_start = min(weekend_night_start, 23.9)
 
-                        # cooling - RECS's data individual behavior
+                        # cooling - CBEC's data individual behavior
                         prob = np.random.uniform(0, 1)  # a random number
                         wakeup_set_cool = select_setpt_occ(prob, 'cool')  # when home is occupied during day
                         daylight_set_cool = select_setpt_unocc(wakeup_set_cool,
                                                                'cool')  # when home is not occupied during day
                         evening_set_cool = wakeup_set_cool  # when home is occupied during evening
                         night_set_cool = select_setpt_night(wakeup_set_cool, daylight_set_cool, 'cool')  # during night
-                        # heating - RECS's data individual behavior
+                        # heating - CBEC's data individual behavior
                         wakeup_set_heat = select_setpt_occ(prob, 'heat')
                         daylight_set_heat = select_setpt_unocc(wakeup_set_heat, 'heat')
                         evening_set_heat = wakeup_set_heat

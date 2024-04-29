@@ -1,0 +1,33 @@
+diff --git a/tape/metrics_collector.cpp b/tape/metrics_collector.cpp
+index 27c20af9..107c0566 100644
+--- a/tape/metrics_collector.cpp
++++ b/tape/metrics_collector.cpp
+@@ -261,7 +261,7 @@ int metrics_collector::init(OBJECT *parent){
+ 		if (propLineOverloaded == NULL) propLineOverloaded = gl_get_property (parent, "overloaded_status");
+ 	} else if (gl_object_isa(parent, "evcharger_det")) {
+ 		parent_string = const_cast<char*>("evcharger_det");
+-		if (propChargeRate == NULL) propChargeRate = gl_get_property (parent, "charge_rate");
++		if (propChargeRate == NULL) propChargeRate = gl_get_property (parent, "actual_charge_rate");
+ 		if (propBatterySOC == NULL) propBatterySOC = gl_get_property (parent, "battery_SOC");
+ 	}
+ 	else {
+@@ -911,8 +911,7 @@ int metrics_collector::read_line(OBJECT *obj){
+ 		voltage_vln_array[curr_index] = vavg;
+ 		voltage_unbalance_array[curr_index] =  0.5 * fabs(v1 - v2)/vavg;
+ 	}
+-	else if (strcmp(parent_string, "meter") == 0)
+-	{
++	else if (strcmp(parent_string, "meter") == 0) {
+ 		real_power_array[curr_index] = *gl_get_double(obj->parent, propMeterP);
+ 		reactive_power_array[curr_index] = *gl_get_double(obj->parent, propMeterQ);
+ 
+@@ -968,8 +967,7 @@ int metrics_collector::read_line(OBJECT *obj){
+ 		voltage_vln_array[curr_index] = vavg;  // Vln
+ 		voltage_unbalance_array[curr_index] = vdev / vll; // max deviation from Vll / average Vll
+ 	} 
+-	else if (strcmp(parent_string, "house") == 0)
+-	{
++	else if (strcmp(parent_string, "house") == 0) {
+ 		total_load_array[curr_index] = *gl_get_double(obj->parent, propHouseLoad);
+ 		hvac_load_array[curr_index] = *gl_get_double(obj->parent, propHouseHVAC);
+ 		air_temperature_array[curr_index] = *gl_get_double(obj->parent, propHouseAirTemp);

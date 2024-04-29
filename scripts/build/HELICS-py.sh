@@ -1,7 +1,9 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
+  echo "Edit tesp.env in the TESP home directory"
+  echo "Run 'source tesp.env' in that same directory"
+  exit
 fi
 
 # Install HELICS Python3 bindings for a version that exactly matches the local build
@@ -15,7 +17,7 @@ a=( ${ver//./ } )
 ((a[2]--))
 ver="${a[0]}.${a[1]}.${a[2]}"
 
-pip3 install helics=="${ver}"
-# pip3 install helics-apps=="${ver}"
-# pip3 install git+https://github.com/GMLC-TDC/helics-cli.git@main
-pip3 install helics[cli]
+pip install helics=="${ver}"
+# pip install helics-apps=="${ver}"
+# pip install git+https://github.com/GMLC-TDC/helics-cli.git@main
+pip install helics[cli]

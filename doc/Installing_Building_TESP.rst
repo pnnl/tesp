@@ -82,7 +82,7 @@ Once the installation process has finished there should be a folder name `tesp` 
 
 Check OS can find TESP software
 ...............................
-TESP includes a small script that attempts to run a trivial command with each of the software packages it installs (typically checking the version). The script is located at `tesp/repository/tesp/scripts/build/versions.sh`. This script runs automatically at the end of the build and install process and produces and output something like this (version numbers will vary):
+TESP includes a small script that attempts to run a trivial command with each of the software packages it installs (typically checking the version). The script is located at `~/grid/tesp/scripts/build/versions.sh`. This script runs automatically at the end of the build and install process and produces and output something like this (version numbers will vary):
 
 .. code-block:: text
 
@@ -110,7 +110,8 @@ An easy manual high-level check to see if TESP installed correctly is to look at
 
 .. code-block:: text
  
-    tesp
+    grid
+    ├── tesp
     ├── venv
     │   ├── bin
     │   │   ├── ...
@@ -167,7 +168,7 @@ An easy manual high-level check to see if TESP installed correctly is to look at
     │       ├── helics
     │       ├── java
     │       └── man
-    └── repository
+    └── repo
         ├── Ames-V5.0
         ├── EnergyPlus
         ├── fncs
@@ -176,7 +177,6 @@ An easy manual high-level check to see if TESP installed correctly is to look at
         ├── Ipopt
         ├── KLU_DLL
         ├── ns-3-dev
-        ├── tesp
         ├── ThirdParty-ASL
         └── ThirdParty-Mumps
 
@@ -190,10 +190,10 @@ and assumes the commandline prompt '~$' in the TESP root directory:
     :caption: TESP example subset autotest
 
     ~$ source tespEnv
-    (TESP) ~$ cd tesp/repository/tesp/examples
-    (TESP) ~/tesp/repository/tesp/examples$ exec python3 autotest.py &> short.log &
-    (TESP) ~/tesp/repository/tesp/examples$ deactivate
-    ~/tesp/repository/tesp/examples$
+    (TESP) ~$ cd ~grid/tesp/examples
+    (TESP) ~/grid/tesp/examples$ exec python3 autotest.py &> short.log &
+    (TESP) ~/grid/tesp/examples$ deactivate
+    ~/grid/tesp/examples$
 
 
 The first command is essential after starting a terminal session prior to running anything in
@@ -242,8 +242,8 @@ Longer Autotest: Remaining examples
     :caption: TESP remaining examples autotest
 
     ~$ source tespEnv
-    (TESP) ~$ cd tesp/repository/tesp/examples
-    (TESP) ~/tesp/repository/tesp/examples$ exec python3 autotest_long.py &> long.log &
+    (TESP) ~$ cd ~/grid/tesp/examples
+    (TESP) ~/grid/tesp/examples$ exec python3 autotest_long.py &> long.log &
 
 The commandline that ran this autotest was executed in the background, so that can close the terminal, but don't close the VM. You can open terminal later and check progress by viewing the long.log.
 This subset of examples can take several days to run (roughly 49.8 hours in the results shown below) and at the end, prints a final results table showing the runtime in seconds for each test:

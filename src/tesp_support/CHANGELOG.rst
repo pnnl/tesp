@@ -84,3 +84,12 @@ Version 1.3.1 (2023-10-3)
 Version 1.3.2 (2023-10-27)
 --------------------------
 * Another fix for model and modifier for GridLAB-D models
+
+Version 1.3.3 (2023-12-4)
+--------------------------
+* Add tesp_component download in tesp_support pypi, add schedule in model_GLM.py
+* Minor changes to path for RECS system feeder
+* Restructured, new RECS parameters, updated to include income, new hvac setpoint RECS data, teleworking.
+* Fix postposing for DSOT
+* Dockerfile for each module getting ready for dockerize COSU Simulations
+* Change directory structure

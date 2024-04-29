@@ -81,18 +81,18 @@ tesp\_support.api.metrics\_collector module
    :undoc-members:
    :show-inheritance:
 
-tesp\_support.api.model module
-------------------------------
+tesp\_support.api.model\_GLM module
+-----------------------------------
 
-.. automodule:: tesp_support.api.model
+.. automodule:: tesp_support.api.model_GLM
    :members:
    :undoc-members:
    :show-inheritance:
 
-tesp\_support.api.modifier module
----------------------------------
+tesp\_support.api.modify\_GLM module
+------------------------------------
 
-.. automodule:: tesp_support.api.modifier
+.. automodule:: tesp_support.api.modify_GLM
    :members:
    :undoc-members:
    :show-inheritance:
