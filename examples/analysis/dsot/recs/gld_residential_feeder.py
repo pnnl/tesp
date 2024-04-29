@@ -3,7 +3,7 @@
 # file: feederGenerator.py
 """Replaces ZIP loads with houses, and optional storage and solar generation.
 
-As this module populates the feeder backbone wiht houses and DER, it uses
+As this module populates the feeder backbone with houses and DER, it uses
 the Networkx package to perform graph-based capacity analysis, upgrading
 fuses, transformers and lines to serve the expected load. Transformers have
 a margin of 20% to avoid overloads, while fuses have a margin of 150% to
@@ -12,8 +12,14 @@ source file.
 
 There are two kinds of house populating methods implemented:
 
-    * :Feeders with Service Transformers: This case applies to the full PNNL taxonomy feeders. Do not specify the *taxchoice* argument to *populate_feeder*. Each service transformer receiving houses will have a short service drop and a small number of houses attached.
-    * :Feeders without Service Transformers: This applies to the reduced-order ERCOT feeders. To invoke this mode, specify the *taxchoice* argument to *populate_feeder*. Each primary load to receive houses will have a large service transformer, large service drop and large number of houses attached.
+    * :Feeders with Service Transformers: This case applies to the full PNNL 
+        taxonomy feeders. Do not specify the *taxchoice* argument to 
+        *populate_feeder*. Each service transformer receiving houses will have a
+        short service drop and a small number of houses attached.
+    * :Feeders without Service Transformers: This applies to the reduced-order 
+        ERCOT feeders. To invoke this mode, specify the *taxchoice* argument to 
+        *populate_feeder*. Each primary load to receive houses will have a large
+        service transformer, large service drop and large number of houses attached.
 
 References:
     `GridAPPS-D Feeder Models <https://github.com/GRIDAPPSD/Powergrid-Models>`_
@@ -22,7 +28,8 @@ Public Functions:
     :populate_feeder: processes one GridLAB-D input file
 
 Todo:
-    * Verify the level zero mobile home thermal integrity properties; these were copied from the MATLAB feeder generator
+    * Verify the level zero mobile home thermal integrity properties; 
+        these were copied from the MATLAB feeder generator
 
 """
 import sys
@@ -96,6 +103,7 @@ def selectEVmodel(evTable, prob):
         if total >= prob:
             return name
     raise UserWarning('EV model sale distribution does not sum to 1!')
+
 #***************************************************************************************************
 #***************************************************************************************************
 def match_driving_schedule(glm_modifier, ev_range, ev_mileage, ev_max_charge):
@@ -147,12 +155,16 @@ def match_driving_schedule(glm_modifier, ev_range, ev_mileage, ev_max_charge):
                    'work_duration': work_duration
                    }
     return driving_sch
+
 #***************************************************************************************************
 #***************************************************************************************************
+
 def randomize_residential_skew(glm_modifier):
     return randomize_skew(glm_modifier.defaults.residential_skew_std, glm_modifier.defaults.residential_skew_max)
+
 #***************************************************************************************************
 #***************************************************************************************************
+
 def randomize_skew(value, skew_max):
     sk = value * np.random.randn()
     if sk < skew_max:
@@ -160,10 +172,9 @@ def randomize_skew(value, skew_max):
     elif sk > skew_max:
         sk = skew_max
     return sk
+
 #***************************************************************************************************
 #***************************************************************************************************
-
-
 
 def is_drive_time_valid(drive_sch):
     """
@@ -180,17 +191,9 @@ def is_drive_time_valid(drive_sch):
     if work_arr_time != drive_sch['work_arr_time'] or round(work_duration/60) != round(drive_sch['work_duration']/60):
         return False
     return True
+
 #***************************************************************************************************
 #***************************************************************************************************
-
-
-
-
-
-
-
-
-
 
 def add_node_house_configs (glm_modifier, xfkva, xfkvll, xfkvln, phs, want_inverter=False):
   """Writes transformers, inverter settings for GridLAB-D houses at a primary load point.
@@ -357,9 +360,9 @@ def log_model(model, h):
                     print('\t\t'+p+'\t-->\t'+h[model[t][o][p]])
                 else:
                     print('\t\t'+p+'\t-->\t'+model[t][o][p])
-#***************************************************************************************************
-#***************************************************************************************************
 
+#***************************************************************************************************
+#***************************************************************************************************
 
 def randomize_commercial_skew(glm_modifier):
     sk = glm_modifier.defaults.commercial_skew_std * np.random.randn()
@@ -371,7 +374,6 @@ def randomize_commercial_skew(glm_modifier):
 
 #***************************************************************************************************
 #***************************************************************************************************
-
 
 def is_edge_class(s):
     """Identify switch, fuse, recloser, regulator, transformer, overhead_line, underground_line and triplex_line instances
@@ -570,6 +572,7 @@ def buildingTypeLabel (glm_modifier, rgn, bldg, ti):
         ti (int): thermal integrity level, 0..6 for single-family, only 0..2 valid for apartment or mobile home
     """
     return glm_modifier.defaults.rgnName[rgn-1] + ': ' +  glm_modifier.defaults.bldgTypeName[bldg] + ': TI Level ' + str (ti+1)
+
 #***************************************************************************************************
 #***************************************************************************************************
 
@@ -589,7 +592,6 @@ def Find3PhaseXfmr (glm_modifier, kva):
         if row[0] >= kva:
             return row[0], 0.01 * row[1], 0.01 * row[2], 0.01 * row[3], 0.01 * row[4]
     return Find3PhaseXfmrKva(kva),0.01,0.08,0.005,0.01
-
 
 #***************************************************************************************************
 #***************************************************************************************************
@@ -612,6 +614,7 @@ def Find1PhaseXfmr (glm_modifier, kva):
 
 #***************************************************************************************************
 #***************************************************************************************************
+
 def Find3PhaseXfmrKva (glm_modifier, kva):
     """Select a standard 3-phase transformer size, with some margin
 
@@ -633,7 +636,6 @@ def Find3PhaseXfmrKva (glm_modifier, kva):
 
 #***************************************************************************************************
 #***************************************************************************************************
-
 
 def Find1PhaseXfmrKva (glm_modifier, kva):
     """Select a standard 1-phase transformer size, with some margin
@@ -690,6 +692,7 @@ def checkResidentialBuildingTable(glm_modifier):
             for hBin in range(1, glm_modifier.defaults.allowedHeatingBins[cBin]):
                     glm_modifier.defaults.conditionalHeatingBinProb[bldg][cBin][hBin] = glm_modifier.defaults.bldgHeatingSetpoints[bldg][hBin][0] / denom
     # print('conditionalHeatingBinProb', conditionalHeatingBinProb)
+
 #***************************************************************************************************
 #***************************************************************************************************
 
@@ -768,9 +771,9 @@ def selectSetpointBins (glm_modifier, bldg, rand):
     glm_modifier.defaults.cooling_bins[bldg][cBin] -= 1
     glm_modifier.defaults.heating_bins[bldg][hBin] -= 1
     return glm_modifier.defaults.bldgCoolingSetpoints[bldg][cBin], glm_modifier.defaults.bldgHeatingSetpoints[bldg][hBin]
-#***************************************************************************************************
-#***************************************************************************************************
 
+#***************************************************************************************************
+#***************************************************************************************************
 
 def initialize_glm_modifier(glmfilepath):
     glmMod = glmmod.GLMModifier()
@@ -782,11 +785,8 @@ def initialize_glm_modifier(glmfilepath):
     else:
         return glmMod
 
-
 #***************************************************************************************************
 #***************************************************************************************************
-
-
 
 #fgconfig: path and name of the file that is to be used as the configuration json for loading
 #ConfigDict dictionary
@@ -886,7 +886,6 @@ def getDsoThermalTable(glm_modifier, income):
 #***************************************************************************************************
 #***************************************************************************************************
 
-
 def obj(glm_modifier, parent, model, line, itr, oidh, octr):
     """Store an object in the model structure
 
@@ -965,6 +964,7 @@ def obj(glm_modifier, parent, model, line, itr, oidh, octr):
 
 #***************************************************************************************************
 #***************************************************************************************************
+
 def add_link_class (glm_modifier, model, h, t, seg_loads,  want_metrics=False):
   """Write a GridLAB-D link (i.e. edge) class
 
@@ -998,6 +998,7 @@ def add_link_class (glm_modifier, model, h, t, seg_loads,  want_metrics=False):
 
 #***************************************************************************************************
 #***************************************************************************************************
+
 def add_local_triplex_configurations (glm_modifier):
     params = dict()
     for row in glm_modifier.defaults.triplex_conductors:
@@ -1162,6 +1163,7 @@ def connect_ercot_commercial(glm_modifier):
 
 #***************************************************************************************************
 #***************************************************************************************************
+
 def add_ercot_small_loads(glm_modifier, basenode, vnom):
   """For the reduced-order ERCOT feeders, write loads that are too small for houses
 
@@ -1200,14 +1202,13 @@ def add_ercot_small_loads(glm_modifier, basenode, vnom):
   params["constant_power_C_real"] = format (1000.0 * kva, '.2f')
   glm_modifier.add_object("load", name, params)
 
-
-
-
 #***************************************************************************************************
 #***************************************************************************************************
+
 # look at primary loads, not the service transformers
 def identify_ercot_houses (glm_modifier,model, h, t, avgHouse, rgn):
-    """For the reduced-order ERCOT feeders, scan each primary load to determine the number of houses it should have
+    """For the reduced-order ERCOT feeders, scan each primary load to determine 
+    the number of houses it should have
 
     Args:
         model (dict): the parsed GridLAB-D model
@@ -1216,7 +1217,7 @@ def identify_ercot_houses (glm_modifier,model, h, t, avgHouse, rgn):
         avgHouse (float): the average house load in kva
         rgn (int): the region number, 1..5
     """
-    print ('Average ERCOT House', avgHouse, rgn)
+    print ('Average ERCOT House load:', avgHouse, 'kVA. Region number:', rgn)
     total_houses = {'A': 0, 'B': 0, 'C': 0}
     total_small =  {'A': 0, 'B': 0, 'C': 0}
     total_small_kva =  {'A': 0, 'B': 0, 'C': 0}
@@ -1283,7 +1284,7 @@ def replace_commercial_loads(glm_modifier, model, h, t, avgBuilding):
         t (str): the GridLAB-D class name to scan
         avgBuilding (float): the average building in kva
     """
-    print('Average Commercial Building', avgBuilding)
+    print('Average Commercial Building load:', avgBuilding, 'kVA')
     total_commercial = 0
     total_comm_kva = 0
     total_zipload = 0
@@ -1412,7 +1413,7 @@ def identify_xfmr_houses (glm_modifier,model, h, t, seg_loads, avgHouse, rgn):
         avgHouse (float): the average house load in kva
         rgn (int): the region number, 1..5
     """
-    print ('Average House', avgHouse)
+    print ('Average House load', avgHouse, 'kVA. Region number:', rgn)
     total_houses = 0
     total_sf = 0
     total_apt = 0
@@ -1448,7 +1449,7 @@ def identify_xfmr_houses (glm_modifier,model, h, t, seg_loads, avgHouse, rgn):
                         else:
                             total_mh += nhouse
                         glm_modifier.defaults.house_nodes[node] = [nhouse, rgn, lg_v_sm, phs, bldg, ti]
-    print (total_small, 'small loads totaling', '{:.2f}'.format (total_small_kva), 'kva')
+    print (total_small, 'small loads totaling', '{:.2f}'.format (total_small_kva), 'kVA')
     print (total_houses, 'houses on', len(glm_modifier.defaults.house_nodes), 'transformers, [SF,APT,MH]=', total_sf, total_apt, total_mh)
     for i in range(6):
         glm_modifier.defaults.heating_bins[0][i] = round (total_sf * glm_modifier.defaults.bldgHeatingSetpoints[0][i][0] + 0.5)
@@ -1531,6 +1532,7 @@ def add_small_loads(glm_modifier, basenode, vnom):
 
 #***************************************************************************************************
 #***************************************************************************************************
+
 def add_one_commercial_zone(glm_modifier, bldg):
   """Write one pre-configured commercial zone as a house
 
@@ -1642,11 +1644,9 @@ def add_one_commercial_zone(glm_modifier, bldg):
     params7["interval"] = str(glm_modifier.defaults.metrics_interval)
     glm_modifier.add_object("ZIPload", "occupancy", params7)
 
-
-
-
 #***************************************************************************************************
 #***************************************************************************************************
+
 def add_commercial_loads(glm_modifier,rgn, key):
   """Put commercial building zones and ZIP loads into the model
 
@@ -1892,12 +1892,8 @@ def add_commercial_loads(glm_modifier,rgn, key):
     glm_modifier.add_object("load", "accumulate zone", params)
 
 
-
 #***************************************************************************************************
 #***************************************************************************************************
-
-
-
 
 def add_houses(glm_modifier, basenode, vnom, bIgnoreThermostatSchedule=True, bWriteService=True, bTriplex=True,
                setpoint_offset=1.0, fg_recs_dataset=None):
@@ -2584,6 +2580,7 @@ def add_houses(glm_modifier, basenode, vnom, bIgnoreThermostatSchedule=True, bWr
 
 #***************************************************************************************************
 #***************************************************************************************************
+
 def add_substation(glm_modifier, name, phs, vnom, vll):
     """Write the substation swing node, transformer, metrics collector and fncs_msg object
 
@@ -2794,6 +2791,7 @@ def add_voltage_class(glm_modifier,model, h, t, vprim, vll, secmtrnode):
 
 #***************************************************************************************************
 #***************************************************************************************************
+
 def add_config_class (glm_modifier, model, h, t):
     """Write a GridLAB-D configuration (i.e. not a link or node) class
 
@@ -2818,6 +2816,7 @@ def add_config_class (glm_modifier, model, h, t):
 
 # ***************************************************************************************************
 # ***************************************************************************************************
+
 def add_xfmr_config(glm_modifier,key, phs, kvat, vnom, vsec, install_type, vprimll, vprimln):
     """Write a transformer_configuration
 
@@ -2877,8 +2876,6 @@ def add_xfmr_config(glm_modifier,key, phs, kvat, vnom, vsec, install_type, vprim
         params["shunt_reactance"] = format(1.0 / row[4], '.2f')
     glm_modifier.add_object("transformer_configuration", name, params)
 
-
-
 # ***************************************************************************************************
 # ***************************************************************************************************
 
@@ -2922,8 +2919,7 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
         rgn = 4
     elif 'R5' in rootname:
         rgn = 5
-    print('using', glm_modifier.defaults.solar_percentage, 'solar and', glm_modifier.defaults.storage_percentage,
-          'storage penetration')
+    print('using', glm_modifier.defaults.solar_percentage, 'percent solar and', glm_modifier.defaults.storage_percentage, 'percent storage penetration')
     # if glm_modifier.defaults.electric_cooling_percentage <= 0.0:
     #     glm_modifier.defaults.electric_cooling_percentage = glm_modifier.defaults.rgnPenElecCool[rgn - 1]
     #     print('using regional default', glm_modifier.defaults.electric_cooling_percentage,
@@ -2952,7 +2948,8 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
 
         op = open(glm_modifier.defaults.work_path + outname + '.glm', 'w')
 
-        print('###### Writing to', glm_modifier.defaults.work_path + outname + '.glm')
+        #print('###### Writing to', glm_modifier.defaults.work_path + outname + '.glm')
+        print('Writing to', outname + '.glm')
         octr = 0;
         model = {}
         h = {}  # OID hash
@@ -3339,10 +3336,9 @@ def ProcessTaxonomyFeeder(glm_modifier, outname, rootname, vll, vln, avghouse, a
 
         op.close()
 
-
-
 # ***************************************************************************************************
 # ***************************************************************************************************
+
 def add_node_houses(glm_modifier, node, region, xfkva, phs, nh=None, loadkw=None, house_avg_kw=None, secondary_ft=None,
                       storage_fraction=0.0, solar_fraction=0.0, electric_cooling_fraction=0.5,
                       node_metrics_interval=None, random_seed=False):
@@ -3590,7 +3586,7 @@ def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, 
             avg_comm = taxrow['avg_comm']
             glm_modifier.defaults.case_name = config['SimulationConfig']['CaseName']
             work_path = taxconfig['work_path']
-            print(glm_modifier.defaults.driving_data_filecase_name, rootname, vll, vln, avg_house, avg_comm, glm_modifier.defaults.driving_data_filefeeders_path, glm_modifier.defaults.work_path)
+            print('Driving data casename:', glm_modifier.defaults.driving_data_filecase_name, 'rootname:', rootname, 'VLL:', vll, 'VLN:', vln, 'House load:', avg_house, 'Commercial load:', avg_comm, 'Driving data feeders path', glm_modifier.defaults.driving_data_filefeeders_path, 'Default work path:', glm_modifier.defaults.work_path)
             ProcessTaxonomyFeeder(glm_modifier.defaults.case_name, rootname, vll, vln, avg_house, avg_comm)
         else:
             print(rootname, 'not found in taxconfig backbone_feeders')
@@ -3616,8 +3612,10 @@ def populate_feeder(glm_modifier, configfile=None, config=None, taxconfig=None, 
 # ***************************************************************************************************
 
 def populate_all_feeders(glm_modifier, outpath):
-    """Wrapper function that batch processes all taxonomy feeders in the casefiles table (see source file)
+    """Wrapper function that batch processes all taxonomy feeders in the 
+    casefiles table (see source file)
     """
+    print('Root Name, VLL, VLN, Avg House, Avg Commercial:')
     print(glm_modifier.defaults.casefiles)
     fg_recs_dataset = None
     if glm_modifier.defaults.use_recs_data == "true":
@@ -3647,9 +3645,10 @@ def populate_all_feeders(glm_modifier, outpath):
 #     return tdt, tdv
 
 if __name__ == "__main__":
-    test_modifier = initialize_glm_modifier("/home/d3k205/tesp/data/feeders/R1-12.47-1.glm")
-    populate_all_feeders(test_modifier, "/home/d3k205/")
-    test_modifier.write_model("/home/d3k205/test.glm")
+    test_modifier = initialize_glm_modifier("../../../../data/feeders/R1-12.47-1.glm")
+    populate_all_feeders(test_modifier, "../../../../data/feeders/R1-12.47-1.glm")
+    test_modifier.write_model("test.glm")
+
 
 
 

@@ -7,7 +7,7 @@ import numpy as np
 from tesp_support.api.helpers import gld_strict_name
 import tesp_support.api.modify_GLM as glmmod
 sys.path.append('./')
-import feeder_generator as res_FG
+import residential_feeder_glm as res_FG
 
 
 
